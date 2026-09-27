@@ -74,7 +74,7 @@ describe("running entries use Toggl's negative-duration encoding", () => {
 
   test("editing elapsed time moves the start of a running entry", () => {
     const started = startTimer(baseState(), draft, NOW_ISO)
-    const state = setRunningElapsed(started.state, 7200, NOW_ISO)
+    const state = setRunningElapsed(started.state, 7200, NOW_ISO).state
     const running = runningEntry(state)!
     expect(entrySeconds(running, epochSeconds(NOW_ISO))).toBe(7200)
   })
@@ -92,7 +92,7 @@ describe("continue / duplicate", () => {
 
   test("duplicate copies the original times", () => {
     const original = entry(1, "2026-08-09", "09:00", "10:30")
-    const next = duplicateEntry(baseState({ entries: [original] }), "1", NOW_ISO)
+    const next = duplicateEntry(baseState({ entries: [original] }), "1", NOW_ISO).state
     expect(next.entries).toHaveLength(2)
     const copy = next.entries.find((e) => e.id !== "1")!
     expect(copy.start).toBe(original.start)

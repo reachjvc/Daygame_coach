@@ -327,7 +327,7 @@ export function validateEntry(
    * entries on its own — press `N` then `S`, or mis-tap Continue.
    */
   if (candidate.stop !== null && epochSeconds(candidate.stop) < epochSeconds(candidate.start)) {
-    violations.push({ field: "date", message: "An entry cannot end before it starts" })
+    violations.push({ field: "time", message: "An entry cannot end before it starts" })
   }
 
   if (required.description && !candidate.description.trim()) {
@@ -552,7 +552,7 @@ export function updateEntry(
     return {
       state,
       violations: [
-        { field: "date", message: "Clearing the end would start this entry running again — use Continue instead" },
+        { field: "time", message: "Clearing the end would start this entry running again — use Continue instead" },
       ],
     }
   }
@@ -628,11 +628,11 @@ export function setRunningElapsed(
   state: TimetrackState,
   seconds: number,
   nowIso: IsoDateTime,
-): TimetrackState {
+): { state: TimetrackState; violations: SaveViolation[] } {
   const running = runningEntry(state)
-  if (!running) return state
+  if (!running) return { state, violations: [] }
   const newStartIso = new Date((epochSeconds(nowIso) - Math.max(0, seconds)) * 1000).toISOString()
-  return updateEntry(state, running.id, { start: newStartIso, stop: null }, nowIso).state
+  return updateEntry(state, running.id, { start: newStartIso, stop: null }, nowIso)
 }
 
 /** Set an entry's duration by moving its stop time (stopped entries only) */
@@ -641,21 +641,29 @@ export function setEntryDuration(
   entryId: Id,
   seconds: number,
   nowIso: IsoDateTime,
-): TimetrackState {
+): { state: TimetrackState; violations: SaveViolation[] } {
   const entry = state.entries.find((e) => e.id === entryId)
-  if (!entry || isRunning(entry)) return state
+  if (!entry || isRunning(entry)) return { state, violations: [] }
   const stop = new Date((epochSeconds(entry.start) + Math.max(0, seconds)) * 1000).toISOString()
-  return updateEntry(state, entryId, { stop }, nowIso).state
+  return updateEntry(state, entryId, { stop }, nowIso)
 }
 
-export function duplicateEntry(state: TimetrackState, entryId: Id, nowIso: IsoDateTime): TimetrackState {
+/**
+ * These three used to answer with a bare state, which meant their callers could
+ * not report a refusal even if they wanted to: duplicate, the inline duration
+ * box and the timer bar's elapsed field all did nothing and said nothing when a
+ * workspace requirement or a locked date refused the write. They carry the
+ * violations now, like everything else that validates.
+ */
+export function duplicateEntry(
+  state: TimetrackState,
+  entryId: Id,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[] } {
   const source = state.entries.find((e) => e.id === entryId)
-  if (!source || isRunning(source) || !source.stop) return state
-  return createManualEntry(
-    state,
-    { draft: draftOf(source), start: source.start, stop: source.stop },
-    nowIso,
-  ).state
+  if (!source || isRunning(source) || !source.stop) return { state, violations: [] }
+  const made = createManualEntry(state, { draft: draftOf(source), start: source.start, stop: source.stop }, nowIso)
+  return { state: made.state, violations: made.violations }
 }
 
 export interface SplitOutcome {

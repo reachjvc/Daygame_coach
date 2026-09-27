@@ -118,3 +118,31 @@ describe("a time the app refuses does not linger on screen", () => {
     expect(new Date(stored().stop!).getTime()).toBeGreaterThan(new Date(stored().start).getTime())
   })
 })
+
+describe("typing in two fields and leaving", () => {
+  test("keeps both, not whichever committed last", () => {
+    /**
+     * The fix that made times survive Escape moved the loss one field to the
+     * left. Both commits compute from `latestState.current`, and on unmount
+     * there is no render between the two cleanups — so both read the same
+     * snapshot and the second write wins. Cleanup order is declaration order,
+     * so the times landed and the description was thrown away: exactly the
+     * defect this sheet was repaired for, one field over.
+     *
+     * No test caught it because none typed BOTH fields before leaving.
+     */
+    const { view, stored } = sheet()
+    const before = stored()
+    const description = view.container.querySelector('input[placeholder="Description"]')!
+    const end = view.container.querySelectorAll('input[type="datetime-local"]')[1]
+
+    fireEvent.change(description, { target: { value: "typed in both" } })
+    fireEvent.change(end, { target: { value: inputValue(before.start, 90) } })
+    view.unmount()
+
+    expect(stored().description, "the description was dropped by the time commit").toBe("typed in both")
+    expect(new Date(stored().stop!).getTime(), "the time was dropped by the description commit").toBe(
+      new Date(before.start).getTime() + 90 * 60_000,
+    )
+  })
+})

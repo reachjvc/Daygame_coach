@@ -192,6 +192,16 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   /** re-runs first contact after a failure; see the catch at the end of it */
   const firstContactRef = useRef<(() => Promise<void>) | null>(null)
   const firstContactDelay = useRef(RETRY_START_MS)
+  const firstContactAt = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /**
+   * Set when this instance goes away.
+   *
+   * The retry chains here re-arm themselves from their own catch, so without
+   * this a tracker left while first contact was failing kept asking for the
+   * life of the tab — and a dead instance still owns `flushRef` and still
+   * writes the shared pending queue, which the live instance also owns.
+   */
+  const unmounted = useRef(false)
 
   latestState.current = state
 
@@ -239,6 +249,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const flushRef = useRef<(() => Promise<void>) | null>(null)
 
   const flush = useCallback(async () => {
+    if (unmounted.current) return
     if (flushing.current) {
       // Something was queued while a request was in the air. That used to wait
       // for an unrelated edit: the request ends by setting the status it
@@ -299,7 +310,12 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           return
         }
         if (!response.ok) {
-          const failure = (await response.json().catch(() => ({}))) as { error?: string; ids?: string[] }
+          const failure = (await response.json().catch(() => ({}))) as {
+            error?: string
+            /** which table the refused rows are in, so they can be taken out of the queue */
+            table?: string
+            ids?: string[]
+          }
           const message = failure.error ?? response.statusText
           if (response.status >= 400 && response.status < 500) {
             /**
@@ -333,6 +349,43 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
                 : `Your account refused a change and it has not been saved: ${message}. Nothing is lost — it is still in this browser. Reload to resync.`,
               "error",
             )
+
+            /**
+             * AND TAKE IT OUT OF THE QUEUE, WHICH IS THE HALF THAT MATTERS.
+             *
+             * Stopping the automatic retry only moved the retry to the user's
+             * keystrokes: the refused row stayed queued, so every later edit
+             * re-sent it, got the same 400, raised another toast, and did not
+             * reach the server either. And a key stuck in `pending` is marked
+             * dirty on every pull while the cursor moves past it — so the other
+             * device's correction for that same row is discarded and never
+             * asked for again. One mistyped time, two devices permanently
+             * disagreeing.
+             *
+             * The row is not lost: the workspace still holds it, the message
+             * names it, and fixing it makes a fresh change that will be sent.
+             * Recording it in `serverRows` is what stops the change-watcher
+             * queueing it again until it does change.
+             */
+            const refusedTable = failure.table as keyof TimetrackRows | undefined
+            const refusedIds = new Set(failure.ids ?? [])
+            if (refusedTable && refusedIds.size > 0) {
+              const queuedHere = (pending.current[refusedTable] ?? []) as { id?: unknown }[]
+              const refusedRows = queuedHere.filter((row) => refusedIds.has(String(row.id)))
+              pending.current = {
+                ...pending.current,
+                [refusedTable]: queuedHere.filter((row) => !refusedIds.has(String(row.id))),
+              } as Partial<TimetrackRows>
+              savePending()
+              serverRows.current = mergeIncoming(
+                serverRows.current ?? emptyRows(),
+                { [refusedTable]: refusedRows } as Partial<TimetrackRows>,
+                new Set(),
+              )
+              // and send what is left NOW rather than at the next edit — the
+              // rest of the queue did nothing wrong
+              if (countRows(pending.current) > 0) setTimeout(() => void flushRef.current?.(), 0)
+            }
             return
           }
           throw new Error(message)
@@ -369,7 +422,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        */
       const more = flushAgain.current || countRows(pending.current) > 0
       flushAgain.current = false
-      if (sent && more && retryAt.current === null) {
+      if (sent && more && retryAt.current === null && !unmounted.current) {
         setTimeout(() => void flushRef.current?.(), 0)
       }
     }
@@ -377,10 +430,16 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
   flushRef.current = flush
 
-  useEffect(() => () => {
-    if (retryAt.current) clearTimeout(retryAt.current)
-    retryAt.current = null
-  }, [])
+  useEffect(
+    () => () => {
+      unmounted.current = true
+      if (retryAt.current) clearTimeout(retryAt.current)
+      retryAt.current = null
+      if (firstContactAt.current) clearTimeout(firstContactAt.current)
+      firstContactAt.current = null
+    },
+    [],
+  )
 
   // --- first contact: who are we, and what does the server already have? ----
   useEffect(() => {
@@ -392,6 +451,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     startingState.current = state
 
     const attempt = async () => {
+      if (unmounted.current) return
       try {
         const abort = new AbortController()
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
@@ -530,7 +590,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         setStatus(navigator.onLine ? "error" : "offline")
         const delay = firstContactDelay.current
         firstContactDelay.current = Math.min(delay * 2, RETRY_MAX_MS)
-        setTimeout(() => void firstContactRef.current?.(), delay)
+        if (firstContactAt.current) clearTimeout(firstContactAt.current)
+        firstContactAt.current = setTimeout(() => void firstContactRef.current?.(), delay)
       }
     }
 
@@ -607,9 +668,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {
     if (!userId.current || !cursor.current) return
-    // Everything this device writes from here on beats whatever comes back:
-    // the answer was decided before those writes existed.
+    /**
+     * WHAT THIS ANSWER MAY NOT OVERWRITE, decided before it is asked for.
+     *
+     * Two sets, because one of them was not enough. `localWrites` covers rows
+     * written after the request goes out. It does NOT cover a row written just
+     * before it that is still only queued — because by the time the answer
+     * arrives the queue has flushed and cleared, so neither `pending` nor the
+     * timestamp protects it. That is the ordering the first version of this
+     * guard missed, and it is the ordinary one:
+     *
+     *   press Stop → queued → pull goes out → queue flushes and clears →
+     *   the pull answers with the copy from before the press.
+     *
+     * A pull is not quick here — `pullTimetrackRows` issues one read per table,
+     * nineteen of them — so answering after an upload that started later is
+     * normal rather than freakish.
+     */
     const askedAt = Date.now()
+    const queuedWhenAsked = keysIn(pending.current)
     const mine = ++pullSeq.current
     try {
       const response = await fetch(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`)
@@ -629,6 +706,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       if (countRows(body.rows) === 0) return
 
       const dirty = keysIn(pending.current)
+      for (const key of queuedWhenAsked) dirty.add(key)
       for (const [key, at] of localWrites.current) if (at >= askedAt) dirty.add(key)
       const merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
       serverRows.current = merged
@@ -670,7 +748,19 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * every time the tab is looked at whether the session is back.
    */
   useEffect(() => {
-    if (!signedOut) return
+    /**
+     * `local-only` needs this as much as `signed-out` does, and used to have no
+     * way out at all: it is set when the very first request is refused, which
+     * means `userId` and `cursor` were never learned, so neither an upload nor
+     * a pull can start. Sign in in another tab and this one stayed local for
+     * the life of the page, silently.
+     *
+     * The two recover differently. A signed-out session already knows who it
+     * is, so it flushes. A local-only one knows nothing yet, so it has to go
+     * back and say hello properly.
+     */
+    const localOnly = statusRef.current === "local-only"
+    if (!signedOut && !localOnly) return
     const recheck = async () => {
       if (document.visibilityState !== "visible") return
       try {
@@ -678,6 +768,11 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           "/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? new Date().toISOString()),
         )
         if (response.status === 401) return
+        if (localOnly) {
+          firstContactDelay.current = RETRY_START_MS
+          void firstContactRef.current?.()
+          return
+        }
         setStatus("saving")
         void flush()
       } catch {
@@ -693,7 +788,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       clearInterval(timer)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [signedOut, flush])
+  }, [signedOut, status, flush])
 
   /**
    * THE 60-SECOND PULL HAD TWO REASONS TO NEVER FIRE, AND ONLY ONE WAS `status`.

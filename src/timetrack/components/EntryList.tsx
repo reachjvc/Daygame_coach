@@ -429,7 +429,15 @@ function EntryFields({
       pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
       return
     }
-    setState((current) => setEntryDuration(current, entry.id, parsed, nowIso()))
+    const refusal = setEntryDuration(state, entry.id, parsed, nowIso()).violations[0]
+    if (refusal) {
+      pushToast(refusal.message, "error")
+      return
+    }
+    setState((current) => {
+      const applied = setEntryDuration(current, entry.id, parsed, nowIso())
+      return applied.violations.length > 0 ? current : applied.state
+    })
   }
 
   const continueButton = (
@@ -597,15 +605,21 @@ function EntryFields({
             // render's state would overwrite each other. Computed outside the
             // updater so a refusal has somewhere to be said — the same shape
             // `patch` above uses.
-            const created = createProject(state, { name }, nowIso())
-            const result = updateEntry(created.state, entry.id, { projectId: created.id, taskId: null }, nowIso())
-            if (result.violations.length > 0) {
-              // the project stays made; only the assignment was refused
-              setState(() => created.state)
-              pushToast(result.violations[0].message, "error")
-              return
-            }
-            setState(() => result.state)
+            // checked on this render's state, applied to whatever is current —
+            // a pull can land between the two and must not be overwritten
+            const refusal = updateEntry(
+              createProject(state, { name }, nowIso()).state,
+              entry.id,
+              { projectId: null, taskId: null },
+              nowIso(),
+            ).violations[0]
+            setState((current) => {
+              const made = createProject(current, { name }, nowIso())
+              const result = updateEntry(made.state, entry.id, { projectId: made.id, taskId: null }, nowIso())
+              // the project stays made even when the assignment is refused
+              return result.violations.length > 0 ? made.state : result.state
+            })
+            if (refusal) pushToast(refusal.message, "error")
           }}
         />
 
@@ -616,17 +630,23 @@ function EntryFields({
           fill
           onChange={(tagIds) => patch({ tagIds })}
           onCreateTag={(name) => {
-            const created = createTag(state, name, nowIso())
-            const target = state.entries.find((e) => e.id === entry.id)
-            const tagIds = [...new Set([...(target?.tagIds ?? []), created.id])]
-            const result = updateEntry(created.state, entry.id, { tagIds }, nowIso())
-            if (result.violations.length > 0) {
-              // the tag stays made; only the assignment was refused
-              setState(() => created.state)
-              pushToast(result.violations[0].message, "error")
-              return
-            }
-            setState(() => result.state)
+            const checkTag = createTag(state, name, nowIso())
+            const checkTarget = state.entries.find((e) => e.id === entry.id)
+            const refusal = updateEntry(
+              checkTag.state,
+              entry.id,
+              { tagIds: [...new Set([...(checkTarget?.tagIds ?? []), checkTag.id])] },
+              nowIso(),
+            ).violations[0]
+            setState((current) => {
+              const made = createTag(current, name, nowIso())
+              const target = current.entries.find((e) => e.id === entry.id)
+              const tagIds = [...new Set([...(target?.tagIds ?? []), made.id])]
+              const result = updateEntry(made.state, entry.id, { tagIds }, nowIso())
+              // the tag stays made even when the assignment is refused
+              return result.violations.length > 0 ? made.state : result.state
+            })
+            if (refusal) pushToast(refusal.message, "error")
           }}
         />
 
@@ -730,7 +750,17 @@ function EntryMenu({
               icon={<IconDuplicate className="size-3.5" />}
               label="Duplicate"
               onClick={() => {
-                setState((current) => duplicateEntry(current, entry.id, nowIso()))
+                {
+                  const refusal = duplicateEntry(state, entry.id, nowIso()).violations[0]
+                  if (refusal) {
+                    pushToast(refusal.message, "error")
+                  } else {
+                    setState((current) => {
+                      const applied = duplicateEntry(current, entry.id, nowIso())
+                      return applied.violations.length > 0 ? current : applied.state
+                    })
+                  }
+                }
                 close()
               }}
             />
@@ -934,6 +964,18 @@ export function EntryDetailModalBody({
       pushToast(result.violations[0].message, "error")
       return false
     }
+    /**
+     * ADVANCE THE SNAPSHOT, OR TWO COMMITS IN ONE TICK EAT EACH OTHER.
+     *
+     * On unmount React runs every cleanup before it renders anything, so the
+     * description's flush and the times' flush both read `latestState.current`
+     * — and whichever runs second overwrites the first. Cleanup order is
+     * declaration order, so the times landed and the description was silently
+     * discarded: the exact defect this sheet was repaired for, moved one field
+     * to the left. Found by a reviewer; no test typed in both fields before
+     * leaving, so nothing caught it.
+     */
+    latestState.current = result.state
     setState(() => result.state)
     return true
   }

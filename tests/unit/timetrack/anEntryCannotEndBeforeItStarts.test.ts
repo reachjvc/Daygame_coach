@@ -31,6 +31,7 @@ import { readFileSync } from "node:fs"
 import { describe, expect, test } from "vitest"
 
 import {
+  canEditEntry,
   createManualEntry,
   isRunning,
   setRunningElapsed,
@@ -137,7 +138,7 @@ describe("a stopped entry cannot be cleared back into running", () => {
 
     const result = updateEntry(state, id, { stop: null }, NOW_ISO)
 
-    expect(result.violations.map((v) => v.field)).toContain("date")
+    expect(result.violations.map((v) => v.field)).toContain("time")
     expect(result.state.entries[0].stop).not.toBeNull()
     expect(isRunning(result.state.entries[0])).toBe(false)
   })
@@ -164,7 +165,7 @@ describe("a stopped entry cannot be cleared back into running", () => {
     const state = baseState()
     const started = startTimer(state, { description: "running", projectId: null, taskId: null, tagIds: [], billable: false }, NOW_ISO)
 
-    const moved = setRunningElapsed(started.state, 1800, NOW_ISO)
+    const moved = setRunningElapsed(started.state, 1800, NOW_ISO).state
 
     const running = moved.entries.find((e) => e.id === started.entry.id)!
     expect(isRunning(running)).toBe(true)
@@ -232,5 +233,32 @@ describe("stopping means nothing is running afterwards", () => {
 
     expect(result.stopped).toBeNull()
     expect(result.state).toBe(state)
+  })
+})
+
+describe("an entry that is already wrong is the one you most need to edit", () => {
+  test("a reversed entry stays editable, so the row the message points at can be repaired", () => {
+    /**
+     * The rule was first raised as `field: "date"`, which `canEditEntry` reads
+     * as "this entry is out of bounds" — the gate meant for locked periods and
+     * approved timesheets. So every entry already stored reversed, which is
+     * precisely the shape yesterday's defect wrote into the owner's workspace,
+     * became the one row whose Start, End and Duration were disabled. The sync
+     * message says "open it and check its times".
+     */
+    const state = baseState({
+      entries: [
+        { ...entry(1, "2026-08-10", "09:00", "10:00", { description: "already reversed" }), stop: entry(1, "2026-08-10", "08:00", "09:00").start, duration: 0 },
+      ],
+    })
+
+    expect(canEditEntry(state, state.entries[0]), "the row that needs repairing cannot be edited").toBe(true)
+  })
+
+  test("a locked period still closes the row, which is what that gate is for", () => {
+    const state = baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] })
+    state.workspace.lockEntriesBefore = "2026-08-11"
+
+    expect(canEditEntry(state, state.entries[0])).toBe(false)
   })
 })

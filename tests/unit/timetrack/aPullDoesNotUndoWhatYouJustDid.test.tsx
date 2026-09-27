@@ -256,3 +256,63 @@ describe("two pulls in flight at once", () => {
     ).toBe("changed on the other device")
   })
 })
+
+describe("a pull issued AFTER the press but answered after the upload", () => {
+  test("still does not put the timer back", async () => {
+    /**
+     * THE ORDERING THE FIRST FIX MISSED, and the reason it matters: the guard
+     * protected rows written after the request went out, and the test above
+     * pressed Stop after the request went out — so it passed while this
+     * sequence stayed broken.
+     *
+     *   t=0     you press Stop. It is queued; the flush is debounced.
+     *   t=100   a pull goes out. The server reads the entry, still running.
+     *   t=800   the queue flushes; the stop is uploaded and acknowledged, and
+     *           `pending` is cleared — so the row is no longer "queued".
+     *   t=1600  the pull answers. The row is not in `pending`, and its local
+     *           write is older than the request, so nothing protects it.
+     *
+     * A pull is not a fast request here: `pullTimetrackRows` issues one read
+     * per table, nineteen of them, so answering after an upload that started
+     * later is the ordinary case rather than a freak one.
+     */
+    const running = withARunningTimer()
+    const server = stubServer(stateToRows(running, USER), stateToRows(running, USER))
+
+    let latest: TimetrackState = running
+    const view = render(<Harness initial={running} onState={(s) => (latest = s)} />)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50))
+    })
+
+    // the press comes FIRST
+    await act(async () => {
+      view.getByTestId("stop").click()
+      await new Promise((r) => setTimeout(r, 30))
+    })
+
+    // then the pull goes out, while the stop is still only queued
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"))
+      await new Promise((r) => setTimeout(r, 20))
+    })
+    expect(server.pullAsked(), "the pull never went out, so this test proves nothing").toBe(true)
+
+    // the upload lands and clears the queue
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 1500))
+    })
+    expect(latest.entries.some(isRunning), "the stop did not apply locally").toBe(false)
+
+    // and only now does the pull answer, with the copy from before the press
+    await act(async () => {
+      server.releasePull()
+      await new Promise((r) => setTimeout(r, 300))
+    })
+
+    expect(
+      latest.entries.some(isRunning),
+      "a pull issued after the press still restarted the timer",
+    ).toBe(false)
+  })
+})

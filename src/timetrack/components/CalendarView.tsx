@@ -189,18 +189,38 @@ export function CalendarView({
          * on that fragment's day and destroyed the first half.
          */
         const moving = state.entries.find((e) => e.id === drag.entryId)
-        const result = moving
-          ? updateEntry(state, drag.entryId, shiftEntryBy(moving, newStart - drag.startMinutes), nowIso())
-          : null
-        if (result && result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else if (result) setState(() => result.state)
+        const patch = moving ? shiftEntryBy(moving, newStart - drag.startMinutes) : null
+        const refusal = patch ? updateEntry(state, drag.entryId, patch, nowIso()).violations[0] : undefined
+        if (refusal) pushToast(refusal.message, "error")
+        else if (patch) {
+          /**
+           * Applied through the updater, not from this render's `state`.
+           *
+           * A drag spans mousedown to mouseup, and a sync pull or the
+           * per-minute alert sweep can land inside it — writing the closure's
+           * copy back would throw that away. The check above is on the closure
+           * only to decide whether to complain; the write itself starts from
+           * whatever is current.
+           */
+          setState((current) => {
+            const applied = updateEntry(current, drag.entryId!, patch, nowIso())
+            // refused against the newer state too: leave it alone rather than
+            // write a copy that was only valid a moment ago
+            return applied.violations.length > 0 ? current : applied.state
+          })
+        }
       }
     } else if (mode === "resize" && drag.entryId) {
       const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)
       suppressClick.current = true
-      const result = updateEntry(state, drag.entryId, { stop: isoAtMinutes(day, end) }, nowIso())
-      if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-      else setState(() => result.state)
+      const stopAt = { stop: isoAtMinutes(day, end) }
+      const refusal = updateEntry(state, drag.entryId, stopAt, nowIso()).violations[0]
+      if (refusal) pushToast(refusal.message, "error")
+      else
+        setState((current) => {
+          const applied = updateEntry(current, drag.entryId!, stopAt, nowIso())
+          return applied.violations.length > 0 ? current : applied.state
+        })
     }
     setDrag(null)
   }

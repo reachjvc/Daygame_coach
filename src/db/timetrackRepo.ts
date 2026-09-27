@@ -178,6 +178,26 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
    */
   const workspaceId = await resolveWorkspaceId(supabase, userId, rows)
 
+  /**
+   * ONE CLOCK DECIDES WHAT "SINCE" MEANS, AND IT IS THIS ONE.
+   *
+   * `pullTimetrackRows` hands out a cursor from the server clock and then asks
+   * for rows with `updated_at > since`. The rows arriving here carry the
+   * BROWSER's clock (`stateToRows` writes the entity's own edit time), and the
+   * `_touch` triggers are `before update` only — so an INSERT kept whatever the
+   * browser said. Two consequences, both silent:
+   *
+   *   - an entry created offline at 10:00 and uploaded at 10:10 arrives stamped
+   *     10:00, so a device whose cursor is 10:05 never sees it at all;
+   *   - a browser whose clock is a few minutes slow makes every row it creates
+   *     invisible to every other device.
+   *
+   * Stamping here costs nothing and makes the comparison mean something. The
+   * client's own `updated_at` is ignored by `meaningful()` when it diffs, so
+   * overwriting it changes no behaviour on that side.
+   */
+  const writtenAt = new Date().toISOString()
+
   // Workspaces first: everything else points at one, and a foreign key does not
   // care that the row it needs is three lines further down the payload.
   const ordered = [...TIMETRACK_TABLES].sort((a, b) => {
@@ -194,6 +214,8 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
       const withOwner = { ...row, user_id: userId } as Record<string, unknown>
       if (table === "timetrack_workspaces") withOwner.id = workspaceId
       else if ("workspace_id" in withOwner) withOwner.workspace_id = workspaceId
+      // the two link tables have no such column; everything else is stamped
+      if (!NO_UPDATED_AT.has(table)) withOwner.updated_at = writtenAt
       return withOwner
     })
     const onConflict = COMPOSITE_KEYS[table] ?? "id"

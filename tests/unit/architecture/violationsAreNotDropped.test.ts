@@ -57,6 +57,12 @@ const RETURNS_VIOLATIONS = [
   "applyDraftPatch",
 ]
 
+/**
+ * How many `.state`-off-a-validating-call sites the service itself still has.
+ * Lower it when one goes; it may never rise.
+ */
+const INTERNAL_CEILING = 1
+
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const full = join(dir, name)
@@ -116,12 +122,22 @@ describe("a refusal is never taken off the result and thrown away", () => {
     expect(offenders).toEqual([])
   })
 
-  test("the service itself may, because that is where the rule is decided", () => {
-    // Not an exemption so much as a statement of where the line is: inside
-    // `timetrackService` these compose, and the outermost caller is the one
-    // that has to answer for the violations.
+  test("the service's own internal compositions may not grow", () => {
+    /**
+     * A CEILING, NOT A FLOOR — and the first version of this was a floor.
+     *
+     * It asserted `inside.length > 0`, which meant the exempt file had to keep
+     * at least one dropped violation for the suite to stay green: fixing them
+     * all would have turned this red. A guard that punishes the fix is worse
+     * than no guard. A reviewer caught it the same day it was written.
+     *
+     * Inside `timetrackService` these calls compose, and the outermost caller
+     * answers for the violations — so some are legitimate. What must not
+     * happen is more of them appearing. Lower this number whenever one goes.
+     */
     const inside = droppedViolations(readFileSync(join(SLICE, OWNER), "utf8"))
-    expect(inside.length).toBeGreaterThan(0)
+
+    expect(inside.length, `internal compositions: ${JSON.stringify(inside)}`).toBeLessThanOrEqual(INTERNAL_CEILING)
   })
 
   test("the scan finds a violation when there is one to find", () => {

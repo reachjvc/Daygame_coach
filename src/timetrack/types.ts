@@ -585,6 +585,13 @@ export interface TimetrackState {
 
 /** Validation failure raised by required-fields / locked-entries / approval rules */
 export interface SaveViolation {
-  field: "description" | "project" | "task" | "tag" | "date" | "approval"
+  /**
+   * `date` means "this whole entry is out of bounds" — a locked period or an
+   * approved timesheet — and `canEditEntry` uses it to close the row for
+   * editing. `time` is different: the entry is editable, these particular
+   * times are not acceptable. Keeping them apart is what stops an entry that
+   * is ALREADY wrong from being the one row you cannot repair.
+   */
+  field: "description" | "project" | "task" | "tag" | "date" | "time" | "approval"
   message: string
 }

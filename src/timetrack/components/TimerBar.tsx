@@ -158,7 +158,10 @@ export function TimerBar({
       setDurationInput(formatClock(runningSeconds))
       return
     }
-    setState((current) => setRunningElapsed(current, seconds, new Date().toISOString()))
+    setState((current) => {
+      const applied = setRunningElapsed(current, seconds, new Date().toISOString())
+      return applied.violations.length > 0 ? current : applied.state
+    })
   }
 
   const addManualEntry = () => {

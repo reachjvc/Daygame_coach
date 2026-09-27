@@ -108,6 +108,17 @@ function Harness({ initial }: { initial: TimetrackState }) {
   const sync = useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast })
 
   return (
+    <>
+    <button
+      data-testid="second"
+      onClick={() =>
+        setState((current) =>
+          current ? { ...current, workspace: { ...current.workspace, name: `renamed ${Date.now()}` } } : current,
+        )
+      }
+    >
+      second
+    </button>
     <button
       data-testid="edit"
       onClick={() =>
@@ -125,6 +136,7 @@ function Harness({ initial }: { initial: TimetrackState }) {
     >
       {sync.status}
     </button>
+    </>
   )
 }
 
@@ -302,5 +314,78 @@ describe("a first contact that fails", () => {
 
     expect(attempts, "it never asked again").toBeGreaterThan(1)
     expect(view.getByTestId("edit").textContent, "it never recovered without a reload").toBe("synced")
+  })
+})
+
+describe("a row the server will never accept", () => {
+  test("is taken out of the queue, so the next edit is not stuck behind it", async () => {
+    /**
+     * The first version of this stopped the automatic retry and left the row in
+     * the queue — which only moved the retry from a timer to the user's
+     * keystrokes. Every later edit re-sent the refused row, got the same 400,
+     * raised another toast, and did not reach the server either. The badge
+     * stayed non-zero for ever.
+     *
+     * Worse, the stuck key is in `pending`, so every pull marks it dirty while
+     * the cursor moves past it: the other device's correction for that same row
+     * is discarded and never asked for again. One mistyped time, two devices
+     * permanently disagreeing.
+     */
+    const initial = localState()
+    const server = stubServer(stateToRows(initial, USER))
+    const view = await mount(server, initial)
+
+    const refusedId = initial.entries[0].id
+    let posts: { table: string; rows: Record<string, unknown>[] }[] = []
+    server.postReply = () => ({ ok: true, status: 200 })
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: { method?: string; body?: string }) => {
+        if (init?.method === "POST") {
+          const body = JSON.parse(init.body ?? "{}") as { rows?: Record<string, Record<string, unknown>[]> }
+          // every table, not just entries: the second edit writes a workspace
+          // row, and a probe that only watches one table reports a working
+          // upload as a silent one
+          for (const [table, rows] of Object.entries(body.rows ?? {})) posts.push({ table, rows })
+          const entries = body.rows?.timetrack_entries ?? []
+          if (entries.some((row) => row.id === refusedId)) {
+            return {
+              ok: false,
+              status: 400,
+              json: async () => ({
+                error: 'violates check constraint "timetrack_entries_stop_after_start"',
+                table: "timetrack_entries",
+                ids: [refusedId],
+              }),
+            }
+          }
+          return { ok: true, status: 200, json: async () => ({}) }
+        }
+        return { ok: true, status: 200, json: async () => ({ rows: {}, cursor: NOW_ISO, empty: false, userId: USER }) }
+      }),
+    )
+
+    // the edit the server refuses
+    await act(async () => view.getByTestId("edit").click())
+    await settle(3_000)
+    expect(
+      posts.some((p) => p.rows.some((r) => r.id === refusedId)),
+      "the refused row was never sent",
+    ).toBe(true)
+
+    // now a second, unrelated edit
+    posts = []
+    await act(async () => view.getByTestId("second").click())
+    await settle(3_000)
+
+    // Scoped to the table as well as the id: in these fixtures the workspace
+    // and the first entry are both id "1", so an id-only check reported a
+    // working quarantine as broken.
+    const rowsSent = posts.flatMap((p) => p.rows.map((row) => ({ table: p.table, id: String(row.id) })))
+    expect(rowsSent.length, "nothing was sent at all after the refusal").toBeGreaterThan(0)
+    expect(
+      rowsSent.some((row) => row.table === "timetrack_entries" && row.id === refusedId),
+      "the refused row was sent again, so the next edit is stuck behind it",
+    ).toBe(false)
   })
 })
