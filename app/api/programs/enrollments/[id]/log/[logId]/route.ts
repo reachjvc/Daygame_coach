@@ -17,7 +17,6 @@ import { workoutErrorResponse } from "@/src/programs/errors"
  * cleanups. It is the only route that removes one session and replays the
  * enrollment so the weights land where they would have been without it.
  */
-const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
 /** Remove a logged session. Every session after it is recomputed. */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string; logId: string }> }) {
