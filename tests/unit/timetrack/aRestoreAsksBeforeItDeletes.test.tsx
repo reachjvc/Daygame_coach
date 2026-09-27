@@ -62,7 +62,9 @@ function settings() {
       syncStatus="idle"
       onUploadEverything={vi.fn()}
       tab="data"
-      onTabChange={vi.fn()}
+      setTab={vi.fn()}
+      nowSec={Math.floor(new Date(2026, 8, 27, 12, 0, 0).getTime() / 1000)}
+      requestNotificationPermission={vi.fn(async () => true)}
     />,
   )
   return { view, replaceState }

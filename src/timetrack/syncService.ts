@@ -155,8 +155,21 @@ export function diffRows(previous: TimetrackRows | null, next: TimetrackRows, de
   let count = 0
 
   for (const table of TIMETRACK_TABLES) {
-    const before = previous ? indexOf(table, previous[table] as unknown as AnyRow[]) : new Map<string, AnyRow>()
-    const after = indexOf(table, next[table] as unknown as AnyRow[])
+    /**
+     * `?? []` because a missing table is not the same as a crash.
+     *
+     * Every other function here reads a change set as `rows[table] ?? []`;
+     * this one indexed it directly, so a response or a stored baseline missing
+     * one of the nineteen threw `Cannot read properties of undefined`. The pull
+     * catches and discards its own errors by design — "a failed pull is not worth
+     * interrupting anyone" — so the visible effect would have been pulling that
+     * silently stopped working, with nothing said and nothing logged.
+     *
+     * A missing table genuinely means "no rows of this kind", and that is what
+     * `emptyRows()` already encodes; this only stops the one place that disagreed.
+     */
+    const before = previous ? indexOf(table, (previous[table] ?? []) as unknown as AnyRow[]) : new Map<string, AnyRow>()
+    const after = indexOf(table, (next[table] ?? []) as unknown as AnyRow[])
     const out: AnyRow[] = []
 
     for (const [key, row] of after) {

@@ -125,3 +125,90 @@ describe("a refusal whose names match nothing in the queue", () => {
     expect(server.posts(), `${server.posts()} POSTs in five seconds`).toBeLessThan(5)
   })
 })
+
+describe("one mistyped end time on a TAGGED entry", () => {
+  /**
+   * THE WHOLE CHAIN, WHICH IS WHAT MADE THIS WORTH FIXING.
+   *
+   *  1. The person logs a client call with a tag and mistypes the end time. The
+   *     entry is refused by its check constraint. That part already worked: the
+   *     server isolates it, names it by id, and the browser drops it.
+   *  2. The orphan `(entry_id, tag_id)` link is still queued — a different table,
+   *     untouched by step 1 — and now fails its foreign key. The server used to
+   *     name it `""`, so the browser's drop branch was skipped and it stayed.
+   *  3. Every ordinary edit afterwards joined the same all-or-nothing batch and
+   *     was refused with it. Nothing that account wrote reached the server again,
+   *     and reloading cannot help because the queue is read back from
+   *     localStorage — while "Reload to resync" is the only thing the person is
+   *     told.
+   *
+   * The server now reports row keys, so step 2 drops like step 1. This asserts
+   * step 3: the ordinary work afterwards arrives.
+   */
+  test("does not stop everything written afterwards from reaching the server", async () => {
+    const accepted: string[] = []
+    const initial = withATag()
+
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: { method?: string; body?: string }) => {
+      if (init?.method === "POST") {
+        const rows = (JSON.parse(init.body ?? "{}") as { rows?: Record<string, Record<string, unknown>[]> }).rows ?? {}
+
+        // the entry with the impossible times, refused by a check constraint
+        if ((rows.timetrack_entries ?? []).some((r) => r.id === "99")) {
+          return { ok: false, status: 400, json: async () => ({ error: "check constraint", table: "timetrack_entries", ids: ["99"] }) }
+        }
+        // its orphan tag link, refused by a foreign key — named as a ROW KEY now
+        if ((rows.timetrack_entry_tags ?? []).some((r) => r.entry_id === "99")) {
+          return { ok: false, status: 400, json: async () => ({ error: "fkey", table: "timetrack_entry_tags", ids: ["99:50"] }) }
+        }
+        for (const list of Object.values(rows)) for (const row of list) accepted.push(String(row.id ?? `${row.entry_id}:${row.tag_id}`))
+        return { ok: true, status: 200, json: async () => ({}) }
+      }
+      if (String(url).includes("since=")) return { ok: true, status: 200, json: async () => ({ rows: {}, cursor: NOW_ISO }) }
+      return { ok: true, status: 200, json: async () => ({ rows: stateToRows(initial, USER), cursor: NOW_ISO, empty: false, userId: USER }) }
+    }))
+
+    function Chain() {
+      const [state, setState] = useState<TimetrackState | null>(null)
+      useEffect(() => setState(initial), [])
+      const apply = useCallback((u: (c: TimetrackState) => TimetrackState) => setState((c) => (c ? u(c) : c)), [])
+      const replace = useCallback((next: TimetrackState) => setState(next), [])
+      useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: useCallback(() => {}, []) })
+      return (
+        <>
+          <button
+            data-testid="mistype"
+            onClick={() =>
+              apply((c) => ({
+                ...c,
+                // an end before its start, with a tag on it
+                entries: [...c.entries, { ...c.entries[0], id: "99", description: "client call", tagIds: ["50"], start: "2026-08-10T11:00:00.000Z", stop: "2026-08-10T10:00:00.000Z" }],
+              }))
+            }
+          >
+            mistype
+          </button>
+          <button data-testid="note" onClick={() => apply((c) => ({ ...c, workspace: { ...c.workspace, name: `note ${Date.now()}` } }))}>note</button>
+        </>
+      )
+    }
+
+    const view = render(<Chain />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(400) })
+
+    await act(async () => { view.getByTestId("mistype").click() })
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000) })
+
+    accepted.length = 0
+    // an hour of ordinary work afterwards
+    for (let i = 0; i < 3; i++) {
+      await act(async () => { view.getByTestId("note").click() })
+      await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+    }
+
+    expect(
+      accepted.length,
+      "nothing written after the mistype reached the server — the account has stopped saving",
+    ).toBeGreaterThan(0)
+  })
+})

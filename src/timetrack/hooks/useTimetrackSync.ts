@@ -203,6 +203,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * writes the shared pending queue, which the live instance also owns.
    */
   const unmounted = useRef(false)
+  /** Requests still in the air, so unmounting can stop them rather than let a dead
+   * instance act on the answer. */
+  const inFlight = useRef(new Set<AbortController>())
 
   latestState.current = state
 
@@ -237,6 +240,26 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   }, [])
 
   const savePending = useCallback(() => {
+    /**
+     * A DEAD INSTANCE DOES NOT GET TO WRITE THE SHARED QUEUE.
+     *
+     * `PENDING_KEY` is one key in one browser, and every instance of this hook
+     * owns it. Navigating away from the tracker with an upload in the air and
+     * coming straight back leaves the old instance's request still running: when
+     * it answers, the success path empties ITS `pending` and saves — over the live
+     * instance's queue, which by then holds a new edit. Measured: the badge reads
+     * "1 waiting" and the key on disk reads `{}`. Close the tab before the next
+     * flush and that work is gone with no trace.
+     *
+     * The unmount block's own comment already claimed this was handled. It was
+     * not: `unmounted.current` was checked on the way into `flush` and in the
+     * drain-again, and neither is on the path a request takes when it answers.
+     *
+     * Checked here rather than at each call site because there are five of them —
+     * success, the 401, the quarantine, the change-watcher and the offer — and
+     * this is the one place they all pass through.
+     */
+    if (unmounted.current) return
     setPendingCount(countRows(pending.current))
     try {
       window.localStorage.setItem(PENDING_KEY, JSON.stringify(pending.current))
@@ -289,6 +312,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       // person with nothing uploaded and no idea why.
       for (const batch of splitIntoBatches(sending, MAX_ROWS_PER_REQUEST)) {
         const abort = new AbortController()
+        // registered so unmounting can stop it — see the unmount block
+        inFlight.current.add(abort)
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
         let response: Response
         try {
@@ -300,6 +325,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           })
         } finally {
           clearTimeout(deadline)
+          inFlight.current.delete(abort)
         }
         if (response.status === 401) {
           // The session ended while the tab was open. Retrying is pointless,
@@ -480,6 +506,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       retryAt.current = null
       if (firstContactAt.current) clearTimeout(firstContactAt.current)
       firstContactAt.current = null
+      /**
+       * And stop the request itself, not just the timers that would start
+       * another. An upload in the air outlives the screen that started it, and
+       * whatever it does when it answers is done on behalf of a component that no
+       * longer exists — see `savePending`. Aborting is safe: the rows are still in
+       * the queue on disk, and the live instance will send them.
+       */
+      for (const controller of inFlight.current) controller.abort()
+      inFlight.current.clear()
     }
   }, [])
 
@@ -496,12 +531,14 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       if (unmounted.current) return
       try {
         const abort = new AbortController()
+        inFlight.current.add(abort)
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
         let response: Response
         try {
           response = await fetch("/api/timetrack/sync", { signal: abort.signal })
         } finally {
           clearTimeout(deadline)
+          inFlight.current.delete(abort)
         }
         if (response.status === 401) {
           setStatus("local-only")
@@ -524,7 +561,31 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           // the workspace may have moved on since the first try.
           const held = latestState.current ?? state
           const localRows = stateToRows(held, userId.current)
-          serverRows.current = null
+          /**
+           * THE OFFER IS NOT AN OFFER IF THE UPLOAD HAS ALREADY HAPPENED.
+           *
+           * This set the baseline to `null`, and `diffRows` reads `null` as "the
+           * server has nothing, so everything is new". Setting the status a few
+           * lines down then flips `syncActive`, which is in the change-watcher's
+           * dependency array — so the watcher re-ran, queued the entire workspace
+           * and flushed it 800ms later. Measured with no user action of any kind:
+           * the banner still on screen reading "This browser has 2 time entries
+           * that your account does not — Show / Upload all / Not now", and both
+           * entries already on the server.
+           *
+           * Two things followed from it. Ticking one entry of three uploaded all
+           * three, so the per-entry chooser and its "Select none" link were inert.
+           * And "Not now" could not win: `declineImport` sets this baseline for
+           * exactly this reason, but by then the rows were already up. Its comment
+           * names the hazard — the fix it describes closed the next EDIT, and
+           * missed the automatic status change that fires first.
+           *
+           * The banner is inline and not a modal, so there is no other gate. What
+           * this browser holds is the baseline until the person says otherwise;
+           * `acceptImport` and `uploadEverything` build their own change set from
+           * `null`, so both still send everything they are asked to.
+           */
+          serverRows.current = localRows
           adopted.current = true
           if (held.entries.length > 0 || held.projects.length > 0) {
             setImportOffer({
