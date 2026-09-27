@@ -94,6 +94,22 @@ export function SetMenu({
         <Slider
           className="min-w-0 flex-1"
           aria-label={`Effort for ${label}`}
+          /**
+           * "not said" IS NOT 6. The thumb parks at `RPE_MIN` when nothing has
+           * been said, so a screen reader was told the effort on that set was
+           * 6 — a number nobody had entered, indistinguishable from one they
+           * had. `aria-valuetext` says which it is; the caption beside it has
+           * said so to the eye all along.
+           *
+           * THE OTHER HALF IS NOT FIXED AND IS NOT PRETENDED TO BE: once the
+           * thumb is touched there is no way back to "not said". The lowest
+           * position means 6, so an accidental drag records an effort for
+           * good. Clearing it needs `null` to travel through `rateSet`,
+           * `patchSet` and the route to the column, which is an API change
+           * rather than a control — left for the owner rather than
+           * half-built.
+           */
+          aria-valuetext={rpe === null ? "not said" : `RPE ${rpe}`}
           min={RPE_MIN}
           max={RPE_MAX}
           step={1}

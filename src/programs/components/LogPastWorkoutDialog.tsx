@@ -224,7 +224,15 @@ export function LogPastWorkoutDialog({ enrollments, liveOpen, timezone }: Props)
                   data-testid="open-past-workout"
                 >
                   {busy && <Loader2 className="mr-1 size-4 animate-spin" />}
-                  Open it
+                  {/*
+                    WHY IT IS OFF, on the button itself. It opened greyed out
+                    with an empty When and nothing chosen, and said nothing —
+                    the exact dead end the finish sheet in this same slice
+                    avoids on purpose, under a comment reading "A disabled
+                    control with no reason is a dead end somebody taps twice
+                    and then leaves."
+                  */}
+                  {busy ? "Opening…" : !when ? "Say when it was" : !choice ? "Pick a session" : "Open it"}
                 </Button>
               </DialogFooter>
             </>

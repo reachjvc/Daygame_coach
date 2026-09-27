@@ -161,9 +161,37 @@ export function FinishSheet({
    * time somebody will accept without reading.
    */
   const [startedAt, setStartedAt] = useState(() => instantToWallClock(workout.startedAt, timezone))
-  const [endedAt, setEndedAt] = useState(() =>
-    past ? "" : instantToWallClock(roundUpToMinute(lastTick ?? new Date().toISOString()), timezone)
-  )
+  /**
+   * ONLY ROUND UP WHEN ROUNDING DOWN WOULD LIE.
+   *
+   * Rounding up unconditionally made the sheet's own line contradict itself.
+   * Started 15:58:53, last tick 16:00:47:
+   *
+   *     15:58 → 16:01     2 min
+   *
+   * The start prints truncated, the end printed rounded UP, and the duration
+   * is measured between the true instants — so the span read one minute
+   * longer than the number beside it, on every workout that started at a
+   * second past the minute. Three in a row: 15:06→15:09 "2 min",
+   * 15:20→15:28 "7 min".
+   *
+   * The guard above is about a workout that ends in the same minute it
+   * started — "a workout that started at 20:43:37 and ended fifteen seconds
+   * later would default to 20:43:00 — before it began". That is the only case
+   * that needs the bump, so it is the only case that gets it.
+   */
+  const [endedAt, setEndedAt] = useState(() => {
+    if (past) return ""
+    const end = lastTick ?? new Date().toISOString()
+    const down = new Date(end)
+    down.setSeconds(0, 0)
+    const startMinute = new Date(workout.startedAt)
+    startMinute.setSeconds(0, 0)
+    return instantToWallClock(
+      down.getTime() > startMinute.getTime() ? down.toISOString() : roundUpToMinute(end),
+      timezone
+    )
+  })
   const [editingEnd, setEditingEnd] = useState(past)
   const [intensity, setIntensity] = useState(3)
   const [notes, setNotes] = useState("")
