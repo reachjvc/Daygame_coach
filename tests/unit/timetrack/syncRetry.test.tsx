@@ -265,3 +265,42 @@ describe("the queue keeps draining after a failure", () => {
     expect(server.posts, "the change queued during the request was never sent").toBeGreaterThan(1)
   })
 })
+
+describe("a first contact that fails", () => {
+  test("is tried again, instead of stranding the page until a reload", async () => {
+    /**
+     * `ready` stops the first-contact effect running twice, and on failure
+     * nothing set it back — so `userId` and `cursor` stayed unset, which means
+     * no upload and no pull can even start. A flaky moment at open left the
+     * tracker working locally and silently never syncing, with only a reload to
+     * recover. The badge does say something is wrong; nothing says it will stay
+     * wrong.
+     */
+    const initial = localState()
+    let attempts = 0
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: { method?: string }) => {
+        if (init?.method === "POST") return { ok: true, status: 200, json: async () => ({}) }
+        attempts += 1
+        if (attempts === 1) throw new Error("the network was not there yet")
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ rows: stateToRows(initial, USER), cursor: NOW_ISO, empty: false, userId: USER }),
+        }
+      }),
+    )
+
+    const view = render(<Harness initial={initial} />)
+    await settle(500)
+    expect(attempts, "the first attempt never happened").toBe(1)
+    expect(view.getByTestId("edit").textContent).not.toBe("synced")
+
+    // the backoff's own second go
+    await settle(6_000)
+
+    expect(attempts, "it never asked again").toBeGreaterThan(1)
+    expect(view.getByTestId("edit").textContent, "it never recovered without a reload").toBe("synced")
+  })
+})

@@ -189,6 +189,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * wins and older answers are dropped unread.
    */
   const pullSeq = useRef(0)
+  /** re-runs first contact after a failure; see the catch at the end of it */
+  const firstContactRef = useRef<(() => Promise<void>) | null>(null)
+  const firstContactDelay = useRef(RETRY_START_MS)
 
   latestState.current = state
 
@@ -388,9 +391,16 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     // remember what was here before the server said anything
     startingState.current = state
 
-    void (async () => {
+    const attempt = async () => {
       try {
-        const response = await fetch("/api/timetrack/sync")
+        const abort = new AbortController()
+        const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+        let response: Response
+        try {
+          response = await fetch("/api/timetrack/sync", { signal: abort.signal })
+        } finally {
+          clearTimeout(deadline)
+        }
         if (response.status === 401) {
           setStatus("local-only")
           return
@@ -407,21 +417,24 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
         if (body.empty) {
           // nothing stored yet. Offer to upload what this browser holds rather
-          // than doing it behind their back.
-          const localRows = stateToRows(state, userId.current)
+          // than doing it behind their back. `latestState` rather than the
+          // captured `state`, because this can run again after a failure and
+          // the workspace may have moved on since the first try.
+          const held = latestState.current ?? state
+          const localRows = stateToRows(held, userId.current)
           serverRows.current = null
           adopted.current = true
-          if (state.entries.length > 0 || state.projects.length > 0) {
+          if (held.entries.length > 0 || held.projects.length > 0) {
             setImportOffer({
-              entries: state.entries.length,
-              projects: state.projects.length,
-              items: state.entries
+              entries: held.entries.length,
+              projects: held.projects.length,
+              items: held.entries
                 .slice()
                 .sort((a, b) => b.start.localeCompare(a.start))
                 .map((entry) => ({
                   id: entry.id,
                   description: entry.description,
-                  project: state.projects.find((p) => p.id === entry.projectId)?.name ?? null,
+                  project: held.projects.find((p) => p.id === entry.projectId)?.name ?? null,
                   day: entry.start.slice(0, 10),
                   seconds: entry.duration < 0 ? 0 : entry.duration,
                 })),
@@ -504,9 +517,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         setStatus("synced")
         void flush()
       } catch {
+        /**
+         * A SESSION THAT CANNOT SAY HELLO MUST KEEP TRYING.
+         *
+         * `ready` stops this effect running twice, and on failure nothing put
+         * it back — so `userId` and `cursor` stayed unset, and with those unset
+         * neither an upload nor a pull can even start. One flaky moment at open
+         * left the tracker working locally and silently never syncing, with a
+         * reload as the only way out. The badge says something is wrong; it
+         * does not say it will stay wrong for ever.
+         */
         setStatus(navigator.onLine ? "error" : "offline")
+        const delay = firstContactDelay.current
+        firstContactDelay.current = Math.min(delay * 2, RETRY_MAX_MS)
+        setTimeout(() => void firstContactRef.current?.(), delay)
       }
-    })()
+    }
+
+    firstContactRef.current = attempt
+    void attempt()
   }, [state, replaceState, savePending, flush])
 
   // --- every local change becomes something to send -------------------------
