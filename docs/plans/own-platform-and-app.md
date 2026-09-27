@@ -244,7 +244,7 @@ exactly as written below.
 
 | # | Decision | Why, and what it cost |
 |---|---|---|
-| D1 | **Leave Vercel and Supabase for Hetzner** — a server you run, with Postgres on a private network and the app's own auth. Auth and migration defaults unchanged: Better Auth, Drizzle. | Leaving decided 2026-09-17. **Provider settled 2026-09-27 because your friend recommended it; that reason stands on its own and is re-litigated by nobody.** Still his to call and not blocking (B7): the deploy layer — GitHub Actions over SSH, or Coolify / Dokku on the box — Postgres on the app box or its own, one server or two. Defaults if he does not say: Actions + Compose over SSH, Postgres on the same box with its data on a separate volume, two small servers so staging and production keep the same shape. |
+| D1 | **Leave Vercel and Supabase for Hetzner** — a server you run, with Postgres on a private network and the app's own auth. Auth and migration defaults unchanged: Better Auth, Drizzle. | Leaving decided 2026-09-17. **Provider settled 2026-09-27 because your friend recommended it; that reason stands on its own and is re-litigated by nobody.** **Confirmed by the owner in person 2026-09-27, not relayed — an earlier note recorded it from a peer session, and this is the owner's own word.** Still his to call and not blocking (B7): the deploy layer — GitHub Actions over SSH, or Coolify / Dokku on the box — Postgres on the app box or its own, one server or two. Defaults if he does not say: Actions + Compose over SSH, Postgres on the same box with its data on a separate volume, two small servers so staging and production keep the same shape. |
 | D2 | **The backend is a separate data service with token login**, not the website rehosted. | A phone app cannot use server-drawn pages or the browser cookie. Building it later means building login twice. |
 | D3 | **The users table's primary key is `uuid`, and every imported account keeps the uuid Supabase gave it.** | N13: 61 `user_id uuid` columns point at it. Better Auth defaults to a **text** id — if that default is taken, M2 stops being a repoint and becomes a type migration across every user-owned table. **Verify Better Auth can be overridden this way before committing to it.** |
 | D4 | **The Claude CLI must become the Anthropic API** in the 3 product features (N31). | It is a desktop binary pinned to a path in your home folder; no host can run it. The code deliberately deletes `ANTHROPIC_API_KEY` for its child process, so adding a key does not rescue it. Its own header says "Switch to API for production." Cost: a code change in 3 files, a real per-call bill, and re-enabling the budget check that path skips. |
@@ -405,7 +405,8 @@ tree.
 **Depends on:** B1 (the dumps), B-PATHS (convention 4 resolved).
 **Your daily use:** unaffected, except where noted in M0.6.
 
-### M0.1 — One function answers "who is logged in". **DONE** (`3a54e532`, `54749fce`)
+### M0.1 — One function answers "who is logged in". **DONE**
+**Depends on:** nothing. Done on the current stack. (`3a54e532`, `54749fce`)
 All 48 API-route call sites now use `requireAuth` / `requirePremium` /
 `requireAccess` / `optionalUserId` in `src/db/auth.ts`. Five files that each carried
 their own copy of the paywall now share one.
@@ -426,6 +427,7 @@ their own copy of the paywall now share one.
   pages, with a browser check, because they are live pages your localhost serves.
 
 ### M0.2 — No database queries outside the database layer
+**Depends on:** nothing.
 18 call sites in 8 files. Round 4 checked every one for the `save_life_plan` pattern
 — relying on a database rule instead of filtering — and **found none**. The five
 `profiles` reads and both in `ScenariosPage` all filter by the signed-in user; the
@@ -435,10 +437,19 @@ four unfiltered reads in `apiAiRepo` sit behind an admin-key gate that fails clo
   never caught these — they get their client from `src/db/`.
 
 ### M0.3 — Scripts stop reaching the database directly
-**N33, not the 4 the old plan named.** The four it named plus `audit-rls.ts`,
-`seed_values.ts`, two training-data stages, and — the ones that matter —
-`backup-timetrack.ts` and `restore-timetrack.ts`, **the timetrack slice's own
-disaster recovery**, which reach it through `timetrackBackupRepo`.
+**Depends on:** nothing.
+**N33, and all twelve named** — an earlier draft described four of them only as "the
+four the old plan named", pointing at a document that no longer exists, and enumerated
+ten while asserting twelve. Measured
+`grep -rl 'src/db/\|@supabase' scripts/ --include=*.ts`:
+`backup-timetrack.ts`, `restore-timetrack.ts`, `dev/seed-training-year.ts`,
+`generate-goal-constraints.ts`, `list-errors.ts`, `repair-counters.ts`,
+`seed_values.ts`, `tracking/audit-achievements.ts`,
+`training-data/00.EXT.reset-embeddings.ts`, `training-data/10.EXT.ingest.ts`,
+`training-data/10.EXT.ingest-test.ts`, `training-data/11.EXT.retrieval-smoke.ts`.
+**The first two matter most: they are the timetrack slice's own disaster recovery**,
+and they reach the database through `timetrackBackupRepo` rather than importing
+Supabase, which is why an import-only check misses them.
 - Acceptance: the same architecture check extended to `scripts/`. **Note it goes red
   on all 12, so M0.3's deliverable must cover all 12** — the old plan's test
   contradicted its own scope.
@@ -470,6 +481,7 @@ disaster recovery**, which reach it through `timetrackBackupRepo`.
 - **Not covered:** this does not port anything. It builds the net M5 falls into.
 
 ### M0.5 — One API base URL (D8)
+**Depends on:** nothing. Useful on either stack.
 N25 routes through one `apiFetch()` helper, and the 3 auth redirects built from `window.location.origin` take a
 configured address.
 - Acceptance: an architecture test that fails on a new bare `fetch("/api/…")`.
@@ -477,6 +489,7 @@ configured address.
   wrapper and a rewrite.
 
 ### M0.6 — Your development connection (rule 5)
+**Depends on:** B1 (the dump, if the local-Postgres route is taken). **Gates M1.6, M1.7 and M5** — each breaks your daily use without it.
 A way for your `localhost:3000` to reach a database once the real one is private:
 an SSH tunnel to the box — there is no platform CLI under D1 — or a local Postgres loaded from B1's dump.
 - **This exists before M1 finishes**, because M1.6, M1.7 and M5 each break your daily
@@ -496,6 +509,7 @@ sub-milestones named tests that need M2 and M3 — so the old plan deadlocked at
 second milestone. The always-on parts are now **M1b, after M3**.
 
 ### M1.1 — It builds and boots. **First, because everything else assumes it.**
+**Depends on:** B2. **Note the ring:** its acceptance names M1.7's healthcheck, and M1.7's healthcheck touches a database whose schema is M2, which depends back on M1.1. It resolves because an empty Postgres answers a healthcheck and `app/page.tsx` renders a signed-out page — **stating that is the point, because the old plan's deadlock was invisible for exactly this reason.**
 **Correcting a claim I made and you were told:** CI *does* build this app, and has
 since 2026-02-04 — `playwright.config.ts` runs `npm run build && npm start` when
 `CI` is set, and all three e2e jobs set it. The earlier "only Vercel has ever built
@@ -549,6 +563,7 @@ exist only in whoever typed the commands.
   changes nothing.
 
 ### M1.7 — Secrets, healthcheck, monitoring
+**Depends on:** M1.1, M0.6.
 **21** distinct environment variables are read across the codebase. `NEXT_PUBLIC_APP_URL`
 is baked into both Stripe's return URL and M1b.3's email links.
 - `NEXT_PUBLIC_BUILD_ID` is required and set from the git sha **in CI** — under D1 there is no provider commit variable to read — and
@@ -622,6 +637,7 @@ reports that *after* the outage, by definition.
   own dev server.**
 
 ### M1.8 — Deploy pipeline
+**Depends on:** M1.1.
 Migrate, then deploy. Staging on push to `training-rebuild`, production on `main`.
 - **How `main` gets updated must be stated**: N34 says the merge is a fast-forward
   with no conflict risk, but the heavy e2e suite runs only on PRs into `main` and
@@ -639,6 +655,7 @@ Migrate, then deploy. Staging on push to `training-rebuild`, production on `main
   workflow deploys without migrating, and no deploy triggers independently of CI.
 
 ### M1.6 — Every AI dependency named, with its replacement (D4, D6, Q-AI-HOST)
+**Depends on:** M1.1, M0.6, B-PATHS (the rate-limit counter lives in `src/timetrack/`), Q-AI-HOST.
 Two classes, not one. **Ollama** is hostable (see N37). **The Claude CLI is not** —
 N30 and N31. Executing D4 means: 3 files move to the Anthropic API, the budget check
 that path skips is re-enabled, and the `execSync` call stops blocking the event loop
@@ -659,7 +676,11 @@ always-on container.
 
 ## M2 — Schema and data
 
-**Depends on:** B1, M1.1, and **M3's library choice and id decision (D3)** — because
+**Depends on:** B1, M1.1. **Not M3, despite needing M3's library choice** — that looks
+like a cycle and is not one, because **D1 settles the library and D3 settles the id type,
+so the dependency is already discharged in DECISIONS.** M2 runs first and M3 consumes
+its schema. Stated because an unexplained ring is what made the old plan's deadlock
+invisible — because
 the login library owns the users table, so building one here first means repointing
 N12 twice.
 
@@ -841,6 +862,48 @@ the test cannot pass.**
   including field reports, approaches, sessions, reviews and purchases. **An account
   deletion that iterated the migration list would have been proved complete while
   leaving the most personal data behind.**
+
+---
+
+# ALREADY CHECKED — do not spend a round re-deriving these
+
+Round 4 verified each of these against the code and the rewrite dropped the section,
+so every later reviewer has been re-deriving them. They are here to be trusted.
+
+- **M3's cookie→token switch does not by itself break the 79 e2e specs.**
+  `tests/e2e/auth.setup.ts` signs in through the real form and saves
+  `page.context().storageState()`, which captures cookies **and** localStorage. And
+  `grep -rln supabase tests/e2e/` returns nothing — the browser suite never touches it.
+- **38 of N12's 40 user links are `ON DELETE CASCADE`**, and the single `SET NULL`
+  (`error_reports.user_id`) holds nothing a person typed, so it is de-identified by
+  design. **There is no orphan class — this matters to M8.**
+- **No file uploads, no Supabase Storage, no Realtime, no `pg_cron` anywhere.** That
+  removes an entire category migrations normally trip over. Audio is transcribed in the
+  browser, so nothing is stored.
+- **Dropping the policies has no hidden tail of test rewrites** — `asUser` appears in 3
+  integration files, 13 times.
+- **Only 3 `SECURITY DEFINER` functions exist** and all three are already named
+  (`handle_new_user` → M3, `claim_beta_slot` → M4, `prune_error_reports` → M1b.2).
+- **No Vercel-only runtime config beyond the build id** — zero `maxDuration`, zero
+  `runtime` exports, one `force-dynamic`, and `images.unoptimized: true` is already set,
+  so the usual self-hosted `sharp`/glibc memory trap does not apply.
+- **`--webpack` is a real supported flag** in the installed Next 16.3.5.
+- **The Drizzle query port is mechanical** — 7 embedded selects, 3 `!inner`, 8 `.or()`,
+  16 `.upsert()`, no full-text search — and the deliberate-refusal protocol survives,
+  because `databaseRefusal` needs only `{ code, message }`, which `pg` provides.
+- **The static filter test cannot be M4's primary gate**, and this is why, so nobody
+  re-proposes it: `getFieldReport(reportId)` checks ownership in the route rather than
+  the repo, which is legitimate; and `embeddingsRepo`/`embeddingsTestRepo` have no user
+  column at all because they hold shared corpus data. Kept as a **secondary** signal.
+- **Two more append-only triggers** beyond the workout one M4 names:
+  `life_answers_no_update` and `life_chapters_no_update`, both added after an update
+  destroyed a real answer someone had written ninety seconds earlier. Plus **17
+  `*_touch` triggers created inside a loop, invisible to a static read** — the same
+  blind spot as N11's policy count.
+- **Four `tests/unit/db/` tests mock the client**, so they pass against a broken
+  rewrite. N18 covers the coverage claim; this is the separate hazard.
+- **Vercel deploys through its GitHub integration** — no `vercel.json`, no `.vercel/`,
+  so B5's switch is in Vercel's own settings, not in this repo.
 
 ---
 
