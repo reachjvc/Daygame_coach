@@ -35,7 +35,7 @@ import {
 import { useLoad } from "@/src/shared/useLoad"
 import { describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/healthService"
 import { describeLoggedSet, fromKg } from "../programsService"
-import { dateKeyLabel } from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, dateKeyLabel } from "@/src/shared/dateUtils"
 import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
 import { workoutReceipt } from "@/src/shared/trainingRoutes"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
@@ -311,7 +311,7 @@ export function HistoryTab({
                     >
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm">
-                          {new Date(log.logged_at).toLocaleDateString([], {
+                          {new Date(log.logged_at).toLocaleDateString(DISPLAY_LOCALE, {
                             ...DAY,
                             timeZone: zone,
                           })}

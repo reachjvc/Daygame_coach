@@ -17,6 +17,41 @@
  */
 
 /**
+ * THE CALENDAR CONVENTIONS EVERY SCREEN PRINTS IN, PINNED.
+ *
+ * `toLocaleDateString(undefined, …)` asks the RUNTIME which locale to use. On
+ * the server that is the host's — en-US on Vercel — and in the browser it is
+ * the person's. Those disagree for everybody outside the United States, and a
+ * server-rendered date that disagrees with the client's is a hydration
+ * failure: React throws the subtree away and rebuilds it.
+ *
+ * Measured on 2026-09-27 on `/programs`, one account with one finished
+ * program, same page four times:
+ *
+ *     en-US   clean            "started Sep 27"
+ *     en-GB   HYDRATION FAILED "started 27 Sept"
+ *     da-DK   HYDRATION FAILED "started 27. sep."
+ *     de-DE   HYDRATION FAILED "started 27. Sept."
+ *
+ * React named the node — `<PastPrograms> → <ProgramRow>`, `+ 27 Sept` /
+ * `- Sep 27` — and said the tree would be regenerated on the client, which is
+ * exactly the cost the server-resolution rewrite exists to avoid. The account
+ * this app was built for is in Europe/Copenhagen, so the owner's own training
+ * page was rebuilding itself on every load.
+ *
+ * WHY A CONSTANT AND NOT `getUserTimezone`. The zone is already passed in and
+ * already correct; the locale is the separate question of how to SPELL the
+ * result, and the answer has to be the same on both sides of the wire. It is
+ * en-GB because the app is English and `src/goals/` already pins en-GB in
+ * three places — one spelling for the codebase rather than two.
+ *
+ * The two visible consequences, stated rather than discovered: dates read
+ * "27 Sep" rather than "Sep 27", and times are 24-hour. Both are one edit
+ * here away from anything else.
+ */
+export const DISPLAY_LOCALE = "en-GB"
+
+/**
  * Get today's date string (YYYY-MM-DD) in the given IANA timezone.
  * Falls back to UTC if timezone is null or invalid.
  */
@@ -458,7 +493,13 @@ export function daysBetweenDateKeys(from: string, to: string): number {
 export function dateKeyLabel(
   key: string,
   opts: Intl.DateTimeFormatOptions,
-  locale?: string
+  /**
+   * Defaults to `DISPLAY_LOCALE`, not to the runtime's. An optional locale
+   * that falls back to `undefined` is the hydration bug with a parameter in
+   * front of it: every caller that omits it gets the server's spelling on the
+   * server and the browser's in the browser.
+   */
+  locale: string = DISPLAY_LOCALE
 ): string {
   const [year, month, day] = key.split("-").map(Number)
   if (!year || !month) return key

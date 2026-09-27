@@ -542,6 +542,74 @@ describe('Architecture Compliance', () => {
       ).toEqual([])
     })
 
+    /**
+     * HOW A DATE IS SPELLED MUST NOT DEPEND ON WHO IS ASKING.
+     *
+     * `toLocaleDateString(undefined, …)` and `toLocaleDateString([], …)` ask
+     * the RUNTIME for the locale. On the server that is the host's — en-US on
+     * Vercel — and in the browser it is the person's. A server-rendered date
+     * that disagrees with the client's is a hydration failure, and React
+     * throws the whole subtree away.
+     *
+     * Measured on `/programs` with one finished program, 2026-09-27: en-US
+     * clean, en-GB / da-DK / de-DE all HYDRATION FAILED, React naming
+     * `<PastPrograms> → <ProgramRow>` and `+ 27 Sept` / `- Sep 27`. The
+     * account this app exists for is in Europe/Copenhagen, so the owner's own
+     * training page rebuilt itself on every load. `DISPLAY_LOCALE` is the one
+     * answer; the zone is a separate question and is already passed in.
+     *
+     * The allowlist is the slices not yet converted. It may SHRINK.
+     */
+    const RUNTIME_LOCALE_ALLOWED = new Set([
+      'app/dashboard/tracking/history/page.tsx',
+      'src/goals/components/DailyActionView.tsx',
+      'src/goals/components/PeriodRollupRow.tsx',
+      'src/tracking/components/DailyReviewPage.tsx',
+      'src/tracking/components/FieldReportPage.tsx',
+      'src/tracking/components/SessionDetailPage.tsx',
+      'src/tracking/components/SessionTrackerPage.tsx',
+      'src/tracking/components/WeeklyReviewPage.tsx',
+      'src/tracking/components/dashboard/RecentFieldReportsCard.tsx',
+      'src/tracking/components/dashboard/RecentSessionsCard.tsx',
+      'src/tracking/components/dashboard/WeeklyReviewsCard.tsx',
+    ])
+
+    /** One scan, so enforcement and only-shrinks cannot disagree. */
+    function spellingADateAtRuntime(): Set<string> {
+      const found = new Set<string>()
+      for (const file of datedFiles()) {
+        const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+        // COMMENTS BLANKED. `dateUtils.ts` and `TrainingCard.tsx` both explain
+        // this exact rule in prose, and a guard that fires on its own
+        // explanation is a fault this file has had twice already.
+        const src = withoutCommentsOrStrings(fs.readFileSync(file, 'utf-8'), rel)
+        if (/toLocale(Date|Time)?String\(\s*(undefined|\[\])\s*,/.test(src)) found.add(rel)
+      }
+      return found
+    }
+
+    test('no date is spelled in whichever locale the runtime happens to have', () => {
+      const offenders = [...spellingADateAtRuntime()]
+        .filter((f) => !RUNTIME_LOCALE_ALLOWED.has(f))
+        .sort()
+      expect(
+        offenders,
+        'Pass DISPLAY_LOCALE. An unpinned locale is spelled one way on the\n' +
+          'server and another in the browser, which is a hydration failure for\n' +
+          'every person outside the host\'s locale:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('the runtime-locale allowlist only shrinks', () => {
+      const still = spellingADateAtRuntime()
+      const cleaned = [...RUNTIME_LOCALE_ALLOWED].filter((f) => !still.has(f)).sort()
+      expect(
+        cleaned,
+        `These are fixed or gone — remove them from RUNTIME_LOCALE_ALLOWED:\n${cleaned.join('\n')}`,
+      ).toEqual([])
+    })
+
     test('no NEW hand-rolled week boundary', () => {
       const offenders: string[] = []
       const stillHandRolling = new Set<string>()

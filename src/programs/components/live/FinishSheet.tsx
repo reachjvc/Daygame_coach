@@ -19,7 +19,7 @@ import { useState } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { instantToWallClock, wallClockToInstant } from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, instantToWallClock, wallClockToInstant } from "@/src/shared/dateUtils"
 import {
   distanceUnitFor,
   toKmFromDisplay,
@@ -334,13 +334,13 @@ export function FinishSheet({
         <p className="text-sm">
           <span className="tabular-nums">
             {started
-              ? started.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: timezone })
+              ? started.toLocaleTimeString(DISPLAY_LOCALE, { hour: "2-digit", minute: "2-digit", timeZone: timezone })
               : "—"}
           </span>
           <span className="text-muted-foreground"> → </span>
           <span className="tabular-nums">
             {endedInstant
-              ? endedInstant.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: timezone })
+              ? endedInstant.toLocaleTimeString(DISPLAY_LOCALE, { hour: "2-digit", minute: "2-digit", timeZone: timezone })
               : "—"}
           </span>
           {endedInstant && <span className="ml-2 text-muted-foreground">{minutes} min</span>}
@@ -450,8 +450,8 @@ export function FinishSheet({
           {/* The account's zone, like every other time on this sheet. Read in
               the device's, this told a traveller their session started on a
               day they were not even training. */}
-          This started {started?.toLocaleDateString([], { timeZone: timezone })} at{" "}
-          {started?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: timezone })}.
+          This started {started?.toLocaleDateString(DISPLAY_LOCALE, { timeZone: timezone })} at{" "}
+          {started?.toLocaleTimeString(DISPLAY_LOCALE, { hour: "2-digit", minute: "2-digit", timeZone: timezone })}.
           Check when it really ended before saving.
         </p>
       )}

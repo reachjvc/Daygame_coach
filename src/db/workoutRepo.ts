@@ -36,7 +36,7 @@ import { CouldNotTell, databaseRefusal, ProgramRefused, WorkoutGone } from "@/sr
 import { isOpenWorkout } from "./workoutLifecycle"
 import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
-import { toDateISO, toZonedDate } from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { detectPersonalRecords, firstTimeLifts, workingVolumeKg } from "@/src/health/healthService"
 import {
   applyLog,
@@ -1029,7 +1029,7 @@ export async function finishWorkout(
     .filter((at): at is string => Boolean(at))
     .sort()[0]
   if (input.startedAt && firstSet && new Date(input.startedAt).getTime() > new Date(firstSet).getTime()) {
-    const at = new Date(firstSet).toLocaleTimeString([], {
+    const at = new Date(firstSet).toLocaleTimeString(DISPLAY_LOCALE, {
       hour: "2-digit",
       minute: "2-digit",
       timeZone: await getUserTimezone(userId),

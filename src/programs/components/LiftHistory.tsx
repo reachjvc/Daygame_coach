@@ -14,6 +14,7 @@
  * second chart.
  */
 
+import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { Button } from "@/components/ui/button"
 import { formatLoad, fromKg } from "../programsService"
 import { UNIT_CONFIG } from "../config"
@@ -50,7 +51,7 @@ export function LiftHistory({
   /** Stored kilograms, shown in the lifter's unit, rounded the way this app rounds. */
   const show = (kg: number) => formatLoad(fromKg(kg, unit))
   const day = (iso: string) =>
-    new Date(iso).toLocaleDateString(undefined, { timeZone: timezone })
+    new Date(iso).toLocaleDateString(DISPLAY_LOCALE, { timeZone: timezone })
 
   /**
    * NOTHING TO SAY ABOUT PROGRESSION until a lift has been done twice — but

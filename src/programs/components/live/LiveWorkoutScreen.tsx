@@ -18,6 +18,7 @@
  * in the middle of A2 is a timer people learn to ignore.
  */
 
+import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -1085,7 +1086,7 @@ function Elapsed({
             {now === null
               ? ""
               : past
-                ? `since ${new Date(startedAt).toLocaleString([], {
+                ? `since ${new Date(startedAt).toLocaleString(DISPLAY_LOCALE, {
                     weekday: "short",
                     day: "numeric",
                     month: "short",

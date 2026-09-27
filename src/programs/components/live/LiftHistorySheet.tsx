@@ -20,6 +20,7 @@
  * training.
  */
 
+import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { useLoad } from "@/src/shared/useLoad"
 import { collapseSets } from "@/src/health/healthService"
 import { BottomSheet } from "@/components/BottomSheet"
@@ -44,7 +45,7 @@ interface Props {
 
 /** "Fri 12 Sep", in the account's own calendar. */
 function dayIn(iso: string, timezone: string): string {
-  return new Date(iso).toLocaleDateString([], {
+  return new Date(iso).toLocaleDateString(DISPLAY_LOCALE, {
     weekday: "short",
     day: "numeric",
     month: "short",

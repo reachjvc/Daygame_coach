@@ -19,7 +19,7 @@ import { summaryFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { WorkoutReceipt } from "@/src/programs/components/WorkoutReceipt"
 import { receiptHeading } from "@/src/programs/programsService"
-import { getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { WorkoutActions } from "@/src/programs/components/WorkoutActions"
 
 export default async function WorkoutReceiptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,7 +70,7 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
           setCount={summary.sets}
           day={
             summary.startedAt
-              ? new Date(summary.startedAt).toLocaleDateString([], {
+              ? new Date(summary.startedAt).toLocaleDateString(DISPLAY_LOCALE, {
                   weekday: "short",
                   day: "numeric",
                   month: "short",

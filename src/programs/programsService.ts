@@ -84,13 +84,7 @@ import { clampCursorDay, effectiveProgram, scheduleDays, scheduleDaysOrNone } fr
  * nineteen existing call sites did not all have to move in one commit.
  */
 import { toKg, fromKg, MAX_WEIGHT_KG } from "@/src/shared/weight"
-import {
-  dateKeyLabel,
-  daysBetweenDateKeys,
-  getTodayInTimezone,
-  isoWeekdayInTimezone,
-  periodStartInTimezone,
-} from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, dateKeyLabel, daysBetweenDateKeys, getTodayInTimezone, isoWeekdayInTimezone, periodStartInTimezone } from "@/src/shared/dateUtils"
 export { toKg, fromKg, MAX_WEIGHT_KG }
 
 /**
@@ -245,7 +239,7 @@ export function weekSoFar(
  * THE WEEKDAY AN INSTANT FELL ON, where the person is.
  *
  * "Finish or discard Monday's workout" has to say the day the lifter thinks
- * it was. `toLocaleDateString(undefined, { weekday: "long" })` reads the
+ * it was. `toLocaleDateString(DISPLAY_LOCALE, { weekday: "long" })` reads the
  * PHONE's zone, so a workout started 23:30 Monday in Copenhagen was offered
  * as Tuesday's to a phone still on UTC.
  *
@@ -319,7 +313,7 @@ export function formatDateOnly(iso: string, style: "weekday" | "short"): string 
   // Noon UTC: far enough from either midnight that no formatter's own zone
   // handling can move the date, which is the bug this function exists to stop.
   const at = new Date(Date.UTC(y, m - 1, d, 12))
-  return at.toLocaleDateString(undefined, {
+  return at.toLocaleDateString(DISPLAY_LOCALE, {
     timeZone: "UTC",
     ...(style === "weekday" ? { weekday: "short" } : { day: "numeric", month: "short" }),
   })
