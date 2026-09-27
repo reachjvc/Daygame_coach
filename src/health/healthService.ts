@@ -487,7 +487,17 @@ export function liftsWithHistory(
 export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): string {
   // `set_kind` rather than a warm-up flag: the file can now say whether a set
   // was an all-out top set or a back-off, which "warm_up: false" could not.
-  const header = ["date", "session_type", "duration_min", "exercise", "set", "reps", "weight_kg", "set_kind"]
+  /**
+   * `distance_km` IS IN IT NOW, and it was the one number a cardio session
+   * has. A run stored and shown everywhere as 3.2 km exported as
+   * `2026-09-27,running,5,,,,,` — the row was there, the distance was not,
+   * and there was no column it could have gone in. The branch below has a
+   * comment saying "a cardio session has no sets and still belongs in the
+   * file", so cardio WAS thought about; the export just had nowhere to put
+   * the thing that makes it cardio. Progress bills this file as "every
+   * program and every loose workout together".
+   */
+  const header = ["date", "session_type", "duration_min", "distance_km", "exercise", "set", "reps", "weight_kg", "set_kind"]
   const cell = (v: string | number | boolean | null): string => {
     if (v === null) return ""
     const str = String(v)
@@ -502,12 +512,12 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): str
     // A cardio session has no sets and still belongs in the file — leaving it
     // out would make the export disagree with the session count on screen.
     if (!log.sets || log.sets.length === 0) {
-      rows.push([date, log.session_type, log.duration_min, "", "", "", "", ""].map(cell).join(","))
+      rows.push([date, log.session_type, log.duration_min, log.distance_km ?? null, "", "", "", "", ""].map(cell).join(","))
       continue
     }
     for (const s of log.sets) {
       rows.push(
-        [date, log.session_type, log.duration_min, s.exercise, s.set_number, s.reps, s.weight_kg, s.set_kind]
+        [date, log.session_type, log.duration_min, log.distance_km ?? null, s.exercise, s.set_number, s.reps, s.weight_kg, s.set_kind]
           .map(cell)
           .join(",")
       )

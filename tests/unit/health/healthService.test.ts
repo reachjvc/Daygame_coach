@@ -263,7 +263,36 @@ describe("workoutsToCsv", () => {
   })
 
   it("has a header even with nothing to export", () => {
-    expect(workoutsToCsv([], TZ).split("\n")).toEqual(["date,session_type,duration_min,exercise,set,reps,weight_kg,set_kind"])
+    expect(workoutsToCsv([], TZ).split("\n")).toEqual([
+      "date,session_type,duration_min,distance_km,exercise,set,reps,weight_kg,set_kind",
+    ])
+  })
+
+  it("carries the distance, which is the only number a cardio session has", () => {
+    /**
+     * A run stored and shown everywhere as 3.2 km exported as
+     * `2026-09-27,running,5,,,,,` — the row was there and the distance was
+     * not, because there was no column it could have gone in. The no-sets
+     * branch already had a comment saying cardio belongs in the file; the
+     * file just had nowhere to put the thing that makes it cardio.
+     */
+    const run = {
+      ...workout("2026-03-01T10:00:00", []),
+      session_type: "running" as const,
+      distance_km: 3.2,
+    }
+    const lines = workoutsToCsv([run], TZ).split("\n")
+    const columns = lines[0].split(",")
+    const values = lines[1].split(",")
+    expect(values[columns.indexOf("distance_km")]).toBe("3.2")
+  })
+
+  it("leaves it empty rather than zero when there is no distance", () => {
+    // 0 km is a claim about a session; blank is the absence of one.
+    const lift = workout("2026-03-01T10:00:00", [set("Squat", 100, 5)])
+    const lines = workoutsToCsv([lift], TZ).split("\n")
+    const columns = lines[0].split(",")
+    expect(lines[1].split(",")[columns.indexOf("distance_km")]).toBe("")
   })
 })
 

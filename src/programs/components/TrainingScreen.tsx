@@ -28,7 +28,7 @@ import { TRAINING_COLUMN } from "./trainingStyles"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getProgram } from "../data/catalog"
 import { effectiveProgram, scheduleDaysOrNone } from "../customize"
-import { isWeekdayAnchored, unitForDisplay } from "../programsService"
+import { accountWideUnit, isWeekdayAnchored, unitForDisplay } from "../programsService"
 import type {
   EnrollmentDetail,
   LiveWorkout,
@@ -98,8 +98,17 @@ export function TrainingScreen({
    * kilograms. Same sets, different numbers, no warning. `unitForDisplay` asks
    * the enrollment first, then the account, and says `null` when neither knows
    * rather than answering kilograms on their behalf.
+   *
+   * AND IT ASKED `initialActive[0]`. Enrolments only deactivate within a
+   * discipline, so two are live routinely — and if they disagreed about kg
+   * and lb, ARRAY POSITION decided what History and Progress measured a year
+   * of training in. `accountWideUnit` takes the programs' answer when they
+   * agree and the account's when they do not.
    */
-  const unit: UnitSystem = unitForDisplay(running?.unitSystem, accountUnit) ?? "kg"
+  const unit: UnitSystem = accountWideUnit(
+    initialActive.map((e) => e.unitSystem),
+    accountUnit
+  ) ?? "kg"
   /**
    * Training days a week the running program asks for — ONLY when it says so.
    *

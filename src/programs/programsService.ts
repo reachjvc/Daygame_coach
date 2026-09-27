@@ -108,6 +108,31 @@ export function unitForDisplay(
 }
 
 /**
+ * THE UNIT FOR SCREENS THAT ARE ABOUT THE ACCOUNT, NOT ABOUT ONE PROGRAM.
+ *
+ * History, Progress and the receipt show every workout there has ever been,
+ * and `TrainingScreen` picked their unit with `initialActive[0]` — the FIRST
+ * active enrolment. Enrolments only deactivate within a discipline, so a
+ * strength program and a calisthenics one are both live routinely, and if
+ * they disagree about kg and lb then array position decided what a year of
+ * training was measured in.
+ *
+ * When every running program agrees, that is the answer and the existing
+ * behaviour is unchanged — a lifter with one program in pounds still sees
+ * pounds everywhere, which is what `unitForDisplay` was written for. When
+ * they disagree there is no program-level answer, so the ACCOUNT's own
+ * setting decides, which is the only thing on the screen that is about the
+ * whole account.
+ */
+export function accountWideUnit(
+  enrollmentUnits: readonly (UnitSystem | null | undefined)[],
+  accountUnit: UnitSystem | null | undefined
+): UnitSystem | null {
+  const stated = [...new Set(enrollmentUnits.filter((u): u is UnitSystem => Boolean(u)))]
+  return unitForDisplay(stated.length === 1 ? stated[0] : null, accountUnit)
+}
+
+/**
  * Round to a weight that can actually be loaded.
  *
  * BARBELL (the default, and what every catalog program gets): floored at the
