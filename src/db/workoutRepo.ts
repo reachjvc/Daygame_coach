@@ -1551,7 +1551,16 @@ export async function reviseWorkout(
     .eq("user_id", userId)
     .maybeSingle()
   if (error) throw readRefused("that workout", error)
-  if (!log) throw new Error("That workout no longer exists.")
+  /**
+   * DELETED WHILE THE EDITOR WAS OPEN — a refusal, not a crash.
+   *
+   * A bare `Error` is a 500 through `statusFor`, so the one race this whole
+   * area exists for answered "something went wrong" on the correction screen
+   * while the identical race on a set write answered 409 `workout_gone` and
+   * the live screen acted on it. One cause, two answers, and only this one
+   * read as a bug in the app.
+   */
+  if (!log) throw new WorkoutGone("discarded")
   if (isOpenWorkout(log as { started_at: string | null; ended_at: string | null })) {
     throw new ProgramRefused("That workout is still open — finish it before correcting it.")
   }
@@ -1575,7 +1584,14 @@ export async function reviseWorkout(
    *
    * Compared as a SET, because swapping one set for another keeps the count.
    */
-  if (basedOn && basedOn.length > 0) {
+  /**
+   * `!== undefined`, NOT `length > 0`. An editor that loaded a workout with no
+   * sets in it sends `[]` — a read like any other — so testing for a non-empty
+   * list skipped the guard for precisely the workout where sets appearing from
+   * another device are invisible. Only a client that sends nothing at all is
+   * exempt, and `basedOn` is optional in the schema for exactly that.
+   */
+  if (basedOn !== undefined) {
     // Paged, like every other read of this table: a workout with more than a
     // thousand sets would otherwise come back short and every save would be
     // refused as "changed on another device".

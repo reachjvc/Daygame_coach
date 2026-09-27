@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { reviseWorkout } from "@/src/db/workoutRepo"
 import { ReviseWorkoutSchema } from "@/src/programs/schemas"
-import { statusFor } from "@/src/programs/errors"
+import { workoutErrorResponse } from "@/src/programs/errors"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -19,8 +19,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json(await reviseWorkout(auth.userId, (await params).id, parsed.data.sets, parsed.data.basedOn))
   } catch (e) {
     console.error("revise workout:", e)
-    // 409 when the program moved on while this was being computed — nothing is
-    // broken and reloading makes it work. Everything else is ours.
-    return err((e as Error).message, statusFor(e))
+    /**
+     * ONE CALL FOR THE BODY AND THE STATUS.
+     *
+     * This asked `statusFor` for the number and wrote its own body, which is
+     * the split `errors.ts` says is what lets the two drift — and it had: four
+     * of the five workout write routes answer through `workoutErrorResponse`
+     * and send `code: "workout_gone"`, and this one sent no code at all. So a
+     * workout deleted on another device came back here as a bare 500 while the
+     * same race on a set came back as a 409 the screen could act on.
+     *
+     * 500 is kept as the fallback: a correction that is not a refusal really
+     * is ours, unlike the sets routes, where it means a set the schema
+     * would not take.
+     */
+    const answer = workoutErrorResponse(e, 500)
+    return NextResponse.json(answer.body, { status: answer.status })
   }
 }
