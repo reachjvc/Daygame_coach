@@ -358,33 +358,53 @@ export function useTimetrack() {
       if (action === "keep") return
 
       const nowIso = new Date().toISOString()
-      setState((current) => {
-        const entry = current.entries.find((e) => e.id === prompt.entryId)
-        if (!entry) return current
-        // Trim the idle tail off the entry, then either keep tracking or stop
-        const trimmed = updateEntry(current, entry.id, { stop: prompt.idleSinceIso }, nowIso).state
-        if (action === "discard_and_stop") return trimmed
-        const restarted = startTimer(
-          trimmed,
-          {
-            description: entry.description,
-            projectId: entry.projectId,
-            taskId: entry.taskId,
-            tagIds: entry.tagIds,
-            billable: entry.billable,
-          },
-          nowIso,
-        )
-        return restarted.state
-      })
+      const entry = state?.entries.find((e) => e.id === prompt.entryId)
+      if (!state || !entry) return
+
+      /**
+       * THE CONFIRMATION USED TO BE WRITTEN BEFORE ANYONE CHECKED.
+       *
+       * This took `.state` from the trim and then toasted "Dropped 25m and
+       * stopped the timer" whether or not the trim happened. A locked date or a
+       * required field is enough to refuse it, and then the message was simply
+       * untrue — the worst shape a message can have, because the one thing the
+       * user now believes is the thing that did not occur.
+       */
+      const trimmed = updateEntry(state, entry.id, { stop: prompt.idleSinceIso }, nowIso)
+      if (trimmed.violations.length > 0) {
+        pushToast(trimmed.violations[0].message, "error")
+        return
+      }
+
       const span = formatIdleSpan(prompt.idleSeconds)
-      pushToast(
-        action === "discard"
-          ? `Dropped ${span} and started a fresh entry`
-          : `Dropped ${span} and stopped the timer`,
+      if (action === "discard_and_stop") {
+        setState(() => trimmed.state)
+        pushToast(`Dropped ${span} and stopped the timer`)
+        return
+      }
+
+      const restarted = startTimer(
+        trimmed.state,
+        {
+          description: entry.description,
+          projectId: entry.projectId,
+          taskId: entry.taskId,
+          tagIds: entry.tagIds,
+          billable: entry.billable,
+        },
+        nowIso,
       )
+      if (restarted.violations.length > 0) {
+        // the trim did happen; only the fresh entry was refused, and the
+        // message says exactly that rather than claiming both or neither
+        setState(() => trimmed.state)
+        pushToast(`Dropped ${span}, but could not start a fresh entry: ${restarted.violations[0].message}`, "error")
+        return
+      }
+      setState(() => restarted.state)
+      pushToast(`Dropped ${span} and started a fresh entry`)
     },
-    [idlePrompt, pushToast, setState],
+    [idlePrompt, pushToast, setState, state],
   )
 
   // --- pomodoro -----------------------------------------------------------
@@ -424,9 +444,17 @@ export function useTimetrack() {
       setPomodoroPhase("idle")
       setPomodoroEndsAt(null)
       if (state.pomodoro.autoContinue && pomodoroLastEntry.current !== null) {
-        const lastId = pomodoroLastEntry.current
-        setState((current) => continueEntry(current, lastId, nowIso).state)
-        if (state.pomodoro.notify) notify("Break over", "Continued your last time entry.")
+        // Same failure as the idle prompt one screen away: this used to take
+        // `.state` and then announce "Continued your last time entry" whether
+        // or not it had. The break is over either way; what did not happen is
+        // not announced.
+        const result = continueEntry(state, pomodoroLastEntry.current, nowIso)
+        if (result.violations.length > 0) {
+          if (state.pomodoro.notify) notify("Break over", `Could not continue: ${result.violations[0].message}`)
+        } else {
+          setState(() => result.state)
+          if (state.pomodoro.notify) notify("Break over", "Continued your last time entry.")
+        }
       } else if (state.pomodoro.notify) {
         notify("Break over", "Ready when you are.")
       }

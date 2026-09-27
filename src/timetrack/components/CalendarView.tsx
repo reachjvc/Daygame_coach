@@ -173,19 +173,28 @@ export function CalendarView({
       const newStart = Math.max(0, drag.currentMinutes - (drag.grabOffset ?? 0))
       if (newStart !== drag.startMinutes) {
         suppressClick.current = true
-        setState((current) =>
-          updateEntry(
-            current,
-            drag.entryId!,
-            { start: isoAtMinutes(day, newStart), stop: isoAtMinutes(day, newStart + drag.durationMinutes!) },
-            nowIso(),
-          ).state,
+        /**
+         * Computed here rather than inside the updater so a refusal has
+         * somewhere to be said. Drag-to-CREATE above has always shown its
+         * message; move and resize took `.state` and dropped theirs, so in a
+         * workspace that requires a project — or with a locked date — the block
+         * slid under the cursor, snapped back, and the app said nothing.
+         */
+        const result = updateEntry(
+          state,
+          drag.entryId,
+          { start: isoAtMinutes(day, newStart), stop: isoAtMinutes(day, newStart + drag.durationMinutes) },
+          nowIso(),
         )
+        if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
+        else setState(() => result.state)
       }
     } else if (mode === "resize" && drag.entryId) {
       const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)
       suppressClick.current = true
-      setState((current) => updateEntry(current, drag.entryId!, { stop: isoAtMinutes(day, end) }, nowIso()).state)
+      const result = updateEntry(state, drag.entryId, { stop: isoAtMinutes(day, end) }, nowIso())
+      if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
+      else setState(() => result.state)
     }
     setDrag(null)
   }

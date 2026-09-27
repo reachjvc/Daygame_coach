@@ -589,14 +589,21 @@ function EntryFields({
           compact
           fill
           onChange={(projectId, taskId) => patch({ projectId, taskId })}
-          onCreateProject={(name) =>
-            // create + assign in a single update: two separate setState calls both
-            // computed from this render's state would overwrite each other
-            setState((current) => {
-              const created = createProject(current, { name }, nowIso())
-              return updateEntry(created.state, entry.id, { projectId: created.id, taskId: null }, nowIso()).state
-            })
-          }
+          onCreateProject={(name) => {
+            // create + assign in ONE setState: two calls computed from this
+            // render's state would overwrite each other. Computed outside the
+            // updater so a refusal has somewhere to be said — the same shape
+            // `patch` above uses.
+            const created = createProject(state, { name }, nowIso())
+            const result = updateEntry(created.state, entry.id, { projectId: created.id, taskId: null }, nowIso())
+            if (result.violations.length > 0) {
+              // the project stays made; only the assignment was refused
+              setState(() => created.state)
+              pushToast(result.violations[0].message, "error")
+              return
+            }
+            setState(() => result.state)
+          }}
         />
 
         <TagPicker
@@ -605,14 +612,19 @@ function EntryFields({
           align="right"
           fill
           onChange={(tagIds) => patch({ tagIds })}
-          onCreateTag={(name) =>
-            setState((current) => {
-              const created = createTag(current, name, nowIso())
-              const target = current.entries.find((e) => e.id === entry.id)
-              const tagIds = [...new Set([...(target?.tagIds ?? []), created.id])]
-              return updateEntry(created.state, entry.id, { tagIds }, nowIso()).state
-            })
-          }
+          onCreateTag={(name) => {
+            const created = createTag(state, name, nowIso())
+            const target = state.entries.find((e) => e.id === entry.id)
+            const tagIds = [...new Set([...(target?.tagIds ?? []), created.id])]
+            const result = updateEntry(created.state, entry.id, { tagIds }, nowIso())
+            if (result.violations.length > 0) {
+              // the tag stays made; only the assignment was refused
+              setState(() => created.state)
+              pushToast(result.violations[0].message, "error")
+              return
+            }
+            setState(() => result.state)
+          }}
         />
 
         <BillableToggle billable={entry.billable} onChange={(billable) => patch({ billable })} disabled={!editable} />
@@ -975,19 +987,10 @@ export function EntryDetailModalBody({
           state={state}
           projectId={entry.projectId}
           taskId={entry.taskId}
-          onChange={(projectId, taskId) =>
-            setState((current) => updateEntry(current, entry.id, { projectId, taskId }, nowIso()).state)
-          }
+          onChange={(projectId, taskId) => commit({ projectId, taskId })}
         />
-        <TagPicker
-          state={state}
-          tagIds={entry.tagIds}
-          onChange={(tagIds) => setState((current) => updateEntry(current, entry.id, { tagIds }, nowIso()).state)}
-        />
-        <BillableToggle
-          billable={entry.billable}
-          onChange={(billable) => setState((current) => updateEntry(current, entry.id, { billable }, nowIso()).state)}
-        />
+        <TagPicker state={state} tagIds={entry.tagIds} onChange={(tagIds) => commit({ tagIds })} />
+        <BillableToggle billable={entry.billable} onChange={(billable) => commit({ billable })} />
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="space-y-1 text-xs text-muted-foreground">
@@ -1004,7 +1007,7 @@ export function EntryDetailModalBody({
         <input
           type="checkbox"
           checked={entry.duronly}
-          onChange={(event) => setState((current) => updateEntry(current, entry.id, { duronly: event.target.checked }, nowIso()).state)}
+          onChange={(event) => commit({ duronly: event.target.checked })}
         />
         Duration only (hide start and end times)
       </label>
@@ -1020,19 +1023,11 @@ export function EntryDetailModalBody({
                   key={member.id}
                   type="button"
                   onClick={() =>
-                    setState(
-                      (current) =>
-                        updateEntry(
-                          current,
-                          entry.id,
-                          {
-                            sharedWith: shared
-                              ? entry.sharedWith.filter((id) => id !== member.id)
-                              : [...entry.sharedWith, member.id],
-                          },
-                          nowIso(),
-                        ).state,
-                    )
+                    commit({
+                      sharedWith: shared
+                        ? entry.sharedWith.filter((id) => id !== member.id)
+                        : [...entry.sharedWith, member.id],
+                    })
                   }
                   className={cn(
                     "rounded-full border px-2 py-0.5 text-xs",
