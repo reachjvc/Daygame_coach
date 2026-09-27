@@ -883,3 +883,67 @@ violation a compile error. The behaviour is fixed at all twelve sites and a
 source scan holds the line; the union is a day across ~44 call sites and buys
 the same property with the compiler instead of a test. Worth doing the next time
 this file is open for another reason.
+
+---
+
+# "I HAD TO CLICK STOP TWICE", 2026-09-27
+
+The owner used the tracker and had to press Stop twice. Reproduced on the
+product route, and worse than reported: **a timer stopped and came back running
+with no input at all**, and one started and un-started the same way.
+
+**I caused the visibility of it.** `pull` asks what changed since a cursor and
+the server answers with the rows as it read them; `mergeIncoming` takes the
+server's version of everything not still queued, comparing nothing — no
+timestamps, no versions. So the answer to a question asked before the press put
+the running row back. That race had been dormant because the pull interval was
+starved to roughly no pulls at all. Repairing the interval the day before turned
+a race nobody met into one the owner met within a day.
+
+Four fixes, each with a test that fails without it:
+
+1. **A pull does not overwrite a row this device wrote after the request went
+   out.** A client-clock map, compared only against itself, so there is no skew
+   to get wrong.
+2. **A pull that brings nothing new does not redraw the workspace.** After any
+   upload the next answer contains that very row, so this was swapping every
+   object and rebuilding the list for no change — and a full redraw at the
+   moment of a tap is a tap that lands on a node that no longer exists.
+3. **Two pulls in flight no longer apply in arrival order.** The tab-focus
+   handler, the interval and `online` can all ask; the answer computed first
+   could land last and undo the second. Newest request wins, older answers are
+   dropped unread, and the cursor only moves forward.
+4. **Stopping means nothing is running afterwards.** `stopTimer` stopped exactly
+   one entry — the first match in array order — so with two running, one press
+   stopped one and the button still said Stop. This was the item the previous
+   round flagged and left "on a guess"; it is closed.
+
+And one more found by asking which fetch in the file still had no guard:
+**a failed first contact used to strand the session** — `ready` stops the effect
+running twice, and with `userId` and `cursor` unset neither an upload nor a pull
+can start, so one flaky moment at open meant silence until a reload. It retries
+on the same backoff now, with the same twenty-second deadline.
+
+**What this round should change about how the next one is done.** Both times
+this week, a fix here exposed a defect that had been sitting behind it, and both
+times the fix shipped without a test for the thing that now happened more often.
+The rule that follows: **when a change alters *when* something runs, the test to
+write is for whatever now runs more often** — not for the thing that was
+changed.
+
+**Two traps in the test harness, both of which hid a real bug on the first
+attempt and are now written into the tests that hit them:**
+- fake timers inside `act()` batch the re-renders an interleaved loop is made
+  of, so the retry harness reported four sends where the product made
+  twenty-five;
+- two answers resolved inside one `act()` block commit as a single render, so
+  the second compared itself against a state that had not happened yet and
+  skipped as "no change" — hiding the overlapping-pull bug behind the guard
+  meant to stop needless redraws.
+
+**Verified:** 6,251 unit tests; the gesture repeated at eight points in the race
+stops and stays stopped; the browser guard fails with the defect put back; and a
+walk of the whole loop on the product route — arrive from the app's tab bar,
+start, rename while running, set a project, one press to stop, edit in the sheet
+and leave with Escape, reload — comes back with everything intact, the calendar
+and Reports agreeing at 1:30 and 1h 30m, and nothing running.
