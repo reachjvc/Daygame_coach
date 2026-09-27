@@ -265,8 +265,17 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
   await page.getByTestId("workout-correct").click()
   const editor = page.getByTestId("workout-correction")
   await expect(editor).toBeVisible({ timeout: 20000 })
-  // The warm-up must be here to edit — it used to be deleted by a correction.
-  await expect(editor).toContainText(/warmup/i)
+  /**
+   * The warm-up must be here to edit — it used to be deleted by a correction.
+   *
+   * Asserted on the row's own KIND CONTROL rather than on the editor's text.
+   * The kind was a static "WARMUP" tag and is now a select, so every row's
+   * text contains all five option labels and a text match says nothing about
+   * which row is which. The value of the warm-up row's select is the fact.
+   */
+  await expect(
+    editor.getByLabel(new RegExp(`^Kind of ${seeded.liftName} warmup set 1$`))
+  ).toHaveValue("warmup")
   /**
    * EVERY SET IS HERE TO EDIT. On an account with a year of training the list
    * read came back capped at 1,000 rows, so this workout arrived with its first
