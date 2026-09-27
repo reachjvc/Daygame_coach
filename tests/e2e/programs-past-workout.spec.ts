@@ -415,7 +415,19 @@ test("a day row in the editor reads its whole name at 390px, behind one options 
    */
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: /StrongLifts/i }).first().click()
+  /**
+   * STARTING STRENGTH, NOT STRONGLIFTS — and the reason is this test's own
+   * premise. `reset()` enrols StrongLifts, and since 2026-09-27 the detail
+   * screen refuses to offer Start for a program that is already running
+   * (tapping it used to archive the running enrolment and re-seed the
+   * weights from the level defaults). So opening StrongLifts here shows
+   * "Already running — go to today's session" and there is no Start to
+   * measure against the tab bar.
+   *
+   * The docblock above says "the week can be shaped BEFORE it is started",
+   * which is a program that is NOT running. This is that program.
+   */
+  await page.getByRole("button", { name: /Starting Strength/i }).first().click()
 
   const row = page.locator('[data-testid^="editor-day-"]').first()
   await expect(row).toBeVisible()
@@ -450,6 +462,46 @@ test("a day row in the editor reads its whole name at 390px, behind one options 
     startBox!.y + startBox!.height,
     "Start is underneath the bottom tab bar"
   ).toBeLessThanOrEqual(barBox!.y)
+})
+
+test("the catalogue will not restart the program you are already running", async ({ page }) => {
+  /**
+   * `reset()` leaves StrongLifts running. Browse → StrongLifts → "Start
+   * StrongLifts 5×5" used to archive that enrolment and begin a new one:
+   *
+   *   before  cursor {week:1, cycle:1, dayIndex:1, sessionCount:1}
+   *   after   cursor {week:1, cycle:1, dayIndex:0, sessionCount:0}
+   *
+   * The cursor is the smaller half — `enrollInProgram` re-seeds from the
+   * level's defaults, and `PastPrograms` says of that path that
+   * "re-enrolling from the catalogue would reset it to the level's starting
+   * weights", so a year of progression goes with it. `BuildYourWeek` has
+   * refused this since it was written; the catalogue, which is how most
+   * people start a program, did not.
+   */
+  await page.setViewportSize({ width: 390, height: 844 })
+  const before = await page.evaluate(
+    async () => ((await (await fetch("/api/programs/enrollments")).json()) as { id: string }[])[0].id
+  )
+
+  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+  await page.getByRole("button", { name: /StrongLifts/i }).first().click()
+
+  await expect(
+    page.getByTestId("program-already-running"),
+    "the running program must offer the way IN, not a way to lose it"
+  ).toBeVisible()
+  await expect(page.getByTestId("start-program")).toHaveCount(0)
+
+  // And nothing was archived on the way to finding that out.
+  const after = await page.evaluate(async () => ({
+    active: ((await (await fetch("/api/programs/enrollments")).json()) as { id: string }[]).map(
+      (e) => e.id
+    ),
+    past: ((await (await fetch("/api/programs/enrollments?past=1")).json()) as unknown[]).length,
+  }))
+  expect(after.active).toEqual([before])
+  expect(after.past, "nothing may be archived by opening a page").toBe(0)
 })
 
 test("the bottom bar is on /programs, and the column does not shrink on the way in", async ({
