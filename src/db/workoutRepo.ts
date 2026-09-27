@@ -1348,13 +1348,33 @@ export async function discardWorkout(userId: string, workoutId: string): Promise
 // ---------------------------------------------------------------------------
 
 /**
- * A live set in the shape the history functions read.
+ * A live set in the shape the history functions read — INCLUDING its library
+ * id, because they key on it.
  *
- * `library_id` is null because nothing downstream of here matches on it: both
- * the record check and the first-time check key on the lift's name, the same
- * way the stored history does.
+ * This said the opposite, and was right when it was written: "`library_id` is
+ * null because nothing downstream of here matches on it: both the record check
+ * and the first-time check key on the lift's name." On 2026-09-27 both were
+ * converted to `liftKey` — `library_id ?? name` — to stop the app announcing a
+ * new best below the real one, and THIS adapter was not. So the stored history
+ * keyed on `lib_bench_press` and today's sets keyed on `"bench press"`, and
+ * they never matched:
+ *
+ *   WHAT YOU DID       Bench Press  61 kg × 5
+ *   First time logged: Bench Press          <- on the fifth bench session
+ *
+ * `detectPersonalRecords` hit `if (!prev) continue` for every library lift and
+ * `firstTimeLifts` announced every one, on every workout, frozen into the row
+ * at finish. A lift the library has never heard of kept working, which is what
+ * made it look fine in passing.
+ *
+ * Derived the same way `completeSet` derives the column it writes, so the
+ * adapter produces the shape the database actually holds.
+ *
+ * EXPORTED FOR ITS TEST, deliberately. The regression was in this function and
+ * nowhere else, and a test that re-derives the key the way this does would
+ * pass with the bug back in — which the first attempt at one did.
  */
-function toSetRow(s: LiveWorkoutSet): WorkoutSetRow {
+export function toSetRow(s: LiveWorkoutSet): WorkoutSetRow {
   return {
     id: s.id,
     log_id: "",
@@ -1365,7 +1385,7 @@ function toSetRow(s: LiveWorkoutSet): WorkoutSetRow {
     notes: null,
     exercise_notes: null,
     exercise_id: s.exerciseId,
-    library_id: null,
+    library_id: libraryByName(s.exercise)?.id ?? null,
     set_kind: s.kind,
     prescribed_index: s.prescribedIndex,
     completed_at: s.completedAt,
