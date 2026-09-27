@@ -13,6 +13,7 @@
  * are derived from the stored sets (`entriesFromSets`).
  */
 
+import { getLiveWorkout } from "./workoutRepo"
 import { createServerSupabaseClient } from "./supabase"
 import {
   applyLog,
@@ -729,6 +730,29 @@ export async function updateEnrollmentSchedule(
 ): Promise<{ enrollment: ProgramEnrollment; prescription: SessionPrescription }> {
   const enr = await getEnrollmentById(userId, enrollmentId)
   if (!enr) throw new Error("Enrollment not found")
+  /**
+   * NOT WHILE A WORKOUT IS OPEN ON IT — because the editor promises
+   * otherwise. Its own line, directly under the boxes, reads "Changing a
+   * weight here sets it from your next session on, and clears any misses
+   * against that lift." That is false for a session already running:
+   * `prescriptionForDay` is recomputed from the enrolment on every render of
+   * `/programs/live`, so the open workout's numbers move under the person.
+   *
+   * Driven: Squat prescribed at 60, set 1 ticked at 60, weight changed to 100
+   * from the same screen that showed "Resume · 0 sets in" —
+   *
+   *   1  110×5   60   5  ✓
+   *   2  110×5  100   5
+   *
+   * a 40 kg jump inside one lift, on a program whose rule is +2.5 kg a
+   * SESSION. Refused rather than made silently true, because the honest
+   * answer is the sentence the editor already gives: it applies from the next
+   * session, so there has to be a next session.
+   */
+  const open = await getLiveWorkout(userId)
+  if (open && open.enrollmentId === enrollmentId) {
+    throw new ProgramRefused(OPEN_WORKOUT_REFUSAL)
+  }
   const catalogProgram = requireProgram(enr.program_id)
   if (schedule && !isCustomizable(catalogProgram)) {
     throw new Error(`${catalogProgram.name} is a week-by-week plan and cannot be edited`)

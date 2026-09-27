@@ -964,11 +964,31 @@ export function LiveWorkoutScreen({
 
         <AddLift
           alreadyHere={exercises.map((e) => e.name)}
-          onAdd={(entry) =>
+          onAdd={(entry) => {
             void live.adjust({
               added: [...((live.workout ?? finished)?.adjustments.added ?? []), entry],
+            }).then(() => {
+              /**
+               * ASK THE SERVER AGAIN, or the new lift's PREVIOUS column is
+               * BLANK until something else reloads the page.
+               *
+               * `lastTime` is computed server-side from the lifts present at
+               * render, so a lift added on the day has nothing — and reloading
+               * by hand filled all three rows with "109×5". The live page's
+               * own docblock says the read was lifted out of the enrollment
+               * branch precisely "for a lift added because the rack was taken
+               * … which is exactly when a lifter has least idea what they did
+               * last time", and the column's own comment says a blank "is a
+               * claim ('you have not done this'), and it is the one claim this
+               * column must never make wrongly."
+               *
+               * Worst on "Start a workout now", where EVERY lift is added on
+               * the day, so the whole session showed a blank column over a
+               * database that had the numbers.
+               */
+              router.refresh()
             })
-          }
+          }}
         />
 
         <div className="flex items-center justify-between gap-2 pt-2">
