@@ -28,7 +28,7 @@ import { TRAINING_COLUMN } from "./trainingStyles"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getProgram } from "../data/catalog"
 import { effectiveProgram, scheduleDaysOrNone } from "../customize"
-import { accountWideUnit, isWeekdayAnchored, unitForDisplay } from "../programsService"
+import { accountWideUnit, isWeekdayAnchored } from "../programsService"
 import type {
   EnrollmentDetail,
   LiveWorkout,
