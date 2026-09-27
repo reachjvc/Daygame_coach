@@ -87,6 +87,9 @@ const finished = (over: Partial<TrainingDoorFacts["recentlyFinished"][number]> =
   dayLabel: "Workout A",
   loggedAt: "2026-09-14T09:00:00.000Z",
   durationMin: 45,
+  // A lifting session by default: no distance, and the schedule names the day.
+  distanceKm: null,
+  sessionType: "weights",
   sets: 14,
   ...over,
 })
@@ -352,5 +355,27 @@ describe("two programs running at once", () => {
       NOW
     )
     expect(state.kind === "today" && state.also[0].todayLabel).toBeNull()
+  })
+})
+
+describe("a run on the tracking card", () => {
+  /**
+   * The card read "Workout · 7 min · 0 sets" for a 3.2 km run the app had
+   * just stored and prints as "Run · 3.2 km" on the receipt and in History.
+   * `dayLabel` is null because `scheduleDaysOrNone` is empty for a
+   * week-by-week endurance plan, and the set count is the wrong figure for a
+   * session that has none.
+   */
+  it("is named and measured by the numbers a run has", () => {
+    const state = trainingCardState({
+      ...facts(),
+      recentlyFinished: [
+        finished({ dayLabel: null, sessionType: "running", distanceKm: 3.2, sets: 0, durationMin: 7 }),
+      ],
+    })
+    expect(state.kind).toBe("done")
+    if (state.kind !== "done") return
+    expect(state.distanceKm).toBe(3.2)
+    expect(state.sessionType).toBe("running")
   })
 })

@@ -40,6 +40,8 @@ type FinishedRow = {
   program_day_id: string | null
   logged_at: string
   duration_min: number | null
+  distance_km: number | null
+  session_type: string | null
   adjustments: { skipped?: string[]; incomplete?: string[] } | null
   workout_sets: { count: number }[]
 }
@@ -69,7 +71,17 @@ export async function getTrainingDoorFacts(userId: string): Promise<TrainingDoor
       try {
         const resolved = await prescriptionForDay(userId, live.enrollmentId, live.dayId ?? undefined)
         dayLabel = resolved.prescription.dayLabel
-        setsAsked = resolved.prescription.exercises.reduce((n, ex) => n + ex.sets.length, 0)
+        /**
+         * NULL FOR AN ENDURANCE DAY, for the same reason it is null for a
+         * loose workout — the comment above says a zero here "reads like a
+         * session with nothing in it", and then the guard was
+         * `if (live.enrollmentId)`, which covers the loose case and not this
+         * one. A Couch to 5K run has BLOCKS, not exercises, so the reduce
+         * summed nothing and the card read "0 of 0 sets ticked" — before the
+         * run, during it, and after two blocks were ticked.
+         */
+        const asked = resolved.prescription.exercises.reduce((n, ex) => n + ex.sets.length, 0)
+        setsAsked = asked > 0 ? asked : null
       } catch {
         // A program whose schedule no longer resolves must not take the whole
         // door down: the workout is still open and still needs its way back.
@@ -157,7 +169,7 @@ async function recentlyFinished(
   const { data, error } = await finishedWorkouts(
     supabase
       .from("workout_logs")
-      .select("id, enrollment_id, program_day_id, logged_at, duration_min, workout_sets(count)")
+      .select("id, enrollment_id, program_day_id, logged_at, duration_min, distance_km, session_type, workout_sets(count)")
       .eq("user_id", userId)
       .gte("logged_at", since)
       .order("logged_at", { ascending: false })
@@ -196,6 +208,21 @@ async function recentlyFinished(
     dayLabel: labelFor(row.enrollment_id, row.program_day_id),
     loggedAt: row.logged_at,
     durationMin: row.duration_min,
+    /**
+     * A RUN'S ONE NUMBER. The card read "Workout · 7 min · 0 sets" for a
+     * 3.2 km run the app had just stored and prints as "Run · 3.2 km" on the
+     * receipt and in History. Sets is the wrong figure for a session that has
+     * none; the distance is the right one and was not being selected.
+     */
+    distanceKm: row.distance_km,
+    /**
+     * And the NAME, when the schedule cannot give one. `labelFor` walks
+     * `scheduleDaysOrNone`, which is empty for a week-by-week endurance plan,
+     * so every Couch to 5K session came back null and the card said
+     * "Workout" — while the Today tab one screen over called the same session
+     * "Week 1 · Run 1". The session type is at least true.
+     */
+    sessionType: row.session_type,
     sets: row.workout_sets?.[0]?.count ?? null,
   }))
 }

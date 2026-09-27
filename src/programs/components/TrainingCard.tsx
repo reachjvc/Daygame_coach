@@ -109,6 +109,15 @@ function AlsoLine({ also }: { also: AlsoRunning[] }) {
 }
 
 /** The words for each state. Nothing here decides anything. */
+/** What to call a session when its schedule cannot name the day. */
+const SESSION_TYPE_WORDS: Record<string, string> = {
+  running: "Run",
+  cardio: "Cardio",
+  weights: "Workout",
+  mobility: "Mobility",
+  yoga: "Yoga",
+}
+
 function wordsFor(state: TrainingCardState, timezone: string): { headline: string; context: string | null; second: string | null } {
   switch (state.kind) {
     case "none":
@@ -137,10 +146,28 @@ function wordsFor(state: TrainingCardState, timezone: string): { headline: strin
         second: null,
       }
     case "done": {
+      /**
+       * A RUN IS NOT "Workout · 7 min · 0 sets".
+       *
+       * `dayLabel` comes from `scheduleDaysOrNone`, which is empty for a
+       * week-by-week endurance plan, so every Couch to 5K session fell to
+       * "Workout" while the Today tab one screen over called the same session
+       * "Week 1 · Run 1". And a 3.2 km run that the receipt and History both
+       * print as "Run · 3.2 km" was reported here by its SET COUNT, which for
+       * a run is zero.
+       *
+       * The session type is at least true when the schedule cannot name the
+       * day, and the distance is the number that session has.
+       */
+      const named = state.dayLabel ?? SESSION_TYPE_WORDS[state.sessionType ?? ""] ?? "Workout"
       const parts = [
-        state.dayLabel ?? "Workout",
+        named,
         state.durationMin != null ? `${state.durationMin} min` : null,
-        state.sets != null ? `${state.sets} sets` : null,
+        state.distanceKm != null && state.distanceKm > 0
+          ? `${Math.round(state.distanceKm * 10) / 10} km`
+          : state.sets != null && state.sets > 0
+            ? `${state.sets} sets`
+            : null,
       ].filter(Boolean)
       return {
         headline: "Trained today",

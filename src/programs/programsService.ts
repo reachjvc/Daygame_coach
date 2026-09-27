@@ -3442,6 +3442,8 @@ export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date
       enrollmentId: newestToday.enrollmentId,
       dayLabel: newestToday.dayLabel,
       durationMin: newestToday.durationMin,
+      distanceKm: newestToday.distanceKm,
+      sessionType: newestToday.sessionType,
       sets: newestToday.sets,
       next: chosen?.next ? { label: chosen.next.label, ...(chosen.next.weekday != null ? { weekday: chosen.next.weekday } : {}) } : null,
       also,

@@ -1377,6 +1377,8 @@ export type TrainingCardState =
       enrollmentId: string | null
       dayLabel: string | null
       durationMin: number | null
+      distanceKm: number | null
+      sessionType: string | null
       sets: number | null
       next: { label: string; weekday?: number } | null
       also: AlsoRunning[]
@@ -1432,6 +1434,10 @@ export interface TrainingDoorFacts {
     dayLabel: string | null
     loggedAt: string
     durationMin: number | null
+    /** A run's one number. Null on a lifting session. */
+    distanceKm: number | null
+    /** What kind it was, for when the schedule cannot name the day. */
+    sessionType: string | null
     sets: number | null
   }>
 }
