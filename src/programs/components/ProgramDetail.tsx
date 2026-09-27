@@ -41,7 +41,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft } from "lucide-react"
 import { requireProgram, resolveProgramForLevel } from "../data/catalog"
-import { fromKg, roundToLoadable, toKg } from "../programsService"
+import { distanceUnitFor, fromKg, roundToLoadable, toKg } from "../programsService"
 import { isCustomizable, isModified, materializeSchedule, scheduleDaysOrNone } from "../customize"
 import { ProgramEditor } from "./ProgramEditor"
 import { CHIP_ON } from "./trainingStyles"
@@ -277,9 +277,20 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
             )}
           </div>
 
-          {/* Unit */}
+          {/*
+            Unit. LABELLED FOR WHAT IT ACTUALLY CONTROLS.
+
+            `unitSystem` decides two things: the weights, and the distance the
+            finish sheet asks for (`distanceUnitFor` — km for kg, miles for
+            lb). On a program with no lifts in it at all — Couch to 5K is
+            entirely endurance — the per-lift weight boxes below are correctly
+            hidden, and this row was left reading "Units: kg / lb" above
+            nothing. Picking "lb" changed the screen not at all, so the only
+            control on the page looked broken; what it had really done was
+            switch the run to miles, silently.
+          */}
           <div>
-            <Label className="mb-1.5 block">Units</Label>
+            <Label className="mb-1.5 block">{exercises.length > 0 ? "Units" : "Distances"}</Label>
             <div className="flex gap-2">
               {(["kg", "lb"] as UnitSystem[]).map((u) => (
                 <Button
@@ -290,7 +301,7 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
                   className={unit === u ? CHIP_ON : undefined}
                   onClick={() => changeUnit(u)}
                 >
-                  {u}
+                  {exercises.length > 0 ? u : distanceUnitFor(u)}
                 </Button>
               ))}
             </div>

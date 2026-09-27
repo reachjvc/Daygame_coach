@@ -12,17 +12,27 @@ import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { DONE } from "./trainingStyles"
 import { daysSinceLastSession, staleLifts, LAYOFF_DAYS } from "../programsService"
-import { UNIT_CONFIG } from "../config"
-import type { LoggedExercise, SessionPrescription, UnitSystem } from "../types"
+import type { LoggedExercise, SessionPrescription } from "../types"
 
 interface Props {
   prescription: SessionPrescription
   logs: { logged_at: string; entries: LoggedExercise[] }[]
-  unit: UnitSystem
+  /**
+   * NO `unit` HERE ANY MORE, and the prop is the reason the bug existed.
+   *
+   * Nothing in this component says a weight. `unit` was consumed by a lone
+   * `<span className="sr-only">kg</span>` at the very end of the notices —
+   * a screen reader reached the bottom of "you have been away 12 days" and
+   * heard "kg", attached to nothing. On Couch to 5K, which has no weights
+   * anywhere in it, it announced a unit the program never uses.
+   *
+   * It was there to keep the prop used. A prop that only a decorative element
+   * reads is a prop the component does not need.
+   */
   onFinish?: (choice: "archive" | "restart") => void
 }
 
-export function SessionNotices({ prescription, logs, unit, onFinish }: Props) {
+export function SessionNotices({ prescription, logs, onFinish }: Props) {
   const layoffDays = useMemo(() => daysSinceLastSession(logs), [logs])
   /**
    * WHICH lifts went stale, not just "you have been away". After a busy month
@@ -81,7 +91,6 @@ export function SessionNotices({ prescription, logs, unit, onFinish }: Props) {
           Final session — you will have graduated the program. 🎉
         </p>
       )}
-      <span className="sr-only">{UNIT_CONFIG[unit].label}</span>
     </>
   )
 }

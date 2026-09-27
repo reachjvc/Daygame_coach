@@ -631,6 +631,88 @@ describe('Architecture Compliance', () => {
         `Dead or archive-bound links:\n${offenders.join('\n')}`
       ).toHaveLength(0)
     })
+
+    /**
+     * EVERY WORKOUT WRITE ANSWERS THROUGH ONE HELPER.
+     *
+     * `src/programs/errors.ts` says why in its own header: "the alternative is
+     * each route deciding for itself whether to pass a `code` — and the screen
+     * then acts on the workout being gone in the three routes that remembered
+     * and not in the two that did not."
+     *
+     * It then happened. Four of the five workout write routes answered through
+     * `workoutErrorResponse`; `/api/workouts/[id]/revise` asked `statusFor` for
+     * a number and wrote its own body. So a correction saved against a workout
+     * deleted on another device came back a bare 500 with no code, while the
+     * identical race on a set came back 409 `workout_gone` and the live screen
+     * acted on it. One cause, two answers, and nothing was red — every test on
+     * that route used a workout that was still there.
+     *
+     * WRITES ONLY. A GET has no offline queue reading its status and no
+     * `workout_gone` for a screen to act on.
+     */
+    const OWNS_ITS_REFUSAL = new Set([
+      // Start hands back the workout that is ALREADY OPEN, which no shared
+      // helper can express: `StartRefused` carries the status, the code and
+      // the workout itself, so the card can offer to go there instead of only
+      // saying no.
+      'app/api/workouts/route.ts',
+    ])
+
+    /** Workout routes that write, and what each one answers a failure with. */
+    function workoutWriteRoutes(): { rel: string; src: string }[] {
+      return getAllFiles(path.join(projectRoot, 'app/api/workouts'), /route\.ts$/)
+        .map((file) => ({
+          rel: path.relative(projectRoot, file).replace(/\\/g, '/'),
+          src: fs.readFileSync(file, 'utf-8'),
+        }))
+        .filter(({ src }) => /export async function (POST|PATCH|PUT|DELETE)\b/.test(src))
+    }
+
+    test('every workout write route answers a refusal through one helper', () => {
+      const routes = workoutWriteRoutes()
+      // The scan has to be finding routes at all. Rename the folder and an
+      // empty list would pass this for ever.
+      expect(routes.length, 'no workout write routes found — the scan is broken').toBeGreaterThan(4)
+
+      const offenders = routes
+        .filter(({ rel, src }) => !OWNS_ITS_REFUSAL.has(rel) && !src.includes('workoutErrorResponse'))
+        .map(({ rel }) => rel)
+        .sort()
+      expect(
+        offenders,
+        'A workout write must answer through workoutErrorResponse, which gives the\n' +
+          'body and the status together. Asking statusFor for the number and writing\n' +
+          'the body by hand is what dropped `code: "workout_gone"` from /revise:\n' +
+          offenders.join('\n'),
+      ).toEqual([])
+    })
+
+    test('and none of them splits the status from the body', () => {
+      // The other half: a route may not call `statusFor` alone. That is the
+      // exact split `errors.ts` says lets the two drift.
+      const offenders = workoutWriteRoutes()
+        .filter(({ src }) => src.includes('statusFor(') && !src.includes('workoutErrorResponse'))
+        .map(({ rel }) => rel)
+        .sort()
+      expect(
+        offenders,
+        `statusFor alone leaves the body to the route. Use workoutErrorResponse:\n${offenders.join('\n')}`,
+      ).toEqual([])
+    })
+
+    test('the refusal-of-its-own list only shrinks', () => {
+      // Same scan as the enforcement half. An entry whose route no longer
+      // names its own refusal class is a free pass waiting to be used.
+      const byPath = new Map(workoutWriteRoutes().map(({ rel, src }) => [rel, src]))
+      const stale = [...OWNS_ITS_REFUSAL]
+        .filter((rel) => !byPath.get(rel)?.includes('Refused'))
+        .sort()
+      expect(
+        stale,
+        `These no longer name a refusal class of their own — remove them from OWNS_ITS_REFUSAL:\n${stale.join('\n')}`,
+      ).toEqual([])
+    })
   })
 
   describe('Counters', () => {

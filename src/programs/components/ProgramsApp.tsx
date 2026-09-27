@@ -651,7 +651,6 @@ function ActiveProgram({
         <SessionNotices
           prescription={prescription}
           logs={detail.logs}
-          unit={detail.enrollment.unitSystem}
           onFinish={async (choice) => {
             setFinishFailed(null)
             // Both of these used to fire and forget. "Archive" then left the
