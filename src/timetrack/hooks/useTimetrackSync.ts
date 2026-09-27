@@ -85,6 +85,16 @@ const RETRY_START_MS = 2_000
 /** Rows per request. Keeps a big first upload well under any body-size limit. */
 const MAX_ROWS_PER_REQUEST = 400
 const RETRY_MAX_MS = 60_000
+/**
+ * A request that is never answered used to hold `flushing` forever.
+ *
+ * `fetch` has no deadline of its own, so a connection that accepts and then
+ * says nothing — a captive portal, a dead tunnel — left every later flush
+ * returning at its first line, with the badge reading "Saving 3…" and nothing
+ * in flight. Only a reload recovered. With a deadline it becomes an ordinary
+ * failure, and the backoff below already knows what to do with those.
+ */
+const REQUEST_TIMEOUT_MS = 20_000
 
 function readPending(): Partial<TimetrackRows> {
   try {
@@ -142,8 +152,40 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const awaitingState = useRef<TimetrackState | null>(null)
   const retryAt = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryDelay = useRef(RETRY_START_MS)
+  /** set when a flush is asked for while one is already in the air */
+  const flushAgain = useRef(false)
 
   latestState.current = state
+
+  /**
+   * THE STATUS, READABLE WITHOUT DEPENDING ON IT.
+   *
+   * Every flush sets `status` — "saving" on the way in, "offline"/"error"/
+   * "signed-out" on the way out. Three effects below used to list `status` in
+   * their dependencies, so each attempt tore them down and rebuilt them, which
+   * meant the change-watcher re-armed its 800ms timer after every attempt and
+   * the backoff never got to schedule anything. Measured in the product:
+   * 25 POSTs in 20.0 seconds, gaps flat at ~850ms, while this file's own
+   * backoff says 2s doubling to 60s.
+   *
+   * Assigned during render, like `latestState` above, so an effect that runs
+   * later sees the current value without being re-created to get it.
+   */
+  const statusRef = useRef<SyncStatus>("starting")
+  statusRef.current = status
+
+  /**
+   * The coarse signals effects MAY depend on: they change when the answer
+   * actually changes, not on every attempt.
+   */
+  const syncActive = status !== "local-only" && status !== "starting" && status !== "signed-out"
+  const signedOut = status === "signed-out"
+
+  /** Forget any armed retry. `clearTimeout` alone leaves the handle truthy. */
+  const clearRetry = useCallback(() => {
+    if (retryAt.current) clearTimeout(retryAt.current)
+    retryAt.current = null
+  }, [])
 
   const savePending = useCallback(() => {
     setPendingCount(countRows(pending.current))
@@ -159,12 +201,30 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const flushRef = useRef<(() => Promise<void>) | null>(null)
 
   const flush = useCallback(async () => {
-    if (flushing.current || !userId.current) return
+    if (flushing.current) {
+      // Something was queued while a request was in the air. That used to wait
+      // for an unrelated edit: the request ends by setting the status it
+      // already had, React bails, no effect re-runs, and the remainder sits
+      // there with nothing in flight. Seen in the product: 21 rows, sixteen
+      // seconds, badge reading "Saving 21…".
+      flushAgain.current = true
+      return
+    }
+    if (!userId.current) return
     if (countRows(pending.current) === 0) {
       setStatus("synced")
       return
     }
     flushing.current = true
+    /**
+     * Whether this attempt actually reached the server. The drain-again in
+     * `finally` keys off THIS and not off the status, because the status ref is
+     * written during render and a `return` inside this function happens long
+     * before that — the first version of this guard read a stale "not signed
+     * out" after a 401 and re-entered immediately, 19,201 times in a
+     * twenty-second test. Caught by the test in the same commit.
+     */
+    let sent = false
     setStatus("saving")
     // Everything goes to the one workspace the app is showing, whatever id the
     // row was created under before the server's copy arrived. `queued` is kept
@@ -178,22 +238,53 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       // request that large is one the server may simply refuse — leaving the
       // person with nothing uploaded and no idea why.
       for (const batch of splitIntoBatches(sending, MAX_ROWS_PER_REQUEST)) {
-        const response = await fetch("/api/timetrack/sync", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ rows: batch }),
-        })
+        const abort = new AbortController()
+        const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+        let response: Response
+        try {
+          response = await fetch("/api/timetrack/sync", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ rows: batch }),
+            signal: abort.signal,
+          })
+        } finally {
+          clearTimeout(deadline)
+        }
         if (response.status === 401) {
           // The session ended while the tab was open. Retrying is pointless,
           // and the first version did it forever — sitting on "Saving 43…"
           // while the work went nowhere. Stop, say so, and keep every change
           // queued for after the next sign-in.
           setStatus("signed-out")
-          if (retryAt.current) clearTimeout(retryAt.current)
+          clearRetry()
           return
         }
         if (!response.ok) {
-          throw new Error((await response.json().catch(() => ({}))).error ?? response.statusText)
+          const message = (await response.json().catch(() => ({}))).error ?? response.statusText
+          if (response.status >= 400 && response.status < 500) {
+            /**
+             * THE SERVER SAID THE ROWS ARE WRONG, NOT "TRY AGAIN LATER".
+             *
+             * Retrying those forever is what turned one mistyped end time into
+             * an account that never saved again: the row was refused by a check
+             * constraint, the queue drains all or nothing, and everything
+             * behind it stayed in the browser while the badge promised it would
+             * be sent. This file's neighbour records the same shape from a bad
+             * workspace id, fixed only for that one cause.
+             *
+             * So: stop, keep the queue, and say what the server said — a
+             * refusal the person can act on beats a spinner that never ends.
+             */
+            clearRetry()
+            setStatus("error")
+            pushToast(
+              `Your account refused a change and it has not been saved: ${message}. Nothing is lost — it is still in this browser. Reload to resync, and if it keeps happening the entry it names is the one to fix.`,
+              "error",
+            )
+            return
+          }
+          throw new Error(message)
         }
       }
       // what we just sent is now what the server has
@@ -202,6 +293,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       pending.current = pending.current === queued ? {} : pending.current
       savePending()
       retryDelay.current = RETRY_START_MS
+      clearRetry()
+      sent = true
       setStatus(countRows(pending.current) > 0 ? "saving" : "synced")
     } catch (error) {
       // try again by ourselves, sooner at first and then less often
@@ -217,13 +310,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       }
     } finally {
       flushing.current = false
+      /**
+       * Whatever was queued while that request was in the air goes now, rather
+       * than waiting for a status change that may never come. This is the work
+       * the old 800ms re-arming loop was accidentally doing; it is done on
+       * purpose here, once, instead of every 800ms forever.
+       */
+      const more = flushAgain.current || countRows(pending.current) > 0
+      flushAgain.current = false
+      if (sent && more && retryAt.current === null) {
+        setTimeout(() => void flushRef.current?.(), 0)
+      }
     }
-  }, [pushToast, savePending])
+  }, [clearRetry, pushToast, savePending])
 
   flushRef.current = flush
 
   useEffect(() => () => {
     if (retryAt.current) clearTimeout(retryAt.current)
+    retryAt.current = null
   }, [])
 
   // --- first contact: who are we, and what does the server already have? ----
@@ -358,7 +463,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
-    if (!state || !userId.current || status === "local-only") return
+    if (!state || !userId.current || statusRef.current === "local-only") return
 
     // Nothing may be compared until the state we adopted has actually arrived.
     if (awaitingState.current) {
@@ -389,9 +494,29 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
     pending.current = mergeChangeSets(pending.current, changed)
     savePending()
+
+    /**
+     * QUEUE AND RETURN WHEN SENDING IS POINTLESS.
+     *
+     * Two cases, both measured in the product before this existed:
+     *
+     *   - a retry is already armed, so the backoff owns the next attempt.
+     *     Without this, typing while offline fires a request per word and each
+     *     failure re-arms the next one 800ms later, which is how the flat
+     *     ~850ms cadence outlived a backoff that says 2s → 60s.
+     *   - the session has ended. The 401 branch above stops the retry and says
+     *     so; this stops the schedule from starting it again. 23 POSTs in 20
+     *     seconds, every one refused, in a file whose comment says it stopped
+     *     doing exactly that.
+     *
+     * The work is not lost either way: it is in `pending`, on disk, and goes up
+     * on the next success, on `online`, or when the tab is looked at again.
+     */
+    if (retryAt.current !== null || statusRef.current === "signed-out") return
+
     const timer = setTimeout(() => void flush(), 800)
     return () => clearTimeout(timer)
-  }, [state, status, savePending, flush])
+  }, [state, syncActive, savePending, flush])
 
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {
@@ -427,31 +552,67 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * every time the tab is looked at whether the session is back.
    */
   useEffect(() => {
-    if (status !== "signed-out") return
+    if (!signedOut) return
     const recheck = async () => {
       if (document.visibilityState !== "visible") return
-      const response = await fetch("/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? new Date().toISOString()))
-      if (response.status === 401) return
-      setStatus("saving")
-      void flush()
+      try {
+        const response = await fetch(
+          "/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? new Date().toISOString()),
+        )
+        if (response.status === 401) return
+        setStatus("saving")
+        void flush()
+      } catch {
+        // offline as well as signed out: nothing to do but wait for the next tick
+      }
     }
-    document.addEventListener("visibilitychange", () => void recheck())
+    // A NAMED handler, because `removeEventListener` with a fresh arrow removes
+    // nothing — this used to add one listener per run and never take one away.
+    const onVisible = () => void recheck()
+    document.addEventListener("visibilitychange", onVisible)
     const timer = setInterval(() => void recheck(), 15_000)
     return () => {
       clearInterval(timer)
-      document.removeEventListener("visibilitychange", () => void recheck())
+      document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [status, flush])
+  }, [signedOut, flush])
+
+  /**
+   * THE 60-SECOND PULL HAD TWO REASONS TO NEVER FIRE, AND ONLY ONE WAS `status`.
+   *
+   * `pull` is rebuilt whenever `replaceState` is — and `replaceState` comes
+   * from a `useMemo` in `useTimetrack` whose dependencies include `state`. So
+   * the interval below was torn down and recreated on every committed change,
+   * and never reached sixty seconds while anybody was working. Measured in the
+   * product: **1 pull in 75 seconds sitting still, 0 pulls in 80 seconds with
+   * one real change every 5 seconds** — which is to say another device's
+   * changes stopped arriving exactly when they mattered.
+   *
+   * The ref is the pattern `flushRef` above already uses: the effect depends on
+   * whether syncing is on at all, and reads the current function when it fires.
+   */
+  const pullRef = useRef(pull)
+  pullRef.current = pull
 
   useEffect(() => {
-    if (status === "local-only" || status === "starting" || status === "signed-out") return
-    const timer = setInterval(() => void pull(), PULL_EVERY_MS)
+    if (!syncActive) return
+    const timer = setInterval(() => void pullRef.current(), PULL_EVERY_MS)
+    /**
+     * Coming back is not a moment to wait out a backoff: the queue may be
+     * sitting on a sixty-second timer from the last failure, and the person is
+     * looking at the screen now.
+     */
+    const resume = () => {
+      clearRetry()
+      retryDelay.current = RETRY_START_MS
+      void flushRef.current?.()
+    }
     const onVisible = () => {
       if (document.visibilityState !== "visible") return
-      void pull()
-      void flush()
+      void pullRef.current()
+      resume()
     }
-    const onOnline = () => void flush()
+    const onOnline = () => resume()
     document.addEventListener("visibilitychange", onVisible)
     window.addEventListener("online", onOnline)
     return () => {
@@ -459,7 +620,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       document.removeEventListener("visibilitychange", onVisible)
       window.removeEventListener("online", onOnline)
     }
-  }, [status, pull, flush])
+  }, [syncActive, clearRetry])
 
   /**
    * Upload what this browser holds. `only` narrows it to chosen entries — the
