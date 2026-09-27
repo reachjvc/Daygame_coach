@@ -8,7 +8,7 @@
 import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { weeklyStreakRun } from "@/src/shared/streakRuns"
 import { estimateOneRepMax } from "@/src/programs/programsService"
-import { isTimedLift } from "@/src/programs/data/exerciseLibrary"
+import { isTimedLift, liftDisplayName, liftKey } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
 import { fromKg, toKg } from "@/src/shared/weight"
 import type {
@@ -246,7 +246,9 @@ export function detectPersonalRecords(
   // Build map of previous maxes (by exercise); warm-up sets never count toward PRs
   for (const s of allSets) {
     if (!isWorkingSet(s)) continue
-    const key = s.exercise.toLowerCase()
+    // `liftKey`, not the name: "Back Squat" and StrongLifts' "Squat" are one
+    // barbell, and keying on text announced a New best 50 kg below the real one.
+    const key = liftKey(s)
     const prev = exerciseMaxes.get(key)
     if (!prev || s.weight_kg > prev.weight_kg || (s.weight_kg === prev.weight_kg && s.reps > prev.reps)) {
       exerciseMaxes.set(key, { weight_kg: s.weight_kg, reps: s.reps })
@@ -263,7 +265,7 @@ export function detectPersonalRecords(
    */
   for (const s of newSets) {
     if (!isWorkingSet(s)) continue
-    const key = s.exercise.toLowerCase()
+    const key = liftKey(s)
     const prev = exerciseMaxes.get(key)
     /**
      * A LIFT YOU HAVE NEVER DONE HAS NOTHING TO BEAT.
@@ -279,7 +281,7 @@ export function detectPersonalRecords(
       exerciseMaxes.set(key, { weight_kg: s.weight_kg, reps: s.reps })
       // Replace an earlier announcement for the same lift rather than adding to
       // it: what stands at the end of the session is the record.
-      const already = records.findIndex((r) => r.exercise.toLowerCase() === key)
+      const already = records.findIndex((r) => liftKey(r) === key)
       if (already >= 0) records.splice(already, 1)
       records.push({
         exercise: s.exercise,
@@ -309,13 +311,13 @@ export function firstTimeLifts(
   prior: (WorkoutSetRow & { logged_at: string })[],
   newSets: WorkoutSetRow[]
 ): string[] {
-  const known = new Set(
-    prior.filter(isWorkingSet).map((s) => s.exercise.trim().toLowerCase())
-  )
+  // Keyed by the LIFT, not its spelling: "First time logged: Squat" was
+  // printed on a screen whose PREVIOUS column read 110×5 for the same barbell.
+  const known = new Set(prior.filter(isWorkingSet).map(liftKey))
   const firsts = new Map<string, string>()
   for (const s of newSets) {
     if (!isWorkingSet(s)) continue
-    const key = s.exercise.trim().toLowerCase()
+    const key = liftKey(s)
     if (known.has(key) || firsts.has(key)) continue
     firsts.set(key, s.exercise.trim())
   }
@@ -979,7 +981,13 @@ export function liftBests(logs: WorkoutLogWithSets[], timezone: string): LiftBes
     const date = toDateISO(toZonedDate(new Date(log.logged_at), timezone))
     for (const set of log.sets ?? []) {
       if (!isWorkingSet(set) || set.reps <= 0) continue
-      const key = set.exercise.trim().toLowerCase()
+      /**
+       * KEYED ON THE LIFT, NAMED BY THE LIBRARY. Keyed on the text, one
+       * barbell appeared twice — "Back Squat 110 kg" and "Squat 100 kg" — and
+       * with the list capped at eight, the duplicate pushed a real lift off
+       * the bottom.
+       */
+      const key = liftKey(set)
       // A timed hold has seconds in `reps`; estimating a one-rep max from
       // "30" would announce a max nobody has ever lifted.
       if (isTimedLift(set)) continue
@@ -987,7 +995,7 @@ export function liftBests(logs: WorkoutLogWithSets[], timezone: string): LiftBes
       const cur = best.get(key)
       if (!cur) {
         best.set(key, {
-          exercise: set.exercise.trim(),
+          exercise: liftDisplayName(set),
           bodyweight: set.weight_kg === 0,
           bestWeightKg: set.weight_kg,
           bestWeightReps: set.reps,

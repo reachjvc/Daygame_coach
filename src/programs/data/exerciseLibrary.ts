@@ -659,6 +659,46 @@ export function libraryByName(name: string): LibraryExercise | undefined {
 }
 
 /**
+ * ONE NAME FOR A LIFT THAT HAS TWO. Once rows are grouped by `liftKey`, the
+ * group may hold "Back Squat" from the library and "Squat" from StrongLifts.
+ * The library's own spelling is the one to show — it is what the lift IS, and
+ * it is what `programText` canonicalises typed names to.
+ *
+ * Falls back to the spelling given, for a lift the library does not have.
+ */
+export function liftDisplayName(set: { exercise: string; library_id?: string | null }): string {
+  if (set.library_id) {
+    const byId = EXERCISE_LIBRARY.find((e) => e.id === set.library_id)
+    if (byId) return byId.name
+  }
+  return set.exercise.trim()
+}
+
+/**
+ * THE LIFT'S IDENTITY ACROSS PROGRAMS — its library entry, not its name.
+ *
+ * `getExerciseMax` was converted to this and its docblock gives the argument:
+ * "Squat was the one that did not [match], which is exactly why a name is the
+ * wrong key." Four readers in `healthService` were left on the name, and the
+ * consequence is the app announcing things that are not true. Driven on one
+ * account: thirteen sessions of **Back Squat** (best 110 kg) from the library,
+ * then StrongLifts, whose lift is named **Squat** —
+ *
+ *   receipt:  "First time logged: Squat"      (PREVIOUS said 110×5)
+ *   receipt:  "PERSONAL BESTS  Squat 105 kg"  (the real best is 110)
+ *   Progress: "Back Squat 110 kg" AND "Squat 100 kg", two rows, one barbell
+ *
+ * Both rows carry `library_id: lib_back_squat`. The column is written on every
+ * set by `completeSet`.
+ *
+ * Falls back to the trimmed lower-cased name, which is what the rows written
+ * before that column existed have, and what a lift outside the library has.
+ */
+export function liftKey(set: { exercise: string; library_id?: string | null }): string {
+  return set.library_id ?? set.exercise.trim().toLowerCase()
+}
+
+/**
  * IS THIS LIFT MEASURED IN SECONDS? — one answer, asked by both slices.
  *
  * It lived in `healthService` as a private `isTimedLift(name)` that only asked
