@@ -965,7 +965,14 @@ export function IntegrationsPanel({
               size="sm"
               onClick={() => {
                 if (!hookUrl.trim()) return
-                setState((current) => addWebhook(current, hookUrl.trim(), [...WEBHOOK_EVENTS] as WebhookEventName[]))
+                // checked before the state changes, so a refused address does not
+                // clear the box the person has to correct
+                const attempt = addWebhook(state, hookUrl.trim(), [...WEBHOOK_EVENTS] as WebhookEventName[])
+                if (attempt.violations.length > 0) {
+                  pushToast(attempt.violations[0].message, "error")
+                  return
+                }
+                setState((current) => addWebhook(current, hookUrl.trim(), [...WEBHOOK_EVENTS] as WebhookEventName[]).state)
                 setHookUrl("")
               }}
             >

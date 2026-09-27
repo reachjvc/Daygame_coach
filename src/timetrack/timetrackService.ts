@@ -1497,9 +1497,46 @@ export function deleteAutotracker(state: TimetrackState, id: Id): TimetrackState
   return { ...state, autotrackers: state.autotrackers.filter((r) => r.id !== id) }
 }
 
-export function addWebhook(state: TimetrackState, url: string, events: WebhookEventName[]): TimetrackState {
+/**
+ * AN ADDRESS THE DATABASE WILL REFUSE IS REFUSED HERE, NOT IN SIX HOURS.
+ *
+ * `timetrack_webhooks` carries `check (url ~* '^https://')`, and nothing checked
+ * before this: a typed `http://` or a bare `example.com/hook` was accepted, and
+ * then refused by the database every time it was offered. That is not confined to
+ * the webhook either — `timetrack_webhooks` is written before
+ * `timetrack_webhook_log`, `timetrack_autotracker_rules`, `timetrack_timeline`,
+ * `timetrack_calendars` and `timetrack_settings`, and a throw stops the rest. One
+ * missing "s" and the person's preferences stop syncing.
+ *
+ * The rule is the database's, stated once here in the language the person typed
+ * in. Other checks in this schema still have no client-side half — the recurring
+ * project shape, the timeline ordering, the alert threshold range and the
+ * not-blank names — and each is the same kind of permanent block.
+ */
+export function addWebhook(
+  state: TimetrackState,
+  url: string,
+  events: WebhookEventName[],
+): { state: TimetrackState; violations: SaveViolation[] } {
+  const trimmed = url.trim()
+  if (!/^https:\/\/\S+$/i.test(trimmed)) {
+    return {
+      state,
+      violations: [
+        {
+          field: "description",
+          message: trimmed.toLowerCase().startsWith("http://")
+            ? "A webhook address has to start with https:// — an http:// one is refused by your account and would stop your settings saving."
+            : "That is not a webhook address. It has to start with https://, like https://example.com/hook.",
+        },
+      ],
+    }
+  }
   const withId = takeId(state)
-  return { ...withId.state, webhooks: [...withId.state.webhooks, { id: withId.id, url, events, enabled: true }] }
+  return {
+    state: { ...withId.state, webhooks: [...withId.state.webhooks, { id: withId.id, url: trimmed, events, enabled: true }] },
+    violations: [],
+  }
 }
 
 export function deleteWebhook(state: TimetrackState, id: Id): TimetrackState {

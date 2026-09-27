@@ -101,9 +101,18 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
   return { rows, cursor }
 }
 
+/**
+ * NO CURSOR HERE, DELIBERATELY.
+ *
+ * This used to carry one, taken after the writes — while the rows in those same
+ * writes were stamped `writtenAt` from before them. Nothing read it, so it did no
+ * harm; but `PullResult.cursor` is documented as "pass this back as `since` next
+ * time", and the day somebody wired this one up the same way, every row another
+ * device wrote during the push window would sort below the cursor and never be
+ * asked for again. A cursor only means anything next to the read it came from.
+ */
 export interface PushResult {
   applied: number
-  cursor: string
 }
 
 /**
@@ -301,7 +310,7 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
     applied += owned.length
   }
 
-  return { applied, cursor: new Date().toISOString() }
+  return { applied }
 }
 
 /** Does this user have anything stored yet? Decides whether to offer the import. */
