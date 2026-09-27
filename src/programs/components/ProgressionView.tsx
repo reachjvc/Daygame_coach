@@ -108,7 +108,23 @@ export function ProgressionView({ logs, enrollment }: Props) {
       ? "Nothing logged yet"
       : `${logs.length} session${logs.length === 1 ? "" : "s"}` +
         (progress[0] && progress[0].latest !== progress[0].first
-          ? ` · ${progress[0].name} ${formatLoad(progress[0].first)} → ${formatLoad(progress[0].latest)} ${unitLabel}`
+          ? /**
+             * THE BEST WHEN THE LAST SESSION WAS LIGHTER, because on a
+             * percentage-of-training-max wave the last session of every cycle
+             * is BY DESIGN the deload. After sixteen textbook 5/3/1 sessions
+             * in which all four training maxes went UP, this row read
+             *
+             *   16 sessions · Overhead Press 45 → 32.5 kg
+             *
+             * and it is the line on screen every visit, while the expanded row
+             * below already carries the mitigation ("best 50", under a comment
+             * reading "Best above latest means a deload, not a lost record").
+             * Somebody checking during deload week was told their press had
+             * dropped 12.5 kg.
+             */
+            ` · ${progress[0].name} ${formatLoad(progress[0].first)} → ${formatLoad(
+              Math.max(progress[0].latest, progress[0].best)
+            )} ${unitLabel}`
           : "")
 
   /*

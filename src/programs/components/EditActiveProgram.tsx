@@ -72,14 +72,35 @@ export function EditActiveProgram({
   const [state, setState] = useState<"idle" | "saving" | "done">("idle")
   const [error, setError] = useState<string | null>(null)
   const [started, setStarted] = useState(false)
+
+  /**
+   * THE GUARD GOES FIRST, and it sat one statement too low.
+   *
+   * `begin()` walks to `materializeSchedule`, which THROWS
+   * "<id> is an endurance plan and cannot be customized" — so on all five
+   * endurance programs, ⋮ → "Change this program" took the whole page to
+   * "This page could not load. The fault has been reported." before the
+   * `isCustomizable` check below could refuse politely:
+   *
+   *   [pageerror] Error: couch-to-5k is an endurance plan and cannot be
+   *   customized
+   *
+   * The catalogue's detail screen already handles this case properly, with a
+   * "Week by week" explanation — the app knows the rule, and the menu on the
+   * RUNNING program did not gate on it. A runner on Couch to 5K tapped the
+   * one obviously-labelled row in their program menu and lost the page.
+   *
+   * Above the hooks is not an option (that is the "Rendered more hooks" crash
+   * this slice has had twice), so it goes between the hooks and the work.
+   */
+  if (!isCustomizable(program)) return null
+
   if (!started) {
     // During the first render, so the editor has its schedule on the first
     // paint rather than flashing empty and filling in.
     begin()
     setStarted(true)
   }
-
-  if (!isCustomizable(program)) return null
 
   /**
    * ALREADY EDITING. This component used to render its own second "Change

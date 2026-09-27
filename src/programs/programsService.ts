@@ -1626,6 +1626,9 @@ function applySkillLog(program: ProgramDefinition, enrollment: ProgramEnrollment
   const nextState = { ...enrollment.exerciseState }
   const changes: ProgressionChange[] = []
   for (const ex of day.exercises) {
+    // Skipped is skipped, the same as the load and hold engines. See
+    // `applyHoldLog` for the driven case.
+    if (log.entries.find((e) => e.exerciseId === ex.id)?.skipped) continue
     const idx = Math.min(enrollment.exerciseState[ex.id]?.tierIndex ?? 0, ex.tiers.length - 1)
     const tier = ex.tiers[idx]
     const entry = log.entries.find((e) => e.exerciseId === ex.id)
@@ -1688,6 +1691,18 @@ function applyHoldLog(program: ProgramDefinition, enrollment: ProgramEnrollment,
   for (const ex of day.exercises) {
     const current = enrollment.exerciseState[ex.id]?.currentHoldSec ?? ex.startSec
     const entry = log.entries.find((e) => e.exerciseId === ex.id)
+    /**
+     * "DON'T COUNT IT" HAS TO COUNT FOR SOMETHING, here too.
+     *
+     * The load engine guards `entry.skipped` and explains why —
+     * "Only the JUDGEMENT is withheld" — and this engine and the skill one
+     * were left out of that fix. Driven: both 20 s Bridge sets ticked, then
+     * "Skip this one" on that lift, then Finish. The receipt still read
+     * "Bridge / backbend  Held 20s → 25s" and the enrolment stored
+     * `{"flx_bridge":{"currentHoldSec":25}}` — a progression written for a
+     * session the person explicitly said not to count.
+     */
+    if (entry?.skipped) continue
     const held = (entry?.sets.filter((s) => s.reps >= current).length ?? 0) >= ex.sets
     if (held && current < ex.targetSec) {
       const next = Math.min(ex.targetSec, current + ex.incrementSec)

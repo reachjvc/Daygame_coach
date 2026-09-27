@@ -650,7 +650,16 @@ export function LiveWorkoutScreen({
                         "Last" was shorter than the column it captioned. */}
                     <span>Previous</span>
                     <span>{unitLabel}</span>
-                    <span>Reps</span>
+                    {/*
+                      THE LIFT'S OWN UNIT, not the word "Reps" for everything.
+                      A Plank is in the app's own `TIMED_IDS` and the whole
+                      Splits & Mobility program declares `repUnit: "sec"`, and
+                      this caption said REPS over all of them — three labels on
+                      one box, because `SetRow`'s accessible name has said
+                      "Seconds for set 1 of Plank" since an earlier round while
+                      the two a sighted person reads said "reps".
+                    */}
+                    <span>{(ex.repUnit ?? "reps") === "sec" ? "Seconds" : "Reps"}</span>
                     <span aria-hidden />
                   </div>
                 )}

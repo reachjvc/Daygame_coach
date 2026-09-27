@@ -365,7 +365,13 @@ export function SetRow({
         max={SET_LIMITS.repsMax}
         step={1}
         aria-label={`${repWord} for set ${of}`}
-        placeholder={prescribed.amrap ? "max" : (range ?? (prescribed.reps ? String(prescribed.reps) : "reps"))}
+        /* "seconds" on a hold, for the same reason the caption above it says
+           Seconds: three labels on one box said two different things. */
+        placeholder={
+          prescribed.amrap
+            ? "max"
+            : (range ?? (prescribed.reps ? String(prescribed.reps) : repUnit === "sec" ? "seconds" : "reps"))
+        }
         className="h-11 w-full sm:h-9"
         value={reps}
         onChange={(e) => setReps(e.target.value)}
