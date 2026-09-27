@@ -18,8 +18,16 @@
  *     `createTag` twice and got the same id back twice;
  *   - `rowsToState`, which appended every link it read without checking.
  *
- * Each is pinned below. The push-side check that names a duplicate rather than
- * jamming on it is in `tests/unit/db/isolatingARefusedRow.test.ts`.
+ * The second and third are pinned below. The FIRST is not, and was claimed here to
+ * be — it is pinned in `tests/unit/db/pagingSortsBySomethingUnique.test.ts`, which
+ * exists because a reviewer found this sentence and checked it. The fixture below
+ * hand-writes the duplicated pair, so it proves `rowsToState` copes with one; it
+ * says nothing about whether the sort key can still produce one.
+ *
+ * The push-side check that names a duplicate rather than jamming on it is pinned in
+ * `tests/unit/db/aRefusedRowIsNamedInAWayTheBrowserCanMatch.test.ts` — not in
+ * `isolatingARefusedRow.test.ts`, which this used to claim and which contains only
+ * tests of `isolateRefusedRows` itself.
  */
 
 import { describe, expect, test } from "vitest"

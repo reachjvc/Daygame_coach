@@ -63,6 +63,19 @@ interface DragState {
   durationMinutes?: number
 }
 
+/**
+ * The hour down the side of the day grid, in the person's own format.
+ *
+ * It goes through `formatTimeOfDay` rather than reimplementing the 12-hour rule,
+ * because a second copy of that rule is exactly what put "1:30" where "1:30 PM"
+ * belonged in the entry list and moved an afternoon entry back twelve hours.
+ */
+function hourLabel(hour: number, timeFormat: TimetrackState["user"]["timeFormat"]): string {
+  const at = new Date()
+  at.setHours(hour, 0, 0, 0)
+  return formatTimeOfDay(at.toISOString(), timeFormat)
+}
+
 export function CalendarView({
   state,
   setState,
@@ -230,6 +243,14 @@ export function CalendarView({
       ? formatDayHeader(anchor, todayKey)
       : `${days[0]} → ${days.at(-1)}`
 
+  /**
+   * The width of the hour gutter, named once because TWO elements use it: the
+   * spacer above the day headers and the ruler itself. They have to be identical
+   * or every day column is offset by the difference. "1:00 PM" does not fit where
+   * "13:00" did, so the format decides it.
+   */
+  const gutter = state.user.timeFormat === "h12" ? "w-16" : "w-12"
+
   return (
     <div className="space-y-3" onMouseUp={finishDrag} onMouseLeave={() => drag && finishDrag()}>
       <div className="flex flex-wrap items-center gap-2">
@@ -278,7 +299,8 @@ export function CalendarView({
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* day headers */}
         <div className={cn("flex border-b border-border bg-secondary/30", range === "week" && "min-w-[640px] sm:min-w-0")}>
-          <div className="w-12 shrink-0 border-r border-border" />
+          {/* must match the ruler below exactly, or every day column is offset */}
+          <div className={cn(gutter, "shrink-0 border-r border-border")} />
           {days.map((day) => (
             <div key={day} className="flex-1 border-r border-border px-2 py-1.5 last:border-r-0">
               <p className={cn("text-xs font-semibold", day === todayKey && "text-primary")}>
@@ -295,14 +317,20 @@ export function CalendarView({
         <div ref={scrollRef} className="max-h-[70vh] overflow-auto">
           <div ref={gridRef} className={cn("relative flex", range === "week" && "min-w-[640px] sm:min-w-0")}>
             {/* hour gutter */}
-            <div className="w-12 shrink-0 border-r border-border">
+            <div className={cn(gutter, "shrink-0 border-r border-border")}>
               {Array.from({ length: 24 }, (_, hour) => (
                 <div
                   key={hour}
                   className="relative border-b border-border/50 text-[10px] text-muted-foreground"
                   style={{ height: hourHeight }}
                 >
-                  <span className="absolute -top-1.5 right-1">{hour > 0 ? `${String(hour).padStart(2, "0")}:00` : ""}</span>
+                  {/*
+                    The ruler reads in the format the person chose, like every
+                    other time on this page. It was hard-coded to 24-hour, so
+                    somebody on 12-hour saw 13:00–23:00 down the side of the
+                    calendar while every block beside it said "1:30 PM".
+                  */}
+                  <span className="absolute -top-1.5 right-1">{hour > 0 ? hourLabel(hour, state.user.timeFormat) : ""}</span>
                 </div>
               ))}
             </div>

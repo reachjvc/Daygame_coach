@@ -21,24 +21,47 @@
  */
 
 // @vitest-environment node
-import { readFileSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { TIMETRACK_TABLES } from "@/src/db/timetrackTypes"
 
-const MIGRATION = join(process.cwd(), "supabase/migrations/20260903120000_timetrack.sql")
+/**
+ * EVERY timetrack migration, not just the first.
+ *
+ * This read `20260903120000_timetrack.sql` alone. Two later ones exist and neither
+ * adds a foreign key, so the check was complete on the day it was written — but
+ * "the check knows what the database knows" stops being true the first time an
+ * `alter table … add constraint … references` lands in a later file, and it would
+ * have stayed green while doing it.
+ */
+const MIGRATIONS_DIR = join(process.cwd(), "supabase/migrations")
+
+function timetrackMigrations(): { name: string; sql: string }[] {
+  return readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith(".sql") && name.includes("timetrack"))
+    .sort()
+    .map((name) => ({ name, sql: readFileSync(join(MIGRATIONS_DIR, name), "utf8") }))
+}
 
 /** Every `child -> parent` pair the migration declares, read from the SQL. */
 function foreignKeys(): { child: string; parent: string; column: string }[] {
-  const sql = readFileSync(MIGRATION, "utf8")
   const pairs: { child: string; parent: string; column: string }[] = []
 
-  // `create table public.timetrack_x (` … up to the closing `);` at line start
-  const tableBlocks = sql.matchAll(/create table (?:if not exists )?public\.(timetrack_\w+)\s*\(([\s\S]*?)\n\);/g)
-  for (const [, child, body] of tableBlocks) {
-    for (const [, column, parent] of body.matchAll(/^\s*(\w+)[^,\n]*?references public\.(timetrack_\w+)\s*\(/gm)) {
+  for (const { sql } of timetrackMigrations()) {
+    // `create table public.timetrack_x (` … up to the closing `);` at line start
+    for (const [, child, body] of sql.matchAll(/create table (?:if not exists )?public\.(timetrack_\w+)\s*\(([\s\S]*?)\n\);/g)) {
+      for (const [, column, parent] of body.matchAll(/^\s*(\w+)[^,\n]*?references public\.(timetrack_\w+)\s*\(/gm)) {
+        pairs.push({ child, parent, column })
+      }
+    }
+    // and one added later to an existing table, which is the case the single-file
+    // version of this would have missed
+    for (const [, child, column, parent] of sql.matchAll(
+      /alter table (?:only )?public\.(timetrack_\w+)[\s\S]*?foreign key \((\w+)\)\s*references public\.(timetrack_\w+)/gi,
+    )) {
       pairs.push({ child, parent, column })
     }
   }
@@ -100,7 +123,8 @@ describe("the order the tables are written in", () => {
      * every test below passing over an empty list — the failure mode this file
      * exists to catch, one level up.
      */
-    expect(keys.length, `no foreign keys parsed out of ${MIGRATION}`).toBeGreaterThan(20)
+    expect(timetrackMigrations().length, "no timetrack migrations were found at all").toBeGreaterThan(0)
+    expect(keys.length, `no foreign keys parsed out of ${MIGRATIONS_DIR}`).toBeGreaterThan(20)
     expect(keys).toEqual(
       expect.arrayContaining([{ child: "timetrack_projects", parent: "timetrack_clients", column: "client_id" }]),
     )
@@ -141,7 +165,9 @@ describe("the order the tables are written in", () => {
      */
     const declared = new Set<string>(TIMETRACK_TABLES)
     const inSchema = new Set(
-      [...readFileSync(MIGRATION, "utf8").matchAll(/create table (?:if not exists )?public\.(timetrack_\w+)/g)].map((m) => m[1]),
+      timetrackMigrations().flatMap(({ sql }) =>
+        [...sql.matchAll(/create table (?:if not exists )?public\.(timetrack_\w+)/g)].map((m) => m[1]),
+      ),
     )
     expect(inSchema.size).toBeGreaterThan(15)
     expect([...inSchema].filter((table) => !declared.has(table))).toEqual([])

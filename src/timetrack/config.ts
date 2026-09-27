@@ -14,8 +14,24 @@ export const STATE_VERSION = 3
 
 /** Changes written locally but not yet accepted by the server */
 export const PENDING_KEY = "toggl-clone:pending"
-/** How far through the server's history this device has read */
-export const SYNC_CURSOR_KEY = "toggl-clone:cursor"
+/**
+ * THERE IS DELIBERATELY NO PERSISTED CURSOR, AND THIS IS WHERE SOMEBODY WOULD
+ * ADD ONE.
+ *
+ * `SYNC_CURSOR_KEY = "toggl-clone:cursor"` lived here, described as "how far
+ * through the server's history this device has read", and nothing ever read or
+ * wrote it — the cursor lives in a ref for the life of the page, so every reload
+ * does a full download.
+ *
+ * It is not a missing line. The cursor and the BASELINE (`serverRows`, what this
+ * device believes the server holds) only mean anything together, and the baseline
+ * is not persisted. Restore a cursor without one and first contact asks only for
+ * changes since last time, so the baseline is built from that delta alone — and
+ * the very next diff reads every other row in the workspace as a local change and
+ * uploads all of it. The full read on open is what makes the baseline true.
+ *
+ * So: persist both, or neither.
+ */
 /**
  * Which section you were last on.
  *

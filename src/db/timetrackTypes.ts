@@ -310,3 +310,19 @@ export function rowKeyOf(table: keyof TimetrackRows, row: Record<string, unknown
     })
     .join(":")
 }
+
+/**
+ * What to sort by when paging a table, and it MUST BE UNIQUE.
+ *
+ * A row's identity is unique by definition, so the page order IS the identity.
+ * That is why this is here and not written out in each repo: the rule had been
+ * copied into `timetrackRepo` and `timetrackBackupRepo` with the same fifteen-line
+ * comment twice, so a table added with a composite key had to be remembered in two
+ * places, and `timetrackBackupRepo`'s copy is the one that writes a backup file.
+ *
+ * `.order("entry_id,tag_id")` does NOT work — Supabase reads that as one column
+ * name — so this returns a list and the caller chains one `.order()` per column.
+ */
+export function pageOrderColumns(table: keyof TimetrackRows): readonly string[] {
+  return rowKeyColumns(table)
+}

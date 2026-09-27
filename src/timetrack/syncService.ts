@@ -253,6 +253,43 @@ export function mergeChangeSets(
   return out
 }
 
+/**
+ * The queue with the rows that were just accepted taken out — BY VALUE, not by key.
+ *
+ * The success path used to compare object identity: if `pending` was still the
+ * very object that went up, clear it, otherwise keep all of it. An edit during the
+ * request replaces that object, so the whole queue survived including every row
+ * the server had just taken, and the drain-again sent them all again.
+ *
+ * Filtering by key instead LOSES WORK, which is the trap: a row edited while its
+ * own upload was in the air has the same key as the row that was sent, and the
+ * queued copy is the newer one. Removing it by key throws away the edit — caught
+ * by "a change made while a request is in the air is sent when it lands", which is
+ * in the suite precisely because that has happened here before.
+ *
+ * So a queued row goes only if it is the same row, unchanged, as the one that was
+ * accepted. `meaningful` ignores `updated_at`, so a re-queue that changed nothing
+ * but the timestamp is correctly treated as redundant.
+ */
+export function withoutSentRows(
+  pending: Partial<TimetrackRows>,
+  sent: Partial<TimetrackRows>,
+): Partial<TimetrackRows> {
+  const out: Partial<TimetrackRows> = {}
+  for (const table of TIMETRACK_TABLES) {
+    const queued = (pending[table] ?? []) as unknown as AnyRow[]
+    if (queued.length === 0) continue
+    const accepted = indexOf(table, (sent[table] ?? []) as unknown as AnyRow[])
+    const kept = queued.filter((row) => {
+      const same = accepted.get(rowKey(table, row))
+      return !same || meaningful(same) !== meaningful(row)
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (kept.length > 0) (out as any)[table] = kept
+  }
+  return out
+}
+
 export function countRows(rows: Partial<TimetrackRows>): number {
   let total = 0
   for (const table of TIMETRACK_TABLES) total += (rows[table] ?? []).length

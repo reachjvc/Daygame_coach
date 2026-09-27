@@ -11,7 +11,7 @@
 import { describe, expect, test } from "vitest"
 
 import { emptyRows } from "@/src/db/timetrackTypes"
-import { countRows, diffRows, keysIn, mergeChangeSets, mergeIncoming, reattachToWorkspace, repairPending, rowKey, safeToSend, splitIntoBatches } from "@/src/timetrack/syncService"
+import { countRows, diffRows, keysIn, mergeChangeSets, mergeIncoming, reattachToWorkspace, repairPending, rowKey, safeToSend, splitIntoBatches, withoutSentRows } from "@/src/timetrack/syncService"
 
 const DELETED_AT = "2026-09-03T12:00:00.000Z"
 
@@ -370,5 +370,51 @@ describe("every row goes to the one workspace the app is showing", () => {
   test("it returns a new object, so the queue can still tell what it sent", () => {
     const rows = { timetrack_entries: [entryRow("e1", "work")] }
     expect(reattachToWorkspace(rows, "w")).not.toBe(rows)
+  })
+})
+
+describe("taking the accepted rows out of the queue", () => {
+  /**
+   * The success path used to compare object identity: if the queue was still the
+   * very object that went up, clear it, otherwise keep all of it. Any edit during
+   * the request replaces that object, so every row the server had just taken was
+   * kept and sent again.
+   *
+   * Filtering by key instead LOSES WORK, and that is the whole reason this is a
+   * function with its own tests: a row edited while its own upload is in the air
+   * has the same key as the row that was sent, and the queued copy is the newer
+   * one. The first attempt at this filtered by key and was caught by "a change
+   * made while a request is in the air is sent when it lands" in `syncRetry`.
+   */
+  const sentVersion = entryRow("e1", "as sent")
+
+  test("a row that was accepted unchanged is taken out", () => {
+    const left = withoutSentRows({ timetrack_entries: [sentVersion] }, { timetrack_entries: [sentVersion] })
+    expect(countRows(left)).toBe(0)
+  })
+
+  test("but the same row re-queued with a NEWER value stays", () => {
+    const edited = entryRow("e1", "edited while it was uploading")
+    const left = withoutSentRows({ timetrack_entries: [edited] }, { timetrack_entries: [sentVersion] })
+    expect(left.timetrack_entries?.[0].description, "the edit made during the request was thrown away").toBe(
+      "edited while it was uploading",
+    )
+  })
+
+  test("a row queued while the request was in the air stays", () => {
+    const other = entryRow("e2", "queued during the flight")
+    const left = withoutSentRows({ timetrack_entries: [sentVersion, other] }, { timetrack_entries: [sentVersion] })
+    expect(left.timetrack_entries?.map((e) => e.id)).toEqual(["e2"])
+  })
+
+  test("a re-queue that changed nothing but its timestamp is still redundant", () => {
+    const touched = { ...sentVersion, updated_at: "2027-01-01T00:00:00.000Z" }
+    expect(countRows(withoutSentRows({ timetrack_entries: [touched] }, { timetrack_entries: [sentVersion] }))).toBe(0)
+  })
+
+  test("and a tombstone is not confused with the live row it replaces", () => {
+    const tombstone = { ...sentVersion, deleted_at: DELETED_AT }
+    const left = withoutSentRows({ timetrack_entries: [tombstone] }, { timetrack_entries: [sentVersion] })
+    expect(left.timetrack_entries, "the deletion was dropped because the live row had just been accepted").toHaveLength(1)
   })
 })

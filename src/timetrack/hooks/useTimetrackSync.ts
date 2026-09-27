@@ -21,7 +21,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { emptyRows, type TimetrackRows } from "@/src/db/timetrackTypes"
 
-import { PENDING_KEY, SYNC_CURSOR_KEY } from "../config"
+import { PENDING_KEY } from "../config"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
 import {
@@ -35,6 +35,7 @@ import {
   rowKey,
   safeToSend,
   splitIntoBatches,
+  withoutSentRows,
 } from "../syncService"
 import type { TimetrackState } from "../types"
 
@@ -448,8 +449,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       }
       // what we just sent is now what the server has
       serverRows.current = mergeIncoming(serverRows.current ?? emptyRows(), sending, new Set())
-      // anything queued while that request was in the air stays queued
-      pending.current = pending.current === queued ? {} : pending.current
+      /**
+       * TAKE OUT WHAT WAS SENT, NOT "EVERYTHING OR NOTHING".
+       *
+       * This compared object identity: if `pending.current` was still the very
+       * object that went up, clear it, otherwise keep all of it. Any edit made
+       * during the request replaces that object, so the whole queue was kept —
+       * including every row the server had just accepted — and the drain-again
+       * sent them all a second time. Upserts, so wasteful rather than lossy, but
+       * it is one extra full upload per interleaved edit, and on a phone the
+       * queue is largest exactly when someone is typing.
+       *
+       * Removing the sent keys is the same rule stated properly, and it keeps what
+       * arrived while the request was in the air.
+       */
+      pending.current = pending.current === queued ? {} : withoutSentRows(pending.current, sending)
       savePending()
       retryDelay.current = RETRY_START_MS
       clearRetry()
@@ -808,7 +822,28 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     const queuedWhenAsked = keysIn(pending.current)
     const mine = ++pullSeq.current
     try {
-      const response = await fetch(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`)
+      /**
+       * A DEADLINE HERE TOO. THIS FILE'S OWN RULE APPLIED TO TWO OF FOUR
+       * REQUESTS.
+       *
+       * `REQUEST_TIMEOUT_MS` exists because `fetch` has no deadline of its own
+       * and "a connection that accepts and then says nothing — a captive portal,
+       * a dead tunnel" never settles. The POST and first contact both carried
+       * one; the pull and the signed-out recheck, which run on timers for as long
+       * as the tab is open, did not. `pullSeq` means a hung pull cannot corrupt
+       * anything, so what accumulates is requests that never finish, on the loop
+       * that fires most often.
+       */
+      const abort = new AbortController()
+      inFlight.current.add(abort)
+      const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+      let response: Response
+      try {
+        response = await fetch(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`, { signal: abort.signal })
+      } finally {
+        clearTimeout(deadline)
+        inFlight.current.delete(abort)
+      }
       if (response.status === 401) {
         setStatus("signed-out")
         return
@@ -984,9 +1019,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     const recheck = async () => {
       if (document.visibilityState !== "visible") return
       try {
-        const response = await fetch(
-          "/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? new Date().toISOString()),
-        )
+        // a deadline, for the reason given at the pull: this runs on a timer for
+        // as long as the tab is open, and a request that never settles never frees
+        const abort = new AbortController()
+        inFlight.current.add(abort)
+        const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+        let response: Response
+        try {
+          response = await fetch(
+            "/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? new Date().toISOString()),
+            { signal: abort.signal },
+          )
+        } finally {
+          clearTimeout(deadline)
+          inFlight.current.delete(abort)
+        }
         if (response.status === 401) return
         if (localOnly) {
           firstContactDelay.current = RETRY_START_MS
@@ -1123,4 +1170,3 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   }
 }
 
-export { SYNC_CURSOR_KEY }
