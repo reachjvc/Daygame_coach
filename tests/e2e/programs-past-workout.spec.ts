@@ -134,8 +134,12 @@ test("History opens the live screen at the time you choose, and it knows it is t
   await page.getByTestId("add-lift-own").click()
   // An invented lift starts blank, and the tick stays disabled until there are
   // numbers to save — the screen refusing to record a set nobody described.
-  await page.getByLabel("Weight for set 1 in kg").fill("60")
-  await page.getByLabel("Reps for set 1").fill("5")
+  // A regex, because the label names the lift too — "Weight for set 1 of
+  // Front Squat in kg" — so every control in a row is distinct to a screen
+  // reader. An exact string here pins the label's wording, which is not what
+  // this test is about.
+  await page.getByLabel(/^Weight for set 1 .* in kg$/).fill("60")
+  await page.getByLabel(/^Reps for set 1 /).fill("5")
   await page.getByTestId("tick-1").first().click()
   await expect(page.getByTestId("rest-bar")).toHaveCount(0)
 

@@ -272,7 +272,9 @@ test.describe("the live screen's menus", () => {
     await page.getByLabel(/options for squat/i).click()
     await page.getByTestId("lift-add-warmup").click()
 
-    const weight = page.getByLabel(/weight for set W1 in kg/i)
+    // `.* in kg`: the label carries the lift name between the two, so that a
+    // screen reader can tell three lifts' set 1 apart.
+    const weight = page.getByLabel(/weight for set W1 .* in kg/i)
     await expect(weight).toBeVisible({ timeout: 20000 })
     // "50 % of set 1" would be a number nobody asked for, and the working
     // weight pre-filled in a warm-up box is the easiest thing to tick by
