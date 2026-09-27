@@ -1024,3 +1024,105 @@ first.
 **The rule this round bought, beyond the fixes:** a reviewer that reads the code
 finds different things from one that reads the behaviour, and BOTH of mine read
 code. Round 2 sends one at the product and one at the schema for that reason.
+
+# REVIEW UNTIL CLEAN — ROUND 2, 2026-09-27
+
+Two lenses, as round 1 said: one at the product, one at the schema and the
+server. Twenty-eight confirmed defects. It also caught two regressions that
+round 1's own fixes had shipped — "2 memberss" from a plural helper applied
+twice, and a timer-bar field still discarding the violations a comment said were
+fixed.
+
+**The safety net was fake.** `safeToSend` refuses a change set that deletes
+everything, and it could not fire. It totalled "live on the server" across every
+table while `diffRows` never tombstones settings or tag links, so the comparison
+was structurally unreachable: measured on five entries and one tag, seven deletes
+against a live total of nine, and the guard answered `{ok:true}` to the exact
+catastrophe it exists to refuse. Its test passed because the fixture had no
+workspace row, no settings row and no tag links — a shape the product is never in.
+
+Counting the same population is not enough on its own, and that is the part worth
+keeping: a person is ALLOWED to delete everything. The entry list has a select-all
+and a delete-this-whole-day, both with undo. What the incident had and a
+deliberate deletion does not is a workspace the server has never seen. So that is
+the signature now, and `resetWorkspace` keeps its own workspace record.
+
+**Four ways an account silently stopped saving**, all of them front-door:
+projects were written before the clients they reference, so every project created
+with a client — the dropdown, every CSV import — was refused, dropped from the
+queue and recorded as sent; `webhook_log.webhook_id` is `not null` and the mapper
+sent null, and that table is written before settings, so one webhook fire stopped
+preferences syncing; a cleared workspace sent a tombstone beside its replacement
+and both were rewritten to the same primary key, which Postgres refuses for ever
+while `isolateRefusedRows` names nothing; and `addWebhook` accepted an `http://`
+address the schema refuses, blocking five tables behind it.
+
+**And one of the reviewer's findings did not survive checking.** "An overnight
+entry shows three different numbers" — measured across the entry list, both
+calendar columns, the Reports summary and the detailed rows: all four agree at
+14,400 seconds. Round 1's fix had closed it. Written down because a rejected
+finding is as much a result as an accepted one.
+
+# REVIEW UNTIL CLEAN — ROUND 3, 2026-09-27
+
+Two lenses: the sync hook, and my own fixes. Thirteen significant, and the
+headline is that **the owner's original symptom was still reproducing** through a
+path none of the five existing regression tests reached.
+
+**Press Stop. 400ms later the minute pull answers, still inside the 800ms
+debounce. Twenty seconds later the timer is running again and the queue reads
+empty.** Nothing slow, nothing offline. The `dirty` set keeps the server's copy
+of a locally-changed row out of the merge — but the merge is seeded from
+`serverRows`, and an unsent edit lives in `state` and `pending`, never there. So
+the pre-edit row stayed, the workspace was rebuilt as it was before the stop, and
+`awaitingState` then recorded that as the baseline, which is why the stop was gone
+from the queue as well as the screen.
+
+Two baselines now: what we believe the server has is the merge WITHOUT our unsent
+rows, what the person sees is the merge WITH them. Recording the second as the
+first is how a change becomes invisible rather than late.
+
+**Not one preference had ever reached the server** — found by me, in the browser,
+not by either reviewer. `meaningful()` ended
+`JSON.stringify(rest, Object.keys(rest).sort())`, which reads as "the keys,
+sorted". That second argument is a property ALLOWLIST and it applies at every
+depth, so every nested object compared as `{}`. Two rows differing only inside one
+were equal. The time format, every display preference, the member list, pomodoro,
+idle, reminders, rounding, required fields, the lock date, every saved report's
+definition: none of it had ever synced, while the badge read "Saved". Entries were
+fine because they are top-level scalars, which is exactly why it survived.
+
+**One mistyped end time on a TAGGED entry stopped an account saving for good.**
+The entry was isolated and dropped correctly; the orphan `(entry_id, tag_id)` link
+behind it was reported as `""`, because three tables have no `id` column. So the
+browser could never drop it, and every later edit joined the same all-or-nothing
+batch. A reload cannot help — the queue is read back from localStorage — and
+"Reload to resync" is the only thing the person is told.
+
+**The import offer was decoration.** The banner reads "Upload all / Not now" and
+the whole workspace was already queued, with no user action at all: the branch
+that shows the banner set the baseline to `null`, which means "the server has
+nothing", and setting the status on the next line re-ran the change-watcher.
+
+**What round 3 proved I got wrong.** My new mass-deletion guard refused restoring
+a backup from another browser — the journey the Backup card advertises in so many
+words. Measured: a 20-entry backup restored into a 3-entry account was refused as
+"a change that would delete 13 of your saved items", a restore that GREW the
+account. And the refusal's advice finished it: the toast says reload, and a reload
+installs the server's copy.
+
+**And two tests of mine that asserted nothing**, which is the lesson of the round.
+One counted POSTs where the damage is in the queue, so whether it caught the bug
+depended on what else happened to trigger a flush. The other held every request
+behind a single shared handle, so the second instance's request replaced the first
+and the dead request was never the one released — it passed against the broken code
+AND against both fixes. Four such tests from me in this review; I caught three
+myself. The habit that catches them is not review, it is putting the defect back
+and watching the new test go red, every time, without exception.
+
+**Where this stands.** Findings per round: about thirty, twenty-eight, thirteen.
+That is a downward trend and it is not convergence. Round 4 runs against the last
+two rounds' fixes and against the screens no round has opened — Reports, Projects,
+Manage, the calendar import. The ceiling is six rounds, and if it is still
+producing findings there, that is the answer and it gets said plainly rather than
+turned into a round seven.
