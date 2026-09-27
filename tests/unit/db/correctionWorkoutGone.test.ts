@@ -91,10 +91,24 @@ afterEach(() => {
 describe("correcting a workout that is not there any more", () => {
   test("is the same refusal the live screen gets, not a server error", async () => {
     const { WorkoutGone } = await import("@/src/programs/errors")
-    const { repo } = await repoWith(null)
+    const { repo, fake } = await repoWith(null)
     const thrown = await repo.reviseWorkout(USER, WORKOUT, [aSet]).catch((e: unknown) => e)
     expect(thrown).toBeInstanceOf(WorkoutGone)
     expect((thrown as Error).message).toMatch(/thrown away somewhere else/i)
+    /**
+     * A COMPANION, NOT A CLAIM — and it used to be its own test, which is why
+     * this note exists.
+     *
+     * "nothing is written on the way to the refusal" stood alone and could not
+     * fail: delete the `if (!log)` guard entirely and `log.enrollment_id`
+     * throws a TypeError before the rpc, so `rpcCalls` is empty either way. A
+     * reviewer proved it twice, against the pre-fix code and against no guard
+     * at all — 3 failed, 2 passed, and this was one of the two that passed.
+     *
+     * It rides on an assertion that CAN go red instead, and says out loud
+     * which of the two it is.
+     */
+    expect(fake.rpcCalls, "and nothing was written on the way there").toEqual([])
   })
 
   test("so the route answers 409 and not 500", async () => {
@@ -111,11 +125,6 @@ describe("correcting a workout that is not there any more", () => {
     expect(errorBody(thrown).code).toBe("workout_gone")
   })
 
-  test("nothing is written on the way to the refusal", async () => {
-    const { repo, fake } = await repoWith(null)
-    await repo.reviseWorkout(USER, WORKOUT, [aSet]).catch(() => null)
-    expect(fake.rpcCalls).toEqual([])
-  })
 })
 
 describe("the stale-read guard on a workout that held no sets", () => {

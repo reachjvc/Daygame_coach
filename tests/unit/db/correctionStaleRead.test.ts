@@ -52,11 +52,32 @@ const corrected = (id: string | null, over: Record<string, unknown> = {}) => ({
 /** `liveIds` is what the workout holds NOW — the other device's version. */
 function fakeSupabase(liveIds: string[]) {
   const rpcCalls: string[] = []
+  /** Every `.update()` payload, so the receipt-nulling can be asserted. */
+  const updates: Record<string, unknown>[] = []
   const table = (name: string) => {
     let selected = ""
     const chain: Record<string, unknown> = {
       select: (cols?: string) => {
         selected = cols ?? ""
+        return chain
+      },
+      /**
+       * `update` WAS MISSING, AND THREE TESTS NAMED "saves" PASSED ANYWAY.
+       *
+       * `reviseWorkout` ends by nulling the superseded receipt
+       * (`progression_changes`, `personal_records`). With no `update` on the
+       * chain every successful path threw "supabase.from(...).update is not a
+       * function", and the `.catch(() => null)` below ate it — so the three
+       * tests that claim a correction SAVES were asserting `rpcCalls` after a
+       * rejection, and the receipt-nulling had no coverage anywhere.
+       *
+       * The identical hole was found and fixed in the sibling file
+       * `correctionWorkoutGone.test.ts` and not fixed here: rule 3 half-done,
+       * one file away. A reviewer found it by replacing the catch with a
+       * logging one and reading what came out.
+       */
+      update: (patch: Record<string, unknown>) => {
+        updates.push(patch)
         return chain
       },
       eq: () => chain,
@@ -77,6 +98,7 @@ function fakeSupabase(liveIds: string[]) {
   }
   return {
     rpcCalls,
+    updates,
     client: {
       from: table,
       rpc: (n: string) => {
@@ -138,10 +160,28 @@ describe("a correction built on a read that has been overtaken", () => {
 
   test("an unchanged workout saves, which is the whole point of the screen", async () => {
     const { repo, fake } = await repoWith(["s1", "s2"])
-    await repo
-      .reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2")], ["s1", "s2"])
-      .catch(() => null)
+    // RESOLVES. It used to be `.catch(() => null)`, which is how this passed
+    // for a call that threw on every run.
+    await expect(
+      repo.reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2")], ["s1", "s2"])
+    ).resolves.toEqual({ recalculated: false })
     expect(fake.rpcCalls).toContain("replace_sets_and_replay")
+  })
+
+  test("and the receipt it supersedes stops claiming to be right", async () => {
+    /**
+     * `progression_changes` and `personal_records` are written at the finish
+     * and read back verbatim. A correction recomputes the program's weights
+     * and used to leave both alone, so the totals updated and "Squat: Hit all
+     * reps → +2.5kg" did not — half the screen recomputed, half frozen, with
+     * nothing saying which.
+     *
+     * This had NO test anywhere. The three that should have covered it were
+     * swallowing the rejection thrown by the very step that does it.
+     */
+    const { repo, fake } = await repoWith(["s1"])
+    await repo.reviseWorkout(USER, WORKOUT, [corrected("s1")], ["s1"])
+    expect(fake.updates).toContainEqual({ progression_changes: null, personal_records: null })
   })
 
   test("REMOVING a set is not a stale read — the whole point of the screen", async () => {
@@ -154,7 +194,9 @@ describe("a correction built on a read that has been overtaken", () => {
      * the screen never does.
      */
     const { repo, fake } = await repoWith(["s1", "s2"])
-    await repo.reviseWorkout(USER, WORKOUT, [corrected("s1")], ["s1", "s2"]).catch(() => null)
+    await expect(
+      repo.reviseWorkout(USER, WORKOUT, [corrected("s1")], ["s1", "s2"])
+    ).resolves.toBeTruthy()
     expect(fake.rpcCalls, "a deletion must reach the database").toContain(
       "replace_sets_and_replay"
     )
@@ -163,7 +205,7 @@ describe("a correction built on a read that has been overtaken", () => {
   test("a client that sends no `basedOn` saves exactly as it did before", async () => {
     // The guard may not start refusing on information it was never given.
     const { repo, fake } = await repoWith(["s1", "s2", "s3"])
-    await repo.reviseWorkout(USER, WORKOUT, [corrected("s1")]).catch(() => null)
+    await expect(repo.reviseWorkout(USER, WORKOUT, [corrected("s1")])).resolves.toBeTruthy()
     expect(fake.rpcCalls).toContain("replace_sets_and_replay")
   })
 })

@@ -772,24 +772,31 @@ test.describe("live workout", () => {
     const answer = await refused
 
     /**
-     * THE WORDS FIRST, because they are what the owner actually saw, and
-     * because the order decides what a red run proves.
+     * THE SENTENCE FIRST, AND THAT ORDER IS THE POINT.
      *
-     * The status was asserted first to begin with. Reverting `workoutRepo` to
-     * before the fix turned this test red on "Expected 409, Received 400" and
-     * stopped there — so the run never reached the sentence on the screen, and
-     * the test's headline claim had still never been observed failing. A
-     * guard proved only on its second assertion is proved only for that one.
+     * Twice wrong before this. The status was asserted first, so a red run
+     * stopped on "Expected 409, Received 400" and never reached the sentence —
+     * a guard proved only on its second assertion is proved only for that one.
+     * Then the four `not.toContainText` leaks were moved to the front, which
+     * was WORSE: a negated Playwright assertion resolves the moment the
+     * condition holds, and immediately after the response arrives React has
+     * not painted the error yet, so all four passed against a body that did
+     * not contain the error at all. They would have passed with the RLS text
+     * on its way to the screen.
+     *
+     * So: wait for the sentence, which is both the headline claim AND the
+     * thing that proves the error has rendered. Only then is "no database
+     * wording is on this screen" a statement about anything.
      */
+    await expect(page.locator("body")).toContainText(/thrown away somewhere else/i, {
+      timeout: 15000,
+    })
     for (const leak of [/row-level security/i, /violates/i, /constraint/i, /workout_sets/i]) {
       await expect(
         page.locator("body"),
         `the database's own words reached a person standing at a squat rack: ${leak}`
       ).not.toContainText(leak, { timeout: 5000 })
     }
-    await expect(page.locator("body")).toContainText(/thrown away somewhere else/i, {
-      timeout: 15000,
-    })
 
     /**
      * And the status, which decides whether the set SURVIVES. Anything in the
