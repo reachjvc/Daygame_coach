@@ -436,6 +436,21 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
 }
 
 /**
+ * "THAT IS NOT A UUID" IS A NOT-FOUND, NOT A FAULT.
+ *
+ * Postgres answers 22P02 — invalid input syntax for type uuid — when an id
+ * cannot name a row at all. `/programs/workout/not-a-uuid` turned that into a
+ * `CouldNotTell`, which the page had no catch for, so a truncated shared link
+ * reached the global error screen: "This page could not load. The fault has
+ * been reported." A well-formed id that is simply missing correctly gets the
+ * 404 page one line later.
+ *
+ * Nothing is wrong on this side and no retry will help, which is exactly what
+ * separates it from every other read failure this file wraps.
+ */
+const idCannotExist = (error: { code?: string }): boolean => error.code === "22P02"
+
+/**
  * WHICH OF FOUR A WORKOUT IS IN — asked, never inferred from an error code.
  *
  * "Zero rows came back" is not a fact about the workout; it is the shape of
@@ -460,6 +475,9 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
     .eq("user_id", userId)
     .maybeSingle()
   if (error) {
+    // A malformed id is not a question that failed — it is a workout that
+    // cannot exist, which is "gone".
+    if (idCannotExist(error)) return "gone"
     // SAY SO. Every sibling logs the real message; this one returned the
     // fourth state silently, so an operator saw a 503 with no cause anywhere.
     console.error(`could not tell the fate of workout ${workoutId}: ${error.message}`)
@@ -811,6 +829,9 @@ export async function summaryFor(userId: string, workoutId: string): Promise<Wor
     .eq("user_id", userId)
     .not("ended_at", "is", null)
     .maybeSingle()
+  // A malformed id names no workout, which is the same answer as a missing
+  // one — and a 404 rather than "the fault has been reported".
+  if (error && idCannotExist(error)) return null
   if (error) throw readRefused("that workout", error)
   if (!data) return null
   const row = data as {

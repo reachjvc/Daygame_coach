@@ -36,13 +36,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useProgramDrafts } from "../hooks/useProgramDrafts"
 import { BUILDER_STORAGE_KEY, formatProgramText, parseProgramText } from "../programText"
 import { convertTyped, numericWeights } from "../builder"
@@ -468,6 +462,15 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
         <DialogContent data-testid="week-name-dialog">
           <DialogHeader>
             <DialogTitle>Name this week</DialogTitle>
+            {/*
+              Radix warns "Missing `Description` or `aria-describedby`" on
+              every open of this dialog, twice. Console noise is not harmless
+              in a slice reviewed by opening pages and reading the console —
+              it is what a real error hides behind.
+            */}
+            <DialogDescription>
+              So you can find it again in your saved weeks.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="week-name">Name</Label>

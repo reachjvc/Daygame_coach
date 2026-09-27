@@ -52,7 +52,27 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
         const isToday = weekday === week.todayWeekday
         const trained = week.trainedWeekdays.includes(weekday)
         const label = labels?.[weekday]
-        const what = trained ? "trained" : label ? label : "nothing planned"
+        /**
+         * "NOTHING PLANNED" IS A CLAIM, AND ON A ROTATION IT IS FALSE.
+         *
+         * `labels` is only given when the schedule PINS WEEKDAYS. A rotation
+         * like StrongLifts does not, so every cell read
+         * "Mon: nothing planned. Tap to change." … "Sun: nothing planned"
+         * while the card directly below said "Workout A" and offered Start.
+         * A screen reader was told the week was empty by the one control on
+         * the page whose job is to describe it.
+         *
+         * And today was never said: `isToday` reached the eye through
+         * `font-semibold` and `data-today`, and the accessible name not at
+         * all.
+         */
+        const what = trained
+          ? "trained"
+          : label
+            ? label
+            : labels
+              ? "nothing planned"
+              : "no set day on this program"
         /**
          * A DAY WITH A SESSION ON IT LOOKS DIFFERENT FROM AN EMPTY ONE.
          *
@@ -100,7 +120,7 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
               data-today={isToday ? "1" : undefined}
               data-trained={trained ? "1" : undefined}
               className={shared}
-              aria-label={`${short}: ${what}`}
+              aria-label={`${short}${isToday ? " (today)" : ""}: ${what}`}
             >
               {body}
             </div>
@@ -117,7 +137,7 @@ export function WeekStrip({ week, labels, onPickDay }: Props) {
             // `bg-accent` in this app is the sunset red; a day you can tap
             // should not flash a warning colour under your thumb.
             className={`${shared} transition-colors hover:bg-muted/50`}
-            aria-label={`${short}: ${what}. Tap to change.`}
+            aria-label={`${short}${isToday ? " (today)" : ""}: ${what}. Tap to change.`}
           >
             {body}
           </button>
