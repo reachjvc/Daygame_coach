@@ -5,6 +5,190 @@
 Every number below was measured in this codebase on 2026-09-26, not estimated.
 Where a number is a guess it says so.
 
+## Revision 5 — 2026-09-27, round four's second reviewer
+
+Round 4's second reviewer looked at execution and operability and returned eight
+findings, none overlapping rounds 1–3. Re-verified here; where my own measurement
+differed from the reviewer's, mine is given and labelled.
+
+### Nothing has ever built this app except Vercel, and the build command will refuse to run on Railway
+
+`grep -rn "npm run build\|next build" .github/` → **nothing.** CI runs the lint
+ratchet, the type ratchet, unit tests and integration tests. **It never builds.**
+The owner's own machine cannot build it (the 29 GB freeze). So **Vercel's builder is
+the only machine that has ever produced a build of this codebase — and M5 switches
+it off.**
+
+What happens on Railway, from `scripts/build.sh`: line 28 runs straight through and
+uncapped `if [ -n "${CI:-}" ] || [ -n "${VERCEL:-}" ]`; otherwise it requires
+`systemd-run` with a delegated memory controller and, failing that, **prints an
+error and `exit 1`** at line 58 — deliberately, because it will not quietly build
+uncapped. A Railway builder has no systemd, no `VERCEL`, and sets `RAILWAY_*`
+rather than `CI`. **So the first deploy fails at the build step with a message about
+VS Code freezing.** And the other branch is no comfort: with `CI=1` the ceiling is
+skipped entirely, and the only thing making that survivable is `--webpack`, whose
+peak memory has **never been measured** — only described as fitting inside 12 GB.
+Entry-tier builders are smaller than that.
+
+**Change — this becomes M1's FIRST deliverable, before M1.2–M1.7, because
+everything else in M1 assumes a deployable app:** "the app builds and boots on the
+new platform", with the webpack build's measured peak memory written down.
+`scripts/build.sh` gains a third case for "inside a build container whose memory the
+platform already limits" instead of relying on `CI` being set by accident. And
+**`npm run build` joins `ci.yml` now, on the current stack**, so the build stops
+being unverified anywhere but Vercel.
+
+### A Railway deploy silently switches offline support off — on the platform chosen to get a phone app
+
+`next.config.mjs` builds `NEXT_PUBLIC_BUILD_ID` from `VERCEL_GIT_COMMIT_SHA`, else
+`git rev-parse`, else the literal `"unknown"`. On Railway the first does not exist
+(it is `RAILWAY_GIT_COMMIT_SHA`) and build containers usually get a source snapshot
+with no `.git`, so it resolves to `"unknown"`. Then
+`OfflineShell.tsx` (verified): `if (!version || version === "unknown")` →
+`console.error` and **return, without registering the service worker.** No offline
+shell, no cached pages, one line in a browser console nobody is reading — on the
+platform whose entire purpose is M7 and vision item 46. Every crash report also
+files under release `"unknown"`, collapsing all versions into one row, which
+`next.config.mjs`'s own comment says is exactly what makes "how often does this
+happen" meaningless.
+
+**Change:** M1.7 names `NEXT_PUBLIC_BUILD_ID` as a required build-time variable
+wired to the platform's commit variable, and **the build fails rather than degrading
+to `"unknown"`.** Same silent-fallback class as M1.6's Ollama default; this one was
+missed.
+
+### M4's gate cannot ask its question of the endpoints where a missing filter leaks most
+
+The gate substitutes user B's ids. Measured here: **116 routes, 26 with a dynamic
+`[id]` segment, and 21 with no dynamic segment and no parameters read at all**
+(`searchParams`, `request.json()`, `req.json()`, `request.text()`). The reviewer
+counted 32 by looking only at GET handlers; **either way the class is the point**:
+for those endpoints there is **no id to substitute.** They mean "give me *my*
+collection" — `/api/tracking/dashboard`, `/api/tracking/stats`,
+`/api/tracking/session/active`, `/api/tracking/review/daily`. They are also the
+highest-risk class in the app: one forgotten `.eq("user_id", …)` returns every
+user's rows to whoever asks, **and the id-substitution test would report green
+because it had nothing to substitute.** The plan's own warning — "a green suite that
+silently skipped 30 endpoints is worse than a red one" — lands on the plan.
+
+**Change: M4 needs two generated forms, not one.** (a) id substitution for the 26
+path-param endpoints and whichever body-reading ones carry an id. (b) For every
+parameterless collection endpoint: seed user B with **recognisably marked rows**,
+call as A, and fail if any of B's markers appear anywhere in A's response. Form (b)
+covers the 21–32 and is the only form that works without knowing each endpoint's
+request shape. M4 must also state **how the generator tells "denied because our code
+filtered" from "rejected as malformed"** — a generated request that 400s proves
+nothing, and with 69 body-reading endpoints that is the common case.
+
+### The vector search the premium product runs on exists nowhere in the repo, and M1.5's own test calls it
+
+Confirmed in Revision 4 that `match_embeddings` has no definition here. Round 4's
+second reviewer found the rest of the hole: `create extension if not exists vector`
+appears in **one** migration and it is the **test** table's
+(`20260606_create_embeddings_test_table.sql:4`) — nothing enables pgvector for the
+real `embeddings` table. The integration harness fakes the type outright
+(`schema.sql:413-424`, "Using DOUBLE PRECISION[] instead of vector type for
+testcontainers"), so **pgvector has never been exercised by any test in this
+project.** And `src/db/embeddingsRepo.ts:45-46` says why the function cannot be
+found: "Uses the match_embeddings RPC function **defined in Supabase**".
+
+**M1.5's stated acceptance test is `11.EXT.retrieval-smoke.ts` running green — and
+that script calls `match_embeddings`.** After a migration port the function does not
+exist, so the named test cannot pass, for the milestone protecting the corpus.
+
+**Change:** M2 gains three named deliverables — `CREATE EXTENSION vector` on the new
+Postgres (**verify Railway's Postgres image ships pgvector before committing to it;
+if it does not, the database choice changes**), the real `embeddings` table with its
+`vector(768)` column and ivfflat index, and `match_embeddings` read out of live
+Supabase and committed as a migration. There are **11** RPCs, not 10
+(`match_embeddings_test` was uncounted).
+
+### Q5 is measurably wrong, and its "cost if wrong: nothing" is false
+
+Q5 says **four** `/api/test/*` and `/api/exercising/*` routes are live in production
+and "not used by any screen". Measured: `find app/api/test -name route.ts` → **11**,
+`find app/api/exercising -name route.ts` → **3**. **Fourteen, and they have live
+callers** — `src/exercising/components/ExercisingPage.tsx:67,100,122` calls all
+three exercising routes; `app/test/articles/page.tsx` makes 12 calls across six test
+endpoints and is the owner's article authoring tool; script-builder and calibration
+each call their own. **And it contradicts M6**, whose 23 screens include
+`/test/scenario-lab` and `/test/goal-review`, so `app/test/**` is in scope later
+while M1 deletes the endpoints half of it runs on. There are 63 `page.tsx` under
+`app/test/`.
+
+**This one matters beyond the fix: it is presented as measured, in the section the
+owner approves, and it was not.** Rewrite with the real count, say which of the
+owner's own tools break, and decide the pages and their endpoints together.
+
+### M0.4's "data handle" is unspecified, and the two shapes differ by ~220 files
+
+Revision 3 made the seam M0.4's first job and budgeted 1–2 weeks without naming its
+shape. **244 files import from `@/src/db/`.** If the handle is a function parameter,
+every one changes. The cheap shape — an ambient provider whose default is today's
+`createServerSupabaseClient()`, overridden in tests — touches ~26 files and no call
+sites. **1–2 weeks is only credible for the second.**
+
+And the repos are interlocked, so the seam cannot be done one repo at a time:
+`healthRepo` reaches the database through `getUserTimezone` in `settingsRepo`
+(`healthRepo.ts:15`); `workoutRepo` reaches it through three other repos and two
+plpgsql functions. **For the two biggest files the seam is necessary and not
+sufficient — anything less than the whole graph leaves both untestable.** That is
+the direct answer to "does M0 unblock M5": only if M0.4 does the graph.
+
+### Ordering: B4 is scheduled after the work that needs it, and the roles are unmentioned
+
+**B4 must move before M0.4.** M0.4 has to complete `tests/integration/schema.sql`
+from 52 tables to the live schema, and the only authoritative copy of the live
+schema is the live database — the mirror is hand-maintained and stale ("Last synced:
+18-09-2026"), and 18–19 tables have no migration to reconstruct from. B4 is
+currently "before M2", which is after M0.4. **So the plan's earliest step is gated
+on the owner, and "M0 alone is 2 to 4 sessions and carries no risk" is wrong on both
+halves.**
+
+**The Supabase roles are never mentioned.** **16 of the 56 migration files reference
+`authenticated` / `anon` / `service_role`, in 19 GRANT/REVOKE statements.** On a
+fresh Postgres those roles do not exist and the grant fails, stopping the replay.
+M2 must say whether the roles are recreated or the grants rewritten — and this
+interacts with the plpgsql functions, whose `EXECUTE` grants are among the 19.
+
+**The branch gate is mechanically safer than feared, and its test has never run.**
+`git rev-list --count origin/main..HEAD` = **313** (it was 265 when this plan was
+written, two days ago), `HEAD..origin/main` = **0**, so the merge to `main` is a
+fast-forward with no conflict risk — that worry was unfounded. But `e2e.yml` runs
+the heavy suite only on pull requests into `main`/`beta` and nightly, and of 179
+measured runs "every completed run was red". So that fast-forward would be the
+**first** full-suite run against this code, and M1 deploys production from `main`.
+**M1 must say how `main` gets updated, and that "the full e2e suite green once" is a
+precondition for the first production deploy rather than an assumption.**
+
+Two more for M1: GitHub workflows are independent, so a `deploy.yml` on push runs
+*beside* `ci.yml` and would deploy red code unless it uses `workflow_run`; and
+Railway's GitHub integration deploys on push by default, outside any workflow file.
+And `e2e.yml` hardcodes five Supabase secrets in its `env:` blocks — a fourth place
+M1.7's inventory must reach.
+
+### What round 4's second reviewer confirmed as sound
+
+**The e2e suite does not touch Supabase** (`grep -rln "supabase" tests/e2e/` →
+nothing); `auth.setup.ts` signs in through the real form and saves `storageState()`,
+which captures cookies *and* localStorage, so M3's cookie→token switch does not by
+itself break the 79 specs. **No Vercel-only runtime config** beyond the build id —
+zero `maxDuration`, zero `runtime` exports, one `force-dynamic`. **`--webpack` is a
+real supported flag** in the installed Next 16.3.5. **The Drizzle query port is
+mostly mechanical** — only 7 embedded selects, 3 `!inner`, 8 `.or()`, 16 `.upsert()`,
+no full-text search — and the deliberate-refusal protocol survives because
+`databaseRefusal` needs only `{ code, message }`, which `pg` provides. **Dropping
+the policies will not cause a hidden tail of test rewrites** — `asUser` appears in 3
+files, 13 times.
+
+**Two live drifts worth noting:** `supabase/pending-owner-approval/` now holds **2**
+migrations, one dated **today**, so "56" is already 58 and moving while the plan is
+reviewed. And the two biggest repos have grown since the plan measured them —
+`workoutRepo.ts` is **1,762** lines (plan: 1,453) and `healthRepo.ts` **1,296**
+(plan: 1,242) — so M0.4's "~2,700 lines with nothing watching" is now ~3,058. Peers
+are editing these files as this is being written, which is the argument for treating
+every estimate here as a floor.
+
 ## Revision 4 — 2026-09-27, round four of review-until-clean
 
 Round 4's security reviewer found the largest hole in four rounds, and it
