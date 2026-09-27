@@ -8,7 +8,7 @@
  */
 
 import { STATE_VERSION } from "./config"
-import { dateKey, epochSeconds, parseDurationInput, parseTimeInput } from "./timetrackFormatService"
+import { dateKey, epochSeconds, parseDurationInput, parseTimeInput, startOfDayIso } from "./timetrackFormatService"
 import { addClient, createManualEntry, createProject, createTag, createTask } from "./timetrackService"
 import type { Id, IsoDateTime, TimetrackState } from "./types"
 
@@ -142,7 +142,19 @@ export function importEntriesCsv(
     }
     if (!startIso && cell(idx.startDate)) {
       const day = normalizeDate(cell(idx.startDate))
-      if (day) startIso = cell(idx.startTime) ? parseTimeInput(cell(idx.startTime), day) : `${day}T00:00:00.000Z`
+      /**
+       * MIDNIGHT IS A LOCAL TIME. `T00:00:00.000Z` IS SOMEBODY ELSE'S MIDNIGHT.
+       *
+       * A row with a start date and no start time used to become UTC midnight.
+       * Anywhere west of Greenwich that is the evening BEFORE — so in New York
+       * every date-only row in an import landed on the previous day, in the entry
+       * list, in the calendar and in every report. East of Greenwich it happened
+       * to look right, which is why it survived.
+       *
+       * Every other date in this slice is a local wall-clock day, including
+       * `parseTimeInput` on the line above. `startOfDayIso` is the same rule.
+       */
+      if (day) startIso = cell(idx.startTime) ? parseTimeInput(cell(idx.startTime), day) : startOfDayIso(day)
     }
     if (!startIso) {
       skipped.push({ line: r + 1, reason: "Missing or unreadable start" })

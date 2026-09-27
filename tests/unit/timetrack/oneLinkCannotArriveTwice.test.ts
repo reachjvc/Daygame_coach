@@ -75,3 +75,32 @@ describe("importing a CSV whose tags cell repeats a name", () => {
     expect(linkKeys(result.state)).toHaveLength(1)
   })
 })
+
+describe("a CSV row with a date and no time", () => {
+  /**
+   * `T00:00:00.000Z` is UTC midnight, and every date in this slice is a local
+   * wall-clock day. Anywhere west of Greenwich those are different days: in New
+   * York, a row dated 2026-09-20 with no start time landed on the 19th — in the
+   * entry list, in the calendar and in every report. East of Greenwich it
+   * happened to look right, which is why it lasted.
+   *
+   * `vitest.config.ts` pins TZ to Europe/Copenhagen, which is east of Greenwich,
+   * so asserting the day string alone would pass against the old code too. The
+   * assertion is therefore on the instant: local midnight of the day asked for.
+   */
+  test("starts at midnight where the person is, not in Greenwich", () => {
+    const csv = [
+      "Description,Start date,Start time,End date,End time,Duration,Tags",
+      "A whole day,2026-09-20,,2026-09-20,,08:00:00,",
+    ].join("\n")
+
+    const result = importEntriesCsv(createEmptyWorkspace(NOW), csv, NOW)
+    expect(result.imported, JSON.stringify(result.skipped)).toBe(1)
+
+    const start = new Date(result.state.entries[0].start)
+    expect(start.getTime(), "the entry starts at a different instant than local midnight").toBe(
+      new Date(2026, 8, 20, 0, 0, 0, 0).getTime(),
+    )
+    expect(start.getHours(), "a date-only row must not land in the small hours or the previous evening").toBe(0)
+  })
+})

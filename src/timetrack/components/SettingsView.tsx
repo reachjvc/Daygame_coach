@@ -1027,6 +1027,20 @@ function DataPanel({
 }) {
   const jsonInput = useRef<HTMLInputElement | null>(null)
   const csvInput = useRef<HTMLInputElement | null>(null)
+  /**
+   * A CHOSEN BACKUP WAITS TO BE CONFIRMED. IT DOES NOT APPLY ITSELF.
+   *
+   * Restoring used to be one gesture: pick a file, and every entry, project, tag
+   * and setting in the workspace was replaced. There was no confirm step and no
+   * undo — and it is worse than it sounds, because the replacement syncs. Every
+   * entry recorded since that backup was taken becomes a tombstone on every
+   * device signed into the account. Picking last month's file by mistake in a
+   * file dialog, which offers no way back, silently deleted a month of work.
+   *
+   * "Clear this workspace", three inches down the same page and strictly less
+   * destructive, has asked twice since the day it was written.
+   */
+  const [pendingRestore, setPendingRestore] = useState<{ next: TimetrackState; fileName: string } | null>(null)
 
   return (
     <div className="space-y-4">
@@ -1056,7 +1070,28 @@ function DataPanel({
         </div>
       </SectionCard>
 
-      <SectionCard title="Backup" description="Export a copy to keep outside this app, or to move it to another browser.">
+      <SectionCard
+        title="Backup"
+        description="Export a copy to keep outside this app, or to move it to another browser."
+      >
+        {/*
+          SAID BECAUSE THE FILE LEAVES THE APP.
+          A calendar's "secret address in iCal format" is a credential: anyone
+          holding that URL can read the whole calendar, without signing in and
+          without the owner being told. It is stored in the workspace, so it is in
+          the exported file in plain text — and an exported file is the one thing
+          here that gets emailed to yourself, dropped in a shared folder or
+          attached to a bug report. Redacting it would make the backup silently
+          fail to restore the connection, so the honest option is to say what is
+          in the file.
+        */}
+        {state.calendars.some((c) => c.source === "ics_url") && (
+          <p className="mb-2 text-xs text-amber-600 dark:text-amber-500">
+            This file will contain the secret calendar address{state.calendars.filter((c) => c.source === "ics_url").length === 1 ? "" : "es"} you
+            connected. Anyone who opens the file can read {state.calendars.filter((c) => c.source === "ics_url").length === 1 ? "that calendar" : "those calendars"} without
+            signing in — keep it somewhere private.
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
@@ -1074,19 +1109,81 @@ function DataPanel({
               const file = event.target.files?.[0]
               event.target.value = ""
               if (!file) return
-              const result = importStateJson(await file.text())
+              /**
+               * A FILE THAT CANNOT BE READ SAYS SO.
+               *
+               * `file.text()` rejects on a read error, and nothing here caught
+               * it — so the promise failed silently, the panel never appeared,
+               * and the person was left looking at a button that had apparently
+               * done nothing at all.
+               */
+              let text: string
+              try {
+                text = await file.text()
+              } catch (error) {
+                pushToast(`Could not read ${file.name}: ${error instanceof Error ? error.message : "the file could not be opened"}`, "error")
+                return
+              }
+              const result = importStateJson(text)
               if (!result.state) {
                 pushToast(result.error ?? "Import failed", "error")
                 return
               }
-              replaceState(result.state)
-              pushToast("Workspace restored from backup")
+              setPendingRestore({ next: result.state, fileName: file.name })
             }}
           />
           <Button size="sm" variant="outline" onClick={() => jsonInput.current?.click()}>
             <IconImport className="size-4" /> Restore from a backup
           </Button>
         </div>
+
+        {pendingRestore && (
+          <div className="mt-3 space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm" data-testid="tt-restore-confirm">
+            <p className="font-medium">Replace everything in this workspace with {pendingRestore.fileName}?</p>
+            {/*
+              The numbers, not an adjective. "This will overwrite your data" is
+              true of a backup taken a minute ago and of one taken in March, and
+              the person can only tell those apart by being told what is in each.
+            */}
+            <ul className="grid gap-0.5 text-xs text-muted-foreground sm:grid-cols-2">
+              <li>
+                Time entries: <strong>{state.entries.length} now</strong> → {pendingRestore.next.entries.length} in the backup
+              </li>
+              <li>
+                Projects: <strong>{state.projects.length} now</strong> → {pendingRestore.next.projects.length} in the backup
+              </li>
+              <li>
+                Clients: <strong>{state.clients.length} now</strong> → {pendingRestore.next.clients.length} in the backup
+              </li>
+              <li>
+                Tags: <strong>{state.tags.length} now</strong> → {pendingRestore.next.tags.length} in the backup
+              </li>
+            </ul>
+            <p className="text-xs text-muted-foreground">
+              This cannot be undone, and it does not stop at this browser: anything recorded since the backup was taken is
+              deleted from your account and from every other device you are signed in on.
+              {state.entries.length > pendingRestore.next.entries.length
+                ? ` That is ${state.entries.length - pendingRestore.next.entries.length} time ${state.entries.length - pendingRestore.next.entries.length === 1 ? "entry" : "entries"} fewer than you have now.`
+                : ""}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <ConfirmButton
+                variant="destructive"
+                confirmLabel="Yes, replace everything"
+                onConfirm={() => {
+                  replaceState(pendingRestore.next)
+                  setPendingRestore(null)
+                  pushToast("Workspace restored from backup")
+                }}
+              >
+                Restore this backup
+              </ConfirmButton>
+              <Button size="sm" variant="outline" onClick={() => setPendingRestore(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </SectionCard>
 
       <SectionCard

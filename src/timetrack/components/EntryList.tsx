@@ -666,7 +666,10 @@ function EntryFields({
                 }}
                 disabled={!editable}
                 aria-label="Start time"
-                className="w-[52px] rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60"
+                className={cn(
+                  timeInputWidth(state),
+                  "rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60",
+                )}
               />
               <span className="text-muted-foreground">–</span>
               <input
@@ -678,7 +681,10 @@ function EntryFields({
                 }}
                 disabled={!editable || running}
                 aria-label="End time"
-                className="w-[52px] rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground"
+                className={cn(
+                  timeInputWidth(state),
+                  "rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground",
+                )}
               />
             </div>
           )}
@@ -831,13 +837,26 @@ function EntryMenu({
   )
 }
 
+/**
+ * THIS WAS A SECOND COPY OF `formatTimeOfDay`, WITH THE AM/PM DROPPED.
+ *
+ * In 12-hour mode it rendered 13:30 as "1:30" — the same string as 01:30 — and
+ * that string is the value of an editable input whose blur runs it back through
+ * `parseTimeInput`. With no meridiem to read, "1:45" is a quarter to two in the
+ * morning, so changing an afternoon entry's minutes moved it back twelve hours.
+ * The rest of the page was right the whole time, because the rest of the page
+ * called the shared formatter that this was a copy of.
+ *
+ * It delegates now rather than being deleted outright, because the inputs need
+ * the width the suffix takes and that is decided here too.
+ */
 function formatTimeLabel(iso: string, state: TimetrackState): string {
-  const date = new Date(iso)
-  if (state.user.timeFormat === "h12") {
-    const h = date.getHours() % 12 || 12
-    return `${h}:${String(date.getMinutes()).padStart(2, "0")}`
-  }
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`
+  return formatTimeOfDay(iso, state.user.timeFormat)
+}
+
+/** "1:30 PM" needs more room than "13:30", and a clipped time is unreadable */
+function timeInputWidth(state: TimetrackState): string {
+  return state.user.timeFormat === "h12" ? "w-[72px]" : "w-[52px]"
 }
 
 function MenuItem({
