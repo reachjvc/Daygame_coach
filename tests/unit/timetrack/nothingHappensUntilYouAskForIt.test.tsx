@@ -46,9 +46,18 @@ beforeEach(() => {
   vi.useFakeTimers()
 })
 
-function Harness({ initial, onOffer }: { initial: TimetrackState; onOffer?: (has: boolean) => void }) {
+function Harness({
+  initial,
+  onOffer,
+  onState,
+}: {
+  initial: TimetrackState
+  onOffer?: (has: boolean) => void
+  onState?: (state: TimetrackState) => void
+}) {
   const [state, setState] = useState<TimetrackState | null>(null)
   useEffect(() => setState(initial), [initial])
+  useEffect(() => { if (state) onState?.(state) }, [state, onState])
   const apply = useCallback((u: (c: TimetrackState) => TimetrackState) => setState((c) => (c ? u(c) : c)), [])
   const replace = useCallback((next: TimetrackState) => setState(next), [])
   const toast = useCallback(() => {}, [])
@@ -192,5 +201,95 @@ describe("leaving the tracker with an upload in the air", () => {
       Object.values(afterTheGhost).some((rows) => rows.length > 0),
       "the unmounted instance emptied the live instance's queue — the badge promises work that is no longer on disk",
     ).toBe(true)
+  })
+})
+
+describe("a reload after the account has some of what this browser holds", () => {
+  /**
+   * THE SERVER DOES NOT GET TO DELETE A ROW IT HAS NEVER SEEN.
+   *
+   * Found in round 4, and it was a regression from round 3's own fix. Making the
+   * import offer a real gate set the baseline to "the server already has everything",
+   * which is a lie while the account is empty. So an edit made before the person
+   * answers the banner — a rename, a Start, a Stop — uploaded that ONE row;
+   * `resolveWorkspaceId` invented a workspace to hang it on; and the next reload was
+   * no longer a first-time account, so adoption took the server's sparse copy as the
+   * base and `replaceState` wrote it over everything else.
+   *
+   * Measured before the fix: a browser holding 3 entries, 2 projects, 2 tags, 2
+   * tasks, a client and a workspace named "Test WS" came back with 1 entry, 0
+   * projects, 0 tags and a workspace called "My Workspace". Gone from the only copy
+   * that had them.
+   *
+   * "Not now" reached the same end by the same route, which made its own promise —
+   * "this browser's time stays here until you ask again" — false at the next reload.
+   */
+  test("keeps what the account has never heard of", async () => {
+    const held = twoEntries()
+    const localRows = stateToRows(held, USER)
+    // the account holds ONE of the entries and a workspace it invented itself
+    const sparseServer = {
+      ...localRows,
+      timetrack_workspaces: [
+        { id: "server-invented", user_id: USER, updated_at: "2026-09-01T00:00:00.000Z", deleted_at: null, name: "My Workspace", currency: "EUR", config: {} },
+      ],
+      timetrack_entries: [localRows.timetrack_entries[0]],
+      timetrack_projects: [],
+      timetrack_tags: [],
+      timetrack_clients: [],
+      timetrack_tasks: [],
+    }
+
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: { method?: string }) => {
+      if (init?.method === "POST") return { ok: true, status: 200, json: async () => ({}) }
+      if (String(url).includes("since=")) return { ok: true, status: 200, json: async () => ({ rows: {}, cursor: NOW_ISO }) }
+      // not empty any more: a fragment was uploaded before the person answered
+      return { ok: true, status: 200, json: async () => ({ rows: sparseServer, cursor: NOW_ISO, empty: false, userId: USER }) }
+    }))
+
+    let latest: TimetrackState | null = null
+    render(<Harness initial={held} onState={(s) => (latest = s)} />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+
+    expect(latest, "the hook never handed a state back").toBeTruthy()
+    const after = latest as unknown as TimetrackState
+    expect(after.entries, "entries the account never had were deleted from the only copy of them").toHaveLength(
+      held.entries.length,
+    )
+    expect(after.projects.length, "the projects were deleted").toBe(held.projects.length)
+    expect(after.tags.length, "the tags were deleted").toBe(held.tags.length)
+    expect(after.clients.length, "the client was deleted").toBe(held.clients.length)
+  })
+
+  test("and still takes the server's version of a row it DOES know, including a deletion", async () => {
+    /**
+     * The other half, and the reason the rule is narrow: a full read carries the
+     * server's tombstones, so a row it says was deleted must stay deleted. Keeping
+     * "anything the server did not send" would resurrect every deletion made on
+     * another device while this one was closed.
+     */
+    const held = twoEntries()
+    const localRows = stateToRows(held, USER)
+    const serverWithATombstone = {
+      ...localRows,
+      timetrack_entries: [
+        localRows.timetrack_entries[0],
+        { ...localRows.timetrack_entries[1], deleted_at: "2026-09-20T10:00:00.000Z" },
+      ],
+    }
+
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: { method?: string }) => {
+      if (init?.method === "POST") return { ok: true, status: 200, json: async () => ({}) }
+      if (String(url).includes("since=")) return { ok: true, status: 200, json: async () => ({ rows: {}, cursor: NOW_ISO }) }
+      return { ok: true, status: 200, json: async () => ({ rows: serverWithATombstone, cursor: NOW_ISO, empty: false, userId: USER }) }
+    }))
+
+    let latest: TimetrackState | null = null
+    render(<Harness initial={held} onState={(s) => (latest = s)} />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+
+    const after = latest as unknown as TimetrackState
+    expect(after.entries, "an entry deleted on another device came back").toHaveLength(1)
+    expect(after.entries[0].description).toBe("one")
   })
 })

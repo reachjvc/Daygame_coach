@@ -27,6 +27,8 @@ import { useTimetrackSync } from "@/src/timetrack/hooks/useTimetrackSync"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
 import type { TimetrackState } from "@/src/timetrack/types"
 
+import { PENDING_KEY } from "@/src/timetrack/config"
+
 import { NOW_ISO, baseState, entry } from "./helpers"
 
 const USER = "user-1"
@@ -55,6 +57,24 @@ function Harness({ initial, onState }: { initial: TimetrackState; onState: (s: T
     <>
       <span data-testid="pending">{sync.pendingCount}</span>
       <button data-testid="edit" onClick={() => apply((c) => ({ ...c, workspace: { ...c.workspace, name: `renamed ${Date.now()}` } }))}>edit</button>
+      {/*
+        A real tag LINK, which is the row the refusal names. The first version of the
+        test below clicked `edit` instead — which renames the workspace — so the queue
+        held a `timetrack_workspaces` row while the refusal named
+        `timetrack_entry_tags`, nothing could match in either version of the code, and
+        the test passed identically against the bug and the fix.
+      */}
+      <button
+        data-testid="tag-second-entry"
+        onClick={() =>
+          apply((c) => ({
+            ...c,
+            entries: c.entries.map((e, i) => (i === 1 ? { ...e, tagIds: [...e.tagIds, "50"], at: new Date().toISOString() } : e)),
+          }))
+        }
+      >
+        tag
+      </button>
     </>
   )
 }
@@ -74,22 +94,62 @@ function stubRefusing(adoption: unknown, table: string, ids: string[]) {
 }
 
 const withATag = () =>
-  baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { description: "a client call", tagIds: ["50"] })] })
+  baseState({
+    entries: [
+      entry(1, "2026-08-10", "09:00", "10:00", { description: "a client call", tagIds: ["50"] }),
+      entry(2, "2026-08-11", "09:00", "10:00", { description: "another call", tagIds: [] }),
+    ],
+  })
 
 describe("a refusal naming rows in a table with no id column", () => {
-  test("drops the named tag link and does not leave it blocking the queue", async () => {
+  /**
+   * This is the case the whole change exists for: `timetrack_entry_tags` is keyed by
+   * the pair it joins, so a refusal used to name `""` and the browser could never
+   * find the row to drop. The queue then held it for ever and took every later edit
+   * down with it, because a batch is all or nothing.
+   *
+   * The first version of this test clicked a button that renames the WORKSPACE while
+   * the refusal named `timetrack_entry_tags`, so nothing could match in either
+   * version of the code — it passed against the bug and against the fix, and its two
+   * assertions were "at least one POST happened" and "the state is truthy". A
+   * reviewer caught it by running it against the pre-fix hook. What it needed was to
+   * queue the row the refusal actually names.
+   */
+  test("drops the named tag link, and the work behind it still gets through", async () => {
     const initial = withATag()
-    const server = stubRefusing(stateToRows(initial, USER), "timetrack_entry_tags", ["1:50"])
+    const refusedKey = `2:50` // the pair the second entry's new tag makes
+    stubRefusing(stateToRows(initial, USER), "timetrack_entry_tags", [refusedKey])
     let latest = initial
     const view = render(<Harness initial={initial} onState={(s) => (latest = s)} />)
-    await act(async () => { await vi.advanceTimersByTimeAsync(300) })
+    await act(async () => { await vi.advanceTimersByTimeAsync(400) })
 
-    // a tag link is queued by adding the tag to a second entry
+    // the tag link the server will refuse
+    await act(async () => { view.getByTestId("tag-second-entry").click() })
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+
+    const queued = JSON.parse(window.localStorage.getItem(PENDING_KEY) ?? "{}") as Record<string, unknown[]>
+    const links = (queued.timetrack_entry_tags ?? []) as { entry_id: string; tag_id: string }[]
+    expect(
+      links.some((l) => `${l.entry_id}:${l.tag_id}` === refusedKey),
+      "the refused link is still queued, so every later edit will be refused behind it",
+    ).toBe(false)
+    expect(latest.entries[1].tagIds, "the tag was taken off the entry in the browser too").toContain("50")
+  })
+
+  test("and an ordinary edit made afterwards reaches the server", async () => {
+    const initial = withATag()
+    const server = stubRefusing(stateToRows(initial, USER), "timetrack_entry_tags", ["2:50"])
+    const view = render(<Harness initial={initial} onState={() => {}} />)
+    await act(async () => { await vi.advanceTimersByTimeAsync(400) })
+
+    await act(async () => { view.getByTestId("tag-second-entry").click() })
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
+    const afterRefusal = server.posts()
+
     await act(async () => { view.getByTestId("edit").click() })
     await act(async () => { await vi.advanceTimersByTimeAsync(2000) })
 
-    expect(server.posts(), "the queue was never even offered").toBeGreaterThan(0)
-    expect(latest).toBeTruthy()
+    expect(server.posts(), "nothing written after the refusal was even offered").toBeGreaterThan(afterRefusal)
   })
 })
 

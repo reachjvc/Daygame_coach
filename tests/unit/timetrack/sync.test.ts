@@ -188,6 +188,12 @@ describe("the guard that stops a bad read becoming a mass deletion", () => {
     expect(result.ok).toBe(true)
   })
 
+  /**
+   * The next three pass against the pre-fix source too, deliberately: before the fix
+   * the guard could not refuse ANYTHING, so "this is allowed" was already true. They
+   * are here so that making the guard work cannot make it refuse a real action —
+   * which is exactly what happened to restoring a backup, one round later.
+   */
   test("select-all-and-delete is a thing people do, and it is allowed", () => {
     /**
      * The entry list has a select-all and a delete-this-whole-day, both with an

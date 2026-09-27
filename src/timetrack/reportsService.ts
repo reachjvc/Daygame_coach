@@ -367,8 +367,24 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
     }
   }
 
-  const fixedFee = state.projects
-    .filter((p) => p.fixedFee != null && (config.filters.projectIds.length === 0 || config.filters.projectIds.includes(p.id)))
+  /**
+   * THE FEES OF THE PROJECTS IN THIS REPORT — NOT OF EVERY PROJECT EVER CREATED.
+   *
+   * This read `state.projects` and never the entries or the range, so the
+   * "Fixed fee" metric ignored all three of: the date range (a one-day report
+   * showed the fee of a project with nothing in that day), whether the project was
+   * ARCHIVED, and whether it was a TEMPLATE. It therefore only ever grew — including
+   * by the fee of every clone made from a template — and rendered as an exact figure
+   * beside the day's real total.
+   *
+   * The projects the entries actually point at are the report's subject, which is
+   * the same rule the rest of this function already follows.
+   */
+  const projectsInReport = new Set<Id>()
+  for (const entry of entries) if (entry.projectId !== null) projectsInReport.add(entry.projectId)
+  const fixedFee = [...projectsInReport]
+    .map((id) => projectById(state, id))
+    .filter((p): p is NonNullable<typeof p> => p != null && p.fixedFee != null)
     .reduce((sum, p) => sum + (p.fixedFee ?? 0), 0)
 
   const bucketRows: SummaryBucket[] = [...buckets.entries()]
@@ -511,7 +527,43 @@ export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSe
 // Profitability report
 // ---------------------------------------------------------------------------
 
-export function buildProfitability(state: TimetrackState, config: ReportConfig, nowSec: number): ProfitabilityRow[] {
+/**
+ * A FIXED FEE BELONGS TO A PROJECT. IT IS NOT DIVISIBLE BY DATE OR BY TAG.
+ *
+ * This returned rows only, and each row added the WHOLE fee of every project that
+ * appeared in it. Group by anything that splits a project across rows and the fee
+ * is counted once per row, and the Total line — which sums the rows — multiplies
+ * it. Measured on one project with a EUR 1,000 fee and three one-hour entries on
+ * three days, grouped by date: Fixed fee EUR 3,000, Profit EUR 2,910, against a
+ * truth of EUR 1,000 and EUR 910. Grouping by billable status doubled it; by tag,
+ * a single entry carrying two tags counted the fee twice.
+ *
+ * It survived three rounds of review because `defaultReportConfig` opens on
+ * "Group by project", which is one of the only two groupings where it was right —
+ * and "Group by date" is one click away on the tab itself. This is the number
+ * somebody invoices from.
+ *
+ * So the fee is now reported ONCE for the whole report, and a row carries a share
+ * of it only when the grouping guarantees a project cannot appear in two rows:
+ * by project, or by client, since a project belongs to exactly one client. For
+ * every other grouping a row's fee is zero and the tab says why, because inventing
+ * a per-day share of a retainer would be a made-up number presented as an exact
+ * one.
+ */
+export interface ProfitabilityReport {
+  rows: ProfitabilityRow[]
+  /** every project in the report, its fee counted once, whatever the grouping */
+  fixedFee: number
+  /** whether a row's own `fixedFee` means anything for this grouping */
+  feeIsPerRow: boolean
+}
+
+/** The groupings in which a project appears in exactly one row */
+function attributesProjectsUniquely(grouping: ReportConfig["grouping"]): boolean {
+  return grouping === "project" || grouping === "client"
+}
+
+export function buildProfitability(state: TimetrackState, config: ReportConfig, nowSec: number): ProfitabilityReport {
   const entries = applyFilters(state, config.filters)
   const rows = new Map<string, ProfitabilityRow & { projectIds: Set<Id> }>()
 
@@ -545,12 +597,18 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
     }
   }
 
-  return [...rows.values()]
+  const feeIsPerRow = attributesProjectsUniquely(config.grouping)
+
+  // every project the report touches, once, however many rows it appears in
+  const allProjectIds = new Set<Id>()
+  for (const row of rows.values()) for (const id of row.projectIds) allProjectIds.add(id)
+  const reportFee = [...allProjectIds].reduce((sum, id) => sum + (projectById(state, id)?.fixedFee ?? 0), 0)
+
+  const out = [...rows.values()]
     .map((row) => {
-      const fixedFee = [...row.projectIds].reduce(
-        (sum, id) => sum + (projectById(state, id)?.fixedFee ?? 0),
-        0,
-      )
+      const fixedFee = feeIsPerRow
+        ? [...row.projectIds].reduce((sum, id) => sum + (projectById(state, id)?.fixedFee ?? 0), 0)
+        : 0
       const income = row.revenue + fixedFee
       const profit = income - row.cost
       return {
@@ -567,6 +625,8 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
       }
     })
     .sort((a, b) => b.profit - a.profit)
+
+  return { rows: out, fixedFee: reportFee, feeIsPerRow }
 }
 
 // ---------------------------------------------------------------------------
@@ -659,7 +719,10 @@ export function defaultReportConfig(todayKey: IsoDate, weekStart: WeekStart, rou
     filters: emptyFilters(presetRange("this_week", todayKey, weekStart)),
     grouping: "project",
     subGrouping: "description",
-    rounding: { ...rounding, enabled: false },
+    // the workspace's own switch, which this used to discard: `enabled: false` was
+    // hard-coded, so "Default report rounding → Round by default" did nothing at
+    // all while reading On. Someone billing in 15-minute blocks got raw minutes.
+    rounding: { ...rounding },
     summaryMetrics: ["total", "billable", "revenue", "avg_daily"],
     chartMetric: "time",
     chartInterval: "day",

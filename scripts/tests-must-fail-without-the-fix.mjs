@@ -46,7 +46,7 @@
  */
 
 import { execFileSync } from "node:child_process"
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 
@@ -128,7 +128,6 @@ if (sourceFiles.length === 0) {
  * touches the working tree.
  */
 const work = mkdtempSync(join(tmpdir(), "must-fail-"))
-let failed = 0
 try {
   execFileSync("bash", ["-c", `git archive ${base} | tar -x -C ${JSON.stringify(work)}`], { cwd: REPO })
   symlinkSync(join(REPO, "node_modules"), join(work, "node_modules"))
@@ -148,61 +147,149 @@ try {
     cpSync(join(REPO, helper), join(work, helper))
   }
 
+  /**
+   * PER TEST, NOT PER FILE — AND THAT DISTINCTION IS NOT A REFINEMENT.
+   *
+   * The first version of this reported one verdict per file and answered PROVEN
+   * whenever the file failed at all. On the day it was written it cleared
+   * `aRefusalTheBrowserCannotMatch.test.tsx` — a file whose three tests included one
+   * that passed identically against the broken hook, because its two assertions were
+   * "at least one POST happened" and "the state is truthy", and the button it clicked
+   * queued a row in a different table from the one the test was about. Two real tests
+   * beside it failed, so the file failed, so the check said PROVEN.
+   *
+   * A reviewer found that test by extracting the old hook and running the test's
+   * assertions against both. The check that was supposed to make that unnecessary had
+   * reported all clear — which is the same failure one level up, in the instrument.
+   * So it reads vitest's JSON per-assertion results now.
+   */
   const results = []
   for (const file of testFiles) {
-    let output = ""
+    const jsonAt = join(work, "must-fail-result.json")
     let exitCode = 0
+    let output = ""
     try {
-      output = execFileSync("npx", ["vitest", "run", file, "--reporter=dot"], {
-        cwd: work,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "pipe"],
-        maxBuffer: 32 * 1024 * 1024,
-        timeout: 180_000,
-      })
+      output = execFileSync(
+        "npx",
+        ["vitest", "run", file, "--reporter=json", `--outputFile=${jsonAt}`],
+        { cwd: work, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 32 * 1024 * 1024, timeout: 180_000 },
+      )
     } catch (error) {
       exitCode = error.status ?? 1
       output = `${error.stdout ?? ""}${error.stderr ?? ""}`
     }
 
+    let tests = []
+    try {
+      const report = JSON.parse(readFileSync(jsonAt, "utf8"))
+      for (const suite of report.testResults ?? []) {
+        for (const assertion of suite.assertionResults ?? []) {
+          tests.push({ name: assertion.fullName ?? assertion.title, status: assertion.status })
+        }
+      }
+    } catch {
+      tests = []
+    }
+
     /**
-     * A file that cannot even be imported against the old source counts as "it
-     * noticed", but it is a WEAKER signal than a failed assertion: it may only
-     * mean the test imports a function that did not exist yet. Reported apart, so
-     * the distinction is not silently flattened.
+     * No per-test results at all means the file never executed — usually because it
+     * imports something the old source did not have. That is a WEAKER signal than a
+     * failed assertion, so it is reported apart rather than counted as proof.
      */
-    const cannotImport = /Failed to load|Cannot find module|does not provide an export|is not a function/i.test(output)
-    const assertionsRan = /AssertionError|expected .* to/i.test(output)
-    results.push({ file, exitCode, cannotImport, assertionsRan })
+    const cannotImport =
+      tests.length === 0 && /Failed to load|Cannot find module|does not provide an export|is not a function/i.test(output)
+    results.push({ file, exitCode, tests, cannotImport })
   }
 
-  const suspect = results.filter((r) => r.exitCode === 0)
-  const proven = results.filter((r) => r.exitCode !== 0 && r.assertionsRan)
-  const weak = results.filter((r) => r.exitCode !== 0 && !r.assertionsRan && r.cannotImport)
-  const other = results.filter((r) => r.exitCode !== 0 && !r.assertionsRan && !r.cannotImport)
+  /**
+   * ONLY THE TESTS THAT ARE NEW, OR THIS DROWNS IN ITS OWN OUTPUT.
+   *
+   * A file's other tests were there before and pass against the old source BECAUSE
+   * THEY SHOULD — that is what a regression suite is. The first per-test version of
+   * this reported 72 suspects, 67 of which were pre-existing tests in files that had
+   * merely been touched, and a check nobody can read is a check nobody runs.
+   *
+   * So the titles present at the base commit are excluded. Where a test was RENAMED
+   * rather than added it will be reported as new, which is the right way round: a
+   * renamed test is one somebody has just edited.
+   */
+  const titlesAtBase = new Map()
+  for (const file of testFiles) {
+    let before = ""
+    try {
+      before = git("show", `${base}:${file}`)
+    } catch {
+      before = "" // the file is new, so every test in it is new
+    }
+    const titles = new Set()
+    for (const [, title] of before.matchAll(/(?:^|\s)(?:test|it)(?:\.each\([\s\S]*?\))?\s*\(\s*[`"']([^`"']+)[`"']/g)) {
+      titles.add(title.trim())
+    }
+    titlesAtBase.set(file, titles)
+  }
 
-  for (const r of proven) console.log(`  PROVEN   ${r.file} — failed on an assertion against the old source`)
-  for (const r of weak) console.log(`  WEAK     ${r.file} — did not run against the old source (missing import). Reach unproven.`)
-  for (const r of other) console.log(`  FAILED   ${r.file} — failed for some other reason; read the output.`)
-  for (const r of suspect) console.log(`  SUSPECT  ${r.file} — PASSED against the old source.`)
+  /** Did this test exist, by name, before the change? */
+  const existedBefore = (file, fullName) => {
+    for (const title of titlesAtBase.get(file) ?? []) {
+      // vitest reports describe + test concatenated, and `test.each` substitutes its
+      // arguments into the title, so a suffix match on the declared title is the
+      // honest comparison here
+      const declared = title.replace(/%[sdifjo#%]/g, "").trim()
+      if (declared.length > 0 && fullName.includes(declared)) return true
+    }
+    return false
+  }
+
+  const suspectTests = []
+  const provenTests = []
+  const carried = []
+  const weakFiles = []
+  for (const r of results) {
+    if (r.tests.length === 0) {
+      weakFiles.push(r)
+      continue
+    }
+    for (const t of r.tests) {
+      if (existedBefore(r.file, t.name)) {
+        carried.push({ file: r.file, name: t.name, status: t.status })
+        continue
+      }
+      if (t.status === "failed") provenTests.push({ file: r.file, name: t.name })
+      else if (t.status === "passed") suspectTests.push({ file: r.file, name: t.name })
+    }
+  }
+
+  const byFile = new Map()
+  for (const t of suspectTests) byFile.set(t.file, [...(byFile.get(t.file) ?? []), t.name])
+
+  for (const r of weakFiles) {
+    console.log(
+      `  WEAK     ${r.file} — never executed against the old source${r.cannotImport ? " (missing import)" : ""}. Reach unproven.`,
+    )
+  }
+  for (const [file, names] of byFile) {
+    console.log(`  SUSPECT  ${file}`)
+    for (const name of names) console.log(`             passed against the old source: ${name}`)
+  }
 
   console.log(
-    `\n${proven.length} proven, ${weak.length} unproven (import), ${other.length} other, ${suspect.length} SUSPECT.`,
+    `\n${provenTests.length} new test(s) proven, ${suspectTests.length} SUSPECT across ${byFile.size} file(s), ` +
+      `${weakFiles.length} file(s) never ran, ${carried.length} pre-existing test(s) ignored.`,
   )
-  if (suspect.length > 0) {
+  if (suspectTests.length > 0) {
     console.log(
-      "\nA SUSPECT file asserts nothing about what changed, or pins behaviour that already\n" +
-        "worked. Both are possible; only one is a bug. Decide which, per file, and if it is\n" +
-        "the second, say so in the file so the next reader does not have to run this again.",
+      "\nEach SUSPECT test either asserts nothing about what changed, or pins behaviour that\n" +
+        "already worked. Both are possible; only one is a bug. Decide per TEST — a file is not\n" +
+        "cleared by its neighbours failing — and where it is the second, say so in the test so\n" +
+        "nobody has to run this again to find out.",
     )
   }
-  if (weak.length > 0) {
+  if (weakFiles.length > 0) {
     console.log(
-      "\nA WEAK file never executed, so it proved nothing either way. Point it at the old\n" +
-        "behaviour by hand: restore the defect in the current source and watch it go red.",
+      "\nA WEAK file proved nothing either way. Point it at the old behaviour by hand:\n" +
+        "restore the defect in the current source and watch it go red.",
     )
   }
-  failed = suspect.length
 } finally {
   writeFileSync(join(work, ".done"), "")
   rmSync(work, { recursive: true, force: true })

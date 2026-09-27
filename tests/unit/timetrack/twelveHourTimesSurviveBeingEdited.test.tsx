@@ -15,6 +15,14 @@
  *
  * This asserts the round trip rather than the string, because the string is not
  * the promise — "I can read my time back" is.
+ *
+ * THE FIRST DESCRIBE PINS BEHAVIOUR THAT ALREADY WORKED, deliberately.
+ * `formatTimeOfDay` was never the broken half — `EntryList` carried its own copy —
+ * so those four cases pass against the pre-fix source and are here to keep the
+ * shared formatter honest, not to prove the fix. The second describe is the one that
+ * fails without it: it reports "the entry moved -705 minutes".
+ * `scripts/tests-must-fail-without-the-fix.mjs` lists them as SUSPECT for that
+ * reason; this paragraph is the answer, so nobody has to run it again to find out.
  */
 
 import { cleanup, fireEvent, render } from "@testing-library/react"

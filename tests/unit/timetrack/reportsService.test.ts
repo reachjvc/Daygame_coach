@@ -15,7 +15,7 @@ import {
   metricValue,
   presetRange,
 } from "@/src/timetrack/reportsService"
-import type { ReportConfig } from "@/src/timetrack/types"
+import type { ReportConfig, TimetrackState } from "@/src/timetrack/types"
 
 import { NOW_ISO, baseState, entry } from "./helpers"
 
@@ -203,17 +203,56 @@ describe("workload report", () => {
 
 describe("profitability report", () => {
   test("revenue minus cost, with the project's fixed fee added", () => {
-    const rows = buildProfitability(state, config({ filters: emptyFilters({ start: "2026-08-01", end: "2026-08-31" }) }), NOW_SEC)
-    const alpha = rows.find((r) => r.label === "Alpha")!
+    const report = buildProfitability(state, config({ filters: emptyFilters({ start: "2026-08-01", end: "2026-08-31" }) }), NOW_SEC)
+    const alpha = report.rows.find((r) => r.label === "Alpha")!
     // 4h tracked; cost = member labour cost (30/h for You, 25/h for Sam)
     expect(Math.round(alpha.revenue)).toBe(500)
     expect(Math.round(alpha.cost)).toBe(30 * 3 + 25 * 1)
     expect(Math.round(alpha.profit)).toBe(500 - 115)
     expect(alpha.margin).toBeCloseTo((500 - 115) / 500, 4)
 
-    const beta = rows.find((r) => r.label === "Beta")!
+    const beta = report.rows.find((r) => r.label === "Beta")!
     expect(beta.fixedFee).toBe(1000)
     expect(Math.round(beta.profit)).toBe(1000 - 15)
+    // grouped by project, so the report's fee and the row's agree
+    expect(report.fixedFee).toBe(1000)
+    expect(report.feeIsPerRow).toBe(true)
+  })
+
+  test("a fixed fee is counted ONCE, however the report is grouped", () => {
+    /**
+     * Each row used to add the whole fee of every project in it, and the Total line
+     * summed the rows — so grouping by date multiplied a retainer by the number of
+     * days worked. Measured before the fix on one EUR 1,000 project across three
+     * days: Fixed fee EUR 3,000, Profit EUR 2,910, against EUR 1,000 and EUR 910.
+     *
+     * It survived three rounds of review because the tab opens on "Group by
+     * project", one of the only two groupings where it was right, and "Group by
+     * date" is one click away on the tab itself. This is the number somebody
+     * invoices from.
+     */
+    const range = emptyFilters({ start: "2026-08-01", end: "2026-08-31" })
+    const byProject = buildProfitability(state, config({ filters: range, grouping: "project" }), NOW_SEC)
+
+    for (const grouping of ["date", "billable", "description", "tag", "member"] as const) {
+      const report = buildProfitability(state, config({ filters: range, grouping }), NOW_SEC)
+      expect(report.fixedFee, `grouped by ${grouping}, the fee is not what it is by project`).toBe(byProject.fixedFee)
+      expect(report.feeIsPerRow, `grouped by ${grouping}, a project can appear in two rows`).toBe(false)
+      expect(
+        report.rows.reduce((sum, r) => sum + r.fixedFee, 0),
+        `grouped by ${grouping}, the rows carry a share of a fee that is not divisible`,
+      ).toBe(0)
+    }
+  })
+
+  test("and a client grouping still shows it per row, because a project has one client", () => {
+    const report = buildProfitability(
+      state,
+      config({ filters: emptyFilters({ start: "2026-08-01", end: "2026-08-31" }), grouping: "client" }),
+      NOW_SEC,
+    )
+    expect(report.feeIsPerRow).toBe(true)
+    expect(report.rows.reduce((sum, r) => sum + r.fixedFee, 0)).toBe(report.fixedFee)
   })
 })
 
@@ -226,5 +265,60 @@ describe("saved report share links", () => {
 
   test("garbage decodes to null", () => {
     expect(decodeReportConfig("!!!not-base64!!!")).toBeNull()
+  })
+})
+
+describe("the Summary's fixed-fee metric", () => {
+  /**
+   * It read `state.projects` and never the entries or the range, so it ignored the
+   * date range, whether a project was archived, and whether it was a template. It
+   * only ever grew — including by the fee of every clone made from a template — and
+   * rendered as an exact figure beside the day's real total.
+   */
+  const august = emptyFilters({ start: "2026-08-01", end: "2026-08-31" })
+
+  test("counts only the projects the report's own entries point at", () => {
+    const oneDay = buildSummary(state, config({ filters: emptyFilters({ start: "2026-08-10", end: "2026-08-10" }) }), NOW_SEC)
+    const whole = buildSummary(state, config({ filters: august }), NOW_SEC)
+
+    // the fixture's fee-bearing project is Beta; whichever days it has entries on,
+    // a day without them must not carry its fee
+    const betaDays = state.entries.filter((e) => e.projectId === "31").map((e) => e.start.slice(0, 10))
+    if (!betaDays.includes("2026-08-10")) {
+      expect(oneDay.totals.fixedFee, "a day with no Beta entry still reported Beta's fee").toBe(0)
+    }
+    expect(whole.totals.fixedFee).toBeGreaterThan(0)
+  })
+
+  test("and ignores a project with no entries in the range at all", () => {
+    const withGhost: TimetrackState = {
+      ...state,
+      projects: [
+        ...state.projects,
+        { ...state.projects[1], id: "ghost", name: "Never worked on", fixedFee: 5000, template: false, active: true },
+      ],
+    }
+    const before = buildSummary(state, config({ filters: august }), NOW_SEC).totals.fixedFee
+    const after = buildSummary(withGhost, config({ filters: august }), NOW_SEC).totals.fixedFee
+    expect(after, "a project nobody has tracked against added its fee to the total").toBe(before)
+  })
+})
+
+describe("the workspace's default report rounding", () => {
+  test("is honoured, switch included", () => {
+    /**
+     * `defaultReportConfig` hard-coded `enabled: false`, so the settings card —
+     * whose own description is "New reports start with this setting" — did nothing
+     * while reading On. `mode` and `minutes` survived; only the switch that turns
+     * it on was discarded, which is the one that changes a number.
+     */
+    const rounding = { enabled: true, mode: "up" as const, minutes: 15 }
+    const fresh = defaultReportConfig("2026-08-10", 1, rounding)
+    expect(fresh.rounding, "the switch the person set was thrown away").toEqual(rounding)
+  })
+
+  test("and off stays off", () => {
+    const off = { enabled: false, mode: "nearest" as const, minutes: 15 }
+    expect(defaultReportConfig("2026-08-10", 1, off).rounding).toEqual(off)
   })
 })

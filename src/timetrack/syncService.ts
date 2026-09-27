@@ -254,6 +254,48 @@ export function mergeChangeSets(
 }
 
 /**
+ * The local rows the server has never heard of.
+ *
+ * FOR FIRST CONTACT ONLY, and the distinction matters. A full read returns the
+ * whole account INCLUDING its tombstones, so a key absent from it was never on the
+ * server at all — which makes keeping it safe. On an incremental pull the answer
+ * holds only what changed since the cursor, so "absent" would mean "unchanged" and
+ * this would resurrect every row another device had deleted.
+ *
+ * WHAT IT IS FOR. Adoption takes the server's rows as the base and lays back only
+ * what changed since the page opened, then hands the result over with
+ * `replaceState`. Anything this browser held that the server does not was therefore
+ * DELETED from the only copy that had it. Measured: a browser holding three
+ * entries, two projects, two tags, two tasks, a client and a named workspace, whose
+ * account held one entry and an auto-created workspace, came back from a reload
+ * with one entry, no projects, no tags and a workspace called "My Workspace".
+ *
+ * It is reachable the moment an account is empty and the person makes any edit
+ * before answering the import offer: that one row goes up, the server invents a
+ * workspace to hang it on, and the next reload is no longer a first-time account.
+ * "Not now" reaches it the same way.
+ *
+ * The rule is narrow and stated as such: the server wins every row it knows about,
+ * including every row it says was deleted. It does not get to win a row it has
+ * never seen.
+ */
+export function rowsUnknownToServer(
+  serverRows: Partial<TimetrackRows>,
+  localRows: TimetrackRows,
+): Partial<TimetrackRows> {
+  const out: Partial<TimetrackRows> = {}
+  for (const table of TIMETRACK_TABLES) {
+    const known = new Set(
+      ((serverRows[table] ?? []) as unknown as AnyRow[]).map((row) => rowKey(table, row)),
+    )
+    const mine = (localRows[table] as unknown as AnyRow[]).filter((row) => !known.has(rowKey(table, row)))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (mine.length > 0) (out as any)[table] = mine
+  }
+  return out
+}
+
+/**
  * The queue with the rows that were just accepted taken out — BY VALUE, not by key.
  *
  * The success path used to compare object identity: if `pending` was still the

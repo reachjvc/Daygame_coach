@@ -33,6 +33,7 @@ import {
   mergeChangeSets,
   mergeIncoming,
   rowKey,
+  rowsUnknownToServer,
   safeToSend,
   splitIntoBatches,
   withoutSentRows,
@@ -640,9 +641,34 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           stateToRows(latestState.current ?? state, userId.current),
           new Date().toISOString(),
         )
-        const base = sinceOpening.count > 0
-          ? mergeIncoming(body.rows, sinceOpening.changed, new Set())
-          : body.rows
+        /**
+         * THE SERVER WINS EVERY ROW IT KNOWS ABOUT. IT DOES NOT WIN ONE IT HAS
+         * NEVER SEEN.
+         *
+         * `body.rows` is a FULL read — the whole account, tombstones included — so
+         * a key missing from it was never stored. Taking it as the base and handing
+         * the result to `replaceState` therefore DELETED anything this browser held
+         * and the account did not, from the only copy that had it. Measured: a
+         * browser with three entries, two projects, two tags, two tasks, a client
+         * and a workspace named "Test WS", against an account holding one entry,
+         * came back from a reload with one entry, no projects, no tags and a
+         * workspace called "My Workspace".
+         *
+         * It needed no unusual sequence. An empty account shows the import offer;
+         * make any edit before answering it — rename an entry, press Start — and
+         * that one row goes up, `resolveWorkspaceId` invents a workspace to hang it
+         * on, and the next reload is no longer a first-time account. "Not now"
+         * reaches it by the same route, which makes its promise — "this browser's
+         * time stays here until you ask again" — false at the next reload.
+         *
+         * `sinceOpening` was only ever the changes made since the page opened,
+         * which is a much smaller set than "everything the server has not got".
+         */
+        const base = mergeIncoming(
+          mergeIncoming(body.rows, rowsUnknownToServer(body.rows, stateToRows(latestState.current ?? state, userId.current)), new Set()),
+          sinceOpening.changed,
+          new Set(),
+        )
 
         serverRows.current = body.rows
         const arrived = rowsToState(base, new Date().toISOString())

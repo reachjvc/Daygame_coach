@@ -168,7 +168,7 @@ export function ReportsView({
       {config.tab === "summary" && <SummaryTab state={state} config={config} report={summary} onUpdate={update} currency={currency} />}
       {config.tab === "detailed" && <DetailedTab state={state} config={config} rows={detailed} onUpdate={update} currency={currency} />}
       {config.tab === "workload" && <WorkloadTab state={state} config={config} report={workload} onUpdate={update} currency={currency} />}
-      {config.tab === "profitability" && <ProfitabilityTab state={state} rows={profitability} config={config} onUpdate={update} currency={currency} />}
+      {config.tab === "profitability" && <ProfitabilityTab state={state} report={profitability} config={config} onUpdate={update} currency={currency} />}
       {config.tab === "saved" && (
         <SavedTab
           state={state}
@@ -1067,27 +1067,41 @@ function WorkloadTab({
 
 function ProfitabilityTab({
   state,
-  rows,
+  report,
   config,
   onUpdate,
   currency,
 }: {
   state: TimetrackState
-  rows: ReturnType<typeof buildProfitability>
+  report: ReturnType<typeof buildProfitability>
   config: ReportConfig
   onUpdate: (patch: Partial<ReportConfig>) => void
   currency: string
 }) {
-  const totals = rows.reduce(
+  const { rows, fixedFee: reportFee, feeIsPerRow } = report
+
+  /**
+   * THE FEE IS TAKEN FROM THE REPORT, NOT SUMMED FROM THE ROWS.
+   *
+   * Summing `row.fixedFee` counted a project's whole fee once per row it appeared
+   * in, so grouping by date multiplied a retainer by the number of days worked:
+   * EUR 3,000 shown for a EUR 1,000 project across three days. `buildProfitability`
+   * now counts each project once for the report and leaves a row's own fee at zero
+   * for any grouping where a project can appear twice.
+   */
+  const summed = rows.reduce(
     (acc, row) => ({
       seconds: acc.seconds + row.seconds,
       revenue: acc.revenue + row.revenue,
-      fixedFee: acc.fixedFee + row.fixedFee,
       cost: acc.cost + row.cost,
-      profit: acc.profit + row.profit,
     }),
-    { seconds: 0, revenue: 0, fixedFee: 0, cost: 0, profit: 0 },
+    { seconds: 0, revenue: 0, cost: 0 },
   )
+  const totals = {
+    ...summed,
+    fixedFee: reportFee,
+    profit: summed.revenue + reportFee - summed.cost,
+  }
 
   return (
     <div className="space-y-3">
@@ -1102,6 +1116,17 @@ function ProfitabilityTab({
         <EmptyState title="Nothing to analyze in this range" hint="Profitability needs billable time, rates or a fixed fee." />
       ) : (
         <>
+        {!feeIsPerRow && reportFee > 0 && (
+          /*
+            Said, not hidden. A fixed fee belongs to a project, so there is no
+            honest per-day or per-tag share of one — and showing a made-up share
+            as an exact figure is how this read EUR 3,000 for a EUR 1,000 project.
+          */
+          <p className="text-xs text-muted-foreground">
+            {formatMoney(reportFee, currency)} of fixed fees belongs to whole projects, so it is counted in the total
+            only. Group by project or client to see it per row.
+          </p>
+        )}
         <ul className="space-y-2 sm:hidden">
           {rows.map((row) => (
             <li key={row.key} className="rounded-lg border border-border bg-card p-3">
