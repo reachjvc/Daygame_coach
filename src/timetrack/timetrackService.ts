@@ -1235,6 +1235,8 @@ export function queueWebhook(
       url: hook.url,
       payload: JSON.stringify(payload),
       status: "sent" as const,
+      // the column is `not null`; a log row without this cannot be stored at all
+      webhookId: hook.id,
     }
   })
   return { ...next, webhookLog: [...additions, ...next.webhookLog].slice(0, 200) }

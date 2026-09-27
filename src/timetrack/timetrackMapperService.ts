@@ -275,12 +275,35 @@ export function stateToRows(state: TimetrackState, userId: string): TimetrackRow
   }
 
   for (const l of state.webhookLog) {
+    /**
+     * `webhook_id` IS `not null`, AND THIS SENT NULL.
+     *
+     * Every log row the app produced was therefore unwritable — and the damage
+     * was not confined to the log. `pushTimetrackRows` writes the tables in one
+     * order and a throw stops the rest, and `timetrack_webhook_log` comes before
+     * `timetrack_autotracker_rules`, `timetrack_timeline`, `timetrack_calendars`
+     * and `timetrack_settings`. `timetrack_settings` is where the person's name,
+     * members, groups, pomodoro, idle and reminder preferences live. So from the
+     * first time any enabled webhook matched an event, preferences stopped
+     * syncing to every other device, silently, for ever.
+     *
+     * The comment that used to sit here argued the log should keep an address
+     * rather than a link "to a webhook that may since have been deleted". That is
+     * an argument for a nullable column, and the column is not nullable; the
+     * schema also says `on delete cascade`, so the log row goes with the webhook
+     * either way. `queueWebhook` has the webhook in hand, so it carries the id.
+     *
+     * A row from before that change has no id to carry. Matching on the address
+     * recovers almost all of them; one whose webhook is genuinely gone is kept
+     * locally and not offered, because offering it is what broke everything
+     * above. There is no migration here, so nothing existing is thrown away.
+     */
+    const webhookId = l.webhookId ?? state.webhooks.find((w) => w.url === l.url)?.id ?? null
+    if (!webhookId) continue
     rows.timetrack_webhook_log.push({
       id: l.id,
       user_id: userId,
-      // the log keeps the address it posted to, not a link to a webhook that
-      // may since have been deleted
-      webhook_id: null,
+      webhook_id: webhookId,
       event: l.event,
       url: l.url,
       payload: l.payload,
@@ -383,7 +406,20 @@ export function rowsToState(rows: TimetrackRows, fallbackNowIso: string): Timetr
 
   const tagsByEntry = new Map<string, string[]>()
   for (const link of rows.timetrack_entry_tags) {
-    tagsByEntry.set(link.entry_id, [...(tagsByEntry.get(link.entry_id) ?? []), link.tag_id])
+    /**
+     * A SET, BECAUSE THE SAME LINK TWICE IS NOT TWO LINKS.
+     *
+     * `(entry_id, tag_id)` is the primary key, so a repeat is the same row read
+     * twice — which a page boundary could produce while the sort key was only
+     * `entry_id`. Appending it made `entry.tagIds` hold the id twice, and
+     * `stateToRows` then emitted two identical rows in one upsert: "ON CONFLICT
+     * DO UPDATE command cannot affect row a second time", the batch refused, and
+     * `isolateRefusedRows` splitting the pair into halves that each write
+     * cleanly, so nothing was named and nothing dropped. The queue then retried
+     * the same impossible payload until the page was reloaded.
+     */
+    const already = tagsByEntry.get(link.entry_id) ?? []
+    if (!already.includes(link.tag_id)) tagsByEntry.set(link.entry_id, [...already, link.tag_id])
   }
 
   const ratesByProject = new Map<string, { validFrom: string; rate: number }[]>()
@@ -536,6 +572,7 @@ export function rowsToState(rows: TimetrackRows, fallbackNowIso: string): Timetr
     at: l.created_at,
     event: l.event as WebhookLogEntry["event"],
     url: l.url,
+    webhookId: l.webhook_id,
     payload: l.payload,
     status: l.status as WebhookLogEntry["status"],
   }))

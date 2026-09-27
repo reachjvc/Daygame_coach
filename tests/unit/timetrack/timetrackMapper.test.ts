@@ -13,6 +13,7 @@
 
 import { describe, expect, test } from "vitest"
 
+import { createEmptyWorkspace } from "@/src/timetrack/data/emptyWorkspace"
 import { rowsToState, stateToRows } from "@/src/timetrack/timetrackMapperService"
 import type { TimetrackState } from "@/src/timetrack/types"
 
@@ -92,7 +93,7 @@ function fullState(): TimetrackState {
     ],
     autotrackers: [{ id: "at1", keyword: "Figma", projectId: "p1", taskId: "t1", tagIds: ["g1"], enabled: true }],
     webhooks: [{ id: "w1", url: "https://hooks.example/x", events: ["time_entry.created"], enabled: true }],
-    webhookLog: [{ id: "wl1", at: NOW, event: "time_entry.created", url: "https://hooks.example/x", payload: '{"a":1}', status: "sent" }],
+    webhookLog: [{ id: "wl1", at: NOW, event: "time_entry.created", url: "https://hooks.example/x", payload: '{"a":1}', status: "sent", webhookId: "w1" }],
     timeline: [{ id: "tl1", start: "2026-09-01T09:00:00.000Z", end: "2026-09-01T09:30:00.000Z", label: "Figma", converted: false }],
     pomodoro: { enabled: true, workMinutes: 25, breakMinutes: 5, autoContinue: true, notify: true },
     idle: { enabled: true, minutes: 10 },
@@ -242,5 +243,41 @@ describe("a server payload with no usable workspace row", () => {
   test("a genuinely empty payload still gives an empty workspace", () => {
     const restored = rowsToState(stateToRows(baseState({ clients: [], projects: [], tasks: [], tags: [], entries: [] }), USER), NOW)
     expect(restored.entries).toEqual([])
+  })
+})
+
+describe("a webhook log row carries the webhook that wrote it", () => {
+  /**
+   * `timetrack_webhook_log.webhook_id` is `not null`, and the mapper sent null
+   * for every row. So every log row was refused — and because
+   * `pushTimetrackRows` stops at the first refusal and writes
+   * `timetrack_webhook_log` before `timetrack_settings`, the person's
+   * preferences, members, pomodoro, idle and reminder settings stopped syncing
+   * from the first time any enabled webhook matched an event.
+   */
+  const base = createEmptyWorkspace(NOW)
+  const hook = { id: "w1", url: "https://hooks.example/x", events: ["time_entry.created"] as never, enabled: true }
+
+  test("the link is sent, not null", () => {
+    const state = {
+      ...base,
+      webhooks: [hook],
+      webhookLog: [{ id: "wl1", at: NOW, event: "time_entry.created" as never, url: hook.url, payload: "{}", status: "sent" as const, webhookId: "w1" }],
+    }
+    const rows = stateToRows(state, "u1")
+    expect(rows.timetrack_webhook_log).toHaveLength(1)
+    expect(rows.timetrack_webhook_log[0].webhook_id, "a null here fails the batch and blocks settings behind it").toBe("w1")
+  })
+
+  test("a row stored before the link existed is recovered from the address it posted to", () => {
+    const stale = { id: "wl2", at: NOW, event: "time_entry.created" as never, url: hook.url, payload: "{}", status: "sent" as const, webhookId: null }
+    const rows = stateToRows({ ...base, webhooks: [hook], webhookLog: [stale] }, "u1")
+    expect(rows.timetrack_webhook_log[0]?.webhook_id).toBe("w1")
+  })
+
+  test("a row whose webhook is genuinely gone is kept locally and never offered", () => {
+    const orphan = { id: "wl3", at: NOW, event: "time_entry.created" as never, url: "https://deleted.example/y", payload: "{}", status: "sent" as const, webhookId: null }
+    const rows = stateToRows({ ...base, webhooks: [hook], webhookLog: [orphan] }, "u1")
+    expect(rows.timetrack_webhook_log, "sending it is what stopped settings from ever saving").toHaveLength(0)
   })
 })

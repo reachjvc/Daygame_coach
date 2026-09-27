@@ -238,7 +238,6 @@ export function ProjectsView({
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {project.isPrivate ? "Private" : "Workspace"} · {plural(project.memberIds.length, "member")}
-                      {project.memberIds.length === 1 ? "" : "s"}
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1">

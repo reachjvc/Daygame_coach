@@ -341,6 +341,14 @@ export interface WebhookLogEntry {
   url: string
   payload: string
   status: "queued" | "sent" | "skipped"
+  /**
+   * Which webhook posted this. Null only on rows written before 2026-09-27,
+   * which cannot be stored: `timetrack_webhook_log.webhook_id` is `not null`, so
+   * a null one fails its whole batch — and `timetrack_webhook_log` is written
+   * before settings, autotracker rules, the timeline and calendars, so from the
+   * first webhook fire onward none of those could be saved either.
+   */
+  webhookId: Id | null
 }
 
 /** Browser-only analog of Toggl's desktop Timeline */

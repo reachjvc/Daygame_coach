@@ -158,6 +158,21 @@ export function TimerBar({
       setDurationInput(formatClock(runningSeconds))
       return
     }
+    /**
+     * Say why, like every other control that writes a time.
+     *
+     * `setRunningElapsed` was given violations so this field could report them,
+     * and the comment on it names "the timer bar's elapsed field" as one of the
+     * three that were fixed — while this call site went on discarding them. A
+     * locked date or a submitted timesheet made the number snap back with
+     * nothing said.
+     */
+    const refusal = setRunningElapsed(latestState.current, seconds, new Date().toISOString()).violations[0]
+    if (refusal) {
+      pushToast(refusal.message, "error")
+      setDurationInput(formatClock(runningSeconds))
+      return
+    }
     setState((current) => {
       const applied = setRunningElapsed(current, seconds, new Date().toISOString())
       return applied.violations.length > 0 ? current : applied.state
@@ -267,6 +282,11 @@ export function TimerBar({
               onKeyDown={(event) => {
                 if (event.key === "Enter" && running) commitRunningDuration()
               }}
+              /* With nothing running there is nothing to set: the effect above
+                 rewrites the box to 0:00:00 on the next tick, so leaving it
+                 editable offered a field whose only behaviour was discarding
+                 what you typed. */
+              disabled={!running}
               aria-label="Duration"
               className="h-11 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
             />

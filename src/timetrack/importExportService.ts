@@ -203,11 +203,19 @@ export function importEntriesCsv(
       }
     }
 
+    /**
+     * A tags cell reading `admin, admin` is one tag. `createTag` returns the
+     * existing tag for a name it already has, so pushing both produced the same
+     * id twice — and two identical `(entry_id, tag_id)` rows in one upsert is a
+     * payload the database refuses every time it is offered, with nothing named
+     * for the browser to drop. An import is exactly where a repeated name
+     * arrives, because nothing on the way in was checking.
+     */
     const tagIds: Id[] = []
     for (const name of cell(idx.tags).split(/[,;]/).map((t) => t.trim()).filter(Boolean)) {
       const created = createTag(next, name, nowIso)
       next = created.state
-      tagIds.push(created.id)
+      if (!tagIds.includes(created.id)) tagIds.push(created.id)
     }
 
     const billableRaw = cell(idx.billable).toLowerCase()

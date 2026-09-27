@@ -22,10 +22,26 @@ const COMPOSITE_KEYS: Partial<Record<keyof TimetrackRows, string>> = {
   timetrack_settings: "user_id",
 }
 
-/** What to sort by when paging, for the tables that are not keyed by `id` */
-const ORDER_KEY: Partial<Record<keyof TimetrackRows, string>> = {
-  timetrack_entry_tags: "entry_id",
-  timetrack_settings: "user_id",
+/**
+ * What to sort by when paging, for the tables that are not keyed by `id`.
+ *
+ * IT MUST BE UNIQUE, AND `entry_id` IS NOT. `src/db/paging.ts` states the rule
+ * this broke: "order by something unique — if rows tie on the sort key, the
+ * database may put the same row in both pages and neither page has the one it
+ * displaced." An entry with three tags is three rows sharing one `entry_id`, so
+ * a workspace with more than 1,000 tag links could come back with a link
+ * duplicated and another missing. The duplicate then became two identical
+ * `(entry_id, tag_id)` rows in one upsert — "ON CONFLICT DO UPDATE command
+ * cannot affect row a second time" — which fails the batch every time it is
+ * retried, while `isolateRefusedRows` splits the pair apart, finds both halves
+ * fine, and names nothing for the browser to drop.
+ *
+ * `.order("entry_id,tag_id")` does NOT do this: Supabase reads that as one
+ * column name. It takes a chained `.order()` per column.
+ */
+const ORDER_KEY: Partial<Record<keyof TimetrackRows, string[]>> = {
+  timetrack_entry_tags: ["entry_id", "tag_id"],
+  timetrack_settings: ["user_id"],
 }
 
 /** Rows per request when reading. The database refuses to return more than 1,000. */
@@ -71,7 +87,7 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
       // A stable order, or two pages can return the same row and miss another.
       // Not every table is keyed by `id`: settings has one row per person and
       // the tag links are keyed by the pair they join.
-      query = query.order(ORDER_KEY[table] ?? "id", { ascending: true })
+      for (const column of ORDER_KEY[table] ?? ["id"]) query = query.order(column, { ascending: true })
 
       const { data, error } = await query
       if (error) throw new Error(`Could not read ${table}: ${error.message}`)
@@ -198,15 +214,30 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
    */
   const writtenAt = new Date().toISOString()
 
-  // Workspaces first: everything else points at one, and a foreign key does not
-  // care that the row it needs is three lines further down the payload.
-  const ordered = [...TIMETRACK_TABLES].sort((a, b) => {
-    const rank = (t: string) =>
-      t === "timetrack_workspaces" ? 0 : t === "timetrack_projects" ? 1 : t === "timetrack_tasks" ? 2 : t === "timetrack_entries" ? 3 : 4
-    return rank(a) - rank(b)
-  })
-
-  for (const table of ordered) {
+  /**
+   * PARENTS BEFORE CHILDREN — AND `TIMETRACK_TABLES` IS ALREADY IN THAT ORDER.
+   *
+   * This used to re-sort the list by a hand-written rank: workspaces 0, projects
+   * 1, tasks 2, entries 3, everything else 4. `timetrack_clients` is "everything
+   * else", and `timetrack_projects.client_id references timetrack_clients(id)`
+   * (migration line 76) — so the sort moved projects ABOVE the clients they
+   * point at, and every push carrying a new client with a project attached to it
+   * raised `violates foreign key constraint timetrack_projects_client_id_fkey`.
+   *
+   * Two front doors: the client dropdown on the project form, and the Toggl CSV
+   * import, which creates a client and its projects in the same pass. Both fit
+   * in one 400-row request, so both tables always travelled together.
+   *
+   * And it did not retry. The browser drops refused rows from the queue and
+   * records them as sent, so the project was never offered again and its tasks
+   * and entries then failed their own foreign keys on the next push and were
+   * dropped the same way.
+   *
+   * The declared order satisfies every foreign key in the schema, checked
+   * against the migration itself by `theWriteOrderRespectsTheForeignKeys` — so
+   * the fix is to stop rearranging it, not to add one more name to a ternary.
+   */
+  for (const table of TIMETRACK_TABLES) {
     const incoming = rows[table]
     if (!incoming || incoming.length === 0) continue
 
@@ -219,6 +250,40 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
       return withOwner
     })
     const onConflict = COMPOSITE_KEYS[table] ?? "id"
+
+    /**
+     * TWO ROWS WITH ONE KEY IN A SINGLE UPSERT IS A DEAD END, SO SAY SO.
+     *
+     * Postgres answers "ON CONFLICT DO UPDATE command cannot affect row a second
+     * time" and refuses the whole batch. It will refuse it again every time,
+     * which on its own would be survivable — except that `isolateRefusedRows`
+     * splits the pair into different halves, each half writes cleanly, so it
+     * comes back having found nothing, the response names no ids, the browser
+     * drops nothing, and the queue retries the same impossible payload for ever.
+     * That is the "stuck until you reload" state, and it had two producers: a
+     * cleared workspace sending a tombstone beside its replacement, and a
+     * duplicated `(entry_id, tag_id)` pair from a tag counted twice.
+     *
+     * Both are fixed at their source. This is here because the cost of missing
+     * the next producer is an account that silently stops saving, and because
+     * quietly dropping one of the two rows would be choosing for the caller
+     * without telling anyone which one lost.
+     */
+    const seen = new Map<string, number>()
+    const keyColumns = onConflict.split(",")
+    for (const row of owned) {
+      const key = keyColumns.map((column) => String(row[column])).join(",")
+      seen.set(key, (seen.get(key) ?? 0) + 1)
+    }
+    const duplicated = [...seen].filter(([, count]) => count > 1).map(([key]) => key)
+    if (duplicated.length > 0) {
+      throw new TimetrackWriteRefused(
+        table,
+        duplicated,
+        `Could not write ${table}: the same ${onConflict} appears more than once in one batch (${duplicated.slice(0, 5).join("; ")})`,
+      )
+    }
+
     const { error } = await supabase.from(table).upsert(owned, { onConflict })
     if (error) {
       // Find the offending rows so the message can name them, and let the rest

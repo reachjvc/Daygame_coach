@@ -31,10 +31,26 @@ import { TIMETRACK_TABLES, type TimetrackRows } from "./timetrackTypes"
 /** Rows per request. The database refuses to return more than 1,000 at a time. */
 const PAGE_SIZE = 1000
 
-/** Not keyed by `id`, so paging has to sort by something else */
-const ORDER_KEY: Partial<Record<keyof TimetrackRows, string>> = {
-  timetrack_entry_tags: "entry_id",
-  timetrack_settings: "user_id",
+/**
+ * What to sort by when paging, for the tables that are not keyed by `id`.
+ *
+ * IT MUST BE UNIQUE, AND `entry_id` IS NOT. `src/db/paging.ts` states the rule
+ * this broke: "order by something unique — if rows tie on the sort key, the
+ * database may put the same row in both pages and neither page has the one it
+ * displaced." An entry with three tags is three rows sharing one `entry_id`, so
+ * a workspace with more than 1,000 tag links could come back with a link
+ * duplicated and another missing. The duplicate then became two identical
+ * `(entry_id, tag_id)` rows in one upsert — "ON CONFLICT DO UPDATE command
+ * cannot affect row a second time" — which fails the batch every time it is
+ * retried, while `isolateRefusedRows` splits the pair apart, finds both halves
+ * fine, and names nothing for the browser to drop.
+ *
+ * `.order("entry_id,tag_id")` does NOT do this: Supabase reads that as one
+ * column name. It takes a chained `.order()` per column.
+ */
+const ORDER_KEY: Partial<Record<keyof TimetrackRows, string[]>> = {
+  timetrack_entry_tags: ["entry_id", "tag_id"],
+  timetrack_settings: ["user_id"],
 }
 
 export interface TimetrackBackup {
@@ -65,7 +81,7 @@ export async function exportTimetrack(userId: string | null = null): Promise<Tim
         .from(table)
         .select("*")
         .range(from, from + PAGE_SIZE - 1)
-        .order(ORDER_KEY[table] ?? "id", { ascending: true })
+      for (const column of ORDER_KEY[table] ?? ["id"]) query = query.order(column, { ascending: true })
       if (userId) query = query.eq("user_id", userId)
 
       const { data, error } = await query

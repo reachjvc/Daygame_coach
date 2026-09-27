@@ -635,7 +635,36 @@ export function useTimetrack() {
         announceDisplacement(result.displaced, result.started)
       },
       resetWorkspace() {
-        setStateRaw(createEmptyWorkspace(new Date().toISOString()))
+        /**
+         * CLEARING A WORKSPACE EMPTIES IT. IT DOES NOT SWAP IT FOR A NEW ONE.
+         *
+         * This used to install a whole fresh state, workspace record included,
+         * which has a new id. Two consequences, both measured:
+         *
+         *   - the change set then carried a tombstone for the old workspace AND
+         *     a live row for the new one, and `pushTimetrackRows` rewrites every
+         *     workspace id to the one the person owns — so both rows arrived with
+         *     the SAME primary key, Postgres answered "ON CONFLICT DO UPDATE
+         *     command cannot affect row a second time", and the queue jammed on a
+         *     payload that could never be accepted. `isolateRefusedRows` then
+         *     wrote each half separately, each succeeded alone, so it named no
+         *     ids at all and nothing was dropped: a stuck queue with no way out
+         *     but a reload.
+         *   - it is the same shape as the bad-read incident `safeToSend` exists
+         *     to refuse — a workspace the server has never seen, next to
+         *     tombstones for everything the old one held. The guard cannot tell
+         *     a deliberate clear from that fault if the deliberate clear looks
+         *     identical to it.
+         *
+         * Keeping the workspace record and the person's display preferences
+         * removes both. What the button promises — "delete everything" — is the
+         * contents, which is what is emptied here.
+         */
+        setStateRaw((current) => {
+          const fresh = createEmptyWorkspace(new Date().toISOString())
+          if (!current) return fresh
+          return { ...fresh, workspace: current.workspace, user: current.user }
+        })
         pushToast("Workspace cleared")
       },
       replaceState(next: TimetrackState) {

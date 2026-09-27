@@ -35,6 +35,42 @@ export function rowKey(table: TableName, row: AnyRow): string {
   return String(row.id)
 }
 
+/**
+ * Tables a deletion cannot travel for, with the reason each one is on the list.
+ *
+ * THIS SET IS THE ONLY COPY OF THE RULE. It used to be three table names
+ * written inline in `diffRows`, while `safeToSend` counted its "how much is
+ * live on the server" total over *every* table — so the two halves counted
+ * different populations and the guard could not fire. Measured on a workspace
+ * of five entries and one tag: a change set deleting all seven deletable rows
+ * scored 7 against a live total of 9, and `safeToSend` answered `{ok: true}` to
+ * the exact catastrophe it exists to refuse.
+ *
+ *  - `timetrack_entry_tags` and `timetrack_webhook_log` have no `deleted_at`
+ *    column at all.
+ *  - `timetrack_settings` is one row per person, which cannot be deleted and
+ *    also has no such column. Sending a tombstone for it fails the whole batch,
+ *    and a queue that drains all-or-nothing then never drains.
+ *  - `timetrack_workspaces` has the column, but a tombstone for it cannot
+ *    survive the journey: `reattachToWorkspace` and `pushTimetrackRows` both
+ *    rewrite a workspace row's id to the one workspace the person owns, so a
+ *    tombstone arrives pointing at the very row it travelled beside — one
+ *    primary key, twice, in one upsert, which Postgres refuses outright. The
+ *    `deleted_at` column stays where it is: `timetrackIsEmpty` reads it, and a
+ *    migration or an admin may still set it. Nothing the browser does will.
+ */
+const NO_TOMBSTONE = new Set<TableName>([
+  "timetrack_entry_tags",
+  "timetrack_webhook_log",
+  "timetrack_settings",
+  "timetrack_workspaces",
+])
+
+/** Can a deletion in this table be expressed as a row with `deleted_at` set? */
+export function canTombstone(table: TableName): boolean {
+  return !NO_TOMBSTONE.has(table)
+}
+
 function indexOf(table: TableName, rows: AnyRow[]): Map<string, AnyRow> {
   return new Map(rows.map((row) => [rowKey(table, row), row]))
 }
@@ -76,16 +112,7 @@ export function diffRows(previous: TimetrackRows | null, next: TimetrackRows, de
     // gone from the app: send the row back with a note saying when it went
     for (const [key, row] of before) {
       if (after.has(key)) continue
-      if (
-        table === "timetrack_entry_tags" ||
-        table === "timetrack_webhook_log" ||
-        // one row per person, which cannot be deleted and has no deleted_at
-        // column. Sending a tombstone for it fails the whole batch, and a queue
-        // that drains all-or-nothing then never drains at all.
-        table === "timetrack_settings"
-      ) {
-        continue
-      }
+      if (!canTombstone(table)) continue
       if ((row as { deleted_at?: string | null }).deleted_at) continue
       out.push({ ...row, deleted_at: deletedAtIso })
     }
@@ -178,7 +205,28 @@ export function countRows(rows: Partial<TimetrackRows>): number {
  *
  *  - a device that has not successfully read the server yet may not delete
  *    anything at all. It does not know what exists.
- *  - a change set that deletes every live row is refused outright.
+ *  - a change set that swaps the workspace for a different one AND empties it
+ *    is refused outright. See below for why both halves are needed.
+ *
+ * WHY NOT SIMPLY "REFUSE A CHANGE SET THAT DELETES EVERYTHING": because a
+ * person is allowed to do that. The entry list has a select-all and a
+ * delete-this-whole-day, both with an undo toast, so "every entry I have is now
+ * a tombstone" is an ordinary Tuesday. A guard on the count alone refuses it,
+ * the badge goes red, and a reload brings back the entries the person just
+ * deleted on purpose — a worse bug than the one being guarded against, and one
+ * that fires on a real action rather than on a rare fault.
+ *
+ * What the incident had and a deliberate deletion does not is a DIFFERENT
+ * WORKSPACE. The mapper invented a fresh one, so the change set carried a
+ * workspace row whose id the server had never seen, next to tombstones for
+ * everything the old one held. No user action produces that: deleting entries
+ * keeps the workspace you are in, and "Clear this workspace" now keeps its own
+ * record too (`resetWorkspace`), which is what makes this test possible.
+ *
+ * So the signature is "you are pointing at a workspace I do not have, and
+ * everything I do have is to be deleted". Stated plainly because it is narrow:
+ * a future bug that empties an account while keeping its workspace id is
+ * indistinguishable here from the select-all above, and this will not catch it.
  */
 export function safeToSend(
   changed: Partial<TimetrackRows>,
@@ -194,18 +242,51 @@ export function safeToSend(
   if (deletes === 0) return { ok: true }
   if (!adopted) return { ok: false, deletes }
 
+  /**
+   * Count the same population the tombstones come from.
+   *
+   * Totalling every table meant the comparison could not be met: the settings
+   * row and every tag link are always live and can never be deleted, so
+   * `deletes` was structurally smaller than `liveOnServer` no matter what the
+   * change set said.
+   */
   let liveOnServer = 0
   if (serverRows) {
     for (const table of TIMETRACK_TABLES) {
+      if (!canTombstone(table)) continue
       for (const row of serverRows[table] as unknown as AnyRow[]) {
         if (!(row as { deleted_at?: string | null }).deleted_at) liveOnServer++
       }
     }
   }
-  // deleting everything at once is a bug, not an intention. Clearing a
-  // workspace on purpose goes through resetWorkspace, which is its own path.
-  if (liveOnServer >= 3 && deletes >= liveOnServer) return { ok: false, deletes }
+
+  if (liveOnServer >= 3 && deletes >= liveOnServer && swapsTheWorkspace(changed, serverRows)) {
+    return { ok: false, deletes }
+  }
   return { ok: true }
+}
+
+/**
+ * Does this change set point at a workspace the server does not have?
+ *
+ * `pushTimetrackRows` rewrites every `workspace_id` to the one workspace the
+ * person owns, so a fresh workspace id in a change set is never a second
+ * workspace — it is a sign the state was rebuilt from nothing.
+ */
+function swapsTheWorkspace(changed: Partial<TimetrackRows>, serverRows: TimetrackRows | null): boolean {
+  const offered = (changed.timetrack_workspaces ?? []) as unknown as AnyRow[]
+  const live = offered.filter((row) => !(row as { deleted_at?: string | null }).deleted_at)
+  if (live.length === 0) return false
+  // nothing known to compare against: a workspace arriving with deletions is
+  // the shape of the incident, so treat it as the incident
+  if (!serverRows) return true
+  const known = new Set(
+    (serverRows.timetrack_workspaces as unknown as AnyRow[])
+      .filter((row) => !(row as { deleted_at?: string | null }).deleted_at)
+      .map((row) => String(row.id)),
+  )
+  if (known.size === 0) return false
+  return live.some((row) => !known.has(String(row.id)))
 }
 
 /**
@@ -299,7 +380,29 @@ export function reattachToWorkspace(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(out as any)[table] =
       table === "timetrack_workspaces"
-        ? list.map((row) => ({ ...row, id: workspaceId }))
+        ? /**
+           * A WORKSPACE TOMBSTONE CANNOT SURVIVE HAVING ITS ID REWRITTEN.
+           *
+           * Rewriting `id` on every row here means a change set holding both a
+           * tombstone for the old workspace and a live row for the new one
+           * arrives as two rows with the SAME primary key. One upsert, one key,
+           * twice: "ON CONFLICT DO UPDATE command cannot affect row a second
+           * time" — the whole batch refused, for ever, and `isolateRefusedRows`
+           * names nothing because each half succeeds on its own. A queue with no
+           * way out but a reload.
+           *
+           * And if the halves DO land, order decides: the tombstone is emitted
+           * second by `diffRows`, so it would soft-delete the person's only
+           * workspace. `timetrackIsEmpty` then reads the account as new and
+           * offers the import again.
+           *
+           * Dropping the tombstone loses nothing. Once the id is rewritten it no
+           * longer refers to the workspace that went away — it refers to the one
+           * being kept.
+           */
+          list
+            .filter((row) => !(row as { deleted_at?: string | null }).deleted_at)
+            .map((row) => ({ ...row, id: workspaceId }))
         : list.map((row) => ("workspace_id" in row ? { ...row, workspace_id: workspaceId } : row))
   }
   return out
