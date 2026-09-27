@@ -296,10 +296,39 @@ export const emptyDraft: EntryDraft = {
 
 export function validateEntry(
   state: TimetrackState,
-  candidate: { description: string; projectId: Id | null; taskId: Id | null; tagIds: Id[]; start: IsoDateTime },
+  candidate: {
+    description: string
+    projectId: Id | null
+    taskId: Id | null
+    tagIds: Id[]
+    start: IsoDateTime
+    /**
+     * Required, not optional, on purpose: every caller has to say what the end
+     * is, so nobody can skip the rule below by forgetting a field. `null` means
+     * the entry is running, which is a real answer.
+     */
+    stop: IsoDateTime | null
+  },
 ): SaveViolation[] {
   const violations: SaveViolation[] = []
   const required = state.workspace.requiredFields
+
+  /**
+   * AN ENTRY CANNOT END BEFORE IT STARTS.
+   *
+   * This lived nowhere until 2026-09-26. The detail sheet had its own copy, the
+   * database had a check constraint, and the inline row — the main editing
+   * surface on a desktop — had neither: typing an end before the start turned a
+   * 24-minute entry into a zero-length one, and the row the database then
+   * refused blocked the upload queue for everything after it.
+   *
+   * Equal is allowed, because that is the database's rule
+   * (`timetrack_entries_stop_after_start`) and because the app makes zero-length
+   * entries on its own — press `N` then `S`, or mis-tap Continue.
+   */
+  if (candidate.stop !== null && epochSeconds(candidate.stop) < epochSeconds(candidate.start)) {
+    violations.push({ field: "date", message: "An entry cannot end before it starts" })
+  }
 
   if (required.description && !candidate.description.trim()) {
     violations.push({ field: "description", message: "Description is required in this workspace" })
@@ -344,6 +373,7 @@ export function canEditEntry(state: TimetrackState, entry: TimeEntry): boolean {
       taskId: entry.taskId ?? (state.workspace.requiredFields.task ? null : PLACEHOLDER_ID),
       tagIds: entry.tagIds.length ? entry.tagIds : state.workspace.requiredFields.tag ? [] : [PLACEHOLDER_ID],
       start: entry.start,
+      stop: entry.stop,
     }).filter((v) => v.field === "date" || v.field === "approval").length === 0
   )
 }
@@ -370,7 +400,7 @@ export function startTimer(
   draft: EntryDraft,
   nowIso: IsoDateTime,
 ): { state: TimetrackState; entry: TimeEntry; violations: SaveViolation[]; displaced: TimeEntry | null } {
-  const violations = validateEntry(state, { ...draft, start: nowIso })
+  const violations = validateEntry(state, { ...draft, start: nowIso, stop: null })
   if (violations.length > 0) {
     return { state, entry: state.entries[0], violations, displaced: null }
   }
@@ -446,7 +476,7 @@ export function createManualEntry(
   input: { draft: EntryDraft; start: IsoDateTime; stop: IsoDateTime; sourceEventId?: string | null },
   nowIso: IsoDateTime,
 ): { state: TimetrackState; violations: SaveViolation[]; entry: TimeEntry | null } {
-  const violations = validateEntry(state, { ...input.draft, start: input.start })
+  const violations = validateEntry(state, { ...input.draft, start: input.start, stop: input.stop })
   if (violations.length > 0) return { state, violations, entry: null }
 
   const withId = takeId(state)
@@ -481,11 +511,41 @@ export function updateEntry(
   entryId: Id,
   patch: Partial<Pick<TimeEntry, "description" | "projectId" | "taskId" | "tagIds" | "billable" | "start" | "stop" | "duronly" | "sharedWith">>,
   nowIso: IsoDateTime,
+  /**
+   * `resuming` is the one sanctioned way to put a stopped entry back into
+   * running — the Undo on the "stopped X and started Y" toast. It is named at
+   * the call site so the rule below reads as a rule rather than a guess.
+   */
+  options: { resuming?: boolean } = {},
 ): { state: TimetrackState; violations: SaveViolation[] } {
   const current = state.entries.find((e) => e.id === entryId)
   if (!current) return { state, violations: [] }
 
+  /**
+   * CLEARING THE END OF A STOPPED ENTRY IS NOT AN EDIT, IT IS A RESTART.
+   *
+   * A null stop means "running" to every reader of this state. So clearing the
+   * end field in the detail sheet set a finished 24-minute entry counting
+   * again — and that field is `disabled` while an entry runs, so the control
+   * that broke it could not mend it. Reproduced twice, 2026-09-26.
+   */
+  if (!options.resuming && current.stop !== null && patch.stop === null) {
+    return {
+      state,
+      violations: [
+        { field: "date", message: "Clearing the end would start this entry running again — use Continue instead" },
+      ],
+    }
+  }
+
   const merged: TimeEntry = { ...current, ...patch, at: nowIso }
+  /**
+   * The clamp stays, and it is not the rule — `validateEntry` refuses a
+   * reversed pair before this line. It stays because a NEGATIVE duration is how
+   * this state encodes "running" (`isRunning`), so arithmetic that could go
+   * below zero here would not produce a wrong number, it would produce a
+   * running timer.
+   */
   merged.duration = merged.stop === null
     ? runningDurationValue(merged.start)
     : Math.max(0, epochSeconds(merged.stop) - epochSeconds(merged.start))
@@ -496,6 +556,7 @@ export function updateEntry(
     taskId: merged.taskId,
     tagIds: merged.tagIds,
     start: merged.start,
+    stop: merged.stop,
   })
   if (violations.length > 0) return { state, violations }
 
@@ -658,8 +719,10 @@ export function undoDisplacement(
 ): TimetrackState {
   const withoutStarted = deleteEntries(state, [startedId], nowIso).state
   // `updateEntry` recomputes duration from a null stop, which is what makes it
-  // running again rather than a zero-length entry
-  return updateEntry(withoutStarted, displacedId, { stop: null }, nowIso).state
+  // running again rather than a zero-length entry. `resuming` says so out loud:
+  // every other caller is refused this, because for them it is a restart nobody
+  // asked for.
+  return updateEntry(withoutStarted, displacedId, { stop: null }, nowIso, { resuming: true }).state
 }
 
 /** Undo support for the delete toast */

@@ -225,14 +225,14 @@ describe("validation: required fields, locked entries, approvals", () => {
   test("required fields block a save", () => {
     const state = baseState()
     state.workspace.requiredFields = { project: true, task: false, tag: true, description: true }
-    const violations = validateEntry(state, { description: "", projectId: null, taskId: null, tagIds: [], start: NOW_ISO })
+    const violations = validateEntry(state, { description: "", projectId: null, taskId: null, tagIds: [], start: NOW_ISO, stop: null })
     expect(violations.map((v) => v.field).sort()).toEqual(["description", "project", "tag"])
   })
 
   test("entries on or before the lock date are rejected", () => {
     const state = baseState()
     state.workspace.lockEntriesBefore = "2026-08-10"
-    const violations = validateEntry(state, { description: "x", projectId: "30", taskId: null, tagIds: [], start: NOW_ISO })
+    const violations = validateEntry(state, { description: "x", projectId: "30", taskId: null, tagIds: [], start: NOW_ISO, stop: null })
     expect(violations[0].field).toBe("date")
   })
 
@@ -242,7 +242,7 @@ describe("validation: required fields, locked entries, approvals", () => {
     state.approvals = [
       { id: "1", memberId: "10", weekStart: "2026-08-10", status: "submitted", submittedAt: NOW_ISO, decidedAt: null, note: "" },
     ]
-    const violations = validateEntry(state, { description: "x", projectId: "30", taskId: null, tagIds: [], start: NOW_ISO })
+    const violations = validateEntry(state, { description: "x", projectId: "30", taskId: null, tagIds: [], start: NOW_ISO, stop: null })
     expect(violations[0].field).toBe("approval")
   })
 
