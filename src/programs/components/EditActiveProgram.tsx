@@ -93,7 +93,29 @@ export function EditActiveProgram({
    * Above the hooks is not an option (that is the "Rendered more hooks" crash
    * this slice has had twice), so it goes between the hooks and the work.
    */
-  if (!isCustomizable(program)) return null
+  if (!isCustomizable(program)) {
+    /**
+     * REFUSES POLITELY, which the crash fix promised and did not do.
+     * `return null` turned the crash into a dead row: the sheet closes, the
+     * URL becomes `?view=edit&program=…`, and the page is byte-identical to
+     * before — no message, no error, nothing. Previously it crashed; then it
+     * did nothing at all. Both are "there is no way to use this menu".
+     *
+     * The catalogue's detail screen already says this in words; this is the
+     * same sentence on the running program.
+     */
+    return (
+      <div className="space-y-3" data-testid="editor-fixed-plan-running">
+        <p className="text-sm text-muted-foreground">
+          {program.name} is a week-by-week plan, so its sessions are set by the plan and cannot be
+          changed. You can skip a session or end the program from the menu.
+        </p>
+        <Button variant="outline" onClick={onCancel}>
+          Back to the program
+        </Button>
+      </div>
+    )
+  }
 
   if (!started) {
     // During the first render, so the editor has its schedule on the first

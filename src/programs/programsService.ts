@@ -3427,6 +3427,32 @@ export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date
 
   const { chosen, also } = chooseCardEnrollment(facts, newestToday?.enrollmentId ?? null)
 
+  /**
+   * DID *THIS* PROGRAM TRAIN TODAY — not "is the newest workout on the
+   * account this program's".
+   *
+   * `newestToday` is the newest workout of any kind, so logging ANYTHING after
+   * your program session — a loose set, a walk — made the program look
+   * untrained and the card offered "Start workout" again. Driven: finish
+   * Couch to 5K, log one unrelated Barbell Row, reopen the same page, and the
+   * button goes from "See today's workout" back to "Start workout" while the
+   * week strip two inches above still says "Mon (today): trained". Two
+   * components on one card disagreeing about one fact.
+   *
+   * Pressing it opens a SECOND session for the same day at the
+   * already-progressed numbers, and finishing it advances the program twice:
+   * one stretch went 30s → 35s → 40s in a single day.
+   *
+   * The comment on `TodayCard`'s `mine` check says it was added because a
+   * loose workout used to take Start off EVERY card. That fix went one way
+   * and left the mirror image open. This is the per-enrollment fact, which
+   * the week strip on the same screen has had all along.
+   */
+  const mineToday = chosen
+    ? (trainedToday.find((w) => w.enrollmentId === chosen.enrollment.id) ?? null)
+    : null
+  const doneToday = mineToday ?? newestToday
+
   if (facts.live) {
     const elapsed = Math.max(0, now.getTime() - new Date(facts.live.startedAt).getTime())
     const open = {
@@ -3450,16 +3476,16 @@ export function trainingCardState(facts: TrainingDoorFacts, now: Date = new Date
       : { kind: "live", ...open }
   }
 
-  if (newestToday) {
+  if (doneToday) {
     return {
       kind: "done",
-      workoutId: newestToday.workoutId,
-      enrollmentId: newestToday.enrollmentId,
-      dayLabel: newestToday.dayLabel,
-      durationMin: newestToday.durationMin,
-      distanceKm: newestToday.distanceKm,
-      sessionType: newestToday.sessionType,
-      sets: newestToday.sets,
+      workoutId: doneToday.workoutId,
+      enrollmentId: doneToday.enrollmentId,
+      dayLabel: doneToday.dayLabel,
+      durationMin: doneToday.durationMin,
+      distanceKm: doneToday.distanceKm,
+      sessionType: doneToday.sessionType,
+      sets: doneToday.sets,
       next: chosen?.next ? { label: chosen.next.label, ...(chosen.next.weekday != null ? { weekday: chosen.next.weekday } : {}) } : null,
       also,
     }

@@ -354,9 +354,32 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     workoutRef.current = workout
   }, [workout])
 
-  /** Apply a server copy only if nothing newer has already been applied. */
+  /**
+   * Apply a server copy only if nothing newer has been ISSUED.
+   *
+   * This compared against `applied.current` — "nothing newer has already been
+   * APPLIED" — which lets a reply that is already stale overwrite an
+   * optimistic write made after it was sent. Three endurance ticks at 700ms
+   * apart, an ordinary pace against a ~900ms round trip:
+   *
+   *   click 0  -> seq 1, optimistic [0]
+   *   click 1  -> seq 2, optimistic [0,1]
+   *   reply 1  -> [0] applied over it, and the second tick disappears
+   *   click 2  -> reads [0], writes [0,2]
+   *   server   -> [0,2]; the finish sheet says "2 of 3 blocks"
+   *
+   * Reproduced twice, identically, with no error anywhere — on the only
+   * control that records how much of a run happened. Round 10 added the
+   * optimistic write and closed the "three taps read the same list" shape;
+   * this is the other half, and the fence is where it lives.
+   *
+   * `issued` is bumped by every request, so a reply is stale the moment
+   * anything else has gone out — which is exactly when its copy of the
+   * workout is older than what the screen already shows. It subsumes the old
+   * check, because `applied` can never exceed `issued`.
+   */
   const applyServer = useCallback((seq: number, next: LiveWorkout | null) => {
-    if (seq < applied.current) return
+    if (seq < issued.current) return
     applied.current = seq
     setWorkout(next)
   }, [])

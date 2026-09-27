@@ -326,10 +326,25 @@ export function SetRow({
             setWeight(formatLoad(previous.weight))
             setReps(String(previous.reps))
           }}
-          aria-label={`Use last time: ${formatLoad(previous.weight)} ${unitLabel} by ${previous.reps}`}
+          /**
+           * A HOLD IS "45s", NOT "0×45". This cell printed weight×reps for
+           * everything, so a Plank's history read `0×45` under a column headed
+           * KG and one headed SECONDS — a zero-kilogram set of 45 reps, and
+           * the only thing a screen reader was told. The caption two lines up
+           * already says Seconds because `repUnit` is right here; the cell was
+           * the one place in the row that did not ask.
+           *
+           * Not the parked downstream class: the receipt, History, bests and
+           * CSV need the unit STORED on the set. This one has it in hand.
+           */
+          aria-label={
+            repUnit === "sec"
+              ? `Use last time: ${previous.reps} seconds`
+              : `Use last time: ${formatLoad(previous.weight)} ${unitLabel} by ${previous.reps}`
+          }
           className="min-w-0 truncate text-left text-xs tabular-nums text-muted-foreground transition-colors hover:text-foreground"
         >
-          {formatLoad(previous.weight)}×{previous.reps}
+          {repUnit === "sec" ? `${previous.reps}s` : `${formatLoad(previous.weight)}×${previous.reps}`}
         </button>
       ) : (
         <span aria-hidden />

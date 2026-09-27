@@ -379,3 +379,45 @@ describe("a run on the tracking card", () => {
     expect(state.sessionType).toBe("running")
   })
 })
+
+describe("a program that has already trained today", () => {
+  /**
+   * `newestToday` was the newest workout of ANY kind, so logging anything
+   * after your program session — a loose set, a walk — made the program look
+   * untrained and the card offered "Start workout" again. Pressing it opened a
+   * SECOND session for the same day at the already-progressed numbers, and
+   * finishing it advanced the program twice: one stretch went 30s → 35s → 40s
+   * in a single day.
+   *
+   * `TodayCard`'s `mine` check exists because a loose workout used to take
+   * Start off EVERY card. That fix went one way and left the mirror image
+   * open; this is the per-enrollment fact, which the week strip on the same
+   * screen has had all along.
+   */
+  it("stays done when something unrelated is logged afterwards", () => {
+    const state = trainingCardState({
+      ...facts(),
+      recentlyFinished: [
+        // Newest first, as the repo returns them: the loose one is on top.
+        finished({ workoutId: "loose", enrollmentId: null, dayLabel: null }),
+        finished({ workoutId: "mine", enrollmentId: "e1" }),
+      ],
+    })
+    expect(state.kind).toBe("done")
+    if (state.kind !== "done") return
+    expect(state.workoutId, "the card must point at ITS OWN session").toBe("mine")
+    expect(state.enrollmentId).toBe("e1")
+  })
+
+  it("and a card whose program has NOT trained is still offered its session", () => {
+    // The case the `mine` check was written for: somebody else's session is
+    // the newest, and this program has done nothing today.
+    const state = trainingCardState({
+      ...facts(),
+      recentlyFinished: [finished({ workoutId: "other", enrollmentId: "e-other" })],
+    })
+    expect(state.kind).toBe("done")
+    if (state.kind !== "done") return
+    expect(state.enrollmentId, "not this card's program").not.toBe("e1")
+  })
+})
