@@ -1052,8 +1052,21 @@ function Elapsed({
    */
   const elapsed =
     now === null ? null : Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000))
+  /**
+   * HOURS, ONCE THERE ARE ANY. The minutes were unbounded, so a session past
+   * an hour read "61:04", "75:12", "92:30" — and a workout opened five hours
+   * late read "300:31" — on the one number a lifter looks at mid-workout. A
+   * StrongLifts session with three-minute rests routinely runs 60 to 90
+   * minutes, so this is not the long tail. The docblock above defends mm:ss
+   * over whole minutes for the first sixty seconds and never reaches the
+   * hour.
+   */
   const clock =
-    elapsed === null ? "" : `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`
+    elapsed === null
+      ? ""
+      : elapsed >= 3600
+        ? `${Math.floor(elapsed / 3600)}:${String(Math.floor((elapsed % 3600) / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`
+        : `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`
 
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">

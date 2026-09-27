@@ -112,7 +112,21 @@ export function SetRow({
    * means "nobody asked for a number here" — the box starts empty and says
    * "reps", rather than pre-filling a zero that somebody has to delete.
    */
-  const defaultReps = previous?.reps ?? (prescribed.reps || "")
+  /**
+   * LAST TIME'S REPS ONLY WHERE THE PROGRAM ASKED A RANGE.
+   *
+   * The reasoning above is about ranges — "A 6–8 lift was seeded as 6, and
+   * the rule for adding weight is 8 on every set" — and it was applied to
+   * FIXED schemes too, where the program's number is the decision, not a
+   * starting point. Driven: one loose Bench Press session at 8 reps, then
+   * StrongLifts Workout A. The row printed "5 × 5 reps @ 20 kg", the weight
+   * box held the prescribed 20 and the reps box held 8. One tap on the ✓ and
+   * the server recorded `{"reps":8}` on a 5×5 program — one row, two sources,
+   * weight from the program and reps from history, and History, the receipt
+   * and the CSV all say 8.
+   */
+  const rangeAsked = prescribed.repRangeMax != null && prescribed.repRangeMax !== prescribed.reps
+  const defaultReps = (rangeAsked ? previous?.reps : undefined) ?? (prescribed.reps || "")
   // `done.weight` and not `done.weightKg`: the box is labelled in the lifter's
   // own unit, and the kilogram number under a "lb" label is how a 135 lb bench
   // redisplayed as 61.23 and re-saved as 61.
