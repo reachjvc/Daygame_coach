@@ -19,7 +19,7 @@ import { summaryFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { WorkoutReceipt } from "@/src/programs/components/WorkoutReceipt"
 import { receiptHeading } from "@/src/programs/programsService"
-import { DISPLAY_LOCALE, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
+import { dateKeyLabel, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { WorkoutActions } from "@/src/programs/components/WorkoutActions"
 
 export default async function WorkoutReceiptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -68,14 +68,16 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
           unit={summary.unit}
           onProgram={Boolean(summary.enrollmentId)}
           setCount={summary.sets}
+          /**
+           * THE SAME OWNER AS THE HEADING. This built its own date inline from
+           * the instant, three lines from `receiptHeading`, which is how the
+           * page came to disagree with itself in the first place. `startedOn`
+           * is already the account's calendar day and `dateKeyLabel` prints a
+           * day key without a second zone getting a vote.
+           */
           day={
-            summary.startedAt
-              ? new Date(summary.startedAt).toLocaleDateString(DISPLAY_LOCALE, {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                  timeZone: timezone,
-                })
+            startedOn
+              ? dateKeyLabel(startedOn, { weekday: "short", day: "numeric", month: "short" })
               : "this workout"
           }
         />

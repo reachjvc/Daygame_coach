@@ -340,9 +340,24 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
                      */
                     const weight = (parsed.weights[e.id] ?? "").trim()
                     const load = weight === "" ? "" : weight === "0" ? " @bw" : ` @${weight}`
-                    return `${e.name} ${reps}${load}`
+                    return { text: `${e.name} ${reps}${load}`, group: e.supersetGroup }
                   })
-                  .join(", ")}
+                  /*
+                    SUPERSETS READ BACK. The hint under the box advertises four
+                    syntaxes and three of them echo here; `+ Chin-up` produced
+                    a preview byte-identical to the same line without the `+`,
+                    so a mistyped or misplaced one was undetectable until the
+                    week was running. The tag itself always worked — the live
+                    screen badges it and shares one rest timer across the
+                    group — the preview just never said so.
+                  */
+                  .reduce<string>(
+                    (line, ex, i, all) =>
+                      i === 0
+                        ? ex.text
+                        : `${line}${ex.group && ex.group === all[i - 1].group ? " + " : ", "}${ex.text}`,
+                    ""
+                  )}
               </span>
             </li>
           ))}

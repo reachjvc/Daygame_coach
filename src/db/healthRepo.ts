@@ -285,10 +285,35 @@ export async function getWorkoutLogs(
  * clicked to edit is not the row you get. Warm-ups first, then the order they
  * were actually done in, and `id` last so the answer is never arbitrary.
  */
+/**
+ * THE ORDER THE SETS HAPPENED IN, when the rows say when.
+ *
+ * `set_number` was the first key, so a workout of five squats then five
+ * benches then four rows listed as Squat 1, Bench 1, Row 1, Squat 2, Bench 2,
+ * Row 2 … — round-robin, in the correction editor and in the CSV, on a
+ * workout nobody had touched. `completed_at` was only the third tiebreaker,
+ * reached only within one set number and kind, so it never decided anything.
+ * Found by a review that ticked three lifts in sequence and read the list
+ * back; it looked like the known `completed_at` migration surfacing, and it
+ * is not — it is this comparator, on rows whose timestamps are intact.
+ *
+ * NULLS LAST, and that is what keeps this safe. A session written up
+ * afterwards has no `completed_at`, and every correction currently nulls it
+ * (see the migration parked in `supabase/pending-owner-approval/`), so those
+ * rows fall through to exactly the old keys and are ordered exactly as
+ * before. Only a workout that still knows when its sets were ticked changes,
+ * and it changes to the truth.
+ *
+ * A lexicographic chain of total comparisons, so it is a valid comparator:
+ * an "as performed when we know, by slot when we do not" rule written as a
+ * pairwise test would not be transitive, and `Array.sort` answers that with
+ * an arbitrary order rather than an error.
+ */
 export const inWorkoutOrder = (a: WorkoutSetRow, b: WorkoutSetRow): number =>
+  Number(!a.completed_at) - Number(!b.completed_at) ||
+  (a.completed_at ?? "").localeCompare(b.completed_at ?? "") ||
   a.set_number - b.set_number ||
   Number(a.set_kind !== "warmup") - Number(b.set_kind !== "warmup") ||
-  (a.completed_at ?? "").localeCompare(b.completed_at ?? "") ||
   a.id.localeCompare(b.id)
 
 export async function getWorkoutLogsWithSets(

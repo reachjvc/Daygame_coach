@@ -117,6 +117,13 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
     return { exercises: list, requires1RM: list.some((e) => e.percentage) }
   }, [schedule])
 
+  /**
+   * Does this program ask for a distance? `unitSystem` drives two things —
+   * the weights, and the km/miles the finish sheet asks an endurance session
+   * for — so a plan with neither is a plan the picker does not touch.
+   */
+  const asksDistance = schedule.kind === "endurance_weeks"
+
   const levelSeed = resolved.program.levels.find((l) => l.id === resolved.level)
 
   function defaultFor(id: string): string {
@@ -326,6 +333,19 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
             control on the page looked broken; what it had really done was
             switch the run to miles, silently.
           */}
+          {/*
+            AND HIDDEN WHEN IT CONTROLS NOTHING ON THIS SCREEN.
+
+            The label was chosen by `exercises.length > 0` — "no lifts, so it
+            must be distances". That is true of every program in the catalogue
+            today, because each one is either all-load or all-endurance, so
+            the proxy is exact by accident. A mobility or yoga plan has
+            neither lifts nor distances, and it would have read
+            "Distances: km / miles" above a control that changes nothing —
+            the bug just fixed, relabelled. `asksDistance` asks the question
+            the label answers.
+          */}
+          {(exercises.length > 0 || asksDistance) && (
           <div>
             <Label className="mb-1.5 block">{exercises.length > 0 ? "Units" : "Distances"}</Label>
             <div className="flex gap-2">
@@ -343,6 +363,7 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
               ))}
             </div>
           </div>
+          )}
 
           {/* The week itself, before it is started. */}
           <ProgramEditor
