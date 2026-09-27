@@ -75,13 +75,62 @@ function indexOf(table: TableName, rows: AnyRow[]): Map<string, AnyRow> {
   return new Map(rows.map((row) => [rowKey(table, row), row]))
 }
 
-/** Ignore bookkeeping when asking "did this actually change?" */
+/**
+ * A stable serialisation: same value, same string, whatever order the keys
+ * arrived in. Recursive, which is the whole point — see `meaningful`.
+ *
+ * Dates are not expected here. Rows come from `stateToRows` or from the server as
+ * JSON, so every timestamp is already a string; a real `Date` would serialise as
+ * `{}` and compare equal to every other Date.
+ */
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null"
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`
+  return `{${Object.entries(value as Record<string, unknown>)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([key, inner]) => `${JSON.stringify(key)}:${stableStringify(inner)}`)
+    .join(",")}}`
+}
+
+/**
+ * Ignore bookkeeping when asking "did this actually change?"
+ *
+ * THIS USED TO COMPARE NOTHING NESTED, AND THAT IS NOT A SUBTLETY.
+ *
+ * It ended `JSON.stringify(rest, Object.keys(rest).sort())`, reading as "the keys,
+ * sorted". `JSON.stringify`'s second argument is not an ordering — it is a
+ * property ALLOWLIST, and it applies at every depth. So a row's top-level keys
+ * survived and everything inside them was replaced by `{}`:
+ *
+ *   {"prefs":{},"user_id":"u1"}          — every preference, identical
+ *   {"config":{},"id":"w1"}              — every workspace setting, identical
+ *   {"config":{},"id":"r1"}              — every saved report, identical
+ *
+ * Two rows that differed only inside an object therefore compared EQUAL, and
+ * `diffRows` never emitted them. Measured in the product on 2026-09-27, signed
+ * in, badge reading "Saved": changing the time format updated the browser and
+ * produced no request at all — 0 POSTs in five seconds — while editing an entry
+ * description in the same session produced one immediately. Clearing local
+ * storage and reloading brought the old setting back from the server, because the
+ * server had never been told.
+ *
+ * What silently never synced: the whole of `timetrack_settings.prefs` — name,
+ * email, duration format, time format, date format, week start, timezone, the
+ * member list, groups, pomodoro, idle and reminders; the whole of
+ * `timetrack_workspaces.config` — rounding, required fields, the lock-entries
+ * date, approvals, default rates; and every saved report's `config`, which is what
+ * the report actually reports. A project's rate history is NOT among them: it gets
+ * a table of its own with the values at the top level, so it was always detected.
+ * Checked rather than assumed. Anything whose value is a bare string or
+ * number at the top of a row was fine, which is why this was invisible: entries,
+ * the thing people look at, are almost all top-level scalars.
+ */
 function meaningful(row: AnyRow): string {
   const rest: AnyRow = {}
   for (const [key, value] of Object.entries(row)) {
     if (key !== "updated_at") rest[key] = value
   }
-  return JSON.stringify(rest, Object.keys(rest).sort())
+  return stableStringify(rest)
 }
 
 export interface RowDiff {
