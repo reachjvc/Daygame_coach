@@ -14,11 +14,18 @@
  * UTC, so a Copenhagen lifter's 00:30 Tuesday session would be headed
  * "Yesterday's workout" by the very function meant to name the day.
  *
- * ASSERTED BY BUCKET, NOT BY SPELLING. Every date here goes through
- * `toLocaleDateString` with no locale pinned, so "Sun, Sep 20" is en-US and
- * something else anywhere else — the same reason `formatDateOnly`'s tests
- * match on `/14/` rather than on a string. What is under test is WHICH shape
- * the heading chose, which is the whole of the logic.
+ * ASSERTED BY BUCKET, NOT BY SPELLING — and the reason has changed since this
+ * was written. It used to be that `dateKeyLabel` took the runtime's locale, so
+ * "Sun, Sep 20" was en-US and something else anywhere else. It defaults to
+ * `DISPLAY_LOCALE` now, so the spelling IS fixed.
+ *
+ * The bucket matching stays anyway, because it is the better test: what is
+ * under test is WHICH shape the heading chose — today, yesterday, a weekday,
+ * a date, a date with a year — and pinning the exact string would make every
+ * one of these fail the day somebody changes `DISPLAY_LOCALE`, for a reason
+ * that has nothing to do with the logic. A reviewer caught the stale
+ * reasoning; a comment that argues from a condition that no longer holds is
+ * how the next person justifies the wrong change.
  */
 
 import { describe, expect, test } from "vitest"

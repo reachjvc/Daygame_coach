@@ -73,6 +73,7 @@ describe("a 4xx that means 'not now'", () => {
   for (const [status, why] of [
     [401, "the session expired mid-workout and the next call will refresh it"],
     [408, "the request timed out on the way, so nothing was decided"],
+    [425, "too early — the server is asking for the retry itself"],
     [429, "rate limited — a retry instruction with a number on it"],
   ] as [number, string][]) {
     it(`keeps the set when the server answers ${status} — ${why}`, async () => {
@@ -125,5 +126,54 @@ describe("a 4xx that means 'not now'", () => {
 
     await waitFor(() => expect(result.current.error).toBeTruthy())
     expect(stillHeld(result)).toBe(false)
+  })
+})
+
+describe("the queue, which is where the headline scenario actually happens", () => {
+  /**
+   * `tick` was the only path under test, and the commit's own motivating
+   * sentence is "one failed refresh took EVERY QUEUED SET with it" — which is
+   * `flush`, a different branch, a hundred lines away. Reverting that one call
+   * site to the raw `status >= 400 && status < 500` left all five tick tests
+   * green. A reviewer found it by doing exactly that.
+   */
+  const QUEUE_KEY = "live-workout-queue-v1"
+
+  /** A set already waiting in localStorage, as an offline tick leaves it. */
+  const queued = {
+    workoutId: "w1",
+    exerciseId: "squat",
+    exercise: "Squat",
+    weight: 60,
+    reps: 5,
+    setNumber: 1,
+    kind: "working" as const,
+    side: null,
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    vi.restoreAllMocks()
+  })
+
+  it("keeps a queued set when the flush is answered 401, rather than deleting it", async () => {
+    window.localStorage.setItem(QUEUE_KEY, JSON.stringify([queued]))
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(answering(401, { error: "Authentication required" }))))
+
+    const { result } = renderHook(() => useLiveWorkout(workout))
+
+    // The mount effect flushes. Give it a turn and then assert the set stayed.
+    await waitFor(() => expect(result.current.unsaved).toBe(1))
+    expect(result.current.error ?? "").not.toMatch(/has been removed/i)
+  })
+
+  it("still drops a queued set the schema will never take", async () => {
+    window.localStorage.setItem(QUEUE_KEY, JSON.stringify([queued]))
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(answering(400, { error: "no" }))))
+
+    const { result } = renderHook(() => useLiveWorkout(workout))
+
+    await waitFor(() => expect(result.current.error).toMatch(/has been removed/i))
+    expect(result.current.unsaved).toBe(0)
   })
 })

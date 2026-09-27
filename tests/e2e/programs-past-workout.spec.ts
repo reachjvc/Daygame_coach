@@ -117,12 +117,29 @@ test.beforeEach(async ({ page }) => {
  * collapse.
  */
 test.afterEach(async ({ page }) => {
-  await page
-    .evaluate(async () => {
-      const logs = (await (await fetch("/api/health/workout?days=3")).json()) as { id: string }[]
-      for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
-    })
-    .catch(() => {})
+  /**
+   * IT FAILS LOUDLY. The first version ended `.catch(() => {})`, which hides
+   * exactly the thing it was written to stop — a cleanup that did not clean —
+   * and `CLAUDE.md` says never to add a silent fallback. A reviewer caught it
+   * within the hour.
+   *
+   * THE OPEN ONE FIRST. `GET /api/health/workout` reads FINISHED workouts, so
+   * a test that fails after opening a past workout leaves a live row this
+   * cannot see, and the next spec's Start is refused by it.
+   */
+  const left = await page.evaluate(async () => {
+    const live = (await (await fetch("/api/workouts/live")).json()) as { id: string } | null
+    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
+    const logs = (await (await fetch("/api/health/workout?days=3")).json()) as { id: string }[]
+    for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
+    const after = (await (await fetch("/api/health/workout?days=3")).json()) as { id: string }[]
+    const open = await (await fetch("/api/workouts/live")).json()
+    return { finished: after.length, open: Boolean(open) }
+  })
+  expect(left, "this spec left rows on the shared training account").toEqual({
+    finished: 0,
+    open: false,
+  })
 })
 
 test("History opens the live screen at the time you choose, and it knows it is the past", async ({
