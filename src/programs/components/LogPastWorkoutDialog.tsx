@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { effectiveProgram, scheduleDaysOrNone } from "../customize"
-import { getProgram } from "../data/catalog"
+import { enrollmentName, getProgram } from "../data/catalog"
 import { wallClockNow, wallClockToInstant } from "@/src/shared/dateUtils"
 import { LIVE_WORKOUT } from "@/src/shared/trainingRoutes"
 import { CHIP_ON } from "./trainingStyles"
@@ -72,12 +72,22 @@ export function choicesFor(enrollments: readonly ProgramEnrollment[]): {
       unknown.push(e.program_id)
       continue
     }
+    /**
+     * THE ENROLMENT'S NAME, not the catalogue entry's. A week somebody built
+     * and called "My week" showed up here as "Monday · Your own program" —
+     * the shell program's name — while every other list in the slice uses
+     * `enrollmentName`, which prefers the label they typed.
+     * `app/programs/live/page.tsx` carries the fix comment for exactly this:
+     * "the header above a session read 'Your own program' for three different
+     * weeks at once, and for the one you had carefully named."
+     */
+    const shownName = enrollmentName(e)
     const effective = effectiveProgram(program, e.customSchedule)
     const days = scheduleDaysOrNone(effective.schedule)
     if (days.length === 0) {
       choices.push({
         key: `${e.id}:next`,
-        label: many ? `Next run · ${program.name}` : "Next run",
+        label: many ? `Next run · ${shownName}` : "Next run",
         enrollmentId: e.id,
         dayId: null,
       })
@@ -86,7 +96,7 @@ export function choicesFor(enrollments: readonly ProgramEnrollment[]): {
     for (const day of days) {
       choices.push({
         key: `${e.id}:${day.id}`,
-        label: many ? `${day.label} · ${program.name}` : day.label,
+        label: many ? `${day.label} · ${shownName}` : day.label,
         enrollmentId: e.id,
         dayId: day.id,
       })

@@ -13,6 +13,7 @@
  * you can do to a saved week behind its ⋮.
  */
 
+import { enrollmentName } from "../data/catalog"
 import { useState } from "react"
 import { AlertTriangle, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,17 @@ export function SavedWeeksSection({
   /** Which row is mid-action, so two taps cannot start the same week twice. */
   const [busy, setBusy] = useState<string | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
+  /**
+   * What starting a saved week just ended, held so the note is read.
+   *
+   * WITH THE OTHER HOOKS, above the early returns. The first version of this
+   * went in beside `start()`, which is BELOW `if (drafts.loading ||
+   * drafts.drafts.length === 0) return null` — so the hook count changed
+   * between renders and `/programs` went to "This page could not load. The
+   * fault has been reported." That is the same crash this slice already had
+   * in `HistoryTab`, which I quoted in a comment earlier the same day.
+   */
+  const [displaced, setDisplaced] = useState<{ id: string; names: string[] } | null>(null)
 
   /**
    * A FAILED READ IS NOT "YOU HAVE SAVED NOTHING" — and it is independent of
@@ -97,6 +109,23 @@ export function SavedWeeksSection({
      * into. Less reachable here because the sheet closes on press, which is
      * why it survived the first pass; the same class one component short.
      */
+    /**
+     * WHAT THIS JUST ENDED, SAID BEFORE YOU WALK AWAY.
+     *
+     * Starting a saved week displaces the running program, and this moved
+     * straight to the new program's card with nothing said — the one starter
+     * of four that did not. The catalogue's Start and the finished list's
+     * resume both show this sentence; `programRepo`'s rule is "it REPORTS
+     * what it displaced rather than doing it silently".
+     */
+    const ended = (out.value.displaced ?? [])
+      .map((d) => enrollmentName(d))
+      .filter(Boolean)
+    if (ended.length > 0) {
+      setBusy(null)
+      setDisplaced({ id: out.value.enrollment.id, names: ended })
+      return
+    }
     onStarted(out.value.enrollment.id)
   }
 
@@ -107,6 +136,25 @@ export function SavedWeeksSection({
     setBusy(null)
     setDeleting(null)
     if (!out.ok) setFailure(out.error)
+  }
+
+  if (displaced) {
+    // The same shape `ProgramDetail` and `BuildYourWeek` use, for the same
+    // reason: what this just ended is a fact somebody needs before they walk
+    // away from the screen.
+    return (
+      <div className="space-y-3" data-testid="saved-week-displaced">
+        <p role="status" className="text-base font-semibold">
+          Your week is running.
+        </p>
+        {displaced.names.map((name) => (
+          <p key={name} className="text-sm text-muted-foreground">
+            {name} moved to your finished programs — everything it logged is kept.
+          </p>
+        ))}
+        <Button onClick={() => onStarted(displaced.id)}>Go to today&apos;s session</Button>
+      </div>
+    )
   }
 
   return (

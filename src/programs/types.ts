@@ -1133,7 +1133,21 @@ export interface DraftsState {
   startCustomWeek: (body: StartWrite) => Promise<DraftResult<{ enrollment: { id: string } }>>
   saveDraft: (body: DraftWrite) => Promise<DraftResult<ProgramDraft>>
   updateDraft: (id: string, body: DraftWrite) => Promise<DraftResult<ProgramDraft>>
-  startDraft: (id: string) => Promise<DraftResult<{ enrollment: { id: string } }>>
+  /**
+   * `displaced` is part of the answer. Starting a saved week ends the running
+   * program of the same discipline, and `programRepo`'s rule is "it REPORTS
+   * what it displaced rather than doing it silently" — this type dropped the
+   * field, so `SavedWeeksSection` had nothing to say and the screen moved on
+   * in silence. The type was the reason, not the component.
+   */
+  startDraft: (
+    id: string
+  ) => Promise<
+    DraftResult<{
+      enrollment: { id: string }
+      displaced?: { program_id: string; label?: string | null }[]
+    }>
+  >
   deleteDraft: (id: string) => Promise<DraftResult<{ ok: true }>>
 }
 

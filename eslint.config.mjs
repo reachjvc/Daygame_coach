@@ -2,6 +2,7 @@ import js from "@eslint/js"
 import globals from "globals"
 import tseslint from "typescript-eslint"
 import nextPlugin from "@next/eslint-plugin-next"
+import reactHooks from "eslint-plugin-react-hooks"
 
 export default [
   {
@@ -61,10 +62,29 @@ export default [
     },
     plugins: {
       "@next/next": nextPlugin,
+      "react-hooks": reactHooks,
     },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
+      /**
+       * THE CRASH THIS REPO HAS SHIPPED TWICE.
+       *
+       * A hook below an early return changes the hook count between renders,
+       * and React answers "Rendered more hooks than during the previous
+       * render" — which reaches a person as "This page could not load. The
+       * fault has been reported." It happened in `HistoryTab`, and again on
+       * 2026-09-27 in `SavedWeeksSection`, in the same session where the
+       * first one was being quoted as a warning. Both were caught by opening
+       * the page; neither was caught by the lint ratchet, because the plugin
+       * was installed and never registered.
+       *
+       * `rules-of-hooks` is an error: there is no correct conditional hook.
+       * `exhaustive-deps` is a warning so it does not become 300 new errors
+       * the ratchet cannot absorb — it can be tightened later.
+       */
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
   {

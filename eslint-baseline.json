@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 335,
+  "total": 323,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -11,7 +11,8 @@
     },
     "app/test/animations/page.tsx": {
       "@typescript-eslint/no-unused-vars: 'Play' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'useCallback' is defined but never used.": 1
+      "@typescript-eslint/no-unused-vars: 'useCallback' is defined but never used.": 1,
+      "react-hooks/rules-of-hooks: React Hook \"useCountUp\" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.": 1
     },
     "app/test/articles/page.tsx": {
       "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1,
@@ -207,8 +208,7 @@
     },
     "app/test/goalsv7/VariantB.tsx": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
-      "@typescript-eslint/no-unused-vars: 'MorphingCard' is defined but never used.": 1,
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 1
+      "@typescript-eslint/no-unused-vars: 'MorphingCard' is defined but never used.": 1
     },
     "app/test/goalsv7/VariantC.tsx": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3,
@@ -240,19 +240,14 @@
     "app/test/goalsv9/V9D.tsx": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 3
     },
-    "app/test/tour-variants/VariantB.tsx": {
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 3
-    },
     "app/test/tour-variants/VariantC.tsx": {
       "@typescript-eslint/no-unused-vars: 'setSelectedGoals' is assigned a value but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'setTargets' is assigned a value but never used.": 1,
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 2
+      "@typescript-eslint/no-unused-vars: 'setTargets' is assigned a value but never used.": 1
     },
     "app/test/tour-variants/VariantD.tsx": {
       "@typescript-eslint/no-unused-vars: 'setSelectedGoals' is assigned a value but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'setTargets' is assigned a value but never used.": 1,
-      "prefer-const: 'left' is never reassigned. Use 'const' instead.": 1,
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 3
+      "prefer-const: 'left' is never reassigned. Use 'const' instead.": 1
     },
     "next.config.mjs": {
       "no-redeclare: 'process' is already defined as a built-in global variable.": 1
@@ -307,9 +302,6 @@
     "src/goals/components/GoalCatalogPicker.tsx": {
       "@typescript-eslint/no-unused-vars: 'GoalDisplayCategory' is defined but never used.": 1
     },
-    "src/goals/components/GoalFormModal.tsx": {
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 1
-    },
     "src/goals/components/GoalFormVariant6.tsx": {
       "@typescript-eslint/no-unused-vars: 'periodInfo' is assigned a value but never used.": 1
     },
@@ -330,8 +322,7 @@
       "@typescript-eslint/no-unused-vars: 'RELATIONS_PATHS' is assigned a value but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'suggestedTargetDate' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'TEMPLATES' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'useRef' is defined but never used.": 1,
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 6
+      "@typescript-eslint/no-unused-vars: 'useRef' is defined but never used.": 1
     },
     "src/goals/components/new-goals/SummaryStep.tsx": {
       "@typescript-eslint/no-unused-vars: 'getDriversForObjective' is defined but never used.": 1,
@@ -349,8 +340,7 @@
     "src/goals/components/setup/GoalsStep.tsx": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1,
       "@typescript-eslint/no-unused-vars: 'getAreaIdForGoal' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'lifeAreas' is defined but never used.": 1,
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 1
+      "@typescript-eslint/no-unused-vars: 'lifeAreas' is defined but never used.": 1
     },
     "src/goals/components/tree-of-life/TreeOfLifeCanvas.tsx": {
       "@typescript-eslint/no-unused-vars: 't' is defined but never used.": 1
@@ -401,8 +391,7 @@
       "@typescript-eslint/no-unused-vars: 'lifewideReady' is assigned a value but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'questionsForPage' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'VALUE_SUGGESTIONS' is defined but never used.": 1,
-      "no-constant-binary-expression: Unexpected constant truthiness on the left-hand side of a `&&` expression.": 1,
-      "react-hooks/exhaustive-deps: Definition for rule 'react-hooks/exhaustive-deps' was not found.": 2
+      "no-constant-binary-expression: Unexpected constant truthiness on the left-hand side of a `&&` expression.": 1
     },
     "src/goals/config.ts": {
       "@typescript-eslint/no-unused-vars: 'GOAL_DISPLAY_CATEGORIES' is defined but never used.": 1
@@ -440,7 +429,11 @@
       "@typescript-eslint/no-unused-vars: 'userLevel' is defined but never used.": 1
     },
     "src/scenarios/keepitgoing/chat.ts": {
-      "@typescript-eslint/no-unused-vars: 'RUBRIC' is defined but never used.": 1
+      "@typescript-eslint/no-unused-vars: 'RUBRIC' is defined but never used.": 1,
+      "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"evaluateWithAI\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 3,
+      "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"generateAIResponse\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1,
+      "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"generateCloseResponse\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1,
+      "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"generateExitResponse\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1
     },
     "src/scenarios/keepitgoing/claudeCode.ts": {
       "@typescript-eslint/no-require-imports: A `require()` style import is forbidden.": 1

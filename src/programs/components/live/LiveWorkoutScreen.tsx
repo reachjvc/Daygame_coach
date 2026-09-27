@@ -665,12 +665,24 @@ export function LiveWorkoutScreen({
                      * printing the working set's numbers there would suggest
                      * one.
                      */
+                    /**
+                     * NO PADDING. This fell back to the LAST previous set for
+                     * any row beyond the number actually done, so a three-set
+                     * session showed five:
+                     *
+                     *   1  60×8   2  65×8   3  70×8
+                     *   4  70×8   <- never happened
+                     *   5  70×8   <- never happened
+                     *
+                     * and the invented cells were tappable, labelled "Use last
+                     * time: 70 kg by 8". The comment two lines below refuses to
+                     * show a working set's numbers against a warm-up because
+                     * "printing the working set's numbers there would suggest
+                     * one" — which is the same argument, for set 4 of a
+                     * three-set session.
+                     */
                     const last =
-                      row.workingIndex === null
-                        ? null
-                        : (previous[row.workingIndex - 1] ??
-                          previous[previous.length - 1] ??
-                          null)
+                      row.workingIndex === null ? null : (previous[row.workingIndex - 1] ?? null)
                     return (
                       /*
                         KEYED BY THE SLOT IT WRITES TO, kind included.

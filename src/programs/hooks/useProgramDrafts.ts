@@ -109,7 +109,17 @@ export function useProgramDrafts(): DraftsState {
     startDraft: useCallback(
       (id: string) =>
         after(
-          send<{ enrollment: { id: string } }>(`${DRAFTS}/${id}/start`, {
+          /**
+           * `displaced` COMES BACK AND WAS DROPPED HERE. Starting a saved week
+           * displaces the running program — `programRepo`'s rule is "it
+           * REPORTS what it displaced rather than doing it silently" — and
+           * this typed the reply as the enrolment id alone, so
+           * `SavedWeeksSection` had nothing to say and the page moved
+           * straight on. The catalogue's Start and the finished-list's resume
+           * both say it; "Start this week" was the one starter of four that
+           * did not.
+           */
+          send<{ enrollment: { id: string }; displaced?: { program_id: string; label?: string | null }[] }>(`${DRAFTS}/${id}/start`, {
             method: "POST",
             body: JSON.stringify({}),
           })

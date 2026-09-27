@@ -247,6 +247,17 @@ export function FinishSheet({
 
   const distanceUnit = distanceUnitFor(workout.unit)
   const askDistance = endurance || kind === "running" || kind === "cardio"
+  /**
+   * A SPAN THAT RUNS BACKWARDS IS NOT "1 min". Typing an end of 08:00 against
+   * a 09:30 start printed "09:30 → 08:00  1 min" with Save armed, because the
+   * duration is clamped by `Math.max(1, …)`. Pressing it got a 409 and the
+   * right sentence — after the fact, which is what `MAX_MINUTES` exists here
+   * rather than as a 400 to avoid: "TOO LONG TO BE A WORKOUT — said HERE, not
+   * as a 400 after the fact." The same discipline, the other direction.
+   */
+  const backwards =
+    endedInstant != null && startedForCount != null && endedInstant < startedForCount
+
   /** Why Save cannot be pressed yet, in the person's words. */
   const blocked = !startedAt
     ? "Say when it started"
@@ -254,7 +265,9 @@ export function FinishSheet({
       ? "Say when it ended"
       : loose && !kind
         ? "Say what kind of session it was"
-        : null
+        : backwards
+          ? "That ends before it started"
+          : null
   /**
    * TOO LONG TO BE A WORKOUT — said HERE, not as a 400 after the fact.
    *

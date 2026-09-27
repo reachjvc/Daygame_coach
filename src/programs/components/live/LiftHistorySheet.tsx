@@ -43,11 +43,21 @@ interface Props {
   timezone: string
 }
 
-/** "Fri 12 Sep", in the account's own calendar. */
+/**
+ * "Fri 12 Sep 2024", in the account's own calendar.
+ *
+ * THE YEAR IS IN IT. A session from 5 January 2019 read "Sat 5 Jan", and this
+ * sheet is the one screen whose stated purpose is to put a date on the
+ * PREVIOUS column — showing up to five sessions, so a lifter coming back
+ * after a break read five undated rows that all look like this month. The
+ * live header was given the year a round earlier under a comment calling
+ * itself "the one call site the year rule missed"; it was not the only one.
+ */
 function dayIn(iso: string, timezone: string): string {
   return new Date(iso).toLocaleDateString(DISPLAY_LOCALE, {
     weekday: "short",
     day: "numeric",
+    year: "numeric",
     month: "short",
     timeZone: timezone,
   })
