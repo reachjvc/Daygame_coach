@@ -1744,12 +1744,42 @@ function computeEndurancePrescription(
   }
 }
 
-/** One-line human summary, e.g. "5 min walk · 8×(jog 60s / walk 90s) · 5 min walk". */
+/**
+ * HOW LONG A BLOCK IS, SAID CORRECTLY — the one place that decides.
+ *
+ * `Math.round(durationSec / 60)` printed a 90-second jog as "2m", which is
+ * the same number it printed for the 180-second run beside it. Twelve of
+ * Couch to 5K's 27 sessions — all of weeks 1 to 4, the beginner half — hold a
+ * 90s or 150s block, so the screen told a beginner to run twice as long as
+ * the program asks. The header above it says "About 30 min" from
+ * `enduranceMinutes`, which sums the true seconds, so the same line
+ * contradicted itself: "About 30 min · Brisk walk 5m · 8×(Jog 1m / Walk 2m)
+ * · Walk 5m" adds up to 34.
+ *
+ * Under two minutes it says seconds, because that is how intervals are
+ * written and because a fraction of a minute is not a number anybody runs to.
+ * Above it, minutes, with a decimal only when there is one.
+ *
+ * Exported because the Today card and the live screen printed
+ * `blocks.map(b => b.label)` — the label ALONE, no duration anywhere — so a
+ * Couch to 5K session read "2× Jog → Walk → Run → Walk" and the person had no
+ * idea how long to do any of it. Three screens, one answer.
+ */
+export function describeEnduranceBlock(b: EnduranceBlock): string {
+  const amount =
+    b.durationSec != null
+      ? b.durationSec < 120
+        ? `${b.durationSec}s`
+        : `${Number.isInteger(b.durationSec / 60) ? b.durationSec / 60 : (b.durationSec / 60).toFixed(1)} min`
+      : b.distanceKm != null
+        ? `${b.distanceKm} km`
+        : ""
+  return `${b.label}${amount ? ` ${amount}` : ""}`
+}
+
+/** One-line human summary, e.g. "Brisk walk 5 min · 8×(Jog 60s / Walk 90s)". */
 function summarizeEndurance(sets: EnduranceSet[]): string {
-  const fmt = (b: EnduranceBlock) => {
-    const amount = b.durationSec != null ? `${Math.round(b.durationSec / 60) || b.durationSec / 60}m` : b.distanceKm != null ? `${b.distanceKm}km` : ""
-    return `${b.label}${amount ? ` ${amount}` : ""}`
-  }
+  const fmt = describeEnduranceBlock
   return sets
     .map((s) => {
       const inner = s.blocks.map(fmt).join(" / ")

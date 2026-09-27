@@ -45,24 +45,7 @@ import type { MissRule } from "../../types"
 import { FinishSheet } from "./FinishSheet"
 import { AddLift } from "./AddLift"
 import { useLiveWorkout } from "../../hooks/useLiveWorkout"
-import {
-  describeSets,
-  restTargetFor,
-  groupOrdinal,
-  addedLiftId,
-  unfinishedLifts,
-  describePlates,
-  platesFor,
-  enduranceMinutes,
-  isStaleWorkout,
-  fixedRowsToTick,
-  keepableChanges,
-  liftRows,
-  setLabel,
-  setSlot,
-  applyLiftOrder,
-  moveLift,
-} from "../../programsService"
+import { addedLiftId, applyLiftOrder, describeEnduranceBlock, describePlates, describeSets, enduranceMinutes, fixedRowsToTick, groupOrdinal, isStaleWorkout, keepableChanges, liftRows, moveLift, platesFor, restTargetFor, setLabel, setSlot, unfinishedLifts } from "../../programsService"
 import { REST_SECONDS, UNIT_CONFIG } from "../../config"
 import type {
   LiftRow,
@@ -473,7 +456,7 @@ export function LiveWorkoutScreen({
                       <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                         {set.repeat > 1 ? `${set.repeat}×` : ""}
                       </span>
-                      <span className="min-w-0">{set.blocks.map((b) => b.label).join(" → ")}</span>
+                      <span className="min-w-0">{set.blocks.map(describeEnduranceBlock).join(" → ")}</span>
                     </li>
                   )
                 })}

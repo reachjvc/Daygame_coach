@@ -22,7 +22,7 @@ import { useRouter } from "next/navigation"
 import { Loader2, MoreVertical, Play } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { describeSets, openWorkoutInvitation } from "../programsService"
+import { describeEnduranceBlock, describeSets, openWorkoutInvitation } from "../programsService"
 import { TRAINING_CARD, TRAINING_CARD_BODY, CHIP_ON } from "./trainingStyles"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
@@ -350,7 +350,7 @@ export function TodayCard({
           {prescription.enduranceSets?.map((set, i) => (
             <li key={i} className="text-sm text-muted-foreground">
               {set.repeat > 1 ? `${set.repeat}× ` : ""}
-              {set.blocks.map((b) => b.label).join(" → ")}
+              {set.blocks.map(describeEnduranceBlock).join(" → ")}
             </li>
           ))}
         </ul>
