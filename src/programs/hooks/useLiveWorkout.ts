@@ -697,6 +697,34 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     async (patch: Record<string, unknown>) => {
       if (!workout) return
       const seq = ++issued.current
+      /**
+       * APPLIED HERE FIRST, so the NEXT tap reads this one.
+       *
+       * Every caller builds the whole field from `shown.adjustments` at click
+       * time — "The WHOLE list, every time … building it from one index at
+       * the call site is how one tick wipes another", says the comment above
+       * the endurance ticks. But `shown` only changed when the response
+       * landed, ~900ms away on localhost and longer on a phone, so three taps
+       * in a row all read the SAME list:
+       *
+       *   REQ {"blocksDone":[0]}
+       *   REQ {"blocksDone":[1]}
+       *   REQ {"blocksDone":[2]}
+       *   RES {"blocksDone":[2]}      <- two ticks gone, no error
+       *
+       * Reproduced at 600ms between taps, which is an ordinary tapping speed.
+       * One tick still wiped another, by the other route. The same shape sat
+       * behind "Skip this one" and Move up/down, which build `skipped` and
+       * `order` the same way.
+       *
+       * Every field `AdjustWorkoutSchema` accepts is an adjustment, so merging
+       * the patch in is right for all five callers. The server's answer still
+       * arrives under `applyServer`'s fence and wins.
+       */
+      const before = workout.adjustments
+      setWorkout((prev) =>
+        prev ? { ...prev, adjustments: { ...prev.adjustments, ...patch } } : prev
+      )
       // try/catch, because offline this rejected into an unhandled promise and
       // a failed "Skip this one" looked exactly like a successful one.
       try {
@@ -714,12 +742,17 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           workoutVanished(workout.id, body?.error ?? "This workout is no longer open.")
           return
         }
+        // PUT BACK. An optimistic tick that the server refused must not stay
+        // on screen — that is the "it looked like it worked" this whole hook
+        // is built against.
+        setWorkout((prev) => (prev ? { ...prev, adjustments: before } : prev))
         setError(body?.error ?? "That change could not be saved.")
       } catch {
+        setWorkout((prev) => (prev ? { ...prev, adjustments: before } : prev))
         setError("Could not reach the server, so that change was not saved.")
       }
     },
-    [workout, applyServer]
+    [workout, applyServer, workoutVanished]
   )
 
   /**
