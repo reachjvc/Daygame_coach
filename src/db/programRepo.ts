@@ -27,8 +27,7 @@ import {
   RESET_EFFECT,
 } from "@/src/programs/programsService"
 import { getProgram, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
-import { ProgramRefused } from "@/src/programs/errors"
-import { CouldNotTell } from "@/src/programs/errors"
+import { CouldNotTell, ProgramRefused } from "@/src/programs/errors"
 import { isOpenWorkout, OPEN_WORKOUT_REFUSAL } from "./workoutLifecycle"
 import {
   clampCursorDay,
@@ -589,9 +588,25 @@ export async function deleteEnrollmentPermanently(userId: string, id: string): P
     .eq("user_id", userId)
     .eq("is_active", false)
     .select("id")
-  if (error) throw new Error(`Failed to delete program: ${error.message}`)
+  if (error) {
+    // The database's sentence goes to the log. This one was on the
+    // grandfathered raw-message list; it is off it now.
+    console.error(`could not delete program ${id}: ${error.message}`)
+    throw new CouldNotTell("that program")
+  }
   if (!data || data.length === 0) {
-    throw new Error("Only a program you have already ended can be deleted permanently")
+    /**
+     * A REFUSAL, NOT A CRASH — the same fix as `reviseWorkout`'s, which the
+     * class pass did not reach. A bare Error is 500 through `statusFor`, so
+     * "you have to end it first" arrived as "the server broke", with the
+     * instruction still in the body where nobody reads a 500.
+     *
+     * The three cases really are one answer here: still running, no such id,
+     * or not yours all mean "there is no ended program of yours at this id",
+     * and saying which would tell a stranger whether somebody else's id
+     * exists.
+     */
+    throw new ProgramRefused("Only a program you have already ended can be deleted permanently")
   }
 }
 

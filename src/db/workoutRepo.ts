@@ -459,7 +459,12 @@ async function fateOf(userId: string, workoutId: string): Promise<WorkoutFate> {
     .eq("id", workoutId)
     .eq("user_id", userId)
     .maybeSingle()
-  if (error) return "unknown"
+  if (error) {
+    // SAY SO. Every sibling logs the real message; this one returned the
+    // fourth state silently, so an operator saw a 503 with no cause anywhere.
+    console.error(`could not tell the fate of workout ${workoutId}: ${error.message}`)
+    return "unknown"
+  }
   if (!data) return "gone"
   /**
    * THE SAME PREDICATE EVERYTHING ELSE USES. This read `ended_at === null`,

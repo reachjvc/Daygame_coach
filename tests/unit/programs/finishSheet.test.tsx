@@ -302,8 +302,26 @@ describe("keep these changes for next time", () => {
   })
 
   it("says a fixed plan cannot be edited instead of offering the switch", () => {
-    sheet({ keepable: { ...keepable, any: false }, fixedPlan: true })
+    /**
+     * `any: true`, AND THAT IS THE WHOLE TEST. It used to pass `any: false`,
+     * which hides the switch by itself — so the assertion that the switch is
+     * absent held whether or not `fixedPlan` did anything, and the test named
+     * for "instead of offering the switch" never exercised the "instead".
+     *
+     * With changes actually present, both halves were rendering at once:
+     * "Keep these changes for next time" above "this plan cannot be edited,
+     * so today's changes are for today only".
+     */
+    sheet({ keepable: { ...keepable, any: true }, fixedPlan: true })
     expect(screen.queryByTestId("keep-changes")).toBeNull()
     expect(screen.getByTestId("fixed-plan").textContent).toContain("cannot be edited")
+  })
+
+  it("and says nothing about changes when there were none", () => {
+    // The sentence is ABOUT changes. Finishing a fixed-plan session having
+    // changed nothing used to be told its changes were for today only.
+    sheet({ keepable: { ...keepable, any: false }, fixedPlan: true })
+    expect(screen.queryByTestId("keep-changes")).toBeNull()
+    expect(screen.queryByTestId("fixed-plan")).toBeNull()
   })
 })

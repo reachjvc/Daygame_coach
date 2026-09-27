@@ -488,7 +488,15 @@ export function FinishSheet({
         asks for squats again. Strong asks this question; nothing here did, so
         every swap was a one-off and the same fight happened every week.
       */}
-      {keepable?.any && (
+      {/*
+        AND NOT WHEN THE PLAN CANNOT TAKE THEM. This was gated on `any` alone
+        while the sentence below was gated on `fixedPlan` alone, so a fixed
+        plan with a swap in it showed BOTH: "Keep these changes for next time"
+        directly above "this plan cannot be edited, so today's changes are for
+        today only". The two are alternatives; each was written as if the
+        other did not exist.
+      */}
+      {keepable?.any && !fixedPlan && (
         <div className="space-y-1">
           <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
             <span>Keep these changes for next time</span>
@@ -514,7 +522,15 @@ export function FinishSheet({
         </div>
       )}
 
-      {fixedPlan && (
+      {/*
+        AND ONLY WHEN THERE WERE CHANGES. This was gated on `fixedPlan` alone,
+        so finishing a Couch to 5K session having changed nothing still said
+        "today's changes are for today only" — a sentence about changes, shown
+        to somebody who made none. Its sibling above is correctly gated on
+        `keepable?.any`; this one was gated on nothing. `keepable` is computed
+        for every enrolment, fixed plan or not, so the same test works here.
+      */}
+      {fixedPlan && keepable?.any && (
         <p className="text-xs text-muted-foreground" data-testid="fixed-plan">
           This plan cannot be edited, so today&apos;s changes are for today only.
         </p>

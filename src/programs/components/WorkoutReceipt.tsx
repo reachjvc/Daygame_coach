@@ -12,6 +12,7 @@
  * like and is a different, false claim.
  */
 
+import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { Card, CardContent } from "@/components/ui/card"
 import { BackLink } from "@/components/BackLink"
 import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
@@ -302,8 +303,18 @@ export function WorkoutReceipt({
 function Figure({ label, value }: { label: string; value: number | null }) {
   return (
     <div>
-      {/* "—", not 0: a figure that could not be read is not a figure of zero. */}
-      <p className="text-lg font-semibold tabular-nums">{value ?? "—"}</p>
+      {/*
+        "—", not 0: a figure that could not be read is not a figure of zero.
+
+        GROUPED, like every other screen that shows this number. The receipt
+        printed `1600` while History said "1,600 kg" and Progress "1,600" for
+        the same workout — `ProgressTab`'s own comment gives the reason
+        ("'25293 kg' is a number you have to count the digits of") and this
+        was the one place that did not follow it.
+      */}
+      <p className="text-lg font-semibold tabular-nums">
+        {value === null ? "—" : value.toLocaleString(DISPLAY_LOCALE)}
+      </p>
       <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   )

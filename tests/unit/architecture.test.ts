@@ -3354,9 +3354,10 @@ describe('Architecture Compliance', () => {
       'src/db/lifePlanRepo.ts': 6,
       'src/db/profilesRepo.ts': 2,
       'src/db/programDraftRepo.ts': 5,
-      // 12, not 13: `getEnrollmentById` was cleaned because it sits on the hot
-      // path of every workout write — see the comment there.
-      'src/db/programRepo.ts': 12,
+      // 11, not 13: `getEnrollmentById` was cleaned because it sits on the hot
+      // path of every workout write, and `deleteProgramPermanently` because it
+      // answered a deliberate refusal with a 500 carrying Postgres's sentence.
+      'src/db/programRepo.ts': 11,
       'src/db/scenarioRepo.ts': 1,
       'src/db/settingsRepo.ts': 17,
       'src/db/timetrackBackupRepo.ts': 2,

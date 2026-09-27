@@ -1086,10 +1086,23 @@ function Elapsed({
             {now === null
               ? ""
               : past
-                ? `since ${new Date(startedAt).toLocaleString(DISPLAY_LOCALE, {
+                ? /*
+                     THE YEAR IS IN IT. A workout written up for 15 March 2024
+                     read "since Fri, 15 Mar, 18:30" — the one call site the
+                     year rule missed, while the receipt for the same workout
+                     says "Workout on Fri, 15 Mar 2024".
+
+                     Always, not only when the year differs: deciding that
+                     needs to know what year it is NOW, and the only clock
+                     this component could ask is the browser's, which is the
+                     hydration fault three screens over. `past` mode is by
+                     definition not today, so the year is never noise here.
+                   */
+                  `since ${new Date(startedAt).toLocaleString(DISPLAY_LOCALE, {
                     weekday: "short",
                     day: "numeric",
                     month: "short",
+                    year: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
                     timeZone: timezone,
