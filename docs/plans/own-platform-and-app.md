@@ -190,6 +190,10 @@ peer is editing — treat each as a floor.
 | N38 · Volume cost if the 107 GB moves | **+$15.45/month** |
 
 **N36–N38 were priced against a managed platform and are not Hetzner's numbers.**
+D1 changed the provider on 2026-09-27, so those three rows are superseded by N39–N43
+below and are the only figures in this plan that a decision has invalidated. Do not
+quote them at the owner.
+
 Hetzner's own, from its pricing 2026-09-27 — **confirm on the order page, because
 Hetzner raised cloud prices on 15 June 2026 and the CPX line rose steeply:**
 
@@ -200,9 +204,8 @@ Hetzner raised cloud prices on 15 June 2026 and the CPX line rose steeply:**
 | N41 · **Platform total, self-hosted** | **≈ €20–30/month** — materially below N36. The saving is paid for in operations work, not conjured |
 | N42 · If the AI models are hosted (Q-AI-HOST) | **+€40–90/month** for a box holding ~8 GB resident. Still the largest single line |
 | N43 · If the corpus inputs move (D5, N32) | **≈ €5/month** of volume — a fraction of N38, which is what makes D5 a choice again |
-D1 changed the provider on 2026-09-27; these are the only figures in this plan that
-a decision has invalidated. Re-price before acting on B2, and do not quote them at
-the owner in the meantime.
+
+Confirm N39–N43 on the order page before B2 is acted on.
 
 ---
 
