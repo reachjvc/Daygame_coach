@@ -960,3 +960,67 @@ walk of the whole loop on the product route — arrive from the app's tab bar,
 start, rename while running, set a project, one press to stop, edit in the sheet
 and leave with Escape, reload — comes back with everything intact, the calendar
 and Reports agreeing at 1:30 and 1h 30m, and nothing running.
+
+---
+
+# REVIEW UNTIL CLEAN — ROUND 1, 2026-09-27
+
+The owner asked whether this had been run past a fresh agent until one found
+nothing. It had not: one agent had reviewed the PLAN, in the morning, before any
+of it existed. Nothing had reviewed the built code. So the rounds started here.
+
+**Round 1: two lenses, eleven confirmed defects, every one verified here before
+it was folded in** — most by putting the defect back and watching the new test
+fail. Two reviewers, one on the sync state machine, one on the rules, the
+arithmetic and whether the tests could fail at all. The second ran today's tests
+against yesterday's source to check that, which is the right way and not one I
+had thought of.
+
+**The three that reached the user:**
+
+1. **The reported Stop bug was narrowed, not closed.** The guard protected rows
+   written after a pull went out; a stop made just before one and uploaded
+   during its flight was protected by neither the queue (cleared by then) nor
+   the timestamp. My test pressed Stop *after* the pull — the one ordering the
+   fix covered. It is the union of three sets now.
+2. **New rows could never reach another device.** The cursor comes from the
+   server clock and the rows carried the browser's, and the `_touch` triggers
+   are `before update` only, so an INSERT kept it. Offline at 10:00, uploaded at
+   10:10, invisible to a device that asked at 10:05 — for ever. A slow browser
+   clock makes everything it creates invisible. The server stamps now.
+3. **The quarantine did not quarantine.** Stopping the retry only moved it to
+   the user's keystrokes; the refused row stayed queued so every later edit
+   failed behind it, and the stuck key made every pull discard the other
+   device's correction for that row.
+
+**Two regressions I had shipped that morning:** the sheet lost the DESCRIPTION
+on Escape instead of the time — both commits read the same snapshot and the
+second won, so the bug moved one field left — and taking the calendar drags out
+of the state updater made them overwrite anything that landed mid-drag.
+
+**And my own guard asserted the hole stay open.** `violationsAreNotDropped`
+required the service to keep at least one dropped violation, so fixing them all
+would have turned it red. A guard that punishes the fix is worse than none. It
+is a ceiling now, proven exact at 1 — passes at 1, fails at 0.
+
+**Five more, all confirmed:** stopping two timers double-counted the overlap
+(5.5h of tracked time for 3h of clock); Stop could still write a reversed row
+via a future start; a pull left raw server rows as the baseline, so an ordinary
+edit dragged the whole tag-link table up with it about once a minute; the idle
+trim could be refused with the prompt already dismissed; a manual entry with
+equal start and end became twenty-four hours.
+
+**A test that was testing nothing.** The DST case depends on the machine's
+timezone and `vitest.config.ts` pinned none, so in a UTC CI that date is an
+ordinary day. The zone is pinned and the test now checks its own premise.
+
+**Still open, and it needs the owner:** removing a tag from an entry is never
+sent and the tag returns within the minute. `timetrack_entry_tags` has no
+`deleted_at`, so a removal is unrepresentable in this protocol. Fixing it means
+a migration or a server-side rule that deletes links absent from a batch — a
+schema change or a deletion rule, both of which this project says to ask about
+first.
+
+**The rule this round bought, beyond the fixes:** a reviewer that reads the code
+finds different things from one that reads the behaviour, and BOTH of mine read
+code. Round 2 sends one at the product and one at the schema for that reason.
