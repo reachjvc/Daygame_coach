@@ -56,6 +56,34 @@ Three rounds in, it had not converged. That is the whole argument.
    change what gets built. "Significant" is the user's bar, not the reviewer's: a
    typo is not a finding, a wrong number a decision rests on is.
 
+## Compress to roots every round, or the count lies to you
+
+**Added 2026-09-27, and it is the most important thing in this file.** Six rounds on one
+plan produced ~66 findings. The owner read the summary and asked: *"you kept checking
+details, but more importantly you should check the overall big thinking, like this seems
+so simple?"* He was right, and no reviewer had noticed. Compressed afterwards, the 66
+were **five facts**, one of them counted nine separate times.
+
+**So at the end of every round, before reporting, write the root list.** Not a summary of
+the findings — the small set of facts the findings are *consequences of*. Then:
+
+- **Report the roots first and the findings as evidence for them.** A person deciding
+  whether to act needs "there are five things wrong with this", not a numbered list of 20.
+- **A root that produces findings in three consecutive rounds is not being fixed**, it is
+  being patched at the leaves. Say so and fix it at the root instead of running round four.
+- **Watch for the root that is NOT a variation of the others.** In that plan, four of the
+  five were downstream of "the document was written from incomplete information"; the
+  fifth — *the code relies on the database for security* — was independent and was the
+  only one that could expose user data. **A root count is also how you notice which
+  finding is genuinely different in kind.**
+- **The stopping condition applies to roots, not findings.** A round that produces ten new
+  findings under an already-known root has found nothing new. A round that produces one
+  finding under a new root has.
+
+**Why this beats more rounds:** review at the leaf level is unbounded, because a document
+long enough always contains another true-but-wrong sentence. Roots are few, and when the
+root list stops growing you are done — which is a condition that can actually be met.
+
 ## Stopping, honestly
 
 - **Stop on convergence**, and say how many rounds it took and what the last round

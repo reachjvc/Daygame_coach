@@ -18,6 +18,75 @@ why this is a rewrite and not a sixth revision.**
 
 ---
 
+# WHAT THIS JOB ACTUALLY IS — five facts
+
+**Read only this if you read nothing else.** Six review rounds produced about 66
+findings. They are not 66 problems. They are **five facts, most of them counted many
+times over**, and the owner spotted that before I did: *"you kept checking details, but
+you should check the overall big thinking."* He was right. Six rounds asked "is each
+sentence in this plan true" and none asked "what are the few things that decide this
+job". This section is that question, answered.
+
+### Fact 1 — The live database is the truth. The folder is not.
+Parts of your database were built by clicking in Supabase's website, not by writing
+instructions down. So the folder is an incomplete recipe, and **anything that says
+"port the migrations" produces a broken app.** N9 is the measurement: 19 tables the code
+uses appear in no instruction file, `supabase db reset` already fails on the second one,
+and N15's `match_embeddings` exists nowhere here.
+**Nine separate findings were this one fact:** the 19 tables, the missing function, the
+52-table mirror, the wrong "63 live tables", the undercounted user links, M8's deletion
+list, "port 56 migrations", the grants to Supabase-only roles, and the policies a grep
+cannot see.
+**The whole fix is two sentences:** export the live database and make *that* the recipe
+(B1), and then add a test that fails whenever the database holds something the files do
+not — so it can never drift again. That second sentence is the part that matters, and it
+came out of the owner's question.
+
+### Fact 2 — Some of your security is done by the database, not by your code.
+**This is the one that could hurt somebody, and it is NOT Fact 1 in disguise** — it
+survives a perfect export. Seven of your database functions are written to let the
+database do the filtering, so `save_life_plan` looks a plan up by id with no owner check
+at all. A separate rule stops a user granting themselves premium by editing their own
+row, and no amount of exporting changes that your code does not replicate it. One small
+program attached to a table exists purely so nobody can attach their own workout to
+someone else's programme.
+**Consequence:** remove the database's protections before your code does that work and
+one user can read and overwrite another's data. That is why M4 exists, and why it must
+prove itself on a throwaway copy with the protections already off — run with them on, the
+test passes because the database refused, which is the green light for removing the
+refusal.
+
+### Fact 3 — Nothing tests the code that talks to your database, and that is the biggest rewrite.
+N18: **0 of 26.** The step that rewrites 11,272 lines had, on paper, 6,000 tests
+watching it and in reality none. M0.4 builds that net first, and it is the largest piece
+of preparation in the plan.
+
+### Fact 4 — Parts of your app run on your own machine and cannot be hosted anywhere.
+Eight pipeline stages and three live features run a program inside your VS Code folder
+on your personal subscription; two features call a model server at `localhost`; the
+corpus build needs a graphics card; its inputs are 107 GB on your laptop. **No host
+fixes this — it is a code change (D4) plus a deliberate decision to leave the corpus
+build where it is (D5).**
+
+### Fact 5 — Vercel and Supabase were doing invisible work that is now yours.
+Only true since the provider became Hetzner: the build, TLS certificates, what restarts
+the app, backups, monitoring, the firewall, and somewhere for secrets to live. M1.1 and
+M1.7 own it.
+
+---
+
+**So: is the plan wrong?** No — it handles all five. **But it is 938 lines, and those
+five facts were nowhere in it**, which for the person who has to decide is the same
+thing as wrong. That is the real finding of round 6, and it came from the owner rather
+than from any reviewer.
+
+**And the order falls out of the five by itself:** Fact 1 is a blocker on him (B1), and
+it is cheap, read-only and reversible; Fact 3 is the longest job and can start the day
+Fact 1 lands; Fact 2 decides one irreversible step (M4); Facts 4 and 5 are ordinary work
+once the platform exists.
+
+---
+
 # PART 1 — For you, in plain words
 
 ## What this does
