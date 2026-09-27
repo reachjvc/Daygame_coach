@@ -91,6 +91,65 @@ export interface PushResult {
 }
 
 /**
+ * The server refused specific rows, and can say which.
+ *
+ * Distinct from "the write failed" because the answer is different: a refused
+ * row will be refused again for ever, so the browser must stop retrying it and
+ * name it to the person. Retrying one of these is how a single mistyped end
+ * time stopped an entire account from saving — the queue drains all or nothing,
+ * so everything behind the bad row stayed in the browser behind a badge
+ * promising it would be sent.
+ */
+export class TimetrackWriteRefused extends Error {
+  constructor(
+    readonly table: string,
+    readonly ids: string[],
+    message: string,
+  ) {
+    super(message)
+    this.name = "TimetrackWriteRefused"
+  }
+}
+
+/**
+ * Which rows in a rejected batch the server will not take, found by halving.
+ *
+ * A batch is up to 400 rows and one bad one fails all of them, so the choice is
+ * between telling somebody "something in here is wrong" and spending a few more
+ * requests to name it. Halving costs about `2 * log2(n)` writes rather than
+ * `n`, and the halves that succeed are genuinely written — so the good work
+ * lands instead of waiting behind the bad row.
+ *
+ * `write` answers true when the batch was accepted. The budget stops a
+ * pathological case (many bad rows) from turning one failure into hundreds of
+ * requests; whatever has been found by then is what gets named.
+ */
+export async function isolateRefusedRows<T>(
+  rows: T[],
+  write: (batch: T[]) => Promise<boolean>,
+  maxRequests = 24,
+): Promise<T[]> {
+  const refused: T[] = []
+  let used = 0
+
+  const walk = async (batch: T[]): Promise<void> => {
+    if (batch.length === 0 || used >= maxRequests) return
+    used += 1
+    if (await write(batch)) return
+    if (batch.length === 1) {
+      refused.push(batch[0])
+      return
+    }
+    const half = Math.floor(batch.length / 2)
+    await walk(batch.slice(0, half))
+    await walk(batch.slice(half))
+  }
+
+  await walk(rows)
+  return refused
+}
+
+/**
  * Write this user's changed rows. Anything already there with the same id is
  * replaced, so sending the same change twice is harmless — which matters,
  * because a phone that loses signal mid-send will send again.
@@ -139,7 +198,19 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
     })
     const onConflict = COMPOSITE_KEYS[table] ?? "id"
     const { error } = await supabase.from(table).upsert(owned, { onConflict })
-    if (error) throw new Error(`Could not write ${table}: ${error.message}`)
+    if (error) {
+      // Find the offending rows so the message can name them, and let the rest
+      // through on the way — see `isolateRefusedRows`.
+      const refused = await isolateRefusedRows(owned, async (batch) => {
+        const { error: retry } = await supabase.from(table).upsert(batch, { onConflict })
+        return !retry
+      })
+      throw new TimetrackWriteRefused(
+        table,
+        refused.map((row) => String((row as { id?: unknown }).id ?? "")).filter(Boolean),
+        `Could not write ${table}: ${error.message}`,
+      )
+    }
     applied += owned.length
   }
 

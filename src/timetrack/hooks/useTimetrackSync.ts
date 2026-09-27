@@ -261,7 +261,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           return
         }
         if (!response.ok) {
-          const message = (await response.json().catch(() => ({}))).error ?? response.statusText
+          const failure = (await response.json().catch(() => ({}))) as { error?: string; ids?: string[] }
+          const message = failure.error ?? response.statusText
           if (response.status >= 400 && response.status < 500) {
             /**
              * THE SERVER SAID THE ROWS ARE WRONG, NOT "TRY AGAIN LATER".
@@ -278,8 +279,20 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
              */
             clearRetry()
             setStatus("error")
+            /**
+             * Name the entry, not the constraint. The server isolates which
+             * rows it refused, so "Could not save “morning pages”" beats a
+             * sentence about `timetrack_entries_stop_after_start` that nobody
+             * can act on.
+             */
+            const named = (failure.ids ?? [])
+              .map((id) => latestState.current?.entries.find((e) => e.id === id))
+              .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+              .map((entry) => `“${entry.description.trim() || "(no description)"}”`)
             pushToast(
-              `Your account refused a change and it has not been saved: ${message}. Nothing is lost — it is still in this browser. Reload to resync, and if it keeps happening the entry it names is the one to fix.`,
+              named.length > 0
+                ? `Your account refused ${named.join(", ")} and it has not been saved. Open it and check its times — an end before its start is the usual reason.`
+                : `Your account refused a change and it has not been saved: ${message}. Nothing is lost — it is still in this browser. Reload to resync.`,
               "error",
             )
             return
