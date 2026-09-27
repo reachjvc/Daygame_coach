@@ -33,7 +33,7 @@
  * see a box for.
  */
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { refreshEnrollments } from "../hooks/useEnrollment"
@@ -162,7 +162,21 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
     setUnit(next)
   }
 
+  /**
+   * True from the first press until the screen has moved or the attempt has
+   * failed. A ref and not state, because state is not readable by the second
+   * press in the same frame.
+   */
+  const enrolling = useRef(false)
+
   async function enroll() {
+    /**
+     * A SECOND PRESS CANNOT GET IN. `setSaving(true)` is a state update, so it
+     * does not take effect until the next render — two taps inside one frame
+     * both pass the disabled check. The ref is synchronous.
+     */
+    if (enrolling.current) return
+    enrolling.current = true
     setSaving(true)
     setError(null)
     try {
@@ -212,12 +226,35 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
       await refreshEnrollments()
       if (ended.length > 0) {
         setDisplaced({ id: answer.enrollment.id, names: ended })
+        enrolling.current = false
+        setSaving(false)
         return
       }
+      /**
+       * AND IT STAYS "Starting…" UNTIL THE SCREEN ACTUALLY MOVES.
+       *
+       * This cleared `saving` in a `finally`, which runs the moment the
+       * handler returns — while `onEnrolled → router.replace` is still in
+       * flight. Timed, polling every 500ms after one click:
+       *
+       *   0.0s  "Starting…"                 ?view=detail&catalog=stronglifts-5x5
+       *   0.5s  POST /api/programs/enrollments 201
+       *   1.0s  "Start StrongLifts 5×5"     <- live again, screen unchanged
+       *   3.0s  ?program=777d00ed…          <- only now does anything move
+       *
+       * Two seconds of an armed Start on a screen that has not changed. A
+       * second press in that window made a SECOND enrolment which displaced
+       * the first: two identical rows in "Programs you have finished", two
+       * controls with the same accessible name, no `displaced` confirmation,
+       * and the URL left on the archived id still drawing a live Today card.
+       *
+       * Navigation is the end of this handler's job, so the button belongs to
+       * the navigation, not to the fetch.
+       */
       onEnrolled(answer.enrollment.id)
     } catch (e) {
       setError((e as Error).message)
-    } finally {
+      enrolling.current = false
       setSaving(false)
     }
   }
