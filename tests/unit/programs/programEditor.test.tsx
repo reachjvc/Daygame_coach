@@ -249,7 +249,16 @@ describe("ProgramDetail", () => {
   }
 
   function detail() {
-    render(<ProgramDetail programId="stronglifts-5x5" onBack={vi.fn()} onEnrolled={vi.fn()} />)
+    // `enrollments` is empty: this test is about the editor, and a non-empty
+    // list would replace Start with "Already running" (see `alreadyRunning`).
+    render(
+      <ProgramDetail
+        programId="stronglifts-5x5"
+        enrollments={[]}
+        onBack={vi.fn()}
+        onEnrolled={vi.fn()}
+      />
+    )
   }
 
   beforeEach(installFetch)

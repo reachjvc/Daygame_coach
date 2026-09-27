@@ -283,6 +283,7 @@ export function ProgramsApp({
         {openWorkoutBanner}
         <ProgramDetail
           programId={view.catalogId}
+          enrollments={enrollments}
           onBack={() => goTo({ view: "programs" })}
           onEnrolled={(enrollmentId) => {
             refresh()

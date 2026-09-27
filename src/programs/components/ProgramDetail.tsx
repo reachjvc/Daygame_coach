@@ -33,6 +33,7 @@
  * see a box for.
  */
 
+import Link from "next/link"
 import { useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -46,15 +47,21 @@ import { isCustomizable, isModified, materializeSchedule, scheduleDaysOrNone } f
 import { ProgramEditor } from "./ProgramEditor"
 import { CHIP_ON } from "./trainingStyles"
 import { LEVEL_LABELS } from "../config"
-import type { LevelId, ProgramSchedule, UnitSystem } from "../types"
+import type { LevelId, ProgramEnrollment, ProgramSchedule, UnitSystem } from "../types"
 
 interface Props {
   programId: string
   onBack: () => void
   onEnrolled: (enrollmentId: string) => void
+  /**
+   * What is running, so this screen can stop offering to start something that
+   * already is. `BuildYourWeek` has had this since it was written; the
+   * catalogue, which is how most people start a program, did not.
+   */
+  enrollments: readonly ProgramEnrollment[]
 }
 
-export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
+export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Props) {
   const program = requireProgram(programId)
   const [level, setLevel] = useState<LevelId>(program.levels[0].id)
   const [unit, setUnit] = useState<UnitSystem>("kg")
@@ -71,6 +78,28 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
 
   // Resolve routing (Layer-1): which program a (program, level) actually delivers.
   const resolved = useMemo(() => resolveProgramForLevel(programId, level), [programId, level])
+
+  /**
+   * IS THIS ONE ALREADY RUNNING? The catalogue marked nothing, and this page
+   * offered a plain "Start Couch to 5K" for the program the account was three
+   * weeks into. Pressing it archived that enrolment and began a new one:
+   *
+   *   before  cursor {week:1, cycle:1, dayIndex:1, sessionCount:1}
+   *   after   cursor {week:1, cycle:1, dayIndex:0, sessionCount:0}
+   *
+   * The cursor is the smaller half. `enrollInProgram` re-seeds from the
+   * level's defaults, and `PastPrograms.tsx` says of that path
+   * "re-enrolling from the catalogue would reset it to the level's starting
+   * weights" — so on a strength program a year of progression goes with it.
+   *
+   * `BuildYourWeek` has refused this since it was written, under a comment
+   * saying the enabled Start "silently paused the very week it had just
+   * started". The same sentence was true here and nobody had said it.
+   */
+  const alreadyRunning = useMemo(
+    () => enrollments.find((e) => e.program_id === resolved.program.id && e.is_active) ?? null,
+    [enrollments, resolved.program.id]
+  )
   const routed = resolved.program.id !== programId
 
   /**
@@ -403,9 +432,19 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
 
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           {/* THE ONE ORANGE. Everything above is an outline chip. */}
-          <Button onClick={enroll} disabled={saving} data-testid="start-program">
-            {saving ? "Starting…" : `Start ${resolved.program.name}`}
-          </Button>
+          {alreadyRunning ? (
+            /* Not a second Start — see `alreadyRunning`. The way in, not a
+               way to lose the weeks already on it. */
+            <Button asChild data-testid="program-already-running">
+              <Link href={`/programs?program=${alreadyRunning.id}`}>
+                Already running — go to today&apos;s session
+              </Link>
+            </Button>
+          ) : (
+            <Button onClick={enroll} disabled={saving} data-testid="start-program">
+              {saving ? "Starting…" : `Start ${resolved.program.name}`}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
