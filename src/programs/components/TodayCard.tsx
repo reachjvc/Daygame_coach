@@ -174,7 +174,37 @@ export function TodayCard({
             Finish or discard {state.startedOnWeekday}&apos;s workout
           </Button>
         )
-      case "done":
+      case "done": {
+        /**
+         * DONE FOR THIS PROGRAM, OR DONE FOR SOMEBODY ELSE'S?
+         *
+         * `trainingCardState` is one state for the whole account, and
+         * `newestToday` is ANY workout finished today — another program's, or
+         * a loose one. The `live` and `stale` branches ask
+         * `openWorkoutInvitation(state, enrollmentId)` whether it is theirs;
+         * this branch never compared, so logging one loose set of curls took
+         * the Start off every program card for the rest of the day and
+         * replaced it with "See today's workout", which opened the curls.
+         *
+         * Measured: enrolled in StrongLifts, logged a loose workout, and the
+         * card prescribed Workout A, drew Sunday's dot UNFILLED (= not
+         * trained), and offered one button that opened somebody else's
+         * receipt. The only way to train was "Start an empty workout instead",
+         * which is not the session.
+         */
+        const mine = state.enrollmentId === enrollmentId
+        if (!mine) {
+          return (
+            <Button
+              size="lg"
+              className="w-full"
+              data-testid="start-workout"
+              onClick={() => void start(prescription.dayId)}
+            >
+              Start workout
+            </Button>
+          )
+        }
         // NOT a Start button. Offering one on a day somebody has finished
         // invites a second workout for the same session.
         return (
@@ -188,6 +218,7 @@ export function TodayCard({
             See today&apos;s workout
           </Button>
         )
+      }
       case "finished":
         // Every session is logged. The notices carry the two ways on.
         return null

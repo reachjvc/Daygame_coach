@@ -65,6 +65,9 @@ export function WorkoutCorrection({
   const label = UNIT_CONFIG[unit].label
   const [draft, setDraft] = useState<EditableSet[]>(() =>
     sets.map((set) => ({
+      id: set.id ?? null,
+      completedAt: set.completed_at ?? null,
+      prescribedIndex: set.prescribed_index ?? null,
       exercise: set.exercise,
       exerciseId: set.exercise_id,
       /**
@@ -107,6 +110,9 @@ export function WorkoutCorrection({
     const answer = await saveCorrection(
       workoutId,
       draft.map((set) => ({
+        id: set.id,
+        completedAt: set.completedAt,
+        prescribedIndex: set.prescribedIndex,
         exercise: set.exercise,
         exerciseId: set.exerciseId,
         // Converted HERE, from the unit this screen displayed, so the server

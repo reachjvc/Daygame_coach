@@ -52,13 +52,27 @@ export function LiftHistory({
   const day = (iso: string) =>
     new Date(iso).toLocaleDateString(undefined, { timeZone: timezone })
 
-  // Nothing to say until a lift has been done twice.
-  if (lifts.length === 0) return null
+  /**
+   * NOTHING TO SAY ABOUT PROGRESSION until a lift has been done twice — but
+   * THE EXPORT IS NOT ABOUT PROGRESSION.
+   *
+   * The download lived inside this component's early return, and `lifts` is
+   * `liftsWithHistory(..., minDays = 2)`. So a new account, an account where
+   * every lift has one day, and a runner who logs no sets at all had no way to
+   * get a file out — and this is the only one in the app. Its own comment
+   * says: "'I lost years of data' is one of the loudest complaints about
+   * training apps, and the answer people actually want is a file they hold."
+   *
+   * The per-lift table below still needs two days to say anything.
+   */
+  const nothingToChart = lifts.length === 0
 
   return (
     <section className="space-y-2 border-t border-border/60 pt-4" data-testid="lift-history">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-medium">Your lifts over time</h3>
+        <h3 className="text-sm font-medium">
+          {nothingToChart ? "Your training" : "Your lifts over time"}
+        </h3>
         {/*
           THE FILE YOU HOLD — all of it, from the server.
           "I lost years of data" is one of the loudest complaints about training
@@ -76,10 +90,16 @@ export function LiftHistory({
       <p className="text-xs text-muted-foreground">
         Every program and every loose workout together — this does not reset when you change program.
       </p>
+      {nothingToChart && (
+        <p className="text-xs text-muted-foreground" data-testid="no-lift-history-yet">
+          Two sessions of the same lift and its progression appears here.
+        </p>
+      )}
       {/* NO CARD. The three blocks on this tab are sections divided by a
           hairline, and a lighter grey box around one of them said "a separate
           object" about the same screen. */}
       <ul className="divide-y divide-border/60">
+        {/* Empty until a lift has two days; the export above does not wait. */}
         {lifts.slice(0, SHOWN).map((l) => {
             const first = l.points[0]
             const last = l.points[l.points.length - 1]

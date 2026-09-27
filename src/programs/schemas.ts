@@ -520,6 +520,17 @@ export const ReviseWorkoutSchema = z
     sets: z
       .array(
         z.object({
+          /**
+           * THE ROW THIS REPLACES. The server compares these against the sets
+           * the workout actually holds and refuses a save built on a read that
+           * has since been overtaken — without it, two devices correcting one
+           * workout each replace the whole list and the later save silently
+           * resurrects what the earlier one deleted.
+           */
+          id: z.string().uuid().nullish(),
+          /** Carried so a correction does not destroy the workout's order. */
+          completedAt: z.string().datetime({ offset: true }).nullish(),
+          prescribedIndex: z.number().int().min(0).max(50).nullish(),
           exercise: z.string().min(1).max(100),
           exerciseId: z.string().min(1).max(80).nullable(),
           /**

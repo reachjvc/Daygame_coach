@@ -61,6 +61,13 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
   const [overrides, setOverrides] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /**
+   * The programs this enrolment ended, and the id to go to once it has been
+   * read. Held rather than navigated straight past, because the message
+   * belongs on a screen that stays — this one unmounts the moment
+   * `onEnrolled` fires.
+   */
+  const [displaced, setDisplaced] = useState<{ id: string; names: string[] } | null>(null)
 
   // Resolve routing (Layer-1): which program a (program, level) actually delivers.
   const resolved = useMemo(() => resolveProgramForLevel(programId, level), [programId, level])
@@ -184,14 +191,53 @@ export function ProgramDetail({ programId, onBack, onEnrolled }: Props) {
         body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? "Enroll failed")
-      const { enrollment } = await res.json()
+      /**
+       * WHAT THIS JUST ENDED, SAID OUT LOUD.
+       *
+       * Enrolling deactivates every active program in the SAME discipline, and
+       * the route returns `displaced` for that reason — `programRepo` says of
+       * it: "it REPORTS what it displaced rather than doing it silently". This
+       * handler threw the field away, so starting Starting Strength from the
+       * catalogue moved StrongLifts to the finished programs with no
+       * confirmation before and no message after. `BuildYourWeek` does say it;
+       * the catalogue, which is how most people start a program, did not.
+       */
+      const answer = (await res.json()) as {
+        enrollment: { id: string }
+        displaced?: { label?: string | null; program_id?: string }[]
+      }
+      const ended = (answer.displaced ?? [])
+        .map((d) => d.label ?? d.program_id ?? "")
+        .filter((name): name is string => Boolean(name))
       await refreshEnrollments()
-      onEnrolled(enrollment.id)
+      if (ended.length > 0) {
+        setDisplaced({ id: answer.enrollment.id, names: ended })
+        return
+      }
+      onEnrolled(answer.enrollment.id)
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setSaving(false)
     }
+  }
+
+  if (displaced) {
+    // The same shape `BuildYourWeek` uses, for the same reason: what this just
+    // ended is a fact somebody needs before they walk away from the screen.
+    return (
+      <div className="space-y-3" data-testid="enrolled-displaced">
+        <p role="status" className="text-base font-semibold">
+          {program.name} is running.
+        </p>
+        {displaced.names.map((name) => (
+          <p key={name} className="text-sm text-muted-foreground">
+            {name} moved to your finished programs — everything it logged is kept.
+          </p>
+        ))}
+        <Button onClick={() => onEnrolled(displaced.id)}>Go to today&apos;s session</Button>
+      </div>
+    )
   }
 
   return (

@@ -95,4 +95,49 @@ describe("another workout is open", () => {
     card(elsewhere({ kind: "stale", startedOnWeekday: "Friday" } as Partial<TrainingCardState>))
     expect(screen.queryByTestId("start-workout")).toBeNull()
   })
+
+  it("another program's finished workout does not take this card's Start away", () => {
+    /**
+     * `trainingCardState` is one state for the whole account and `newestToday`
+     * is ANY workout finished today. The `live` and `stale` branches ask
+     * `openWorkoutInvitation(state, enrollmentId)` whether it is theirs; the
+     * `done` branch never compared.
+     *
+     * Measured in a browser: enrolled in StrongLifts, logged one loose set of
+     * curls, and the card still prescribed Workout A, drew today's dot
+     * UNFILLED, and offered a single button — "See today's workout" — that
+     * opened the curls. There was no way to start the session it was showing.
+     */
+    card({
+      kind: "done",
+      workoutId: "w-someone-elses",
+      enrollmentId: "enr-2",
+      dayLabel: "Workout A",
+      durationMin: 30,
+      sets: 1,
+      next: null,
+      also: [],
+    } as unknown as TrainingCardState)
+
+    expect(screen.getByTestId("start-workout"), "this program has not been trained today").toBeTruthy()
+    expect(screen.queryByTestId("see-todays-workout")).toBeNull()
+  })
+
+  it("but its OWN finished workout still replaces Start with the receipt", () => {
+    // The other direction: a second workout on a day already trained is what
+    // the `done` state exists to prevent.
+    card({
+      kind: "done",
+      workoutId: "w-mine",
+      enrollmentId: "enr-1",
+      dayLabel: "Workout A",
+      durationMin: 42,
+      sets: 15,
+      next: null,
+      also: [],
+    } as unknown as TrainingCardState)
+
+    expect(screen.getByTestId("see-todays-workout")).toBeTruthy()
+    expect(screen.queryByTestId("start-workout")).toBeNull()
+  })
 })

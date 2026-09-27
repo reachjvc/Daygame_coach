@@ -1523,6 +1523,12 @@ export async function reviseWorkout(
     notes?: string | null
     /** The per-exercise note, which a correction used to delete. */
     exerciseNotes?: string | null
+    /** The row this replaces, or null for one the editor added. */
+    id?: string | null
+    /** When it was ticked, carried so the workout keeps its true order. */
+    completedAt?: string | null
+    /** Which prescribed slot it answered. */
+    prescribedIndex?: number | null
     rpe?: number | null
   }>
 ): Promise<{ recalculated: boolean }> {
@@ -1541,6 +1547,40 @@ export async function reviseWorkout(
   if (!log) throw new Error("That workout no longer exists.")
   if (isOpenWorkout(log as { started_at: string | null; ended_at: string | null })) {
     throw new ProgramRefused("That workout is still open — finish it before correcting it.")
+  }
+
+  /**
+   * THE SAVE IS CHECKED AGAINST WHAT THE SCREEN READ.
+   *
+   * `replace_sets_and_replay` deletes every set and inserts the payload, with
+   * no version and no comparison — so two devices correcting one workout each
+   * replace the whole list and the later save wins whole. Measured: B removed
+   * two squat sets and saved (2 sets, 650 kg); A, holding a read from before
+   * that, changed a bench weight and saved — and the two sets B deleted CAME
+   * BACK (4 sets, 1675 kg), with no warning on either screen.
+   *
+   * `WorkoutCorrection`'s own header says "a list that arrived short does not
+   * display wrong, it DELETES", and guards a SHORT read. A STALE read does the
+   * same damage and was unguarded.
+   *
+   * Compared as a set of ids, not a count: swapping one set for another keeps
+   * the count identical.
+   */
+  const known = sets.map((set) => set.id).filter((id): id is string => Boolean(id))
+  if (known.length > 0) {
+    // Paged, like every other read of this table: a workout with more than a
+    // thousand sets would otherwise come back short and every save would be
+    // refused as "changed on another device".
+    const current = await readAllRows<{ id: string }>("that workout's sets", (from, to) =>
+      supabase.from("workout_sets").select("id").eq("log_id", workoutId).order("id").range(from, to)
+    )
+    const live = new Set(current.map((row) => row.id))
+    const missing = known.filter((id) => !live.has(id))
+    if (missing.length > 0 || live.size !== known.length) {
+      throw new ProgramRefused(
+        "This workout changed on another device while you were editing it. Reload to see what it says now, then correct it again."
+      )
+    }
   }
 
   const rows = sets.map((set) => ({
@@ -1611,6 +1651,32 @@ export async function reviseWorkout(
     if (deliberate) throw deliberate
     console.error(`revise workout ${workoutId} failed (code ${written.code}): ${written.message}`)
     throw new Error("Those sets could not be saved, so the workout was left as it was.")
+  }
+
+  /**
+   * THE RECEIPT'S STORED HALF IS NOW WRONG, so it stops claiming to be right.
+   *
+   * `progression_changes` and `personal_records` are written at the finish and
+   * read back verbatim — deliberately, so the record of what somebody was told
+   * cannot drift. A correction recomputes the program's weights and left both
+   * columns alone, so the two halves of one screen disagreed. Measured:
+   * removing a squat set rolled the state back to 40 kg and set the next
+   * prescription to 40, while the same screen still read "Squat: Hit all reps
+   * → +2.5kg". The totals above it DID update, so the page was half
+   * recomputed and half frozen with nothing saying which.
+   *
+   * Nulled rather than recomputed, because null already means "not kept for
+   * this workout" and `summaryFor` renders it as a sentence
+   * (`changesUnavailable`). Recomputing would be worse: what somebody was told
+   * at the time is not a thing this screen may invent afterwards.
+   */
+  const { error: cleared } = await supabase
+    .from("workout_logs")
+    .update({ progression_changes: null, personal_records: null })
+    .eq("id", workoutId)
+    .eq("user_id", userId)
+  if (cleared) {
+    console.error(`could not clear the superseded receipt on ${workoutId}: ${cleared.message}`)
   }
 
   return { recalculated: log.enrollment_id != null }

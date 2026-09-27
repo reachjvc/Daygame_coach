@@ -1543,6 +1543,12 @@ export interface KeepableChanges {
  * added. The editor refuses to save a blank rather than inventing the zero.
  */
 export interface EditableSet {
+  /** The row it came from, so a save can be checked against what was read. */
+  id: string | null
+  /** Carried untouched: it is the only thing that orders a workout truthfully. */
+  completedAt: string | null
+  /** Carried untouched: which prescribed slot this answered. */
+  prescribedIndex: number | null
   exercise: string
   exerciseId: string | null
   weight: string
@@ -1562,6 +1568,20 @@ export interface EditableSet {
  * place that knows what unit the box was labelled in.
  */
 export interface CorrectedSet {
+  /**
+   * The row this replaces, or null for one the editor added.
+   *
+   * Two jobs, both learned the hard way. It lets the server check the save
+   * against the sets the screen actually read — without it, two devices
+   * correcting one workout each replace the whole list, and the second save
+   * silently resurrects the sets the first deleted. And it carries the set's
+   * own `completed_at` and `prescribed_index` back, which the replace drops.
+   */
+  id: string | null
+  /** When it was ticked. The only thing that orders a workout truthfully. */
+  completedAt: string | null
+  /** Which prescribed slot it answered; null for a lift added on the day. */
+  prescribedIndex: number | null
   exercise: string
   exerciseId: string | null
   weightKg: number

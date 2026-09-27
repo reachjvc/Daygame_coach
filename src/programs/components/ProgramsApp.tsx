@@ -19,7 +19,7 @@ import { TRAINING_CARD } from "./trainingStyles"
 import { ProgramSheet } from "./ProgramSheet"
 import { DayAssignment } from "./DayAssignment"
 import { PastPrograms } from "./PastPrograms"
-import { useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
+import { refreshEnrollments, useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { requireProgram, enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { formatDateOnly, computePrescription, openWorkoutInvitation } from "../programsService"
@@ -220,6 +220,22 @@ export function ProgramsApp({
         */}
         {cardState === null ? openWorkoutBanner : null}
         {looseStart}
+        {/*
+          AND THE WEEKS YOU WROTE, which vanished at exactly one program.
+          `SavedWeeksSection` was mounted only in the home-view return, and this
+          branch takes over the moment there is one enrollment — so a saved week
+          was visible with zero programs and with two, and unreachable with one.
+          The only route back was `?view=build&draft=<uuid>` with the uuid shown
+          nowhere. Same class as the comment above that mount celebrates fixing
+          for archived programs: visible from the state you are actually in.
+        */}
+        <SavedWeeksSection
+          onOpen={(id) => goTo({ view: "build", draft: id })}
+          onStarted={(enrollmentId) => {
+            refresh()
+            goTo({ view: "today", program: enrollmentId })
+          }}
+        />
       </div>
     )
   }
@@ -696,7 +712,24 @@ function ActiveProgram({
         }}
       />
       <ProgressionView logs={detail.logs} enrollment={detail.enrollment} />
-      <PastPrograms initial={initialPast} onResumed={refresh} />
+      {/*
+        BOTH LISTS, because resuming one program ARCHIVES another.
+        `refresh` here is this enrollment's DETAIL refresh, not the active-list
+        one — so the list that decides which program this screen renders was
+        never re-read. Measured: pressing "Start it again" on StrongLifts left
+        the page headed "Starting Strength", showing its lifts and an orange
+        Start, directly above its own notice saying Starting Strength had moved
+        to the finished programs. Pressing that Start answered 201 with the
+        ARCHIVED enrollment's id, so the server logged and progressed a program
+        the app had just said you had finished.
+      */}
+      <PastPrograms
+        initial={initialPast}
+        onResumed={() => {
+          void refreshEnrollments()
+          refresh()
+        }}
+      />
     </div>
   )
 }
