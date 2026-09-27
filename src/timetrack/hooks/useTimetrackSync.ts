@@ -154,6 +154,26 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const retryDelay = useRef(RETRY_START_MS)
   /** set when a flush is asked for while one is already in the air */
   const flushAgain = useRef(false)
+  /**
+   * WHAT THIS DEVICE WROTE, AND WHEN — the guard against a stale answer.
+   *
+   * `pull` asks what changed since a cursor, and the server answers with rows
+   * as they were when it read them. `mergeIncoming` takes the server's version
+   * of every row except those still queued for upload, and compares nothing:
+   * no timestamps, no versions. So a row that was queued, flushed and cleared
+   * while the request was in the air is no longer protected, and the answer —
+   * computed before the change — overwrites it.
+   *
+   * That is what "I had to press Stop twice" was. The timer stopped, the stop
+   * went up, and the reply to a question asked a moment earlier put it back.
+   * It was nearly invisible until the pull interval was repaired: pulls were
+   * starved to roughly none while anybody was working, so fixing that turned a
+   * dormant race into a daily one.
+   *
+   * Client clock only, and only ever compared with itself, so there is no skew
+   * to get wrong.
+   */
+  const localWrites = useRef(new Map<string, number>())
 
   latestState.current = state
 
@@ -508,6 +528,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     pending.current = mergeChangeSets(pending.current, changed)
     savePending()
 
+    const writtenAt = Date.now()
+    for (const key of keysIn(changed)) localWrites.current.set(key, writtenAt)
+    if (localWrites.current.size > 2_000) {
+      // a bounded memory: anything older than a few minutes cannot still be
+      // racing a request that is in flight now
+      const cutoff = writtenAt - 5 * 60_000
+      for (const [key, at] of localWrites.current) if (at < cutoff) localWrites.current.delete(key)
+    }
+
     /**
      * QUEUE AND RETURN WHEN SENDING IS POINTLESS.
      *
@@ -534,6 +563,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {
     if (!userId.current || !cursor.current) return
+    // Everything this device writes from here on beats whatever comes back:
+    // the answer was decided before those writes existed.
+    const askedAt = Date.now()
     try {
       const response = await fetch(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`)
       if (response.status === 401) {
@@ -546,9 +578,31 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       if (countRows(body.rows) === 0) return
 
       const dirty = keysIn(pending.current)
+      for (const [key, at] of localWrites.current) if (at >= askedAt) dirty.add(key)
       const merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
       serverRows.current = merged
       const settled = reconcileRunningEntries(rowsToState(merged, new Date().toISOString()))
+
+      /**
+       * DO NOT REDRAW FOR AN ECHO OF YOUR OWN WRITES.
+       *
+       * A pull asks what changed since the cursor, and after this device
+       * uploads anything, the answer contains that very row — so this used to
+       * replace the whole workspace every time, swapping every object and
+       * rebuilding the entry list for no change at all. Adoption already
+       * refuses to do that; this is the same check, using the same definition
+       * of "differs" rather than a new one.
+       *
+       * It is not only waste: a full redraw at the moment of a tap is a tap
+       * that lands on a node that no longer exists.
+       */
+      const held = latestState.current
+      const nothingNew =
+        held !== null &&
+        diffRows(stateToRows(held, userId.current), stateToRows(settled.state, userId.current), new Date().toISOString())
+          .count === 0
+      if (nothingNew && settled.stopped.length === 0) return
+
       if (settled.stopped.length > 0) {
         pushToast("Another device had a timer running too. The older one was stopped where this one started.")
       }
