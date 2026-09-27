@@ -1509,12 +1509,33 @@ export async function prescriptionForDay(userId: string, enrollmentId: string, d
   return {
     prescription,
     unit: enr.unitSystem,
-    // The enrollment's bar overrides the account's; the plate comes from the
-    // account, which is the only place it is set.
+    /**
+     * THE ENROLLMENT'S BAR OVERRIDES THE ACCOUNT'S; the plate comes from the
+     * account, which is the only place it is set.
+     *
+     * A VALUE STILL AT THE COLUMN DEFAULT IS ONE NOBODY CHOSE. `profiles`
+     * stores both in KILOGRAMS and both columns are NOT NULL with kg
+     * defaults, so an account that has never touched them arrives here as
+     * 20 / 1.25 — and passing those through converts them. On a pounds
+     * enrolment that is a 44.09 lb bar and a 2.76 lb smallest plate, which
+     * also filters the real 2.5 lb plate out of the set:
+     *
+     *   Overhead Press  75 lb × 5 …
+     *   Bar: 10 + 5 per side (makes 74.09 lb)
+     *
+     * 75 lb is exactly loadable, and the hint flagged it approximate with a
+     * two-decimal number nobody can load. Meanwhile `enrollment.plates`,
+     * built from the same unit through the same function, correctly said 45
+     * and 2.5 — two paths, two bars, on one row. It never showed in kg
+     * because there the account defaults and the unit defaults are the same
+     * numbers.
+     *
+     * A number somebody TYPED is theirs and is converted as before.
+     */
     plates: plateSetupFor(
-      enr.barWeightKg ?? account.barWeightKg,
+      enr.barWeightKg ?? (account.barWeightKg === DEFAULT_BAR_KG ? null : account.barWeightKg),
       enr.unitSystem,
-      account.smallestPlateKg
+      account.smallestPlateKg === DEFAULT_PLATE_KG ? null : account.smallestPlateKg
     ),
     loadStyles: Object.fromEntries(
       days.flatMap((d) => d.exercises.map((ex) => [ex.id, loadStyleOf(ex)] as const))

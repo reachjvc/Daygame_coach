@@ -81,6 +81,21 @@ export function PastPrograms({
   const [deletingId, setDeletingId] = useState<string | null>(null)
   /** The program a delete is being confirmed for. */
   const [confirming, setConfirming] = useState<ProgramEnrollment | null>(null)
+  /**
+   * The program a RESUME is being confirmed for.
+   *
+   * The row used to resume on a single tap. It is a `ProgramRow`, visually
+   * identical to the rows above it where a tap NAVIGATES and to the catalogue
+   * rows where a tap opens a detail page — the only list in the slice where an
+   * apparently navigational row performs a write, and the write archives the
+   * program you are currently running. Driven: one tap on a finished
+   * StrongLifts row moved a live Starting Strength to the finished list, with
+   * the sentence explaining it appearing AFTER the write.
+   *
+   * "End program" and "Remove from your finished programs" both confirm. The
+   * one that displaces a running program did not.
+   */
+  const [resuming, setResuming] = useState<ProgramEnrollment | null>(null)
   /** Which finished program's sheet is open. */
   const [menuFor, setMenuFor] = useState<ProgramEnrollment | null>(null)
   /** What a restart displaced, said on the page rather than in an alert box. */
@@ -312,6 +327,42 @@ export function PastPrograms({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={resuming !== null} onOpenChange={(v) => !v && setResuming(null)}>
+        <DialogContent>
+          {resuming && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Start {enrollmentName(resuming)} again?</DialogTitle>
+                {/*
+                  WHAT IT COSTS, BEFORE it happens. Resuming displaces whatever
+                  is running in the same discipline, and the row that did it
+                  looks exactly like the rows above it where a tap merely
+                  navigates. The sentence explaining the swap used to arrive
+                  after the write.
+                */}
+                <DialogDescription>
+                  It picks up where it left off. A program you are running of the same kind moves
+                  to your finished programs — everything it logged is kept.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  disabled={resumingId === resuming.id}
+                  data-testid="confirm-resume-past"
+                  onClick={() => {
+                    const e = resuming
+                    setResuming(null)
+                    void resume(e, enrollmentName(e))
+                  }}
+                >
+                  {resumingId === resuming.id ? "Starting…" : "Start it again"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Card className={TRAINING_CARD}>
         <CardContent className="divide-y p-0">
           {(showAll ? past : past.slice(0, SHOWN)).map((e) => {
@@ -331,7 +382,7 @@ export function PastPrograms({
                 key={e.id}
                 name={name}
                 testId={`past-${e.id}`}
-                onClick={() => resume(e, name)}
+                onClick={() => setResuming(e)}
                 meta={
                   <>
                     {LEVEL_LABELS[e.level]} · started{" "}
