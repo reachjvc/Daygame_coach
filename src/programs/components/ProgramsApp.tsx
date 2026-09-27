@@ -15,12 +15,12 @@ import { EditActiveProgram } from "./EditActiveProgram"
 import { ProgramRow } from "./ProgramRow"
 import { BuildYourWeek } from "./BuildYourWeek"
 import { SavedWeeksSection } from "./SavedWeeksSection"
-import { TRAINING_CARD } from "./trainingStyles"
+import { TRAINING_CARD, TRAINING_COLUMN } from "./trainingStyles"
 import { ProgramSheet } from "./ProgramSheet"
 import { DayAssignment } from "./DayAssignment"
 import { PastPrograms } from "./PastPrograms"
 import { refreshEnrollments, useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
-import { requireProgram, enrollmentName, getProgram } from "../data/catalog"
+import { enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { formatDateOnly, computePrescription, openWorkoutInvitation } from "../programsService"
 import { LIVE_WORKOUT } from "@/src/shared/trainingRoutes"
@@ -277,10 +277,21 @@ export function ProgramsApp({
     )
   }
 
-  if (view.view === "detail" && view.catalogId) {
+  if (view.view === "detail" && view.catalogId && getProgram(view.catalogId)) {
     return (
       <div className="space-y-4">
         {openWorkoutBanner}
+        {/*
+          NOT MOUNTED FOR AN ID THE CATALOGUE DOES NOT HAVE.
+          `ProgramDetail` calls `requireProgram`, and so does
+          `resolveProgramForLevel` inside it, so
+          `?view=detail&catalog=no-such-program` threw straight through the
+          render and took the whole page to the global error screen — "This
+          page could not load. The fault has been reported." — where
+          `?program=<unknown-uuid>` degrades to the programs list. A mistyped
+          URL, or a link to a program that has since left the catalogue, is
+          not a fault to report.
+        */}
         <ProgramDetail
           programId={view.catalogId}
           enrollments={enrollments}
@@ -561,10 +572,25 @@ function ActiveProgram({
    * are already here — so showing a different day's session is a function call
    * rather than a round trip. The server still owns what happens on log.
    */
-  const program = effectiveProgram(
-    requireProgram(detail.enrollment.program_id),
-    detail.enrollment.customSchedule
-  )
+  /**
+   * `getProgram`, NOT `requireProgram`. `programRepo` already treats a
+   * retired program as a real case — "an old enrollment whose program has
+   * since left the catalogue used to throw here, so one retired program on
+   * the account made it impossible to start ANY new one" — and this render
+   * would have taken the Today tab down for the same reason.
+   */
+  const catalogProgram = getProgram(detail.enrollment.program_id)
+  if (!catalogProgram) {
+    return (
+      <div className={`${TRAINING_COLUMN} py-10 text-center`}>
+        <p className="text-sm text-muted-foreground">
+          This program is not in the catalogue any more, so today&apos;s session cannot be worked
+          out. Everything it logged is still in History.
+        </p>
+      </div>
+    )
+  }
+  const program = effectiveProgram(catalogProgram, detail.enrollment.customSchedule)
   const days =
     program.schedule.kind === "linear_rotation" || program.schedule.kind === "weekly_waved"
       ? program.schedule.days.map((d) => ({ id: d.id, label: d.label, weekday: d.weekday }))

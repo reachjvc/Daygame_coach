@@ -28,6 +28,7 @@
  *      History and on the card — three weeks in and all of them read the same.
  */
 
+import { enrollmentName } from "../data/catalog"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { AlertTriangle } from "lucide-react"
@@ -272,7 +273,10 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
     setNaming(null)
 
     if (action === "start") {
-      const value = out.value as { enrollment: { id: string }; displaced?: { label?: string | null }[] }
+      const value = out.value as {
+        enrollment: { id: string }
+        displaced?: { program_id: string; label?: string | null }[]
+      }
       // The box is emptied, so Start cannot fire twice — the second press used
       // to pause the copy it had just started.
       setText("")
@@ -284,7 +288,16 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
       setStarted({
         id: value.enrollment.id,
         name,
-        displaced: (value.displaced ?? []).map((d) => d.label ?? "a program").filter(Boolean),
+        /**
+         * `enrollmentName`, NOT `label`. A catalogue program's enrolment has
+         * `label: null` — only a self-written week sets one — so
+         * `d.label ?? "a program"` was not an edge case, it was what every
+         * catalogue program hit: "a program moved to your finished
+         * programs". `ProgramDetail`'s fallback to `program_id` was the same
+         * miss one step further along, and printed "couch-to-5k". The
+         * finished-programs list has used `enrollmentName` all along.
+         */
+        displaced: (value.displaced ?? []).map((d) => enrollmentName(d)).filter(Boolean),
       })
       return
     }

@@ -41,7 +41,7 @@ import { refreshEnrollments } from "../hooks/useEnrollment"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft } from "lucide-react"
-import { requireProgram, resolveProgramForLevel } from "../data/catalog"
+import { enrollmentName, requireProgram, resolveProgramForLevel } from "../data/catalog"
 import { distanceUnitFor, fromKg, roundToLoadable, toKg } from "../programsService"
 import { isCustomizable, isModified, materializeSchedule, scheduleDaysOrNone } from "../customize"
 import { ProgramEditor } from "./ProgramEditor"
@@ -62,6 +62,16 @@ interface Props {
 }
 
 export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Props) {
+  /**
+   * `requireProgram` is safe HERE because `ProgramsApp` will not mount this
+   * for an id the catalogue does not have — see the guard at its call site.
+   * It used to mount it regardless, and
+   * `/programs?view=detail&catalog=no-such-program` threw straight through
+   * the render and took the WHOLE page to the global error screen ("This
+   * page could not load. The fault has been reported."), where
+   * `?program=<unknown-uuid>` degrades to the programs list. A mistyped URL
+   * is not a fault to report.
+   */
   const program = requireProgram(programId)
   const [level, setLevel] = useState<LevelId>(program.levels[0].id)
   const [unit, setUnit] = useState<UnitSystem>("kg")
@@ -254,10 +264,10 @@ export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Pr
        */
       const answer = (await res.json()) as {
         enrollment: { id: string }
-        displaced?: { label?: string | null; program_id?: string }[]
+        displaced?: { program_id: string; label?: string | null }[]
       }
       const ended = (answer.displaced ?? [])
-        .map((d) => d.label ?? d.program_id ?? "")
+        .map((d) => enrollmentName(d))
         .filter((name): name is string => Boolean(name))
       await refreshEnrollments()
       if (ended.length > 0) {

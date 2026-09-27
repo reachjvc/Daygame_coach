@@ -18,6 +18,7 @@
  * in the middle of A2 is a timer people learn to ignore.
  */
 
+import { isTimedLift } from "@/src/programs/data/exerciseLibrary"
 import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -213,6 +214,22 @@ export function LiveWorkoutScreen({
        * not save until a weight is typed.
        */
       unweightedOk: canBeUnweighted(a.libraryId, a.name),
+      /**
+       * SECONDS, IF IT IS A HOLD. This was left off, so a Plank added with
+       * "Add a lift" asked for "Reps" while the identical Plank prescribed by
+       * a program asked for "Seconds" — `loadExerciseFromLibrary` sets
+       * `repUnit: "sec"` for the six timed lifts and this path built its
+       * prescription inline and did not.
+       *
+       * The receipt, History and the CSV all print it as "Plank 45 s"
+       * whatever the box said, so somebody who held it once for 45 seconds
+       * and typed `1` — one hold, because the box asked for reps — has
+       * "Plank 1 s" in their history for good.
+       *
+       * The `as PrescribedExercise[]` below is why nothing caught it: the
+       * cast asserts the shape rather than checking it.
+       */
+      ...(isTimedLift({ exercise: a.name, library_id: a.libraryId }) ? { repUnit: "sec" as const } : {}),
     })) as PrescribedExercise[],
   ], (live.workout ?? finished)?.adjustments.order)
 

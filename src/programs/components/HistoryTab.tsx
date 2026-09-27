@@ -254,6 +254,18 @@ export function HistoryTab({
          * has already narrowed to the filtered lift, so "of Squat" means it.
          */
         const volume = month.logs.reduce((total, log) => total + workingVolumeKg(log.sets ?? []), 0)
+        /**
+         * AND THE DISTANCE, because "· 0 kg" is what a runner's every month
+         * said. Four of the thirteen catalogue programs are endurance, and on
+         * Couch to 5K this header read "3 sessions · 0 kg" every month for
+         * nine weeks — the only aggregate on the tab, reporting the one thing
+         * the account does not do. The kilometres are stored, printed on the
+         * row directly below, and in the CSV; they were summed nowhere.
+         *
+         * Both when both exist, which a mixed month has: lifting and running
+         * in one month is two facts, not one.
+         */
+        const distanceKm = month.logs.reduce((total, log) => total + (log.distance_km ?? 0), 0)
         return (
           <div key={month.monthKey}>
             {/* THE MONTH, once, with what it came to. Sticky, which is what
@@ -263,9 +275,15 @@ export function HistoryTab({
                 {dateKeyLabel(month.monthKey, { month: "long", year: "numeric" })}
               </h3>
               <span className="text-xs tabular-nums text-muted-foreground">
-                {month.logs.length} {month.logs.length === 1 ? "session" : "sessions"} ·{" "}
-                {showTotal(volume)} {label}
-                {lift ? ` of ${lift}` : ""}
+                {month.logs.length} {month.logs.length === 1 ? "session" : "sessions"}
+                {volume > 0 || distanceKm === 0 ? (
+                  <>
+                    {" · "}
+                    {showTotal(volume)} {label}
+                    {lift ? ` of ${lift}` : ""}
+                  </>
+                ) : null}
+                {distanceKm > 0 ? ` · ${Math.round(distanceKm * 10) / 10} km` : ""}
               </span>
             </div>
 
