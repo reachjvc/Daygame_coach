@@ -22,7 +22,7 @@
  * passes while proving nothing.
  */
 
-import { useCallback, useEffect, useState } from "react"
+import { StrictMode, useCallback, useEffect, useState } from "react"
 import { act, cleanup, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
@@ -387,5 +387,38 @@ describe("a row the server will never accept", () => {
       rowsSent.some((row) => row.table === "timetrack_entries" && row.id === refusedId),
       "the refused row was sent again, so the next edit is stuck behind it",
     ).toBe(false)
+  })
+})
+
+describe("the double-invoked effects React runs in development", () => {
+  test("do not switch the whole sync off", async () => {
+    /**
+     * React mounts, cleans up and mounts again in development. A flag that is
+     * only ever set true in a cleanup — `unmounted.current = true`, added to
+     * stop retry chains outliving the page — is therefore true from the first
+     * render onwards, and every fetch and flush returned at its first line.
+     *
+     * What that looked like in the product: no first contact, no status badge,
+     * nothing queued, nothing uploaded, and a workspace that existed in one
+     * browser only — 767 rows there, 764 on the account. The next successful
+     * load then replaced the local copy with the server's, so the work made
+     * while it was off was discarded.
+     *
+     * The owner's product IS the dev server, so this was not a development
+     * inconvenience. It was the feature, off, silently, for an hour.
+     */
+    const initial = localState()
+    const server = stubServer(stateToRows(initial, USER))
+
+    render(
+      <StrictMode>
+        <Harness initial={initial} />
+      </StrictMode>,
+    )
+    await settle(400)
+
+    const asked = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls
+    expect(asked.length, "the tracker never spoke to the server at all").toBeGreaterThan(0)
+    expect(server.posts + asked.length).toBeGreaterThan(0)
   })
 })

@@ -100,10 +100,17 @@ function Harness({
   initial,
   onState,
   onReplace,
+  copyOnReplace,
 }: {
   initial: TimetrackState
   onState: (s: TimetrackState) => void
   onReplace?: (s: TimetrackState) => void
+  /**
+   * Commit a COPY of what the hook handed over, rather than the same object.
+   * That is what any other effect touching the workspace in the same commit
+   * amounts to, and it is the condition the stranding guard turned on.
+   */
+  copyOnReplace?: boolean
 }) {
   const [state, setState] = useState<TimetrackState | null>(null)
   useEffect(() => setState(initial), [initial])
@@ -118,9 +125,9 @@ function Harness({
   const replace = useCallback(
     (next: TimetrackState) => {
       onReplace?.(next)
-      setState(next)
+      setState(copyOnReplace ? { ...next } : next)
     },
-    [onReplace],
+    [onReplace, copyOnReplace],
   )
   const toast = useCallback(() => {}, [])
   useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast })
@@ -398,5 +405,79 @@ describe("what a pull leaves behind as the baseline", () => {
       tablesSent.includes("timetrack_entry_tags"),
       `an edit dragged the whole tag-link table with it: ${JSON.stringify(posted)}`,
     ).toBe(false)
+  })
+})
+
+describe("an edit made in the same breath as a pull's answer", () => {
+  test("is still queued and sent, rather than stranding the uploader for ever", async () => {
+    /**
+     * THE WORST DEFECT OF THE DAY, AND IT WAS MINE FOR FORTY MINUTES.
+     *
+     * A pull hands its state over and marks it "awaited", so the change-watcher
+     * does not compare anything until that exact state arrives. The guard read
+     * `if (state !== awaitingState.current) return` — so once the workspace
+     * moved past it, every later change hit that line and returned. Nothing was
+     * ever queued again: no request attempted, queue empty, badge reading
+     * "Saved". Found by a smoke test that started a timer and then looked for
+     * it on the server — 765 rows in the browser, 764 on the account.
+     *
+     * At startup the window is one render wide. Setting it on every pull made
+     * it as wide as the working day.
+     */
+    const running = withARunningTimer()
+    // the answer carries a real change to the OTHER entry, so the pull hands a
+    // state over rather than skipping as "nothing new"
+    const elsewhere = stateToRows(
+      { ...running, entries: running.entries.map((e, i) => (i === 0 ? { ...e, description: "changed elsewhere" } : e)) },
+      USER,
+    )
+
+    const posted: string[][] = []
+    let release: (() => void) | null = null
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: { method?: string; body?: string }) => {
+        if (init?.method === "POST") {
+          const body = JSON.parse(init.body ?? "{}") as { rows?: Record<string, unknown[]> }
+          posted.push(Object.keys(body.rows ?? {}))
+          return { ok: true, status: 200, json: async () => ({}) }
+        }
+        if (String(url).includes("since=")) {
+          await new Promise<void>((resolve) => (release = resolve))
+          return { ok: true, status: 200, json: async () => ({ rows: elsewhere, cursor: NOW_ISO }) }
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ rows: stateToRows(running, USER), cursor: NOW_ISO, empty: false, userId: USER }),
+        }
+      }),
+    )
+
+    let latest: TimetrackState = running
+    const view = render(<Harness initial={running} onState={(st) => (latest = st)} copyOnReplace />)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 60))
+    })
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"))
+      await new Promise((r) => setTimeout(r, 20))
+    })
+
+    // the answer lands and commits as its own render
+    await act(async () => {
+      release?.()
+      await new Promise((r) => setTimeout(r, 300))
+    })
+
+    // and only then does the person stop the timer
+    posted.length = 0
+    await act(async () => {
+      view.getByTestId("stop").click()
+      await new Promise((r) => setTimeout(r, 2500))
+    })
+
+    expect(latest.entries.some(isRunning), "the stop never applied, so this proves nothing").toBe(false)
+    expect(posted.length, "nothing was ever sent again after that pull").toBeGreaterThan(0)
   })
 })

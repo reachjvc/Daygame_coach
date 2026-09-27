@@ -430,16 +430,29 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
   flushRef.current = flush
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    /**
+     * SET ON MOUNT, NOT ONLY ON UNMOUNT.
+     *
+     * React runs every effect twice in development — mount, clean up, mount —
+     * so a flag that is only ever set true in the cleanup is true for the whole
+     * life of the page after the very first render. Every `fetch` and every
+     * flush then returned at its first line: no first contact, no badge,
+     * nothing queued, nothing uploaded, and a workspace that quietly existed in
+     * one browser only. 767 rows here, 764 on the account.
+     *
+     * The owner's product IS the dev server, so this was not a development-only
+     * inconvenience; it was the whole feature, off, silently, for an hour.
+     */
+    unmounted.current = false
+    return () => {
       unmounted.current = true
       if (retryAt.current) clearTimeout(retryAt.current)
       retryAt.current = null
       if (firstContactAt.current) clearTimeout(firstContactAt.current)
       firstContactAt.current = null
-    },
-    [],
-  )
+    }
+  }, [])
 
   // --- first contact: who are we, and what does the server already have? ----
   useEffect(() => {
@@ -603,14 +616,30 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   useEffect(() => {
     if (!state || !userId.current || statusRef.current === "local-only") return
 
-    // Nothing may be compared until the state we adopted has actually arrived.
+    /**
+     * Nothing may be compared until the state we adopted has actually arrived —
+     * BUT NOT WAITING FOR EVER IF IT NEVER DOES.
+     *
+     * `if (state !== awaitingState.current) return` stranded the uploader: once
+     * the workspace moved past the state a pull had handed over, every later
+     * change hit that line and returned, so nothing was ever queued again. The
+     * badge said "Saved", the queue was empty, and no request was even
+     * attempted. Caught by a smoke test that started a timer and then looked
+     * for it on the server: 765 rows here, 764 there.
+     *
+     * At startup the window was narrow, which is why it survived there. Setting
+     * it on every pull made it wide, and I did that this afternoon.
+     *
+     * So: take the baseline from the state we handed over — which is the point
+     * of the mechanism — and then carry on. If the workspace has already moved,
+     * the diff below queues what changed, which is exactly what should happen.
+     */
     if (awaitingState.current) {
-      if (state !== awaitingState.current) return
+      const awaited = awaitingState.current
       awaitingState.current = null
-      // the baseline is this exact state, round-tripped, so that mapping quirks
-      // do not read as changes on the very next tick
-      serverRows.current = stateToRows(state, userId.current)
-      return
+      // round-tripped, so mapping quirks do not read as changes on the next tick
+      serverRows.current = stateToRows(awaited, userId.current)
+      if (state === awaited) return
     }
 
     const rows = stateToRows(state, userId.current)
@@ -708,6 +737,27 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       const dirty = keysIn(pending.current)
       for (const key of queuedWhenAsked) dirty.add(key)
       for (const [key, at] of localWrites.current) if (at >= askedAt) dirty.add(key)
+      /**
+       * AND ANYTHING THIS DEVICE HOLDS THAT THE SERVER HAS NOT ACKNOWLEDGED.
+       *
+       * The three sets above are all records of a change having been NOTICED —
+       * queued, or timestamped by the change-watcher. The watcher runs after
+       * React commits, so a change made in the same tick as this answer is in
+       * none of them, and the answer overwrote it. Pressing Stop as a pull
+       * landed lost the stop exactly that way.
+       *
+       * This is the rule the others were approximating: whatever differs right
+       * now between what we hold and what we believe the server has is ours,
+       * and an answer computed before it cannot speak for it.
+       */
+      if (latestState.current) {
+        const unsent = diffRows(
+          serverRows.current,
+          stateToRows(latestState.current, userId.current),
+          new Date().toISOString(),
+        ).changed
+        for (const key of keysIn(unsent)) dirty.add(key)
+      }
       const merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
       serverRows.current = merged
       const settled = reconcileRunningEntries(rowsToState(merged, new Date().toISOString()))
