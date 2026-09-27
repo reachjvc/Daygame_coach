@@ -16,7 +16,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const parsed = ReviseWorkoutSchema.safeParse(await request.json())
     if (!parsed.success) return err(parsed.error.issues[0]?.message ?? "That change could not be saved", 400)
-    return NextResponse.json(await reviseWorkout(auth.userId, (await params).id, parsed.data.sets))
+    return NextResponse.json(await reviseWorkout(auth.userId, (await params).id, parsed.data.sets, parsed.data.basedOn))
   } catch (e) {
     console.error("revise workout:", e)
     // 409 when the program moved on while this was being computed — nothing is

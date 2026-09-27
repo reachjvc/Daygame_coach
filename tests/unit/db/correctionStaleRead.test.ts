@@ -110,7 +110,7 @@ describe("a correction built on a read that has been overtaken", () => {
     // The screen read s1, s2, s3. Another device has since deleted s2 and s3.
     const { repo, fake } = await repoWith(["s1"])
     await expect(
-      repo.reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2"), corrected("s3")])
+      repo.reviseWorkout(USER, WORKOUT, [corrected("s1")], ["s1", "s2", "s3"])
     ).rejects.toThrow(/changed on another device/i)
     expect(fake.rpcCalls, "nothing may be written on the way to the refusal").toEqual([])
   })
@@ -119,7 +119,11 @@ describe("a correction built on a read that has been overtaken", () => {
     // One deleted, one added elsewhere: three then, three now, different rows.
     const { repo } = await repoWith(["s1", "s2", "s9"])
     await expect(
-      repo.reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2"), corrected("s3")])
+      repo.reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2"), corrected("s3")], [
+        "s1",
+        "s2",
+        "s3",
+      ])
     ).rejects.toThrow(/changed on another device/i)
   })
 
@@ -127,14 +131,39 @@ describe("a correction built on a read that has been overtaken", () => {
     const { statusFor } = await import("@/src/programs/errors")
     const { repo } = await repoWith(["s1"])
     const thrown = await repo
-      .reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2")])
+      .reviseWorkout(USER, WORKOUT, [corrected("s1")], ["s1", "s2"])
       .catch((e: unknown) => e)
     expect(statusFor(thrown)).toBe(409)
   })
 
   test("an unchanged workout saves, which is the whole point of the screen", async () => {
     const { repo, fake } = await repoWith(["s1", "s2"])
-    await repo.reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2")]).catch(() => null)
+    await repo
+      .reviseWorkout(USER, WORKOUT, [corrected("s1"), corrected("s2")], ["s1", "s2"])
+      .catch(() => null)
+    expect(fake.rpcCalls).toContain("replace_sets_and_replay")
+  })
+
+  test("REMOVING a set is not a stale read — the whole point of the screen", async () => {
+    /**
+     * THE FIRST VERSION REFUSED EVERY DELETION, and the training matrix is
+     * what found it: the guard derived "what was read" from the payload, and
+     * the payload is missing exactly the rows the person just deleted. The
+     * unit tests all passed, because they modelled a payload rather than the
+     * flow — they sent ids for rows that had supposedly been removed, which
+     * the screen never does.
+     */
+    const { repo, fake } = await repoWith(["s1", "s2"])
+    await repo.reviseWorkout(USER, WORKOUT, [corrected("s1")], ["s1", "s2"]).catch(() => null)
+    expect(fake.rpcCalls, "a deletion must reach the database").toContain(
+      "replace_sets_and_replay"
+    )
+  })
+
+  test("a client that sends no `basedOn` saves exactly as it did before", async () => {
+    // The guard may not start refusing on information it was never given.
+    const { repo, fake } = await repoWith(["s1", "s2", "s3"])
+    await repo.reviseWorkout(USER, WORKOUT, [corrected("s1")]).catch(() => null)
     expect(fake.rpcCalls).toContain("replace_sets_and_replay")
   })
 })

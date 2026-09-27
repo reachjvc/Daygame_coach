@@ -1530,7 +1530,14 @@ export async function reviseWorkout(
     /** Which prescribed slot it answered. */
     prescribedIndex?: number | null
     rpe?: number | null
-  }>
+  }>,
+  /**
+   * The ids the editor LOADED — not the ones it is submitting.
+   *
+   * Optional, so a client that does not send it saves exactly as before: this
+   * cannot start refusing on information it was never given.
+   */
+  basedOn?: string[]
 ): Promise<{ recalculated: boolean }> {
   const supabase = await createServerSupabaseClient()
   const { data: log, error } = await supabase
@@ -1559,15 +1566,16 @@ export async function reviseWorkout(
    * that, changed a bench weight and saved — and the two sets B deleted CAME
    * BACK (4 sets, 1675 kg), with no warning on either screen.
    *
-   * `WorkoutCorrection`'s own header says "a list that arrived short does not
-   * display wrong, it DELETES", and guards a SHORT read. A STALE read does the
-   * same damage and was unguarded.
+   * `basedOn` IS THE IDS THE EDITOR LOADED, not the ids it is submitting, and
+   * the difference is the whole guard. The first version derived the list from
+   * the payload — which is missing exactly the rows the person just deleted, so
+   * every deletion looked like a workout that had changed underneath and was
+   * refused. The training matrix caught it; the unit test did not, because it
+   * modelled a payload rather than the flow.
    *
-   * Compared as a set of ids, not a count: swapping one set for another keeps
-   * the count identical.
+   * Compared as a SET, because swapping one set for another keeps the count.
    */
-  const known = sets.map((set) => set.id).filter((id): id is string => Boolean(id))
-  if (known.length > 0) {
+  if (basedOn && basedOn.length > 0) {
     // Paged, like every other read of this table: a workout with more than a
     // thousand sets would otherwise come back short and every save would be
     // refused as "changed on another device".
@@ -1575,8 +1583,9 @@ export async function reviseWorkout(
       supabase.from("workout_sets").select("id").eq("log_id", workoutId).order("id").range(from, to)
     )
     const live = new Set(current.map((row) => row.id))
-    const missing = known.filter((id) => !live.has(id))
-    if (missing.length > 0 || live.size !== known.length) {
+    const changed =
+      live.size !== basedOn.length || basedOn.some((id) => !live.has(id))
+    if (changed) {
       throw new ProgramRefused(
         "This workout changed on another device while you were editing it. Reload to see what it says now, then correct it again."
       )

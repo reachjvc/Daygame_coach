@@ -125,7 +125,15 @@ export function WorkoutCorrection({
         notes: set.notes,
         exerciseNotes: set.exerciseNotes,
         rpe: set.rpe,
-      }))
+      })),
+      /**
+       * WHAT THIS EDITOR LOADED, so the server can refuse a save built on a
+       * read another device has since overtaken. Taken from the `sets` prop,
+       * not from `draft` — `draft` is missing exactly the rows just deleted,
+       * which is what made the first version of this guard reject every
+       * deletion.
+       */
+      sets.map((set) => set.id).filter((id): id is string => Boolean(id))
     )
     setSaving(false)
     if (!answer.ok) {

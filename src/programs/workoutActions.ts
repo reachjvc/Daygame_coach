@@ -56,13 +56,18 @@ export async function readWorkoutSets(workoutId: string): Promise<ActionResult<W
 }
 
 /** Replaces the workout's sets with exactly these. */
-export function saveCorrection(workoutId: string, sets: CorrectedSet[]): Promise<ActionResult> {
+export function saveCorrection(
+  workoutId: string,
+  sets: CorrectedSet[],
+  /** The ids the editor loaded — see `reviseWorkout`. */
+  basedOn?: string[]
+): Promise<ActionResult> {
   return call(
     `/api/workouts/${workoutId}/revise`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sets }),
+      body: JSON.stringify({ sets, basedOn }),
     },
     "That correction could not be saved."
   )

@@ -517,6 +517,12 @@ export const StartDraftSchema = z.object({
  */
 export const ReviseWorkoutSchema = z
   .object({
+    /**
+     * The set ids the editor loaded, so the server can refuse a save built on
+     * a read another device has overtaken. Not derivable from `sets`: the rows
+     * the person deleted are exactly the ones missing from it.
+     */
+    basedOn: z.array(z.string().uuid()).max(500).optional(),
     sets: z
       .array(
         z.object({
