@@ -1722,6 +1722,28 @@ export async function reviseWorkout(
     // lift — which the comment above this function says cannot happen.
     exercise_notes: set.exerciseNotes ?? null,
     rpe: set.rpe ?? null,
+    /**
+     * WHEN THE SET WAS TICKED, AND WHICH SLOT IT ANSWERED — carried back.
+     *
+     * These two were the other half of the parked migration, and without them
+     * that migration fixes nothing: `replace_sets_and_replay` now KEEPS both
+     * columns, but this payload never sent them, so every corrected row still
+     * arrived with `completed_at` null. The migration's own header claimed
+     * "the repo already sends both fields"; `CorrectedSet` declares them and
+     * this mapping dropped them one line later.
+     *
+     * `inWorkoutOrder` sorts on `completed_at` first and puts rows without one
+     * LAST, so a null here is not a cosmetic loss: the workout stops reading in
+     * the order it was performed and reverts to slot order, permanently,
+     * because the instants are gone. `prescribed_index` going null turns every
+     * corrected program set into one the app reads as "added on the day".
+     *
+     * `?? null` rather than omitting the key: `jsonb_populate_recordset` reads
+     * a missing key as null anyway, and an explicit null says the editor meant
+     * it — a set somebody ADDED in the editor genuinely has neither.
+     */
+    completed_at: set.completedAt ?? null,
+    prescribed_index: set.prescribedIndex ?? null,
   }))
 
   /**
