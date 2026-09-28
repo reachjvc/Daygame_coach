@@ -339,7 +339,28 @@ exactly as written below.
 Each has a recommendation, so "go with your recommendations" is a complete answer.
 **A milestone that depends on an unanswered question says so and does not start.**
 
+**ANSWER THEM IN THIS ORDER — round 9 found the set did not work.** The five added in rounds
+7–8 had no *Gates* line and were cited by no milestone, so starting work answered them "no"
+by default and nothing said so. And two depend on each other.
+
+1. **Q-DOWNTIME** — one sentence from you, and it decides whether five other things exist.
+2. **Q-POLICIES** — must be answered **before Q-ORDER**, because it decides whether the
+   role-and-claim machinery Q-ORDER needs gets built at all. Q-ORDER's entry defers to it.
+3. **Q-ORDER** — and note it is the only question here **with no recommendation**, because
+   mine was withdrawn when its premise proved false. This one is genuinely yours.
+4. **Q-RULE5, Q-CUSTOMER, Q-SEAM, Q-AI-HOST, Q-BETA, Q-CORPUS** — independent, any order.
+5. **Q-SKELETON is PARTLY ANSWERED by the document already**, which is a defect: M1.0
+   absorbed two of its four beliefs and M0.4 step 2 covers a third. **The fourth is not
+   covered anywhere before M3 — "Better Auth issues a token a non-browser client accepts",
+   which is the belief rule 1 and D2 both rest on.** So the live question is narrower than
+   its entry reads: *should that one belief be tested early?* **Recommendation: yes, and it
+   is an afternoon.**
+
+**"Go with your recommendations" is therefore no longer a complete answer** — it was, and
+rounds 7–8 broke it by adding questions without gates. Q-ORDER needs you.
+
 ### Q-DOWNTIME — Can the app be off for an evening, and can you go one day without using it? **NEW 2026-09-28. The cheapest question in this document.**
+*Gates: M1b.2, M1b.5, M2's live row-count acceptance, M3's password branch, and M5's second dump and rehearsed rollback — five places that must be hand-applied because none of them names this question.*
 
 **This plan is priced for a live service. There is one user and he owns it.** Work that
 exists only because nobody asked: a second dump taken inside a bounded read-only window
@@ -418,6 +439,8 @@ avoid.
 - A real checkpoint arrives in weeks, not months — "the app runs on Drizzle" is verifiable
   long before "the app runs on Hetzner".
 
+*Gates: M5's port order, and it is gated BY Q-POLICIES.*
+
 **Recommendation: WITHDRAWN pending your answer to Q-POLICIES.** I recommended this
 reorder on a premise that turned out false. It may still be right for its other three
 reasons, but it is no longer a recommendation I will make for you — the version that works
@@ -428,6 +451,7 @@ of the current order if it is wrong:** a data-access bug and an unfamiliar serve
 same week, with no second wall and no managed backup.
 
 ### Q-CUSTOMER — Should anything here come before "somebody can pay you"? **NEW 2026-09-28.**
+*Gates: nothing mechanically — it is an ordering question, so starting M1 answers it "no". Said plainly because that is how it would otherwise be decided by default.*
 
 As ordered, **this plan delivers an installed phone app before it delivers a customer.**
 Paying grants nobody anything today — no Stripe webhook, `has_purchased` never written —
@@ -497,7 +521,7 @@ M1.6.*
 
 Each names the milestone it gates, in its own entry.
 
-### B1 — A schema-only dump AND a data dump of live Supabase. **Needs you. Gates M0.4.**
+### B1 — A schema-only dump AND a data dump of live Supabase. **Needs you. Gates M0.4, M0.6, M2, M8's acceptance — and therefore M1.0, M1.7 and everything after.** It is the first thing.
 *Attempted:* not against live data, on purpose — those are your credentials.
 *Why it moved to the front:* N9. Nineteen tables the code uses exist in no
 migration, so **the migration folder cannot rebuild your database** and
@@ -513,7 +537,7 @@ rather than on the morning M1 starts.
 *Cost:* **not priced** — see the note under N36–N38. The shape is N36, or N37 if
 Q-AI-HOST says host, but those were a managed platform's prices.
 
-### B3 — An email provider and a domain you control. **Needs you. Gates M1b.3.**
+### B3 — An email provider and a domain you control. **Needs you. The domain half gates M1.0 and M3; the email half gates M1b.3 and M3's forced-reset branch.**
 *Attempted:* no provider is configured anywhere; Supabase sends every confirmation
 and reset today. There is no custom domain in the repo.
 *Why it gates more than it looks like:* the day login becomes yours, nobody can
@@ -554,6 +578,8 @@ first data load. Anything with no owner here is out of scope, explicitly.
 | Job | Owner |
 |---|---|
 | Source of truth for the schema | **B1's schema-only dump.** Not `supabase/migrations/`, not the test mirror |
+| **The drift guard — a test that fails when the live database holds what the files do not** | **M0.4 step 2c** (Fact 1's second half; was unowned until round 9) |
+| **Re-pointing `schemaMirror.test.ts` at the dump, dump wins on conflict** | **M0.4 step 2c** |
 | The data seam (Q-SEAM) | **M0.4**, its first deliverable |
 | Completing the test mirror to the live schema | **M0.4** |
 | The API base-URL indirection (D8) | **M0.5** |
@@ -663,6 +689,19 @@ Supabase, which is why an import-only check misses them.
    everything else stands on — *can this database be rebuilt on a plain Postgres at all?*
    **Give it M2's acceptance and the plan's largest unknown moves from month three to week
    two.** M2 then becomes a data load against a schema already proven.
+2c. **Re-point the drift guard, and give Fact 1's second half a mechanism.** Fact 1 says the
+   part that matters is *a test that fails whenever the live database holds something the
+   files do not*. **Round 9 found that sentence has no deliverable, no acceptance and no
+   owner anywhere in this plan** — the only drift mechanism proposed recomputes the plan's own
+   number rows, not the schema. It belongs here.
+   And the repo's existing guard points the wrong way: `tests/unit/db/schemaMirror.test.ts`
+   reads `supabase/migrations/` as the original and `tests/integration/schema.sql` as the
+   copy, while this plan says the migration folder is **not** the source of truth. So
+   re-sourcing the mirror from B1's dump will make its rule 3 fire **exactly where live
+   Postgres and the folder have drifted** — which is Fact 1's premise, so it is close to
+   certain. **Decide it once, here: the dump wins.** And note its rules 1 and 4 walk
+   migration-declared tables, so the completed mirror would get no guard at all on N9's 19
+   tables — the ones that motivated B1 in the first place.
 2b. **Complete the test mirror** from N10 to the live schema, out of B1's
    dump. Without this M0.4 cannot seed a fixture for 8 of its own targets.
 3. **Tests that execute repo functions**, written now against Supabase so they
@@ -675,7 +714,16 @@ Supabase, which is why an import-only check misses them.
    `valuesRepo.ts` at 91 lines. So "test all 26, then port all 26" puts the first evidence
    that the approach works at the end of a multi-week phase — which is why this plan cannot
    estimate at all. **Build the seam once (Q-SEAM, genuinely shared), then run
-   test → port → prove on ONE standalone file first.** That yields a measured cost per line
+   test → **and nothing else** → on ONE standalone file first.** **CORRECTED 2026-09-28:
+   this bullet used to read "test → port → prove", which instructed the whole Drizzle port
+   inside M0 — contradicting this milestone's own closing line ("this does not port
+   anything") and, far worse, instructing it BEFORE M4. Round 8 established that a direct
+   Postgres connection authenticates as the table owner and is therefore exempt from the row
+   rules, so **each ported repo loses the database's protection the moment it is ported.**
+   Read literally, the old wording stripped row-level security slice by slice, in
+   production, months before the gate that exists to guard it. **M0.4 tests. M5 ports, and
+   M4 runs first.** The per-file sequencing below is M5's, recorded here only because it is
+   what makes the estimate knowable.** That yields a measured cost per line
    so the estimate stops being a guess, a checkpoint every few days, and somewhere to stop.
    Then the other 13 standalone files, then the clumps, largest last. **The whole-graph rule
    still applies within a clump:** `healthRepo` reaches the database through
@@ -694,7 +742,8 @@ Supabase, which is why an import-only check misses them.
   Supabase's bcrypt hashes; that its tokens are accepted by a Capacitor client; that service
   workers run under Capacitor on iOS; and that `match_embeddings` can be extracted from
   Supabase at all (N15 — it exists nowhere here). **Test the first four before M1 ends.**
-- **Not covered:** this does not port anything. It builds the net M5 falls into.
+- **Not covered:** this does not port anything — see the correction in step 4. It builds the
+  net M5 falls into. **M5 owns the port and M4 gates it.**
 
 ### M0.5 — One API base URL (D8)
 **Depends on:** nothing. Useful on either stack.
@@ -727,7 +776,10 @@ second milestone. The always-on parts are now **M1b, after M3**.
 ### M1.0 — Lift and shift: the same app, on your box, still talking to Supabase.
 **Depends on:** B2, **B3's domain half** (the acceptance is "answers on your domain" and
 rollback is a DNS change; B3 records that there is no custom domain in the repo, and TLS
-needs one), **M1.1 and M1.7** — see the correction below. **No new *application* code.**
+needs one), **M1.1 and M1.7** — see the correction below — **and therefore B1,
+transitively**: M1.7 depends on M0.6, and M0.6 depends on B1's dump. **So the "zero-code,
+reverses in minutes" hosting half still cannot begin until you have exported your database.
+That was not visible anywhere and it changes what you do first.** **No new *application* code.**
 
 **CORRECTED 2026-09-28. This is not a milestone before M1.1; it is M1.1 and M1.7's
 ACCEPTANCE.** I wrote "Depends on: B2. No new code. Week one" and also "M1.1 comes after
@@ -792,7 +844,7 @@ operator job D1 handed over — build in CI, TLS, firewall, supervision, deploy,
 - Acceptance: the app answers on your domain, from the box, against Supabase, and you have
   used it for a day. Rolling back is a DNS change.
 
-### M1.1 — It builds and boots. **After M1.0; it is what M1.0 deploys.**
+### M1.1 — It builds and boots. **M1.0 is this milestone's acceptance, not a step before it** — see M1.0's correction.
 **Depends on:** B2. **Note the ring:** its acceptance names M1.7's healthcheck, and M1.7's healthcheck touches a database whose schema is M2, which depends back on M1.1. It resolves because an empty Postgres answers a healthcheck and `app/page.tsx` renders a signed-out page — **stating that is the point, because the old plan's deadlock was invisible for exactly this reason.**
 **Correcting a claim I made and you were told:** CI *does* build this app, and has
 since 2026-02-04 — `playwright.config.ts` runs `npm run build && npm start` when
@@ -1104,7 +1156,7 @@ the test cannot pass.**
 
 ## M5 — Drizzle
 
-**Vercel is already off — M1.0 did it, in week one, with no new code.** Leaving Vercel was
+**Vercel is already off — M1.0 did it, and M1.0 is M1.1+M1.7's acceptance rather than a separate week-one step (see its correction).** Leaving Vercel was
 welded to this milestone and that was the plan's largest ordering mistake: the cheap
 reversible half bolted to the dangerous one-way half, and scheduled last.
 
@@ -1118,6 +1170,10 @@ reversible half bolted to the dangerous one-way half, and scheduled last.
   `.upsert()`, no full-text search. The real change is that Supabase returns errors
   as values and Drizzle throws — but `databaseRefusal` needs only `{ code, message }`,
   which `pg` provides, so the deliberate-refusal protocol survives.
+- **M4 runs before the first file is ported, not after.** The port is what removes the
+  database's protection (round 8), so the gate cannot follow it. The per-file order is the
+  one recorded in M0.4 step 4: seam once, then `valuesRepo`, then the other standalone
+  files, then the clumps largest-last, measuring cost per line as you go.
 - **Before traffic moves: a second dump inside a bounded read-only window**, of every
   table with rows newer than B1's, so the months of your own use in between are not
   lost.
