@@ -37,11 +37,12 @@ import type {
   PlateSetup,
   ProgramDefinition,
   ProgramSchedule,
+  ReplayEvent,
   SkillDay,
   SkillExercise,
   UnitSystem,
 } from "./types"
-import { fromKg, roundToLoadable } from "./programsService"
+import { fromKg, roundToLoadable, toKg } from "./programsService"
 import { LIBRARY_BY_ID } from "./data/exerciseLibrary"
 
 // ---------------------------------------------------------------------------
@@ -632,6 +633,130 @@ export function applyWeightOverrides(
     changed.push({ exerciseId, to })
   }
   return { state: next, changed }
+}
+
+/**
+ * THE SAME PROGRAM, READ IN THE OTHER UNIT.
+ *
+ * WHY THIS HAS TO EXIST. `unitFor` asks the ENROLMENT first and the account
+ * second, deliberately — without that, ending your last program silently
+ * converted History and Progress to kilograms. The cost was a dead end: a
+ * program started in kg could never be moved to lb. The account toggle said
+ * "Saved." and nothing moved, and the options sheet had no control of its own.
+ * Measured on 2026-09-27: switching to Pounds and re-walking every screen —
+ * History, Progress, the receipt, the Today card — all still kg.
+ *
+ * WHAT IS AND IS NOT STORED IN THE ENROLMENT'S UNIT. `workout_sets.weight_kg`
+ * is kilograms always, so every set you have ever logged converts itself and
+ * nothing here touches history. What IS in the enrolment's unit is its state:
+ * `exercise_state` (what the program has worked up to), `initial_exercise_state`
+ * (the seed a replay folds history over) and the `weight`/`schedule` replay
+ * events. Convert the live state alone and the next correction replays from a
+ * seed still in the old unit and undoes the switch — which is why
+ * `changeEnrollmentUnit` converts all three and this function is the one place
+ * that knows how.
+ *
+ * ROUNDED TO WHAT THE BAR CAN HOLD, not left at 220.46 lb. `mode` is the
+ * default "nearest": this is a number somebody already owns, so the intent is
+ * the number itself rather than a prescription that must never ask for more.
+ * The conversion is therefore NOT reversible to the last decimal — 100 kg
+ * becomes 220 lb becomes 99.79 kg — and that is the honest answer, because an
+ * unloadable weight is worse than a rounded one.
+ *
+ * A LIFT THE SCHEDULE NO LONGER CONTAINS keeps its number, converted and
+ * rounded to two decimals but NOT snapped to the bar. There is no exercise to
+ * ask for a load style, and defaulting to barbell would floor a 6 kg lateral
+ * raise at the bar — the exact fault `loadStyleOf` exists to prevent. The
+ * engine never reads those entries; destroying them on the way past would be a
+ * silent loss for nothing.
+ */
+export function convertExerciseState(
+  state: Record<string, ExerciseState>,
+  from: UnitSystem,
+  to: UnitSystem,
+  schedule: ProgramSchedule,
+  plates?: PlateSetup
+): Record<string, ExerciseState> {
+  if (from === to) return state
+  const byId = new Map(
+    scheduleDaysOrNone(schedule).flatMap((d) => d.exercises.map((ex) => [ex.id, ex] as const))
+  )
+  const convert = (value: number, exerciseId: string): number => {
+    const inNewUnit = fromKg(toKg(value, from), to)
+    const ex = byId.get(exerciseId)
+    if (!ex) return Math.round(inNewUnit * 100) / 100
+    return roundToLoadable(inNewUnit, to, "loadStyle" in ex ? ex.loadStyle : undefined, plates)
+  }
+
+  const next: Record<string, ExerciseState> = {}
+  for (const [id, entry] of Object.entries(state)) {
+    /**
+     * ONLY THE TWO WEIGHTS. `consecutiveFails`, `stalled`, `missedTopSet`,
+     * `tierIndex` and `currentHoldSec` are counts, flags, an index and a
+     * number of SECONDS — none of them is a weight, and a blanket
+     * "convert every number" would have turned a 30-second plank into 66.
+     */
+    next[id] = {
+      ...entry,
+      ...(entry.workingWeight != null ? { workingWeight: convert(entry.workingWeight, id) } : {}),
+      ...(entry.trainingMax != null ? { trainingMax: convert(entry.trainingMax, id) } : {}),
+    }
+  }
+  return next
+}
+
+/**
+ * The history, read in the other unit.
+ *
+ * A `weight` event is "somebody set this lift to this number by hand" and a
+ * `schedule` event carries the state of the lifts that edit invented — both in
+ * the enrolment's unit, both folded over the seed by every replay. Left alone,
+ * the first correction after a unit switch would replay old-unit numbers as if
+ * they were new-unit ones: a 100 kg squat would come back as a 100 lb one.
+ *
+ * `skip` and `reset` carry no weight and pass through untouched.
+ *
+ * TWO SCHEDULES, because the two events ask different questions of one. A
+ * `weight` event names a lift that is almost certainly still in the week as it
+ * stands, so it gets `current`. A `schedule` event carries the week that came
+ * into force WITH it, and its seeded lifts belong to that week — so it gets its
+ * own, and `catalog` when its own is null, which is what null means there: back
+ * to the catalogue program. Handing either the wrong week only mis-reads a load
+ * style, which decides barbell rounding against free-weight rounding — enough
+ * to floor a removed accessory at the bar.
+ */
+export function convertReplayEvents(
+  events: ReplayEvent[],
+  from: UnitSystem,
+  to: UnitSystem,
+  current: ProgramSchedule,
+  catalog: ProgramSchedule,
+  plates?: PlateSetup
+): ReplayEvent[] {
+  if (from === to) return events
+  return events.map((event) => {
+    if (event.kind === "weight") {
+      const [converted] = Object.values(
+        convertExerciseState(
+          { [event.exerciseId]: { workingWeight: event.to } },
+          from,
+          to,
+          current,
+          plates
+        )
+      )
+      return { ...event, to: converted.workingWeight ?? event.to }
+    }
+    if (event.kind === "schedule") {
+      // Its own week; `null` there is "back to the catalogue program", so that
+      // is what null resolves to rather than whatever the week is today.
+      return {
+        ...event,
+        seeded: convertExerciseState(event.seeded, from, to, event.schedule ?? catalog, plates),
+      }
+    }
+    return event
+  })
 }
 
 export function seedForAddedExercises(

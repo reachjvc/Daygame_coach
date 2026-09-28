@@ -32,16 +32,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { CalendarDays, ListOrdered, Pencil, RotateCcw, SkipForward, Trash2 } from "lucide-react"
-import { endProgram, resetProgram, skipSession } from "../programActions"
+/**
+ * `Ruler`, NOT `Scale` and NOT `ArrowLeftRight`, both of which were tried.
+ *
+ * `Scale` is the body-weight icon (`src/health/components/WeightTracker.tsx`),
+ * so beside "Switch to lb" it reads as "weigh yourself". `ArrowLeftRight` is
+ * already "swap this lift for another" one sheet away in `live/LiftMenu.tsx` —
+ * the same control shape in the same slice, which would make one arrow mean
+ * two different swaps. A ruler is a unit of measure and nothing else here.
+ */
+import { CalendarDays, ListOrdered, Pencil, RotateCcw, Ruler, SkipForward, Trash2 } from "lucide-react"
+import { changeProgramUnit, endProgram, resetProgram, skipSession } from "../programActions"
+import { refreshEnrollments } from "../hooks/useEnrollment"
 import { resetConfirmText, skipConfirmText, skipRefusal } from "../programsService"
 import { effectiveProgram } from "../customize"
 import { getProgram, enrollmentName } from "../data/catalog"
 import { PROGRAMS } from "@/src/shared/trainingRoutes"
-import type { ProgramEnrollment } from "../types"
+import { UNIT_CONFIG } from "../config"
+import type { ProgramEnrollment, UnitSystem } from "../types"
 
 /** Which confirmation is open, if any. */
-type Asking = "skip" | "reset" | "end" | null
+type Asking = "skip" | "reset" | "end" | "unit" | null
 
 interface Props {
   open: boolean
@@ -85,6 +96,18 @@ export function ProgramSheet({
   const hasWeekdays =
     schedule?.kind === "linear_rotation" || schedule?.kind === "weekly_waved"
 
+  /**
+   * THE UNIT, WHICH NOTHING COULD REACH ONCE A PROGRAM WAS RUNNING.
+   *
+   * `unitFor` asks the enrolment first and the account second, deliberately —
+   * without that, ending your last program converted History and Progress to
+   * kilograms behind your back. The cost was a dead end: the Settings toggle
+   * said "Saved." and every training screen stayed in the old unit, and this
+   * sheet, which is meant to be everything you do to a program, had no control
+   * of its own. A program started in the wrong unit was in it for life.
+   */
+  const otherUnit: UnitSystem = enrollment.unitSystem === "kg" ? "lb" : "kg"
+
   async function run(what: Asking) {
     if (!what) return
     setBusy(true)
@@ -94,7 +117,9 @@ export function ProgramSheet({
         ? await endProgram(enrollment.id)
         : what === "reset"
           ? await resetProgram(enrollment.id)
-          : await skipSession(enrollment.id)
+          : what === "unit"
+            ? await changeProgramUnit(enrollment.id, otherUnit)
+            : await skipSession(enrollment.id)
     setBusy(false)
     setAsking(null)
 
@@ -112,6 +137,15 @@ export function ProgramSheet({
       router.replace(`${PROGRAMS}?view=programs`)
       return
     }
+    /**
+     * THE SHARED LIST, NOT JUST THIS CARD. `onChanged` re-reads one
+     * enrollment; the unit is read off the shared store by History, Progress
+     * and the training screen's account-wide fallback, so refreshing only the
+     * detail would leave every other surface showing the old unit until
+     * something else happened to refetch — which is the same staleness
+     * `saveRunningSchedule` already calls this for.
+     */
+    if (what === "unit") await refreshEnrollments()
     onChanged()
     onClose()
   }
@@ -134,6 +168,21 @@ export function ProgramSheet({
       title: `End ${name}?`,
       body: "It stops prescribing sessions. Everything you logged is kept.",
       confirm: "End it",
+    },
+    unit: {
+      title: `Switch ${name} to ${UNIT_CONFIG[otherUnit].label}?`,
+      /**
+       * WHAT IT ACTUALLY DOES, including the part somebody would otherwise
+       * discover afterwards. The weights are ROUNDED — 100 kg becomes 220 lb,
+       * not 220.46 — so switching back does not land on the number you
+       * started from, and a sentence that did not say so would be the
+       * "promised a weight reset the code never performed" fault again.
+       */
+      body:
+        `Every weight this program has worked up to is converted and rounded to what your bar can load, ` +
+        `so switching back may not land on exactly the number you started with. ` +
+        `The workouts you have already logged are not changed — they are stored in kilograms and simply read in ${UNIT_CONFIG[otherUnit].label}.`,
+      confirm: `Switch to ${UNIT_CONFIG[otherUnit].label}`,
     },
   }
 
@@ -159,6 +208,12 @@ export function ProgramSheet({
             Skip this session
           </SheetRow>
         )}
+        <SheetRow icon={Ruler} onClick={() => setAsking("unit")} testId="sheet-unit">
+          {/* The DESTINATION, not the current state. A row reading "Weights in
+              kg" is a label, and a label in a list of actions looks like a
+              setting you have to find the control for. */}
+          Switch to {UNIT_CONFIG[otherUnit].label}
+        </SheetRow>
         <SheetRow icon={RotateCcw} onClick={() => setAsking("reset")} testId="sheet-reset">
           Reset to start
         </SheetRow>

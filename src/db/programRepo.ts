@@ -36,6 +36,8 @@ import {
   isCustomizable,
   seedForAddedExercises,
   applyWeightOverrides,
+  convertExerciseState,
+  convertReplayEvents,
 } from "@/src/programs/customize"
 import { getUserClock, getUserTimezone } from "./settingsRepo"
 import { getTodayInTimezone, isoWeekdayInTimezone } from "@/src/shared/dateUtils"
@@ -827,6 +829,106 @@ export async function updateEnrollmentSchedule(
 
   const enrollment = toDomain(data as ProgramEnrollmentRow)
   return { enrollment, prescription: computePrescription(programFor(enrollment), enrollment) }
+}
+
+/**
+ * MOVE A RUNNING PROGRAM FROM KILOGRAMS TO POUNDS, OR BACK.
+ *
+ * THE DEAD END THIS REMOVES. `unitFor` asks the enrolment first and the
+ * account second, so the Settings toggle cannot reach a program that is
+ * running — it said "Saved." and every training screen stayed in the old unit.
+ * The options sheet had no control of its own. So a program started in the
+ * wrong unit was in it for life, and the only way out was to end the program
+ * and lose the weights it had worked up to.
+ *
+ * THREE COLUMNS, ONE STATEMENT, because converting fewer is worse than
+ * converting none. `exercise_state` is what the program says today;
+ * `initial_exercise_state` is the seed every replay folds history over; the
+ * `weight` and `schedule` replay events are the manual changes folded on top.
+ * Convert only the first and the next correction — which replays from the seed
+ * — silently puts the old unit's numbers back, in the new unit's clothes. They
+ * go in one UPDATE so a failure leaves the enrolment entirely as it was.
+ *
+ * NOTHING YOU LOGGED IS TOUCHED. `workout_sets.weight_kg` is kilograms
+ * whatever the enrolment says, so History, Progress and every receipt convert
+ * themselves the moment `unit_system` changes.
+ *
+ * `.eq("unit_system", from)` IS NOT BELT AND BRACES. Without it a double-tap,
+ * a retry on bad gym wifi or two tabs would convert twice: 100 kg → 220 lb →
+ * 485 lb, on a program whose rule is +5 lb a session. The second write matches
+ * no row, `maybeSingle` returns null, and the caller is told the switch had
+ * already happened rather than being handed a program it cannot lift.
+ *
+ * REFUSED MID-WORKOUT, like every other edit to a running program. Changing
+ * the unit under an open session would leave sets already ticked in one unit
+ * and the rest prescribed in another, inside one workout.
+ */
+export async function changeEnrollmentUnit(
+  userId: string,
+  enrollmentId: string,
+  to: UnitSystem
+): Promise<{ enrollment: ProgramEnrollment; changed: boolean }> {
+  const enr = await getEnrollmentById(userId, enrollmentId)
+  if (!enr) throw new ProgramRefused("That program was not found.")
+  if (enr.unitSystem === to) return { enrollment: enr, changed: false }
+  await assertNoOpenWorkoutOn(userId, enrollmentId)
+
+  const from = enr.unitSystem
+  const catalogProgram = requireProgram(enr.program_id)
+  const schedule = effectiveProgram(catalogProgram, enr.customSchedule).schedule
+  /**
+   * The plates of the unit we are moving TO. `enr.plates` is the old unit's,
+   * so rounding with it would snap pounds onto kilogram steps — 220.46 lb to
+   * 220.46, because 2.5 divides it evenly enough to look deliberate.
+   */
+  const plates = plateSetupFor(enr.barWeightKg ?? null, to)
+
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("program_enrollments")
+    .update({
+      unit_system: to,
+      exercise_state: convertExerciseState(enr.exerciseState, from, to, schedule, plates),
+      /**
+       * The seed can be absent: programs started before 2026-09-07 never kept
+       * one. `replayedState` already refuses to recalculate those with a
+       * sentence of its own, and inventing a seed here to have something to
+       * convert would be the silent fallback that rule forbids.
+       */
+      ...(enr.initialExerciseState
+        ? {
+            initial_exercise_state: convertExerciseState(
+              enr.initialExerciseState,
+              from,
+              to,
+              schedule,
+              plates
+            ),
+          }
+        : {}),
+      replay_events: convertReplayEvents(
+        enr.replayEvents ?? [],
+        from,
+        to,
+        schedule,
+        catalogProgram.schedule,
+        plates
+      ),
+    })
+    .eq("id", enrollmentId)
+    .eq("user_id", userId)
+    .eq("unit_system", from)
+    .select()
+    .maybeSingle()
+  if (error) throw refusalFrom(error, "That program's unit could not be changed. Reload and try again.")
+  if (!data) {
+    // Matched no row: something else switched it first. Read what it says now
+    // rather than reporting a failure for a change that has already happened.
+    const now = await getEnrollmentById(userId, enrollmentId)
+    if (!now) throw new ProgramRefused("That program was not found.")
+    return { enrollment: now, changed: false }
+  }
+  return { enrollment: toDomain(data as ProgramEnrollmentRow), changed: true }
 }
 
 // ---------------------------------------------------------------------------

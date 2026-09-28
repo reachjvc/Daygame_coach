@@ -76,6 +76,28 @@ export function resetProgram(id: string): Promise<ActionResult> {
   return post(id, "reset", "The program was not reset.")
 }
 
+/**
+ * Moves a running program between kilograms and pounds.
+ *
+ * `changed: false` is the answer when the program was already in that unit —
+ * a no-op rather than a failure, so the screen says nothing happened instead
+ * of claiming a conversion it did not perform.
+ */
+export function changeProgramUnit(
+  id: string,
+  unitSystem: "kg" | "lb"
+): Promise<ActionResult<{ changed: boolean }>> {
+  return call(
+    `/api/programs/enrollments/${id}/unit`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ unitSystem }),
+    },
+    "That program's unit was not changed."
+  )
+}
+
 function post(id: string, action: "skip" | "reset", whenSilent: string): Promise<ActionResult> {
   return call(
     `/api/programs/enrollments/${id}/action`,

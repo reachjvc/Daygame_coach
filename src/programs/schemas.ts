@@ -226,6 +226,19 @@ export const UpdateScheduleSchema = z.object({
   workingWeights: WorkingWeightsSchema.optional(),
 })
 
+/**
+ * PUT body for /api/programs/enrollments/[id]/unit.
+ *
+ * Its own route rather than a field on the schedule save: that save refuses
+ * anything on a program the catalogue calls uneditable, and moving a
+ * week-by-week endurance plan from kg to lb is a perfectly reasonable thing to
+ * want. The two also mean different things to the replay — a schedule edit
+ * appends an event, a unit change rewrites the ones already there.
+ */
+export const ChangeUnitSchema = z.object({
+  unitSystem: z.enum(["kg", "lb"]),
+})
+
 
 /**
  * `LogSessionSchema` was here: a whole session — every set, a duration, an

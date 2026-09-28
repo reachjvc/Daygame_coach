@@ -54,6 +54,7 @@
   "src/db/programDraftRepo.ts:deleteDraft": "unasserted",
   "src/db/programDraftRepo.ts:startDraft": "asserted",
   "src/db/programDraftRepo.ts:updateDraft": "unasserted",
+  "src/db/programRepo.ts:changeEnrollmentUnit": "asserted",
   "src/db/programRepo.ts:deleteEnrollmentPermanently": "unasserted",
   "src/db/programRepo.ts:enrollInProgram": "unasserted",
   "src/db/programRepo.ts:ensureEnrollment": "unasserted",

@@ -114,17 +114,11 @@ export function TrainingSettingsCard({
 
             `unitForDisplay` asks the ENROLMENT first and the account second,
             deliberately — without it, ending your last program silently
-            converted History and Progress to kilograms. The cost is that with
-            a program running, switching this says "Saved." and nothing on any
-            screen moves: History, Progress, the receipt and the Today card
-            all keep the program's unit. Measured on 2026-09-27, switching to
+            converted History and Progress to kilograms. The cost was that with
+            a program running, switching this said "Saved." and nothing on any
+            screen moved: History, Progress, the receipt and the Today card all
+            kept the program's unit. Measured on 2026-09-27, switching to
             Pounds and re-walking every screen: all still kg.
-
-            Saying so is not the whole answer — there is still no way to move
-            a running program from kg to lb, and that is a product decision
-            about which should win, left for the owner. This is the half that
-            is not a decision: the screen must not imply it did something it
-            did not.
 
             THE SENTENCE WAS WRONG WITHIN THE HOUR, in the one state
             `accountWideUnit` had just been written for: with two programs
@@ -132,11 +126,20 @@ export function TrainingSettingsCard({
             History and Progress fall back to THIS setting. "A program you are
             already running keeps the unit" was false exactly there. Two fixes
             forty minutes apart, each correct, contradicting each other.
+
+            AND IT IS NO LONGER A DEAD END (2026-09-28). The half left for the
+            owner — "there is still no way to move a running program from kg to
+            lb" — is built: the program's own ⋮ menu has "Switch to lb", which
+            converts the weights it has worked up to, its seed and its replay
+            history together. So this sentence has to say where that control
+            is, or it describes a dead end that no longer exists and sends
+            somebody looking for a setting that was never the answer.
           */}
           <p className="mt-1.5 text-xs text-muted-foreground">
             Everything you have already logged stays as it was — this changes how it is shown. A
-            running program keeps the unit you started it in; this decides when none is running,
-            or when two disagree.
+            running program keeps the unit you started it in; this decides when none is running, or
+            when two disagree. To move a running program, open it and choose “Switch to {unit}” from its
+            ⋮ menu.
           </p>
         </div>
 
