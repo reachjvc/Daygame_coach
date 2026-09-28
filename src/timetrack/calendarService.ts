@@ -283,7 +283,21 @@ export function expandRecurrence(
   const count = rules.COUNT ? Number(rules.COUNT) : null
   const until = rules.UNTIL ? parseIcsDate(rules.UNTIL)?.iso ?? null : null
   const untilMs = until ? new Date(until).getTime() : null
-  const byDay = rules.BYDAY ? rules.BYDAY.split(",").map((d) => d.slice(-2).toUpperCase()) : null
+  /**
+   * In WEEKDAY order, not in the order the rule happens to list them.
+   *
+   * The weekly branch walks this array and emits one instance per entry within the
+   * current week, so `BYDAY=SA,SU` emitted Saturday before the Sunday of the same
+   * week — Sunday being index 0, i.e. four days earlier. `eventsForDay` sorts before
+   * drawing, so nothing showed it; a caller that trusted the order would have been
+   * quietly wrong. Found by asserting "no instance is out of order" across 1,700 rule
+   * shapes, which is the kind of thing an example test cannot see.
+   */
+  const byDay = rules.BYDAY
+    ? rules.BYDAY.split(",")
+        .map((d) => d.slice(-2).toUpperCase())
+        .sort((a, b) => ICS_WEEKDAYS.indexOf(a) - ICS_WEEKDAYS.indexOf(b))
+    : null
   const excluded = new Set(event.exdates.map((iso) => new Date(iso).getTime()))
 
   const out: { start: IsoDateTime; end: IsoDateTime }[] = []
@@ -319,12 +333,61 @@ export function expandRecurrence(
     // inside the span cannot shift the count by one
     const from = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()).getTime()
     const to = new Date(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate()).getTime()
-    const steps = Math.floor(Math.round((to - from) / dayMs) / stepDays)
+
+    /**
+     * STOP SHORT BY THE LENGTH OF THE EVENT, BECAUSE AN INSTANCE THAT STARTS BEFORE
+     * THE WINDOW CAN STILL END INSIDE IT.
+     *
+     * `push` keeps an instance whose END is in the window — `if (instanceEnd <
+     * windowStart) return` — and `icsToEvents` agrees. Landing the cursor on the last
+     * step at or before the window's first DAY therefore stepped over instances that
+     * qualify: measured on a nightly 23:00–00:30 series, the first event moved from
+     * Wed 29 July to Thu 30 July, one lost. A three-day recurring event loses three.
+     *
+     * Going back by the event's own duration costs one or two extra iterations and
+     * makes the jump land where the walk would have been. The loop then filters them
+     * the way it always did, so `emitted` counts them exactly as the walk counted them
+     * — which is what keeps a `COUNT` rule honest.
+     */
+    const spanMs = stepDays * dayMs
+    /**
+     * AND ONE MORE WEEK WHEN BYDAY IS IN PLAY, BECAUSE THE INSTANCE CAN SIT BEFORE
+     * THE CURSOR.
+     *
+     * The weekly branch emits from the cursor's WEEK, not from the cursor: with
+     * `BYDAY=MO` and a DTSTART on a Saturday, the Monday it emits is five days
+     * earlier than the cursor. So a cursor landed just before the window puts its
+     * Monday outside it, and the first Monday that belongs in the window is never
+     * visited. Caught by a day-by-day oracle over 1,728 rule shapes: twelve
+     * instances where thirteen were due.
+     */
+    const backOff =
+      Math.ceil(Math.max(0, durationMs) / spanMs) + (freq === "WEEKLY" && byDay ? 1 : 0)
+    const steps = Math.max(0, Math.floor(Math.round((to - from) / dayMs) / stepDays) - backOff)
+
     if (steps > 0) {
       // `setDate` keeps the wall-clock time of day across a clock change, which is
       // what a recurring 09:00 meeting means
       cursor.setDate(cursor.getDate() + steps * stepDays)
-      emitted += steps * (freq === "WEEKLY" && byDay ? byDay.length : 1)
+
+      /**
+       * AND CREDIT WHAT THE WALK WOULD HAVE EMITTED, WHICH IS NOT `byDay.length` FOR
+       * THE FIRST WEEK.
+       *
+       * The weekly branch emits, in DTSTART's own week, only the BYDAY weekdays at or
+       * after DTSTART — `if (instance < startDate) continue` skips the earlier ones
+       * WITHOUT incrementing `emitted`. Crediting the full `byDay.length` for that
+       * week ran the count ahead by the number of BYDAY weekdays before DTSTART's,
+       * and a `COUNT` rule then stopped that many instances early. Measured on
+       * `FREQ=WEEKLY;BYDAY=MO,WE,FR,SA;COUNT=90` from a Saturday: 36 events instead
+       * of 39, and three of the missing ones were in the future.
+       */
+      if (freq === "WEEKLY" && byDay) {
+        const inFirstWeek = byDay.filter((day) => ICS_WEEKDAYS.indexOf(day) >= startDate.getDay()).length
+        emitted += inFirstWeek + (steps - 1) * byDay.length
+      } else {
+        emitted += steps
+      }
     }
   }
 
@@ -342,7 +405,27 @@ export function expandRecurrence(
     guard++
     if (count !== null && emitted >= count) break
     if (untilMs !== null && cursor.getTime() > untilMs) break
-    if (cursor > windowEnd) break
+    /**
+     * THE WEEK, NOT THE CURSOR, WHEN BYDAY DECIDES THE DAY.
+     *
+     * The weekly branch emits from the cursor's WEEK, so with `BYDAY=MO` and a DTSTART
+     * on a Saturday the instance is five days EARLIER than the cursor. Breaking as soon
+     * as the cursor passed the window therefore dropped the last instance whenever its
+     * weekday sits before DTSTART's: measured on `BYDAY=MO` from Saturday 2 May with a
+     * window ending 28 October, twelve Mondays where the window holds thirteen — the
+     * missing one being Monday 26 October, two days inside it.
+     *
+     * Pre-existing: the walk this replaced broke on the same condition, and a
+     * differential fuzz of 1,728 shapes against it showed no difference here. It was
+     * found by a day-by-day oracle, which is the only thing that can see an absence.
+     */
+    if (freq === "WEEKLY" && byDay) {
+      const weekStart = new Date(cursor)
+      weekStart.setDate(cursor.getDate() - cursor.getDay())
+      if (weekStart > windowEnd) break
+    } else if (cursor > windowEnd) {
+      break
+    }
 
     if (freq === "WEEKLY" && byDay) {
       // Emit each requested weekday inside the current week

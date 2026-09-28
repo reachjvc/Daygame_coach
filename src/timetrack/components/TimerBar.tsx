@@ -265,7 +265,9 @@ export function TimerBar({
               <Input
                 type="date"
                 value={manualDay}
-                onChange={(e) => setManualDay(e.target.value)}
+                // "" makes `parseTimeInput` build an Invalid Date and throw, and the
+                // "pick a start and an end" toast on the next line never gets its turn
+                onChange={(e) => e.target.value && setManualDay(e.target.value)}
                 className="h-11 w-[150px] sm:h-8 sm:w-[140px]"
                 aria-label="Date"
               />

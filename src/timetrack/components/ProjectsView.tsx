@@ -539,7 +539,9 @@ function ProjectDialog({
               <Input
                 type="date"
                 value={draft.recurringStart ?? todayKey}
-                onChange={(event) => setDraft({ ...draft, recurringStart: event.target.value })}
+                // `|| null`, like the start and end dates beside it: "" in a Postgres
+                // `date` column is "invalid input syntax", and it refuses table 3 of 19
+                onChange={(event) => setDraft({ ...draft, recurringStart: event.target.value || null })}
               />
             </Field>
           </>

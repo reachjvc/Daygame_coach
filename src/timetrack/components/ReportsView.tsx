@@ -346,13 +346,15 @@ function FilterControls({
               <Input
                 type="date"
                 value={filters.range.start}
-                onChange={(event) => onUpdateFilters({ range: { ...filters.range, start: event.target.value } })}
+                // an empty `type="date"` fires with "", which makes `spanDays` NaN and
+                // the ‹ › arrows throw inside their own click handler — see `dateKey`
+                onChange={(event) => event.target.value && onUpdateFilters({ range: { ...filters.range, start: event.target.value } })}
                 className="h-11 sm:h-8"
               />
               <Input
                 type="date"
                 value={filters.range.end}
-                onChange={(event) => onUpdateFilters({ range: { ...filters.range, end: event.target.value } })}
+                onChange={(event) => event.target.value && onUpdateFilters({ range: { ...filters.range, end: event.target.value } })}
                 className="h-11 sm:h-8"
               />
             </div>

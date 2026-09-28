@@ -1441,7 +1441,28 @@ export function updateProject(
     const day = dateKey(nowIso)
     rateHistory = [...rateHistory.filter((r) => r.validFrom !== day), { validFrom: day, rate: patch.rate }]
   }
-  return { ...state, projects: replaceById(state.projects, id, { ...patch, rateHistory, at: nowIso }) }
+  /**
+   * THE SAME EMPTY-STRING GUARD `createProject` GOT, BECAUSE THIS IS THE PATH AN
+   * EXISTING PROJECT TAKES.
+   *
+   * Round 5 fixed `createProject` and left this one passing the patch through
+   * untouched, which is the incomplete class fix this project's rule 3 is about.
+   * Reachable on an existing project: tick "Recurring estimate", clear "First period
+   * starts", untick "Recurring estimate", Save. `validateProject` returns nothing
+   * because `recurring` is false by then, and `""` reaches
+   * `timetrack_projects.recurring_start` — "invalid input syntax for type date",
+   * refusing table 3 of 19 and taking the tasks, tags and entries of that push with
+   * it. `??` does not catch `""`, which is why the mapper did not save it either.
+   */
+  const dates: Partial<Project> = {}
+  if (patch.recurringStart !== undefined) dates.recurringStart = patch.recurringStart || null
+  if (patch.startDate !== undefined) dates.startDate = patch.startDate || null
+  if (patch.endDate !== undefined) dates.endDate = patch.endDate || null
+
+  return {
+    ...state,
+    projects: replaceById(state.projects, id, { ...patch, ...dates, rateHistory, at: nowIso }),
+  }
 }
 
 /**
@@ -1563,6 +1584,19 @@ export function deleteTag(state: TimetrackState, id: Id): TimetrackState {
     ),
     autotrackers: state.autotrackers.map((r) =>
       r.tagIds.includes(id) ? { ...r, tagIds: r.tagIds.filter((t) => t !== id) } : r,
+    ),
+    /**
+     * AND THE FAVOURITES, WHICH THIS HAD ALWAYS MISSED.
+     *
+     * Round 5 added favourites to `deleteProject` and `deleteTask` and cited this
+     * function as the model — true for the entries and the autotracker rules, and not
+     * for `favorites[].draft.tagIds`. A starred draft went on creating entries with a
+     * tag id that resolves to nothing; with "tag required" switched on it satisfies
+     * the requirement while showing no tag, and because tag deletes are soft on the
+     * server the link's foreign key is satisfied so nothing refuses it.
+     */
+    favorites: state.favorites.map((f) =>
+      f.draft.tagIds.includes(id) ? { ...f, draft: { ...f.draft, tagIds: f.draft.tagIds.filter((t) => t !== id) } } : f,
     ),
   }
 }

@@ -179,8 +179,9 @@ function policiesIn(sql: string, where: string): Policy[] {
   /**
    * A match whose table came out as `public` is the loop form misread — the regex
    * could not match `%I` and fell back to the schema name. Those are dropped and the
-   * loop parser handles them properly; the test below asserts none survive, so the
-   * drop cannot hide a form neither parser understands.
+   * loop parser handles them properly, and the test below checks that EVERY such
+   * declaration was recovered — per declaration, not per file, because the first
+   * version of that test passed as long as the file held one parseable one.
    */
   return [...direct.filter((policy) => policy.table !== "public"), ...loopPoliciesIn(sql, where)]
 }
@@ -221,11 +222,12 @@ const mirroredTables = new Set(
  * Remove an entry the day its table is mirrored; the third test below fails if an
  * excuse outlives the thing it excuses.
  *
- * KNOWN LIMIT, stated rather than left to be discovered: `tablesInProduction()` reads
- * `create table` out of the migration text, so a table created inside a `do $$` block
- * is invisible to it the same way those policies were. Seven parsed policies point at
- * two tables this scan does not see as created (`program_session_logs`,
- * `workout_templates`), which is that gap rather than a missing table.
+ * CORRECTED 2026-09-28: an earlier version of this note claimed `program_session_logs`
+ * and `workout_templates` were invisible to `tablesInProduction()` because a table
+ * created inside a `do $$` block cannot be seen. That was wrong — both are created with
+ * a plain `create table` and both are DROPPED by a later migration, which the scan
+ * handles correctly. Their seven policies point at tables that no longer exist, which
+ * is a different and harmless thing. Round 6 checked the claim; nobody had.
  */
 const NOT_MIRRORED_YET: Record<string, string> = {
   // 76 policies, created in a loop this file cannot parse. Their primary keys are one
@@ -299,9 +301,24 @@ describe("the mirror's own blind spots are written down", () => {
        */
       const rawPhantoms = [...sql.matchAll(/create\s+policy\s+"([^"]+)"\s+on\s+public\.(?![a-z0-9_])/gi)]
       if (rawPhantoms.length === 0) continue
-      const recovered = loopPoliciesIn(sql, file)
-      if (recovered.length === 0) {
-        for (const m of rawPhantoms) unreadable.push(`${file}: "${m[1]}" — and the loop parser found nothing`)
+
+      /**
+       * PER DECLARATION, NOT PER FILE, and the first version of this was per file: it
+       * only complained when the loop parser returned NOTHING, so one parseable
+       * declaration covered for any number of unparseable ones. Round 6 proved it by
+       * rewriting a single `"%s_delete_own"` to `"%1$s_delete_own"` — 19 real DELETE
+       * policies vanished from the guard's model, 57 instead of 76, and every test
+       * here stayed green.
+       */
+      const recoveredSuffixes = new Set(
+        [...sql.matchAll(/create\s+policy\s+"%s([a-z0-9_]+)"/gi)].map((m) => m[1]),
+      )
+      for (const m of rawPhantoms) {
+        const template = m[1]
+        const suffix = /^%s([a-z0-9_]+)$/.exec(template)?.[1]
+        if (suffix === undefined || !recoveredSuffixes.has(suffix)) {
+          unreadable.push(`${file}: "${template}" — no parser recovers this one`)
+        }
       }
     }
     expect(

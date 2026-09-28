@@ -45,13 +45,30 @@ export function pad2(n: number): string {
  *
  * A caller reaching here with an invalid date has a bug, and this project's rule is
  * that such a thing fails loudly rather than passing something shaped like an answer.
- * User input is checked at its own edge — see the approvals card — so a throw here
- * means a genuine defect rather than a typed character.
+ *
+ * THAT DEPENDS ON EVERY DATE INPUT GUARDING ITS OWN EMPTY VALUE, AND WHEN THIS THROW
+ * WAS ADDED ONLY ONE OF THEM DID. The comment here claimed "user input is checked at
+ * its own edge — see the approvals card", which was true of that card and of nothing
+ * else: clearing either date box on the Reports screen and clicking the ‹ or › arrow
+ * reached this line, and because a throw inside a click handler goes to
+ * `window.onerror` rather than to React, the arrow simply did nothing, silently. The
+ * fix before that was worse — it moved the range to "NaN-NaN-NaN" — but it was at
+ * least visible in the label.
+ *
+ * So the premise is now enforced rather than asserted:
+ * `tests/unit/architecture/aDateInputCannotSendNothing.test.ts` reads every
+ * `type="date"` in the slice and requires its handler to deal with an empty value.
  */
 export function dateKey(iso: IsoDateTime | Date): IsoDate {
   const d = iso instanceof Date ? iso : new Date(iso)
   if (Number.isNaN(d.getTime())) {
-    throw new Error(`dateKey was given something that is not a date: ${JSON.stringify(iso)}`)
+    /**
+     * Named, not stringified. `JSON.stringify(new Date(NaN))` is the four characters
+     * `null`, so the loudest error in this slice could not say what it was handed for
+     * any `Date` argument at all.
+     */
+    const given = iso instanceof Date ? "an Invalid Date" : JSON.stringify(iso)
+    throw new Error(`dateKey was given something that is not a date: ${given}`)
   }
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
