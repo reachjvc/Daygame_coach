@@ -378,6 +378,59 @@ multi-session negotiation the list never named.
 **"Go with your recommendations" is therefore no longer a complete answer** — it was, and
 rounds 7–8 broke it by adding questions without gates. Q-ORDER needs you.
 
+### Q-HARNESS — How do the database tests reach a database before the port? **NEW 2026-09-28. This is the question my last two fixes were patching around.**
+*Gates: M0.4's acceptance, and therefore M0's exit and M5's entry.*
+
+Three options, priced. **None is free and the plan must not pretend otherwise.**
+- **(a) Build a PostgREST-compatible surface over `pg`** so unported repos can run against the
+  container. Makes "26 of 26" genuinely reachable without porting anything. **Cost:** 7
+  embedded selects, 3 `!inner`, 8 `.or()`, 16 `.upsert()`, errors-as-values, and error *text*
+  fidelity — `valuesRepo.ts` branches on the string "column values.display_name does not
+  exist". A large throwaway, deleted at M5.
+- **(b) Port all 26 in M0.4 behind a seam that carries both implementations.** Then M0 *is* the
+  rewrite, and the plan's shape changes.
+- **(c) Accept 1 of 26 and reword both gates**, in which case **M5's safety net is 91 lines out
+  of 11,272** — and M5 is the phase this whole plan calls its riskiest.
+
+**Recommendation: (a), and note it also resolves Q-SEAM's contradiction** — Q-SEAM says the
+seam's default is "today's client" while step 4 said the seam's test implementation is
+Drizzle-over-`pg`; those are two different seams, and only Q-SEAM's makes 26 of 26 reachable
+without porting. **Cost if wrong:** weeks on a compatibility layer that gets thrown away.
+**Cost of (c):** the net under the riskiest phase covers 0.8% of it.
+
+### Q-AUTHWINDOW — How do queries stay authorised between M3 and M5? **NEW 2026-09-28. Eleven rounds missed this and it is not a wording problem.**
+*Gates: M3, and therefore M1b, M4 and M5 — the longest stretch in the plan.*
+
+**Measured:** 21 of 26 repos build their client from the **anon key plus the user's Supabase
+session cookie**, and the policies are `using (auth.uid() = user_id)` with no role clause.
+The app keeps reading Supabase until M5 — M1.0 says so, and M5's "second dump of every table
+with rows newer than B1's" confirms it.
+
+**So the moment M3 replaces `authCookies.ts` and issues its own tokens, `auth.uid()` is NULL
+on every request.** Every user-owned table returns zero rows; every insert is refused. For
+the whole M1b + M4 + M5 span. Three things follow, and the third is the one that would have
+hurt:
+1. M3's own acceptance — "a new account that lands on a working dashboard" — cannot pass.
+2. **M4's gate goes green on nothing.** Its form (b) seeds user B and fails if any of B's
+   markers appear in A's response. With the rules denying everything, no marker appears. That
+   is the *"green denial test that proves nothing"* M4 exists to prevent, arriving through a
+   door no round had checked.
+3. **Rule 5 dies for months** — and the plan could not see it, because the "your daily use"
+   line the fixed shape requires is present on only four milestones. M3 is exactly where it
+   would have fired.
+
+**Two resolutions. Pick one; there is no third.**
+- **(a) M3 mints a Supabase-shaped token until M5**, keeping the existing path alive. Possible
+  precisely because D3 preserves Supabase's uuid. **Verify the project still exposes a
+  symmetric JWT secret before relying on it.**
+- **(b) M3 moves after the data-layer port**, which is Q-ORDER territory and reopens M4's
+  position.
+
+**Recommendation: (a).** It keeps every milestone's daily-use answer "yes" and leaves the
+order alone. **Cost if wrong:** a throwaway token-minting path that lives until M5 and is then
+deleted. **Cost of not deciding:** the app is dead for its longest phase and the security gate
+passes while proving nothing.
+
 ### Q-DOWNTIME — Can the app be off for an evening, and can you go one day without using it? **NEW 2026-09-28. The cheapest question in this document.**
 *Gates: M1b.2, M1b.5, M2's live row-count acceptance, M3's password branch, and M5's second dump and rehearsed rollback — five places that must be hand-applied because none of them names this question.*
 
@@ -601,7 +654,7 @@ first data load. Anything with no owner here is out of scope, explicitly.
 | Job | Owner |
 |---|---|
 | Source of truth for the schema | **B1's schema-only dump.** Not `supabase/migrations/`, not the test mirror |
-| **The drift guard — a test that fails when the live database holds what the files do not** | **M0.4 step 2c** (Fact 1's second half; was unowned until round 9) |
+| **The drift guard — a test that fails when the live database holds what the files do not** | **M0.4 step 2c — BUT SEE BELOW: as specified it cannot do this.** Re-pointing `schemaMirror.test.ts` leaves a unit test comparing two files on disk. It fails when someone edits the mirror; **it can never fail because the live database changed**, which is literally what Fact 1 asked for. Either B1 becomes **repeatable, with stated re-take points before M2's staging restore and before M5's cutover**, or a check reads the live schema directly. **Security: the second option puts a live Supabase credential in GitHub Actions beside the deploy key — read-only role, and unreachable from any fork-triggerable event.** Four acceptances currently treat a day-one snapshot as current months later (M0.4, M2's schema half, M8, M5's second dump) while M2's *data* half two lines earlier explicitly refuses a stale dump — the plan caught the staleness for rows and missed it for schema, inside one acceptance. |
 | **Re-pointing `schemaMirror.test.ts` at the dump, dump wins on conflict** | **M0.4 step 2c** |
 | The data seam (Q-SEAM) | **M0.4**, its first deliverable |
 | Completing the test mirror to the live schema | **M0.4** |
@@ -760,7 +813,19 @@ Supabase, which is why an import-only check misses them.
    oversight — and the three integration files this plan credited with importing repo code
    import only types and enums (`lifePlanTypes`, `lifePlanDayTypes`, `goalEnums`); not one
    calls a repo function.
-   **What I got wrong: I collapsed "port" with "port in production."** Round 8's danger was a
+   **CORRECTED A THIRD TIME 2026-09-28, and this time as a decision rather than a patch —
+   because patching this has now failed twice.** "Port into the container only" is not
+   something this codebase permits: **a repo is one file, shared with production.**
+   `valuesRepo.ts` is on the serving path (`app/api/goals/tree-of-life/route.ts`,
+   `app/api/inner-game/infer-values/route.ts`, `app/api/inner-game/progress/route.ts`,
+   `src/inner-game/innerGameService.ts`, `src/inner-game/modules/progress.ts`), so porting it
+   breaks Inner Game and Tree of Life — against M0's own acceptance, "the app still works on
+   Vercel". There is no `DATABASE_URL` and no drizzle anywhere yet. **The three readings all
+   fail:** port the real file and production loses it; keep a forked copy and you have two
+   implementations of one repo for months, which is the drift Fact 1 exists to kill;
+   re-implement the queries in the test and you hit step 3's own trap.
+   **So this is Q-HARNESS, below, and the acceptance must not be written until it is
+   answered.** What follows is the reasoning that remains true and is not sufficient: Round 8's danger was a
    ported repo *serving live traffic* with no row rules behind it. **A repo ported and
    exercised only against a throwaway container strips nothing — there is no production
    row-security in a container built from `schema.sql`.** So: the seam's test implementation
@@ -784,8 +849,12 @@ Supabase, which is why an import-only check misses them.
    `settingsRepo`; `workoutRepo` through three other repos and two Postgres
    functions. Giving one a seam while its callees build their own client buys
    nothing.
-- Acceptance: `npm run test:integration` executes repo functions for 26 of 26, and
-  the mirror contains every table in B1's dump. **Plus the cheapest test in this plan,
+- Acceptance: **UNWRITABLE until Q-HARNESS is answered.** It said "executes repo functions for
+  26 of 26" while the deliverable ports one and the milestone's own mechanism paragraph says a
+  repo cannot reach the container until it is ported. **An acceptance incompatible with its own
+  deliverable is worse than a missing one**, and this is M0's exit gate and M5's entry
+  condition. Whichever Q-HARNESS answer is taken writes this line.
+  The mirror half stands: the mirror contains every table in B1's dump. **Plus the cheapest test in this plan,
   whose second half the rewrite dropped: every table the code queries AND every
   function it calls by name exists in the dump.** The function half is what catches
   N15's `match_embeddings` being absent. **Prerequisite for the test to be
