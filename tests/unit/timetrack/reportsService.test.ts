@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 
-import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
+import { parseCsvRows } from "@/src/timetrack/importExportService"
+import { epochSeconds, localIsoWithOffset } from "@/src/timetrack/timetrackFormatService"
 import {
   applyFilters,
   buildDetailed,
@@ -14,6 +15,8 @@ import {
   encodeReportConfig,
   metricValue,
   presetRange,
+  profitabilityToCsv,
+  summaryToCsv,
 } from "@/src/timetrack/reportsService"
 import type { ReportConfig, TimetrackState } from "@/src/timetrack/types"
 
@@ -320,5 +323,90 @@ describe("the workspace's default report rounding", () => {
   test("and off stays off", () => {
     const off = { enabled: false, mode: "nearest" as const, minutes: 15 }
     expect(defaultReportConfig("2026-08-10", 1, off).rounding).toEqual(off)
+  })
+})
+
+describe("what each tab exports", () => {
+  /**
+   * `profitability` had no exporter, so it fell into the handler's `else` and
+   * downloaded the SUMMARY — a duration and revenue header with none of Fixed fee,
+   * Profit or Margin, the four columns that tab exists for — while the toast said
+   * "Report exported". The first cell of every CSV also carried the raw dimension id
+   * (`date`, `desc`, `billable`) because the grouping id was passed where a label
+   * belongs.
+   */
+  const august = emptyFilters({ start: "2026-08-01", end: "2026-08-31" })
+
+  test("the profitability CSV has the four columns that tab exists for", () => {
+    const report = buildProfitability(state, config({ filters: august, grouping: "project" }), NOW_SEC)
+    const csv = profitabilityToCsv(report, "Project", "EUR")
+    const header = csv.split("\n")[0]
+
+    for (const column of ["Fixed fee", "Profit", "Margin", "Revenue"]) {
+      expect(header, `the export is missing "${column}"`).toContain(column)
+    }
+    expect(header.startsWith("Project"), `the first cell reads "${header.split(",")[0]}"`).toBe(true)
+  })
+
+  test("and its total counts a fixed fee once, whatever the grouping", () => {
+    const byDate = buildProfitability(state, config({ filters: august, grouping: "date" }), NOW_SEC)
+    const csv = profitabilityToCsv(byDate, "Date", "EUR")
+
+    /**
+     * Read back with the repo's own CSV parser rather than `split(",")`: the total's
+     * label contains commas, so it is quoted, and a naive split reads the wrong
+     * column — which is how the first version of this assertion failed on the value
+     * 500 while the file said 1000.
+     */
+    const rows = parseCsvRows(csv)
+    const header = rows[0]
+    const total = rows.at(-1)!
+    const feeColumn = header.findIndex((cell) => cell.startsWith("Fixed fee"))
+    expect(feeColumn, `no Fixed fee column in ${header.join(" | ")}`).toBeGreaterThan(-1)
+
+    expect(Number(total[feeColumn]), `the total line reads ${total.join(" | ")}`).toBe(byDate.fixedFee)
+    expect(total[0], "the total does not say the fee is not per row").toContain("counted once")
+
+    // and the rows themselves carry no share of it, so summing them cannot double it
+    expect(rows.slice(1, -1).reduce((sum, r) => sum + Number(r[feeColumn]), 0)).toBe(0)
+  })
+
+  test("the summary CSV names the grouping in words, not as an id", () => {
+    const summary = buildSummary(state, config({ filters: august, grouping: "date" }), NOW_SEC)
+    expect(summaryToCsv(summary, "Date").split("\n")[0].startsWith("Date")).toBe(true)
+  })
+})
+
+describe("the detailed CSV's timestamps", () => {
+  test("are written in the person's own clock, with the offset", () => {
+    /**
+     * They were raw UTC instants while the screen beside them showed the local date,
+     * so every entry after 22:00 in a zone ahead of Greenwich exported on the
+     * PREVIOUS day — and a monthly invoice is exactly somebody grouping that file by
+     * date in a spreadsheet.
+     *
+     * The assertion is on the local calendar day rather than the string, because the
+     * pinned test zone is ahead of Greenwich and a string comparison would pass
+     * against the old code for any entry before 22:00.
+     */
+    const lateNight = entry(99, "2026-08-11", "00:30", "00:45", { description: "late night" })
+    const withLateEntry: TimetrackState = { ...state, entries: [lateNight] }
+    const rows = buildDetailed(withLateEntry, config({ filters: emptyFilters({ start: "2026-08-01", end: "2026-08-31" }) }), NOW_SEC)
+    expect(rows.length, "the entry was filtered out, so this asserts nothing").toBe(1)
+
+    const line = detailedToCsv(rows, "EUR").split("\n")[1]
+    const startCell = line.split(",").find((cell) => cell.includes("2026-08-1"))
+    expect(startCell, `no timestamp found in: ${line}`).toBeTruthy()
+    expect(startCell, `exported as ${startCell} — the screen shows 2026-08-11`).toContain("2026-08-11")
+  })
+
+  test("and still parse back to the same instant", () => {
+    /**
+     * The offset is in the string for this reason: `importEntriesCsv` reads these
+     * columns back with `new Date(...)`, and a round trip that shifts the instant
+     * would be a worse bug than the one being fixed.
+     */
+    const iso = new Date(2026, 7, 11, 0, 30, 0).toISOString()
+    expect(new Date(localIsoWithOffset(iso)).getTime()).toBe(new Date(iso).getTime())
   })
 })

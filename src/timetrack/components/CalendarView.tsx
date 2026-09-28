@@ -32,6 +32,7 @@ import {
   formatCompact,
   formatDayHeader,
   formatDuration,
+  formatHourOfDay,
   formatTimeOfDay,
   isoAtMinutes,
   minutesIntoDay,
@@ -61,19 +62,6 @@ interface DragState {
   /** Offset from the block top when moving */
   grabOffset?: number
   durationMinutes?: number
-}
-
-/**
- * The hour down the side of the day grid, in the person's own format.
- *
- * It goes through `formatTimeOfDay` rather than reimplementing the 12-hour rule,
- * because a second copy of that rule is exactly what put "1:30" where "1:30 PM"
- * belonged in the entry list and moved an afternoon entry back twelve hours.
- */
-function hourLabel(hour: number, timeFormat: TimetrackState["user"]["timeFormat"]): string {
-  const at = new Date()
-  at.setHours(hour, 0, 0, 0)
-  return formatTimeOfDay(at.toISOString(), timeFormat)
 }
 
 export function CalendarView({
@@ -330,7 +318,7 @@ export function CalendarView({
                     somebody on 12-hour saw 13:00–23:00 down the side of the
                     calendar while every block beside it said "1:30 PM".
                   */}
-                  <span className="absolute -top-1.5 right-1">{hour > 0 ? hourLabel(hour, state.user.timeFormat) : ""}</span>
+                  <span className="absolute -top-1.5 right-1">{hour > 0 ? formatHourOfDay(hour, state.user.timeFormat) : ""}</span>
                 </div>
               ))}
             </div>

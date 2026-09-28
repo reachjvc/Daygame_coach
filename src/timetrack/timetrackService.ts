@@ -1270,6 +1270,76 @@ export function deleteClient(state: TimetrackState, id: Id): TimetrackState {
 
 export type NewProjectInput = Partial<Omit<Project, "id" | "workspaceId" | "at" | "createdAt">> & { name: string }
 
+/**
+ * THE RULES THE DATABASE WILL ENFORCE ANYWAY, CHECKED WHERE THEY ARE TYPED.
+ *
+ * The project editor's whole validator was `if (!draft.name.trim())`. Everything
+ * else went straight to a row the database refuses:
+ *
+ *   - a Start date after an End date (two free `type="date"` inputs) —
+ *     `timetrack_projects_dates_ordered`;
+ *   - a negative Hourly rate, Fixed fee or Monetary budget (no `min` on any of the
+ *     three) — `rate >= 0`, `fixed_fee >= 0`, `estimated_amount >= 0`;
+ *   - a recurring project with no period or no first-period date —
+ *     `timetrack_projects_recurring_complete`, and an empty date string is not a
+ *     date at all;
+ *   - a name cleared to nothing in the rename inputs — `*_name_not_blank`.
+ *
+ * WHY IT IS NOT COSMETIC. `timetrack_projects` is table 3 of 19, so a refusal there
+ * stops tasks, tags and entries in the same batch. And the browser drops a refused
+ * row from the queue while recording it as sent — which self-heals for an existing
+ * project on its next edit, but for a NEW one the project is marked synced while the
+ * server has no such row, and every entry pointing at it then fails its own foreign
+ * key at table 9 and is dropped the same way.
+ *
+ * The list is taken from the CHECK constraints in `20260903120000_timetrack.sql`, so
+ * it says what the database says rather than what seemed sensible here.
+ */
+export function validateProject(input: {
+  name?: string
+  startDate?: IsoDate | null
+  endDate?: IsoDate | null
+  rate?: number | null
+  fixedFee?: number | null
+  estimatedAmount?: number | null
+  estimatedSeconds?: number | null
+  recurring?: boolean
+  recurringPeriod?: string | null
+  recurringStart?: IsoDate | null
+}): SaveViolation[] {
+  const violations: SaveViolation[] = []
+
+  if (!(input.name ?? "").trim()) {
+    violations.push({ field: "description", message: "A project needs a name." })
+  }
+  if (input.startDate && input.endDate && input.endDate < input.startDate) {
+    violations.push({
+      field: "date",
+      message: `This project would end before it starts — ${input.endDate} is before ${input.startDate}.`,
+    })
+  }
+  for (const [label, value] of [
+    ["hourly rate", input.rate],
+    ["fixed fee", input.fixedFee],
+    ["monetary budget", input.estimatedAmount],
+    ["time estimate", input.estimatedSeconds],
+  ] as const) {
+    if (value != null && value < 0) {
+      violations.push({ field: "project", message: `A ${label} cannot be negative.` })
+    }
+  }
+  if (input.recurring) {
+    if (!input.recurringPeriod) {
+      violations.push({ field: "project", message: "A recurring project needs a period — pick how often it repeats." })
+    }
+    if (!input.recurringStart) {
+      violations.push({ field: "date", message: "A recurring project needs a date for its first period." })
+    }
+  }
+
+  return violations
+}
+
 export function createProject(
   state: TimetrackState,
   input: NewProjectInput,
@@ -1295,11 +1365,31 @@ export function createProject(
     fixedFee: input.fixedFee ?? null,
     recurring: input.recurring ?? false,
     recurringPeriod: input.recurringPeriod ?? null,
-    recurringStart: input.recurringStart ?? null,
+    // `|| null`, not `?? null`: an empty string is what a cleared `type="date"`
+    // sends, and `""` in a Postgres `date` column is "invalid input syntax for
+    // type date", which refuses the whole batch
+    recurringStart: input.recurringStart || null,
     startDate: input.startDate ?? null,
     endDate: input.endDate ?? null,
     template: input.template ?? false,
-    alerts: input.alerts ?? [],
+    /**
+     * A NEW PROJECT'S ALERTS ARE NEW ROWS, SO THEY GET NEW IDS.
+     *
+     * This took the caller's alerts verbatim, and `createProjectFromTemplate` passes
+     * `{ ...template }` — so a project created from a template carried the
+     * TEMPLATE'S alert ids. `stateToRows` then emitted two `timetrack_project_alerts`
+     * rows sharing one primary key, `diffRows` indexes by key and keeps the last, and
+     * the one that survived was the clone's. Upserted `on conflict (id)`, that
+     * rewrote the server's row to point at the clone: the template's budget alarm was
+     * gone server-side, and because the local duplicate collapses to the same single
+     * row every time, the diff saw nothing to put back. Clone twice and two projects
+     * lose their alerts. What the person loses is "tell me at 80% of the estimate" —
+     * silently, at the next reload.
+     *
+     * The tasks in that same function already get fresh ids through `createTask`.
+     * The alerts were the one collection copied straight across.
+     */
+    alerts: (input.alerts ?? []).map((alert) => ({ ...alert, id: newId() })),
     memberIds: input.memberIds ?? [selfMember(state).id],
     at: nowIso,
     createdAt: nowIso,

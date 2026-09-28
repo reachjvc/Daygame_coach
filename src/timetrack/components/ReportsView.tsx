@@ -36,6 +36,7 @@ import {
   activeFilterCount,
   buildDetailed,
   buildProfitability,
+  profitabilityToCsv,
   buildSummary,
   buildWorkload,
   detailedToCsv,
@@ -117,9 +118,22 @@ export function ReportsView({
       downloadFile(`report-${stamp}.json`, JSON.stringify(payload, null, 2), "application/json")
       return
     }
+    /**
+     * EVERY TAB EXPORTS ITSELF.
+     *
+     * `profitability` used to fall into the `else` and download the SUMMARY — a
+     * duration and revenue header with none of Fixed fee, Profit or Margin, the four
+     * columns that tab exists for — while the toast said "Report exported".
+     *
+     * The first cell also carried the raw dimension id (`date`, `desc`, `billable`)
+     * because `config.grouping` was passed where a label belongs.
+     */
+    const groupingLabel = GROUPING_DIMENSIONS.find((d) => d.id === config.grouping)?.label ?? config.grouping
     if (config.tab === "detailed") downloadFile(`detailed-${stamp}.csv`, detailedToCsv(detailed, currency), "text/csv")
     else if (config.tab === "workload") downloadFile(`workload-${stamp}.csv`, workloadToCsv(workload), "text/csv")
-    else downloadFile(`summary-${stamp}.csv`, summaryToCsv(summary, config.grouping), "text/csv")
+    else if (config.tab === "profitability")
+      downloadFile(`profitability-${stamp}.csv`, profitabilityToCsv(profitability, groupingLabel, currency), "text/csv")
+    else downloadFile(`summary-${stamp}.csv`, summaryToCsv(summary, groupingLabel), "text/csv")
     pushToast("Report exported")
   }
 

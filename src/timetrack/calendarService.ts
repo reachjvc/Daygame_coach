@@ -291,6 +291,43 @@ export function expandRecurrence(
   let emitted = 0
   let guard = 0
 
+  /**
+   * JUMP TO THE WINDOW. DO NOT WALK TO IT.
+   *
+   * The loop below takes one STEP per iteration from DTSTART, and its guard allows
+   * `maxInstances * 4` = 1,600 iterations. For `FREQ=DAILY` a step is one day, so it
+   * covered 1,600 days — about four and a half years — and anything older ran out of
+   * guard before the cursor reached the import window. Measured with a 60-day window
+   * around 2026-09-28: a daily rule from 2015-01-05 produced ZERO instances, and a
+   * rule from 2026-01-05 produced 91. The cliff sat at 1,671 days.
+   *
+   * The visible result was the worst kind: the standup that has run every morning for
+   * eleven years is the one that vanishes, and the app says "Imported 0 events
+   * (skipped 1 outside the date window)" — which sends the person to widen a window
+   * that is already wide enough.
+   *
+   * A step is a fixed number of days for DAILY and WEEKLY, so the number of whole
+   * steps between DTSTART and the window is arithmetic, not iteration. Skipping them
+   * also has to advance `emitted`, or a `COUNT` rule would think it still had all its
+   * occurrences left. MONTHLY and YEARLY step by a calendar month or year, so 1,600
+   * iterations is 133 years and 1,600 years — no cliff, and left alone.
+   */
+  const stepDays = freq === "DAILY" ? interval : freq === "WEEKLY" ? 7 * interval : 0
+  if (stepDays > 0 && cursor < windowStart) {
+    const dayMs = 24 * 60 * 60 * 1000
+    // whole days between the two, measured on local midnights so a clock change
+    // inside the span cannot shift the count by one
+    const from = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate()).getTime()
+    const to = new Date(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate()).getTime()
+    const steps = Math.floor(Math.round((to - from) / dayMs) / stepDays)
+    if (steps > 0) {
+      // `setDate` keeps the wall-clock time of day across a clock change, which is
+      // what a recurring 09:00 meeting means
+      cursor.setDate(cursor.getDate() + steps * stepDays)
+      emitted += steps * (freq === "WEEKLY" && byDay ? byDay.length : 1)
+    }
+  }
+
   const push = (instanceStart: Date) => {
     const ms = instanceStart.getTime()
     if (excluded.has(ms)) return

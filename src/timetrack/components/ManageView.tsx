@@ -540,7 +540,16 @@ function TeamPanel({
           <Input
             type="date"
             value={approvalWeek}
-            onChange={(event) => setApprovalWeek(weekStartOf(event.target.value, state.user.weekStart))}
+            /*
+              An empty `type="date"` fires `change` with "", and `weekStartOf("")`
+              used to produce the string "NaN-NaN-NaN" — which reached a Postgres
+              `date` column. Clearing the field now leaves the week that was chosen,
+              which is the only other thing it could honestly mean.
+            */
+            onChange={(event) => {
+              if (!event.target.value) return
+              setApprovalWeek(weekStartOf(event.target.value, state.user.weekStart))
+            }}
             className="h-11 w-[160px] sm:h-8"
           />
         }

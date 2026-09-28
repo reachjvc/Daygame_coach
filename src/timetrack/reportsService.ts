@@ -16,6 +16,7 @@ import {
   formatDayShort,
   formatMonthLabel,
   hashColor,
+  localIsoWithOffset,
   monthStartOf,
   roundSeconds,
   weekStartOf,
@@ -665,8 +666,11 @@ export function detailedToCsv(rows: DetailedRow[], currency: string): string {
       row.tagNames.join(", "),
       row.memberName,
       row.billable ? "Yes" : "No",
-      row.start,
-      row.stop ?? "",
+      // the person's own clock, with its offset — see `localIsoWithOffset`. These
+      // were raw UTC instants while the screen beside them showed the local date, so
+      // every entry after 22:00 exported on the previous day.
+      localIsoWithOffset(row.start),
+      row.stop ? localIsoWithOffset(row.stop) : "",
       `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
       (row.seconds / 3600).toFixed(2),
       row.amount.toFixed(2),
@@ -699,6 +703,65 @@ export function summaryToCsv(report: SummaryReport, groupingLabel: string): stri
     for (const child of row.children) push(child.label, child, "— ")
   }
   return [header.join(","), ...lines].join("\n")
+}
+
+/**
+ * The Profitability tab's own CSV.
+ *
+ * It had none, and the export handler's `else` branch caught it — so clicking
+ * Export → CSV on Profitability downloaded `summary-<range>.csv`, with a duration
+ * and revenue header and none of Fixed fee, Profit or Margin: the four columns the
+ * tab exists for. The toast still said "Report exported".
+ *
+ * The fee is a report-level figure for most groupings (see `buildProfitability`), so
+ * it is written as its own trailing line rather than spread across the rows, and the
+ * total line says which it is.
+ */
+export function profitabilityToCsv(report: ProfitabilityReport, groupingLabel: string, currency: string): string {
+  const header = [
+    groupingLabel,
+    "Duration (h:mm:ss)",
+    "Duration (decimal)",
+    `Revenue (${currency})`,
+    `Fixed fee (${currency})`,
+    `Cost (${currency})`,
+    `Profit (${currency})`,
+    "Margin",
+  ]
+  const lines = report.rows.map((row) => {
+    const h = Math.floor(row.seconds / 3600)
+    const m = Math.floor((row.seconds % 3600) / 60)
+    const sec = row.seconds % 60
+    return [
+      row.label,
+      `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`,
+      (row.seconds / 3600).toFixed(2),
+      row.revenue.toFixed(2),
+      row.fixedFee.toFixed(2),
+      row.cost.toFixed(2),
+      row.profit.toFixed(2),
+      `${(row.margin * 100).toFixed(1)}%`,
+    ].map(csvCell).join(",")
+  })
+
+  const seconds = report.rows.reduce((sum, r) => sum + r.seconds, 0)
+  const revenue = report.rows.reduce((sum, r) => sum + r.revenue, 0)
+  const cost = report.rows.reduce((sum, r) => sum + r.cost, 0)
+  const profit = revenue + report.fixedFee - cost
+  const income = revenue + report.fixedFee
+  const totalLabel = report.feeIsPerRow ? "Total" : "Total (fixed fees belong to whole projects, counted once)"
+  const total = [
+    totalLabel,
+    `${Math.floor(seconds / 3600)}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`,
+    (seconds / 3600).toFixed(2),
+    revenue.toFixed(2),
+    report.fixedFee.toFixed(2),
+    cost.toFixed(2),
+    profit.toFixed(2),
+    `${(income > 0 ? (profit / income) * 100 : 0).toFixed(1)}%`,
+  ].map(csvCell).join(",")
+
+  return [header.map(csvCell).join(","), ...lines, total].join("\n")
 }
 
 export function workloadToCsv(report: WorkloadReport): string {

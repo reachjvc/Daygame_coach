@@ -31,9 +31,28 @@ export function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n)
 }
 
-/** Local YYYY-MM-DD for an ISO instant (not UTC — day buckets must match the UI) */
+/**
+ * Local YYYY-MM-DD for an ISO instant (not UTC — day buckets must match the UI).
+ *
+ * IT REFUSES TO INVENT ONE. Given an unparseable date this returned the string
+ * `"NaN-NaN-NaN"`, which looks like a date key, satisfies every `string` type on the
+ * way down, and reaches a Postgres `date` column. It was reachable by clearing the
+ * week field on the approvals card: an empty `<input type="date">` fires `change`
+ * with `""`, `weekStartOf("")` built `new Date(NaN, NaN, NaN)`, and the card then
+ * showed every member at 0:00 while Submit wrote `week_start: "NaN-NaN-NaN"` into
+ * `timetrack_approvals` — table 13 of 19, so the refusal would take webhooks, the
+ * webhook log, autotracker rules, the timeline, calendars and settings down with it.
+ *
+ * A caller reaching here with an invalid date has a bug, and this project's rule is
+ * that such a thing fails loudly rather than passing something shaped like an answer.
+ * User input is checked at its own edge — see the approvals card — so a throw here
+ * means a genuine defect rather than a typed character.
+ */
 export function dateKey(iso: IsoDateTime | Date): IsoDate {
   const d = iso instanceof Date ? iso : new Date(iso)
+  if (Number.isNaN(d.getTime())) {
+    throw new Error(`dateKey was given something that is not a date: ${JSON.stringify(iso)}`)
+  }
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
@@ -158,12 +177,62 @@ export function formatDecimalHours(totalSeconds: number): string {
 
 export function formatTimeOfDay(iso: IsoDateTime, format: TimeFormat = "h24"): string {
   const d = new Date(iso)
+  return formatWallClock(d.getHours(), d.getMinutes(), format)
+}
+
+/**
+ * AN INSTANT, WRITTEN IN THE PERSON'S OWN CLOCK, WITH ITS OFFSET.
+ *
+ * `2026-08-11T00:30:00+02:00` rather than `2026-08-10T22:30:00.000Z`. Both name the
+ * same moment, and a machine reading either gets it right — but a human reading the
+ * second one, or a spreadsheet grouping a column of them by date, gets the previous
+ * day for everything after 22:00.
+ *
+ * That is what the Detailed CSV exported while the screen beside it showed the local
+ * date, and a monthly invoice is exactly somebody grouping that file by date. The
+ * offset is included so the value stays an unambiguous instant: `importEntriesCsv`
+ * parses this column back with `new Date(...)` and must not have to guess a zone.
+ */
+export function localIsoWithOffset(iso: IsoDateTime): string {
+  const d = new Date(iso)
+  const offsetMinutes = -d.getTimezoneOffset()
+  const sign = offsetMinutes < 0 ? "-" : "+"
+  const abs = Math.abs(offsetMinutes)
+  const stamp =
+    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}` +
+    `T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`
+  return `${stamp}${sign}${pad2(Math.floor(abs / 60))}:${pad2(abs % 60)}`
+}
+
+/**
+ * A LABEL FOR AN HOUR OF THE DAY, WITH NO DATE INVOLVED.
+ *
+ * The calendar's hour ruler built a real `Date` for today and called
+ * `setHours(hour, 0, 0, 0)`. On the spring-forward day 02:00 does not exist in a
+ * zone that has one, so it landed on 03:00: measured in Europe/Copenhagen on
+ * 2026-03-29, twenty-four rows carried twenty-three distinct labels, "02:00" was
+ * missing and "03:00" appeared twice — and every label below it was one row out of
+ * step with the block beside it. The ruler is built from `new Date()`, so it showed
+ * that on the real clock-change day whatever week was on screen.
+ *
+ * An hour label is a number and a format. It does not need a day, and asking for one
+ * is what let a day that is missing an hour break it. This is here rather than in the
+ * component because a second copy of the 12-hour rule is exactly what put "1:30"
+ * where "1:30 PM" belonged in the entry list and moved an afternoon entry back twelve
+ * hours.
+ */
+export function formatHourOfDay(hour: number, format: TimeFormat = "h24"): string {
+  return formatWallClock(hour, 0, format)
+}
+
+/** The one place the 12-hour rule is written down */
+function formatWallClock(hours: number, minutes: number, format: TimeFormat): string {
   if (format === "h12") {
-    const h = d.getHours() % 12 || 12
-    const suffix = d.getHours() < 12 ? "AM" : "PM"
-    return `${h}:${pad2(d.getMinutes())} ${suffix}`
+    const h = hours % 12 || 12
+    const suffix = hours < 12 ? "AM" : "PM"
+    return `${h}:${pad2(minutes)} ${suffix}`
   }
-  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+  return `${pad2(hours)}:${pad2(minutes)}`
 }
 
 export function formatDate(key: IsoDate, format: DateFormatId = "YYYY-MM-DD"): string {

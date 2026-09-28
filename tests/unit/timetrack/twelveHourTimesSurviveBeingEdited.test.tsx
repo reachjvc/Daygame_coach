@@ -29,7 +29,7 @@ import { cleanup, fireEvent, render } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vitest"
 
 import { EntryList } from "@/src/timetrack/components/EntryList"
-import { dateKey, formatTimeOfDay, parseTimeInput } from "@/src/timetrack/timetrackFormatService"
+import { dateKey, formatHourOfDay, formatTimeOfDay, parseTimeInput } from "@/src/timetrack/timetrackFormatService"
 import type { TimeFormat, TimetrackState } from "@/src/timetrack/types"
 
 import { baseState, entry } from "./helpers"
@@ -127,5 +127,54 @@ describe("the entry list's own start and end fields, in 12-hour mode", () => {
     fireEvent.blur(start)
 
     expect((new Date(stored().start).getTime() - new Date(before.start).getTime()) / 60_000).toBe(15)
+  })
+})
+
+describe("the hour labels down the side of the calendar", () => {
+  /**
+   * They were built from a real `Date` for today with `setHours(hour, 0, 0, 0)`. On
+   * the spring-forward day 02:00 does not exist, so it landed on 03:00: twenty-four
+   * rows carried twenty-three distinct labels, "02:00" was missing, "03:00" appeared
+   * twice, and every label below it was one row out of step with the block beside it.
+   * And because the ruler took its date from `new Date()` rather than the day on
+   * screen, it did that on the real clock-change day whatever week was being looked
+   * at.
+   *
+   * An hour label is a number and a format; it does not need a day at all, and asking
+   * for one is what let a day missing an hour break it.
+   */
+  test.each(["h12", "h24"] as TimeFormat[])("are twenty-four distinct labels in %s", (format) => {
+    const labels = Array.from({ length: 24 }, (_, hour) => formatHourOfDay(hour, format))
+    expect(new Set(labels).size, `only ${new Set(labels).size} distinct: ${labels.join(" ")}`).toBe(24)
+  })
+
+  test("and do not depend on today's date, so a clock change cannot move them", () => {
+    /**
+     * The premise is checked first, and so is the old approach: if a local `Date` on
+     * that day did NOT lose an hour, this test would be asserting nothing.
+     * `vitest.config.ts` pins Europe/Copenhagen, where 2026-03-29 has 23 hours.
+     */
+    const springForward = new Date(2026, 2, 29)
+    const nextDay = new Date(2026, 2, 30)
+    expect(
+      (nextDay.getTime() - springForward.getTime()) / 3600_000,
+      "this zone has no clock change on 2026-03-29 — is TZ pinned?",
+    ).toBe(23)
+
+    const viaLocalDate = Array.from({ length: 24 }, (_, hour) => {
+      const at = new Date(2026, 2, 29)
+      at.setHours(hour, 0, 0, 0)
+      return at.getHours()
+    })
+    expect(new Set(viaLocalDate).size, "the old approach must be broken for this to mean anything").toBe(23)
+
+    expect(new Set(Array.from({ length: 24 }, (_, hour) => formatHourOfDay(hour, "h24"))).size).toBe(24)
+  })
+
+  test("and read the same as the entry times beside them", () => {
+    // 13:00 down the side must not say "13:00" while the block says "1:00 PM"
+    const at = new Date(2026, 8, 20, 13, 0, 0)
+    expect(formatHourOfDay(13, "h12")).toBe(formatTimeOfDay(at.toISOString(), "h12"))
+    expect(formatHourOfDay(13, "h24")).toBe(formatTimeOfDay(at.toISOString(), "h24"))
   })
 })

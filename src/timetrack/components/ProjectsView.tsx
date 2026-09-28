@@ -38,6 +38,7 @@ import {
   sumSeconds,
   updateProject,
   updateTask,
+  validateProject,
 } from "../timetrackService"
 import type { AlertThreshold, Id, Project, RecurringPeriod, TimetrackState } from "../types"
 import { MiniSelect } from "./pickers"
@@ -346,12 +347,21 @@ function ProjectDialog({
   const tasks = project ? state.tasks.filter((t) => t.projectId === project.id) : []
 
   const save = () => {
-    if (!draft.name.trim()) {
-      pushToast("Project needs a name", "error")
-      return
-    }
     const estimateSeconds = estimateInput.trim() ? parseDurationInput(`${estimateInput}h`) : null
     const payload = { ...draft, estimatedSeconds: draft.estimateType === "hours" ? estimateSeconds : null }
+
+    /**
+     * Checked against the database's own CHECK constraints — see `validateProject`.
+     * This used to check the name and nothing else, so a Start date after an End
+     * date, a negative rate, or a recurring project with no period went up as a row
+     * the server refuses; and `timetrack_projects` is table 3 of 19, so that refusal
+     * stopped the tasks, tags and entries in the same batch.
+     */
+    const violations = validateProject(payload)
+    if (violations.length > 0) {
+      pushToast(violations[0].message, "error")
+      return
+    }
     setState((current) =>
       project
         ? updateProject(current, project.id, payload, new Date().toISOString())
