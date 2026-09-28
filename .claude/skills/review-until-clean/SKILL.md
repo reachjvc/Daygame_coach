@@ -84,6 +84,33 @@ the findings — the small set of facts the findings are *consequences of*. Then
 long enough always contains another true-but-wrong sentence. Roots are few, and when the
 root list stops growing you are done — which is a condition that can actually be met.
 
+## Every round adds questions. Audit who can answer them.
+
+**Added 2026-09-28, after eleven rounds on one plan produced twelve open questions and six of
+them were engineering choices handed to a non-programmer.** One asked the owner to choose
+between building a PostgREST-compatible compatibility surface, porting 26 files behind a dual
+seam, or accepting a safety net covering 0.8% of the riskiest phase. He had told the session
+twice that he is not a programmer.
+
+**Rounds generate questions, and questions feel like diligence.** They are not, when the
+person receiving them cannot answer. A reviewer who finds "the plan does not say X" produces
+"Q-X" by default, and nobody audits the pile.
+
+**So at the end of every round, split the open questions in two:**
+- **Theirs** — it turns on their money, their time, their risk appetite, or their permission.
+  Bring these, each with a recommendation.
+- **Yours** — it turns on how the code works. **Decide it, record what it costs if you are
+  wrong, and say they may overrule.** A decision with a stated cost is something a
+  non-programmer can overrule without acquiring the engineering; a question is not.
+
+**The tell that you have got this wrong:** the question cannot be answered without reading
+code. If a reasonable answer requires knowing what PostgREST returns, or how many files import
+a module, it was never theirs.
+
+**And watch the count.** Twelve open questions is not twelve times as careful as one; it is a
+plan nobody can start. If the pile grows every round, the rounds are converting your
+uncertainty into their homework.
+
 ## Stopping, honestly
 
 - **Stop on convergence**, and say how many rounds it took and what the last round

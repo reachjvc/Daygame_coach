@@ -338,7 +338,48 @@ exactly as written below.
 
 ---
 
-# OPEN QUESTIONS — these need you
+# OPEN QUESTIONS
+
+**SPLIT 2026-09-28, and this is a fault in how I have been working.** Twelve questions had
+accumulated and I audited who can actually answer them. **Six were engineering choices I had
+offloaded onto someone who has said he is not a programmer** — Q-HARNESS asks you to choose
+between building a PostgREST-compatible surface, porting 26 files behind a dual seam, or
+accepting a safety net covering 0.8% of the riskiest phase. **That is not your decision; it is
+mine, and putting it to you was me making you do my job.**
+
+## Tier 1 — genuinely yours. Seven, and each turns on your money, your time, your risk appetite or your permission.
+
+| | Question | Why it is yours | My recommendation |
+|---|---|---|---|
+| 1 | **Q-DOWNTIME** | Can the app be off for an evening? Only you know. Deletes five pieces of work. | Answer it; I cannot |
+| 2 | **Q-CUSTOMER** | What the next months are *for*. | Leave the order, write the trade down |
+| 3 | **Q-RULE5** | Whether your daily working setup moves to the box. | Yes |
+| 4 | **Q-CORPUS** | Permission to write a migration. | Yes, and it is one line |
+| 5 | **Q-AI-HOST** | Money: it is the largest line in the bill. | Ollama for embeddings, paid API for chat |
+| 6 | **Q-BETA** | It deletes a branch. Your repo, your call. | Retire it |
+| 7 | **Q-POLICIES** | Risk appetite, with a real cost either way. | Keep them, rewritten |
+
+## Tier 2 — mine. Decided, so you do not have to. Overrule any of them if you disagree.
+
+I should have arrived at these rather than asked. Each is recorded with what it costs if I am
+wrong, so you can overrule without needing the engineering.
+
+| | Decision | If I am wrong |
+|---|---|---|
+| **Q-HARNESS** | **Build the PostgREST-compatible surface over `pg`.** Option (c) leaves M5's net at 91 of 11,272 lines; option (b) turns M0 into the rewrite. | Weeks spent on a layer that is deleted at M5 |
+| **Q-AUTHWINDOW** | **M3 mints a Supabase-shaped token until M5.** Keeps every milestone's daily-use answer yes and leaves the order alone. | A throwaway token path, deleted at M5 |
+| **Q-ORDER** | **Closed: no.** Not a preference — the plan's own physics closes it, since M4 must precede the port and M4 needs M2, which needs the move. | We forgo a checkpoint that was never reachable |
+| **Q-SEAM** | **Ambient provider**, not a threaded parameter: ~26 files instead of 275, and it is what makes Q-HARNESS work. | A seam that has to be widened later |
+| **Q-SKELETON** | **Yes — test the one belief M1.0 cannot cover**, that a non-browser client accepts a Better Auth token. An afternoon. | An afternoon spent early instead of a surprise at M3 |
+
+**The general rule this should have followed from the start:** bring the owner decisions that
+turn on what he wants, what he will pay, what he will risk, or what he permits. **Everything
+that turns on how the code works is mine, and handing it over is not consultation — it is
+making the person least equipped to answer do the work.**
+
+---
+
+# The questions in full — these need you
 
 Each has a recommendation, so "go with your recommendations" is a complete answer.
 **A milestone that depends on an unanswered question says so and does not start.**
