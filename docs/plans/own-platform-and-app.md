@@ -136,7 +136,11 @@ carry their own size so you can see where it goes.
 
 Approve these. Each says what it costs if it is wrong.
 
-1. **The backend becomes a data service with token login, from day one.** Not the
+1. **The backend becomes a data service with token login.** *(The words "from day one" were
+   removed 2026-09-28: day one on the new platform is now M1.0, the website rehosted on
+   cookie auth, so "from day one" stopped being literally true when M1.0 was added. The
+   substance survives — login is still built once, at M3 — so the stated cost never
+   materialises, but you were being asked to approve words that described M3.)* Not the
    website on a new host. **If wrong:** you rebuild login when the phone app
    arrives — the rebuild vision item 15 forbids.
 2. **Everything doable on the current stack is done first.** **If wrong:** little;
@@ -343,11 +347,26 @@ Each has a recommendation, so "go with your recommendations" is a complete answe
 7–8 had no *Gates* line and were cited by no milestone, so starting work answered them "no"
 by default and nothing said so. And two depend on each other.
 
+**CORRECTED 2026-09-28: items 2 and 3 are not yours to answer yet, and the list did not say
+so.** B-PATHS gates Q-POLICIES, and **B-PATHS is a renegotiation with the peer sessions that
+own `src/timetrack/**` and `src/vice/**`** — not a question you can answer alone. So the real
+chain is **B-PATHS → Q-POLICIES → Q-ORDER**, and the first three items below were gated on a
+multi-session negotiation the list never named.
+
+0. **B-PATHS** — settle convention 4 with the other sessions. Not a question; a negotiation.
+   **Everything numbered 2 and 3 waits on it.**
 1. **Q-DOWNTIME** — one sentence from you, and it decides whether five other things exist.
-2. **Q-POLICIES** — must be answered **before Q-ORDER**, because it decides whether the
-   role-and-claim machinery Q-ORDER needs gets built at all. Q-ORDER's entry defers to it.
-3. **Q-ORDER** — and note it is the only question here **with no recommendation**, because
-   mine was withdrawn when its premise proved false. This one is genuinely yours.
+   Answerable now, independent of B-PATHS.
+2. **Q-POLICIES** — after B-PATHS, because 76 of the rules live in the paths it covers. Then
+   it decides whether the role-and-claim machinery Q-ORDER needs gets built at all.
+3. **Q-ORDER** — the only question here **with no recommendation**, because mine was
+   withdrawn when its premise proved false. **And as the plan stands it cannot be answered
+   "yes":** its own corrected consequence is that M4 must run before the port, but M4 depends
+   on M2 and M3, and M2 depends on the hosting move — so "port before the move" requires the
+   move first. **Either M4 gets a stated pre-move form — and it can, because neither of its
+   two generated test forms needs Better Auth; they need a throwaway Postgres from B1's dump
+   and two hand-made accounts — or Q-ORDER is not genuinely open and should say so.**
+   Until one of those is written, treat it as closed: no.
 4. **Q-RULE5, Q-CUSTOMER, Q-SEAM, Q-AI-HOST, Q-BETA, Q-CORPUS** — independent, any order.
 5. **Q-SKELETON is PARTLY ANSWERED by the document already**, which is a defect: M1.0
    absorbed two of its four beliefs and M0.4 step 2 covers a third. **The fourth is not
@@ -466,6 +485,10 @@ infrastructure and still no way to take money, on a product whose own vision say
 value is elsewhere.
 
 ### Q-SKELETON — Should one screen go end-to-end first? **NEW 2026-09-28.**
+*Gates: M1's first deliverable — and it had no Gates line until round 10 caught that the fix
+landed on three of the five questions that needed one, not five. M1's dependency line still
+reads "B2, Q-BETA", so this question's answer changes what M1 does first and M1 does not
+know it exists.*
 
 Nothing proves the approach works until months in. **One screen, one endpoint, own token
 login, own Postgres, on Hetzner, end to end** would test every load-bearing belief in days:
@@ -689,7 +712,10 @@ Supabase, which is why an import-only check misses them.
    everything else stands on — *can this database be rebuilt on a plain Postgres at all?*
    **Give it M2's acceptance and the plan's largest unknown moves from month three to week
    two.** M2 then becomes a data load against a schema already proven.
-2c. **Re-point the drift guard, and give Fact 1's second half a mechanism.** Fact 1 says the
+2c. **(Runs AFTER 2b, and lands in the same commit as it.)** 2c re-points a guard at a
+   mirror that 2b completes, and 2c itself predicts its rule 3 firing is close to certain. A
+   knowingly-red unit test in this shared checkout blocks **every** session, because the Stop
+   hook runs the whole suite — so these two are one commit, not two. **Re-point the drift guard, and give Fact 1's second half a mechanism.** Fact 1 says the
    part that matters is *a test that fails whenever the live database holds something the
    files do not*. **Round 9 found that sentence has no deliverable, no acceptance and no
    owner anywhere in this plan** — the only drift mechanism proposed recomputes the plan's own
@@ -699,7 +725,17 @@ Supabase, which is why an import-only check misses them.
    copy, while this plan says the migration folder is **not** the source of truth. So
    re-sourcing the mirror from B1's dump will make its rule 3 fire **exactly where live
    Postgres and the folder have drifted** — which is Fact 1's premise, so it is close to
-   certain. **Decide it once, here: the dump wins.** And note its rules 1 and 4 walk
+   certain. **Decide it once, here: the dump wins — EXCEPT the user links and the
+   `auth.uid()` stub, which M2's acceptance requires to differ.** **CORRECTED 2026-09-28: a
+   flat "the dump wins" contradicted step 2 and M2's acceptance on the same file, and would
+   have broken the integration suite outright.** Measured: the mirror's only three
+   `auth.users` occurrences are **comments explaining why it has none** — *"auth.users does
+   not exist in the container, so user_id references profiles"* — and the `auth.uid()` stub
+   reads `test.uid`. **There is no `auth` schema in a plain Postgres**, so a dump-sourced
+   mirror would not merely drift, it would fail to load. And M2's acceptance states the
+   opposite rule for the same artifact: *the user links must NOT match the dump*, with a test
+   that fails if any `auth.users` reference survives. One file, two tests, mutually exclusive
+   until this sentence. And note its rules 1 and 4 walk
    migration-declared tables, so the completed mirror would get no guard at all on N9's 19
    tables — the ones that motivated B1 in the first place.
 2b. **Complete the test mirror** from N10 to the live schema, out of B1's
@@ -714,7 +750,25 @@ Supabase, which is why an import-only check misses them.
    `valuesRepo.ts` at 91 lines. So "test all 26, then port all 26" puts the first evidence
    that the approach works at the end of a multi-week phase — which is why this plan cannot
    estimate at all. **Build the seam once (Q-SEAM, genuinely shared), then run
-   test → **and nothing else** → on ONE standalone file first.** **CORRECTED 2026-09-28:
+   test → **port into the container only** → prove, on ONE standalone file first.**
+   **CORRECTED AGAIN 2026-09-28, because my previous correction broke this milestone.** I
+   removed the word "port" and thereby removed the only mechanism by which this milestone's
+   acceptance could ever be met. Measured: **zero of the 26 repos import `pg`; 21 of 26
+   import the Supabase client**, which speaks HTTP to PostgREST and reads `next/headers`.
+   There is no `supabase/config.toml`, so no local Supabase either. **A repo function cannot
+   reach a Postgres container until it is ported.** N18's "0 of 26" is structural, not an
+   oversight — and the three integration files this plan credited with importing repo code
+   import only types and enums (`lifePlanTypes`, `lifePlanDayTypes`, `goalEnums`); not one
+   calls a repo function.
+   **What I got wrong: I collapsed "port" with "port in production."** Round 8's danger was a
+   ported repo *serving live traffic* with no row rules behind it. **A repo ported and
+   exercised only against a throwaway container strips nothing — there is no production
+   row-security in a container built from `schema.sql`.** So: the seam's test implementation
+   IS Drizzle-over-`pg` against the container, and **one standalone repo (`valuesRepo.ts`,
+   91 lines) is ported inside M0.4 to prove the harness works.** That also restores the thing
+   the previous correction threw away — a measured cost per line of an 11,272-line rewrite,
+   in week two rather than after M4. **M5 still owns porting anything that serves traffic,
+   and M4 still gates that.** **CORRECTED 2026-09-28:
    this bullet used to read "test → port → prove", which instructed the whole Drizzle port
    inside M0 — contradicting this milestone's own closing line ("this does not port
    anything") and, far worse, instructing it BEFORE M4. Round 8 established that a direct
@@ -742,8 +796,9 @@ Supabase, which is why an import-only check misses them.
   Supabase's bcrypt hashes; that its tokens are accepted by a Capacitor client; that service
   workers run under Capacitor on iOS; and that `match_embeddings` can be extracted from
   Supabase at all (N15 — it exists nowhere here). **Test the first four before M1 ends.**
-- **Not covered:** this does not port anything — see the correction in step 4. It builds the
-  net M5 falls into. **M5 owns the port and M4 gates it.**
+- **Not covered:** this ports **one** file, and only into a test container, to prove the
+  harness. **It ports nothing that serves traffic — M5 owns that and M4 gates it.** The
+  distinction is the whole of step 4's second correction.
 
 ### M0.5 — One API base URL (D8)
 **Depends on:** nothing. Useful on either stack.
