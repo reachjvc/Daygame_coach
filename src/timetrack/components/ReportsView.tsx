@@ -61,9 +61,11 @@ import {
   formatTimeOfDay,
   plural,
 } from "../timetrackFormatService"
+import { useStagedEdit } from "../hooks/useStagedEdit"
 import type {
   GroupingDimension,
   Id,
+  IsoDate,
   ReportConfig,
   ReportTab,
   SummaryReport,
@@ -360,26 +362,31 @@ function FilterControls({
                 </Button>
               ))}
             </div>
+            {/*
+              A DRAFT THAT COMMITS ON BLUR, BECAUSE A DATE FIELD EMITS EVERY PREFIX.
+              
+              Typing `2 0 2 5` into the year fires four changes — `0002`, ``, `0002`,
+              `0005` in this field's case — and committing each one meant the range
+              ceiling rejected the prefixes, React rewrote `value`, and that write
+              cleared Chromium's segment-typing buffer so every keystroke started over.
+              The field became impossible to type a year into at all: the previous fix
+              removed a 1.8-second freeze and replaced it with a dead control.
+              
+              `EntryList`'s detail sheet had already solved this one file away — hold the
+              text locally, commit when the person leaves the field — and its own comment
+              explains why there is deliberately no debounce: a `datetime-local` reads ""
+              mid-typing, and a timer fired there would commit a half-typed value.
+            */}
             <div className="flex items-center gap-2 border-t border-border pt-2">
-              <Input
-                type="date"
-                /* a year field takes five and six digits, and a 3.3-million-day range
-                   freezes the tab for seconds — see `decodeReportConfig` */
-                min="1970-01-01"
-                max="2099-12-31"
+              <RangeDateField
+                label="Range start"
                 value={filters.range.start}
-                // an empty `type="date"` fires with "", which makes `spanDays` NaN and
-                // the ‹ › arrows throw inside their own click handler — see `dateKey`
-                onChange={(event) => event.target.value && onUpdateFilters({ range: { ...filters.range, start: event.target.value } })}
-                className="h-11 sm:h-8"
+                onCommit={(start) => onUpdateFilters({ range: { ...filters.range, start } })}
               />
-              <Input
-                type="date"
-                min="1970-01-01"
-                max="2099-12-31"
+              <RangeDateField
+                label="Range end"
                 value={filters.range.end}
-                onChange={(event) => event.target.value && onUpdateFilters({ range: { ...filters.range, end: event.target.value } })}
-                className="h-11 sm:h-8"
+                onCommit={(end) => onUpdateFilters({ range: { ...filters.range, end } })}
               />
             </div>
           </div>
@@ -1098,6 +1105,47 @@ function WorkloadTab({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * One end of the report range: typed freely, committed when the person leaves it.
+ *
+ * `min`/`max` are a hint to the picker and nothing more — they are constraint-validation
+ * attributes, so the value still arrives and only `validity.rangeOverflow` flips. The
+ * rule that actually holds is `clampRange`, applied by `updateFilters` when this
+ * commits.
+ *
+ * `useStagedEdit` gives the other half: leaving the screen with a half-typed date still
+ * commits it, because React does not fire blur on unmount.
+ */
+function RangeDateField({
+  label,
+  value,
+  onCommit,
+}: {
+  label: string
+  value: IsoDate
+  onCommit: (value: IsoDate) => void
+}) {
+  const [draft, setDraft] = useState<string | null>(null)
+  const commit = () => {
+    if (draft !== null && draft !== value) onCommit(draft)
+    setDraft(null)
+  }
+  const staged = useStagedEdit(commit)
+
+  return (
+    <Input
+      type="date"
+      min="1970-01-01"
+      max="2099-12-31"
+      aria-label={label}
+      value={draft ?? value}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={staged.flush}
+      className="h-11 sm:h-8"
+    />
   )
 }
 

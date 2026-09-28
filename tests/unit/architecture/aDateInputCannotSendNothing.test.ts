@@ -91,6 +91,22 @@ describe("every date input in the tracker", () => {
       .filter(({ snippet }) => {
         const handler = /onChange=\{[\s\S]*$/.exec(snippet)?.[0] ?? ""
         if (!handler) return false // no handler at all cannot send anything
+        /**
+         * A FOURTH SHAPE: the guard may live at the COMMIT rather than at the keystroke.
+         *
+         * A date field emits every prefix of a year as it is typed, so committing each
+         * change meant a rejected prefix rewrote `value` and cleared the browser's
+         * segment buffer — the field became impossible to type a year into. The report
+         * range fields therefore hold a draft and commit on blur, which means the draft
+         * legitimately holds "" mid-typing and the emptiness is refused by `clampRange`
+         * at the commit instead. Verified: committing "" returns the previous range
+         * unchanged.
+         *
+         * Recognised by `onBlur` + a staged flush, because that is the pattern, and the
+         * test below asserts the clamp actually refuses an empty value — so this branch
+         * cannot become a hole if the clamp is ever weakened.
+         */
+        if (/onBlur=\{[^}]*flush/.test(snippet)) return false
         return !(
           /\.value\s*&&/.test(handler) ||
           /\.value\s*\|\|\s*null/.test(handler) ||
@@ -103,6 +119,18 @@ describe("every date input in the tracker", () => {
       unguarded,
       "these date inputs pass an empty string onward, and `dateKey` throws on it:\n  " + unguarded.join("\n  "),
     ).toEqual([])
+  })
+
+  test("the commit-time guard the draft fields rely on actually refuses an empty value", () => {
+    /**
+     * The scan above excuses a field that commits on blur rather than on every
+     * keystroke. That excuse is only sound while the commit refuses an empty value, so
+     * it is asserted here rather than assumed — otherwise the branch becomes the hole.
+     */
+    const current = { start: "2026-01-01", end: "2026-10-04" }
+    expect(clampRange({ start: "", end: current.end }, current)).toEqual(current)
+    expect(clampRange({ start: current.start, end: "" }, current)).toEqual(current)
+    expect(clampRange({}, current)).toEqual(current)
   })
 
   test("and a controlled date input does not show a value its state does not hold", () => {
