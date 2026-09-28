@@ -24,8 +24,10 @@ import {
   dateKey,
   dateKeyToDate,
   daysBetween,
+  eachDay,
   epochSeconds,
   monthStartOf,
+  startOfDayIso,
   weekStartOf,
 } from "./timetrackFormatService"
 import type {
@@ -924,19 +926,67 @@ export function weekTotalSeconds(
 ): number {
   const start = weekStartOf(refDay, weekStart)
   const end = addDays(start, 6)
-  return sumSeconds(
-    entries.filter((e) => {
-      const day = dateKey(e.start)
-      return day >= start && day <= end
-    }),
-    nowSec,
-  )
+
+  /**
+   * THE HOURS THAT FALL INSIDE THE WEEK, NOT THE WHOLE LENGTH OF EVERY ENTRY THAT
+   * STARTED IN IT.
+   *
+   * This filtered on the start day and then summed each entry's full duration, so a
+   * Sunday-night shift ending Monday morning read "This week 0:00" while the calendar
+   * beside it read 7:00 for the Monday. `entryDaySeconds` splits an entry at local
+   * midnight and is the one function with a written argument for why that is what a
+   * day's hours means; every other place that bucketed by day had invented its own
+   * answer.
+   */
+  return eachDay(start, end).reduce((total, day) => total + daySeconds(entries, day, nowSec), 0)
 }
 
+/**
+ * The real tracked seconds of `entry` that fall inside `day`.
+ *
+ * The bounds are local midnights — this day's, and the next one's — rather than
+ * `endOfDayIso`, which is 23:59:59.999 and, with `epochSeconds` flooring, would
+ * lose a second at every midnight and look exactly like the bug this replaces.
+ * Local midnights also mean the 23- and 25-hour days at a clock change total
+ * correctly; `start + 86400` would not.
+ */
+export function entryDaySeconds(entry: TimeEntry, day: IsoDate, nowSec: number): number {
+  /**
+   * The entry's effective end, worked out ONCE rather than clamped per day.
+   *
+   * The clamp used to sit inside the per-day slice: `Math.min(visible,
+   * entrySeconds(...))`, which is the entry's WHOLE length, so a row spanning
+   * two days could have each day clamped to the total and be counted twice.
+   * Deriving the end from the elapsed time instead is correct for every shape,
+   * including the one the old clamp existed for — no stop, but a stored
+   * duration, which `isRunning` still calls running.
+   */
+  const end = entry.stop ? epochSeconds(entry.stop) : epochSeconds(entry.start) + entrySeconds(entry, nowSec)
+  const from = Math.max(epochSeconds(startOfDayIso(day)), epochSeconds(entry.start))
+  const to = Math.min(epochSeconds(startOfDayIso(addDays(day, 1))), end)
+  return Math.max(0, to - from)
+}
+
+/** The seconds of these entries that fall on one local day. */
+export function daySeconds(entries: TimeEntry[], day: IsoDate, nowSec: number): number {
+  return entries.reduce((sum, e) => sum + (e.serverDeletedAt ? 0 : entryDaySeconds(e, day, nowSec)), 0)
+}
+
+/**
+ * Entries with any time inside the range — OVERLAP, not "started in it".
+ *
+ * This selected on `dateKey(e.start)`, so a shift from Sunday 23:00 to Monday 07:00 was
+ * excluded from a report for Monday to Sunday entirely: seven of its eight hours were in
+ * the range and the report said "0 entries · 0 active days", while the calendar showed
+ * 7:00 for that Monday. Absent, not misattributed — a defect under any model of what a
+ * day is.
+ */
 export function entriesInRange(entries: TimeEntry[], start: IsoDate, end: IsoDate): TimeEntry[] {
   return entries.filter((e) => {
-    const day = dateKey(e.start)
-    return day >= start && day <= end
+    const firstDay = dateKey(e.start)
+    const lastDay = dateKey(e.stop ?? new Date().toISOString())
+    // touches the range if it starts before the end of it and ends after the start
+    return firstDay <= end && lastDay >= start
   })
 }
 

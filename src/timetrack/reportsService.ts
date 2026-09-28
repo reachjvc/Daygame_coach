@@ -27,7 +27,7 @@ import {
   entriesInRange,
   entryCost,
   entryRevenue,
-  entrySeconds,
+  entryDaySeconds,
   liveEntries,
   memberById,
   projectById,
@@ -301,6 +301,26 @@ function bucketLabel(key: IsoDate, interval: ChartInterval): string {
   return formatDayShort(key)
 }
 
+/**
+ * The seconds of `entry` that fall inside the report's range, rounded per day.
+ *
+ * One owner for what every report means by an entry's hours. Four places each took
+ * `entrySeconds` — the whole entry — and one of them also filed all of it under the
+ * start day, so a shift from Sunday 23:00 to Monday 07:00 gave a Monday report none of
+ * its seven Monday hours while the calendar beside it showed them. `entryDaySeconds` is
+ * the function with a written argument for what a day's hours are; this is it applied
+ * across a range.
+ *
+ * Identical to the old behaviour for a same-day entry inside the range, which is almost
+ * all of them.
+ */
+function secondsInRange(entry: TimeEntry, config: ReportConfig, nowSec: number): number {
+  return eachDay(config.filters.range.start, config.filters.range.end).reduce(
+    (sum, day) => sum + roundSeconds(entryDaySeconds(entry, day, nowSec), config.rounding),
+    0,
+  )
+}
+
 export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec: number): SummaryReport {
   const entries = applyFilters(state, config.filters)
   const groups = new Map<string, Accumulator>()
@@ -323,8 +343,26 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
   }
 
   for (const entry of entries) {
-    const rawSeconds = entrySeconds(entry, nowSec)
-    const seconds = roundSeconds(rawSeconds, config.rounding)
+    /**
+     * THE SECONDS THIS ENTRY CONTRIBUTES TO THIS RANGE, DAY BY DAY.
+     *
+     * This took `entrySeconds` — the whole entry — and filed all of it under
+     * `dateKey(entry.start)`. So a shift from Sunday 23:00 to Monday 07:00 put eight
+     * hours on the Sunday, and a Monday-to-Sunday report that held seven of those hours
+     * showed none of them, while the calendar beside it showed 7:00 for that Monday.
+     * Two definitions of "hours on this day"; `entryDaySeconds` is the one with a
+     * written argument, so it is the one used here.
+     *
+     * Rounding stays per contribution rather than per entry, which is identical for a
+     * same-day entry — the overwhelming majority — and has the property the old code
+     * lacked: the chart buckets now sum to the total exactly.
+     */
+    const perDay = eachDay(config.filters.range.start, config.filters.range.end)
+      .map((day) => ({ day, seconds: roundSeconds(entryDaySeconds(entry, day, nowSec), config.rounding) }))
+      .filter((d) => d.seconds > 0)
+
+    const seconds = perDay.reduce((sum, d) => sum + d.seconds, 0)
+    if (seconds === 0) continue
     const revenue = entryRevenue(state, entry, seconds)
     const cost = entryCost(state, entry, seconds)
 
@@ -332,36 +370,64 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
     if (entry.billable) totalBillable += seconds
     totalRevenue += revenue
     totalCost += cost
-    activeDays.add(dateKey(entry.start))
+    for (const d of perDay) activeDays.add(d.day)
+
+    /**
+     * GROUPING BY DATE IS THE ONE DIMENSION WHOSE VALUE IS DIVISIBLE.
+     *
+     * Every other dimension answers "which project / tag / member is this entry",
+     * and the whole entry belongs to each answer. "Which day" does not: a shift from
+     * Sunday 23:00 to Monday 07:00 belongs partly to each, and `dimensionValues` gave
+     * it one label — `dateKey(entry.start)` — which for a Monday-to-Sunday report was a
+     * label for a day outside the range entirely.
+     *
+     * So the date grouping comes from `perDay`, which is already the per-day split, and
+     * the rest come from `dimensionValues` as before.
+     */
+    const primaries =
+      config.grouping === "date"
+        ? perDay.map((d) => ({ value: { key: `date:${d.day}`, label: d.day, color: null }, seconds: d.seconds }))
+        : dimensionValues(state, entry, config.grouping).map((value) => ({ value, seconds }))
 
     // primary grouping (+ optional sub-grouping)
-    for (const primary of dimensionValues(state, entry, config.grouping)) {
+    for (const { value: primary, seconds: primarySeconds } of primaries) {
       const acc = groups.get(primary.key) ?? makeAcc(primary)
-      addTo(acc, seconds, entry.billable, revenue, cost)
+      const share = primarySeconds
+      const shareRevenue = seconds > 0 ? (revenue * share) / seconds : 0
+      const shareCost = seconds > 0 ? (cost * share) / seconds : 0
+      addTo(acc, share, entry.billable, shareRevenue, shareCost)
       if (config.subGrouping) {
         for (const secondary of dimensionValues(state, entry, config.subGrouping)) {
           const child = acc.children.get(secondary.key) ?? makeAcc(secondary)
-          addTo(child, seconds, entry.billable, revenue, cost)
+          // the parent's share, so a child can never exceed the row it sits under
+          addTo(child, share, entry.billable, shareRevenue, shareCost)
           acc.children.set(secondary.key, child)
         }
       }
       groups.set(primary.key, acc)
     }
 
-    // chart buckets
-    const bucketKey = bucketKeyFor(dateKey(entry.start), interval, state.user.weekStart)
+    // chart buckets — each day's own hours in its own bucket, so a shift that crossed
+    // midnight appears on both days rather than all on the first
+    for (const contribution of perDay) {
+    const bucketKey = bucketKeyFor(contribution.day, interval, state.user.weekStart)
     const bucket = buckets.get(bucketKey) ?? { seconds: 0, billableSeconds: 0, revenue: 0, cost: 0, segments: new Map() }
-    bucket.seconds += seconds
-    if (entry.billable) bucket.billableSeconds += seconds
-    bucket.revenue += revenue
-    bucket.cost += cost
+    const share = contribution.seconds
+    const shareRevenue = seconds > 0 ? (revenue * share) / seconds : 0
+    const shareCost = seconds > 0 ? (cost * share) / seconds : 0
+    bucket.seconds += share
+    if (entry.billable) bucket.billableSeconds += share
+    bucket.revenue += shareRevenue
+    bucket.cost += shareCost
     if (config.chartStackBy) {
       for (const segment of dimensionValues(state, entry, config.chartStackBy)) {
         const existing = bucket.segments.get(segment.key)
-        bucket.segments.set(segment.key, { ...segment, value: (existing?.value ?? 0) + seconds })
+        // the day's share, not the whole entry, or a stacked bar exceeds its own bar
+        bucket.segments.set(segment.key, { ...segment, value: (existing?.value ?? 0) + share })
       }
     }
     buckets.set(bucketKey, bucket)
+    }
 
     // pie
     for (const slice of dimensionValues(state, entry, config.pieGroupBy)) {
@@ -446,7 +512,7 @@ export function metricValue(report: SummaryReport, metric: string): { value: num
 
 export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSec: number): DetailedRow[] {
   const rows = applyFilters(state, config.filters).map((entry) => {
-    const seconds = roundSeconds(entrySeconds(entry, nowSec), config.rounding)
+    const seconds = secondsInRange(entry, config, nowSec)
     const project = projectById(state, entry.projectId)
     const task = taskById(state, entry.taskId)
     const client = clientById(state, project?.clientId ?? null)
@@ -499,18 +565,31 @@ export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSe
   const dayTotals = days.map(() => 0)
 
   for (const entry of entries) {
-    const seconds = roundSeconds(entrySeconds(entry, nowSec), config.rounding)
+    const seconds = secondsInRange(entry, config, nowSec)
+    if (seconds === 0) continue
     const amount = entryRevenue(state, entry, seconds)
-    const value = config.workloadValueMode === "earnings" ? amount : seconds
-    const index = dayIndex.get(dateKey(entry.start))
-    if (index === undefined) continue
 
-    for (const dim of dimensionValues(state, entry, config.grouping)) {
-      const row = rows.get(dim.key) ?? { key: dim.key, label: dim.label, color: dim.color, values: days.map(() => 0) }
-      row.values[index] += value
-      rows.set(dim.key, row)
+    /**
+     * A COLUMN PER DAY MEANS THE DAY'S OWN HOURS, not the whole entry under the day it
+     * began. `dayIndex.get(dateKey(entry.start))` also returned undefined for an entry
+     * that started the evening before the range, so the grid dropped it entirely —
+     * which is how a night shift vanished from the Workload tab while the calendar
+     * showed it.
+     */
+    for (const day of days) {
+      const daySeconds = roundSeconds(entryDaySeconds(entry, day, nowSec), config.rounding)
+      if (daySeconds === 0) continue
+      const index = dayIndex.get(day)
+      if (index === undefined) continue
+      const share = config.workloadValueMode === "earnings" ? (amount * daySeconds) / seconds : daySeconds
+
+      for (const dim of dimensionValues(state, entry, config.grouping)) {
+        const row = rows.get(dim.key) ?? { key: dim.key, label: dim.label, color: dim.color, values: days.map(() => 0) }
+        row.values[index] += share
+        rows.set(dim.key, row)
+      }
+      dayTotals[index] += share
     }
-    dayTotals[index] += value
   }
 
   const rowList = [...rows.values()]
@@ -571,7 +650,7 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
   const rows = new Map<string, ProfitabilityRow & { projectIds: Set<Id> }>()
 
   for (const entry of entries) {
-    const seconds = roundSeconds(entrySeconds(entry, nowSec), config.rounding)
+    const seconds = secondsInRange(entry, config, nowSec)
     const revenue = entryRevenue(state, entry, seconds)
     const cost = entryCost(state, entry, seconds)
 

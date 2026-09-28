@@ -16,13 +16,12 @@ import {
 } from "./config"
 import {
   addDays,
-  startOfDayIso,
   dateKey,
   dateKeyToDate,
   epochSeconds,
   minutesIntoDay,
 } from "./timetrackFormatService"
-import { entrySeconds } from "./timetrackService"
+import { entryDaySeconds } from "./timetrackService"
 import type {
   CalendarEvent,
   EntryDraft,
@@ -877,31 +876,14 @@ export function snapMinutes(minutes: number, snap = CALENDAR_SNAP_MINUTES): numb
   return Math.max(0, Math.min(24 * 60, Math.round(minutes / snap) * snap))
 }
 
+
 /**
- * The real tracked seconds of `entry` that fall inside `day`.
- *
- * The bounds are local midnights — this day's, and the next one's — rather than
- * `endOfDayIso`, which is 23:59:59.999 and, with `epochSeconds` flooring, would
- * lose a second at every midnight and look exactly like the bug this replaces.
- * Local midnights also mean the 23- and 25-hour days at a clock change total
- * correctly; `start + 86400` would not.
+ * Re-exported because five callers import it from here and because the calendar is
+ * where the rule was written down. It LIVES in `timetrackService` now: the week total
+ * and every report bucket need the same answer, and `calendarService` already imports
+ * from `timetrackService`, so the dependency could only run that way.
  */
-export function entryDaySeconds(entry: TimeEntry, day: IsoDate, nowSec: number): number {
-  /**
-   * The entry's effective end, worked out ONCE rather than clamped per day.
-   *
-   * The clamp used to sit inside the per-day slice: `Math.min(visible,
-   * entrySeconds(...))`, which is the entry's WHOLE length, so a row spanning
-   * two days could have each day clamped to the total and be counted twice.
-   * Deriving the end from the elapsed time instead is correct for every shape,
-   * including the one the old clamp existed for — no stop, but a stored
-   * duration, which `isRunning` still calls running.
-   */
-  const end = entry.stop ? epochSeconds(entry.stop) : epochSeconds(entry.start) + entrySeconds(entry, nowSec)
-  const from = Math.max(epochSeconds(startOfDayIso(day)), epochSeconds(entry.start))
-  const to = Math.min(epochSeconds(startOfDayIso(addDays(day, 1))), end)
-  return Math.max(0, to - from)
-}
+export { entryDaySeconds }
 
 /** Total tracked seconds shown in a calendar day column. */
 export function dayColumnSeconds(entries: TimeEntry[], day: IsoDate, nowSec: number): number {
