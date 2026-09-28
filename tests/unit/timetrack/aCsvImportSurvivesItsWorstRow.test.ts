@@ -54,7 +54,11 @@ describe("a CSV with a duration too big to be a date", () => {
     expect(result.skipped.map((s) => s.line)).toEqual([3])
   })
 
-  test("a negative overshoot is refused the same way", () => {
+  /**
+   * A CONTROL: it pins that the guard refuses only what it must, so it passes against
+   * the old source too and `tests-must-fail-without-the-fix.mjs` reports it as such.
+   */
+  test("an ordinary early date still imports, so the guard refuses only what it must", () => {
     /**
      * `parseDurationInput` will not return a negative, so this comes at it from the
      * other side: a start date so early that even an ordinary duration cannot land in

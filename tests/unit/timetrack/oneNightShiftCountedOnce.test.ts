@@ -53,6 +53,12 @@ const NOW_SEC = Math.floor(new Date(2026, 9, 1, 12).getTime() / 1000)
 describe("a shift that crossed midnight", () => {
   const state = baseState({ entries: [nightShift()] })
 
+  /**
+   * PINS BEHAVIOUR THAT ALREADY WORKED, deliberately: `entryDaySeconds` was the one
+   * surface that had this right, and the fix made it the owner for the others. So this
+   * passes against the old source, and `tests-must-fail-without-the-fix.mjs` will keep
+   * reporting it — that is correct, and this comment is the answer.
+   */
   test("is eight hours, one on the Sunday and seven on the Monday", () => {
     // the premise, so the numbers below mean something
     expect(state.entries[0].duration).toBe(8 * 3600)
@@ -99,6 +105,7 @@ describe("a shift that crossed midnight", () => {
     expect(summary.totals.seconds, "the previous day was inflated by the whole shift").toBe(3600)
   })
 
+  /** The control. Passes against the old source by design — that is what a control is. */
   test("an ordinary same-day entry is untouched, which is the control", () => {
     const ordinary = baseState({ entries: [entry(2, MONDAY, "09:00", "10:30")] })
     const config = { ...defaultReportConfig(MONDAY, 1, ordinary.workspace.rounding), filters: emptyFilters({ start: MONDAY, end: SUNDAY_AFTER }) }
@@ -131,14 +138,21 @@ describe("and every tab tells the same story about it", () => {
     expect(report.dayTotals[0], "the Monday column is empty").toBe(7 * 3600)
   })
 
-  test("the chart buckets sum to the total, which they did not before", () => {
+  test("the chart buckets sum to the total, and to a total that is not zero", () => {
     /**
-     * A property the old code could not have: the total came from the whole entry and
-     * the buckets from its start day, so with a cross-midnight entry they disagreed by
-     * construction.
+     * THE SECOND HALF IS THE WHOLE TEST. Without it this asserted `0 === 0`: on the old
+     * source the entry was excluded from the range ENTIRELY, so the buckets and the
+     * total were both empty and the property held by vacuum. It was named "which they
+     * did not before" and `tests-must-fail-without-the-fix.mjs` reported it passing
+     * against the old source, which is how the claim was caught.
+     *
+     * A sum-equals-total property can only see a MISATTRIBUTION. It cannot see an
+     * absence, and absence was the defect — the same lesson the recurrence fuzzing in
+     * this slice learned the hard way. So the magnitude is pinned too.
      */
     const summary = buildSummary(state, config(), NOW_SEC)
     const bucketed = summary.buckets.reduce((sum, b) => sum + b.seconds, 0)
+    expect(summary.totals.seconds).toBe(7 * 3600)
     expect(bucketed).toBe(summary.totals.seconds)
   })
 

@@ -527,6 +527,11 @@ describe("rangeRefusalIsCheckedAgainstAHandWrittenTable", () => {
     expect(wrong).toEqual([])
   })
 
+  /**
+   * A meta-test about the TABLE, not about the source, so it passes against any
+   * version of `rangeRefusal` — which is the point, and is why
+   * `tests-must-fail-without-the-fix.mjs` lists it.
+   */
   test("the table covers both verdicts, or neither test above asserts anything", () => {
     const refused = TABLE.filter(([, expected]) => expected !== null)
     expect(refused.length).toBeGreaterThan(11)
