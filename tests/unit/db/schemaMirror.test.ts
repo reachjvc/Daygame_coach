@@ -28,6 +28,28 @@
  * Rule 3 is the one that catches tomorrow's version of this: change a function's
  * parameters in a migration and forget the mirror, and this goes red the same
  * day instead of the mirror quietly testing last month's database.
+ *
+ * AND RULE 4, ADDED 2026-09-28, WHICH IS ABOUT THIS FILE'S OWN BLIND SPOT.
+ *
+ * Rule 1 says "on a table the mirror actually has". That clause is an escape
+ * hatch the size of a whole slice: a table absent from the mirror has all of its
+ * row rules filtered out, so the guard is silent by design about exactly the
+ * tables nobody has mirrored yet. Measured today: `grep -ci timetrack
+ * tests/integration/schema.sql` = 0, for nineteen tables carrying 76 policies.
+ *
+ * Worse, the policies those migrations declare are not merely filtered — they are
+ * MISREAD. `20260903120000_timetrack.sql` creates them in a loop with
+ * `execute format('create policy "%s_select_own" on public.%I …', t, t)`, and
+ * rule 1's regex, unable to match `%I`, backtracks and captures the schema name.
+ * So this file's model of production contained four policies on a table called
+ * `public` in place of 76 on real tables. A guard holding a phantom is worse than
+ * a guard holding nothing, because the phantom looks like coverage.
+ *
+ * Rule 4 therefore refuses both silences: a policy this file cannot parse is an
+ * error rather than a row in the model, and a table a migration creates is either
+ * mirrored or listed below with a reason. The pattern is the one
+ * `auditRlsExpectations.test.ts` already uses — an excuse must not outlive the
+ * thing it excuses.
  */
 
 import { describe, test, expect } from "vitest"
@@ -107,15 +129,60 @@ interface Policy {
   where: string
 }
 
+/**
+ * Policies created inside a `do $$ … $$` loop over a list of table names.
+ *
+ * `20260903120000_timetrack.sql` declares all 76 of its policies as
+ * `execute format('create policy "%s_select_own" on public.%I …', t, t)` inside
+ * `foreach t in array array['timetrack_workspaces', …]`. The plain regex below cannot
+ * match `%I`, so it backtracked and captured the SCHEMA name — recording four
+ * policies on a table called `public` in place of 76 on real tables. A guard holding a
+ * phantom is worse than one holding nothing, because the phantom looks like coverage.
+ *
+ * `20260922100000_life_plan_tables.sql` uses the same shape for 100 policies across 25
+ * tables, so this is not one migration's quirk.
+ */
+function loopPoliciesIn(sql: string, where: string): Policy[] {
+  const found: Policy[] = []
+  for (const [, block] of sql.matchAll(/do\s+\$\$([\s\S]*?)\$\$\s*;/gi)) {
+    const listMatch = /in\s+array\s+array\s*\[([\s\S]*?)\]/i.exec(block)
+    if (!listMatch) continue
+    const tables = [...listMatch[1].matchAll(/'([a-z0-9_]+)'/gi)].map((m) => m[1].toLowerCase())
+    if (tables.length === 0) continue
+    // the policy NAME is a format string: `"%s_select_own"` becomes `<table>_select_own`
+    for (const [, nameTemplate] of block.matchAll(/create\s+policy\s+"%s([a-z0-9_]+)"/gi)) {
+      for (const table of tables) found.push({ name: `${table}${nameTemplate}`, table, where })
+    }
+  }
+  return found
+}
+
 function policiesIn(sql: string, where: string): Policy[] {
   // Case-insensitive on purpose: 20260827000000_create_life_answers.sql writes
   // `create policy ... on public.life_answers` in lower case, and an earlier
   // version of this check missed all three of its rules because of it.
-  return [...sql.matchAll(/create\s+policy\s+"([^"]+)"\s+on\s+(?:public\.)?([a-z0-9_]+)/gi)].map((m) => ({
-    name: m[1],
-    table: m[2].toLowerCase(),
+  /**
+   * QUOTED OR NOT. A policy name is an SQL identifier, and quoting it is optional —
+   * `20260923120000_vice_black_box_tables.sql` writes
+   * `CREATE POLICY vice_attempts_select_own ON vice_attempts`, which is the more
+   * common style. This pattern required the quotes, so eight policies across the two
+   * vice tables were invisible: the tables that hold relapse records, which is the
+   * most private data in the app.
+   */
+  const direct = [
+    ...sql.matchAll(/create\s+policy\s+(?:"([^"]+)"|([a-z][a-z0-9_]*))\s+on\s+(?:public\.)?([a-z0-9_]+)/gi),
+  ].map((m) => ({
+    name: m[1] ?? m[2],
+    table: m[3].toLowerCase(),
     where,
   }))
+  /**
+   * A match whose table came out as `public` is the loop form misread — the regex
+   * could not match `%I` and fell back to the schema name. Those are dropped and the
+   * loop parser handles them properly; the test below asserts none survive, so the
+   * drop cannot hide a form neither parser understands.
+   */
+  return [...direct.filter((policy) => policy.table !== "public"), ...loopPoliciesIn(sql, where)]
 }
 
 function policyDropsIn(sql: string): Array<{ table: string; name: string }> {
@@ -130,6 +197,198 @@ const mirroredTables = new Set(
     m[1].toLowerCase(),
   ),
 )
+
+/**
+ * Tables production creates that the mirror deliberately does not have yet.
+ *
+ * Every entry needs a reason and an owner-visible consequence, because each one is
+ * a set of row rules no database test can check. Remove an entry the day its table
+ * is mirrored — the assertion below fails if an excuse outlives the thing it
+ * excuses.
+ */
+/**
+ * Tables production creates that the mirror does not have yet, each with the reason
+ * and what it costs.
+ *
+ * Every entry is a set of row rules no database test can check. MEASURED on
+ * 2026-09-28: 63 tables exist in production and 52 are mirrored, and of the 56
+ * policies this file can parse, **34 are discarded** by rule 1's "on a table the
+ * mirror actually has" clause — so 22 of them are actually checked. The nineteen
+ * timetrack tables are worse than discarded: their policies are created in a loop
+ * this file cannot read at all, and were being recorded as four phantoms on a table
+ * called `public`.
+ *
+ * Remove an entry the day its table is mirrored; the third test below fails if an
+ * excuse outlives the thing it excuses.
+ *
+ * KNOWN LIMIT, stated rather than left to be discovered: `tablesInProduction()` reads
+ * `create table` out of the migration text, so a table created inside a `do $$` block
+ * is invisible to it the same way those policies were. Seven parsed policies point at
+ * two tables this scan does not see as created (`program_session_logs`,
+ * `workout_templates`), which is that gap rather than a missing table.
+ */
+const NOT_MIRRORED_YET: Record<string, string> = {
+  // 76 policies, created in a loop this file cannot parse. Their primary keys are one
+  // global namespace across ALL users, so RLS is the only thing refusing another
+  // person's row — and nothing proves it is on.
+  ...Object.fromEntries(
+    [
+      "timetrack_workspaces", "timetrack_clients", "timetrack_projects", "timetrack_project_rates",
+      "timetrack_project_alerts", "timetrack_alert_events", "timetrack_tasks", "timetrack_tags",
+      "timetrack_entries", "timetrack_entry_tags", "timetrack_favorites", "timetrack_saved_reports",
+      "timetrack_approvals", "timetrack_webhooks", "timetrack_webhook_log",
+      "timetrack_autotracker_rules", "timetrack_timeline", "timetrack_calendars", "timetrack_settings",
+    ].map((table) => [
+      table,
+      "timetrack: 76 policies in a loop this file cannot read, none checked by any test. " +
+        "Ids are one global namespace across users, so RLS is the only lock.",
+    ]),
+  ),
+  weight_logs: "health: 4 policies, unchecked. Holds a person's body weight.",
+  sleep_logs: "health: 4 policies, unchecked.",
+  nutrition_logs: "health: 4 policies, unchecked.",
+  body_measurements: "health: 4 policies, unchecked. Holds body measurements.",
+  life_chapters: "life: 3 policies, unchecked. Holds what somebody wrote about their life.",
+  dashboard_widgets: "dashboard: 4 policies, unchecked. Layout only.",
+  vice_attempts: "vice: RLS enabled, policies not parsed here. Holds relapse records — the " +
+    "most private data in the app.",
+  vice_reports: "vice: RLS enabled, policies not parsed here.",
+  error_reports: "diagnostics: written by the app, read by nobody in-product.",
+  embeddings_test: "a test fixture table, not user data.",
+}
+
+
+/** Every table a migration creates and no later migration drops. */
+function tablesInProduction(): Set<string> {
+  const live = new Set<string>()
+  for (const { sql } of migrations) {
+    for (const m of sql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?([a-z0-9_]+)/gi)) {
+      live.add(m[1].toLowerCase())
+    }
+    for (const m of sql.matchAll(/drop\s+table\s+(?:if\s+exists\s+)?(?:public\.)?([a-z0-9_]+)/gi)) {
+      live.delete(m[1].toLowerCase())
+    }
+  }
+  return live
+}
+
+describe("the mirror's own blind spots are written down", () => {
+  test("no policy is recorded against a table called `public`, which means it could not be read", () => {
+    /**
+     * `execute format('create policy "%s_x" on public.%I …')` cannot be parsed by a
+     * regex over the file, and rule 1's pattern silently captured the schema name
+     * instead of failing. Four such phantoms stood in for 76 real policies.
+     *
+     * This is the check on the check: a model of production that contains a table
+     * named `public` is a model that failed to read something, and it has to say so.
+     */
+    /**
+     * Read with the RAW regex, not through `policiesIn` — which now drops these and
+     * lets `loopPoliciesIn` handle them. Asserting on the filtered output would be
+     * asserting that the filter ran, which is not the question. The question is
+     * whether every such declaration is accounted for by the loop parser.
+     */
+    const unreadable: string[] = []
+    for (const { file, sql } of migrations) {
+      /**
+       * `on public.%I` — a schema qualifier followed by something that is NOT a plain
+       * identifier, which is what a format placeholder looks like. The first version
+       * of this used `on\s+public(?![a-z0-9_.])`, whose lookahead excluded the very
+       * `.` it needed to see, so it matched nothing and the test asserted nothing.
+       * Caught by disabling the loop parser and watching it stay green.
+       */
+      const rawPhantoms = [...sql.matchAll(/create\s+policy\s+"([^"]+)"\s+on\s+public\.(?![a-z0-9_])/gi)]
+      if (rawPhantoms.length === 0) continue
+      const recovered = loopPoliciesIn(sql, file)
+      if (recovered.length === 0) {
+        for (const m of rawPhantoms) unreadable.push(`${file}: "${m[1]}" — and the loop parser found nothing`)
+      }
+    }
+    expect(
+      unreadable.sort(),
+      "these policies are declared in a form this file cannot read, so rule 1 is blind to them:\n  " +
+        unreadable.join("\n  ") +
+        "\nParse the loop form, or assert the count from `pg_policies` the way " +
+        "20260922100000_life_plan_tables.sql does.",
+    ).toEqual([])
+  })
+
+  test("every table production creates is mirrored, or listed with a reason", () => {
+    const unaccounted = [...tablesInProduction()]
+      .filter((table) => !mirroredTables.has(table) && !(table in NOT_MIRRORED_YET))
+      .sort()
+
+    expect(
+      unaccounted,
+      "these tables exist in production and not in the mirror, so no database test can " +
+        "check a single one of their row rules. Mirror them, or add each to " +
+        "NOT_MIRRORED_YET with the reason:\n  " + unaccounted.join("\n  "),
+    ).toEqual([])
+  })
+
+  test("a table with row security on has policies this file can see, or is listed as deny-all", () => {
+    /**
+     * The general form of the phantom, and the one that catches a declaration style
+     * nobody has thought of yet. Turning RLS on with NO policies is a legitimate
+     * design — it means deny-all, which is right for a table whose rows are earned or
+     * computed rather than typed in (`CLAUDE.md`'s RLS stop sign). What is not
+     * legitimate is not knowing which of the two you have.
+     *
+     * So each table with row security on must either have a policy this file can read,
+     * or be named below with which it is.
+     */
+    const DENY_ALL_BY_DESIGN: Record<string, string> = {
+      user_xp: "earned, not typed in — system-only by design, see CLAUDE.md's RLS stop sign",
+      beta_invites: "administered outside the app",
+      waitlist_emails: "administered outside the app",
+      error_reports: "written by the app, read by nobody in-product",
+      embeddings_test: "a test fixture table, not user data",
+      core_values: "life_plan: policies created as `CREATE POLICY %I ON %I` with variables, " +
+        "which no text parser can resolve. That migration asserts its own counts from " +
+        "`pg_policies` instead — the pattern the timetrack migration should copy.",
+      plan_snapshots: "life_plan: same `%I` form as core_values.",
+    }
+
+    const rlsOn = new Set<string>()
+    const withPolicies = new Set<string>()
+    for (const { sql, file } of migrations) {
+      for (const m of sql.matchAll(
+        /alter\s+table\s+(?:only\s+)?(?:public\.)?([a-z0-9_]+)\s+enable\s+row\s+level\s+security/gi,
+      )) {
+        rlsOn.add(m[1].toLowerCase())
+      }
+      for (const p of policiesIn(sql, file)) withPolicies.add(p.table)
+    }
+
+    const unexplained = [...rlsOn]
+      .filter((table) => !withPolicies.has(table) && !(table in DENY_ALL_BY_DESIGN))
+      .sort()
+
+    expect(
+      unexplained,
+      "these tables have row security on and no policy this file can read. Either they are " +
+        "deny-all on purpose — add them above with the reason — or their policies are " +
+        "declared in a form this file cannot parse, which is the phantom problem again:\n  " +
+        unexplained.join("\n  "),
+    ).toEqual([])
+  })
+
+  test("and an excuse does not outlive the thing it excuses", () => {
+    /**
+     * The companion half, which this repo requires of every allowlist: an entry whose
+     * table has since been mirrored, or dropped, is a free pass waiting to be used.
+     */
+    const live = tablesInProduction()
+    const stale = Object.keys(NOT_MIRRORED_YET)
+      .filter((table) => mirroredTables.has(table) || !live.has(table))
+      .sort()
+
+    expect(
+      stale,
+      "these are mirrored or gone — remove them from NOT_MIRRORED_YET:\n  " + stale.join("\n  "),
+    ).toEqual([])
+  })
+})
 
 describe("the test schema mirrors production", () => {
   test("every policy production declares on a table the test schema also declares is in the test schema", () => {

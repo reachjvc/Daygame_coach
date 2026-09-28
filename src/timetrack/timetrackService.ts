@@ -519,6 +519,35 @@ export function createManualEntry(
   nowIso: IsoDateTime,
 ): { state: TimetrackState; violations: SaveViolation[]; entry: TimeEntry | null } {
   const violations = validateEntry(state, { ...input.draft, start: input.start, stop: input.stop })
+
+  /**
+   * THE SAME MEETING CANNOT BECOME TWO ENTRIES.
+   *
+   * `timetrack_entries_source_event_uniq` is
+   * `unique (user_id, source_event_id) where source_event_id is not null and
+   * deleted_at is null`, and the migration's own comment says it exists "so
+   * re-importing the same meeting twice cannot create two entries". Nothing on this
+   * side enforced it: the calendar's "Copy as a time entry" button is rendered
+   * whether or not the event has already been copied, and event ids are deterministic
+   * (`${calendarId}:${uid}:${start}`), so a re-sync offers the same button again.
+   *
+   * Two clicks therefore doubled the day's tracked time locally, and the second row
+   * was refused by the server, dropped from the queue and recorded as sent — so it
+   * existed on that browser only and vanished on the next device, with an error toast
+   * naming the meeting.
+   *
+   * Said here rather than in the calendar view because the rule is the data's, not
+   * the screen's, and the same function is what an import would call.
+   */
+  if (input.sourceEventId) {
+    const already = state.entries.find((e) => e.sourceEventId === input.sourceEventId && !e.serverDeletedAt)
+    if (already) {
+      violations.push({
+        field: "date",
+        message: `That calendar event is already a time entry${already.description.trim() ? ` — “${already.description.trim()}”` : ""}. Edit that one instead of copying it again.`,
+      })
+    }
+  }
   if (violations.length > 0) return { state, violations, entry: null }
 
   const withId = takeId(state)
@@ -1415,13 +1444,44 @@ export function updateProject(
   return { ...state, projects: replaceById(state.projects, id, { ...patch, rateHistory, at: nowIso }) }
 }
 
+/**
+ * EVERYTHING THAT POINTED AT IT STOPS POINTING AT IT — INCLUDING THE THINGS THAT
+ * CREATE FUTURE ENTRIES.
+ *
+ * This unhooked the entries and left the autotracker rules and the favourites
+ * holding the dead id. Because deletes here are SOFT on the server (`deleted_at`),
+ * the `on delete cascade` on `timetrack_autotracker_rules.project_id` never fires,
+ * so the foreign key is satisfied and the row is accepted — the reference just does
+ * not resolve.
+ *
+ * What that costs: a rule matching "invoice" kept `projectId: "30"`, `applyAutotracker`
+ * handed it to the timer bar, `startTimer` accepted it with no violations, and every
+ * entry the rule created afterwards carried a project id nothing resolves. The entry
+ * list shows "No project", which is indistinguishable from a rule that deliberately
+ * has none, so there is no way to see it is broken — and the entry's money falls
+ * through to the member or workspace rate instead of the project rate. The whole
+ * point of setting `projectId` to null on the existing entries was bypassed for
+ * everything created after the delete.
+ *
+ * The tasks of a deleted project go too, so their ids are stripped as well.
+ * `deleteTag` has always done this for its own references; these two had not.
+ */
 export function deleteProject(state: TimetrackState, id: Id): TimetrackState {
+  const orphanedTaskIds = new Set(state.tasks.filter((t) => t.projectId === id).map((t) => t.id))
+  const forgetProject = <T extends { projectId: Id | null; taskId: Id | null }>(ref: T): T => ({
+    ...ref,
+    projectId: ref.projectId === id ? null : ref.projectId,
+    taskId: ref.taskId !== null && (ref.projectId === id || orphanedTaskIds.has(ref.taskId)) ? null : ref.taskId,
+  })
+
   return {
     ...state,
     projects: state.projects.filter((p) => p.id !== id),
     tasks: state.tasks.filter((t) => t.projectId !== id),
     entries: state.entries.map((e) => (e.projectId === id ? { ...e, projectId: null, taskId: null } : e)),
     alerts: state.alerts.filter((a) => a.projectId !== id),
+    autotrackers: state.autotrackers.map(forgetProject),
+    favorites: state.favorites.map((f) => ({ ...f, draft: forgetProject(f.draft) })),
   }
 }
 
@@ -1466,11 +1526,18 @@ export function updateTask(state: TimetrackState, id: Id, patch: Partial<Task>):
   return { ...state, tasks: replaceById(state.tasks, id, patch) }
 }
 
+/** As `deleteProject`: the rules and favourites that create future entries let go too. */
 export function deleteTask(state: TimetrackState, id: Id): TimetrackState {
+  const forgetTask = <T extends { taskId: Id | null }>(ref: T): T => ({
+    ...ref,
+    taskId: ref.taskId === id ? null : ref.taskId,
+  })
   return {
     ...state,
     tasks: state.tasks.filter((t) => t.id !== id),
     entries: state.entries.map((e) => (e.taskId === id ? { ...e, taskId: null } : e)),
+    autotrackers: state.autotrackers.map(forgetTask),
+    favorites: state.favorites.map((f) => ({ ...f, draft: forgetTask(f.draft) })),
   }
 }
 
