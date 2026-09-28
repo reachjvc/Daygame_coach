@@ -274,12 +274,31 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
         target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.tagName === "SELECT" || target?.isContentEditable
       if (event.metaKey || event.ctrlKey || event.altKey) return
 
+      /**
+       * THE TYPING GUARD COMES FIRST, INCLUDING FOR `?`.
+       *
+       * This branch sat three lines above it, so `Shift+?` fired in every text field
+       * on every screen — and `preventDefault()` on keydown suppresses the character,
+       * so the question mark could not be typed anywhere in the slice. Typing "Call
+       * Acme — what next?" lost the "?" and opened a modal over the timer bar. The
+       * description field's own placeholder is "What are you working on?".
+       *
+       * The e2e spec blurs the active element before pressing `Shift+?` — its comment
+       * says "Shortcuts are ignored while a field has focus, so blur first" — which is
+       * why the suite never saw it: the test encoded the intended rule and the code
+       * did not follow it.
+       *
+       * `?` is still allowed on every SCREEN, unlike the letter shortcuts below, which
+       * is the point of a help key.
+       */
+      if (typing) return
+
       if (event.key === "?" && event.shiftKey) {
         event.preventDefault()
         setShortcutsOpen((open) => !open)
         return
       }
-      if (typing || screen !== "timer" || !state) return
+      if (screen !== "timer" || !state) return
 
       const key = event.key.toLowerCase()
       if (key === "s") {

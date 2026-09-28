@@ -304,6 +304,8 @@ export function expandRecurrence(
   const cursor = new Date(startDate)
   let emitted = 0
   let guard = 0
+  /** How many month/year steps have been taken from the anchor. See the switch below. */
+  let stepsTaken = 0
 
   /**
    * JUMP TO THE WINDOW. DO NOT WALK TO IT.
@@ -404,28 +406,39 @@ export function expandRecurrence(
   while (guard < maxInstances * 4 && out.length < maxInstances) {
     guard++
     if (count !== null && emitted >= count) break
-    if (untilMs !== null && cursor.getTime() > untilMs) break
+
     /**
-     * THE WEEK, NOT THE CURSOR, WHEN BYDAY DECIDES THE DAY.
+     * BOTH BOUNDS ASK THE SAME QUESTION, SO BOTH ASK IT OF THE SAME INSTANT.
      *
-     * The weekly branch emits from the cursor's WEEK, so with `BYDAY=MO` and a DTSTART
-     * on a Saturday the instance is five days EARLIER than the cursor. Breaking as soon
-     * as the cursor passed the window therefore dropped the last instance whenever its
-     * weekday sits before DTSTART's: measured on `BYDAY=MO` from Saturday 2 May with a
-     * window ending 28 October, twelve Mondays where the window holds thirteen — the
-     * missing one being Monday 26 October, two days inside it.
+     * The weekly branch emits from the cursor's WEEK, not from the cursor: with
+     * `BYDAY=MO` and a DTSTART on a Saturday the instance is five days EARLIER than
+     * the cursor. So neither `UNTIL` nor the window end can be tested against the
+     * cursor — the earliest instant this iteration might emit is what either bound has
+     * to be compared with.
      *
-     * Pre-existing: the walk this replaced broke on the same condition, and a
-     * differential fuzz of 1,728 shapes against it showed no difference here. It was
-     * found by a day-by-day oracle, which is the only thing that can see an absence.
+     * This was fixed for the window end alone, and `UNTIL` two lines above it was left
+     * comparing the cursor — the same mistake, in the same function, three lines apart.
+     * Every bounded weekly series therefore lost its last one to three occurrences:
+     * measured on `BYDAY=MO,WE,FR;UNTIL=20261021T215959Z` from Friday 1 May, 34 events
+     * where 36 were due, with Monday 19 and Wednesday 21 October both missing and both
+     * inside the window. `push` already refuses an instance past `UNTIL`, so the loop
+     * only had to reach them. Google Calendar writes `UNTIL` for every "ends on" repeat
+     * and `BYDAY=MO,WE,FR` for every multi-day weekly one, so this is the ordinary
+     * case rather than an exotic one — and the import says "Imported 34 events" with
+     * nothing wrong on screen.
+     *
+     * Hence one helper rather than two conditions: the next person cannot fix one bound
+     * and miss the other, which has now happened once.
      */
-    if (freq === "WEEKLY" && byDay) {
+    const earliestThisIteration = () => {
+      if (freq !== "WEEKLY" || !byDay) return cursor
       const weekStart = new Date(cursor)
       weekStart.setDate(cursor.getDate() - cursor.getDay())
-      if (weekStart > windowEnd) break
-    } else if (cursor > windowEnd) {
-      break
+      return weekStart
     }
+    const earliest = earliestThisIteration()
+    if (untilMs !== null && earliest.getTime() > untilMs) break
+    if (earliest > windowEnd) break
 
     if (freq === "WEEKLY" && byDay) {
       // Emit each requested weekday inside the current week
@@ -446,8 +459,28 @@ export function expandRecurrence(
       continue
     }
 
-    push(new Date(cursor))
-    emitted++
+    /**
+     * A MONTH WITHOUT A 31st HAS NO OCCURRENCE — IT DOES NOT HAVE THE 3rd INSTEAD.
+     *
+     * `cursor.setMonth(cursor.getMonth() + interval)` on a mutated cursor overflows
+     * February and never comes back: a monthly event on the 31st of January became
+     * Jan 31, **Mar 3**, Apr 3, May 3 … and stayed on the 3rd for ever. Yearly from 29
+     * February became 1 March every year after. RFC 5545 §3.3.10 is explicit that an
+     * instance on a date that does not exist "MUST be ignored and MUST NOT be counted",
+     * so the set is Jan 31, Mar 31, May 31 — the app invented a day and then kept it.
+     * A DTSTART from 2020 has drifted for six years by the time a 60-day window reaches
+     * it, so the meeting imports onto the wrong day with nothing on screen to show it.
+     *
+     * So the month and year steps are computed from the ORIGINAL day of the month
+     * rather than from wherever the cursor has drifted to, and a month that cannot hold
+     * that day is skipped without being counted. Daily and weekly steps are day
+     * arithmetic and cannot overflow, so they are unchanged.
+     */
+    const exists = freq === "DAILY" || freq === "WEEKLY" || cursor.getDate() === startDate.getDate()
+    if (exists) {
+      push(new Date(cursor))
+      emitted++
+    }
 
     switch (freq) {
       case "DAILY":
@@ -457,11 +490,17 @@ export function expandRecurrence(
         cursor.setDate(cursor.getDate() + 7 * interval)
         break
       case "MONTHLY":
-        cursor.setMonth(cursor.getMonth() + interval)
+      case "YEARLY": {
+        // rebuilt from the anchor, so an overflowed month cannot move every later one
+        stepsTaken += 1
+        const months = (freq === "MONTHLY" ? interval : 12 * interval) * stepsTaken
+        const next = new Date(startDate.getFullYear(), startDate.getMonth() + months, startDate.getDate())
+        // a day the target month does not have rolls forward; mark it by keeping the
+        // rolled date, which the `exists` check above then skips
+        next.setHours(startDate.getHours(), startDate.getMinutes(), startDate.getSeconds(), 0)
+        cursor.setTime(next.getTime())
         break
-      case "YEARLY":
-        cursor.setFullYear(cursor.getFullYear() + interval)
-        break
+      }
       default:
         return out.length ? out : base
     }

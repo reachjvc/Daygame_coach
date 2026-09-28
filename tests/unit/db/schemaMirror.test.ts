@@ -303,21 +303,32 @@ describe("the mirror's own blind spots are written down", () => {
       if (rawPhantoms.length === 0) continue
 
       /**
-       * PER DECLARATION, NOT PER FILE, and the first version of this was per file: it
-       * only complained when the loop parser returned NOTHING, so one parseable
-       * declaration covered for any number of unparseable ones. Round 6 proved it by
-       * rewriting a single `"%s_delete_own"` to `"%1$s_delete_own"` — 19 real DELETE
-       * policies vanished from the guard's model, 57 instead of 76, and every test
-       * here stayed green.
+       * PER DECLARATION, AND CHECKED AGAINST WHAT THE LOOP PARSER ACTUALLY PRODUCED.
+       *
+       * Two wrong versions of this before it worked, both of which read as thorough:
+       *
+       *   - per FILE, so one parseable declaration covered for any number of
+       *     unparseable ones. Proved by rewriting a single `"%s_delete_own"` to
+       *     `"%1$s_delete_own"`: 19 real DELETE policies vanished from the guard's
+       *     model — 57 instead of 76 — and every test here stayed green.
+       *   - per declaration, but comparing each phantom's suffix against a set built by
+       *     the SAME regex over the SAME text. The phantoms are a strict subset of that
+       *     set, so the comparison was true whenever the name had the right shape and
+       *     the loop parser's output was never consulted at all. A migration whose loop
+       *     form the parser cannot read — `foreach t in array (select array_agg(…))`
+       *     rather than `array[…]` — recovered ZERO policies and this reported nothing.
+       *
+       * So it asks the parser. Each phantom declaration must have produced at least one
+       * real policy, on a real table, whose name ends the way the template says.
        */
-      const recoveredSuffixes = new Set(
-        [...sql.matchAll(/create\s+policy\s+"%s([a-z0-9_]+)"/gi)].map((m) => m[1]),
-      )
+      const recovered = loopPoliciesIn(sql, file)
       for (const m of rawPhantoms) {
         const template = m[1]
         const suffix = /^%s([a-z0-9_]+)$/.exec(template)?.[1]
-        if (suffix === undefined || !recoveredSuffixes.has(suffix)) {
-          unreadable.push(`${file}: "${template}" — no parser recovers this one`)
+        const producedSomething =
+          suffix !== undefined && recovered.some((p) => p.table !== "public" && p.name.endsWith(suffix))
+        if (!producedSomething) {
+          unreadable.push(`${file}: "${template}" — the loop parser produced no policy for it`)
         }
       }
     }

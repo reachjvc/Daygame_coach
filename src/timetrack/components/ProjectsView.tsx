@@ -538,7 +538,15 @@ function ProjectDialog({
             <Field label="First period starts">
               <Input
                 type="date"
-                value={draft.recurringStart ?? todayKey}
+                /*
+                  `?? ""`, like the start and end dates below. The last commit copied
+                  their `|| null` handler and not their `value`, so clearing this box
+                  re-rendered it as TODAY while the draft held nothing: Create was then
+                  refused with "a recurring project needs a date for its first period"
+                  while the field visibly read today's date, and on the edit path the
+                  box jumped to today, showing a date the project never had.
+                */
+                value={draft.recurringStart ?? ""}
                 // `|| null`, like the start and end dates beside it: "" in a Postgres
                 // `date` column is "invalid input syntax", and it refuses table 3 of 19
                 onChange={(event) => setDraft({ ...draft, recurringStart: event.target.value || null })}

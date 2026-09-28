@@ -1289,11 +1289,40 @@ export function updateClient(state: TimetrackState, id: Id, patch: Partial<Clien
   return { ...state, clients: replaceById(state.clients, id, patch) }
 }
 
+/**
+ * A SAVED REPORT LETS GO OF SOMETHING THAT HAS BEEN DELETED.
+ *
+ * `savedReports[].config.filters` is the fourth place an id list lives, after the
+ * entries, the autotracker rules and the favourites — and none of the five delete
+ * functions touched it. `applyFilters` then matches nothing, so the person opens
+ * "Billable, October" and it is empty, while the filter count still says one and the
+ * dropdown shows nothing selected because the id is not in the workspace any more.
+ *
+ * Rounds 5 and 6 closed this class for the other three holders one at a time. This is
+ * the one function all five deletes call, so the next id list added to a saved report
+ * has one place to be swept rather than five.
+ */
+function forgetInSavedReports(
+  state: TimetrackState,
+  field: "clientIds" | "projectIds" | "taskIds" | "tagIds" | "memberIds",
+  id: Id,
+): TimetrackState["savedReports"] {
+  return state.savedReports.map((report) => {
+    const ids = report.config.filters[field]
+    if (!ids.includes(id)) return report
+    return {
+      ...report,
+      config: { ...report.config, filters: { ...report.config.filters, [field]: ids.filter((x) => x !== id) } },
+    }
+  })
+}
+
 export function deleteClient(state: TimetrackState, id: Id): TimetrackState {
   return {
     ...state,
     clients: state.clients.filter((c) => c.id !== id),
     projects: state.projects.map((p) => (p.clientId === id ? { ...p, clientId: null } : p)),
+    savedReports: forgetInSavedReports(state, "clientIds", id),
   }
 }
 
@@ -1503,6 +1532,7 @@ export function deleteProject(state: TimetrackState, id: Id): TimetrackState {
     alerts: state.alerts.filter((a) => a.projectId !== id),
     autotrackers: state.autotrackers.map(forgetProject),
     favorites: state.favorites.map((f) => ({ ...f, draft: forgetProject(f.draft) })),
+    savedReports: forgetInSavedReports(state, "projectIds", id),
   }
 }
 
@@ -1559,6 +1589,7 @@ export function deleteTask(state: TimetrackState, id: Id): TimetrackState {
     entries: state.entries.map((e) => (e.taskId === id ? { ...e, taskId: null } : e)),
     autotrackers: state.autotrackers.map(forgetTask),
     favorites: state.favorites.map((f) => ({ ...f, draft: forgetTask(f.draft) })),
+    savedReports: forgetInSavedReports(state, "taskIds", id),
   }
 }
 
@@ -1598,6 +1629,7 @@ export function deleteTag(state: TimetrackState, id: Id): TimetrackState {
     favorites: state.favorites.map((f) =>
       f.draft.tagIds.includes(id) ? { ...f, draft: { ...f.draft, tagIds: f.draft.tagIds.filter((t) => t !== id) } } : f,
     ),
+    savedReports: forgetInSavedReports(state, "tagIds", id),
   }
 }
 
@@ -1634,7 +1666,11 @@ export function updateMember(state: TimetrackState, id: Id, patch: Partial<Membe
 export function deleteMember(state: TimetrackState, id: Id): TimetrackState {
   const member = state.members.find((m) => m.id === id)
   if (!member || member.isSelf) return state
-  return { ...state, members: state.members.filter((m) => m.id !== id) }
+  return {
+    ...state,
+    members: state.members.filter((m) => m.id !== id),
+    savedReports: forgetInSavedReports(state, "memberIds", id),
+  }
 }
 
 export function createGroup(state: TimetrackState, name: string, nowIso: IsoDateTime): TimetrackState {

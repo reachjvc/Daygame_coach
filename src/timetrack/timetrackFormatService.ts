@@ -55,9 +55,20 @@ export function pad2(n: number): string {
  * fix before that was worse — it moved the range to "NaN-NaN-NaN" — but it was at
  * least visible in the label.
  *
- * So the premise is now enforced rather than asserted:
- * `tests/unit/architecture/aDateInputCannotSendNothing.test.ts` reads every
- * `type="date"` in the slice and requires its handler to deal with an empty value.
+ * THAT PARAGRAPH THEN CLAIMED A TEST THAT DID NOT EXIST. It said the premise was
+ * "enforced rather than asserted" by a file at
+ * `tests/unit/architecture/aDateInputCannotSendNothing.test.ts`, and the only
+ * occurrence of that name anywhere in the repository was the sentence claiming it. A
+ * false claim of coverage is worse than none, because it stops the next person
+ * looking — which is the failure this project has written down more times than any
+ * other, committed here in the act of closing it.
+ *
+ * The file exists now, and it guards two things rather than one, because the premise
+ * needed both: every `type="date"` in the slice deals with an empty value, AND every
+ * writer of a report's date range produces keys that parse. The live bug was not at an
+ * input — `decodeReportConfig` cast any JSON to a `ReportConfig`, so a share link could
+ * put empty strings in the range and the ‹ › arrows reached this throw inside a click
+ * handler, where it goes to `window.onerror` and the button simply does nothing.
  */
 export function dateKey(iso: IsoDateTime | Date): IsoDate {
   const d = iso instanceof Date ? iso : new Date(iso)

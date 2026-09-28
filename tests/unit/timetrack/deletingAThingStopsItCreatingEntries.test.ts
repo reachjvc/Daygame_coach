@@ -21,7 +21,7 @@
 
 import { describe, expect, test } from "vitest"
 
-import { createManualEntry, deleteProject, deleteTask } from "@/src/timetrack/timetrackService"
+import { createManualEntry, deleteClient, deleteMember, deleteProject, deleteTag, deleteTask } from "@/src/timetrack/timetrackService"
 import type { TimetrackState } from "@/src/timetrack/types"
 
 import { NOW_ISO, baseState } from "./helpers"
@@ -136,5 +136,74 @@ describe("copying the same calendar event twice", () => {
     const first = createManualEntry(baseState(), { draft, ...times }, NOW_ISO)
     const second = createManualEntry(first.state, { draft, ...times }, NOW_ISO)
     expect(second.violations).toEqual([])
+  })
+})
+
+describe("a saved report lets go of what has been deleted", () => {
+  /**
+   * `savedReports[].config.filters` is the fourth place an id list lives, after the
+   * entries, the autotracker rules and the favourites — and none of the five delete
+   * functions touched it. `applyFilters` then matches nothing, so the person opens
+   * "Billable, October" and it is empty, while the filter count still reads one and the
+   * dropdown shows nothing selected because the id is no longer in the workspace.
+   *
+   * Rounds 5 and 6 closed this class for the other three holders one at a time, each
+   * time thinking it was closed. One helper owns it now, so the next id list added to a
+   * saved report has one place to be swept rather than five.
+   */
+  function withASavedReport(): TimetrackState {
+    const base = baseState()
+    return {
+      ...base,
+      savedReports: [
+        {
+          id: "sr1",
+          name: "Billable, October",
+          at: NOW_ISO,
+          config: {
+            filters: {
+              range: { start: "2026-10-01", end: "2026-10-31" },
+              clientIds: ["20"], projectIds: ["30"], taskIds: ["40"], tagIds: ["50"], memberIds: ["11"],
+              billable: "all", description: "",
+            },
+          },
+        },
+      ],
+    } as never as TimetrackState
+  }
+
+  const filtersAfter = (state: TimetrackState) => state.savedReports[0].config.filters as unknown as Record<string, string[]>
+
+  test.each([
+    ["deleteProject", "30", "projectIds"],
+    ["deleteTask", "40", "taskIds"],
+    ["deleteTag", "50", "tagIds"],
+    ["deleteClient", "20", "clientIds"],
+    ["deleteMember", "11", "memberIds"],
+  ])("%s takes its id out of the filter", (fn, id, field) => {
+    const deletes: Record<string, (s: TimetrackState, i: string) => TimetrackState> = {
+      deleteProject, deleteTask, deleteTag, deleteClient, deleteMember,
+    }
+    const after = deletes[fn](withASavedReport(), id)
+    expect(filtersAfter(after)[field], `the report still filters on a ${field.slice(0, -3)} that is gone`).toEqual([])
+  })
+
+  test("and leaves the filters it has no business touching", () => {
+    /**
+     * The other half: a sweep that cleared the whole filter set would pass every case
+     * above while quietly emptying somebody's saved report.
+     */
+    const after = deleteProject(withASavedReport(), "30")
+    const f = filtersAfter(after)
+    expect(f.tagIds).toEqual(["50"])
+    expect(f.clientIds).toEqual(["20"])
+    expect(f.memberIds).toEqual(["11"])
+    expect(after.savedReports[0].name).toBe("Billable, October")
+  })
+
+  test("and a report that never mentioned it is the same object", () => {
+    const state = withASavedReport()
+    const after = deleteTag(state, "51") // a tag the report does not filter on
+    expect(after.savedReports[0]).toBe(state.savedReports[0])
   })
 })

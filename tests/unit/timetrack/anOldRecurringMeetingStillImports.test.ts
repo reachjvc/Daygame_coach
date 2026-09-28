@@ -140,20 +140,43 @@ describe("whatever the rule says, across 1,700 shapes", () => {
    */
   const SHAPES = (() => {
     const out: { start: string; rule: string; minutes: number }[] = []
+    /**
+     * `UNTIL` IS IN HERE NOW, AND ITS ABSENCE IS WHY THIS FILE MISSED A LIVE BUG.
+     *
+     * The first version of this enumeration had no `UNTIL` and no `EXDATE` at all — so
+     * it passed identically against the code before and after the `UNTIL` bound was
+     * fixed, which means it said nothing about the very defect that followed. The
+     * method was right and the enumeration stopped one rule part short, which is the
+     * same failure as a stand-in one level up: the shape space IS the claim.
+     *
+     * The `UNTIL` forms matter individually: Google Calendar writes it as the end of
+     * the last day in UTC for every "ends on <date>" repeat, and that is the form that
+     * loses the most when the bound is tested against the wrong instant.
+     */
     for (const freq of ["DAILY", "WEEKLY"]) {
       for (const interval of [1, 2, 3]) {
         for (const count of [null, 5, 40, 90]) {
-          for (const byday of freq === "WEEKLY" ? [null, "MO", "MO,WE,FR", "MO,WE,FR,SA", "SA,SU"] : [null]) {
-            for (const minutes of [30, 90, 24 * 60, 3 * 24 * 60]) {
-              for (const start of [
-                "2026-07-20T23:00:00.000Z", "2026-05-02T09:00:00.000Z", "2015-01-05T09:00:00.000Z",
-                "2026-08-15T07:30:00.000Z", "2024-01-08T09:00:00.000Z", "2026-09-27T12:00:00.000Z",
-              ]) {
-                let rule = `FREQ=${freq}`
-                if (interval > 1) rule += `;INTERVAL=${interval}`
-                if (count !== null) rule += `;COUNT=${count}`
-                if (byday) rule += `;BYDAY=${byday}`
-                out.push({ start, rule, minutes })
+          for (const until of [
+            null,
+            "20261021T215959Z", // end of a day, UTC — what Google writes
+            "20261026T090000Z", // mid-morning
+            "20260801T000000Z", // just inside the window
+            "20260101T000000Z", // long before it
+          ]) {
+            for (const byday of freq === "WEEKLY" ? [null, "MO", "MO,WE,FR", "MO,WE,FR,SA", "SA,SU"] : [null]) {
+              for (const minutes of [30, 90, 24 * 60, 3 * 24 * 60]) {
+                for (const start of [
+                  "2026-07-20T23:00:00.000Z", "2026-05-02T09:00:00.000Z", "2015-01-05T09:00:00.000Z",
+                  "2026-08-15T07:30:00.000Z", "2024-01-08T09:00:00.000Z", "2026-09-27T12:00:00.000Z",
+                  "2026-05-01T09:00:00.000Z", "2026-05-06T09:00:00.000Z",
+                ]) {
+                  let rule = `FREQ=${freq}`
+                  if (interval > 1) rule += `;INTERVAL=${interval}`
+                  if (count !== null) rule += `;COUNT=${count}`
+                  if (until) rule += `;UNTIL=${until}`
+                  if (byday) rule += `;BYDAY=${byday}`
+                  out.push({ start, rule, minutes })
+                }
               }
             }
           }
@@ -192,6 +215,18 @@ describe("whatever the rule says, across 1,700 shapes", () => {
     const interval = Math.max(1, Number(parts.INTERVAL ?? 1))
     const count = parts.COUNT ? Number(parts.COUNT) : null
     const byDay = parts.BYDAY ? parts.BYDAY.split(",") : null
+    /**
+     * `UNTIL` is a bound on the INSTANCE, not on any cursor — RFC 5545: an occurrence
+     * at or before it is in the set. Parsed here the same way `parseIcsDate` does, so
+     * the oracle's reading of the rule is not the implementation's reading of it.
+     */
+    const untilMs = (() => {
+      if (!parts.UNTIL) return null
+      const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/.exec(parts.UNTIL)
+      if (!m) return null
+      const [, y, mo, d, h = "23", mi = "59", sec = "59"] = m
+      return Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(sec))
+    })()
     const names = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]
     const start = new Date(startIso)
     const durationMs = minutes * 60_000
@@ -219,6 +254,7 @@ describe("whatever the rule says, across 1,700 shapes", () => {
       if (!member || at < start) continue
 
       if (count !== null && emitted >= count) break
+      if (untilMs !== null && at.getTime() > untilMs) break
       emitted++
       const end = new Date(at.getTime() + durationMs)
       if (at <= WINDOW_END && end >= WINDOW_START) out.push(at.toISOString())
@@ -299,5 +335,69 @@ describe("whatever the rule says, across 1,700 shapes", () => {
       }
     }
     expect(wrong.slice(0, 5)).toEqual([])
+  })
+})
+
+describe("a monthly or yearly event on a day some months do not have", () => {
+  /**
+   * `cursor.setMonth(cursor.getMonth() + interval)` on a mutated cursor overflows
+   * February and never comes back: a monthly meeting on 31 January became Jan 31,
+   * **Mar 3**, Apr 3, May 3 … and stayed on the 3rd for ever. Yearly from 29 February
+   * became 1 March every year after.
+   *
+   * RFC 5545 §3.3.10 is explicit — an instance on a date that does not exist "MUST be
+   * ignored and MUST NOT be counted" — so the set is Jan 31, Mar 31, May 31, and the
+   * app was inventing a day and then keeping it. A DTSTART from 2020 has drifted for
+   * six years by the time a 60-day import window reaches it, so the meeting arrives on
+   * the wrong day with nothing on screen to show it.
+   *
+   * The days are asserted rather than the count, because a count would have passed
+   * against the drift: it emitted the same NUMBER of instances, on the wrong dates.
+   */
+  const YEAR_START = new Date(2026, 0, 1)
+  const YEAR_END = new Date(2026, 11, 30, 23, 59)
+
+  const daysOf = (startIso: string, rule: string, from = YEAR_START, to = YEAR_END) =>
+    expandRecurrence(event(startIso, rule, 30), from, to).map((i) => new Date(i.start).getDate())
+
+  test("keeps the day of the month it was set on, or skips that month", () => {
+    const onThe31st = daysOf(new Date(2026, 0, 31, 9).toISOString(), "FREQ=MONTHLY")
+    expect(new Set(onThe31st), `landed on ${[...new Set(onThe31st)].join(", ")}`).toEqual(new Set([31]))
+    // and it skips the months that have no 31st rather than moving
+    expect(onThe31st.length).toBe(6)
+  })
+
+  test("the 30th appears in every month except February", () => {
+    const onThe30th = daysOf(new Date(2026, 0, 30, 9).toISOString(), "FREQ=MONTHLY")
+    expect(new Set(onThe30th)).toEqual(new Set([30]))
+    expect(onThe30th.length, "February has no 30th, so eleven").toBe(11)
+  })
+
+  test("an ordinary day is in every month, which is the control", () => {
+    /**
+     * Without this, a fix that skipped too eagerly would pass the two above while
+     * dropping half the calendar.
+     */
+    expect(daysOf(new Date(2026, 0, 15, 9).toISOString(), "FREQ=MONTHLY").length).toBe(12)
+  })
+
+  test("a yearly event on 29 February happens only in leap years", () => {
+    const years = expandRecurrence(
+      event(new Date(2024, 1, 29, 9).toISOString(), "FREQ=YEARLY", 30),
+      new Date(2024, 0, 1),
+      new Date(2033, 11, 31),
+    ).map((i) => new Date(i.start).getFullYear())
+
+    expect(years, "1 March in the non-leap years, which is a day the rule never named").toEqual([2024, 2028, 2032])
+  })
+
+  test("and a skipped month does not consume a COUNT", () => {
+    /**
+     * The other half of the RFC sentence: "MUST NOT be counted". A `COUNT=4` monthly
+     * series from the 31st must give four instances on the 31st, not four minus the
+     * Februaries.
+     */
+    const days = daysOf(new Date(2026, 0, 31, 9).toISOString(), "FREQ=MONTHLY;COUNT=4", YEAR_START, new Date(2027, 11, 31))
+    expect(days).toEqual([31, 31, 31, 31])
   })
 })
