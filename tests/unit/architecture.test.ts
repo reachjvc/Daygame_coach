@@ -76,9 +76,14 @@ const ALLOWED_DIRECT_GET_USER = new Set([
   'src/profile/actions.ts',
   'src/settings/actions.ts',
   'src/profile/loginDestinationService.ts',
-  // Authenticates with getSession() rather than getUser(), which is why the
-  // first version of this guard could not see it. Same job as the pages above.
-  'app/dashboard/tracking/layout.tsx',
+  // THE EDGE GUARD, which cannot use the facade and is not an oversight.
+  // `proxy.ts` runs before `next/headers` exists, so it builds its own client
+  // from the NextRequest; `createServerSupabaseClient()` reads `cookies()` and
+  // would throw there. It was invisible to this guard until 2026-09-28 because
+  // the walk below only descended app/ and src/ — a root-level file asking the
+  // identity provider directly, unlisted and unchecked, which is how it sat on
+  // an unverified `getSession()` while a layout cited it as the verification.
+  'proxy.ts',
   // Reads the provider's own user table by id via the ADMIN api
   // (`auth.admin.getUserById`) — a third spelling, found by an independent review
   // on 2026-09-26 after two versions of this guard missed it. It breaks outright
@@ -3002,6 +3007,28 @@ describe('Architecture Compliance', () => {
       }
       walk('app')
       walk('src')
+      /**
+       * AND THE ROOT-LEVEL FILES, which this walk could not reach.
+       *
+       * `proxy.ts` is the only one today, and it was the one that mattered:
+       * Next 16 renamed `middleware.ts` to it, it asks the identity provider
+       * on every protected request, and descending app/ and src/ alone meant
+       * no guard had ever looked at it. Listed explicitly rather than by
+       * walking the repo root, which would drag in config files and every
+       * build script.
+       */
+      for (const rel of ['proxy.ts']) {
+        const abs = path.join(projectRoot, rel)
+        if (!fs.existsSync(abs)) continue
+        const src = fs.readFileSync(abs, 'utf8')
+        if (
+          src.includes('auth.getUser()') ||
+          src.includes('auth.getSession()') ||
+          src.includes('auth.admin.')
+        ) {
+          found.push(rel)
+        }
+      }
       return found.sort()
     }
 

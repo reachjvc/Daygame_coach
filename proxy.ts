@@ -44,12 +44,23 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Use getSession() for fast cookie-based check (no network call)
-  // This is acceptable in middleware because:
-  // 1. The session token is cryptographically signed
-  // 2. Middleware only controls routing, not data access
-  // 3. RLS still protects data in API routes
-  const { data: { session } } = await supabase.auth.getSession()
+  /**
+   * `getUser()`, NOT `getSession()`.
+   *
+   * This read `getSession()` and defended it as "the session token is
+   * cryptographically signed". Nothing here checked that signature:
+   * `getSession()` decodes the cookie and returns what it says. Supabase logs
+   * a warning on every request for exactly that reason, and
+   * `app/dashboard/tracking/layout.tsx` went on to cite THIS function as the
+   * place the verification had happened.
+   *
+   * `getUser()` asks the identity provider, so a tampered or expired cookie is
+   * refused here rather than downstream, and the refreshed tokens land on
+   * `response` through `setAll` above. The cost is one network call per
+   * matched request; the routes below still call `requireAuth()` themselves,
+   * so this remains defence in depth rather than the only check.
+   */
+  const { data: { user } } = await supabase.auth.getUser()
 
   // API routes answer with 401, never a redirect to a login page: a fetch()
   // that receives an HTML login page reports a confusing parse error instead of
@@ -58,14 +69,14 @@ export async function proxy(request: NextRequest) {
   // The admin pages are reachable by URL and were never behind the guard. The
   // data they show is protected by an admin key, so nothing leaked — but the
   // pages themselves loaded for anyone who guessed the address.
-  if (pathname.startsWith("/admin") && !session) {
+  if (pathname.startsWith("/admin") && !user) {
     const redirectUrl = new URL("/auth/login", request.url)
     // Same as below: the query string is part of where they were going.
     redirectUrl.searchParams.set("next", pathname + search)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (pathname.startsWith("/api/timetrack/") && !session) {
+  if (pathname.startsWith("/api/timetrack/") && !user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
 
@@ -81,7 +92,7 @@ export async function proxy(request: NextRequest) {
     // never has its sign-in refreshed on the way past.
     pathname.startsWith(LIFE_MASTERY)
 
-  if (isProtectedRoute && !session) {
+  if (isProtectedRoute && !user) {
     const redirectUrl = new URL("/auth/login", request.url)
     /**
      * Must be `next`: that is the parameter the login page reads to send the
