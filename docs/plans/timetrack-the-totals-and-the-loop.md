@@ -1126,3 +1126,100 @@ two rounds' fixes and against the screens no round has opened — Reports, Proje
 Manage, the calendar import. The ceiling is six rounds, and if it is still
 producing findings there, that is the answer and it gets said plainly rather than
 turned into a round seven.
+
+# REVIEW UNTIL CLEAN — ROUND 4, 2026-09-28
+
+Two lenses: round 3's own fixes, and the screens no earlier round had opened
+(Reports, Projects, Manage, the calendar import). About twenty findings, and the
+worst of them was mine.
+
+**My import-offer fix deleted a workspace.** Making the banner a real gate set the
+sync baseline to "the server already has everything", which is a lie while the
+account is empty. An edit made before the person answers — a rename, a Start, a
+Stop — uploaded that ONE row; the server invented a workspace to hang it on; and the
+next reload was no longer a first-time account, so adoption took the server's sparse
+copy as the base and wrote it over the rest. Measured: 3 entries, 2 projects, 2 tags,
+2 tasks, a client and a workspace named "Test WS" came back as 1 entry, 0 projects, 0
+tags and "My Workspace". "Not now" reached the same end by the same route, which made
+its promise false at the next reload.
+
+Fixed at a root older than my bug: **the server wins every row it knows about,
+including every row it says was deleted — it does not win a row it has never seen.**
+A first contact is a full read, tombstones included, so a key missing from it was
+never stored.
+
+**Money nobody had checked.** A fixed fee was counted once per row, so grouping by
+date multiplied a retainer by the days worked: EUR 3,000 and a 91% margin for a EUR
+1,000 project across three days. It survived three rounds because the tab opens on
+the one grouping where it was right. The Summary's fixed fee read every project ever
+created, ignoring the range, archived projects and templates. "Round by default" did
+nothing while reading On. The Profitability tab's Export downloaded the Summary. The
+Detailed CSV exported UTC instants where the screen showed local dates, so every
+entry after 22:00 landed on the previous day in a spreadsheet — which is what a
+monthly invoice is.
+
+**The oldest recurring meeting was the one that vanished.** `expandRecurrence` walked
+one step per iteration from DTSTART with a 1,600-iteration guard, so a daily rule
+older than about four and a half years never reached the import window: a rule from
+2015 gave 0 instances, the same rule from 2026 gave 91, and the cliff sat at 1,671
+days. And the message sent the person to widen a window that was already wide enough.
+
+**Two of my tests asserted nothing**, which is the lesson of the round. One counted
+requests where the damage was in the queue; one held every request behind a single
+shared handle, so the request under test was never the one released — green against
+the bug AND against both fixes. Round 4's reviewer found a third the same way, by
+extracting the pre-fix hook and running the test against both.
+
+**So the gesture became a script.** `scripts/tests-must-fail-without-the-fix.mjs`
+takes the source as it was at a base commit, lays the current tests on top and runs
+them; a test that still passes is reported. It reads per-assertion JSON and ignores
+tests that already existed, because judging whole files cleared the very file that
+contained the stand-in. On this review: 53 new tests proven, 15 suspect, and all 15
+are control cases that pin behaviour which already worked — each now says so in its
+own file.
+
+# REVIEW UNTIL CLEAN — ROUND 5, 2026-09-28 — THE BIRDSEYE PASS
+
+The owner asked for one agent to step back rather than hunt another bug, and to keep
+going until a fresh agent had nothing left to change.
+
+**Its most serious finding is not a timetrack defect.** `schemaMirror.test.ts` guards
+against a row rule going missing, and it could not see most of them. Verified here,
+and worse than reported: it required a QUOTED policy name, so eight policies on the
+two vice tables — relapse records, the most private data in the app — were invisible;
+it could not read a policy created in a loop and recorded **four phantoms on a table
+called `public`** in place of 76 real ones; and rule 1's "on a table the mirror
+actually has" clause discarded 34 of the 56 it could parse. Measured: 63 tables in
+production, 52 mirrored, 22 policies actually checked. The guard now reads 136, holds
+no phantoms, and names every remaining hole with its consequence.
+
+**Three claims of the plan's own, corrected.** This slice is 17,764 lines and
+**fifth** largest, not "the largest in the app" — goals is 115,647, and programs,
+scenarios and tracking are all bigger. Nothing outside the slice reads a single hour
+you have tracked: the only references beyond it are its own row types. And `main` is
+41 timetrack commits behind, with zero occurrences of "end before it starts", so the
+deployed build still accepts a reversed end time.
+
+**The defect shape, which is the useful part.** About ninety findings reduce to a few
+roots, and three of them — a strict 19-table schema with no validating boundary in
+front of it, React effects used as the scheduler, and three different meanings of
+"the baseline" collapsed into one snapshot — account for roughly a third of every
+finding and live in the same four files: `syncService.ts`, `useTimetrackSync.ts`,
+`timetrackMapperService.ts` and `timetrackRepo.ts`. 2,735 lines, 16% of the slice.
+That is where the shape question lives, not in "19k lines is a lot".
+
+**And a set of decisions that are the owner's, not a reviewer's.** About a third of
+the slice is features that cannot work by construction — RLS on all nineteen tables
+is `auth.uid() = user_id`, with no share table and no second-user path, so "Invite"
+types a contact card, you approve your own timesheet, and the webhook log shows the
+word "sent" for something the header two lines above calls simulated. Deleting that
+code is reversible; dropping its tables is not. Both are written up as blockers in
+the reply rather than acted on.
+
+**Where this leaves the loop.** Findings per round: about thirty, twenty-eight,
+thirteen, twenty, and a birdseye pass whose findings were mostly structural. It has
+not converged and, on the evidence of a thirteen-round review of another slice this
+week, a review of a surface this size does not converge — it enumerates. Each round
+aimed at something the previous ones had not driven, and each found something. The
+honest stopping rule is cost, not a clean round; the owner asked for a clean round,
+so the rounds continue, and this is what they have cost and bought so far.
