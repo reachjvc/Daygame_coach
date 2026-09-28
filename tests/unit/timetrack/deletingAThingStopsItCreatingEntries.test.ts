@@ -188,10 +188,30 @@ describe("a saved report lets go of what has been deleted", () => {
     expect(filtersAfter(after)[field], `the report still filters on a ${field.slice(0, -3)} that is gone`).toEqual([])
   })
 
+  test("deleting a project also takes ITS TASKS out of the filter", () => {
+    /**
+     * The field the first version of this file walked around. It seeded
+     * `taskIds: ["40"]` — task 40 belongs to project 30 — called `deleteProject`, and
+     * then checked `tagIds`, `clientIds` and `memberIds`: every field except the one
+     * that would have caught it. `deleteProject` deletes the project's tasks and
+     * strips their ids from the autotracker rules and the favourites, so leaving them
+     * in a saved report is the same dangling reference, in the fourth holder, found by
+     * round 8 one round after the helper was written to end exactly that.
+     */
+    const state = withASavedReport()
+    expect(state.tasks.some((t) => t.id === "40" && t.projectId === "30"), "the fixture's task 40 must belong to project 30").toBe(true)
+
+    const after = deleteProject(state, "30")
+    expect(after.tasks.some((t) => t.id === "40"), "the task was not deleted, so this asserts nothing").toBe(false)
+    expect(filtersAfter(after).taskIds, "the report still filters on a task that went with the project").toEqual([])
+  })
+
   test("and leaves the filters it has no business touching", () => {
     /**
      * The other half: a sweep that cleared the whole filter set would pass every case
-     * above while quietly emptying somebody's saved report.
+     * above while quietly emptying somebody's saved report. Every remaining field is
+     * named, so the next one added to `ReportFilters` shows up here as a gap rather
+     * than passing by omission.
      */
     const after = deleteProject(withASavedReport(), "30")
     const f = filtersAfter(after)
@@ -199,6 +219,10 @@ describe("a saved report lets go of what has been deleted", () => {
     expect(f.clientIds).toEqual(["20"])
     expect(f.memberIds).toEqual(["11"])
     expect(after.savedReports[0].name).toBe("Billable, October")
+    // the whole set, so an unnamed field cannot hide
+    expect(Object.keys(f).sort()).toEqual(
+      ["billable", "clientIds", "description", "memberIds", "projectIds", "range", "tagIds", "taskIds"],
+    )
   })
 
   test("and a report that never mentioned it is the same object", () => {

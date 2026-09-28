@@ -1304,16 +1304,22 @@ export function updateClient(state: TimetrackState, id: Id, patch: Partial<Clien
  */
 function forgetInSavedReports(
   state: TimetrackState,
-  field: "clientIds" | "projectIds" | "taskIds" | "tagIds" | "memberIds",
-  id: Id,
+  gone: Partial<Record<"clientIds" | "projectIds" | "taskIds" | "tagIds" | "memberIds", Id[]>>,
 ): TimetrackState["savedReports"] {
   return state.savedReports.map((report) => {
-    const ids = report.config.filters[field]
-    if (!ids.includes(id)) return report
-    return {
-      ...report,
-      config: { ...report.config, filters: { ...report.config.filters, [field]: ids.filter((x) => x !== id) } },
+    let filters = report.config.filters
+    let changed = false
+    for (const [field, ids] of Object.entries(gone) as [keyof typeof gone, Id[]][]) {
+      const current = filters[field]
+      const kept = current.filter((x) => !ids.includes(x))
+      if (kept.length !== current.length) {
+        filters = { ...filters, [field]: kept }
+        changed = true
+      }
     }
+    // the same object back when nothing matched, so a report nobody touched is not
+    // re-created on every delete
+    return changed ? { ...report, config: { ...report.config, filters } } : report
   })
 }
 
@@ -1322,7 +1328,7 @@ export function deleteClient(state: TimetrackState, id: Id): TimetrackState {
     ...state,
     clients: state.clients.filter((c) => c.id !== id),
     projects: state.projects.map((p) => (p.clientId === id ? { ...p, clientId: null } : p)),
-    savedReports: forgetInSavedReports(state, "clientIds", id),
+    savedReports: forgetInSavedReports(state, { clientIds: [id] }),
   }
 }
 
@@ -1532,7 +1538,17 @@ export function deleteProject(state: TimetrackState, id: Id): TimetrackState {
     alerts: state.alerts.filter((a) => a.projectId !== id),
     autotrackers: state.autotrackers.map(forgetProject),
     favorites: state.favorites.map((f) => ({ ...f, draft: forgetProject(f.draft) })),
-    savedReports: forgetInSavedReports(state, "projectIds", id),
+    /**
+     * THE PROJECT'S TASKS GO TOO, SO THEIR IDS GO FROM THE FILTERS AS WELL.
+     *
+     * The first version of this swept `projectIds` only, while the same function
+     * deletes every task belonging to the project three lines above and strips those
+     * task ids from the autotracker rules and the favourites. A saved report therefore
+     * kept a task id that no longer resolves — verbatim the symptom this helper was
+     * written to end: the report opens empty while the filter count still reads one
+     * and the dropdown shows nothing selected.
+     */
+    savedReports: forgetInSavedReports(state, { projectIds: [id], taskIds: [...orphanedTaskIds] }),
   }
 }
 
@@ -1589,7 +1605,7 @@ export function deleteTask(state: TimetrackState, id: Id): TimetrackState {
     entries: state.entries.map((e) => (e.taskId === id ? { ...e, taskId: null } : e)),
     autotrackers: state.autotrackers.map(forgetTask),
     favorites: state.favorites.map((f) => ({ ...f, draft: forgetTask(f.draft) })),
-    savedReports: forgetInSavedReports(state, "taskIds", id),
+    savedReports: forgetInSavedReports(state, { taskIds: [id] }),
   }
 }
 
@@ -1629,7 +1645,7 @@ export function deleteTag(state: TimetrackState, id: Id): TimetrackState {
     favorites: state.favorites.map((f) =>
       f.draft.tagIds.includes(id) ? { ...f, draft: { ...f.draft, tagIds: f.draft.tagIds.filter((t) => t !== id) } } : f,
     ),
-    savedReports: forgetInSavedReports(state, "tagIds", id),
+    savedReports: forgetInSavedReports(state, { tagIds: [id] }),
   }
 }
 
@@ -1669,7 +1685,7 @@ export function deleteMember(state: TimetrackState, id: Id): TimetrackState {
   return {
     ...state,
     members: state.members.filter((m) => m.id !== id),
-    savedReports: forgetInSavedReports(state, "memberIds", id),
+    savedReports: forgetInSavedReports(state, { memberIds: [id] }),
   }
 }
 

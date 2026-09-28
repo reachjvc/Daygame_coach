@@ -228,10 +228,10 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     if (!state || reportConfig) return
     const params = new URLSearchParams(window.location.search)
     const shared = params.get("report")
-    const decoded = shared ? decodeReportConfig(shared) : null
-    setReportConfig(
-      decoded ?? defaultReportConfig(dateKey(new Date()), state.user.weekStart, state.workspace.rounding),
-    )
+    // the link is laid over a complete config, so a partial one cannot reach a builder
+    const defaults = defaultReportConfig(dateKey(new Date()), state.user.weekStart, state.workspace.rounding)
+    const decoded = shared ? decodeReportConfig(shared, defaults) : null
+    setReportConfig(decoded ?? defaults)
     if (decoded) setScreen("reports")
   }, [state, reportConfig])
 

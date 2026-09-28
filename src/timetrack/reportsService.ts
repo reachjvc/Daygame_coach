@@ -806,38 +806,52 @@ function isDateKey(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime())
 }
 
-export function decodeReportConfig(encoded: string): ReportConfig | null {
+/**
+ * A shared report link, LAID OVER A COMPLETE CONFIG RATHER THAN TRUSTED AS ONE.
+ *
+ * WHY IT IS A MERGE AND NOT A VALIDATOR. This cast whatever `JSON.parse` returned to a
+ * `ReportConfig`, so `?report=e30` — which is `btoa("{}")` — produced `{}`. The first
+ * attempt at fixing it checked `filters.range.start/end`, because that was the crash
+ * being looked at; seven other members of `ReportFilters` went unchecked, and
+ * `applyFilters` reads `filters.description.trim()`, so a link carrying only a range
+ * still threw. Checking `description` next would have been the third round of the same
+ * mistake.
+ *
+ * And the cost is not a blank report. `ReportsView` builds all four reports in a
+ * `useMemo` during render, and the `ErrorBoundary` wraps the whole of `<main>` — so a
+ * throw replaces the entire content area, timer and entries included, with "Something
+ * went wrong with this screen". `?report=` is never stripped from the URL, so a reload
+ * decodes the same link and crashes again; getting out means navigating away and THEN
+ * pressing Try again, in that order. The timer keeps running invisibly throughout.
+ *
+ * A merge cannot have that failure for any input: every field the link omits, or gets
+ * wrong in a way worth refusing, comes from the defaults the caller already has. The
+ * only things still checked are the ones where a present-but-wrong value is worse than
+ * absent — a range whose dates do not parse reaches `dateKey`, which throws.
+ */
+export function decodeReportConfig(encoded: string, fallback: ReportConfig): ReportConfig | null {
+  let parsed: unknown
   try {
-    const parsed: unknown = JSON.parse(decodeURIComponent(escape(atob(encoded))))
-
-    /**
-     * A LINK THAT PARSES IS NOT A LINK THAT MEANS ANYTHING.
-     *
-     * This cast whatever came out of `JSON.parse` to a `ReportConfig`, so
-     * `?report=e30` — which is `btoa("{}")` — produced `{}`, `btoa("[]")` produced an
-     * array and `btoa("7")` produced the number 7. With `filters` missing, all four
-     * report builders throw `Cannot read properties of undefined (reading 'range')`,
-     * and `ReportsView` calls them inside `useMemo` during render, so the screen
-     * unmounts. The `try/catch` and the existing "not base64 gives null" test make the
-     * intent plain — an unusable link falls back to the default — and it was met only
-     * for input that failed to parse at all.
-     *
-     * It is also the second door to the `dateKey` throw: a range whose dates are empty
-     * strings reaches `shiftRange`, and `addDays("", 0)` throws inside a click handler
-     * where nothing catches it. Refusing the link here closes that one too, which is
-     * why the check is on the RANGE specifically and not just on `filters` existing.
-     */
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null
-    const filters = (parsed as { filters?: unknown }).filters
-    if (typeof filters !== "object" || filters === null) return null
-    const range = (filters as { range?: unknown }).range
-    if (typeof range !== "object" || range === null) return null
-    const { start, end } = range as { start?: unknown; end?: unknown }
-    if (!isDateKey(start) || !isDateKey(end)) return null
-
-    return parsed as ReportConfig
+    parsed = JSON.parse(decodeURIComponent(escape(atob(encoded))))
   } catch {
     return null
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null
+
+  const shared = parsed as Partial<ReportConfig>
+  const sharedFilters = (shared.filters ?? {}) as Partial<ReportFilters>
+
+  // a range is only taken if both ends parse; otherwise the default range stands
+  const range =
+    isDateKey((sharedFilters.range as DateRange | undefined)?.start) &&
+    isDateKey((sharedFilters.range as DateRange | undefined)?.end)
+      ? (sharedFilters.range as DateRange)
+      : fallback.filters.range
+
+  return {
+    ...fallback,
+    ...shared,
+    filters: { ...fallback.filters, ...sharedFilters, range },
   }
 }
 

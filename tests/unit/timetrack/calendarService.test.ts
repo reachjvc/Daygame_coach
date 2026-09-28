@@ -336,3 +336,38 @@ describe("calendar grid geometry", () => {
     expect(dayColumnSeconds(entries, "2026-08-10", NOW_SEC)).toBe(2 * 3600)
   })
 })
+
+describe("a VEVENT that gives a start and no end", () => {
+  /**
+   * `parseIcs` required both, so such a row was dropped — and counted by NEITHER skip
+   * counter, so the import said "Imported 1 event" for a file holding two. RFC 5545
+   * §3.6.1 permits `DTSTART` alone, and it means zero length for a DATE-TIME.
+   *
+   * A zero-length event still cannot become a time entry, so it is not imported. What
+   * changed is that the person is told which of the two things happened: it used to
+   * fall into the "outside the date window" count, which is untrue and sends them to
+   * widen a window that is already wide enough — the same wrong sentence the
+   * recurrence cliff produced, from a different cause.
+   */
+  const ics = (body: string[]) => ["BEGIN:VCALENDAR", ...body, "END:VCALENDAR"].join("\r\n")
+  const withEnd = ["BEGIN:VEVENT", "UID:a", "SUMMARY:has an end", "DTSTART:20260920T090000Z", "DTEND:20260920T093000Z", "END:VEVENT"]
+  const startOnly = ["BEGIN:VEVENT", "UID:b", "SUMMARY:no end", "DTSTART:20260920T110000Z", "END:VEVENT"]
+
+  test("is parsed rather than silently dropped", () => {
+    expect(parseIcs(ics([...withEnd, ...startOnly])).map((e) => e.uid)).toEqual(["a", "b"])
+  })
+
+  test("and is counted as having no length, not as outside the window", () => {
+    const result = icsToEvents(ics([...withEnd, ...startOnly]), "cal", "2026-09-20")
+    expect(result.events).toHaveLength(1)
+    expect(result.skippedZeroLength, "it was not counted at all, so the numbers did not add up").toBe(1)
+    expect(result.skippedOutOfWindow, "it was blamed on the date window, which is false").toBe(0)
+  })
+
+  test("and a genuinely out-of-window event is still called that", () => {
+    const longAgo = ["BEGIN:VEVENT", "UID:c", "SUMMARY:last year", "DTSTART:20250101T090000Z", "DTEND:20250101T093000Z", "END:VEVENT"]
+    const result = icsToEvents(ics([...withEnd, ...longAgo]), "cal", "2026-09-20")
+    expect(result.skippedOutOfWindow).toBe(1)
+    expect(result.skippedZeroLength).toBe(0)
+  })
+})

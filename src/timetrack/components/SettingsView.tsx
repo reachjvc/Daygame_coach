@@ -608,7 +608,7 @@ export function IntegrationsPanel({
   const mergeEvents = (
     calendarId: Id,
     events: ReturnType<typeof icsToEvents>["events"],
-    stats: { skippedAllDay: number; skippedOutOfWindow?: number },
+    stats: { skippedAllDay: number; skippedOutOfWindow?: number; skippedZeroLength?: number },
   ) => {
     setState((current) => ({
       ...current,
@@ -620,6 +620,8 @@ export function IntegrationsPanel({
     const skipped = [
       stats.skippedAllDay > 0 ? `${stats.skippedAllDay} all-day` : null,
       stats.skippedOutOfWindow ? `${stats.skippedOutOfWindow} outside the date window` : null,
+      // said as itself rather than folded into the window count, which was untrue
+      stats.skippedZeroLength ? `${stats.skippedZeroLength} with no length` : null,
     ].filter(Boolean)
     pushToast(
       `Imported ${events.length} ${events.length === 1 ? "event" : "events"}` +

@@ -260,14 +260,71 @@ describe("profitability report", () => {
 })
 
 describe("saved report share links", () => {
+  const DEFAULTS = defaultReportConfig("2026-09-28", 1, { enabled: false, mode: "nearest", minutes: 15 })
+
   test("config survives an encode/decode round trip", () => {
     const original = config({ grouping: "client", subGrouping: null, chartInterval: "week" })
-    const decoded = decodeReportConfig(encodeReportConfig(original))
+    const decoded = decodeReportConfig(encodeReportConfig(original), DEFAULTS)
     expect(decoded).toEqual(original)
   })
 
   test("garbage decodes to null", () => {
-    expect(decodeReportConfig("!!!not-base64!!!")).toBeNull()
+    expect(decodeReportConfig("!!!not-base64!!!", DEFAULTS)).toBeNull()
+  })
+
+  test("a partial link is laid over the defaults rather than handed on as a config", () => {
+    /**
+     * `?report=e30` is `btoa("{}")`. It used to decode to `{}`; the first fix checked
+     * `filters.range` because that was the crash in front of it, and a link carrying
+     * ONLY a range still threw in `applyFilters` on `filters.description.trim()`.
+     *
+     * The cost was not a blank report: `ReportsView` builds all four inside a
+     * `useMemo` during render and the `ErrorBoundary` wraps the whole of `<main>`, so
+     * a throw replaced the timer, the entries and every other screen with "Something
+     * went wrong". `?report=` is never stripped, so a reload crashed again.
+     *
+     * The assertion is therefore that every field is PRESENT, not that some named ones
+     * are — a validator gets one more field each round; a merge cannot be short of one.
+     */
+    const encode = (value: unknown) => btoa(unescape(encodeURIComponent(JSON.stringify(value))))
+    const rangeOnly = decodeReportConfig(encode({ filters: { range: { start: "2026-08-01", end: "2026-08-31" } } }), DEFAULTS)
+
+    expect(rangeOnly, "a range-only link was refused; it should be honoured over the defaults").not.toBeNull()
+    expect(rangeOnly!.filters.range).toEqual({ start: "2026-08-01", end: "2026-08-31" })
+    // and everything the link did not say comes from the defaults
+    expect(Object.keys(rangeOnly!).sort()).toEqual(Object.keys(DEFAULTS).sort())
+    expect(Object.keys(rangeOnly!.filters).sort()).toEqual(Object.keys(DEFAULTS.filters).sort())
+    expect(rangeOnly!.filters.description).toBe("")
+    expect(rangeOnly!.sort).toEqual(DEFAULTS.sort)
+    expect(rangeOnly!.rounding).toEqual(DEFAULTS.rounding)
+  })
+
+  test("and every report can be built from what it returns", () => {
+    /**
+     * The assertion that matters, and the one the previous version of this did not
+     * make: the previous test asserted a shape was ACCEPTED, and that shape threw in
+     * `buildDetailed`. Accepting is not the promise — being usable is.
+     */
+    const encode = (value: unknown) => btoa(unescape(encodeURIComponent(JSON.stringify(value))))
+    for (const link of [
+      {},
+      { filters: {} },
+      { filters: { range: { start: "2026-08-01", end: "2026-08-31" } } },
+      { grouping: "tag" },
+      { tab: "profitability" },
+      { filters: { description: "invoice" } },
+      { filters: { range: { start: "not-a-date", end: "2026-08-31" } } },
+    ]) {
+      const decoded = decodeReportConfig(encode(link), DEFAULTS)
+      expect(decoded, `${JSON.stringify(link)} was refused`).not.toBeNull()
+      const cfg = decoded!
+      // all four builders, which is what ReportsView runs during render
+      // asserted on the result, not on the absence of an error — the report has totals
+      expect(buildSummary(state, cfg, NOW_SEC).totals.seconds).toBeGreaterThanOrEqual(0)
+      expect(buildDetailed(state, cfg, NOW_SEC)).toBeInstanceOf(Array)
+      expect(buildWorkload(state, cfg, NOW_SEC).rows).toBeInstanceOf(Array)
+      expect(buildProfitability(state, cfg, NOW_SEC).rows).toBeInstanceOf(Array)
+    }
   })
 })
 

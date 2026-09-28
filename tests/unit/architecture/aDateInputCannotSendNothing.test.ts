@@ -30,7 +30,7 @@ import { join } from "node:path"
 
 import { describe, expect, test } from "vitest"
 
-import { decodeReportConfig, emptyFilters, presetRange, rangeDayCount } from "@/src/timetrack/reportsService"
+import { decodeReportConfig, defaultReportConfig, emptyFilters, presetRange, rangeDayCount } from "@/src/timetrack/reportsService"
 import { addDays, dateKey, weekStartOf } from "@/src/timetrack/timetrackFormatService"
 
 const COMPONENTS = join(process.cwd(), "src/timetrack/components")
@@ -142,31 +142,50 @@ describe("every writer of a report's date range", () => {
     expect(addDays(filters.range.start, 7)).toMatch(KEY)
   })
 
-  test("a share link that would produce an unusable range is refused", () => {
-    /**
-     * `?report=e30` is `btoa("{}")`. It used to decode to `{}`, and every report
-     * builder then threw inside a render. A range of empty strings decoded happily and
-     * reached the ‹ › arrows, where the throw goes to `window.onerror` and the button
-     * silently does nothing.
-     */
-    const encode = (value: unknown) => btoa(unescape(encodeURIComponent(JSON.stringify(value))))
-    for (const bad of [
+  /**
+   * A SHARE LINK EITHER IS NOT A CONFIG, OR COMES BACK AS A WHOLE ONE.
+   *
+   * Two wrong versions of this before it settled. The first cast any JSON to a
+   * `ReportConfig`, so `?report=e30` — `btoa("{}")` — reached the builders and, because
+   * `ReportsView` builds all four in a `useMemo` and the `ErrorBoundary` wraps the whole
+   * of `<main>`, replaced the timer and every other screen with "Something went wrong".
+   * The second validated `filters.range` because that was the crash in front of it, and
+   * a link carrying only a range still threw on `filters.description.trim()`.
+   *
+   * So the contract is not "refuse the bad ones" — a validator is one field short every
+   * round. It is: anything that is not an object is refused, and anything that is comes
+   * back laid over a complete default. The assertion is therefore that every link
+   * produces something all four builders can use, which is the thing actually promised.
+   */
+  const DEFAULTS = defaultReportConfig("2026-09-28", 1, { enabled: false, mode: "nearest", minutes: 15 })
+  const encode = (value: unknown) => btoa(unescape(encodeURIComponent(JSON.stringify(value))))
+
+  test("what is not an object at all is refused", () => {
+    for (const bad of [[], 7, "text", null]) {
+      expect(decodeReportConfig(encode(bad), DEFAULTS), `${JSON.stringify(bad)} was accepted`).toBeNull()
+    }
+    expect(decodeReportConfig("!!!not-base64!!!", DEFAULTS)).toBeNull()
+  })
+
+  test("and every partial link comes back complete, range included", () => {
+    for (const partial of [
       {},
-      [],
-      7,
       { filters: {} },
       { filters: { range: {} } },
       { filters: { range: { start: "", end: "" } } },
       { filters: { range: { start: "not-a-date", end: "2026-09-28" } } },
       { filters: { range: { start: "2026-13-45", end: "2026-09-28" } } },
+      { grouping: "tag" },
+      { filters: emptyFilters(presetRange("this_month", "2026-09-28", 1)), grouping: "project" },
     ]) {
-      expect(decodeReportConfig(encode(bad)), `${JSON.stringify(bad)} was accepted`).toBeNull()
+      const decoded = decodeReportConfig(encode(partial), DEFAULTS)
+      expect(decoded, `${JSON.stringify(partial)} was refused`).not.toBeNull()
+      const cfg = decoded!
+      // every key present, so nothing downstream can read undefined
+      expect(Object.keys(cfg).sort(), `${JSON.stringify(partial)} is missing keys`).toEqual(Object.keys(DEFAULTS).sort())
+      expect(Object.keys(cfg.filters).sort()).toEqual(Object.keys(DEFAULTS.filters).sort())
+      // and the range is one the arrows can shift, which is what reaches `dateKey`
+      expect(addDays(cfg.filters.range.start, rangeDayCount(cfg.filters.range))).toMatch(KEY)
     }
-  })
-
-  test("and a real one still round-trips", () => {
-    const good = { filters: emptyFilters(presetRange("this_month", "2026-09-28", 1)), grouping: "project" }
-    const encode = (value: unknown) => btoa(unescape(encodeURIComponent(JSON.stringify(value))))
-    expect(decodeReportConfig(encode(good))).not.toBeNull()
   })
 })

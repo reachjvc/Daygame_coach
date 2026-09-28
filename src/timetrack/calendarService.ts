@@ -168,6 +168,17 @@ export function parseIcs(text: string): ParsedVEvent[] {
       continue
     }
     if (line.startsWith("END:VEVENT")) {
+      /**
+       * A start with no end is a zero-length event, not a row to throw away.
+       *
+       * This required `current.end`, so a VEVENT carrying `DTSTART` and neither `DTEND`
+       * nor `DURATION` was dropped — and counted by neither skip counter, so the import
+       * said "Imported 1 event" for a file holding two. RFC 5545 §3.6.1 permits DTSTART
+       * alone. Google and Outlook always write DTEND for a timed event, so this needs a
+       * hand-written or third-party file; the cost of the old behaviour was a silent
+       * disagreement between the file and the count.
+       */
+      if (current?.start && !current.end) current.end = current.start
       if (current?.start && current.end && current.uid) {
         events.push({
           uid: current.uid,
@@ -298,6 +309,47 @@ export function expandRecurrence(
         .map((d) => d.slice(-2).toUpperCase())
         .sort((a, b) => ICS_WEEKDAYS.indexOf(a) - ICS_WEEKDAYS.indexOf(b))
     : null
+
+  /**
+   * "MONTHLY ON THE SECOND MONDAY" MEANS THE SECOND MONDAY, NOT THE 14th.
+   *
+   * `BYDAY` was parsed for every FREQ with `slice(-2)` throwing the numeric prefix
+   * away, and then read only inside the WEEKLY branch — so MONTHLY and YEARLY fell
+   * through to the anchor stepper, which repeats DTSTART's day of the month. Measured:
+   * `FREQ=MONTHLY;BYDAY=2MO` from Monday 14 September gave 14 Sep, **Wed** 14 Oct,
+   * **Sat** 14 Nov — the weekday wandering while the rule names one. Google Calendar
+   * writes exactly `BYDAY=2MO` and `BYDAY=-1FR` for two of the options in its repeat
+   * dropdown, and the import reported a clean success while writing wrong dates.
+   *
+   * `2MO` is the second Monday, `-1FR` the last Friday. Only the first entry is used:
+   * a monthly rule with several positional days is legal and vanishingly rare, and
+   * guessing which one the person meant would be worse than using the one they wrote
+   * first.
+   */
+  const positional = (() => {
+    if (!rules.BYDAY || (freq !== "MONTHLY" && freq !== "YEARLY")) return null
+    const first = rules.BYDAY.split(",")[0].trim().toUpperCase()
+    const m = /^(-?\d+)(MO|TU|WE|TH|FR|SA|SU)$/.exec(first)
+    if (!m) return null
+    const weekday = ICS_WEEKDAYS.indexOf(m[2])
+    if (weekday === -1) return null
+    return { nth: Number(m[1]), weekday }
+  })()
+
+  /** The nth (or -1 = last) `weekday` of the month `sample` falls in. */
+  const nthWeekdayOf = (sample: Date, nth: number, weekday: number): Date | null => {
+    const year = sample.getFullYear()
+    const month = sample.getMonth()
+    const days: number[] = []
+    for (const at = new Date(year, month, 1); at.getMonth() === month; at.setDate(at.getDate() + 1)) {
+      if (at.getDay() === weekday) days.push(at.getDate())
+    }
+    const day = nth > 0 ? days[nth - 1] : days[days.length + nth]
+    if (day === undefined) return null
+    const out = new Date(year, month, day)
+    out.setHours(sample.getHours(), sample.getMinutes(), sample.getSeconds(), 0)
+    return out
+  }
   const excluded = new Set(event.exdates.map((iso) => new Date(iso).getTime()))
 
   const out: { start: IsoDateTime; end: IsoDateTime }[] = []
@@ -476,10 +528,23 @@ export function expandRecurrence(
      * that day is skipped without being counted. Daily and weekly steps are day
      * arithmetic and cannot overflow, so they are unchanged.
      */
-    const exists = freq === "DAILY" || freq === "WEEKLY" || cursor.getDate() === startDate.getDate()
-    if (exists) {
-      push(new Date(cursor))
-      emitted++
+    if (positional) {
+      /**
+       * A positional rule names a weekday, so the anchor's day of the month is not the
+       * question — and a month that has no such nth weekday (a fifth Monday) is skipped
+       * without being counted, the same rule as a month with no 31st.
+       */
+      const at = nthWeekdayOf(cursor, positional.nth, positional.weekday)
+      if (at && at >= startDate) {
+        push(at)
+        emitted++
+      }
+    } else {
+      const exists = freq === "DAILY" || freq === "WEEKLY" || cursor.getDate() === startDate.getDate()
+      if (exists) {
+        push(new Date(cursor))
+        emitted++
+      }
     }
 
     switch (freq) {
@@ -517,6 +582,9 @@ export interface IcsImportResult {
   events: CalendarEvent[]
   skippedAllDay: number
   skippedOutOfWindow: number
+  /** Events with no length, which cannot become a time entry. Counted apart from the
+   * window, because saying "outside the date window" about one is simply false. */
+  skippedZeroLength: number
 }
 
 /**
@@ -531,6 +599,7 @@ export function icsToEvents(text: string, calendarId: Id, todayKey: IsoDate): Ic
   const events: CalendarEvent[] = []
   let skippedAllDay = 0
   let skippedOutOfWindow = 0
+  let skippedZeroLength = 0
 
   for (const parsed of parseIcs(text)) {
     if (parsed.allDay) {
@@ -539,11 +608,25 @@ export function icsToEvents(text: string, calendarId: Id, todayKey: IsoDate): Ic
     }
     const instances = expandRecurrence(parsed, windowStart, windowEndDay)
     let kept = 0
+    let zeroLength = 0
     for (const instance of instances) {
       const start = new Date(instance.start)
       const end = new Date(instance.end)
       if (end < windowStart || start > windowEndDay) continue
-      if (end.getTime() <= start.getTime()) continue
+      /**
+       * A zero-length event cannot become a time entry, so it is dropped — but it is
+       * dropped for THAT reason, and said so.
+       *
+       * It used to fall into the `kept === 0` branch below and be reported as "outside
+       * the date window", which is not true and sends the person to widen a window that
+       * is already wide enough. The same wrong sentence as the recurrence cliff, from a
+       * different cause. An event with `DTSTART` and no `DTEND` is zero-length by RFC
+       * 5545 §3.6.1, so this is where such a row now lands.
+       */
+      if (end.getTime() <= start.getTime()) {
+        zeroLength++
+        continue
+      }
       kept++
       events.push({
         id: `${calendarId}:${parsed.uid}:${instance.start}`,
@@ -558,10 +641,13 @@ export function icsToEvents(text: string, calendarId: Id, todayKey: IsoDate): Ic
         htmlLink: parsed.htmlLink,
       })
     }
-    if (kept === 0) skippedOutOfWindow++
+    if (kept === 0) {
+      if (zeroLength > 0) skippedZeroLength++
+      else skippedOutOfWindow++
+    }
   }
 
-  return { events, skippedAllDay, skippedOutOfWindow }
+  return { events, skippedAllDay, skippedOutOfWindow, skippedZeroLength }
 }
 
 /** Google's Calendar API shape (events.list items) → CalendarEvent[] */

@@ -401,3 +401,55 @@ describe("a monthly or yearly event on a day some months do not have", () => {
     expect(days).toEqual([31, 31, 31, 31])
   })
 })
+
+describe("monthly on the second Monday", () => {
+  /**
+   * `BYDAY` was parsed for every FREQ with `slice(-2)` throwing the numeric prefix
+   * away, and then read only inside the WEEKLY branch — so MONTHLY and YEARLY fell
+   * through to the anchor stepper, which repeats DTSTART's day of the month. Measured:
+   * `FREQ=MONTHLY;BYDAY=2MO` from Monday 14 September gave 14 Sep, **Wednesday** 14
+   * Oct, **Saturday** 14 Nov, the weekday wandering while the rule names one.
+   *
+   * Google Calendar writes exactly `BYDAY=2MO` and `BYDAY=-1FR` for two of the options
+   * in its repeat dropdown, and the import reported a clean success while putting the
+   * meeting on the wrong day. The weekday is asserted rather than the count, because a
+   * count was already right.
+   */
+  const SIX_MONTHS_START = new Date(2026, 8, 1)
+  const SIX_MONTHS_END = new Date(2027, 2, 1)
+
+  const starts = (startIso: string, rule: string) =>
+    expandRecurrence(event(startIso, rule, 30), SIX_MONTHS_START, SIX_MONTHS_END).map((i) => new Date(i.start))
+
+  test("lands on the second Monday of every month", () => {
+    const got = starts(new Date(2026, 8, 14, 9).toISOString(), "FREQ=MONTHLY;BYDAY=2MO")
+    expect(got.length).toBeGreaterThan(4)
+    for (const at of got) {
+      expect(at.getDay(), `${at.toDateString()} is not a Monday`).toBe(1)
+      // the second Monday is between the 8th and the 14th, whatever the month
+      expect(at.getDate(), `${at.toDateString()} is not the SECOND Monday`).toBeGreaterThanOrEqual(8)
+      expect(at.getDate()).toBeLessThanOrEqual(14)
+    }
+  })
+
+  test("and on the last Friday when the rule says -1FR", () => {
+    const got = starts(new Date(2026, 8, 25, 9).toISOString(), "FREQ=MONTHLY;BYDAY=-1FR")
+    expect(got.length).toBeGreaterThan(4)
+    for (const at of got) {
+      expect(at.getDay(), `${at.toDateString()} is not a Friday`).toBe(5)
+      // the last Friday has no Friday after it in its own month
+      const later = new Date(at)
+      later.setDate(at.getDate() + 7)
+      expect(later.getMonth(), `${at.toDateString()} is not the LAST Friday`).not.toBe(at.getMonth())
+    }
+  })
+
+  test("a plain monthly rule still repeats the day of the month", () => {
+    /**
+     * The control. A fix that routed every monthly rule through the positional path
+     * would move every ordinary monthly meeting.
+     */
+    const got = starts(new Date(2026, 8, 14, 9).toISOString(), "FREQ=MONTHLY")
+    expect(new Set(got.map((d) => d.getDate()))).toEqual(new Set([14]))
+  })
+})
