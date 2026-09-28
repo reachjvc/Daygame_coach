@@ -357,7 +357,7 @@ mine, and putting it to you was me making you do my job.**
 | 4 | **Q-CORPUS** | Permission to write a migration. | Yes, and it is one line |
 | 5 | **Q-AI-HOST** | Money: it is the largest line in the bill. | Ollama for embeddings, paid API for chat |
 | 6 | **Q-BETA** | It deletes a branch. Your repo, your call. | Retire it |
-| 7 | **Q-POLICIES** | Risk appetite, with a real cost either way. | Keep them, rewritten |
+| 7 | **Q-POLICIES** | Risk appetite, with a real cost either way. **But you cannot answer it until B-PATHS is settled** — 76 of the rules live in the paths that negotiation covers. | Keep them, rewritten |
 
 ## Tier 2 — mine. Decided, so you do not have to. Overrule any of them if you disagree.
 
@@ -368,7 +368,7 @@ wrong, so you can overrule without needing the engineering.
 |---|---|---|
 | **Q-HARNESS** | **Build the PostgREST-compatible surface over `pg`.** Option (c) leaves M5's net at 91 of 11,272 lines; option (b) turns M0 into the rewrite. | Weeks spent on a layer that is deleted at M5 |
 | **Q-AUTHWINDOW** | **M3 mints a Supabase-shaped token until M5.** Keeps every milestone's daily-use answer yes and leaves the order alone. | A throwaway token path, deleted at M5 |
-| **Q-ORDER** | **Closed: no.** Not a preference — the plan's own physics closes it, since M4 must precede the port and M4 needs M2, which needs the move. | We forgo a checkpoint that was never reachable |
+| **Q-ORDER** | **MOVED BACK TO TIER 1 — I should not have pre-decided this.** My "physics" reason is refuted five lines into Q-ORDER's own entry, which says M4 *can* take a pre-move form because neither of its test forms needs Better Auth. And Q-ORDER is gated **by** Q-POLICIES, which is yours and unanswered. **A question downstream of your decision cannot be closed for you.** It stays closed *provisionally* until Q-POLICIES is answered, and then it is yours. | — |
 | **Q-SEAM** | **Ambient provider**, not a threaded parameter: ~26 files instead of 275, and it is what makes Q-HARNESS work. | A seam that has to be widened later |
 | **Q-SKELETON** | **Yes — test the one belief M1.0 cannot cover**, that a non-browser client accepts a Better Auth token. An afternoon. | An afternoon spent early instead of a surprise at M3 |
 
@@ -379,7 +379,11 @@ making the person least equipped to answer do the work.**
 
 ---
 
-# The questions in full — these need you
+# The questions in full
+
+**The numbered answering order below predates the Tier split and asks you for ten, including four
+I have now decided.** Read it for the *reasoning* on each question; take the count from Tier 1.
+Where the two disagree, Tier 1 wins.
 
 Each has a recommendation, so "go with your recommendations" is a complete answer.
 **A milestone that depends on an unanswered question says so and does not start.**
@@ -677,17 +681,46 @@ string, **URI** — the *direct* connection, not the pooler, because the pooler 
 
 **Step 2 — the two dumps.**
 
-    pg_dump "$SUPABASE_DB_URL" --schema-only --no-owner --no-privileges -f schema.sql
-    pg_dump "$SUPABASE_DB_URL" --data-only --no-owner -f data.sql
+    pg_dump "$SUPABASE_DB_URL" --schema public --schema-only --no-owner --no-privileges -f schema.sql
+    pg_dump "$SUPABASE_DB_URL" --schema public --data-only --no-owner -f data.sql
+    pg_dump "$SUPABASE_DB_URL" --schema public --schema-only --no-owner -f privileges-reference.sql
+
+**CORRECTED 2026-09-28 — my first version of these commands was wrong twice, and the first way
+was serious.** `--no-privileges` suppresses GRANT and REVOKE. That is **exactly Fact 2's second
+protection kind — the one the plan says no row rule can replace.** Measured: two migrations carry
+`revoke update on public.profiles from authenticated` followed by `grant update (…)` on a named
+column list, and **that grant IS the premium guard** — its own comment says "Excluded:
+has_purchased (money), id, email, created_at", and its NOTE records that a table grant cannot be
+carved with `revoke update (col)`, so the allow-list exists nowhere but in the ACL. Function
+execute privileges — who may run the 11 functions M4 must decide the fate of — go the same way.
+**So M4's first permission deliverable, "enumerate the permission model from
+`information_schema.table_privileges` and `column_privileges`", would have run against a copy
+containing zero privileges and reported nothing to enumerate.** Hence the **third dump**, kept for
+*reading* rather than loading — grants to `authenticated` and `anon` cannot replay where those
+roles do not exist, which is M2's own N14 problem.
+The second error: **no `--schema public`.** A bare `pg_dump` takes every schema it can read,
+including `auth` and `storage`, which either fails on objects owned by `supabase_*` roles or loads
+a copy of Supabase's `auth` schema into the proof container — and both break what M0.4 step 2c and
+M2's acceptance assume. `--schema public` drops the `auth` schema while keeping public tables'
+`references auth.users` constraints, which is the state both of them want. `docs/plans/foundation.md`
+already used `--schema public`; I did not look.
 
 **Step 3 — prove the schema dump before trusting it**, because Fact 1 says the migration folder
 cannot rebuild this database and this file is its replacement:
 
-    docker run -d --name proof -e POSTGRES_PASSWORD=x -p 55432:5432 postgres:15-alpine
+    docker run -d --name proof -e POSTGRES_PASSWORD=x -p 55432:5432 pgvector/pgvector:pg15
     psql "postgresql://postgres:x@localhost:55432/postgres" -f schema.sql
 
-**It will fail on `auth.*` references and that is expected, not a problem** — a plain Postgres has
-no `auth` schema. What matters is *what else* fails, because that is the list M2 has to fix.
+**Use a pgvector image, not plain `postgres:15-alpine`.** M2 says the dump contains the real
+`embeddings` table with its `vector(768)` column, and plain Postgres has no `vector` type — which
+is why the test harness fakes it as `DOUBLE PRECISION[]` and why N20 says pgvector has never been
+exercised here. On a plain image step 3 produces a cascade of `vector` errors that look like a
+broken schema and are not.
+
+**Two classes of failure are expected and are not problems.** (1) `auth.*` references — a plain
+Postgres has no `auth` schema, and `--schema public` above is what keeps this to the FK
+constraints rather than the whole schema. (2) Anything about `vector`, if you used a plain image
+instead of the pgvector one. What matters is *what else* fails, because that is the list M2 has to fix.
 **I have not run steps 1–3** (your credentials); step 0 is the only part I could verify here.
 *Why it moved to the front:* N9. Nineteen tables the code uses exist in no
 migration, so **the migration folder cannot rebuild your database** and
@@ -784,7 +817,17 @@ tree.
 
 ## M0 — Preparation on the current stack
 
-**Depends on:** B1 (the dumps), B-PATHS (convention 4 resolved).
+**Depends on:** nothing, as a milestone. **CORRECTED 2026-09-28: this line used to read "B1,
+B-PATHS" for the whole of M0, while M0.2, M0.3 and M0.5 each declare "Depends on: nothing" — and
+the convention says no milestone starts before its dependencies pass. Read as written, the three
+things that could begin today could not begin at all.** The real gating is per sub-step: **B1 →
+M0.4 and M0.6. B-PATHS → M0.4.** M0.1 is done; M0.2, M0.3 and M0.5 need neither.
+
+**So the first hour, which no version of this plan has ever stated:** message the sessions that own
+`src/timetrack/**` and `src/vice/**` about B-PATHS — it gates M0.4, M1b.4, M7, M1.6 *and* your own
+Q-POLICIES, and it is the only step whose latency nobody here controls. Then start M0.2 or M0.5
+while it is outstanding. The plan's only previous sentence about what comes first pointed at the
+hosting half, which is the **latest**-available item of all of them.
 **Your daily use:** unaffected, except where noted in M0.6.
 
 ### M0.1 — One function answers "who is logged in". **DONE**
@@ -939,7 +982,14 @@ Supabase, which is why an import-only check misses them.
    `settingsRepo`; `workoutRepo` through three other repos and two Postgres
    functions. Giving one a seam while its callees build their own client buys
    nothing.
-- Acceptance: **UNWRITABLE until Q-HARNESS is answered.** It said "executes repo functions for
+- Acceptance, **written 2026-09-28 from Q-HARNESS's Tier-2 answer, because leaving it blank was
+  incoherent once I had decided the question:** option (a) builds the compatibility surface, and
+  option (a)'s own text says that makes **26 of 26 reachable without porting anything**. So the
+  acceptance is **`npm run test:integration` executes repo functions for 26 of 26, through the
+  compatibility surface, with one repo (`valuesRepo`) additionally proven against Drizzle to
+  measure cost per line.** "Whatever the answer makes reachable" was satisfied by any number
+  including zero — an absent gate wearing a deferral's clothes. The earlier retraction stands as
+  history: It said "executes repo functions for
   26 of 26" while the deliverable ports one and the milestone's own mechanism paragraph says a
   repo cannot reach the container until it is ported. **An acceptance incompatible with its own
   deliverable is worse than a missing one**, and this is M0's exit gate and M5's entry
@@ -978,8 +1028,9 @@ an SSH tunnel to the box — there is no platform CLI under D1 — or a local Po
   database your laptop cannot reach.
 
 **M0 acceptance:** N17 still passes, N19 reports "none new", the app still works on Vercel, and
-**the repo-test coverage figure is whatever Q-HARNESS's answer makes reachable — NOT "26 of 26"
-until that answer says so.** (Blanking M0.4's acceptance while leaving this one asserting the
+**`npm run test:integration` covers 26 of 26 through Q-HARNESS's compatibility surface.** (This
+line asserted that number while M0.4's acceptance was blank, then deferred to a question Tier 2 had
+already answered. Both were wrong; the answer is (a) and (a) makes the number reachable.) (Blanking M0.4's acceptance while leaving this one asserting the
 retracted number was the same mistake twice in one milestone. Q-HARNESS option (c) even says
 "reword **both** gates".) Nothing about the platform has
 changed.
@@ -1395,6 +1446,20 @@ reversible half bolted to the dangerous one-way half, and scheduled last.
   database's protection (round 8), so the gate cannot follow it. The per-file order is the
   one recorded in M0.4 step 4: seam once, then `valuesRepo`, then the other standalone
   files, then the clumps largest-last, measuring cost per line as you go.
+- **Acceptance — M5 had none, on the 11,272-line phase this plan calls its riskiest.** Every other
+  milestone has one. M5's is: **M0.4's tests pass against Drizzle for every repo ported, M4's
+  generated suite runs as a STANDING CI check across the whole phase rather than once at its
+  start, and the app serves your daily use on the new database.**
+- **The three temporary structures die here, and until now none of them said when.** All three were
+  promised to end "at M5" and M5 named none of them:
+  1. **The PostgREST compatibility surface** (Q-HARNESS) — **dies per file, as each is ported**,
+     not at the start. It is M5's own safety net, because M0.4's tests run through it, so killing
+     it up front removes the net from the phase it exists to protect.
+  2. **The minted Supabase-shaped token** (Q-AUTHWINDOW (a)) — dies when the last repo is ported.
+  3. **The `auth.users` dual write** (Q-AUTHWINDOW (c)) — dies with it, same moment.
+  **Put the dual write in `src/db/auth.ts`.** The architecture guard walks `app/` and `src/` for
+  `auth.admin.` and exempts only that file, with a ledger M0.1's acceptance says may only shrink —
+  so anywhere else is a knowingly-red guard that blocks every peer session through the Stop hook.
 - **Before traffic moves: a second dump inside a bounded read-only window**, of every
   table with rows newer than B1's, so the months of your own use in between are not
   lost.
