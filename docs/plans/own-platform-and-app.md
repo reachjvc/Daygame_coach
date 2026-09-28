@@ -341,13 +341,13 @@ exactly as written below.
 # OPEN QUESTIONS
 
 **SPLIT 2026-09-28, and this is a fault in how I have been working.** Twelve questions had
-accumulated and I audited who can actually answer them. **Six were engineering choices I had
+accumulated and I audited who can actually answer them. **Five were engineering choices I had
 offloaded onto someone who has said he is not a programmer** — Q-HARNESS asks you to choose
 between building a PostgREST-compatible surface, porting 26 files behind a dual seam, or
 accepting a safety net covering 0.8% of the riskiest phase. **That is not your decision; it is
 mine, and putting it to you was me making you do my job.**
 
-## Tier 1 — genuinely yours. Seven, and each turns on your money, your time, your risk appetite or your permission.
+## Tier 1 — genuinely yours. Eight, and each turns on your money, your time, your risk appetite or your permission.
 
 | | Question | Why it is yours | My recommendation |
 |---|---|---|---|
@@ -357,6 +357,7 @@ mine, and putting it to you was me making you do my job.**
 | 4 | **Q-CORPUS** | Permission to write a migration. | Yes, and it is one line |
 | 5 | **Q-AI-HOST** | Money: it is the largest line in the bill. | Ollama for embeddings, paid API for chat |
 | 6 | **Q-BETA** | It deletes a branch. Your repo, your call. | Retire it |
+| 8 | **Q-ORDER** | Gated by your Q-POLICIES answer, and my closure reason is refuted inside its own entry. **No recommendation — genuinely yours.** | none |
 | 7 | **Q-POLICIES** | Risk appetite, with a real cost either way. **But you cannot answer it until B-PATHS is settled** — 76 of the rules live in the paths that negotiation covers. | Keep them, rewritten |
 
 ## Tier 2 — mine. Decided, so you do not have to. Overrule any of them if you disagree.
@@ -368,7 +369,7 @@ wrong, so you can overrule without needing the engineering.
 |---|---|---|
 | **Q-HARNESS** | **Build the PostgREST-compatible surface over `pg`.** Option (c) leaves M5's net at 91 of 11,272 lines; option (b) turns M0 into the rewrite. | Weeks spent on a layer that is deleted at M5 |
 | **Q-AUTHWINDOW** | **M3 mints a Supabase-shaped token until M5.** Keeps every milestone's daily-use answer yes and leaves the order alone. | A throwaway token path, deleted at M5 |
-| **Q-ORDER** | **MOVED BACK TO TIER 1 — I should not have pre-decided this.** My "physics" reason is refuted five lines into Q-ORDER's own entry, which says M4 *can* take a pre-move form because neither of its test forms needs Better Auth. And Q-ORDER is gated **by** Q-POLICIES, which is yours and unanswered. **A question downstream of your decision cannot be closed for you.** It stays closed *provisionally* until Q-POLICIES is answered, and then it is yours. | — |
+| ~~Q-ORDER~~ | **MOVED TO TIER 1, item 8. Marker only: last round announced the move and never made it, so an owner reading the tables never learned it was his.** My "physics" reason is refuted five lines into Q-ORDER's own entry, which says M4 *can* take a pre-move form because neither of its test forms needs Better Auth. And Q-ORDER is gated **by** Q-POLICIES, which is yours and unanswered. **A question downstream of your decision cannot be closed for you.** It stays closed *provisionally* until Q-POLICIES is answered, and then it is yours. | — |
 | **Q-SEAM** | **Ambient provider**, not a threaded parameter: ~26 files instead of 275, and it is what makes Q-HARNESS work. | A seam that has to be widened later |
 | **Q-SKELETON** | **Yes — test the one belief M1.0 cannot cover**, that a non-browser client accepts a Better Auth token. An afternoon. | An afternoon spent early instead of a surprise at M3 |
 
@@ -646,7 +647,7 @@ branch and its CI triggers. **Cost if wrong:** you lose a staging lane you have 
 used since February. *Gates: M1.*
 
 ### Q-AI-HOST — Is Ollama hosted on the platform, or do those slices move to a paid API?
-N36 vs N37: this single choice is three to four times everything else in the bill.
+N41 vs N42: roughly two to three times everything else in the bill. (This read 'N36 vs N37, three to four times' — pricing your largest money decision off the superseded rows.)
 It cannot be made cheap by letting it sleep — reloading 4.9 GB of weights on the
 first request means Ask Coach times out rather than being slow. **And D6 constrains
 it: the embedding half cannot move.** So the real question is only about the chat
@@ -665,14 +666,15 @@ noun phrase with no procedure, which `docs/known-failures.md` forbids: *"anythin
 meant to run, I have run — or I say plainly that I could not, and why."* Here is the procedure,
 with the failure it hits first.**
 
-**Step 0, the one that prevents the classic first-paste failure.** `pg_dump` refuses outright if
-it is older than the server's major version. **Checked on this machine: `pg_dump` is 16.15.** So
-find the server's major first:
-
-    psql "$SUPABASE_DB_URL" -c "select version();"
-
-If that says 17, a 16.15 client **will not work** and you need `postgresql-client-17`. If it says
-15 or 16, you are fine. (The integration harness pins `postgres:15-alpine`, so whatever the answer
+**Step 0 — ALREADY ANSWERED, on your own disk, and the answer changes the step.**
+`supabase/.temp/postgres-version` has been tracked in git since 2026-02-15 and contains
+**`17.6.1.063`**. Majors never go down, so **your live server is Postgres 17.** `pg_dump` refuses
+outright if it is older than the server, and `pg_dump` here is **16.15** — so
+**`postgresql-client-17` is a prerequisite, not a contingency**, and my previous "if it says 15 or
+16 you are fine" branch was dead on arrival. No credentials and no dashboard trip were ever needed
+for this; fourteen rounds of review sent you to ask a question the repo had already answered.
+`supabase/.temp/` also holds the project ref, the pooler URI and the gotrue version, so step 1's
+"nothing in this repo holds it" was wrong too — only the password is missing. (The integration harness pins `postgres:15-alpine`, so whatever the answer
 is, M2's version pin must match it.)
 
 **Step 1 — the connection string.** Supabase dashboard, Project Settings, Database, Connection
@@ -708,10 +710,15 @@ already used `--schema public`; I did not look.
 **Step 3 — prove the schema dump before trusting it**, because Fact 1 says the migration folder
 cannot rebuild this database and this file is its replacement:
 
-    docker run -d --name proof -e POSTGRES_PASSWORD=x -p 55432:5432 pgvector/pgvector:pg15
+    docker run -d --name proof -e POSTGRES_PASSWORD=x -p 55432:5432 pgvector/pgvector:pg17
     psql "postgresql://postgres:x@localhost:55432/postgres" -f schema.sql
 
-**Use a pgvector image, not plain `postgres:15-alpine`.** M2 says the dump contains the real
+**Use `pg17`, and a pgvector image.** Restoring a 17 dump into a 15 server produces a third
+failure class on top of the two named below — and step 3 tells you to treat "what else fails" as
+M2's to-do list, so a version mismatch hands M2 a false list, which is the exact failure step 3
+exists to prevent. **And the harness pin follows from this:** `tests/integration/setup.ts` pins
+`postgres:15-alpine`, two majors behind production, which matters because M0.4 makes the mirror and
+M2's schema one artifact. M2's Postgres is 17. M2 says the dump contains the real
 `embeddings` table with its `vector(768)` column, and plain Postgres has no `vector` type — which
 is why the test harness fakes it as `DOUBLE PRECISION[]` and why N20 says pgvector has never been
 exercised here. On a plain image step 3 produces a cascade of `vector` errors that look like a
@@ -730,10 +737,39 @@ mirror from N10, and it cannot invent 29 tables.
 *Consequence to state plainly:* the first substantive step of this plan is gated on
 you. "M0 carries no risk" was wrong on both halves.
 
+### B0 — CONFIRM WHETHER YOUR SUPABASE PROJECT IS VERCEL-MANAGED. **Needs you. Before anything else, and it may change rule 4.** NEW 2026-09-28.
+*Gates: B5, rule 4, and the plan's central safety claim.*
+
+**Read from tracked git, not inferred:** `supabase/.temp/linked-project.json` says
+`"organization_id": "vercel_icfg_71FOm5Sa6adJPpop7W4qxxX2"`. The `icfg_` prefix is a Vercel
+integration-configuration id, and there is no `supabase/config.toml` — **so this project appears to
+have been provisioned through the Vercel Marketplace rather than created in a Supabase organisation
+of your own.**
+
+**If that is what it is, three things this plan promises may not be true:**
+- **Rule 4 — "Supabase stays paid and running"** — which you are asked to approve, and which is the
+  safety net under every risky step. A database billed and lifecycled through the account being
+  cancelled cannot be promised to survive it.
+- **B5** treats switching Vercel and Supabase off as one blocker with one order. It may be **one
+  switch that takes both.**
+- **The plan's central safety claim** — "every one-way door is in the Supabase half; the hosting
+  half is reversible in minutes by pointing the domain back at Vercel." If the integration must be
+  unpicked to free the database, the fallback and the database move together. The integration also
+  injects `NEXT_PUBLIC_SUPABASE_*` into the Vercel project, so unpicking at the wrong moment takes
+  the live site down.
+
+**What to do, and it is one trip to two dashboards while Vercel is still production and nothing
+has moved:** confirm whether the project is Vercel-provisioned, and if so transfer it into a
+Supabase organisation you own. **Stated as needs-confirming, not settled** — I read the org id in
+your repo and the vendor's public docs, not your dashboard. The same trip answers where B1's direct
+connection string lives, and whether the project still exposes a symmetric JWT secret, which
+Q-AUTHWINDOW (a) rests on — `gotrue-version` says v2.186.0, which is the asymmetric-signing-keys
+era, so that is a real question rather than a formality.
+
 ### B2 — Hetzner account, a payment method and an SSH key. **Needs you. Gates M1.**
 *Also:* Hetzner verifies new accounts, which can take a day or two — open it early
 rather than on the morning M1 starts.
-*Cost:* **not priced** — see the note under N36–N38. The shape is N36, or N37 if
+*Cost:* **N41, or N42 if Q-AI-HOST says host.** Corrected 2026-09-28: this priced your hardware order off N36-N38, the rows the plan twice says not to quote at you. Superseded shape was N36, or N37 if
 Q-AI-HOST says host, but those were a managed platform's prices.
 
 ### B3 — An email provider and a domain you control. **Needs you. The domain half gates M1.0 and M3; the email half gates M1b.3 and M3's forced-reset branch.**
@@ -823,9 +859,14 @@ the convention says no milestone starts before its dependencies pass. Read as wr
 things that could begin today could not begin at all.** The real gating is per sub-step: **B1 →
 M0.4 and M0.6. B-PATHS → M0.4.** M0.1 is done; M0.2, M0.3 and M0.5 need neither.
 
-**So the first hour, which no version of this plan has ever stated:** message the sessions that own
-`src/timetrack/**` and `src/vice/**` about B-PATHS — it gates M0.4, M1b.4, M7, M1.6 *and* your own
-Q-POLICIES, and it is the only step whose latency nobody here controls. Then start M0.2 or M0.5
+**So the first hour, corrected 2026-09-28** — my previous version called B-PATHS "the only step
+whose latency nobody here controls", wrong three ways: B1's latency is yours, B2's is Hetzner's
+account verification (a day or two), B3's is DNS settling. **Order:**
+1. **B0** — the Vercel-managed organisation question. It can invalidate rule 4, so it precedes all.
+2. **B1** (step 0 corrected), **B2** (open the account; their verification is the wait) and **B3**
+   (buy the domain; DNS settling is a wait, not a task). All three are your latency.
+3. **Then** message the sessions owning `src/timetrack/**` and `src/vice/**` about B-PATHS.
+4. **Then** start M0.2 or M0.5, which need none of the above. Then start M0.2 or M0.5
 while it is outstanding. The plan's only previous sentence about what comes first pointed at the
 hosting half, which is the **latest**-available item of all of them.
 **Your daily use:** unaffected, except where noted in M0.6.
@@ -1343,6 +1384,17 @@ N12 twice.
   so a new account gets no profile and hits a blank wall at every access gate with no
   error explaining it. The same trigger fills `profiles.timezone`, **so without this
   M1b.2's scheduler rolls everyone over at UTC midnight instead of their own.**
+- **`src/db/auth.ts`, `proxy.ts` and the 20-file ledger — ADDED 2026-09-28. M3 had named the one
+  file on that path that reads no identity at all.** M3 said "`authCookies.ts` replaced". Measured:
+  59 lines exporting `authCookieOptions`, `browserAuthCookieOptions`, `requestIsHttps` — **cookie
+  options; it reads nobody.** The two files that decide who the caller is are **`src/db/auth.ts`**
+  (the facade all 48 converted API routes use) and **`proxy.ts`**, which calls
+  `supabase.auth.getUser()` at line 63 then redirects or 401s across nine prefixes — `/dashboard`,
+  `/preferences`, `/programs`, `/lair`, `/qa`, `/life-mastery`, `/api/test`, `/api/timetrack`,
+  `/admin` — and refreshes the session cookies. **`proxy.ts` appeared once in this whole plan, in an
+  unrelated trace, and in no milestone.** It needs its own token verification, because it runs
+  before `next/headers` exists and cannot use the facade. N5's 20 remaining direct call sites belong
+  here too, not under "still to do" inside a milestone marked DONE.
 - **New accounts land in BOTH databases for the M3→M5 window** (Q-AUTHWINDOW (a)+(c)): our own
   users table *and* Supabase's `auth.users` via `createAdminSupabaseClient`, so the trigger that
   creates `profiles` still fires and the foreign key is satisfied. **Stops at M5.** Without this,
@@ -1432,7 +1484,11 @@ the test cannot pass.**
 welded to this milestone and that was the plan's largest ordering mistake: the cheap
 reversible half bolted to the dangerous one-way half, and scheduled last.
 
-**Depends on:** M0.4 (the only reason this is not a leap of faith), M4, B5.
+**Depends on:** M0.4 (the only reason this is not a leap of faith), M4. **NOT B5 — corrected
+2026-09-28.** B5 was a dependency, and the convention is no milestone starts before its dependencies
+pass. Followed literally that switches Supabase off *before* the port: every unported repo dead, the
+second dump impossible, the dual write's target gone, rule 4 broken. **B5 belongs at M5's exit**,
+which rule 4 and the plan's own later sentence already say.
 - N1. What holds the shape is each repo's exported functions
   plus M0.4's tests — **M0 establishes no other interface.**
 - **Connection pooling**: today ~280 call sites each get a free HTTP client; under
@@ -1457,6 +1513,10 @@ reversible half bolted to the dangerous one-way half, and scheduled last.
      it up front removes the net from the phase it exists to protect.
   2. **The minted Supabase-shaped token** (Q-AUTHWINDOW (a)) — dies when the last repo is ported.
   3. **The `auth.users` dual write** (Q-AUTHWINDOW (c)) — dies with it, same moment.
+  4. **`proxy.ts`'s Supabase session check — and this one fails CLOSED.** The moment the minted
+     token stops, `proxy.ts` gets no user and **every one of its nine protected prefixes redirects
+     to `/auth/login`.** It cannot lag as cleanup: ported *with* item 2, same change, or the app
+     locks everyone out at the moment the plan calls itself finished.
   **Put the dual write in `src/db/auth.ts`.** The architecture guard walks `app/` and `src/` for
   `auth.admin.` and exempts only that file, with a ledger M0.1's acceptance says may only shrink —
   so anywhere else is a knowingly-red guard that blocks every peer session through the Stop hook.
