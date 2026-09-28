@@ -160,7 +160,11 @@ interface ParsedVEvent {
 export function parseIcs(text: string): ParsedVEvent[] {
   const lines = unfoldIcsLines(text)
   const events: ParsedVEvent[] = []
-  let current: Partial<ParsedVEvent> & { exdates: IsoDateTime[] } | null = null
+  /**
+   * `durationRaw` is a parsing buffer, not part of a parsed event: a VEVENT may put
+   * `DURATION` above `DTSTART`, so the value is kept and resolved at `END:VEVENT`.
+   */
+  let current: (Partial<ParsedVEvent> & { exdates: IsoDateTime[]; durationRaw?: string }) | null = null
 
   for (const line of lines) {
     if (line.startsWith("BEGIN:VEVENT")) {
@@ -178,6 +182,11 @@ export function parseIcs(text: string): ParsedVEvent[] {
        * hand-written or third-party file; the cost of the old behaviour was a silent
        * disagreement between the file and the count.
        */
+      // a DURATION resolves here, where DTSTART is known however the file ordered them
+      if (current?.start && !current.end && current.durationRaw) {
+        const seconds = parseIcsDuration(current.durationRaw)
+        if (seconds !== null) current.end = new Date(new Date(current.start).getTime() + seconds * 1000).toISOString()
+      }
       if (current?.start && !current.end) current.end = current.start
       if (current?.start && current.end && current.uid) {
         events.push({
@@ -231,10 +240,17 @@ export function parseIcs(text: string): ParsedVEvent[] {
         break
       }
       case "DURATION": {
-        if (current.start) {
-          const seconds = parseIcsDuration(prop.value)
-          if (seconds !== null) current.end = new Date(new Date(current.start).getTime() + seconds * 1000).toISOString()
-        }
+        /**
+         * KEPT, NOT RESOLVED HERE — because a VEVENT's properties may arrive in any
+         * order and RFC 5545 puts no constraint on it.
+         *
+         * This required `current.start` to be set already, so a `DURATION:PT1H` line
+         * written ABOVE `DTSTART` was dropped. That used to make the event vanish;
+         * once a start with no end became zero-length it made the import say "1 with
+         * no length" about a one-hour meeting — a confidently wrong sentence, the same
+         * sin as the "outside the date window" message that change was made to fix.
+         */
+        current.durationRaw = prop.value
         break
       }
       case "RRULE":
@@ -329,7 +345,11 @@ export function expandRecurrence(
   const positional = (() => {
     if (!rules.BYDAY || (freq !== "MONTHLY" && freq !== "YEARLY")) return null
     const first = rules.BYDAY.split(",")[0].trim().toUpperCase()
-    const m = /^(-?\d+)(MO|TU|WE|TH|FR|SA|SU)$/.exec(first)
+    // `[+-]?`: RFC 5545 §3.3.10 spells the ordinal `[plus / minus] ordwk` and its own
+    // examples are `+1FR` and `-1SU`. A leading `+` made this return null, so the rule
+    // fell through to the anchor stepper — the very bug the positional branch fixed,
+    // one character away. `Number("+2")` is 2, so nothing else changes.
+    const m = /^([+-]?\d+)(MO|TU|WE|TH|FR|SA|SU)$/.exec(first)
     if (!m) return null
     const weekday = ICS_WEEKDAYS.indexOf(m[2])
     if (weekday === -1) return null
@@ -483,6 +503,24 @@ export function expandRecurrence(
      * and miss the other, which has now happened once.
      */
     const earliestThisIteration = () => {
+      /**
+       * A POSITIONAL RULE HAS THE SAME PROPERTY, AND THE BRANCH FOR IT WAS ADDED
+       * WITHOUT BEING ADDED HERE.
+       *
+       * This helper exists because a WEEKLY+BYDAY instance can fall earlier than the
+       * cursor, so no bound may be tested against the cursor. `BYDAY=2MO` is the same
+       * shape — the cursor sits on DTSTART's day of the month while the instance is
+       * that month's nth weekday, up to six days either side — and both bounds
+       * therefore stopped one iteration too early. Fuzzed: 2,148 of 29,700 positional
+       * shapes silently lost one due occurrence, never an extra. End to end, a
+       * `BYDAY=1MO` series dropped Monday 2 November on three days out of five while it
+       * sat inside the window, and the toast said "Imported 2 events" with no note.
+       *
+       * Third time this function's bound has been wrong in the same way, which is why
+       * the helper exists at all — and the positional branch still had to be taught to
+       * use it.
+       */
+      if (positional) return nthWeekdayOf(cursor, positional.nth, positional.weekday) ?? cursor
       if (freq !== "WEEKLY" || !byDay) return cursor
       const weekStart = new Date(cursor)
       weekStart.setDate(cursor.getDate() - cursor.getDay())

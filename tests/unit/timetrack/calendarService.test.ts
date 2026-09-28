@@ -371,3 +371,52 @@ describe("a VEVENT that gives a start and no end", () => {
     expect(result.skippedZeroLength).toBe(0)
   })
 })
+
+describe("a VEVENT whose DURATION comes before its DTSTART", () => {
+  /**
+   * RFC 5545 puts no constraint on the order of a component's properties. `DURATION`
+   * was resolved inline and required `DTSTART` to be set already, so a file writing
+   * them the other way round lost the length — and once a start with no end became
+   * zero-length, the import began saying "1 with no length" about a one-hour meeting.
+   * A confidently wrong sentence, which is the same sin as the "outside the date
+   * window" message that behaviour was added to fix.
+   */
+  const ics = (body: string[]) => ["BEGIN:VCALENDAR", ...body, "END:VCALENDAR"].join("\r\n")
+
+  test("still has its length", () => {
+    const before = parseIcs(ics([
+      "BEGIN:VEVENT", "UID:a", "SUMMARY:duration first", "DURATION:PT1H", "DTSTART:20260920T090000Z", "END:VEVENT",
+    ]))
+    expect(before).toHaveLength(1)
+    const minutes = (new Date(before[0].end).getTime() - new Date(before[0].start).getTime()) / 60_000
+    expect(minutes, "the DURATION line was dropped, so the event became zero-length").toBe(60)
+  })
+
+  test("and the usual order still works", () => {
+    const after = parseIcs(ics([
+      "BEGIN:VEVENT", "UID:b", "SUMMARY:dtstart first", "DTSTART:20260920T090000Z", "DURATION:PT90M", "END:VEVENT",
+    ]))
+    const minutes = (new Date(after[0].end).getTime() - new Date(after[0].start).getTime()) / 60_000
+    expect(minutes).toBe(90)
+  })
+
+  test("and DTEND still wins over a DURATION, whichever order they arrive in", () => {
+    /**
+     * RFC 5545 §3.6.1 forbids both in one VEVENT, so either reading is defensible —
+     * what matters is that the explicit end is not silently replaced by a computed one.
+     */
+    const both = parseIcs(ics([
+      "BEGIN:VEVENT", "UID:c", "DURATION:PT5H", "DTSTART:20260920T090000Z", "DTEND:20260920T100000Z", "END:VEVENT",
+    ]))
+    expect((new Date(both[0].end).getTime() - new Date(both[0].start).getTime()) / 60_000).toBe(60)
+  })
+
+  test("and an event that genuinely has no length is still reported as such", () => {
+    const result = icsToEvents(
+      ics(["BEGIN:VEVENT", "UID:d", "DTSTART:20260920T110000Z", "END:VEVENT"]),
+      "cal",
+      "2026-09-20",
+    )
+    expect(result.skippedZeroLength).toBe(1)
+  })
+})

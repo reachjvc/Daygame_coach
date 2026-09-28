@@ -30,8 +30,22 @@ import { join } from "node:path"
 
 import { describe, expect, test } from "vitest"
 
-import { decodeReportConfig, defaultReportConfig, emptyFilters, presetRange, rangeDayCount } from "@/src/timetrack/reportsService"
+import {
+  applyFilters,
+  buildDetailed,
+  buildProfitability,
+  buildSummary,
+  buildWorkload,
+  decodeReportConfig,
+  defaultReportConfig,
+  emptyFilters,
+  presetRange,
+  describeReport,
+  rangeDayCount,
+} from "@/src/timetrack/reportsService"
 import { addDays, dateKey, weekStartOf } from "@/src/timetrack/timetrackFormatService"
+
+import { baseState } from "../timetrack/helpers"
 
 const COMPONENTS = join(process.cwd(), "src/timetrack/components")
 
@@ -109,6 +123,9 @@ describe("every date input in the tracker", () => {
 })
 
 describe("every writer of a report's date range", () => {
+  const state = baseState()
+  const NOW_SEC = Math.floor(new Date(2026, 8, 28, 12).getTime() / 1000)
+
   /**
    * The half the original comment missed. `dateKey` is reached from `addDays` and
    * `weekStartOf`, and the report range is what feeds them — so a range is only safe
@@ -165,6 +182,60 @@ describe("every writer of a report's date range", () => {
       expect(decodeReportConfig(encode(bad), DEFAULTS), `${JSON.stringify(bad)} was accepted`).toBeNull()
     }
     expect(decodeReportConfig("!!!not-base64!!!", DEFAULTS)).toBeNull()
+  })
+
+  test("no field of a link can be null, wrong-typed or unknown and still reach a builder", () => {
+    /**
+     * DERIVED FROM THE KEY SET, BECAUSE A HAND-WRITTEN LIST WAS ONE FIELD SHORT THREE
+     * TIMES RUNNING.
+     *
+     * The first attempt cast any JSON to a config. The second checked `filters.range`,
+     * the crash in front of it. The third spread the link over a default and its comment
+     * claimed "a merge cannot have that failure for any input" — but JSON carries `null`
+     * and `null` wins a spread, so eight one-field links still replaced the timer, the
+     * entry list and every other screen with "Something went wrong". Every one of the
+     * three came with a test whose examples were all well-typed omissions, which is the
+     * exact space the bug was not in.
+     *
+     * So this enumerates `Object.keys` of the default instead: for every field, a link
+     * carrying `null` and a link carrying a wrong-typed value must both come back with
+     * a usable config. The next field added to `ReportConfig` is covered the day it is
+     * added.
+     */
+    const wrongTyped = [null, 42, "a string", [], {}, true]
+    const failures: string[] = []
+
+    const check = (label: string, link: unknown) => {
+      const cfg = decodeReportConfig(encode(link), DEFAULTS)
+      if (cfg === null) return // refusing is a fine answer
+      // unknown keys must not survive: they get persisted by Save and re-shared
+      const extra = Object.keys(cfg).filter((k) => !(k in DEFAULTS))
+      if (extra.length > 0) failures.push(`${label}: kept unknown key(s) ${extra.join(", ")}`)
+      try {
+        buildSummary(state, cfg, NOW_SEC)
+        buildDetailed(state, cfg, NOW_SEC)
+        buildWorkload(state, cfg, NOW_SEC)
+        buildProfitability(state, cfg, NOW_SEC)
+        applyFilters(state, cfg.filters)
+        describeReport(cfg)
+      } catch (error) {
+        failures.push(`${label}: ${(error as Error).message.slice(0, 70)}`)
+      }
+    }
+
+    for (const key of Object.keys(DEFAULTS)) {
+      for (const value of wrongTyped) check(`${key} = ${JSON.stringify(value)}`, { [key]: value })
+    }
+    for (const key of Object.keys(DEFAULTS.filters)) {
+      for (const value of wrongTyped) check(`filters.${key} = ${JSON.stringify(value)}`, { filters: { [key]: value } })
+    }
+    check("an unknown key", { evil: 1 })
+    check("everything at once", {
+      ...Object.fromEntries(Object.keys(DEFAULTS).map((k) => [k, null])),
+      filters: Object.fromEntries(Object.keys(DEFAULTS.filters).map((k) => [k, null])),
+    })
+
+    expect(failures.slice(0, 10), `${failures.length} link(s) produced an unusable config:\n  ${failures.join("\n  ")}`).toEqual([])
   })
 
   test("and every partial link comes back complete, range included", () => {

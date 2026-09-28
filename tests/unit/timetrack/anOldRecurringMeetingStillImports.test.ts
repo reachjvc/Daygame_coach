@@ -444,6 +444,88 @@ describe("monthly on the second Monday", () => {
     }
   })
 
+  test("keeps an instance the window still holds, whatever weekday the cursor sits on", () => {
+    /**
+     * THE BOUNDS, NOT THE WEEKDAY — which is what the first version of these tests
+     * missed entirely.
+     *
+     * A positional instance can fall up to six days either side of the cursor, exactly
+     * like a WEEKLY+BYDAY one, so neither `UNTIL` nor the window end may be tested
+     * against the cursor. The helper that owns that rule was written for the weekly
+     * case and the positional branch was added without being taught to use it: 2,148
+     * of 29,700 fuzzed shapes lost one due occurrence, never an extra.
+     *
+     * End to end, `BYDAY=1MO` from Monday 7 September dropped Monday 2 November on
+     * three days out of five while it sat INSIDE the window, and the import said
+     * "Imported 2 events" with nothing skipped. So this walks the window end across a
+     * whole week: the count may only rise as the window grows.
+     */
+    const dtstart = new Date(2026, 8, 7, 9).toISOString() // Monday 7 September
+    const counts: { end: string; kept: number }[] = []
+    for (let day = 30; day <= 37; day++) {
+      const windowEnd = new Date(2026, 9, day) // walks across Fri 30 Oct → Fri 6 Nov
+      const kept = expandRecurrence(event(dtstart, "FREQ=MONTHLY;BYDAY=1MO", 30), new Date(2026, 8, 1), windowEnd)
+      counts.push({ end: windowEnd.toDateString(), kept: kept.length })
+    }
+
+    /**
+     * Compared against the INSTANT, not the date: a window ending at 00:00 on 2
+     * November legitimately excludes a 09:00 instance that day, and the first version
+     * of this assertion asked for it — a test wrong at its own boundary would have been
+     * blamed on the code.
+     */
+    const theInstance = new Date(2026, 10, 2, 9, 0, 0)
+    const reachesNov2 = counts.filter((c) => new Date(c.end) >= theInstance)
+    expect(reachesNov2.length, "the sweep never reached 2 November, so this asserts nothing").toBeGreaterThan(0)
+    for (const c of reachesNov2) {
+      expect(c.kept, `window ending ${c.end} holds 2 November and kept only ${c.kept}`).toBe(3)
+    }
+    // and never fewer as the window grows, which is the property the break broke
+    for (let i = 1; i < counts.length; i++) {
+      expect(counts[i].kept, `count fell from ${counts[i - 1].kept} to ${counts[i].kept} as the window grew`).toBeGreaterThanOrEqual(
+        counts[i - 1].kept,
+      )
+    }
+  })
+
+  test("and an UNTIL on the instance's own day still includes it", () => {
+    /**
+     * The same bound, from the other side. `push` already refuses an instance past
+     * `UNTIL`, so the loop only has to reach it — and it did not.
+     */
+    const dtstart = new Date(2026, 8, 7, 9).toISOString() // Monday 7 September
+    const got = expandRecurrence(
+      event(dtstart, "FREQ=MONTHLY;BYDAY=1MO;UNTIL=20261102T235959Z", 30),
+      new Date(2026, 8, 1),
+      new Date(2026, 11, 1),
+    ).map((i) => new Date(i.start).toDateString())
+
+    expect(got, "the last occurrence, on UNTIL's own day, was dropped").toContain("Mon Nov 02 2026")
+  })
+
+  test("the RFC's signed spelling means the same thing", () => {
+    /**
+     * `+1FR` and `-1SU` are how RFC 5545 §3.3.10 writes its own examples, and the
+     * parser's `-?` rejected the plus — so `+2MO` fell through to the anchor stepper
+     * and wandered across weekdays, which is the bug the positional branch was added to
+     * fix, one character away.
+     */
+    const signed = expandRecurrence(
+      event(new Date(2026, 8, 14, 9).toISOString(), "FREQ=MONTHLY;BYDAY=+2MO", 30),
+      SIX_MONTHS_START,
+      SIX_MONTHS_END,
+    ).map((i) => new Date(i.start).getDay())
+    const unsigned = expandRecurrence(
+      event(new Date(2026, 8, 14, 9).toISOString(), "FREQ=MONTHLY;BYDAY=2MO", 30),
+      SIX_MONTHS_START,
+      SIX_MONTHS_END,
+    ).map((i) => new Date(i.start).getDay())
+
+    expect(signed.length).toBeGreaterThan(4)
+    expect(new Set(signed), "+2MO landed on something other than Mondays").toEqual(new Set([1]))
+    expect(signed).toEqual(unsigned)
+  })
+
   test("a plain monthly rule still repeats the day of the month", () => {
     /**
      * The control. A fix that routed every monthly rule through the positional path

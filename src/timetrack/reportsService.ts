@@ -6,7 +6,7 @@
  * per time entry before aggregation, which is what Toggl's report rounding does.
  */
 
-import { NO_PROJECT_COLOR, PROJECT_COLORS } from "./config"
+import { GROUPING_DIMENSIONS, NO_PROJECT_COLOR, PROJECT_COLORS, SUMMARY_METRICS } from "./config"
 import {
   addDays,
   dateKey,
@@ -37,6 +37,7 @@ import type {
   DateRange,
   DetailedRow,
   GroupingDimension,
+  SummaryMetric,
   Id,
   IsoDate,
   ProfitabilityRow,
@@ -807,28 +808,54 @@ function isDateKey(value: unknown): value is string {
 }
 
 /**
- * A shared report link, LAID OVER A COMPLETE CONFIG RATHER THAN TRUSTED AS ONE.
+ * A shared report link, LAID OVER A COMPLETE CONFIG — FIELD BY FIELD, AND TYPED.
  *
- * WHY IT IS A MERGE AND NOT A VALIDATOR. This cast whatever `JSON.parse` returned to a
- * `ReportConfig`, so `?report=e30` — which is `btoa("{}")` — produced `{}`. The first
- * attempt at fixing it checked `filters.range.start/end`, because that was the crash
- * being looked at; seven other members of `ReportFilters` went unchecked, and
- * `applyFilters` reads `filters.description.trim()`, so a link carrying only a range
- * still threw. Checking `description` next would have been the third round of the same
- * mistake.
+ * Three versions of this, each one short of the last, and the shape of the mistake
+ * never changed: the fix matched the crash in front of it rather than the property.
  *
- * And the cost is not a blank report. `ReportsView` builds all four reports in a
- * `useMemo` during render, and the `ErrorBoundary` wraps the whole of `<main>` — so a
- * throw replaces the entire content area, timer and entries included, with "Something
- * went wrong with this screen". `?report=` is never stripped from the URL, so a reload
- * decodes the same link and crashes again; getting out means navigating away and THEN
- * pressing Try again, in that order. The timer keeps running invisibly throughout.
+ *   1. it cast whatever `JSON.parse` returned to a `ReportConfig`, so `?report=e30` —
+ *      `btoa("{}")` — reached the builders;
+ *   2. it then checked `filters.range`, because that was the crash being looked at.
+ *      Seven other members of `ReportFilters` went unchecked and a link carrying only
+ *      a range still threw on `filters.description.trim()`;
+ *   3. it then spread the link over a complete default, and the comment here claimed
+ *      "a merge cannot have that failure for any input". It can: JSON carries `null`,
+ *      and `{...fallback, ...shared}` lets `null` win. Eight one-field links —
+ *      `{"filters":{"description":null}}`, `{"rounding":null}`, `{"sort":null}`,
+ *      `{"filters":{"tagIds":"abc"}}` among them — reproduced the whole crash. Unknown
+ *      keys survived too, were persisted by Save, and came back in every later link.
  *
- * A merge cannot have that failure for any input: every field the link omits, or gets
- * wrong in a way worth refusing, comes from the defaults the caller already has. The
- * only things still checked are the ones where a present-but-wrong value is worse than
- * absent — a range whose dates do not parse reaches `dateKey`, which throws.
+ * The cost each time was not a blank report. `ReportsView` builds all four reports in a
+ * `useMemo` during render and the `ErrorBoundary` wraps the whole of `<main>`, so the
+ * timer, the entry list and every other screen become "Something went wrong with this
+ * screen". `?report=` is never stripped, so a reload crashes again, and getting out
+ * means navigating away and THEN pressing Try again, in that order, while the timer
+ * keeps running invisibly.
+ *
+ * So every field is taken individually and only if it is the right shape, and nothing
+ * else comes through. The test for this is derived from `Object.keys` of the default
+ * rather than written out, because a hand-written list of fields is what was one short
+ * three times.
  */
+function takeString(value: unknown, fallback: string): string {
+  return typeof value === "string" ? value : fallback
+}
+
+function takeIds(value: unknown, fallback: Id[]): Id[] {
+  return Array.isArray(value) && value.every((v) => typeof v === "string") ? (value as Id[]) : fallback
+}
+
+function takeOneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return typeof value === "string" && (allowed as readonly string[]).includes(value) ? (value as T) : fallback
+}
+
+function takeOneOfOrNull<T extends string>(value: unknown, allowed: readonly T[], fallback: T | null): T | null {
+  if (value === null) return null
+  return typeof value === "string" && (allowed as readonly string[]).includes(value) ? (value as T) : fallback
+}
+
+const DIMENSIONS: readonly GroupingDimension[] = GROUPING_DIMENSIONS.map((d) => d.id)
+
 export function decodeReportConfig(encoded: string, fallback: ReportConfig): ReportConfig | null {
   let parsed: unknown
   try {
@@ -838,20 +865,65 @@ export function decodeReportConfig(encoded: string, fallback: ReportConfig): Rep
   }
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null
 
-  const shared = parsed as Partial<ReportConfig>
-  const sharedFilters = (shared.filters ?? {}) as Partial<ReportFilters>
+  const shared = parsed as Record<string, unknown>
+  const sharedFilters = (typeof shared.filters === "object" && shared.filters !== null ? shared.filters : {}) as Record<
+    string,
+    unknown
+  >
+  const sharedRange = (typeof sharedFilters.range === "object" && sharedFilters.range !== null
+    ? sharedFilters.range
+    : {}) as Record<string, unknown>
+  const sharedSort = (typeof shared.sort === "object" && shared.sort !== null ? shared.sort : {}) as Record<
+    string,
+    unknown
+  >
+  const sharedRounding = (typeof shared.rounding === "object" && shared.rounding !== null
+    ? shared.rounding
+    : {}) as Record<string, unknown>
 
-  // a range is only taken if both ends parse; otherwise the default range stands
   const range =
-    isDateKey((sharedFilters.range as DateRange | undefined)?.start) &&
-    isDateKey((sharedFilters.range as DateRange | undefined)?.end)
-      ? (sharedFilters.range as DateRange)
+    isDateKey(sharedRange.start) && isDateKey(sharedRange.end)
+      ? { start: sharedRange.start, end: sharedRange.end }
       : fallback.filters.range
 
   return {
-    ...fallback,
-    ...shared,
-    filters: { ...fallback.filters, ...sharedFilters, range },
+    tab: takeOneOf(shared.tab, ["summary", "detailed", "workload", "profitability", "saved"] as const, fallback.tab),
+    filters: {
+      range,
+      clientIds: takeIds(sharedFilters.clientIds, fallback.filters.clientIds),
+      projectIds: takeIds(sharedFilters.projectIds, fallback.filters.projectIds),
+      taskIds: takeIds(sharedFilters.taskIds, fallback.filters.taskIds),
+      tagIds: takeIds(sharedFilters.tagIds, fallback.filters.tagIds),
+      memberIds: takeIds(sharedFilters.memberIds, fallback.filters.memberIds),
+      billable: takeOneOf(sharedFilters.billable, ["all", "yes", "no"] as const, fallback.filters.billable),
+      description: takeString(sharedFilters.description, fallback.filters.description),
+    },
+    grouping: takeOneOf(shared.grouping, DIMENSIONS, fallback.grouping),
+    subGrouping: takeOneOfOrNull(shared.subGrouping, DIMENSIONS, fallback.subGrouping),
+    rounding: {
+      enabled: typeof sharedRounding.enabled === "boolean" ? sharedRounding.enabled : fallback.rounding.enabled,
+      mode: takeOneOf(sharedRounding.mode, ["nearest", "up", "down"] as const, fallback.rounding.mode),
+      // a negative or absurd interval would divide the clock into nothing
+      minutes:
+        typeof sharedRounding.minutes === "number" && Number.isFinite(sharedRounding.minutes) && sharedRounding.minutes > 0
+          ? Math.min(Math.round(sharedRounding.minutes), 24 * 60)
+          : fallback.rounding.minutes,
+    },
+    summaryMetrics: (() => {
+      const allowed: readonly SummaryMetric[] = SUMMARY_METRICS.map((m) => m.id)
+      if (!Array.isArray(shared.summaryMetrics)) return fallback.summaryMetrics
+      const kept = shared.summaryMetrics.filter((m): m is SummaryMetric => allowed.includes(m as SummaryMetric))
+      return kept.length > 0 ? kept : fallback.summaryMetrics
+    })(),
+    chartMetric: takeOneOf(shared.chartMetric, ["time", "billable_pct", "revenue", "cost", "profit"] as const, fallback.chartMetric),
+    chartInterval: takeOneOf(shared.chartInterval, ["day", "week", "month"] as const, fallback.chartInterval),
+    chartStackBy: takeOneOfOrNull(shared.chartStackBy, DIMENSIONS, fallback.chartStackBy),
+    pieGroupBy: takeOneOf(shared.pieGroupBy, DIMENSIONS, fallback.pieGroupBy),
+    workloadValueMode: takeOneOf(shared.workloadValueMode, ["duration", "earnings"] as const, fallback.workloadValueMode),
+    sort: {
+      column: takeString(sharedSort.column, fallback.sort.column),
+      direction: takeOneOf(sharedSort.direction, ["asc", "desc"] as const, fallback.sort.direction),
+    },
   }
 }
 
