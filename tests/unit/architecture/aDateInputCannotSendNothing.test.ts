@@ -238,6 +238,46 @@ describe("every writer of a report's date range", () => {
     expect(failures.slice(0, 10), `${failures.length} link(s) produced an unusable config:\n  ${failures.join("\n  ")}`).toEqual([])
   })
 
+  test("an impossible range is not accepted just because both ends parse", () => {
+    /**
+     * THE PAIR, which is the axis the generated case above does not have: every field is
+     * checked against six WRONG-TYPED values, and this bug is an in-type, impossible
+     * combination.
+     *
+     * `{"range":{"start":"1000-01-01","end":"9999-12-31"}}` was accepted verbatim — 3.3
+     * million days, `buildSummary` at 6.8 seconds and 3.3 million chart buckets, 2.28 GB
+     * resident, in a render-time `useMemo` behind a URL that is never stripped. The two
+     * date inputs had no `min`/`max` either, so a five-digit year typed by hand reached
+     * the same place.
+     */
+    const tooWide = decodeReportConfig(encode({ filters: { range: { start: "1000-01-01", end: "9999-12-31" } } }), DEFAULTS)
+    expect(tooWide, "the link was refused outright; the rest of it should still arrive").not.toBeNull()
+    expect(rangeDayCount(tooWide!.filters.range), "a 3.3-million-day range was accepted").toBeLessThan(366 * 21)
+
+    // inverted, both ends valid
+    const inverted = decodeReportConfig(encode({ filters: { range: { start: "2026-12-31", end: "2026-01-01" } } }), DEFAULTS)
+    expect(rangeDayCount(inverted!.filters.range), "an inverted range gives an empty report and dead arrows").toBeGreaterThan(0)
+
+    // and a range somebody would really ask for is untouched
+    const real = { start: "2026-01-01", end: "2026-12-31" }
+    expect(decodeReportConfig(encode({ filters: { range: real } }), DEFAULTS)!.filters.range).toEqual(real)
+    const fiveYears = { start: "2022-01-01", end: "2026-12-31" }
+    expect(decodeReportConfig(encode({ filters: { range: fiveYears } }), DEFAULTS)!.filters.range).toEqual(fiveYears)
+  })
+
+  test("and the date inputs cannot be typed into a five-digit year", () => {
+    /**
+     * The other door to the same freeze. Read from the source, because the browser is
+     * what enforces `min`/`max` and there is nothing to run here.
+     */
+    const unbounded = dateInputs()
+      .filter(({ snippet }) => /value=\{filters\.range/.test(snippet))
+      .filter(({ snippet }) => !/min="/.test(snippet) || !/max="/.test(snippet))
+      .map(({ file, snippet }) => `${file}: ${/value=\{[^}]*\}/.exec(snippet)?.[0] ?? ""}`)
+
+    expect(unbounded, "these range inputs accept any year:\n  " + unbounded.join("\n  ")).toEqual([])
+  })
+
   test("and every partial link comes back complete, range included", () => {
     for (const partial of [
       {},

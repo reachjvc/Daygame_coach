@@ -153,7 +153,22 @@ describe("whatever the rule says, across 1,700 shapes", () => {
      * the last day in UTC for every "ends on <date>" repeat, and that is the form that
      * loses the most when the bound is tested against the wrong instant.
      */
-    for (const freq of ["DAILY", "WEEKLY"]) {
+    /**
+     * MONTHLY AND YEARLY ARE IN HERE NOW, AND THEIR ABSENCE IS WHY NINE ROUNDS MISSED A
+     * LIVE DEFECT.
+     *
+     * This describe block is titled "whatever the rule says, across 1,700 shapes" and
+     * its own comment says "the shape space IS the claim" — and it enumerated only
+     * DAILY and WEEKLY, which are the two frequencies in which a DUPLICATE is not even
+     * possible. A positional monthly rule anchored on the 29th, 30th or 31st was
+     * sampling the wrong month, losing one occurrence and repeating the next, for two
+     * whole rounds while this file reported agreement on every shape it knew.
+     *
+     * The DTSTART list carries a 29th, a 30th and a 31st for the same reason: every
+     * positional example test used the 7th, 14th or 25th, and the defect was 100%
+     * present on those three days and absent on the other twenty-eight.
+     */
+    for (const freq of ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]) {
       for (const interval of [1, 2, 3]) {
         for (const count of [null, 5, 40, 90]) {
           for (const until of [
@@ -163,12 +178,22 @@ describe("whatever the rule says, across 1,700 shapes", () => {
             "20260801T000000Z", // just inside the window
             "20260101T000000Z", // long before it
           ]) {
-            for (const byday of freq === "WEEKLY" ? [null, "MO", "MO,WE,FR", "MO,WE,FR,SA", "SA,SU"] : [null]) {
-              for (const minutes of [30, 90, 24 * 60, 3 * 24 * 60]) {
+            const bydays =
+              freq === "WEEKLY"
+                ? [null, "MO", "MO,WE,FR", "MO,WE,FR,SA", "SA,SU"]
+                : freq === "MONTHLY" || freq === "YEARLY"
+                  ? [null, "1MO", "2MO", "-1FR", "3WE", "+2MO"]
+                  : [null]
+            for (const byday of bydays) {
+              // two values, not four: duration only interacts with the back-off, and
+              // the pair that matters is "shorter than a step" and "longer than one"
+              for (const minutes of [30, 3 * 24 * 60]) {
                 for (const start of [
                   "2026-07-20T23:00:00.000Z", "2026-05-02T09:00:00.000Z", "2015-01-05T09:00:00.000Z",
                   "2026-08-15T07:30:00.000Z", "2024-01-08T09:00:00.000Z", "2026-09-27T12:00:00.000Z",
                   "2026-05-01T09:00:00.000Z", "2026-05-06T09:00:00.000Z",
+                  // the three days of the month a positional rule was wrong on, always
+                  "2026-07-31T14:00:00.000Z", "2026-08-30T09:00:00.000Z", "2026-09-29T09:00:00.000Z",
                 ]) {
                   let rule = `FREQ=${freq}`
                   if (interval > 1) rule += `;INTERVAL=${interval}`
@@ -233,16 +258,76 @@ describe("whatever the rule says, across 1,700 shapes", () => {
 
     const out: string[] = []
     let emitted = 0
-    // a day at a time from DTSTART, far enough to pass the window in every shape
-    for (let day = 0; day < 4_600; day++) {
-      const at = new Date(start)
-      at.setDate(start.getDate() + day)
-      at.setHours(start.getHours(), start.getMinutes(), start.getSeconds(), 0)
+
+    /**
+     * ONE CANDIDATE PER OCCURRENCE, at the rule's own granularity.
+     *
+     * The first version walked 4,600 days for every shape, which was fine for two
+     * frequencies and timed out at twenty seconds once MONTHLY and YEARLY were added —
+     * a monthly rule from 2015 needs 140 candidates, not 4,000. Iterating months for a
+     * monthly rule is also the plainer statement of what the rule means, which is what
+     * an oracle is for.
+     */
+    const candidates: Date[] = []
+    if (parts.FREQ === "MONTHLY" || parts.FREQ === "YEARLY") {
+      const monthsPer = parts.FREQ === "MONTHLY" ? interval : 12 * interval
+      const ordinal = byDay ? /^([+-]?\d+)(MO|TU|WE|TH|FR|SA|SU)$/.exec(byDay[0]) : null
+      for (let step = 0; step < 400; step++) {
+        const month = new Date(start.getFullYear(), start.getMonth() + step * monthsPer, 1)
+        if (month > WINDOW_END) break
+
+        /**
+         * ONE candidate per month — the day the rule actually names. Generating all
+         * thirty and letting the membership test pick took a hundred seconds once the
+         * monthly frequencies were added; this is the same statement of the rule, said
+         * once instead of thirty times.
+         */
+        let dayOfMonth: number | undefined
+        if (ordinal) {
+          const wanted = names.indexOf(ordinal[2])
+          const nth = Number(ordinal[1])
+          const weekdays: number[] = []
+          for (const d = new Date(month); d.getMonth() === month.getMonth(); d.setDate(d.getDate() + 1)) {
+            if (d.getDay() === wanted) weekdays.push(d.getDate())
+          }
+          dayOfMonth = nth > 0 ? weekdays[nth - 1] : weekdays[weekdays.length + nth]
+        } else {
+          // a month that cannot hold the anchor's day has no occurrence at all
+          const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
+          dayOfMonth = start.getDate() <= lastDay ? start.getDate() : undefined
+        }
+        if (dayOfMonth === undefined) continue
+
+        const at = new Date(month.getFullYear(), month.getMonth(), dayOfMonth)
+        at.setHours(start.getHours(), start.getMinutes(), start.getSeconds(), 0)
+        candidates.push(at)
+      }
+    } else {
+      for (let day = 0; day < 4_600; day++) {
+        const at = new Date(start)
+        at.setDate(start.getDate() + day)
+        at.setHours(start.getHours(), start.getMinutes(), start.getSeconds(), 0)
+        candidates.push(at)
+      }
+    }
+
+    for (const at of candidates) {
       if (at > WINDOW_END && emitted > 0) break
 
       let member = false
-      if (parts.FREQ === "DAILY") {
-        member = day % interval === 0
+      if (parts.FREQ === "MONTHLY" || parts.FREQ === "YEARLY") {
+        // the candidate list above already holds exactly the days the rule names, one
+        // per interval-month, so there is nothing left to test here
+        member = true
+      } else if (parts.FREQ === "DAILY") {
+        // whole days from DTSTART, measured on local midnights so a clock change in the
+        // span cannot shift the count
+        const daysApart = Math.round(
+          (new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime() -
+            new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()) /
+            86_400_000,
+        )
+        member = daysApart >= 0 && daysApart % interval === 0
       } else if (parts.FREQ === "WEEKLY") {
         // which interval-week this day falls in, counted from DTSTART's own week
         const weekOfStart = new Date(start)
@@ -274,7 +359,9 @@ describe("whatever the rule says, across 1,700 shapes", () => {
       }
     }
     expect(wrong.slice(0, 8), `${wrong.length} of ${SHAPES.length} shapes disagree`).toEqual([])
-  })
+    // stated so a future reader knows the number is the point, not an accident
+    expect(SHAPES.length, "the shape space shrank — that is the claim getting narrower").toBeGreaterThan(5_000)
+  }, 60_000)
 
   test("no instance is emitted twice, and none is out of order", () => {
     const wrong: string[] = []

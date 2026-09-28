@@ -881,10 +881,38 @@ export function decodeReportConfig(encoded: string, fallback: ReportConfig): Rep
     ? shared.rounding
     : {}) as Record<string, unknown>
 
-  const range =
-    isDateKey(sharedRange.start) && isDateKey(sharedRange.end)
-      ? { start: sharedRange.start, end: sharedRange.end }
-      : fallback.filters.range
+  /**
+   * THE PAIR, NOT JUST THE TWO ENDS — the fourth input class this decode has had to
+   * learn.
+   *
+   * Every scalar is typed now, and `range` is still two independently-valid keys with
+   * nothing bounding their span. A link carrying
+   * `{"range":{"start":"1000-01-01","end":"9999-12-31"}}` was accepted verbatim: 3.3
+   * MILLION days, `buildSummary` 6.8 seconds and 3.3 million chart buckets, 2.28 GB
+   * resident — and `ReportsView` builds all four reports in a render-time `useMemo`
+   * while `?report=` is never stripped from the URL, so it is the same escape-proof
+   * trap the paragraph above describes, reached by a different door.
+   *
+   * It is reachable without a link too: an `<input type="date">` year field accepts
+   * five and six digits, and the two range inputs carry no `min`/`max`, so one stray
+   * keystroke in the year is a several-second freeze. Both doors are closed — the
+   * ceiling here, and `min`/`max` on the inputs.
+   *
+   * Twenty years is far more than anybody reports on and far less than the pathological
+   * case; a range wider than that falls back rather than being refused, the same as
+   * every other field, so the rest of a shared link still arrives.
+   */
+  const MAX_RANGE_DAYS = 366 * 20
+
+  const rangeIsSane = (() => {
+    if (!isDateKey(sharedRange.start) || !isDateKey(sharedRange.end)) return false
+    const days = rangeDayCount({ start: sharedRange.start, end: sharedRange.end })
+    return days > 0 && days <= MAX_RANGE_DAYS
+  })()
+
+  const range = rangeIsSane
+    ? { start: sharedRange.start as IsoDate, end: sharedRange.end as IsoDate }
+    : fallback.filters.range
 
   return {
     tab: takeOneOf(shared.tab, ["summary", "detailed", "workload", "profitability", "saved"] as const, fallback.tab),

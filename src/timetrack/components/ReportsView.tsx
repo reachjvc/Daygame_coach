@@ -345,6 +345,10 @@ function FilterControls({
             <div className="flex items-center gap-2 border-t border-border pt-2">
               <Input
                 type="date"
+                /* a year field takes five and six digits, and a 3.3-million-day range
+                   freezes the tab for seconds — see `decodeReportConfig` */
+                min="1970-01-01"
+                max="2099-12-31"
                 value={filters.range.start}
                 // an empty `type="date"` fires with "", which makes `spanDays` NaN and
                 // the ‹ › arrows throw inside their own click handler — see `dateKey`
@@ -353,6 +357,8 @@ function FilterControls({
               />
               <Input
                 type="date"
+                min="1970-01-01"
+                max="2099-12-31"
                 value={filters.range.end}
                 onChange={(event) => event.target.value && onUpdateFilters({ range: { ...filters.range, end: event.target.value } })}
                 className="h-11 sm:h-8"

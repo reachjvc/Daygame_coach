@@ -597,7 +597,35 @@ export function expandRecurrence(
         // rebuilt from the anchor, so an overflowed month cannot move every later one
         stepsTaken += 1
         const months = (freq === "MONTHLY" ? interval : 12 * interval) * stepsTaken
-        const next = new Date(startDate.getFullYear(), startDate.getMonth() + months, startDate.getDate())
+
+        /**
+         * A POSITIONAL RULE STEPS BY MONTH, NOT BY DAY OF THE MONTH — AND THAT IS NOT A
+         * REFINEMENT.
+         *
+         * Using the anchor's day of the month is right for a plain monthly rule: a month
+         * that cannot hold the day rolls forward and the `exists` check skips it without
+         * counting. For `BYDAY=-1FR` the day of the month is meaningless, and the roll
+         * made the cursor land in the WRONG MONTH — so `nthWeekdayOf` was handed a
+         * sample from the next month, which skipped one occurrence and repeated the one
+         * after.
+         *
+         * Measured for `BYDAY=-1FR` anchored on Friday 31 July 2026, which IS that
+         * month's last Friday: 31 Jul, 28 Aug, **30 Oct, 30 Oct**, **25 Dec, 25 Dec**,
+         * 29 Jan — September and November gone, October and December duplicated, both
+         * copies carrying the same event id. The import reported "Imported 2 events"
+         * with nothing skipped: the same confidently-wrong success message whose other
+         * three causes were each fixed in an earlier round.
+         *
+         * And it is the ORDINARY case. Google Calendar's "Monthly on the last Friday"
+         * writes `BYDAY=-1FR` with DTSTART on that last Friday, which is the 29th, 30th
+         * or 31st for roughly a third of months. Swept against an oracle: correct for
+         * every day of the month from 1 to 28, and wrong for ALL of 29, 30 and 31.
+         *
+         * So the sample is the first of the intended month when a positional rule is in
+         * force, which is a date every month has.
+         */
+        const dayOfMonth = positional ? 1 : startDate.getDate()
+        const next = new Date(startDate.getFullYear(), startDate.getMonth() + months, dayOfMonth)
         // a day the target month does not have rolls forward; mark it by keeping the
         // rolled date, which the `exists` check above then skips
         next.setHours(startDate.getHours(), startDate.getMinutes(), startDate.getSeconds(), 0)
