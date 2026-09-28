@@ -36,6 +36,7 @@ import {
   fromLocalInputValue,
   parseDurationInput,
   parseTimeInput,
+  plural,
   toLocalInputValue,
 } from "../timetrackFormatService"
 import {
@@ -111,10 +112,30 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
   const removeEntries = (ids: Id[]) => {
     const result = deleteEntries(state, ids, nowIso())
     setState(() => result.state)
-    pushToast(`${ids.length} time ${ids.length === 1 ? "entry" : "entries"} deleted`, "info", () =>
-      setState((latest) => restoreEntries(latest, result.removed)),
-    )
-    setSelected((current) => current.filter((id) => !ids.includes(id)))
+    /**
+     * COUNTS WHAT WAS ACTUALLY REMOVED, AND SAYS WHY THE REST WAS NOT.
+     *
+     * This said `${ids.length} deleted` whatever happened — and `deleteEntries` had no
+     * validation, so a browser round destroyed an entry inside an APPROVED week and was
+     * told "1 time entry deleted · Undo". Now that the locks are enforced there, the
+     * toast has to be able to say "0 deleted, and here is the reason", or a refused
+     * delete looks exactly like a successful one.
+     */
+    if (result.removed.length > 0) {
+      pushToast(`${plural(result.removed.length, "time entry", "time entries")} deleted`, "info", () =>
+        setState((latest) => restoreEntries(latest, result.removed)),
+      )
+    }
+    if (result.violations.length > 0) {
+      const kept = ids.length - result.removed.length
+      pushToast(
+        result.removed.length === 0
+          ? result.violations[0].message
+          : `${plural(kept, "entry", "entries")} kept: ${result.violations[0].message}`,
+        "error",
+      )
+    }
+    setSelected((current) => current.filter((id) => result.removed.some((e) => e.id === id)))
   }
 
   if (entries.length === 0) {

@@ -1154,6 +1154,17 @@ function RangeDateField({
       type="date"
       min={RANGE_MIN}
       max={RANGE_MAX}
+      /**
+       * NAMES THE GUARD THAT REFUSES ITS EMPTY VALUE.
+       *
+       * This field holds a draft and commits on blur, so `draft` legitimately reads ""
+       * while a year is half-typed and the emptiness has to be refused at the COMMIT.
+       * `aDateInputCannotSendNothing` excuses exactly the fields carrying this marker,
+       * and runs the named guard to check it really refuses "" — the first version of
+       * that excuse keyed on the `onBlur`+flush PATTERN, which let a reviewer add a
+       * staged field handing "" straight to `dateKey` with the suite still green.
+       */
+      data-staged-commit="clampRange"
       aria-label={label}
       value={draft ?? value}
       onChange={(event) => setDraft(event.target.value)}
@@ -1166,6 +1177,17 @@ function RangeDateField({
 // ---------------------------------------------------------------------------
 // Profitability tab
 // ---------------------------------------------------------------------------
+
+/**
+ * A margin that cannot be computed shows an em dash, never `0%`.
+ *
+ * `0%` means break-even, and it was printed on rows that had lost money — non-billable
+ * time with a real labour cost has no income to take a margin of, which is a third
+ * state. One formatter so the desktop row, the phone card and the totals row agree.
+ */
+function formatMargin(margin: number | null): string {
+  return margin === null ? "—" : `${Math.round(margin * 100)}%`
+}
 
 function ProfitabilityTab({
   state,
@@ -1194,16 +1216,30 @@ function ProfitabilityTab({
   const summed = rows.reduce(
     (acc, row) => ({
       seconds: acc.seconds + row.seconds,
+      // `billableSeconds` is on every row and was simply never added up, which is why
+      // the Billable column's total cell was empty while the column itself had values
+      billableSeconds: acc.billableSeconds + row.billableSeconds,
       revenue: acc.revenue + row.revenue,
       cost: acc.cost + row.cost,
     }),
-    { seconds: 0, revenue: 0, cost: 0 },
+    { seconds: 0, billableSeconds: 0, revenue: 0, cost: 0 },
   )
   const totals = {
     ...summed,
     fixedFee: reportFee,
     profit: summed.revenue + reportFee - summed.cost,
   }
+  /**
+   * THE TOTALS ROW TOTALS EVERY COLUMN IT HAS A NUMBER FOR.
+   *
+   * Billable and Margin were literally `<td />` — two empty cells in a row where every
+   * other column adds up, which reads as "could not compute" for numbers the app has
+   * twice over: `row.billableSeconds` is on every row, the Summary tab shows the
+   * billable total one click away, and the CSV from the Export button prints the margin
+   * total. A browser round read all three off one screen.
+   */
+  const totalIncome = totals.revenue + totals.fixedFee
+  const totalMargin = totalIncome > 0 ? totals.profit / totalIncome : null
 
   return (
     <div className="space-y-3">
@@ -1246,7 +1282,7 @@ function ProfitabilityTab({
                 </div>
                 <div className="flex justify-between">
                   <dt>Margin</dt>
-                  <dd className="tabular-nums">{Math.round(row.margin * 100)}%</dd>
+                  <dd className="tabular-nums">{formatMargin(row.margin)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>Revenue</dt>
@@ -1295,7 +1331,7 @@ function ProfitabilityTab({
                   <td className={cn("px-3 py-2 text-right font-medium tabular-nums", row.profit < 0 && "text-destructive")}>
                     {formatMoney(row.profit, currency)}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">{Math.round(row.margin * 100)}%</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatMargin(row.margin)}</td>
                 </tr>
               ))}
             </tbody>
@@ -1303,14 +1339,16 @@ function ProfitabilityTab({
               <tr>
                 <td className="px-3 py-2">Total</td>
                 <td className="px-3 py-2 text-right tabular-nums">{formatDuration(totals.seconds, state.user.durationFormat)}</td>
-                <td />
+                <td className="px-3 py-2 text-right tabular-nums">
+                  {formatDuration(totals.billableSeconds, state.user.durationFormat)}
+                </td>
                 <td className="px-3 py-2 text-right tabular-nums">{formatMoney(totals.revenue, currency)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{formatMoney(totals.fixedFee, currency)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{formatMoney(totals.cost, currency)}</td>
                 <td className={cn("px-3 py-2 text-right tabular-nums", totals.profit < 0 && "text-destructive")}>
                   {formatMoney(totals.profit, currency)}
                 </td>
-                <td />
+                <td className="px-3 py-2 text-right tabular-nums">{formatMargin(totalMargin)}</td>
               </tr>
             </tfoot>
           </table>

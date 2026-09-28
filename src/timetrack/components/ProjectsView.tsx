@@ -32,11 +32,10 @@ import {
   createTask,
   deleteProject,
   deleteTask,
-  entriesInRange,
+  secondsInRangeOf,
   liveEntries,
   projectEstimateSeconds,
   projectPeriod,
-  sumSeconds,
   updateProject,
   updateTask,
   validateProject,
@@ -71,20 +70,49 @@ import {
  * Exported and pure so `projectsEmptyState.test.ts` can walk every combination; the
  * component only spreads the result.
  */
+export type ProjectTab = "active" | "archived" | "templates"
+
+/** How many projects each tab holds, so a hint only names a tab with something in it. */
+export interface ProjectTabCounts {
+  active: number
+  archived: number
+  templates: number
+}
+
+const TAB_LABEL: Record<ProjectTab, string> = { active: "Active", archived: "Archived", templates: "Templates" }
+
 export function projectsEmptyState(
   query: string,
-  filter: "active" | "archived" | "templates",
-  totalProjects: number,
+  filter: ProjectTab,
+  counts: ProjectTabCounts,
 ): { title: string; hint: string } {
-  if (totalProjects === 0) {
+  /**
+   * ONLY THE TABS THAT HOLD SOMETHING. The first version took a single TOTAL, so it
+   * could not tell the difference between "there is nothing anywhere" and "everything
+   * is on another tab" — a workspace whose only projects are templates, viewed on
+   * Active, was sent to Archived, where there is nothing. A reviewer found it, and the
+   * test written with the fix had pinned the wrong sentence in place.
+   */
+  const total = counts.active + counts.archived + counts.templates
+  if (total === 0) {
     return { title: "No projects yet", hint: "Create your first one with New project, above." }
   }
+
+  const others = (["active", "archived", "templates"] as ProjectTab[])
+    .filter((tab) => tab !== filter && counts[tab] > 0)
+    .map((tab) => TAB_LABEL[tab])
+  const lookUnder =
+    others.length === 0
+      ? null
+      : others.length === 1
+        ? `look under ${others[0]}`
+        : `look under ${others.slice(0, -1).join(", ")} or ${others.at(-1)}`
+
   if (query.trim()) {
-    const elsewhere =
-      filter === "active"
-        ? "Clear the search, or look under Archived or Templates."
-        : "Clear the search, or look under Active."
-    return { title: `Nothing here matches “${query.trim()}”`, hint: elsewhere }
+    return {
+      title: `Nothing here matches “${query.trim()}”`,
+      hint: lookUnder ? `Clear the search, or ${lookUnder}.` : "Clear the search — nothing anywhere matches it.",
+    }
   }
   if (filter === "archived") {
     return { title: "No archived projects", hint: "Archive a project from its own page and it will appear here." }
@@ -92,7 +120,10 @@ export function projectsEmptyState(
   if (filter === "templates") {
     return { title: "No templates", hint: "Tick Template while creating a project to reuse its settings later." }
   }
-  return { title: "No active projects", hint: "Create one with New project, or look under Archived." }
+  return {
+    title: "No active projects",
+    hint: lookUnder ? `Create one with New project, or ${lookUnder}.` : "Create one with New project, above.",
+  }
 }
 
 export function ProjectsView({
@@ -111,7 +142,7 @@ export function ProjectsView({
   onFocusProject: (id: Id | null) => void
 }) {
   const [query, setQuery] = useState("")
-  const [filter, setFilter] = useState<"active" | "archived" | "templates">("active")
+  const [filter, setFilter] = useState<ProjectTab>("active")
   const [editing, setEditing] = useState<Project | "new" | null>(null)
   const todayKey = dateKey(new Date(nowSec * 1000))
 
@@ -126,6 +157,20 @@ export function ProjectsView({
       .filter((project) => !text || project.name.toLowerCase().includes(text))
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [state.projects, query, filter])
+
+  /**
+   * Counted with the SAME predicates the tabs use, off the same `state.projects`, so a
+   * hint cannot offer a tab that is empty. Ignores the search on purpose: the point of
+   * the hint is where to look when the current view has nothing.
+   */
+  const tabCounts = useMemo(
+    () => ({
+      active: state.projects.filter((p) => p.active && !p.template).length,
+      archived: state.projects.filter((p) => !p.active && !p.template).length,
+      templates: state.projects.filter((p) => p.template).length,
+    }),
+    [state.projects],
+  )
 
   const focused = focusProjectId ? state.projects.find((p) => p.id === focusProjectId) ?? null : null
 
@@ -169,15 +214,17 @@ export function ProjectsView({
       </div>
 
       {projects.length === 0 ? (
-        <EmptyState {...projectsEmptyState(query, filter, state.projects.length)} />
+        <EmptyState {...projectsEmptyState(query, filter, tabCounts)} />
       ) : (
         <>
         {/* phones: one card per project */}
         <ul className="space-y-2 sm:hidden">
           {projects.map((project) => {
             const period = projectPeriod(project, todayKey)
-            const tracked = sumSeconds(
-              entriesInRange(liveEntries(state).filter((e) => e.projectId === project.id), period.start, period.end),
+            const tracked = secondsInRangeOf(
+              liveEntries(state).filter((e) => e.projectId === project.id),
+              period.start,
+              period.end,
               nowSec,
             )
             const estimate = projectEstimateSeconds(state, project)
@@ -236,8 +283,10 @@ export function ProjectsView({
             <tbody className="divide-y divide-border">
               {projects.map((project) => {
                 const period = projectPeriod(project, todayKey)
-                const tracked = sumSeconds(
-                  entriesInRange(liveEntries(state).filter((e) => e.projectId === project.id), period.start, period.end),
+                const tracked = secondsInRangeOf(
+                  liveEntries(state).filter((e) => e.projectId === project.id),
+                  period.start,
+                  period.end,
                   nowSec,
                 )
                 const estimate = projectEstimateSeconds(state, project)
@@ -804,7 +853,7 @@ function ProjectDashboardPanel({
       <p className="text-xs text-muted-foreground">
         Period {formatDate(dashboard.periodStart, state.user.dateFormat)} → {formatDate(dashboard.periodEnd, state.user.dateFormat)}
         {project.recurring ? ` · recurring ${project.recurringPeriod}` : ""} ·{" "}
-        {periodDaysRemaining(dashboard, todayKey)} days remaining
+        {plural(periodDaysRemaining(dashboard, todayKey), "day")} remaining
       </p>
 
       {dashboard.triggeredThresholds.length > 0 && (

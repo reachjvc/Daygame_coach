@@ -7,9 +7,12 @@
  * thresholds have been crossed.
  */
 
-import { addDays, dateKey, daysBetween, eachDay } from "./timetrackFormatService"
+import { addDays, daysBetween, eachDay } from "./timetrackFormatService"
 import {
   entriesInRange,
+  entryDaySeconds,
+  entryDaysInRange,
+  entrySecondsInRange,
   entryCost,
   entryRevenue,
   entrySeconds,
@@ -17,7 +20,6 @@ import {
   memberById,
   projectEstimateSeconds,
   projectPeriod,
-  sumSeconds,
   taskById,
 } from "./timetrackService"
 import type { AlertThreshold, Id, IsoDate, ProjectDashboard, TimetrackState } from "./types"
@@ -33,12 +35,21 @@ export function buildProjectDashboard(
 
   const period = projectPeriod(project, todayKey)
   const projectEntries = liveEntries(state).filter((e) => e.projectId === projectId)
-  const entries = entriesInRange(projectEntries, period.start, period.end)
+  const entries = entriesInRange(projectEntries, period.start, period.end, nowSec)
 
-  const trackedSeconds = sumSeconds(entries, nowSec)
-  const billableSeconds = sumSeconds(entries.filter((e) => e.billable), nowSec)
-  const revenue = entries.reduce((sum, e) => sum + entryRevenue(state, e, entrySeconds(e, nowSec)), 0)
-  const cost = entries.reduce((sum, e) => sum + entryCost(state, e, entrySeconds(e, nowSec)), 0)
+  /**
+   * THE HOURS INSIDE THE PERIOD. `entriesInRange` selects by overlap, so summing whole
+   * entries counted a shift that began the evening before the period in full — and the
+   * burn-up below filed it under `dateKey(entry.start)`, a day OUTSIDE `days`, so it
+   * was dropped from the chart entirely. One panel, and its header read "8h tracked"
+   * over a chart that never left zero.
+   */
+  const inPeriod = (e: (typeof entries)[number]) => entrySecondsInRange(e, period.start, period.end, nowSec)
+
+  const trackedSeconds = entries.reduce((sum, e) => sum + inPeriod(e), 0)
+  const billableSeconds = entries.filter((e) => e.billable).reduce((sum, e) => sum + inPeriod(e), 0)
+  const revenue = entries.reduce((sum, e) => sum + entryRevenue(state, e, inPeriod(e)), 0)
+  const cost = entries.reduce((sum, e) => sum + entryCost(state, e, inPeriod(e)), 0)
   const estimatedSeconds = projectEstimateSeconds(state, project)
 
   // Cumulative tracked time per day, up to today (never into the future)
@@ -46,8 +57,11 @@ export function buildProjectDashboard(
   const days = period.start <= lastDay ? eachDay(period.start, lastDay) : []
   const perDay = new Map<IsoDate, number>()
   for (const entry of entries) {
-    const key = dateKey(entry.start)
-    perDay.set(key, (perDay.get(key) ?? 0) + entrySeconds(entry, nowSec))
+    // each day the entry touched, clipped to the period, so the chart's last point and
+    // `trackedSeconds` above are the same number by construction
+    for (const day of entryDaysInRange(entry, period.start, period.end, nowSec)) {
+      perDay.set(day, (perDay.get(day) ?? 0) + entryDaySeconds(entry, day, nowSec))
+    }
   }
   let running = 0
   const burnUp = days.map((day) => {

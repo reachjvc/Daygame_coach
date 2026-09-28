@@ -320,19 +320,48 @@ export function importEntriesCsv(
 }
 
 /** Accept YYYY-MM-DD, DD.MM.YYYY, DD/MM/YYYY and MM/DD/YYYY (unambiguous cases) */
+/**
+ * A DATE THAT IS NOT A DATE IS `null`, NOT A DATE THAT ROLLS OVER.
+ *
+ * This checked the SHAPE `\d{4}-\d{2}-\d{2}` and returned the string, so `Date` was
+ * left to interpret month 99 and day 99 the way it does — by carrying:
+ *
+ *   End date  9999-99-99 → an entry stopping in the year 10007
+ *   Start date 2026-01-99 → silently 2026-04-09, three months out
+ *   Month      2026-00-15 → silently 2025-12-15, the year before
+ *
+ * All three imported with no skip and no message, and one 8,000-year entry makes every
+ * report, week total and invoice in the workspace meaningless. `MAX_DATE_MS` in the
+ * duration guard cannot catch them, because year 10007 is a perfectly legal `Date` —
+ * that guard was aimed at the throw, not at the class, which is why this exists.
+ *
+ * The test: build the date and check the components come back. A `Date` that carried
+ * does not round-trip, and that is true for every rollover without enumerating them.
+ */
 function normalizeDate(raw: string): string | null {
   const text = raw.trim()
-  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
+  if (iso) return isRealCalendarDate(Number(iso[1]), Number(iso[2]), Number(iso[3])) ? text : null
   const dotted = /^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/.exec(text)
   if (dotted) {
     const [, a, b, y] = dotted
     // A value above 12 in the first slot can only be a day
     const day = Number(a) > 12 ? a : text.includes("/") && Number(b) > 12 ? b : a
     const month = day === a ? b : a
+    if (!isRealCalendarDate(Number(y), Number(month), Number(day))) return null
     return `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
   }
   const parsed = new Date(text)
   return Number.isNaN(parsed.getTime()) ? null : dateKey(parsed)
+}
+
+/** Does this year/month/day survive being built as a `Date` without carrying? */
+function isRealCalendarDate(year: number, month: number, day: number): boolean {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false
+  const built = new Date(year, month - 1, day)
+  return (
+    built.getFullYear() === year && built.getMonth() === month - 1 && built.getDate() === day
+  )
 }
 
 export function downloadFile(filename: string, contents: string, mime: string): void {

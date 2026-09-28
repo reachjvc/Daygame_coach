@@ -9,6 +9,7 @@
 import { GROUPING_DIMENSIONS, NO_PROJECT_COLOR, PROJECT_COLORS, SUMMARY_METRICS } from "./config"
 import {
   addDays,
+  startOfDayIso,
   dateKey,
   daysBetween,
   eachDay,
@@ -25,6 +26,8 @@ import {
 import {
   clientById,
   entriesInRange,
+  entrySecondsInRange,
+  entryDaysInRange,
   entryCost,
   entryRevenue,
   entryDaySeconds,
@@ -41,6 +44,7 @@ import type {
   SummaryMetric,
   Id,
   IsoDate,
+  IsoDateTime,
   ProfitabilityRow,
   ReportConfig,
   ReportFilters,
@@ -115,8 +119,10 @@ export function rangeDayCount(range: DateRange): number {
 // Filtering
 // ---------------------------------------------------------------------------
 
-export function applyFilters(state: TimetrackState, filters: ReportFilters): TimeEntry[] {
-  const inRange = entriesInRange(liveEntries(state), filters.range.start, filters.range.end)
+export function applyFilters(state: TimetrackState, filters: ReportFilters, nowSec: number): TimeEntry[] {
+  // `nowSec`, not the wall clock: a running entry's last day decides membership, and
+  // reading real `now` here put a report's seconds and its membership on two clocks
+  const inRange = entriesInRange(liveEntries(state), filters.range.start, filters.range.end, nowSec)
   const search = filters.description.trim().toLowerCase()
 
   return inRange.filter((entry) => {
@@ -315,14 +321,23 @@ function bucketLabel(key: IsoDate, interval: ChartInterval): string {
  * all of them.
  */
 function secondsInRange(entry: TimeEntry, config: ReportConfig, nowSec: number): number {
-  return eachDay(config.filters.range.start, config.filters.range.end).reduce(
-    (sum, day) => sum + roundSeconds(entryDaySeconds(entry, day, nowSec), config.rounding),
-    0,
+  /**
+   * ROUNDED ONCE, FOR THE WHOLE ENTRY. The first version rounded each DAY's share and
+   * added them up, which rounds a cross-midnight entry twice: with "round up to 15
+   * minutes", a shift from 23:55 to 00:05 — ten minutes of work — billed THIRTY, two
+   * quarter-hours instead of one. This file's own header says Toggl rounds per time
+   * entry before aggregation, and that is the rule the rest of the slice follows.
+   *
+   * O(1) as well; see `entrySecondsInRange`.
+   */
+  return roundSeconds(
+    entrySecondsInRange(entry, config.filters.range.start, config.filters.range.end, nowSec),
+    config.rounding,
   )
 }
 
 export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec: number): SummaryReport {
-  const entries = applyFilters(state, config.filters)
+  const entries = applyFilters(state, config.filters, nowSec)
   const groups = new Map<string, Accumulator>()
   const buckets = new Map<string, { seconds: number; billableSeconds: number; revenue: number; cost: number; segments: Map<string, DimensionValue & { value: number }> }>()
   const pie = new Map<string, DimensionValue & { seconds: number }>()
@@ -332,6 +347,7 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
   let totalRevenue = 0
   let totalCost = 0
   const activeDays = new Set<IsoDate>()
+  let countedEntries = 0
 
   // Pre-create every bucket in range so charts show empty days too
   const interval = config.chartInterval
@@ -353,19 +369,36 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
      * Two definitions of "hours on this day"; `entryDaySeconds` is the one with a
      * written argument, so it is the one used here.
      *
-     * Rounding stays per contribution rather than per entry, which is identical for a
-     * same-day entry — the overwhelming majority — and has the property the old code
-     * lacked: the chart buckets now sum to the total exactly.
+     * TWO THINGS THIS GOT WRONG FIRST TIME, both found by a reviewer:
+     *
+     * It walked every day of the RANGE per entry, so "This year" with 300 entries took
+     * 1508 ms against 5 ms before, rebuilt every second while a timer runs. It walks
+     * only the days the entry touches now — one for almost every entry, two for a night
+     * shift — via `entryDaysInRange`.
+     *
+     * And it rounded each day's share, which rounds a cross-midnight entry twice: ten
+     * minutes across midnight billed thirty at quarter-hour round-up. The entry is
+     * rounded ONCE, as this file's header says Toggl does, and the rounded total is then
+     * split across its days in proportion to the real seconds — so the chart buckets
+     * still sum to the total exactly, which is the property the per-day version was for.
+     * The last day takes the remainder so no second is lost to integer division.
      */
-    const perDay = eachDay(config.filters.range.start, config.filters.range.end)
-      .map((day) => ({ day, seconds: roundSeconds(entryDaySeconds(entry, day, nowSec), config.rounding) }))
-      .filter((d) => d.seconds > 0)
+    const days = entryDaysInRange(entry, config.filters.range.start, config.filters.range.end, nowSec)
+    const rawPerDay = days.map((day) => ({ day, raw: entryDaySeconds(entry, day, nowSec) }))
+    const rawTotal = rawPerDay.reduce((sum, d) => sum + d.raw, 0)
+    const seconds = roundSeconds(rawTotal, config.rounding)
+    if (seconds === 0 || rawTotal === 0) continue
 
-    const seconds = perDay.reduce((sum, d) => sum + d.seconds, 0)
-    if (seconds === 0) continue
+    let allocated = 0
+    const perDay = rawPerDay.map((d, index) => {
+      const share = index === rawPerDay.length - 1 ? seconds - allocated : Math.round((d.raw / rawTotal) * seconds)
+      allocated += share
+      return { day: d.day, seconds: share }
+    }).filter((d) => d.seconds > 0)
     const revenue = entryRevenue(state, entry, seconds)
     const cost = entryCost(state, entry, seconds)
 
+    countedEntries += 1
     totalSeconds += seconds
     if (entry.billable) totalBillable += seconds
     totalRevenue += revenue
@@ -481,7 +514,14 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
       cost: totalCost,
       fixedFee,
       activeDays: activeDays.size,
-      entryCount: entries.length,
+      /**
+       * The entries that CONTRIBUTED, not the ones selected. `entries.length` counted
+       * every entry the overlap filter returned, including one whose hours all fall
+       * outside the range — so the tab read "0:00 · 1 entry · 0 active days" over an
+       * empty grouping table, and its CSV was a header with no rows. Detailed lists the
+       * same entries this counts.
+       */
+      entryCount: countedEntries,
     },
   }
 }
@@ -510,8 +550,40 @@ export function metricValue(report: SummaryReport, metric: string): { value: num
 // Detailed report
 // ---------------------------------------------------------------------------
 
+/** An instant pulled back inside the report's own window, so a row's times match its duration. */
+function clipToRange(iso: IsoDateTime, rangeStart: number, rangeEnd: number): IsoDateTime {
+  const at = epochSeconds(iso)
+  if (at >= rangeStart && at <= rangeEnd) return iso
+  return new Date(Math.min(Math.max(at, rangeStart), rangeEnd) * 1000).toISOString()
+}
+
 export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSec: number): DetailedRow[] {
-  const rows = applyFilters(state, config.filters).map((entry) => {
+  /**
+   * A ROW SHOWS THE SAME PERIOD ITS DURATION MEASURES.
+   *
+   * Two things were wrong once the duration became "the seconds inside the range":
+   *
+   *   1. an entry with ZERO seconds in the range was still listed. A shift ending
+   *      exactly at the range's first midnight exported as
+   *      `…23:00, …00:00, 0:00:00, 0.00` — an hour of work shown as nothing, on a row
+   *      that should not exist. `buildSummary` had the mirror of it: `entryCount` came
+   *      from `entries.length`, so the Summary tab read "0:00 · 1 entry · 0 active
+   *      days" over an empty table while Detailed listed the row.
+   *   2. the row carried the entry's REAL start and stop beside the CLIPPED duration,
+   *      so Start and Stop described eight hours while Duration said seven. And
+   *      `importEntriesCsv` prefers the Stop column over Duration, so exporting the
+   *      detailed CSV and importing it back restored the unclipped figure — a round
+   *      trip through the app's own format that did not preserve its own numbers.
+   *
+   * So the times are clipped to the range too. A report for a range reports that
+   * range, and Start, Stop and Duration now describe the same interval.
+   */
+  const rangeStart = epochSeconds(startOfDayIso(config.filters.range.start))
+  const rangeEnd = epochSeconds(startOfDayIso(addDays(config.filters.range.end, 1)))
+
+  const rows = applyFilters(state, config.filters, nowSec)
+    .filter((entry) => entrySecondsInRange(entry, config.filters.range.start, config.filters.range.end, nowSec) > 0)
+    .map((entry) => {
     const seconds = secondsInRange(entry, config, nowSec)
     const project = projectById(state, entry.projectId)
     const task = taskById(state, entry.taskId)
@@ -528,8 +600,8 @@ export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSe
         .filter((n): n is string => Boolean(n)),
       memberName: memberById(state, entry.userId)?.name ?? "Unknown",
       billable: entry.billable,
-      start: entry.start,
-      stop: entry.stop,
+      start: clipToRange(entry.start, rangeStart, rangeEnd),
+      stop: entry.stop === null ? null : clipToRange(entry.stop, rangeStart, rangeEnd),
       seconds,
       amount: entryRevenue(state, entry, seconds),
     }
@@ -560,7 +632,7 @@ export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSe
 export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSec: number): WorkloadReport {
   const days = eachDay(config.filters.range.start, config.filters.range.end)
   const dayIndex = new Map(days.map((d, i) => [d, i]))
-  const entries = applyFilters(state, config.filters)
+  const entries = applyFilters(state, config.filters, nowSec)
   const rows = new Map<string, { key: string; label: string; color: string | null; values: number[] }>()
   const dayTotals = days.map(() => 0)
 
@@ -576,8 +648,23 @@ export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSe
      * which is how a night shift vanished from the Workload tab while the calendar
      * showed it.
      */
-    for (const day of days) {
-      const daySeconds = roundSeconds(entryDaySeconds(entry, day, nowSec), config.rounding)
+    /**
+     * Only the days this entry touches — walking all of `days` per entry is what made
+     * the four builders O(entries x days); see `entrySecondsInRange`. And the day's
+     * share comes out of the ONCE-rounded `seconds` rather than being rounded again,
+     * for the reason `secondsInRange` gives: rounding per day bills a cross-midnight
+     * entry twice.
+     */
+    const touched = entryDaysInRange(entry, config.filters.range.start, config.filters.range.end, nowSec)
+    const rawTotal = touched.reduce((sum, day) => sum + entryDaySeconds(entry, day, nowSec), 0)
+    if (rawTotal === 0) continue
+    let allocatedSeconds = 0
+    for (const [position, day] of touched.entries()) {
+      const daySeconds =
+        position === touched.length - 1
+          ? seconds - allocatedSeconds
+          : Math.round((entryDaySeconds(entry, day, nowSec) / rawTotal) * seconds)
+      allocatedSeconds += daySeconds
       if (daySeconds === 0) continue
       const index = dayIndex.get(day)
       if (index === undefined) continue
@@ -646,7 +733,7 @@ function attributesProjectsUniquely(grouping: ReportConfig["grouping"]): boolean
 }
 
 export function buildProfitability(state: TimetrackState, config: ReportConfig, nowSec: number): ProfitabilityReport {
-  const entries = applyFilters(state, config.filters)
+  const entries = applyFilters(state, config.filters, nowSec)
   const rows = new Map<string, ProfitabilityRow & { projectIds: Set<Id> }>()
 
   for (const entry of entries) {
@@ -667,7 +754,7 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
           fixedFee: 0,
           cost: 0,
           profit: 0,
-          margin: 0,
+          margin: null,
           projectIds: new Set<Id>(),
         }
       row.seconds += seconds
@@ -703,7 +790,8 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
         fixedFee,
         cost: row.cost,
         profit,
-        margin: income > 0 ? profit / income : 0,
+        // null, not 0: there is no margin to take of no income, and `0%` reads as break-even
+        margin: income > 0 ? profit / income : null,
       }
     })
     .sort((a, b) => b.profit - a.profit)
@@ -821,7 +909,7 @@ export function profitabilityToCsv(report: ProfitabilityReport, groupingLabel: s
       row.fixedFee.toFixed(2),
       row.cost.toFixed(2),
       row.profit.toFixed(2),
-      `${(row.margin * 100).toFixed(1)}%`,
+      row.margin === null ? "—" : `${(row.margin * 100).toFixed(1)}%`,
     ].map(csvCell).join(",")
   })
 

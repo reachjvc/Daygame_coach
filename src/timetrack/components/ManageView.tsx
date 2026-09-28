@@ -25,7 +25,7 @@ import {
   deleteGroup,
   deleteMember,
   deleteTag,
-  entriesInRange,
+  secondsInRangeOf,
   liveEntries,
   setApprovalStatus,
   sumSeconds,
@@ -191,7 +191,7 @@ function TagsPanel({
                 onChange={(event) => setState((current) => updateTag(current, tag.id, event.target.value))}
                 className="h-11 w-full sm:h-8 sm:w-[220px]"
               />
-              <span className="text-xs text-muted-foreground">used on {tagUsageCount(state, tag.id)} entries</span>
+              <span className="text-xs text-muted-foreground">used on {plural(tagUsageCount(state, tag.id), "entry", "entries")}</span>
               <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteTag(current, tag.id))}>
                 <IconDelete className="size-4" />
               </ConfirmButton>
@@ -269,8 +269,10 @@ function TeamPanel({
         {/* phones: one card per member */}
         <ul className="space-y-3 sm:hidden">
           {state.members.map((member) => {
-            const tracked = sumSeconds(
-              entriesInRange(liveEntries(state).filter((e) => e.userId === member.id), auditRange.start, auditRange.end),
+            const tracked = secondsInRangeOf(
+              liveEntries(state).filter((e) => e.userId === member.id),
+              auditRange.start,
+              auditRange.end,
               nowSec,
             )
             return (
@@ -349,8 +351,10 @@ function TeamPanel({
             </thead>
             <tbody className="divide-y divide-border">
               {state.members.map((member) => {
-                const tracked = sumSeconds(
-                  entriesInRange(liveEntries(state).filter((e) => e.userId === member.id), auditRange.start, auditRange.end),
+                const tracked = secondsInRangeOf(
+                  liveEntries(state).filter((e) => e.userId === member.id),
+                  auditRange.start,
+                  auditRange.end,
                   nowSec,
                 )
                 return (
@@ -547,8 +551,10 @@ function TeamPanel({
           {state.members.map((member) => {
             const approval = approvalFor(state, member.id, approvalWeek)
             const status = approval?.status ?? "open"
-            const tracked = sumSeconds(
-              entriesInRange(liveEntries(state).filter((e) => e.userId === member.id), approvalWeek, addDays(approvalWeek, 6)),
+            const tracked = secondsInRangeOf(
+              liveEntries(state).filter((e) => e.userId === member.id),
+              approvalWeek,
+              addDays(approvalWeek, 6),
               nowSec,
             )
             return (

@@ -18,7 +18,7 @@ import { newId } from "../idService"
 import { migrateStateToV3 } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
-import { dateKey, epochSeconds, formatIdleSpan } from "../timetrackFormatService"
+import { dateKey, epochSeconds, formatIdleSpan, plural } from "../timetrackFormatService"
 import {
   continueEntry,
   entrySeconds,
@@ -469,7 +469,7 @@ export function useTimetrack() {
       setPomodoroCycles((c) => c + 1)
       setPomodoroPhase("break")
       setPomodoroEndsAt(Date.now() + state.pomodoro.breakMinutes * 60_000)
-      if (state.pomodoro.notify) notify("Pomodoro complete", `Timer stopped. Take ${state.pomodoro.breakMinutes} minutes.`)
+      if (state.pomodoro.notify) notify("Pomodoro complete", `Timer stopped. Take ${plural(state.pomodoro.breakMinutes, "minute")}.`)
       pomodoroLastEntry.current = lastId
       return
     }
@@ -515,7 +515,7 @@ export function useTimetrack() {
     forgottenWarned.current = true
     const what = forgotten.entry.description.trim()
     pushToast(
-      `${what ? `“${what}”` : "A timer"} has been running for ${Math.round(forgotten.hours)} hours. Stop it if you forgot about it.`,
+      `${what ? `“${what}”` : "A timer"} has been running for ${plural(Math.round(forgotten.hours), "hour")}. Stop it if you forgot about it.`,
       "error",
     )
   }, [state, nowSec, pushToast])

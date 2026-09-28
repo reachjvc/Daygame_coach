@@ -76,22 +76,22 @@ describe("date presets", () => {
 
 describe("filters", () => {
   test("date range excludes entries outside it", () => {
-    const rows = applyFilters(state, emptyFilters({ start: "2026-08-10", end: "2026-08-10" }))
+    const rows = applyFilters(state, emptyFilters({ start: "2026-08-10", end: "2026-08-10" }), NOW_SEC)
     expect(rows.map((r) => r.id).sort()).toEqual(["1", "2"])
   })
 
   test("project, tag, member, billable and text filters", () => {
     const range = { start: "2026-08-01", end: "2026-08-31" }
-    expect(applyFilters(state, { ...emptyFilters(range), projectIds: ["31"] }).map((r) => r.id)).toEqual(["3"])
-    expect(applyFilters(state, { ...emptyFilters(range), tagIds: ["51"] }).map((r) => r.id)).toEqual(["2"])
-    expect(applyFilters(state, { ...emptyFilters(range), memberIds: ["11"] }).map((r) => r.id)).toEqual(["4"])
-    expect(applyFilters(state, { ...emptyFilters(range), billable: "no" }).map((r) => r.id)).toEqual(["3"])
-    expect(applyFilters(state, { ...emptyFilters(range), description: "beta" }).map((r) => r.id)).toEqual(["3"])
+    expect(applyFilters(state, { ...emptyFilters(range), projectIds: ["31"] }, NOW_SEC).map((r) => r.id)).toEqual(["3"])
+    expect(applyFilters(state, { ...emptyFilters(range), tagIds: ["51"] }, NOW_SEC).map((r) => r.id)).toEqual(["2"])
+    expect(applyFilters(state, { ...emptyFilters(range), memberIds: ["11"] }, NOW_SEC).map((r) => r.id)).toEqual(["4"])
+    expect(applyFilters(state, { ...emptyFilters(range), billable: "no" }, NOW_SEC).map((r) => r.id)).toEqual(["3"])
+    expect(applyFilters(state, { ...emptyFilters(range), description: "beta" }, NOW_SEC).map((r) => r.id)).toEqual(["3"])
   })
 
   test("client filter follows the entry's project", () => {
     const range = { start: "2026-08-01", end: "2026-08-31" }
-    const rows = applyFilters(state, { ...emptyFilters(range), clientIds: ["20"] })
+    const rows = applyFilters(state, { ...emptyFilters(range), clientIds: ["20"] }, NOW_SEC)
     expect(rows.map((r) => r.id).sort()).toEqual(["1", "2", "4"])
   })
 })

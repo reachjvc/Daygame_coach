@@ -345,8 +345,33 @@ export function validateEntry(
     violations.push({ field: "tag", message: "At least one tag is required in this workspace" })
   }
 
+  violations.push(...lockViolations(state, candidate.start))
+
+  return violations
+}
+
+/**
+ * THE TWO RULES THAT SAY "THIS DAY IS CLOSED", AND EVERY PATH THAT MUTATES USES THEM.
+ *
+ * Both locks lived inside `validateEntry`, so only the paths that validated a whole
+ * candidate entry were covered. `splitEntry` and `deleteEntries` did not, and a browser
+ * round found both going straight through an APPROVED week — Split silently turned one
+ * approved entry into two, Delete destroyed one and cheerfully toasted "1 time entry
+ * deleted". The same two were unstoppable with `lockEntriesBefore` set.
+ *
+ * Four other paths did hold, each with a clear refusal — the inline fields are
+ * disabled, and Start, Continue and Duplicate all say "Timesheet for the week of … is
+ * approved and cannot be changed". So the promise on screen was kept everywhere except
+ * the two paths that mutate or destroy the entry, and the destructive one SYNCS: a
+ * delete becomes a tombstone on every device.
+ *
+ * Split out so the rule has one home. `validateEntry` adds the workspace's required
+ * fields on top; a delete has no fields to require, only a day that may be closed.
+ */
+export function lockViolations(state: TimetrackState, startIso: IsoDateTime): SaveViolation[] {
+  const violations: SaveViolation[] = []
   const lockBefore = state.workspace.lockEntriesBefore
-  const day = dateKey(candidate.start)
+  const day = dateKey(startIso)
   if (lockBefore && day <= lockBefore) {
     violations.push({ field: "date", message: `Time entries on or before ${lockBefore} are locked` })
   }
@@ -738,6 +763,12 @@ export function splitEntry(
   if (entry.duration <= MIN_SPLIT_SECONDS) {
     return { state, error: "Only time entries longer than 10 minutes can be split" }
   }
+  /**
+   * A closed day refuses a split. This checked running, length and split point and
+   * never the locks, so Split silently turned one approved entry into two.
+   */
+  const locked = lockViolations(state, entry.start)
+  if (locked.length > 0) return { state, error: locked[0].message }
 
   const startSec = epochSeconds(entry.start)
   const stopSec = epochSeconds(entry.stop)
@@ -771,15 +802,36 @@ export function splitEntry(
   return { state: next, error: null }
 }
 
+/**
+ * A DELETE OBEYS THE LOCKS, AND SAYS SO WHEN IT DOES NOT HAPPEN.
+ *
+ * This had no validation at all and returned no violations, so a browser round deleted
+ * an entry out of an APPROVED week and got "1 time entry deleted · Undo" for it. The
+ * delete syncs, so it becomes a tombstone on every device — the most destructive path
+ * in the slice was the least guarded one.
+ *
+ * Refused entries are reported rather than dropped: a bulk delete of ten rows where two
+ * sit in a closed week removes the eight it may and names the reason for the rest,
+ * because silently removing eight of ten is how somebody discovers this a week later.
+ */
 export function deleteEntries(
   state: TimetrackState,
   entryIds: Id[],
   nowIso: IsoDateTime,
-): { state: TimetrackState; removed: TimeEntry[] } {
-  const removed = state.entries.filter((e) => entryIds.includes(e.id))
-  let next = { ...state, entries: state.entries.filter((e) => !entryIds.includes(e.id)) }
+): { state: TimetrackState; removed: TimeEntry[]; violations: SaveViolation[] } {
+  const targets = state.entries.filter((e) => entryIds.includes(e.id))
+  const violations: SaveViolation[] = []
+  const removable: Id[] = []
+  for (const entry of targets) {
+    const locked = lockViolations(state, entry.start)
+    if (locked.length > 0) violations.push(locked[0])
+    else removable.push(entry.id)
+  }
+
+  const removed = targets.filter((e) => removable.includes(e.id))
+  let next = { ...state, entries: state.entries.filter((e) => !removable.includes(e.id)) }
   for (const entry of removed) next = queueWebhook(next, "time_entry.deleted", entry, nowIso)
-  return { state: next, removed }
+  return { state: next, removed, violations }
 }
 
 /**
@@ -950,6 +1002,44 @@ export function weekTotalSeconds(
  * Local midnights also mean the 23- and 25-hour days at a clock change total
  * correctly; `start + 86400` would not.
  */
+/**
+ * The tracked seconds of `entry` that fall inside the days `from`..`to` INCLUSIVE.
+ *
+ * O(1). The first version of the cross-midnight fix had no such thing: it asked
+ * `entryDaySeconds` once per day of the RANGE, per entry, so the four report builders
+ * became O(entries x days). Measured on a plain year of tracking — 300 entries, the
+ * "This year" preset — that is 1508 ms, against 5 ms before; 1500 entries is 7480 ms.
+ * `ReportsView` rebuilds all four in a `useMemo` keyed on `nowSec`, which ticks every
+ * second while a timer runs, so the Reports screen simply stopped finishing frames.
+ *
+ * Clipping the interval is the same arithmetic done once instead of once per day, and
+ * `entryDaySeconds` is now this with `from === to`.
+ */
+export function entrySecondsInRange(entry: TimeEntry, from: IsoDate, to: IsoDate, nowSec: number): number {
+  const end = entry.stop ? epochSeconds(entry.stop) : epochSeconds(entry.start) + entrySeconds(entry, nowSec)
+  const windowStart = Math.max(epochSeconds(startOfDayIso(from)), epochSeconds(entry.start))
+  const windowEnd = Math.min(epochSeconds(startOfDayIso(addDays(to, 1))), end)
+  return Math.max(0, windowEnd - windowStart)
+}
+
+/**
+ * The days between `from` and `to` that this entry ACTUALLY touches — never more than
+ * the two a cross-midnight shift spans, where walking the range would walk 365.
+ */
+export function entryDaysInRange(entry: TimeEntry, from: IsoDate, to: IsoDate, nowSec: number): IsoDate[] {
+  if (entrySecondsInRange(entry, from, to, nowSec) <= 0) return []
+  const end = entry.stop ? entry.stop : new Date((epochSeconds(entry.start) + entrySeconds(entry, nowSec)) * 1000).toISOString()
+  let day = dateKey(entry.start)
+  if (day < from) day = from
+  const lastDay = dateKey(end) < to ? dateKey(end) : to
+  const days: IsoDate[] = []
+  while (day <= lastDay) {
+    days.push(day)
+    day = addDays(day, 1)
+  }
+  return days
+}
+
 export function entryDaySeconds(entry: TimeEntry, day: IsoDate, nowSec: number): number {
   /**
    * The entry's effective end, worked out ONCE rather than clamped per day.
@@ -961,10 +1051,7 @@ export function entryDaySeconds(entry: TimeEntry, day: IsoDate, nowSec: number):
    * including the one the old clamp existed for — no stop, but a stored
    * duration, which `isRunning` still calls running.
    */
-  const end = entry.stop ? epochSeconds(entry.stop) : epochSeconds(entry.start) + entrySeconds(entry, nowSec)
-  const from = Math.max(epochSeconds(startOfDayIso(day)), epochSeconds(entry.start))
-  const to = Math.min(epochSeconds(startOfDayIso(addDays(day, 1))), end)
-  return Math.max(0, to - from)
+  return entrySecondsInRange(entry, day, day, nowSec)
 }
 
 /** The seconds of these entries that fall on one local day. */
@@ -981,10 +1068,42 @@ export function daySeconds(entries: TimeEntry[], day: IsoDate, nowSec: number): 
  * 7:00 for that Monday. Absent, not misattributed — a defect under any model of what a
  * day is.
  */
-export function entriesInRange(entries: TimeEntry[], start: IsoDate, end: IsoDate): TimeEntry[] {
+/**
+ * The seconds of `entries` that fall INSIDE `start`..`end` — the number every screen
+ * that shows "tracked in this period" wants.
+ *
+ * `entriesInRange` selects by OVERLAP, so a Sunday-night shift is returned for both the
+ * week it starts in and the week it ends in. That is right for selection and wrong for
+ * summing: the first version of the cross-midnight fix converted only the report
+ * builders, and left eight callers doing `sumSeconds(entriesInRange(...))` — so an
+ * eight-hour night shift read 8h in the previous week AND 8h in the next, sixteen hours
+ * for eight worked, while `weekTotalSeconds` on the Timer beside it correctly said 7.
+ * Manage → Team's "Tracked (week)" and the timesheet-approval row — the number a
+ * manager signs off — were two of the eight.
+ *
+ * Before that change those callers were wrong by attribution but counted once. After
+ * it they double-counted, which is worse, so this exists and all eight use it.
+ */
+export function secondsInRangeOf(entries: TimeEntry[], start: IsoDate, end: IsoDate, nowSec: number): number {
+  return entriesInRange(entries, start, end, nowSec).reduce(
+    (total, e) => total + entrySecondsInRange(e, start, end, nowSec),
+    0,
+  )
+}
+
+/**
+ * `nowSec` RATHER THAN THE WALL CLOCK. A running entry's last day is "today", and the
+ * first version of this read `new Date()` for it — so a pure selector became impure and
+ * ignored the frozen clock every other function in the slice is handed. `buildSummary`
+ * then judged an entry's SECONDS against `nowSec` and its MEMBERSHIP against real now,
+ * which is two clocks in one report, and made the tests' own results depend on when
+ * they ran.
+ */
+export function entriesInRange(entries: TimeEntry[], start: IsoDate, end: IsoDate, nowSec: number): TimeEntry[] {
   return entries.filter((e) => {
     const firstDay = dateKey(e.start)
-    const lastDay = dateKey(e.stop ?? new Date().toISOString())
+    // the entry's effective end, by the same rule `entrySecondsInRange` uses
+    const lastDay = dateKey(e.stop ?? new Date(nowSec * 1000).toISOString())
     // touches the range if it starts before the end of it and ends after the start
     return firstDay <= end && lastDay >= start
   })
@@ -1179,23 +1298,33 @@ export function alertProgressPct(
     liveEntries(state).filter((e) => e.projectId === project.id),
     period.start,
     period.end,
+    nowSec,
   )
+
+  /**
+   * THE SECONDS INSIDE THE PERIOD, not the whole length of every entry that touched it.
+   * `entriesInRange` selects by overlap, so a shift starting the evening before a period
+   * used to contribute its WHOLE duration to that period's progress — 80% against a ten
+   * hour estimate where seven hours were worked, which is enough to fire a 75% alert
+   * that should not fire, and to fire it in two consecutive periods for one shift.
+   */
+  const inPeriod = (e: TimeEntry) => entrySecondsInRange(e, period.start, period.end, nowSec)
 
   if (basis === "fixed_fee") {
     if (!project.fixedFee) return 0
-    const spend = entries.reduce((sum, e) => sum + entryCost(state, e, entrySeconds(e, nowSec)), 0)
+    const spend = entries.reduce((sum, e) => sum + entryCost(state, e, inPeriod(e)), 0)
     return (spend / project.fixedFee) * 100
   }
 
   if (project.estimateType === "monetary") {
     if (!project.estimatedAmount) return 0
-    const revenue = entries.reduce((sum, e) => sum + entryRevenue(state, e, entrySeconds(e, nowSec)), 0)
+    const revenue = entries.reduce((sum, e) => sum + entryRevenue(state, e, inPeriod(e)), 0)
     return (revenue / project.estimatedAmount) * 100
   }
 
   const estimate = projectEstimateSeconds(state, project)
   if (!estimate) return 0
-  return (sumSeconds(entries, nowSec) / estimate) * 100
+  return (entries.reduce((sum, e) => sum + inPeriod(e), 0) / estimate) * 100
 }
 
 /** Fire any project alerts whose threshold has been crossed in the current period */
@@ -1762,12 +1891,16 @@ export function auditMembers(
   maxHours: number,
   nowSec: number,
 ): { member: Member; seconds: number }[] {
-  const entries = entriesInRange(liveEntries(state), range.start, range.end)
+  // the hours INSIDE the range: a night shift used to be counted in full in both of the
+  // weeks it touched, so "tracked less than N hours" could clear a member twice over
+  const entries = entriesInRange(liveEntries(state), range.start, range.end, nowSec)
   return state.members
     .filter((m) => m.active)
     .map((member) => ({
       member,
-      seconds: sumSeconds(entries.filter((e) => e.userId === member.id), nowSec),
+      seconds: entries
+        .filter((e) => e.userId === member.id)
+        .reduce((total, e) => total + entrySecondsInRange(e, range.start, range.end, nowSec), 0),
     }))
     .filter(({ seconds }) => (maxHours === 0 ? seconds === 0 : seconds < maxHours * 3600))
     .sort((a, b) => a.seconds - b.seconds)

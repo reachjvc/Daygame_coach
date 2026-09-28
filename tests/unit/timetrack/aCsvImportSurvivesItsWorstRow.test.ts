@@ -71,3 +71,43 @@ describe("a CSV with a duration too big to be a date", () => {
     expect(result.skipped).toEqual([])
   })
 })
+
+describe("a CSV date that is not a real calendar date", () => {
+  /**
+   * The duration guard above closed a THROW. It did not close the class: `normalizeDate`
+   * checked the shape `\\d{4}-\\d{2}-\\d{2}` and handed the string to `Date`, which carries.
+   * So month 99 and day 99 imported silently, and `MAX_DATE_MS` could not see them
+   * because the year 10007 is a legal `Date`. One such row makes every report, week
+   * total and invoice in the workspace meaningless, with no skip and no message.
+   */
+  const cases: [string, string][] = [
+    ["day 99", `Description,Start date,Start time,Duration\nx,2026-01-99,09:00,1h\n`],
+    ["month 99", `Description,Start date,Start time,Duration\nx,2026-99-01,09:00,1h\n`],
+    ["month 00", `Description,Start date,Start time,Duration\nx,2026-00-15,09:00,1h\n`],
+    ["day 00", `Description,Start date,Start time,Duration\nx,2026-01-00,09:00,1h\n`],
+    ["31 February", `Description,Start date,Start time,Duration\nx,2026-02-31,09:00,1h\n`],
+    ["everything 99", `Description,Start date,Start time,Duration\nx,9999-99-99,09:00,1h\n`],
+  ]
+
+  for (const [label, csv] of cases) {
+    test(`${label} is skipped, not carried into another month`, () => {
+      const result = importEntriesCsv(baseState(), csv, NOW)
+      expect(result.imported, `${label} imported`).toBe(0)
+      expect(result.skipped).toHaveLength(1)
+    })
+  }
+
+  test("an end date that rolls over does not put the stop 8000 years out", () => {
+    const csv = `Description,Start date,Start time,End date,End time\nx,2026-01-01,09:00,9999-99-99,10:00\n`
+    const result = importEntriesCsv(baseState(), csv, NOW)
+    expect(result.state.entries.map((e) => e.stop)).not.toContain("+010007-06-07T08:00:00.000Z")
+    expect(result.imported).toBe(0)
+  })
+
+  test("and 29 February in a leap year still imports, so the check refuses only what it must", () => {
+    const csv = `Description,Start date,Start time,Duration\nleap,2028-02-29,09:00,1h\n`
+    const result = importEntriesCsv(baseState(), csv, NOW)
+    expect(result.skipped).toEqual([])
+    expect(result.imported).toBe(1)
+  })
+})

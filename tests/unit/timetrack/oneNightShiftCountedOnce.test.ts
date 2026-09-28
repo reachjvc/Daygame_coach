@@ -67,7 +67,7 @@ describe("a shift that crossed midnight", () => {
   })
 
   test("is in a report for the week it was mostly worked", () => {
-    const inRange = entriesInRange(state.entries, MONDAY, SUNDAY_AFTER)
+    const inRange = entriesInRange(state.entries, MONDAY, SUNDAY_AFTER, NOW_SEC)
     expect(inRange, "the entry was excluded from a week holding seven of its eight hours").toHaveLength(1)
   })
 
@@ -111,7 +111,7 @@ describe("a shift that crossed midnight", () => {
     const config = { ...defaultReportConfig(MONDAY, 1, ordinary.workspace.rounding), filters: emptyFilters({ start: MONDAY, end: SUNDAY_AFTER }) }
     expect(buildSummary(ordinary, config, NOW_SEC).totals.seconds).toBe(90 * 60)
     expect(weekTotalSeconds(ordinary.entries, MONDAY, 1, NOW_SEC)).toBe(90 * 60)
-    expect(entriesInRange(ordinary.entries, MONDAY, SUNDAY_AFTER)).toHaveLength(1)
+    expect(entriesInRange(ordinary.entries, MONDAY, SUNDAY_AFTER, NOW_SEC)).toHaveLength(1)
   })
 })
 

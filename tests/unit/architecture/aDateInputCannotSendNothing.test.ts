@@ -72,6 +72,37 @@ function dateInputs(): { file: string; snippet: string }[] {
   return found
 }
 
+const RANGE_FALLBACK = { start: "2026-01-01", end: "2026-10-04" }
+
+/**
+ * The commit guards a staged date field may name in `data-staged-commit`, each with the
+ * assertion that it really refuses "". The list may only SHRINK: a stale entry is a free
+ * pass, so the last test here fails on a guard no field names any more.
+ *
+ * A MARKER, not a pattern. A staged field is safe because of where its draft GOES, and
+ * the first version of this excused anything shaped like `onBlur={…flush…}` — so a
+ * field whose commit handed "" to `dateKey` was excused for looking right.
+ *
+ * WHAT THIS STILL DOES NOT CATCH, stated because the version it replaces claimed to be
+ * airtight and was not: the marker is a CLAIM. A field could carry
+ * `data-staged-commit="clampRange"` and not route its draft through `clampRange` at
+ * all, and nothing here would know — proving it would need dataflow from the input to
+ * the commit, across component boundaries. What changed is the cost of the mistake:
+ * before, any staged field was excused for free by a shape it naturally has; now
+ * somebody has to write a named claim that a reviewer can read and check. That is a
+ * smaller hole, not no hole.
+ */
+const STAGED_FIELDS: { guard: string; refusesEmpty: () => void }[] = [
+  {
+    guard: "clampRange",
+    refusesEmpty: () => {
+      expect(clampRange({ start: "", end: RANGE_FALLBACK.end }, RANGE_FALLBACK)).toEqual(RANGE_FALLBACK)
+      expect(clampRange({ start: RANGE_FALLBACK.start, end: "" }, RANGE_FALLBACK)).toEqual(RANGE_FALLBACK)
+      expect(clampRange({ start: "", end: "" }, RANGE_FALLBACK)).toEqual(RANGE_FALLBACK)
+    },
+  },
+]
+
 describe("every date input in the tracker", () => {
   const inputs = dateInputs()
 
@@ -98,15 +129,22 @@ describe("every date input in the tracker", () => {
          * change meant a rejected prefix rewrote `value` and cleared the browser's
          * segment buffer — the field became impossible to type a year into. The report
          * range fields therefore hold a draft and commit on blur, which means the draft
-         * legitimately holds "" mid-typing and the emptiness is refused by `clampRange`
-         * at the commit instead. Verified: committing "" returns the previous range
-         * unchanged.
+         * legitimately holds "" mid-typing and the emptiness is refused at the commit.
          *
-         * Recognised by `onBlur` + a staged flush, because that is the pattern, and the
-         * test below asserts the clamp actually refuses an empty value — so this branch
-         * cannot become a hole if the clamp is ever weakened.
+         * THE FIRST VERSION OF THIS BRANCH WAS A HOLE, and its own comment claimed it
+         * could not be: it excused any input matching `onBlur={…flush…}`, which is a
+         * PATTERN, while what makes a staged field safe is its DESTINATION. A reviewer
+         * added a `type="date"` with a draft, an `onBlur` flush and a commit handing
+         * `""` straight to `dateKey`, and the suite stayed green — the same shape as the
+         * tautology one commit earlier.
+         *
+         * So the excuse is BY NAME. Each staged field is listed below with the function
+         * that refuses its empty value, and the tests after this run those functions. A
+         * new staged field is not on the list, so it is reported until somebody either
+         * guards it at the keystroke or adds it here WITH its guard's assertion.
          */
-        if (/onBlur=\{[^}]*flush/.test(snippet)) return false
+        const marker = /data-staged-commit="([^"]+)"/.exec(snippet)?.[1] ?? ""
+        if (marker && STAGED_FIELDS.some((f) => f.guard === marker)) return false
         return !(
           /\.value\s*&&/.test(handler) ||
           /\.value\s*\|\|\s*null/.test(handler) ||
@@ -121,16 +159,25 @@ describe("every date input in the tracker", () => {
     ).toEqual([])
   })
 
-  test("the commit-time guard the draft fields rely on actually refuses an empty value", () => {
+  test("every excused staged field's own commit guard refuses an empty value", () => {
     /**
-     * The scan above excuses a field that commits on blur rather than on every
-     * keystroke. That excuse is only sound while the commit refuses an empty value, so
-     * it is asserted here rather than assumed — otherwise the branch becomes the hole.
+     * The scan excuses these BY NAME. That excuse is only sound while each one's commit
+     * really refuses "", so each guard is run here rather than assumed — otherwise the
+     * branch is the hole it was the first time.
      */
-    const current = { start: "2026-01-01", end: "2026-10-04" }
-    expect(clampRange({ start: "", end: current.end }, current)).toEqual(current)
-    expect(clampRange({ start: current.start, end: "" }, current)).toEqual(current)
-    expect(clampRange({}, current)).toEqual(current)
+    expect(STAGED_FIELDS.length, "nothing is excused, so this asserts nothing").toBeGreaterThan(0)
+    for (const field of STAGED_FIELDS) field.refusesEmpty()
+  })
+
+  test("and nothing is excused that is no longer there", () => {
+    /**
+     * A stale entry excuses a field that does not exist, and then excuses it again when
+     * somebody recreates it at that label without a guard. Same reason the allowlists in
+     * `architecture.test.ts` each carry a companion assertion.
+     */
+    const named = inputs.map(({ snippet }) => /data-staged-commit="([^"]+)"/.exec(snippet)?.[1] ?? "")
+    const stale = STAGED_FIELDS.filter((f) => !named.includes(f.guard)).map((f) => f.guard)
+    expect(stale, "no date input names these guards any more — remove them from STAGED_FIELDS").toEqual([])
   })
 
   test("and a controlled date input does not show a value its state does not hold", () => {
@@ -246,7 +293,7 @@ describe("every writer of a report's date range", () => {
         buildDetailed(state, cfg, NOW_SEC)
         buildWorkload(state, cfg, NOW_SEC)
         buildProfitability(state, cfg, NOW_SEC)
-        applyFilters(state, cfg.filters)
+        applyFilters(state, cfg.filters, NOW_SEC)
         describeReport(cfg)
       } catch (error) {
         failures.push(`${label}: ${(error as Error).message.slice(0, 70)}`)

@@ -774,7 +774,7 @@ export function IntegrationsPanel({
                     : calendar.source === "ics_file"
                       ? "uploaded file"
                       : "Google Calendar API"}{" "}
-                  · {calendar.eventCount} events
+                  · {plural(calendar.eventCount, "event")}
                   {calendar.lastSyncedAt
                   ? ` · synced ${formatDate(dateKey(calendar.lastSyncedAt), state.user.dateFormat)} ${formatTimeOfDay(calendar.lastSyncedAt, state.user.timeFormat)}`
                   : ""}

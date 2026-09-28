@@ -533,8 +533,17 @@ export interface ProfitabilityRow {
   fixedFee: number
   cost: number
   profit: number
-  /** profit / (revenue + fixedFee), 0 when no income */
-  margin: number
+  /**
+   * profit / (revenue + fixedFee), or **null when there is no income to take a margin
+   * of** — which is a third state, not zero.
+   *
+   * It was `0`, and a browser round read the consequence straight off the screen:
+   * `Gamma Unpaid … EUR 0.00 … EUR 225.00 … EUR -225.00 … 0%`. Zero margin means
+   * break-even, printed on a row that lost EUR 225, and the CSV carried the same `0.0%`
+   * into whatever it was pasted into. Non-billable time with a real labour cost is the
+   * ordinary case for this, not an exotic one.
+   */
+  margin: number | null
 }
 
 export interface ProjectDashboard {
