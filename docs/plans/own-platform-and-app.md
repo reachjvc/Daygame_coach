@@ -467,8 +467,25 @@ hurt:
 - **(b) M3 moves after the data-layer port**, which is Q-ORDER territory and reopens M4's
   position.
 
-**Recommendation: (a).** It keeps every milestone's daily-use answer "yes" and leaves the
-order alone. **Cost if wrong:** a throwaway token-minting path that lives until M5 and is then
+**CORRECTED 2026-09-28 — (a) alone fixes ONE of the three consequences, and my "there is no
+third" was false.** Measured: `profiles` carries `constraint profiles_id_fkey ... references
+auth.users (id)`, there is **no INSERT policy on it in any migration** — deliberately, because
+"the trigger below is the only thing that creates a profile" — and that trigger fires `after
+insert on auth.users`. So a Better Auth sign-up creates a row only in *our* Postgres; no
+`auth.users` row exists; the `profiles` insert into Supabase fails on the foreign key and would
+be refused by the absent INSERT policy anyway. **A correctly minted token changes none of that.**
+Uuid preservation covers accounts that already exist, and consequences 1 and 2 are both about
+accounts that do not. Only consequence 3 — your own daily use — is fixed by (a), because your
+uuid predates M3.
+
+**The third option I said did not exist is the one that works: (c) M3 also creates the Supabase
+`auth.users` account for the duration of the window, via `createAdminSupabaseClient`, which this
+repo already has — and stops at M5.**
+
+**Recommendation: (a) AND (c) together.** Mint the Supabase-shaped token *and* keep creating the
+Supabase account. That is a deliverable M3 did not have: its list says "users in your own
+database" without saying which database a new account lands in, and nothing in the plan mentioned
+dual-writing. It keeps every milestone's daily-use answer "yes" and leaves the order alone. **Cost if wrong:** a throwaway token-minting path that lives until M5 and is then
 deleted. **Cost of not deciding:** the app is dead for its longest phase and the security gate
 passes while proving nothing.
 
@@ -639,7 +656,39 @@ M1.6.*
 Each names the milestone it gates, in its own entry.
 
 ### B1 — A schema-only dump AND a data dump of live Supabase. **Needs you. Gates M0.4, M0.6, M2, M8's acceptance — and therefore M1.0, M1.7 and everything after.** It is the first thing.
-*Attempted:* not against live data, on purpose — those are your credentials.
+*Attempted:* not against live data, on purpose — those are your credentials. **But "a dump" was a
+noun phrase with no procedure, which `docs/known-failures.md` forbids: *"anything the owner is
+meant to run, I have run — or I say plainly that I could not, and why."* Here is the procedure,
+with the failure it hits first.**
+
+**Step 0, the one that prevents the classic first-paste failure.** `pg_dump` refuses outright if
+it is older than the server's major version. **Checked on this machine: `pg_dump` is 16.15.** So
+find the server's major first:
+
+    psql "$SUPABASE_DB_URL" -c "select version();"
+
+If that says 17, a 16.15 client **will not work** and you need `postgresql-client-17`. If it says
+15 or 16, you are fine. (The integration harness pins `postgres:15-alpine`, so whatever the answer
+is, M2's version pin must match it.)
+
+**Step 1 — the connection string.** Supabase dashboard, Project Settings, Database, Connection
+string, **URI** — the *direct* connection, not the pooler, because the pooler does not support
+`pg_dump`. Nothing in this repo holds it and there is no `.env.example`.
+
+**Step 2 — the two dumps.**
+
+    pg_dump "$SUPABASE_DB_URL" --schema-only --no-owner --no-privileges -f schema.sql
+    pg_dump "$SUPABASE_DB_URL" --data-only --no-owner -f data.sql
+
+**Step 3 — prove the schema dump before trusting it**, because Fact 1 says the migration folder
+cannot rebuild this database and this file is its replacement:
+
+    docker run -d --name proof -e POSTGRES_PASSWORD=x -p 55432:5432 postgres:15-alpine
+    psql "postgresql://postgres:x@localhost:55432/postgres" -f schema.sql
+
+**It will fail on `auth.*` references and that is expected, not a problem** — a plain Postgres has
+no `auth` schema. What matters is *what else* fails, because that is the list M2 has to fix.
+**I have not run steps 1–3** (your credentials); step 0 is the only part I could verify here.
 *Why it moved to the front:* N9. Nineteen tables the code uses exist in no
 migration, so **the migration folder cannot rebuild your database** and
 `supabase db reset` already fails on the second file. The only authoritative
@@ -788,7 +837,7 @@ Supabase, which is why an import-only check misses them.
   contradicted its own scope.
 
 ### M0.4 — Give the database layer a testable seam, and tests. **The largest piece.**
-**Depends on:** B1, B-PATHS, Q-SEAM.
+**Depends on:** B1, B-PATHS, Q-SEAM, **Q-HARNESS** — without which this milestone could start with no exit criterion at all.
 1. **The seam first** (Q-SEAM). N18 is zero — not the 12 an earlier round
    claimed, which was a count of filenames appearing inside test files. Only 3 of 22
    integration files import repo code, and the rest say in their headers that they
@@ -928,8 +977,11 @@ an SSH tunnel to the box — there is no platform CLI under D1 — or a local Po
   machine too, and there are 21 of them; M5 rewrites N1 to talk to a
   database your laptop cannot reach.
 
-**M0 acceptance:** N17 still passes, N19 reports "none new", `npm run test:integration`
-covers 26 of 26, and the app still works on Vercel. Nothing about the platform has
+**M0 acceptance:** N17 still passes, N19 reports "none new", the app still works on Vercel, and
+**the repo-test coverage figure is whatever Q-HARNESS's answer makes reachable — NOT "26 of 26"
+until that answer says so.** (Blanking M0.4's acceptance while leaving this one asserting the
+retracted number was the same mistake twice in one milestone. Q-HARNESS option (c) even says
+"reword **both** gates".) Nothing about the platform has
 changed.
 
 ## M1 — The platform exists
@@ -1240,6 +1292,10 @@ N12 twice.
   so a new account gets no profile and hits a blank wall at every access gate with no
   error explaining it. The same trigger fills `profiles.timezone`, **so without this
   M1b.2's scheduler rolls everyone over at UTC midnight instead of their own.**
+- **New accounts land in BOTH databases for the M3→M5 window** (Q-AUTHWINDOW (a)+(c)): our own
+  users table *and* Supabase's `auth.users` via `createAdminSupabaseClient`, so the trigger that
+  creates `profiles` still fires and the foreign key is satisfied. **Stops at M5.** Without this,
+  M3's own acceptance cannot pass and M4's gate goes green on an empty database.
 - **Existing accounts and passwords** (D3). Supabase stores bcrypt; Better Auth uses
   scrypt and will not verify bcrypt without a custom verifier. Decide: import the
   hashes with a verifier, or force a reset for every account — **the second needs B3
