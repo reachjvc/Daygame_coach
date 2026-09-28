@@ -118,6 +118,14 @@ platform and D1 superseded them.** The original plan said $5–20, wrong by enou
 matter. **The saving against a managed platform is paid for in operations work, not
 conjured** — that work is M1.1 and M1.7.
 
+**The number that justified leaving no longer exists.** The 2026-09-17 decision rested on
+an asymmetry: leaving unnecessarily costs about three weeks, bounded, while staying wrongly
+compounds. **That three weeks is now 8–14+ weeks of sessions and has grown at every
+revision.** The decision is settled and not re-argued — but the arithmetic that made it
+easy has changed by four or five times, and you should hear that from me rather than
+discover it in month three. It is also the strongest argument for Q-ORDER and Q-SKELETON:
+both shrink what has to go right at once.
+
 **Time: unknown, and I will not give you a single number again.** It was 4–7 weeks,
 then 6–10, then 8–14, and each was produced by a review that then found more work.
 What I can say honestly: **M0 alone is the largest piece of preparation ever
@@ -331,6 +339,85 @@ exactly as written below.
 Each has a recommendation, so "go with your recommendations" is a complete answer.
 **A milestone that depends on an unanswered question says so and does not start.**
 
+### Q-DOWNTIME — Can the app be off for an evening, and can you go one day without using it? **NEW 2026-09-28. The cheapest question in this document.**
+
+**This plan is priced for a live service. There is one user and he owns it.** Work that
+exists only because nobody asked: a second dump taken inside a bounded read-only window
+before traffic moves; row counts compared against live Supabase at the moment of cutover
+rather than against the dump (stale only because the plan takes months); the whole
+bcrypt-verifier-versus-force-a-reset branch for existing accounts, when the honest account
+count is probably one; a rehearsed data rollback; two servers from day one.
+
+**This is also the mechanical explanation for three weeks becoming 8–14:** each review
+round added another continuity guarantee, and every one was priced as though there were
+customers. `docs/known-failures.md`'s very first check is *"Did I price advice for a
+product that has users?"* — and six rounds, mine included, failed it.
+
+**Recommendation: answer it, then delete what the answer makes unnecessary.** If the answer
+is no, nothing changes — but the machinery is then justified by your word instead of an
+assumption nobody wrote down. **Cost:** one sentence from you.
+
+**And two milestones become optional, with stated consequences:**
+- **M1b.2, the scheduler — droppable.** Goal rollover keeps happening lazily when a page
+  loads, which is exactly today's behaviour and today's known bug. Not a hosting job.
+- **M1b.5, the pipeline's ingest tail — droppable.** Ingest keeps running from your laptop
+  over the same connection, already true of the eight stages D5 leaves there.
+Both are product jobs that got pulled into a migration.
+
+### Q-ORDER — Should the database-layer rewrite happen on Supabase's own Postgres, BEFORE the hosting move? **NEW 2026-09-28, and the largest open question in this plan.**
+
+**Supabase is just Postgres.** It hands out a direct connection string, `pg` is already a
+dependency here, and `tests/integration/setup.ts` already talks to Postgres directly
+rather than through Supabase's client. So there is an intermediate state nobody proposed
+across six review rounds: **port the 26 repo files to Drizzle against Supabase's own
+Postgres, over a direct connection, while row-level security is still on and managed
+backups still exist.**
+
+**Why this outweighs any detail in this document.** As written, M4 (changing the security
+model) and M5 (rewriting N1) both happen **after** the move — so the two most dangerous
+changes land on the least familiar ground, weeks after the safety net of a managed
+provider was given up. Reordered:
+- The rewrite runs with **row-level security still behind it as a second wall.** If a
+  ported query forgets its filter, the database refuses it. That is exactly the
+  belt-and-braces M4 otherwise spends its length worrying about losing.
+- It runs with **managed point-in-time backups still in place**, before M1b.4 has to build
+  them by hand.
+- The hosting move then shrinks to something boring: *the same code, a different
+  connection string*, plus the operations work in M1.1 and M1.7.
+- A real checkpoint arrives in weeks, not months — "the app runs on Drizzle" is verifiable
+  long before "the app runs on Hetzner".
+
+**Recommendation: yes, reorder.** M0, then the Drizzle port against Supabase's Postgres
+with RLS still on, then M4's proof on a throwaway copy with the rules dropped, then move
+the database and the host. **Cost if wrong:** Supabase's direct-connection limits are
+lower than its pooler's, so the port may have to use the pooler — real but small. **Cost
+of the current order if it is wrong:** a data-access bug and an unfamiliar server in the
+same week, with no second wall and no managed backup.
+
+### Q-CUSTOMER — Should anything here come before "somebody can pay you"? **NEW 2026-09-28.**
+
+As ordered, **this plan delivers an installed phone app before it delivers a customer.**
+Paying grants nobody anything today — no Stripe webhook, `has_purchased` never written —
+and that sits in the out-of-scope row. The legal minimum is M8, last. M6 and M7 build the
+app first.
+
+That may be right: no users, so nothing to lose. But it is a choice about what the next
+months are *for*, and it was never put to you. **Recommendation: leave the order, write the
+trade down** — vision item 7 calls Scenarios the real product and item 31 calls the corpus
+the core value driver, and this plan touches neither. **Cost if wrong:** months of
+infrastructure and still no way to take money, on a product whose own vision says the
+value is elsewhere.
+
+### Q-SKELETON — Should one screen go end-to-end first? **NEW 2026-09-28.**
+
+Nothing proves the approach works until months in. **One screen, one endpoint, own token
+login, own Postgres, on Hetzner, end to end** would test every load-bearing belief in days:
+that Better Auth issues a token a non-browser client accepts, that this schema restores
+into a fresh Postgres at all, that the build deploys, that the proxy and certificate work.
+**Recommendation: yes, first thing in M1**, before M1.7 and M1.8 are built out. **Cost:** a
+few days in no current milestone. **Cost of skipping:** every assumption is validated at
+once, at month three, when unpicking them is expensive.
+
 ### Q-POLICIES — Are the database rules (N11) deleted, or kept as a second wall?
 Row-level security is a Postgres feature, not a Supabase one, so it survives the
 move. Keeping it means rewriting each rule to read a value your code sets instead of
@@ -532,12 +619,32 @@ Supabase, which is why an import-only check misses them.
    every repo builds its own client, which speaks HTTP to Supabase and reads
    `next/headers`. **That last fact is also why rule 1 is not yet true — the data
    layer is bound to Next's request context.**
-2. **Complete the test mirror** from N10 to the live schema, out of B1's
+2. **The migration rehearsal — not "a test fixture".** `tests/integration/schema.sql` is
+   **2,640 lines and 52 tables, and it already does the thing M2 calls its hardest work**:
+   measured today, **25 references to `profiles` and zero to `auth.users`**, plus
+   `auth.uid()` stubbed, policies included, green on a plain Postgres container in CI.
+   The plan treated this as N10, a fixture for M0.4 to "complete", while handing M2 the
+   schema separately. **They are the same artifact.** Finishing it from B1's dump is
+   simultaneously M0.4's fixture, M2's schema deliverable, and the answer to the question
+   everything else stands on — *can this database be rebuilt on a plain Postgres at all?*
+   **Give it M2's acceptance and the plan's largest unknown moves from month three to week
+   two.** M2 then becomes a data load against a schema already proven.
+2b. **Complete the test mirror** from N10 to the live schema, out of B1's
    dump. Without this M0.4 cannot seed a fixture for 8 of its own targets.
 3. **Tests that execute repo functions**, written now against Supabase so they
    describe behaviour, not implementation. A test written after the rewrite only
    proves the rewrite agrees with itself.
-4. **The repo graph must be done whole.** `healthRepo` reaches the database through
+4. **Slice vertically, not horizontally — the "whole graph" claim is true of one clump,
+   not of this plan.** Measured: **18 of the 26 repo files import no other repo file.** The
+   coupling is three small clumps (training/programs ~5,529 lines; goals/tracking ~3,831;
+   `profilesRepo`→`betaRepo` 224) plus **14 standalone files**, the smallest being
+   `valuesRepo.ts` at 91 lines. So "test all 26, then port all 26" puts the first evidence
+   that the approach works at the end of a multi-week phase — which is why this plan cannot
+   estimate at all. **Build the seam once (Q-SEAM, genuinely shared), then run
+   test → port → prove on ONE standalone file first.** That yields a measured cost per line
+   so the estimate stops being a guess, a checkpoint every few days, and somewhere to stop.
+   Then the other 13 standalone files, then the clumps, largest last. **The whole-graph rule
+   still applies within a clump:** `healthRepo` reaches the database through
    `settingsRepo`; `workoutRepo` through three other repos and two Postgres
    functions. Giving one a seam while its callees build their own client buys
    nothing.
@@ -547,6 +654,12 @@ Supabase, which is why an import-only check misses them.
   function it calls by name exists in the dump.** The function half is what catches
   N15's `match_embeddings` being absent. **Prerequisite for the test to be
   runnable at all:** B1 and step 2.
+- **Five load-bearing beliefs nothing in this plan tests, and four are an afternoon each.**
+  They are currently all scheduled to be discovered late, together: that Better Auth can be
+  forced onto `uuid` ids (D3 literally says "verify" and nobody has); that it can verify
+  Supabase's bcrypt hashes; that its tokens are accepted by a Capacitor client; that service
+  workers run under Capacitor on iOS; and that `match_embeddings` can be extracted from
+  Supabase at all (N15 — it exists nowhere here). **Test the first four before M1 ends.**
 - **Not covered:** this does not port anything. It builds the net M5 falls into.
 
 ### M0.5 — One API base URL (D8)
@@ -577,7 +690,37 @@ changed.
 sub-milestones named tests that need M2 and M3 — so the old plan deadlocked at its
 second milestone. The always-on parts are now **M1b, after M3**.
 
-### M1.1 — It builds and boots. **First, because everything else assumes it.**
+### M1.0 — Lift and shift: the same app, on your box, still talking to Supabase. **NEW — first, and it replaces the skeleton Q-SKELETON asked for.**
+**Depends on:** B2. **No new code.**
+
+**"Leave Vercel" and "leave Supabase" are two projects and the plan had them welded
+together, with the easy one last.** M5 was titled "Drizzle, and Vercel off" — leaving
+Vercel bolted onto the largest and most dangerous rewrite, at the very end. And there was
+no state anywhere in which the app ran on Hetzner with Supabase still behind it, because
+M1.1's box boots against an empty Postgres.
+
+The two halves have opposite risk profiles. **Every one-way door is in the Supabase half**
+— forcing a password reset, deleting the database's protections, the first real write to
+the new database. **The hosting half has none:** it needs no new code and is reversible in
+minutes by pointing the domain back at Vercel. It is also the half that exercises every
+operator job D1 handed over — build in CI, TLS, firewall, supervision, deploy, monitoring.
+
+- The same artifact M1.1 builds, running on the box behind the proxy, `DATABASE_URL` still
+  pointing at Supabase.
+- **You move your daily use onto it in week one.** Everything after becomes "swap one thing
+  at a time underneath an app he is already using".
+- **This deletes work.** M0.6 exists only to keep the *old* world usable for months; with
+  your daily use on the box, M0.6 stops gating M1.6, M1.7 and M5. And your own use becomes
+  the smoke test of the new platform — for someone with no monitoring habits, the only
+  alarm that will ever actually be acted on.
+- **Security, unasked:** the database's exposure is unchanged here (Supabase stays public
+  behind its rules, exactly as today). What *is* new is an internet-facing box of your own,
+  months earlier than planned. That is the point — learn sshd, TLS and the firewall while
+  there is nothing to lose — but it means **M1.7's hardening ships WITH M1.0, not after.**
+- Acceptance: the app answers on your domain, from the box, against Supabase, and you have
+  used it for a day. Rolling back is a DNS change.
+
+### M1.1 — It builds and boots. **After M1.0; it is what M1.0 deploys.**
 **Depends on:** B2. **Note the ring:** its acceptance names M1.7's healthcheck, and M1.7's healthcheck touches a database whose schema is M2, which depends back on M1.1. It resolves because an empty Postgres answers a healthcheck and `app/page.tsx` renders a signed-out page — **stating that is the point, because the old plan's deadlock was invisible for exactly this reason.**
 **Correcting a claim I made and you were told:** CI *does* build this app, and has
 since 2026-02-04 — `playwright.config.ts` runs `npm run build && npm start` when
@@ -617,6 +760,18 @@ exist only in whoever typed the commands.
    `output: "standalone"` (it does **not** copy `public/` or `.next/static` — you copy
    them), a Docker image, or shipped `node_modules` whose native binaries must match the
    box's architecture and libc. Name the registry and its retention.
+0. **The process topology, first line of this milestone.** One process or two? The word
+   "worker" appears twice in this plan and both times means a *browser* service worker;
+   there is **no scheduling or queue library in `package.json` at all** (measured). M1b.2
+   states its requirement and names no mechanism and no home. This matters structurally
+   because of this milestone's own rule — nothing exists on either box that the
+   provisioning artifact put there — so **a second always-on process discovered later means
+   reopening the artifact, the supervision units, the log caps, the alerts and the deploy
+   step after all of them are signed off.** Decide now: one process, or the app plus a
+   worker, both in the artifact from the start. Not a backend rebuild — a decision taken
+   before the machine is built rather than after. (The `leave-vercel-supabase-decision`
+   note recorded that Next has nowhere to put a worker; this plan asserts rule 1 and never
+   resolves it.)
 3. **Supervision.** What runs the app, restarts it on crash, starts it on boot. Compose
    does this only if the restart policy is set and Docker is enabled at boot, neither of
    which is currently stated. systemd is familiar territory — `build.sh:65`.
@@ -875,7 +1030,11 @@ the test cannot pass.**
 - Acceptance: the above, plus **a stated enumeration**: how many of N21's 116 were
   exercised, how many were skipped, and why each skip is safe.
 
-## M5 — Drizzle, and Vercel off
+## M5 — Drizzle
+
+**Vercel is already off — M1.0 did it, in week one, with no new code.** Leaving Vercel was
+welded to this milestone and that was the plan's largest ordering mistake: the cheap
+reversible half bolted to the dangerous one-way half, and scheduled last.
 
 **Depends on:** M0.4 (the only reason this is not a leap of faith), M4, B5.
 - N1. What holds the shape is each repo's exported functions
@@ -931,6 +1090,30 @@ the test cannot pass.**
   including field reports, approaches, sessions, reviews and purchases. **An account
   deletion that iterated the migration list would have been proved complete while
   leaving the most personal data behind.**
+
+---
+
+# WHAT KEEPS THIS PLAN TRUE
+
+**Nothing does, and it went stale during its own review** — the file grew 62 lines under
+round 7 while it was reading, moving its citations. That is the revision-banner failure
+again, live, at small scale.
+
+The repo already owns the right kind of mechanism and none of it points here:
+`tests/unit/docs/planConceptCheck.test.ts`, `knownFailuresWired.test.ts` and
+`architecture/orientation.test.ts` all go red when a document stops matching the code.
+**Grep over `tests/`, `scripts/` and `.claude/`: nothing names this plan.**
+
+Two options, in preference order:
+- **(a) Shorten the horizon so the plan need not survive months.** That is exactly what
+  M1.0, Q-DOWNTIME, the vertical slicing and the rehearsal relabel do. Preferred, and it is
+  free.
+- **(b) One test that recomputes the rows this plan actually leans on** — N1, N4, N7, N9,
+  N18, N21, N24, N29 — and fails on drift. **Half a day, and one more red test the peers
+  will see.** Worth it only if the horizon stays long.
+
+**Prose discipline is not a mechanism.** "All figures in one table" is exactly the
+discipline that failed five times in this document already.
 
 ---
 
