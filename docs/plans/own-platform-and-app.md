@@ -346,7 +346,18 @@ exists only because nobody asked: a second dump taken inside a bounded read-only
 before traffic moves; row counts compared against live Supabase at the moment of cutover
 rather than against the dump (stale only because the plan takes months); the whole
 bcrypt-verifier-versus-force-a-reset branch for existing accounts, when the honest account
-count is probably one; a rehearsed data rollback; two servers from day one.
+count is probably one; a rehearsed data rollback.
+
+**STRUCK from this list 2026-09-28: "two servers from day one."** It was on it, and it should
+not have been. That is **rule 3**, which you are asked to approve — *"staging and production
+exist from the first day; if wrong, you learn whether a migration works by running it on
+your own data"* — and **four acceptances name staging**: M1.1's reboot test and "both boxes
+from a fresh image", M2's "does not load production data until that dump has been restored
+into staging once", M1b.4's restore with real data in it, and M1.8's staging lane. **M2's
+staging restore is the only place B1's dump is proven to rebuild on real Hetzner hardware
+before production data moves** — i.e. the mitigation for Fact 1, this plan's own first fact.
+At N39's prices it is also the cheapest item on the list. A one-word "yes" to this question
+would otherwise have taken rule 3 and four acceptances with it.
 
 **This is also the mechanical explanation for three weeks becoming 8–14:** each review
 round added another continuity guarantee, and every one was priced as though there were
@@ -373,13 +384,33 @@ across six review rounds: **port the 26 repo files to Drizzle against Supabase's
 Postgres, over a direct connection, while row-level security is still on and managed
 backups still exist.**
 
-**Why this outweighs any detail in this document.** As written, M4 (changing the security
-model) and M5 (rewriting N1) both happen **after** the move — so the two most dangerous
-changes land on the least familiar ground, weeks after the safety net of a managed
-provider was given up. Reordered:
-- The rewrite runs with **row-level security still behind it as a second wall.** If a
-  ported query forgets its filter, the database refuses it. That is exactly the
-  belt-and-braces M4 otherwise spends its length worrying about losing.
+**CORRECTED 2026-09-28, and the correction kills the argument this section led with.** I
+wrote that the port would run "with row-level security still behind it as a second wall".
+**That is false, and this repo documents why in the harness that does the same thing.**
+`tests/integration/setup.ts:161-166`: *"The account that owns the tables is exempt from the
+row rules — Postgres lets an owner see everything on its own tables — so a test that asks
+'is someone else refused?' while connected as the owner passes without the rules ever being
+consulted."* Supabase's direct connection authenticates as `postgres`, which owns every
+table, so a Drizzle port over a socket gets **zero** policy enforcement. And the other
+branch is worse, not better: every policy is written against `auth.uid()`, which in live
+Supabase reads a claim set per HTTP request. A socket carries no claim, so stepping down to
+`authenticated` makes `auth.uid()` NULL and every policy denies everything — which is
+exactly why `schema.sql` has to **stub** `auth.uid()` and hand-build a non-owner role.
+
+**So the intermediate state I recommended is LESS protected than today, not more.** Today's
+anon-key path always enforces the rules; the ported path never would. Getting the wall back
+means new machinery — `FORCE ROW LEVEL SECURITY`, a non-owner role, and setting the role
+and claim on every transaction of a pooled connection — and the harness warns that the
+failure mode is *a green denial test that proves nothing*, which is the trap M4 exists to
+avoid.
+
+**Two consequences if this is answered yes anyway:**
+- **M4's gate must run BEFORE the port, not after.** The port *is* the step that removes the
+  database's protection, silently and with no gate. That inverts the order stated below.
+- **Q-POLICIES stops gating M4 and starts gating the port**, because "keep them, rewritten"
+  is what decides whether the per-transaction claim machinery gets built at all.
+
+**What survives of the original argument** — three of the four benefits:
 - It runs with **managed point-in-time backups still in place**, before M1b.4 has to build
   them by hand.
 - The hosting move then shrinks to something boring: *the same code, a different
@@ -387,9 +418,11 @@ provider was given up. Reordered:
 - A real checkpoint arrives in weeks, not months — "the app runs on Drizzle" is verifiable
   long before "the app runs on Hetzner".
 
-**Recommendation: yes, reorder.** M0, then the Drizzle port against Supabase's Postgres
-with RLS still on, then M4's proof on a throwaway copy with the rules dropped, then move
-the database and the host. **Cost if wrong:** Supabase's direct-connection limits are
+**Recommendation: WITHDRAWN pending your answer to Q-POLICIES.** I recommended this
+reorder on a premise that turned out false. It may still be right for its other three
+reasons, but it is no longer a recommendation I will make for you — the version that works
+requires building the role-and-claim machinery first, and that is Q-POLICIES' decision, not
+a sequencing preference. **Cost if wrong:** Supabase's direct-connection limits are
 lower than its pooler's, so the port may have to use the pooler — real but small. **Cost
 of the current order if it is wrong:** a data-access bug and an unfamiliar server in the
 same week, with no second wall and no managed backup.
@@ -542,6 +575,7 @@ first data load. Anything with no owner here is out of scope, explicitly.
 | The 11 Postgres functions (N15) | **M4** decides their fate, **M5** ports the callers |
 | Connection pooling | **M5** |
 | Account deletion and export | **M8** |
+| **A database and accounts for the browser suite, after M3 and M5** | **UNOWNED — and it is load-bearing three times.** See below |
 | **Out of scope, stated:** paying grants access (no Stripe webhook); the 98 type and 323 lint errors (D9); `ignoreBuildErrors`; moving the corpus build off your laptop (D5) | — |
 
 ---
@@ -690,8 +724,36 @@ changed.
 sub-milestones named tests that need M2 and M3 — so the old plan deadlocked at its
 second milestone. The always-on parts are now **M1b, after M3**.
 
-### M1.0 — Lift and shift: the same app, on your box, still talking to Supabase. **NEW — first, and it replaces the skeleton Q-SKELETON asked for.**
-**Depends on:** B2. **No new code.**
+### M1.0 — Lift and shift: the same app, on your box, still talking to Supabase.
+**Depends on:** B2, **B3's domain half** (the acceptance is "answers on your domain" and
+rollback is a DNS change; B3 records that there is no custom domain in the repo, and TLS
+needs one), **M1.1 and M1.7** — see the correction below. **No new *application* code.**
+
+**CORRECTED 2026-09-28. This is not a milestone before M1.1; it is M1.1 and M1.7's
+ACCEPTANCE.** I wrote "Depends on: B2. No new code. Week one" and also "M1.1 comes after
+M1.0". That is a ring: M1.0's deliverable is the artifact M1.1 builds, so it cannot exist
+until M1.1's provisioning artifact, build job, registry, supervision and build-variable
+rule exist, and its own text says M1.7's hardening ships with it while M1.7 depends on
+M1.1. **Read it as: M1.1 and M1.7 are the work, and "runs on your box against Supabase, on
+your domain, and you used it for a day" is how they are judged.** "Week one" was then a
+claim about CI build plus compose or systemd plus a proxy plus firewall plus sshd plus DNS,
+in a repo with no Dockerfile, compose file or Caddyfile — judge it on that, not on "no new
+code".
+
+**Two prerequisites nothing had named, both outside this repo:**
+- **Supabase's redirect allow-list.** Sign-up, sign-up-success and forgot-password build
+  their redirect from `window.location.origin`, so a new origin must be added to Supabase's
+  Site URL / redirect list or confirmation and password reset bounce — on the milestone
+  whose acceptance is "you used it for a day".
+- **`x-forwarded-proto` on the new proxy.** `src/db/authCookies.ts:46` says in as many words
+  that **Vercel always sets it**; if the new proxy does not, session cookies are refreshed
+  without `Secure`.
+
+**Feasibility, traced and confirmed:** no `process.env.VERCEL` anywhere in `src/`, `app/` or
+`proxy.ts`; `@supabase/ssr` needs only `cookies()`/`headers()`, which work under
+`next start`; the four build-time values are ordinary build args; `build.sh`'s refusal is
+satisfied because Actions sets `CI`. **The application can run on a Hetzner box against
+Supabase with no code change.**
 
 **"Leave Vercel" and "leave Supabase" are two projects and the plan had them welded
 together, with the easy one last.** M5 was titled "Drizzle, and Vercel off" — leaving
@@ -707,12 +769,22 @@ operator job D1 handed over — build in CI, TLS, firewall, supervision, deploy,
 
 - The same artifact M1.1 builds, running on the box behind the proxy, `DATABASE_URL` still
   pointing at Supabase.
-- **You move your daily use onto it in week one.** Everything after becomes "swap one thing
-  at a time underneath an app he is already using".
-- **This deletes work.** M0.6 exists only to keep the *old* world usable for months; with
-  your daily use on the box, M0.6 stops gating M1.6, M1.7 and M5. And your own use becomes
-  the smoke test of the new platform — for someone with no monitoring habits, the only
-  alarm that will ever actually be acted on.
+- **You move your daily use onto it.** Everything after becomes "swap one thing at a time
+  underneath an app you are already using", and your own use becomes the smoke test — for
+  someone with no monitoring habits, the only alarm that will ever actually be acted on.
+- **RETRACTED: "this deletes work".** I claimed M0.6 stops being needed. **Four places in
+  this plan correctly say otherwise and my claim was the wrong one.** M0.6 gives your
+  *laptop* a way to reach a database once the real one is private, and moving your *usage*
+  to the box does not do that — `npm run dev` and `npm run test:e2e` both run on the laptop,
+  and M1.6's and M1.7's mandatory-variable changes land there. **M0.6 survives untouched;
+  only its "keep the old world alive for months" rationale shrinks.**
+- **AND THIS CHANGES A RULE YOU WERE ASKED TO APPROVE, so it is a question, not a bullet.**
+  Rule 5 says "you can use the product on localhost every day of this". This milestone
+  quietly replaces it with "you move your daily use onto the box". That may be better — but
+  your approval surface moved after you were asked to approve it. **Q-RULE5: do you want
+  rule 5 to become "on the box" rather than "on localhost"? Recommendation: yes, because
+  the box then gets exercised daily by the only person who will notice. Cost if wrong: your
+  daily driver is the thing being changed underneath you.**
 - **Security, unasked:** the database's exposure is unchanged here (Supabase stays public
   behind its rules, exactly as today). What *is* new is an internet-facing box of your own,
   months earlier than planned. That is the point — learn sshd, TLS and the firewall while
@@ -1093,6 +1165,39 @@ reversible half bolted to the dangerous one-way half, and scheduled last.
 
 ---
 
+# THE BROWSER SUITE HAS NO DATABASE AFTER M5, AND NOTHING OWNS ONE
+
+**Found round 8, and it is the second gap of the scheduler kind — a requirement stated with
+no mechanism.** Today CI depends on a **live Supabase project containing three seeded
+accounts**: `auth.setup.ts` signs in through the real login form, `fixtures/test-user.ts`
+defines `TEST_USER`, `TEST_USER_B` (for cross-user isolation) and `TEST_USER_TRAINING`
+— whose own comment records that the training specs **wipe that account clean on every
+run** — and `e2e.yml` hands every job the Supabase URL, the anon key, the **service-role
+key** and all six credentials.
+
+After M3 those accounts live in our own users table. After M5 and B5 Supabase is off. After
+M1.7 port 5432 answers nothing from outside and inbound is default-deny, and GitHub's
+runners have no stable address to allow-list. **So the suite has nowhere to run, and this is
+a precondition of three separate things:** M1.8's "the full suite green once" before the
+merge to `main`, M6's "each converted route keeps its e2e spec green", and M3's acceptance,
+which is a live sign-in.
+
+Two options, neither written down until now: **a throwaway Postgres per CI run**, seeded
+from B1's dump plus Better Auth accounts — the mechanism already exists for the integration
+suite via testcontainers, but nothing wires it to Playwright — or **point the suite at
+staging** and accept that a suite which wipes an account on every push writes to a real box.
+
+**This needs an owner before M3.** The OWNERSHIP table is the device this plan invented to
+catch exactly this, and it had no row for a test database.
+
+**A second, smaller orphan of the same kind:** M0.4's "test the first four beliefs before M1
+ends" names no milestone, no deliverable and no acceptance — and since M1.0 absorbed
+Q-SKELETON, that bullet is now the *only* early validation of Better Auth's uuid override,
+its bcrypt verification and its non-browser tokens left anywhere in the plan. Unenforceable
+as written.
+
+---
+
 # WHAT KEEPS THIS PLAN TRUE
 
 **Nothing does, and it went stale during its own review** — the file grew 62 lines under
@@ -1122,10 +1227,17 @@ discipline that failed five times in this document already.
 Round 4 verified each of these against the code and the rewrite dropped the section,
 so every later reviewer has been re-deriving them. They are here to be trusted.
 
-- **M3's cookie→token switch does not by itself break the 79 e2e specs.**
+- **M3's cookie→token switch does not by itself break the 79 e2e specs**, because
   `tests/e2e/auth.setup.ts` signs in through the real form and saves
-  `page.context().storageState()`, which captures cookies **and** localStorage. And
-  `grep -rln supabase tests/e2e/` returns nothing — the browser suite never touches it.
+  `page.context().storageState()`, which captures cookies **and** localStorage. That half
+  holds.
+- **CORRECTED 2026-09-28 — the second half of this entry was wrong, and this was the worst
+  possible place to put a wrong fact.** It said `grep -rln supabase tests/e2e/` returns
+  nothing, "so the browser suite never touches it". The grep is accurate and the conclusion
+  is a stand-in: **the suite reaches Supabase through the app, so no import appears.** It
+  depends on a live Supabase project with three seeded accounts — see the section above.
+  Sixth single-pattern grep failure of that session, in the one section headed "do not spend
+  a round re-deriving these".
 - **38 of N12's 40 user links are `ON DELETE CASCADE`**, and the single `SET NULL`
   (`error_reports.user_id`) holds nothing a person typed, so it is de-identified by
   design. **There is no orphan class — this matters to M8.**
