@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { AUDIT_BUCKETS } from "../config"
+import { useAddField } from "../hooks/useAddField"
 import { IconAdd, IconArchive, IconDelete } from "../icons"
 import { addDays, dateKey, formatDate, formatDuration, plural, weekStartOf } from "../timetrackFormatService"
 import {
@@ -93,7 +94,9 @@ function ClientsPanel({
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
 }) {
-  const [name, setName] = useState("")
+  const field = useAddField((name) => {
+    setState((current) => addClient(current, name, new Date().toISOString()).state)
+  })
 
   return (
     <SectionCard
@@ -101,15 +104,8 @@ function ClientsPanel({
       description="Group projects under the client they are for."
       actions={
         <div className="flex w-full gap-2 sm:w-auto">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New client" className="h-11 w-full sm:h-8 sm:w-[180px]" />
-          <Button
-            size="sm"
-            onClick={() => {
-              if (!name.trim()) return
-              setState((current) => addClient(current, name.trim(), new Date().toISOString()).state)
-              setName("")
-            }}
-          >
+          <Input {...field.inputProps} placeholder="New client" className="h-11 w-full sm:h-8 sm:w-[180px]" />
+          <Button size="sm" {...field.buttonProps}>
             <IconAdd className="size-4" /> Add
           </Button>
         </div>
@@ -167,7 +163,9 @@ function TagsPanel({
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
 }) {
-  const [name, setName] = useState("")
+  const field = useAddField((name) => {
+    setState((current) => createTag(current, name, new Date().toISOString()).state)
+  })
 
   return (
     <SectionCard
@@ -175,15 +173,8 @@ function TagsPanel({
       description="Renaming a tag updates every entry using it. Deleting one removes it from those entries."
       actions={
         <div className="flex w-full gap-2 sm:w-auto">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="New tag" className="h-11 w-full sm:h-8 sm:w-[160px]" />
-          <Button
-            size="sm"
-            onClick={() => {
-              if (!name.trim()) return
-              setState((current) => createTag(current, name.trim(), new Date().toISOString()).state)
-              setName("")
-            }}
-          >
+          <Input {...field.inputProps} placeholder="New tag" className="h-11 w-full sm:h-8 sm:w-[160px]" />
+          <Button size="sm" {...field.buttonProps}>
             <IconAdd className="size-4" /> Add
           </Button>
         </div>
@@ -228,7 +219,9 @@ function TeamPanel({
   pushToast: (text: string, tone?: "info" | "error") => void
 }) {
   const [invite, setInvite] = useState({ name: "", email: "" })
-  const [groupName, setGroupName] = useState("")
+  const groupField = useAddField((name) => {
+    setState((current) => createGroup(current, name, new Date().toISOString()))
+  })
   const [auditBucket, setAuditBucket] = useState<string>("under_10")
   const todayKey = dateKey(new Date(nowSec * 1000))
   const weekStart = weekStartOf(todayKey, state.user.weekStart)
@@ -464,7 +457,7 @@ function TeamPanel({
           title="Groups"
           actions={
             <div className="flex w-full gap-2 sm:w-auto">
-              <Input value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="Group name" className="h-11 w-[140px] sm:h-8" />
+              <Input {...groupField.inputProps} placeholder="Group name" className="h-11 w-[140px] sm:h-8" />
               <Button
                 size="sm"
                 /* It was an unlabelled plus: a screen reader heard "button", and
@@ -472,11 +465,7 @@ function TeamPanel({
                    without a name. */
                 aria-label="Add group"
                 className="min-w-11 sm:min-w-0"
-                onClick={() => {
-                  if (!groupName.trim()) return
-                  setState((current) => createGroup(current, groupName.trim(), new Date().toISOString()))
-                  setGroupName("")
-                }}
+                {...groupField.buttonProps}
               >
                 <IconAdd className="size-4" />
               </Button>

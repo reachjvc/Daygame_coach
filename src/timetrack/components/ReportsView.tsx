@@ -6,7 +6,7 @@
  * summary-bar metric picker, bar + pie charts, exports and saved/shared reports.
  */
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,12 +31,16 @@ import {
   IconNext,
   IconPrev,
 } from "../icons"
+import { useAddField } from "../hooks/useAddField"
 import { downloadFile } from "../importExportService"
 import {
   activeFilterCount,
   buildDetailed,
   buildProfitability,
   clampRange,
+  rangeRefusal,
+  RANGE_MAX,
+  RANGE_MIN,
   profitabilityToCsv,
   buildSummary,
   buildWorkload,
@@ -124,6 +128,16 @@ export function ReportsView({
    */
   const updateFilters = (patch: Partial<ReportConfig["filters"]>) => {
     const filters = { ...config.filters, ...patch }
+    /**
+     * A REFUSED RANGE SAYS WHY.
+     *
+     * The clamp put the previous range back and said nothing, so setting an end before
+     * the start, or a span past the ceiling, looked exactly like the app ignoring the
+     * keystroke — and the field then re-rendered the old value, which reads as a bug.
+     * `rangeRefusal` owns the reason; this only shows it.
+     */
+    const refusal = rangeRefusal(filters.range)
+    if (refusal !== null && patch.range !== undefined) pushToast(refusal, "error")
     setConfig({ ...config, filters: { ...filters, range: clampRange(filters.range, config.filters.range) } })
   }
 
@@ -236,7 +250,6 @@ function FilterBar({
   onExport: (kind: "csv" | "json" | "print") => void
   onSave: (name: string) => void
 }) {
-  const [saveName, setSaveName] = useState("")
   const [sheetOpen, setSheetOpen] = useState(false)
   const { filters } = config
   const filterCount = activeFilterCount(filters)
@@ -258,8 +271,6 @@ function FilterBar({
       todayKey={todayKey}
       filters={filters}
       filterCount={filterCount}
-      saveName={saveName}
-      setSaveName={setSaveName}
       onUpdate={onUpdate}
       onUpdateFilters={onUpdateFilters}
       onExport={onExport}
@@ -309,8 +320,6 @@ function FilterControls({
   todayKey,
   filters,
   filterCount,
-  saveName,
-  setSaveName,
   onUpdate,
   onUpdateFilters,
   onExport,
@@ -322,14 +331,18 @@ function FilterControls({
   todayKey: string
   filters: ReportConfig["filters"]
   filterCount: number
-  saveName: string
-  setSaveName: (value: string) => void
   onUpdate: (patch: Partial<ReportConfig>) => void
   onUpdateFilters: (patch: Partial<ReportConfig["filters"]>) => void
   onExport: (kind: "csv" | "json" | "print") => void
   onSave: (name: string) => void
   shiftRange: (direction: number) => void
 }) {
+  const closeRef = useRef<() => void>(() => {})
+  const saveField = useAddField((name) => {
+    onSave(name)
+    closeRef.current()
+  })
+
   return (
     <>
       <Button variant="ghost" size="icon-sm" className="hidden sm:inline-flex" onClick={() => shiftRange(-1)} aria-label="Previous period">
@@ -529,29 +542,30 @@ function FilterControls({
           width="w-64"
           trigger={() => <span className="flex h-8 items-center rounded-md border border-border px-2 text-xs">Save report</span>}
         >
-          {(close) => (
-            <div className="space-y-2 p-3">
-              <Input
-                autoFocus
-                value={saveName}
-                onChange={(event) => setSaveName(event.target.value)}
-                placeholder="Report name"
-                className="h-11 sm:h-8"
-              />
-              <Button
-                size="sm"
-                className="w-full"
-                onClick={() => {
-                  if (!saveName.trim()) return
-                  onSave(saveName.trim())
-                  setSaveName("")
-                  close()
-                }}
-              >
-                Save
-              </Button>
-            </div>
-          )}
+          {(close) => {
+            /**
+             * THE BUTTON TELLS THE TRUTH ABOUT WHETHER IT WILL WORK.
+             *
+             * Save looked enabled with the name box empty and returned silently on the
+             * click — a full-width primary button that does nothing is indistinguishable
+             * from a broken one. Enter did nothing either, though the box is
+             * `autoFocus`, so the natural way to finish typing a name was the one way
+             * that had no effect. `useAddField` owns both halves for all six of these.
+             *
+             * The hook is built once per render of this component while `close` arrives
+             * per render of the dropdown's body, so the latest one is parked in a ref —
+             * the same thing `useStagedEdit` does with its commit.
+             */
+            closeRef.current = close
+            return (
+              <div className="space-y-2 p-3">
+                <Input autoFocus {...saveField.inputProps} placeholder="Report name" className="h-11 sm:h-8" />
+                <Button size="sm" className="w-full" {...saveField.buttonProps}>
+                  Save
+                </Button>
+              </div>
+            )
+          }}
         </Dropdown>
       </div>
     </>
@@ -1138,8 +1152,8 @@ function RangeDateField({
   return (
     <Input
       type="date"
-      min="1970-01-01"
-      max="2099-12-31"
+      min={RANGE_MIN}
+      max={RANGE_MAX}
       aria-label={label}
       value={draft ?? value}
       onChange={(event) => setDraft(event.target.value)}

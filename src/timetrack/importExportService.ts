@@ -137,6 +137,9 @@ function headerIndex(header: string[], ...names: string[]): number {
   return -1
 }
 
+/** The largest time value a `Date` can hold; past it `toISOString()` throws. */
+const MAX_DATE_MS = 8.64e15
+
 export function importEntriesCsv(
   state: TimetrackState,
   text: string,
@@ -209,7 +212,27 @@ export function importEntriesCsv(
     }
     if (!stopIso && cell(idx.duration)) {
       const seconds = parseDurationInput(cell(idx.duration))
-      if (seconds !== null) stopIso = new Date((epochSeconds(startIso) + seconds) * 1000).toISOString()
+      /**
+       * A DURATION TOO BIG FOR A DATE IS A SKIPPED ROW, NOT A THROWN IMPORT.
+       *
+       * `parseDurationInput` caps the `h:mm:ss` form at three digits of hours but puts
+       * no ceiling on the unit form, so one cell reading `999999999999999h` pushed the
+       * stop past the ±8.64e15 ms a `Date` can hold and `toISOString()` raised
+       * `RangeError: Invalid time value`. That escaped `importEntriesCsv` entirely:
+       * every row in the file was lost, including the good ones, and the caller's
+       * promise rejected with nothing catching it — so the button appeared to do
+       * nothing at all, which is the same silence the JSON import above was fixed for.
+       *
+       * Verified by importing that cell: `RangeError` before, `skipped` after.
+       */
+      if (seconds !== null) {
+        const stopMs = (epochSeconds(startIso) + seconds) * 1000
+        if (Number.isFinite(stopMs) && Math.abs(stopMs) <= MAX_DATE_MS) stopIso = new Date(stopMs).toISOString()
+        else {
+          skipped.push({ line: r + 1, reason: "Duration is too long to be a date" })
+          continue
+        }
+      }
     }
     if (!stopIso) {
       skipped.push({ line: r + 1, reason: "Missing duration and end time" })

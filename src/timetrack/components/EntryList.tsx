@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useRef, useState } from "react"
+import type { KeyboardEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -381,6 +382,33 @@ function EntryFields({
   const [durationDraft, setDurationDraft] = useState<string | null>(null)
   const [startDraft, setStartDraft] = useState<string | null>(null)
   const [stopDraft, setStopDraft] = useState<string | null>(null)
+
+  /**
+   * ENTER COMMITS, ESCAPE THROWS THE EDIT AWAY. The three inline fields in this row —
+   * start, end and duration — committed on blur and on nothing else, so typing a new
+   * time and pressing Enter left the row looking edited while nothing had been written,
+   * and Escape kept the change instead of cancelling it. The sheet's fields next door
+   * already commit on the way out; these were the ones a person actually types into.
+   *
+   * Both keys work by blurring and letting the SINGLE blur handler do the writing.
+   * Committing in the key handler and then blurring writes twice: React has not
+   * re-rendered by the time blur fires, so the blur closure still holds the old draft.
+   * Escape therefore parks a flag the blur handler reads — one ref for all three,
+   * because only one of them can hold focus.
+   */
+  const discarding = useRef(false)
+  const timeKeys = (clear: () => void) => (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      event.currentTarget.blur()
+      return
+    }
+    if (event.key !== "Escape") return
+    event.preventDefault()
+    discarding.current = true
+    clear()
+    event.currentTarget.blur()
+  }
   const project = state.projects.find((p) => p.id === entry.projectId)
   const nowIso = () => new Date().toISOString()
 
@@ -660,8 +688,10 @@ function EntryFields({
               <input
                 value={startDraft ?? formatTimeLabel(entry.start, state)}
                 onChange={(event) => setStartDraft(event.target.value)}
+                onKeyDown={timeKeys(() => setStartDraft(null))}
                 onBlur={() => {
-                  if (startDraft !== null) commitTime("start", startDraft)
+                  if (discarding.current) discarding.current = false
+                  else if (startDraft !== null) commitTime("start", startDraft)
                   setStartDraft(null)
                 }}
                 disabled={!editable}
@@ -675,8 +705,10 @@ function EntryFields({
               <input
                 value={stopDraft ?? (entry.stop ? formatTimeLabel(entry.stop, state) : "now")}
                 onChange={(event) => setStopDraft(event.target.value)}
+                onKeyDown={timeKeys(() => setStopDraft(null))}
                 onBlur={() => {
-                  if (stopDraft !== null && !running) commitTime("stop", stopDraft)
+                  if (discarding.current) discarding.current = false
+                  else if (stopDraft !== null && !running) commitTime("stop", stopDraft)
                   setStopDraft(null)
                 }}
                 disabled={!editable || running}
@@ -693,8 +725,10 @@ function EntryFields({
         <input
           value={durationDraft ?? (running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat))}
           onChange={(event) => setDurationDraft(event.target.value)}
+          onKeyDown={timeKeys(() => setDurationDraft(null))}
           onBlur={() => {
-            if (durationDraft !== null && !running && !row?.grouped) commitDuration(durationDraft)
+            if (discarding.current) discarding.current = false
+            else if (durationDraft !== null && !running && !row?.grouped) commitDuration(durationDraft)
             setDurationDraft(null)
           }}
           disabled={!editable || running || row?.grouped}

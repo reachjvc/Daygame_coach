@@ -747,8 +747,20 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
         </Modal>
       )}
 
-      {/* toasts */}
-      <div className="pointer-events-none fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4">
+      {/*
+        Toasts. `role="status"` (an implicit `aria-live="polite"`) on the CONTAINER,
+        which is in the tree from first render — a live region announces what appears
+        inside it after it is registered, so putting the role on each toast as it
+        mounts announces nothing at all. This is the slice's only channel for "that was
+        refused and here is why", including the range refusals and the import errors,
+        so with no live region a screen-reader user got silence where everyone else got
+        a sentence.
+      */}
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
+      >
         {toasts.map((toast) => (
           <div
             key={toast.id}
@@ -771,7 +783,12 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
                 <IconUndo className="size-3.5" /> Undo
               </Button>
             )}
-            <button type="button" onClick={() => dismissToast(toast.id)} className="text-muted-foreground hover:text-foreground">
+            <button
+              type="button"
+              aria-label="Dismiss"
+              onClick={() => dismissToast(toast.id)}
+              className="text-muted-foreground hover:text-foreground"
+            >
               <IconClose className="size-3.5" />
             </button>
           </div>

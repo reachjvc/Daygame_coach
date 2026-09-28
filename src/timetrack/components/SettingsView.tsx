@@ -27,6 +27,7 @@ import {
   WEEK_STARTS,
 } from "../config"
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
+import { useAddField } from "../hooks/useAddField"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
 import { addDays, dateKey, endOfDayIso, formatDate, formatDuration, formatTimeOfDay, plural, startOfDayIso } from "../timetrackFormatService"
 import { downloadFile, exportStateJson, importEntriesCsv, importStateJson, restoreIntoWorkspace } from "../importExportService"
@@ -598,7 +599,19 @@ export function IntegrationsPanel({
   const [ref, setRef] = useState("")
   const [rememberUrl, setRememberUrl] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [hookUrl, setHookUrl] = useState("")
+  /**
+   * Returns `false` on a refusal so the box KEEPS the address. Clearing it would throw
+   * away the very text the person now has to correct — the reason the old handler
+   * validated before it touched state.
+   */
+  const hookField = useAddField((url) => {
+    const attempt = addWebhook(state, url, [...WEBHOOK_EVENTS] as WebhookEventName[])
+    if (attempt.violations.length > 0) {
+      pushToast(attempt.violations[0].message, "error")
+      return false
+    }
+    setState((current) => addWebhook(current, url, [...WEBHOOK_EVENTS] as WebhookEventName[]).state)
+  })
   /** Set when re-syncing a calendar whose secret address was deliberately not stored */
   const [resyncCalendarId, setResyncCalendarId] = useState<Id | null>(null)
   const fileInput = useRef<HTMLInputElement | null>(null)
@@ -962,22 +975,8 @@ export function IntegrationsPanel({
         description="Toggl posts entry and project events to a URL you choose. Here they are recorded below instead of being sent anywhere."
         actions={
           <div className="flex gap-2">
-            <Input value={hookUrl} onChange={(event) => setHookUrl(event.target.value)} placeholder="https://example.com/hook" className="h-11 w-full sm:h-8 sm:w-[220px]" />
-            <Button
-              size="sm"
-              onClick={() => {
-                if (!hookUrl.trim()) return
-                // checked before the state changes, so a refused address does not
-                // clear the box the person has to correct
-                const attempt = addWebhook(state, hookUrl.trim(), [...WEBHOOK_EVENTS] as WebhookEventName[])
-                if (attempt.violations.length > 0) {
-                  pushToast(attempt.violations[0].message, "error")
-                  return
-                }
-                setState((current) => addWebhook(current, hookUrl.trim(), [...WEBHOOK_EVENTS] as WebhookEventName[]).state)
-                setHookUrl("")
-              }}
-            >
+            <Input {...hookField.inputProps} placeholder="https://example.com/hook" className="h-11 w-full sm:h-8 sm:w-[220px]" />
+            <Button size="sm" {...hookField.buttonProps}>
               <IconAdd className="size-4" /> Add
             </Button>
           </div>
@@ -1209,13 +1208,27 @@ function DataPanel({
             const file = event.target.files?.[0]
             event.target.value = ""
             if (!file) return
-            const text = await file.text()
+            /**
+             * THE SAME GUARD THE JSON IMPORT ABOVE ALREADY HAS.
+             *
+             * `file.text()` rejects on a read error and this handler caught nothing, so
+             * the CSV button had the exact failure the JSON one was fixed for: the
+             * promise rejected, no toast appeared, and the person was left looking at a
+             * button that had apparently done nothing.
+             */
+            let text: string
+            try {
+              text = await file.text()
+            } catch (error) {
+              pushToast(`Could not read ${file.name}: ${error instanceof Error ? error.message : "the file could not be opened"}`, "error")
+              return
+            }
             const result = importEntriesCsv(state, text, new Date().toISOString())
             setState(() => result.state)
             pushToast(
               result.skipped.length === 0
-                ? `Imported ${result.imported} entries`
-                : `Imported ${result.imported}, skipped ${result.skipped.length}: ${result.skipped
+                ? `Imported ${plural(result.imported, "time entry", "time entries")}`
+                : `Imported ${plural(result.imported, "time entry", "time entries")}, skipped ${result.skipped.length}: ${result.skipped
                     .slice(0, 3)
                     .map((s) => `line ${s.line} (${s.reason})`)
                     .join("; ")}`,

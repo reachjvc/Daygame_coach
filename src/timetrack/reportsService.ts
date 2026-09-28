@@ -912,13 +912,52 @@ export function encodeReportConfig(config: ReportConfig): string {
  */
 export const MAX_RANGE_DAYS = 366 * 20
 
-export function clampRange(candidate: unknown, fallback: DateRange): DateRange {
-  if (typeof candidate !== "object" || candidate === null) return fallback
+/**
+ * WHY a range was refused, or `null` when it is fine.
+ *
+ * `clampRange` reverting in silence was its own defect: setting the end before the
+ * start, or asking for a span past the ceiling, put the previous range back in the
+ * field with nothing said, so the screen looked like it had ignored the keystroke.
+ * A refusal the person cannot see is indistinguishable from a bug.
+ *
+ * The reason and the refusal are ONE function on purpose: computing "is it allowed" in
+ * `clampRange` and "what do we tell them" beside it would be two copies of the rule,
+ * and `clampRange` is a one-line delegation to this so they cannot drift.
+ *
+ * That also means a test comparing the two proves nothing, and the first one written
+ * here did exactly that — it passed unchanged with the inverted-range check broken on
+ * purpose. `rangeRefusalIsCheckedAgainstAHandWrittenTable` in the reports tests
+ * replaced it and checks each verdict against a reason written out by hand.
+ */
+/**
+ * The window the date inputs declare, and the one the rule enforces — ONE PAIR.
+ *
+ * The fields carried `min="1970-01-01" max="2099-12-31"` and nothing checked them, so
+ * the ‹ › arrows shifted the range straight past both: a few presses and the field was
+ * showing 1969 while declaring 1970 its minimum. `min`/`max` are validation flags, not
+ * clamps — they never stop a value set in code. Exported so the inputs read the same
+ * two strings the refusal below tests, because a second copy is how they drifted.
+ */
+export const RANGE_MIN = "1970-01-01"
+export const RANGE_MAX = "2099-12-31"
+
+export function rangeRefusal(candidate: unknown): string | null {
+  if (typeof candidate !== "object" || candidate === null) return "That date range could not be read"
   const { start, end } = candidate as { start?: unknown; end?: unknown }
-  if (!isDateKey(start) || !isDateKey(end)) return fallback
+  if (!isDateKey(start) || !isDateKey(end)) return "A report needs both a start date and an end date"
   // `daysBetween`, not `rangeDayCount`: the second one builds the days it counts
   const span = daysBetween(start, end) + 1
-  if (span <= 0 || span > MAX_RANGE_DAYS) return fallback
+  if (span <= 0) return "The end of the range is before its start"
+  if (span > MAX_RANGE_DAYS) return `A report covers at most ${Math.floor(MAX_RANGE_DAYS / 366)} years`
+  if (start < RANGE_MIN || end > RANGE_MAX) {
+    return `Reports cover ${RANGE_MIN.slice(0, 4)} to ${RANGE_MAX.slice(0, 4)}`
+  }
+  return null
+}
+
+export function clampRange(candidate: unknown, fallback: DateRange): DateRange {
+  if (rangeRefusal(candidate) !== null) return fallback
+  const { start, end } = candidate as { start: IsoDate; end: IsoDate }
   return { start, end }
 }
 

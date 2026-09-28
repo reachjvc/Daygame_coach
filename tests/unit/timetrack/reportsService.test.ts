@@ -16,6 +16,11 @@ import {
   metricValue,
   presetRange,
   profitabilityToCsv,
+  rangeRefusal,
+  clampRange,
+  MAX_RANGE_DAYS,
+  RANGE_MAX,
+  RANGE_MIN,
   summaryToCsv,
 } from "@/src/timetrack/reportsService"
 import type { ReportConfig, TimetrackState } from "@/src/timetrack/types"
@@ -465,5 +470,72 @@ describe("the detailed CSV's timestamps", () => {
      */
     const iso = new Date(2026, 7, 11, 0, 30, 0).toISOString()
     expect(new Date(localIsoWithOffset(iso)).getTime()).toBe(new Date(iso).getTime())
+  })
+})
+
+describe("rangeRefusalIsCheckedAgainstAHandWrittenTable", () => {
+  /**
+   * WHY A TABLE AND NOT A CROSS-CHECK. The first version of this compared `clampRange`
+   * against `rangeRefusal` and asserted they agreed — but `clampRange` is a one-line
+   * delegation to `rangeRefusal`, so they CANNOT disagree, and the test passed
+   * unchanged when the inverted-range check was broken on purpose. It asserted a
+   * tautology and would have caught nothing, which is worse than no test: a name like
+   * "agrees with the clamp" stops the next person looking.
+   *
+   * So the expected verdict is written out by hand for each candidate. Breaking either
+   * function now goes red, which was checked by breaking each of them in turn.
+   */
+  const FALLBACK = { start: "2026-01-01", end: "2026-01-31" }
+
+  /** [candidate, the reason it must be refused, or null for "must be accepted"] */
+  const TABLE: [unknown, string | null][] = [
+    [{ start: "2026-02-01", end: "2026-02-28" }, null],
+    [{ start: "2026-02-01", end: "2026-02-01" }, null],
+    [{ start: "2026-01-01", end: "2045-12-31" }, null],
+    [{ start: "2026-02-28", end: "2026-02-01" }, "The end of the range is before its start"],
+    [{ start: "", end: "2026-02-01" }, "A report needs both a start date and an end date"],
+    [{ start: "2026-02-01", end: "" }, "A report needs both a start date and an end date"],
+    [{ start: null, end: null }, "A report needs both a start date and an end date"],
+    [{ start: "2026-13-45", end: "2026-02-01" }, "A report needs both a start date and an end date"],
+    // SHORT ranges outside the window: a long one hits the 20-year ceiling first, and
+    // short is what the ‹ › arrows produce — they shift by the span, a week at a time.
+    [{ start: "1969-12-25", end: "1969-12-31" }, "Reports cover 1970 to 2099"],
+    [{ start: "2100-01-01", end: "2100-01-07" }, "Reports cover 1970 to 2099"],
+    [{ start: "1969-12-31", end: "2026-02-01" }, "A report covers at most 20 years"],
+    [{ start: "1970-01-01", end: "2099-12-31" }, "A report covers at most 20 years"],
+    [{}, "A report needs both a start date and an end date"],
+    [[], "A report needs both a start date and an end date"],
+    [null, "That date range could not be read"],
+    [undefined, "That date range could not be read"],
+    ["2026-01-01", "That date range could not be read"],
+    [7, "That date range could not be read"],
+  ]
+
+  test("every candidate gets the reason written beside it", () => {
+    const wrong = TABLE.filter(([candidate, expected]) => rangeRefusal(candidate) !== expected).map(
+      ([candidate, expected]) => `${JSON.stringify(candidate)}: expected ${expected}, got ${rangeRefusal(candidate)}`,
+    )
+    expect(wrong).toEqual([])
+  })
+
+  test("and the clamp reverts for exactly the refused ones", () => {
+    const wrong = TABLE.filter(([candidate, expected]) => {
+      const result = clampRange(candidate, FALLBACK)
+      const reverted = result.start === FALLBACK.start && result.end === FALLBACK.end
+      return reverted !== (expected !== null)
+    }).map(([candidate]) => JSON.stringify(candidate))
+    expect(wrong).toEqual([])
+  })
+
+  test("the table covers both verdicts, or neither test above asserts anything", () => {
+    const refused = TABLE.filter(([, expected]) => expected !== null)
+    expect(refused.length).toBeGreaterThan(11)
+    expect(TABLE.length - refused.length).toBe(3)
+  })
+
+  test("the ceiling and the window in the reasons are the exported constants", () => {
+    /** So the hand-written strings above cannot quietly stop matching the real numbers. */
+    expect(`A report covers at most ${Math.floor(MAX_RANGE_DAYS / 366)} years`).toBe("A report covers at most 20 years")
+    expect(`Reports cover ${RANGE_MIN.slice(0, 4)} to ${RANGE_MAX.slice(0, 4)}`).toBe("Reports cover 1970 to 2099")
   })
 })

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { newId } from "../idService"
 import { ALERT_THRESHOLDS, CURRENCIES, PROJECT_COLORS, RECURRING_PERIODS } from "../config"
+import { useAddField } from "../hooks/useAddField"
 import { IconAdd, IconAlert, IconArchive, IconDelete, IconEdit, IconTrend } from "../icons"
 import { buildProjectDashboard, paceVerdict, periodDaysRemaining } from "../projectDashboardService"
 import {
@@ -55,6 +56,44 @@ import {
   StatTile,
   ToggleRow,
 } from "./primitives"
+
+
+/**
+ * WHAT TO SAY WHEN THE PROJECT LIST IS EMPTY, WHICH IS FOUR DIFFERENT THINGS.
+ *
+ * One hardcoded sentence covered all of them: "Create one, or switch the filter above
+ * to see archived projects and templates." On the Archived tab that offers to show you
+ * archived projects while you are standing on them, and after a search that matched
+ * nothing it never mentions the search — which is the only reason the list is empty and
+ * the only thing the person can do about it. A brand-new workspace got the same
+ * sentence as a filtered one.
+ *
+ * Exported and pure so `projectsEmptyState.test.ts` can walk every combination; the
+ * component only spreads the result.
+ */
+export function projectsEmptyState(
+  query: string,
+  filter: "active" | "archived" | "templates",
+  totalProjects: number,
+): { title: string; hint: string } {
+  if (totalProjects === 0) {
+    return { title: "No projects yet", hint: "Create your first one with New project, above." }
+  }
+  if (query.trim()) {
+    const elsewhere =
+      filter === "active"
+        ? "Clear the search, or look under Archived or Templates."
+        : "Clear the search, or look under Active."
+    return { title: `Nothing here matches “${query.trim()}”`, hint: elsewhere }
+  }
+  if (filter === "archived") {
+    return { title: "No archived projects", hint: "Archive a project from its own page and it will appear here." }
+  }
+  if (filter === "templates") {
+    return { title: "No templates", hint: "Tick Template while creating a project to reuse its settings later." }
+  }
+  return { title: "No active projects", hint: "Create one with New project, or look under Archived." }
+}
 
 export function ProjectsView({
   state,
@@ -130,7 +169,7 @@ export function ProjectsView({
       </div>
 
       {projects.length === 0 ? (
-        <EmptyState title="No projects here" hint="Create one, or switch the filter above to see archived projects and templates." />
+        <EmptyState {...projectsEmptyState(query, filter, state.projects.length)} />
       ) : (
         <>
         {/* phones: one card per project */}
@@ -343,7 +382,10 @@ function ProjectDialog({
   const [estimateInput, setEstimateInput] = useState(
     project?.estimatedSeconds ? String(project.estimatedSeconds / 3600) : "",
   )
-  const [newTask, setNewTask] = useState("")
+  const taskField = useAddField((name) => {
+    if (!project) return false
+    setState((current) => createTask(current, { projectId: project.id, name }, new Date().toISOString()).state)
+  })
   const tasks = project ? state.tasks.filter((t) => t.projectId === project.id) : []
 
   const save = () => {
@@ -675,20 +717,11 @@ function ProjectDialog({
             ))}
             <div className="flex gap-2">
               <Input
-                value={newTask}
-                onChange={(event) => setNewTask(event.target.value)}
+                {...taskField.inputProps}
                 placeholder="New task name"
                 className="h-11 sm:h-8"
               />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  if (!newTask.trim()) return
-                  setState((current) => createTask(current, { projectId: project.id, name: newTask.trim() }, new Date().toISOString()).state)
-                  setNewTask("")
-                }}
-              >
+              <Button size="sm" variant="outline" {...taskField.buttonProps}>
                 Add task
               </Button>
             </div>
