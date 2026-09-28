@@ -10,6 +10,7 @@ import { GROUPING_DIMENSIONS, NO_PROJECT_COLOR, PROJECT_COLORS, SUMMARY_METRICS 
 import {
   addDays,
   dateKey,
+  daysBetween,
   eachDay,
   epochSeconds,
   formatCompact,
@@ -802,6 +803,46 @@ export function encodeReportConfig(config: ReportConfig): string {
   return btoa(unescape(encodeURIComponent(JSON.stringify(config))))
 }
 
+/**
+ * A RANGE THE REPORT ENGINE WILL ACTUALLY BUILD — ONE OWNER, EVERY DOOR.
+ *
+ * The rule is: both ends parse, the span is positive, and it is at most
+ * `MAX_RANGE_DAYS`. It lived inside `decodeReportConfig`, which meant it guarded the
+ * one door nobody walks through and none of the doors people use.
+ *
+ * WHAT THAT COST, measured in a real headless browser rather than reasoned about.
+ * `min`/`max` on an `<input type="date">` are CONSTRAINT-VALIDATION attributes, not
+ * clamps: the value still arrives, only `validity.rangeOverflow` flips. And a date
+ * field emits every prefix of a year as it is typed — pressing `2 0 2 5` fires four
+ * changes: `0002-01-01`, `0020-01-01`, `0202-01-01`, `2025-01-01`. The third of those
+ * is a 666,480-day range, which the four render-time report builders take about 1.8
+ * seconds to build. So typing a year into the Reports start date froze the tab, every
+ * time — and stopping after three digits left it frozen, rebuilding every second while
+ * a timer ran, which is the one state where somebody needs to press Stop.
+ *
+ * The previous attempt added `min`/`max` and a test asserting the attributes were
+ * present. That is the eighth test in this review to certify the thing it was meant to
+ * close, and it happened because the fix aimed at a mechanism I had inferred — "the
+ * year field takes five digits" — rather than one I had observed. One minute in a
+ * browser produces the real one.
+ *
+ * The span is measured with `daysBetween`, which is O(1) arithmetic. `rangeDayCount` is
+ * `eachDay(...).length`, so asking IT whether a range is too wide allocated 3.3 million
+ * Dates and 3.3 million formatted strings in order to reject them: 1,917 ms, against
+ * 0 ms for the same answer.
+ */
+export const MAX_RANGE_DAYS = 366 * 20
+
+export function clampRange(candidate: unknown, fallback: DateRange): DateRange {
+  if (typeof candidate !== "object" || candidate === null) return fallback
+  const { start, end } = candidate as { start?: unknown; end?: unknown }
+  if (!isDateKey(start) || !isDateKey(end)) return fallback
+  // `daysBetween`, not `rangeDayCount`: the second one builds the days it counts
+  const span = daysBetween(start, end) + 1
+  if (span <= 0 || span > MAX_RANGE_DAYS) return fallback
+  return { start, end }
+}
+
 /** A YYYY-MM-DD that `new Date` can actually read. */
 function isDateKey(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime())
@@ -881,38 +922,8 @@ export function decodeReportConfig(encoded: string, fallback: ReportConfig): Rep
     ? shared.rounding
     : {}) as Record<string, unknown>
 
-  /**
-   * THE PAIR, NOT JUST THE TWO ENDS — the fourth input class this decode has had to
-   * learn.
-   *
-   * Every scalar is typed now, and `range` is still two independently-valid keys with
-   * nothing bounding their span. A link carrying
-   * `{"range":{"start":"1000-01-01","end":"9999-12-31"}}` was accepted verbatim: 3.3
-   * MILLION days, `buildSummary` 6.8 seconds and 3.3 million chart buckets, 2.28 GB
-   * resident — and `ReportsView` builds all four reports in a render-time `useMemo`
-   * while `?report=` is never stripped from the URL, so it is the same escape-proof
-   * trap the paragraph above describes, reached by a different door.
-   *
-   * It is reachable without a link too: an `<input type="date">` year field accepts
-   * five and six digits, and the two range inputs carry no `min`/`max`, so one stray
-   * keystroke in the year is a several-second freeze. Both doors are closed — the
-   * ceiling here, and `min`/`max` on the inputs.
-   *
-   * Twenty years is far more than anybody reports on and far less than the pathological
-   * case; a range wider than that falls back rather than being refused, the same as
-   * every other field, so the rest of a shared link still arrives.
-   */
-  const MAX_RANGE_DAYS = 366 * 20
-
-  const rangeIsSane = (() => {
-    if (!isDateKey(sharedRange.start) || !isDateKey(sharedRange.end)) return false
-    const days = rangeDayCount({ start: sharedRange.start, end: sharedRange.end })
-    return days > 0 && days <= MAX_RANGE_DAYS
-  })()
-
-  const range = rangeIsSane
-    ? { start: sharedRange.start as IsoDate, end: sharedRange.end as IsoDate }
-    : fallback.filters.range
+  // one owner for the rule — see `clampRange`
+  const range = clampRange(sharedRange, fallback.filters.range)
 
   return {
     tab: takeOneOf(shared.tab, ["summary", "detailed", "workload", "profitability", "saved"] as const, fallback.tab),

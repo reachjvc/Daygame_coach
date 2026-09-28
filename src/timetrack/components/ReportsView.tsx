@@ -36,6 +36,7 @@ import {
   activeFilterCount,
   buildDetailed,
   buildProfitability,
+  clampRange,
   profitabilityToCsv,
   buildSummary,
   buildWorkload,
@@ -104,8 +105,25 @@ export function ReportsView({
   const profitability = useMemo(() => buildProfitability(state, config, nowSec), [state, config, nowSec])
 
   const update = (patch: Partial<ReportConfig>) => setConfig({ ...config, ...patch })
-  const updateFilters = (patch: Partial<ReportConfig["filters"]>) =>
-    setConfig({ ...config, filters: { ...config.filters, ...patch } })
+
+  /**
+   * EVERY WRITER OF THE RANGE GOES THROUGH THE SAME RULE.
+   *
+   * The ceiling used to live only in the share-link decoder, which is the one door
+   * nobody walks through. A date field emits every PREFIX of a year as it is typed —
+   * `2 0 2 5` fires four changes ending `0002`, `0020`, `0202`, `2025` — and `0202` is
+   * a 666,480-day range that the four render-time builders take about 1.8 seconds to
+   * produce. So typing a year here froze the tab, every time, and `min`/`max` on the
+   * input do not stop it: they are validation flags, not clamps.
+   *
+   * `clampRange` owns it now, and it is applied where the range is WRITTEN rather than
+   * at each input, so the ‹ › arrows and anything added later are covered by the same
+   * line.
+   */
+  const updateFilters = (patch: Partial<ReportConfig["filters"]>) => {
+    const filters = { ...config.filters, ...patch }
+    setConfig({ ...config, filters: { ...filters, range: clampRange(filters.range, config.filters.range) } })
+  }
 
   const exportCurrent = (kind: "csv" | "json" | "print") => {
     const stamp = `${config.filters.range.start}_${config.filters.range.end}`

@@ -11,7 +11,8 @@
  */
 
 import { mkdirSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import { dirname, join, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
 import { config } from "dotenv"
 
@@ -26,6 +27,30 @@ function arg(name: string): string | null {
 
 async function main() {
   const out = arg("out") ?? "backups"
+
+  /**
+   * A BACKUP IS EVERY USER'S TRACKED TIME IN PLAIN JSON, SO IT DOES NOT GO IN THE REPO.
+   *
+   * The default `backups/` is gitignored; `--out` takes any path, so `--out .` or
+   * `--out docs` put real people's hours — descriptions, clients, rates — into a tracked
+   * directory with nothing said. One `git add` away from a public repository, and
+   * nothing downstream would notice.
+   *
+   * Refused rather than warned: a warning in a script nobody watches is not a control.
+   */
+  const resolved = resolve(out)
+  // `import.meta.dirname` is undefined under this tsx setup, which is why this reads
+  // the script's own URL instead — checked by running the refusal, not by assuming it
+  const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+  const gitignored = resolve(repo, "backups")
+  if (resolved.startsWith(repo) && resolved !== gitignored && !resolved.startsWith(`${gitignored}/`)) {
+    console.error(
+      `Refusing to write a backup to ${resolved}.\n` +
+        `It holds every user's tracked time in plain JSON, and that path is inside the repository.\n` +
+        `Use the default (backups/, which is gitignored) or --out with a path outside ${repo}.`,
+    )
+    process.exit(1)
+  }
   const userId = arg("user")
 
   const backup = await exportTimetrack(userId)

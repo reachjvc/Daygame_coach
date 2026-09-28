@@ -40,10 +40,12 @@ import {
   defaultReportConfig,
   emptyFilters,
   presetRange,
+  MAX_RANGE_DAYS,
+  clampRange,
   describeReport,
   rangeDayCount,
 } from "@/src/timetrack/reportsService"
-import { addDays, dateKey, weekStartOf } from "@/src/timetrack/timetrackFormatService"
+import { addDays, dateKey, daysBetween, weekStartOf } from "@/src/timetrack/timetrackFormatService"
 
 import { baseState } from "../timetrack/helpers"
 
@@ -265,17 +267,71 @@ describe("every writer of a report's date range", () => {
     expect(decodeReportConfig(encode({ filters: { range: fiveYears } }), DEFAULTS)!.filters.range).toEqual(fiveYears)
   })
 
-  test("and the date inputs cannot be typed into a five-digit year", () => {
+  test("the prefixes a date field emits while a year is typed cannot widen the range", () => {
     /**
-     * The other door to the same freeze. Read from the source, because the browser is
-     * what enforces `min`/`max` and there is nothing to run here.
+     * THE MECHANISM AS OBSERVED, NOT AS INFERRED — which is the whole lesson of this
+     * test's history.
+     *
+     * The previous version was titled "the date inputs cannot be typed into a
+     * five-digit year" and asserted only that the two source snippets contained `min="`
+     * and `max="`. Its comment said "the browser is what enforces min/max and there is
+     * nothing to run here". Both halves were wrong: `min`/`max` are constraint-validation
+     * attributes, so the value still arrives and only `validity.rangeOverflow` flips;
+     * and the year segment does not take five digits at all — it emits every PREFIX.
+     * Measured in headless Chromium on a page carrying those exact attributes, pressing
+     * `2 0 2 5` fires four changes:
+     *
+     *     "0002-01-01" → "0020-01-01" → "0202-01-01" → "2025-01-01"
+     *
+     * `0202-01-01` is a 666,480-day range, and the four report builders sit in
+     * render-time memos: about 1.8 seconds of frozen tab, on every attempt to type a
+     * year, with the freeze persisting if the person stops after three digits.
+     *
+     * So this feeds those exact four values through the function that owns the rule and
+     * asserts the span, rather than asserting an attribute is present.
      */
-    const unbounded = dateInputs()
-      .filter(({ snippet }) => /value=\{filters\.range/.test(snippet))
-      .filter(({ snippet }) => !/min="/.test(snippet) || !/max="/.test(snippet))
-      .map(({ file, snippet }) => `${file}: ${/value=\{[^}]*\}/.exec(snippet)?.[0] ?? ""}`)
+    const typedPrefixes = ["0002-01-01", "0020-01-01", "0202-01-01", "2025-01-01"]
+    const current = { start: "2026-01-01", end: "2026-10-04" }
 
-    expect(unbounded, "these range inputs accept any year:\n  " + unbounded.join("\n  ")).toEqual([])
+    for (const typed of typedPrefixes) {
+      const clamped = clampRange({ start: typed, end: current.end }, current)
+      const span = daysBetween(clamped.start, clamped.end) + 1
+      expect(span, `typing "${typed}" produced a ${span}-day range`).toBeLessThanOrEqual(MAX_RANGE_DAYS)
+    }
+
+    // the finished year is a real range and must survive
+    expect(clampRange({ start: "2025-01-01", end: current.end }, current)).toEqual({
+      start: "2025-01-01",
+      end: current.end,
+    })
+  })
+
+  test("and the span check does not build the days it rejects", () => {
+    /**
+     * The house rule in `vitest.config.ts`: anything that wants a performance bound
+     * asserts one out loud, with a number. `rangeDayCount` is `eachDay(...).length`, so
+     * asking IT whether a range is too wide allocated 3.3 million Dates and 3.3 million
+     * formatted strings in order to say no — 1,917 ms measured, against 0 ms for the
+     * same answer from `daysBetween`.
+     */
+    const started = Date.now()
+    for (let i = 0; i < 50; i++) {
+      clampRange({ start: "1000-01-01", end: "9999-12-31" }, { start: "2026-01-01", end: "2026-01-31" })
+    }
+    const elapsed = Date.now() - started
+    expect(elapsed, `fifty rejections took ${elapsed}ms; each one is building its days`).toBeLessThan(100)
+  })
+
+  test("and the widest range anybody asks for is still allowed", () => {
+    /**
+     * The control. A ceiling that refused a real question would be worse than the freeze.
+     */
+    for (const preset of ["today", "this_week", "this_month", "this_year", "last_year"] as const) {
+      const range = presetRange(preset, "2026-09-28", 1)
+      expect(clampRange(range, DEFAULTS.filters.range), `${preset} was clamped away`).toEqual(range)
+    }
+    const twentyYears = { start: "2006-09-29", end: "2026-09-28" }
+    expect(clampRange(twentyYears, DEFAULTS.filters.range)).toEqual(twentyYears)
   })
 
   test("and every partial link comes back complete, range included", () => {
