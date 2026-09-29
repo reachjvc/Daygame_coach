@@ -18,6 +18,35 @@ why this is a rewrite and not a sixth revision.**
 
 ---
 
+# THE REVIEW IS OVER. START HERE.
+
+**Fifteen rounds of adversarial review ended 2026-09-29.** The last two found nothing wrong inside
+this document — only facts in the repo it did not hold. That is the signal to stop, and the
+reviewer's own words were: *"Another round buys nothing. Fold in the three paragraphs and start."*
+
+**What you do, in order:**
+1. **B0** — check whether your Supabase project sits inside a Vercel-managed organisation. Ten
+   minutes, two dashboards, and it can invalidate rule 4, which is the safety net under everything.
+2. **B1** — export the database, to `~/dg-migration/`, mode 600, **not into this repo**. Then B2
+   (Hetzner account, their verification is the wait) and B3 (domain, DNS settling is the wait).
+3. **Carve out `never.py`** for the new host, or the first command of this job is refused by your
+   own hook.
+4. **Then Q-SKELETON, promoted from a question to the first thing built:** one screen, one
+   endpoint, a Better Auth token, your own Postgres, on a Hetzner box, end to end. A few days. **It
+   settles more open questions than any further review can** — whether Better Auth issues a token a
+   non-browser client accepts, whether this schema restores into a fresh Postgres at all, whether
+   the build deploys, whether the proxy and certificate work.
+
+**And the honest note about this document.** It is ~1,770 lines, and roughly 1,200 of them are
+review. This repo holds **16,924 lines of plans across 18 documents**. Planning stopped being this
+project's constraint a long time ago. **The parts of this that earned their keep are engineering,
+not process:** Fact 1 (the live database is the truth, the folder is not), Fact 2 (the column grant
+is the `has_purchased` guard, so `--no-privileges` would have silently discarded it), B1's
+corrected commands, M0.4's test seam, and M5's ordering (B5 at exit, `proxy.ts` ported with the
+token). Everything else is scaffolding you can ignore while you work.
+
+---
+
 # WHAT THIS JOB ACTUALLY IS — five facts
 
 **Read only this if you read nothing else.** Six review rounds produced about 66
@@ -701,9 +730,33 @@ string, **URI** — the *direct* connection, not the pooler, because the pooler 
 
 **Step 2 — the two dumps.**
 
+    mkdir -p ~/dg-migration && chmod 700 ~/dg-migration && cd ~/dg-migration
+    umask 077
     pg_dump "$SUPABASE_DB_URL" --schema public --schema-only --no-owner --no-privileges -f schema.sql
     pg_dump "$SUPABASE_DB_URL" --schema public --data-only --no-owner -f data.sql
     pg_dump "$SUPABASE_DB_URL" --schema public --schema-only --no-owner -f privileges-reference.sql
+
+**SECURITY, CORRECTED 2026-09-29 — my earlier version wrote these into the repository.**
+`data.sql` is every life answer, journal entry, day note and field report **in plaintext**, and
+`.gitignore` covers `backups/` and has **no line for `schema.sql` or `data.sql`** — so they would
+have sat in a checkout three agent sessions share, one `git add -A` from being committed. A naive
+gitignore entry would also be wrong, because `tests/integration/schema.sql` is tracked under that
+same basename. **So: outside the repo, mode 600 via `umask 077`, in a 700 directory.**
+This is not a new standard — `docs/plans/life-mastery-everything-saves.md` already exported plan
+snapshots *"outside the repository as this plan insisted"*, with the owner's approval, and flagged
+in the same passage that the file was left world-readable holding *"free text about somebody's body,
+money, relationships and drinking"*. I contradicted a standing practice and repeated the defect it
+had already exposed.
+
+**If `pg_dump` says "Network is unreachable":** a tracked script at this repo's root,
+`dump_schema.sh`, resolves the direct host to IPv4 by hand (`getent ahostsv4`, `nslookup` fallback)
+and passes the raw address with `PGSSLMODE=require` — i.e. **this machine has already needed that
+workaround**, most likely because Supabase's direct host is IPv6-only without the add-on. Do the
+same, and keep `sslmode=require`, because the whole database crosses the wire.
+**That script is also broken and should not be pasted:** `bash -n dump_schema.sh` fails with a
+syntax error at line 12 (an `if` with no `fi`), so the one previous attempt to dump this schema
+never ran and was committed broken. It also commits the live database hostname to git. **I have not
+deleted it — deleting a tracked file is yours to approve — but it should go rather than be fixed.**
 
 **CORRECTED 2026-09-28 — my first version of these commands was wrong twice, and the first way
 was serious.** `--no-privileges` suppresses GRANT and REVOKE. That is **exactly Fact 2's second
@@ -1538,6 +1591,31 @@ which rule 4 and the plan's own later sentence already say.
   **Put the dual write in `src/db/auth.ts`.** The architecture guard walks `app/` and `src/` for
   `auth.admin.` and exempts only that file, with a ledger M0.1's acceptance says may only shrink —
   so anywhere else is a knowingly-red guard that blocks every peer session through the Stop hook.
+- **Port the guardrails, because every one of them is spelled in Supabase and three go GREEN here.**
+  Fifteen rounds never read what `.claude/` and the architecture tests enforce:
+  - **The database boundary** (`tests/unit/architecture.test.ts`) matches `@supabase/…` imports and
+    a bare `createClient(`. Remove the last Supabase import and it passes with zero violations
+    forever — and nothing then stops a route importing `drizzle` or `pg` directly. This is the
+    most-cited rule in the repo; `.claude/rules/database.md` opens with it.
+  - **The unpaged-read ratchet** walks *forward* from `.from(` looking for `.select(`. Supabase
+    writes `.from(t).select(…)`; Drizzle writes `.select().from(t)` — select is upstream, so every
+    Drizzle read is skipped, the counts go to zero, and the companion test goes red telling the
+    porter to **lower the numbers**, which deletes the rule. **Decide the paging guard's fate in
+    writing** — the 1,000-row hazard is PostgREST's, not Postgres's, so the honest answer may be
+    "retire it", but it must be retired deliberately rather than zeroed by a red test.
+  - **`.claude/hooks/never.py` stops asking.** Its ask-first gate keys on the literal path
+    `supabase/migrations/`, so once migrations move, the confirmation you get today before any
+    schema change **silently stops appearing** — exactly when schema changes get riskier.
+  - **And it will refuse M2's own work.** The same hook hard-denies a bare `psql … -c` containing
+    `alter table`, `drop table`, `insert into` or `delete from` unless wrapped in a rollback — so
+    B1 step 3's rehearse-and-retry loop and M2's restore hit it on day one, against a throwaway box
+    with no user data. **It needs a host-aware carve-out before B1, or the first command of this
+    job is refused.** (`psql -f file.sql` passes; only `-c` with a write verb is caught.)
+  - **`.claude/rules/database.md`** tells every future session that `supabase db push --linked` is
+    how migrations are applied and `supabase db query --linked` is "the ground truth". Both become
+    wrong. **`scripts/audit-rls.ts`** needs a Supabase login and is the only thing that answers "is
+    any table exposed" — so Q-POLICIES' "keep them, rewritten" has no audit behind it once the
+    account is gone.
 - **Before traffic moves: a second dump inside a bounded read-only window**, of every
   table with rows newer than B1's, so the months of your own use in between are not
   lost.
