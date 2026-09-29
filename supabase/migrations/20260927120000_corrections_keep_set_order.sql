@@ -1,8 +1,15 @@
 -- A CORRECTION MUST NOT DESTROY THE ORDER OF THE WORKOUT IT CORRECTS.
 --
--- PARKED FOR THE OWNER. `supabase db push` takes every file in
--- `supabase/migrations/` at once, so this waits here until it is approved.
--- Moving it into that folder is the only step needed.
+-- APPROVED AND MOVED HERE 2026-09-28, by the owner, out of
+-- `supabase/pending-owner-approval/`. Being in this folder is not the same as
+-- being applied: `supabase db push` takes every pending file here at once, so
+-- `supabase migration list --linked` comes first and says what else would go
+-- with it.
+--
+-- NO PERMISSION CHANGE, which is why the approval was a short one.
+-- `CREATE OR REPLACE` keeps the grants
+-- `20260918100000_program_writes_are_one_statement.sql` already made, and the
+-- signature is unchanged, so nobody gains or loses the right to call this.
 --
 -- WHAT IS WRONG TODAY. `replace_sets_and_replay` deletes every set of a
 -- workout and re-inserts the payload, and its INSERT names twelve columns —
@@ -36,12 +43,24 @@
 -- `prescribed_index` going null turns every corrected program set into one the
 -- app reads as "added on the day".
 --
--- WHY THIS IS A MIGRATION AND NOT TYPESCRIPT. The repo already sends both
--- fields (`CorrectedSet.completedAt` / `.prescribedIndex`, added 2026-09-27) and
--- `jsonb_populate_recordset(null::workout_sets, …)` already parses them into
--- `s`. Only the INSERT's column list drops them, and that list is inside this
--- function. Applying this changes no behaviour on its own — it starts keeping
--- two columns that are currently thrown away.
+-- IT IS HALF THE FIX, AND THIS HEADER USED TO CLAIM OTHERWISE. The paragraph
+-- here read "the repo already sends both fields (`CorrectedSet.completedAt` /
+-- `.prescribedIndex`, added 2026-09-27)". It did not. The type declared both,
+-- and `reviseWorkout`'s row mapping in `src/db/workoutRepo.ts` dropped them one
+-- line later — so this migration applied ALONE would have changed nothing on
+-- any screen while looking exactly like the fix: the function keeping two
+-- columns the payload never sent. The claim was checked against the code on
+-- 2026-09-28 and was false when it was written.
+--
+-- The TypeScript half landed first, in `5d57ea0a`, guarded by
+-- `tests/unit/db/correctionKeepsItsOrder.test.ts` — which asserts the PAYLOAD,
+-- because no SQL test can see that end. This is the other half. The order they
+-- land in does not matter and neither works alone: the extra keys are inert
+-- until this function selects them, and this function selects nulls until the
+-- payload carries them.
+--
+-- `jsonb_populate_recordset(null::workout_sets, …)` already parses both into
+-- `s`; only the INSERT's column list dropped them, and that list is here.
 --
 -- WHAT BREAKS IF IT IS LEFT: every correction keeps destroying the order, and
 -- each one destroys a little more history that cannot be rebuilt.

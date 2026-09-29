@@ -1294,13 +1294,14 @@ BEGIN
 
   DELETE FROM workout_sets WHERE log_id = p_log_id;
 
+  -- The two added columns are the whole change.
   INSERT INTO workout_sets (
     log_id, exercise, exercise_id, library_id, weight_kg, reps, set_number,
-    set_kind, side, notes, exercise_notes, rpe
+    set_kind, side, notes, exercise_notes, rpe, completed_at, prescribed_index
   )
   SELECT p_log_id, s.exercise, s.exercise_id, s.library_id, s.weight_kg, s.reps,
          s.set_number, COALESCE(s.set_kind, 'working'), s.side, s.notes,
-         s.exercise_notes, s.rpe
+         s.exercise_notes, s.rpe, s.completed_at, s.prescribed_index
   FROM jsonb_populate_recordset(null::workout_sets, COALESCE(p_sets, '[]'::jsonb)) s;
 
   IF p_enrollment_id IS NULL THEN
