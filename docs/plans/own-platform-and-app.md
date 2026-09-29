@@ -594,7 +594,25 @@ and that sits in the out-of-scope row. The legal minimum is M8, last. M6 and M7 
 app first.
 
 That may be right: no users, so nothing to lose. But it is a choice about what the next
-months are *for*, and it was never put to you. **Recommendation: leave the order, write the
+months are *for*, and it was never put to you. **REWRITTEN 2026-09-29, with evidence instead of my speculation.** I wrote this question as an
+abstraction when `docs/plans/road-to-paying.md` had answered it three weeks earlier with counts,
+from someone who opened 17 signed-in screens at phone size and read them. **I re-checked its claims
+today rather than relay them, and two of three still hold:**
+
+- **16 of 20 Scenario doors are still padlocked** — `grep -c "comingSoon: true" src/scenarios/catalog.ts`
+  returns 16, unchanged in three weeks, with Closing & Texting at **0 of 8**: an entire phase of the
+  conversation with nothing behind it. **This is what vision item 7 calls "the real product" and item
+  31 "the core value driver".**
+- **12 files still render a "coming soon"**, against your own CLAUDE.md rule never to show one.
+- **Life Mastery's navigation is FIXED** — `components/navTabs.ts` put it in the More sheet on
+  2026-09-24, so that document's sharpest finding no longer holds. Said explicitly, because relaying
+  a three-week-old doc as current is the exact failure this project keeps having.
+
+**And the number that frames the question: this repo holds 16,924 lines of plans across 18
+documents.** This one is third largest at ~1,704, and I added roughly 1,100 of those in two days of
+reviewing it. **Planning has not been this project's constraint for some time.**
+
+**Recommendation: leave the order, write the
 trade down** — vision item 7 calls Scenarios the real product and item 31 calls the corpus
 the core value driver, and this plan touches neither. **Cost if wrong:** months of
 infrastructure and still no way to take money, on a product whose own vision says the
