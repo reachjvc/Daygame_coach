@@ -1249,31 +1249,72 @@ function addMonths(key: IsoDate, months: number): IsoDate {
  * their start/end dates, falling back to "everything up to today".
  */
 export function projectPeriod(project: Project, todayKey: IsoDate): { start: IsoDate; end: IsoDate } {
-  if (project.recurring && project.recurringPeriod && project.recurringStart) {
-    const period = RECURRING_PERIODS.find((p) => p.id === project.recurringPeriod)!
-    if (project.recurringPeriod === "monthly" || project.recurringPeriod === "quarterly" || project.recurringPeriod === "yearly") {
-      const step = project.recurringPeriod === "monthly" ? 1 : project.recurringPeriod === "quarterly" ? 3 : 12
-      let start = monthStartOf(project.recurringStart)
-      let next = addMonths(start, step)
-      let guard = 0
-      while (next <= todayKey && guard < 500) {
-        start = next
-        next = addMonths(start, step)
-        guard++
-      }
-      return { start, end: addDays(next, -1) }
-    }
-    const spanDays = period.days
-    const elapsed = Math.max(0, daysBetween(project.recurringStart, todayKey))
-    const periodsPassed = Math.floor(elapsed / spanDays)
-    const start = addDays(project.recurringStart, periodsPassed * spanDays)
-    return { start, end: addDays(start, spanDays - 1) }
-  }
-
-  return {
+  return projectPeriodAt(project, todayKey, 0) ?? {
     start: project.startDate ?? dateKey(project.createdAt),
     end: project.endDate ?? todayKey,
   }
+}
+
+/**
+ * The project's period `offset` steps from the current one, or `null` when there is no
+ * such period. Negative is backwards.
+ *
+ * WHY THIS EXISTS RATHER THAN ARITHMETIC AT THE CALL SITE. The dashboard's
+ * `Previous period` button did `addDays(todayKey, offset * currentPeriodLength)` — a
+ * FIXED number of days, taken from the length of whatever period you happen to be in.
+ * Stepping 30 days back from 28 September lands on 31 May and then on 1 May, so a
+ * browser round pressing it ten times on a monthly project read:
+ *
+ *     -4  2026-05-01 → 2026-05-31
+ *     -5  2026-05-01 → 2026-05-31      May twice
+ *     -6  2026-04-01 → 2026-04-30
+ *     -7  2026-03-01 → 2026-03-31
+ *     -8  2026-01-01 → 2026-01-31      February unreachable
+ *
+ * Exactly the class of `"Monthly on the last Friday lost September and repeated
+ * October"` at the top of this branch: a calendar stepped in days. Months are stepped
+ * as months here, and the day-based periods by their own span.
+ *
+ * `null` for a project that is NOT recurring at any offset but 0, because such a
+ * project has ONE period — `startDate`..`today`. Stepping it moved only the end, so the
+ * same button produced `2026-09-20 → 2026-09-10`, an end nineteen days before its
+ * start, rendered with a burn-up chart under it and no complaint.
+ */
+export function projectPeriodAt(
+  project: Project,
+  todayKey: IsoDate,
+  offset: number,
+): { start: IsoDate; end: IsoDate } | null {
+  if (!project.recurring || !project.recurringPeriod || !project.recurringStart) {
+    return offset === 0
+      ? { start: project.startDate ?? dateKey(project.createdAt), end: project.endDate ?? todayKey }
+      : null
+  }
+
+  const period = RECURRING_PERIODS.find((p) => p.id === project.recurringPeriod)!
+  if (project.recurringPeriod === "monthly" || project.recurringPeriod === "quarterly" || project.recurringPeriod === "yearly") {
+    const step = project.recurringPeriod === "monthly" ? 1 : project.recurringPeriod === "quarterly" ? 3 : 12
+    let start = monthStartOf(project.recurringStart)
+    let next = addMonths(start, step)
+    let guard = 0
+    while (next <= todayKey && guard < 500) {
+      start = next
+      next = addMonths(start, step)
+      guard++
+    }
+    // whole periods, so every month is reachable exactly once
+    const shifted = addMonths(start, step * offset)
+    if (shifted < monthStartOf(project.recurringStart)) return null
+    return { start: shifted, end: addDays(addMonths(shifted, step), -1) }
+  }
+
+  const spanDays = period.days
+  const elapsed = Math.max(0, daysBetween(project.recurringStart, todayKey))
+  const periodsPassed = Math.floor(elapsed / spanDays)
+  const index = periodsPassed + offset
+  if (index < 0) return null
+  const start = addDays(project.recurringStart, index * spanDays)
+  return { start, end: addDays(start, spanDays - 1) }
 }
 
 /** Estimate in seconds, honouring auto-estimates (sum of task estimates) */
@@ -2014,4 +2055,26 @@ export function forgottenTimer(state: TimetrackState, nowSec: number): { entry: 
   const hours = entrySeconds(running, nowSec) / 3600
   if (hours < FORGOTTEN_TIMER_HOURS) return null
   return { entry: running, hours }
+}
+
+/**
+ * Why this invite cannot be added, or `null` when it can.
+ *
+ * Add member accepted `not-an-email`, and a second member on an address already in the
+ * workspace — two rows that are the same person to every report, every audit and every
+ * timesheet approval. It also refused a blank name and email with a toast while the
+ * button stayed enabled, which round 12 fixed everywhere else in the slice.
+ *
+ * Deliberately NOT a full RFC 5322 address check: the point is to catch a typo and a
+ * duplicate, and a stricter pattern rejects addresses that are genuinely valid.
+ */
+export function inviteRefusal(state: TimetrackState, invite: { name: string; email: string }): string | null {
+  const name = invite.name.trim()
+  const email = invite.email.trim().toLowerCase()
+  if (!name || !email) return "Name and email are required"
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return `“${invite.email.trim()}” is not an email address`
+  if (state.members.some((m) => m.email.trim().toLowerCase() === email)) {
+    return `${invite.email.trim()} is already a member of this workspace`
+  }
+  return null
 }

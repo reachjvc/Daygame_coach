@@ -166,8 +166,14 @@ export async function listGoogleCalendarEvents(
 ): Promise<GoogleEventsResult> {
   const credsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
   if (!credsJson) {
+    /**
+     * A person reads this in a toast, so it does not name an environment variable. The
+     * old text put `GOOGLE_SERVICE_ACCOUNT_JSON` in front of the user and then offered
+     * "the iCal secret address" as the remedy — which this app's own panel calls a
+     * password you should not paste on a shared computer.
+     */
     throw new Error(
-      "GOOGLE_SERVICE_ACCOUNT_JSON is not set — use the iCal secret address or a .ics upload instead",
+      "This app has no Google service account configured, so it cannot read a calendar this way. Upload a .ics export instead.",
     )
   }
 

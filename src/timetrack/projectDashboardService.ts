@@ -19,7 +19,7 @@ import {
   liveEntries,
   memberById,
   projectEstimateSeconds,
-  projectPeriod,
+  projectPeriodAt,
   taskById,
 } from "./timetrackService"
 import type { AlertThreshold, Id, IsoDate, ProjectDashboard, TimetrackState } from "./types"
@@ -29,11 +29,19 @@ export function buildProjectDashboard(
   projectId: Id,
   todayKey: IsoDate,
   nowSec: number,
+  /**
+   * Whole periods back or forward, never days. The dashboard used to be moved by
+   * handing this function a shifted `todayKey` — a fixed number of days taken from the
+   * current period's length — which repeated May and made February unreachable on a
+   * monthly project. `projectPeriodAt` steps months as months.
+   */
+  periodOffset = 0,
 ): ProjectDashboard | null {
   const project = state.projects.find((p) => p.id === projectId)
   if (!project) return null
 
-  const period = projectPeriod(project, todayKey)
+  const period = projectPeriodAt(project, todayKey, periodOffset)
+  if (!period) return null
   const projectEntries = liveEntries(state).filter((e) => e.projectId === projectId)
   const entries = entriesInRange(projectEntries, period.start, period.end, nowSec)
 
@@ -164,22 +172,42 @@ function completionPercent(
 }
 
 /** Days left in the period — drives the "on pace / over pace" label */
-export function periodDaysRemaining(dashboard: ProjectDashboard, todayKey: IsoDate): number {
-  return Math.max(0, daysBetween(todayKey, dashboard.periodEnd))
+/**
+ * Days left in the period, or `null` when the period has no future end.
+ *
+ * A project that is not recurring runs `startDate`..TODAY, so `periodEnd` IS today and
+ * this returned 0 — every such project permanently read "0 days remaining", which says
+ * the deadline is now rather than that there is no deadline. A third state, not a zero.
+ */
+export function periodDaysRemaining(dashboard: ProjectDashboard, todayKey: IsoDate): number | null {
+  if (dashboard.periodEnd <= todayKey) return null
+  return daysBetween(todayKey, dashboard.periodEnd)
 }
 
 export function paceVerdict(
   dashboard: ProjectDashboard,
   todayKey: IsoDate,
 ): { label: string; tone: "ok" | "warn" | "over" } {
-  if (!dashboard.estimatedSeconds) return { label: "No estimate set", tone: "ok" }
+  /**
+   * AN ESTIMATE IS AN ESTIMATE, IN HOURS OR IN MONEY.
+   *
+   * This read `estimatedSeconds` alone, so a project estimated at EUR 5,000 was told
+   * "No estimate set" on the same card whose tile beside it read `ESTIMATE USED 3% of
+   * EUR 5,000.00`. `completionPercent` has always handled the monetary case; only the
+   * sentence about it did not.
+   */
+  if (!dashboard.estimatedSeconds && !dashboard.estimatedAmount) {
+    return { label: "No estimate set", tone: "ok" }
+  }
   const totalDays = Math.max(1, daysBetween(dashboard.periodStart, dashboard.periodEnd) + 1)
   const elapsed = Math.min(totalDays, Math.max(1, daysBetween(dashboard.periodStart, todayKey) + 1))
   const expectedPct = (elapsed / totalDays) * 100
   const diff = dashboard.completionPct - expectedPct
 
   if (dashboard.completionPct >= 100) return { label: "Estimate consumed", tone: "over" }
-  if (diff > 15) return { label: `${Math.round(diff)}% ahead of pace`, tone: "warn" }
-  if (diff < -15) return { label: `${Math.round(-diff)}% behind pace`, tone: "ok" }
+  // POINTS, not per cent: `diff` is the gap between two percentages, so "86% behind
+  // pace" was 86 percentage points and read as a proportion of something
+  if (diff > 15) return { label: `${Math.round(diff)} points ahead of pace`, tone: "warn" }
+  if (diff < -15) return { label: `${Math.round(-diff)} points behind pace`, tone: "ok" }
   return { label: "On pace", tone: "ok" }
 }

@@ -630,9 +630,31 @@ function EntryFields({
         <input
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          onBlur={() => description !== entry.description && patch({ description })}
+          /*
+            THE SAME TWO KEYS AS THE THREE FIELDS BESIDE IT. Those got Enter and Escape;
+            this one kept commit-on-blur only, so within a single row Escape threw away
+            a time edit and KEPT a description edit. One row, two rules, and the
+            difference is invisible until it costs you something.
+          */
           onKeyDown={(event) => {
-            if (event.key === "Enter") event.currentTarget.blur()
+            if (event.key === "Enter") {
+              event.preventDefault()
+              event.currentTarget.blur()
+              return
+            }
+            if (event.key !== "Escape") return
+            event.preventDefault()
+            discarding.current = true
+            setDescription(entry.description)
+            event.currentTarget.blur()
+          }}
+          onBlur={() => {
+            if (discarding.current) {
+              discarding.current = false
+              setDescription(entry.description)
+              return
+            }
+            if (description !== entry.description) patch({ description })
           }}
           disabled={!editable}
           placeholder="(no description)"

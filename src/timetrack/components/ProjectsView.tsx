@@ -17,7 +17,6 @@ import { useAddField } from "../hooks/useAddField"
 import { IconAdd, IconAlert, IconArchive, IconDelete, IconEdit, IconTrend } from "../icons"
 import { buildProjectDashboard, paceVerdict, periodDaysRemaining } from "../projectDashboardService"
 import {
-  addDays,
   dateKey,
   formatCompact,
   formatDate,
@@ -36,6 +35,7 @@ import {
   liveEntries,
   projectEstimateSeconds,
   projectPeriod,
+  projectPeriodAt,
   updateProject,
   updateTask,
   validateProject,
@@ -274,7 +274,14 @@ export function ProjectsView({
                 <th className="px-3 py-2 text-left font-medium">Client</th>
                 <th className="px-3 py-2 text-left font-medium">Tasks</th>
                 <th className="px-3 py-2 text-left font-medium">Estimate (current period)</th>
-                <th className="px-3 py-2 text-right font-medium">Tracked</th>
+                {/*
+                  SAYS WHICH PERIOD, because that is what the number is. The column was
+                  labelled just "Tracked" beside one that says "(current period)", and
+                  it holds the same period's hours — so a project created today, with
+                  last month's work imported into it, read `0:00` for thirteen hours.
+                  The phone card next to this already said "of 10:00 this period".
+                */}
+                <th className="px-3 py-2 text-right font-medium">Tracked (current period)</th>
                 <th className="px-3 py-2 text-right font-medium">Rate</th>
                 <th className="px-3 py-2 text-left font-medium">Access</th>
                 <th className="px-3 py-2" />
@@ -808,18 +815,29 @@ function ProjectDashboardPanel({
 }) {
   const [periodOffset, setPeriodOffset] = useState(0)
   const todayKey = dateKey(new Date(nowSec * 1000))
-  // Stepping the reference date back moves the dashboard to an earlier period
-  const referenceDay = useMemo(() => {
-    if (periodOffset === 0) return todayKey
-    const span = projectPeriod(project, todayKey)
-    const length = Math.max(1, Math.round((new Date(span.end).getTime() - new Date(span.start).getTime()) / 86_400_000) + 1)
-    return addDays(todayKey, periodOffset * length)
-  }, [periodOffset, project, todayKey])
 
-  const dashboard = buildProjectDashboard(state, project.id, referenceDay, nowSec)
+  /**
+   * WHOLE PERIODS, AND ONLY THE ONES THAT EXIST.
+   *
+   * This used to shift `todayKey` by `offset × currentPeriodLength` DAYS and let
+   * `projectPeriod` re-derive the period from the shifted date. Stepping 30 days back
+   * from 28 September landed on 31 May, then on 1 May: May appeared twice and February
+   * could not be reached at all. On a project that is not recurring it moved only the
+   * END, producing `2026-09-20 → 2026-09-10` — an end nineteen days before its start,
+   * with a burn-up chart under it.
+   *
+   * `projectPeriodAt` answers `null` when a period does not exist, so the arrows are
+   * disabled at the ends instead of inventing one. There is a Next now as well; before,
+   * the only way forward was `Current`.
+   */
+  const hasPrevious = projectPeriodAt(project, todayKey, periodOffset - 1) !== null
+  const hasNext = periodOffset < 0 && projectPeriodAt(project, todayKey, periodOffset + 1) !== null
+
+  const dashboard = buildProjectDashboard(state, project.id, todayKey, nowSec, periodOffset)
   if (!dashboard) return <EmptyState title="Project not found" />
 
   const verdict = paceVerdict(dashboard, todayKey)
+  const daysLeft = periodDaysRemaining(dashboard, todayKey)
   const currency = project.currency
 
   return (
@@ -836,8 +854,17 @@ function ProjectDashboardPanel({
           {state.clients.find((c) => c.id === project.clientId)?.name ?? "No client"}
         </span>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPeriodOffset((o) => o - 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!hasPrevious}
+            title={!hasPrevious ? "This is the project's first period" : undefined}
+            onClick={() => setPeriodOffset((o) => o - 1)}
+          >
             Previous period
+          </Button>
+          <Button variant="outline" size="sm" disabled={!hasNext} onClick={() => setPeriodOffset((o) => o + 1)}>
+            Next period
           </Button>
           {periodOffset !== 0 && (
             <Button variant="ghost" size="sm" onClick={() => setPeriodOffset(0)}>
@@ -852,8 +879,9 @@ function ProjectDashboardPanel({
 
       <p className="text-xs text-muted-foreground">
         Period {formatDate(dashboard.periodStart, state.user.dateFormat)} → {formatDate(dashboard.periodEnd, state.user.dateFormat)}
-        {project.recurring ? ` · recurring ${project.recurringPeriod}` : ""} ·{" "}
-        {plural(periodDaysRemaining(dashboard, todayKey), "day")} remaining
+        {project.recurring ? ` · recurring ${project.recurringPeriod}` : ""}
+        {/* `null` means the period has no future end, which is not "0 days remaining" */}
+        {daysLeft === null ? "" : ` · ${plural(daysLeft, "day")} remaining`}
       </p>
 
       {dashboard.triggeredThresholds.length > 0 && (
@@ -888,10 +916,25 @@ function ProjectDashboardPanel({
 
       <SectionCard
         title="Burn-up and forecast"
+        /**
+         * SAYS WHY THERE IS NO DATE, RATHER THAN ASSUMING ONE REASON.
+         *
+         * "Set an estimate to see a projected end date" was shown for EVERY null,
+         * including a project with `estimatedSeconds: 36000` and nothing tracked yet —
+         * where the chart beside it is labelled `estimate 10h 00m` and the tile reads
+         * `0% of 10:00`. It told the person to do the thing they had already done.
+         * There are three reasons this is empty and they need different sentences.
+         */
         description={
           dashboard.projectedEndDate
             ? `At the current pace the estimate is reached on ${formatDate(dashboard.projectedEndDate, state.user.dateFormat)}`
-            : "Set an estimate to see a projected end date"
+            : !dashboard.estimatedSeconds && !dashboard.estimatedAmount
+              ? "Set an estimate in hours to see a projected end date"
+              : !dashboard.estimatedSeconds
+                ? "A projected end date needs an estimate in hours, not money"
+                : dashboard.trackedSeconds === 0
+                  ? "Track some time and a projected end date appears here"
+                  : "Not enough tracked time yet to project an end date"
         }
       >
         <BurnUpChart

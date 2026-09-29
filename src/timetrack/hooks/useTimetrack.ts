@@ -18,7 +18,7 @@ import { newId } from "../idService"
 import { migrateStateToV3 } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
-import { dateKey, epochSeconds, formatIdleSpan, plural } from "../timetrackFormatService"
+import { dateKey, epochSeconds, formatIdleSpan, hourIsInWindow, plural } from "../timetrackFormatService"
 import {
   continueEntry,
   entrySeconds,
@@ -187,11 +187,23 @@ export function useTimetrack() {
    * in minutes. So an idle page rebuilt the entire tracker sixty times a minute
    * to change nothing at all.
    */
+  /**
+   * A POMODORO BREAK IS A COUNTDOWN, SO IT TICKS LIKE ONE.
+   *
+   * Nothing is *running* during a break, so this fell to the 10-second idle rate and
+   * the header pill froze: `Break 0:02:01` for ten seconds, then a jump to `0:01:51`.
+   * The break's END is detected on the same tick, so a break also overran by up to ten
+   * seconds. Focus ticked every second the whole time, one phase away.
+   *
+   * The dep list stays narrow — the RATE, not the entry — and now names the two things
+   * the rate depends on.
+   */
+  const ticksEverySecond = running !== null || pomodoroPhase === "break"
   useEffect(() => {
-    const everyMs = running ? 1000 : IDLE_TICK_MS
+    const everyMs = ticksEverySecond ? 1000 : IDLE_TICK_MS
     const timer = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), everyMs)
     return () => window.clearInterval(timer)
-  }, [running !== null]) // deps intentionally narrow: the rate, not the entry
+  }, [ticksEverySecond])
 
   const setState = useCallback((updater: (current: TimetrackState) => TimetrackState) => {
     setStateRaw((current) => (current ? updater(current) : current))
@@ -500,7 +512,9 @@ export function useTimetrack() {
     if (!state?.reminders.enabled || running) return
     const now = new Date()
     if (!state.reminders.days.includes(now.getDay())) return
-    if (now.getHours() < state.reminders.fromHour || now.getHours() >= state.reminders.toHour) return
+    // a window may wrap past midnight — 20:00 to 03:00 is an ordinary evening window,
+    // and the old comparison made it match no hour at all
+    if (!hourIsInWindow(now.getHours(), state.reminders.fromHour, state.reminders.toHour)) return
     const gap = state.reminders.everyMinutes * 60_000
     if (Date.now() - lastReminder.current < gap) return
     lastReminder.current = Date.now()
@@ -696,7 +710,13 @@ export function useTimetrack() {
       phase: pomodoroPhase,
       endsAt: pomodoroEndsAt,
       cycles: pomodoroCycles,
-      secondsLeft: pomodoroEndsAt ? Math.max(0, Math.round((pomodoroEndsAt - nowSec * 1000) / 1000)) : 0,
+      /**
+       * FLOOR, not round. `nowSec` is floored to the second while `endsAt` carries
+       * milliseconds, so this difference runs up to 999 ms LONG — and rounding turned a
+       * two-minute break into `0:02:01` at the moment it started, one second more than
+       * the number the person had just typed in.
+       */
+      secondsLeft: pomodoroEndsAt ? Math.max(0, Math.floor((pomodoroEndsAt - nowSec * 1000) / 1000)) : 0,
     },
     actions,
     requestNotificationPermission,

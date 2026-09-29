@@ -104,9 +104,23 @@ describe("JSON backup", () => {
     expect(restored.state?.entries).toHaveLength(1)
   })
 
-  test("rejects a version mismatch", () => {
+  test("rejects a version mismatch, naming both versions", () => {
     const bad = JSON.stringify({ ...baseState(), version: STATE_VERSION + 99 })
-    expect(importStateJson(bad).error).toMatch(/does not match/)
+    const error = importStateJson(bad).error ?? ""
+    expect(error).toContain(String(STATE_VERSION + 99))
+    expect(error).toContain(String(STATE_VERSION))
+  })
+
+  test("and a file that is not a backup at all says THAT, not 'version undefined'", () => {
+    /**
+     * Picking an unrelated `.json` answered `Backup version undefined does not match 3`
+     * — two internal numbers and a developer's word for them, for the most likely
+     * mistake a person makes on this button. The CSV and `.ics` failures beside it are
+     * specific and plain; this one was not.
+     */
+    const error = importStateJson(JSON.stringify({ hello: "world" })).error ?? ""
+    expect(error).not.toContain("undefined")
+    expect(error).toContain("not a workspace backup")
   })
 
   test("rejects malformed input", () => {

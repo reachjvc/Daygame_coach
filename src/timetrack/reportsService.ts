@@ -336,6 +336,21 @@ function secondsInRange(entry: TimeEntry, config: ReportConfig, nowSec: number):
   )
 }
 
+/**
+ * A DATE GROUPING IS ORDERED BY DATE. Anything else is ordered by size.
+ *
+ * Grouping by date and sorting by profit produced `2026-09-28, 2026-09-30, 2026-09-29,
+ * 2026-10-01` — a time series shuffled by magnitude, on both the Summary and
+ * Profitability tabs. Dates have an order of their own and a reader assumes it.
+ *
+ * `dimensionValues` builds a `date:` key from `dateKey`, so the key sorts correctly as
+ * a string.
+ */
+function orderRows<T extends { key: string }>(rows: T[], dimension: GroupingDimension, bySize: (a: T, b: T) => number): T[] {
+  if (dimension === "date") return [...rows].sort((a, b) => a.key.localeCompare(b.key))
+  return [...rows].sort(bySize)
+}
+
 export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec: number): SummaryReport {
   const entries = applyFilters(state, config.filters, nowSec)
   const groups = new Map<string, Accumulator>()
@@ -502,7 +517,7 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
     }))
 
   return {
-    rows: [...groups.values()].map(toRow).sort((a, b) => b.seconds - a.seconds),
+    rows: orderRows([...groups.values()].map(toRow), config.grouping, (a, b) => b.seconds - a.seconds),
     buckets: bucketRows,
     pie: [...pie.values()]
       .map((p) => ({ key: p.key, label: p.label, color: p.color, seconds: p.seconds }))
@@ -794,7 +809,7 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
         margin: income > 0 ? profit / income : null,
       }
     })
-    .sort((a, b) => b.profit - a.profit)
+    .sort((a, b) => (config.grouping === "date" ? a.key.localeCompare(b.key) : b.profit - a.profit))
 
   return { rows: out, fixedFee: reportFee, feeIsPerRow }
 }

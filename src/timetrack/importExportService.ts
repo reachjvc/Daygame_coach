@@ -30,7 +30,19 @@ export function importStateJson(text: string): { state: TimetrackState | null; e
   const candidate = parsed as Partial<TimetrackState>
   if (!candidate || typeof candidate !== "object") return { state: null, error: "Backup is not an object" }
   if (candidate.version !== STATE_VERSION) {
-    return { state: null, error: `Backup version ${String(candidate.version)} does not match ${STATE_VERSION}` }
+    /**
+     * A person picking the wrong file gets a sentence about the file, not about the
+     * schema. An unrelated `.json` answered `Backup version undefined does not match 3`
+     * — two internal numbers and a developer's word for them. The CSV and `.ics`
+     * failures next door are specific and plain; this one was not.
+     */
+    return {
+      state: null,
+      error:
+        candidate.version === undefined
+          ? "That file is not a workspace backup. Pick the .json this app exported."
+          : `That backup was made by an older version of this app (${String(candidate.version)}, this one reads ${STATE_VERSION}).`,
+    }
   }
   if (!Array.isArray(candidate.entries) || !candidate.workspace) {
     return { state: null, error: "Backup is missing entries or workspace" }

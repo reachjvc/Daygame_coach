@@ -29,7 +29,19 @@ import {
 import { googleEventsToEvents, icsToEvents } from "../calendarService"
 import { useAddField } from "../hooks/useAddField"
 import { IconAdd, IconAlert, IconCalendar, IconDelete, IconExport, IconImport, IconSpinner } from "../icons"
-import { addDays, dateKey, endOfDayIso, formatDate, formatDuration, formatTimeOfDay, plural, startOfDayIso } from "../timetrackFormatService"
+import {
+  addDays,
+  clampSetting,
+  dateKey,
+  endOfDayIso,
+  formatDate,
+  formatDuration,
+  formatTimeOfDay,
+  plural,
+  reminderNeverFiresBecause,
+  startOfDayIso,
+  weekdayChips,
+} from "../timetrackFormatService"
 import { downloadFile, exportStateJson, importEntriesCsv, importStateJson, restoreIntoWorkspace } from "../importExportService"
 import {
   addAutotracker,
@@ -337,18 +349,28 @@ function AutomationPanel({
           <Field label="Work interval (minutes)" className="w-full sm:w-48">
             <Input
               type="number"
+              min={1}
+              max={480}
               value={state.pomodoro.workMinutes}
               onChange={(event) =>
-                setState((current) => ({ ...current, pomodoro: { ...current.pomodoro, workMinutes: Number(event.target.value) || 1 } }))
+                setState((current) => ({
+                  ...current,
+                  pomodoro: { ...current.pomodoro, workMinutes: clampSetting(event.target.value, 1, 480, current.pomodoro.workMinutes) },
+                }))
               }
             />
           </Field>
           <Field label="Break interval (minutes)" className="w-full sm:w-48">
             <Input
               type="number"
+              min={1}
+              max={480}
               value={state.pomodoro.breakMinutes}
               onChange={(event) =>
-                setState((current) => ({ ...current, pomodoro: { ...current.pomodoro, breakMinutes: Number(event.target.value) || 1 } }))
+                setState((current) => ({
+                  ...current,
+                  pomodoro: { ...current.pomodoro, breakMinutes: clampSetting(event.target.value, 1, 480, current.pomodoro.breakMinutes) },
+                }))
               }
             />
           </Field>
@@ -401,8 +423,24 @@ function AutomationPanel({
             setState((current) => ({ ...current, reminders: { ...current.reminders, enabled } }))
           }}
         />
+        {/*
+          SAYS WHEN THE SETTINGS CANNOT FIRE. All three of these were accepted in
+          silence while the card above still read "Reminds you to start a timer during
+          the hours you set below": every weekday deselected, and a window of zero
+          length. Both are reachable in two clicks and neither produces a reminder ever.
+        */}
+        {state.reminders.enabled && reminderNeverFiresBecause(state.reminders) !== null && (
+          <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs">
+            {reminderNeverFiresBecause(state.reminders)}
+          </p>
+        )}
         <div className="flex flex-wrap gap-1 py-2">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => {
+          {/*
+            Starts on the workspace's own first day of the week. These were hardcoded
+            Sun→Sat while everything else in the app honours `weekStart`, so with the
+            setting on Monday this row alone disagreed with the rest of the product.
+          */}
+          {weekdayChips(state.user.weekStart).map(({ label: day, index }) => {
             const active = state.reminders.days.includes(index)
             return (
               <button
@@ -433,18 +471,28 @@ function AutomationPanel({
           <Field label="From hour" className="w-full sm:w-28">
             <Input
               type="number"
+              min={0}
+              max={23}
               value={state.reminders.fromHour}
               onChange={(event) =>
-                setState((current) => ({ ...current, reminders: { ...current.reminders, fromHour: Number(event.target.value) } }))
+                setState((current) => ({
+                  ...current,
+                  reminders: { ...current.reminders, fromHour: clampSetting(event.target.value, 0, 23, current.reminders.fromHour) },
+                }))
               }
             />
           </Field>
           <Field label="To hour" className="w-full sm:w-28">
             <Input
               type="number"
+              min={0}
+              max={23}
               value={state.reminders.toHour}
               onChange={(event) =>
-                setState((current) => ({ ...current, reminders: { ...current.reminders, toHour: Number(event.target.value) } }))
+                setState((current) => ({
+                  ...current,
+                  reminders: { ...current.reminders, toHour: clampSetting(event.target.value, 0, 23, current.reminders.toHour) },
+                }))
               }
             />
           </Field>
@@ -479,9 +527,18 @@ function AutomationPanel({
             />
             <Button
               size="sm"
+              /*
+                A RULE WITH NO PROJECT SUGGESTS NOTHING. The button was enabled with the
+                select on its default "No project", and the rule it made rendered as
+                `email → No project` with its toggle reading `On`, under a section
+                promising "Suggests a project as soon as your description contains one
+                of these keywords". It suggested nothing, and looked like it would.
+              */
+              disabled={!rule.keyword.trim() || rule.projectId === null}
+              title={rule.projectId === null ? "Pick the project this keyword should suggest" : undefined}
               onClick={() => {
-                if (!rule.keyword.trim()) {
-                  pushToast("Give the rule a keyword", "error")
+                if (!rule.keyword.trim() || rule.projectId === null) {
+                  pushToast("A rule needs a keyword and the project it suggests", "error")
                   return
                 }
                 setState((current) =>
@@ -531,6 +588,21 @@ function AutomationPanel({
             setState((current) => ({ ...current, user: { ...current.user, showTimelineRecorder } }))
           }
         />
+        {/*
+          SAYS WHEN A BLOCK WILL APPEAR, RATHER THAN SHOWING NOTHING.
+          
+          A block is only written when the tab is hidden, closed or unmounted, and only
+          above 30 seconds — so for the whole of a first session this list is empty while
+          the description above promises "Turn any block into a time entry below", with
+          nothing below it. A browser round turned the toggle on, waited 35 seconds,
+          switched tabs and back, and still saw nothing and no explanation.
+        */}
+        {state.user.showTimelineRecorder && state.timeline.length === 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            No blocks yet. One is recorded when you leave this tab and come back, if you were away for more than half a
+            minute.
+          </p>
+        )}
         {state.timeline.length > 0 && (
           <ul className="mt-2 divide-y divide-border">
             {state.timeline.slice(0, 10).map((block) => {
@@ -875,11 +947,25 @@ export function IntegrationsPanel({
 
           {source === "google_api" && (
             <div className="space-y-2">
+              {/*
+                SAYS UP FRONT THAT THIS DEPLOYMENT CANNOT DO IT.
+                
+                This method was presented as an equal peer and actively recommended by
+                the secret-address warning below, but it needs a service account that is
+                not configured here — so Import failed only AFTER the person had found
+                their calendar ID and typed it in, with a message naming an environment
+                variable. A method that cannot work should say so before the work, not
+                after it.
+              */}
+              <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs">
+                <strong>Not available in this deployment.</strong> It needs a Google service account to be configured on
+                the server, and none is. Upload a <code>.ics</code> export instead — it imports the same events.
+              </p>
               <p className="text-xs text-muted-foreground">
-                Keeps the credential on the server: this app&apos;s service account (<code>GOOGLE_SERVICE_ACCOUNT_JSON</code>)
-                reads the calendar, and your browser only ever sees the events. In Google Calendar, share the calendar with
-                the service account&apos;s <code>client_email</code> (See all event details), then enter the calendar ID —
-                usually your Gmail address. Revoke access any time by removing that share.
+                How it would work: this app&apos;s service account reads the calendar and your browser only ever sees the
+                events. In Google Calendar you would share the calendar with the service account&apos;s{" "}
+                <code>client_email</code> (See all event details), then enter the calendar ID — usually your Gmail
+                address — and revoke access any time by removing that share.
               </p>
               <div className="flex flex-wrap items-end gap-2">
                 <Field label="Name in this app" className="w-full sm:w-[160px]">
@@ -910,7 +996,8 @@ export function IntegrationsPanel({
                 <IconAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
                 <p className="text-xs">
                   <strong>This address is a password.</strong> Anyone holding it can read that calendar forever, without
-                  signing in. Prefer <em>Upload .ics</em> or the <em>Google API</em> method above. If you do use it and it
+                  signing in. Prefer <em>Upload .ics</em> above — the Google API method needs a service account this
+                  deployment does not have. If you do use this address and it
                   ever leaks, reset it in Google Calendar → Settings → your calendar → <strong>Reset private URLs</strong>.
                 </p>
               </div>
@@ -963,9 +1050,10 @@ export function IntegrationsPanel({
           )}
 
           <p className="border-t border-border pt-2 text-[11px] text-muted-foreground">
-            Toggl&apos;s one-click “Connect” button uses a Google OAuth consent screen, which needs an OAuth client ID and
-            secret in this app&apos;s environment. Until those exist, the three methods above import the same events — and
-            the first two never put a calendar credential in your browser.
+            Toggl&apos;s one-click “Connect” button uses a Google OAuth consent screen, which needs an OAuth client ID
+            and secret in this app&apos;s environment. Until those exist, the two methods that work here — the secret
+            address and a <code>.ics</code> upload — import the same events, and the upload never puts a calendar
+            credential anywhere.
           </p>
         </div>
       </SectionCard>
@@ -1035,6 +1123,8 @@ function DataPanel({
 }) {
   const jsonInput = useRef<HTMLInputElement | null>(null)
   const csvInput = useRef<HTMLInputElement | null>(null)
+  /** Addresses the backup will actually carry — `ref` empty means it was never saved. */
+  const leakedAddresses = state.calendars.filter((c) => c.source === "ics_url" && c.ref.trim() !== "").length
   /**
    * A CHOSEN BACKUP WAITS TO BE CONFIRMED. IT DOES NOT APPLY ITSELF.
    *
@@ -1093,11 +1183,21 @@ function DataPanel({
           fail to restore the connection, so the honest option is to say what is
           in the file.
         */}
-        {state.calendars.some((c) => c.source === "ics_url") && (
+        {/*
+          WARNS ONLY WHEN THE FILE REALLY HOLDS AN ADDRESS.
+          
+          This gated on `source === "ics_url"` rather than on `ref` being non-empty, so
+          somebody who left "Remember this address" OFF — which the app itself advises
+          on a shared computer, and which the integrations panel correctly labels
+          "secret iCal address (not saved)" — was told their backup leaked a credential
+          that is not in it. A security warning that cries wolf is the one people stop
+          reading, so it has to be true every time it appears.
+        */}
+        {leakedAddresses > 0 && (
           <p className="mb-2 text-xs text-amber-600 dark:text-amber-500">
-            This file will contain the secret calendar address{state.calendars.filter((c) => c.source === "ics_url").length === 1 ? "" : "es"} you
-            connected. Anyone who opens the file can read {state.calendars.filter((c) => c.source === "ics_url").length === 1 ? "that calendar" : "those calendars"} without
-            signing in — keep it somewhere private.
+            This file will contain the secret calendar address{leakedAddresses === 1 ? "" : "es"} you connected. Anyone
+            who opens the file can read {leakedAddresses === 1 ? "that calendar" : "those calendars"} without signing
+            in — keep it somewhere private.
           </p>
         )}
         <div className="flex flex-wrap gap-2">

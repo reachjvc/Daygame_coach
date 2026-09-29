@@ -20,6 +20,7 @@ import {
   addClient,
   createGroup,
   createMember,
+  inviteRefusal,
   createTag,
   deleteClient,
   deleteGroup,
@@ -47,6 +48,22 @@ const APPROVAL_ACTIONS = [
   { status: "rejected", label: "Reject" },
   { status: "open", label: "Reopen" },
 ] as const
+
+/**
+ * WHICH STATUS A WEEK CAN MOVE TO FROM WHERE.
+ *
+ * Every action was enabled except the one already in effect (`disabled={status ===
+ * action.status}`), so a week nobody had submitted could be Rejected, and one could be
+ * Approved without ever being submitted. A timesheet workflow whose states can be
+ * entered in any order is not a workflow, and the approved state is the one that LOCKS
+ * entries — so it has to be reachable only on purpose.
+ */
+const APPROVAL_NEXT: Record<string, readonly string[]> = {
+  open: ["submitted"],
+  submitted: ["approved", "rejected", "open"],
+  approved: ["open"],
+  rejected: ["submitted", "open"],
+}
 
 export function ManageView({
   state,
@@ -231,6 +248,16 @@ function TeamPanel({
   const bucket = AUDIT_BUCKETS.find((b) => b.id === auditBucket)!
   const audit = auditMembers(state, auditRange, bucket.maxHours, nowSec)
 
+  const submitInvite = () => {
+    const refusal = inviteRefusal(state, invite)
+    if (refusal) {
+      pushToast(refusal, "error")
+      return
+    }
+    setState((current) => createMember(current, invite, new Date().toISOString()).state)
+    setInvite({ name: "", email: "" })
+  }
+
   return (
     <div className="space-y-4">
       <SectionCard
@@ -238,29 +265,31 @@ function TeamPanel({
         description="Access levels mirror Toggl: basic tracks time, manager sees team reports, admin manages the workspace."
         actions={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+            {/*
+              TAKES ENTER, AND REFUSES WHAT IT CANNOT USE.
+              
+              This was the one add control in the slice that Enter did nothing in —
+              every other one takes it, including the Groups field on this same screen.
+              It also accepted `not-an-email`, and a second member on an address already
+              in use, which makes two rows that are the same person to every report.
+              `inviteRefusal` owns the reasons so the button and Enter agree.
+            */}
             <Input
               value={invite.name}
               onChange={(event) => setInvite({ ...invite, name: event.target.value })}
+              onKeyDown={(event) => event.key === "Enter" && submitInvite()}
               placeholder="Name"
               className="h-11 w-full sm:h-8 sm:w-[130px]"
             />
             <Input
+              type="email"
               value={invite.email}
               onChange={(event) => setInvite({ ...invite, email: event.target.value })}
+              onKeyDown={(event) => event.key === "Enter" && submitInvite()}
               placeholder="email@example.com"
               className="h-11 w-full sm:h-8 sm:w-[180px]"
             />
-            <Button
-              size="sm"
-              onClick={() => {
-                if (!invite.name.trim() || !invite.email.trim()) {
-                  pushToast("Name and email are required", "error")
-                  return
-                }
-                setState((current) => createMember(current, invite, new Date().toISOString()).state)
-                setInvite({ name: "", email: "" })
-              }}
-            >
+            <Button size="sm" disabled={!invite.name.trim() || !invite.email.trim()} onClick={submitInvite}>
               <IconAdd className="size-4" /> Add member
             </Button>
           </div>
@@ -580,7 +609,12 @@ function TeamPanel({
                       variant="ghost"
                       // four of these in a row at 28px before this
                       className="min-h-11 sm:h-7 sm:min-h-0"
-                      disabled={status === action.status}
+                      disabled={!(APPROVAL_NEXT[status] ?? []).includes(action.status)}
+                      title={
+                        (APPROVAL_NEXT[status] ?? []).includes(action.status)
+                          ? undefined
+                          : `A ${status} week cannot be ${action.label.toLowerCase()}ed`
+                      }
                       onClick={() =>
                         setState((current) =>
                           setApprovalStatus(current, member.id, approvalWeek, action.status, new Date().toISOString()),

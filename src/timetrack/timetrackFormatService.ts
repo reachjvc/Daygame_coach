@@ -473,3 +473,67 @@ export function hashColor(seed: string, palette: readonly string[]): string {
   for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
   return palette[hash % palette.length]
 }
+
+/**
+ * A NUMBER TYPED INTO A SETTING, PULLED INTO THE RANGE IT CAN ACTUALLY WORK IN.
+ *
+ * `Number(event.target.value) || 1` was the pattern, and it only catches 0 and NaN. A
+ * browser round typed `-5` into the Pomodoro work interval: it was stored, and every
+ * press of Start then created and instantly stopped a zero-length entry while the
+ * header read `Break 0:05:08 · 1 done` — the timer was unusable and nothing said why.
+ * `99` went into "From hour", and there is no 99 o'clock.
+ *
+ * `min`/`max` on the input do not stop this: they are constraint-validation flags, not
+ * clamps, which this slice has now learned twice. The clamp has to be at the write.
+ */
+export function clampSetting(raw: string, min: number, max: number, fallback: number): number {
+  const value = Number(raw)
+  if (!Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(min, Math.round(value)))
+}
+
+/**
+ * Is `hour` inside a daily window that may WRAP PAST MIDNIGHT?
+ *
+ * `hour < from || hour >= to` is true for all 24 hours when `from` is 20 and `to` is 3,
+ * so an evening reminder window — which reads perfectly sensible, and which the form
+ * accepts — could never fire once. Nothing said so.
+ */
+export function hourIsInWindow(hour: number, fromHour: number, toHour: number): boolean {
+  if (fromHour === toHour) return false
+  if (fromHour < toHour) return hour >= fromHour && hour < toHour
+  return hour >= fromHour || hour < toHour
+}
+
+/**
+ * The seven weekday chips, starting on the workspace's own first day of the week.
+ *
+ * `index` stays the JS `getDay()` number, because that is what `reminders.days` holds
+ * and what the firing check compares against — only the ORDER changes. The reminder row
+ * was hardcoded Sun→Sat while every other weekday row in the app honours `weekStart`.
+ */
+export function weekdayChips(weekStart: 0 | 1 | 6): { label: string; index: number }[] {
+  const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  return Array.from({ length: 7 }, (_, offset) => {
+    const index = (weekStart + offset) % 7
+    return { label: names[index], index }
+  })
+}
+
+/**
+ * Why a reminder configuration can never fire, or `null` when it can.
+ *
+ * Each of these was accepted in silence under a card reading "Reminds you to start a
+ * timer during the hours you set below".
+ */
+export function reminderNeverFiresBecause(reminders: {
+  days: number[]
+  fromHour: number
+  toHour: number
+}): string | null {
+  if (reminders.days.length === 0) return "No days are selected, so no reminder will be sent. Pick at least one."
+  if (reminders.fromHour === reminders.toHour) {
+    return "The window starts and ends at the same hour, so no reminder will be sent."
+  }
+  return null
+}

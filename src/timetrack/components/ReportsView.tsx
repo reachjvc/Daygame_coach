@@ -1292,9 +1292,65 @@ function ProfitabilityTab({
                   <dt>Cost</dt>
                   <dd className="tabular-nums">{formatMoney(row.cost, currency)}</dd>
                 </div>
+                {row.fixedFee > 0 && (
+                  <div className="flex justify-between">
+                    <dt>Fixed fee</dt>
+                    <dd className="tabular-nums">{formatMoney(row.fixedFee, currency)}</dd>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <dt>Billable</dt>
+                  <dd className="tabular-nums">{formatDuration(row.billableSeconds, state.user.durationFormat)}</dd>
+                </div>
               </dl>
             </li>
           ))}
+          {/*
+            A TOTAL ON THE PHONE TOO.
+            
+            The card list had none, so on a 390px screen the sentence above — "EUR
+            2,000.00 of fixed fees … is counted in the total only" — pointed at a total
+            that was not on the screen, and more than half the money in the workspace
+            was unreachable. The fee is also on each card now, so a card's own profit
+            follows from the numbers printed on it; without it a card read
+            "EUR 2,067.50" over a revenue of 135 and a cost of 67.50.
+          */}
+          {rows.length > 0 && (
+            <li className="rounded-lg border border-border bg-secondary/40 p-3">
+              <div className="flex items-center gap-1.5">
+                <span className="min-w-0 flex-1 text-sm font-semibold">Total</span>
+                <span className={cn("shrink-0 text-sm font-semibold tabular-nums", totals.profit < 0 && "text-destructive")}>
+                  {formatMoney(totals.profit, currency)}
+                </span>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <dt>Tracked</dt>
+                  <dd className="tabular-nums">{formatDuration(totals.seconds, state.user.durationFormat)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Margin</dt>
+                  <dd className="tabular-nums">{formatMargin(totalMargin)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Revenue</dt>
+                  <dd className="tabular-nums">{formatMoney(totals.revenue, currency)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Cost</dt>
+                  <dd className="tabular-nums">{formatMoney(totals.cost, currency)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Fixed fee</dt>
+                  <dd className="tabular-nums">{formatMoney(totals.fixedFee, currency)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Billable</dt>
+                  <dd className="tabular-nums">{formatDuration(totals.billableSeconds, state.user.durationFormat)}</dd>
+                </div>
+              </dl>
+            </li>
+          )}
         </ul>
         <div className="hidden overflow-x-auto rounded-lg border border-border bg-card sm:block">
           <table className="w-full min-w-[760px] text-sm">

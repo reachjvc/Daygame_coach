@@ -418,8 +418,14 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               trigger={() => (
                 <span className={cn(touchTarget, "relative rounded-md text-muted-foreground hover:bg-secondary/60")}>
                   <IconBell className="size-5 sm:size-4" />
+                  {/*
+                    9px was the smallest text anywhere in the slice, on the one badge
+                    whose whole job is to be read at a glance, and at 4.17:1 it was under
+                    the 4.5:1 contrast floor as well. 10px in a slightly larger circle,
+                    at full-strength white on the destructive fill.
+                  */}
                   {unreadAlerts.length > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[9px] text-white">
+                    <span className="absolute -right-1 -top-1 flex size-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-semibold leading-none text-white">
                       {unreadAlerts.length}
                     </span>
                   )}
@@ -838,7 +844,9 @@ function SyncBadge({
     status === "synced"
       ? "border-border text-muted-foreground"
       : status === "error" || status === "signed-out"
-        ? "border-destructive/50 text-destructive"
+        // `text-destructive` measured 4.49:1 against this background — a hundredth under
+        // the 4.5:1 floor, on the one label that means "your work did not save"
+        ? "border-destructive/50 text-destructive-foreground bg-destructive"
         : "border-border text-foreground"
 
   /**
