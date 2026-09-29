@@ -546,6 +546,87 @@ describe("a program write is one statement", () => {
     expect(Number(kept!.w)).toBe(60)
   })
 
+  test("a correction that SUCCEEDS keeps when each set was ticked and which slot it answered", async () => {
+    /**
+     * THE MIGRATION THIS FILE EXISTS TO PROVE (20260927120000).
+     *
+     * `replace_sets_and_replay` deletes every set and re-inserts the payload,
+     * and its INSERT named twelve columns — `completed_at` and
+     * `prescribed_index` were not among them — so both came back NULL on every
+     * corrected row. `inWorkoutOrder` sorts on `completed_at` first and puts
+     * rows without one LAST, so a corrected workout reverted to slot order
+     * permanently: the instants are gone and cannot be rebuilt.
+     *
+     * The sibling test above drives the same function and cannot see this at
+     * all, because it asserts the REFUSAL path — where nothing is inserted. The
+     * claim is about what a successful insert keeps, so the test has to let one
+     * succeed.
+     *
+     * Two sets deliberately out of slot order (set 2 ticked before set 1) so
+     * "the timestamps survived" cannot pass by coincidence on a workout whose
+     * slot order and performed order agree.
+     */
+    const me = await createTestUser("correct-keeps-order@example.com")
+    const running = await enroll(me)
+    await logSessions(running, me, 1)
+    const [session] = await sql<{ id: string }>(
+      `SELECT id FROM workout_logs WHERE enrollment_id = $1`,
+      [running]
+    )
+
+    const corrected = [
+      {
+        exercise: "Squat",
+        exercise_id: "squat",
+        weight_kg: 100,
+        reps: 5,
+        set_number: 1,
+        completed_at: "2026-09-27T02:52:09.000Z",
+        prescribed_index: 0,
+      },
+      {
+        exercise: "Squat",
+        exercise_id: "squat",
+        weight_kg: 100,
+        reps: 5,
+        set_number: 2,
+        completed_at: "2026-09-27T02:44:38.187Z",
+        prescribed_index: 1,
+      },
+    ]
+
+    /**
+     * 0, NOT 1. `logSessions` inserts `workout_logs` rows and never touches the
+     * enrollment's cursor, so `sessionCount` is still the 0 that `enroll` set.
+     * Passing 1 made the optimistic guard refuse — which is the sibling test's
+     * assertion, not this one's, and it passed through this test as a thrown
+     * error rather than a wrong answer.
+     */
+    await sql(`SELECT replace_sets_and_replay($1, $2::jsonb, $3, '{}'::jsonb, $4::jsonb, NULL, 0)`, [
+      session!.id,
+      JSON.stringify(corrected),
+      running,
+      JSON.stringify({ cycle: 1, week: 1, dayIndex: 1, sessionCount: 1 }),
+    ])
+
+    const rows = await sql<{ set_number: number; completed_at: string | null; prescribed_index: number | null }>(
+      `SELECT set_number, completed_at, prescribed_index
+         FROM workout_sets WHERE log_id = $1 ORDER BY set_number`,
+      [session!.id]
+    )
+
+    expect(rows).toHaveLength(2)
+    // NOT NULL is the whole point — this is what the old column list threw away.
+    expect(rows.map((r) => r.completed_at)).not.toContain(null)
+    expect(rows.map((r) => r.prescribed_index)).toEqual([0, 1])
+    // And the instants are the ones sent, so the workout still reads in the
+    // order it was performed: set 2 first, which is not its slot order.
+    const byInstant = [...rows].sort((a, b) =>
+      String(a.completed_at) < String(b.completed_at) ? -1 : 1
+    )
+    expect(byInstant.map((r) => r.set_number)).toEqual([2, 1])
+  })
+
   test("the same write-up sent twice records one workout and advances the program once", async () => {
     const me = await createTestUser("retry-writeup@example.com")
     const running = await enroll(me)
