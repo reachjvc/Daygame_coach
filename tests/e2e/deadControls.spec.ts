@@ -60,7 +60,14 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
       // file download, which this in-page probe cannot observe at all. It is
       // not inert — `tests/unit/vice/blackboxStore.test.ts` covers what it
       // writes — and reporting it would teach people to ignore this list.
-      if (/start over|yes, start over|keep it|copy it all|copied|blocked the copy|save a copy/i.test(text)) return
+      //
+      // "Load a copy" is the exact mirror and was missing: its whole effect is
+      // opening a native file picker (`fileInput.current?.click()`), which this
+      // probe can see even less of than a download. It meets the same bar —
+      // `importRecord` has nine assertions in that same unit file, including the
+      // export/import round trip and three malformed inputs — so it is excused
+      // for the same stated reason rather than left failing the sweep.
+      if (/start over|yes, start over|keep it|copy it all|copied|blocked the copy|save a copy|load a copy/i.test(text)) return
       // Re-selecting the option that is already selected is meant to be inert.
       if (btn.getAttribute("aria-pressed") === "true") return
       const key = `${where}::${text}`
