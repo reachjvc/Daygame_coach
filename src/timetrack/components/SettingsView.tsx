@@ -285,14 +285,42 @@ function WorkspacePanel({
         title="Required fields"
         description="Entries cannot be saved until these are filled in. Applies to the timer, the calendar and CSV import."
       >
-        {(["description", "project", "task", "tag"] as const).map((field) => (
-          <ToggleRow
-            key={field}
-            label={`${field[0].toUpperCase()}${field.slice(1)} is required`}
-            checked={state.workspace.requiredFields[field]}
-            onChange={(value) => patch({ requiredFields: { ...state.workspace.requiredFields, [field]: value } })}
-          />
-        ))}
+        {(["description", "project", "task", "tag"] as const).map((field) => {
+          /**
+           * A REQUIREMENT NOTHING CAN SATISFY SAYS SO, HERE, RATHER THAN AT THE TIMER.
+           *
+           * Requiring a project in a workspace with no projects makes Start refuse
+           * forever — "Project is required in this workspace" — and the Timer bar has no
+           * way to create one, so the person is stuck in a loop the setting caused and
+           * this screen said nothing about. Same for tasks and tags. It stays
+           * switchable, because setting it up before importing is a reasonable order to
+           * work in; it just no longer does it silently.
+           */
+          const available =
+            field === "description"
+              ? 1
+              : field === "project"
+                ? state.projects.filter((p) => p.active && !p.template).length
+                : field === "task"
+                  ? state.tasks.length
+                  : state.tags.length
+          const unsatisfiable = state.workspace.requiredFields[field] && available === 0
+          return (
+            <div key={field}>
+              <ToggleRow
+                label={`${field[0].toUpperCase()}${field.slice(1)} is required`}
+                checked={state.workspace.requiredFields[field]}
+                onChange={(value) => patch({ requiredFields: { ...state.workspace.requiredFields, [field]: value } })}
+              />
+              {unsatisfiable && (
+                <p className="pb-2 text-xs text-amber-600 dark:text-amber-500">
+                  This workspace has no {field === "project" ? "projects" : field === "task" ? "tasks" : "tags"}, so no
+                  timer can be started until you add one.
+                </p>
+              )}
+            </div>
+          )
+        })}
       </SectionCard>
 
       <SectionCard title="Locking" description="Both rules stop finished time entries from being changed.">

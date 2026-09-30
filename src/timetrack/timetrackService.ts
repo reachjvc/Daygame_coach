@@ -368,7 +368,23 @@ export function validateEntry(
  * Split out so the rule has one home. `validateEntry` adds the workspace's required
  * fields on top; a delete has no fields to require, only a day that may be closed.
  */
-export function lockViolations(state: TimetrackState, startIso: IsoDateTime): SaveViolation[] {
+export function lockViolations(
+  state: TimetrackState,
+  startIso: IsoDateTime,
+  /**
+   * WHOSE timesheet decides, which is the entry's owner and not always me.
+   *
+   * This looked up `selfMember(state)` whatever entry it was handed, so once I approved
+   * my own week, the approval locked every OTHER member's entries in that week too —
+   * and left mine unlocked if I had not. A timesheet approval is per member; asking
+   * about the wrong one is not a stricter rule, it is a different rule.
+   *
+   * Defaults to me because the paths that CREATE an entry make it for me. The paths
+   * that touch an existing one — split, delete, edit — pass its `userId`. Latent while
+   * there is one member, and wrong the moment there are two.
+   */
+  memberId: Id = selfMember(state).id,
+): SaveViolation[] {
   const violations: SaveViolation[] = []
   const lockBefore = state.workspace.lockEntriesBefore
   const day = dateKey(startIso)
@@ -377,9 +393,8 @@ export function lockViolations(state: TimetrackState, startIso: IsoDateTime): Sa
   }
 
   if (state.workspace.timesheetApprovalsEnabled) {
-    const self = selfMember(state)
     const week = weekStartOf(day, state.user.weekStart)
-    const approval = approvalFor(state, self.id, week)
+    const approval = approvalFor(state, memberId, week)
     if (approval && (approval.status === "submitted" || approval.status === "approved")) {
       violations.push({
         field: "approval",
@@ -767,7 +782,7 @@ export function splitEntry(
    * A closed day refuses a split. This checked running, length and split point and
    * never the locks, so Split silently turned one approved entry into two.
    */
-  const locked = lockViolations(state, entry.start)
+  const locked = lockViolations(state, entry.start, entry.userId)
   if (locked.length > 0) return { state, error: locked[0].message }
 
   const startSec = epochSeconds(entry.start)
@@ -823,7 +838,7 @@ export function deleteEntries(
   const violations: SaveViolation[] = []
   const removable: Id[] = []
   for (const entry of targets) {
-    const locked = lockViolations(state, entry.start)
+    const locked = lockViolations(state, entry.start, entry.userId)
     if (locked.length > 0) violations.push(locked[0])
     else removable.push(entry.id)
   }
