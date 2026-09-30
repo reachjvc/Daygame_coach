@@ -614,7 +614,13 @@ lower than its pooler's, so the port may have to use the pooler — real but sma
 of the current order if it is wrong:** a data-access bug and an unfamiliar server in the
 same week, with no second wall and no managed backup.
 
-### Q-CUSTOMER — Should anything here come before "somebody can pay you"? **NEW 2026-09-28.**
+### Q-CUSTOMER — ANSWERED BY THE OWNER 2026-09-30. Closed.
+**His words: "I want to build the platform/foundation for making the scenarios accessible, before I
+make them."** So the infrastructure is not competing with the Scenarios work — it is the floor under
+it. The 16-of-20 padlocked doors are not an argument against this plan; they are what this plan is
+for. **Stop raising this.** The original question, for the record:
+
+### ~~Q-CUSTOMER~~ — Should anything here come before "somebody can pay you"? **NEW 2026-09-28.**
 *Gates: nothing mechanically — it is an ordering question, so starting M1 answers it "no". Said plainly because that is how it would otherwise be decided by default.*
 
 As ordered, **this plan delivers an installed phone app before it delivers a customer.**
