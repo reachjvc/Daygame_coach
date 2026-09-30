@@ -206,6 +206,13 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
 - `dashboard/` — the signed-in landing page. Conversation practice only;
   the gym deliberately does not appear here.
 - `settings/` — units, timezone, language, difficulty, subscription management.
+  **Its weight unit does not reach a program that is running**, and reading this
+  line as if it did is the mistake it keeps causing: `unitFor` asks the
+  enrolment first and this second, so the toggle decides only what you see when
+  no program is running, or when two disagree. A running program is moved from
+  its own ⋮ menu on `/programs` ("Switch to lb"), which converts what it has
+  worked up to. Before 2026-09-28 there was no such control and no way out at
+  all.
 - `api_ai/` — what every AI call cost, per user, against a budget.
 
 ## The data
