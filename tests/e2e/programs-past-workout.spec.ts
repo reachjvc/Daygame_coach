@@ -651,10 +651,31 @@ test("every program control is behind the ⋮, and a refusal stays on the sheet"
    * nav bar's rows were 43.75px on an iPhone 14, a quarter-pixel short.
    */
   const TAP_TARGET_PX = 43.99
-  for (const row of ["sheet-reset", "sheet-all", "sheet-end"]) {
-    const box = await sheet.getByTestId(row).boundingBox()
-    expect(box, row).toBeTruthy()
-    expect(box!.height, `${row} is ${box!.height}px`).toBeGreaterThanOrEqual(TAP_TARGET_PX)
+  /**
+   * EVERY ROW THE SHEET IS SHOWING, not a list of three written by hand.
+   *
+   * It was `["sheet-reset", "sheet-all", "sheet-end"]`, and a row added later
+   * simply was not checked — "Switch to lb" arrived on 2026-09-28 and this
+   * test stayed green without ever measuring it. A hand-written list in a
+   * test whose whole point is "no row is too small to tap" only covers the
+   * rows somebody remembered, which is the same failure the repo's ratchets
+   * and allowlists carry companion assertions for.
+   *
+   * `button, a` scoped to the sheet IS every `SheetRow`: the component renders
+   * one or the other, both with `min-h-11` (components/BottomSheet.tsx). The
+   * count check is what stops this passing by measuring nothing if that ever
+   * changes — a selector that matches zero elements makes a `for` loop green.
+   */
+  const rows = sheet.locator("button, a")
+  const rowCount = await rows.count()
+  expect(rowCount, "the sheet rendered no tappable rows, so this measured nothing")
+    .toBeGreaterThanOrEqual(4)
+  for (let i = 0; i < rowCount; i++) {
+    const row = rows.nth(i)
+    const name = (await row.getAttribute("data-testid")) ?? (await row.innerText()).trim()
+    const box = await row.boundingBox()
+    expect(box, name).toBeTruthy()
+    expect(box!.height, `${name} is ${box!.height}px`).toBeGreaterThanOrEqual(TAP_TARGET_PX)
   }
 
   // End asks first, and says what survives.
