@@ -1,0 +1,63 @@
+# Caddy, in front of the local production build.
+#
+# WHY CADDY IS IN A CONTAINER AND THE APP IS NOT, which looks backwards.
+# Ports 80 and 443 are privileged: binding them needs root or
+# CAP_NET_BIND_SERVICE. There is no passwordless sudo on this machine
+# (verified 2026-10-01: `sudo -n true` asks for a password), so a Caddy binary
+# run as this user cannot bind 443 at all. The Docker daemon already runs as
+# root and this user is in the `docker` group, so a container can publish 443
+# without anybody typing a password. That is the whole reason — not a
+# preference about containers.
+#
+# The app itself is supervised by a systemd USER unit instead
+# (infra/systemd/daygame-local.service.template), because `loginctl
+# enable-linger` succeeded here, which means user units start at boot and
+# restart on crash without privileges either.
+#
+# WHAT CHANGES ON THE SERVER. On Hetzner both of these become ordinary
+# services on one box and the app joins this file as a second service built
+# from an image. The shape here is deliberately the shape there, so the thing
+# being rehearsed is the thing that ships.
+
+services:
+  caddy:
+    image: caddy:2.11-alpine
+    container_name: dg-caddy
+
+    # The host's network namespace, for two reasons that both matter:
+    #   - it binds 80/443 on the host directly, which is what we are testing;
+    #   - `reverse_proxy 127.0.0.1:3100` then reaches the app running on the
+    #     host. With a bridge network it would not — that needs
+    #     host.docker.internal and an --add-host, i.e. a second mechanism to
+    #     get wrong.
+    network_mode: host
+
+    # Comes back after a crash AND after a reboot: `systemctl is-enabled
+    # docker` is `enabled` on this machine, so the daemon starts at boot and
+    # restarts anything with this policy. `always` would also restart it after
+    # a deliberate `docker compose stop`, which is not wanted.
+    restart: unless-stopped
+
+    volumes:
+      - ./caddy/Caddyfile.local:/etc/caddy/Caddyfile:ro
+
+      # The internal CA's root key and the certificates it issues. This MUST
+      # be a persistent volume: lose it and Caddy generates a new root, and
+      # the root you trusted in the browser stops matching, which presents as
+      # a certificate error on a site that worked yesterday.
+      - caddy_data:/data
+      - caddy_config:/config
+
+    # Caddy logs to stdout; `docker logs dg-caddy` is the reader. Capped
+    # because Docker's default json-file driver has no size limit at all, and
+    # an unbounded proxy log on one disk is the M1.7 disk-full failure in
+    # miniature.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

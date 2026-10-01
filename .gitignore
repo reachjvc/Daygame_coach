@@ -103,3 +103,10 @@ coverage/
 
 # Database backups — real data, never committed
 backups/
+
+# Caddy's local CA root, exported by infra/run-local.sh on every run so a
+# browser can be told to trust it. Generated output, and specific to one
+# machine's Caddy data volume — tracking it would churn and would mean nothing
+# on anybody else's box. The public certificate is not a secret; the CA's
+# private key never leaves the named Docker volume.
+infra/caddy/local-root-ca.crt

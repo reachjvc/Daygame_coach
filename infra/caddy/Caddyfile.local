@@ -1,0 +1,80 @@
+# THE LOCAL PRODUCTION REHEARSAL — Caddy in front of a real `next start`.
+#
+# WHY THIS FILE EXISTS. Next.js's own self-hosting guide says to put a reverse
+# proxy in front of the app rather than exposing `next start` to the network:
+# the proxy absorbs malformed requests, slow-connection attacks, payload limits
+# and rate limiting, so the app spends its resources rendering. On Vercel that
+# was somebody else's job. From here it is ours, so it gets a checked-in file
+# rather than a command somebody once typed.
+#
+# WHAT IT PROVES BEFORE A SERVER EXISTS. Three things in this repo depend on
+# being behind an HTTPS proxy and cannot be checked by any unit test:
+#
+#   1. `src/db/authCookies.ts` decides the session cookie's `Secure` flag from
+#      `x-forwarded-proto`. Its own comment says "Vercel always sets it", and a
+#      proxy that does not sets the session cookie WITHOUT `Secure` on every
+#      refresh — silently. Measured through this config on 2026-10-01: Caddy
+#      sends `x-forwarded-proto: https`, `x-forwarded-host` and
+#      `x-forwarded-for`. Verified by observation, not by reading Caddy's docs.
+#   2. The app must not listen on anything but loopback. `next start` binds
+#      every interface unless told otherwise, so the run script passes
+#      `-H 127.0.0.1` and this file is the only public door.
+#   3. Auth redirects are built from `window.location.origin`, so a new origin
+#      has to be on Supabase's redirect allow-list or sign-up and password
+#      reset bounce. That is a dashboard change, listed as a blocker in
+#      docs/plans/local-deploy-caddy-and-cicd.md.
+#
+# NO HSTS HERE, AND IT IS NOT AN OVERSIGHT. Strict-Transport-Security applies
+# to a HOST and ignores the port, so an HSTS header served for `localhost`
+# would make the browser upgrade `http://localhost:3000` to https as well —
+# and :3000 is the owner's `next dev`, which has no certificate. One header
+# here would break the daily driver in a way that looks like a dead dev
+# server. HSTS belongs in the production Caddyfile, on a real domain, and
+# nowhere near localhost.
+
+{
+	# No admin API. It needs no authentication by design and binds :2019; on a
+	# box this is a local privilege path, and here it is simply not needed.
+	admin off
+
+	# Caddy's own CA, because there is no public DNS name yet and ACME cannot
+	# issue for `localhost`. The root has to be trusted once by hand — see
+	# infra/README.md. When the Cloudflare domain lands, the production
+	# Caddyfile uses a real ACME certificate and this line goes away.
+	local_certs
+}
+
+# Both names are served because they resolve differently and the browser is on
+# the other side of WSL: `localhost` is in /etc/hosts as 127.0.0.1, while
+# `daygame.localhost` resolves to ::1 through the stub resolver and is not
+# guaranteed to resolve from Windows at all. Serving both means whichever one
+# answers in the browser is already configured.
+localhost, daygame.localhost {
+	encode zstd gzip
+
+	# The payload ceiling the Next.js guide asks the proxy to own. Nothing in
+	# this app uploads a file; the largest bodies are goal trees and plan
+	# snapshots as JSON, which are kilobytes.
+	request_body {
+		max_size 10MB
+	}
+
+	# Caddy announces itself in every response. A version banner is free
+	# reconnaissance and costs nothing to drop.
+	header {
+		-Server
+	}
+
+	# The app, on loopback only. `next start` is given -H 127.0.0.1 by
+	# infra/run-local.sh, so this is the only route to it.
+	#
+	# X-Forwarded-For / -Proto / -Host are set by Caddy automatically; they are
+	# deliberately NOT written out here, because re-stating a default invites
+	# someone to "tidy" it and change the behaviour the app depends on.
+	reverse_proxy 127.0.0.1:3100 {
+		# A deploy restarts the app. Without this, a request landing in that
+		# window is a 502 in the browser instead of a wait.
+		lb_try_duration 10s
+		lb_try_interval 250ms
+	}
+}

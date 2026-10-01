@@ -1,0 +1,62 @@
+# The local production build, supervised. A template, not a unit: the paths
+# are filled in by infra/run-local.sh so that no absolute path from one
+# machine is checked in as if it were true everywhere.
+#
+# A systemd USER unit, installed to ~/.config/systemd/user/. It needs no
+# privileges, and `loginctl enable-linger` (done by run-local.sh, which
+# succeeded here without sudo) is what makes it start at boot and keep running
+# when no shell is open. Without lingering a user unit dies with the last
+# session, which is the difference between "it is deployed" and "it runs while
+# I am logged in".
+#
+# WHY NOT `npm start`. npm adds a process between systemd and the server, so
+# systemd's SIGTERM reaches npm and the Next.js server never drains. This
+# calls Next directly, which is also what makes TimeoutStopSec below mean
+# anything.
+
+[Unit]
+Description=daygame-coach — local production build on 127.0.0.1:3100
+Documentation=file://@@REPO@@/infra/README.md
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@@REPO@@
+
+# NODE_ENV=production is what gates the test pages off: app/test/layout.tsx
+# calls notFound() under it, and proxy.ts refuses /api/test/* the same way.
+# So this server deliberately does NOT serve the lab pages, exactly like the
+# deployed site — that is a feature of the rehearsal, not a gap in it.
+Environment=NODE_ENV=production
+
+# The build this serves lives in .next-prod, so the owner's `next dev` on
+# :3000 keeps its own .next and the two never fight over a lock.
+Environment=NEXT_DIST_DIR=.next-prod
+
+# Loopback only. `next start` binds every interface unless told otherwise,
+# and Caddy is meant to be the only door in.
+ExecStart=@@NODE@@ @@REPO@@/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3100
+
+Restart=always
+RestartSec=2
+
+# Next.js finishes in-flight requests and runs pending `after()` callbacks on
+# SIGTERM; its self-hosting guide asks for a 10-30s drain window. systemd's
+# default is 90s of waiting followed by SIGKILL, so this shortens the wait
+# without cutting the drain short.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# The SERVER, not the build. Measured on this machine: `next start` for this
+# app sits around 200-300 MB resident. 2 GB is headroom, not a target, and it
+# exists so a leak cannot repeat the 2026-09-18 incident where one Node
+# process took the whole Linux side down. The BUILD's ceiling is a different
+# mechanism entirely — scripts/build.sh.
+MemoryMax=2G
+
+# Nothing here should ever write outside the repo and the temp dir.
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
