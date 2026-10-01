@@ -676,3 +676,57 @@ fails, it is that.
 - It does not add a local Supabase stack (B4).
 - It does not claim any deletion made anything faster. The unit suite's 2× comes
   from M1b's configuration change; M1's deletions are argued on worth alone (R1).
+
+---
+
+## The execution prompt
+
+Paste after `/goal`. Kept here so it survives the session that wrote it.
+
+> Execute `docs/plans/tests-worth-their-keep.md` end to end, every phase, no
+> per-phase approval. Read the plan first, then `docs/known-failures.md`,
+> `.claude/rules/testing.md` and `docs/testing_behavior.md`.
+>
+> **Order:** M0 first and alone — nothing later may claim an improvement without
+> it. Then M1b (one day, a measured 2×, deletes nothing), M4a (one hour), M5, M1,
+> M2, M3, M6 last.
+>
+> **The one rule that governs the whole job:** no number from this checkout is
+> valid unless one session is working in it. Four sessions share this tree. Two of
+> this plan's conclusions were written backwards because a peer was running the
+> unit suite through my measurement window. Before every timing claim, check
+> `ps` for a peer vitest/Playwright/testcontainers Postgres, and check that
+> nothing under `tests/` or `src/` moved while you ran. That is M0's job — build
+> it before you need it, not after.
+>
+> **Deleting tests:** only on a written reason from the D1–D7 list in the plan,
+> with the rule id in the commit message. Never by heuristic. The scan that found
+> 65 files "importing nothing from src/" was wrong on the first one I checked —
+> `db/workoutRepoFinish.test.ts` imports through `vi.doMock` and is a real
+> idempotency test. A scanner gives you a shortlist, never a verdict. Never delete
+> the only cover for a write path in `tests/support/writeCoverage.baseline.json`
+> before its replacement is green.
+>
+> **Every parallelism claim is proved by a run that goes RED when the isolation is
+> removed.** A green parallel suite is not evidence. This applies to M2's
+> per-worker databases and M3's per-worker accounts, and both acceptance criteria
+> say so.
+>
+> **M3 needs the owner's yes** (creating and deleting accounts in the live
+> Supabase project — blocker B1 in the plan). They said they would not be
+> available, so: do everything in M3 that does not touch live auth — the fixture,
+> the per-worker storage state, the chain removal, the worker count, the retry
+> change, the production-build-per-port for local runs — and leave the account
+> creation behind one flag, defaulted off, with the one command the owner runs to
+> turn it on. Do not create auth accounts without that yes. Report it as the one
+> thing outstanding.
+>
+> **Do not** touch `supabase/migrations/`, add a local Supabase stack, or reopen
+> the Hetzner decision. **Do not** re-litigate the 3h45m browser baseline by
+> running it — it is recorded from 179 CI runs in `e2e.yml`. Spend that time once,
+> after M3, on the after-number.
+>
+> Commit each phase separately with its measured before/after. Run `npm run ci`
+> before saying a phase is done. If a phase's measured result contradicts the
+> plan, say so in the reply and fix the plan — the plan has been wrong twice
+> already and both times the measurement was right.
