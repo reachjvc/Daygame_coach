@@ -9,6 +9,13 @@
 #
 # To bypass: User must explicitly say "skip test check" in their message
 
+# `git diff` and `npm test` below both read the working tree, so this hook is
+# only correct from the repo root. Hooks do not get the repo root as their cwd
+# (a stale cwd under node_modules once made the sibling hook fail outright), so
+# derive it from this file's own location instead of trusting the caller.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT" || exit 0
+
 MARKER_FILE="/tmp/.claude-test-check-done"
 
 # If marker exists, test check was already done this turn

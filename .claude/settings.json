@@ -62,11 +62,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/clear-test-marker.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/clear-test-marker.sh"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/known_failures.py --snapshot"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/known_failures.py --snapshot"
           }
         ]
       }
@@ -76,11 +76,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/check-test-results.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-test-results.sh"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/known_failures.py --check"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/known_failures.py --check"
           }
         ]
       }
@@ -90,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/never.py"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/never.py"
           }
         ]
       }
