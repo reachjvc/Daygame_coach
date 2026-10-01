@@ -20,6 +20,13 @@ design is presented and appears in the same message. For code, run
 or permissions. Hand-rolling one pass is not a review. For a plan, see
 `plans.md`.
 
+# When a plan is done
+
+Set its `**Status:**` to `done <date>`. Delete every branch
+`git branch --merged HEAD` lists but `main` and your own, push that, then
+`git worktree remove` and `git worktree prune`. `--merged main` trails the
+trunk. Never `-D`; `-d` checks the upstream, which deleted `beta` 2026-10-01.
+
 **Why a stand-in never feels like one.** The full account, with six worked
 examples, is under "How this plan's author kept being wrong" in
 `docs/plans/life-mastery-deployment.md`. The short version: a stand-in never

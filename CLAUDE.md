@@ -41,17 +41,18 @@ migrations, access control and icon reuse. The ones no hook can catch:
 Before saying what the app does, read `docs/product/map.md` — having code is not
 being reachable. Before proposing work, `docs/product/vision.md`.
 
-Architecture is enforced by `tests/unit/architecture.test.ts`; run it rather than
-memorising it. A cited `docs/` path not on disk is expected: 482 were deleted
+Architecture: run `tests/unit/architecture.test.ts`, don't memorise it.
+A cited `docs/` path not on disk is expected: 482 were deleted
 2026-09-09; `git log --diff-filter=D -- <path>` finds it.
 
 ## Commands
 
-`npm run dev` (localhost:3000) and `npm run test:e2e`. A Stop hook runs `npm test`
-for you and blocks on a failure.
+`npm run dev` (localhost:3000), `npm run test:e2e`. A Stop hook runs `npm test`
+and blocks on failure.
 
-**Commit and push your own work without being asked.** `git commit --only <paths>`
-— a bare commit takes a peer's staged work too.
+**Commit and push your own work without being asked**, with
+`git commit --only <paths>` — a bare commit takes a peer's staged work.
+**A finished plan leaves no branches:** `.claude/rules/finished-work.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -1,8 +1,14 @@
 # Cleanup, and the structure rules that stop it coming back — plan
 
-**Status:** written 2026-10-01, not started. Supersedes nothing. Every number in
-it was measured on `training-rebuild` at `4308cd5c` on 2026-10-01 and the command
-that produced it is given, so you can re-run any of them.
+**Status:** in progress 2026-10-01 — Phase 1b and 1c are done and committed; the
+rest is not started. Supersedes nothing.
+
+Every number here was measured on `training-rebuild` and the command is in the
+appendix. **Re-measure before acting on any count.** Three other sessions commit
+into this working tree: `HEAD` advanced twice while this was being written, the
+count of files importing `@/components/` fell from 278 to 271, the worktree list
+went from 1 to 4 and back to 1, and `docs/plans/` went from 18 files to 20. A
+number here is evidence that something is true, never an input to a script.
 
 ---
 
@@ -16,14 +22,14 @@ folders; the stray files put into their slices; and the structure written down
 once instead of in several places.
 
 Three of those are right and the plan does them. **One premise is wrong, and it
-changes the whole shape of the work**, so it goes first rather than buried:
+changes the shape of the work**, so it goes first rather than buried:
 
 > **There are almost no unused files in this repo. There are 355 unreachable
 > ones.**
 
-I resolved every `@/` and relative import across all 1,622 tracked code files and
-walked the graph from the 155 live route entry points. Of the 629 files in
-`src/`, `components/` and `lib/`:
+I resolved every import across all 1,622 tracked code files and walked the graph
+from the 155 live entry points. Of the 629 files in `src/`, `components/` and
+`lib/`:
 
 | | files |
 |---|---|
@@ -33,518 +39,643 @@ walked the graph from the 155 live route entry points. Of the 629 files in
 | reached by nothing at all | **2** |
 
 Two. `components/ui/GoalIcon.tsx` and `src/qa/providers/claude.ts`. A tool that
-hunts unused files would report those two and tell you the repo is clean.
+hunts unused files reports those two and tells you the repo is clean.
 
-The weight is somewhere else: **`app/test/` is 276 files, and none of them is
-reachable from the product.** 220 of those files — 95,643 lines — have not been
-touched in six months or more. They pull 77 `src/` files into existence behind
-them. That is the dead weight, and it is invisible to "find unused files" because
-every one of those files *is* imported — by another dead file.
+The weight is elsewhere. **`app/test/` is 280 files and 104,535 lines — 63
+`page.tsx` routes under 43 top-level entries — and no live route reaches any of
+it.** 220 of those files (95,643 lines) have no commit in six months, and they
+hold 77 `src/` files alive behind them. Every one of those files *is* imported —
+by another dead file.
 
 So this plan deletes by **reachability**, not by whether a symbol is referenced.
 
-## The second thing that changes the shape: your first ask is budget-blocked
+Where the premise *was* right, and I understated it: **618 exported names are not
+used by any other file** — **142 used nowhere at all**, **476 used only inside
+their own file** (drop the `export` keyword), and **96 in lab-only files** that
+die with their page.
 
-You asked me to improve `CLAUDE.md`. I cannot add a sentence to it without
-removing one, and that is deliberate — you built the gate yourself.
+## The second thing: your first ask was budget-blocked, and is now done
 
-`tests/unit/docs/instructionBudget.test.ts` caps the instruction files, and here
-is where they stand today:
+You asked me to improve `CLAUDE.md`. I could not add a sentence without removing
+one — you built that gate yourself. `tests/unit/docs/instructionBudget.test.ts`
+caps the instruction files, and every one was at its ceiling: `CLAUDE.md`
+389/391, `.claude/rules/` 2,710/2,710, `docs/known-failures.md` 948/950,
+`MEMORY.md` 416/430.
 
-| file | words | budget | headroom |
-|---|---|---|---|
-| `CLAUDE.md` | 389 | 391 | **2** |
-| `.claude/rules/` (all 8 files) | 2,710 | 2,710 | **0** |
-| `docs/known-failures.md` | 948 | 950 | **2** |
-| `MEMORY.md` | 416 | 430 | 14 |
+**This is done — the one part of the plan already executed**, because housekeeping
+to rule files is a standing never-ask and you asked for it directly:
 
-Every one is at its ceiling. The test's own comment says it: *"To add a line, cut
-one. That is not an obstacle to route around by raising the cap."*
+- **`.claude/rules/product-map.md`** lost its closing paragraph (the three facts
+  about `/test/*` 404ing, `health/`+`exercising/` having no live page, `goals/`
+  being 100k lines). I checked each against `docs/product/map.md` first — all
+  three are there at lines 107, 159, 233, 238–239, and line 10 of the rule
+  already sends you to that file. **A true duplicate.**
+- **`.claude/rules/finished-work.md`** gained `# When a plan is done`. It
+  triggers on `docs/plans/**`, which is exactly when a plan finishes.
+- **`CLAUDE.md`** gained `**A finished plan leaves no branches:**` pointing at
+  that rule, paid for by shortening the architecture and commands lines.
+  **387 of 391 — four words better than it started.** Rules: 2,709 of 2,710.
 
-There is also **no `AGENTS.md`** in this repo. You mentioned "agents.md /
-claude.md" — `CLAUDE.md` is the only one, and I have not invented the other.
+It is in `CLAUDE.md` as well because a branch is deleted at the end of a turn,
+when no `docs/plans/` path may have been touched and the path-triggered rule will
+not have loaded.
 
-So the git-hygiene rule you asked for costs words you do not have, and deciding
-how to pay is yours, not mine. It is open question 1, with my recommendation.
+**There is no `AGENTS.md`.** You mentioned "agents.md / claude.md"; `CLAUDE.md`
+is the only one and I have not invented the other.
+
+### And the first version of that rule was wrong — I shipped it, then caught it
+
+I wrote it keyed on `git branch --merged main`, which is the obvious thing and is
+useless here. **`main` is 0 commits ahead and 421 behind `training-rebuild`, and
+`git branch --merged training-rebuild` lists `main`.** `main` is not the trunk;
+it is wholly contained in the branch you are working on. A rule keyed on
+`--merged main` can never match anything, forever.
+
+The rule now reads `git branch --merged HEAD`, minus `main` and your own branch,
+so it works whichever branch is the integration branch and needs no hardcoded
+name — which is this plan's Rule 2 applied to the rule itself. Run today it
+returns **zero branches**, which is the honest answer: there are three branches
+and two hold unmerged work.
 
 ## The third thing: the structure rule exists and checks 44% of the code
 
 You said the smells suggest the architecture is not written down well enough. It
-is written down. The problem is sharper and worse than that.
+is written down. The problem is sharper and worse.
 
 `tests/unit/architecture.test.ts` has a `Slice Structure` block enforcing "each
 slice has a `types.ts`", "each slice has a service file", and "type exports only
-in `types.ts`". It applies them to a **hand-typed list of eight slices**:
+in `types.ts`". It applies them to a **hand-typed list of eight slices** at line
+295:
 
 ```js
 const slices = ['qa', 'inner-game', 'scenarios', 'tracking',
                 'profile', 'settings', 'articles', 'programs']
 ```
 
-`src/` has **eighteen** directories. The ten not on that list are `goals`
-(198 files), `db` (47), `timetrack` (36), `vice` (31), `shared` (22), `health`,
-`home`, `exercising`, `dashboard`, `api_ai`.
+`src/` has **eighteen** directories. The ten omitted are `goals` (198 files),
+`db` (47), `timetrack` (36), `vice` (31), `shared` (22), `health`, `home`,
+`exercising`, `dashboard`, `api_ai`. Extend the rule to the directory listing and
+**138 type-export violations appear at once** — 77 in `goals`, 27 in `db`, 13 in
+`timetrack`, 12 in `vice`. `src/home` and `src/shared` have no `types.ts` at all.
 
-Extend the rule to every directory under `src/` and **138 type-export violations
-appear immediately** — 77 in `goals`, 27 in `db`, 13 in `timetrack`, 12 in
-`vice`. And `src/home` and `src/shared` have no `types.ts` at all.
-
-The test already knows this can happen. Its own comment reads:
+The test already knows this can happen. Its own comment:
 
 > *"`programs` was absent, and so the type rule never looked at the gym.
 > `TrainingCardState`, `LiftProgress` and `PlateLoad` all lived in
 > `programsService.ts` for months with nothing noticing."*
 
-Somebody found this exact bug once, fixed it for one slice by typing `programs`
-into the array, and left the mechanism — a hand-maintained list with nothing
-checking it against the directory — fully intact. **That is why the biggest slice
-in the repo has a 2,558-line `types.ts` and 232 exports nothing else names.** Not
-a missing rule. A rule whose scope silently excludes the code that needed it.
+Somebody found this exact bug once, fixed it by typing `programs` into the array,
+and left the mechanism intact. **That is why the biggest slice has a 2,558-line
+`types.ts` and 232 exports nothing else names.** Not a missing rule — a rule whose
+scope silently excluded the code that needed it.
 
-So the single-source-of-truth work is not "write an architecture doc". It is:
-**no rule in this repo may have a hand-maintained scope.** Every list of what a
-rule covers is derived from the filesystem, or a test fails.
+**And it is not one instance. It is four.**
+
+1. The `slices` array above — 8 of 18.
+2. `tests/unit/architecture/sharedComponentsTested.test.ts` reads as a repo-wide
+   shared-component guard and is scoped at line 35 to `src/programs/components`
+   only.
+3. `orientation.test.ts` has **no reverse check**: it fails when a new slice is
+   missing from `docs/product/map.md` and stays green when a slice is *deleted*
+   and the map goes on describing it. Phase 3 deletes things, so this closes
+   first.
+4. `docs/product/map.md:169` says **"The Black Box reads none of the corpus."**
+   It does. Traced: `app/life-mastery/quit-vice/page.tsx` → `BlackBoxPage`
+   (imports 65–66, renders 776 and 788) → `ThoughtDoor`/`UrgeNow` → `OneVoice`
+   from `../Voices` → `TESTIMONIALS` and `TECHNIQUES` from `src/vice/data/`. The
+   live Black Box reads all 381 testimonials and 196 techniques.
+
+`.claude/rules/product-map.md` already records this exact failure happening to the
+`health/` line on 2026-09-19, and says why: nothing tests whether the sentences
+are true, only that each slice is *named*. It has now happened again, to a line
+about the newest feature.
+
+**So the single-source-of-truth work is not "write an architecture doc". It is:
+no rule and no document may have a hand-maintained scope.** Everything a rule
+covers is derived from the filesystem, checked in both directions, or it rots.
+
+### Where the knowledge actually lives: nine places, not one
+
+`CLAUDE.md:44` says "Architecture: run `tests/unit/architecture.test.ts`, don't
+memorise it." That one file is 3,621 lines, **65 tests in 23 describes, and 20
+allowlists** (3 at module scope, 17 declared inside describe blocks). It has
+**nine sibling files in `tests/unit/architecture/` carrying 45 more tests — 10
+files and 111 tests in total — and `CLAUDE.md` names none of the nine.**
+
+The other eight homes: `.claude/rules/` (8 path-triggered files),
+`docs/product/map.md`, `docs/testing_behavior.md`, `docs/known-failures.md`,
+`tests/unit/docs/instructionBudget.test.ts` (the word caps that block any new
+prose), `tests/unit/docs/instructionInvariants.test.ts` (the clause-survival
+list), `tests/unit/architecture/*` (above), and `src/db/paging.ts`'s own header,
+which duplicates `.claude/rules/database.md:40-50` figure for figure.
 
 ## The four rules this plan follows
 
-These are what I am asking you to approve. Not the phase count, not the file
+These are what I am asking you to approve. Not the phase count or the file
 counts — those are outputs and they will move.
 
-**Rule 1 — Unreachable is the unit of deletion, not unused.**
-Code goes when no live route reaches it, not when no symbol references it.
-*Cost if wrong:* I delete a lab you were still using. Mitigated by gating every
-deletion on six months of staleness and tagging before each one, so recovery is
-one `git checkout`. The risk is real but cheap; the alternative is keeping 95,643
-lines forever because something might want them.
+**Rule 1 — Unreachable is the unit of deletion, not unused.** Code goes when no
+live route reaches it, not when no symbol references it.
+*Cost if wrong:* I delete a lab you were using. Mitigated by gating on six months
+of staleness and tagging first. **This rule nearly bit me — see "What I got
+wrong" — because a folder can be mostly lab and partly live.**
 
-**Rule 2 — No rule may have a hand-maintained scope.**
-Every rule derives what it covers from the filesystem, and a test fails when a
-new slice or route appears outside it. `orientation.test.ts` already does this for
-the product map; nothing does it for the architecture rules.
-*Cost if wrong:* exactly what happened above — a rule that reads as universal,
-covers less than half, and hides 138 violations for months. This is the most
-expensive thing in the plan to get wrong, which is why it is Phase 1.
+**Rule 2 — No rule and no document may have a hand-maintained scope.** Derive it
+from the filesystem and check both directions.
+*Cost if wrong:* four instances above, hiding 138 violations and one false
+sentence about the newest feature. The most expensive thing to get wrong.
 
 **Rule 3 — Instruction budget is paid, never raised.**
-Words added to `CLAUDE.md` or `.claude/rules/` come out of the same files.
-*Cost if wrong:* the 4,386-word state returns, and with it the failure that
-caused the budget — an agent answering "this is a live, paid product taking real
-Stripe subscriptions" about a product that has never had a customer.
+*Cost if wrong:* the 4,386-word state returns, and with it an agent answering
+"this is a live, paid product taking real Stripe subscriptions" about a product
+that has never had a customer.
 
 **Rule 4 — One phase, one green tree, one commit.**
-Each phase ends with `npm test`, `tsc`, the lint ratchet and a production build
-all green, and is committed on its own with `git commit --only <paths>`.
-*Cost if wrong:* `HEAD` that does not compile between two commits. Three other
+*Cost if wrong:* a `HEAD` that does not compile between two commits. Three other
 sessions share this checkout and `.husky/pre-commit` tests the tree, so a broken
-`HEAD` blocks all of them from committing. This has happened three times already.
+`HEAD` blocks all of them. This has happened three times already.
 
-## Every gate works. I ran all four.
+## The gates: which can go green, and which never can
 
-This is the part that decides whether the plan is safe to execute, so I ran it
-rather than assuming:
+**Two can never pass, by design. Writing "typecheck clean" as an acceptance
+criterion would make this plan unachievable.**
 
 | gate | command | result |
 |---|---|---|
-| unit suite | `npm test` | **6,627 pass, 1 skipped, 384 files, 49.7s** |
-| types | `npx tsc --noEmit` | **98 errors — exactly `tsc-baseline.json`** |
+| unit suite | `npm test` | **6,634 pass, 1 skipped, 385 files, 48s** |
+| types | `node scripts/typecheck-ratchet.mjs` | **"Type errors: 98, none new."** |
+| | `npx tsc --noEmit` | **exits 1 forever — 98 *is* the baseline** |
 | lint | `npm run lint:ratchet` | **"Lint errors: 323, none new."** |
-| production build | `NEXT_DIST_DIR=.next-verify BUILD_MEMORY_CAP=12G bash scripts/build.sh --webpack` | **✓ Compiled successfully in 42s** |
-| e2e listing | `npx playwright test --list` | **1,196 tests in 84 files** |
+| | `npm run lint` | **red by design — 323 baselined errors** |
+| build | `NEXT_DIST_DIR=.next-verify bash scripts/build.sh --webpack` | **✓ Compiled successfully in 42s** |
+| e2e listing | `npx playwright test --list` | **1,196 tests, 84 files, 44 projects** |
+| integration | `npm run test:integration` | **369s, 1 failure beside a peer session** |
 | the app | `curl localhost:3000` | **200** |
 
-Two of those deserve a note, because the received wisdom says otherwise.
+**The build works, and it is what makes this plan possible.** `scripts/build.sh`
+puts a 12 GB cgroup ceiling on it and refuses to start if it cannot, so the
+Turbopack runaway that froze this machine three times in 2026-09 cannot recur;
+`package.json` already passes `--webpack`. Next 16 rejects `--distDir` outright,
+but `next.config.mjs` reads `NEXT_DIST_DIR`, so a verification build runs beside
+your dev server. **75 seconds wall clock.**
 
-**The build works.** `scripts/build.sh` puts a 12 GB cgroup ceiling on it and
-`package.json` already passes `--webpack`, so the Turbopack memory runaway that
-froze this machine three times in 2026-09 cannot recur. `next build` in Next 16
-no longer accepts `--distDir` — it errors — but `next.config.mjs` already reads
-`NEXT_DIST_DIR`, so a verification build can run beside your dev server without
-fighting it for `.next`. **A 278-file import move is build-verifiable in about
-three minutes.** That removes the single biggest risk in Phase 4.
+**And it catches a bad import path even though types are ignored** — proven, not
+assumed: a probe importing `@/src/shared/definitelyNotARealModule` failed in 65s
+with `Module not found`. `typescript.ignoreBuildErrors: true` suppresses *type*
+errors, not webpack resolution.
 
-**But a green build does not mean green types.** `next.config.mjs` sets
-`typescript.ignoreBuildErrors: true`. The build proves the modules resolve; only
-`tsc` proves the types. Both are needed and they are not substitutes.
+**The integration suite cannot be a per-phase gate.** 369s, and it fails beside
+another session — `vitest.integration.config.ts` already sets
+`fileParallelism: false`, so the contention is between *sessions*.
+
+**Your dev server is three days old.** PID 928644, 1.6 GB resident. A three-day
+HMR graph can keep serving a module a codemod has deleted — this repo's named
+repeating failure, checking a stand-in instead of the thing. **It must be
+restarted after every file-moving phase**, and not by me: it serves you and two
+peer sessions and there is no deployed site.
+
+**A fresh worktree has no `node_modules`,** so `vitest` cannot start and these
+gates cannot run in one. `ln -sfn <repo>/node_modules <worktree>/node_modules`
+first, or the transaction stalls at the verification step.
+
+**Capture vitest output to a file, never the terminal tail:**
+`npx vitest run tests/unit --reporter=json --outputFile=/tmp/run.json`. A probe
+run reported "9 failed" while naming only 3, because the tail truncated it.
+
+## Two security notes, unasked
+
+**1. `app/api/test/` is eleven endpoints, ten of them unauthenticated.** Six
+write files under `process.cwd()` from an unauthenticated POST body, and one
+joins a URL segment into a file path. They are held off the internet by a single
+early return in `proxy.ts` plus one matcher line, and
+`testRoutesSealed.test.ts`'s own comment says reordering that guard leaves
+everything compiling while the endpoints start answering.
+
+Priced for this stage: nothing is deployed, nobody has paid, so this is not an
+incident and I am not calling it one. It becomes one the day something ships.
+Their only consumers are three lab benches last touched 2026-02-06, 2026-03-04
+and 2026-03-11 — so retiring the surface is cheaper than guarding it forever.
+
+**2. The ask-first guardrail cannot fire in an unattended session.**
+`.claude/hooks/never.py` is correct — I fed it the payloads and it returns `ask`
+for `src/shared/iconRoles.ts`; selftest 27/27. But `ask` needs a human. In a
+non-interactive session there is none, and an agent of mine edited
+`src/shared/iconRoles.ts` with no prompt at all (it reverted; the tree is clean).
+The five `deny` classes still hold, because `deny` needs nobody. **The seven
+`ask` paths — migrations, `profilesRepo.ts` (who gets paid access), `stripe.ts`,
+`products.ts`, `CheckoutButton.ts`, `app/auth/`, `iconRoles.ts` — are unguarded
+in any background run.** Separately the hook only inspects `Write`/`Edit`/
+`NotebookEdit` file paths and Bash command text, so
+`git mv src/db/profilesRepo.ts ...` is never asked about. It needs a
+`deny`-plus-allowlist shape rather than an `ask`, and that is a decision rather
+than a patch.
 
 ## What you will see after each phase
 
-Nothing in the product changes. Not one user-facing pixel, in any phase. That is
-the point — this is a cleanup, and any phase that changes behaviour has a bug.
+Nothing in the product changes. Not one user-facing pixel. Any phase that changes
+behaviour has a bug.
 
-- **Phase 0** — `npm run smells` prints the five numbers in this plan. You can
-  check any claim here yourself, and watch them fall.
-- **Phase 1** — the structure rules cover all 18 slices instead of 8, and
-  `CLAUDE.md` says what to do with a branch when a plan is done.
+- **Phase 0** — `npm run smells` prints these numbers, so you can check any claim
+  and watch them fall.
+- **Phase 1** — partly done. Rules cover all 18 slices in both directions; the
+  map's false line is fixed.
 - **Phase 2** — 118 files gone, all provably referenced by nothing.
-- **Phase 3** — the lab is 56 files instead of 276. ~131,000 lines gone. 131 of
-  the 323 lint errors go with them, for free.
-- **Phase 4** — one home for shared code instead of two. `@/components/...`
-  becomes `@/src/shared/...` in 278 files.
-- **Phase 5** — `src/goals` is six subslices instead of 198 flat files.
-- **Phase 6** — `eslint-baseline.json` and `tsc-baseline.json` at or near zero.
+- **Phase 3** — the lab is 60 folders' worth of files instead of 280 files, and
+  131 of the 323 lint errors go with it for free.
+- **Phase 4** — the shared-code rule written down and enforced instead of being
+  one sentence in a product doc.
+- **Phase 5** — `src/goals`'s existing folder structure promoted to real
+  subslices and enforced.
+- **Phase 6** — the baselines at or near zero.
 - **Phase 7** — a test fails if any of it starts coming back.
 
-## Blockers — the ones that are yours to answer
+## Blockers — the ones that are yours
 
-Four, numbered, one line each. Everything else in this plan I will do and report.
+1. **Deleting 220 lab files / 95,643 lines (Phase 3).** The one
+   irreversible-feeling step, though git keeps it and I will tag first.
+   *Recommendation: yes*, gated on six months of no commits, keeping
+   `app/test/archive/` (touched 2026-09-25, guarded by the architecture test and
+   an e2e spec).
+2. **`src/shared/iconRoles.ts`.** Ask-first by name; the `GoalIcon.tsx` deletion
+   touches it. *Recommendation: approve.* Note the hook will not actually stop an
+   unattended agent here.
+3. **An exclusive window for Phases 3 and 5.** A multi-hundred-file codemod in a
+   tree three sessions commit into cannot be made safe by care alone; `git stash`
+   is banned, so a mid-codemod conflict has no cheap exit. *Recommendation: yes,
+   and restart the dev server afterwards.*
+4. **Whether `app/api/test/` and its three benches go** (security note 1).
+   *Recommendation: delete all three and `app/api/test` with them.* If you want
+   one bench, keep only the endpoints it needs and leave the proxy guard and
+   `testRoutesSealed.test.ts` exactly as they are.
+5. **`beta`, and the two stashes.** `beta` is 1 commit ahead and 480 behind; its
+   content is a strip of `src/articles`, which still exists on `training-rebuild`,
+   so the trunk already rejected it. *Recommendation: delete `beta` local and
+   remote without cherry-picking, and record why in the message.* **The two
+   stashes: leave both alone forever.** `never.py` forbids every stash write,
+   memory says one holds irreplaceable work, and which one is **unverified** —
+   a third state, not a pass. `git stash show -p stash@{1}` is permitted and is
+   yours to read, not an agent's to act on.
 
-1. **Deleting 220 lab files / 95,643 lines (Phase 3).** Recoverable from git and
-   from a tag I will push first, but it is the one irreversible-feeling step.
-   *Recommendation: yes.* Gate it on six months of no commits, tag
-   `lab-before-prune` first, and keep `app/test/archive/` — which you touched on
-   2026-09-25 and which the architecture test already guards — untouched.
-2. **`src/shared/iconRoles.ts`.** `.claude/hooks/never.py` asks first on this
-   file by name, and both the `GoalIcon.tsx` deletion and the `components/` move
-   touch it. *Recommendation: approve both.* `GoalIcon` is one of the two files
-   in the repo that nothing imports, and the move only rewrites a path string.
-3. **How to pay for the instruction words (Phase 1).** See open question 1.
-   *Recommendation: cut, do not raise the cap.*
-4. **Whether a production build is required before each phase merges.**
-   It costs three minutes and it is the only check that catches a broken import
-   path. *Recommendation: yes, required for Phases 2–5, which move files.*
-
-I did not put `app/auth/` on this list: nothing in this plan touches it, so the
-hook's fourth ask-first path never comes up.
+Nothing in this plan touches `app/auth/`.
 
 ## Open questions, each with my recommendation
 
-**1. How do we pay for the git-hygiene words?**
-`CLAUDE.md` has 2 words of headroom and `.claude/rules/` has none. Three options:
-pay by cutting, raise a cap, or put the rule somewhere with no budget (a script
-that prints it, or a hook).
-*Recommendation: pay by cutting, and spend it in `.claude/rules/finished-work.md`
-rather than `CLAUDE.md`.* That file already triggers on `docs/plans/**`, which is
-exactly the moment a plan finishes and a branch wants deleting — so the words
-arrive when they are relevant instead of in every session. Pay for them out of
-`.claude/rules/product-map.md` (23 lines, and the three sentences it spends
-explaining why the map exists are also the first paragraph of `docs/product/map.md`
-itself, so one copy can go). Then spend **one** line of `CLAUDE.md`'s two words of
-headroom plus a short cut, because a branch is cleaned up at the end of a turn
-when no `docs/plans/` path may have been touched at all, and a path-triggered rule
-will not have loaded. Exact diff in Phase 1.
+**1. Where does shared UI live — and is one home even right?**
+I started from "two homes is a smell, collapse them". That was wrong, and
+checking it reversed my answer twice over. `docs/product/map.md:146` states a
+*rule*: `OfflineShell` moved to `src/shared/components/` **"because two pages
+mount it."** And the move is more expensive than the first draft of this plan
+said: `architecture.test.ts:1300` filters candidates with
+`rel.includes('/components/')`, which root `components/ClockSync.tsx` never
+matches (no leading slash) but `src/shared/components/ClockSync.tsx` does — and
+`ClockSync.tsx:77,85` call `fetch()`, so it would trip "no NEW screen fetches its
+own data". A trial run of the move **failed nine test files**, not zero.
+*Recommendation: keep both homes and write the rule down where it is enforced.*
+The problem was never two folders — it is that the rule governing them lives in
+one passing sentence of a product document, is in none of the architecture rules,
+and nothing checks it. **This reverses a whole phase of the first draft, and the
+reversal is the most useful thing checking produced.**
 
 **2. Does `app/test/` stay as a concept?**
-`docs/product/map.md` calls it "the laboratory" deliberately, and it is where you
-prototype. Pruning 220 stale files does not answer whether the next prototype
-goes there.
-*Recommendation: keep it, with a documented half-life.* A lab page with no commit
-in six months is deleted, and a test lists the candidates rather than failing — a
-test that fails on the calendar fails on a day you did nothing wrong. Keeping the
-concept is right; it is how you work. What was missing is anything that ever
-clears it out.
+It is the laboratory on purpose, and 15 of the 43 entries are active.
+*Recommendation: keep it, and add the marker that makes this question
+unrepeatable* — `app/test/LABS.md`, one line of status per route, plus a test
+that fails when a `page.tsx` appears with no entry. The folder was never the
+problem; "lab" and "abandoned" were stored in it with nothing telling them apart.
 
-**3. `src/shared/components/` or `src/shared/ui/` — and are they one home or two?**
-`src/shared/components/` already exists with 5 files, and they are not the same
-kind of thing as the 18 in `components/ui/`. `ErrorBoundary`, `OfflineShell`,
-`StaleWorkerCleanup` are app-shell plumbing mounted once; `button`, `input`,
-`select` are primitives used 256 times.
-*Recommendation: two homes.* `src/shared/ui/` for the primitives (the 18 shadcn
-files plus `BottomSheet` and `stepper`), `src/shared/components/` for the shell
-plumbing, and `src/shared/chrome/` for `AppHeader`, `MobileNav`, `MobileTabBar`,
-`navTabs.ts`, `BackLink` — the navigation, which is neither. Collapsing all three
-into one folder of 31 files recreates the flat-folder problem one level down.
+**3. Delete the nine superseded goals generations, or archive them first?**
+203 files, 89,175 lines, 7.4% of the tracked repo, 38% of its lint debt.
+*Recommendation: delete, build no archive.* Git is the archive —
+`git log --diff-filter=D -- <path>` already finds the 482 docs deleted on
+2026-09-09 and `CLAUDE.md` teaches that move, so a second archive adds a place to
+look without adding anything to find. Trial-run: **zero new type errors, 124
+fewer lint errors, 9 fewer type errors, zero `src/` files touched, two guard
+files to update.**
 
 **4. The 41 imports where `src/db` reaches up into feature slices.**
-The rule is "slices depend on `db`". Measured, `db` imports from `programs` (24
-statements), `tracking` (6), `health` (5), `goals` (3), `scenarios` (2), `vice`
-(1) — mostly for types and a few services. The dependency runs both ways today.
-*Recommendation: bless it for now, with a shrinking allowlist, and do not fix it
-in this plan.* Most of those 41 are `import type` for a row shape, which is
-harmless; untangling the rest means moving types between slices, which is Phase 5
-work for `goals` and a separate plan for `programs`. Write it down as debt with a
-number so it cannot grow — that is the honest move, and pretending a cleanup plan
-can also invert the data layer is not.
+`db` imports from `programs` (24, including a re-export at
+`src/db/workoutRepo.ts:1844`), `tracking` (6), `health` (5), `goals` (3),
+`scenarios` (2), `vice` (1). `db` is not a bottom layer; it is entangled with
+`programs` both ways.
+*Recommendation: bless it with a shrinking allowlist, do not fix it here.* Most
+are `import type` for a row shape. Untangling the rest means moving types between
+slices; pretending a cleanup plan can also invert the data layer is not honest.
 
 **5. Generalise "one door between slices" to all slice pairs?**
-The architecture test has `no new direct import from src/goals into src/programs`
-with a shrinking allowlist, and `src/programs/forLifeMastery.ts` is the door.
-Generalising it to every pair starts at **100 import statements across 23 edges**
-(59 of them not involving `db`).
-*Recommendation: not yet — adopt it per pair, highest first.* A rule that starts
-at 100 needs an allowlist of 100, and a 100-entry allowlist is read by nobody.
-The three pairs worth a door of their own, by weight: `db → programs` (24),
-`programs → health` (8), `goals → programs` (8, already has one). Do those three
-and the generalised rule starts at a number somebody will actually drive down.
+Generalising starts at **100 import statements across 23 edges** (59 without
+`db`). *Recommendation: not yet — adopt per pair, highest first:* `db → programs`
+(24), `programs → health` (8), `goals → programs` (8, already has a door at
+`src/programs/forLifeMastery.ts`). A rule that starts at 100 needs a 100-entry
+allowlist and nobody reads one.
 
 **6. What happens to a plan file when its plan is done?**
-There are 18 in `docs/plans/`, 17,026 lines. Some describe finished work; nothing
-in the repo says which.
-*Recommendation: a `**Status:**` line that a test requires, and nothing moves.*
-Every plan already opens with one informally — this plan does. Make it required
-and make the vocabulary fixed (`not started` / `in progress` / `done <date>` /
-`superseded by <file>`). Do not archive or delete: you cite old plans for their
-reasoning, `training-overhaul.md` is cited by `training-rebuild.md` for exactly
-that, and the 482 docs deleted on 2026-09-09 are the standing argument against
-tidying by deletion.
+20 files on disk now (two were written during this session).
+*Recommendation: a required `**Status:**` line with fixed lifecycle vocabulary —
+`DRAFT`, `APPROVED`, `EXECUTING`, `DONE`, `SUPERSEDED` — in place, and nothing
+moves.* Lifecycle only, not built-state: the banner points at `map.md` for what
+is built, so there is one owner per fact. Do not archive or delete — you cite old
+plans for their reasoning (`training-rebuild.md` cites `training-overhaul.md`),
+and the 482 deleted docs are the standing argument. If you want a tidier folder,
+the five done-looking plans with **zero inbound references** can move for free:
+`training-three-doors`, `training-overhaul`, `one-hub`, `life-mastery-simple`,
+`life-mastery-off-the-bench`. `life-mastery-everything-saves` (7 refs) and
+`vice-finished` (6) must not move.
 
-**7. Do the six `goals` subslices each get their own `types.ts`?**
-Once Rule 2 lands, `goals` is governed, and the rule is "type exports only in
-`types.ts`" — today that is one 2,558-line file for 198 files of code.
-*Recommendation: yes, one `types.ts` per subslice, and change the rule to mean
-"the nearest `types.ts` up the tree".* Splitting a 2,558-line type file six ways
-and then banning the six pieces would be absurd, and a single shared type file is
-how `goals` got 77 violations and 232 unreferenced exports in the first place.
+**7. Do the `goals` subslices each get their own `types.ts`, and does `goals`
+join the `slices` array now?**
+*Recommendation: own `types.ts` per subslice — yes. Adding `goals` to the array
+now — no.* I measured it: **77 files in `src/goals` violate the type-export rule
+today.** Writing a 77-entry allowlist triples the existing 27 and makes the
+ratchet mostly grandfather, the opposite of that file's own "EVERY LIST HERE
+SHRINKS". And each subslice's own `types.ts` is **automatically exempt** — the
+filter is `!f.endsWith('types.ts')` over a recursive walk, proven by
+`src/scenarios/{keepitgoing,openers}/types.ts` being absent from the allowlist.
+So the 77 shrinks on its own as Phase 5 lands. Add `goals` when it is under 20.
+**Good news:** `orientation.test.ts`'s `readdirSync` is non-recursive, so
+**subslices need no `docs/product/map.md` edit.**
 
-## What I got wrong while writing this
+**8. A dead-export ratchet, or install knip?**
+Nothing is installed — no knip, ts-prune, depcheck, madge or unimported, verified
+against `node_modules` and `package-lock.json`.
+*Recommendation: write the ratchet.* knip reports per-run totals, and
+`scripts/lint-ratchet.mjs`'s own header argues that totals are the wrong unit:
+*"fix two unused variables in a file and add two others and a count would be
+unchanged, so a brand-new error would pass."* A ratchet inherits
+`scripts/lib/ratchet.mjs` and the `--update`/`--accept-new` convention you know.
 
-Two things, both worth your knowing because one of them touched the repo.
+**9. The research content in `src/goals/data` that only a lab page renders.**
+A mechanical reading says lab-only, therefore delete.
+*Recommendation: keep all ten, delete none — and this nearly went wrong.*
+`tests/unit/goals/visionPlanService.test.ts` imports `WORKOUT_SPLITS`,
+`MANIFESTO_PROGRAM_CREDO`, `INCANTATION_DECK`, `MONEY_JARS`, `PRINCIPLES` and
+`buildExamplePlan` from them, and **`visionPlanService` is live**;
+`lifeMasteryCopyLint.test.ts` prose-lints 16 of their exports. And four of them
+(`lifeMasteryBeliefs`, `lifeMasteryContent`, `lifeMasteryExemplar`,
+`lifeMasterySingle`) each say *"every quote here is verbatim from
+lifeMasteryCorpus.ts"* — so `lifeMasteryCorpus.ts` (8,868 lines) is the evidence
+behind live content and deleting it makes those claims uncheckable. Its only two
+importers are unit tests, so **move it to `tests/fixtures/`** rather than delete
+it. The question underneath is yours: does this content have a shipping home
+coming, or is the lab page its final form? If it is the final form, the honest
+follow-up is to delete the lab page and the copy-lint together — prose-linting
+text nobody can read is work with no reader.
 
-**I deleted the `beta` branch.** I wanted to document that `git branch -d`
-refuses an unmerged branch, so I ran it on `beta` expecting a refusal. It
-deleted it. `git branch -d` checks whether the branch is merged into **its own
-upstream**, not into `HEAD` — and `beta` was merged to `origin/beta`, so `-d`
-was satisfied and said so in a warning while deleting. I restored it
-immediately to `b9b808e5` with its upstream tracking; it is byte-identical to
-`origin/beta` and nothing was lost.
+**10. Is `main` or `training-rebuild` the integration branch?**
+`main` is 0 ahead, 421 behind, and wholly contained in `training-rebuild`.
+*Recommendation: say in one line that `training-rebuild` is the de facto trunk,
+and key every check on `--merged HEAD` rather than a branch name.* Merging
+`training-rebuild` into `main` is a release, not a cleanup, and must not be
+bundled into this plan.
 
-That is a verified hazard rather than a theory, and it is the exact trap in the
-rule you asked for: **"delete merged branches" plus `git branch -d` deletes
-branches that are merged nowhere you care about.** Phase 1's rule uses
-`git branch --merged main` as the test and never relies on `-d` to protect
-anything.
+**11. Should `never.py` ask or deny on branch and worktree deletion?**
+*Recommendation: ask, never deny.* The accident worth preventing is the
+unconsidered one — my own `git branch -d beta` — and a prompt stops it for one
+keystroke, which is the bargain `ASK_FIRST` already strikes. Deny would mean
+`CLAUDE.md` tells agents to do something the hook forbids. Note security note 2:
+an `ask` is worth nothing unattended, so this is a guard for interactive work
+only.
 
-**I tried `next build --distDir`,** which Next 16 rejects outright, and my
-wrapper reported `exit: 0` because the real exit code was swallowed by a pipe
-into `tail`. A pipeline's exit status is its last command's. Phase 0's script
-sets `set -o pipefail` for this reason.
+## What I got wrong, and what checking changed
+
+Four things. Two touched the repo and one would have broken the live product.
+
+**I deleted the `beta` branch.** I ran `git branch -d beta` expecting a refusal,
+to document that `-d` protects unmerged work. It deleted it. **`-d` checks the
+branch against its own upstream, not against `HEAD`** — `beta` was merged to
+`origin/beta`, so `-d` was satisfied and warned while deleting. Restored to
+`b9b808e5` with its tracking, byte-identical to `origin/beta`, nothing lost. An
+agent of mine independently repeated the same experiment with the same result.
+Every branch here tracks an origin counterpart, so **`-d` is as destructive as
+`-D` for all three.**
+
+**I shipped the cleanup rule keyed on `--merged main`, which can never match.**
+Caught after committing, fixed to `--merged HEAD`. See above.
+
+**I listed `src/goals/components/views` and `setup` as lab-only and slated them
+for deletion. Both contain live code, and deleting the folders would have broken
+the live Life Mastery page.** The chain: `app/life-mastery/page.tsx` →
+`NorthStarFlow` → `TrackTab:39` → `GoalsHubContent:18-21` →
+`views/TreeView`, `views/OrreryView`, `views/ViewSwitcher` and all seven of
+`tree-of-life/`. The live Life Mastery screen mounts the *old goals hub*.
+
+The cause is exactly the stand-in failure this repo keeps recording: my
+per-folder table labelled each folder by the origins of its *external* importers,
+and `GoalsHubContent` is internal to `goals`, so the live path was invisible to
+the label while being plainly visible in the files. **I read a summary of my own
+scan instead of the scan.** The corrected numbers are below, computed per file.
+
+**My reachability scan was blind to side-effect imports.** It matched
+`from "…"`, `import("…")` and `require("…")` but not a bare `import "./x.css"`,
+so `src/goals/components/setup/goalsStepTour.css` (436 lines) looked like it had
+no importer at all. Phase 0's scanner must match the bare form, and no deletion
+may rest on a scan that does not.
+
+**I also tried `next build --distDir`,** which Next 16 rejects, and my wrapper
+reported `exit: 0` because the status was swallowed by a pipe into `tail`. A
+pipeline's exit status is its last command's. Phase 0's script sets
+`set -o pipefail`.
 
 ---
 
 # Part 2 — Execution
 
-Conventions for every phase below:
+Conventions for every phase:
 
-- **Gates** means all four, in order: `npm test`, `npx tsc --noEmit` (compare to
-  `tsc-baseline.json`), `npm run lint:ratchet`, and
-  `NEXT_DIST_DIR=.next-verify BUILD_MEMORY_CAP=12G bash scripts/build.sh --webpack`.
-  Then `rm -rf .next-verify`.
+- **Gates** means, in order: `npm test`; `node scripts/typecheck-ratchet.mjs`;
+  `npm run lint:ratchet`;
+  `NEXT_DIST_DIR=.next-verify BUILD_MEMORY_CAP=12G bash scripts/build.sh --webpack`;
+  then `rm -rf .next-verify`. **Never `npx tsc --noEmit` or `npm run lint` as a
+  pass/fail gate — both are red by design.** The integration suite is not a gate.
 - **Commit** means `git commit --only <paths> -m "..."` — never a bare
-  `git commit`, never `git add -A`, never `git stash`. Three other sessions share
-  this checkout; `.claude/hooks/never.py` refuses the sweeping forms, and the two
-  existing stashes must not be popped or dropped.
-- Before each commit, `git status --short` again, and after it, read what is left.
-- Any phase that cannot be finished in one pass runs in a `git worktree`, because
-  a half-renamed tree returns 500 on every route and blocks all three sessions.
+  `git commit`, never `git add -A`, never `git stash`.
+- `git status --short` immediately before each commit, and read what is left
+  after. Record `git rev-parse HEAD` at phase start and re-check before
+  committing.
+- Any phase that cannot finish in one pass runs in a `git worktree` — with
+  `node_modules` symlinked, or the gates cannot run there.
+- **Re-measure every count before acting on it.**
 
 ## Phase 0 — Make the smells countable
 
-Nothing is deleted. This phase builds the instrument, so every later phase has a
-number that moves and this plan's claims stay checkable after the code changes.
+Nothing is deleted. This builds the instrument, so every later phase has a number
+that moves and this plan's claims stay checkable after the code changes.
 
-**Deliverable:** `scripts/smells.mjs` plus `"smells": "node scripts/smells.mjs"`
-in `package.json`. It prints, and takes `--json` for the tests:
+**Deliverable:** `scripts/smells.mjs` plus `"smells": "node scripts/smells.mjs"`.
+Prints, and takes `--json`:
 
-1. **Reachability** — files in `src/`+`components/`+`lib/` split into
-   live-reachable / lab-only / suite-only / unreachable. Walks the import graph
-   from every non-`app/test` route file, resolving `@/` and relative specifiers.
-   *Today: 544 / 77 / 6 / 2.*
-2. **Lab staleness** — each `app/test/*` folder with its file count, line count
-   and `git log -1 --format=%as` date. *Today: 220 files / 95,643 lines at ≥6
-   months.*
-3. **Scope gaps** — directories under `src/` that the architecture test's slice
-   list omits. *Today: 10 of 18.*
-4. **Cross-slice coupling** — the slice-to-slice import matrix, `db`/`shared`
-   edges separated from feature edges. *Today: 23 feature edges, 100 statements,
-   41 of them `db →` a slice.*
-5. **Instruction budgets** — the four files against their caps. *Today:
-   389/391, 2710/2710, 948/950, 416/430.*
+1. **Reachability, per FILE, never per folder.** `src/`+`components/`+`lib/`
+   split live / lab-only / suite-only / unreachable. **It must match bare
+   `import "./x"` side-effect specifiers** — the omission that hid a 436-line
+   file — and it must print a folder's live *and* lab counts side by side so a
+   mixed folder cannot read as a deletable one. *Today, repo-wide: 544 / 77 / 6 / 2.*
+2. **Lab staleness** — each `app/test/*` folder with files, lines and
+   `git log -1 --format=%as`. *Today: 220 files / 95,643 lines at ≥6 months.*
+3. **Scope gaps, both directions** — `src/` directories the architecture slice
+   list omits, *and* names in the list or in `map.md` with no directory.
+   *Today: 10 of 18 omitted; 0 stale.*
+4. **Cross-slice coupling** — the slice matrix, `db`/`shared` edges separated
+   from feature edges. *Today: 23 feature edges, 100 statements, 41 `db →` slice.*
+5. **Dead exports** — used-nowhere / used-only-in-own-file / in-a-lab-only-file.
+   *Today: 142 / 476 / 96 of 618.*
+6. **Instruction budgets.** *Today: 387/391, 2709/2710, 948/950, 416/430.*
 
-Three details that matter, each from something that went wrong:
+Three details, each from something that went wrong:
 
-- `set -o pipefail` in anything that pipes, and the script exits non-zero on its
-  own failure. A measurement that reports success when it did not run is worse
-  than no measurement.
-- It reports **"uncomputable"** as a third state, distinct from zero. A file it
-  cannot parse is named, not skipped.
-- It must not resolve `@/` by guessing. `tsconfig.json` maps `@/*` to `./*`; read
-  it rather than hardcoding.
+- `set -o pipefail` in anything that pipes; exit non-zero on its own failure.
+- Report **"uncomputable"** as a third state, distinct from zero, and name the
+  file it could not parse.
+- Read `@/*` from `tsconfig.json` rather than hardcoding `./*`.
 
-**Acceptance test:** `tests/unit/docs/smellsScript.test.ts` — runs
-`node scripts/smells.mjs --json`, asserts the five sections are present and
-numeric, and asserts the reachability count equals a hand-counted fixture of six
-known files (one live, one lab-only, one suite-only, `components/ui/GoalIcon.tsx`
-as unreachable, one `app/test` page, one `src/db` file). A scanner with no fixture
-is a scanner that silently stops finding things.
+**Acceptance test:** `tests/unit/docs/smellsScript.test.ts` runs it with `--json`
+and checks reachability against a hand-counted fixture of seven known files —
+including `goalsStepTour.css` as lab-only (it proves the side-effect-import fix)
+and one file in a mixed folder. A scanner with no fixture silently stops finding
+things; this one already did.
 
-**Gates**, then commit `scripts/smells.mjs`, `package.json`,
-`tests/unit/docs/smellsScript.test.ts`.
+**Gates**, commit.
 
-## Phase 1 — The structure rules cover everything, and say what to do when a plan ends
+## Phase 1 — Rules cover everything, in both directions
 
-This is the phase that makes the rest stick. It changes no product code.
+Changes no product code. **1b and 1c are done** (see Part 1).
 
 ### 1a. The slice list stops being hand-typed
 
-In `tests/unit/architecture.test.ts`, the `Slice Structure` block's `slices`
-array becomes a filesystem read:
+In `tests/unit/architecture.test.ts:295`, `slices` becomes a `readdirSync` of
+`src/`. **Split by rule, because the three rules cost very different amounts:**
 
-```js
-const slices = fs.readdirSync(path.join(projectRoot, 'src'), { withFileTypes: true })
-  .filter((e) => e.isDirectory())
-  .map((e) => e.name)
-```
+- **`types.ts` exists** and **a service file exists** — adopt for all 18 now.
+  Cost: create `src/home/types.ts` and `src/shared/types.ts`, re-exporting what
+  those slices already export as types. Two small files.
+- **Type exports only in `types.ts`** — adopt for all 18 *except* `goals`, whose
+  77 violations would triple the allowlist (open question 7). Absorb the other
+  61 into `ALLOWED_TYPE_EXPORTS` with a dated comment saying they were revealed
+  by widening the scope. Add `goals` in Phase 5, when its own subslice
+  `types.ts` files have shrunk the number below 20.
+- **New test `the slice list is the directory listing`** — the array equals
+  `readdirSync('src')`. This is the actual fix; adopt now, for all three rules,
+  with the per-rule exception recorded in the test itself rather than in prose.
 
-This surfaces **138 type-export violations and 2 missing `types.ts`**
-(`src/home`, `src/shared`) at once, which is far too many to fix here. So:
-
-- `ALLOWED_TYPE_EXPORTS` absorbs the 138 as a **shrinking allowlist**, written
-  with a dated comment saying they were revealed by widening the scope and are
-  not new debt. The existing `staleAllowances` check already makes it shrink-only
-  and already catches an entry whose file is gone.
-- `src/home/types.ts` and `src/shared/types.ts` are created, re-exporting what
-  those slices already export as types. Two small files, not a refactor.
-- A new test, **`the slice list is the directory listing`**, asserts the array
-  the rules use equals `readdirSync('src')`. This is the actual fix: without it,
-  the next slice is silently ungoverned exactly as `goals` has been.
-
-Why a single allowlist entry per violation rather than per file: the test's own
-header explains that counts hide churn — fix two and add two and a count is
-unchanged. Follow the existing shape, do not invent a second one.
+Also fix the third and fourth instances of the same bug:
+`sharedComponentsTested.test.ts:35` is scoped to `src/programs/components` while
+reading as repo-wide — either widen it or rename it to say what it checks.
 
 **Acceptance test:** plant `src/zzz_probe/index.ts` exporting a type, confirm the
-new test fails naming `zzz_probe`, delete it. Prove by removal, in the worktree,
-and say so first — a planted defect looks exactly like a broken refactor from
+new test fails naming `zzz_probe`, delete it. **Prove by removal in a worktree,
+and say so first** — a planted defect looks exactly like a broken refactor to
 another session.
 
-### 1b. `.claude/rules/finished-work.md` gains the cleanup rule
+### 1b. `.claude/rules/finished-work.md` — **DONE**
+### 1c. `CLAUDE.md` — **DONE** (387/391)
 
-Paid for out of `.claude/rules/product-map.md`, whose first three sentences
-restate the opening paragraph of `docs/product/map.md`. Net words: ≤ 0.
+### 1d. `orientation.test.ts` gains its reverse check
 
-Added under a new heading, because it triggers on `docs/plans/**`:
+Every backticked `<name>/` in the map's slice section has a matching directory,
+and every `/<group>` a matching route group. **Phase 3 deletes things, so this
+closes first.**
 
-> **When a plan is done.** Set its `**Status:**` line to `done <date>`. Then:
-> `git branch --merged main` — delete every branch it lists except `main`, with
-> `git branch -d <name>`, and push the deletion. `git worktree list` — for each
-> worktree that is not this one, `git worktree remove <path>` if its branch is
-> merged, and `git worktree prune`. Never `git branch -D`, and never touch a
-> branch `--merged main` does not list: `-d` alone will delete a branch merged
-> only to its own upstream, which is how `beta` was deleted on 2026-10-01.
+**Acceptance test:** `git mv src/exercising /tmp/x`, confirm it fails naming
+`exercising/`, move it back.
 
-### 1c. `CLAUDE.md` gains one line
+### 1e. The false and stale lines in the map
 
-`CLAUDE.md` is at 389/391. The line below is 19 words, so 17 words come out of
-the `## Read before you act` section, whose sentence about the 482 deleted docs
-can lose its second clause without losing its instruction.
+- Fix `docs/product/map.md:169` — the live Black Box reads the corpus.
+- `docs/product/map.md:203` describes `src/shared/` as five things for 22 files,
+  omitting `HistoryBarrierContext`, `claudeHeadless`, `passwordRules`,
+  `returnTo`, `safeRedirect`, `streakRuns`, `trainingRoutes`, `typedNumber`,
+  `useBackableState`, `useLoad`, `useSteppedFlow` and the whole `components/`
+  subfolder.
+- `docs/product/map.md:107-111` says the live part of `goals` is "northStarService
+  plus the north-star/ components". The live closure from
+  `app/life-mastery/page.tsx` is **125 `src/goals` files** and reaches
+  `visionPlanService`, `intakeService`, `horizonService`, `lifeMasteryService`,
+  `goalsService`, `badgeEngineService`, `milestoneService` and
+  `treeGenerationService` — all of whose *screens* are lab-only.
+- `app/test/archive/quit-vice/routes.ts` says the archive's components are "still
+  in `src/vice/components/`". They are at
+  `app/test/archive/quit-vice/_module/components/`, and all 31 `src/vice` files
+  are live-reachable.
 
-Under `## Commands`, after the commit line:
+**Acceptance test: none possible** — a test cannot tell whether a sentence is
+true, which is the whole point, and is why the rest of this plan derives rather
+than describes. The only durable mitigation is the existing instruction in
+`.claude/rules/product-map.md` to check the line for the slice you are in.
 
-> **A finished plan leaves no branches.** `git branch --merged main` and
-> `git worktree list`, then `.claude/rules/finished-work.md`.
-
-It goes in `CLAUDE.md` rather than only in the rules file because a branch is
-deleted at the end of a turn, when no `docs/plans/` path may have been touched
-and the path-triggered rule will not have loaded. The pointer is always in
-context; the procedure is not.
-
-**Acceptance test:** `npx vitest run tests/unit/docs/instructionBudget.test.ts` —
-all four budgets still pass. If it fails, the cut was too small; cut more rather
-than raising the cap.
-
-### 1d. One structure document, and it is generated
-
-The repo has no `docs/architecture.md`, and `CLAUDE.md` says to run the test
-instead of memorising it. That is defensible for *rules* and useless for the one
-question a newcomer actually has: **where do I put this file?** I tried to answer
-"where does a new shared date helper go?" from the existing docs. `src/shared/`
-holds `dateUtils.ts`, so the answer exists — and nothing states it.
-
-**Deliverable:** `docs/architecture.md`, **generated** by
-`scripts/smells.mjs --architecture`, containing only what is derived from the
-filesystem and the tests: the slice list with file counts, which directories a
-slice may contain, where shared code lives, the dependency direction, and one
-line per architecture test naming what it enforces and where its allowlist is.
-
-Generated, not written, for the reason this repo already knows: a hand-written
-architecture doc is the 482 deleted docs waiting to happen. A generated one
-cannot drift, because a test regenerates it and fails on a diff.
-
-**Acceptance test:** `tests/unit/docs/architectureDocFresh.test.ts` regenerates
-it in memory and asserts byte-equality with the file on disk. Same shape as
-`orientation.test.ts`, which already keeps `docs/product/map.md` honest.
-
-**Gates**, then commit as four separate commits — the test change, the rules
-change, the `CLAUDE.md` change, the generated doc — so each is revertable alone.
+**Gates**, one commit per sub-phase.
 
 ## Phase 2 — Delete what is provably referenced by nothing
 
-118 files. Every one has evidence, and no judgement call.
+118 files. Every one has evidence; no judgement calls.
 
 ### 2a. `new_new_clean_attempt/` — 115 tracked files
 
-The evidence, all four parts:
-
 - `git log -- new_new_clean_attempt` → **one commit**, `80b9f571`, 2026-03-11,
   message `"ny ny"`. Never touched since.
-- `grep -rl new_new_clean_attempt` across `*.ts,*.tsx,*.json,*.md,*.mjs`
-  excluding itself → **nothing**. Not in `docs/`, `.claude/` or `CLAUDE.md`.
-- Its folder names are `02.EXT.transcribe`, `06.LLM.video-type`, `06b.LLM.verify`,
+- `grep -rl` across `*.ts,*.tsx,*.json,*.md,*.mjs` excluding itself →
+  **nothing**. Not in `docs/`, `.claude/` or `CLAUDE.md`.
+- Its folders are `02.EXT.transcribe`, `06.LLM.video-type`, `06b.LLM.verify`,
   `06d.DET.sanitized`, `06e.LLM.quality-check`, `06f.DET.damage-map`,
   `06g.LLM.damage-adjudicator`, `06h.DET.confidence-propagation`,
-  `07.LLM.content`, `07b.LLM.enrichment-verify` — **the exact stage names that
-  now live in `scripts/training-data/`.** It is the prototype of the shipped
-  pipeline, superseded by it.
-- 16 of its files have emoji and escaped bytes in their names
-  (`5 RAW Daygame Infields \360\237\232\250 [GOZo4Z0brDc]`), which is why
-  `git ls-files` quotes them. Use `git rm -r -- new_new_clean_attempt`, not a
-  shell glob, or those 16 are missed.
+  `07.LLM.content`, `07b.LLM.enrichment-verify` — **the exact stage names now in
+  `scripts/training-data/`.** It is the prototype of the shipped pipeline.
+- 16 of its files carry emoji and escaped bytes in their names, which is why
+  `git ls-files` quotes them. **Use `git rm -r -- new_new_clean_attempt`, not a
+  shell glob**, or those 16 are missed.
 
-**Gated:** tag `git tag pre-cleanup-newnew && git push origin pre-cleanup-newnew`
-first. Recoverable forever from one commit hash either way.
+**Gated:** `git tag pre-cleanup-newnew && git push origin pre-cleanup-newnew`
+first.
 
 ### 2b. The two unreachable files
 
-- `src/qa/providers/claude.ts` (43 lines). **Check for a dynamic import before
-  deleting:** `grep -rn "claude" src/qa/` and look for a provider registry that
-  resolves by string. A static scan is blind to `import(\`./providers/${name}\`)`,
-  and this file is named like a plugin. If it is dynamically loaded, it is not
-  dead — leave it and say so.
-- `components/ui/GoalIcon.tsx` (32 lines). **Blocker 2** — it is listed in
-  `CUSTOM_ICON_COMPONENTS` in `src/shared/iconRoles.ts`, which `never.py` asks
-  about by name. Removing the file means removing that entry, and the
-  architecture test's `Custom icon components must only be used in allowed
-  contexts` test reads it.
+- `src/qa/providers/claude.ts` (43 lines). **Check for a dynamic import first:**
+  `grep -rn "claude" src/qa/` for a registry resolving by string. A static scan
+  is blind to `import(\`./providers/${name}\`)` and this file is named like a
+  plugin. If it is dynamically loaded it is not dead — leave it and say so.
+- `components/ui/GoalIcon.tsx` (32 lines). **Blocker 2.** Named as a string in
+  `src/shared/iconRoles.ts:210-211` and filtered by name in
+  `tests/unit/architecture.test.ts:2524`. "No importer" and "safe to delete" are
+  different claims, and this is the difference.
 
-### 2c. Two empty directories, ten stale ignores, four stale excludes
+### 2c. Thin directories, stale ignores, stale excludes
 
-- `src/vice/hooks/` and `src/vice/components/steps/` are empty. Git does not
-  track directories, so these exist only in your working copy — `rmdir` them and
-  note that they will not appear in the diff.
-- `.gitignore` names ten paths that no longer exist: `whisper.cpp`,
-  `LivePortrait`, `SadTalker`, `training-data`, `deprecated`, `coverage`, `out`,
-  `build`, `dist`, `www.youtube.com_cookies.txt`. Keep `coverage`, `out`, `build`
-  and `dist` — they are build outputs that will exist again. Delete the other six
-  and the `!training-data/sources.txt` exception that depends on one of them.
-- `tsconfig.json` excludes four paths that do not exist: `deprecated`,
-  `scripts/training-data/old`, `scripts/deprecated`, `LivePortrait`. Delete all
-  four. `.venv` stays; it exists.
+- `src/vice/hooks/` and `src/vice/components/steps/` are empty **on disk only** —
+  git tracks no directory and no file under either, so `rmdir` yields no diff.
+- `.gitignore` names ten paths that no longer exist. Delete six —
+  `whisper.cpp`, `LivePortrait`, `SadTalker`, `training-data` (and the
+  `!training-data/sources.txt` exception depending on it), `deprecated`,
+  `www.youtube.com_cookies.txt`. **Keep** `coverage`, `out`, `build`, `dist`:
+  build outputs that will exist again. (`time-open.png` has already left disk on
+  its own; it was ignored by the blanket `*.png` at line 98, never by a rule.)
+- `tsconfig.json` excludes four non-existent paths: `deprecated`,
+  `scripts/training-data/old`, `scripts/deprecated`, `LivePortrait`. `.venv`
+  stays.
 
-**Do not touch:** `proxy.ts`. Next 16 renamed `middleware.ts` to `proxy.ts`, the
-file documents this itself, and the build output confirms it with
-`ƒ Proxy (Middleware)`. It must stay at the repository root. It is the most
-plausible-looking wrong move in this whole plan.
+**Do not touch — `proxy.ts`.** Next 16 renamed `middleware.ts` to `proxy.ts`, the
+file documents this, and the build output confirms it with `ƒ Proxy (Middleware)`.
+It is the most plausible-looking wrong move in this plan.
 
-**Also do not touch:** `data/woman-responses/prompts/`. Nine tracked files, read
-at **request time** by `src/scenarios/keepitgoing/chat.ts:79` via
-`path.join(process.cwd(), "data/woman-responses/prompts")`, and
-`app/api/test/calibration/*/route.ts` read `data/woman-responses/diagnostics`
-the same way. `.gitignore` carries a comment saying excluding them made every
-production build fail with `ENOENT`. `data/` has 44,595 files on disk and 9 in
-git; the 44,586 others are already ignored and are not the repo's problem.
+**Do not touch — `data/`, and not for the reason you would guess.** It is **107 GB
+and 44,595 files, of which 9 are tracked.** Two directories under it are read at
+**request time** via `process.cwd()`: `data/woman-responses/prompts` at
+`src/scenarios/keepitgoing/chat.ts:79`, and
+`data/woman-responses/diagnostics` at `app/api/test/calibration/{get,list}/route.ts:5`.
+**Only the first has a `.gitignore` exception; `diagnostics` has zero tracked
+files.** And `grep` over `tests/` finds **zero coverage of either path** — the
+green 75-second build proves nothing about them. So before `data/` is touched:
+write `tests/unit/scenarios/promptDirExists.test.ts` asserting both directories
+exist with their expected contents, and prove it bites by `git mv`-ing one away
+and back. Until that test exists, `data/` is off limits.
 
 **Acceptance test:** `npm run smells` reports unreachable `0` (or `1` if
-`src/qa/providers/claude.ts` turns out to be dynamically loaded), and the
-`tests/unit/docs/smellsScript.test.ts` fixture is updated in the same commit to
-drop `GoalIcon.tsx`. **Gates**, then commit.
+`src/qa/providers/claude.ts` is dynamically loaded), and the Phase 0 fixture is
+updated in the same commit. **Gates**, commit.
 
 ## Phase 3 — Prune the lab
 
-The biggest single win, and the only phase with a real judgement call in it.
-**Blocker 1.**
+The biggest single win and the only phase with real judgement in it. **Blocker 1.**
 
-**Scope: the 22 folders under `app/test/` with no commit in six months** — 220
-files, 95,643 lines. Measured with `git log -1 --format=%as -- <folder>` on
-2026-10-01:
+### 3a. The 22 stale `app/test` folders
+
+220 files, 95,643 lines, by `git log -1 --format=%as -- <folder>` on 2026-10-01:
 
 | folder | files | lines | last commit |
 |---|---|---|---|
@@ -571,296 +702,293 @@ files, 95,643 lines. Measured with `git log -1 --format=%as -- <folder>` on
 | `old-variants` | 1 | 92 | 2026-02-25 |
 | `curve_editor` | 1 | 66 | 2026-02-25 |
 
-**Kept, all of it:** everything touched since July — `archive/` (36 files,
-2026-09-25, and the architecture test's `nothing links to the archived surfaces`
-guards it), `goal-scorecard`, `health`, `goal-model`, `font-check`, `crash`,
-`goal-review`, `achievements`, `change-your-life`, `life-mastery-v1`, `toggl`,
-`life-direction`, `vision-plan`, `scenario-lab`, `programs`, `test-chatbot`,
-`new-goals`, `pricing`, `exercising`. 56 files, 8,505 lines.
+**Kept, all of it** — everything touched since July: `archive/` (36 files,
+2026-09-25, guarded by the architecture test and an e2e spec), `goal-scorecard`,
+`health`, `goal-model`, `font-check`, `crash`, `goal-review`, `achievements`,
+`change-your-life`, `life-mastery-v1`, `toggl`, `life-direction`, `vision-plan`,
+`scenario-lab`, `programs`, `test-chatbot`, `new-goals`, `pricing`, `exercising`.
 
-**And with them, the `src/` code that existed only to serve them.** Six subtrees
-of `src/goals` are reachable from no live route and no other slice — only from
-`app/test` pages:
+### 3b. The `src/` code behind them — per file, never per folder
 
-| subtree | files | lines |
+**This is where the first draft of this plan was dangerously wrong.** Recomputed
+per file: of 198 `src/goals` files, **125 are live-reachable (60,780 lines), 71
+are lab-only (46,474 lines), 2 are suite-only, and none is reached by nothing.**
+
+**Folders that are 100% lab-only — safe to delete whole. 35 files, 23,408 lines:**
+
+| folder | files | lines |
 |---|---|---|
-| `src/goals/components/vision-plan` | 2 | 12,250 |
-| `src/goals/components/views` | 10 | 12,155 |
-| `src/goals/components/setup` | 10 | 4,352 |
-| `src/goals/components/change-your-life` | 7 | 2,691 |
-| `src/goals/components/life-direction` | 9 | 2,469 |
-| `src/goals/components/life-mastery` | 4 | 1,313 |
-| **total** | **42** | **35,230** |
+| `src/goals/components/vision-plan` | 2 | 12,248 |
+| `src/goals/components/new-goals` | 12 | 4,558 |
+| `src/goals/components/change-your-life` | 7 | 2,684 |
+| `src/goals/components/life-direction` | 9 | 2,460 |
+| `src/goals/components/life-mastery` | 4 | 1,309 |
+| `src/goals/components/guide` | 1 | 149 |
 
-`src/goals/components/vision-plan/VisionPlanLab.tsx` alone is **11,681 lines**,
-the largest file in the repo, reachable from one lab page.
+**Folders that are MIXED — file-level selection only, never a folder delete:**
 
-**Each subtree is checked against its lab page before deletion, not in bulk.**
-`components/setup`, `change-your-life`, `life-direction` and `life-mastery`
-correspond to labs in the keep list — so they stay, whatever the scan says about
-reachability. Only the subtrees whose *only* importer is a folder being deleted go.
-Re-derive this from `npm run smells` after the `app/test` deletions, in the same
-phase, rather than trusting the table above: deleting pages changes the graph.
+| folder | live | lab-only |
+|---|---|---|
+| `src/goals/components/north-star` | 43 | 0 |
+| `src/goals` (slice root services) | 26 | 5 |
+| `src/goals/components` (flat) | 26 | 4 |
+| `src/goals/data` | 17 | **10 — keep all, see Q9** |
+| `src/goals/components/tree-of-life` | 7 | 0 |
+| `src/goals/components/views` | **3** | 7 |
+| `src/goals/components/setup` | **2** | 9 |
+| `src/goals/hooks` | 1 | 1 |
 
-**Why this is worth doing beyond the line count:** 131 of the 323 baselined lint
-errors and 88 of the 218 unused variables live in `app/test`. Pruning the lab
-removes **41% of the lint debt** without editing a line of live code. That is why
-Phase 6 comes after this one and not before — burning down `app/test` lint errors
-first would be work thrown away.
+`src/goals/components/views/VisionPlanLab.tsx` — 11,682 lines, the largest file
+in the repo, lab-only, **one external import to fix.** `git mv` it; **do not
+split it.** Splitting an 11.7k-line screen is a rewrite dressed as cleanup, and
+it should wait until you say whether that screen is becoming product or being
+retired.
+
+**Three hard constraints:**
+
+1. **A folder with any live file is never deleted as a folder.** `views` and
+   `setup` each hold live files reached through `GoalsHubContent`, which the live
+   Life Mastery page mounts.
+2. **`src/goals/data/` is not in the delete set, whatever the scan says** — ten
+   files of corpus-derived research imported by tests of live code. Move
+   `lifeMasteryCorpus.ts` (8,868 lines) to `tests/fixtures/`; keep the rest.
+3. **Re-derive the list from `npm run smells` after 3a, in this phase.** Deleting
+   pages changes the graph; the tables above are evidence, not input.
+
+**Why this is worth more than the line count:** 131 of 323 baselined lint errors
+and 88 of 218 unused variables live in `app/test`. Pruning removes **41% of the
+lint debt** without editing live code. That is why Phase 6 comes after.
 
 **Procedure, per folder, one commit each:**
 
-1. `git tag lab-before-prune && git push origin lab-before-prune` — once, before
-   the first deletion.
+1. `git tag lab-before-prune && git push origin lab-before-prune` — once.
 2. `git rm -r -- app/test/<folder>`
-3. `npm run smells` → note which `src/` files just became unreachable.
-4. Remove any `eslint-baseline.json` / `tsc-baseline.json` entries for deleted
-   files, with `node scripts/lint-ratchet.mjs --update` and the typecheck
-   equivalent. **The ratchets will otherwise fail on stale entries** — which is
-   the behaviour you want, and is also the step that is easy to forget.
-5. Check the architecture test's allowlists for entries under that folder. Note
-   that several use `.filter((rel) => fs.existsSync(...))`, so a deleted file
-   **silently drops out of the scan** instead of failing — a coverage loss with
-   no error. Grep each allowlist for the folder name by hand.
-6. **Gates**, then commit.
+3. `npm run smells` → which `src/` files just became unreachable.
+4. Drop baseline entries for deleted files via
+   `node scripts/lint-ratchet.mjs --update` and the typecheck equivalent. **The
+   ratchets fail on stale entries** — the behaviour you want, and the step
+   easiest to forget.
+5. Grep the **20** architecture allowlists for the folder name **by hand**.
+   Several filter with `.filter((rel) => fs.existsSync(...))`, so a deleted file
+   **silently drops out of the scan** rather than failing — a coverage loss with
+   no error.
+6. **Gates**, commit.
 
-22 folders is 22 commits. Group the twelve `goalsv*` folders into one commit if
-that is too many; they are one decision.
+Group the twelve `goalsv*` folders into one commit if 22 is too many; they are one
+decision.
 
-## Phase 4 — One home for shared code
+## Phase 4 — Write down the shared-code rule instead of moving the code
 
-Today there are two homes for shared components (`components/`, 26 files, and
-`src/shared/components/`, 5 files) and two for shared utilities (`lib/utils.ts`
-and `src/shared/`). **278 files import `@/components/`** and 40 import
-`@/lib/utils`. This is the largest mechanical change in the plan and the one most
-likely to break something, so it is also the most heavily verified.
+**Much smaller than the first draft said** — open question 1 explains why.
 
-**Target layout** (open question 3 — three homes, not one):
+**The rule, stated once where it is enforced:**
 
-| from | to | files |
-|---|---|---|
-| `components/ui/*` (18, less `GoalIcon`) + `BottomSheet.tsx` | `src/shared/ui/` | 19 |
-| `components/AppHeader.tsx`, `MobileNav.tsx`, `MobileTabBar.tsx`, `BackLink.tsx`, `navTabs.ts` | `src/shared/chrome/` | 5 |
-| `components/ClockSync.tsx`, `ViewportHeightUpdater.tsx` | `src/shared/components/` | 2 |
-| `lib/utils.ts` | `src/shared/cn.ts` | 1 |
+- Root `components/` — primitives generated by shadcn, owned by no slice.
+- `src/shared/components/` — a component one slice owns that **two or more pages
+  mount** (`docs/product/map.md:146`'s existing reason for `OfflineShell`).
+- `src/shared/` (flat) — helpers two or more slices import.
+- A slice's own `components/` — everything else.
 
-**Three things de-risk this, and I verified each one:**
+**Enforced by `tests/unit/architecture/sharedBoundary.test.ts`:** a file in
+`src/shared/` imported by exactly one slice is named; a file in
+`src/shared/components/` mounted by exactly one page is named; shrinking
+allowlists; `src/db/` exempt, since every slice imports it by design.
 
-1. **The dependency already flows the right way.** `components/` imports from
-   `src/shared/` (3 statements) and from `lib/` (17), and nothing in `src/`
-   outside its own slices imports *out* to a sibling. Moving `components/` under
-   `src/shared/` does not invert any edge.
-2. **The scans that currently skip `components/` would not newly fail.** Four
-   architecture scans walk `['src', 'app']` and not `components`: the write-up
-   form's word list, the `/api/health/workout` POST check, the direct
-   `auth.getUser()` check, and the browser-reads-in-`useState` check. I grepped
-   root `components/` for all four patterns: **clean on all four.** So bringing
-   those 26 files into scope surfaces nothing.
-3. **The build catches a wrong path in 42 seconds**, and `tsc` catches the rest.
+**Known findings it will catch, so the start is no surprise:**
+`components/ui/markdown.tsx` is lab-only (reached only from `app/test/articles`,
+which Phase 3 deletes), and `components/ui/draft-input.tsx` and `stepper.tsx` are
+reachable only from the test suite. **Resolve those after Phase 3**, which
+changes the answer.
 
-**The config references that must move with the files.** Missing one of these is
-the failure mode, so here is every hit, found by grepping all ten config files:
+Also: the `"components/**"` globs in `.claude/rules/product-map.md:5` and
+`.claude/rules/finished-work.md:7` should be **deleted, not retargeted** — both
+files already list `src/**`, so a second glob is itself a stray.
 
-- `eslint.config.mjs:47` — `"components/**/*.{js,jsx,mjs,cjs,ts,tsx}"` in the
-  globals block. Delete the line; `src/**` already covers the new location.
-- `.claude/rules/product-map.md:5` and `.claude/rules/finished-work.md:7` —
-  `"components/**"` in `paths:` front-matter. Both become `"src/shared/**"`.
-- `tests/unit/architecture.test.ts:508`, `:713`, `:1982`, `:2669`, `:2894` —
-  each walks `['src', 'app', 'components']`. Drop the third element.
-- `tests/unit/architecture.test.ts:1501-1502` — `'components/BottomSheet.tsx'`
-  and `'components/ui/stepper.tsx'`, inside a list that ends
-  `.filter((rel) => fs.existsSync(path.join(projectRoot, rel)))`. **These will
-  not fail — they will silently stop being checked.** Update both paths.
-- `tests/unit/shared/touchTargets.test.ts` — 15 occurrences across lines 47–107.
-- `tests/unit/shared/bottomSheet.test.tsx:141`,
-  `tests/unit/navigation/backNavigation.test.ts:218`,
-  `tests/unit/navigation/routeReachability.test.ts:369,459,461`,
-  `tests/unit/navigation/tabBarDestinations.test.ts:70`.
-- `tsconfig.json` — no change. `@/*` maps to `./*`, so `@/src/shared/ui/button`
-  resolves with no new path entry. Do not add one.
+### 4b. One structure document, and it is generated
 
-Entries matching `components/...` elsewhere in the architecture test are
-**slice-relative** (`src/programs/components/HistoryTab.tsx` keyed as
-`components/HistoryTab.tsx`) and must not be rewritten. Check each against
-`fs.existsSync` at the root before touching it.
+The repo has no `docs/architecture.md`, and `CLAUDE.md` says to run the test
+rather than memorise it. That is right for *rules* and useless for the one
+question a newcomer has: **where do I put this file?** I tried answering "where
+does a new shared date helper go?" from the existing docs. `src/shared/` holds
+`dateUtils.ts`, so the answer exists — and nothing states it. It is also
+circular: the file `CLAUDE.md` names is one of ten, and it names none of the
+other nine.
 
-**Procedure — this is a transaction and runs in a worktree.**
+**Deliverable:** `docs/architecture.md`, **generated** by
+`scripts/smells.mjs --architecture`: the slice list with counts, what a slice may
+contain, the four homes above, the dependency direction, and one line per
+architecture test across all ten files, naming what it enforces and where its
+allowlist lives.
 
-A rename across 278 files cannot be half-done: a partially converted tree returns
-500 on every route including `/auth/login`, and since `.husky/pre-commit` tests
-the tree, it blocks all three sessions from committing. That has already happened
-once, on 2026-09-24.
+Generated, not written, for the reason this repo knows twice over — the 482
+deleted docs, and `map.md:169`.
 
-1. `git worktree add ../dgc-shared-move training-rebuild` and work there.
-2. `git mv` each file to its new home — `git mv`, so the rename is staged
-   atomically and git records it as a rename.
-3. Rewrite the specifiers. 278 files, so a codemod, but **not a blind `sed`**:
-   match `from ['"]@/components/` and `from ['"]@/lib/utils` at a specifier
-   position only. A bare `s|@/components/|@/src/shared/|g` also rewrites the
-   string inside every test allowlist and every comment, including the
-   slice-relative ones above.
-4. `grep -rn "@/components/\|@/lib/utils" --include='*.ts' --include='*.tsx' .`
-   → must be empty. Then the same grep over `HEAD` after committing:
-   `git grep "@/components/" HEAD` → must be empty. The working tree being clean
-   says nothing about whether the commit compiles alone.
-5. Update the config references listed above.
-6. **Gates** — all four, and the build is not optional here.
-7. Commit as one commit. A rename split across two commits leaves `HEAD` broken
-   in between.
-8. `git worktree remove ../dgc-shared-move && git worktree prune`.
+**Acceptance test:** `tests/unit/docs/architectureDocFresh.test.ts` regenerates it
+in memory and asserts byte-equality with disk.
 
-**Acceptance test:** `npm run smells` shows `components/` and `lib/` gone from the
-reachability table; `npx playwright test tests/e2e/sweep/route-sweep.spec.ts`
-passes, since that suite visits every page and is the only check that a moved
-component still renders. Note that an e2e run needs a frozen `src/` — do not run
-it while another session is editing.
+**Gates**, commit per deliverable.
 
-## Phase 5 — `src/goals` becomes subslices
+## Phase 5 — Promote `src/goals`'s existing structure to real subslices
 
-198 files: 136 in a flat `components/`, 29 in `data/`, 2 in `hooks/`, 31 service
-files at the slice root, and one 2,558-line `types.ts`. After Phase 3 removes the
-lab-only subtrees it is roughly 156.
+**The boundaries already exist.** Of the 136 files in `src/goals/components/`,
+only **30 sit directly in it; the other 106 are already grouped in 11
+subdirectories** — `north-star` (43), `new-goals` (12), `setup` (11), `views`
+(10), `life-direction` (9), `tree-of-life` (7), `change-your-life` (7),
+`life-mastery` (4), `vision-plan` (2), `guide` (1). **The job is to promote and
+enforce a convention that is ~78% present, not to invent one.** After Phase 3 the
+slice is roughly 160 files.
 
-**The honest boundaries are the import clusters, and they are already visible in
-the folder names.** Measured group sizes and who imports each:
-
-| group | files | lines | imported from |
-|---|---|---|---|
-| `components/north-star` | 43 | 19,424 | live app, other slices, tests |
-| slice root (services) | 31 | 24,138 | live app, other slices, lab, tests |
-| `components/` (flat) | 30 | 8,302 | **lab and tests only** |
-| `data/` | 29 | 22,663 | live app, other slices, lab, tests |
-| `components/new-goals` | 12 | 4,570 | lab and tests only |
-| `components/tree-of-life` | 7 | 1,270 | **inside `goals` only** |
-| `hooks/` | 2 | 97 | inside `goals` only |
-| `components/guide` | 1 | 150 | inside `goals` only |
-
-**The public surface is 44 of 197 files.** Everything else is internal, which is
-what makes subslicing tractable. `types.ts` has **122 importers** — it is the one
-file that cannot move without touching everything, so it moves last, or not at
-all.
-
-**Proposed layout**, each step independently shippable and green:
+**Subslices need no `docs/product/map.md` edit** — `orientation.test.ts`'s
+`readdirSync` is non-recursive. Verified.
 
 ```
 src/goals/
-  types.ts                 (stays — 122 importers; re-exports the subslice types)
-  index.ts                 (new — the slice's public surface, the 44 files' exports)
+  types.ts                 (stays — 122 importers; re-exports subslice types)
+  index.ts                 (new — the public surface, 44 of 197 files today)
   north-star/              components/north-star + the services only it uses
+  hub/                     GoalsHubContent + views/ + tree-of-life/ (LIVE)
   plan/                    lifePlan*, visionPlan*, horizonService, oneThing*
-  tree/                    components/tree-of-life + treeGenerationService + hooks
   catalogue/               data/ (goalShapes, lifeAreas, goalCategories, goalGraph)
   achievements/            badgeEngineService, goalAchievementsService
   (slice root)             goalsService, goalHierarchyService, goalTriageService…
 ```
 
+Note `hub/`: the live Life Mastery screen mounts the old goals hub, so
+`GoalsHubContent`, three of `views/` and all of `tree-of-life/` are live code and
+belong in a named live subslice rather than looking like lab leftovers. That
+mislabelling is what nearly got them deleted.
+
 **Order, and why:**
 
-1. **`tree/` first** — 7 files plus 2 hooks, imported from nowhere outside
-   `goals`. Zero external blast radius. It is the rehearsal: if the mechanics are
-   wrong, they are wrong on 9 files instead of 43.
-2. **`catalogue/`** — `data/` is imported widely but is pure data with no
-   component dependencies, so the specifier rewrite is mechanical.
-3. **`achievements/`** — 2 services, small, and `goalAchievementsService` is one
-   of the 44 public files, so it exercises the `index.ts` surface.
-4. **`north-star/`** — 43 files, the live Life Mastery feature. Highest value and
-   highest risk; do it fourth, with the full gate set and the route sweep.
-5. **`plan/`** — the remaining services.
-6. **`types.ts` split last, or not at all.** Depends on open question 7. If the
-   answer is one `types.ts` per subslice, this is where the 2,558 lines divide and
-   where 77 of the 138 allowlist entries from Phase 1 come off.
+1. **`tree-of-life/`** — 7 files, imported from nowhere outside `goals`. Zero
+   external blast radius. The rehearsal: if the mechanics are wrong they are
+   wrong on 7 files, not 43.
+2. **`catalogue/`** — widely imported but pure data with no component
+   dependencies, so the rewrite is mechanical. **Carries the research files from
+   open question 9 — move, never delete.**
+3. **`achievements/`** — 2 services; `goalAchievementsService` is public, so it
+   exercises the `index.ts` surface.
+4. **`hub/`** — the live hub, including the file-level split of `views/`.
+5. **`north-star/`** — 43 files, the live Life Mastery feature. Highest value and
+   risk; full gates plus the route sweep.
+6. **`plan/`**, then **`types.ts`** last or not at all (open question 7). Each
+   subslice's own `types.ts` is automatically exempt from the type-export rule, so
+   this is where the 77 violations shrink and `goals` can finally join the
+   `slices` array.
 
-**Per step:** `git mv`, specifier rewrite (same codemod discipline as Phase 4 —
-match specifier positions, never a bare `sed`), update the architecture test
-allowlists that name the moved paths, **Gates**, one commit.
+**Per step:** `git mv`; rewrite specifiers by **matching specifier positions,
+never a bare `sed`** (a blind `s|@/goals/|…|g` also rewrites every allowlist
+string and comment, and the hit list is wider than it looks — it includes a regex
+literal at `src/shared/iconRoles.ts:192`); update the architecture allowlists
+naming moved paths; **Gates**; one commit.
 
-**Acceptance test:** after each step, `npm run smells` shows the coupling matrix
-unchanged — subslicing must not create new cross-slice edges, and if the count
-moves, a specifier was rewritten to the wrong target.
+**Do not move the 96 files in `tests/unit/goals/`.** Nothing enforces test-file
+location — no test maps a test path to a slice path, and `.claude/rules/testing.md`
+says nothing about it. They are found by name, and moving them doubles the diff on
+every phase and loses `git log --follow` on the files that record why each rule
+exists. If you want the mirror, do it as a single final step of 96 pure renames.
 
-**Which other slices need this, and which do not.** `programs` (66 files),
-`tracking` (58) and `db` (47) are large enough to argue about and small enough to
-leave alone; `goals` is 198 and is three times the next one. Do `goals` only, and
-re-measure afterwards. A plan that subslices four slices at once is a plan that
-gets abandoned at the second.
+**Acceptance test:** after each step `npm run smells` shows the coupling matrix
+unchanged. Subslicing must create no new cross-slice edge; if the count moves, a
+specifier went to the wrong target.
+
+**Which other slices need this:** `programs` (66), `tracking` (58) and `db` (47)
+are large enough to argue about and small enough to leave. `goals` is 198. **Do
+`goals` only**, then re-measure.
 
 ## Phase 6 — Burn the baselines down
 
-Only now, because Phase 3 already deleted 41% of it for free.
+Only now, because Phase 3 deleted 41% of it for free.
 
-`eslint-baseline.json`, 323 errors, where they live:
+`eslint-baseline.json`, 323 errors:
 
-| | all errors | of which unused-vars |
+| | all | of which unused-vars |
 |---|---|---|
 | `app/test/` | 131 | 88 |
-| live code (`src/`, `app/`, `components/`) | 120 | 78 |
+| live code | 120 | 78 |
 | `tests/` | 46 | 40 |
 | `scripts/` | 25 | 12 |
 
 **Order, each group one reviewable commit:**
 
-1. **117 unused imports across 79 files.** Pure deletions, no behaviour change,
-   and `tsc` plus the build prove it. This is the single cheapest win in the
-   entire plan. (`eslint --fix` handles most; review the diff, because a
-   side-effect import — `import './polyfill'` — is not an unused import and
-   deleting it changes behaviour silently.)
-2. **80 dead locals** (`assigned a value but never used`). Read each one: a
-   dead local is sometimes the *symptom* — a computed value nobody uses because a
-   line that should use it was dropped. Deleting it hides the bug. Check each
-   against what the function claims to do before removing it.
-3. **57 `no-unused-expressions`.** These are the interesting ones, not noise: an
-   expression statement with no effect is usually a dropped assignment or a
-   missing call. Expect to find at least one real bug here.
-4. **7 `react-hooks/rules-of-hooks`.** A conditional hook is the crash this repo
-   has shipped twice — "Rendered more hooks than during the previous render",
-   which reaches a person as "This page could not load." These are not cleanup;
-   they are live defects. **Fix them first if any are in live code**, ahead of
-   step 1, and open each page to confirm.
-5. **27 `no-explicit-any`**, then the remaining 12 singletons.
+1. **7 `react-hooks/rules-of-hooks` first, ahead of everything.** A conditional
+   hook is the crash this repo has shipped twice — "Rendered more hooks than
+   during the previous render", which reaches a person as "This page could not
+   load." Live defects, not cleanup. **Open each page to confirm.**
+2. **117 unused imports across 79 files.** Pure deletions; `tsc` and the build
+   prove it. The cheapest win in the plan. `eslint --fix` handles most — **review
+   the diff**, because a side-effect import (`import './polyfill'`) is not an
+   unused import and deleting it changes behaviour silently. That is the same
+   blind spot that hid `goalsStepTour.css`.
+3. **80 dead locals.** Read each: a dead local is sometimes the *symptom* — a
+   computed value nobody uses because the line that should use it was dropped.
+4. **57 `no-unused-expressions`.** Not noise: an expression statement with no
+   effect is usually a dropped assignment or a missing call. Expect a real bug.
+5. **27 `no-explicit-any`**, then the 12 singletons.
 
-Unused **function parameters** specifically: `typescript-eslint`'s recommended
-config uses `args: 'after-used'`, so a trailing unused parameter is already
-reported and is inside the 218 — there is no separate hidden pool. A
-*leading* unused parameter is not reported, by design, because removing it
-changes the call signature. Leave those; renaming to `_name` is churn.
+**Unused function parameters:** `typescript-eslint`'s recommended config uses
+`args: 'after-used'`, so a trailing unused parameter is already inside the 218 —
+there is no separate hidden pool. A *leading* unused parameter is not reported, by
+design, because removing it changes the signature. Leave those.
+
+**The 618 dead exports**, after the Phase 7 ratchet exists and not before —
+otherwise you pay 476 edits and buy no guarantee, and the count regrows:
+
+- **142 used nowhere** — delete.
+- **476 used only in their own file** — drop the `export` keyword. ~150 files,
+  one commit per slice. **`src/db` first** (65 findings, no JSX, the slice the
+  architecture test guards hardest), **`src/goals` last** (232, heavily
+  overlapping the lab cascade, so Phase 3 does some for free).
+- **96 in lab-only files** — skip; Phase 3 deletes them.
+
+Risk is low: **there are no `export *` barrels in `src/`, `components/` or
+`lib/`**, so `tsc` catches any name the scan misjudged, by name.
 
 `tsc-baseline.json`, 98 errors: 31 live, 30 `scripts/`, 27 `tests/`, 10
-`app/test/`. Twelve of them are `TS1378` (top-level `await`), which is one
-`tsconfig` decision rather than 12 fixes — but changing `module`/`target` affects
-every file, so it is its own commit with the full gate set.
+`app/test/`. **12 are `TS1378`** (top-level `await`) — one `tsconfig` decision,
+not 12 fixes, but changing `module`/`target` affects every file, so it is its own
+commit with full gates.
 
-**Acceptance test:** `npm run lint:ratchet` and the typecheck ratchet after each
-commit; the baseline total strictly falls. These gates already exist and already
-refuse a regression — this phase is just driving them down.
+**Acceptance test:** both ratchets after each commit; the baseline total strictly
+falls.
 
 ## Phase 7 — The tests that stop it coming back
 
-One test per smell class. Each one fails today if the thing it guards is absent,
-and each has a starting number written into it.
+One per smell class, each with a starting number written into it.
 
-1. **`the slice list is the directory listing`** — Phase 1a. Scope cannot be
-   hand-maintained. *Starts at 0 gaps (today: 10 of 18.)*
-2. **`no new top-level directory`** — a shrinking allowlist of what may sit at
-   the repo root, so the next `new_new_clean_attempt/` fails on arrival rather
-   than being found seven months later. *Starts at today's root listing.*
-3. **`shared code has more than one importing slice`** — a file in
-   `src/shared/` imported by exactly one slice belongs in that slice.
-   *Compute the start from `npm run smells`; expect a handful.*
-4. **`the lab has a half-life`** — lists `app/test/*` folders with no commit in
-   six months. **Reports, does not fail.** A test that fails on the calendar
-   fails on a day you did nothing wrong, and a gate that goes red by itself is
-   the 492-lint-error story again. *Starts at 0 after Phase 3.*
-5. **`no file is reachable only from the lab`** — a shrinking allowlist.
-   *Starts at whatever Phase 3 leaves; expect ~35 outside `goals`.*
-6. **`every plan has a Status line`** — open question 6's vocabulary, checked
-   across all 18 files in `docs/plans/`.
-7. **`the architecture doc is freshly generated`** — Phase 1d.
+1. **`the slice list is the directory listing`** — Phase 1a. *0 gaps (today 10 of 18).*
+2. **`the map names nothing that does not exist`** — Phase 1d. *Starts at 0.*
+3. **`no new top-level directory`** — a shrinking allowlist of what may sit at the
+   repo root, so the next `new_new_clean_attempt/` fails on arrival instead of
+   being found seven months later.
+4. **`sharedBoundary`** — Phase 4.
+5. **`app/test/LABS.md` covers every lab route** — open question 2. *0 after Phase 3.*
+6. **`the lab has a half-life`** — lists folders with no commit in six months.
+   **Reports, does not fail.** A test that fails on the calendar fails on a day
+   you did nothing wrong, and a gate that goes red by itself is the
+   492-lint-error story again.
+7. **`no file is reachable only from the lab`** — shrinking allowlist, **per file
+   and matching side-effect imports.**
+8. **The dead-export ratchet** — open question 8. *Starts at 618, or what Phase 6
+   leaves.*
+9. **`every plan has a Status line`** — open question 6's vocabulary across all
+   20 files. **Whoever lands it must know it will immediately flag the two plans
+   written during this session**, which is the test working.
+10. **`the architecture doc is freshly generated`** — Phase 4.
+11. **`the request-time data directories exist`** — Phase 2c, written *before*
+    `data/` is touched, covering both `prompts` and `diagnostics`.
+12. **`cleanup:check`** — `git branch --merged HEAD` minus `main` and current,
+    `git worktree list`, `git stash list` read-only. Wired into the **Stop hook
+    with `|| true`**, not into `npm run ci` and not into the end-of-turn
+    checklist: it is never.py's own argument, that a sentence read at session
+    start is ancient history by the time the moment arrives. Coordinate with
+    whoever currently owns `tests/unit/hooks/hookCommandPaths.test.ts`.
 
 **What none of these can do**, said plainly because the budget test says the same
-thing about itself: they check the shape, never the judgement. A test can tell you
-`src/shared/x.ts` has one importer. It cannot tell you whether the second
-importer is arriving next week. Treat every number above as a prompt to look, not
-a verdict.
+about itself: they check the shape, never the judgement. A test can tell you
+`src/shared/x.ts` has one importer. It cannot tell you whether the second is
+arriving next week. And `map.md:169` is the standing proof that a true-sounding
+sentence survives 6,634 passing tests.
 
 ---
 
@@ -868,16 +996,18 @@ a verdict.
 
 | claim | command |
 |---|---|
-| reachability 544/77/6/2 | `node scripts/smells.mjs` (Phase 0); until then the scratch scripts in this session |
-| 276 `app/test` files, 0 live-reachable | `git ls-files app/test \| wc -l` plus the reachability walk |
+| reachability 544/77/6/2 | `node scripts/smells.mjs` (Phase 0) |
+| `src/goals` 125 live / 71 lab-only | the per-file walk, matching side-effect imports |
+| `app/test` 280 files, 104,535 lines, 63 routes, 43 entries | `git ls-files app/test \| wc -l`; `git ls-files 'app/test/**/page.tsx' \| wc -l` |
 | 220 files / 95,643 lines ≥6mo | `for d in app/test/*/; do git log -1 --format=%as -- "$d"; done` |
-| 323 lint errors, 218 unused-vars | `npm run lint:ratchet`; breakdown by rule from `eslint-baseline.json` |
-| 131 of 323 in `app/test` | group `eslint-baseline.json` keys by path prefix |
+| 323 lint errors, 218 unused-vars | `npm run lint:ratchet`; group `eslint-baseline.json` by rule |
 | 117 unused imports / 79 files | match each baselined name against an `^import` line in its file |
-| 98 type errors | `npx tsc --noEmit 2>&1 \| grep -c "error TS"` |
-| 138 hidden type-export violations | run the `Slice Structure` scan with `slices = readdirSync('src')` |
-| 23 feature-coupling edges, 100 statements | the slice-to-slice matrix in `scripts/smells.mjs` |
-| 278 importers of `@/components/` | `grep -rl "@/components/" --include='*.ts' --include='*.tsx' .` |
-| `goals` public surface 44 of 197 | importer walk restricted to `src/goals/**` targets |
-| instruction budgets 389/2710/948/416 | `npx vitest run tests/unit/docs/instructionBudget.test.ts` |
-| all four gates green | the table in Part 1 |
+| 618 dead exports, 142/476/96 | `node scripts/smells.mjs` dead-export section |
+| 98 type errors | `node scripts/typecheck-ratchet.mjs` (**not** `tsc`, which never exits 0) |
+| 138 hidden type-export violations (77 in `goals`) | run `Slice Structure` with `slices = readdirSync('src')` |
+| 23 feature edges, 100 statements, 41 `db →` | the slice matrix in `scripts/smells.mjs` |
+| 65 tests + 20 allowlists in one file; 10 files / 111 tests total | `grep -c "^\s*test(" tests/unit/architecture.test.ts`; `npx vitest run tests/unit/architecture*` |
+| budgets 387/2709/948/416 | `npx vitest run tests/unit/docs/instructionBudget.test.ts` |
+| the build catches a bad import | write a probe importing a nonexistent module, build, delete it |
+| `main` is 421 behind the trunk | `git rev-list --left-right --count main...training-rebuild` |
+| `git branch -d` is unsafe here | it checks the branch's upstream, not `HEAD` |

@@ -16,8 +16,3 @@ those sentences are still true — the test only checks that each slice is
 user could see weight and sleep on the live tracking dashboard; it had been
 wrong for an unknown length of time because nobody who edited that slice ever
 read its line. If you are in the slice, you are the only one who will notice.
-
-The three that catch people out: `/test/*` 404s in production by design, so
-finding something there means it is **not** in the product; `health/` and
-`exercising/` have no live page at all; and `goals/` is over 100k lines of which
-only Life Mastery is live. Having code is not being reachable.
