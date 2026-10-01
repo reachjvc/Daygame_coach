@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { existsSync, readFileSync } from "fs"
+import { execFileSync } from "child_process"
+import { existsSync, readFileSync, rmSync, writeFileSync } from "fs"
 import { join } from "path"
 
 /**
@@ -63,6 +64,44 @@ describe("the end-of-turn known-failures check", () => {
       commandsFor("Stop").some((c) => c.includes("known_failures.py") && c.includes("--check")),
       "settings.json no longer runs the known-failures check on Stop.",
     ).toBe(true)
+  })
+
+  it("delivers the checklist in the field a Stop hook can actually deliver", () => {
+    // It did not, for as long as it existed. The hook put one line in `reason`
+    // and the checklist in `hookSpecificOutput.additionalContext`, which Claude
+    // Code reads for PreToolUse, UserPromptSubmit, SessionStart, Setup,
+    // SubagentStart, PostToolUse and PostToolUseFailure — never for Stop. The
+    // fire log showed two fires for one session on 2026-10-01 that received
+    // nothing and were not stopped. A Stop hook's errors are suppressed in the
+    // UI, so it could fail this way indefinitely without anyone seeing it.
+    //
+    // So this asserts the shape, by running the hook on a tree it has to fire
+    // on: everything in `reason`, and no hookSpecificOutput to be dropped.
+    const session = `shape-${process.pid}`
+    const stdin = JSON.stringify({ session_id: session })
+    const run = (mode: string) =>
+      execFileSync(join(ROOT, HOOK), [mode], { cwd: ROOT, input: stdin, encoding: "utf8" })
+
+    run("--snapshot")
+    const probe = join(ROOT, `.known-failures-shape-${process.pid}.tmp`)
+    writeFileSync(probe, "a file this turn changed\n")
+    let out: string
+    try {
+      out = run("--check")
+    } finally {
+      rmSync(probe, { force: true })
+    }
+
+    const payload = JSON.parse(out)
+    expect(payload.decision, "the hook stopped blocking on Stop.").toBe("block")
+    expect(
+      payload.hookSpecificOutput,
+      "the checklist is back in hookSpecificOutput, which Stop never reads.",
+    ).toBeUndefined()
+    expect(
+      payload.reason,
+      "`reason` no longer carries the checklist itself, so nothing arrives.",
+    ).toContain("Known failures")
   })
 
   it("is pointed at from the places that should send you here", () => {

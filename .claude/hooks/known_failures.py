@@ -128,19 +128,39 @@ def main() -> int:
 
     open(fired, "w").close()
     note_fired(sid)
+    # EVERYTHING GOES IN `reason`, AND THAT IS NOT A STYLE CHOICE.
+    #
+    # This block used to carry one line in `reason` and the checklist itself in
+    # `hookSpecificOutput.additionalContext`. It was handed back empty every
+    # time. On 2026-10-01 the log above recorded two fires for one session —
+    #
+    #   2026-10-01T12:41:53 fired session=abef7a2fe949a1d3
+    #   2026-10-01T12:43:07 fired session=abef7a2fe949a1d3
+    #
+    # — and that session received no checklist and was not stopped, which a
+    # working `decision: block` would have done. Claude Code reads
+    # `additionalContext` for PreToolUse, UserPromptSubmit, SessionStart, Setup,
+    # SubagentStart, PostToolUse and PostToolUseFailure. There is no Stop case.
+    # Worse, a `hookSpecificOutput` whose `hookEventName` does not match the
+    # event raises inside the CLI, and a Stop hook's errors are suppressed in the
+    # UI — so the mechanism this repo leans on for its end-of-turn check failed
+    # silently for as long as it existed. That is the "is any control dead
+    # without a reason beside it" item, on the very list it was failing to
+    # deliver.
+    #
+    # `reason` is what becomes the blocking message on Stop. One field, chosen
+    # against the observed behaviour rather than against the docstring.
     print(json.dumps({
         "decision": "block",
-        "reason": "End-of-turn check against docs/known-failures.md",
-        "hookSpecificOutput": {
-            "additionalContext": (
-                "This turn changed files on disk. Before you answer, run the "
-                "checklist below against the work you are about to hand over, "
-                "and fix or say out loud anything it catches. Do not reply "
-                "describing the checklist — reply with the work, corrected.\n\n"
-                + body
-                + "\n\nThis will not fire again this turn."
-            )
-        },
+        "reason": (
+            "End-of-turn check against docs/known-failures.md. This turn changed "
+            "files on disk. Before you answer, run the checklist below against "
+            "the work you are about to hand over, and fix or say out loud "
+            "anything it catches. Do not reply describing the checklist \u2014 "
+            "reply with the work, corrected.\n\n"
+            + body
+            + "\n\nThis will not fire again this turn."
+        ),
     }))
     return 0
 
