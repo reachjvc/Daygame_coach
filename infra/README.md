@@ -69,6 +69,16 @@ force HTTPS on `http://localhost:3000` as well — and the dev server has no
 certificate. One header would break the daily driver in a way that looks like a
 dead dev server. HSTS belongs on the real domain.
 
+## What stops this drifting
+
+`tests/unit/infra/localDeploy.test.ts` reads these files the way Caddy and
+systemd read them and fails when a rule here stops being true: the port named in
+three places disagreeing, `-H 127.0.0.1` going missing, the LAN-address check
+disappearing from `run-local.sh`, HSTS appearing in the local Caddyfile (or
+missing from the production one, once it exists), or Caddy losing its restart
+policy, its log cap or its persistent certificate volume. It was checked by
+breaking two of those rules on purpose and watching it fail, then reverting.
+
 ## Things that will bite
 
 - **`next build` edits `tsconfig.json`**, adding the dist dir to `include`.

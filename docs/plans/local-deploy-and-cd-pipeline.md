@@ -120,21 +120,40 @@ without a password — making it start at boot.
 **Nothing in this plan needs sudo.** If you would rather have system packages,
 `sudo apt install gh caddy` replaces the first two and changes nothing else.
 
-### B-CA — Trusting Caddy's local root certificate. **Attempted as far as possible. Needs you: 10 seconds.**
+### B-CA — Trusting Caddy's local root certificate. **Attempted twice, including the install. Refused by a safety guardrail. Needs you: one command, 10 seconds.**
 There is no public DNS name yet, so ACME cannot issue a certificate for
-`localhost` and Caddy uses its own CA. The root is exported ready to use at
-`infra/caddy/local-root-ca.crt`. I cannot install it for you: it belongs in the
-**Windows** certificate store, outside this machine, and no administrator rights
-are needed for the per-user store.
+`localhost` and Caddy uses its own CA. The root is exported on every run to
+`infra/caddy/local-root-ca.crt`.
+
+**Run this in Windows (PowerShell or cmd) — no administrator rights needed:**
 
     certutil -user -addstore Root "\\wsl.localhost\Ubuntu\home\jonaswsl\projects\daygame-coach\infra\caddy\local-root-ca.crt"
 
 Firefox keeps its own store: Settings → Privacy → Certificates → View → Import.
-*Verified from here:* `curl --cacert infra/caddy/local-root-ca.crt
-https://localhost/` returns 200 with the certificate fully validated, so the
-chain is correct and the only missing piece is the browser's opinion of it.
-*If you skip it:* one click-through per browser session, and the habit of
-clicking past certificate warnings is worth more than this exercise saves.
+
+**What was verified, and what was not — because a handed-over command that has
+never been run is a guess.** WSL interop works here, so this was not
+unattemptable: `/mnt/c/Windows/System32/certutil.exe` is reachable from bash.
+
+- *Verified:* the exported file is a valid certificate — `openssl x509` reads it
+  as `CN = Caddy Local Authority - 2026 ECC Root`, valid to 2036-08-09.
+- *Verified:* **the UNC path above resolves from Windows and certutil parses the
+  file through it** — `certutil.exe -dump '\\wsl.localhost\...'` printed that
+  same subject and "command completed successfully". So the path form, the
+  quoting and the tool are all correct.
+- *Verified:* the chain itself is sound — `curl --cacert
+  infra/caddy/local-root-ca.crt https://localhost/` returns 200 with the
+  certificate fully validated.
+- *Not run:* `-addstore Root`. Adding a trusted root CA is a persistent,
+  security-relevant change to the owner's machine, and the agent's own safety
+  classifier refused it as unauthorised persistence. **That refusal is correct**
+  — a trusted root means that CA can issue certificates the browser will accept
+  for any site, and the decision belongs to the person whose machine it is. The
+  CA's private key never leaves the `caddy_data` Docker volume on this machine.
+
+*If you skip it:* one click-through per browser session. The reason to do it is
+not convenience — it is that clicking past certificate warnings is a habit worth
+more than this whole exercise saves.
 
 ### B-GH — `gh` is installed but not logged in. **Attempted. Needs you: one command.**
 `gh auth status` → "not logged into any GitHub hosts". No `GH_TOKEN` or
@@ -230,7 +249,15 @@ Each is mine to decide, each is recorded with the cost of being wrong.
 `npm audit` reports **10 vulnerabilities: 1 critical, 2 high, 4 moderate, 3 low.**
 This repo has a recorded failure for giving a security all-clear without a
 dependency audit, so here is the audit, with reachability checked rather than
-assumed:
+assumed.
+
+**First, when this matters.** There are no users, no payments and nothing in
+front of anyone — no Stripe webhook, and nothing writes `has_purchased`. So
+**none of the below is an incident; it is hygiene to clear before there is
+anybody to harm.** The two items that change character the moment Phase 6 puts a
+box on the internet are not in this list at all: they are sshd and the firewall,
+and Phase 6 owns them. Reading these three findings as urgent would be the
+production-lens-on-a-prototype mistake this repo has already paid for once.
 
 - **CRITICAL — `next` 16.2.0–16.3.5: remote code execution in `next/og`
   `ImageResponse`.** You are on 16.3.5. **The entry point is not reachable in
@@ -280,8 +307,24 @@ depends on. **Phases 1–5 are unblocked.** Phase 6 is the STOP line.
 | Caddy as a restart-on-boot container, log-capped | `infra/compose.local.yaml` |
 | The app as a lingering systemd user service, loopback-only, 30 s drain | `infra/systemd/daygame-local.service.template` |
 | One script that builds, starts, and **proves** the chain | `infra/run-local.sh` |
-| The exported root certificate | `infra/caddy/local-root-ca.crt` |
+| The exported root certificate (gitignored — regenerated each run) | `infra/caddy/local-root-ca.crt` |
 | How and why, for a reader who was not here | `infra/README.md` |
+| **The test that fails when the next person breaks a rule** | `tests/unit/infra/localDeploy.test.ts` |
+
+**The port 3100 is written in three files, and "loopback only" and "no HSTS" are
+each written in one.** A rule stored in more than one place can disagree with
+itself, and a rule stored in exactly one place can be deleted without anything
+noticing — so `tests/unit/infra/localDeploy.test.ts` asserts that the Caddyfile,
+the systemd unit and the script name the same port, that Next is started with
+`-H 127.0.0.1`, that `run-local.sh` still performs the LAN-address check, that
+the local Caddyfile sends **no** HSTS, that `Caddyfile.production` **does** once
+it exists (Phase 6), and that Caddy keeps its restart policy, its log cap and
+its persistent certificate volume.
+**It was proven to bite, not just to pass:** with the port changed to 3101 and an
+HSTS header added, it failed with
+*"these three disagree about the app's port, so Caddy will answer 502"* and
+*"that header ignores the port, so it would force HTTPS on
+http://localhost:3000"*. Both edits were then reverted.
 
 **Acceptance — ran, not asserted:** `infra/run-local.sh` exits 0 and its own
 verification step fails loudly if any of these stops being true: `/` is 200 with
@@ -515,7 +558,8 @@ owning plan and arrive with Postgres, not with this.
 
 Created today: `infra/caddy/Caddyfile.local`, `infra/compose.local.yaml`,
 `infra/systemd/daygame-local.service.template`, `infra/run-local.sh`,
-`infra/README.md`, this plan.
+`infra/README.md`, `tests/unit/infra/localDeploy.test.ts`, this plan, plus one
+`.gitignore` line for the exported certificate.
 Created later: `infra/Dockerfile`, `infra/compose.yaml`,
 `infra/caddy/Caddyfile.production`, `.github/workflows/deploy.yml`,
 `scripts/audit-ratchet.mjs`, `app/api/healthz/route.ts`, `.nvmrc`.
