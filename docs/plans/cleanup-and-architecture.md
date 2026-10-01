@@ -154,6 +154,60 @@ about the newest feature.
 no rule and no document may have a hand-maintained scope.** Everything a rule
 covers is derived from the filesystem, checked in both directions, or it rots.
 
+### The rulebook is circular: the rules are stated nowhere at all
+
+This is the sharpest form of your question, and it is worse than scattered
+duplication. Verified by reading both ends:
+
+- `CLAUDE.md:44` says **"Architecture: run `tests/unit/architecture.test.ts`,
+  don't memorise it."**
+- That test's header, line 4, says **"These tests enforce the rules defined in
+  CLAUDE.md"** and lists four: thin API routes (max 30 lines), no direct Supabase
+  outside `src/db/`, business logic only in `*Service.ts`, types only in
+  `types.ts`.
+- **None of those four sentences is in `CLAUDE.md`.** Grepped: "30 lines" 0 hits,
+  "thin wrapper" 0, "Service.ts" 0, "types.ts" 0.
+- There is no `docs/architecture.md`.
+
+Each file points at the other and neither states the rule. That is why "where
+does this file go?" has no answer in this repo — not because it is written in
+several places, but because it is written in none.
+
+And inside the one file that claims to enforce them:
+
+- **The stated rule and the enforced rule disagree.** The header says *max 30
+  lines*; the test is named *"should be under 50 lines of code"*; the code reads
+  `if (lineCount > 50)`; and the comment between them says *"50 lines is generous
+  - the rule says 30, but we allow some buffer."* Three numbers, no document.
+- **One of the six structural tests is fully vacuous.** "API routes should not
+  import business logic directly" forbids exactly two patterns, `from
+  '.../utils/'` and `from '.../helpers/'` — and **no `utils/` or `helpers/`
+  directory exists anywhere** in `src`, `app`, `components` or `lib`. It is green
+  across all 116 route files and protects nothing.
+- **"Business logic only in `*Service.ts`" is enforced by no test at all.** The
+  nearest three are the vacuous one above, an existence check for a service file
+  in 8 slices, and one slice's badge writer. The rule itself is stated only in
+  `docs/product/map.md:85` — inside the *product* map, which is the wrong
+  document for a structure rule.
+- **The two slice tests silently stop applying when a slice is renamed**:
+  both carry `if (!fs.existsSync(sliceDir)) continue`, with none of the
+  premise-assertion guard this repo uses elsewhere (compare
+  `sharedComponentsTested.test.ts:99`, which asserts the scan found something).
+- **`orientation.test.ts` tells a failing engineer to edit the wrong file.** Its
+  header says "THE MAP IN CLAUDE.md HAS TO STAY TRUE", it reads
+  `docs/product/map.md`, and both failure messages say "the orientation in
+  CLAUDE.md does not mention". Line 32 of that same file records that the map
+  moved out of `CLAUDE.md` on 2026-09-19.
+- **`.claude/rules/testing.md:61-66` says seven allowlists have a companion
+  assertion "and all ten do now". There are 20.** The repo's own anti-drift rule
+  has drifted.
+
+And the duplication you suspected, counted: the **reachability** rule is stated
+in four places (`CLAUDE.md:41`, `.claude/rules/product-map.md`,
+`docs/known-failures.md:22`, `docs/product/map.md:238`) and the **db-access** rule
+in four (`.claude/rules/database.md:9`, `docs/product/map.md:85` and `:201`,
+`src/db/paging.ts`'s own header).
+
 ### Where the knowledge actually lives: nine places, not one
 
 `CLAUDE.md:44` says "Architecture: run `tests/unit/architecture.test.ts`, don't
@@ -567,9 +621,29 @@ In `tests/unit/architecture.test.ts:295`, `slices` becomes a `readdirSync` of
   `readdirSync('src')`. This is the actual fix; adopt now, for all three rules,
   with the per-rule exception recorded in the test itself rather than in prose.
 
-Also fix the third and fourth instances of the same bug:
-`sharedComponentsTested.test.ts:35` is scoped to `src/programs/components` while
-reading as repo-wide — either widen it or rename it to say what it checks.
+Also, in the same phase, fix the things the circularity section found — each is
+a test that reads as a guard and is not one:
+
+- **Delete or rewrite the vacuous test.** "API routes should not import business
+  logic directly" can never match; no `utils/` or `helpers/` directory exists.
+  Rewriting it means deciding what "business logic in a route" actually is, which
+  is a real design question — so **delete it and record the gap**, rather than
+  leave a green test standing in for a rule nobody wrote.
+- **Pick one number for route length.** Header says 30, test name says 50, code
+  enforces 50. Set the enforced number in the test and state it in the generated
+  `docs/architecture.md`; delete the header's contradicting sentence.
+- **Give the two slice tests a premise assertion.** Both carry
+  `if (!fs.existsSync(sliceDir)) continue`, so renaming a slice silently ends
+  enforcement. Copy the shape from `sharedComponentsTested.test.ts:99`, which
+  asserts its scan found something.
+- **`sharedComponentsTested.test.ts:35`** is scoped to `src/programs/components`
+  while reading as repo-wide — widen it or rename it to say what it checks.
+- **Fix `orientation.test.ts`'s own header and both failure messages**, which
+  send a failing engineer to `CLAUDE.md` for a map that moved to
+  `docs/product/map.md` on 2026-09-19.
+- **Fix `.claude/rules/testing.md:61-66`**, which says ten allowlists where there
+  are twenty — and make the count derived, since a hand-typed count is the same
+  bug one level up.
 
 **Acceptance test:** plant `src/zzz_probe/index.ts` exporting a type, confirm the
 new test fails naming `zzz_probe`, delete it. **Prove by removal in a worktree,
@@ -770,6 +844,23 @@ retired.
 **Why this is worth more than the line count:** 131 of 323 baselined lint errors
 and 88 of 218 unused variables live in `app/test`. Pruning removes **41% of the
 lint debt** without editing live code. That is why Phase 6 comes after.
+
+**This was trialled, not estimated.** I ran 3a in a throwaway worktree
+(`git worktree add --detach`, `node_modules` symlinked) and measured the result:
+
+- **220 files removed**, matching the prediction exactly.
+- **The suite went to 2 failures out of 6,643**, and both are ratchets working as
+  designed, not breakage: `architecture.test.ts > the runtime-locale allowlist
+  only shrinks` named **9 stale entries in `RUNTIME_LOCALE_ALLOWED`**, and
+  `lintRatchet.test.ts > the baseline names only files that exist` named **65
+  stale files**. Nothing else failed.
+- After `node scripts/lint-ratchet.mjs --update` and the typecheck equivalent:
+  **lint 323 → 193 (−130) and types 98 → 88 (−10)**, with no code edited.
+- The worktree was then removed and pruned; the main tree was untouched
+  throughout.
+
+So the two guard files to update are known by name before you start, and the
+debt reduction is measured rather than inferred.
 
 **Procedure, per folder, one commit each:**
 
