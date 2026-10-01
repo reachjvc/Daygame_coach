@@ -23,9 +23,9 @@ or permissions. Hand-rolling one pass is not a review. For a plan, see
 # When a plan is done
 
 Set its `**Status:**` to `done <date>`. Delete every branch
-`git branch --merged HEAD` lists but `main` and your own, push that, then
-`git worktree remove` and `git worktree prune`. `--merged main` trails the
-trunk. Never `-D`; `-d` checks the upstream, which deleted `beta` 2026-10-01.
+`git branch --merged HEAD` lists but `main` and your own, push, then
+`git worktree remove` and `git worktree prune`. That filter makes `-d` safe;
+alone it checks the upstream, which deleted `beta` 2026-10-01. Never `-D`.
 
 **Why a stand-in never feels like one.** The full account, with six worked
 examples, is under "How this plan's author kept being wrong" in

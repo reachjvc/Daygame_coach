@@ -526,11 +526,16 @@ Three details, each from something that went wrong:
   file it could not parse.
 - Read `@/*` from `tsconfig.json` rather than hardcoding `./*`.
 
-**Acceptance test:** `tests/unit/docs/smellsScript.test.ts` runs it with `--json`
-and checks reachability against a hand-counted fixture of seven known files —
-including `goalsStepTour.css` as lab-only (it proves the side-effect-import fix)
-and one file in a mixed folder. A scanner with no fixture silently stops finding
-things; this one already did.
+**Acceptance test — it must test the SCANNER, not the tree.**
+`tests/unit/docs/smellsScript.test.ts` runs the specifier parser over **inline
+fixture strings**, not over live files: one `from "@/x"`, one
+`import("./y")`, one bare `import "./z.css"`, one `require("./w")`, and one
+commented-out import that must NOT match. A fixture made of real paths rots the
+first time one of them moves, and then the test passes while measuring nothing —
+which is how the side-effect blind spot survived. Separately, assert the six
+`--json` sections are numeric, and that every walk root is guarded with
+`fs.existsSync` so a scanner cannot die of `ENOENT` when a phase deletes a
+directory it walks.
 
 **Gates**, commit.
 
@@ -960,7 +965,14 @@ One per smell class, each with a starting number written into it.
 2. **`the map names nothing that does not exist`** — Phase 1d. *Starts at 0.*
 3. **`no new top-level directory`** — a shrinking allowlist of what may sit at the
    repo root, so the next `new_new_clean_attempt/` fails on arrival instead of
-   being found seven months later.
+   being found seven months later. **Record the sorted path list, never a count**
+   — a count is unchanged when one entry is removed and another added, which is
+   the argument `scripts/lint-ratchet.mjs`'s own header makes — and use the
+   two-sided assertion this repo already uses: nothing outside the set, *and* no
+   stale entry in the set. **Ship it green**, with `new_new_clean_attempt` in the
+   allowlist; Phase 2a then removes that entry in the same commit as the files. A
+   test that arrives red is a test somebody disables. Live proof it is needed: a
+   peer created a new top-level `infra/` while this plan was being written.
 4. **`sharedBoundary`** — Phase 4.
 5. **`app/test/LABS.md` covers every lab route** — open question 2. *0 after Phase 3.*
 6. **`the lab has a half-life`** — lists folders with no commit in six months.
