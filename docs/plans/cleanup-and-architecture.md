@@ -224,9 +224,13 @@ assumed: a probe importing `@/src/shared/definitelyNotARealModule` failed in 65s
 with `Module not found`. `typescript.ignoreBuildErrors: true` suppresses *type*
 errors, not webpack resolution.
 
-**The integration suite cannot be a per-phase gate.** 369s, and it fails beside
-another session — `vitest.integration.config.ts` already sets
-`fileParallelism: false`, so the contention is between *sessions*.
+**The integration suite cannot be a per-phase LOCAL gate.** 369s, and it fails
+beside another session — `vitest.integration.config.ts` already sets
+`fileParallelism: false`, so the contention is between *sessions*, not files.
+**But CI runs it on every push** (`.github/workflows/ci.yml:53`, with a
+15-minute ceiling at line 54), so it is not escapable — only deferrable. Decide
+deliberately whether these phases are pushed one at a time or batched behind one
+push; each push buys a 6-minute integration run.
 
 **Your dev server is three days old.** PID 928644, 1.6 GB resident. A three-day
 HMR graph can keep serving a module a codemod has deleted — this repo's named
@@ -375,11 +379,14 @@ allowlist and nobody reads one.
 moves.* Lifecycle only, not built-state: the banner points at `map.md` for what
 is built, so there is one owner per fact. Do not archive or delete — you cite old
 plans for their reasoning (`training-rebuild.md` cites `training-overhaul.md`),
-and the 482 deleted docs are the standing argument. If you want a tidier folder,
-the five done-looking plans with **zero inbound references** can move for free:
-`training-three-doors`, `training-overhaul`, `one-hub`, `life-mastery-simple`,
-`life-mastery-off-the-bench`. `life-mastery-everything-saves` (7 refs) and
-`vice-finished` (6) must not move.
+and the 482 deleted docs are the standing argument. If you want a tidier folder, exactly
+**three** done-looking plans have zero inbound references and can move for free:
+`training-three-doors`, `training-overhaul`, `one-hub`. Not five — checked:
+`life-mastery-simple.md` and `life-mastery-off-the-bench.md` are in the
+`GRANDFATHERED` set of `tests/unit/docs/planConceptCheck.test.ts`, so moving
+either needs that entry updated in the same commit, and that set *may only
+shrink*. `life-mastery-everything-saves` (7 refs) and `vice-finished` (6) must
+not move at all.
 
 **7. Do the `goals` subslices each get their own `types.ts`, and does `goals`
 join the `slices` array now?**
