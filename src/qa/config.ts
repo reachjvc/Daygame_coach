@@ -1,3 +1,5 @@
+import { ollamaBaseUrl } from "@/src/shared/ollama"
+
 import type { QAConfig } from "./types"
 
 /**
@@ -6,7 +8,11 @@ import type { QAConfig } from "./types"
  */
 export const QA_CONFIG: QAConfig = {
   ollama: {
-    baseUrl: process.env.OLLAMA_API_URL || "http://localhost:11434",
+    // Read when used, so an unset OLLAMA_API_URL fails that request with
+    // "not configured" rather than at import. See src/shared/ollama.ts.
+    get baseUrl() {
+      return ollamaBaseUrl()
+    },
     chatModel: process.env.OLLAMA_MODEL || "llama3.1",
     embeddingModel: "nomic-embed-text",
     temperature: 0.5,

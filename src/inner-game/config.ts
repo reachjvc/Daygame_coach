@@ -1,3 +1,5 @@
+import { ollamaBaseUrl } from "@/src/shared/ollama"
+
 import type { CategoryInfo } from "./types"
 
 /**
@@ -241,7 +243,10 @@ export const STEP_LABELS = {
 // ============================================================================
 
 export const INFERENCE_CONFIG = {
-  baseUrl: process.env.OLLAMA_API_URL || "http://localhost:11434",
+  // Read when used: unset says "not configured". See src/shared/ollama.ts.
+  get baseUrl() {
+    return ollamaBaseUrl()
+  },
   model: process.env.OLLAMA_MODEL || "llama3.1",
   temperature: 0.7,
   maxTokens: 1024,

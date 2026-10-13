@@ -38,7 +38,8 @@ export function OfflineShell() {
        under one name — exactly the fault rule 5 in public/sw.js exists to fix.
        So a build with no id gets no offline support and says so, rather than
        quietly sharing a cache with the last one. NEXT_PUBLIC_BUILD_ID is set in
-       next.config.mjs, which reports "unknown" when it cannot ask git. */
+       next.config.mjs by scripts/build-id.mjs, which fails a build that has no
+       commit rather than call it "unknown". */
     const version = process.env.NEXT_PUBLIC_BUILD_ID
     if (!version || version === "unknown") {
       console.error(

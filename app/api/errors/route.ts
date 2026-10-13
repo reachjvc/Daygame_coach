@@ -17,8 +17,8 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { reports?: unknown[] }
     const incoming = Array.isArray(body.reports) ? body.reports.slice(0, 50) : []
-    // set at build time from the commit, in next.config.mjs. "unknown" means the
-    // build machine had no git and no Vercel commit — worth seeing, not guessing at.
+    // The commit this build was made from, set at build time by
+    // scripts/build-id.mjs, which fails a build that has no commit.
     const release = process.env.NEXT_PUBLIC_BUILD_ID ?? "unknown"
 
     const cleaned = incoming.flatMap((raw) => {

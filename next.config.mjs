@@ -1,32 +1,29 @@
 /* global process */
 // This file runs in Node at build time, not in a browser, so `process` is real
 // here. Declared explicitly because the lint config assumes a browser by default.
-import { execSync } from "node:child_process"
+import { buildId } from "./scripts/build-id.mjs"
 
 /**
- * Which build this is, so a crash report can say which version it came from.
+ * SELF-HOSTED BUILDS ONLY, so Vercel's build stays exactly as it is while it is
+ * still production. `infra/Dockerfile` sets NEXT_OUTPUT=standalone.
  *
- * Without it every build calls itself "dev", and a fault you fixed three
- * deploys ago goes on incrementing the same row forever — which makes the
- * "how often does this happen" number meaningless, and it is the number you
- * would use to decide what to fix first.
- *
- * Vercel provides the commit; locally we ask git. If neither answers we say
- * "unknown" rather than pretending, because a wrong version label is worse
- * than an absent one.
+ * - `output: "standalone"` copies only the files the server needs into
+ *   `.next/standalone`, with a `server.js` to run instead of `next start`.
+ * - `isrFlushToDisk: false` keeps regenerated pages in memory. The container's
+ *   filesystem is read-only, and Next would otherwise try to write them into
+ *   the image. Prerendered pages are still read from `.next/server` as before.
  */
-function buildId() {
-  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)
-  try {
-    return execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim()
-  } catch {
-    return "unknown"
-  }
-}
+const selfHosted =
+  process.env.NEXT_OUTPUT === "standalone"
+    ? { output: "standalone", experimental: { isrFlushToDisk: false } }
+    : {}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ...selfHosted,
   env: {
+    // Which commit this is, for crash reports, the offline store and
+    // /api/healthz. scripts/build-id.mjs explains the rules.
     NEXT_PUBLIC_BUILD_ID: buildId(),
   },
   // Lets a second instance run without fighting the first for .next/dev/lock —
