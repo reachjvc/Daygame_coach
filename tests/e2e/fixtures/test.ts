@@ -46,6 +46,7 @@
  */
 import { test as base, expect, type Browser, type Page, type WorkerInfo } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
+import os from 'node:os'
 import path from 'node:path'
 import { SELECTORS } from '../helpers/selectors'
 import { fillSecret } from '../helpers/secret'
@@ -101,6 +102,7 @@ async function theSharedAccount(): Promise<Credentials> {
  */
 export async function signIn(page: Page, account: Credentials): Promise<void> {
   await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
+  await waitForReactOn(page, SELECTORS.auth.emailInput)
   await page.getByTestId(SELECTORS.auth.emailInput).fill(account.email, { timeout: AUTH_TIMEOUT })
   await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), account.password, { timeout: AUTH_TIMEOUT })
   await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: AUTH_TIMEOUT })
@@ -122,6 +124,27 @@ export async function signIn(page: Page, account: Credentials): Promise<void> {
     .toBe('signed in')
 }
 
+/**
+ * WAIT UNTIL REACT OWNS THE FIELD, NOT JUST UNTIL IT IS VISIBLE.
+ *
+ * The login form is server-rendered, so its inputs are visible 0.5–0.8 s before
+ * React attaches to them on a busy machine. Typing and clicking in that window
+ * does a native submit that reloads the page empty: no request reaches the auth
+ * server, and the account never signs in. Under parallel load most WebKit and
+ * phone workers failed to provision this way (2026-10-13). `networkidle` is not
+ * proof (helpers/hydration.ts says why); React's props on the element are.
+ */
+async function waitForReactOn(page: Page, testId: string): Promise<void> {
+  await page.waitForFunction(
+    (id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`)
+      return !!el && Object.keys(el).some((key) => key.startsWith('__reactProps'))
+    },
+    testId,
+    { timeout: AUTH_TIMEOUT },
+  )
+}
+
 /** Records the account's zone as CHOSEN, so the one-time browser sync never overwrites it. */
 async function pinTimezone(page: Page, timezone: string): Promise<void> {
   const res = await page.request.put('/api/settings/time-preferences', { data: { timezone, source: 'chosen' } })
@@ -138,9 +161,14 @@ async function provision(
   credentials: () => Promise<Credentials>,
 ): Promise<SignedInAccount> {
   const account = await credentials()
+  // Not under test-results/: every other Playwright run empties that folder when
+  // it starts, and a second context opened from this file mid-run then finds
+  // nothing. One folder per run — the workers' parent is the runner — so two
+  // runs at once cannot overwrite each other's worker files either.
   const storageState = path.join(
-    workerInfo.project.outputDir,
-    '.accounts',
+    os.tmpdir(),
+    'daygame-e2e-accounts',
+    String(process.ppid),
     `${workerInfo.project.name}-${workerInfo.workerIndex}-${label}.json`,
   )
   const context = await browser.newContext({
