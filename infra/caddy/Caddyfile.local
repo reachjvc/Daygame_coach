@@ -21,8 +21,8 @@
 #      `-H 127.0.0.1` and this file is the only public door.
 #   3. Auth redirects are built from `window.location.origin`, so a new origin
 #      has to be on Supabase's redirect allow-list or sign-up and password
-#      reset bounce. That is a dashboard change, listed as a blocker in
-#      docs/plans/local-deploy-caddy-and-cicd.md.
+#      reset bounce. That is a dashboard change, listed as blocker
+#      B-SUPABASE-REDIRECT in Plans/caddy-deploy-and-cicd.md.
 #
 # NO HSTS HERE, AND IT IS NOT AN OVERSIGHT. Strict-Transport-Security applies
 # to a HOST and ignores the port, so an HSTS header served for `localhost`

@@ -98,7 +98,7 @@ describe("HSTS is kept away from localhost and required on the real domain", () 
   })
 
   it("the production Caddyfile, once it exists, does send HSTS", () => {
-    // Phase 6 of docs/plans/local-deploy-and-cd-pipeline.md creates this file.
+    // Phase 5 of Plans/caddy-deploy-and-cicd.md creates this file.
     // Until then there is nothing to check, and saying so is better than a
     // test that silently passes on a missing file forever.
     if (!existsSync(join(ROOT, CADDYFILE_PROD))) {

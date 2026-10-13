@@ -10,7 +10,8 @@ only worth something if the machine it is restored onto can be rebuilt, so the
 backup plan is only as good as the machine plan.
 
 The plan that owns this work, including its blockers and its decisions, is
-`docs/plans/local-deploy-and-cd-pipeline.md`.
+`Plans/caddy-deploy-and-cicd.md` (it replaced `docs/plans/local-deploy-and-cd-pipeline.md`
+on 2026-10-13).
 
 ## Run it
 

@@ -1,5 +1,11 @@
 # The app on your own box, and a pipeline that puts it there
 
+**Superseded 2026-10-13 by `Plans/caddy-deploy-and-cicd.md`. Do not execute from this file.** Its
+Phase 1 (the local deployment) still stands and is still running. Its later phases were re-planned,
+because four of their assumptions were wrong: a `workflow_run` deploy fires only from `main`; GitHub
+cannot reach this machine over SSH; Node 20 is end-of-life; and the 120-second build timeout was not
+why the heavy suite is red. The new plan lists the details. This file is kept for its history.
+
 **Written 2026-10-01.** Serves vision items **37** (the CD half of your friend's
 CI/CD advice) and **43** (CI exists, CD does not; `npm audit` and secret scanning
 are named there as missing). It is the **local rehearsal of M1.1, M1.7 and M1.8**
