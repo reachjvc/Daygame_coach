@@ -84,7 +84,7 @@ async function seed(page: Page, record: unknown | null) {
   // so the losing order is guaranteed.
   await settled(page)
 
-  await page.evaluate(async (r) => {
+  const seededAt = await page.evaluate(async (r) => {
     const put = (rows: unknown) =>
       fetch("/api/black-box", {
         method: "PUT",
@@ -119,7 +119,7 @@ async function seed(page: Page, record: unknown | null) {
     window.localStorage.removeItem("vice-blackbox-view")
     if (r === null) {
       window.localStorage.removeItem("vice-blackbox-v1")
-      return
+      return now + 1000
     }
     // Every seeded row is stamped fresh, so it outranks the tombstones above
     // and is what the account ends up holding once the page pushes it.
@@ -129,6 +129,7 @@ async function seed(page: Page, record: unknown | null) {
       attempts: rec.attempts.map((a) => ({ ...a, updatedAt: seeded, deletedAt: null })),
       reports: rec.reports.map((x) => ({ ...x, updatedAt: seeded, deletedAt: null })),
     }))
+    return now + 1000
   }, record)
 
   await page.reload()
@@ -141,6 +142,16 @@ async function seed(page: Page, record: unknown | null) {
   // racing it. Not the status line — that is inside a section which only
   // renders once there is a run, so an empty seed would wait forever.
   await settled(page)
+
+  // AND THE CLOCK PAST THE SEED'S STAMP, which is one second in the future so
+  // it outranks the tombstones. Pushing the seed moves the page's watermark to
+  // that stamp, and a change the test makes before the clock reaches it is
+  // stamped EARLIER than the watermark: never pending, never sent. In CI run
+  // 38437166271 a lapse filed 0.5 s after the seed never reached the second
+  // device, and a report filed "offline" never tried to leave, so the page
+  // still said "Saved to your account". The product has the same fault for a
+  // device whose clock runs ahead (Plans/tests-worth-their-keep.md, bugs).
+  await page.waitForFunction((t) => Date.now() > t, seededAt)
 }
 
 /**

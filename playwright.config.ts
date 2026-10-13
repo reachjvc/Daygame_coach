@@ -89,10 +89,10 @@ const LOCAL_HTTPS = /^https:\/\/(localhost|127\.0\.0\.1|[a-z0-9-]+\.localhost)(:
  *   @timing  measures real time (a rest clock, a background tab). Runs in a lane
  *            of its own with one worker, so a busy machine cannot fail it.
  */
-const PHONE = /mobile\/|@phone/
-const ENGINE = /@engine|cross-browser\//
-const TIMING = /@timing/
-const PHONE_TIMING = /^(?=.*(?:mobile\/|@phone))(?=.*@timing)/
+const PHONE = /mobile\/|@phone\b/
+const ENGINE = /@engine\b|cross-browser\//
+const TIMING = /@timing\b/
+const PHONE_TIMING = /^(?=.*(?:mobile\/|@phone\b))(?=.*@timing\b)/
 const SWEEPS = /sweep\//
 
 /**
@@ -121,6 +121,19 @@ export default defineConfig({
     // cookies, and CI's artifacts on this public repo are downloadable.
     trace: process.env.CI ? 'off' : 'on-first-retry',
     headless: true,
+    /**
+     * NO SERVICE WORKER, EXCEPT IN THE SPEC THAT TESTS IT (vice-offline).
+     *
+     * `public/sw.js` registers in production builds only, so CI ran a
+     * different app from every local run. Once it controls a page, Chromium
+     * sends that page's requests through the worker's own network stack, where
+     * `context.setOffline` does not reach: in CI run 38437166271 the Black
+     * Box's "filed with no signal" went straight to the account while the
+     * context was offline, and it depended on whether the worker had claimed
+     * the page yet, so the same test passed, failed, and passed on retry. Its
+     * background shell fetches also re-rendered pages beside the test.
+     */
+    serviceWorkers: 'block',
   },
   projects: [
     // === Every pull request ===
@@ -205,15 +218,16 @@ export default defineConfig({
   /**
    * THE APP, ON ITS OWN PORT AND ITS OWN BUILD FOLDER, AGAINST THE TEST BACKEND.
    *
-   * `env` reaches the BUILD as well as the server: Next inlines every
-   * `NEXT_PUBLIC_*` value into the client bundle at build time, so a CI build
-   * made without these would send the browser to whichever backend the build
-   * machine's env named. The server's own `.env.local` loading never overrides
-   * a variable already set, so these win over the live project's there too.
+   * The backend's address and keys reach the build and the server through
+   * `process.env`, which the top of this file has already pointed at the test
+   * backend and which the web server inherits. Not through `env` here: the blob
+   * reporter writes this whole object into every CI report, and those are
+   * public. Next inlines every `NEXT_PUBLIC_*` value into the client bundle at
+   * build time, and its own `.env.local` loading never overrides a variable
+   * already set, so the live project's values cannot win.
    *
    * Locally a dev server: a production build freezes this WSL machine
-   * (scripts/build.sh). CI builds with webpack and starts it; Phase 9 moves the
-   * build into a job of its own.
+   * (scripts/build.sh). In CI each shard builds its own (e2e.yml says why).
    */
   webServer: {
     command: process.env.CI
@@ -222,14 +236,9 @@ export default defineConfig({
     url: BASE_URL,
     ignoreHTTPSErrors: LOCAL_HTTPS,
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Allow more time for build in CI
-    env: STACK
-      ? {
-          NEXT_PUBLIC_SUPABASE_URL: STACK.API_URL,
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: STACK.ANON_KEY,
-          SUPABASE_SERVICE_ROLE_KEY: STACK.SERVICE_ROLE_KEY,
-          NEXT_DIST_DIR: '.next-e2e',
-        }
-      : undefined,
+    // The CI build alone measured ~90 s on a 4-CPU runner, and every shard
+    // builds; 120 s left a shard one slow runner away from failing unbuilt.
+    timeout: process.env.CI ? 300_000 : 120_000,
+    env: { NEXT_DIST_DIR: '.next-e2e' },
   },
 })

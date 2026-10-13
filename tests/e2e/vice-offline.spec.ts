@@ -113,6 +113,10 @@ async function shellIsStored(page: Page, path: string): Promise<boolean> {
   }, path)
 }
 
+// The worker is the subject here; every other spec runs with it blocked
+// (playwright.config.ts says why).
+test.use({ serviceWorkers: "allow" })
+
 test("the Black Box opens with no connection, and its record is there", async ({ page, context }) => {
   await neverWriteToTheAccount(page)
   await page.goto(QUIT_VICE)
