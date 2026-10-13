@@ -164,7 +164,7 @@ describe("a missing setting stops compose, and the proxy strips what a leaked ke
   it("fails on a missing image, env file or Caddyfile instead of guessing", () => {
     expect(app.image).toMatch(/^\$\{APP_IMAGE:\?/)
     expect(app.env_file).toMatch(/^\$\{APP_ENV_FILE:\?/)
-    expect(caddy.volumes?.[0]).toMatch(/^\$\{CADDYFILE:\?/)
+    expect(caddy.volumes?.[0]).toMatch(/^\.\/\$\{CADDYFILE:\?/)
   })
 
   it("strips the preview and subrequest headers before they reach the app", () => {

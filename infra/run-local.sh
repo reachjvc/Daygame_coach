@@ -57,13 +57,17 @@ ensure_env_files() {
     "$INFRA/write-env-file.sh" staging
   fi
   if [ ! -f "$DEPLOY_ENV" ]; then
-    umask 077
-    cat > "$DEPLOY_ENV" <<EOF
+    # In a subshell: a umask set here would leak into the image build below,
+    # and an image built from 0600 files cannot be read by its own user.
+    (
+      umask 077
+      cat > "$DEPLOY_ENV" <<EOF
 APP_ENV_FILE=$RUNTIME_ENV
 CADDYFILE=caddy/Caddyfile.local
 SITE_HOST=localhost
 CA_CERT=$CA_OUT
 EOF
+    )
     say "Wrote $DEPLOY_ENV (this machine's settings for infra/deploy.sh)"
   fi
 }

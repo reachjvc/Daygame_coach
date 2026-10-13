@@ -60,7 +60,8 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ${CADDYFILE:?CADDYFILE names the Caddyfile for this machine}:/etc/caddy/Caddyfile:ro
+      # Relative to infra/, so compose reads it as a path, not a volume name.
+      - ./${CADDYFILE:?CADDYFILE names the Caddyfile for this machine, relative to infra/}:/etc/caddy/Caddyfile:ro
       - ./caddy/common.caddy:/etc/caddy/common.caddy:ro
       # The certificates, and here the local root that a browser may trust.
       # Persistent: lose it and every certificate changes overnight.

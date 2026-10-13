@@ -75,8 +75,18 @@ describe("infra/deploy.sh refuses", () => {
   })
 })
 
-describe("infra/build-image.sh refuses", () => {
-  it("something that is not a commit", () => {
+describe("infra/build-image.sh", () => {
+  it("extracts the commit with umask 022, so the image's non-root user can read its own files", () => {
+    // 2026-10-13: a caller's umask 077 leaked into the extraction, every file
+    // in the image became 0600 root-owned, and the container could not read
+    // scripts/check-runtime-env.mjs. infra/deploy.sh caught it and stopped it.
+    const script = readFileSync(join(ROOT, "infra/build-image.sh"), "utf8")
+    const umask = script.indexOf("umask 022")
+    expect(umask).toBeGreaterThan(-1)
+    expect(umask).toBeLessThan(script.indexOf("archive --format=tar"))
+  })
+
+  it("refuses something that is not a commit", () => {
     const r = run("infra/build-image.sh", ["not-a-commit-anywhere"])
     expect(r.status).toBe(1)
     expect(r.stderr).toContain("is not a commit")

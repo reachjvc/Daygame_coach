@@ -87,6 +87,10 @@ cap="$(docker inspect -f '{{.HostConfig.Memory}}' "buildx_buildkit_${BUILDER}0" 
 
 # --- the build context ---------------------------------------------------------
 if [ "$mode" = commit ]; then
+  # The image runs as uid 1000, so every file must be readable by others.
+  # tar applies the caller's umask to the archive's modes; a caller with
+  # umask 077 would otherwise produce an image that cannot read itself.
+  umask 022
   ctx="$(mktemp -d "${TMPDIR:-/tmp}/daygame-build-XXXXXX")"
   trap 'rm -rf "$ctx"' EXIT
   git -C "$REPO" archive --format=tar "$sha" | tar -x -C "$ctx"
