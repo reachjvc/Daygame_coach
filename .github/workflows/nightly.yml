@@ -4,13 +4,20 @@ name: Nightly checks
 # cannot sit in `npm test`: a commit cannot make them pass or fail.
 # Plans/tests-worth-their-keep.md, Phase 10.
 #
-# `schedule` only fires on the default branch; `workflow_dispatch` runs it on
-# any branch by hand.
+# GitHub schedules and dispatches only a workflow the DEFAULT branch has, so
+# until this file is on main those two never fire. A push that changes the
+# ratchet, its baselines or this file runs it on that branch, which is also
+# when a changed baseline most needs checking.
 on:
   schedule:
     # 04:30 UTC, after e2e.yml's 03:00 nightly run has had time to finish.
     - cron: '30 4 * * *'
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/nightly.yml
+      - scripts/ci/durations.mjs
+      - docs/testing/durations.json
 
 permissions:
   contents: read
