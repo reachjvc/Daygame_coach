@@ -13,7 +13,6 @@ Read `docs/testing_behavior.md` before writing tests.
 | `*.integration.test.ts` | Vitest | `tests/integration/` |
 | `*.spec.ts` | Playwright | `tests/e2e/` |
 
-- Check `.test-known-failures.json` before calling a failure pre-existing.
 - Test production functions, not raw SQL. No tests that pass by doing nothing.
 - The `training` Playwright project runs real flows at 390×844 on one worker; its specs share one account, so never run them in parallel.
 

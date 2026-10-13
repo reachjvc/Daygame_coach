@@ -10,7 +10,7 @@ that stage.
 
 ## Commands
 
-- `npm run dev` — localhost:3000. Test logins are in `.env` / `.env.local`.
+- `npm run dev` — localhost:3000.
 - `npm test` (Vitest), `npm run test:e2e` (Playwright). The pre-commit hook
   runs `npm test` and refuses the commit on failure.
 - `npm run build` — keep `--webpack`; the default bundler exhausts WSL memory.

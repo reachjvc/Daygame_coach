@@ -32,13 +32,10 @@
  * guards — lives in scripts/lib/ratchet.mjs, because scripts/lint-ratchet.mjs
  * needs exactly the same thing and two copies of it would drift apart silently.
  *
- * WHERE IT RUNS, AND WHAT THAT COVERS: `.github/workflows/ci.yml` on every push
- * and pull request — that is the gate, and it checks the pushed commit.
- * `.husky/pre-push` runs it too, as a fast local warning, but it checks the
- * WORKING TREE, not the commits being pushed: uncommitted work counts, and
- * committed work you have since changed does not. Stashing to fix that is
- * forbidden here (a second agent shares this checkout), so the hook says what it
- * measured and CI remains the thing that decides.
+ * WHERE IT RUNS: `.github/workflows/ci.yml` on every push and pull request —
+ * that is the gate, and it checks the pushed commit. Run locally, it checks the
+ * WORKING TREE, which in this shared checkout includes other sessions'
+ * uncommitted work.
  */
 
 import { spawnSync } from "node:child_process"

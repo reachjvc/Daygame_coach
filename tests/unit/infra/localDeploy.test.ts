@@ -5,7 +5,7 @@
  * `infra/` carries four rules that are invisible until the day they are broken,
  * and each of them is currently written down in more than one file. A rule
  * stored twice is a rule that can disagree with itself, which is the shape of
- * half the failures in docs/known-failures.md.
+ * many past failures here.
  *
  *   1. THE PORT. 3100 appears in the Caddyfile, in the systemd unit and in
  *      run-local.sh. Change one and the proxy answers 502 — on a deployment

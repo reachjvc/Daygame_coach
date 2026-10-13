@@ -322,8 +322,7 @@ describe("every page has a way in", () => {
       orphans,
       `no way in to: ${orphans.join(", ")} — link it from a page people already reach, ` +
         `or remove it. A link in an unmounted component, or on a page that is itself an ` +
-        `orphan, does not count. Known-failing entries (with the reason) live in ` +
-        `.test-known-failures.json — check there before treating this as new`
+        `orphan, does not count.`
     ).toEqual([])
   })
 
