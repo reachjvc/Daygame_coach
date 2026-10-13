@@ -7,7 +7,7 @@
  * shape rules hold for writes that do not come through the app at all.
  *
  * The table owner bypasses RLS, so every denial test runs under the
- * `authenticated` role via SET ROLE — the same shape the beta-invite tests use.
+ * `authenticated` role via `asUser` (tests/integration/setup.ts).
  */
 
 import { describe, it, expect, beforeEach, afterAll } from "vitest"
@@ -60,15 +60,6 @@ describe("program_drafts", () => {
     await truncateAllTables()
   })
 
-  it("keeps a week you save, with its lifts intact", async () => {
-    const [row] = await sql<{ id: string; schedule: { days: { exercises: unknown[] }[] } }>(
-      `INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Push Pull', $2)
-       RETURNING id, schedule`,
-      [me, WEEK]
-    )
-    expect(row!.schedule.days[0]!.exercises).toHaveLength(1)
-  })
-
   /**
    * A DRAFT MAY BE HALF-BUILT. Building a week over two sittings is the
    * ordinary case; refusing to SAVE one is how the builder came to lose
@@ -89,14 +80,14 @@ describe("program_drafts", () => {
   it("refuses a schedule that is not an object with days", async () => {
     await expect(
       sql(`INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Broken', '[]'::jsonb)`, [me])
-    ).rejects.toThrow(/program_drafts_schedule_shape/)
+    ).rejects.toMatchObject({ code: "23514", constraint: "program_drafts_schedule_shape" })
   })
 
   it("refuses two weeks with the same name for one person", async () => {
     await sql(`INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Week A', $2)`, [me, WEEK])
     await expect(
       sql(`INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Week A', $2)`, [me, WEEK])
-    ).rejects.toThrow(/duplicate key|unique/i)
+    ).rejects.toMatchObject({ code: "23505", constraint: "program_drafts_user_id_name_key" })
   })
 
   it("lets two different people each have a week called the same thing", async () => {
@@ -111,23 +102,34 @@ describe("program_drafts", () => {
   it("refuses a name that is only spaces", async () => {
     await expect(
       sql(`INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, '   ', $2)`, [me, WEEK])
-    ).rejects.toThrow(/program_drafts_name_check|violates check/i)
+    ).rejects.toMatchObject({ code: "23514", constraint: "program_drafts_name_check" })
   })
 
+  /**
+   * SEEDED FROM 2020, so "it moved" cannot pass by the update landing in the
+   * same instant as the insert — which is all `>=` against the insert's own
+   * timestamp could ever prove. And the update names an old value outright: a
+   * client sending a stale `updated_at` must not be able to bury a week either.
+   */
   it("moves updated_at itself, so a client that forgets cannot reorder the list", async () => {
-    const [row] = await sql<{ id: string; updated_at: Date }>(
-      `INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Week A', $2)
-       RETURNING id, updated_at`,
+    const [row] = await sql<{ id: string }>(
+      `INSERT INTO program_drafts (user_id, name, schedule, updated_at)
+       VALUES ($1, 'Week A', $2, '2020-01-01T00:00:00Z') RETURNING id`,
       [me, WEEK]
     )
     await sql(`UPDATE program_drafts SET name = 'Week B' WHERE id = $1`, [row!.id])
-    const [after] = await sql<{ updated_at: Date }>(
-      `SELECT updated_at FROM program_drafts WHERE id = $1`,
+    const [renamed] = await sql<{ fresh: boolean }>(
+      `SELECT updated_at > now() - interval '1 minute' AS fresh FROM program_drafts WHERE id = $1`,
       [row!.id]
     )
-    expect(new Date(after!.updated_at).getTime()).toBeGreaterThanOrEqual(
-      new Date(row!.updated_at).getTime()
+    expect(renamed!.fresh, "a rename moves the week to the top").toBe(true)
+
+    await sql(`UPDATE program_drafts SET updated_at = '2020-01-01T00:00:00Z' WHERE id = $1`, [row!.id])
+    const [stale] = await sql<{ fresh: boolean }>(
+      `SELECT updated_at > now() - interval '1 minute' AS fresh FROM program_drafts WHERE id = $1`,
+      [row!.id]
     )
+    expect(stale!.fresh, "a stale timestamp from the client is overwritten").toBe(true)
   })
 
   // ---- the security property, exercised rather than asserted --------------

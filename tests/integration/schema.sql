@@ -2253,6 +2253,12 @@ BEGIN
     END IF;
 
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
+    -- Production has Supabase's default grant-all to `authenticated` on every
+    -- table it creates (see 20260908120000_revoke_truncate_from_clients.sql:43);
+    -- this mirror had the policies and no grant, so a signed-in caller was
+    -- refused with "permission denied" before a single policy was consulted,
+    -- and every test of save_life_plan had to run as the table owner instead.
+    EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON %I TO authenticated', t);
 
     -- WITH CHECK is spelled out on UPDATE rather than left implicit. Postgres
     -- falls back to USING when it is absent, so this changes nothing today; it

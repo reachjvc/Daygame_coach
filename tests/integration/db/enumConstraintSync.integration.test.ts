@@ -1,15 +1,27 @@
 /**
- * Integration test: Code enums ↔ DB CHECK constraints sync.
+ * Integration test: code enums ↔ DB CHECK constraints sync.
  *
- * Queries actual Postgres CHECK constraint definitions from pg_constraint
- * and asserts they match the canonical enum arrays in src/db/goalEnums.ts.
+ * Reads the CHECK constraints out of pg_constraint and asserts each one allows
+ * exactly the values of the code array the app validates against — so a value
+ * added on one side only fails here rather than at somebody's save.
  *
- * Catches drift in either direction:
- * - Code adds a value but DB constraint wasn't updated
- * - DB constraint has a value that code doesn't know about
+ * A constraint is matched by the COLUMNS IT CONSTRAINS (pg_constraint.conkey),
+ * not by whether its text mentions the column name. The text match took the
+ * first constraint whose definition contained the name anywhere — a CHECK on
+ * another column that merely mentioned this one would have answered for it —
+ * and a column with two CHECKs was read as having one.
+ *
+ * WHAT THIS CANNOT SEE: it reads tests/integration/schema.sql, a hand-written
+ * mirror. Production has drifted from it — `user_goals` in production carries a
+ * second `display_category` CHECK without 'scenarios' (see
+ * 20260920100000_goal_abstinence.sql), which this mirror does not have. Code
+ * enums whose values live only inside a `z.enum([...])` literal (program level,
+ * session type, set kind, draft source) are not exported, so they cannot be
+ * compared here without a change to src/.
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "vitest"
+import type { Client } from "pg"
 import { getClient } from "../setup"
 import {
   GOAL_TYPES,
@@ -20,80 +32,55 @@ import {
   GOAL_TRACKING_TYPES,
   GOAL_PHASES,
 } from "@/src/db/goalEnums"
-import { Client } from "pg"
+import { SESSION_END_REASONS } from "@/src/db/trackingEnums"
+import { NS_FIELD_KINDS } from "@/src/goals/types"
 
-/** Extract allowed values from a CHECK constraint definition string. */
+/** The quoted literals of a CHECK, in either form Postgres prints. */
 function parseCheckValues(constraintDef: string): string[] {
-  // Matches patterns like:
-  //   CHECK ((col = ANY (ARRAY['a'::text, 'b'::text])))
-  //   CHECK ((col IS NULL OR (col = ANY (ARRAY['a'::text, 'b'::text]))))
-  //   CHECK (col IN ('a', 'b', 'c'))
-  //   CHECK ((col IS NULL OR col IN ('a', 'b')))
-  const values: string[] = []
-
-  // Pattern 1: ARRAY['val'::text, ...] (Postgres normalizes inline CHECK to this)
+  // `col = ANY (ARRAY['a'::text, 'b'::text])` — how Postgres prints an IN list.
   const arrayMatch = constraintDef.match(/ARRAY\[([^\]]+)\]/)
   if (arrayMatch) {
-    const items = arrayMatch[1].matchAll(/'([^']+)'::text/g)
-    for (const m of items) {
-      values.push(m[1])
-    }
-    return values.sort()
+    return [...arrayMatch[1].matchAll(/'([^']+)'::text/g)].map((m) => m[1]).sort()
   }
-
-  // Pattern 2: IN ('val1', 'val2', ...) (raw SQL form)
+  // `col IN ('a', 'b')` — the raw form, should a definition ever print that way.
   const inMatch = constraintDef.match(/IN\s*\(([^)]+)\)/i)
   if (inMatch) {
-    const items = inMatch[1].matchAll(/'([^']+)'/g)
-    for (const m of items) {
-      values.push(m[1])
-    }
-    return values.sort()
+    return [...inMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1]).sort()
   }
-
-  return values
+  return []
 }
 
-/** Query all CHECK constraints for a table and return a map of constraint_name → definition. */
-async function getCheckConstraints(
-  client: Client,
-  tableName: string
-): Promise<Map<string, string>> {
+/** Every CHECK on `table` that constrains exactly the one column `column`. */
+async function checksOnColumn(client: Client, table: string, column: string): Promise<string[]> {
   const result = await client.query(
-    `SELECT con.conname AS name, pg_get_constraintdef(con.oid) AS definition
-     FROM pg_constraint con
-     JOIN pg_class rel ON con.conrelid = rel.oid
-     JOIN pg_namespace nsp ON rel.relnamespace = nsp.oid
-     WHERE nsp.nspname = 'public'
-       AND rel.relname = $1
-       AND con.contype = 'c'
-     ORDER BY con.conname`,
-    [tableName]
+    `SELECT pg_get_constraintdef(con.oid) AS definition
+       FROM pg_constraint con
+      WHERE con.contype = 'c'
+        AND con.conrelid = to_regclass('public.' || $1)
+        AND ARRAY(SELECT a.attname::text
+                    FROM unnest(con.conkey) AS k(attnum)
+                    JOIN pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = k.attnum)
+            = ARRAY[$2::text]`,
+    [table, column]
   )
-  const map = new Map<string, string>()
-  for (const row of result.rows) {
-    map.set(row.name, row.definition)
-  }
-  return map
+  return result.rows.map((r) => r.definition as string)
 }
 
-/** Find the constraint definition that references a given column name. */
-function findConstraintForColumn(
-  constraints: Map<string, string>,
-  columnName: string
-): string | undefined {
-  for (const [, def] of constraints) {
-    if (def.includes(columnName)) {
-      return def
-    }
-  }
-  return undefined
-}
+const ENUMS: Array<{ name: string; table: string; column: string; codeValues: readonly string[] }> = [
+  { name: "GOAL_TYPES", table: "user_goals", column: "goal_type", codeValues: GOAL_TYPES },
+  { name: "GOAL_TRACKING_TYPES", table: "user_goals", column: "tracking_type", codeValues: GOAL_TRACKING_TYPES },
+  { name: "GOAL_PERIODS", table: "user_goals", column: "period", codeValues: GOAL_PERIODS },
+  { name: "GOAL_DISPLAY_CATEGORIES", table: "user_goals", column: "display_category", codeValues: GOAL_DISPLAY_CATEGORIES },
+  { name: "GOAL_NATURES", table: "user_goals", column: "goal_nature", codeValues: GOAL_NATURES },
+  { name: "LINKED_METRICS", table: "user_goals", column: "linked_metric", codeValues: LINKED_METRICS },
+  { name: "GOAL_PHASES", table: "user_goals", column: "goal_phase", codeValues: GOAL_PHASES },
+  { name: "SESSION_END_REASONS", table: "sessions", column: "end_reason", codeValues: SESSION_END_REASONS },
+  { name: "NS_FIELD_KINDS", table: "life_plan_fields", column: "kind", codeValues: NS_FIELD_KINDS },
+]
 
 describe("Enum ↔ DB CHECK constraint sync", () => {
   let client: Client
 
-  // Single connection for all read-only queries
   beforeAll(async () => {
     client = await getClient()
   })
@@ -102,41 +89,13 @@ describe("Enum ↔ DB CHECK constraint sync", () => {
     await client.end()
   })
 
-  let constraints: Map<string, string>
-
-  test("can query CHECK constraints from user_goals", async () => {
-    constraints = await getCheckConstraints(client, "user_goals")
-    expect(constraints.size).toBeGreaterThan(0)
-  })
-
-  const ENUM_COLUMN_MAP: Array<{
-    name: string
-    column: string
-    codeValues: readonly string[]
-  }> = [
-    { name: "GOAL_TYPES", column: "goal_type", codeValues: GOAL_TYPES },
-    { name: "GOAL_TRACKING_TYPES", column: "tracking_type", codeValues: GOAL_TRACKING_TYPES },
-    { name: "GOAL_PERIODS", column: "period", codeValues: GOAL_PERIODS },
-    { name: "GOAL_DISPLAY_CATEGORIES", column: "display_category", codeValues: GOAL_DISPLAY_CATEGORIES },
-    { name: "GOAL_NATURES", column: "goal_nature", codeValues: GOAL_NATURES },
-    { name: "LINKED_METRICS", column: "linked_metric", codeValues: LINKED_METRICS },
-    { name: "GOAL_PHASES", column: "goal_phase", codeValues: GOAL_PHASES },
-  ]
-
-  for (const { name, column, codeValues } of ENUM_COLUMN_MAP) {
-    test(`${name} matches DB CHECK constraint on '${column}'`, async () => {
-      // Re-fetch if first test hasn't populated yet
-      if (!constraints) {
-        constraints = await getCheckConstraints(client, "user_goals")
-      }
-
-      const def = findConstraintForColumn(constraints, column)
-      expect(def, `No CHECK constraint found for column '${column}'`).toBeDefined()
-
-      const dbValues = parseCheckValues(def!)
-      const sorted = [...codeValues].sort()
-
-      expect(dbValues).toEqual(sorted)
+  for (const { name, table, column, codeValues } of ENUMS) {
+    test(`${name} matches the CHECK on ${table}.${column}`, async () => {
+      const defs = await checksOnColumn(client, table, column)
+      // Exactly one: two CHECKs on a column must BOTH hold, so a value only one
+      // of them allows is refused — and comparing against the first would miss it.
+      expect(defs, `CHECK constraints on ${table}.${column}`).toHaveLength(1)
+      expect(parseCheckValues(defs[0]!)).toEqual([...codeValues].sort())
     })
   }
 })

@@ -13,7 +13,7 @@
  */
 
 import { describe, test, expect, beforeEach } from "vitest"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
 
 const CURSOR = JSON.stringify({ cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 })
 
@@ -270,23 +270,23 @@ describe("the sets in a workout", () => {
 
   test("a set can be corrected in place — the whole point of the merge", async () => {
     // `program_session_logs` had read, insert and delete policies and NO
-    // update, so the app reported success and changed nothing. These rows have
-    // always been updatable; the engine now reads them.
+    // update, so the app reported success and changed nothing. That is a fact
+    // about POLICIES, so it is checked as a signed-in person: the table owner
+    // this used to run as is exempt from every policy, and would have passed
+    // with no UPDATE policy at all.
     await addSet({ reps: 5 })
-    await sql(`UPDATE workout_sets SET reps = 3 WHERE log_id = $1`, [logId])
-    const rows = await sql<{ reps: number }>(
-      `SELECT reps FROM workout_sets WHERE log_id = $1`,
-      [logId]
-    )
-    expect(rows[0].reps).toBe(3)
-  })
-})
 
-describe("the second copy is gone", () => {
-  test("program_session_logs no longer exists", async () => {
-    const rows = await sql(
-      `SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'program_session_logs'`
+    const theirs = await asUser(otherUserId, (q) =>
+      q(`UPDATE workout_sets SET reps = 1 WHERE log_id = $1 RETURNING id`, [logId])
     )
-    expect(rows).toHaveLength(0)
+    expect(theirs, "somebody else's correction reaches no row").toEqual([])
+
+    const mine = await asUser(userId, (q) =>
+      q(`UPDATE workout_sets SET reps = 3 WHERE log_id = $1 RETURNING reps`, [logId])
+    )
+    expect(mine, "the owner's correction lands").toEqual([{ reps: 3 }])
+
+    const rows = await sql<{ reps: number }>(`SELECT reps FROM workout_sets WHERE log_id = $1`, [logId])
+    expect(rows[0].reps).toBe(3)
   })
 })

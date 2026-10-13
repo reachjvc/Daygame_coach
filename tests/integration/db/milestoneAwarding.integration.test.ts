@@ -10,6 +10,10 @@
  * what is exercised is the SQL it issues — the same `ON CONFLICT
  * (user_id, milestone_type) DO NOTHING`, against real Postgres with the real
  * constraint from schema.sql.
+ *
+ * "Re-awarding never rewrites the day it was earned" was removed 2026-10-13
+ * (D5): with `DO NOTHING` the second award writes no row, which the first test
+ * already asserts — a `DO UPDATE` would return the row and fail it there.
  */
 
 import { describe, test, expect, beforeEach } from "vitest"
@@ -47,29 +51,6 @@ describe("milestone awarding — the database's half of the promise", () => {
       expect(first.rowCount).toBe(1)
       expect(second.rowCount).toBe(0)
       expect(rows.rows[0].n).toBe(1)
-    } finally {
-      await client.end()
-    }
-  })
-
-  test("re-awarding never rewrites the day it was earned", async () => {
-    // Arrange: this is the property that lets the reconciler run on every write.
-    // Without it, every save would move "Getting Started" to today.
-    const userId = await createTestUser()
-    const client = await getClient()
-
-    try {
-      await client.query(AWARD, [userId, "first_approach", "2026-01-28T10:10:36Z", null])
-
-      // Act
-      await client.query(AWARD, [userId, "first_approach", "2026-08-27T09:00:00Z", null])
-      const { rows } = await client.query(
-        `SELECT achieved_at FROM milestones WHERE user_id = $1 AND milestone_type = $2`,
-        [userId, "first_approach"]
-      )
-
-      // Assert
-      expect(new Date(rows[0].achieved_at).toISOString()).toBe("2026-01-28T10:10:36.000Z")
     } finally {
       await client.end()
     }

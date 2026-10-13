@@ -10,9 +10,10 @@
  * WHY THESE RUN AGAINST REAL POSTGRES. Every assertion below is about
  * something only the database does: two columns that must move together
  * because a CHECK says so, an end that cannot precede a start, a distance
- * bound that holds for anything holding the service key, and a second finish
- * that must raise rather than quietly advance the program twice. A fake client
- * would agree with whatever the app believes.
+ * bound that holds for anything holding the service key. A fake client would
+ * agree with whatever the app believes. (A second finish raising is
+ * `workoutFinish.integration.test.ts`'s, which also proves the program moved
+ * once.)
  */
 
 import { describe, test, expect, beforeEach } from "vitest"
@@ -91,7 +92,7 @@ describe("finishing a workout that happened earlier", () => {
       // The app could forget this check. The database cannot.
       await expect(
         finish(client, id, { startedAt: "2026-09-15T12:00:00Z", endedAt: "2026-09-15T11:00:00Z" })
-      ).rejects.toThrow()
+      ).rejects.toMatchObject({ code: "23514", constraint: "workout_logs_ended_after_start" })
     } finally {
       await client.end()
     }
@@ -142,30 +143,19 @@ describe("finishing a workout that happened earlier", () => {
     const client = await getClient()
     try {
       // A USER EACH, because a refused finish leaves the workout open and
-      // `uq_workout_logs_one_open_per_user` then refuses the next one — which
+      // `uq_workout_logs_live` then refuses the next one — which
       // is another constraint doing its job, and not the one under test.
       for (const bad of [-1, 1001]) {
         const id = await openWorkout(client, await createTestUser(), "2026-09-15T10:00:00Z")
         // Not the app's validation — this connection has no app in it.
-        await expect(finish(client, id, { distanceKm: bad }), String(bad)).rejects.toThrow()
+        await expect(finish(client, id, { distanceKm: bad }), String(bad)).rejects.toMatchObject({
+          code: "23514",
+          constraint: "workout_logs_distance_km_check",
+        })
       }
 
       const ok = await openWorkout(client, await createTestUser(), "2026-09-15T10:00:00Z")
       await expect(finish(client, ok, { distanceKm: 1000 })).resolves.toBeTruthy()
-    } finally {
-      await client.end()
-    }
-  })
-
-  test("a second finish of the same workout is refused", async () => {
-    const userId = await createTestUser()
-    const client = await getClient()
-    try {
-      const id = await openWorkout(client, userId, "2026-09-15T10:00:00Z")
-      await finish(client, id)
-
-      // A retry must not advance the program a second time.
-      await expect(finish(client, id)).rejects.toThrow(/already been finished/)
     } finally {
       await client.end()
     }

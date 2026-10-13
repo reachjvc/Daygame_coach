@@ -16,12 +16,14 @@
  * training and merely stops calling it that — the cascade that made a hard
  * delete catastrophic is gone by construction rather than by discipline.
  *
- * Two schema facts still hold this up, and this file pins both:
+ * Two schema facts still hold this up:
  *
  *   1. **Erasing a program keeps its workouts, un-linked.** That you trained is
  *      not the program's fact to erase. If this ever becomes a cascade again,
- *      "End program" is one misread away from destroying a year.
- *   2. **The unique index is PARTIAL.** `… WHERE is_active` is what lets any
+ *      "End program" is one misread away from destroying a year. Pinned by
+ *      `workoutSchema.integration.test.ts` ("erasing the program keeps the
+ *      workouts, and what day they were"), which also checks the day survives.
+ *   2. **The unique index is PARTIAL**, pinned here. `… WHERE is_active` is what lets any
  *      number of finished enrollments of one program sit beside a single live
  *      one. Drop the `WHERE` and archiving breaks the moment somebody returns to
  *      a program they did before — and it breaks at *enrollment* time, far from
@@ -86,61 +88,33 @@ async function countSessions(enrollmentId: string): Promise<number> {
   }
 }
 
+/** One statement, one connection — the pattern the sibling files here use. */
+async function sql<T extends Record<string, unknown> = Record<string, unknown>>(
+  text: string,
+  params: unknown[] = []
+): Promise<T[]> {
+  const client = await getClient()
+  try {
+    return (await client.query(text, params)).rows as T[]
+  } finally {
+    await client.end()
+  }
+}
+
+async function isActive(id: string): Promise<boolean> {
+  const [row] = await sql<{ is_active: boolean }>(
+    `SELECT is_active FROM program_enrollments WHERE id = $1`,
+    [id]
+  )
+  return row!.is_active
+}
+
 describe("program schema", () => {
   beforeEach(async () => {
     await truncateAllTables()
   })
 
-  describe("archiving keeps the training; deleting destroys it", () => {
-    test("setting is_active = false keeps every logged session", async () => {
-      // This is what "End program" does now. A year of training survives it.
-      const userId = await createTestUser("archive@example.com")
-      const enrollmentId = await enroll(userId)
-      await logSessions(enrollmentId, userId, 3)
-
-      const client = await getClient()
-      try {
-        await client.query(`UPDATE program_enrollments SET is_active = false WHERE id = $1`, [enrollmentId])
-      } finally {
-        await client.end()
-      }
-
-      expect(await countSessions(enrollmentId)).toBe(3)
-    })
-
-    test("erasing the enrollment KEEPS the workouts, detached", async () => {
-      /**
-       * THIS TEST USED TO ASSERT THE OPPOSITE, and that was the danger.
-       * Sessions lived in their own table under `ON DELETE CASCADE`, so one
-       * click on "End program" erased a year of training. The fix at the time
-       * was discipline — archive, never delete — and this test existed to keep
-       * everyone frightened of the alternative.
-       *
-       * Workouts now hang off the enrollment with `ON DELETE SET NULL`, so the
-       * catastrophe is unrepresentable rather than merely discouraged: erasing
-       * the program leaves every workout, and the day, cycle and week it was
-       * done on, so the history still reads.
-       */
-      const userId = await createTestUser("cascade@example.com")
-      const enrollmentId = await enroll(userId)
-      await logSessions(enrollmentId, userId, 3)
-      expect(await countSessions(enrollmentId)).toBe(3)
-
-      const client = await getClient()
-      try {
-        await client.query(`DELETE FROM program_enrollments WHERE id = $1`, [enrollmentId])
-        const kept = await client.query(
-          `SELECT enrollment_id, program_day_id FROM workout_logs WHERE user_id = $1`,
-          [userId]
-        )
-        expect(kept.rows).toHaveLength(3)
-        expect(kept.rows.every((r) => r.enrollment_id === null)).toBe(true)
-        expect(kept.rows.every((r) => r.program_day_id === "A")).toBe(true)
-      } finally {
-        await client.end()
-      }
-    })
-
+  describe("deleting a person", () => {
     test("deleting a person takes their programs and sessions with them", async () => {
       const userId = await createTestUser("gdpr@example.com")
       const enrollmentId = await enroll(userId)
@@ -165,7 +139,10 @@ describe("program schema", () => {
     test("refuses two ACTIVE enrollments of the same program", async () => {
       const userId = await createTestUser("dupe@example.com")
       await enroll(userId, "stronglifts-5x5", true)
-      await expect(enroll(userId, "stronglifts-5x5", true)).rejects.toThrow()
+      await expect(enroll(userId, "stronglifts-5x5", true)).rejects.toMatchObject({
+        code: "23505",
+        constraint: "uq_program_enrollments_active",
+      })
     })
 
     test("allows returning to a program you finished — the archived one does not block it", async () => {
@@ -182,14 +159,6 @@ describe("program schema", () => {
       }
 
       await expect(enroll(userId, "stronglifts-5x5", true)).resolves.toBeTruthy()
-    })
-
-    test("allows many finished runs of the same program side by side", async () => {
-      // Somebody who has run StrongLifts three times over three years.
-      const userId = await createTestUser("thrice@example.com")
-      await enroll(userId, "stronglifts-5x5", false)
-      await enroll(userId, "stronglifts-5x5", false)
-      await expect(enroll(userId, "stronglifts-5x5", false)).resolves.toBeTruthy()
     })
 
     test("two people may run the same program at once", async () => {
@@ -211,7 +180,7 @@ describe("program schema", () => {
              VALUES ($1, 'x', 'expert', 'kg', $2::jsonb)`,
             [userId, CURSOR]
           )
-        ).rejects.toThrow()
+        ).rejects.toMatchObject({ code: "23514", constraint: "program_enrollments_level_check" })
       } finally {
         await client.end()
       }
@@ -228,7 +197,9 @@ describe("program schema", () => {
              VALUES ($2, 'weights', 52, 3, $1, 'A', 1, 1, 11)`,
             [enrollmentId, userId]
           )
-        ).rejects.toThrow()
+          // Production names this one `workout_logs_rpe_range`; the mirror's is
+          // the generated name. Same rule, same bounds.
+        ).rejects.toMatchObject({ code: "23514", constraint: "workout_logs_rpe_check" })
         await expect(
           client.query(
             `INSERT INTO workout_logs (user_id, session_type, duration_min, intensity, enrollment_id, program_day_id, program_cycle, program_week, rpe)
@@ -245,6 +216,12 @@ describe("program schema", () => {
       // A loose workout — a class, an improvised session — is a first-class
       // case and always was; it is the whole "Anything else" tab. Pointing at
       // an enrollment that is not there is a different thing, and refused.
+      //
+      // REFUSED BY THE OWNERSHIP TRIGGER, NOT THE FOREIGN KEY. The trigger runs
+      // BEFORE the row is written and finds no enrollment of yours with that id,
+      // so the foreign key is never reached — a bare `toThrow()` here read as
+      // proof of the key while the trigger did the refusing. The key itself is
+      // pinned by `userDataCascades.integration.test.ts`.
       const userId = await createTestUser("orphan@example.com")
       const client = await getClient()
       try {
@@ -261,24 +238,7 @@ describe("program schema", () => {
              VALUES ($1, 'weights', 52, 3, gen_random_uuid(), 'A', 1, 1)`,
             [userId]
           )
-        ).rejects.toThrow()
-      } finally {
-        await client.end()
-      }
-    })
-
-    test("custom_schedule is null until somebody edits the program", async () => {
-      // Copy-on-write: null means "follow the catalogue and keep getting its
-      // corrections", which is a different fact from an empty schedule.
-      const userId = await createTestUser("cow@example.com")
-      const enrollmentId = await enroll(userId)
-      const client = await getClient()
-      try {
-        const r = await client.query(
-          `SELECT custom_schedule FROM program_enrollments WHERE id = $1`,
-          [enrollmentId]
-        )
-        expect(r.rows[0].custom_schedule).toBeNull()
+        ).rejects.toMatchObject({ code: "P0001", message: "A workout can only be attached to your own program" })
       } finally {
         await client.end()
       }
@@ -308,27 +268,6 @@ describe("a program write is one statement", () => {
   beforeEach(async () => {
     await truncateAllTables()
   })
-
-  /** One statement, one connection — the pattern the sibling files here use. */
-  async function sql<T extends Record<string, unknown> = Record<string, unknown>>(
-    text: string,
-    params: unknown[] = []
-  ): Promise<T[]> {
-    const client = await getClient()
-    try {
-      return (await client.query(text, params)).rows as T[]
-    } finally {
-      await client.end()
-    }
-  }
-
-  async function isActive(id: string): Promise<boolean> {
-    const [row] = await sql<{ is_active: boolean }>(
-      `SELECT is_active FROM program_enrollments WHERE id = $1`,
-      [id]
-    )
-    return row!.is_active
-  }
 
   async function sessionCount(id: string): Promise<number> {
     const [row] = await sql<{ n: number }>(
@@ -686,5 +625,85 @@ describe("a program write is one statement", () => {
     await expect(sql(`SELECT resume_enrollment($1, $2::uuid[])`, [finished, []])).rejects.toThrow(
       /already running/
     )
+  })
+})
+
+
+/**
+ * A PROGRAM CANNOT BE SWITCHED OFF WHILE A WORKOUT IS OPEN ON IT — WHOEVER WRITES.
+ *
+ * Merged from `programBusy.integration.test.ts` on 2026-10-13. The tests above
+ * go through `end_enrollment` and `start_enrollment`; these go through a bare
+ * `UPDATE … SET is_active = false`, which is what a script, the SQL editor or
+ * anything holding the service key would send. What refuses it is the trigger
+ * `refuse_to_pause_a_busy_program`, and a trigger only behaves like one when a
+ * real Postgres runs it. The app's own check before it writes is proven in
+ * `tests/unit/db/programRepoGuards.test.ts`; it leaves a gap of a few
+ * milliseconds where a Start can cross an End, and the trigger closes it.
+ *
+ * ("Ending a program with nothing open on it works" was dropped in the merge
+ * (D5): `end_enrollment` above asserts the same.)
+ */
+describe("a busy program refuses to be switched off, whoever writes", () => {
+  const END_IT = `UPDATE program_enrollments SET is_active = false WHERE id = $1`
+
+  beforeEach(async () => {
+    await truncateAllTables()
+  })
+
+  test("ending a program is refused while a workout is open on it, and the program stays on", async () => {
+    const me = await createTestUser("busy-program@example.com")
+    const running = await enroll(me)
+    // Every column the table's own rules require of a workout that is RUNNING:
+    // a start and no ending, no length or intensity yet, `logged_at` equal to
+    // the start, and the program day it is answering.
+    await sql(
+      `INSERT INTO workout_logs
+         (user_id, session_type, started_at, logged_at, enrollment_id, program_day_id, program_cycle, program_week)
+       VALUES ($1, 'weights', now(), now(), $2, 'dayA', 1, 1)`,
+      [me, running]
+    )
+
+    // The sentence matters: it is the one the app shows, so a refusal that
+    // reaches the screen through the database reads the same as one the app
+    // caught itself.
+    await expect(sql(END_IT, [running])).rejects.toMatchObject({
+      code: "55000",
+      message: "Finish or throw away the open workout first.",
+    })
+    expect(await isActive(running)).toBe(true)
+  })
+
+  test("a workout that is already finished does not block anything", async () => {
+    const me = await createTestUser("busy-program@example.com")
+    const running = await enroll(me)
+    await sql(
+      `INSERT INTO workout_logs
+         (user_id, session_type, started_at, ended_at, logged_at, enrollment_id,
+          program_day_id, program_cycle, program_week, duration_min, intensity)
+       VALUES ($1, 'weights', now() - interval '1 hour', now(), now() - interval '1 hour', $2,
+               'dayA', 1, 1, 60, 3)`,
+      [me, running]
+    )
+    await sql(END_IT, [running])
+    expect(await isActive(running)).toBe(false)
+  })
+
+  test("a workout typed in after the fact is not a workout you are in", async () => {
+    // The after-the-fact writer stores no start time. "Exists and has not
+    // ended" would therefore have blocked every program anybody had ever
+    // written a past session against — which is why the trigger asks for a
+    // start time rather than for an ending.
+    const me = await createTestUser("busy-program@example.com")
+    const running = await enroll(me)
+    await sql(
+      `INSERT INTO workout_logs
+         (user_id, session_type, logged_at, enrollment_id, program_day_id, program_cycle, program_week,
+          duration_min, intensity)
+       VALUES ($1, 'weights', now(), $2, 'dayA', 1, 1, 45, 3)`,
+      [me, running]
+    )
+    await sql(END_IT, [running])
+    expect(await isActive(running)).toBe(false)
   })
 })

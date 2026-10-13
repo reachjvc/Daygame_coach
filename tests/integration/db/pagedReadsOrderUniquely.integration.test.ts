@@ -80,19 +80,25 @@ function pagedReads(file: string): PagedRead[] {
 
 /** Every unique index on a table, as its column list. */
 async function uniqueIndexes(table: string): Promise<string[][]> {
+  // Closed every time: this runs once per paged read, and it used to leave
+  // every one of those connections open for the rest of the run.
   const db = await getClient()
-  const got = await db.query(
-    `SELECT array_agg(a.attname::text ORDER BY k.ord) AS cols
-       FROM pg_index x
-       JOIN pg_class i ON i.oid = x.indexrelid
-       JOIN pg_class t ON t.oid = x.indrelid
-       JOIN unnest(x.indkey) WITH ORDINALITY k(attnum, ord) ON TRUE
-       JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum
-      WHERE t.relname = $1 AND x.indisunique
-      GROUP BY i.relname`,
-    [table],
-  )
-  return got.rows.map((r) => r.cols as string[])
+  try {
+    const got = await db.query(
+      `SELECT array_agg(a.attname::text ORDER BY k.ord) AS cols
+         FROM pg_index x
+         JOIN pg_class i ON i.oid = x.indexrelid
+         JOIN pg_class t ON t.oid = x.indrelid
+         JOIN unnest(x.indkey) WITH ORDINALITY k(attnum, ord) ON TRUE
+         JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum
+        WHERE t.relname = $1 AND x.indisunique
+        GROUP BY i.relname`,
+      [table],
+    )
+    return got.rows.map((r) => r.cols as string[])
+  } finally {
+    await db.end()
+  }
 }
 
 describe("every paged read orders by something unique", () => {
