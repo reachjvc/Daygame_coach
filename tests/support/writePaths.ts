@@ -241,7 +241,15 @@ function bodySpan(src: string, startIndex: number): { from: number; to: number }
  * So: build the set of ALL function names (exported or not) that write, and
  * grow it until it stops growing. Then report the exported ones.
  */
+/** The source does not change during a test run, so the scan runs once per process. */
+let writeFunctionsOnce: WriteFn[] | null = null
+
 export function writeFunctions(): WriteFn[] {
+  writeFunctionsOnce ??= scanWriteFunctions()
+  return [...writeFunctionsOnce]
+}
+
+function scanWriteFunctions(): WriteFn[] {
   interface Fn {
     rel: string
     name: string
@@ -322,23 +330,29 @@ export function writeFunctions(): WriteFn[] {
  * same proxy error again. The registry's reason strings carry the real claim.
  */
 export function isMentionedInTests(fn: string): boolean {
-  const testDirs = [path.join(root, "tests")]
-  let found = false
+  const name = new RegExp(`\\b${fn}\\b`)
+  return testSources().some((source) => name.test(source))
+}
 
+/** Every test file's text, read once per process rather than once per function asked about. */
+let testSourcesOnce: string[] | null = null
+
+function testSources(): string[] {
+  if (testSourcesOnce) return testSourcesOnce
+  const sources: string[] = []
   const walk = (dir: string) => {
-    if (found || !fs.existsSync(dir)) return
+    if (!fs.existsSync(dir)) return
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (found) return
       const full = path.join(dir, entry.name)
       if (entry.isDirectory()) {
         if (entry.name === "node_modules" || entry.name === ".auth") continue
         walk(full)
       } else if (/\.(test|spec)\.tsx?$/.test(entry.name)) {
-        if (new RegExp(`\\b${fn}\\b`).test(fs.readFileSync(full, "utf-8"))) found = true
+        sources.push(fs.readFileSync(full, "utf-8"))
       }
     }
   }
-
-  walk(testDirs[0])
-  return found
+  walk(path.join(root, "tests"))
+  testSourcesOnce = sources
+  return sources
 }
