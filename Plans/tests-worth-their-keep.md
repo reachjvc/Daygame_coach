@@ -763,14 +763,24 @@ plus 159 nightly (Firefox 24, Safari 24, Android 58, Safari sweep 53).
 
 **The measurement (Phase 9 step 6).** Two full runs dispatched on this branch,
 every pull-request lane and every nightly lane at once, 14 jobs each:
-**7 min 3 s and 7 min 18 s** wall time, from the first job's start to the merged
-report (runs 38435568018, 38437166271). It was **3 h 45 min**, one test at a
-time, and red. Each shard is 4–6½ minutes, of which ~50 s is the backend, ~90 s
-the build and 3–4 minutes the tests. Both runs had red shards, each a real fault
-now fixed: an ambiguous locator (session-tracking), a click before React owned
-the card (programs-past-workout), and the Black Box seed's future timestamp
-(below). The nightly WebKit lane's "two tabs stay in step" failed both attempts
-in run 2 and passed in run 1; not yet diagnosed.
+**7 min 3 s, 7 min 18 s and 7 min 21 s** wall time, from the first job's start
+to the merged report (runs 38435568018, 38437166271, 38439853507). It was
+**3 h 45 min**, one test at a time, and red. Each shard is 4–6½ minutes, of
+which ~50 s is the backend, ~90 s the build and 3–4 minutes the tests. The first
+two runs had red shards, each a real fault now fixed: an ambiguous locator
+(session-tracking), a click before React owned the card (programs-past-workout),
+and the Black Box seed's future timestamp (below). **In the third, every
+pull-request lane is green.**
+
+**Open, nightly only:** `toggl-time-tracker.spec.ts` "two tabs of the same
+browser stay in step" fails on Firefox and Safari in CI — green in run 1, red on
+both attempts in runs 2 and 3, on both engines in run 3 — and passes on Chromium
+in every run, and 3 of 3 on WebKit locally against the dev server. In the second
+tab, Start never turns into Stop (`helpers/timetrack.ts:111`). Production build,
+non-Chromium engines, intermittent: possibly the cross-tab race the test exists
+for, on those engines. Not diagnosed; the next step is a trace of the second tab
+in CI (traces are off under CI on purpose, so run that lane with tracing on a
+branch, or reproduce against a local production build).
 
 **What changed from this plan, and why.** No shared build (Phase 9 step 1: it
 lengthens the critical path). No separate `public` lane (signed-out specs run in
