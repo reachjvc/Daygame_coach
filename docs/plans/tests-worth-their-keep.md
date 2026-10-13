@@ -718,22 +718,45 @@ Paste after `/goal`. Kept here so it outlives the session that wrote it.
 
 ## Progress
 
-**2026-10-13**
-- Phase 7, built and proven:
-  - `scripts/db/baseline.sh` writes `tests/db/baseline.sql` (84 tables, stamp
-    `20260924100000`); its `--check` mode confirmed it matches production.
-  - `tests/db/shim.sql`, and `tests/db/supabase/config.toml` (own project id,
-    553xx ports, the 1,000-row read cap, email confirmation on, rate limits
-    raised).
-  - `scripts/db/test-stack.mjs up` starts the stack in 24 s (0.7 s when it is
-    already running) and applies `20260927120000`, which production lacks, on top.
-  - `tests/db/harness.ts` (`newUser`, `actAs`, `asOwner`, `asUser`,
-    `stackSupabaseModule`) and `tests/db/globalSetup.ts`.
-  - The first repo-level database tests in the repository:
-    `tests/integration/repos/settingsRepo.stack.test.ts` (3, green; red with row
-    security off on `profiles`; red with `TEST_SHARED_USER=1`) and
-    `scenarioRepo.stack.test.ts` (2 `it.fails`: the bug above).
-  - `tests/unit/db/selectsMatchTheSchema.test.ts`: every column the code selects
-    exists in production's schema (red when a known entry is removed).
-- Phases 1–3 running as nine parallel work packages; results land here when
-  they are committed.
+**2026-10-13** — executed by one session with parallel agents; every commit is
+on `training-rebuild`.
+
+| Phase | State | Result |
+|---|---|---|
+| 1 Cut the unit suite | done | 8df2e292, 812f496d, a13dc9f3, b4edcaca, 705516d3. All six work packages; every rewrite proven by a planted break. |
+| 2 Cut the database suite | done | c498c5d4. 300 → 111 tests; every refusal named. |
+| 3 Cut the browser suite | mostly done | 9274a742, 7e66dd8a; the agent is finishing spec runs. 1,191 runs per pass → see its final numbers. |
+| 4 Lab-only and dead code | done except two owner calls | b4edcaca, 705516d3, 812f496d (lab tests); 3fa860e3, 863fcf74, 31f0b466 (dead code with its tests, ~14,000 lines). `carryAuthoredSettings`, both `sameWeek`s and badgeEngine's `detectTierUpgrades` wait for you. |
+| 5 First CI numbers | blocked | CI is red at the lint step on another session's commit (dbe09f12), being fixed by that session, so the unit and database steps have not run since. |
+| 6 Unit speed | done | 1b2b7fca (recurrence sweep 40 s → 5 s), b9a06180 (Node by default, jsdom only where a file renders: 47 s → 27 s here), 084742e3 (write-coverage guard 2.2 s → 0.5 s). |
+| 7 One real test backend | done | 7cb661a9, 3aaea00e, d7968eea. Production's schema, files in parallel, no truncation: 146 s → 11 s; 139 passing + 8 pinned known-wrong; `TEST_SHARED_USER=1` turns 99 red; row-security catalog over all 84 tables. |
+| 8–10 | not started | Phase 8 starts when Phase 3's agent finishes. |
+
+**Counts:** unit 6,519 runtime tests this morning → 4,533 (the peer's
+architecture deletion included); database 300 → 147 (139 + 8 known-wrong, now
+including the app's own data code); browser per Phase 3's final report.
+
+**Bugs found by this work.** Fixed: the time tracker crashed when browser
+storage was full (c5ab3116); its phone header pushed the bell off screen
+(80cfcc73); AddLift printed "Hamstrings_glutes" (18e1b1e6). Pinned for you
+(`it.fails`, each with a header): every scenario attempt fails to save, and the
+scenario stats read 0 (`scenarios` has no `evaluation` column); saving
+inner-game values keeps only the first category (`user_values` has no UPDATE
+policy); inner-game reset always returns 500 (`inner_game_progress` has no
+`essential_selection` column); goals filed under "scenarios" are refused by a
+second production CHECK; `user_goals.goal_type` defaults to a value its own CHECK
+refuses; `user_values` has no foreign key to the person; five `life_plan_*`
+foreign keys abort a plan save that removes an area with goals under it.
+Also: migration `20260927120000_corrections_keep_set_order` is not applied in
+production (the test backend applies it on top of the baseline).
+
+**Found by the browser cut, not fixed:** the tracking history's "All" filter
+hides drafts; the custom report builder cannot save a notes-only report (400
+"Fields required"); `life-mastery-track.spec` fails at "pushes the plan into
+real goals" before and after this work.
+
+**Security, found along the way:** `/api/goals/plan` and the four
+`/api/goals/vision-plan/*` routes are deployed and callable by any signed-in
+account, though only `/test` lab pages use them (the vision-plan ones run
+Claude on every call); `npm audit` reports 21 advisories (1 critical, 8 high),
+not investigated here.
