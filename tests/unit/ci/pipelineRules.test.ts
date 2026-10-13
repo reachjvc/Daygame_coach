@@ -1,0 +1,161 @@
+// @vitest-environment node
+/**
+ * THE PIPELINE'S SAFETY RULES, READ FROM THE WORKFLOW FILES THEMSELVES.
+ *
+ * This repository is public, and CI is about to publish the images servers
+ * run. A few lines of YAML decide whether someone else's pull request can run
+ * with this repository's write token, whether a red check can still publish,
+ * and whether a stale run can finish last. Each of those lines is easy to
+ * delete without anything going red, so each one is asserted here.
+ * (Plans/caddy-deploy-and-cicd.md, steps 2.6, 4.3 and 5.5.)
+ *
+ * `tests/unit/ciWorkflows.test.ts` belongs to another plan (which browser
+ * projects run where); these rules live here so the two never collide.
+ */
+
+import { describe, it, expect } from "vitest"
+import { readdirSync, readFileSync } from "node:fs"
+import { join, resolve } from "node:path"
+import { parse, stringify } from "yaml"
+
+const ROOT = resolve(__dirname, "../../..")
+const DIR = join(ROOT, ".github/workflows")
+
+type Job = {
+  "runs-on"?: string
+  if?: string
+  permissions?: Record<string, string> | string
+  environment?: string | { name: string }
+  needs?: string | string[]
+  concurrency?: unknown
+  steps?: Array<{ uses?: string; run?: string; with?: Record<string, unknown>; env?: Record<string, unknown> }>
+}
+type Workflow = {
+  on: Record<string, unknown> | string | string[]
+  permissions?: Record<string, string> | string
+  concurrency?: { group: string; "cancel-in-progress": string | boolean }
+  jobs: Record<string, Job>
+}
+
+const FILES = readdirSync(DIR).filter((f) => /\.ya?ml$/.test(f))
+const load = (file: string): Workflow => parse(readFileSync(join(DIR, file), "utf8"))
+const ci = load("ci.yml")
+
+function triggers(w: Workflow): string[] {
+  if (typeof w.on === "string") return [w.on]
+  if (Array.isArray(w.on)) return w.on
+  return Object.keys(w.on ?? {})
+}
+
+/** A job that pushes images (or anything else) somewhere: it may write packages. */
+function publishingJobs(w: Workflow): Array<[string, Job]> {
+  return Object.entries(w.jobs).filter(
+    ([name, job]) =>
+      /^image-/.test(name) || (typeof job.permissions === "object" && job.permissions.packages === "write"),
+  )
+}
+
+const FULL_SHA = /^[^@\s]+@[0-9a-f]{40}$/
+
+describe("no workflow runs someone else's code with this repository's rights", () => {
+  it.each(FILES)("%s uses neither pull_request_target nor workflow_run", (file) => {
+    // pull_request_target runs a fork's pull request with this repository's
+    // secrets and write token. workflow_run fires only from main's copy of a
+    // workflow, so on this repository it silently never fires (C1).
+    const bad = triggers(load(file)).filter((t) => t === "pull_request_target" || t === "workflow_run")
+    expect(bad).toEqual([])
+  })
+})
+
+describe("ci.yml says what it may do, and stops its own stale runs", () => {
+  it("grants the token only contents: read at the top", () => {
+    expect(ci.permissions).toEqual({ contents: "read" })
+  })
+
+  it("cancels a superseded run, except on main, where a run may be waiting for approval", () => {
+    expect(ci.concurrency).toEqual({
+      group:
+        "ci-${{ github.event_name }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.run_id) || '' }}",
+      "cancel-in-progress":
+        "${{ (github.event_name == 'push' || github.event_name == 'pull_request') && github.ref != 'refs/heads/main' }}",
+    })
+  })
+
+  it("pins the runner image instead of riding ubuntu-latest", () => {
+    for (const [name, job] of Object.entries(ci.jobs)) {
+      expect(job["runs-on"], `ci.yml job ${name}`).toBe("ubuntu-24.04")
+    }
+  })
+
+  it("reads Node's version from .nvmrc, the one place it is written", () => {
+    const setups = Object.values(ci.jobs).flatMap((job) =>
+      (job.steps ?? []).filter((s) => s.uses?.startsWith("actions/setup-node@")),
+    )
+    expect(setups.length).toBeGreaterThan(0)
+    for (const step of setups) {
+      expect(step.with?.["node-version-file"]).toBe(".nvmrc")
+      expect(step.with?.["node-version"]).toBeUndefined()
+    }
+  })
+
+  it("scans the whole history for secrets and fails on a finding", () => {
+    const checks = ci.jobs.checks
+    expect(checks, "ci.yml has a `checks` job").toBeDefined()
+    const checkout = (checks.steps ?? []).find((s) => s.uses?.startsWith("actions/checkout@"))
+    expect(checkout?.with?.["fetch-depth"]).toBe(0)
+    const scan = (checks.steps ?? []).find((s) => s.run?.includes("gitleaks"))
+    expect(scan?.run).toMatch(/sha256sum -c/)
+    expect(scan?.run).toMatch(/gitleaks" git --redact --no-banner --exit-code 1/)
+  })
+
+  it("runs the dependency audit ratchet", () => {
+    expect((ci.jobs.checks.steps ?? []).some((s) => s.run === "npm run audit:ratchet")).toBe(true)
+  })
+})
+
+/** Every way a publishing job breaks the rules, as readable lines. */
+function publishingViolations(file: string, w: Workflow): string[] {
+  return publishingJobs(w).flatMap(([name, job]) => {
+    const where = `${file} ${name}`
+    const out: string[] = []
+    // A pull request from a fork must never reach a job that holds a write
+    // token. Requiring a push event keeps it out by construction.
+    if (!/github\.event_name == 'push'/.test(job.if ?? "") || /pull_request/.test(job.if ?? "")) {
+      out.push(`${where} can run for something other than a push: if: ${job.if ?? "(none)"}`)
+    }
+    for (const secret of [...stringify(job).matchAll(/secrets\.([A-Za-z0-9_]+)/g)].map((m) => m[1])) {
+      if (secret !== "GITHUB_TOKEN") out.push(`${where} uses secrets.${secret}`)
+    }
+    // A tag can be moved to different code after review; a commit SHA cannot.
+    for (const uses of (job.steps ?? []).map((st) => st.uses)) {
+      if (uses && !uses.startsWith("./") && !FULL_SHA.test(uses)) out.push(`${where} uses ${uses}, not pinned to a commit SHA`)
+    }
+    return out
+  })
+}
+
+describe("a job that publishes", () => {
+  it("never runs for a pull request, uses only GITHUB_TOKEN, and pins every action to a commit", () => {
+    expect(FILES.flatMap((file) => publishingViolations(file, load(file)))).toEqual([])
+  })
+
+  it("is recognised, and each rule bites (a made-up job that breaks all three)", () => {
+    const bad: Workflow = parse(`
+on: [push, pull_request]
+jobs:
+  image-staging:
+    if: github.event_name == 'pull_request'
+    permissions: { packages: write }
+    steps:
+      - uses: docker/login-action@v4
+        with: { password: "\${{ secrets.DEPLOY_TOKEN }}" }
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
+      - uses: ./local-action
+`)
+    expect(publishingViolations("made-up.yml", bad)).toEqual([
+      "made-up.yml image-staging can run for something other than a push: if: github.event_name == 'pull_request'",
+      "made-up.yml image-staging uses secrets.DEPLOY_TOKEN",
+      "made-up.yml image-staging uses docker/login-action@v4, not pinned to a commit SHA",
+    ])
+  })
+})

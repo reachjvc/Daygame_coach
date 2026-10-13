@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# SECRETS ARE STOPPED BEFORE THEY ARE PUBLIC, NOT REPORTED AFTER.
+#
+# This repository is public: a pushed commit is readable by anyone at once, and
+# CI's secret scan can only report a leak after that. So this hook scans exactly
+# the commits being pushed, and refuses the push when gitleaks finds a secret.
+#
+# It blocks, unlike the ratchets that used to live here (removed 2026-10-13),
+# because it measures the commits being published and nothing else. Those
+# measured the shared working folder, which other sessions' half-saved files
+# make an unreliable description of anyone's commits.
+#
+# Known non-secrets are listed in .gitleaksignore. CI scans the whole history
+# again (.github/workflows/ci.yml). Plans/caddy-deploy-and-cicd.md, step 2.5.
+
+zero=0000000000000000000000000000000000000000
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks=gitleaks
+elif [ -x "$HOME/.local/bin/gitleaks" ]; then
+  gitleaks="$HOME/.local/bin/gitleaks"
+else
+  echo "pre-push: gitleaks is not installed, so the commits being pushed cannot be scanned for secrets." >&2
+  echo "          The push is refused: this repository is public, and an unscanned push may publish one." >&2
+  echo "          Install gitleaks 8.30.1 into ~/.local/bin from" >&2
+  echo "          https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1 (verify the checksum)." >&2
+  exit 1
+fi
+
+# Git writes one line per ref being pushed: <local ref> <local sha> <remote ref> <remote sha>.
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # A deletion publishes no commits.
+  if [ "$local_sha" = "$zero" ]; then
+    continue
+  fi
+  # A new branch, or a remote tip this clone has never seen: scan every commit
+  # no remote has yet. Otherwise scan only what the push adds.
+  if [ "$remote_sha" = "$zero" ] || ! git cat-file -e "${remote_sha}^{commit}" 2>/dev/null; then
+    range="$local_sha --not --remotes"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  if ! "$gitleaks" git --redact --no-banner --exit-code 1 --log-opts="$range" .; then
+    echo "pre-push: gitleaks found a secret in the commits for $remote_ref ($local_ref). Push refused." >&2
+    echo "          If it is not a secret, add its fingerprint to .gitleaksignore with a comment saying why." >&2
+    status=1
+  fi
+done
+
+exit $status

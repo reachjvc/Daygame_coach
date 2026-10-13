@@ -12,16 +12,51 @@ on:
     branches: [main, beta]
   workflow_dispatch:
 
+# The token's rights are stated here, not left to a repository setting. Jobs
+# that publish ask for exactly what they need, and nothing else gets more.
+permissions:
+  contents: read
+
+# A newer push to the same branch stops the older run: its answer is about a
+# commit nobody is looking at any more, and without this the older run can
+# finish last and paint the branch with a stale result. main is the exception:
+# a production run may sit waiting for the owner's approval, so runs on main
+# get a group of their own and never cancel or queue each other.
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.run_id) || '' }}
+  cancel-in-progress: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && github.ref != 'refs/heads/main' }}
+
 jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
+  checks:
+    # Pinned, not ubuntu-latest: that label moves to Ubuntu 26.04 from
+    # 2026-10-19, and browser dependencies and Docker on a new OS release are
+    # what break first. Moving to 26.04 is a deliberate change for later.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          # The whole history: the secret scan reads every commit, and the
+          # dependency audit compares with the lockfile its baseline was
+          # written from.
+          fetch-depth: 0
+
+      # This repository is public, so a pushed secret is published at once.
+      # .husky/pre-push scans the commits being pushed before they leave the
+      # machine; this scans the whole history again, for pushes made without
+      # the hook. Known non-secrets: .gitleaksignore. The checksum is pinned
+      # here, not read from the release, so a replaced release fails.
+      - name: Secret scan
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git --redact --no-banner --exit-code 1 .
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: 'npm'
 
       - name: Install dependencies
@@ -40,6 +75,13 @@ jobs:
       # so without this nothing anywhere would type-check.
       - name: Type-check ratchet
         run: node scripts/typecheck-ratchet.mjs
+
+      # Fails when the lockfile brings in a version with a known advisory, or
+      # when anything that ships has a critical one. An advisory published
+      # overnight against an unchanged version only warns, in the run summary.
+      # See scripts/audit-ratchet.mjs.
+      - name: Dependency audit ratchet
+        run: npm run audit:ratchet
 
       - name: Unit tests
         run: npm test

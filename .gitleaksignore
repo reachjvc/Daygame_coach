@@ -1,0 +1,13 @@
+# Findings that `gitleaks git` reports in this repository's history and that are
+# not secrets. Each line is one finding's fingerprint (commit:file:rule:line).
+# Checked by hand on 2026-10-13; add a line only after reading the finding.
+# The scan runs in .husky/pre-push and in ci.yml (Plans/caddy-deploy-and-cicd.md, step 2.5).
+
+# A made-up JWT that the error-scrubbing test feeds in, to prove it is removed.
+c5f10a7684cfe1b407f7e0cc85c04ce78662aea5:tests/unit/shared/errorScrub.test.ts:jwt:29
+
+# Not a key: the rule matched the Python variable name `check_key` in a test.
+f266405acaebe301acec6456fe7441180a30ad10:tests/unit/pipeline/test_pipeline_runner_stage06_gate.py:generic-api-key:347
+
+# Not a key: the rule matched a line of command-line flag names in the pipeline docs.
+7e4c08e7e3a87332748da5c684a9b6323bc661b6:docs/pipeline/validation_harness.md:generic-api-key:109
