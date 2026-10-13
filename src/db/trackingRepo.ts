@@ -1099,6 +1099,14 @@ export async function getOrCreateUserTrackingStats(
       .select()
       .single()
 
+    if (error?.code === "23505") {
+      // Another request created the row between our read and this insert —
+      // the dashboard asks from several places at once on a new account. The
+      // row exists now; read it rather than report the totals as unreadable.
+      const created = await getUserTrackingStats(userId)
+      if (!created) throw new Error(`Failed to create tracking stats: ${error.message}`)
+      return created
+    }
     if (error) {
       throw new Error(`Failed to create tracking stats: ${error.message}`)
     }

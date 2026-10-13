@@ -11,6 +11,7 @@
 import { describe, it, expect, vi } from "vitest"
 import { actAs, asOwner, newUser } from "@/tests/db/harness"
 import {
+  getOrCreateUserTrackingStats,
   createApproach,
   createCustomReportTemplate,
   createFieldReport,
@@ -269,5 +270,27 @@ describe("a custom report template", () => {
       q("select id, name from public.field_report_templates where user_id = $1", [owner.id])
     )
     expect(rows).toEqual([{ id: made.id, name: "My debrief" }])
+  })
+})
+
+/**
+ * A NEW ACCOUNT'S COUNTERS ARE CREATED ONCE, HOWEVER MANY SCREENS ASK FIRST.
+ *
+ * The dashboard asks for them from several places at once. Each read "no row
+ * yet" and inserted, and the loser failed on the unique key, so a fresh
+ * account's tracking tile said its totals "could not be read" (seen in CI on
+ * 2026-10-13, the first run against an empty account).
+ */
+describe("a new account's tracking counters", () => {
+  it("are created once when two screens ask at the same moment", async () => {
+    const user = await newUser("stats-race")
+    actAs(user)
+
+    const [a, b] = await Promise.all([getOrCreateUserTrackingStats(user.id), getOrCreateUserTrackingStats(user.id)])
+
+    expect(a.user_id).toBe(user.id)
+    expect(b.user_id).toBe(user.id)
+    const rows = await asOwner((q) => q("select user_id from public.user_tracking_stats where user_id = $1", [user.id]))
+    expect(rows).toHaveLength(1)
   })
 })
