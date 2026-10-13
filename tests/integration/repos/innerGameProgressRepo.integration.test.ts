@@ -27,6 +27,7 @@ import { actAs, asOwner, newUser } from "@/tests/db/harness"
 import {
   getProgress,
   resetProgress,
+  updateProgress,
   resetSection,
   upsertProgress,
   type InnerGameProgressUpdate,
@@ -133,5 +134,26 @@ describe("a person's Inner Game progress", () => {
 
     const [row] = await rowsFor(owner.id)
     expect(row).toMatchObject({ current_step: 4, shadow_response: "I resent people who coast." })
+  })
+})
+
+/**
+ * THE FIRST SAVE FROM A FRESH ACCOUNT. Only a read used to create the row, so a
+ * save that arrived first updated zero rows and the route answered 500
+ * ("Cannot coerce the result to a single JSON object") — found 2026-10-13 by
+ * the browser tests' first run on empty accounts.
+ */
+describe("a person's first Inner Game save", () => {
+  it("is kept even when they never read their progress first", async () => {
+    const user = await newUser("ig-first-save")
+    actAs(user)
+
+    const saved = await updateProgress(user.id, { welcome_dismissed: true, current_step: 1 })
+
+    expect(saved).toMatchObject({ welcome_dismissed: true, current_step: 1 })
+    const rows = await asOwner((q) =>
+      q("select welcome_dismissed, current_step from public.inner_game_progress where user_id = $1", [user.id])
+    )
+    expect(rows).toEqual([{ welcome_dismissed: true, current_step: 1 }])
   })
 })

@@ -146,6 +146,9 @@ export async function updateProgress(
     .select()
     .single()
 
+  // No row yet: only a read used to create one, so a save that arrived first
+  // updated nothing and the route answered 500. Create it with the update.
+  if (error?.code === "PGRST116") return upsertProgress(userId, updates)
   if (error) {
     throw new Error(`Failed to update progress: ${error.message}`)
   }
