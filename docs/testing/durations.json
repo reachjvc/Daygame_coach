@@ -1,0 +1,23 @@
+{
+  "about": "Baselines for scripts/ci/durations.mjs, in seconds, measured from CI. A suite fails the nightly check when its newest green run took longer than its baseline plus the tolerance. Baselines may only fall: lower one when the check says a suite ran well under it. Browser shards are whole jobs (install, backend, build, tests); the unit and database suites are their steps in ci.yml. Plans/tests-worth-their-keep.md, Phase 10.",
+  "measured": "2026-10-13, runs 38433989945 (ci.yml) and 38435568018 (e2e.yml, dispatched)",
+  "tolerance": 0.25,
+  "suites": [
+    { "workflow": "ci.yml", "job": "checks", "step": "Unit tests", "seconds": 97 },
+    { "workflow": "ci.yml", "job": "checks", "step": "Database tests", "seconds": 73 },
+    { "workflow": "e2e.yml", "job": "e2e-fast", "seconds": 378 },
+    { "workflow": "e2e.yml", "job": "desktop 1/4", "seconds": 318 },
+    { "workflow": "e2e.yml", "job": "desktop 2/4", "seconds": 263 },
+    { "workflow": "e2e.yml", "job": "desktop 3/4", "seconds": 236 },
+    { "workflow": "e2e.yml", "job": "desktop 4/4", "seconds": 356 },
+    { "workflow": "e2e.yml", "job": "timing 1/1", "seconds": 252 },
+    { "workflow": "e2e.yml", "job": "phone 1/2", "seconds": 288 },
+    { "workflow": "e2e.yml", "job": "phone 2/2", "seconds": 311 },
+    { "workflow": "e2e.yml", "job": "timing-phone 1/1", "seconds": 266 },
+    { "workflow": "e2e.yml", "job": "sweep-phone 1/1", "seconds": 346 },
+    { "workflow": "e2e.yml", "job": "firefox 1/1", "seconds": 277 },
+    { "workflow": "e2e.yml", "job": "webkit 1/1", "seconds": 345 },
+    { "workflow": "e2e.yml", "job": "android 1/1", "seconds": 384 },
+    { "workflow": "e2e.yml", "job": "sweep-webkit 1/1", "seconds": 381 }
+  ]
+}

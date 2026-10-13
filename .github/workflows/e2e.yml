@@ -180,7 +180,9 @@ jobs:
   # ===========================================================================
   report:
     needs: [e2e-fast, lanes, nightly]
-    if: ${{ always() }}
+    # A red shard must not skip the report that says what went red. A
+    # cancelled run (a newer push superseded it) has nothing to report.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

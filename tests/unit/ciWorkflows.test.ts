@@ -135,8 +135,8 @@ describe("the browser tests that CI actually runs", () => {
     // Without a name per shard, merging overwrites shard 1 of one lane with another's.
     expect(e2eJobs["lanes"]).toMatch(/PLAYWRIGHT_BLOB_OUTPUT_NAME: report-\$\{\{ matrix\.lane \}\}-\$\{\{ strategy\.job-index \}\}\.zip/)
     expect(e2eJobs["report"]).toMatch(/needs: \[e2e-fast, lanes, nightly\]/)
-    // `always()`: a red shard must not skip the report that says what went red.
-    expect(e2eJobs["report"]).toMatch(/if: \$\{\{ always\(\) \}\}/)
+    // A red shard must not skip the report that says what went red; only a cancelled run may.
+    expect(e2eJobs["report"]).toMatch(/if: \$\{\{ !cancelled\(\) \}\}/)
   })
 
   test("no browser job is handed a Supabase key or an account's password", () => {
@@ -163,6 +163,42 @@ describe("the browser tests that CI actually runs", () => {
     ).map((p) => p.name)
     expect(chained).toEqual([])
     expect(playwrightConfig.globalSetup, "a global setup runs before every lane; the fixtures make what a test needs").toBeUndefined()
+  })
+})
+
+describe("the duration ratchet watches what CI runs", () => {
+  /**
+   * scripts/ci/durations.mjs fails a suite that has no green run, but only at
+   * night, and only for the suites docs/testing/durations.json names. A lane
+   * added without a baseline would never be timed, and a renamed one would
+   * fail every night until someone noticed. Both are caught here, on commit.
+   */
+  const { suites } = JSON.parse(readFileSync(join(root, "docs/testing/durations.json"), "utf8")) as {
+    suites: { workflow: string; job: string; step?: string; seconds: number }[]
+  }
+  const workflows: Record<string, string> = { "ci.yml": ci, "e2e.yml": e2e }
+
+  test("every suite it names is a job, or a step of one, that CI has", () => {
+    const missing: string[] = []
+    for (const s of suites) {
+      const yaml = workflows[s.workflow]
+      if (!yaml) {
+        missing.push(`${s.workflow}: not a workflow this test reads`)
+        continue
+      }
+      const shard = SHARDS.find((x) => `${x.lane} ${x.shard}/${x.of}` === s.job)
+      const plain = jobs(yaml)[s.job]
+      if (!shard && plain === undefined) missing.push(`${s.workflow} › ${s.job}: no such job`)
+      if (s.step && !(plain ?? "").includes(`- name: ${s.step}\n`)) missing.push(`${s.workflow} › ${s.job} › ${s.step}: no such step`)
+      if (!(s.seconds > 0)) missing.push(`${s.workflow} › ${s.job}: no baseline`)
+    }
+    expect(missing).toEqual([])
+  })
+
+  test("every browser shard has a baseline", () => {
+    const named = new Set(suites.filter((s) => s.workflow === "e2e.yml").map((s) => s.job))
+    const shards = SHARDS.filter((x) => x.job !== "e2e-fast").map((x) => `${x.lane} ${x.shard}/${x.of}`)
+    expect([...shards, "e2e-fast"].filter((name) => !named.has(name))).toEqual([])
   })
 })
 

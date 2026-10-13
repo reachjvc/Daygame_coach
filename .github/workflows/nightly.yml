@@ -1,0 +1,52 @@
+name: Nightly checks
+
+# Checks whose answer depends on the date or on CI's own history, so they
+# cannot sit in `npm test`: a commit cannot make them pass or fail.
+# Plans/tests-worth-their-keep.md, Phase 10.
+#
+# `schedule` only fires on the default branch; `workflow_dispatch` runs it on
+# any branch by hand.
+on:
+  schedule:
+    # 04:30 UTC, after e2e.yml's 03:00 nightly run has had time to finish.
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # The duration ratchet reads earlier runs' job and step times.
+  actions: read
+
+jobs:
+  # The crisis numbers in src/vice/data/help.ts must have been checked by a
+  # person in the last 90 days. The test says why it fails rather than warns,
+  # and what to do: check the numbers, then move VERIFIED.
+  helplines:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: The helplines were verified recently
+        run: npx vitest run tests/unit/vice/helpFreshness.test.ts
+        env:
+          RUN_FRESHNESS: '1'
+
+  # Each suite's newest green run against docs/testing/durations.json.
+  durations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: No suite got slower than its baseline
+        run: node scripts/ci/durations.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
