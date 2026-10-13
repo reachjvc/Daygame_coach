@@ -12,7 +12,7 @@
  * on purpose. Everything else waits for the account to say something.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import {
   STORAGE_KEY,
   entriesOnAccount,
@@ -24,6 +24,9 @@ import {
 } from './helpers/timetrack'
 
 test.describe('time is kept on the server, not just in one browser', () => {
+  // Not for isolation: each worker has an account of its own, and every test
+  // here empties it first. tests/unit/e2e-isolation.test.ts asks for serial
+  // mode in any file that intercepts a route, and the @timing test below does.
   test.describe.configure({ mode: 'serial' })
 
   test('the real page saves, and says so', async ({ page }) => {
@@ -50,7 +53,7 @@ test.describe('time is kept on the server, not just in one browser', () => {
    * named the workspace, and the way out was an unlabelled arrow.
    *
    * An emptied account first: the tab title is the running clock while a timer
-   * is going, and on a shared account some other run may have left one going.
+   * is going, and this worker's previous test may have left one going.
    */
   test('the product route is dressed as part of this app, not as a lab page', async ({ page }) => {
     await openFreshTracker(page)
@@ -81,7 +84,7 @@ test.describe('time is kept on the server, not just in one browser', () => {
   // "The endpoint refuses anyone who is not signed in" lived here; it is two
   // rows of security-auth.spec.ts's table now, which needs no browser page.
 
-  test('what I track in one browser appears in another one signed into the same account', async ({ browser, page }) => {
+  test('what I track in one browser appears in another one signed into the same account', async ({ browser, page, account }) => {
     await openFreshTracker(page)
     await trackEntry(page, 'work that must survive')
     await expect.poll(() => entriesOnAccount(page), { message: 'the entry never reached the account' }).toContain(
@@ -89,13 +92,11 @@ test.describe('time is kept on the server, not just in one browser', () => {
     )
 
     /**
-     * ...and now a completely separate browser, SAME account — whichever
-     * account this project signs in as, not a hard-coded one. It named
-     * `user.json` outright, which is what forced the phone project to share an
-     * account with the desktop one.
+     * ...and now a completely separate browser, SAME account: this worker's,
+     * from its saved signed-in state. It named `user.json` outright once, which
+     * is what forced the phone project to share an account with the desktop one.
      */
-    const stateFile = test.info().project.use.storageState as string
-    const second = await browser.newContext({ storageState: stateFile })
+    const second = await browser.newContext({ storageState: account.storageState })
     const other = await second.newPage()
     await reopenFromAccount(other)
     await expect(entryInList(other, 'work that must survive').first()).toBeVisible({ timeout: 25_000 })

@@ -82,7 +82,7 @@
  * 740 loads could not.
  */
 
-import { test } from "@playwright/test"
+import { test } from "../fixtures/test"
 import { staticRoutes } from "../../support/appRoutes"
 import {
   openCold,
@@ -148,8 +148,8 @@ const NOT_SWEPT: Record<string, string> = {
   "/auth/reset-password": "signed-out flow, owned by cold-open-signed-out.spec.ts",
   "/admin/ai-usage": "behind an admin key this account does not have",
   "/programs/live":
-    "its whole purpose is an open workout. A sweep that has to start one is not a read, " +
-    "and this account is shared",
+    "its whole purpose is an open workout, and a sweep that has to start one is not a read. " +
+    "route-sweep.spec.ts opens it on an account with none",
   "/redirect": "a redirect shim with no page of its own",
   "/dashboard/goals/plan": "a redirect shim with no page of its own",
 }

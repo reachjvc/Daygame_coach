@@ -12,7 +12,8 @@
  * in (protected-routes.spec.ts), so that state cannot be reached from it.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { PENDING_KEY, entryInList, openFreshTracker, trackEntry } from './helpers/timetrack'
 
 /**
@@ -36,9 +37,10 @@ async function goToSettings(page: Page) {
   await page.getByRole('dialog').getByRole('button', { name: 'Settings', exact: true }).click()
 }
 
+// No serial mode: each worker signs in to an account of its own and every test
+// empties it first, so these may run side by side. `clearCookies` drops only
+// this test's browser cookies; the session itself is not ended on the server.
 test.describe('edge cases', () => {
-  test.describe.configure({ mode: 'serial' })
-
   test('being signed out mid-session says so, and offers the way back', async ({ page, context }) => {
     await openFreshTracker(page)
     // Throw away the session cookies without touching anything else

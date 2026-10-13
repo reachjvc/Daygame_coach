@@ -4,16 +4,17 @@
  *
  * These ran signed OUT against `/test/toggl`, a lab copy of the same components
  * that returns 404 in the production build CI runs. On the product route the
- * workspace is the account's, so each test starts from an emptied account (see
- * helpers/timetrack.ts) rather than from a cleared browser. The account round
- * trip itself — two devices, offline, deletions — is timetrack-sync's.
+ * workspace is the account's — the worker's own — so each test starts from an
+ * emptied account (see helpers/timetrack.ts) rather than from a cleared
+ * browser. The account round trip itself — two devices, offline, deletions —
+ * is timetrack-sync's.
  *
  * Tests tagged @engine are the ones where the browser engine is the risk
  * (layout, focus, storage events); the nightly WebKit and Firefox projects run
  * only those. The one tagged @timing measures wall-clock time on purpose.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import {
   STORAGE_KEY,
   TRACKER,
@@ -76,9 +77,10 @@ const nav = (page: import('@playwright/test').Page, name: string | RegExp) =>
   page.getByRole('navigation').getByRole('button', { name })
 
 test.describe('Toggl-style time tracker', () => {
-  // One test stubs the calendar route, and every test empties the one account
-  // the others write to — so serially, and interceptions dropped afterwards
-  // (tests/unit/e2e-isolation.test.ts)
+  // Not for isolation: each worker has an account of its own, every test
+  // empties it first, and a stub lives and dies with its test's page.
+  // tests/unit/e2e-isolation.test.ts asks for serial mode in any file that
+  // intercepts a route, and one test here stubs the calendar route.
   test.describe.configure({ mode: 'serial' })
 
   test.afterEach(async ({ page }) => {

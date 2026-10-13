@@ -10,6 +10,11 @@ import { expect, type Page } from '@playwright/test'
  * the ACCOUNT's, which is why `openFreshTracker` empties the account first and
  * not only this browser: clearing localStorage alone brings the account's rows
  * straight back down.
+ *
+ * The account is the Playwright worker's own (tests/e2e/fixtures/test.ts), so
+ * emptying it reaches no other worker. It is still emptied before each test,
+ * because a worker's tests run one after another on that one account and most
+ * of them count what is on it.
  */
 
 export const TRACKER = '/dashboard/time'
@@ -72,7 +77,8 @@ export async function reopenFromAccount(page: Page): Promise<void> {
 }
 
 /**
- * An empty account and a browser that has never opened the tracker.
+ * An empty account and a browser that has never opened the tracker: what this
+ * worker's previous test left behind is gone.
  *
  * Note what an EMPTY account does on first contact: it takes this browser's
  * workspace as the starting point and uploads it, preferences included. So a

@@ -19,7 +19,7 @@
 
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { test, expect } from "@playwright/test"
+import { test, expect } from "../fixtures/test"
 import {
   routesReadingSearchParams,
   searchParamNames,

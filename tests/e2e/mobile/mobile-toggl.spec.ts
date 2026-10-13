@@ -8,11 +8,13 @@
  *
  * It ran signed OUT against `/test/toggl`, a lab copy of the same components
  * that returns 404 in the production build CI runs, and on three phone projects
- * of which two were the same iPhone. Signed in, the workspace is the account's,
- * so each test starts from an emptied account (helpers/timetrack.ts).
+ * of which two were the same iPhone. Signed in, the workspace is the account's
+ * — the worker's own — so each test starts from an emptied account
+ * (helpers/timetrack.ts).
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { type Page } from '@playwright/test'
+import { test, expect } from '../fixtures/test'
 import { STORAGE_KEY, TRACKER, openFreshTracker, openTracker, readState, trackEntry } from '../helpers/timetrack'
 
 /**
@@ -63,9 +65,9 @@ const pageOverflow = (page: Page) =>
     innerWidth: window.innerWidth,
   }))
 
+// No serial mode: each worker signs in to an account of its own and every test
+// empties it first, so these may run side by side.
 test.describe('time tracker on a phone', () => {
-  test.describe.configure({ mode: 'serial' })
-
   test('every screen fits the viewport with no horizontal scrolling', async ({ page }) => {
     await openFreshTracker(page)
     await trackEntry(page, 'phone entry')

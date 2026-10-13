@@ -32,7 +32,8 @@
  * mobile data. Everything else needs a test that knows what the page is for.
  */
 
-import { test, expect, type Page } from "@playwright/test"
+import { type Page } from "@playwright/test"
+import { test, expect } from "../fixtures/test"
 import { staticRoutes } from "../../support/appRoutes"
 // The two debt maps live in tests/support/ so `npm test` can hold them to their
 // own rule without starting a browser. See tests/unit/navigation/sweepDebt.test.ts.
@@ -97,7 +98,7 @@ test.describe("every page", () => {
    * instead of hiding in a list.
    */
   for (const route of ROUTES) {
-    test(`${route} holds up`, async ({ page }) => {
+    test(`${route} holds up`, async ({ page, hasTouch }) => {
       const violations: Violation[] = []
 
       await page.goto(route, { timeout: NAV_TIMEOUT })
@@ -177,7 +178,11 @@ test.describe("every page", () => {
       // 8.9x8.4. Only counts things a person can actually press: visible, on
       // screen, and not a link inside a run of prose (where the line height, not
       // the link, is what you aim at).
-      if (test.info().project.name === "sweep-phone") {
+      //
+      // Asked of the device, not of the project's name: the projects are
+      // becoming lanes with other names, and a name check would have stopped
+      // measuring on the day `sweep-phone` was renamed, in silence.
+      if (hasTouch) {
         const measureSmallTargets = () =>
           page.evaluate((min) => {
           const out: string[] = []
