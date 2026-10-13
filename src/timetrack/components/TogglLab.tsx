@@ -366,7 +366,13 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
       <OfflineShell />
 
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
+        {/* flex-wrap: on a phone, a running timer plus a sync badge that keeps
+            its words ("Offline · 1 waiting", "Saving 1…") plus the bell do not
+            fit beside the back link and the title — they made the header 440px
+            on a 390px screen and pushed the bell off it. When they do not fit,
+            the right-hand group moves to its own line, still right-aligned,
+            instead of off the edge. */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
           {/* The only way out of the tracker on a phone, and it used to be a
               bare 20x36px arrow with its label hidden below `sm` — under the
               44px this slice's own `touchTarget` sets as the floor, on the one
@@ -394,7 +400,18 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               pushed the bell 28px off the right edge of a 390px screen. Nothing
               caught it: the overflow test stops its timer before it navigates,
               so it never visits another screen with the pill on screen. */}
-          <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2">
+          {/* With a timer running outside the Timer screen, its pill joins this
+              group, and on a phone the group then always takes its own row:
+              otherwise the header would jump between one and two rows every
+              time the badge briefly says "Saving 1…" after a change. */}
+          <div
+            className={cn(
+              "ml-auto flex min-w-0 max-w-full items-center gap-1 sm:gap-2",
+              screen !== "timer" &&
+                state.entries.some((e) => e.duration < 0 && !e.serverDeletedAt) &&
+                "basis-full justify-end sm:basis-auto",
+            )}
+          >
             <SyncBadge status={sync.status} pending={sync.pendingCount} onRetry={sync.syncNow} />
             {pomodoro.phase !== "idle" && (
               <span className="hidden items-center gap-1 rounded-full border border-border px-2 py-1 text-xs sm:flex">
