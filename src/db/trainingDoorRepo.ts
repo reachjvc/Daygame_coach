@@ -181,8 +181,8 @@ async function recentlyFinished(
    * This collapsed both into `[]`, and `trainingCardState` reads an empty
    * `recentlyFinished` as "nothing finished today" — so a failed query offers
    * **Start workout** on a day already trained, which the card's own comment
-   * says "invites a second workout for the same session". `docs/known-failures.md`:
-   * a value that could not be computed is a THIRD state, never zero.
+   * says "invites a second workout for the same session". A value that could
+   * not be computed is a THIRD state, never zero.
    *
    * Thrown rather than guessed: the caller already handles a failure by saying
    * the door could not be loaded, which is the honest answer.

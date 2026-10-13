@@ -230,9 +230,9 @@ export function FinishSheet({
    * workout that began at 30 seconds past or later — half of them — the sheet
    * promised 8 minutes and the receipt recorded 7.
    *
-   * Two facts about one session, stored apart and shown a second apart, which
-   * is the shape `docs/known-failures.md` names. The unedited case uses the
-   * real instant; once the field is edited, the typed value IS the fact.
+   * Two facts about one session, stored apart and shown a second apart. The
+   * unedited case uses the real instant; once the field is edited, the typed
+   * value IS the fact.
    */
   const startedForCount =
     startedAt === instantToWallClock(workout.startedAt, timezone)

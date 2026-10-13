@@ -16,7 +16,6 @@
     "ci": "npm run lint:ratchet && node scripts/typecheck-ratchet.mjs && npm test && npm run test:integration",
     "ingest": "node node_modules/tsx/dist/cli.mjs scripts/training-data/08.ingest.ts",
     "seed:values": "tsx scripts/seed_values.ts",
-    "audit": "bash scripts/audit-session.sh",
     "audit:rls": "tsx scripts/audit-rls.ts",
     "seed:training": "tsx scripts/dev/seed-training-year.ts",
     "prepare": "husky"

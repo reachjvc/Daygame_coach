@@ -22,8 +22,7 @@
  * `fateOf` called a written-up session "open", so a failed write against one
  * answered "That set could not be saved. Tap it again." — retry advice for a
  * workout that is not open and never was. One predicate now, imported by all
- * of them, and `docs/known-failures.md` asks the question this is the answer
- * to: "Does this name already mean something else here?"
+ * of them.
  */
 
 /** The two columns that decide it. Anything wider is the caller's business. */
