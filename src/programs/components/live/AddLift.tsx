@@ -18,7 +18,7 @@
 import { useState } from "react"
 import { Plus, Search, X } from "lucide-react"
 import { addedLiftId } from "../../programsService"
-import { searchLibrary } from "../../data/exerciseLibrary"
+import { BODY_GROUP_LABELS, searchLibrary } from "../../data/exerciseLibrary"
 import type { LibraryExercise } from "../../types"
 
 interface Props {
@@ -125,7 +125,7 @@ export function AddLift({ alreadyHere, onAdd, startOpen = false, onCancel }: Pro
                 className="flex min-h-11 w-full items-center justify-between gap-2 rounded-md border border-border px-2.5 text-left text-sm transition-colors hover:bg-muted/50"
               >
                 <span className="truncate">{e.name}</span>
-                <span className="shrink-0 text-xs capitalize text-muted-foreground">{e.group}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{BODY_GROUP_LABELS[e.group]}</span>
               </button>
             </li>
           ))}

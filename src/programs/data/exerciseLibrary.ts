@@ -20,8 +20,8 @@
 import type { BodyGroup, LibraryExercise, MovementPattern } from "../types"
 
 /**
- * A body part as a person would write it. Not read by any screen yet:
- * `AddLift` prints the raw `group` id beside each search result.
+ * A body part as a person would write it, as `AddLift` shows it beside each
+ * search result.
  */
 export const BODY_GROUP_LABELS: Record<BodyGroup, string> = {
   chest: "Chest",
