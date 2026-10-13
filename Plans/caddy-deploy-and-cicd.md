@@ -114,7 +114,7 @@ Every row was checked on 2026-10-13, not copied from earlier notes.
 | C6 | CI runs on Node 20, which reached end of life on 2026-04-30. Runs print a deprecation warning for the GitHub actions they use. | run annotations | Phases 1–2 for `ci.yml`. `e2e.yml` belongs to the other plan. |
 | C7 | `ubuntu-latest` moves to Ubuntu 26.04 **from 2026-10-19**, six days after this was written. Browser dependencies and Docker on a new OS release are what break first. | run annotation | Phase 2 (pin `ubuntu-24.04`) |
 | C8 | `ci.yml` has no `concurrency` (two quick pushes run two full pipelines, and the older can finish last) and no explicit `permissions` (the token's rights depend on a repository setting). | workflow files | Phase 2 |
-| C9 | **On this public repository, CI publishes Playwright reports as artifacts that any signed-in GitHub user can download.** Playwright records a trace when a test is retried. Traces contain network requests, which can include the test accounts' passwords and session cookies. | `e2e.yml` upload steps; `trace: 'on-first-retry'` in `playwright.config.ts` | Phase 1.1, first step of the whole plan |
+| C9 | **On this public repository, CI publishes Playwright reports as artifacts that any signed-in GitHub user can download.** Playwright records a trace when a test is retried. Traces contain network requests, which can include the test accounts' passwords and session cookies. | `e2e.yml` upload steps; `trace: 'on-first-retry'` in `playwright.config.ts` | Phase 1.1 stops new exposure; it is the first step of the whole plan. Checking and deleting the three live reports is B9 of `tests-worth-their-keep.md`, which took it on the same day. |
 
 **One finding corrects the earlier plan.** It suspected the heavy suite was red because Playwright gives
 the build only 120 seconds. That is refuted. The fast job uses the same 120-second budget and builds and
@@ -188,9 +188,11 @@ internet, which is the moment exposure begins.
 
 - **Published test reports (C9) — act first.** A Playwright trace records network traffic, so a trace
   from a retried login test can contain a test account's password. On this public repository every
-  uploaded report is downloadable by any signed-in GitHub user. Phase 1.1 turns traces off in CI. After
-  B-GH, the executor checks the three live reports for trace files and deletes them. If any held a
-  trace, the test accounts' passwords are rotated (R12).
+  uploaded report is downloadable by any signed-in GitHub user. Phase 1.1 turns traces off in CI. The
+  three live reports belong to B9 of `tests-worth-their-keep.md`: two are 215 KB, the size of a report
+  without a trace; one, from run 38368655433, is 812 KB, which fits a trace but does not prove one.
+  After the GitHub CLI login, that one is opened and, if it holds a trace, deleted, and the test
+  account's password is changed (R12).
 - **Dependencies.** The critical advisory (remote code execution in `next/og`) is not reachable here,
   because nothing generates images. But the same patch release, `next` 16.3.8, also fixes two
   cache-poisoning advisories, one of them specific to self-hosted Next.js, which is what this plan
@@ -245,7 +247,7 @@ what happened, not a guess.
 
 | ID | What | Attempted, and what happened | Blocks | Recommendation |
 |---|---|---|---|---|
-| B-GH | Log the GitHub CLI in | `gh auth status`: not logged in. No token in the environment, no `~/.config/gh`, no GitHub CLI on the Windows side. A browser login started with a 25-second limit waited for a person to enter a code, as expected. | Steps 4.4–4.7; deleting old artifacts (C9); reading CI job logs | In the WSL terminal: `gh auth login -s read:packages`, choose SSH. Two minutes. If the executor's attempt to pass values into `gh variable set` is refused, run `infra/github-config.sh` yourself (R4). |
+| B-GH | Log the GitHub CLI in | `gh auth status`: not logged in. No token in the environment, no `~/.config/gh`, no GitHub CLI on the Windows side. A browser login started with a 25-second limit waited for a person to enter a code, as expected. | Steps 4.4–4.7; reading CI job logs; B9 of `tests-worth-their-keep.md` | In the WSL terminal: `gh auth login -s read:packages`, choose SSH. Two minutes. If the executor's attempt to pass values into `gh variable set` is refused, run `infra/github-config.sh` yourself (R4). |
 | B-ENV | Scripts that read `.env.local` | Reading `.env.local` directly was refused today by the safety classifier. Running a script that reads it (as `infra/run-local.sh` already does) worked on 2026-10-01. A script that copies secrets into a second file may be refused. | Phase 3 onwards, if refused | If refused, run `infra/write-env-file.sh` once yourself (R13). It writes the runtime file and a file of the three public build values, both mode 600, outside the repository. |
 | B-GHCR | Read-only registry tokens for the deploy agents (the image is private) | Nothing to test yet: no image exists. GitHub's own pages disagree on whether a package that a workflow creates starts private, so step 4.3 proves it with an empty placeholder image before any real image is pushed. | Step 4.5 (this machine) and Phase 6 (server) | Two classic tokens with only `read:packages`, 1-year expiry: one for this machine, one for the server (R5). GitHub's registry accepts only classic tokens. Until R5, this machine may use the GitHub CLI's own token. |
 | B-DNS | Buy the domain on Cloudflare and create a DNS-only API token for it | No domain and no Cloudflare credential anywhere (`~/.cloudflared`, environment, repository). A purchase needs payment. | **STOP line**: Phase 6 | Cloudflare Registrar. Token with "Edit zone DNS" for that one zone, 30-day expiry. |
@@ -255,7 +257,7 @@ what happened, not a guess.
 | B-SUPABASE-REDIRECT | Add `https://localhost/**` now, and `https://<domain>/**` in Phase 6, to Supabase's redirect allow-list | Reading the setting was refused today by the safety classifier as a production read, and was not routed around. The last reading (2026-10-01) listed only the Vercel URL and `http://localhost:3000`. | Sign-up confirmation and password reset on any new address. Ordinary login works. | Supabase dashboard → Authentication → URL Configuration → add the two entries (R7) |
 | B-CA | Trust Caddy's local certificate in Windows | Checked: not trusted. The command and path were verified on 2026-10-01 (`certutil -dump` through the network path). It was not installed, because it changes what your browser trusts, which is the machine owner's call. | Only a certificate warning on https://localhost | In Windows: `certutil -user -addstore Root "\\wsl.localhost\Ubuntu\home\jonaswsl\projects\daygame-coach\infra\caddy\local-root-ca.crt"`, or skip it (Q19) |
 | B-DEVSERVER | Move the owner's dev server to Node 24 and the patched `next` | Not attempted on purpose. The dev server on :3000 is the owner's own process; a restart by an AI session would either be refused or leave the server dying with that session. | Nothing in this plan. Until then :3000 runs Node 20 and `next` 16.3.5 while CI and the image run the new versions. | R11: `nvm alias default 24.21.0`, then `npm ci` and restart `npm run dev` when convenient |
-| B-CI-ARTIFACTS | Act on reports that may contain test passwords (C9) | Listed the live artifacts today (three reports, until 2026-10-20). Downloading one to look inside needs a login. | Nothing; this is cleanup | After B-GH the executor inspects and deletes them. If any held a trace, rotate the test accounts' passwords and update the GitHub secrets (R12). |
+| B-CI-ARTIFACTS | Act on reports that may contain a test password (C9) | Listed the live artifacts today: three reports, live until 2026-10-20. Downloading one to look inside needs a login. `tests-worth-their-keep.md` recorded this as its B9 the same day, so it is listed here only so that your return visit covers it. | Nothing in this plan; it is cleanup | R12 |
 | B-PEER-TREE | Another session's unfinished change breaks a check that runs on our commit, such as the pre-commit unit tests | May happen during execution; it cannot be attempted in advance | Committing, until the other session fixes its change | The executor records the failing test and the file, messages that session, and continues with work that needs no commit. It never edits another session's files. |
 | B-REBOOT | See the local deployment come back after a restart | Uptime is 24 days, so this has never been observed. Not forced: restarting WSL would cut off the owner's editor and two other working sessions. | Nothing. The claim stays "configured, not observed". | Next time WSL restarts, run `infra/run-local.sh --status`. |
 | B-UPTIME | An account with an external uptime monitor | Cannot be attempted: it needs your email and a sign-up | Phase 7 | healthchecks.io or UptimeRobot, free tier |
@@ -650,9 +652,8 @@ reaches https://localhost with no person involved.
      contributors.
 
    If any part is refused, record it; you run the script yourself at the return visit (R4).
-5. **Clean up the published reports (C9, needs B-GH).** List the live artifacts and download each into
-   the scratchpad. Look for trace files (`unzip -l`), then delete the artifacts. If any held a trace,
-   record R12 as required; otherwise record it as not needed.
+5. **The published reports (C9) are not this plan's to clean up.** They are B9 of
+   `tests-worth-their-keep.md`. This plan never downloads or deletes artifacts.
 6. **Give this machine registry access (needs B-GH).** Until R5's token exists:
    `gh auth token | docker login ghcr.io -u reachjvc --password-stdin`. This stores the CLI's broader
    token in `~/.docker/config.json`. The same token already sits in `~/.config/gh/`, so this is no new
@@ -761,7 +762,7 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R9 | Optional: trust the local certificate (the B-CA command above) | Windows |
 | R10 | The email address for certificate and uptime alerts | Tell the AI |
 | R11 | When convenient: `nvm alias default 24.21.0`, then in the repository `npm ci`, then restart `npm run dev` (B-DEVSERVER) | WSL terminal |
-| R12 | Only if step 4.5 found traces: rotate the test accounts' passwords in the Supabase project CI uses, and update the GitHub secrets. Also confirm which Supabase project CI's secrets point at. | Supabase dashboard; GitHub → Settings → Secrets |
+| R12 | B9 of `tests-worth-their-keep.md`, after R4: `gh run download 38368655433 -n playwright-report-fast` and look for a `data/*.zip` inside. If one is there, delete that artifact, change the test account's password, and update it in `.env.local` and in the CI secret. Also confirm which Supabase project CI's secrets point at. | WSL terminal; Supabase dashboard; GitHub → Settings → Secrets |
 | R13 | Only if B-ENV was refused: run `infra/write-env-file.sh staging` once | WSL terminal |
 
 Then start a new session with the Phase 6 prompt at the end of this file.
@@ -872,9 +873,10 @@ finish), and confirming the emails in steps 6 and 7.
 - **A refusal from the permission layer is a blocker, not a puzzle.** Quote it in the blocker table, do
   not work around it, and continue with the next step that does not depend on it.
 - **Before calling the work done:** note the commit you started from. Run `/code-review` and
-  `/security-review` on `<start>..HEAD`, limited to this plan's files, and check against
-  `docs/known-failures.md`. Plans in `Plans/` are not covered by the automatic rules for `docs/plans/`,
-  so these steps are written here instead.
+  `/security-review` on `<start>..HEAD`, limited to this plan's files. Then re-read each phase's
+  acceptance list against what was actually run. (`docs/known-failures.md`, the old end-of-turn
+  checklist, was deleted on 2026-10-13.) Plans in `Plans/` are not covered by the automatic rules for
+  `docs/plans/`, so these steps are written here instead.
 
 ## Tools on this machine
 
