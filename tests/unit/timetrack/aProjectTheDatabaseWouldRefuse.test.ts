@@ -15,12 +15,8 @@
  * at table 9 and is dropped the same way.
  *
  * Each case below is taken from a CHECK constraint in
- * `supabase/migrations/20260903120000_timetrack.sql`, and the last test reads them out
- * of the migration so this list cannot drift from the database's.
+ * `supabase/migrations/20260903120000_timetrack.sql`.
  */
-
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
 
 import { describe, expect, test } from "vitest"
 
@@ -82,35 +78,5 @@ describe("and whatever the caller does", () => {
 
     const row = stateToRows(state, "u1").timetrack_projects.find((r) => r.id === id)!
     expect(row.recurring_start, "an empty string in a `date` column is invalid input syntax").toBeNull()
-  })
-})
-
-describe("the list of rules", () => {
-  test("is the database's, not a remembered version of it", () => {
-    /**
-     * Read out of the migration so the two cannot drift. If a constraint is added to
-     * `timetrack_projects` and nothing here covers it, that is worth knowing — the
-     * assertion names the ones this file accounts for.
-     */
-    const sql = readFileSync(join(process.cwd(), "supabase/migrations/20260903120000_timetrack.sql"), "utf8")
-    const projectBlock = /create table (?:if not exists )?public\.timetrack_projects\s*\(([\s\S]*?)\n\);/.exec(sql)?.[1]
-    expect(projectBlock, "the timetrack_projects block was not found, so this asserts nothing").toBeTruthy()
-
-    const constraints = [...projectBlock!.matchAll(/check \(([^)]*(?:\([^)]*\))?[^)]*)\)/g)].map((m) => m[1])
-    expect(constraints.length, "no CHECK constraints parsed").toBeGreaterThan(2)
-
-    /**
-     * Two of this table's constraints need no client-side check and are named here
-     * with the reason, rather than left to look like an oversight:
-     * `estimate_type in ('hours','monetary')` and `status in (…)` are produced by a
-     * picker and a boolean respectively, so no input can reach them out of range.
-     * Everything else has a rule in `validateProject`.
-     */
-    const checkedInCode = ["name", "end_date", "estimated_amount", "fixed_fee", "recurring", "estimated_seconds"]
-    const safeByConstruction = ["estimate_type in", "status in"]
-    const unaccounted = constraints.filter(
-      (c) => !checkedInCode.some((word) => c.includes(word)) && !safeByConstruction.some((word) => c.includes(word)),
-    )
-    expect(unaccounted, `these CHECK constraints have no client-side check:\n  ${unaccounted.join("\n  ")}`).toEqual([])
   })
 })

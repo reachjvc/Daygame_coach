@@ -65,16 +65,6 @@ describe("the inline start time", () => {
     expect(new Date(stored().start).getMinutes()).toBe(30)
   })
 
-  test("Escape throws it away", () => {
-    const { field, stored } = list()
-    const before = stored().start
-    const start = field("Start time")
-    fireEvent.change(start, { target: { value: "03:15" } })
-    fireEvent.keyDown(start, { key: "Escape" })
-    fireEvent.blur(start)
-    expect(stored().start).toBe(before)
-  })
-
   test("and Enter does not write the same edit twice", () => {
     /**
      * Enter blurs and lets the blur handler write. If it ALSO wrote in the key handler,

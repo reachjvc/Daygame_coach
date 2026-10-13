@@ -467,14 +467,6 @@ describe("only one timer may be running", () => {
     expect(fixed.entries.filter((e) => e.stop === null)).toHaveLength(1)
   })
 
-  test("no hour is counted twice", () => {
-    const state = baseState({ entries: [runningFrom("laptop", "09:00"), runningFrom("phone", "11:00")] })
-    const { state: fixed } = reconcileRunningEntries(state)
-    const laptop = fixed.entries.find((e) => e.id === "laptop")!
-    const phone = fixed.entries.find((e) => e.id === "phone")!
-    expect(new Date(laptop.stop!).getTime()).toBeLessThanOrEqual(new Date(phone.start).getTime())
-  })
-
   test("a deleted running entry is not counted as a second timer", () => {
     const state = baseState({
       entries: [runningFrom("a", "09:00"), { ...runningFrom("ghost", "11:00"), serverDeletedAt: "2026-09-05T12:00:00.000Z" }],

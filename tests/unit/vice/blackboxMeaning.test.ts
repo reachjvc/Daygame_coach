@@ -8,48 +8,13 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { ENDING_FAMILIES, familyFor } from "@/src/vice/data/blackbox"
-import { ENDINGS } from "@/app/test/archive/quit-vice/_module/data/again"
+import { familyFor } from "@/src/vice/data/blackbox"
 import { emptyRecord, fileReport, startAttempt } from "@/src/vice/blackbox/blackboxStore"
 import { stats, thoughtCosts } from "@/src/vice/blackboxService"
 
 const TODAY = "2026-09-20"
 
-describe("the chart's accent means something", () => {
-  /**
-   * The emphasis form only works because exactly one thing is emphasised. Accent
-   * a second family and the chart stops saying "this is the one that keeps
-   * killing your runs" and starts saying nothing at all.
-   */
-  it("accents exactly one family", () => {
-    expect(ENDING_FAMILIES.filter((f) => f.accent)).toHaveLength(1)
-  })
-
-  /**
-   * And it is the good-stretch family specifically. Across eight sources and an
-   * RCT the hazard is feeling fine rather than craving; the module's tripwire,
-   * its `again` tool and this chart all point at the same finding, and moving
-   * the accent to "stressed" would quietly re-aim the whole feature at the
-   * thing the research says is NOT the main danger.
-   */
-  it("accents the good stretch, not the bad night", () => {
-    expect(ENDING_FAMILIES.find((f) => f.accent)?.id).toBe("fine")
-  })
-})
-
-describe("the two surfaces agree about what an ending is", () => {
-  /**
-   * `data/again.ts` asks how the last attempt ended and `data/blackbox.ts`
-   * records how every run ended. If they drift, a person answers the same
-   * question two ways in one module. `never` is excluded on purpose: "this is
-   * my first real go" is the absence of an ending, not one.
-   */
-  it("every ending the attempt review offers has a family here", () => {
-    const theirs = ENDINGS.map((e) => e.id).filter((id) => id !== "never")
-    const ours: string[] = ENDING_FAMILIES.map((f) => f.id)
-    expect(theirs.filter((id) => !ours.includes(id))).toEqual([])
-  })
-
+describe("an ending the chart does not know", () => {
   it("resolves an unknown ending to something rather than crashing a chart", () => {
     expect(familyFor("nonsense" as never).id).toBe("other")
   })

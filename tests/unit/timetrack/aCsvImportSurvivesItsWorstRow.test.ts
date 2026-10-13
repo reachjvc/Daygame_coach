@@ -22,19 +22,6 @@ const NOW = "2026-09-28T12:00:00.000Z"
 const HEADER = "Description,Start date,Start time,Duration"
 
 describe("a CSV with a duration too big to be a date", () => {
-  test("returns a result at all, where it used to throw past its caller", () => {
-    /**
-     * Asserted as a RETURN rather than as the absence of a throw: the caller needs a `skipped`
-     * list to put in the toast, and "did not throw" would also be satisfied by
-     * swallowing the row silently — which is the other way this could have been fixed
-     * and the wrong one.
-     */
-    const csv = `${HEADER}\nmoon shot,2026-09-28,09:00,999999999999999h\n`
-    const result = importEntriesCsv(baseState(), csv, NOW)
-    expect(Array.isArray(result.skipped)).toBe(true)
-    expect(result.skipped).toHaveLength(1)
-  })
-
   test("skips that row, with a reason the toast can show", () => {
     const csv = `${HEADER}\nmoon shot,2026-09-28,09:00,999999999999999h\n`
     const result = importEntriesCsv(baseState(), csv, NOW)

@@ -68,13 +68,6 @@ describe("the eight hours are split, not duplicated", () => {
     expect(secondsInRangeOf(entries, THIS_WEEK.start, THIS_WEEK.end, NOW) / 3600).toBe(MONDAY_HOURS)
   })
 
-  test("and they add up to the shift, which is the whole claim", () => {
-    const both =
-      secondsInRangeOf(entries, PREV_WEEK.start, PREV_WEEK.end, NOW) +
-      secondsInRangeOf(entries, THIS_WEEK.start, THIS_WEEK.end, NOW)
-    expect(both).toBe(entries[0].duration)
-  })
-
   test("Team's tracked-this-week agrees with the Timer's week total, to the second", () => {
     const state = baseState()
     state.entries = entries

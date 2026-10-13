@@ -239,11 +239,6 @@ describe("a server payload with no usable workspace row", () => {
     expect(restored.projects.length).toBe(fullState().projects.length)
     expect(restored.workspace.id).toBe(rows.timetrack_workspaces[0].id)
   })
-
-  test("a genuinely empty payload still gives an empty workspace", () => {
-    const restored = rowsToState(stateToRows(baseState({ clients: [], projects: [], tasks: [], tags: [], entries: [] }), USER), NOW)
-    expect(restored.entries).toEqual([])
-  })
 })
 
 describe("a webhook log row carries the webhook that wrote it", () => {

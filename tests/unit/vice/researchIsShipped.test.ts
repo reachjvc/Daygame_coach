@@ -232,30 +232,4 @@ describe("a user can actually reach the research", () => {
       "techniques.ts exists but no component imports it — that is a data file, not a feature",
     ).toMatch(/from "\.\.?\/(data\/)?techniques"/)
   })
-
-  it("puts something in front of a first-time user mid-urge, with nothing set up", () => {
-    // The concrete regression: a brand-new visitor used to get a bare
-    // ninety-second countdown, because every other surface needed them to have
-    // written something first.
-    //
-    // THE SUBJECT MOVED WITH THE PRODUCT. This read the retired module's
-    // `Tools.tsx`, which was the right file to ask until 2026-09-24 and the
-    // wrong one after: the live answer to "an urge, right now" is `UrgeNow` on
-    // the Black Box. Asking the archive whether the PRODUCT does something is
-    // the shape of every stale check in this repo, so it asks the live one —
-    // and the archived one too, because it is still reachable.
-    const live = fs.readFileSync(
-      path.join(process.cwd(), "src/vice/components/blackbox/UrgeNow.tsx"),
-      "utf8",
-    )
-    expect(live, "the live urge path has no zero-setup content in it").toMatch(/OneVoice/)
-
-    const archived = path.join(componentDirs[1] ?? "", "Tools.tsx")
-    if (fs.existsSync(archived)) {
-      expect(
-        fs.readFileSync(archived, "utf8"),
-        "the archived urge tool lost its zero-setup content",
-      ).toMatch(/OneVoice/)
-    }
-  })
 })

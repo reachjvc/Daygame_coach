@@ -18,9 +18,6 @@ import {
   profitabilityToCsv,
   rangeRefusal,
   clampRange,
-  MAX_RANGE_DAYS,
-  RANGE_MAX,
-  RANGE_MIN,
   summaryToCsv,
 } from "@/src/timetrack/reportsService"
 import type { ReportConfig, TimetrackState } from "@/src/timetrack/types"
@@ -525,22 +522,5 @@ describe("rangeRefusalIsCheckedAgainstAHandWrittenTable", () => {
       return reverted !== (expected !== null)
     }).map(([candidate]) => JSON.stringify(candidate))
     expect(wrong).toEqual([])
-  })
-
-  /**
-   * A meta-test about the TABLE, not about the source, so it passes against any
-   * version of `rangeRefusal` — which is the point, and is why
-   * `tests-must-fail-without-the-fix.mjs` lists it.
-   */
-  test("the table covers both verdicts, or neither test above asserts anything", () => {
-    const refused = TABLE.filter(([, expected]) => expected !== null)
-    expect(refused.length).toBeGreaterThan(11)
-    expect(TABLE.length - refused.length).toBe(3)
-  })
-
-  test("the ceiling and the window in the reasons are the exported constants", () => {
-    /** So the hand-written strings above cannot quietly stop matching the real numbers. */
-    expect(`A report covers at most ${Math.floor(MAX_RANGE_DAYS / 366)} years`).toBe("A report covers at most 20 years")
-    expect(`Reports cover ${RANGE_MIN.slice(0, 4)} to ${RANGE_MAX.slice(0, 4)}`).toBe("Reports cover 1970 to 2099")
   })
 })

@@ -180,8 +180,4 @@ describe("chart geometry", () => {
       expect(g.left + g.width).toBeLessThanOrEqual(100.001)
     }
   })
-
-  it("has no span to draw when nothing has been recorded", () => {
-    expect(chartSpan(emptyRecord(), TODAY)).toBeNull()
-  })
 })

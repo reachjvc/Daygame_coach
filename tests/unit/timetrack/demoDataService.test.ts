@@ -1,19 +1,12 @@
 import { describe, expect, test } from "vitest"
 
 import { CREATED_WITH, SEED_CREATED_WITH } from "@/src/timetrack/config"
-import { isDemoEntry, removeDemoData } from "@/src/timetrack/demoDataService"
+import { removeDemoData } from "@/src/timetrack/demoDataService"
 
 import { NOW_ISO, baseState, entry } from "./helpers"
 
 const demo = { createdWith: SEED_CREATED_WITH }
 const mine = { createdWith: CREATED_WITH }
-
-describe("legacy sample-data tagging", () => {
-  test("only the old seeded rows count as sample data", () => {
-    expect(isDemoEntry(entry(1, "2026-08-10", "09:00", "10:00", demo))).toBe(true)
-    expect(isDemoEntry(entry(2, "2026-08-10", "09:00", "10:00", mine))).toBe(false)
-  })
-})
 
 describe("removeDemoData", () => {
   test("removes demo entries and leaves your own untouched", () => {

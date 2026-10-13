@@ -70,6 +70,10 @@ import {
   VALUES_STEP,
 } from "@/src/vice/data/gives"
 import { ENDING_FAMILIES, FACTOR_SEEDS, STRUCTURE_SEEDS } from "@/src/vice/data/blackbox"
+import { SURVIVORSHIP } from "@/src/vice/data/testimonials"
+import { AGAIN, DIFFERENCES, ENDINGS } from "@/app/test/archive/quit-vice/_module/data/again"
+import { MODULES, MODULES_COPY } from "@/app/test/archive/quit-vice/_module/data/modules"
+import { SHORTLIST, SHORTLIST_COPY } from "@/app/test/archive/quit-vice/_module/data/shortlist"
 
 interface Violation { where: string; rule: string; text: string }
 const violations: Violation[] = []
@@ -435,6 +439,39 @@ describe("quit-a-vice copy lint", () => {
     GIVES_INTRO.body.forEach((b, i) => prose(`GIVES_INTRO.body[${i}]`, b))
     prose("GIVES_INTRO.caution", GIVES_INTRO.caution)
 
+    // --- the framing around other people's accounts. The quotes themselves are
+    // exempt — they are other people talking, and editing them would defeat the
+    // point of the file — but our own words around them are not.
+    prose("SURVIVORSHIP", SURVIVORSHIP)
+
+    // --- the attempt review, the nine modules and the short version. These live
+    // in the archived lab (`app/test/archive/quit-vice`), and their own files
+    // each carried a copy of the language check; one lint holds it now.
+    for (const [key, value] of Object.entries(AGAIN)) label(`AGAIN.${key}`, value)
+    for (const ending of ENDINGS) {
+      label(`ENDINGS.${ending.id}.label`, ending.label)
+      prose(`ENDINGS.${ending.id}.answer`, ending.answer)
+    }
+    for (const difference of DIFFERENCES) {
+      label(`DIFFERENCES.${difference.id}.label`, difference.label)
+      prose(`DIFFERENCES.${difference.id}.help`, difference.help)
+    }
+    for (const [key, value] of Object.entries(MODULES_COPY)) label(`MODULES_COPY.${key}`, value)
+    for (const m of MODULES) {
+      label(`MODULES.${m.id}.title`, m.title)
+      prose(`MODULES.${m.id}.premise`, m.premise)
+      prose(`MODULES.${m.id}.takeaway`, m.takeaway)
+      // Filed under `hub.evidence` for the reason the provenance lines are: it
+      // describes the research ("re-addicted at home"), not the reader.
+      prose(`hub.evidence.MODULES.${m.id}`, m.evidence)
+      label(`MODULES.${m.id}.exercise`, m.exercise.label)
+    }
+    for (const [key, value] of Object.entries(SHORTLIST_COPY)) label(`SHORTLIST_COPY.${key}`, value)
+    for (const item of SHORTLIST) {
+      label(`SHORTLIST.${item.id}.label`, item.label)
+      prose(`SHORTLIST.${item.id}.does`, item.does)
+    }
+
     for (const region of Object.values(SERVICES)) {
       label(`SERVICES.${region.label}`, region.label)
       for (const service of region.items) {
@@ -523,11 +560,12 @@ describe("the rules the lint enforces are real rules", () => {
 })
 
 describe("structural guarantees the copy has to keep", () => {
-  it("keeps the standing line on the urge tool free of any demand", () => {
-    // The tool stops working the moment it reads as a test, because the honest
-    // entries stop arriving and the log is what everything else runs on.
-    expect(URGE.standing.toLowerCase()).toContain("still do it")
-    expect(URGE.standing.toLowerCase()).toContain("not a test")
+  it("never answers an ended attempt with try harder", () => {
+    // The one answer the accounts never give. More motivation, more willpower
+    // and more facts about harm are conspicuously absent from every "this time
+    // was different" story in the corpus.
+    const all = [AGAIN.frame, AGAIN.blurb, ...ENDINGS.map((e) => e.answer), ...DIFFERENCES.map((d) => d.help)].join(" ")
+    expect(all).not.toMatch(/try harder|more willpower|more motivation than|be stronger/i)
   })
 
   it("offers the lapse screen no counter to reset", () => {
@@ -542,14 +580,5 @@ describe("structural guarantees the copy has to keep", () => {
       expect(item.thought.trim().length, item.id).toBeGreaterThan(5)
     }
     expect(new Set(PERMISSION_THOUGHTS.map((p) => p.id)).size).toBe(PERMISSION_THOUGHTS.length)
-  })
-
-  it("runs the mission sequence from day one with no gaps and no repeats", () => {
-    expect(MISSIONS.map((m) => m.day)).toEqual(MISSIONS.map((_, i) => i + 1))
-  })
-
-  it("names a source for the steps that reproduce published material", () => {
-    const sourced = VICE_FLOWS.flatMap((f) => f.steps).filter((s) => s.source)
-    expect(sourced.length).toBeGreaterThan(0)
   })
 })

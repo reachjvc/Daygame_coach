@@ -45,12 +45,7 @@ describe("stepping back through a monthly project", () => {
   /** offsets 0..-8 — the exact presses the browser round made. */
   const walked = Array.from({ length: 9 }, (_, i) => projectPeriodAt(monthly, TODAY, -i))
 
-  test("every step lands on a different month", () => {
-    const starts = walked.map((p) => p?.start ?? "none")
-    expect(new Set(starts).size, `repeated a period: ${starts.join(", ")}`).toBe(starts.length)
-  })
-
-  test("and lands on consecutive months, so none is skipped", () => {
+  test("lands on consecutive months, so none is skipped or repeated", () => {
     expect(walked.map((p) => p?.start)).toEqual([
       "2026-09-01",
       "2026-08-01",
@@ -62,17 +57,6 @@ describe("stepping back through a monthly project", () => {
       "2026-02-01",
       "2026-01-01",
     ])
-  })
-
-  test("February is reachable, which it was not", () => {
-    expect(walked.map((p) => p?.start)).toContain("2026-02-01")
-  })
-
-  test("each period ends the day before the next one starts", () => {
-    for (const period of walked) {
-      expect(period).not.toBeNull()
-      expect(period!.end >= period!.start, `${period!.start} → ${period!.end} is inverted`).toBe(true)
-    }
   })
 
   test("and stepping past the project's first period answers null rather than inventing one", () => {

@@ -17,6 +17,9 @@
  * and the order test in `tests/unit/db` is what makes the consequence visible.
  */
 
+import { readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, test } from "vitest"
 
 import { createEmptyWorkspace } from "@/src/timetrack/data/emptyWorkspace"
@@ -59,18 +62,46 @@ describe("adding a webhook", () => {
 
   test("the pattern is the database's own, not a looser copy of it", () => {
     /**
-     * Checked against the constraint in the migration rather than against a
-     * remembered version of it: a client-side rule that accepts more than the
-     * database does is the bug this file is about, one level up.
+     * Checked against the constraint as the migrations state it, not against a
+     * remembered copy: a client-side rule that accepts more than the database does
+     * is the bug this file is about, one level up. The client may be stricter (it
+     * refuses a bare `https://`); it may never be looser.
      */
-    const constraint = /^https:\/\//i
-    for (const url of ["https://a.example/x", "HTTPS://a.example/x"]) {
-      expect(constraint.test(url), `${url} passes the database check`).toBe(true)
-      expect(add(url).violations, `${url} passes the database but was refused here`).toEqual([])
+    const database = webhookUrlCheck()
+    const wellFormed = ["https://a.example/x", "HTTPS://a.example/x", "  https://a.example/x  "]
+    const malformed = ["http://a.example/x", "a.example/x", "//a.example/x", "ftp://a.example/x", "https:/a.example/x", " http://a.example"]
+
+    const refusedByDatabase = [...wellFormed, ...malformed].filter((url) => !database.test(url.trim()))
+    expect(refusedByDatabase, "the parsed check refuses none of these, so it was misread").toEqual(
+      expect.arrayContaining(["http://a.example/x"]),
+    )
+    for (const url of refusedByDatabase) {
+      expect(add(url).violations.length, `${JSON.stringify(url)} fails the database's check but was accepted here`).toBe(1)
     }
-    for (const url of ["http://a.example/x", "a.example/x", "//a.example/x"]) {
-      expect(constraint.test(url), `${url} fails the database check`).toBe(false)
-      expect(add(url).violations.length, `${url} fails the database but was accepted here`).toBe(1)
+    for (const url of wellFormed) {
+      expect(database.test(url.trim()), `${JSON.stringify(url)} should pass the database's check`).toBe(true)
+      expect(add(url).violations, `${JSON.stringify(url)} passes the database but was refused here`).toEqual([])
     }
   })
 })
+
+/**
+ * `timetrack_webhooks_url_is_https` as the NEWEST migration that names it states it.
+ * If a later migration drops or rewrites it in a shape this cannot read, that is a
+ * failure here rather than a silent fall-back to the first definition.
+ */
+function webhookUrlCheck(): RegExp {
+  const dir = join(process.cwd(), "supabase/migrations")
+  let last: { file: string; text: string } | null = null
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
+    const sql = readFileSync(join(dir, file), "utf8")
+    for (const m of sql.matchAll(/timetrack_webhooks_url_is_https\b([^;]*)/gi)) last = { file, text: m[1] }
+  }
+  if (!last) throw new Error("no migration names timetrack_webhooks_url_is_https, so this would assert nothing")
+  const pattern = /^\s*check\s*\(\s*url\s*~\*\s*'([^']*)'\s*\)/i.exec(last.text)?.[1]
+  if (pattern === undefined) {
+    throw new Error(`${last.file} is the last to name the webhook URL check, and not as \`check (url ~* '…')\`: ${last.text.trim()}`)
+  }
+  // `~*` is Postgres's case-insensitive match
+  return new RegExp(pattern, "i")
+}

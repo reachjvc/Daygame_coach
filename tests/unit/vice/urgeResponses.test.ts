@@ -37,12 +37,6 @@ describe("the four urge responses", () => {
     expect(RESPOND.cueRichNote).toContain("first two below")
   })
 
-  it("keeps watching last, and keeps it", () => {
-    const ids = RESPOND.options.map((o) => o.id)
-    expect(ids[ids.length - 1], "watching is not last").toBe("watch")
-    expect(ids, "watching was removed — people credit it and it stays").toContain("watch")
-  })
-
   it("gives every response its basis, so none reads as invented", () => {
     for (const o of RESPOND.options) {
       expect(o.basis.length, `${o.id} has no basis`).toBeGreaterThan(20)

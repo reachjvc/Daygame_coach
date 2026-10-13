@@ -86,10 +86,13 @@ function TimerBarHarness({ initial, latest }: { initial: TimetrackState; latest:
 const firstButton = (name: RegExp | string) => screen.getAllByRole("button", { name })[0]
 
 /**
- * The pointer-device row, which carries the pickers. Scoping matters once a tag
- * exists: its name then also matches the phone row's tap area.
+ * The tag picker's trigger once a tag is on the entry: the button whose whole name is
+ * that tag. Matched exactly, because the phone row's tap area also contains the tag's
+ * name — inside a longer one ("(no description) … · focus …") — and a pattern would
+ * find both. By role and name rather than by the row's layout classes, which are
+ * styling and free to change.
  */
-const pointerRow = () => document.querySelector<HTMLElement>("ul.divide-y > li div.hidden")!
+const tagPickerShowing = (name: string) => screen.getByRole("button", { name })
 
 async function createFromPicker(trigger: HTMLElement, placeholder: RegExp, value: string) {
   fireEvent.click(trigger)
@@ -143,7 +146,7 @@ describe("creating an entity from an entry row keeps it and the link", () => {
     await createFromPicker(firstButton("Tags"), /Search or add a tag/, "focus")
     await waitFor(() => expect(latest.current.tags).toHaveLength(1))
     await createFromPicker(
-      within(pointerRow()).getByRole("button", { name: /focus/ }),
+      tagPickerShowing("focus"),
       /Search or add a tag/,
       "deep work",
     )

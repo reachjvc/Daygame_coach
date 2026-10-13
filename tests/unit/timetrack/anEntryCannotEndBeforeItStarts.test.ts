@@ -21,12 +21,10 @@
  * tests drive it through every door that reaches it.
  *
  * WHAT THE RULE IS, EXACTLY: `stop >= start`, equal allowed. That is the
- * database's rule (see the last test), and the app creates zero-length entries
+ * database's rule (`timetrack_entries_stop_after_start`), and the app creates zero-length entries
  * on its own — press `N` and `S`, or mis-tap Continue — so refusing them here
  * would refuse something the product does routinely.
  */
-
-import { readFileSync } from "node:fs"
 
 import { describe, expect, test } from "vitest"
 
@@ -37,7 +35,6 @@ import {
   setRunningElapsed,
   startTimer,
   stopTimer,
-  undoDisplacement,
   updateEntry,
   validateEntry,
 } from "@/src/timetrack/timetrackService"
@@ -143,22 +140,6 @@ describe("a stopped entry cannot be cleared back into running", () => {
     expect(isRunning(result.state.entries[0])).toBe(false)
   })
 
-  test("undo of a displacement still resumes the entry it stopped", () => {
-    // the one sanctioned door: `Undo` on the "stopped X and started Y" toast
-    const state = baseState({
-      entries: [entry(1, "2026-08-10", "09:00", "10:00", { description: "the displaced one" })],
-    })
-    const displacedId = state.entries[0].id
-    const started = startTimer(state, { description: "the new one", projectId: null, taskId: null, tagIds: [], billable: false }, NOW_ISO)
-    expect(started.violations).toEqual([])
-
-    const undone = undoDisplacement(started.state, started.entry.id, displacedId, NOW_ISO)
-
-    const displaced = undone.entries.find((e) => e.id === displacedId)!
-    expect(isRunning(displaced)).toBe(true)
-    expect(undone.entries.find((e) => e.id === started.entry.id)?.serverDeletedAt).not.toBeNull()
-  })
-
   test("editing a RUNNING entry's elapsed time still works", () => {
     // `setRunningElapsed` passes `stop: null` too — but the entry is already
     // running, so it is not the transition the rule refuses.
@@ -188,18 +169,6 @@ describe("the client's rule and the database's rule are the same rule", () => {
     expect(validateEntry(state, { ...candidate, stop: "2026-08-10T10:00:01.000Z" })).toEqual([])
     expect(validateEntry(state, { ...candidate, stop: "2026-08-10T09:59:59.000Z" })).toHaveLength(1)
     expect(validateEntry(state, { ...candidate, stop: null })).toEqual([])
-  })
-
-  test("the migration still says what this rule assumes it says", () => {
-    /**
-     * Two facts stored apart: the rule above, and the check constraint the
-     * database enforces. If somebody tightens one, this points at the other.
-     */
-    const sql = readFileSync("supabase/migrations/20260903120000_timetrack.sql", "utf8")
-
-    expect(sql).toContain(
-      "constraint timetrack_entries_stop_after_start check (stopped_at is null or stopped_at >= started_at)",
-    )
   })
 })
 

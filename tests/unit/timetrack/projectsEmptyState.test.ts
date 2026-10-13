@@ -41,19 +41,23 @@ describe("the empty project list", () => {
     expect(projectsEmptyState("", "archived", ALL_THREE).hint).not.toContain("switch the filter")
   })
 
-  test("each unfiltered tab explains what would put something in it", () => {
-    expect(projectsEmptyState("", "archived", ALL_THREE)).toEqual({
-      title: "No archived projects",
-      hint: "Archive a project from its own page and it will appear here.",
-    })
-    expect(projectsEmptyState("", "templates", ALL_THREE)).toEqual({
-      title: "No templates",
-      hint: "Tick Template while creating a project to reuse its settings later.",
-    })
-    expect(projectsEmptyState("", "active", ALL_THREE)).toEqual({
-      title: "No active projects",
-      hint: "Create one with New project, or look under Archived or Templates.",
-    })
+  test("each unfiltered tab names itself and the action that would fill it", () => {
+    /**
+     * The words that carry the meaning — which tab this is, and what you do to put
+     * something on it — not the sentences around them, which are free to change.
+     */
+    const archived = projectsEmptyState("", "archived", ALL_THREE)
+    expect(archived.title, "the Archived tab's title does not say which tab this is").toMatch(/archived/i)
+    expect(archived.hint, "the Archived tab does not say to archive a project").toMatch(/\barchive\b/i)
+
+    const templates = projectsEmptyState("", "templates", ALL_THREE)
+    expect(templates.title, "the Templates tab's title does not say which tab this is").toMatch(/template/i)
+    expect(templates.hint, "the Templates tab does not say how a project becomes one").toMatch(/template/i)
+    expect(templates.hint).toMatch(/creat/i)
+
+    const active = projectsEmptyState("", "active", ALL_THREE)
+    expect(active.title, "the Active tab's title does not say which tab this is").toMatch(/active/i)
+    expect(active.hint, "the Active tab does not name the button that creates a project").toContain("New project")
   })
 
   test("no two states share a sentence, which is the defect that was there", () => {

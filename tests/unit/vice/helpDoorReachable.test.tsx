@@ -79,14 +79,17 @@ describe("the help door, mounted with no vice state at all", () => {
   })
 
   it("offers a service specific to one vice only for that vice", () => {
+    // Asserted, not skipped. This used to `return` when the data had no
+    // vice-specific service, so the day the last one was removed the filter
+    // would have stopped being exercised and the test would have stayed green.
     const specific = SERVICES.uk.items.find((s) => s.forVice && s.forVice.length > 0)
-    if (!specific) return // nothing region-specific to check in this data
-    const { unmount } = render(<HelpDoor {...props} viceId={specific.forVice![0]} />)
-    expect(screen.getByRole("dialog").textContent).toContain(specific.name)
+    expect(specific, "the UK list has no vice-specific service, so the filter goes untested").toBeDefined()
+    const { unmount } = render(<HelpDoor {...props} viceId={specific!.forVice![0]} />)
+    expect(screen.getByRole("dialog").textContent).toContain(specific!.name)
     unmount()
 
     render(<HelpDoor {...props} viceId="something-else-entirely" />)
-    expect(screen.getByRole("dialog").textContent).not.toContain(specific.name)
+    expect(screen.getByRole("dialog").textContent).not.toContain(specific!.name)
   })
 })
 
@@ -142,15 +145,15 @@ describe("the call plan is drawn only where there is somewhere to keep it", () =
  * own research is that an intention with no when is not a plan. Dropping it
  * from a flow by accident deletes that quietly, on a screen nobody opens often
  * enough to notice.
+ *
+ * Product code only. The four call sites in the archived lab
+ * (`app/test/archive/quit-vice`) had a check each here; the lab is kept but its
+ * tests were retired, so the walk below covers `src` and `app` outside `app/test`.
  */
 const ROOT = path.resolve(__dirname, "../../..")
 
 /** Every surface that mounts the door, and whether it must offer a call plan. */
 const CALL_SITES: Array<{ file: string; needsPlan: boolean; why: string }> = [
-  { file: "app/test/archive/quit-vice/_module/components/ViceHub.tsx", needsPlan: true, why: "the old hub has a plan list" },
-  { file: "app/test/archive/quit-vice/_module/components/ViceFlow.tsx", needsPlan: true, why: "every flow has a plan list" },
-  { file: "app/test/archive/quit-vice/_module/components/LearnPage.tsx", needsPlan: true, why: "shares the old module's state" },
-  { file: "app/test/archive/quit-vice/_module/components/ShortlistPage.tsx", needsPlan: true, why: "shares the old module's state" },
   {
     file: "src/vice/components/blackbox/BlackBoxPage.tsx",
     needsPlan: false,
@@ -161,20 +164,21 @@ const CALL_SITES: Array<{ file: string; needsPlan: boolean; why: string }> = [
 describe("every surface that mounts the help door passes the right things", () => {
   it("knows about every call site, so a new one cannot be added unnoticed", () => {
     const found: string[] = []
+    const LAB = path.join(ROOT, "app/test")
     const walk = (dir: string) => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name)
-        if (entry.isDirectory()) walk(full)
-        else if (/\.tsx$/.test(entry.name) && fs.readFileSync(full, "utf-8").includes("<HelpDoor")) {
+        if (entry.isDirectory()) {
+          if (full !== LAB) walk(full)
+        } else if (/\.tsx$/.test(entry.name) && fs.readFileSync(full, "utf-8").includes("<HelpDoor")) {
           found.push(path.relative(ROOT, full))
         }
       }
     }
-    // BOTH HALVES. The retired module's components moved out of `src` on
-    // 2026-09-25; a walk of `src` alone would have gone on passing while four
-    // of the five call sites became invisible to it.
+    // BOTH HALVES OF THE PRODUCT. A page can mount the door straight from `app`,
+    // and a walk of `src` alone would not see it.
     walk(path.join(ROOT, "src"))
-    walk(path.join(ROOT, "app/test/archive/quit-vice/_module"))
+    walk(path.join(ROOT, "app"))
     expect(found.sort(), "a surface mounts HelpDoor and is not listed in CALL_SITES").toEqual(
       CALL_SITES.map((c) => c.file).sort(),
     )

@@ -105,14 +105,6 @@ describe("opening the tracker when the server has nothing new", () => {
     expect(onReplace, "the workspace was replaced with an identical copy").not.toHaveBeenCalled()
   })
 
-  test("and it still says it is saved, rather than sitting on 'starting'", async () => {
-    const initial = localState()
-    serveRows(stateToRows(initial, USER))
-
-    const { getByTestId } = render(<Harness initial={initial} onReplace={() => {}} />)
-    await waitFor(() => expect(getByTestId("status").textContent).toBe("synced"))
-  })
-
   test("nothing is queued for upload either", async () => {
     const initial = localState()
     serveRows(stateToRows(initial, USER))

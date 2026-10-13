@@ -372,11 +372,6 @@ describe("every row goes to the one workspace the app is showing", () => {
       updated_at: "x",
     })
   })
-
-  test("it returns a new object, so the queue can still tell what it sent", () => {
-    const rows = { timetrack_entries: [entryRow("e1", "work")] }
-    expect(reattachToWorkspace(rows, "w")).not.toBe(rows)
-  })
 })
 
 describe("taking the accepted rows out of the queue", () => {

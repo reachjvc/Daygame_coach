@@ -23,8 +23,8 @@
  * **Switching never costs anything.** All three read and write the same
  * `quit-vice-v1` state, so the log, the plans, the card, the tripwire and the
  * voice work follow you across. A version is a view, never a container. If a
- * later change makes one version hold data another cannot see, that is the bug
- * — `tests/unit/vice/versions.test.ts` guards it.
+ * later change makes one version hold data another cannot see, that is the bug.
+ * (Its test retired with the rest of the archive's on 2026-10-13.)
  */
 
 export type ViceVersionId = "plain" | "guided" | "full"

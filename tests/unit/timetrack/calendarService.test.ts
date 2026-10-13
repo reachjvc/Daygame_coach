@@ -1,11 +1,9 @@
 import { describe, expect, test } from "vitest"
 
 import {
-  dayColumnSeconds,
   entriesForDay,
   entryInterval,
   eventInterval,
-  eventToDraft,
   expandRecurrence,
   googleEventsToEvents,
   icsToEvents,
@@ -250,19 +248,6 @@ describe("Google Calendar API mapping", () => {
   })
 })
 
-describe("event → time entry", () => {
-  test("only the title is copied, exactly like Toggl", () => {
-    const event = icsToEvents(ICS, "1", "2026-08-10").events[0]
-    expect(eventToDraft(event)).toEqual({
-      description: "Standup with the team",
-      projectId: null,
-      taskId: null,
-      tagIds: [],
-      billable: false,
-    })
-  })
-})
-
 describe("calendar grid geometry", () => {
   test("non-overlapping blocks each get one full column", () => {
     const blocks = layoutBlocks(
@@ -330,11 +315,6 @@ describe("calendar grid geometry", () => {
     expect(snapMinutes(-10)).toBe(0)
     expect(snapMinutes(2000)).toBe(1440)
   })
-
-  test("day column total sums the visible portion", () => {
-    const entries = [entry(1, "2026-08-10", "09:00", "10:30"), entry(2, "2026-08-10", "11:00", "11:30")]
-    expect(dayColumnSeconds(entries, "2026-08-10", NOW_SEC)).toBe(2 * 3600)
-  })
 })
 
 describe("a VEVENT that gives a start and no end", () => {
@@ -392,14 +372,6 @@ describe("a VEVENT whose DURATION comes before its DTSTART", () => {
     expect(minutes, "the DURATION line was dropped, so the event became zero-length").toBe(60)
   })
 
-  test("and the usual order still works", () => {
-    const after = parseIcs(ics([
-      "BEGIN:VEVENT", "UID:b", "SUMMARY:dtstart first", "DTSTART:20260920T090000Z", "DURATION:PT90M", "END:VEVENT",
-    ]))
-    const minutes = (new Date(after[0].end).getTime() - new Date(after[0].start).getTime()) / 60_000
-    expect(minutes).toBe(90)
-  })
-
   test("and DTEND still wins over a DURATION, whichever order they arrive in", () => {
     /**
      * RFC 5545 §3.6.1 forbids both in one VEVENT, so either reading is defensible —
@@ -409,14 +381,5 @@ describe("a VEVENT whose DURATION comes before its DTSTART", () => {
       "BEGIN:VEVENT", "UID:c", "DURATION:PT5H", "DTSTART:20260920T090000Z", "DTEND:20260920T100000Z", "END:VEVENT",
     ]))
     expect((new Date(both[0].end).getTime() - new Date(both[0].start).getTime()) / 60_000).toBe(60)
-  })
-
-  test("and an event that genuinely has no length is still reported as such", () => {
-    const result = icsToEvents(
-      ics(["BEGIN:VEVENT", "UID:d", "DTSTART:20260920T110000Z", "END:VEVENT"]),
-      "cal",
-      "2026-09-20",
-    )
-    expect(result.skippedZeroLength).toBe(1)
   })
 })

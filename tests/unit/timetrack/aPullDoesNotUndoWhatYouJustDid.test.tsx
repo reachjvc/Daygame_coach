@@ -34,13 +34,22 @@ import { NOW_ISO, baseState, entry } from "./helpers"
 
 const USER = "user-1"
 
+/**
+ * Fake timers, advanced with `advanceTimersByTimeAsync` as `syncRetry` does: the
+ * waits below are the hook's own debounce and the order the answers land in, not
+ * wall-clock time, so the file no longer sleeps for nine seconds to say so.
+ */
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
   window.localStorage.clear()
 })
 
-beforeEach(() => window.localStorage.clear())
+beforeEach(() => {
+  window.localStorage.clear()
+  vi.useFakeTimers()
+})
 
 /** A workspace whose only entry is running — the shape you are about to stop. */
 function withARunningTimer(): TimetrackState {
@@ -148,27 +157,27 @@ describe("a pull that was already in flight when you pressed Stop", () => {
     let latest: TimetrackState = running
     const view = render(<Harness initial={running} onState={(s) => (latest = s)} />)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 50))
+      await vi.advanceTimersByTimeAsync(50)
     })
 
     // the pull goes out while the timer is still running
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 20))
+      await vi.advanceTimersByTimeAsync(20)
     })
     expect(server.pullAsked(), "the pull never went out, so this test proves nothing").toBe(true)
 
     // you press Stop, and it is uploaded and acknowledged
     await act(async () => {
       view.getByTestId("stop").click()
-      await new Promise((r) => setTimeout(r, 1200))
+      await vi.advanceTimersByTimeAsync(1200)
     })
     expect(latest.entries.some(isRunning), "the stop did not even apply locally").toBe(false)
 
     // now the answer from before the stop finally lands
     await act(async () => {
       server.releasePull()
-      await new Promise((r) => setTimeout(r, 300))
+      await vi.advanceTimersByTimeAsync(300)
     })
 
     expect(
@@ -194,15 +203,15 @@ describe("a pull that brings nothing new", () => {
     const replaced = vi.fn()
     render(<Harness initial={state} onState={() => {}} onReplace={replaced} />)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 50))
+      await vi.advanceTimersByTimeAsync(50)
     })
     replaced.mockClear()
 
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 20))
+      await vi.advanceTimersByTimeAsync(20)
       server.releasePull()
-      await new Promise((r) => setTimeout(r, 300))
+      await vi.advanceTimersByTimeAsync(300)
     })
 
     expect(replaced, "the workspace was redrawn for rows it already had").not.toHaveBeenCalled()
@@ -231,15 +240,15 @@ describe("two pulls in flight at once", () => {
     let latest: TimetrackState = held
     render(<Harness initial={held} onState={(s) => (latest = s)} />)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 50))
+      await vi.advanceTimersByTimeAsync(50)
     })
 
     // two pulls go out before either answers
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 10))
+      await vi.advanceTimersByTimeAsync(10)
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 10))
+      await vi.advanceTimersByTimeAsync(10)
     })
     expect(server.asked(), "only one pull went out, so this test proves nothing").toBeGreaterThan(1)
 
@@ -250,11 +259,11 @@ describe("two pulls in flight at once", () => {
     // not of a browser, and it hid this bug on the first attempt.
     await act(async () => {
       server.answer(1)
-      await new Promise((r) => setTimeout(r, 150))
+      await vi.advanceTimersByTimeAsync(150)
     })
     await act(async () => {
       server.answer(0)
-      await new Promise((r) => setTimeout(r, 250))
+      await vi.advanceTimersByTimeAsync(250)
     })
 
     expect(
@@ -289,32 +298,32 @@ describe("a pull issued AFTER the press but answered after the upload", () => {
     let latest: TimetrackState = running
     const view = render(<Harness initial={running} onState={(s) => (latest = s)} />)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 50))
+      await vi.advanceTimersByTimeAsync(50)
     })
 
     // the press comes FIRST
     await act(async () => {
       view.getByTestId("stop").click()
-      await new Promise((r) => setTimeout(r, 30))
+      await vi.advanceTimersByTimeAsync(30)
     })
 
     // then the pull goes out, while the stop is still only queued
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 20))
+      await vi.advanceTimersByTimeAsync(20)
     })
     expect(server.pullAsked(), "the pull never went out, so this test proves nothing").toBe(true)
 
     // the upload lands and clears the queue
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 1500))
+      await vi.advanceTimersByTimeAsync(1500)
     })
     expect(latest.entries.some(isRunning), "the stop did not apply locally").toBe(false)
 
     // and only now does the pull answer, with the copy from before the press
     await act(async () => {
       server.releasePull()
-      await new Promise((r) => setTimeout(r, 300))
+      await vi.advanceTimersByTimeAsync(300)
     })
 
     expect(
@@ -381,23 +390,23 @@ describe("what a pull leaves behind as the baseline", () => {
 
     const view = render(<Harness initial={held} onState={() => {}} />)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 60))
+      await vi.advanceTimersByTimeAsync(60)
     })
 
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 20))
+      await vi.advanceTimersByTimeAsync(20)
     })
     await act(async () => {
       release?.()
-      await new Promise((r) => setTimeout(r, 300))
+      await vi.advanceTimersByTimeAsync(300)
     })
 
     // one small, unrelated edit
     posted.length = 0
     await act(async () => {
       view.getByTestId("stop").click()
-      await new Promise((r) => setTimeout(r, 1500))
+      await vi.advanceTimersByTimeAsync(1500)
     })
 
     const tablesSent = posted.flat()
@@ -457,24 +466,24 @@ describe("an edit made in the same breath as a pull's answer", () => {
     let latest: TimetrackState = running
     const view = render(<Harness initial={running} onState={(st) => (latest = st)} copyOnReplace />)
     await act(async () => {
-      await new Promise((r) => setTimeout(r, 60))
+      await vi.advanceTimersByTimeAsync(60)
     })
     await act(async () => {
       document.dispatchEvent(new Event("visibilitychange"))
-      await new Promise((r) => setTimeout(r, 20))
+      await vi.advanceTimersByTimeAsync(20)
     })
 
     // the answer lands and commits as its own render
     await act(async () => {
       release?.()
-      await new Promise((r) => setTimeout(r, 300))
+      await vi.advanceTimersByTimeAsync(300)
     })
 
     // and only then does the person stop the timer
     posted.length = 0
     await act(async () => {
       view.getByTestId("stop").click()
-      await new Promise((r) => setTimeout(r, 2500))
+      await vi.advanceTimersByTimeAsync(2500)
     })
 
     expect(latest.entries.some(isRunning), "the stop never applied, so this proves nothing").toBe(false)

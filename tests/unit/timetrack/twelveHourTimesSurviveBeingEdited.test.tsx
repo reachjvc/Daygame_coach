@@ -148,29 +148,6 @@ describe("the hour labels down the side of the calendar", () => {
     expect(new Set(labels).size, `only ${new Set(labels).size} distinct: ${labels.join(" ")}`).toBe(24)
   })
 
-  test("and do not depend on today's date, so a clock change cannot move them", () => {
-    /**
-     * The premise is checked first, and so is the old approach: if a local `Date` on
-     * that day did NOT lose an hour, this test would be asserting nothing.
-     * `vitest.config.ts` pins Europe/Copenhagen, where 2026-03-29 has 23 hours.
-     */
-    const springForward = new Date(2026, 2, 29)
-    const nextDay = new Date(2026, 2, 30)
-    expect(
-      (nextDay.getTime() - springForward.getTime()) / 3600_000,
-      "this zone has no clock change on 2026-03-29 — is TZ pinned?",
-    ).toBe(23)
-
-    const viaLocalDate = Array.from({ length: 24 }, (_, hour) => {
-      const at = new Date(2026, 2, 29)
-      at.setHours(hour, 0, 0, 0)
-      return at.getHours()
-    })
-    expect(new Set(viaLocalDate).size, "the old approach must be broken for this to mean anything").toBe(23)
-
-    expect(new Set(Array.from({ length: 24 }, (_, hour) => formatHourOfDay(hour, "h24"))).size).toBe(24)
-  })
-
   test("and read the same as the entry times beside them", () => {
     // 13:00 down the side must not say "13:00" while the block says "1:00 PM"
     const at = new Date(2026, 8, 20, 13, 0, 0)

@@ -18,8 +18,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { SURVIVORSHIP, TESTIMONIALS, testimonialsFor } from "@/src/vice/data/testimonials"
-import { LANGUAGE_RULES } from "@/src/vice/data/copy"
+import { TESTIMONIALS, testimonialsFor } from "@/src/vice/data/testimonials"
 
 describe("every testimonial can be checked by a reader", () => {
   it("has a working-shaped URL and a source, without exception", () => {
@@ -86,11 +85,6 @@ describe("privacy and licensing", () => {
 })
 
 describe("the set is honest rather than flattering", () => {
-  it("says so on the page about survivorship bias", () => {
-    expect(SURVIVORSHIP.toLowerCase()).toContain("stop posting")
-    expect(SURVIVORSHIP.length).toBeGreaterThan(80)
-  })
-
   it("includes accounts of things not working", () => {
     // A library where everything worked is an advert. The gambling
     // self-exclusion account is here precisely because it corrects the module.
@@ -109,17 +103,6 @@ describe("the set is honest rather than flattering", () => {
     // The cold-start case. Before this library existed, that person got a bare
     // ninety-second countdown and nothing else.
     expect(testimonialsFor("urge", null).length).toBeGreaterThan(0)
-  })
-})
-
-describe("our own words around the quotes follow the module's copy rules", () => {
-  it("keeps controlling language and machine phrasing out of the framing copy", () => {
-    const control = new RegExp(`\\b(${LANGUAGE_RULES.bannedControl.join("|")})\\b`, "i")
-    const machine = new RegExp(LANGUAGE_RULES.bannedMachineTells.join("|"), "i")
-    // The quotes themselves are exempt — they are other people talking, and
-    // editing them would defeat the point of the file.
-    expect(control.test(SURVIVORSHIP)).toBe(false)
-    expect(machine.test(SURVIVORSHIP)).toBe(false)
   })
 })
 

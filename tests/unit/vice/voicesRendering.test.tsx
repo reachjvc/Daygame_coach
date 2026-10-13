@@ -26,14 +26,19 @@ afterEach(cleanup)
 
 describe("a quote renders as a quote, not as markup", () => {
   it("shows no literal asterisks for any account the live page can reach", () => {
-    // Both live stages, every vice, every rotation — because the fault was in a
-    // subset of entries and a single render would have missed it.
+    // Both live stages, every vice — because the fault was in a subset of entries
+    // and a single render would have missed it. Each ACCOUNT is rendered once,
+    // through the first stage, vice and rotation that reaches it: the quote
+    // paragraph depends on the account alone, and walking every rotation of every
+    // pool rendered the same 115 accounts 269 times.
     const vices = [null, "alcohol", "nicotine", "weed", "scrolling", "gaming", "porn", "gambling", "junk", "spending"]
-    let rendered = 0
+    const rendered = new Set<string>()
     for (const stage of ["urge", "goodStretch"] as const) {
       for (const viceId of vices) {
         const pool = testimonialsFor(stage, viceId)
         for (let rotate = 0; rotate < pool.length; rotate++) {
+          const account = pool[rotate]
+          if (rendered.has(account.id)) continue
           cleanup()
           render(<OneVoice stage={stage} viceId={viceId} rotate={rotate} />)
           // BY THE PARAGRAPH, NOT BY ITS TEXT. `Quoted` deliberately splits the
@@ -44,17 +49,21 @@ describe("a quote renders as a quote, not as markup", () => {
             (el.textContent ?? "").includes("\u201c"),
           )
           expect(quote, "no quote paragraph rendered").toBeDefined()
+          // and it is THIS account, or skipping the repeats would skip accounts
+          expect(quote!.textContent, `rotation ${rotate} did not show ${account.id}`).toContain(
+            account.quote.split("**").join("").slice(0, 40),
+          )
           expect(
             quote!.textContent,
-            `a quote shown for ${viceId ?? "no vice"} at ${stage} still has ** in it`,
+            `${account.id}, shown for ${viceId ?? "no vice"} at ${stage}, still has ** in it`,
           ).not.toContain("**")
-          rendered++
+          rendered.add(account.id)
         }
       }
     }
     // A loop over an empty pool passes by asking nothing, which is the shape of
     // half the faults this module has had.
-    expect(rendered, "no quotes were rendered at all").toBeGreaterThan(50)
+    expect(rendered.size, "no quotes were rendered at all").toBeGreaterThan(50)
   })
 
   it("keeps the emphasised words, rather than dropping them with the asterisks", () => {
@@ -81,15 +90,19 @@ describe("a quote renders as a quote, not as markup", () => {
 
   it("leaves a marked elision visible, because it is part of the quotation", () => {
     // `[…]` says words were removed. Hiding it would turn a trimmed quote into
-        // one that reads as continuous, which is a different claim about what
+    // one that reads as continuous, which is a different claim about what
     // somebody said.
+    //
+    // Asserted, not skipped: both preconditions below used to `return`, so the
+    // day the last elision went, or the account stopped being reachable, this
+    // passed without rendering anything.
     const elided = TESTIMONIALS.filter((t) => t.quote.includes("[…]"))
-    if (elided.length === 0) return
+    expect(elided.length, "no account carries a marked elision — is it still a convention?").toBeGreaterThan(0)
     const t = elided[0]
     const stage = t.stages[0]
     const pool = testimonialsFor(stage, t.vices[0] ?? null)
     const at = pool.findIndex((x) => x.id === t.id)
-    if (at < 0) return
+    expect(at, `${t.id} is not reachable at its own first stage and vice`).toBeGreaterThanOrEqual(0)
     render(<OneVoice stage={stage} viceId={t.vices[0] ?? null} rotate={at} />)
     const shown = [...document.querySelectorAll("p")].find((el) =>
       (el.textContent ?? "").includes("[…]"),
