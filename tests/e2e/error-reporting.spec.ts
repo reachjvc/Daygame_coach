@@ -3,62 +3,111 @@
  *
  * Before this existed there was not one error boundary in the app: a page that
  * threw showed the browser's error screen and no record of it survived
- * anywhere. This proves the whole path — something breaks, the person gets a
- * way forward, and a row lands.
+ * anywhere. This proves the path every page shares — `ErrorReporting` in the
+ * root layout listens for what a React boundary cannot see, and a row lands.
+ *
+ * ON A PRODUCT PAGE. These ran on `/test/crash`, a lab page with two "break
+ * this" buttons, which returns 404 in the production build CI runs — so in CI
+ * they asserted against a 404 page. The failure is raised from the test now,
+ * in the page's own window, which is exactly where an uncaught error or an
+ * unhandled rejection comes from in real use.
+ *
+ * What moved out: the error BOUNDARY's fallback ("Something went wrong", and
+ * the page around it still working). The only boundary on a product route
+ * wraps the time tracker's screens, and nothing a test can do from outside
+ * makes one of them throw while rendering. That half belongs in a component
+ * test of `ErrorBoundary`.
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+
+/** A product page every signed-in account can open */
+const PAGE = '/dashboard'
+
+/** Every failure raised here carries this, so a report the page sent of its own accord is not mistaken for ours */
+const MARK = 'Deliberate failure from error-reporting.spec'
+
+/**
+ * Raise a failure in the page, once the app-wide listener can hear it.
+ *
+ * The listener is attached in an effect, after hydration, and a failure raised
+ * before that is simply not reported. So: raise it, and raise it again only if
+ * no report of it has left the browser yet.
+ */
+async function failUntilReported(page: Page, raise: (mark: string) => void): Promise<string[]> {
+  const sent: string[] = []
+  page.on('request', (request) => {
+    const body = request.postData() ?? ''
+    if (request.url().includes('/api/errors') && request.method() === 'POST' && body.includes(MARK)) sent.push(body)
+  })
+  await expect
+    .poll(
+      async () => {
+        if (sent.length === 0) await page.evaluate(raise, MARK)
+        return sent.length
+      },
+      { timeout: 15000, intervals: [500] },
+    )
+    .toBeGreaterThan(0)
+  return sent
+}
 
 test.describe('crash reporting', () => {
   test.describe.configure({ mode: 'serial' })
 
-  test('a broken panel does not take the page with it, and is reported', async ({ page }) => {
-    const posted: number[] = []
+  test('an error thrown outside rendering reaches the database', async ({ page }) => {
+    const stored: number[] = []
     page.on('response', (response) => {
-      if (response.url().includes('/api/errors')) posted.push(response.status())
+      if (response.url().includes('/api/errors') && (response.request().postData() ?? '').includes(MARK)) {
+        stored.push(response.status())
+      }
     })
 
-    await page.goto('/test/crash', { waitUntil: 'domcontentloaded' })
-    await page.getByRole('button', { name: 'Break this panel' }).click()
+    await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
+    await failUntilReported(page, (mark) => {
+      setTimeout(() => {
+        throw new Error(mark)
+      })
+    })
 
-    // the person gets a way forward, not a blank screen
-    await expect(page.getByText(/Something went wrong/)).toBeVisible({ timeout: 10000 })
-    // and the rest of the page still works
-    await expect(page.getByRole('button', { name: /Break a promise/ })).toBeVisible()
-
-    await expect.poll(() => posted, { timeout: 15000 }).toContain(200)
+    await expect.poll(() => stored, { timeout: 15000 }).toContain(200)
   })
 
   test('a promise nobody catches is reported too', async ({ page }) => {
-    const posted: number[] = []
+    const stored: number[] = []
     page.on('response', (response) => {
-      if (response.url().includes('/api/errors')) posted.push(response.status())
+      if (response.url().includes('/api/errors') && (response.request().postData() ?? '').includes(MARK)) {
+        stored.push(response.status())
+      }
     })
 
-    await page.goto('/test/crash', { waitUntil: 'domcontentloaded' })
-    await page.waitForTimeout(1500)
-    await page.getByRole('button', { name: /Break a promise/ }).click()
+    await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
+    await failUntilReported(page, (mark) => {
+      void Promise.reject(new Error(mark))
+    })
 
-    // this one a React boundary cannot see; it is caught app-wide instead
-    await expect.poll(() => posted, { timeout: 15000 }).toContain(200)
+    await expect.poll(() => stored, { timeout: 15000 }).toContain(200)
   })
 
   test('nothing private travels with a report', async ({ page }) => {
-    let sent = ''
-    await page.route('**/api/errors', async (route) => {
-      sent = route.request().postData() ?? ''
-      await route.fulfill({ status: 200, body: JSON.stringify({ stored: 1 }) })
-    })
+    await page.route('**/api/errors', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ stored: 1 }) }),
+    )
 
-    await page.goto('/test/crash?token=supersecret123&email=jo@example.com', { waitUntil: 'domcontentloaded' })
-    await page.getByRole('button', { name: 'Break this panel' }).click()
-    await expect.poll(() => sent, { timeout: 15000 }).not.toBe('')
+    await page.goto(`${PAGE}?token=supersecret123&email=jo@example.com`, { waitUntil: 'domcontentloaded' })
+    const sent = await failUntilReported(page, (mark) => {
+      setTimeout(() => {
+        throw new Error(mark)
+      })
+    })
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
 
     // the route it reports is the path only: a query string is where reset
     // tokens live, and a crash report is not the place to keep one
-    expect(sent).not.toContain('supersecret123')
-    expect(sent).not.toContain('jo@example.com')
-    expect(sent).toContain('/test/crash')
+    const body = sent.join('\n')
+    expect(body).not.toContain('supersecret123')
+    expect(body).not.toContain('jo@example.com')
+    expect(body).toContain(`"route":"${PAGE}"`)
   })
 
   test('the reports endpoint refuses to be used as a firehose', async ({ request }) => {

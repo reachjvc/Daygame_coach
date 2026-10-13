@@ -403,6 +403,21 @@ test.describe.serial("training on a phone", () => {
       })
     })
     await page.reload({ waitUntil: "networkidle" })
-    await expect(page.getByTestId("week-strip")).toBeVisible({ timeout: 15000 })
+    const strip = page.getByTestId("week-strip")
+    await expect(strip).toBeVisible({ timeout: 15000 })
+
+    // MEASURED, which is what the name always claimed: it asserted only that
+    // the strip was visible, which a row of 20px days also is.
+    const days = strip.locator('[data-testid^="week-day-"]')
+    await expect(days).toHaveCount(7)
+    for (const box of await days.evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect()
+        return { day: el.getAttribute("data-testid"), width: Math.round(r.width), height: Math.round(r.height) }
+      }),
+    )) {
+      expect(box.height, `${box.day} is ${box.height}px tall`).toBeGreaterThanOrEqual(44)
+      expect(box.width, `${box.day} is ${box.width}px wide`).toBeGreaterThanOrEqual(44)
+    }
   })
 })

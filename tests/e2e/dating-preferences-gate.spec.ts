@@ -9,7 +9,9 @@
  *
  * So the assertions worth keeping are not about steps and progress bars. They
  * are: signing in does not divert you into a questionnaire, and the form cannot
- * submit a half-filled profile.
+ * submit a half-filled profile. "Every question on one screen" and "the region
+ * list is present" are what the route sweep sees on every page, and the garbled
+ * `?step=` case is junk-params' job.
  */
 
 import { test, expect } from '@playwright/test'
@@ -18,73 +20,30 @@ import { SELECTORS } from './helpers/selectors'
 const T = 15000
 const G = SELECTORS.datingPreferences
 
-test.describe('signing in does not ask dating questions', () => {
-  test('the dashboard opens without a detour through /preferences', async ({ page }) => {
-    await page.goto('/dashboard', { timeout: T })
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: T })
-  })
-
-  // Was `/dashboard/lair`, which had already 404'd since the Lair was archived
-  // on 2026-09-02 — so the assertion passed on a missing page and proved
-  // nothing. The Lair was deleted outright on 2026-09-09. Inner Game is used
-  // instead because it is a live surface that `onboarding_completed` gated in
-  // the same way, so the test again asserts something that can actually fail.
-  test('inner game does not send you to a questionnaire it never reads', async ({ page }) => {
-    await page.goto('/dashboard/inner-game', { timeout: T })
-    await expect(page).not.toHaveURL(/\/preferences/, { timeout: T })
-  })
+test('signing in does not send you through a questionnaire it never reads', async ({ page }) => {
+  // Inner Game is checked as well as the dashboard: `onboarding_completed`
+  // gated both, and neither reads a single dating answer.
+  for (const route of ['/dashboard', '/dashboard/inner-game']) {
+    await page.goto(route, { timeout: T })
+    await expect(page).toHaveURL(new RegExp(`${route}$`), { timeout: T })
+  }
 })
 
-test.describe('the dating preferences screen', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/preferences', { timeout: T })
-    await expect(page.getByTestId(G.form)).toBeVisible({ timeout: T })
-  })
+test('holds the save until every answer is given, and says which is missing', async ({ page }) => {
+  /* The wizard checked only the step on screen, so deep-linking to its last
+     step offered a live submit on a profile with no region -- and submitting
+     threw a full-page "This page could not load". Nothing is saved here: the
+     guard is checked by un-picking an answer the test account already has. */
+  await page.goto('/preferences', { timeout: T })
+  await expect(page.getByTestId(G.form)).toBeVisible({ timeout: T })
+  const submit = page.getByTestId(G.submit)
 
-  test('asks every question on one screen, with no steps to walk', async ({ page }) => {
-    await expect(page.getByText('Which region are they from?')).toBeVisible({ timeout: T })
-    await expect(page.getByText('Pick up to three archetypes')).toBeVisible({ timeout: T })
-    await expect(page.getByTestId(G.userIsForeign)).toBeVisible({ timeout: T })
-    await expect(page.getByTestId(G.datingForeigners)).toBeVisible({ timeout: T })
+  const picked = page.locator('[data-testid^="gate-archetype-"][aria-pressed="true"]')
+  while ((await picked.count()) > 0) await picked.first().click({ timeout: T })
 
-    // The wizard's furniture must not have come along.
-    await expect(page.getByText(/Step \d+ of 5/)).toHaveCount(0)
-  })
+  await expect(submit).toBeDisabled()
+  await expect(page.getByTestId(G.missing)).toContainText('at least one archetype')
 
-  test('the region list is usable without arming anything first', async ({ page }) => {
-    // A country shape on the map is ~9px on a phone, so the list is the control
-    // that works on every device. It must be present at rest.
-    const list = page.getByTestId('region-list')
-    await expect(list).toBeVisible({ timeout: T })
-    const buttons = list.getByRole('button')
-    expect(await buttons.count()).toBeGreaterThan(0)
-  })
-
-  test('holds the save until every answer is given, and says which is missing', async ({
-    page,
-  }) => {
-    /* The wizard checked only the step on screen, so deep-linking to its last
-       step offered a live submit on a profile with no region -- and submitting
-       threw a full-page "This page could not load". */
-    const submit = page.getByTestId(G.submit)
-
-    // The seeded test user already has answers, so clear one to see the guard.
-    await page
-      .getByTestId(G.userIsForeign)
-      .getByRole('button', { name: 'Yes' })
-      .click({ timeout: T })
-
-    await expect(submit).toBeEnabled({ timeout: T })
-    await expect(page.getByTestId(G.missing)).toHaveCount(0)
-  })
-})
-
-test.describe('a garbled URL cannot break this page', () => {
-  // `/preferences?step=abc` used to render "Step NaN of 5": a blank page with a
-  // Back button that did nothing. The page no longer reads a step at all.
-  test('an unknown query parameter is ignored', async ({ page }) => {
-    await page.goto('/preferences?step=abc', { timeout: T })
-    await expect(page.getByTestId(G.form)).toBeVisible({ timeout: T })
-    await expect(page.getByText(/NaN/)).toHaveCount(0)
-  })
+  await page.locator('[data-testid^="gate-archetype-"]').first().click({ timeout: T })
+  await expect(page.getByTestId(G.missing).filter({ hasText: 'archetype' })).toHaveCount(0)
 })

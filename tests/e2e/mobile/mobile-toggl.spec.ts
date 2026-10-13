@@ -1,34 +1,39 @@
 /**
- * Phone-viewport coverage for the time tracker at /test/toggl.
+ * Phone-viewport coverage for the time tracker, on the product route.
  *
- * Runs in the mobile-* Playwright projects (iPhone 14 / Pixel 7). It guards the
- * things that actually broke at 390px: page-width overflow, the bottom tab bar,
- * the compact entry rows, the report filter sheet and touch-target sizes.
+ * Runs in `timetrack-sync-phone` (iPhone 14) on pull requests and in
+ * `toggl-android` (Pixel 7) nightly. It guards the things that actually broke at
+ * 390px: page-width overflow, the bottom tab bar, the compact entry rows, the
+ * report filter sheet and touch-target sizes.
+ *
+ * It ran signed OUT against `/test/toggl`, a lab copy of the same components
+ * that returns 404 in the production build CI runs, and on three phone projects
+ * of which two were the same iPhone. Signed in, the workspace is the account's,
+ * so each test starts from an emptied account (helpers/timetrack.ts).
  */
 
 import { test, expect, type Page } from '@playwright/test'
-
-const PAGE = '/test/toggl'
-const STORAGE_KEY = 'toggl-clone:v1'
-
-async function openFreshSandbox(page: Page) {
-  await page.goto(PAGE, { waitUntil: 'domcontentloaded' })
-  await page.evaluate((key) => window.localStorage.removeItem(key), STORAGE_KEY)
-  await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 20000 })
-  await page.waitForTimeout(800)
-}
+import { STORAGE_KEY, TRACKER, openFreshTracker, openTracker, readState, trackEntry } from '../helpers/timetrack'
 
 /**
  * The bottom bar is `position: fixed`; Playwright's mobile emulation measures
  * actionability against the layout viewport, so a plain click can report a
  * false interception. The element's own hit-test is asserted separately below.
  */
-const tab = (page: Page, name: string) =>
-  page.getByRole('navigation').getByRole('button', { name, exact: true })
+const tab = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name, exact: true })
 
 /** The two sections that live behind "More" on a phone, not in the bar */
 const BEHIND_MORE = ['Manage', 'Settings']
+
+/** Something only that screen draws, so arriving there is a thing to wait for */
+const SCREEN_READY: Record<string, (page: Page) => ReturnType<Page['locator']>> = {
+  Timer: (page) => page.getByPlaceholder('What are you working on?'),
+  Calendar: (page) => page.locator('main').getByRole('button', { name: 'Day', exact: true }),
+  Reports: (page) => page.locator('main').getByText(/total hours/i).first(),
+  Projects: (page) => page.locator('main').getByRole('button', { name: 'Archived', exact: true }),
+  Manage: (page) => page.locator('main').getByRole('button', { name: 'Clients', exact: true }),
+  Settings: (page) => page.locator('main').getByRole('button', { name: 'Profile', exact: true }),
+}
 
 async function goTo(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0))
@@ -37,26 +42,20 @@ async function goTo(page: Page, name: string) {
   // production build, and the bar's own hit-test is asserted separately.
   if (BEHIND_MORE.includes(name)) {
     await tab(page, 'More').dispatchEvent('click')
-    await page.waitForTimeout(400)
     // a real click here on purpose: the sheet's rows have to be tappable, and
     // Playwright refuses a click on an element something else is covering.
     // The sheet was drawn under this very bar the first time it was wired up.
     await page.getByRole('dialog').getByRole('button', { name, exact: true }).click()
-    await page.waitForTimeout(700)
-    return
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  } else {
+    await tab(page, name).dispatchEvent('click')
   }
-  await tab(page, name).dispatchEvent('click')
-  await page.waitForTimeout(700)
+  await expect(SCREEN_READY[name](page)).toBeVisible()
 }
 
-/** The workspace starts empty, so tests that need rows create them */
-async function trackEntry(page: Page, description: string) {
-  await page.getByPlaceholder('What are you working on?').fill(description)
-  await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-  await page.waitForTimeout(700)
-  await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
-  await page.waitForTimeout(400)
-}
+/** The frame after a tap has been drawn: React has rendered what the tap changed */
+const painted = (page: Page) =>
+  page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
 
 const pageOverflow = (page: Page) =>
   page.evaluate(() => ({
@@ -64,25 +63,11 @@ const pageOverflow = (page: Page) =>
     innerWidth: window.innerWidth,
   }))
 
-/**
- * These run signed OUT on purpose.
- *
- * They are about the tracker itself — grouping, pickers, rounding, the layout —
- * and none of them is about your account. Once syncing existed, running them
- * signed in meant "clear this browser" no longer produced an empty workspace:
- * the account's own projects and tags came back down, and tests asserting on an
- * empty one failed for a reason that had nothing to do with what they check.
- *
- * The signed-in paths have their own suites: timetrack-sync and
- * timetrack-edge-cases.
- */
-test.use({ storageState: { cookies: [], origins: [] } })
-
 test.describe('time tracker on a phone', () => {
   test.describe.configure({ mode: 'serial' })
 
   test('every screen fits the viewport with no horizontal scrolling', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await trackEntry(page, 'phone entry')
 
     for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
@@ -99,15 +84,14 @@ test.describe('time tracker on a phone', () => {
    * The running pill only renders in the header on the five screens that are not
    * Timer, so it was never on screen while anything measured width — and it
    * pushed the alerts bell 28px off a 390px viewport whenever the sync badge was
-   * also keeping its words, which it does whenever there is something to say:
-   * offline, not saved, signed out, or never signed in at all.
+   * also keeping its words, which it does whenever there is something to say.
    */
   test('every screen still fits while a timer is running', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
 
     await page.getByPlaceholder('What are you working on?').fill('a timer left running')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await page.waitForTimeout(700)
+    await expect(page.locator('main').getByRole('button', { name: 'Stop timer' })).toBeVisible()
 
     for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
       if (screen !== 'Timer') await goTo(page, screen)
@@ -121,7 +105,7 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('the bottom tab bar is present, reachable and switches screens', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
 
     const bar = page.locator('nav[aria-label="Sections"]')
     await expect(bar).toBeVisible()
@@ -143,7 +127,7 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('entry rows are compact and open the detail sheet on tap', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await trackEntry(page, 'phone entry')
 
     const firstRow = page.locator('ul.divide-y > li').first()
@@ -161,7 +145,7 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('a grouped entry can be expanded on a phone, not just on a desktop', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await trackEntry(page, 'grouped work')
     await trackEntry(page, 'grouped work')
 
@@ -172,29 +156,28 @@ test.describe('time tracker on a phone', () => {
     const box = await badge.boundingBox()
     expect(box!.height, 'the group toggle is too short to tap').toBeGreaterThanOrEqual(44)
 
-    const collapsed = await page.locator('ul.divide-y li').count()
+    const rows = page.locator('ul.divide-y li')
+    const collapsed = await rows.count()
     await badge.click()
-    await page.waitForTimeout(300)
     await expect(page.getByRole('button', { name: 'Collapse group' })).toBeVisible()
-    expect(await page.locator('ul.divide-y li').count()).toBeGreaterThan(collapsed)
+    await expect.poll(() => rows.count()).toBeGreaterThan(collapsed)
 
     await page.getByRole('button', { name: 'Collapse group' }).click()
-    await page.waitForTimeout(300)
-    expect(await page.locator('ul.divide-y li').count()).toBe(collapsed)
+    await expect.poll(() => rows.count()).toBe(collapsed)
   })
 
   test('bulk selection is opt-in, so checkboxes do not clutter the list', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await trackEntry(page, 'phone entry')
 
-    await expect(page.locator('input[aria-label="Select time entry"]')).toHaveCount(0)
+    const boxes = page.locator('input[aria-label="Select time entry"]')
+    await expect(boxes).toHaveCount(0)
     await page.getByRole('button', { name: 'Select' }).first().click()
-    await page.waitForTimeout(300)
-    expect(await page.locator('input[aria-label="Select time entry"]').count()).toBeGreaterThan(0)
+    await expect.poll(() => boxes.count()).toBeGreaterThan(0)
   })
 
   test('report filters live in a sheet instead of a wall of controls', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await trackEntry(page, 'phone entry')
     await goTo(page, 'Reports')
 
@@ -204,17 +187,19 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('the calendar opens on a single day rather than a seven-column grid', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await goTo(page, 'Calendar')
 
-    const dayButton = page.getByRole('button', { name: 'Day', exact: true })
-    await expect(dayButton).toHaveClass(/bg-primary/)
+    await expect(page.locator('main').getByRole('button', { name: 'Day', exact: true })).toHaveAttribute(
+      'data-active',
+      'true',
+    )
     const { scrollWidth, innerWidth } = await pageOverflow(page)
     expect(scrollWidth).toBeLessThanOrEqual(innerWidth + 1)
   })
 
   test('no field is small enough to make iOS zoom the page when tapped', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
 
     // Safari zooms the whole page when you tap an input under 16px, and the
     // page never zooms back. The main timer field was 14px, as were ten
@@ -248,28 +233,21 @@ test.describe('time tracker on a phone', () => {
    * reason it is written this way now.
    *
    * The first version queried `button` and nothing else, and visited only the
-   * default state of each screen. Both holes were mine, both were predictable,
-   * and between them they hid: every `<select>` in the slice at 40px (there is
-   * exactly one component behind all of them), the running-timer stop button at
-   * 36px on five of the six screens, seven reminder weekday toggles at 22px,
-   * four timesheet actions at 28px, the project card's own name at 36px, and the
+   * default state of each screen. Between them those two holes hid: every
+   * `<select>` in the slice at 40px, the running-timer stop button at 36px on
+   * five of the six screens, seven reminder weekday toggles at 22px, four
+   * timesheet actions at 28px, the project card's own name at 36px, and the
    * group-similar label at 36px. The guard reported all clear the whole time.
    *
    * So: every kind of thing a thumb can hit, in every tab of every screen, with
    * the row in the states it can be in. And the target measured is the EFFECTIVE
    * one — a 16px checkbox inside a 44px label is fine, because the label is what
-   * you hit — rather than the control's own box, which would demand a
-   * comically large checkbox to pass.
+   * you hit — rather than the control's own box.
+   *
+   * Text inputs are in here too: this app's own `Input` is `h-11 sm:h-9`, so
+   * 44px on a phone is a decision the project already made.
    */
-  /**
-   * Text inputs are in here too, and that is not padding: this app's own `Input`
-   * is `h-11 sm:h-9`, so 44px on a phone is a decision the project already made.
-   * Thirteen call sites in this slice overrode it with a bare `h-8` or `h-9` and
-   * so were 32-36px at EVERY width — the search box in the project picker among
-   * them, which is the field this whole piece of work started from.
-   */
-  const TAPPABLE =
-    'button, select, textarea, a[href], input, [role=button], [role=switch], summary'
+  const TAPPABLE = 'button, select, textarea, a[href], input, [role=button], [role=switch], summary'
 
   /** Which tabs live inside each screen, since the bar only gets you to the screen */
   const INNER_TABS: Record<string, string[]> = {
@@ -282,7 +260,7 @@ test.describe('time tracker on a phone', () => {
   }
 
   test('no visible control on any screen or tab is too small to tap', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
 
     // a grouped row, expanded, with selection on: the states the first version
     // of this never saw, which is how a 28px group chip survived it
@@ -291,9 +269,9 @@ test.describe('time tracker on a phone', () => {
     const expand = page.getByRole('button', { name: /Expand group/ })
     await expect(expand, 'the fixture did not produce a grouped row').toBeVisible()
     await expand.click()
-    await page.waitForTimeout(400)
+    await expect(page.getByRole('button', { name: /Collapse group/ })).toBeVisible()
     await page.locator('main').getByRole('button', { name: 'Select', exact: true }).first().click()
-    await page.waitForTimeout(400)
+    await expect.poll(() => page.locator('input[aria-label="Select time entry"]').count()).toBeGreaterThan(0)
 
     const tooSmall = (selector: string) =>
       page.evaluate((sel) => {
@@ -328,9 +306,15 @@ test.describe('time tracker on a phone', () => {
 
       const places = [`${screen} (as opened)`, ...INNER_TABS[screen].map((t) => `${screen} › ${t}`)]
       for (const place of places) {
-        const tab = place.includes(' › ') ? place.split(' › ')[1] : null
-        if (tab && !(await openInnerTab(tab))) continue
-        if (tab) await page.waitForTimeout(600)
+        const inner = place.includes(' › ') ? place.split(' › ')[1] : null
+        if (inner && !(await openInnerTab(inner))) continue
+        if (inner) {
+          // the inner tab is a segmented control: it marks the one that is open
+          await expect(
+            page.locator('main button[data-active="true"]').filter({ hasText: new RegExp(`^${inner}$`) }),
+          ).toHaveCount(1)
+          await painted(page)
+        }
 
         const found = await tooSmall(TAPPABLE)
         expect(found, `${place} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])
@@ -339,8 +323,9 @@ test.describe('time tracker on a phone', () => {
 
     // manual mode has three inputs the timer mode does not
     await goTo(page, 'Timer')
-    await page.locator('main').getByRole('button', { name: 'Toggle timer or manual mode' }).click()
-    await page.waitForTimeout(500)
+    const modeToggle = page.locator('main').getByRole('button', { name: 'Toggle timer or manual mode' })
+    await modeToggle.click()
+    await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toHaveCount(0)
     const manual = await tooSmall(TAPPABLE)
     expect(manual, `manual mode has controls under 44px: ${JSON.stringify(manual)}`).toEqual([])
 
@@ -350,8 +335,8 @@ test.describe('time tracker on a phone', () => {
      * become 24px wide — neither on any screen the loop above visits, because a
      * sheet is a state you have to enter, not a place you navigate to.
      */
-    await page.locator('main').getByRole('button', { name: 'Toggle timer or manual mode' }).click()
-    await page.waitForTimeout(400)
+    await modeToggle.click()
+    await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
     await page.locator('main li div[role="button"]').first().click()
     await expect(page.getByText('Time entry details')).toBeVisible()
     const sheet = await tooSmall(TAPPABLE)
@@ -362,65 +347,54 @@ test.describe('time tracker on a phone', () => {
    * A favourite used to be permanent on a phone. Its × was `hidden … sm:flex`,
    * and the only other way to un-favourite something is the star in the timer
    * bar, which acts on the draft — so it only works while the draft still
-   * matches that favourite exactly. Move on to anything else and you were left
-   * with a tile you could not remove whose only behaviour is starting a timer.
+   * matches that favourite exactly.
    */
   test('a favourite can be removed on a phone, and putting it back is one tap', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
+    const favourites = async () => (await readState(page)).favorites.length
 
     await page.getByPlaceholder('What are you working on?').fill('a favourite')
     await page.locator('main').getByRole('button', { name: 'Toggle favorite' }).click()
-    await page.waitForTimeout(500)
-
-    const stored = (key: string) =>
-      page.evaluate((k) => JSON.parse(window.localStorage.getItem(k)!).favorites.length, key)
-    expect(await stored(STORAGE_KEY)).toBe(1)
+    await expect.poll(favourites).toBe(1)
 
     // a real click, which Playwright refuses on a hidden or covered element
     await page.getByRole('button', { name: /Remove .* from favorites/ }).click()
-    await page.waitForTimeout(500)
-    expect(await stored(STORAGE_KEY)).toBe(0)
+    await expect.poll(favourites).toBe(0)
 
     await page.getByRole('button', { name: /Undo/ }).click()
-    await page.waitForTimeout(500)
-    expect(await stored(STORAGE_KEY), 'undo did not put it back').toBe(1)
+    await expect.poll(favourites, { message: 'undo did not put it back' }).toBe(1)
   })
 
   /**
    * "Continue" sits 8px from the row's own tap area and 4px from the entry
    * menu. Hitting it while a timer runs ends that timer — the right rule, but it
    * used to happen in silence, and a timer that stopped without being mentioned
-   * surfaces days later as a total that is wrong. I did this to myself with a
-   * thumb while testing something else.
+   * surfaces days later as a total that is wrong.
    */
   test('a tap that stops the timer you were running says so, and can be undone', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await trackEntry(page, 'old work')
-
-    await page.getByPlaceholder('What are you working on?').fill('what I am doing now')
-    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await page.waitForTimeout(800)
 
     const running = () =>
       page.evaluate((key) => {
         const state = JSON.parse(window.localStorage.getItem(key)!)
         return state.entries.find((e: { duration: number }) => e.duration < 0)?.description ?? null
       }, STORAGE_KEY)
-    expect(await running()).toBe('what I am doing now')
+
+    await page.getByPlaceholder('What are you working on?').fill('what I am doing now')
+    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await expect.poll(running).toBe('what I am doing now')
 
     await page.getByRole('button', { name: 'Continue this entry' }).last().click()
-    await page.waitForTimeout(600)
-
-    expect(await running(), 'the running timer was not displaced').toBe('old work')
+    await expect.poll(running, { message: 'the running timer was not displaced' }).toBe('old work')
     await expect(page.getByText(/Stopped .* and started /)).toBeVisible()
 
     await page.getByRole('button', { name: /Undo/ }).click()
-    await page.waitForTimeout(700)
-    expect(await running(), 'undo did not put the timer back').toBe('what I am doing now')
+    await expect.poll(running, { message: 'undo did not put the timer back' }).toBe('what I am doing now')
   })
 
   test('primary controls are large enough to tap', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
 
     const startButton = page.locator('main').getByRole('button', { name: 'Start timer' }).first()
     const startBox = await startButton.boundingBox()
@@ -444,36 +418,48 @@ test.describe('time tracker on a phone', () => {
    * inline-editable row that saves you on a desktop is `hidden sm:grid`.
    */
   test('what you fill in after pressing Start is what gets saved', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     const bar = page.locator('main > div').first()
+
+    /** The running entry, as this browser holds it */
+    const runningEntry = () =>
+      page.evaluate((key) => {
+        const state = JSON.parse(window.localStorage.getItem(key)!)
+        const entry = state.entries.find((e: { duration: number }) => e.duration < 0)
+        if (!entry) return null
+        return {
+          description: entry.description,
+          project: state.projects.find((p: { id: string }) => p.id === entry.projectId)?.name ?? null,
+          billable: entry.billable,
+        }
+      }, STORAGE_KEY)
 
     // a project to reach for later
     await bar.getByRole('button', { name: 'Project', exact: true }).click()
     await page.getByPlaceholder(/Search or add a project/).fill('Writing')
     await page.getByRole('button', { name: /Create/ }).click()
-    await page.waitForTimeout(400)
     await bar.getByRole('button', { name: 'Writing', exact: true }).click()
     await page.getByRole('button', { name: 'No project', exact: true }).click()
-    await page.waitForTimeout(400)
+    await expect(bar.getByRole('button', { name: 'Project', exact: true })).toBeVisible()
 
     // start FIRST, fill in AFTER — the order this app is used in
     await bar.getByRole('button', { name: 'Start timer' }).click()
-    await page.waitForTimeout(700)
+    await expect(bar.getByRole('button', { name: 'Stop timer' })).toBeVisible()
 
     await page.getByPlaceholder('What are you working on?').fill('morning pages')
-    await page.waitForTimeout(800) // past the commit pause
+    // past the commit pause: the running entry has taken the words
+    await expect.poll(async () => (await runningEntry())?.description).toBe('morning pages')
 
     await bar.getByRole('button', { name: 'Project', exact: true }).click()
     await page.getByPlaceholder(/Search or add a project/).fill('wri')
-    await page.waitForTimeout(300)
     await page.getByRole('button', { name: 'Writing', exact: true }).last().click()
-    await page.waitForTimeout(400)
+    await expect.poll(async () => (await runningEntry())?.project).toBe('Writing')
 
     await bar.getByRole('button', { name: 'Non-billable' }).click()
-    await page.waitForTimeout(400)
+    await expect.poll(async () => (await runningEntry())?.billable).toBe(true)
 
     await bar.getByRole('button', { name: 'Stop timer' }).click()
-    await page.waitForTimeout(700)
+    await expect(bar.getByRole('button', { name: 'Start timer' })).toBeVisible()
 
     const saved = await page.evaluate((key) => {
       const state = JSON.parse(window.localStorage.getItem(key)!)
@@ -491,35 +477,32 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('typing a project name in the description box offers the project', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     const bar = page.locator('main > div').first()
 
     await bar.getByRole('button', { name: 'Project', exact: true }).click()
     await page.getByPlaceholder(/Search or add a project/).fill('Writing')
     await page.getByRole('button', { name: /Create/ }).click()
-    await page.waitForTimeout(400)
     await bar.getByRole('button', { name: 'Writing', exact: true }).click()
     await page.getByRole('button', { name: 'No project', exact: true }).click()
-    await page.waitForTimeout(400)
+    await expect(bar.getByRole('button', { name: 'Project', exact: true })).toBeVisible()
 
     // no `@` typed: the grammar was invisible at this width, so plain text has
     // to work on its own
     await page.getByPlaceholder('What are you working on?').fill('wri')
-    await page.waitForTimeout(500)
 
     const panel = page.locator('[data-dropdown-panel]')
     await expect(panel).toBeVisible()
     await expect(panel.getByRole('button', { name: 'Writing' })).toBeVisible()
 
     await panel.getByRole('button', { name: 'Writing' }).click()
-    await page.waitForTimeout(400)
     // the words are the description somebody meant to write; only the project is set
-    await expect(page.getByPlaceholder('What are you working on?')).toHaveValue('wri')
     await expect(bar.getByRole('button', { name: 'Writing', exact: true })).toBeVisible()
+    await expect(page.getByPlaceholder('What are you working on?')).toHaveValue('wri')
   })
 
   test('the section bar is five items with readable labels, and the way out says where it goes', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
 
     const tabs = page.locator('nav[aria-label="Sections"] button')
     await expect(tabs).toHaveCount(5)
@@ -536,7 +519,7 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('the sections behind More can actually be tapped', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     // goTo uses a real click for these, which Playwright refuses if anything
     // covers them — the sheet was drawn under the nav bar the first time
     await goTo(page, 'Settings')
@@ -546,20 +529,20 @@ test.describe('time tracker on a phone', () => {
   })
 
   test('it opens where you left it, and the tab does not name a lab page', async ({ page }) => {
-    await openFreshSandbox(page)
+    await openFreshTracker(page)
     await goTo(page, 'Reports')
 
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await page.getByRole('heading', { name: 'Time' }).waitFor({ timeout: 20000 })
-    await page.waitForTimeout(800)
+    await openTracker(page)
 
     const current = page.locator('nav[aria-label="Sections"] button[aria-current="page"]')
     await expect(current).toHaveText('Reports')
-    expect(await page.title()).not.toContain('/test/')
+    expect(await page.title()).not.toMatch(/\/test\//)
+    expect(page.url()).toContain(TRACKER)
   })
 
-  test('an idle page does no work: observers are not rebuilt as the clock ticks', async ({ page }) => {
-    await openFreshSandbox(page)
+  test('an idle page does no work: observers are not rebuilt as the clock ticks @timing', async ({ page }) => {
+    await openFreshTracker(page)
 
     // The shell's bottom-bar effect had no dependency array, so it rebuilt a
     // ResizeObserver after every render — against a one-second clock. Measured
@@ -580,7 +563,7 @@ test.describe('time tracker on a phone', () => {
     // in Chromium and fails on WebKit, which builds exactly one of its own
     // after load — engine internals this test has no business policing. What
     // the bug actually was is "one more every render", and that is what two
-    // samples across four idle seconds catch.
+    // samples across four idle seconds catch: idle TIME is the thing measured.
     const count = () => page.evaluate(() => (window as unknown as { __observersBuilt: number }).__observersBuilt)
     await page.waitForTimeout(1500)
     const settled = await count()

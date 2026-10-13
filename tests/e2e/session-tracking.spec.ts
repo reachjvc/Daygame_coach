@@ -1,364 +1,164 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
 import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external service latency
 
+/**
+ * A field session, from the start button to the dashboard.
+ *
+ * Merged from session-tracking, approach-logging and data-persistence, which
+ * between them started 23 sessions to check much the same seven things, and
+ * whose quick-log tests asserted that the modal CLOSED — not that the outcome,
+ * mood and tags you picked were stored. They read the account now, and nothing
+ * here asserts a Tailwind class. The same flow on a phone is
+ * `mobile/mobile-session.spec.ts`.
+ */
+
+/** What the account holds for the session that is running now */
+async function activeSession(page: Page) {
+  const response = await page.request.get('/api/tracking/session/active')
+  expect(response.status()).toBe(200)
+  return (await response.json()) as {
+    session: { id: string; goal: number | null } | null
+    approaches: { outcome: string | null; mood: number | null; tags: string[] | null }[]
+  }
+}
+
+async function startSession(page: Page, goal?: string) {
+  await page.getByTestId(SELECTORS.session.startButton).click({ timeout: ACTION_TIMEOUT })
+  if (goal) await page.getByTestId(SELECTORS.session.goalInput).fill(goal, { timeout: ACTION_TIMEOUT })
+  const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
+  await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
+  await confirmButton.evaluate((el: HTMLElement) => el.click())
+  await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
+}
+
+/** Tap once, and wait for the quick log it opens */
+async function tapApproach(page: Page, expectedCount: string) {
+  await page.getByTestId(SELECTORS.session.tapButton).click({ timeout: ACTION_TIMEOUT })
+  await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText(expectedCount, { timeout: AUTH_TIMEOUT })
+  await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeVisible({ timeout: AUTH_TIMEOUT })
+}
+
+async function endSession(page: Page) {
+  await page.getByTestId(SELECTORS.session.endButton).click({ timeout: ACTION_TIMEOUT })
+  const confirm = page.getByRole('button', { name: /end session/i })
+  await expect(confirm).toBeVisible({ timeout: AUTH_TIMEOUT })
+  await confirm.click({ timeout: ACTION_TIMEOUT })
+  await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
+}
+
 test.describe('Session Tracking Flow', () => {
-  // Run tests sequentially to avoid session conflicts (same user can only have one active session)
+  // One account can hold one active session, so these never run side by side
   test.describe.configure({ mode: 'serial' })
 
   test.beforeEach(async ({ page }) => {
-    // Arrange: Navigate to session tracker with clean state
     await ensureCleanSessionPage(page)
   })
 
   test.afterEach(async ({ page }) => {
-    // Cleanup: End any active session via API to prevent conflicts
     await ensureNoActiveSessionViaAPI(page)
   })
 
-  test('should display start session screen when no active session', async ({ page }) => {
-    // Assert: Start session button should be visible
-    await expect(page.getByTestId(SELECTORS.session.startButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByText('Session Tracker')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
+  test('a session counts its approaches, and the count survives a reload', async ({ page }) => {
+    await startSession(page)
+    await expect(page.getByTestId(SELECTORS.session.duration)).toBeVisible()
 
-  test('should open start session dialog when clicking start button', async ({ page }) => {
-    // Wait for start button and click
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
+    for (const count of ['1', '2']) {
+      await tapApproach(page, count)
+      await page.getByTestId(SELECTORS.session.quickLogDismiss).click({ timeout: ACTION_TIMEOUT })
+      await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeHidden({ timeout: AUTH_TIMEOUT })
+    }
+    // both taps reached the account before the reload, or the reload proves nothing
+    await expect.poll(async () => (await activeSession(page)).approaches.length, { timeout: AUTH_TIMEOUT }).toBe(2)
 
-    // Assert: Dialog should appear with goal input and confirm button
-    await expect(page.getByTestId(SELECTORS.session.goalInput)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.session.confirmButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should start session and show counter at 0', async ({ page }) => {
-    // Wait for start button and click
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    // Wait for confirm button and click
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-
-    // Assert: Should show approach counter at 0
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-  })
-
-  test('should start session with custom goal', async ({ page }) => {
-    // Wait for start button and click
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    // Fill goal input
-    await page.getByTestId(SELECTORS.session.goalInput).fill('5', { timeout: ACTION_TIMEOUT })
-
-    // Wait for confirm button and click
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-
-    // Assert: Should show approach counter at 0 and goal progress
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-    await expect(page.getByText('Goal Progress')).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should increment approach counter when tapping', async ({ page }) => {
-    // Arrange: Start a session first
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-
-    // Act: Tap for approach
-    await page.getByTestId(SELECTORS.session.tapButton).click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Counter should increment to 1
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('1', { timeout: AUTH_TIMEOUT })
-  })
-
-  test('should show quick log modal after tapping approach', async ({ page }) => {
-    // Arrange: Start a session
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-
-    // Act: Tap for approach
-    await page.getByTestId(SELECTORS.session.tapButton).click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Quick log modal should appear
-    await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.session.quickLogSave)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should show session duration during active session', async ({ page }) => {
-    // Arrange: Start a session
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: Duration should be visible
-    await expect(page.getByTestId(SELECTORS.session.duration)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should show end session button during active session', async ({ page }) => {
-    // Arrange: Start a session
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: End button should be visible
+    await page.reload({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.session.endButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('2', { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.duration)).toBeVisible()
   })
 
-  test('should end session and navigate to tracking dashboard', async ({ page }) => {
-    // Arrange: Start a session
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
+  test('the outcome, mood and tags picked in the quick log are what is stored', async ({ page }) => {
+    await startSession(page)
+    await tapApproach(page, '1')
 
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Act: Click end button and confirm
-    await page.getByTestId(SELECTORS.session.endButton).click({ timeout: ACTION_TIMEOUT })
-
-    // Wait for end dialog to appear and click End Session
-    await expect(page.getByRole('button', { name: /end session/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await page.getByRole('button', { name: /end session/i }).click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Should navigate to tracking dashboard
-    await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
-    expect(page.url()).toContain('/dashboard/tracking')
-  })
-
-  // Regression tests: Session reset behavior
-  // User reported session persisting after clicking end - could not replicate 30-01-2026
-  // These tests guard against sessions not properly resetting
-
-  test('should reset counter to 0 when starting new session after ending with approaches', async ({ page }) => {
-    // Arrange: Start a session and add an approach
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-
-    // Tap for an approach
-    await page.getByTestId(SELECTORS.session.tapButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('1', { timeout: AUTH_TIMEOUT })
-
-    // Dismiss quick log modal if visible
-    const quickLogModal = page.getByTestId(SELECTORS.session.quickLogModal)
-    if (await quickLogModal.isVisible().catch(() => false)) {
-      await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
-      await expect(quickLogModal).not.toBeVisible({ timeout: AUTH_TIMEOUT })
+    // an outcome tapped twice is un-picked; the one picked after it is the one kept
+    await page.getByTestId(SELECTORS.session.outcome('blowout')).click({ timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.session.outcome('blowout')).click({ timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.session.outcome('number')).click({ timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.session.mood(4)).click({ timeout: ACTION_TIMEOUT })
+    for (const tag of ['day', 'street', 'solo']) {
+      await page.getByTestId(SELECTORS.session.tag(tag)).click({ timeout: ACTION_TIMEOUT })
     }
+    await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeHidden({ timeout: AUTH_TIMEOUT })
 
-    // Act: End the session
-    await page.getByTestId(SELECTORS.session.endButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByRole('button', { name: /end session/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await page.getByRole('button', { name: /end session/i }).click({ timeout: ACTION_TIMEOUT })
-    await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
-
-    // Navigate back to session page and start a new session
-    await ensureCleanSessionPage(page)
-
-    const newStartButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(newStartButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await newStartButton.click({ timeout: ACTION_TIMEOUT })
-
-    const newConfirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(newConfirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await newConfirmButton.evaluate((el: HTMLElement) => el.click())
-
-    // Assert: Counter should be 0, not carrying over from previous session
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
+    await expect
+      .poll(async () => (await activeSession(page)).approaches[0] ?? null, { timeout: AUTH_TIMEOUT })
+      .toMatchObject({ outcome: 'number', mood: 4 })
+    const [approach] = (await activeSession(page)).approaches
+    expect((approach.tags ?? []).map((t) => t.toLowerCase()).sort()).toEqual(['day', 'solo', 'street'])
   })
 
-  test('should reset counter to 0 when starting new session after ending without approaches', async ({ page }) => {
-    // Arrange: Start a session but don't add any approaches
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
+  test('dismissing the quick log still counts the approach, with nothing made up', async ({ page }) => {
+    await startSession(page)
+    await tapApproach(page, '1')
+    await page.getByTestId(SELECTORS.session.quickLogDismiss).click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeHidden({ timeout: AUTH_TIMEOUT })
 
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-
-    // Act: End the session immediately (no approaches)
-    await page.getByTestId(SELECTORS.session.endButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByRole('button', { name: /end session/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await page.getByRole('button', { name: /end session/i }).click({ timeout: ACTION_TIMEOUT })
-    await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
-
-    // Navigate back to session page and start a new session
-    await ensureCleanSessionPage(page)
-
-    const newStartButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(newStartButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await newStartButton.click({ timeout: ACTION_TIMEOUT })
-
-    const newConfirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(newConfirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await newConfirmButton.evaluate((el: HTMLElement) => el.click())
-
-    // Assert: Counter should be 0
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
+    await expect.poll(async () => (await activeSession(page)).approaches.length, { timeout: AUTH_TIMEOUT }).toBe(1)
+    const [approach] = (await activeSession(page)).approaches
+    expect(approach.outcome).toBeNull()
+    expect(approach.mood).toBeNull()
   })
 
-  // Zombie session prevention: browser back navigation should not show ended session as active
-  // Bug: bfcache restores old React state, showing active session UI for an ended session
-  test('should show session-ended state when navigating back to ended session via browser history', async ({ page }) => {
-    // Arrange: Start a session and add an approach
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
+  test('a goal set at the start is stored and shown', async ({ page }) => {
+    await startSession(page, '5')
+    await expect(page.getByText('Goal Progress')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    expect((await activeSession(page)).session?.goal).toBe(5)
+  })
 
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
+  test('ending a session goes to the dashboard, and the next one starts from zero', async ({ page }) => {
+    // Guards a report from 2026-01-30: a session that seemed to persist after End
+    await startSession(page)
+    await tapApproach(page, '1')
+    await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeHidden({ timeout: AUTH_TIMEOUT })
 
-    // Add an approach to create some interaction
-    await page.getByTestId(SELECTORS.session.tapButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('1', { timeout: AUTH_TIMEOUT })
+    await endSession(page)
+    expect((await activeSession(page)).session, 'the session is still active after End').toBeNull()
 
-    // Dismiss quick log modal
-    const quickLogModal = page.getByTestId(SELECTORS.session.quickLogModal)
-    if (await quickLogModal.isVisible().catch(() => false)) {
-      await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
-      await expect(quickLogModal).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-    }
+    await ensureCleanSessionPage(page)
+    await startSession(page)
+    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0')
+  })
 
-    // End session via dialog (clicks "End Session" which redirects to dashboard)
-    await page.getByTestId(SELECTORS.session.endButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByRole('button', { name: /end session/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await page.getByRole('button', { name: /end session/i }).click({ timeout: ACTION_TIMEOUT })
-    await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
+  test('going back to an ended session does not bring it back to life', async ({ page }) => {
+    // bfcache restores the old React state, which showed an ended session as
+    // active: the tap button live, on a session the account had closed
+    await startSession(page)
+    await tapApproach(page, '1')
+    await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeHidden({ timeout: AUTH_TIMEOUT })
+    await endSession(page)
 
-    // Navigate to field report page (simulating user writing report after session)
     await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    // Act: Navigate back via browser history (simulating user pressing back button)
-    // This should trigger the zombie session scenario where bfcache restores old state
     await page.goBack({ timeout: AUTH_TIMEOUT })
     await page.goBack({ timeout: AUTH_TIMEOUT })
 
-    // Wait for page to settle — use domcontentloaded as networkidle can be flaky
-    // after bfcache restoration (especially in WebKit)
-    await page.waitForLoadState('domcontentloaded', { timeout: AUTH_TIMEOUT })
-    // Give the page a moment to re-render after bfcache restore
-    await page.waitForTimeout(2000)
-
-    // Assert: Should NOT show the active session UI (tap button, active counter)
-    // The tap button should NOT be visible - that's the "zombie" state we want to prevent
-    const tapButton = page.getByTestId(SELECTORS.session.tapButton)
-    const isZombie = await tapButton.isVisible().catch(() => false)
-
-    if (isZombie) {
-      // If we see the tap button, the zombie bug exists - test should fail with clear message
-      // Expected behavior: show session-ended banner with edit option
-      await expect(page.getByTestId(SELECTORS.session.sessionEndedBanner)).toBeVisible({
-        timeout: AUTH_TIMEOUT,
-      })
-    } else {
-      // Good path: either shows start screen, session-ended state, "Active Session Found" dialog,
-      // or we may have landed back on tracking dashboard (goBack twice from report → dashboard → session,
-      // but browser history depth varies). Accept tracking dashboard as valid too.
-      const sessionEndedBanner = page.getByTestId(SELECTORS.session.sessionEndedBanner)
-      const startBtn = page.getByTestId(SELECTORS.session.startButton)
-      const activeDialog = page.getByRole('dialog', { name: 'Active Session Found' })
-      const trackingDashboard = page.getByTestId(SELECTORS.trackingDashboard.page)
-
-      // One of these should be visible
-      await expect(sessionEndedBanner.or(startBtn).or(activeDialog).or(trackingDashboard)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    }
+    // Wait for the page to settle into one of the honest states — the ended
+    // banner, a fresh start screen, or the dashboard — then require that the
+    // dead session's controls are not among what is on screen.
+    await expect(
+      page
+        .getByTestId(SELECTORS.session.sessionEndedBanner)
+        .or(page.getByTestId(SELECTORS.session.startButton))
+        .or(page.getByTestId(SELECTORS.trackingDashboard.page)),
+    ).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.session.tapButton)).toBeHidden()
   })
-
-  test('should provide edit session option when viewing ended session', async ({ page }) => {
-    // Arrange: Start a session and add an approach
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    await expect(startButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    const confirmButton = page.getByTestId(SELECTORS.session.confirmButton)
-    await expect(confirmButton).toBeAttached({ timeout: AUTH_TIMEOUT })
-    await confirmButton.evaluate((el: HTMLElement) => el.click())
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('0', { timeout: AUTH_TIMEOUT })
-
-    // Add an approach
-    await page.getByTestId(SELECTORS.session.tapButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText('1', { timeout: AUTH_TIMEOUT })
-
-    // Dismiss quick log modal
-    const quickLogModal = page.getByTestId(SELECTORS.session.quickLogModal)
-    if (await quickLogModal.isVisible().catch(() => false)) {
-      await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
-      await expect(quickLogModal).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-    }
-
-    // End session
-    await page.getByTestId(SELECTORS.session.endButton).click({ timeout: ACTION_TIMEOUT })
-    await expect(page.getByRole('button', { name: /end session/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await page.getByRole('button', { name: /end session/i }).click({ timeout: ACTION_TIMEOUT })
-    await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
-
-    // Navigate to field report then back
-    await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-    await page.goBack({ timeout: AUTH_TIMEOUT })
-    await page.goBack({ timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Assert: If session-ended banner is shown, edit button should be available
-    const sessionEndedBanner = page.getByTestId(SELECTORS.session.sessionEndedBanner)
-    const bannerVisible = await sessionEndedBanner.isVisible().catch(() => false)
-
-    if (bannerVisible) {
-      // Edit button should be visible when in session-ended state
-      await expect(page.getByTestId(SELECTORS.session.editSessionButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    }
-    // If banner isn't visible, we're in start-session state which is also acceptable
-  })
-
-  // Note: The UI now handles checking for active sessions before starting a new one.
-  // When an active session exists and user tries to start a new one, a dialog is shown
-  // offering "Resume Session" or "Start Fresh" options. The "Start Fresh" option
-  // abandons the old session and marks it with end_reason='abandoned'.
-  // Testing this flow requires more complex E2E setup with multiple browser contexts.
 })

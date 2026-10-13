@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto"
 import { test, expect } from "@playwright/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
-import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
+import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * The Black Box, end to end.
@@ -18,6 +18,25 @@ import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
 test.describe.configure({ mode: "serial" })
 
 type Page = import("@playwright/test").Page
+
+/**
+ * Row ids, minted once per run and named by role.
+ *
+ * They were literal UUIDs, and a row's id is its primary key on the account
+ * table — so the same literal seeded by two accounts (two projects, two
+ * machines, CI beside a laptop) is one row two owners are fighting over. The
+ * names keep a record's cross-references readable (a report's `attemptId`
+ * points at its attempt); the values are new every run.
+ */
+const mintedIds = new Map<string, string>()
+function runId(name: string): string {
+  let id = mintedIds.get(name)
+  if (!id) {
+    id = randomUUID()
+    mintedIds.set(name, id)
+  }
+  return id
+}
 
 /**
  * The record lives in localStorage, and every Playwright test gets a fresh
@@ -164,7 +183,7 @@ function liveRun(extraReports: unknown[] = []) {
   return {
     version: 1,
     attempts: [{
-      id: "aaaaaaaa-0000-4000-8000-000000000001", viceId: "nicotine", label: "Smoking or vaping", startedOn: started,
+      id: runId("attempt-1"), viceId: "nicotine", label: "Smoking or vaping", startedOn: started,
       startedBy: "Read my own record", structure: ["Told a specific person"],
       endedOn: null, endedByReportId: null,
     }],
@@ -182,6 +201,28 @@ test.describe("the Black Box", () => {
     // isolation. I should not have to click around old work to reach it." The
     // module was retired to the test archive on 2026-09-24.
     await expect(page.getByRole("link", { name: /the flows, tools and reading/i })).toHaveCount(0)
+  })
+
+  test("is reachable from the Vices routine inside Life Mastery", async ({ page }) => {
+    // Moved here from quit-vice.spec.ts when that suite went with the archived
+    // module it tested: this is the one test in it that drove product routes.
+    // The routine there is a list of days you hold a line, which is the right
+    // shape for a scoreboard and no help on the evening you do not hold it.
+    await page.goto(LIFE_MASTERY, { waitUntil: "domcontentloaded" })
+    await page.getByText("Opening your plan…").waitFor({ state: "hidden", timeout: 30_000 })
+    // The routines live under this step, and only under this one: the wanting
+    // half and the doing half are two steps again, and a routine is always a
+    // system. TAB_LABELS in src/goals/data/northStar.ts is the source of truth
+    // for the name.
+    await page.locator('nav[aria-label="Sections"] button', { hasText: "Systems" }).click()
+    await page.locator("#ns-routines button", { hasText: "Vices" }).first().click()
+
+    const link = page.getByRole("link", { name: /Working on one of these properly/ })
+    await expect(link).toBeVisible()
+    await link.click()
+
+    await expect(page).toHaveURL(new RegExp(`${QUIT_VICE}$`))
+    await expect(page.getByRole("heading", { name: "Black Box", level: 1 })).toBeVisible()
   })
 
   test("no lane label escapes the chart's card, at 320px or anywhere else", async ({ page }) => {
@@ -223,10 +264,10 @@ test.describe("the Black Box", () => {
     const fourRunsOverYears = {
       version: 1,
       attempts: [
-        ["aaaaaaaa-0000-4000-8000-00000000000a", "2024-01-02", "2024-02-18"],
-        ["aaaaaaaa-0000-4000-8000-00000000000b", "2024-06-10", "2024-09-01"],
-        ["aaaaaaaa-0000-4000-8000-00000000000c", "2025-02-01", "2025-11-14"],
-        ["aaaaaaaa-0000-4000-8000-00000000000d", "2026-01-05", null],
+        [runId("attempt-a"), "2024-01-02", "2024-02-18"],
+        [runId("attempt-b"), "2024-06-10", "2024-09-01"],
+        [runId("attempt-c"), "2025-02-01", "2025-11-14"],
+        [runId("attempt-d"), "2026-01-05", null],
       ].map(([id, startedOn, endedOn], i) => ({
         id,
         viceId: "nicotine",
@@ -237,7 +278,7 @@ test.describe("the Black Box", () => {
         endedOn,
         // The report that ended it, which is where the label's REASON comes
         // from — and the reason is most of the label's width.
-        endedByReportId: endedOn === null ? null : `bbbbbbbb-0000-4000-8000-00000000000${i}`,
+        endedByReportId: endedOn === null ? null : runId(`ending-${i}`),
       })),
       /**
        * EACH ENDED RUN NEEDS ITS REPORT, or this guard cannot fail.
@@ -250,8 +291,8 @@ test.describe("the Black Box", () => {
        * what makes the label ~190px, which is the whole problem.
        */
       reports: [0, 1, 2].map((i) => ({
-        id: `bbbbbbbb-0000-4000-8000-00000000000${i}`,
-        attemptId: `aaaaaaaa-0000-4000-8000-00000000000${"abc"[i]}`,
+        id: runId(`ending-${i}`),
+        attemptId: runId(`attempt-${"abc"[i]}`),
         at: `${["2024-02-18", "2024-09-01", "2025-11-14"][i]}T22:00:00`,
         wentThrough: true,
         thought: "Work has been brutal, I have earned it",
@@ -306,8 +347,8 @@ test.describe("the Black Box", () => {
      * themselves.
      */
     await seed(page, liveRun([{
-      id: "bbbb0000-0000-4000-8000-0000000000f1",
-      attemptId: "aaaaaaaa-0000-4000-8000-000000000001",
+      id: runId("report-f1"),
+      attemptId: runId("attempt-1"),
       at: "2026-02-01T22:00:00",
       wentThrough: false,
       thought: "It has been three months, I am fine now",
@@ -384,17 +425,6 @@ test.describe("the Black Box", () => {
     expect(carried, "what was written in the urge path was thrown away").toContain(wrote)
   })
 
-  test("the retired module still works, at its archived address", async ({ page }) => {
-    // RETIRED, NOT DELETED, and this is what makes that claim true rather than
-    // a sentence in a commit message. The owner's condition for retiring it was
-    // "keep it in the test archives so i can access it later", and it reads the
-    // same `quit-vice-v1` key it always did — so anything ever typed into those
-    // screens is still there. If this test goes, that promise is unguarded.
-    await page.goto(QUIT_VICE_ARCHIVE)
-    await expect(page.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15000 })
-    await expect(page.getByRole("heading", { name: "Quitting something" })).toBeVisible()
-  })
-
   test("a run can be started, and it shows up as days", async ({ page }) => {
     await seed(page, null)
     // On an empty record the primary action is entering history; starting a run
@@ -424,7 +454,7 @@ test.describe("the Black Box", () => {
     // One report on file, so the door exists — but asked about a DIFFERENT
     // thought it must say so plainly and invent no pattern.
     await seed(page, liveRun([{
-      id: "bbbb0000-0000-4000-8000-000000000000", attemptId: "aaaaaaaa-0000-4000-8000-000000000001", at: "2026-09-01T20:00:00", wentThrough: false,
+      id: runId("report-0"), attemptId: runId("attempt-1"), at: "2026-09-01T20:00:00", wentThrough: false,
       thought: "Bad day at work", ending: "stress", closeness: 5,
       withWhom: "", where: "", factors: [], didInstead: "went for a walk",
     }]))
@@ -548,7 +578,7 @@ test.describe("the Black Box", () => {
     // last Tuesday is corrected where it is read, from the run's own panel,
     // with the words that were typed beside it.
     await seed(page, liveRun([{
-      id: "bbbb0000-0000-4000-8000-000000000000", attemptId: "aaaaaaaa-0000-4000-8000-000000000001", at: "2026-09-01T20:00:00", wentThrough: false,
+      id: runId("report-0"), attemptId: runId("attempt-1"), at: "2026-09-01T20:00:00", wentThrough: false,
       thought: "Filed this by accident", ending: "stress", closeness: 5,
       withWhom: "", where: "", factors: [], didInstead: "",
     }]))
@@ -609,13 +639,13 @@ test.describe("the Black Box", () => {
     await seed(page, {
       version: 1,
       attempts: [
-        { id: "aaaaaaaa-0000-4000-8000-000000000001", viceId: "nicotine", label: "Smoking or vaping", startedOn: "2025-01-01",
-          startedBy: "", structure: [], endedOn: "2025-04-10", endedByReportId: "bbbb0000-0000-4000-8000-000000000001" },
-        { id: "aaaaaaaa-0000-4000-8000-000000000002", viceId: "porn", label: "Porn", startedOn: "2026-06-01",
+        { id: runId("attempt-1"), viceId: "nicotine", label: "Smoking or vaping", startedOn: "2025-01-01",
+          startedBy: "", structure: [], endedOn: "2025-04-10", endedByReportId: runId("report-1") },
+        { id: runId("attempt-2"), viceId: "porn", label: "Porn", startedOn: "2026-06-01",
           startedBy: "", structure: [], endedOn: null, endedByReportId: null },
       ],
       reports: [
-        { id: "bbbb0000-0000-4000-8000-000000000001", attemptId: "aaaaaaaa-0000-4000-8000-000000000001", at: "2025-04-10T12:00:00", wentThrough: true,
+        { id: runId("report-1"), attemptId: runId("attempt-1"), at: "2025-04-10T12:00:00", wentThrough: true,
           thought: "One at the wedding", ending: "justone", closeness: null,
           withWhom: "", where: "", factors: [], didInstead: "" },
       ],
@@ -643,9 +673,9 @@ test.describe("the Black Box", () => {
     // well as on the screen and "Add it" simply did nothing.
     await seed(page, {
       version: 1,
-      attempts: [{ id: "aaaaaaaa-0000-4000-8000-000000000001", viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-01-01",
-        startedBy: "", structure: [], endedOn: "2026-03-01", endedByReportId: "bbbb0000-0000-4000-8000-000000000001" }],
-      reports: [{ id: "bbbb0000-0000-4000-8000-000000000001", attemptId: "aaaaaaaa-0000-4000-8000-000000000001", at: "2026-03-01T12:00:00", wentThrough: true,
+      attempts: [{ id: runId("attempt-1"), viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-01-01",
+        startedBy: "", structure: [], endedOn: "2026-03-01", endedByReportId: runId("report-1") }],
+      reports: [{ id: runId("report-1"), attemptId: runId("attempt-1"), at: "2026-03-01T12:00:00", wentThrough: true,
         thought: "", ending: "fine", closeness: null,
         withWhom: "", where: "", factors: [], didInstead: "" }],
     })
@@ -918,9 +948,9 @@ test.describe("the Black Box", () => {
   test("the same days twice off one thing is still refused, and says so", async ({ page }) => {
     await seed(page, {
       version: 1,
-      attempts: [{ id: "aaaaaaaa-0000-4000-8000-000000000001", viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-01-01",
-        startedBy: "", structure: [], endedOn: "2026-03-01", endedByReportId: "bbbb0000-0000-4000-8000-000000000001" }],
-      reports: [{ id: "bbbb0000-0000-4000-8000-000000000001", attemptId: "aaaaaaaa-0000-4000-8000-000000000001", at: "2026-03-01T12:00:00", wentThrough: true,
+      attempts: [{ id: runId("attempt-1"), viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-01-01",
+        startedBy: "", structure: [], endedOn: "2026-03-01", endedByReportId: runId("report-1") }],
+      reports: [{ id: runId("report-1"), attemptId: runId("attempt-1"), at: "2026-03-01T12:00:00", wentThrough: true,
         thought: "", ending: "fine", closeness: null,
         withWhom: "", where: "", factors: [], didInstead: "" }],
     })

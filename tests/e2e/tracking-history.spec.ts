@@ -1,119 +1,90 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import { SELECTORS } from './helpers/selectors'
 
 const AUTH_TIMEOUT = 15000
 
+/**
+ * The history of field reports: filtered, opened, and deleted.
+ *
+ * Each test seeds the reports it is about. The file it replaces read whatever
+ * the shared account happened to hold — its pagination and expand tests passed
+ * by returning early on an empty account, its filter test asserted a Tailwind
+ * class, and its delete test removed the FIRST report on the account, whoever
+ * had written it.
+ */
+
+/** A report of this run's own, through the same endpoint the form uses */
+async function seedReport(page: Page, isDraft: boolean, note: string): Promise<string> {
+  const response = await page.request.post('/api/tracking/field-report', {
+    data: {
+      system_template_slug: 'quick-log',
+      title: note,
+      fields: { approaches: 2, quick_note: note },
+      is_draft: isDraft,
+    },
+  })
+  expect(response.status(), 'could not seed a report').toBe(201)
+  return ((await response.json()) as { id: string }).id
+}
+
 test.describe('Tracking History', () => {
-  test.beforeEach(async ({ page }) => {
+  test.describe.configure({ mode: 'serial' })
+
+  const seeded: string[] = []
+  test.afterEach(async ({ page }) => {
+    for (const id of seeded.splice(0)) await page.request.delete(`/api/tracking/field-report/${id}`)
+  })
+
+  test('the filters keep submitted reports and drafts apart', async ({ page }) => {
+    const run = randomUUID().slice(0, 8)
+    const submitted = await seedReport(page, false, `E2E submitted ${run}`)
+    const draft = await seedReport(page, true, `E2E draft ${run}`)
+    seeded.push(submitted, draft)
+
     await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-  })
+    await expect(page.getByTestId(SELECTORS.history.card(submitted))).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // NOT asserted: that "All" shows the draft. It does not — the list behind
+    // "All" is read with `is_draft = false` (getUserFieldReports), so "All" and
+    // "Submitted" show the same thing. Reported 2026-10-13 rather than pinned.
 
-  test('history page loads with filter tabs', async ({ page }) => {
-    await expect(page.getByTestId(SELECTORS.history.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // All three filter tabs should be visible
-    await expect(page.getByTestId(SELECTORS.history.filterAll)).toBeVisible()
-    await expect(page.getByTestId(SELECTORS.history.filterSubmitted)).toBeVisible()
-    await expect(page.getByTestId(SELECTORS.history.filterDrafts)).toBeVisible()
-  })
-
-  test('filter tabs switch displayed reports', async ({ page }) => {
-    await expect(page.getByTestId(SELECTORS.history.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Click Drafts filter
     await page.getByTestId(SELECTORS.history.filterDrafts).click()
-    // The active filter should have primary styling — verify it changed
-    await expect(page.getByTestId(SELECTORS.history.filterDrafts)).toHaveClass(/bg-primary/, { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.history.card(draft))).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.history.card(submitted))).toHaveCount(0)
 
-    // Click Submitted filter
     await page.getByTestId(SELECTORS.history.filterSubmitted).click()
-    await expect(page.getByTestId(SELECTORS.history.filterSubmitted)).toHaveClass(/bg-primary/, { timeout: AUTH_TIMEOUT })
-
-    // Click All filter to reset
-    await page.getByTestId(SELECTORS.history.filterAll).click()
-    await expect(page.getByTestId(SELECTORS.history.filterAll)).toHaveClass(/bg-primary/, { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.history.card(submitted))).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.history.card(draft))).toHaveCount(0)
   })
 
-  test('report cards are expandable', async ({ page }) => {
-    await expect(page.getByTestId(SELECTORS.history.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
+  test('a report card opens to show what was written, and closes again', async ({ page }) => {
+    const note = `E2E opened ${randomUUID().slice(0, 8)}`
+    const id = await seedReport(page, false, note)
+    seeded.push(id)
 
-    // Find first report card
-    const firstCard = page.locator('[data-testid^="history-card-"]').first()
-    const isCardVisible = await firstCard.isVisible().catch(() => false)
+    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    const card = page.getByTestId(SELECTORS.history.card(id))
+    await expect(card).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    if (!isCardVisible) {
-      // No reports exist — empty state is shown, test passes vacuously
-      await expect(page.getByText('No Field Reports Yet')).toBeVisible()
-      return
-    }
+    await page.getByTestId(SELECTORS.history.cardExpand(id)).click()
+    await expect(card.getByText('Report Fields')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(card.locator('dd').getByText(note)).toBeVisible()
 
-    // Get the card's testid to extract report ID
-    const testId = await firstCard.getAttribute('data-testid')
-    const reportId = testId!.replace('history-card-', '')
-
-    // Click the expand toggle
-    await page.getByTestId(SELECTORS.history.cardExpand(reportId)).click()
-
-    // Expanded content should show "Report Fields" heading
-    await expect(firstCard.getByText('Report Fields')).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Click again to collapse
-    await page.getByTestId(SELECTORS.history.cardExpand(reportId)).click()
-    await expect(firstCard.getByText('Report Fields')).not.toBeVisible()
+    await page.getByTestId(SELECTORS.history.cardExpand(id)).click()
+    await expect(card.getByText('Report Fields')).toBeHidden()
   })
 
-  test('load more pagination works', async ({ page }) => {
-    await expect(page.getByTestId(SELECTORS.history.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
+  test('deleting a report from history removes it from the account', async ({ page }) => {
+    const id = await seedReport(page, false, `E2E deleted ${randomUUID().slice(0, 8)}`)
+    seeded.push(id)
 
-    // Load more button only appears if there are more reports
-    const loadMoreButton = page.getByTestId(SELECTORS.history.loadMore)
-    const hasLoadMore = await loadMoreButton.isVisible().catch(() => false)
+    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.history.card(id))).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    if (!hasLoadMore) {
-      // Not enough reports for pagination — test passes vacuously
-      return
-    }
+    page.once('dialog', (dialog) => dialog.accept())
+    await page.getByTestId(SELECTORS.history.cardDelete(id)).click()
+    await expect(page.getByTestId(SELECTORS.history.card(id))).toHaveCount(0, { timeout: AUTH_TIMEOUT })
 
-    // Count current cards
-    const initialCount = await page.locator('[data-testid^="history-card-"]').count()
-
-    // Click load more
-    await loadMoreButton.click()
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Should have more cards now
-    const newCount = await page.locator('[data-testid^="history-card-"]').count()
-    expect(newCount).toBeGreaterThan(initialCount)
-  })
-
-  test('delete report from history', async ({ page }) => {
-    await expect(page.getByTestId(SELECTORS.history.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Find first report card
-    const firstCard = page.locator('[data-testid^="history-card-"]').first()
-    const isCardVisible = await firstCard.isVisible().catch(() => false)
-
-    if (!isCardVisible) {
-      // No reports — skip
-      return
-    }
-
-    const testId = await firstCard.getAttribute('data-testid')
-    const reportId = testId!.replace('history-card-', '')
-
-    // Count cards before delete
-    const countBefore = await page.locator('[data-testid^="history-card-"]').count()
-
-    // Click delete — will trigger a confirm dialog
-    page.on('dialog', (dialog) => dialog.accept())
-    await page.getByTestId(SELECTORS.history.cardDelete(reportId)).click()
-
-    // Wait for the card to disappear
-    await expect(page.getByTestId(SELECTORS.history.card(reportId))).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Count should be one less (or empty state shows)
-    const countAfter = await page.locator('[data-testid^="history-card-"]').count()
-    expect(countAfter).toBeLessThan(countBefore)
+    expect((await page.request.get(`/api/tracking/field-report/${id}`)).status()).toBe(404)
   })
 })

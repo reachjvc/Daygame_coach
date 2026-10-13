@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto"
 import { test, expect, type Page } from "@playwright/test"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
-import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 /**
  * Dead-control sweep.
@@ -12,27 +12,13 @@ import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice
  * nothing and looked broken.
  *
  * The probe runs inside the page rather than through the driver, because a
- * click-per-round-trip sweep of six flows takes minutes and times out. In-page
+ * click-per-round-trip sweep takes minutes and times out. In-page
  * it takes seconds: click, watch for a DOM mutation or a storage write, and
  * report anything that produces neither.
  */
 
-/**
- * The old hub moved on 2026-09-20: `/quit-vice` became the Black Box and the
- * hub went to `/quit-vice/old`. This file kept pointing at `/quit-vice`, so
- * the hub sweep waited thirty seconds for a `data-hydrated` the Black Box did
- * not set, went red, and covered NEITHER module. It is two constants now so
- * the next move cannot quietly turn this suite into a no-op again. The `HUB`
- * constant that used to sit here is gone: it meant BOTH "the hub page" and
- * "the prefix the steps hang off", and only the first of those moved — so the
- * step URLs stayed right while every visit to the hub landed elsewhere. Steps
- * are built with `viceArchiveStep` now, which is the one thing that knows where they
- * live.
- */
-const OLD_HUB = QUIT_VICE_ARCHIVE
 /** The Black Box, which is what the front door serves now. */
 const BLACK_BOX = QUIT_VICE
-const FLOWS = ["where", "gives", "map", "experiment", "line", "week"] as const
 
 async function settled(page: Page) {
   await page.locator('[data-hydrated="true"]').waitFor({ state: "attached", timeout: 30000 })
@@ -44,7 +30,6 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
     const root = () => document.querySelector(".max-w-3xl") as HTMLElement
     const faults: string[] = []
     const seen = new Set<string>()
-    const nav = document.querySelector('nav[aria-label="Steps"]') as HTMLElement | null
 
     const probe = async (btn: HTMLButtonElement, where: string) => {
       // A control labelled only by aria-label is correctly labelled — icon
@@ -81,7 +66,7 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
       if ((btn as HTMLElement).offsetParent === null || btn.disabled) return
 
       const stored = () =>
-        (localStorage.getItem("quit-vice-v1") || "").length + ":" + (localStorage.getItem("vice-blackbox-v1") || "").length
+        (localStorage.getItem("vice-blackbox-v1") || "").length
       const before = document.body.innerHTML.length + "|" + stored()
       let mutated = false
       const obs = new MutationObserver(() => { mutated = true })
@@ -97,70 +82,12 @@ async function sweep(page: Page, tag: string): Promise<string[]> {
 
     const visible = () =>
       [...root().querySelectorAll("button")].filter(
-        (b) => (b as HTMLElement).offsetParent !== null && !(b as HTMLButtonElement).disabled && !(nav?.contains(b) ?? false),
+        (b) => (b as HTMLElement).offsetParent !== null && !(b as HTMLButtonElement).disabled,
       ) as HTMLButtonElement[]
 
-    if (!nav) {
-      for (const b of visible().slice(0, 20)) await probe(b, label)
-      return faults
-    }
-
-    const toggle = () => (nav.querySelector("button") as HTMLButtonElement)
-    toggle().click(); await sleep(150)
-    const steps = [...nav.querySelectorAll("button")].length - 1
-    toggle().click(); await sleep(90)
-
-    for (let i = 0; i < steps; i++) {
-      toggle().click(); await sleep(110)
-      ;([...nav.querySelectorAll("button")][i + 1] as HTMLButtonElement)?.click()
-      await sleep(170)
-      for (const b of visible().slice(0, 16)) await probe(b, `${label}#${i + 1}`)
-    }
+    for (const b of visible().slice(0, 20)) await probe(b, label)
     return faults
   }, tag)
-}
-
-test("no dead controls on the hub, in any version", async ({ page }) => {
-  test.setTimeout(180000)
-  const all: string[] = []
-  for (const v of ["plain", "guided", "full"]) {
-    await page.goto(OLD_HUB, { waitUntil: "domcontentloaded" })
-    await page.evaluate((ver) => {
-      localStorage.removeItem("quit-vice-v1")
-      localStorage.setItem("quit-vice-version", ver)
-    }, v)
-    await page.reload({ waitUntil: "domcontentloaded" })
-    await settled(page)
-    all.push(...(await sweep(page, `hub:${v}`)))
-  }
-  expect(all, `dead controls:\n  ${all.join("\n  ")}`).toEqual([])
-})
-
-test("no dead controls in the nine modules", async ({ page }) => {
-  test.setTimeout(120000)
-  await page.goto(viceArchiveStep("learn"), { waitUntil: "domcontentloaded" })
-  await settled(page)
-  const faults = await sweep(page, "learn")
-  expect(faults, `dead controls:\n  ${faults.join("\n  ")}`).toEqual([])
-})
-
-test("no dead controls on the short version", async ({ page }) => {
-  test.setTimeout(120000)
-  await page.goto(viceArchiveStep("shortlist"), { waitUntil: "domcontentloaded" })
-  await settled(page)
-  const faults = await sweep(page, "shortlist")
-  expect(faults, `dead controls:\n  ${faults.join("\n  ")}`).toEqual([])
-})
-
-for (const flow of FLOWS) {
-  test(`no dead controls in ${flow}`, async ({ page }) => {
-    test.setTimeout(180000)
-    await page.goto(viceArchiveStep(flow), { waitUntil: "domcontentloaded" })
-    await page.evaluate(() => localStorage.setItem("quit-vice-version", "full"))
-    await settled(page)
-    const faults = await sweep(page, flow)
-    expect(faults, `dead controls in ${flow}:\n  ${faults.join("\n  ")}`).toEqual([])
-  })
 }
 
 test("no dead controls on the Black Box", async ({ page }) => {
@@ -172,7 +99,7 @@ test("no dead controls on the Black Box", async ({ page }) => {
   const live = {
     version: 1,
     attempts: [{
-      id: "a1", viceId: "nicotine", label: "Smoking or vaping", startedOn: started,
+      id: randomUUID(), viceId: "nicotine", label: "Smoking or vaping", startedOn: started,
       startedBy: "Read my own record", structure: ["Told a specific person"],
       endedOn: null, endedByReportId: null,
     }],

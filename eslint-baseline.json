@@ -468,15 +468,6 @@
       "@typescript-eslint/no-unused-vars: 'APPROACH_OUTCOMES' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'SET_TYPES' is defined but never used.": 1
     },
-    "tests/e2e/articles.spec.ts": {
-      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
-    },
-    "tests/e2e/goals-data-consistency.spec.ts": {
-      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
-    },
-    "tests/e2e/helpers/goals.helper.ts": {
-      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1
-    },
     "tests/e2e/security-idor.spec.ts": {
       "@typescript-eslint/no-unused-vars: 'AUTH_TIMEOUT' is assigned a value but never used.": 1
     },
@@ -486,24 +477,8 @@
       "@typescript-eslint/no-unused-vars: 'SELECTORS' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'session' is assigned a value but never used.": 1
     },
-    "tests/e2e/security-rls.spec.ts": {
-      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'BrowserContext' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'Page' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'userAStats' is assigned a value but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'userBStats' is assigned a value but never used.": 1
-    },
-    "tests/e2e/start-session.spec.ts": {
-      "@typescript-eslint/no-unused-vars: 'SELECTORS' is defined but never used.": 1
-    },
-    "tests/integration/db/trackingRepo.integration.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'userId' is assigned a value but never used.": 1
-    },
     "tests/unit/articles/feedbackEnum.test.ts": {
       "@typescript-eslint/no-unused-vars: 'key' is assigned a value but never used.": 1
-    },
-    "tests/unit/articles/schemas.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'title' is assigned a value but never used.": 1
     },
     "tests/unit/db/linkedMetrics.test.ts": {
       "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1,
@@ -514,10 +489,6 @@
     },
     "tests/unit/goals/goalGraph.test.ts": {
       "@typescript-eslint/no-unused-vars: 'area' is assigned a value but never used.": 1
-    },
-    "tests/unit/goals/goalListIntake.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'goalIsPlanned' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'planConformance' is defined but never used.": 1
     },
     "tests/unit/goals/goalsService.test.ts": {
       "@typescript-eslint/no-unused-vars: 'getMilestoneLadderValues' is defined but never used.": 1
@@ -530,9 +501,6 @@
     },
     "tests/unit/goals/lifeMasteryCopyLint.test.ts": {
       "no-useless-escape: Unnecessary escape character: \\\".": 1
-    },
-    "tests/unit/goals/lifeMasteryRegressions.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'goalNeedsWhy' is defined but never used.": 1
     },
     "tests/unit/goals/streakFreeze.test.ts": {
       "@typescript-eslint/no-unused-vars: 'afterEach' is defined but never used.": 1,

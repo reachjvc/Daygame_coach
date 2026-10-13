@@ -169,8 +169,21 @@ async function measured(page: Page) {
 async function opened(page: Page, open: (p: Page) => Promise<void>) {
   const before = await measured(page)
   await open(page)
-  // The dialog animates in; a box measured mid-transition is not its box.
-  await page.waitForTimeout(600)
+  // The dialog animates in; a box measured mid-transition is not its box. So
+  // wait for its own entry animations to finish (the finite ones: a spinner
+  // inside it would never end) instead of for a guessed 600ms.
+  await page
+    .getByRole("dialog")
+    .last()
+    .evaluate(async (el) => {
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+      await Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+          .map((a) => a.finished),
+      )
+    })
   const after = await measured(page)
   const was = new Set(before.map((c) => `${c.label}|${c.w}x${c.h}`))
   return after.filter((c) => !was.has(`${c.label}|${c.w}x${c.h}`))
@@ -238,7 +251,7 @@ test.describe("every door on the Black Box is usable with a thumb", () => {
       )
       expect(wayOut.length, `"${name}" has only the 32px close to dismiss it`).toBeGreaterThan(0)
       await page.keyboard.press("Escape")
-      await page.waitForTimeout(400)
+      await expect(page.getByRole("dialog")).toHaveCount(0)
     }
   })
 })

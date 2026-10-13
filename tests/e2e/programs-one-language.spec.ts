@@ -255,7 +255,12 @@ test("no bordered button flashes the sunset red when you hover it", async ({ pag
   const outlined = page.locator('[data-slot="button"]').first()
   await expect(outlined).toBeVisible()
   await outlined.hover()
-  await page.waitForTimeout(250)
+  // The hover colour arrives by CSS transition. Wait for the transition the
+  // hover started to finish, rather than for a guessed 250ms.
+  await outlined.evaluate(async (el) => {
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    await Promise.all(el.getAnimations().map((animation) => animation.finished))
+  })
 
   const background = await outlined.evaluate((el) => window.getComputedStyle(el).backgroundColor)
   expect(

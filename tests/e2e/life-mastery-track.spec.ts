@@ -105,10 +105,13 @@ async function goals(
   return Array.isArray(body) ? body : body.goals ?? []
 }
 
+/** A goal made outside the plan, by this spec, so "not in the plan's hub" has something to be about */
+const FOREIGN_TITLE = `E2E goal from outside the plan (${RUN})`
+
 /** Only what this test made. Never DELETE /api/goals — that is everything. */
 async function cleanUp(page: Page) {
   for (const goal of await goals(page)) {
-    if (goal.template_id?.startsWith(`ns:${RUN}:`)) {
+    if (goal.template_id?.startsWith(`ns:${RUN}:`) || goal.title === FOREIGN_TITLE) {
       await page.request.delete(`/api/goals/${goal.id}?permanent=true`)
     }
   }
@@ -266,6 +269,11 @@ test.describe('Life Mastery — the track step', () => {
   })
 
   test('shows the real goals hub on the same tab, holding the pushed goals', async ({ page }) => {
+    const seeded = await page.request.post('/api/goals', {
+      data: { title: FOREIGN_TITLE, category: 'custom', target_value: 10, life_area: 'custom' },
+    })
+    expect(seeded.ok(), `could not seed the outside goal: ${seeded.status()}`).toBe(true)
+
     await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
     await page.getByRole('button', { name: 'Track 3 goals' }).click()
     await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 15000 })
@@ -276,11 +284,11 @@ test.describe('Life Mastery — the track step', () => {
     const hub = page.locator('section', { hasText: 'This plan, running' })
     await expect(hub.getByText('E2E gym sessions')).toBeVisible({ timeout: 15000 })
 
-    // Goals made outside this plan must not be in it. The test account has at
-    // least one; if it ever has none this assertion passes vacuously, so it is
-    // checked against the API rather than assumed.
+    // Goals made outside this plan must not be in it. This spec seeds one of
+    // its own above rather than relying on whatever the shared account holds —
+    // with none, this assertion would pass vacuously.
     const foreign = (await goals(page)).filter((g) => !g.template_id?.startsWith(`ns:${RUN}:`))
-    expect(foreign.length).toBeGreaterThan(0)
+    expect(foreign.map((g) => g.title)).toContain(FOREIGN_TITLE)
     for (const g of foreign) await expect(hub.getByText(g.title, { exact: true })).toHaveCount(0)
 
     // Controls that would make a goal outside the scope are off: it would get

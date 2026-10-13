@@ -11,20 +11,6 @@ const AUTH_TIMEOUT = 15000
 test.describe.configure({ mode: 'serial' })
 
 test.describe('Signup Flow', () => {
-  test('should show signup form', async ({ page }) => {
-    // Arrange: Navigate to signup page
-    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
-    await waitForHydration(page)
-
-    // Assert: Form elements should be visible
-    await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.fullNameInput)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.emailInput)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.passwordInput)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.repeatPasswordInput)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.submitButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
   test('should show error for password mismatch', async ({ page }) => {
     // Arrange: Navigate to signup page
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
@@ -57,21 +43,6 @@ test.describe('Signup Flow', () => {
 
     // Assert: Should navigate to login page
     await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
-  })
-
-  test('should require all fields', async ({ page }) => {
-    // Arrange: Navigate to signup page
-    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
-    await waitForHydration(page)
-    await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: All input fields should have required attribute. The name is
-    // mandatory on purpose -- the onboarding flow and the dashboard greeting
-    // both expect a name to exist.
-    await expect(page.getByTestId(SELECTORS.signup.fullNameInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.emailInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.passwordInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.signup.repeatPasswordInput)).toHaveAttribute('required', '', { timeout: ACTION_TIMEOUT })
   })
 
   test('sends the confirmation link to /auth/confirm, not straight to /dashboard', async ({ page }) => {

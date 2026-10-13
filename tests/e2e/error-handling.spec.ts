@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
+import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -24,31 +24,32 @@ test.describe('Error Handling: API Failures', () => {
     await ensureNoActiveSessionViaAPI(page)
   })
 
-  test('QA page shows error message in chat when API returns 500', async ({ page }) => {
-    // Arrange: Navigate to Q&A page
+  // Moved from auth-errors.spec.ts, whose other four tests duplicated
+  // auth.spec, signup-flow and protected-routes.
+  test('401 on API call mid-session shows error', async ({ page }) => {
+    // Arrange: Navigate to a protected page
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
-    // Skip if user doesn't have subscription (redirected away from QA)
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
+    // The test account can open Q&A; a redirect away is a failure, not a skip
+    await expect(page).toHaveURL(/\/dashboard\/qa/)
 
     await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
 
-    // Intercept the Q&A API and return 500
-    await page.route('/api/qa', async (route) => {
+    // Intercept ALL API calls to return 401 (simulating expired token)
+    await page.route('/api/**', async (route) => {
       await route.fulfill({
-        status: 500,
+        status: 401,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'Internal server error' }),
+        body: JSON.stringify({ error: 'Unauthorized' }),
       })
     })
 
-    // Act: Submit a question
+    // Act: Trigger an API call that will get 401
     await page.getByTestId(SELECTORS.qa.input).fill('Test question')
     await page.getByTestId(SELECTORS.qa.submit).click()
 
-    // Assert: Error message should appear in the chat
-    // The QA page shows errors inline: "Error: <message>"
+    // Assert: The page should show an error (app doesn't auto-redirect on API 401)
     await expect(page.locator('text=Error:')).toBeVisible({ timeout: 10000 })
   })
 
@@ -57,8 +58,8 @@ test.describe('Error Handling: API Failures', () => {
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
-    // Skip if user doesn't have subscription (redirected away from QA)
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
+    // The test account can open Q&A; a redirect away is a failure, not a skip
+    await expect(page).toHaveURL(/\/dashboard\/qa/)
 
     await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
 
@@ -84,60 +85,9 @@ test.describe('Error Handling: API Failures', () => {
     await expect(page.locator('text=Error:')).toBeVisible({ timeout: 40000 })
   })
 
-  test('QA page does not crash on malformed API response', async ({ page }) => {
-    // Arrange: Navigate to Q&A page
-    await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Skip if user doesn't have subscription (redirected away from QA)
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
-
-    // Intercept the Q&A API and return malformed JSON
-    await page.route('/api/qa', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: 'not valid json{{{',
-      })
-    })
-
-    // Act: Submit a question
-    await page.getByTestId(SELECTORS.qa.input).fill('Test question')
-    await page.getByTestId(SELECTORS.qa.submit).click()
-
-    // Assert: Page should show error, not crash
-    // Check that the page is still interactive
-    await expect(page.locator('text=Error:')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByTestId(SELECTORS.qa.input)).toBeEnabled()
-  })
-
   test('session start shows error when API returns 500', async ({ page }) => {
-    // Arrange: Ensure no active session, navigate to session page
-    await ensureNoActiveSessionViaAPI(page)
-    await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Handle "Active Session Found" dialog if it appears (parallel test created a session)
-    const activeSessionDialog = page.getByRole('dialog', { name: 'Active Session Found' })
-    const dialogVisible = await activeSessionDialog.isVisible().catch(() => false)
-    if (dialogVisible) {
-      await page.getByRole('button', { name: 'Start Fresh' }).click({ timeout: 5000 })
-      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-      await ensureNoActiveSessionViaAPI(page)
-      await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-    }
-
-    // Wait for page to fully load (either start button or end button visible)
+    await ensureCleanSessionPage(page)
     const startButton = page.getByTestId(SELECTORS.session.startButton)
-    const endButton = page.getByTestId(SELECTORS.session.endButton)
-    await expect(startButton.or(endButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // If there's already an active session, skip this test
-    const hasActiveSession = await endButton.isVisible().catch(() => false)
-    test.skip(hasActiveSession, 'Cannot test session start - already has active session')
 
     // Intercept session creation API
     await page.route('/api/tracking/session', async (route) => {
@@ -154,73 +104,26 @@ test.describe('Error Handling: API Failures', () => {
 
     // Act: Try to start a session
     await startButton.click()
+    await page.getByTestId(SELECTORS.session.goalInput).fill('5')
+    const refused = page.waitForResponse(
+      (r) => r.url().includes('/api/tracking/session') && r.request().method() === 'POST',
+    )
+    // dispatchEvent bypasses viewport issues in modals
+    await page.getByTestId(SELECTORS.session.confirmButton).dispatchEvent('click')
+    expect((await refused).status()).toBe(500)
 
-    // Fill dialog fields
-    const goalInput = page.getByTestId(SELECTORS.session.goalInput)
-    if (await goalInput.isVisible()) {
-      await goalInput.fill('5')
-    }
-
-    const locationInput = page.getByTestId(SELECTORS.session.locationInput)
-    if (await locationInput.isVisible()) {
-      await locationInput.fill('Test Location')
-    }
-
-    // Click confirm using dispatchEvent (bypasses viewport issues in modals)
-    const confirmBtn = page.getByTestId(SELECTORS.session.confirmButton)
-    await confirmBtn.dispatchEvent('click')
-
-    // Assert: Page should handle the error (not crash)
-    // The useSession hook stores errors in state.error
-    // Check that dialog closes and page is still functional
-    await page.waitForTimeout(2000) // Give time for error state to update
-
-    // Page should still be interactive
+    // Assert: the page is still usable, not crashed into a blank screen, and
+    // no session was started
     await expect(page.getByTestId(SELECTORS.session.startButton)).toBeVisible()
+    await expect(page.getByTestId(SELECTORS.session.tapButton)).toHaveCount(0)
   })
 
   test('approach add shows error when API returns 500', async ({ page }) => {
-    // Arrange: Navigate to session page
-    await ensureNoActiveSessionViaAPI(page)
-    await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Handle "Active Session Found" dialog if it appears
-    const activeSessionDialog = page.getByRole('dialog', { name: 'Active Session Found' })
-    const dialogVisible = await activeSessionDialog.isVisible().catch(() => false)
-    if (dialogVisible) {
-      await page.getByRole('button', { name: 'Start Fresh' }).click({ timeout: 5000 })
-      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-      await ensureNoActiveSessionViaAPI(page)
-      await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-    }
-
-    // Wait for page to fully load (either start button or end button visible)
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    const endButton = page.getByTestId(SELECTORS.session.endButton)
-    await expect(startButton.or(endButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Check if we need to start a new session
-    const hasActiveSession = await endButton.isVisible().catch(() => false)
-
-    if (!hasActiveSession) {
-      // Need to start a new session
-      await startButton.click()
-
-      const goalInput = page.getByTestId(SELECTORS.session.goalInput)
-      if (await goalInput.isVisible()) {
-        await goalInput.fill('5')
-      }
-
-      const locationInput = page.getByTestId(SELECTORS.session.locationInput)
-      if (await locationInput.isVisible()) {
-        await locationInput.fill('Test Location')
-      }
-
-      // Use dispatchEvent to bypass viewport issues in modals
-      await page.getByTestId(SELECTORS.session.confirmButton).dispatchEvent('click')
-    }
+    await ensureCleanSessionPage(page)
+    await page.getByTestId(SELECTORS.session.startButton).click()
+    await page.getByTestId(SELECTORS.session.goalInput).fill('5')
+    // dispatchEvent bypasses viewport issues in modals
+    await page.getByTestId(SELECTORS.session.confirmButton).dispatchEvent('click')
 
     // Wait for session to be active (tap button visible)
     await expect(page.getByTestId(SELECTORS.session.tapButton)).toBeVisible({ timeout: 10000 })
@@ -238,21 +141,18 @@ test.describe('Error Handling: API Failures', () => {
       }
     })
 
-    // Get initial approach count
-    const initialCount = await page.getByTestId(SELECTORS.session.counter).textContent()
+    const counter = page.getByTestId(SELECTORS.session.counter)
+    const initialCount = (await counter.textContent()) ?? '0'
 
     // Act: Try to add an approach
+    const refused = page.waitForResponse(
+      (r) => r.url().includes('/api/tracking/approach') && r.request().method() === 'POST',
+    )
     await page.getByTestId(SELECTORS.session.tapButton).click()
+    expect((await refused).status()).toBe(500)
 
-    // Assert: Optimistic update should be rolled back
-    // The counter should return to initial count after the API fails
-    await page.waitForTimeout(2000) // Give time for rollback
-
-    // Counter should show original count (optimistic update rolled back)
-    await expect(page.getByTestId(SELECTORS.session.counter)).toHaveText(initialCount || '0')
-
-    // Clean up: end the session
-    await ensureNoActiveSessionViaAPI(page)
+    // Assert: the optimistic +1 is rolled back once the refusal arrives
+    await expect(counter).toHaveText(initialCount)
   })
 
   test('dashboard handles stats API failure gracefully', async ({ page }) => {

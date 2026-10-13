@@ -120,11 +120,15 @@ test.describe("ticking today's routine with a thumb", () => {
      * three times here and a copy of it in a test would be a fourth.
      */
     if (await box.isChecked()) {
+      // The day save is debounced; wait for the save itself to be answered, so
+      // the baseline is read settled rather than mid-flight. It was an 8s sleep.
+      const unticked = page.waitForResponse(
+        (r) => r.url().includes("/api/life-plan/day") && r.request().method() !== "GET",
+        { timeout: 20_000 },
+      )
       await box.click()
       await expect(box).not.toBeChecked()
-      // The day save is debounced; this waits it out so the baseline is settled
-      // rather than read mid-flight.
-      await page.waitForTimeout(8_000)
+      expect((await unticked).ok(), "the account refused the untick").toBe(true)
     }
     const before = await tickedDates(page, localId)
 

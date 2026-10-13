@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
-import { QUIT_VICE_ARCHIVE } from "@/app/test/archive/quit-vice/routes"
 
 /**
  * OPENING THE BLACK BOX WITH NO CONNECTION.
@@ -173,36 +172,6 @@ test("the Black Box opens with no connection, and its record is there", async ({
     await page.locator('[data-hydrated="true"]').waitFor({ timeout: 30000 })
     // And it came back with the record, not an empty shell.
     await expect(page.getByText("Drinking", { exact: false }).first()).toBeVisible()
-  } finally {
-    await context.setOffline(false)
-  }
-})
-
-test("no other page is served offline, including the archived module", async ({ page, context }) => {
-  // `SHELL_PATHS` is deliberately short. This was written when the old module
-  // sat at `/life-mastery/quit-vice/old`, one character of `startsWith` away
-  // from the worker adopting all nine of its routes; it was retired to
-  // `/test/archive/quit-vice` on 2026-09-24, so that exact collision is gone
-  // and the unit test keeps the rule honest with a synthetic path instead.
-  // Kept anyway, pointed at the archive: the question "does the worker serve
-  // something it was never told to" is the one rule 2 exists for, and the day
-  // somebody adds a real route under the Black Box's path it is this that
-  // notices.
-  await neverWriteToTheAccount(page)
-  await page.goto(QUIT_VICE)
-  await landed(page)
-
-  const controlled = await workerIsControlling(page)
-  test.skip(!controlled, "No service worker under `npm run dev` — see the header of this file.")
-  expect(await shellIsStored(page, QUIT_VICE)).toBe(true)
-
-  await context.setOffline(true)
-  try {
-    const reached = await page
-      .goto(QUIT_VICE_ARCHIVE, { timeout: 20000 })
-      .then(() => true)
-      .catch(() => false)
-    expect(reached, "the archived module was served offline; SHELL_PATHS should not match it").toBe(false)
   } finally {
     await context.setOffline(false)
   }

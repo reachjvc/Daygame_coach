@@ -1,108 +1,52 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { TEST_USER, validateTestConfig } from './fixtures/test-user'
+import { validateTestConfig } from './fixtures/test-user'
 import { login } from './helpers/auth.helper'
-import { fillSecret } from './helpers/secret'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external auth service latency
 
+/**
+ * Logging in with a wrong password, and logging out.
+ *
+ * A successful login is what every `setup` project does before anything else
+ * runs, so a third copy of it here proved nothing new; the loading-label and
+ * settings-link tests pinned copy and accepted a login redirect as success.
+ *
+ * Logging out revokes the account's sessions, which is why this file runs in
+ * `auth-destructive`, after everything else that signs in as TEST_USER.
+ */
 test.describe('Authentication Flow', () => {
   test.beforeEach(async () => {
-    // Arrange: Validate test credentials are set
     validateTestConfig()
   })
 
-  test('should login successfully with valid credentials', async ({ page }) => {
-    // Arrange: Navigate to login page
-    await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
-
-    // Act: Fill login form and submit
-    await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER.email, { timeout: ACTION_TIMEOUT })
-    await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER.password, { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Should redirect to dashboard or redirect page (or show no error)
-    // Wait for either redirect OR error message to appear
-    await Promise.race([
-      page.waitForURL(/\/(dashboard|redirect|preferences)/, { timeout: AUTH_TIMEOUT }),
-      expect(page.getByTestId(SELECTORS.auth.errorMessage)).toBeVisible({ timeout: AUTH_TIMEOUT }),
-    ])
-
-    // Verify we got redirect (no error)
-    const errorVisible = await page.getByTestId(SELECTORS.auth.errorMessage).isVisible().catch(() => false)
-    expect(errorVisible).toBe(false)
-  })
-
   test('should show error message with invalid credentials', async ({ page }) => {
-    // Arrange: Navigate to login page
     await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
 
-    // Act: Fill login form with invalid credentials and submit
     await page.getByTestId(SELECTORS.auth.emailInput).fill('invalid@example.com', { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.auth.passwordInput).fill('wrongpassword', { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
 
-    // Assert: Should display error message
     await expect(page.getByTestId(SELECTORS.auth.errorMessage)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page).toHaveURL(/\/auth\/login/)
   })
 
-  test('should show loading state while logging in', async ({ page }) => {
-    // Arrange: Navigate to login page
-    await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
-
-    // Act: Fill form and submit
-    await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER.email, { timeout: ACTION_TIMEOUT })
-    await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER.password, { timeout: ACTION_TIMEOUT })
-
-    // Assert: Button shows loading text immediately after click
-    // Use Promise.all to click and check simultaneously since loading state is brief
-    const submitButton = page.getByTestId(SELECTORS.auth.submitButton)
-    await Promise.all([
-      submitButton.click({ timeout: ACTION_TIMEOUT }),
-      expect(submitButton).toHaveText('Logging in...', { timeout: AUTH_TIMEOUT }),
-    ])
-  })
-
-  test('should logout successfully', async ({ page }) => {
-    // Arrange: Login using helper
+  test('logging out ends the session: the dashboard turns you away afterwards', async ({ page }) => {
+    // A fresh login of its own, not the shared saved state
     await login(page)
 
-    // Navigate to dashboard to ensure we see the header
     await page.goto('/dashboard', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('domcontentloaded', { timeout: AUTH_TIMEOUT })
-
-    // Wait for logout button to be visible
     const logoutButton = page.getByTestId(SELECTORS.header.logoutButton)
     await expect(logoutButton).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    // Act: Click logout button
     await logoutButton.click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Should redirect to home page (production behavior)
     await page.waitForURL(/^\/$|localhost:\d+\/?$/, { timeout: AUTH_TIMEOUT })
-  })
 
-  test('should navigate to settings from header', async ({ page }) => {
-    // Arrange: Login using helper
-    await login(page)
-
-    // Navigate to dashboard (longer timeout for server-side auth checks)
-    await page.goto('/dashboard', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Wait for settings link to be visible and stable
-    const settingsLink = page.getByTestId(SELECTORS.header.settingsLink)
-    await expect(settingsLink).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Act: Click settings link
-    await settingsLink.click({ timeout: ACTION_TIMEOUT })
-
-    // Wait for navigation - could go to settings or redirect to login if session expired
-    await page.waitForURL(/\/(dashboard\/settings|auth\/login)/, { timeout: AUTH_TIMEOUT })
-
-    // Assert: Navigation worked (either to settings or auth redirect)
-    const url = page.url()
-    expect(url).toMatch(/\/(dashboard\/settings|auth\/login)/)
+    // The cookies this browser still holds must not open the dashboard again.
+    // An earlier copy of this check cleared the cookies by hand first, which
+    // tested the proxy and not the logout.
+    await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
+    await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
   })
 })

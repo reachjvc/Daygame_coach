@@ -223,28 +223,11 @@ describe('E2E Test Isolation Compliance', () => {
    * lower it to make a change pass.
    */
   /**
-   * FIXED SLEEPS IN THE TRAINING SPECS ONLY GO DOWN.
-   *
-   * `waitForTimeout` is not banned, because one of them IS the thing under
-   * test: `programs-live-workout.spec.ts` backgrounds a tab for ten real
-   * seconds to prove the rest clock survives it. The rest are a guess about how
-   * long a screen takes, and a guess is either too short — in which case the
-   * test is flaky and the failure looks like a defect — or too long on every
-   * run for ever. So they are counted, per file, and the count may fall.
-   *
-   * SEEDED BY COUNTING, not by copying the plan's numbers, which said
-   * live-workout 5, history-progress 4 and dashboard-training-card 1. The real
-   * counts on 2026-09-23 were 4, 5 and 0.
+   * Fixed sleeps — in the training specs and everywhere else — are
+   * tests/unit/infra/e2eSleepsAreTimed.test.ts's rule since 2026-10-13. The
+   * per-file ceiling that lived here covered three training files; that check
+   * covers the whole suite, by test, and is the one owner.
    */
-  const SLEEP_CEILING: Record<string, number> = {
-    // The ten-second background of the rest-clock test, which IS the thing
-    // under test (tagged @timing). The other three became waits on a condition.
-    'tests/e2e/programs-live-workout.spec.ts': 1,
-    'tests/e2e/programs-history-progress.spec.ts': 0,
-    // Was one, for a CSS hover transition: it waits on the element's own
-    // animations finishing now (`getAnimations()`), which is that event.
-  }
-
   /** Every spec the `training` project runs, read off the config. */
   function trainingSpecs(): string[] {
     const config = fs.readFileSync(path.join(projectRoot, 'playwright.config.ts'), 'utf-8')
@@ -254,24 +237,6 @@ describe('E2E Test Isolation Compliance', () => {
       (m) => `tests/e2e/${m[1]}.spec.ts`
     )
   }
-
-  test('fixed sleeps in the training specs only go down', () => {
-    const over: string[] = []
-    for (const rel of trainingSpecs()) {
-      const full = path.join(projectRoot, rel)
-      if (!fs.existsSync(full)) continue
-      const n = (fs.readFileSync(full, 'utf-8').match(/waitForTimeout\(/g) ?? []).length
-      const ceiling = SLEEP_CEILING[rel] ?? 0
-      if (n !== ceiling) over.push(`${rel}: ${n} sleeps, ceiling ${ceiling}`)
-    }
-    expect(
-      over,
-      'A fixed sleep is a guess about how long a screen takes. Wait for the\n' +
-        'thing itself, and lower the ceiling here in the same sitting — an\n' +
-        'allowance with headroom protects nothing:\n' +
-        over.join('\n'),
-    ).toEqual([])
-  })
 
   test('no training spec builds a calendar fact from the machine clock', () => {
     /**

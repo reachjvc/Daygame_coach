@@ -46,13 +46,6 @@ test.describe('Tracking dashboard tiles', () => {
     await setLayout(page, DEFAULT_LAYOUT)
   })
 
-  test('shows the four default tiles under their original testids', async ({ page }) => {
-    await expect(page.getByTestId(SELECTORS.trackingDashboard.totalApproaches)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.trackingDashboard.totalNumbers)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.trackingDashboard.weekStreak)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.trackingDashboard.totalSessions)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
   test('a tile added in the picker survives a reload', async ({ page }) => {
     // Act: open the manage dialog, add a metric from the catalogue.
     await page.getByTestId(SELECTORS.trackingDashboard.editTiles).click({ timeout: ACTION_TIMEOUT })

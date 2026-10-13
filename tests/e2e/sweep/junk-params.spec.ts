@@ -17,12 +17,43 @@
  * it is written, with nobody remembering to add it.
  */
 
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { test, expect } from "@playwright/test"
 import {
   routesReadingSearchParams,
   searchParamNames,
   JUNK_PARAM_VALUES,
 } from "../../support/appRoutes"
+
+/**
+ * PAGES THAT HAND THEIR WHOLE QUERY TO A PARSER, and where that parser is.
+ *
+ * `/programs` copies every parameter into a `URLSearchParams` and passes it to
+ * `parseProgramsLocation`, so its page file names none of them — and
+ * `searchParamNames` derived an empty list, which made `/programs`' test here
+ * zero navigations long and green. The names are still DERIVED, from the
+ * parser's own `params.get("…")` calls; only where to look is written down.
+ */
+const PARSED_ELSEWHERE: Record<string, { file: string; fn: string }> = {
+  "/programs": { file: "src/programs/programsService.ts", fn: "parseProgramsLocation" },
+}
+
+function parserParamNames({ file, fn }: { file: string; fn: string }): string[] {
+  const src = readFileSync(join(process.cwd(), file), "utf-8")
+  const start = src.indexOf(`export function ${fn}(`)
+  if (start < 0) throw new Error(`${fn} is not in ${file}; PARSED_ELSEWHERE is out of date`)
+  const next = src.indexOf("\nexport ", start + 1)
+  const body = src.slice(start, next < 0 ? undefined : next)
+  return [...new Set([...body.matchAll(/\.get\(\s*["'`](\w+)["'`]\s*\)/g)].map((m) => m[1]))].sort()
+}
+
+function paramNamesFor(route: { route: string; file: string }): string[] {
+  const derived = searchParamNames(route.file)
+  if (derived.length > 0) return derived
+  const parser = PARSED_ELSEWHERE[route.route]
+  return parser ? parserParamNames(parser) : []
+}
 
 const NAV_TIMEOUT = 30_000
 
@@ -63,9 +94,15 @@ test.describe("garbled URLs", () => {
    * names the failing page in the test title instead of burying it in a list.
    */
   for (const route of routesReadingSearchParams()) {
-    const params = searchParamNames(route.file)
+    const params = paramNamesFor(route)
 
-    test(`${route.route} survives junk in ${params.join(", ")}`, async ({ page }) => {
+    test(`${route.route} survives junk in ${params.join(", ") || "(no parameter names found)"}`, async ({ page }) => {
+      // Zero names is zero navigations, which passes having opened nothing
+      expect(
+        params,
+        `${route.route} reads its query, but no parameter names could be found. ` +
+          `If it hands the query to a parser, add that parser to PARSED_ELSEWHERE.`,
+      ).not.toEqual([])
       const broken: string[] = []
 
       for (const param of params) {

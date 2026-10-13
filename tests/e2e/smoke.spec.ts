@@ -1,31 +1,18 @@
 import { test, expect } from "@playwright/test"
 
 /**
- * Smoke tests - verify critical paths work after changes.
- * These run on every PR to catch breaking changes early.
+ * The two signed-out checks that need a real browser and that nothing else
+ * makes: the auth gate turns a stranger away, and text is painted in the app's
+ * own font.
+ *
+ * Three more lived here. "Homepage loads" and "auth pages load" are what the
+ * cold-open sweeps assert in more detail on every page, and "test pages load"
+ * opened `/test`, which returns 404 in the production build CI runs.
  */
 
 test.describe("Smoke Tests", () => {
-  test("homepage loads", async ({ page }) => {
-    const response = await page.goto("/")
-    expect(response?.status()).toBe(200)
-  })
-
-  test("auth pages load", async ({ page }) => {
-    const loginResponse = await page.goto("/auth/login")
-    expect(loginResponse?.status()).toBe(200)
-    await expect(page.locator("body")).toBeVisible()
-
-    const signupResponse = await page.goto("/auth/sign-up")
-    expect(signupResponse?.status()).toBe(200)
-    await expect(page.locator("body")).toBeVisible()
-  })
-
   test("unauthenticated dashboard redirects to login", async ({ page }) => {
-    // Without auth, dashboard should redirect to login
     await page.goto("/dashboard/tracking")
-
-    // Should be redirected to login page
     await expect(page).toHaveURL(/\/auth\/login/)
   })
 
@@ -47,11 +34,5 @@ test.describe("Smoke Tests", () => {
     expect(fonts.body).toMatch(/^"?Geist"?,\s*"?Geist Fallback"?/)
     expect(fonts.body).not.toContain("Mono")
     expect(fonts.geistLoaded).toBe(true)
-  })
-
-  test("test pages load (no auth required)", async ({ page }) => {
-    const testResponse = await page.goto("/test")
-    expect(testResponse?.status()).toBe(200)
-    await expect(page.locator("body")).toBeVisible()
   })
 })

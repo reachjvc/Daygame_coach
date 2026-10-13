@@ -20,6 +20,7 @@
 import { test, expect, type Page } from "@playwright/test"
 import { TRAINING_STATE } from "../../playwright.config"
 import { PHONE, cleanUp, resetAndEnroll, guardTrainingAccount } from "./helpers/training.helper"
+import { networkQuiet } from "./helpers/settle"
 
 /**
  * The phone size and the two account-cleaning helpers now live in
@@ -100,7 +101,7 @@ test.describe("live workout", () => {
     await cleanUp(page, startedAt).catch(() => {})
   })
 
-  test("a set is saved when it is ticked, and is still ticked after a reload", async ({ page }) => {
+  test("a set is saved when it is ticked, and is still ticked after a reload @engine", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
 
@@ -151,7 +152,7 @@ test.describe("live workout", () => {
     expect(overflows, "the live screen should not scroll sideways").toBe(false)
   })
 
-  test("finishing shows what you did, and the summary stays on screen", async ({ page }) => {
+  test("finishing shows what you did, and the summary stays on screen @engine", async ({ page }) => {
     /**
      * A lift with no past, minted for this run, so the first finish below has
      * nothing to beat and the second one does — without deleting a single row
@@ -229,8 +230,9 @@ test.describe("live workout", () => {
     // The set that was still saving when Finish was pressed is in the totals.
     await expect(summary).toContainText("2")
 
-    // It survives a repaint rather than flashing past.
-    await page.waitForTimeout(1500)
+    // It survives the refetch that follows the save rather than flashing past:
+    // once nothing more is in flight, it is still the summary on screen.
+    await networkQuiet(page)
     await expect(summary).toBeVisible()
 
     /**
@@ -339,7 +341,7 @@ test.describe("live workout", () => {
     await expect(summary).not.toContainText(/new best/i)
   })
 
-  test("the rest clock is still right after the tab has been in the background", async ({ page }) => {
+  test("the rest clock is still right after the tab has been in the background @timing @engine", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
     await page.getByTestId("start-workout").click()
     await page.waitForURL("**/programs/live", { timeout: 20000 })
@@ -407,7 +409,9 @@ test.describe("live workout", () => {
   await box.fill("225")
   await page.getByTestId("tick-1").first().click()
   await saved
-  await page.waitForTimeout(400)
+  // Whatever the save set off has to land before the box is read, or this
+  // reads the number that was typed rather than the one the screen put back.
+  await networkQuiet(page)
 
   // THE BUG: the box came back showing the KILOGRAM number under an "lb" label.
   const afterTick = await box.inputValue()
@@ -463,8 +467,10 @@ test.describe("live workout", () => {
   await expect(page.getByTestId("add-lift")).toBeVisible({ timeout: 20000 })
   await page.getByTestId("add-lift").click()
   await page.getByTestId("add-lift-search").fill("front squat")
-  await page.waitForTimeout(800)
-  await page.getByTestId("add-lift-results").getByRole("button").first().click()
+  // the search is debounced: wait for the list to have answered this query
+  const firstResult = page.getByTestId("add-lift-results").getByRole("button").first()
+  await expect(firstResult).toContainText(/front squat/i, { timeout: 10000 })
+  await firstResult.click()
 
   await expect(page.getByText(/front squat/i).first()).toBeVisible({ timeout: 20000 })
   const saved = page.waitForResponse((r) => r.url().includes("/sets") && r.request().method() === "POST")
@@ -578,7 +584,7 @@ test.describe("live workout", () => {
    * refused too. It now asks the server whether a workout is still open, finds
    * none, and fetches the summary the person earned.
    */
-  test("a dropped finish reply still ends in the summary, and Start works afterwards", async ({
+  test("a dropped finish reply still ends in the summary, and Start works afterwards @engine", async ({
     page,
   }) => {
     await page.reload({ waitUntil: "networkidle" })

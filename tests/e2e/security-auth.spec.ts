@@ -1,4 +1,4 @@
-import { test, expect, APIRequestContext } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 /**
  * Security E2E Tests: Authentication Enforcement
@@ -37,102 +37,36 @@ const PROTECTED_ENDPOINTS = [
   { method: 'POST', path: '/api/scenarios/openers/encounter' },
   { method: 'POST', path: '/api/scenarios/openers/evaluate' },
   { method: 'POST', path: '/api/scenarios/chat' },
+  // Time tracker sync: both directions. Moved here from timetrack-sync.spec.ts,
+  // which checked the same two calls in a browser of its own.
+  { method: 'GET', path: '/api/timetrack/sync' },
+  { method: 'POST', path: '/api/timetrack/sync' },
 ]
 
+/**
+ * Signed out, from whatever server this run points at. It named
+ * `http://localhost:3000` outright, so pointed at a production build on
+ * another port it went on asking the dev server.
+ */
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('Security: Authentication Enforcement', () => {
-  let request: APIRequestContext
-
-  test.beforeAll(async ({ playwright }) => {
-    // Arrange: Create a standalone request context without browser auth
-    request = await playwright.request.newContext({
-      baseURL: 'http://localhost:3000',
-    })
-  })
-
-  test.afterAll(async () => {
-    await request.dispose()
-  })
-
-  test('API rejects unauthenticated GET request to /api/tracking/sessions', async () => {
-    // Act: Call API without authentication
-    const response = await request.get('/api/tracking/sessions')
-
-    // Assert: Should return 401 Unauthorized
-    expect(response.status()).toBe(401)
-    const body = await response.json()
-    expect(body.error).toBeDefined()
-  })
-
-  test('API rejects unauthenticated POST request to /api/tracking/session', async () => {
-    // Act: Call API without authentication
-    const response = await request.post('/api/tracking/session', {
-      data: { goal: 5, location: 'test' },
-    })
-
-    // Assert: Should return 401 Unauthorized
-    expect(response.status()).toBe(401)
-  })
-
-  test('API rejects request with invalid authorization header', async () => {
-    // Arrange: Create request with garbage token
-    const invalidTokenRequest = await request.fetch('/api/tracking/sessions', {
-      headers: {
-        Authorization: 'Bearer invalid-garbage-token-12345',
-      },
-    })
-
-    // Assert: Should return 401 Unauthorized
-    expect(invalidTokenRequest.status()).toBe(401)
-  })
-
-  test('API rejects request with malformed authorization header', async () => {
-    // Arrange: Create request with malformed header (no Bearer prefix)
-    const response = await request.fetch('/api/tracking/sessions', {
-      headers: {
-        Authorization: 'some-token-without-bearer-prefix',
-      },
-    })
-
-    // Assert: Should return 401 Unauthorized
-    expect(response.status()).toBe(401)
-  })
-
-  test('all protected endpoints require authentication', async () => {
-    // Act & Assert: Loop through all protected endpoints
-    const results: { endpoint: string; status: number; passed: boolean }[] = []
-
+  test('all protected endpoints require authentication', async ({ request }) => {
+    const failures: string[] = []
     for (const endpoint of PROTECTED_ENDPOINTS) {
       const response =
         endpoint.method === 'GET'
           ? await request.get(endpoint.path)
           : await request.post(endpoint.path, { data: {} })
-
-      const passed = response.status() === 401
-      results.push({
-        endpoint: `${endpoint.method} ${endpoint.path}`,
-        status: response.status(),
-        passed,
-      })
+      if (response.status() !== 401) failures.push(`${endpoint.method} ${endpoint.path}: got ${response.status()}`)
     }
-
-    // Report all failures
-    const failures = results.filter((r) => !r.passed)
-    if (failures.length > 0) {
-      console.log('Endpoints missing auth enforcement:')
-      failures.forEach((f) => console.log(`  ${f.endpoint}: got ${f.status}, expected 401`))
-    }
-
-    // Assert: All endpoints should return 401
-    expect(failures).toHaveLength(0)
+    expect(failures, 'these endpoints answer a request that carries no session').toEqual([])
   })
 
-  test('API returns proper error message on 401', async () => {
-    // Act: Call API without authentication
-    const response = await request.get('/api/tracking/sessions')
-
-    // Assert: Should return proper error structure
-    expect(response.status()).toBe(401)
-    const body = await response.json()
-    expect(body.error).toBe('Unauthorized')
+  test('a made-up bearer token is not a session', async ({ request }) => {
+    for (const authorization of ['Bearer invalid-garbage-token-12345', 'some-token-without-bearer-prefix']) {
+      const response = await request.get('/api/tracking/sessions', { headers: { Authorization: authorization } })
+      expect(response.status(), authorization).toBe(401)
+    }
   })
 })

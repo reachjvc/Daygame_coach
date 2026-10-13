@@ -28,102 +28,23 @@ test.describe('Inner Game Flow', () => {
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
 
-  test('should show welcome card on page load', async ({ page }) => {
-    // Assert: Welcome card should be visible (either loading or welcome)
-    const loading = page.getByTestId(SELECTORS.innerGame.loading)
-    const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
-
-    // Wait for either loading to disappear or welcome card to appear
-    await expect(loading.or(welcomeCard)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // If loading was shown, wait for it to disappear
-    const isLoading = await loading.isVisible().catch(() => false)
-    if (isLoading) {
-      await expect(loading).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-    }
-
-    // Welcome card should now be visible
-    await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should display progress section in welcome card', async ({ page }) => {
-    // Wait for welcome card
-    const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
-    await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: Should show "Your Progress" heading specifically (use exact match)
-    await expect(welcomeCard.getByText('Your Progress', { exact: true })).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should have action button in welcome card', async ({ page }) => {
-    // Wait for welcome card
-    const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
-    await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: Should have either start button (authenticated) or signup button (preview)
-    const startButton = page.getByTestId(SELECTORS.innerGame.welcomeStartButton)
-    const signupButton = page.getByRole('link', { name: /get started free/i })
-
-    // Either the start button or signup button should be visible
-    const hasStartButton = await startButton.isVisible().catch(() => false)
-    const hasSignupButton = await signupButton.isVisible().catch(() => false)
-
-    expect(hasStartButton || hasSignupButton).toBe(true)
-  })
-
-  test('should dismiss welcome card when clicking start (if not preview)', async ({ page }) => {
-    // Arrange: Wait for welcome card
-    const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
-    await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Check if we're in preview mode (signup button visible) or authenticated mode (start button visible)
-    const startButton = page.getByTestId(SELECTORS.innerGame.welcomeStartButton)
-    const hasStartButton = await startButton.isVisible().catch(() => false)
-
-    // A reason, not a bare skip: an unexplained skip in the report is
-    // indistinguishable from a test that quietly stopped covering anything.
-    test.skip(
-      !hasStartButton,
-      'inner game rendered in preview mode — the signed-in start button is absent, so there is no flow to walk',
-    )
-
-    // Act: Click start button
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Welcome card should disappear and main page should be visible
-    await expect(welcomeCard).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.innerGame.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should show back button to dashboard (if not preview)', async ({ page }) => {
-    // Arrange: Wait for welcome card
-    const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
-    await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    const startButton = page.getByTestId(SELECTORS.innerGame.welcomeStartButton)
-    const hasStartButton = await startButton.isVisible().catch(() => false)
-
-    // A reason, not a bare skip: an unexplained skip in the report is
-    // indistinguishable from a test that quietly stopped covering anything.
-    test.skip(
-      !hasStartButton,
-      'inner game rendered in preview mode — the signed-in start button is absent, so there is no flow to walk',
-    )
-
-    // Dismiss welcome card
-    await startButton.click({ timeout: ACTION_TIMEOUT })
-
-    // Wait for main page
-    await expect(page.getByTestId(SELECTORS.innerGame.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: Back button should be visible
+  test('the welcome card leads into inner game, which has a way back out', async ({ page }) => {
     /**
-     * The control is called "Exit", not "Back" — it was renamed and this test
-     * was not, so it had been asserting the absence of a word rather than the
-     * presence of a way out. What matters is that there IS one and that it goes
-     * to the dashboard, so that is what is asserted; the wording can change
-     * again without this failing for no reason.
+     * One test. Three of the five only asserted the card rendered, one accepted
+     * a start button OR a signup link, and the two that walked the flow skipped
+     * themselves when the start button was missing — so a signed-in account
+     * shown the preview would have passed. Signed in, the start button is the
+     * only right answer.
      */
+    const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
+    await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(welcomeCard.getByText('Your Progress', { exact: true })).toBeVisible()
+
+    await page.getByTestId(SELECTORS.innerGame.welcomeStartButton).click({ timeout: ACTION_TIMEOUT })
+    await expect(welcomeCard).toBeHidden({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.innerGame.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // The control is called "Exit"; what matters is that it goes to the dashboard
     const wayOut = page.getByRole('link', { name: /exit|back/i })
     await expect(wayOut).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(wayOut).toHaveAttribute('href', '/dashboard')

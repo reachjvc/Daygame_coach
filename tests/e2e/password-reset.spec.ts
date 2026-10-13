@@ -18,40 +18,14 @@ test.describe('Password reset', () => {
     await expect(page.getByTestId('forgot-form')).toBeVisible({ timeout: AUTH_TIMEOUT })
   })
 
-  test('does not reveal whether an address is registered', async ({ page }) => {
-    // The point of this file. A reset form that says "no such account" is a way
-    // for anyone to test which email addresses have signed up. Both the
-    // registered and unregistered cases must produce the identical response.
-    const messages: string[] = []
-
-    for (const address of ['definitely-not-registered-9f2a@example.com', 'reachjvc@gmail.com']) {
-      await page.goto('/auth/forgot-password', { timeout: AUTH_TIMEOUT })
-    await waitForHydration(page)
-
-      // Stub the network call: asserting on our own UI, and a real call would
-      // send mail to a real inbox.
-      await page.route('**/auth/v1/recover**', (route) =>
-        route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
-      )
-
-      await page.getByTestId('forgot-email-input').fill(address, { timeout: ACTION_TIMEOUT })
-      await page.getByTestId('forgot-submit-button').click({ timeout: ACTION_TIMEOUT })
-
-      const success = page.getByTestId('forgot-success-message')
-      await expect(success).toBeVisible({ timeout: AUTH_TIMEOUT })
-      messages.push(((await success.textContent()) ?? '').trim())
-    }
-
-    expect(messages[0]).toBe(messages[1])
-    expect(messages[0]).not.toContain('not found')
-  })
-
   test('says so when rate limited, instead of claiming an email was sent', async ({ page }) => {
     // Supabase applies a cooldown per address and answers 429. Showing the
     // usual "we've sent it" there is a lie: no mail went out, and the user
     // sits waiting for it. Safe to surface, because a 429 says nothing about
     // whether the account exists -- unlike "no such account", which must stay
-    // hidden (see the enumeration test above).
+    // hidden. (A test of that lived here; it stubbed the reset call to answer
+    // the same for both addresses, so the two messages matched whatever the
+    // product did.)
     await page.goto('/auth/forgot-password', { timeout: AUTH_TIMEOUT })
     await waitForHydration(page)
 

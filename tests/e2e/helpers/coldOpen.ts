@@ -94,9 +94,11 @@ export async function openCold(page: Page, route: string): Promise<ColdOpen> {
    *   - a page that NEVER hydrates now fails here, loudly, on a 20s timeout,
    *     where the old sleep would have called it clean and moved on
    *
-   * The short settle afterwards is for the console event to reach the listener
-   * once the error has been raised; the long, uncertain part is no longer
-   * guesswork.
+   * The settle afterwards is for the console event to reach the listener once
+   * the error has been raised: two frames after hydration in the page, then a
+   * round trip back here — console events travel the same ordered connection
+   * as the evaluate's answer, so anything logged in those frames has been
+   * delivered by the time it returns. It was a 400ms sleep.
    */
   await page.waitForFunction(
     () => {
@@ -108,7 +110,7 @@ export async function openCold(page: Page, route: string): Promise<ColdOpen> {
     undefined,
     { timeout: 20000 }
   )
-  await page.waitForTimeout(400)
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
 
   const nested = await page.$$eval("button button, a button, button a, a a", (elements) =>
     elements

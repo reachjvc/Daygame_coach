@@ -4,105 +4,58 @@ import { SELECTORS } from './helpers/selectors'
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
+/**
+ * Asking the coach a question, with the model's answer stubbed.
+ *
+ * One test. There were six, and every one began with
+ * `test.skip(!page.url().includes('/dashboard/qa'))` — so the day the test
+ * account lost access to Q&A, the whole file would have reported green having
+ * checked nothing. The account can open the page (verified 2026-10-13), so a
+ * redirect away from it now fails the test instead.
+ *
+ * The answer is stubbed because what this checks is the page — question in,
+ * answer and sources out — not the model, which is slow, costs money, and says
+ * something different every time.
+ */
+const ANSWER = {
+  answer: 'Open with what you noticed about her, then ask one question.',
+  confidence: { score: 0.8, factors: { retrievalStrength: 0.8, sourceConsistency: 0.8, policyCompliance: 1 } },
+  sources: [
+    {
+      chunkId: 'e2e-chunk-1',
+      text: 'Say what made you stop, then ask something only she can answer.',
+      metadata: { coach: 'E2E Coach', topic: 'openers', source: 'e2e-fixture' },
+      relevanceScore: 0.9,
+    },
+  ],
+  metaCognition: { reasoning: 'stubbed', limitations: 'stubbed', suggestedFollowUps: [] },
+  meta: { provider: 'e2e', model: 'stub', latencyMs: 1, tokensUsed: 1 },
+}
+
 test.describe('Q&A Chat Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Arrange: Navigate to Q&A page
+  test.describe.configure({ mode: 'serial' })
+
+  test.afterEach(async ({ page }) => {
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
+  })
+
+  test('a question gets an answer, with the sources it came from', async ({ page }) => {
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-  })
+    // The test account can open Q&A; a redirect away is a failure, not a skip
+    await expect(page).toHaveURL(/\/dashboard\/qa/)
 
-  test('should display initial state with sample questions', async ({ page }) => {
-    // Skip if user doesn't have subscription (redirected away from QA)
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
+    await page.route('**/api/qa', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(ANSWER) }),
+    )
 
-    // Assert: Q&A page should be visible with samples
-    await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByRole('heading', { name: 'Ask the Coach' })).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.qa.samples)).toBeVisible({ timeout: AUTH_TIMEOUT })
-  })
-
-  test('should fill input when clicking sample question', async ({ page }) => {
-    // Skip if user doesn't have subscription
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    // Arrange: Wait for page to load
-    await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.qa.samples)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Get the input element
     const input = page.getByTestId(SELECTORS.qa.input)
-    await expect(input).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Verify input is initially empty
-    await expect(input).toHaveValue('', { timeout: ACTION_TIMEOUT })
-
-    // Act: Click the first sample question
+    const submit = page.getByTestId(SELECTORS.qa.submit)
+    await expect(submit).toBeDisabled({ timeout: AUTH_TIMEOUT })
     await page.getByTestId(SELECTORS.qa.sample(0)).click({ timeout: ACTION_TIMEOUT })
+    await expect(input).not.toHaveValue('')
 
-    // Assert: Input should be filled with sample text
-    await expect(input).not.toHaveValue('', { timeout: ACTION_TIMEOUT })
-  })
-
-  test('should disable submit when input empty', async ({ page }) => {
-    // Skip if user doesn't have subscription
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    // Arrange: Wait for page to load
-    await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Assert: Submit button should be disabled when input is empty
-    const submitButton = page.getByTestId(SELECTORS.qa.submit)
-    await expect(submitButton).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(submitButton).toBeDisabled({ timeout: ACTION_TIMEOUT })
-  })
-
-  test('should enable submit when input has text', async ({ page }) => {
-    // Skip if user doesn't have subscription
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    // Arrange: Wait for page to load
-    await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Act: Fill the input with text
-    const input = page.getByTestId(SELECTORS.qa.input)
-    await input.fill('Test question', { timeout: ACTION_TIMEOUT })
-
-    // Assert: Submit button should be enabled
-    const submitButton = page.getByTestId(SELECTORS.qa.submit)
-    await expect(submitButton).toBeEnabled({ timeout: ACTION_TIMEOUT })
-  })
-
-  test('should show loading state during request', async ({ page }) => {
-    // Skip if user doesn't have subscription
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    // Arrange: Wait for page to load and fill input
-    await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    const input = page.getByTestId(SELECTORS.qa.input)
-    await input.fill('What should I say when approaching?', { timeout: ACTION_TIMEOUT })
-
-    // Act: Click submit
-    await page.getByTestId(SELECTORS.qa.submit).click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Submit button should show "Thinking..." text (loading state)
-    await expect(page.getByTestId(SELECTORS.qa.submit)).toHaveText('Thinking...', { timeout: ACTION_TIMEOUT })
-  })
-
-  test('should display sources panel after getting response', async ({ page }) => {
-    // Skip if user doesn't have subscription
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    // Arrange: Wait for page to load
-    await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Use a sample question which should have a known response
-    await page.getByTestId(SELECTORS.qa.sample(0)).click({ timeout: ACTION_TIMEOUT })
-
-    // Act: Submit the question
-    await page.getByTestId(SELECTORS.qa.submit).click({ timeout: ACTION_TIMEOUT })
-
-    // Assert: Sources panel should appear (after loading completes)
-    await expect(page.getByTestId(SELECTORS.qa.sources)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await submit.click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByText(ANSWER.answer)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.qa.sources)).toBeVisible()
   })
 })

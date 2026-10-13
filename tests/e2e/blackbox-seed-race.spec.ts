@@ -85,6 +85,19 @@ test("a push already in flight cannot resurrect the rows the fixture just buried
     await route.continue()
   })
 
+  /** Every push still on its way to the account, the held-back ones included */
+  let pushesInFlight = 0
+  const isPush = (request: import("@playwright/test").Request) =>
+    request.url().includes("/api/black-box") && request.method() === "PUT"
+  page.on("request", (request) => {
+    if (isPush(request)) pushesInFlight += 1
+  })
+  for (const event of ["requestfinished", "requestfailed"] as const) {
+    page.on(event, (request) => {
+      if (isPush(request)) pushesInFlight -= 1
+    })
+  }
+
   // Now do what `seed()` does: land on the page, and bury what the account
   // holds. With the fix, `seed` waits for the page's own sync to finish first,
   // so by the time the tombstones go up there is nothing left in flight.
@@ -111,9 +124,11 @@ test("a push already in flight cannot resurrect the rows the fixture just buried
     })
   })
 
-  // Long enough that any held-back push has certainly landed by now. If one
-  // was in flight over the tombstones, this is where the rows come back.
-  await page.waitForTimeout(PUSH_DELAY_MS + 1500)
+  // Every held-back push has landed — counted, not slept for. If one was in
+  // flight over the tombstones, this is where the rows come back.
+  await expect
+    .poll(() => pushesInFlight, { timeout: PUSH_DELAY_MS * 4 + 20000, intervals: [100] })
+    .toBe(0)
 
   const stillLive = await page.evaluate(async () => {
     const got = await fetch("/api/black-box").then((x) => x.json()).catch(() => null)

@@ -16,6 +16,7 @@ import { test, expect } from "@playwright/test"
 import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
 import { guardTrainingAccount } from "./helpers/training.helper"
+import { networkQuiet } from "./helpers/settle"
 
 test.describe.configure({ mode: "serial" })
 /** Refuses to run as anybody but the training account — see the helper. */
@@ -65,7 +66,6 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   const histText = await page.getByTestId("workout-history").innerText()
   expect(histText).toContain("ZZHist Squat")
   expect(histText, "the top WORKING set, not the warm-up").toContain("120")
-  await page.screenshot({ path: ".playwright-mcp/p4-history.png" })
 
   /**
    * OPEN THE SEEDED ONE — which is now a LINK to the workout's own page.
@@ -85,7 +85,6 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   const detail = await page.getByTestId("workout-receipt").innerText()
   expect(detail, "a warm-up is marked, so the volume total makes sense").toMatch(/\(W\)/)
   expect(detail, "and the working set is there in full").toContain("120")
-  await page.screenshot({ path: ".playwright-mcp/p4-history-open.png" })
 
   // And the two things you can do to it are here rather than on the row.
   await expect(page.getByTestId("workout-correct")).toBeVisible()
@@ -109,7 +108,6 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
   const prog = await page.locator("body").innerText()
   expect(prog).toContain("Your bests")
   expect(prog, "the estimated max is a separate figure").toContain("est. max")
-  await page.screenshot({ path: ".playwright-mcp/p4-progress.png", fullPage: true })
 
   // Remove every seeded workout, including any a failed earlier run left.
   await page.evaluate(async () => {
@@ -161,8 +159,9 @@ await expect(page.getByTestId("workout-correction")).toBeVisible({ timeout: 2000
 // Fix a typo and drop the set that never happened.
 await page.getByLabel("Weight for ZZEdit Press set 1").fill("110")
 await page.getByLabel("Remove ZZEdit Press set 2").click()
+const corrected = page.waitForResponse((r) => r.url().includes("/api/") && r.request().method() !== "GET")
 await page.getByTestId("correction-save").click()
-await page.waitForTimeout(2500)
+expect((await corrected).ok(), "the correction was refused").toBe(true)
 
 const after = await page.evaluate(async (logId) => {
   const logs = await (await fetch("/api/health/workout?days=3650&include=sets")).json()
@@ -284,8 +283,9 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
    */
   await expect(editor.getByLabel(/^Reps for /)).toHaveCount(seeded.setCount)
   await page.getByLabel(`Reps for ${seeded.liftName} set 5`).fill("1")
+  const corrected = page.waitForResponse((r) => r.url().includes("/api/") && r.request().method() !== "GET")
   await page.getByTestId("correction-save").click()
-  await page.waitForTimeout(3000)
+  expect((await corrected).ok(), "the correction was refused").toBe(true)
 
   const after = await page.evaluate(async (ids) => {
     const detail = await (await fetch(`/api/programs/enrollments/${ids.enrollmentId}`)).json()
@@ -398,8 +398,9 @@ test("deleting a program session moves the weights back down", async ({ page }) 
    */
   await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
   await page.getByTestId("workout-delete").click()
+  const deleted = page.waitForResponse((r) => r.url().includes("/api/") && r.request().method() === "DELETE")
   await page.getByTestId("confirm-delete-workout").click()
-  await page.waitForTimeout(3000)
+  expect((await deleted).ok(), "the delete was refused").toBe(true)
 
   const after = await page.evaluate(async (ids) => {
     const detail = await (await fetch(`/api/programs/enrollments/${ids.enrollmentId}`)).json()
@@ -575,8 +576,9 @@ test("deleting a session on a program edited after it started moves the weights 
   // The app's own dialog, on the workout's own page, as above.
   await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
   await page.getByTestId("workout-delete").click()
+  const deleted = page.waitForResponse((r) => r.url().includes("/api/") && r.request().method() === "DELETE")
   await page.getByTestId("confirm-delete-workout").click()
-  await page.waitForTimeout(3000)
+  expect((await deleted).ok(), "the delete was refused").toBe(true)
 
   const after = await page.evaluate(async (ids) => {
     const detail = await (await fetch(`/api/programs/enrollments/${ids.enrollmentId}`)).json()
@@ -728,7 +730,8 @@ test("History pages back past a year and says when it has reached the beginning"
       // It may vanish between the count and the click — that IS the end of the
       // list arriving, and the loop's own condition catches it next time round.
       await more.click({ timeout: 30000 }).catch(() => {})
-      await page.waitForTimeout(300)
+      // that page of history has arrived before the end is looked for again
+      await networkQuiet(page, 300)
     }
 
     await expect(page.getByTestId("history-end")).toBeVisible({ timeout: 20000 })
