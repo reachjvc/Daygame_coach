@@ -7,7 +7,9 @@
  *
  * PROVENANCE RULES — read before editing:
  *  1. Every `quote` here is verbatim from `lifeMasteryCorpus.ts`, which is
- *     itself 5-gram-verified against the named transcript. Do not paraphrase
+ *     itself 5-gram-verified against the named transcript (deleted 2026-10-13
+ *     with nothing reading it; `git log --diff-filter=D --
+ *     src/goals/data/lifeMasteryCorpus.ts` recovers it). Do not paraphrase
  *     into a quote field; put paraphrase in `gloss`.
  *  2. `era` is REQUIRED on anything carrying numbers. His numbers drift across
  *     years (190 lbs @ 8% in V1, 170 @ 6% later; $2M/yr then $10M/yr) and

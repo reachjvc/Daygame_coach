@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { addArea, addDailyField, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, dayNote, emptyNsPlan, journalEntry, journalHistory, linkGoal, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
+import { addArea, addDailyField, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, emptyNsPlan, journalEntry, journalHistory, linkGoal, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
 import { JOURNAL_COPY, REVIEW_PROMPTS, STAR_ANCHOR, STAR_PROMPTS, TAB_ORDER } from "@/src/goals/data/northStar"
 import {
   activityPerWeek,
@@ -589,7 +589,7 @@ describe("today: what you actually did", () => {
     const reloaded = loadNsPlan(serializeNsPlan(written))!
     expect(stepTickedByHand(reloaded, MONDAY, stepId)).toBe(true)
     expect(dailyRating(reloaded, MONDAY, "lm_health")).toBe(7)
-    expect(dayNote(reloaded, MONDAY)).toBe("Slept badly, went anyway.")
+    expect(reloaded.notes[MONDAY]).toBe("Slept badly, went anyway.")
   })
 
   it("drops a tick whose step has been deleted rather than rendering a blank row", () => {

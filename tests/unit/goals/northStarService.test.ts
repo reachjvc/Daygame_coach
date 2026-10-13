@@ -3,12 +3,12 @@ import path from "node:path"
 import { describe, it, expect } from "vitest"
 import {
   addArea,
+  normalizeNsPlan,
   addExperiences,
   addIdealDay,
   areaKeywordIndex,
   guessAreaId,
   idealDayMinutes,
-  moveBlock,
   parseIdealDay,
   readsAsActionable,
   resetGoalsAndFocus,
@@ -16,7 +16,6 @@ import {
   promoteExperience,
   tenCandidates,
   toggleExperienceDone,
-  unplaceStep,
   unplacedSteps,
   weekBlocks,
   answerOf,
@@ -34,7 +33,6 @@ import {
   applySplit,
   areaGoalsByPriority,
   areaReview,
-  areasWithoutGoals,
   areasTouched,
   clearDailyRating,
   clearRoutineSteps,
@@ -87,7 +85,6 @@ import {
   splitPreview,
   subGoalsOf,
   suggestSentence,
-  tabHasContent,
   toggleRoutineStep,
   targetsForTemplate,
   templatesFor,
@@ -446,10 +443,6 @@ describe("goals", () => {
     let plan = addGoal(emptyNsPlan(), "lm_health", "Run", "habit_ramp", NOW)
     plan = addGoal(plan, "lm_money", "Earn", "milestone_ladder", NOW)
     expect(goalsInArea(plan, "lm_health").map((g) => g.title)).toEqual(["Run"])
-    const without = areasWithoutGoals(plan).map((a) => a.id)
-    expect(without).toHaveLength(10)
-    expect(without).not.toContain("lm_health")
-    expect(without).not.toContain("lm_money")
   })
 })
 
@@ -842,10 +835,9 @@ describe("the work under the north star", () => {
     expect(text.indexOf("WHY IS THIS IMPORTANT")).toBeGreaterThan(text.indexOf("MY NORTH STAR"))
   })
 
-  it("is enough on its own to count the star tab as having content", () => {
+  it("is enough on its own to count the plan as touched", () => {
     const plan = setAnswer(emptyNsPlan(), "star_why", "Because I am tired of starting again", NOW)
     expect(nsProgress(plan).starWritten).toBe(false)
-    expect(tabHasContent(plan, "star")).toBe(true)
     expect(planIsUntouched(plan)).toBe(false)
   })
 })
@@ -1180,7 +1172,6 @@ describe("the order of the flow", () => {
     // steps it lands in, and a ring on "have you had a look" scores browsing.
     const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_health", "tmpl_strength", 1, NOW)
     expect(stepState(plan, "templates")).toBe("empty")
-    expect(tabHasContent(plan, "templates")).toBe(false)
     expect(planTodos(plan, NOW).some((t) => t.tab === "templates")).toBe(false)
   })
 
@@ -1197,7 +1188,6 @@ describe("the order of the flow", () => {
     expect(WORKSHOP_TABS).not.toContain("recap")
     const plan = setNorthStar(emptyNsPlan(), "I wake up near the water.", NOW)
     expect(stepState(plan, "recap")).toBe("empty")
-    expect(tabHasContent(plan, "recap")).toBe(false)
     expect(planTodos(plan, TODAY).some((t) => t.tab === "recap")).toBe(false)
   })
 
@@ -1207,7 +1197,6 @@ describe("the order of the flow", () => {
     // doors open, so this one stays empty however full the plan is.
     const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_health", "tmpl_strength", 1, NOW)
     expect(stepState(plan, "pick")).toBe("empty")
-    expect(tabHasContent(plan, "pick")).toBe(false)
     expect(planTodos(plan, NOW).some((t) => t.tab === "pick")).toBe(false)
   })
 
@@ -1967,12 +1956,10 @@ import {
   defaultActionForTarget,
   goalMilestones,
   planCascade,
-  planTimeline,
   practiceIsOn,
   removePractice,
   routineNeedState,
   routineNeedsForObjectives,
-  routineNeedsForTarget,
   routineNeedsForTemplate,
   unmetRoutineNeeds,
   weeklyLoad,
@@ -2237,11 +2224,6 @@ describe("a goal drags its routine in behind it", () => {
     expect(templatesInArea(plan, "lm_fitness")[0].goalIds).toHaveLength(plan.goals.length)
     expect(templatesInArea(plan, "lm_money")).toEqual([])
   })
-
-  it("finds the need behind a single target, not only behind a whole set", () => {
-    expect(routineNeedsForTarget("t_bench")[0].blueprintId).toBe("workout")
-    expect(routineNeedsForTarget("nope")).toEqual([])
-  })
 })
 
 describe("a practice goes straight into a routine", () => {
@@ -2404,26 +2386,6 @@ describe("the year, as things to hit", () => {
     expect(goalMilestones(plan.goals[0], TODAY)).toEqual([])
     plan = updateGoal(plan, plan.goals[0].id, { targetDate: "2020-01-01" }, NOW)
     expect(goalMilestones(plan.goals[0], TODAY)).toEqual([])
-  })
-
-  it("buckets the milestones into months and keeps every one of them", () => {
-    const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_fitness", "tmpl_strength", 1, NOW)
-    const months = planTimeline(plan, TODAY, 12)
-    expect(months).toHaveLength(12)
-    expect(months[0].key).toBe("2026-08")
-    const inBuckets = months.reduce((n, m) => n + m.milestones.length, 0)
-    const total = plan.goals.reduce((n, g) => n + goalMilestones(g, TODAY).length, 0)
-    // Nothing is silently dropped off the end of the window.
-    expect(inBuckets).toBe(total)
-    expect(total).toBeGreaterThan(0)
-  })
-
-  it("sorts each month by date", () => {
-    const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_fitness", "tmpl_strength", 1, NOW)
-    for (const month of planTimeline(plan, TODAY, 12)) {
-      const dates = month.milestones.map((m) => m.date)
-      expect(dates).toEqual([...dates].sort())
-    }
   })
 })
 
@@ -3228,32 +3190,6 @@ describe("the week, drawn", () => {
     expect(unplacedSteps(withPreset).length).toBeGreaterThan(0)
   })
 
-  it("takes a block off the grid without deleting the step", () => {
-    let plan = emptyNsPlan()
-    const routineId = plan.routines[0].id
-    plan = addCustomStep(plan, routineId, "Gym", 60, 3, NOW, { days: [1], startMin: 420 })
-    const stepId = plan.routines.find((r) => r.id === routineId)!.steps.at(-1)!.id
-    plan = unplaceStep(plan, routineId, stepId, NOW)
-    expect(weekBlocks(plan).some((b) => b.step.id === stepId)).toBe(false)
-    expect(unplacedSteps(plan).some((s) => s.step.id === stepId)).toBe(true)
-  })
-
-  it("moves one day of a repeat without disturbing the others", () => {
-    let plan = emptyNsPlan()
-    const routineId = plan.routines[0].id
-    plan = addCustomStep(plan, routineId, "Gym", 60, 3, NOW, { days: [1, 3, 5], startMin: 420 })
-    const stepId = plan.routines.find((r) => r.id === routineId)!.steps.at(-1)!.id
-    plan = moveBlock(plan, routineId, stepId, 3, 4, 18 * 60, NOW)
-    const step = plan.routines.find((r) => r.id === routineId)!.steps.find((s) => s.id === stepId)!
-    expect(step.days).toEqual([1, 4, 5])
-    expect(step.startMin).toBe(18 * 60)
-    // Dropped onto a day it already runs, it merges rather than doubling up.
-    plan = moveBlock(plan, routineId, stepId, 1, 4, 18 * 60, NOW)
-    const merged = plan.routines.find((r) => r.id === routineId)!.steps.find((s) => s.id === stepId)!
-    expect(merged.days).toEqual([4, 5])
-    expect(merged.daysPerWeek).toBe(2)
-  })
-
   it("keeps a placed step's slot when the routine's preset changes", () => {
     let plan = emptyNsPlan()
     const fresh = plan.routines.find((r) => r.blueprintId === "morning")!
@@ -3972,5 +3908,25 @@ describe("applyProgramToWorkoutRoutine", () => {
     // Five is what the person typed. A program running does not make it wrong,
     // and it is what the week returns to when the program ends.
     expect(plan.routines.find((r) => r.id === routineId)!.daysPerWeek).toBe(5)
+  })
+})
+
+/**
+ * THE THREE ANSWER KEYS THE LOADER DROPS, AND WHY THAT IS NOT A BUG.
+ *
+ * `normalizeNsPlan` keeps an answer only when its key is a star or review
+ * prompt id or carries the `start:` prefix. `vision`, `why` and `cost` are the
+ * v1 flow's bare keys, reachable only from /test/life-mastery-v1, which 404s in
+ * production. Asserted rather than left as a silence: a loader with an
+ * allow-list quietly dropping somebody's writing is a defect this product has
+ * already paid for twice. If one of these keys becomes reachable from the live
+ * flow, this goes red. (Moved here from answerInventory.test.ts, deleted with
+ * its dead module on 2026-10-13.)
+ */
+describe("the plan loader's allow-list", () => {
+  it("drops the v1 flow's vision, why and cost answers", () => {
+    for (const key of ["vision", "why", "cost"]) {
+      expect(answerOf(normalizeNsPlan({ ...emptyNsPlan(), answers: { [key]: "x" } })!, key)).toBe("")
+    }
   })
 })

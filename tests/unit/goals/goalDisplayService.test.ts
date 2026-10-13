@@ -1,32 +1,9 @@
 import { describe, test, expect } from "vitest"
-import { getCategoryLabel, isUnknownCategory, getGoalTypeLabel, getGoalPhaseLabel, getPeriodLabel, getPeriodAbbrev } from "@/src/goals/goalDisplayService"
+import { getCategoryLabel, getGoalPhaseLabel, getPeriodLabel, getPeriodAbbrev } from "@/src/goals/goalDisplayService"
 
 describe("getCategoryLabel", () => {
   test("returns formatted string for unknown category", () => {
     expect(getCategoryLabel("some_new_thing")).toBe("Some New Thing")
-  })
-})
-
-describe("isUnknownCategory", () => {
-  test("returns false for known categories", () => {
-    expect(isUnknownCategory("field_work")).toBe(false)
-  })
-  test("returns true for unknown categories", () => {
-    expect(isUnknownCategory("nonexistent")).toBe(true)
-  })
-  test("returns false for null", () => {
-    expect(isUnknownCategory(null)).toBe(false)
-  })
-})
-
-describe("getGoalTypeLabel", () => {
-  test("returns label for known types", () => {
-    expect(getGoalTypeLabel("recurring")).toBe("Recurring")
-    expect(getGoalTypeLabel("milestone")).toBe("Milestone")
-    expect(getGoalTypeLabel("habit_ramp")).toBe("Habit Ramp")
-  })
-  test("returns formatted string for unknown type", () => {
-    expect(getGoalTypeLabel("future_type")).toBe("Future Type")
   })
 })
 

@@ -4,11 +4,7 @@ import {
   GOAL_TEMPLATE_MAP,
   GOAL_GRAPH_EDGES,
   getChildren,
-  getLeafGoals,
   getTemplatesByCategory,
-  CROSS_AREA_EDGES,
-  getCrossAreaInfluence,
-  getCrossAreaContributors,
 } from "@/src/goals/data/goalGraph"
 
 // ============================================================================
@@ -139,41 +135,6 @@ describe("getChildren", () => {
   })
 })
 
-describe("getLeafGoals", () => {
-  test("L1 goal returns all L3 goals in its area (direct L1→L3)", () => {
-    const leaves = getLeafGoals("l1_girlfriend")
-    const daygameL3Count = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
-    expect(leaves.length).toBe(daygameL3Count)
-    for (const leaf of leaves) {
-      expect(leaf.level).toBe(3)
-    }
-  })
-
-  test("L2 is standalone — returns only itself (no children)", () => {
-    const leaves = getLeafGoals("l2_approach")
-    // L2 has level 2, not 3, so it doesn't match the "return [tmpl]" branch.
-    // But getLeafGoals returns the template itself if it has no children.
-    // Since L2 has no children and is not level 3, it returns empty.
-    expect(leaves.length).toBe(0)
-  })
-
-  test("L3 goal returns itself", () => {
-    const leaves = getLeafGoals("l3_approach_volume")
-    expect(leaves).toHaveLength(1)
-    expect(leaves[0].id).toBe("l3_approach_volume")
-  })
-
-  test("L1 goals produce unique L3s (no duplicates)", () => {
-    const leaves = getLeafGoals("l1_rotation")
-    const ids = leaves.map((l) => l.id)
-    expect(new Set(ids).size).toBe(ids.length)
-  })
-
-  test("unknown ID returns empty array", () => {
-    expect(getLeafGoals("nonexistent")).toEqual([])
-  })
-})
-
 // ============================================================================
 // getTemplatesByCategory
 // ============================================================================
@@ -195,85 +156,5 @@ describe("getTemplatesByCategory", () => {
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
     expect(allIds.length).toBe(l3Goals.length)
     expect(new Set(allIds).size).toBe(allIds.length)
-  })
-})
-
-// ============================================================================
-// Cross-Area Connections (Phase 3.4)
-// ============================================================================
-
-describe("CROSS_AREA_EDGES", () => {
-  test("all source IDs are valid template IDs", () => {
-    for (const edge of CROSS_AREA_EDGES) {
-      expect(GOAL_TEMPLATE_MAP[edge.sourceId]).toBeDefined()
-    }
-  })
-
-  test("all target IDs are valid template IDs", () => {
-    for (const edge of CROSS_AREA_EDGES) {
-      expect(GOAL_TEMPLATE_MAP[edge.targetId]).toBeDefined()
-    }
-  })
-
-  test("no self-edges", () => {
-    for (const edge of CROSS_AREA_EDGES) {
-      expect(edge.sourceId).not.toBe(edge.targetId)
-    }
-  })
-
-  test("no same-area edges (source and target must be from different life areas)", () => {
-    for (const edge of CROSS_AREA_EDGES) {
-      const source = GOAL_TEMPLATE_MAP[edge.sourceId]
-      const target = GOAL_TEMPLATE_MAP[edge.targetId]
-      expect(source.lifeArea).not.toBe(target.lifeArea)
-    }
-  })
-
-  test("all weights are between 0 and 1", () => {
-    for (const edge of CROSS_AREA_EDGES) {
-      expect(edge.weight).toBeGreaterThan(0)
-      expect(edge.weight).toBeLessThanOrEqual(1)
-    }
-  })
-
-  test("all relationships are valid", () => {
-    const validRelationships = new Set(["supports", "reinforces", "enables"])
-    for (const edge of CROSS_AREA_EDGES) {
-      expect(validRelationships.has(edge.relationship)).toBe(true)
-    }
-  })
-})
-
-describe("getCrossAreaInfluence", () => {
-  test("returns edges where template is source", () => {
-    const edges = getCrossAreaInfluence("l3_pg_meditation")
-    expect(edges.length).toBeGreaterThan(0)
-    expect(edges.some((e) => e.sourceId === "l3_pg_meditation")).toBe(true)
-  })
-
-  test("returns edges where template is target", () => {
-    const edges = getCrossAreaInfluence("l2_approach")
-    expect(edges.length).toBeGreaterThan(0)
-    expect(edges.some((e) => e.targetId === "l2_approach")).toBe(true)
-  })
-
-  test("returns empty for template with no cross-area connections", () => {
-    const edges = getCrossAreaInfluence("l3_f_deadlift")
-    expect(edges).toEqual([])
-  })
-})
-
-describe("getCrossAreaContributors", () => {
-  test("returns only edges where template is the target", () => {
-    const edges = getCrossAreaContributors("l2_results")
-    expect(edges.length).toBeGreaterThan(0)
-    for (const edge of edges) {
-      expect(edge.targetId).toBe("l2_results")
-    }
-  })
-
-  test("returns empty for template that is never a target", () => {
-    const edges = getCrossAreaContributors("l3_pg_meditation")
-    expect(edges).toEqual([])
   })
 })

@@ -402,8 +402,6 @@ export const ONE_COPY = {
 } as const
 
 export const ONE_THING_KEY = `${START_ANSWER_PREFIX}one-thing`
-/** What the season after this one is for, named while this one is fresh. */
-export const NEXT_SEASON_KEY = `${START_ANSWER_PREFIX}next-season`
 /** The commitment itself, in the person's own words, and the date they made it. */
 export const COMMIT_KEY = `${START_ANSWER_PREFIX}commit`
 export const COMMIT_DATE_KEY = `${START_ANSWER_PREFIX}commit-date`

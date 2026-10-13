@@ -19,7 +19,9 @@
  *   2. Add value, don't take — leave the person better off for having met you.
  * And never frame the goal as acquiring a person. He never does.
  *
- * Every quote below is verbatim and in `lifeMasteryCorpus.ts` under its videoId.
+ * Every quote below is verbatim and in `lifeMasteryCorpus.ts` under its videoId
+ * (deleted 2026-10-13 with nothing reading it; `git log --diff-filter=D --
+ * src/goals/data/lifeMasteryCorpus.ts` recovers it).
  */
 
 /** One rung of his approach-anxiety ladder. Progression gates on REPS, not on

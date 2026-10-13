@@ -12,7 +12,6 @@ import type {
   GoalGraphEdge,
   GoalDisplayCategory,
   GoalGraphLevel,
-  CrossAreaEdge,
   GoalTemplateType,
   GoalPriority,
   MilestoneLadderConfig,
@@ -1782,37 +1781,6 @@ export function getChildren(parentId: string): GoalTemplate[] {
 }
 
 /**
- * Get all L3 (leaf) descendants of any template — the actual work goals.
- * Traverses the graph recursively until it hits level 3.
- */
-export function getLeafGoals(templateId: string): GoalTemplate[] {
-  const tmpl = GOAL_TEMPLATE_MAP[templateId]
-  if (!tmpl) return []
-  if (tmpl.level === 3) return [tmpl]
-
-  const children = getChildren(templateId)
-  const leaves: GoalTemplate[] = []
-  const seen = new Set<string>()
-
-  for (const child of children) {
-    if (seen.has(child.id)) continue
-    seen.add(child.id)
-    if (child.level === 3) {
-      leaves.push(child)
-    } else {
-      for (const leaf of getLeafGoals(child.id)) {
-        if (!seen.has(leaf.id)) {
-          seen.add(leaf.id)
-          leaves.push(leaf)
-        }
-      }
-    }
-  }
-
-  return leaves
-}
-
-/**
  * Get all L2 achievements that reference a given L3 goal.
  * Used by setup wizard to show which badges a selected L3 contributes to.
  */
@@ -1958,51 +1926,6 @@ export function getCatalogTiers(): {
     tier2: L2_TEMPLATES,
     tier3: getTemplatesByCategoryForArea("daygame"),
   }
-}
-
-// ============================================================================
-// Cross-Area Connections (Phase 3.4)
-// ============================================================================
-
-/**
- * Cross-area edges connect goals from different life areas.
- * Used for weekly review insights and "whole-man" progress visualization.
- */
-export const CROSS_AREA_EDGES: CrossAreaEdge[] = [
-  // Personal Growth → Daygame
-  { sourceId: "l3_pg_meditation", targetId: "l2_approach", weight: 0.7, relationship: "supports" },
-  { sourceId: "l3_pg_comfort_zone", targetId: "l3_approach_volume", weight: 0.6, relationship: "enables" },
-  { sourceId: "l3_pg_cold_exposure", targetId: "l2_approach", weight: 0.5, relationship: "supports" },
-  { sourceId: "l3_pg_books", targetId: "l2_tongue", weight: 0.4, relationship: "reinforces" },
-  { sourceId: "l3_pg_morning_routine", targetId: "l3_session_frequency", weight: 0.4, relationship: "enables" },
-
-  // Fitness → Daygame
-  { sourceId: "l3_f_gym_frequency", targetId: "l2_results", weight: 0.5, relationship: "supports" },
-  { sourceId: "l3_f_gym_frequency", targetId: "l2_inner", weight: 0.4, relationship: "supports" },
-
-  // Vices → Daygame
-  { sourceId: "l3_v_porn_free_days", targetId: "l2_inner", weight: 0.6, relationship: "enables" },
-  { sourceId: "l3_v_screen_time", targetId: "l3_session_frequency", weight: 0.3, relationship: "enables" },
-
-  // Fitness → Personal Growth
-  { sourceId: "l3_f_gym_frequency", targetId: "l2_pg_discipline", weight: 0.5, relationship: "reinforces" },
-
-  // Personal Growth → Vices
-  { sourceId: "l3_pg_meditation", targetId: "l2_v_willpower", weight: 0.5, relationship: "supports" },
-]
-
-/**
- * Get all cross-area edges where this template is either source or target.
- */
-export function getCrossAreaInfluence(templateId: string): CrossAreaEdge[] {
-  return CROSS_AREA_EDGES.filter((e) => e.sourceId === templateId || e.targetId === templateId)
-}
-
-/**
- * Get cross-area edges where this template is the target (influenced BY other areas).
- */
-export function getCrossAreaContributors(templateId: string): CrossAreaEdge[] {
-  return CROSS_AREA_EDGES.filter((e) => e.targetId === templateId)
 }
 
 /**

@@ -10,7 +10,9 @@
  * is USEFUL. That sidesteps the trap where someone defends a belief with
  * evidence and stays stuck inside it.
  *
- * Quotes verbatim; each verified in lifeMasteryCorpus.ts under its videoId.
+ * Quotes verbatim; each verified in lifeMasteryCorpus.ts under its videoId
+ * (deleted 2026-10-13 with nothing reading it; `git log --diff-filter=D --
+ * src/goals/data/lifeMasteryCorpus.ts` recovers it).
  */
 
 export interface BeliefStep {

@@ -151,16 +151,6 @@ export type CelebrationTier = "subtle" | "toast" | "confetti-small" | "confetti-
  */
 export type GoalViewMode = "today" | "hierarchy" | "tree" | "tree-of-life" | "orrery" | "daily" | "strategic" | "standard" | "time-horizon"
 
-/**
- * Filter state for goals list/views
- */
-export interface GoalFilterState {
-  lifeArea: string | null
-  timeHorizon: string | null
-  status: string | null
-  search: string
-}
-
 // ============================================================================
 // Curve Theme Types
 // ============================================================================
@@ -372,12 +362,6 @@ export interface BadgeConfig {
 
 export type TimeOfDayBracket = "morning" | "afternoon" | "evening" | "night"
 
-export interface WeeklyRhythm {
-  activeDays: number
-  peakBracket: TimeOfDayBracket | null
-  bracketCounts: Record<TimeOfDayBracket, number>
-}
-
 // ============================================================================
 // Pacing Types (Phase 6.7)
 // ============================================================================
@@ -519,19 +503,6 @@ export interface TreeLayout {
 }
 
 // ============================================================================
-// Cross-Area Connection Types (Phase 3.4)
-// ============================================================================
-
-export type CrossAreaRelationship = "supports" | "reinforces" | "enables"
-
-export interface CrossAreaEdge {
-  sourceId: string
-  targetId: string
-  weight: number
-  relationship: CrossAreaRelationship
-}
-
-// ============================================================================
 // Goal Setup Wizard Types (Phase 4)
 // ============================================================================
 
@@ -578,23 +549,6 @@ export interface GoalPeriodStats {
   yearTotal: number
   monthDelta: number | null
   yearDelta: number | null
-}
-
-// ============================================================================
-// Will Gate & Bottleneck Types (Diagnostic Layer)
-// ============================================================================
-
-export interface WillGateResult {
-  gateTriggered: boolean
-  ratio: number
-  message: string
-}
-
-export interface BottleneckResult {
-  willGate: WillGateResult | null
-  bottleneckGoalId: string | null
-  description: string
-  recommendedFocus: string
 }
 
 // ---------------------------------------------------------------------------

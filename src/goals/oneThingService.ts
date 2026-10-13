@@ -497,11 +497,3 @@ export function oneThingPrompt(current: OneThing | null): string | null {
   if (stage === "ending") return "This one is nearly up — worth deciding now what comes after it."
   return null
 }
-
-/** What the header says when there is nothing to show. */
-export type OneThingState = "set" | "lapsed" | "none"
-
-export function oneThingState(current: OneThing | null): OneThingState {
-  if (!current) return "none"
-  return current.lapsed ? "lapsed" : "set"
-}

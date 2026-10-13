@@ -12,7 +12,6 @@ import {
   pastOneThings,
   wordingsOf,
   isSameAsCurrent,
-  oneThingState,
   daysBetween,
   addDays,
   defaultDueOn,
@@ -87,7 +86,6 @@ describe("AT1 — what my one thing is", () => {
   it("is nothing when nothing has been written", () => {
     expect(currentOneThing([], [], "Europe/Copenhagen")).toBeNull()
     expect(pastOneThings([], [], "Europe/Copenhagen")).toEqual([])
-    expect(oneThingState(null)).toBe("none")
   })
 
   it("is the newest chapter, not the first one started", () => {

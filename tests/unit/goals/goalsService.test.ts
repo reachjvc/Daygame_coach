@@ -1,9 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest"
 import {
-  buildGoalTree,
-  filterGoals,
   groupGoalsByLifeArea,
-  groupGoalsByTimeHorizon,
   computeLifeAreaProgress,
   deriveTimeHorizon,
   isDailyActionable,
@@ -15,19 +12,16 @@ import {
   deriveChildLevel,
   getNextMilestoneInfo,
   formatStreakLabel,
-  getDaysLeftInWeek,
   computeProjectedDate,
-  findExistingByTemplate,
   generateDirtyDogInserts,
   getTimeOfDayBracket,
   isAlmostComplete,
-  getWeeklyRhythm,
   computePacing,
   buildMilestoneCelebrationData,
   computeMultiPeriodStats,
   getOrphanedGoalIds,
 } from "@/src/goals/goalsService"
-import type { GoalWithProgress, GoalFilterState, BadgeStatus } from "@/src/goals/types"
+import type { GoalWithProgress, BadgeStatus } from "@/src/goals/types"
 import type { DailyGoalSnapshotRow } from "@/src/db/goalTypes"
 
 // ============================================================================
@@ -83,267 +77,6 @@ function createGoalWithProgress(overrides: Partial<GoalWithProgress> = {}): Goal
   }
 }
 
-function createEmptyFilters(overrides: Partial<GoalFilterState> = {}): GoalFilterState {
-  return {
-    lifeArea: null,
-    timeHorizon: null,
-    status: null,
-    search: "",
-    ...overrides,
-  }
-}
-
-// ============================================================================
-// buildGoalTree
-// ============================================================================
-
-describe("buildGoalTree", () => {
-  test("should return empty array for empty input", () => {
-    const result = buildGoalTree([])
-    expect(result).toEqual([])
-  })
-
-  test("should return all goals as roots when none have parents", () => {
-    const goals = [
-      createGoalWithProgress({ id: "a", title: "A" }),
-      createGoalWithProgress({ id: "b", title: "B" }),
-      createGoalWithProgress({ id: "c", title: "C" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(3)
-    expect(result[0].id).toBe("a")
-    expect(result[1].id).toBe("b")
-    expect(result[2].id).toBe("c")
-    expect(result[0].children).toEqual([])
-    expect(result[1].children).toEqual([])
-    expect(result[2].children).toEqual([])
-  })
-
-  test("should nest children under their parent", () => {
-    const goals = [
-      createGoalWithProgress({ id: "parent", title: "Parent" }),
-      createGoalWithProgress({ id: "child-1", title: "Child 1", parent_goal_id: "parent" }),
-      createGoalWithProgress({ id: "child-2", title: "Child 2", parent_goal_id: "parent" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("parent")
-    expect(result[0].children).toHaveLength(2)
-    expect(result[0].children[0].id).toBe("child-1")
-    expect(result[0].children[1].id).toBe("child-2")
-  })
-
-  test("should handle orphans (parent not in array) as roots", () => {
-    const goals = [
-      createGoalWithProgress({ id: "orphan", title: "Orphan", parent_goal_id: "missing-parent" }),
-      createGoalWithProgress({ id: "root", title: "Root" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(2)
-    expect(result[0].id).toBe("orphan")
-    expect(result[1].id).toBe("root")
-  })
-
-  test("should handle deep nesting (3 levels)", () => {
-    const goals = [
-      createGoalWithProgress({ id: "grandparent", title: "Grandparent" }),
-      createGoalWithProgress({ id: "parent", title: "Parent", parent_goal_id: "grandparent" }),
-      createGoalWithProgress({ id: "child", title: "Child", parent_goal_id: "parent" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("grandparent")
-    expect(result[0].children).toHaveLength(1)
-    expect(result[0].children[0].id).toBe("parent")
-    expect(result[0].children[0].children).toHaveLength(1)
-    expect(result[0].children[0].children[0].id).toBe("child")
-    expect(result[0].children[0].children[0].children).toEqual([])
-  })
-
-  test("should handle mixed roots, children, and orphans", () => {
-    const goals = [
-      createGoalWithProgress({ id: "root-1", title: "Root 1" }),
-      createGoalWithProgress({ id: "child-of-root-1", title: "Child", parent_goal_id: "root-1" }),
-      createGoalWithProgress({ id: "orphan", title: "Orphan", parent_goal_id: "deleted-goal" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(2) // root-1 and orphan
-    expect(result[0].id).toBe("root-1")
-    expect(result[0].children).toHaveLength(1)
-    expect(result[0].children[0].id).toBe("child-of-root-1")
-    expect(result[1].id).toBe("orphan")
-    expect(result[1].children).toEqual([])
-  })
-
-  test("should treat self-referencing goal as root (no ghost)", () => {
-    const goals = [
-      createGoalWithProgress({ id: "self-ref", title: "Self Ref", parent_goal_id: "self-ref" }),
-      createGoalWithProgress({ id: "normal", title: "Normal" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(2)
-    expect(result.map((r) => r.id)).toContain("self-ref")
-    expect(result.map((r) => r.id)).toContain("normal")
-  })
-
-  test("should break 2-node cycle and treat both as roots (no ghost)", () => {
-    const goals = [
-      createGoalWithProgress({ id: "a", title: "A", parent_goal_id: "b" }),
-      createGoalWithProgress({ id: "b", title: "B", parent_goal_id: "a" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    // Both must appear — neither should be a ghost
-    expect(result).toHaveLength(2)
-    expect(result.map((r) => r.id)).toContain("a")
-    expect(result.map((r) => r.id)).toContain("b")
-  })
-
-  test("should break 3-node cycle and treat all as roots (no ghost)", () => {
-    const goals = [
-      createGoalWithProgress({ id: "a", title: "A", parent_goal_id: "c" }),
-      createGoalWithProgress({ id: "b", title: "B", parent_goal_id: "a" }),
-      createGoalWithProgress({ id: "c", title: "C", parent_goal_id: "b" }),
-    ]
-
-    const result = buildGoalTree(goals)
-
-    expect(result).toHaveLength(3)
-    expect(result.map((r) => r.id)).toContain("a")
-    expect(result.map((r) => r.id)).toContain("b")
-    expect(result.map((r) => r.id)).toContain("c")
-  })
-})
-
-// ============================================================================
-// filterGoals
-// ============================================================================
-
-describe("filterGoals", () => {
-  const goals = [
-    createGoalWithProgress({
-      id: "g1",
-      title: "Run 5K",
-      life_area: "health_fitness",
-      is_complete: false,
-      period: "weekly",
-    }),
-    createGoalWithProgress({
-      id: "g2",
-      title: "Read books",
-      life_area: "personal_growth",
-      is_complete: true,
-      period: "monthly",
-    }),
-    createGoalWithProgress({
-      id: "g3",
-      title: "Do approaches",
-      life_area: "daygame",
-      is_complete: false,
-      period: "daily",
-    }),
-    createGoalWithProgress({
-      id: "g4",
-      title: "Save money for health",
-      life_area: "career_business",
-      is_complete: false,
-      period: "yearly",
-    }),
-  ]
-
-  test("should return all goals when filters are empty", () => {
-    const filters = createEmptyFilters()
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(4)
-  })
-
-  test("should filter by lifeArea", () => {
-    const filters = createEmptyFilters({ lifeArea: "health_fitness" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("g1")
-  })
-
-  test("should filter by search text (title match, case-insensitive)", () => {
-    const filters = createEmptyFilters({ search: "run" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("g1")
-  })
-
-  test("should filter by search text (life_area match)", () => {
-    const filters = createEmptyFilters({ search: "daygame" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("g3")
-  })
-
-  test("should filter by search text matching title containing life area word", () => {
-    // "health" appears in g1's life_area AND g4's title
-    const filters = createEmptyFilters({ search: "health" })
-    const result = filterGoals(goals, filters)
-    // g1 matches on life_area "health_fitness", g4 matches on title "Save money for health" (career_business area)
-    expect(result).toHaveLength(2)
-    const ids = result.map((g) => g.id)
-    expect(ids).toContain("g1")
-    expect(ids).toContain("g4")
-  })
-
-  test("should filter by status=complete", () => {
-    const filters = createEmptyFilters({ status: "complete" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("g2")
-  })
-
-  test("should filter by status=active", () => {
-    const filters = createEmptyFilters({ status: "active" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(3)
-    expect(result.every((g) => !g.is_complete)).toBe(true)
-  })
-
-  test("should filter by timeHorizon", () => {
-    // period=daily maps to "Today" via deriveTimeHorizon
-    const filters = createEmptyFilters({ timeHorizon: "Today" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("g3")
-  })
-
-  test("should apply combined filters (lifeArea + status)", () => {
-    const filters = createEmptyFilters({ lifeArea: "personal_growth", status: "complete" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe("g2")
-  })
-
-  test("should return empty when combined filters match nothing", () => {
-    const filters = createEmptyFilters({ lifeArea: "health_fitness", status: "complete" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(0)
-  })
-
-  test("should return empty when search matches nothing", () => {
-    const filters = createEmptyFilters({ search: "zzznomatch" })
-    const result = filterGoals(goals, filters)
-    expect(result).toHaveLength(0)
-  })
-})
-
 // ============================================================================
 // groupGoalsByLifeArea
 // ============================================================================
@@ -389,61 +122,6 @@ describe("groupGoalsByLifeArea", () => {
 
     expect(Object.keys(result)).toEqual(["custom"])
     expect(result["custom"]).toHaveLength(1)
-  })
-})
-
-// ============================================================================
-// groupGoalsByTimeHorizon
-// ============================================================================
-
-describe("groupGoalsByTimeHorizon", () => {
-  test("should return empty object for empty array", () => {
-    const result = groupGoalsByTimeHorizon([])
-    expect(result).toEqual({})
-  })
-
-  test("should group goals by derived time horizon", () => {
-    const goals = [
-      createGoalWithProgress({ id: "g1", period: "daily", goal_type: "recurring" }),
-      createGoalWithProgress({ id: "g2", period: "weekly", goal_type: "recurring" }),
-      createGoalWithProgress({ id: "g3", period: "daily", goal_type: "recurring" }),
-    ]
-
-    const result = groupGoalsByTimeHorizon(goals)
-
-    expect(Object.keys(result)).toHaveLength(2)
-    expect(result["Today"]).toHaveLength(2)
-    expect(result["This Week"]).toHaveLength(1)
-  })
-
-  test("should group milestones by their target date horizon", () => {
-    // Use fake timers so date calculations are stable
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date("2026-02-07T12:00:00Z"))
-
-    const goals = [
-      createGoalWithProgress({
-        id: "g1",
-        goal_type: "milestone",
-        target_date: "2035-01-01",
-        period: "custom",
-      }),
-      createGoalWithProgress({
-        id: "g2",
-        goal_type: "milestone",
-        target_date: "2027-06-01",
-        period: "custom",
-      }),
-    ]
-
-    const result = groupGoalsByTimeHorizon(goals)
-
-    expect(result["Life"]).toHaveLength(1)
-    expect(result["Life"][0].id).toBe("g1")
-    expect(result["Multi-Year"]).toHaveLength(1)
-    expect(result["Multi-Year"][0].id).toBe("g2")
-
-    vi.useRealTimers()
   })
 })
 
@@ -862,40 +540,6 @@ describe("deriveTimeHorizon", () => {
   })
 
   // ===========================================================================
-  // getDaysLeftInWeek
-  // ===========================================================================
-
-  describe("getDaysLeftInWeek", () => {
-    test("returns 0 on Sunday", () => {
-      vi.useFakeTimers()
-      vi.setSystemTime(new Date("2026-02-08T12:00:00Z")) // Sunday
-      expect(getDaysLeftInWeek()).toBe(0)
-      vi.useRealTimers()
-    })
-
-    test("returns 6 on Monday", () => {
-      vi.useFakeTimers()
-      vi.setSystemTime(new Date("2026-02-09T12:00:00Z")) // Monday
-      expect(getDaysLeftInWeek()).toBe(6)
-      vi.useRealTimers()
-    })
-
-    test("returns 1 on Saturday", () => {
-      vi.useFakeTimers()
-      vi.setSystemTime(new Date("2026-02-07T12:00:00Z")) // Saturday
-      expect(getDaysLeftInWeek()).toBe(1)
-      vi.useRealTimers()
-    })
-
-    test("returns 4 on Wednesday", () => {
-      vi.useFakeTimers()
-      vi.setSystemTime(new Date("2026-02-11T12:00:00Z")) // Wednesday
-      expect(getDaysLeftInWeek()).toBe(4)
-      vi.useRealTimers()
-    })
-  })
-
-  // ===========================================================================
   // computeProjectedDate
   // ===========================================================================
 
@@ -953,33 +597,6 @@ describe("deriveTimeHorizon", () => {
       expect(result).not.toBeNull()
       expect(result!.nextLabel).toBeNull()
       expect(result!.finalLabel).toBeTruthy()
-    })
-  })
-
-  // ============================================================================
-  // findExistingByTemplate
-  // ============================================================================
-
-  describe("findExistingByTemplate", () => {
-    test("returns matching goal when template_id matches", () => {
-      const goals = [
-        createGoalWithProgress({ id: "g1", template_id: "l3_approach_volume" }),
-        createGoalWithProgress({ id: "g2", template_id: "l3_phone_numbers" }),
-      ]
-      const result = findExistingByTemplate(goals, "l3_approach_volume")
-      expect(result).not.toBeNull()
-      expect(result!.id).toBe("g1")
-    })
-
-    test("returns null when no template_id matches", () => {
-      const goals = [
-        createGoalWithProgress({ id: "g1", template_id: "l3_approach_volume" }),
-      ]
-      expect(findExistingByTemplate(goals, "l3_instadates")).toBeNull()
-    })
-
-    test("returns null for empty array", () => {
-      expect(findExistingByTemplate([], "l3_approach_volume")).toBeNull()
     })
   })
 
@@ -1107,83 +724,6 @@ describe("isAlmostComplete", () => {
     const goal = createGoalWithProgress({ current_value: 7, target_value: 10 })
     expect(isAlmostComplete(goal, 0.7)).toBe(true)
     expect(isAlmostComplete(goal, 0.8)).toBe(false)
-  })
-})
-
-describe("getWeeklyRhythm", () => {
-  function createSnapshot(overrides: Partial<DailyGoalSnapshotRow> = {}): DailyGoalSnapshotRow {
-    return {
-      id: "snap-1",
-      user_id: "user-1",
-      goal_id: "goal-1",
-      snapshot_date: "2026-02-21",
-      current_value: 10,
-      target_value: 10,
-      was_complete: true,
-      current_streak: 3,
-      best_streak: 5,
-      period: "daily",
-      created_at: "2026-02-21T10:00:00Z",
-      ...overrides,
-    }
-  }
-
-  test("counts active days from unique snapshot dates", () => {
-    const snapshots = [
-      createSnapshot({ snapshot_date: "2026-02-17", created_at: "2026-02-17T09:00:00Z" }),
-      createSnapshot({ snapshot_date: "2026-02-18", created_at: "2026-02-18T14:00:00Z" }),
-      createSnapshot({ snapshot_date: "2026-02-19", created_at: "2026-02-19T18:00:00Z" }),
-    ]
-    const rhythm = getWeeklyRhythm(snapshots)
-    expect(rhythm.activeDays).toBe(3)
-  })
-
-  test("only counts completed goals as active", () => {
-    const snapshots = [
-      createSnapshot({ snapshot_date: "2026-02-17", was_complete: true }),
-      createSnapshot({ snapshot_date: "2026-02-18", was_complete: false }),
-      createSnapshot({ snapshot_date: "2026-02-19", was_complete: true }),
-    ]
-    const rhythm = getWeeklyRhythm(snapshots)
-    expect(rhythm.activeDays).toBe(2)
-  })
-
-  test("identifies peak bracket", () => {
-    const snapshots = [
-      createSnapshot({ created_at: "2026-02-17T09:00:00Z" }), // morning
-      createSnapshot({ created_at: "2026-02-18T10:00:00Z", snapshot_date: "2026-02-18" }), // morning
-      createSnapshot({ created_at: "2026-02-19T15:00:00Z", snapshot_date: "2026-02-19" }), // afternoon
-    ]
-    const rhythm = getWeeklyRhythm(snapshots)
-    expect(rhythm.peakBracket).toBe("morning")
-    expect(rhythm.bracketCounts.morning).toBe(2)
-    expect(rhythm.bracketCounts.afternoon).toBe(1)
-  })
-
-  test("returns null peakBracket when no completed snapshots", () => {
-    const snapshots = [
-      createSnapshot({ was_complete: false }),
-    ]
-    const rhythm = getWeeklyRhythm(snapshots)
-    expect(rhythm.peakBracket).toBeNull()
-    expect(rhythm.activeDays).toBe(0)
-  })
-
-  test("handles empty snapshots", () => {
-    const rhythm = getWeeklyRhythm([])
-    expect(rhythm.activeDays).toBe(0)
-    expect(rhythm.peakBracket).toBeNull()
-    expect(rhythm.bracketCounts).toEqual({ morning: 0, afternoon: 0, evening: 0, night: 0 })
-  })
-
-  test("deduplicates same-day snapshots for active days count", () => {
-    const snapshots = [
-      createSnapshot({ goal_id: "g1", snapshot_date: "2026-02-17", created_at: "2026-02-17T09:00:00Z" }),
-      createSnapshot({ goal_id: "g2", snapshot_date: "2026-02-17", created_at: "2026-02-17T10:00:00Z" }),
-    ]
-    const rhythm = getWeeklyRhythm(snapshots)
-    expect(rhythm.activeDays).toBe(1)
-    expect(rhythm.bracketCounts.morning).toBe(2) // both snapshots contribute to bracket counts
   })
 })
 

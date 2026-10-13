@@ -1,6 +1,7 @@
 /**
  * Phase-3 content — every structure here is built from the VERIFIED corpus
- * (src/goals/data/lifeMasteryCorpus.ts + ~/.cache/lm-corpus/results/*). Each
+ * (src/goals/data/lifeMasteryCorpus.ts, deleted 2026-10-13 and recoverable with
+ * `git log --diff-filter=D -- <that path>`, + ~/.cache/lm-corpus/results/*). Each
  * item carries the videoId it was extracted from (Rule 2: provenance or
  * silence). Display rule: text inside QUOTE MARKS is single-source verbatim
  * (punctuation/case restored, wording unchanged); unquoted text is faithful

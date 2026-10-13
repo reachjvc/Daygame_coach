@@ -3,7 +3,7 @@
  */
 
 import { isPracticeRow } from "@/src/goals/data/goalShapes"
-import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, WeeklyRhythm, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, WillGateResult, BottleneckResult, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
+import type { GoalWithProgress, GoalTreeNode, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState, TimeOfDayBracket, PacingInfo, MilestoneCelebrationData, BadgeStatus, TierUpgradeEvent, WeeklyReviewData, WeeklyGoalMomentum, GoalSetupSelections, GoalTemplate, PhaseTransitionEvent, GoalPeriodStats } from "./types"
 import type { DailyGoalSnapshotRow, GoalPhase, GoalTrackingType, GoalType, LinkedMetric, UserGoalRow } from "@/src/db/goalTypes"
 import { computeGoalProgress } from "@/src/db/goalTypes"
 import { isGoalComplete, progressPercent, rungReached, type ProgressFields } from "@/src/db/goalProgress"
@@ -16,54 +16,6 @@ import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getL2AchievementsForL3, getD
 import { LIFE_AREAS } from "./data/lifeAreas"
 import { isNonRegistryTemplateId } from "./data/templateNamespaces"
 import { detectTierUpgrades } from "./badgeEngineService"
-
-/**
- * Build a hierarchical goal tree from a flat array. O(n) algorithm.
- * Detects cycles and self-references — orphaned nodes become roots.
- */
-export function buildGoalTree(goals: GoalWithProgress[]): GoalTreeNode[] {
-  const nodeMap = new Map<string, GoalTreeNode>()
-  const roots: GoalTreeNode[] = []
-
-  for (const goal of goals) {
-    nodeMap.set(goal.id, { ...goal, children: [] })
-  }
-
-  // Detect cycles: walk parent chain, if we revisit a node it's a cycle
-  const safeParent = new Map<string, string | null>()
-  for (const goal of goals) {
-    if (!goal.parent_goal_id || !nodeMap.has(goal.parent_goal_id)) {
-      safeParent.set(goal.id, null)
-      continue
-    }
-    if (goal.parent_goal_id === goal.id) {
-      safeParent.set(goal.id, null)
-      continue
-    }
-    const visited = new Set<string>([goal.id])
-    let ancestor = goal.parent_goal_id
-    let hasCycle = false
-    while (ancestor && nodeMap.has(ancestor)) {
-      if (visited.has(ancestor)) { hasCycle = true; break }
-      visited.add(ancestor)
-      const ancestorGoal = goals.find((g) => g.id === ancestor)
-      ancestor = ancestorGoal?.parent_goal_id ?? null
-    }
-    safeParent.set(goal.id, hasCycle ? null : goal.parent_goal_id)
-  }
-
-  for (const goal of goals) {
-    const node = nodeMap.get(goal.id)!
-    const parentId = safeParent.get(goal.id)
-    if (parentId && nodeMap.has(parentId)) {
-      nodeMap.get(parentId)!.children.push(node)
-    } else {
-      roots.push(node)
-    }
-  }
-
-  return roots
-}
 
 /**
  * Flatten a goal tree back into a flat array of GoalWithProgress.
@@ -125,30 +77,6 @@ export function flattenTree(tree: GoalTreeNode[]): GoalWithProgress[] {
 }
 
 /**
- * Filter goals by life area, time horizon, status, and search text
- */
-export function filterGoals(
-  goals: GoalWithProgress[],
-  filters: GoalFilterState
-): GoalWithProgress[] {
-  return goals.filter((goal) => {
-    if (filters.lifeArea && goal.life_area !== filters.lifeArea) return false
-    if (filters.timeHorizon && deriveTimeHorizon(goal) !== filters.timeHorizon) return false
-    if (filters.status) {
-      if (filters.status === "complete" && !goal.is_complete) return false
-      if (filters.status === "active" && goal.is_complete) return false
-    }
-    if (filters.search) {
-      const q = filters.search.toLowerCase()
-      if (!goal.title.toLowerCase().includes(q) && !goal.life_area.toLowerCase().includes(q)) {
-        return false
-      }
-    }
-    return true
-  })
-}
-
-/**
  * Group goals by life area
  */
 export function groupGoalsByLifeArea(
@@ -159,21 +87,6 @@ export function groupGoalsByLifeArea(
     const key = goal.life_area || "custom"
     if (!groups[key]) groups[key] = []
     groups[key].push(goal)
-  }
-  return groups
-}
-
-/**
- * Group goals by derived time horizon
- */
-export function groupGoalsByTimeHorizon(
-  goals: GoalWithProgress[]
-): Record<string, GoalWithProgress[]> {
-  const groups: Record<string, GoalWithProgress[]> = {}
-  for (const goal of goals) {
-    const horizon = deriveTimeHorizon(goal)
-    if (!groups[horizon]) groups[horizon] = []
-    groups[horizon].push(goal)
   }
   return groups
 }
@@ -377,16 +290,6 @@ export function formatStreakLabel(weeks: number): string {
 }
 
 /**
- * Get the number of days remaining in the current week (Mon-Sun).
- * Sunday = 0 remaining, Monday = 6, etc.
- */
-export function getDaysLeftInWeek(): number {
-  const day = new Date().getDay() // 0=Sun, 1=Mon, ...6=Sat
-  if (day === 0) return 0 // Sunday = end of week
-  return 7 - day
-}
-
-/**
  * Projected date info for a goal with milestone_config and ramp_steps.
  */
 export interface ProjectedDateInfo {
@@ -540,38 +443,6 @@ export function isAlmostComplete(goal: GoalWithProgress, threshold = 0.8): boole
 }
 
 /**
- * Analyze 7 days of snapshots to determine active days and peak time bracket.
- * Uses snapshot created_at timestamps to infer activity times.
- */
-export function getWeeklyRhythm(snapshots: DailyGoalSnapshotRow[]): WeeklyRhythm {
-  const bracketCounts: Record<TimeOfDayBracket, number> = { morning: 0, afternoon: 0, evening: 0, night: 0 }
-  const activeDates = new Set<string>()
-
-  for (const snap of snapshots) {
-    if (snap.was_complete) {
-      activeDates.add(snap.snapshot_date)
-      const hour = new Date(snap.created_at).getHours()
-      bracketCounts[getTimeOfDayBracket(hour)]++
-    }
-  }
-
-  let peakBracket: TimeOfDayBracket | null = null
-  let maxCount = 0
-  for (const [bracket, count] of Object.entries(bracketCounts) as [TimeOfDayBracket, number][]) {
-    if (count > maxCount) {
-      maxCount = count
-      peakBracket = bracket
-    }
-  }
-
-  return {
-    activeDays: activeDates.size,
-    peakBracket: maxCount > 0 ? peakBracket : null,
-    bracketCounts,
-  }
-}
-
-/**
  * Compute pacing info for a habit_ramp goal.
  * Compares actual rate (current_value / weeks_elapsed) against
  * the projected rate from the current ramp step.
@@ -682,98 +553,6 @@ export function computeMultiPeriodStats(
     yearTotal: yearSnaps.length,
     monthDelta,
     yearDelta,
-  }
-}
-
-// ============================================================================
-// Will Gate & Bottleneck Analysis (Diagnostic Layer)
-// ============================================================================
-
-/** Default threshold: minimum approaches per session-hour before diagnostics engage */
-const WILL_GATE_THRESHOLD = 3
-
-/**
- * Compute the will gate — a time:approach ratio that determines whether
- * the user's bottleneck is willpower (getting started) vs skill (improving).
- *
- * If approaches/sessionHours < threshold → "Your bottleneck is getting started, not improving a skill"
- */
-export function computeWillGate(
-  weeklyApproaches: number,
-  sessionDurationMinutes: number,
-  threshold: number = WILL_GATE_THRESHOLD
-): WillGateResult {
-  const sessionHours = sessionDurationMinutes / 60
-  if (sessionHours <= 0) {
-    return {
-      gateTriggered: true,
-      ratio: 0,
-      message: "You haven't logged any session time this week. The bottleneck is getting out the door.",
-    }
-  }
-
-  const ratio = weeklyApproaches / sessionHours
-  const gateTriggered = ratio < threshold
-
-  return {
-    gateTriggered,
-    ratio: Math.round(ratio * 10) / 10,
-    message: gateTriggered
-      ? "Your bottleneck is getting started, not improving a skill. Focus on showing up more."
-      : "",
-  }
-}
-
-/**
- * Compute the primary bottleneck from active goals.
- * If will gate is triggered → return the will message (don't look at skills).
- * Otherwise → find the L3 goal with the worst pacing ratio (furthest behind pace).
- */
-export function computeBottleneck(
-  goals: GoalWithProgress[],
-  pacingMap: Map<string, PacingInfo>,
-  willGate: WillGateResult
-): BottleneckResult {
-  if (willGate.gateTriggered) {
-    return {
-      willGate,
-      bottleneckGoalId: null,
-      description: willGate.message,
-      recommendedFocus: "Get out and approach. Quantity before quality.",
-    }
-  }
-
-  // Find worst-pacing L3 goal
-  let worstGoalId: string | null = null
-  let worstRatio = Infinity
-
-  for (const goal of goals) {
-    if (goal.goal_level !== 3) continue
-    const pacing = pacingMap.get(goal.id)
-    if (!pacing) continue
-    if (pacing.pacingRatio < worstRatio) {
-      worstRatio = pacing.pacingRatio
-      worstGoalId = goal.id
-    }
-  }
-
-  if (!worstGoalId) {
-    return {
-      willGate,
-      bottleneckGoalId: null,
-      description: "All goals are on pace. Keep it up!",
-      recommendedFocus: "Maintain current habits.",
-    }
-  }
-
-  const worstGoal = goals.find((g) => g.id === worstGoalId)!
-  const worstPacing = pacingMap.get(worstGoalId)!
-
-  return {
-    willGate,
-    bottleneckGoalId: worstGoalId,
-    description: `"${worstGoal.title}" is your biggest bottleneck — ${Math.round(worstPacing.pacingRatio * 100)}% of target pace.`,
-    recommendedFocus: `Prioritize ${worstGoal.title} this week.`,
   }
 }
 
@@ -1197,16 +976,6 @@ export function getOrphanedGoalIds(goals: GoalWithProgress[]): string[] {
     }
   }
   return orphans
-}
-
-/**
- * Find an existing goal matching a template_id.
- */
-export function findExistingByTemplate(
-  goals: GoalWithProgress[],
-  templateId: string
-): GoalWithProgress | null {
-  return goals.find((g) => g.template_id === templateId) ?? null
 }
 
 /**

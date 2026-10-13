@@ -3179,10 +3179,6 @@ export function setDayNote(plan: NsPlan, date: string, text: string, now = nowIs
   return touch({ ...plan, notes }, now)
 }
 
-export function dayNote(plan: NsPlan, date: string): string {
-  return plan.notes[date] ?? ""
-}
-
 // ------------------------------------------------------ your own text fields
 
 /**
@@ -3562,11 +3558,6 @@ export function goalToolLink(goal: NsGoal): (typeof GOAL_TOOL_LINKS)[number] | n
   return GOAL_TOOL_LINKS.find((link) => link.match.some((m) => title.includes(m))) ?? null
 }
 
-/** Areas with a 10 written and nothing aimed at it. The gap worth naming. */
-export function areasWithoutGoals(plan: NsPlan): NsArea[] {
-  return plan.areas.filter((a) => !plan.goals.some((g) => g.areaId === a.id))
-}
-
 /** Areas sitting under the floor. These are the ones asking for attention. */
 export function areasUnderFloor(plan: NsPlan, today = todayISO()): NsArea[] {
   const ratings = wheelRatings(plan, today)
@@ -3768,24 +3759,6 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
 /** Every step's state at once, for the rail. */
 export function stepStates(plan: NsPlan, account: NsAccount = NO_ACCOUNT): Record<NorthStarTabId, NsStepState> {
   return Object.fromEntries(TAB_ORDER.map((tab: NorthStarTabId) => [tab, stepState(plan, tab, account)])) as Record<NorthStarTabId, NsStepState>
-}
-
-/** Whether a tab has anything on it worth reading back. */
-export function tabHasContent(plan: NsPlan, tab: NorthStarTabId, account: NsAccount = NO_ACCOUNT): boolean {
-  const p = nsProgress(plan, account)
-  if (tab === "star") return p.starWritten || starWorkWritten(plan)
-  if (tab === "now") return p.areasRated > 0 || p.areasWithTen > 0 || areasTouched(plan)
-  if (tab === "focus") return plan.seasonAreaIds.length > 0 || plan.seasonFocusId != null || account.hasOneThing
-  if (tab === "values") return plan.values.length > 0 || plan.currentValues.length > 0
-  if (tab === "commit") return answerOf(plan, COMMIT_KEY).trim().length > 0 || plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null)
-  if (tab === "milestones") return milestoneGoals(plan).length > 0 || plan.experiences.length > 0
-  if (tab === "systems") return systemGoals(plan).length > 0 || plan.routines.some((r) => r.steps.length > 0)
-  // A fork holds nothing of its own, so it never reads back as anything, and
-  // neither does a catalogue — what you took from it is in the other steps.
-  // Track is the same: it is the goals, somewhere else, not more of them.
-  if (tab === "pick" || tab === "templates" || tab === "track" || tab === "today" || tab === "recap") return false
-  if (tab === "one") return account.hasOneThing || plan.goals.some((g) => g.servesOneThing)
-  return plan.areas.some((a) => areaReview(plan, a.id).goalsAim != null) || REVIEW_PROMPTS.some((q) => answerOf(plan, q.id).trim())
 }
 
 /**
@@ -4943,12 +4916,6 @@ export function routineNeedsForTemplate(template: Template): RoutineNeed[] {
   return routineNeedsForObjectives(template.objectiveIds)
 }
 
-/** The needs behind one target, via its objective. */
-export function routineNeedsForTarget(targetId: string): RoutineNeed[] {
-  const target = TARGETS.find((t) => t.id === targetId)
-  return target ? routineNeedsForObjectives([target.objectiveId]) : []
-}
-
 /**
  * The routines the goals ALREADY in one area are asking for and have not got.
  *
@@ -5276,44 +5243,6 @@ export function daysBetween(fromISO: string, toISO: string): number {
   const to = Date.parse(`${toISO}T00:00:00Z`)
   if (!Number.isFinite(from) || !Number.isFinite(to)) return 0
   return Math.round((to - from) / 86400000)
-}
-
-/**
- * The plan as a run of months, each carrying what lands in it.
- *
- * The point of this is the shape rather than the detail: a year with things in
- * it every month reads as a plan, and a year with everything piled into the last
- * month reads — correctly — as twelve goals all quietly dated a year out.
- */
-export function planTimeline(plan: NsPlan, today = todayISO(), months = 12): Array<{ key: string; label: string; milestones: NsMilestone[] }> {
-  const all = plan.goals.flatMap((g) => goalMilestones(g, today))
-  const buckets: Array<{ key: string; label: string; milestones: NsMilestone[] }> = []
-  const start = monthKey(today)
-  for (let i = 0; i < months; i += 1) {
-    const iso = addMonthsISO(`${start}-01`, i)
-    buckets.push({ key: monthKey(iso), label: shortMonth(iso), milestones: [] })
-  }
-  const byKey = new Map(buckets.map((b) => [b.key, b]))
-  for (const milestone of all) {
-    const bucket = byKey.get(monthKey(milestone.date))
-    // Anything past the window is folded into the last month rather than
-    // dropped, so the count on screen is the whole plan and not a slice of it.
-    if (bucket) bucket.milestones.push(milestone)
-    else if (milestone.date > buckets[buckets.length - 1].key) buckets[buckets.length - 1].milestones.push(milestone)
-  }
-  for (const bucket of buckets) bucket.milestones.sort((a, b) => a.date.localeCompare(b.date))
-  return buckets
-}
-
-function monthKey(iso: string): string {
-  return iso.slice(0, 7)
-}
-
-const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-function shortMonth(iso: string): string {
-  const month = SHORT_MONTHS[Number(iso.slice(5, 7)) - 1] ?? ""
-  return `${month} ${iso.slice(2, 4)}`
 }
 
 // ------------------------------------------------------------------- the guide
@@ -6287,21 +6216,6 @@ export function placeStep(plan: NsPlan, routineId: string, stepId: string, days:
     startMin: startMin == null ? null : clamp(Math.round(startMin), 0, 24 * 60 - 1),
     ...(clean.length > 0 ? { daysPerWeek: clamp(clean.length, 1, 7) } : {}),
   }, now)
-}
-
-/** Take a step off the grid without deleting the step. */
-export function unplaceStep(plan: NsPlan, routineId: string, stepId: string, now = nowIso()): NsPlan {
-  return updateStep(plan, routineId, stepId, { days: [], startMin: null }, now)
-}
-
-/** Move a placed block to another day and hour, keeping the rest of its days. */
-export function moveBlock(plan: NsPlan, routineId: string, stepId: string, fromDay: number, toDay: number, startMin: number, now = nowIso()): NsPlan {
-  const step = plan.routines.find((r) => r.id === routineId)?.steps.find((s) => s.id === stepId)
-  if (!step) return plan
-  const days = step.days.includes(toDay) && fromDay !== toDay
-    ? step.days.filter((d) => d !== fromDay)
-    : step.days.map((d) => (d === fromDay ? toDay : d))
-  return placeStep(plan, routineId, stepId, days, startMin, now)
 }
 
 // ------------------------------------------------------ things to experience

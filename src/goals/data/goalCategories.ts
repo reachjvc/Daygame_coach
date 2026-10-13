@@ -6,7 +6,7 @@
  */
 
 import type { LucideIcon } from "lucide-react"
-import { LIFE_AREAS, LIFE_AREA_MAP, getLifeAreaConfig } from "@/src/goals/data/lifeAreas"
+import { getLifeAreaConfig } from "@/src/goals/data/lifeAreas"
 import type { GoalPeriod, LinkedMetric } from "@/src/db/goalTypes"
 
 export interface GoalSuggestion {
@@ -28,28 +28,6 @@ export interface GoalCategoryConfig {
   progressColor: string
   suggestions: GoalSuggestion[]
 }
-
-/**
- * GOAL_CATEGORIES maps to LIFE_AREAS for backward compat.
- * New code should use LIFE_AREAS directly.
- */
-export const GOAL_CATEGORIES: GoalCategoryConfig[] = LIFE_AREAS.map((area) => ({
-  id: area.id,
-  name: area.name,
-  icon: area.icon,
-  hex: area.hex,
-  color: area.color,
-  bgColor: area.bgColor,
-  borderColor: area.borderColor,
-  progressColor: area.progressColor,
-  suggestions: area.suggestions,
-}))
-
-/**
- * Map for O(1) category lookup — delegates to LIFE_AREA_MAP
- */
-export const GOAL_CATEGORY_MAP: Record<string, GoalCategoryConfig> =
-  Object.fromEntries(GOAL_CATEGORIES.map((c) => [c.id, c]))
 
 /**
  * Default category config for unknown categories

@@ -1059,14 +1059,6 @@ export function loadVisionPlanState(raw: string | null): VisionPlanLoad | null {
   return { state: { ...parsed.data, goals } as VisionPlanState, repairs }
 }
 
-/** Parse a persisted sandbox blob. Returns null for anything invalid — the
- * caller starts fresh rather than rendering a half-broken plan.
- * v17: a thin wrapper over `loadVisionPlanState`; use that one when you can
- * surface the repair report to the user. */
-export function parseVisionPlanState(raw: string | null): VisionPlanState | null {
-  return loadVisionPlanState(raw)?.state ?? null
-}
-
 /**
  * Stable-sort goal ids so goals of higher-priority life areas come first
  * (drag order of the area board), preserving the existing relative order
@@ -1094,27 +1086,6 @@ export function orderGoalIdsByArea(
 // never re-open one in an area you already left. The reverse index is computed,
 // never stored, so the two directions can't drift.
 // ---------------------------------------------------------------------------
-
-/** Goals that feed `goalId` — the reverse index over feedsGoalIds. */
-export function goalFeeders(goals: VisionGoalDraft[], goalId: string): VisionGoalDraft[] {
-  return goals.filter((g) => (g.feedsGoalIds ?? []).includes(goalId))
-}
-
-/** Flat edge list for rendering. `crossArea` compares the goals' effective
- * areas — explicit areaId when set, otherwise the pillar they hang off. */
-export function goalEdges(goals: VisionGoalDraft[]): Array<{ fromId: string; toId: string; crossArea: boolean }> {
-  const byId = new Map(goals.map((g) => [g.id, g]))
-  const scopeOf = (g: VisionGoalDraft) => g.areaId ?? `pillar:${g.pillarId}`
-  const out: Array<{ fromId: string; toId: string; crossArea: boolean }> = []
-  for (const g of goals) {
-    for (const toId of g.feedsGoalIds ?? []) {
-      const to = byId.get(toId)
-      if (!to) continue
-      out.push({ fromId: g.id, toId, crossArea: scopeOf(g) !== scopeOf(to) })
-    }
-  }
-  return out
-}
 
 /** Would adding from→to close a loop? (DFS forward from `to` looking for `from`.) */
 export function wouldCycle(goals: VisionGoalDraft[], fromId: string, toId: string): boolean {
@@ -1228,20 +1199,6 @@ export const CORRECTION_GUARD_RAIL = {
   videoId: "TRGRznrMSec",
 }
 
-/** The bi-weekly after-action check-in — his cleanest ready-made question set. */
-export const BIWEEKLY_CHECKIN = [
-  "Are you on track?",
-  "Are you making progress?",
-  "Are you behind?",
-  "What changes do you need to make, if any?",
-]
-
-/** Is a bi-weekly check-in due? Every 14 days from the plan's start. */
-export function biweeklyCheckinDue(startDate: string, today: string): boolean {
-  const d = dayNumber(startDate, today)
-  return d > 0 && d % 14 === 0
-}
-
 /** v21 — how many days into the 30-60 day conditioning window a belief is, and
  * whether it has cleared the minimum. Null when no replacement is written yet. */
 export function beliefConditioning(
@@ -1267,13 +1224,6 @@ export type HorizonYears = (typeof HORIZON_YEARS)[number]
 export function paretoKeepCount(total: number): number {
   if (total <= 0) return 0
   return Math.min(20, Math.max(1, Math.round(total * 0.2)))
-}
-
-/** Wants tagged for this year and circled — the output of the divergent phase. */
-export function circledThisYear(
-  wants: Array<{ years: number | null; circled: boolean; text: string; id: string }> | undefined,
-): Array<{ id: string; text: string }> {
-  return (wants ?? []).filter((w) => w.circled && w.years === 1).map((w) => ({ id: w.id, text: w.text }))
 }
 
 // ---------------------------------------------------------------------------
@@ -1340,9 +1290,6 @@ export const GUIDE_SESSIONS: GuideSession[] = [
     ask: "Sign it, and start.",
     why: "Set-and-forget is the most common failure. Signing starts the loop; it doesn't end the work." },
 ]
-
-export const guideSession = (id: GuideSessionId): GuideSession | undefined =>
-  GUIDE_SESSIONS.find((s) => s.id === id)
 
 export interface GuideProgress {
   /** Sessions completed, in the order they were finished. */
@@ -2235,13 +2182,6 @@ export function rolloverAdhocSince(progress: VisionProgress, since: string | nul
   let out = progress
   for (let i = days; i >= 1; i--) out = rolloverAdhoc(out, addDays(today, -i), today)
   return out
-}
-
-/** How many days of unfinished work `rolloverAdhocSince` would carry, so the
- * daily loop can say "you were away 3 days" instead of silently merging. */
-export function daysAway(since: string | null | undefined, today: string): number {
-  if (!since || since >= today) return 0
-  return Math.max(0, dayNumber(since, today) - 1)
 }
 
 // --- M5: Weekly Evaluation Ritual ---------------------------------------------

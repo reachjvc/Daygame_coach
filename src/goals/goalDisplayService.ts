@@ -13,20 +13,6 @@ export function getCategoryLabel(category: string): string {
   return category.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
 }
 
-export function isUnknownCategory(category: string | null): boolean {
-  if (!category) return false
-  return !isKnownDisplayCategory(category)
-}
-
-export function getGoalTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    recurring: "Recurring",
-    milestone: "Milestone",
-    habit_ramp: "Habit Ramp",
-  }
-  return labels[type] ?? type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-}
-
 export function getGoalPhaseLabel(phase: string): string {
   const labels: Record<string, string> = {
     acquisition: "Learning",

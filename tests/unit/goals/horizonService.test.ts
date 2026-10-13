@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest"
-import { classifyHorizon, formatCountdown, addDaysISO, clampDateWithin, suggestChildWithin } from "@/src/goals/horizonService"
+import { classifyHorizon, formatCountdown, addDaysISO } from "@/src/goals/horizonService"
 
 const NOW = new Date("2026-06-07T00:00:00")
 
@@ -25,28 +25,6 @@ describe("addDaysISO", () => {
   test("addDaysISO advances the date", () => {
     expect(addDaysISO("2026-06-07", 90)).toBe("2026-09-05")
     expect(addDaysISO("2026-06-07", 365)).toBe("2027-06-07")
-  })
-})
-
-describe("clampDateWithin (tier date nesting)", () => {
-  test("flags a child date later than its parent", () => {
-    expect(clampDateWithin("2026-12-01", "2026-06-07", "2026-09-01").violatesParent).toBe(true)
-    expect(clampDateWithin("2026-08-01", "2026-06-07", "2026-09-01").violatesParent).toBe(false)
-  })
-  test("flags a child date before the plan start", () => {
-    expect(clampDateWithin("2026-05-01", "2026-06-07", "2026-09-01").beforeStart).toBe(true)
-    expect(clampDateWithin("2026-07-01", "2026-06-07", "2026-09-01").beforeStart).toBe(false)
-  })
-  test("equal dates are allowed (not a violation)", () => {
-    expect(clampDateWithin("2026-09-01", "2026-06-07", "2026-09-01").violatesParent).toBe(false)
-  })
-  test("missing dates impose no constraint", () => {
-    expect(clampDateWithin("2026-12-01", undefined, undefined)).toEqual({ violatesParent: false, beforeStart: false })
-    expect(clampDateWithin(undefined, "2026-06-07", "2026-09-01")).toEqual({ violatesParent: false, beforeStart: false })
-  })
-  test("suggestChildWithin returns the parent date when set", () => {
-    expect(suggestChildWithin("2026-06-07", "2026-09-01")).toBe("2026-09-01")
-    expect(suggestChildWithin("2026-06-07", undefined)).toBeNull()
   })
 })
 

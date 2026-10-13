@@ -117,47 +117,6 @@ export function formatCountdown(targetDate: string, now: Date): string | null {
   return mo > 0 ? `in ${years}y ${mo}mo` : `in ${years}y`
 }
 
-// ---------------------------------------------------------------------------
-// Date nesting — a child tier date should fall within [start, parentDate]. We
-// SOFT-validate (flag, never block) so the user can still set whatever they want;
-// the UI surfaces a warning when a child reaches past its parent.
-// ---------------------------------------------------------------------------
-
-export interface DateNesting {
-  /** True when child > parent (child outlives its parent — usually a mistake). */
-  violatesParent: boolean
-  /** True when child < start (before the plan begins). */
-  beforeStart: boolean
-}
-
-/** Compare two YYYY-MM-DD strings as dates; null/empty sorts as "no constraint". */
-function cmpISO(a?: string | null, b?: string | null): number | null {
-  if (!a || !b) return null
-  const ta = Date.parse(a + "T00:00:00")
-  const tb = Date.parse(b + "T00:00:00")
-  if (Number.isNaN(ta) || Number.isNaN(tb)) return null
-  return ta === tb ? 0 : ta < tb ? -1 : 1
-}
-
-/**
- * Validate a child tier date against its plan start and parent tier date.
- * Pure + tolerant: missing dates simply don't constrain. Returns flags, not errors.
- */
-export function clampDateWithin(child: string | undefined, start: string | undefined, parentDate?: string): DateNesting {
-  const vsParent = cmpISO(child, parentDate)
-  const vsStart = cmpISO(child, start)
-  return {
-    violatesParent: vsParent === 1,
-    beforeStart: vsStart === -1,
-  }
-}
-
-/** Suggest a child date inside [start, parentDate]: the parent's date if set, else null. */
-export function suggestChildWithin(start: string | undefined, parentDate?: string): string | null {
-  if (parentDate) return parentDate
-  return null
-}
-
 /**
  * Linear-interpolate an ISO date `fraction` (0..1) of the way from start to end.
  * Used to pace milestone checkpoints across [planStart, targetDate] so the roadmap's
