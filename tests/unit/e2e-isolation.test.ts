@@ -107,6 +107,11 @@ function clicksTheStartButton(content: string): boolean {
   return bindings.some((name) => new RegExp(`\\b${name}\\s*\\.click\\(`).test(content))
 }
 
+/** Imports `test` from the per-worker account fixture, wherever the spec sits under tests/e2e. */
+function usesWorkerAccount(content: string): boolean {
+  return /from\s+['"](?:\.\.?\/)+fixtures\/test['"]/.test(content)
+}
+
 describe('E2E Test Isolation Compliance', () => {
   test('stateful E2E tests must use serial mode', () => {
     const e2eFiles = getAllE2EFiles()
@@ -119,6 +124,14 @@ describe('E2E Test Isolation Compliance', () => {
       // Skip if in allowlist (grandfathered or explicitly parallel-safe)
       if (GRANDFATHERED_PARALLEL_TESTS.has(relativePath)) continue
       if (ALLOWED_PARALLEL_TESTS.has(relativePath)) continue
+
+      // A spec on the per-worker account fixture (tests/e2e/fixtures/test.ts)
+      // owns its account: nothing it does can reach another worker's data,
+      // which is the only thing serial mode was protecting here. (Route
+      // interception is per page in Playwright and never leaked between tests.)
+      // When every spec is on the fixture, this rule goes with the shared
+      // accounts it existed for — Plans/tests-worth-their-keep.md, Phase 8.
+      if (usesWorkerAccount(content)) continue
 
       // Check if file is stateful (uses login or route interception)
       const usesLogin = /login\(page\)/.test(content) || /loginAsUserB\(page\)/.test(content)
@@ -154,6 +167,10 @@ describe('E2E Test Isolation Compliance', () => {
 
       // Skip if in cleanup allowlist
       if (ROUTE_TESTS_WITH_CLEANUP.has(relativePath)) continue
+      // Per-worker fixture specs use the test-scoped `page`: an interception
+      // dies with the page at the end of its test, so there is nothing to
+      // clean up. (A page shared across tests is the one way it could leak.)
+      if (usesWorkerAccount(content) && !/let\s+page\s*:\s*Page/.test(content)) continue
 
       // Check if file uses route interception
       const routeMatches = content.match(/page\.route\(/g)
