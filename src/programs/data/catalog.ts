@@ -6,7 +6,6 @@
  */
 
 import type { Discipline, LevelId, ProgramDefinition } from "../types"
-import { DISCIPLINES } from "../config"
 import { strongLifts5x5 } from "./strength/stronglifts5x5"
 import { wendler531 } from "./strength/wendler531"
 import { startingStrength } from "./strength/startingStrength"
@@ -26,9 +25,8 @@ import { customProgram } from "./customProgram"
  * It is a real program as far as `getProgram`/`requireProgram` are concerned —
  * an enrollment has to resolve through it — but it is not something anybody
  * picks off a list, because until you have designed it there is nothing in it.
- * Keeping it out of this array keeps it out of `programsByDiscipline`,
- * `programsForLevel` and the catalog UI in one move rather than by filtering at
- * each call site.
+ * Keeping it out of this array keeps it out of `hasProgramsForDiscipline` and
+ * the catalog UI in one move rather than by filtering at each call site.
  */
 export const ALL_PROGRAMS: ProgramDefinition[] = [
   strongLifts5x5,
@@ -59,37 +57,8 @@ export function requireProgram(id: string): ProgramDefinition {
   return p
 }
 
-export function programsByDiscipline(discipline: Discipline): ProgramDefinition[] {
-  return ALL_PROGRAMS.filter((p) => p.discipline === discipline).sort(
-    (a, b) => a.popularityRank - b.popularityRank
-  )
-}
-
 export function hasProgramsForDiscipline(discipline: Discipline): boolean {
   return ALL_PROGRAMS.some((p) => p.discipline === discipline)
-}
-
-/**
- * THE DISCIPLINES A PERSON CAN ACTUALLY BROWSE — derived, never listed.
- *
- * The list was typed by hand in the Templates step and named six. The
- * catalogue has seven, and the seventh — Ironman — holds the Half Ironman
- * plan, which was therefore unreachable from every screen in the app while
- * the sentence beside the list counted it among "thirteen cited programs".
- *
- * Derived here rather than in `config.ts` because config must not import the
- * program data: the disciplines are a vocabulary, the programs are content,
- * and content depending on vocabulary is the direction that works.
- */
-export const OFFERED_DISCIPLINES: Discipline[] = (
-  Object.keys(DISCIPLINES) as Discipline[]
-).filter((d) => DISCIPLINES[d].implemented && hasProgramsForDiscipline(d))
-
-/** Programs that serve a given level without routing elsewhere. */
-export function programsForLevel(level: LevelId): ProgramDefinition[] {
-  return ALL_PROGRAMS.filter((p) =>
-    p.levels.some((l) => l.id === level && !l.structuralVariantOf)
-  )
 }
 
 /**

@@ -448,17 +448,3 @@ export function carryAuthoredSettings(
   return { kind: "linear_rotation", days }
 }
 
-/** The example shown in the empty box — the format, taught by showing it. */
-export const PROGRAM_TEXT_PLACEHOLDER = `Push
-Bench Press 3x8 @60
-Overhead Press 3x8 @40
-+ Lateral Raise 3x12-20 @6
-
-Pull
-Deadlift 1x5 @100
-Barbell Row 3x8 @60
-+ Barbell Curl 3x10 @25
-
-Legs
-Back Squat 5x5 @80
-Romanian Deadlift 3x8 @60`

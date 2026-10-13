@@ -19,10 +19,10 @@
 
 import type { BodyGroup, LibraryExercise, MovementPattern } from "../types"
 
-// ---------------------------------------------------------------------------
-// Browsing: by body part
-// ---------------------------------------------------------------------------
-
+/**
+ * A body part as a person would write it. Not read by any screen yet:
+ * `AddLift` prints the raw `group` id beside each search result.
+ */
 export const BODY_GROUP_LABELS: Record<BodyGroup, string> = {
   chest: "Chest",
   back: "Back",
@@ -33,18 +33,6 @@ export const BODY_GROUP_LABELS: Record<BodyGroup, string> = {
   calves: "Calves",
   core: "Core",
 }
-
-/** Big muscles first, because that is the order a session is written in. */
-export const BODY_GROUP_ORDER: BodyGroup[] = [
-  "chest",
-  "back",
-  "shoulders",
-  "arms",
-  "quads",
-  "hamstrings_glutes",
-  "calves",
-  "core",
-]
 
 /**
  * The body part a movement pattern trains, which is right for almost every
@@ -75,18 +63,6 @@ const GROUP_FOR_PATTERN: Record<MovementPattern, BodyGroup> = {
  * building a shoulder day looks for it under Shoulders. Kept as an explicit
  * list because it is short and the exceptions are the interesting part.
  */
-/** A body part's most typical pattern — for lifts the user invents. */
-const PATTERN_FOR_GROUP: Record<BodyGroup, MovementPattern> = {
-  chest: "horizontal_push",
-  back: "horizontal_pull",
-  shoulders: "shoulders",
-  arms: "arms",
-  quads: "squat",
-  hamstrings_glutes: "hinge",
-  calves: "calves",
-  core: "core",
-}
-
 const GROUP_OVERRIDES: Record<string, BodyGroup> = {
   lib_face_pull: "shoulders",
   lib_rear_delt_row: "shoulders",
@@ -97,35 +73,6 @@ const GROUP_OVERRIDES: Record<string, BodyGroup> = {
   lib_wrist_curl: "arms",
   lib_reverse_wrist_curl: "arms",
 }
-
-export const PATTERN_LABELS: Record<MovementPattern, string> = {
-  squat: "Squat",
-  hinge: "Hinge",
-  horizontal_push: "Horizontal push",
-  vertical_push: "Vertical push",
-  horizontal_pull: "Horizontal pull",
-  vertical_pull: "Vertical pull",
-  lunge: "Single leg",
-  arms: "Arms",
-  shoulders: "Shoulders",
-  core: "Core",
-  calves: "Calves",
-}
-
-/** Order the patterns are offered in — legs, push, pull, then the small stuff. */
-export const PATTERN_ORDER: MovementPattern[] = [
-  "squat",
-  "hinge",
-  "lunge",
-  "horizontal_push",
-  "vertical_push",
-  "horizontal_pull",
-  "vertical_pull",
-  "shoulders",
-  "arms",
-  "core",
-  "calves",
-]
 
 /**
  * `bar` and `free` instead of one factory with a boolean, because which lifts
@@ -508,15 +455,14 @@ export function customLiftId(name: string): string | null {
  * So the parser's rule is this function and the parser calls it, rather than a
  * second copy of "what an unknown lift is" living in a component.
  *
- * NO BODY-PART QUESTION. `customLibraryEntry` asks, because the builder was a
- * form and one more field was cheap; `AddLift` deliberately does not, because
- * it is used at a rack mid-set and answering for somebody would be the app
- * inventing a fact about their training. `group` and `pattern` below are
- * therefore PLACEHOLDERS, not claims: nothing reads either for a lift outside
- * `EXERCISE_LIBRARY` — `patternForName`, `libraryByPattern` and `libraryByGroup`
- * all walk the library itself, and a synthesised entry is never in it. The
- * pattern is taken from the name when an alias happens to be recognised, which
- * costs nothing and occasionally helps a later swap.
+ * NO BODY-PART QUESTION. `AddLift` deliberately does not ask, because it is
+ * used at a rack mid-set and answering for somebody would be the app inventing
+ * a fact about their training. `group` and `pattern` below are therefore
+ * PLACEHOLDERS, not claims: nothing reads either for a lift outside
+ * `EXERCISE_LIBRARY` — `patternForName` walks the library itself, and a
+ * synthesised entry is never in it. The pattern is taken from the name when an
+ * alias happens to be recognised, which costs nothing and occasionally helps a
+ * later swap.
  *
  * Returns null for a name that is nothing but whitespace, like `customLiftId`.
  */
@@ -544,42 +490,10 @@ export function freeLiftEntry(name: string): LibraryExercise | null {
   }
 }
 
-export function customLibraryEntry(name: string, group: BodyGroup): LibraryExercise | null {
-  const clean = name.trim().replace(/\s+/g, " ").slice(0, 120)
-  if (!clean) return null
-  const id = customLiftId(clean)
-  if (!id) return null
-  return {
-    id,
-    name: clean,
-    group,
-    // A representative pattern for the body part, so a custom lift still has
-    // something sensible to offer when somebody swaps it later.
-    pattern: PATTERN_FOR_GROUP[group],
-    // Double progression, which is the accessory rule and the safe default for
-    // something we know nothing about.
-    compound: false,
-    barbell: false,
-    defaultSets: 3,
-    defaultRepMin: 8,
-    defaultRepMax: 12,
-    suggestedKg: { beginner: 0, intermediate: 0, advanced: 0 },
-  }
-}
-
 export const LIBRARY_BY_ID = new Map(EXERCISE_LIBRARY.map((e) => [e.id, e]))
 
 export function libraryExercise(id: string): LibraryExercise | undefined {
   return LIBRARY_BY_ID.get(id)
-}
-
-/** Everything that trains this body part — the browse index. */
-export function libraryByGroup(group: BodyGroup): LibraryExercise[] {
-  return EXERCISE_LIBRARY.filter((e) => e.group === group)
-}
-
-export function libraryByPattern(pattern: MovementPattern): LibraryExercise[] {
-  return EXERCISE_LIBRARY.filter((e) => e.pattern === pattern)
 }
 
 /**

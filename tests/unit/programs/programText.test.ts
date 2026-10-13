@@ -9,14 +9,12 @@
 
 import { describe, test, expect } from "vitest"
 import {
-  PROGRAM_TEXT_PLACEHOLDER,
   carryAuthoredSettings,
   formatProgramText,
   parseProgramText,
 } from "@/src/programs/programText"
 import { scheduleDays } from "@/src/programs/customize"
-import { customLibraryEntry, customLiftId } from "@/src/programs/data/exerciseLibrary"
-import { designProblems } from "@/src/programs/builder"
+import { customLiftId, freeLiftEntry } from "@/src/programs/data/exerciseLibrary"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import type { DayTemplate, LoadExercise, ProgramSchedule } from "@/src/programs/types"
 
@@ -56,13 +54,11 @@ Fri
 Barbell Row 5x5`)
     expect(problems).toEqual([])
     expect(scheduleDays(schedule)).toHaveLength(5)
-    expect(designProblems(schedule)).toEqual([])
   })
 
   test("extra blank lines between days are not empty days", () => {
     const { schedule } = parseProgramText("Push\nBench Press 3x8\n\n\n\nPull\nBarbell Row 3x8")
     expect(scheduleDays(schedule)).toHaveLength(2)
-    expect(designProblems(schedule)).toEqual([])
   })
 
   test("lifts written before any day name still get a home", () => {
@@ -294,17 +290,27 @@ describe("re-applying text keeps what the text cannot say", () => {
 })
 
 describe("round trip", () => {
-  test("the shipped example parses cleanly", () => {
-    const { schedule, problems, weights } = parseProgramText(PROGRAM_TEXT_PLACEHOLDER)
-    expect(problems).toEqual([])
-    expect(scheduleDays(schedule)).toHaveLength(3)
-    expect(designProblems(schedule)).toEqual([])
-    expect(Object.keys(weights).length).toBeGreaterThan(0)
-    expect(CustomScheduleSchema.safeParse(schedule).success).toBe(true)
-  })
-
   test("formatting then reparsing gives the same program", () => {
-    const first = parseProgramText(PROGRAM_TEXT_PLACEHOLDER)
+    // Three days, straight sets and a rep range, two supersets, a weight on
+    // every lift: each of the things the written form has to carry.
+    const WEEK = [
+      "Push",
+      "Bench Press 3x8 @60",
+      "Overhead Press 3x8 @40",
+      "+ Lateral Raise 3x12-20 @6",
+      "",
+      "Pull",
+      "Deadlift 1x5 @100",
+      "Barbell Row 3x8 @60",
+      "+ Barbell Curl 3x10 @25",
+      "",
+      "Legs",
+      "Back Squat 5x5 @80",
+      "Romanian Deadlift 3x8 @60",
+    ].join("\n")
+    const first = parseProgramText(WEEK)
+    expect(first.problems, "premise: the input itself parses cleanly").toEqual([])
+    expect(scheduleDays(first.schedule)).toHaveLength(3)
     const text = formatProgramText(first.schedule, first.weights)
     const second = parseProgramText(text)
     expect(second.problems).toEqual([])
@@ -368,7 +374,7 @@ describe("the id a typed lift gets", () => {
     expect(day[1]).toMatch(/_2$/)
   })
 
-  test("a typed unknown lift and a palette-added one share an id", () => {
+  test("a typed unknown lift and one picked in the editor share an id", () => {
     // Deliberately not in the library — Zercher Squat is, which is why the
     // first draft of this test passed for the wrong reason.
     const ODD = "Wobble Board Overhead Hold"
@@ -378,9 +384,9 @@ describe("the id a typed lift gets", () => {
     // Guard the premise: if the library ever learns this lift, say so here
     // rather than silently testing the library path again.
     expect(typed, "premise: the library must not know this lift").toMatch(/^custom_/)
-    // The palette mints its id through customLibraryEntry; both go through the
-    // same slug rule now, so a typed lift and a clicked one are one lift.
-    expect(typed).toBe(customLibraryEntry(ODD, "quads")!.id)
+    // The program editor builds an unknown lift through freeLiftEntry; both go
+    // through the same slug rule, so a typed lift and a picked one are one lift.
+    expect(typed).toBe(freeLiftEntry(ODD)!.id)
     expect(typed).toBe(customLiftId(ODD))
   })
 

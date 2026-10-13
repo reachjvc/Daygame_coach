@@ -9,33 +9,20 @@
  */
 
 import { describe, test, expect } from "vitest"
+import { buildExercise, hasWeight, numericWeights, progressionOfKind, setWeekday, convertTyped } from "@/src/programs/builder"
+import { fromKg, toKg } from "@/src/shared/weight"
+import { addDay, addExercise, scheduleDays, seedForAddedExercises } from "@/src/programs/customize"
 import {
-  PROGRESSION_CHOICES,
-  buildExercise,
-  designProblems,
-  emptyCustomSchedule,
-  hasWeight,
-  numericWeights,
-  joinWithNext,
-  progressionOfKind,
-  setIncrement,
-  setNote,
-  setProgression,
-  setSchemeKind,
+  applyLog,
+  computePrescription,
   dayForWeekday,
   isWeekdayAnchored,
-  setWeekday,
-  supersetGroups,
-  supersetLabel,
-  unjoin,
-  convertTyped,
-} from "@/src/programs/builder"
-import { fromKg, toKg } from "@/src/shared/weight"
-import { addDay, addExercise, moveExercise, scheduleDays, seedForAddedExercises } from "@/src/programs/customize"
-import { applyLog, computePrescription, roundToLoadable, seedEnrollment } from "@/src/programs/programsService"
+  roundToLoadable,
+  seedEnrollment,
+} from "@/src/programs/programsService"
 import { getProgram, requireProgram } from "@/src/programs/data/catalog"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
-import { CUSTOM_PROGRAM_ID, customProgram, isCustomProgram } from "@/src/programs/data/customProgram"
+import { CUSTOM_PROGRAM_ID, customProgram } from "@/src/programs/data/customProgram"
 import { libraryByName, libraryExercise } from "@/src/programs/data/exerciseLibrary"
 import { loadStyleOf } from "@/src/programs/programsService"
 import { effectiveProgram } from "@/src/programs/customize"
@@ -48,9 +35,27 @@ const dated = (s: ProgramSchedule) => scheduleDays(s) as Array<{ label: string; 
 const lifts = (s: ProgramSchedule, dayId: string) =>
   scheduleDays(s).find((d) => d.id === dayId)!.exercises as LoadExercise[]
 
+/** A week with nothing in it yet. */
+const emptyWeek = (): ProgramSchedule => ({ kind: "linear_rotation", days: [] })
+
+/**
+ * The same week with fields set on some of its lifts, written out literally —
+ * a superset letter, a note, a progression rule. Nothing derived, so a test
+ * built on it is about what the engine and the wire do with those fields.
+ */
+function withFields(s: ProgramSchedule, dayId: string, fields: Record<string, Partial<LoadExercise>>): ProgramSchedule {
+  if (s.kind !== "linear_rotation") throw new Error("fixture: a days-and-lifts week")
+  return {
+    kind: "linear_rotation",
+    days: s.days.map((d) =>
+      d.id !== dayId ? d : { ...d, exercises: d.exercises.map((e) => ({ ...e, ...fields[e.id] })) }
+    ),
+  }
+}
+
 /** A two-lift day, the smallest thing worth testing. */
 function twoLiftDay(): { schedule: ProgramSchedule; dayId: string; ids: string[] } {
-  let s = addDay(emptyCustomSchedule(), "Push")
+  let s = addDay(emptyWeek(), "Push")
   const dayId = scheduleDays(s)[0].id
   const a = addExercise(s, dayId, libraryExercise("lib_bench_press")!)
   s = a.schedule
@@ -83,8 +88,6 @@ describe("the custom shell", () => {
     expect(getProgram(CUSTOM_PROGRAM_ID)).toBeDefined()
     expect(ALL_PROGRAMS.map((p) => p.id)).not.toContain(CUSTOM_PROGRAM_ID)
     expect(requireProgram(CUSTOM_PROGRAM_ID).id).toBe(CUSTOM_PROGRAM_ID)
-    expect(isCustomProgram(CUSTOM_PROGRAM_ID)).toBe(true)
-    expect(isCustomProgram("stronglifts-5x5")).toBe(false)
   })
 
   test("seeds nothing, so every lift must be given a weight", () => {
@@ -100,20 +103,6 @@ describe("the custom shell", () => {
 // ---------------------------------------------------------------------------
 
 describe("designing", () => {
-  test("an empty design asks for a day before anything else", () => {
-    expect(designProblems(emptyCustomSchedule())).toEqual(["Add a training day to get started."])
-  })
-
-  test("a day with no lifts is named as the problem", () => {
-    const s = addDay(emptyCustomSchedule(), "Push")
-    expect(designProblems(s)).toEqual(["Push has no lifts in it yet."])
-  })
-
-  test("a finished design has no problems", () => {
-    const { schedule } = twoLiftDay()
-    expect(designProblems(schedule)).toEqual([])
-  })
-
   test("a compound arrives on straight sets, an accessory on a rep range", () => {
     const { schedule, dayId } = twoLiftDay()
     const [bench, raise] = lifts(schedule, dayId)
@@ -122,150 +111,13 @@ describe("designing", () => {
     expect(raise.scheme.kind).toBe("rep_range")
     expect(raise.progression.kind).toBe("double_progression")
   })
-
-  test("scheme kind toggles carry the reps across rather than resetting them", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    // linear 3×5 → range starting at the reps it had
-    let s = setSchemeKind(schedule, dayId, ids[0], "rep_range")
-    let bench = lifts(s, dayId)[0]
-    expect(bench.scheme).toMatchObject({ kind: "rep_range", repMin: 5, repMax: 8 })
-    // and back again, keeping the bottom of the range
-    s = setSchemeKind(s, dayId, ids[0], "linear")
-    bench = lifts(s, dayId)[0]
-    expect(bench.scheme).toMatchObject({ kind: "linear", reps: 5 })
-  })
-
-  test("switching to the same scheme kind is a no-op", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    expect(setSchemeKind(schedule, dayId, ids[0], "linear")).toBe(schedule)
-  })
-
-  test("a note is stored, trimmed and removable", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    let s = setNote(schedule, dayId, ids[0], "  3-1-1 tempo  ")
-    expect(lifts(s, dayId)[0].note).toBe("3-1-1 tempo")
-    s = setNote(s, dayId, ids[0], "   ")
-    expect(lifts(s, dayId)[0].note).toBeUndefined()
-  })
 })
 
 // ---------------------------------------------------------------------------
 
 describe("progression is a choice", () => {
-  test("every offered choice builds a rule the engine understands", () => {
-    for (const choice of PROGRESSION_CHOICES) {
-      expect(progressionOfKind(choice.id).kind).toBe(choice.id)
-    }
-  })
-
   test("a percentage wave cannot be built one lift at a time", () => {
     expect(() => progressionOfKind("percentage_tm")).toThrow(/cannot be built one lift at a time/)
-    expect(PROGRESSION_CHOICES.map((c) => c.id)).not.toContain("percentage_tm")
-  })
-
-  test("switching rules keeps the increment the lifter chose", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    let s = setIncrement(schedule, dayId, ids[0], 5, "kg")
-    s = setProgression(s, dayId, ids[0], "double_progression")
-    const bench = lifts(s, dayId)[0]
-    expect(bench.progression.kind).toBe("double_progression")
-    expect((bench.progression as { incrementKg: number }).incrementKg).toBe(5)
-  })
-
-  test("the increment is set in the lifter's own unit, never converted", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    const s = setIncrement(schedule, dayId, ids[0], 10, "lb")
-    const p = lifts(s, dayId)[0].progression as { incrementKg: number; incrementLb: number }
-    expect(p.incrementLb).toBe(10)
-    expect(p.incrementKg).toBe(2.5) // untouched
-  })
-
-  test("a lift set to hold has no increment to set", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    const s = setProgression(schedule, dayId, ids[0], "none")
-    expect(() => setIncrement(s, dayId, ids[0], 5, "kg")).toThrow(/does not add weight/)
-  })
-
-  test("a nonsense increment is refused", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    expect(() => setIncrement(schedule, dayId, ids[0], 0, "kg")).toThrow(/more than nothing/)
-    expect(() => setIncrement(schedule, dayId, ids[0], -5, "kg")).toThrow(/more than nothing/)
-  })
-})
-
-// ---------------------------------------------------------------------------
-
-describe("supersets", () => {
-  test("joining two neighbours puts them in one lettered group", () => {
-    const { schedule, dayId } = twoLiftDay()
-    const s = joinWithNext(schedule, dayId, 0)
-    const [a, b] = lifts(s, dayId)
-    expect(a.supersetGroup).toBe("A")
-    expect(b.supersetGroup).toBe("A")
-    expect(supersetGroups(s, dayId)).toEqual(["A"])
-  })
-
-  test("labels number by position, so reordering renumbers", () => {
-    const { schedule, dayId } = twoLiftDay()
-    const s = joinWithNext(schedule, dayId, 0)
-    expect(supersetLabel(lifts(s, dayId), 0)).toBe("A1")
-    expect(supersetLabel(lifts(s, dayId), 1)).toBe("A2")
-
-    const swapped = moveExercise(s, dayId, 0, 1)
-    expect(supersetLabel(lifts(swapped, dayId), 0)).toBe("A1")
-    expect(supersetLabel(lifts(swapped, dayId), 1)).toBe("A2")
-  })
-
-  test("an unpaired lift has no label", () => {
-    const { schedule, dayId } = twoLiftDay()
-    expect(supersetLabel(lifts(schedule, dayId), 0)).toBe(null)
-  })
-
-  test("a third lift joins the existing pair rather than starting a rival group", () => {
-    const { schedule: twoLifts, dayId } = twoLiftDay()
-    const schedule = addExercise(twoLifts, dayId, libraryExercise("lib_cable_fly")!).schedule
-    let s = joinWithNext(schedule, dayId, 0)
-    s = joinWithNext(s, dayId, 1)
-    expect(lifts(s, dayId).map((e) => e.supersetGroup)).toEqual(["A", "A", "A"])
-    expect(supersetGroups(s, dayId)).toEqual(["A"])
-    expect(supersetLabel(lifts(s, dayId), 2)).toBe("A3")
-  })
-
-  test("a second, separate pair gets its own letter", () => {
-    const { schedule: twoLifts, dayId } = twoLiftDay()
-    let schedule = twoLifts
-    for (const id of ["lib_cable_fly", "lib_triceps_pushdown"]) {
-      schedule = addExercise(schedule, dayId, libraryExercise(id)!).schedule
-    }
-    let s = joinWithNext(schedule, dayId, 0)
-    s = joinWithNext(s, dayId, 2)
-    expect(lifts(s, dayId).map((e) => e.supersetGroup)).toEqual(["A", "A", "B", "B"])
-  })
-
-  test("unpairing releases the lift left behind — a pair of one is not a superset", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    const joined = joinWithNext(schedule, dayId, 0)
-    const s = unjoin(joined, dayId, ids[0])
-    expect(lifts(s, dayId).map((e) => e.supersetGroup)).toEqual([undefined, undefined])
-  })
-
-  test("unpairing from a group of three leaves the other two paired", () => {
-    const { schedule: twoLifts, dayId } = twoLiftDay()
-    const schedule = addExercise(twoLifts, dayId, libraryExercise("lib_cable_fly")!).schedule
-    let s = joinWithNext(schedule, dayId, 0)
-    s = joinWithNext(s, dayId, 1)
-    s = unjoin(s, dayId, lifts(s, dayId)[2].id)
-    expect(lifts(s, dayId).map((e) => e.supersetGroup)).toEqual(["A", "A", undefined])
-  })
-
-  test("the last lift has nothing under it to pair with", () => {
-    const { schedule, dayId } = twoLiftDay()
-    expect(() => joinWithNext(schedule, dayId, 1)).toThrow(/no lift under this one/)
-  })
-
-  test("unpairing something that is not paired is a no-op", () => {
-    const { schedule, dayId, ids } = twoLiftDay()
-    expect(unjoin(schedule, dayId, ids[0])).toBe(schedule)
   })
 })
 
@@ -283,7 +135,7 @@ describe("a self-designed program runs on the real engine", () => {
 
   test("the superset tag reaches the session, so it can be shown", () => {
     const { schedule, dayId, ids } = twoLiftDay()
-    const joined = joinWithNext(schedule, dayId, 0)
+    const joined = withFields(schedule, dayId, { [ids[0]]: { supersetGroup: "A" }, [ids[1]]: { supersetGroup: "A" } })
     const enr = enrollCustom(joined, { [ids[0]]: 60, [ids[1]]: 10 })
     const rx = computePrescription(effectiveProgram(customProgram, joined), enr)
     expect(rx.exercises.map((e) => e.supersetGroup)).toEqual(["A", "A"])
@@ -291,7 +143,7 @@ describe("a self-designed program runs on the real engine", () => {
 
   test("a note reaches the session and replaces the generated one", () => {
     const { schedule, dayId, ids } = twoLiftDay()
-    const s = setNote(schedule, dayId, ids[1], "each side")
+    const s = withFields(schedule, dayId, { [ids[1]]: { note: "each side" } })
     const enr = enrollCustom(s, { [ids[0]]: 60, [ids[1]]: 10 })
     const rx = computePrescription(effectiveProgram(customProgram, s), enr)
     expect(rx.exercises[1].note).toBe("each side")
@@ -299,7 +151,7 @@ describe("a self-designed program runs on the real engine", () => {
 
   test("both halves of a superset still progress on their own rule", () => {
     const { schedule, dayId, ids } = twoLiftDay()
-    const joined = joinWithNext(schedule, dayId, 0)
+    const joined = withFields(schedule, dayId, { [ids[0]]: { supersetGroup: "A" }, [ids[1]]: { supersetGroup: "A" } })
     const enr = enrollCustom(joined, { [ids[0]]: 60, [ids[1]]: 10 })
     const program = effectiveProgram(customProgram, joined)
     const rx = computePrescription(program, enr)
@@ -331,7 +183,7 @@ describe("a self-designed program runs on the real engine", () => {
 describe('"leave it to me" holds the weight', () => {
   test("a held lift does not move however well the session went", () => {
     const { schedule, dayId, ids } = twoLiftDay()
-    const held = setProgression(schedule, dayId, ids[0], "none")
+    const held = withFields(schedule, dayId, { [ids[0]]: { progression: { kind: "none" } } })
     const enr = enrollCustom(held, { [ids[0]]: 60, [ids[1]]: 10 })
     const program = effectiveProgram(customProgram, held)
     const rx = computePrescription(program, enr)
@@ -359,7 +211,7 @@ describe('"leave it to me" holds the weight', () => {
 
   test("a held lift does not deload either, however badly it went", () => {
     const { schedule, dayId, ids } = twoLiftDay()
-    const held = setProgression(schedule, dayId, ids[0], "none")
+    const held = withFields(schedule, dayId, { [ids[0]]: { progression: { kind: "none" } } })
     let enr = enrollCustom(held, { [ids[0]]: 60, [ids[1]]: 10 })
     const program = effectiveProgram(customProgram, held)
 
@@ -381,7 +233,7 @@ describe('"leave it to me" holds the weight', () => {
     const withPull = addDay(pushOnly, "Pull")
     const pullId = scheduleDays(withPull)[1].id
     const third = addExercise(withPull, pullId, libraryExercise("lib_barbell_row")!)
-    const held = setProgression(third.schedule, dayId, ids[0], "none")
+    const held = withFields(third.schedule, dayId, { [ids[0]]: { progression: { kind: "none" } } })
 
     const enr = enrollCustom(held, { [ids[0]]: 60, [ids[1]]: 10, [third.exerciseId]: 50 })
     const program = effectiveProgram(customProgram, held)
@@ -401,16 +253,17 @@ describe('"leave it to me" holds the weight', () => {
 describe("the wire schema accepts a design", () => {
   test("a superset, a note and a held lift all survive validation", () => {
     const { schedule, dayId, ids } = twoLiftDay()
-    let s = joinWithNext(schedule, dayId, 0)
-    s = setNote(s, dayId, ids[0], "pause on the chest")
-    s = setProgression(s, dayId, ids[1], "none")
+    const s = withFields(schedule, dayId, {
+      [ids[0]]: { supersetGroup: "A", note: "pause on the chest" },
+      [ids[1]]: { supersetGroup: "A", progression: { kind: "none" } },
+    })
     const parsed = CustomScheduleSchema.safeParse(s)
     expect(parsed.success, parsed.error?.issues[0]?.message).toBe(true)
   })
 
   test("an empty design is refused at the wire", () => {
-    expect(CustomScheduleSchema.safeParse(emptyCustomSchedule()).success).toBe(false)
-    expect(CustomScheduleSchema.safeParse(addDay(emptyCustomSchedule(), "Push")).success).toBe(false)
+    expect(CustomScheduleSchema.safeParse(emptyWeek()).success).toBe(false)
+    expect(CustomScheduleSchema.safeParse(addDay(emptyWeek(), "Push")).success).toBe(false)
   })
 
   test("a superset group cannot be arbitrary free text", () => {
@@ -525,7 +378,7 @@ describe("bodyweight is a real starting weight", () => {
   })
 
   test("a bodyweight lift seeds and prescribes at nothing", () => {
-    let s = addDay(emptyCustomSchedule(), "Push")
+    let s = addDay(emptyWeek(), "Push")
     const dayId = scheduleDays(s)[0].id
     const added = addExercise(s, dayId, libraryExercise("lib_push_up")!)
     s = added.schedule
@@ -536,7 +389,7 @@ describe("bodyweight is a real starting weight", () => {
   })
 
   test("seeding an added bodyweight lift mid-program is allowed", () => {
-    let s = addDay(emptyCustomSchedule(), "Push")
+    let s = addDay(emptyWeek(), "Push")
     const dayId = scheduleDays(s)[0].id
     const added = addExercise(s, dayId, libraryExercise("lib_push_up")!)
     s = added.schedule
@@ -546,7 +399,7 @@ describe("bodyweight is a real starting weight", () => {
   })
 
   test("a barbell lift given 0 still floors at the bar", () => {
-    let s = addDay(emptyCustomSchedule(), "Legs")
+    let s = addDay(emptyWeek(), "Legs")
     const dayId = scheduleDays(s)[0].id
     const added = addExercise(s, dayId, libraryExercise("lib_back_squat")!)
     s = added.schedule
@@ -577,7 +430,7 @@ describe("buildExercise", () => {
 
 describe("days of the week", () => {
   function twoDays() {
-    let s = addDay(emptyCustomSchedule(), "Push")
+    let s = addDay(emptyWeek(), "Push")
     s = addExercise(s, scheduleDays(s)[0].id, libraryExercise("lib_bench_press")!).schedule
     s = addDay(s, "Pull")
     s = addExercise(s, scheduleDays(s)[1].id, libraryExercise("lib_barbell_row")!).schedule
@@ -614,14 +467,6 @@ describe("days of the week", () => {
     expect(isWeekdayAnchored(setWeekday(half, pull, 4))).toBe(true)
   })
 
-  test("a half-assigned week is reported, not interpreted", () => {
-    const { schedule, push } = twoDays()
-    const half = setWeekday(schedule, push, 1)
-    expect(designProblems(half)[0]).toMatch(/Pull has no day of the week/)
-    // Fully assigned, or fully unassigned, are both fine.
-    expect(designProblems(schedule)).toEqual([])
-  })
-
   test("dayForWeekday finds the session for a given day", () => {
     const { schedule, push, pull } = twoDays()
     let s = setWeekday(schedule, push, 1)
@@ -654,7 +499,7 @@ describe("days of the week", () => {
 describe("logging the session you actually did", () => {
   /** Two days, each with one distinct lift, so progression is attributable. */
   function twoDayProgram() {
-    let s = addDay(emptyCustomSchedule(), "Push")
+    let s = addDay(emptyWeek(), "Push")
     const push = scheduleDays(s)[0].id
     const bench = addExercise(s, push, libraryExercise("lib_bench_press")!)
     s = bench.schedule

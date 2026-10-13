@@ -64,8 +64,3 @@ export const customProgram: ProgramDefinition = {
     days: [{ id: "custom_day_1", label: "Day 1", exercises: [placeholder] }],
   },
 }
-
-/** True for an enrollment that is somebody's own design rather than a cited program. */
-export function isCustomProgram(programId: string): boolean {
-  return programId === CUSTOM_PROGRAM_ID
-}

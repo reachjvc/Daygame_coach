@@ -312,9 +312,8 @@ export interface DayTemplate {
    * have weekdays ("Push is Monday"), so the field is theirs to set.
    *
    * When every day carries one, the next session is chosen by today's date
-   * rather than by the cursor. When none do, the cursor walks the list as
-   * before. Those are the only two states; a half-assigned week is refused at
-   * the point of editing rather than resolved by guessing.
+   * rather than by the cursor. Otherwise — none, or only some — the cursor
+   * walks the list as before (`isWeekdayAnchored`).
    */
   weekday?: number
 }

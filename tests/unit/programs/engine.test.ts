@@ -10,7 +10,6 @@ import {
   toKg,
   fromKg,
   describeSets,
-  needsInput,
   summariseProgression,
   formatLoad,
   unbrokenRun,
@@ -18,8 +17,6 @@ import {
   daysSinceLastSession,
   LAYOFF_DAYS,
   staleLifts,
-  lastTimePerLift,
-  unknownExerciseIds,
   isSessionOf,
   sessionTypeFor,
   platesFor,
@@ -34,7 +31,6 @@ import { recommendedRoutine } from "@/src/programs/data/calisthenics/recommended
 import { splitsMobility } from "@/src/programs/data/flexibility/splitsMobility"
 import { startingStrength } from "@/src/programs/data/strength/startingStrength"
 import { phul } from "@/src/programs/data/bodybuilding/phul"
-import { upperLower } from "@/src/programs/data/bodybuilding/upperLower"
 import { fiveKToTenK } from "@/src/programs/data/cardio/fiveKToTenK"
 import { sprintTriathlon } from "@/src/programs/data/endurance/triathlon"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
@@ -317,8 +313,6 @@ describe("PPL — the six-day template it cites", () => {
     expect(bench.sets.slice(0, 4).every((set) => set.reps === 5 && !set.amrap)).toBe(true)
     expect(bench.sets[4].amrap).toBe(true)
     expect(bench.sets[0].weight).toBe(70)
-    // And it cannot be logged closed: "5+" has no prescribed answer.
-    expect(needsInput(bench)).toBe(true)
   })
 
   test("hitting the target on the last set adds weight; upper 2.5, lower 5", () => {
@@ -649,19 +643,6 @@ describe("describeSets", () => {
   })
 })
 
-describe("needsInput", () => {
-  const set = (n: number, amrap = false): PrescribedSet =>
-    ({ setNumber: n, reps: 5, amrap, weight: 40, weightKg: 40 })
-
-  test("an AMRAP lift must be opened — logging the floor would record a lift you never did", () => {
-    expect(needsInput({ exerciseId: "x", name: "Squat", sets: [set(1), set(2, true)] })).toBe(true)
-  })
-
-  test("a fully prescribed lift does not", () => {
-    expect(needsInput({ exerciseId: "x", name: "Squat", sets: [set(1), set(2)] })).toBe(false)
-  })
-})
-
 /**
  * A YEAR OF TRAINING, READ BACK.
  *
@@ -965,95 +946,6 @@ describe("a level change only invalidates edits when the program itself changes"
 })
 
 /**
- * WHAT ACTUALLY HAPPENED, not what was asked for.
- *
- * The session screen rendered exactly the prescribed number of set rows and
- * offered no way to change it, so stopping at three of five — or pushing a
- * sixth — could not be written down. The app recorded five as prescribed and
- * progressed off a set nobody lifted.
- */
-describe("lastTimePerLift", () => {
-  const s = (at: string, id: string, sets: [number, number][]) => ({
-    logged_at: new Date(at).toISOString(),
-    entries: [{ exerciseId: id, sets: sets.map(([reps, weight], i) => ({ setNumber: i + 1, reps, weight })) }],
-  })
-
-  test("collapses a uniform session the way somebody would say it", () => {
-    const out = lastTimePerLift([s("2026-03-01", "squat", [[5, 60], [5, 60], [5, 60]])], "kg")
-    expect(out.squat).toContain("3 × 5 @ 60 kg")
-  })
-
-  test("does not flatten sets that differ — that would be a lie", () => {
-    const out = lastTimePerLift([s("2026-03-01", "squat", [[5, 60], [3, 70]])], "kg")
-    expect(out.squat).toContain("60×5, 70×3")
-  })
-
-  test("means the last time you did THAT LIFT, not the last session", () => {
-    // Alternating programs: the most recent session was the other day.
-    const logs = [
-      s("2026-03-01", "bench", [[5, 50], [5, 50]]),
-      s("2026-03-03", "squat", [[5, 80], [5, 80]]),
-    ]
-    const out = lastTimePerLift(logs, "kg")
-    expect(out.bench).toContain("50 kg")
-    expect(out.squat).toContain("80 kg")
-  })
-
-  test("takes the newest, whatever order the logs arrive in", () => {
-    const logs = [s("2026-01-01", "squat", [[5, 40]]), s("2026-06-01", "squat", [[5, 90]])]
-    expect(lastTimePerLift(logs, "kg").squat).toContain("90 kg")
-  })
-
-  test("a lift never done has no last time rather than a made-up one", () => {
-    expect(lastTimePerLift([], "kg")).toEqual({})
-  })
-})
-
-/**
- * A SESSION MAY ONLY NAME LIFTS THE PROGRAM HAS.
- *
- * A log referencing `bench` against a program whose lift is `ul_bench` was
- * accepted, stored and returned 200. Nothing downstream can recover: the engine
- * has no state to progress for an id it has never seen, and every screen that
- * turns an id back into a name prints the raw id for ever.
- */
-describe("unknownExerciseIds", () => {
-  test("rejects an id the program does not have, and names it", () => {
-    expect(unknownExerciseIds(upperLower, [{ exerciseId: "bench" }])).toEqual(["bench"])
-  })
-
-  test("accepts the program's real ids", () => {
-    expect(unknownExerciseIds(upperLower, [{ exerciseId: "ul_bench" }, { exerciseId: "ul_row" }])).toEqual([])
-  })
-
-  test("reports every bad id once, not the first and not duplicates", () => {
-    const out = unknownExerciseIds(upperLower, [
-      { exerciseId: "bench" }, { exerciseId: "row" }, { exerciseId: "bench" }, { exerciseId: "ul_squat" },
-    ])
-    expect(out.sort()).toEqual(["bench", "row"])
-  })
-
-  test("an endurance session has no entries at all, which is valid", () => {
-    // Couch to 5K logs a session with an empty entry list by design.
-    expect(unknownExerciseIds(couchTo5k, [])).toEqual([])
-  })
-
-  test("every days-and-lifts program accepts its own lifts", () => {
-    // The check must never reject a legitimate session for any program.
-    for (const program of ALL_PROGRAMS) {
-      if (program.schedule.kind === "endurance_weeks") continue // weeks, not days
-      const ids = scheduleDays(program.schedule).flatMap((d) => d.exercises.map((e) => ({ exerciseId: e.id })))
-      expect(unknownExerciseIds(program, ids), program.id).toEqual([])
-    }
-  })
-
-  test("an endurance plan has no lifts, so an entry sent against one is unknown", () => {
-    // Answering rather than crashing: `scheduleDays` throws on these by design.
-    expect(unknownExerciseIds(couchTo5k, [{ exerciseId: "squat" }])).toEqual(["squat"])
-  })
-})
-
-/**
  * WHAT DO I PUT ON THE BAR.
  *
  * Arithmetic somebody does in their head between sets, gets wrong, and then
@@ -1280,10 +1172,5 @@ describe("every program can be described without crashing", () => {
     // A workout answering no program at all is a gym session, which is what
     // every dashboard tile has always assumed.
     expect(sessionTypeFor(null)).toBe("weights")
-  })
-
-  test("an entry sent against a running plan is unknown, not a crash", () => {
-    const endurance = ALL_PROGRAMS.find((p) => p.schedule.kind === "endurance_weeks")!
-    expect(unknownExerciseIds(endurance, [{ exerciseId: "squat" }])).toEqual(["squat"])
   })
 })

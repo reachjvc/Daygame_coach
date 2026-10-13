@@ -14,7 +14,6 @@ import {
   computePrescription,
   judgeLoadEntry,
   entriesFromSets,
-  needsInput,
   pickTodaysDay,
   replayEnrollment,
   repairUneventfulEdit,
@@ -338,23 +337,6 @@ describe("the other two engines", () => {
         entries: [],
       })
     ).not.toThrow()
-  })
-})
-
-// ============================================================================
-// A rep range has no single right answer
-// ============================================================================
-
-describe("a lift with a rep range", () => {
-  test("cannot be logged closed", () => {
-    // "6–8" was seeded as 6, so the one-tap save recorded the bottom of every
-    // range — and adding weight needs the TOP on every set. On the programs
-    // built out of rep ranges the weight could never move.
-    const enr = enroll(upperLower, "intermediate")
-    const p = computePrescription(upperLower, enr)
-    const bench = p.exercises.find((e) => e.exerciseId === "ul_bench")!
-    expect(bench.sets[0].repRangeMax).toBeGreaterThan(bench.sets[0].reps)
-    expect(needsInput(bench)).toBe(true)
   })
 })
 

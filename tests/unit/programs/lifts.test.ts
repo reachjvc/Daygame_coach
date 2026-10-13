@@ -12,33 +12,31 @@
 
 import { describe, test, expect } from "vitest"
 import {
-  BODY_GROUP_LABELS,
-  BODY_GROUP_ORDER,
   EXERCISE_LIBRARY,
-  libraryByGroup,
-  PATTERN_ORDER,
-  customLibraryEntry,
+  customLiftId,
+  freeLiftEntry,
   libraryExercise,
   patternForName,
   searchLibrary,
   canBeUnweighted,
 } from "@/src/programs/data/exerciseLibrary"
 import { addDay, addExercise, loadExerciseFromLibrary, scheduleDays } from "@/src/programs/customize"
-// `builder.ts`, not the builder COMPONENT's re-export of it: a test that
-// imports a pure function through a 1,300-line React screen mounts nothing and
-// proves nothing about the screen, and it dies the day that screen is deleted.
-import { emptyCustomSchedule, setDropSets } from "@/src/programs/builder"
 import { formatProgramText, parseProgramText } from "@/src/programs/programText"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
 import type { LoadExercise, ProgramSchedule } from "@/src/programs/types"
 
-const dayOf = (s: ProgramSchedule) => scheduleDays(s)[0]
-const lifts = (s: ProgramSchedule) => dayOf(s).exercises as LoadExercise[]
+const emptyWeek = (): ProgramSchedule => ({ kind: "linear_rotation", days: [] })
 
-function oneLiftDay() {
-  const schedule = addDay(emptyCustomSchedule(), "Push")
+/** One day holding a bench press with `drops` written on it literally. */
+function benchWithDrops(drops: number): ProgramSchedule {
+  const schedule = addDay(emptyWeek(), "Push")
   const dayId = scheduleDays(schedule)[0].id
-  return { ...addExercise(schedule, dayId, libraryExercise("lib_bench_press")!), dayId }
+  const out = addExercise(schedule, dayId, libraryExercise("lib_bench_press")!).schedule
+  if (out.kind !== "linear_rotation") throw new Error("fixture: a days-and-lifts week")
+  return {
+    kind: "linear_rotation",
+    days: out.days.map((d) => ({ ...d, exercises: d.exercises.map((e) => ({ ...e, dropSets: drops })) })),
+  }
 }
 
 describe("finding a lift", () => {
@@ -81,13 +79,6 @@ describe("the pool itself", () => {
     const names = EXERCISE_LIBRARY.map((e) => e.name.toLowerCase())
     expect(new Set(ids).size).toBe(ids.length)
     expect(new Set(names).size).toBe(names.length)
-  })
-
-  test("offers something in every movement pattern the picker lists", () => {
-    // A pattern heading with nothing under it is a dead end in the UI.
-    for (const pattern of PATTERN_ORDER) {
-      expect(EXERCISE_LIBRARY.filter((e) => e.pattern === pattern).length).toBeGreaterThan(0)
-    }
   })
 
   test("every entry resolves back to its own pattern by name", () => {
@@ -139,78 +130,54 @@ describe("the pool itself", () => {
   })
 })
 
+/**
+ * `freeLiftEntry` is the one rule for a lift the library does not know: the
+ * program editor's search builds from it, and so does the text parser.
+ */
 describe("a lift you write yourself", () => {
-  test("keeps the name as typed, tidied", () => {
-    const entry = customLibraryEntry("  Cable   Thing  ", "arms")!
+  test("keeps the name as typed, tidied, under the one custom id rule", () => {
+    const entry = freeLiftEntry("  Cable   Thing  ")!
     expect(entry.name).toBe("Cable Thing")
-    expect(entry.pattern).toBe("arms")
+    expect(entry.id).toBe(customLiftId("Cable Thing"))
   })
 
-  test("is free-loaded with no starting weight, because we know nothing about it", () => {
+  test("is free-loaded on double progression with no starting weight, because we know nothing about it", () => {
     // Guessing barbell floors a 6 kg movement at the 20 kg bar, and a made-up
     // suggested weight under a made-up lift is a number pretending to be advice.
-    const entry = customLibraryEntry("Cable Thing", "arms")!
-    expect(entry.barbell).toBe(false)
-    expect(entry.compound).toBe(false)
+    const entry = freeLiftEntry("Cable Thing")!
+    const lift = loadExerciseFromLibrary(entry, entry.id)
+    expect(lift.loadStyle).toBe("free")
+    expect(lift.progression.kind).toBe("double_progression")
     expect(Object.values(entry.suggestedKg)).toEqual([0, 0, 0])
   })
 
   test("refuses a name that is not one", () => {
-    expect(customLibraryEntry("", "arms")).toBeNull()
-    expect(customLibraryEntry("   ", "arms")).toBeNull()
+    expect(freeLiftEntry("")).toBeNull()
+    expect(freeLiftEntry("   ")).toBeNull()
   })
 
   test("does not join the library everyone else sees", () => {
     const before = EXERCISE_LIBRARY.length
-    customLibraryEntry("Cable Thing", "arms")
+    freeLiftEntry("Cable Thing")
     expect(EXERCISE_LIBRARY.length).toBe(before)
     expect(patternForName("Cable Thing")).toBeNull()
   })
 
   test("goes into a day and passes the wire schema like any other lift", () => {
-    const schedule = addDay(emptyCustomSchedule(), "Arms")
+    const schedule = addDay(emptyWeek(), "Arms")
     const dayId = scheduleDays(schedule)[0].id
-    const out = addExercise(schedule, dayId, customLibraryEntry("Cable Thing", "arms")!).schedule
+    const out = addExercise(schedule, dayId, freeLiftEntry("Cable Thing")!).schedule
     expect((scheduleDays(out)[0].exercises[0] as LoadExercise).name).toBe("Cable Thing")
     expect(CustomScheduleSchema.safeParse(out).success).toBe(true)
   })
 })
 
 describe("drop sets", () => {
-  test("go on and come back off through the same control", () => {
-    const { schedule, dayId } = oneLiftDay()
-    const id = lifts(schedule)[0].id
-    const on = setDropSets(schedule, dayId, id, 2)
-    expect((lifts(on)[0] as LoadExercise).dropSets).toBe(2)
-    const off = setDropSets(on, dayId, id, 0)
-    expect((lifts(off)[0] as LoadExercise).dropSets).toBeUndefined()
-  })
-
-  test("are capped, because nine strips is a typo and not a plan", () => {
-    const { schedule, dayId } = oneLiftDay()
-    const id = lifts(schedule)[0].id
-    expect((lifts(setDropSets(schedule, dayId, id, 9))[0] as LoadExercise).dropSets).toBe(4)
-    expect((lifts(setDropSets(schedule, dayId, id, -3))[0] as LoadExercise).dropSets).toBeUndefined()
-  })
-
-  test("DO NOT TOUCH THE PRESCRIPTION — they are extra work, not extra sets", () => {
-    // If drops became sets, the engine would read the working weight as having
-    // collapsed and deload a lift that is going fine.
-    const { schedule, dayId } = oneLiftDay()
-    const id = lifts(schedule)[0].id
-    const before = lifts(schedule)[0]
-    const after = lifts(setDropSets(schedule, dayId, id, 3))[0]
-    expect(after.scheme).toEqual(before.scheme)
-    expect(after.progression).toEqual(before.progression)
-  })
-
   test("survive the written form, which is the only way they could be lost", () => {
     // formatProgramText writes them out; the parser's last rule is "whatever is
     // left is the name", so an unread suffix would come back as a lift called
     // "Bench Press +2 drops" — matching nothing in the library or workout_sets.
-    const { schedule, dayId } = oneLiftDay()
-    const id = lifts(schedule)[0].id
-    const text = formatProgramText(setDropSets(schedule, dayId, id, 2))
+    const text = formatProgramText(benchWithDrops(2))
     expect(text).toContain("+2 drops")
 
     const parsed = parseProgramText(text)
@@ -229,79 +196,7 @@ describe("drop sets", () => {
   })
 
   test("a design with drops still passes the wire schema", () => {
-    const { schedule, dayId } = oneLiftDay()
-    const id = lifts(schedule)[0].id
-    expect(CustomScheduleSchema.safeParse(setDropSets(schedule, dayId, id, 3)).success).toBe(true)
-  })
-})
-
-// ---------------------------------------------------------------------------
-
-describe("finding a lift where you would look for it", () => {
-  /**
-   * The report: "they are not all squats in squats, and things like certain leg
-   * exercises, or shoulder press, isnt there, and dumbell shrug etc".
-   *
-   * Almost nothing was actually absent. Shoulder Press and Dumbbell Shrug were
-   * both in the pool — filed under "Vertical push", which is not a place anyone
-   * looks. The browse index was movement patterns; people browse by body part.
-   */
-  test("every lift has a body group, and every group has lifts", () => {
-    for (const e of EXERCISE_LIBRARY) {
-      expect(BODY_GROUP_ORDER, `${e.name} has group ${e.group}`).toContain(e.group)
-    }
-    for (const g of BODY_GROUP_ORDER) {
-      expect(libraryByGroup(g).length, `${g} is empty`).toBeGreaterThan(0)
-    }
-  })
-
-  test("shoulder presses are under Shoulders, not hidden in a push pattern", () => {
-    const names = libraryByGroup("shoulders").map((e) => e.name)
-    expect(names).toContain("Overhead Press")
-    expect(names).toContain("Dumbbell Shoulder Press")
-    expect(names).toContain("Machine Shoulder Press")
-    expect(names).toContain("Arnold Press")
-  })
-
-  test("both shrugs are under Shoulders", () => {
-    const names = libraryByGroup("shoulders").map((e) => e.name)
-    expect(names).toContain("Barbell Shrug")
-    expect(names).toContain("Dumbbell Shrug")
-  })
-
-  test("the Quads group is quad work — and not everything is a squat", () => {
-    const names = libraryByGroup("quads").map((e) => e.name)
-    expect(names).toContain("Leg Press")
-    expect(names).toContain("Leg Extension")
-    expect(names).toContain("Bulgarian Split Squat")
-    // The tab is named for what it trains, so a Leg Press in it is not a lie.
-    expect(BODY_GROUP_LABELS.quads).toBe("Quads")
-  })
-
-  test("hamstring and glute work is its own group, not buried under a hinge", () => {
-    const names = libraryByGroup("hamstrings_glutes").map((e) => e.name)
-    for (const n of ["Leg Curl", "Seated Leg Curl", "Romanian Deadlift", "Hip Thrust", "Good Morning"]) {
-      expect(names, n).toContain(n)
-    }
-  })
-
-  test("rear-delt work is filed by what it trains, not by how it moves", () => {
-    // A Face Pull is a horizontal pull; nobody builds a shoulder day and looks
-    // for it under Back.
-    expect(libraryByGroup("shoulders").map((e) => e.name)).toContain("Face Pull")
-    expect(libraryByGroup("back").map((e) => e.name)).not.toContain("Face Pull")
-  })
-
-  test("chest and back are not mixed together", () => {
-    expect(libraryByGroup("chest").map((e) => e.name)).toContain("Bench Press")
-    expect(libraryByGroup("back").map((e) => e.name)).toContain("Pull-up")
-    expect(libraryByGroup("chest").map((e) => e.name)).not.toContain("Pull-up")
-  })
-
-  test("a lift you write yourself is filed under the body part you picked", () => {
-    const own = customLibraryEntry("Reverse Hyper Machine", "hamstrings_glutes")!
-    expect(own.group).toBe("hamstrings_glutes")
-    expect(own.pattern).toBe("hinge")
+    expect(CustomScheduleSchema.safeParse(benchWithDrops(3)).success).toBe(true)
   })
 })
 

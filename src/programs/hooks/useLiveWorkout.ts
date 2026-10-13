@@ -342,19 +342,6 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
   }, [])
 
   /**
-   * The workout as it stands, readable from a callback without re-creating it.
-   *
-   * `refresh` has to know whether a screen was showing a workout when the
-   * server said there is none, and it cannot close over `workout` without
-   * being rebuilt on every set — which would restart the interval that calls
-   * it.
-   */
-  const workoutRef = useRef<LiveWorkout | null>(initial)
-  useEffect(() => {
-    workoutRef.current = workout
-  }, [workout])
-
-  /**
    * Apply a server copy only if nothing newer has been ISSUED.
    *
    * This compared against `applied.current` — "nothing newer has already been
@@ -383,34 +370,6 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     applied.current = seq
     setWorkout(next)
   }, [])
-
-  const refresh = useCallback(async () => {
-    const seq = ++issued.current
-    try {
-      const res = await fetch("/api/workouts/live")
-      if (!res.ok) return
-      const next = (await res.json()) as LiveWorkout | null
-      /**
-       * NOTHING OPEN, WHILE THIS SCREEN IS SHOWING SOMETHING. The server has
-       * just said the workout is not there — finished or thrown away
-       * elsewhere — and clearing it without saying so leaves the screen on
-       * "This workout is finished", which is the one thing it must not claim
-       * wrongly.
-       *
-       * Nothing calls `refresh` today; it is exported and the live screen does
-       * not use it. That is exactly why this is here rather than in a comment:
-       * the first caller would otherwise reintroduce the lie, and nothing would
-       * say so.
-       */
-      if (next === null && workoutRef.current !== null) {
-        workoutVanished(workoutRef.current.id, "This workout is no longer open.")
-        return
-      }
-      applyServer(seq, next)
-    } catch {
-      // Offline. What is on screen stays on screen.
-    }
-  }, [applyServer])
 
   /**
    * Send everything waiting, oldest first. Stops at the first failure.
@@ -1081,7 +1040,6 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     adjust,
     finish,
     discard,
-    refresh,
     flush,
   }
 }

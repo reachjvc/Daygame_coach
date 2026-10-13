@@ -181,28 +181,6 @@ describe("the workout is gone", () => {
     expect(result.current.error).toMatch(/finished somewhere else/i)
   })
 
-  it("a refresh that finds nothing open says so, rather than clearing the screen quietly", async () => {
-    /**
-     * `refresh` has no caller today — it is exported and the live screen does
-     * not use it. That is the reason for the test rather than a reason against
-     * it: applying a `null` from the server without marking it leaves the
-     * screen on "This workout is finished", and the first caller would
-     * reintroduce that with nothing to say so.
-     */
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.resolve({ ok: true, status: 200, json: async () => null }) as unknown as Promise<Response>)
-    )
-    const { result } = renderHook(() => useLiveWorkout(workout))
-
-    await act(async () => {
-      await result.current.refresh()
-    })
-
-    await waitFor(() => expect(result.current.workout).toBeNull())
-    expect(result.current.vanished).toBe(true)
-  })
-
   it("clears the rest clock, which would otherwise count down over nothing", async () => {
     vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(goneResponse())))
     const { result } = renderHook(() => useLiveWorkout(workout))

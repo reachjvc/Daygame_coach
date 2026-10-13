@@ -22,7 +22,6 @@ import {
   WEEKDAY_SHORT,
 } from "./config"
 import { isTimedLift, libraryByName } from "./data/exerciseLibrary"
-import { CUSTOM_PROGRAM_ID } from "./data/customProgram"
 import { enrollmentName } from "./data/catalog"
 import { readReturn } from "@/src/shared/returnTo"
 import { typedNumber } from "@/src/shared/typedNumber"
@@ -204,8 +203,9 @@ export function loadStyleOf(
  *
  * Deliberately all-or-nothing. A week where three days have weekdays and two do
  * not has no coherent answer to "what is today's session" on the days nobody
- * assigned, and every way of resolving it is a guess. `designProblems` reports
- * the half-assigned state so it is fixed rather than interpreted.
+ * assigned, and every way of resolving it is a guess — so it runs in order until
+ * every day has one. Nothing refuses a half-assigned week: `DayAssignment` pins
+ * one day at a time.
  *
  * Lives here, with the engine, because it decides what gets prescribed. It was
  * in `builder.ts` next to the editor that sets the weekdays, which is where you
@@ -341,40 +341,6 @@ export function formatDateOnly(iso: string, style: "weekday" | "short"): string 
     timeZone: "UTC",
     ...(style === "weekday" ? { weekday: "short" } : { day: "numeric", month: "short" }),
   })
-}
-
-/**
- * IS THE WEEK IN THE BUILDER ALREADY RUNNING?
- *
- * The builder's "started" state was component state, so it returned to "idle"
- * the moment anything remounted it — and the design saved in the browser was
- * never marked as started at all. Come back the next day, press the armed
- * green Start again, and you have silently paused the copy you were three
- * weeks into and begun a fresh one from your typed weights.
- *
- * TWO WAYS TO MATCH, in order. The design records the enrollment it started,
- * which is exact. Failing that — a design saved before the id was recorded, or
- * one restored on another device — the week is compared STRUCTURALLY against
- * every running self-built program.
- *
- * Weights are deliberately not compared: after one session the enrollment's
- * weights have moved on, so any comparison including them would stop matching
- * exactly when it mattered most. Nor is `JSON.stringify` used — it would make
- * the answer depend on key order, which is luck, not equality.
- */
-export function runningCopyOf(
-  design: { enrollmentId: string | null; schedule: ProgramSchedule },
-  active: ProgramEnrollment[]
-): ProgramEnrollment | null {
-  if (design.enrollmentId) {
-    const byId = active.find((e) => e.id === design.enrollmentId)
-    if (byId) return byId
-  }
-  return (
-    active.find(
-      (e) => e.program_id === CUSTOM_PROGRAM_ID && e.customSchedule && sameWeek(e.customSchedule, design.schedule)
-    ) ?? null
-  )
 }
 
 /**
@@ -1000,9 +966,8 @@ export function computePrescription(
      * The shape the r/Fitness PPL and StrongLifts-style "5+" work actually
      * have, and one the engine could not say before: `linear` has no AMRAP set
      * and `percentage_tm` is a weekly table rather than one lift's setting. The
-     * last set carries the floor as its rep target and `amrap`, which is what
-     * makes the session refuse to be logged closed (`needsInput`) — logging a
-     * "5+" as five would record a number nobody chose.
+     * last set carries the floor as its rep target and `amrap`, because logging
+     * a "5+" as five would record a number nobody chose.
      */
     if (ex.scheme.kind === "straight_amrap") {
       const weight = prescribedWeight(state.workingWeight!, ex, unit, enrollment.plates)
@@ -2419,22 +2384,6 @@ export function pickLastSets<
   return out
 }
 
-/**
- * Whether a lift has to be opened before it can be logged honestly.
- *
- * An AMRAP set has no prescribed answer — the whole point is how many you got —
- * so "log it as prescribed" would quietly record the floor of the range as your
- * result and progress you off a number you never lifted.
- */
-export function needsInput(exercise: PrescribedExercise): boolean {
-  // A REP RANGE HAS NO PRESCRIBED ANSWER EITHER. "6–8" was seeded as 6, so the
-  // one-tap save recorded the bottom of every range — and the rule for adding
-  // weight is hitting the TOP on every set. On the three programs built out of
-  // rep ranges the weight could therefore never move, however well the session
-  // had gone, unless you opened each lift and typed the top number by hand.
-  return exercise.sets.some((s) => s.amrap || s.repRangeMax != null)
-}
-
 // ---------------------------------------------------------------------------
 // A year of it, read back
 // ---------------------------------------------------------------------------
@@ -2639,76 +2588,6 @@ export function staleLifts(
 
 /** Long enough away that the weights waiting for you are probably wrong. */
 export const LAYOFF_DAYS = 21
-
-/**
- * What you did last time, per lift, in the words you would say it in.
- *
- * "What did I get last week" is the question somebody is actually answering
- * when they decide today's numbers, and every other lifting app puts the answer
- * beside the input. This screen had it nowhere — the data was sitting in the
- * session logs the whole time.
- *
- * Reads the most recent session that CONTAINED the lift, not the most recent
- * session: on an alternating program the last session was the other day, and
- * "last time" means the last time you did this lift.
- */
-export function lastTimePerLift(
-  logs: { entries: LoggedExercise[]; logged_at: string }[],
-  unitLabel: string
-): Record<string, string> {
-  const newestFirst = [...logs].sort((a, b) => b.logged_at.localeCompare(a.logged_at))
-  const out: Record<string, string> = {}
-
-  for (const log of newestFirst) {
-    for (const entry of log.entries ?? []) {
-      if (out[entry.exerciseId] || entry.sets.length === 0) continue
-      const reps = entry.sets.map((s) => s.reps)
-      const weights = entry.sets.map((s) => s.weight)
-      const sameReps = reps.every((r) => r === reps[0])
-      const sameWeight = weights.every((w) => w === weights[0])
-      // Uniform sets collapse; anything else is listed, for the same reason
-      // `describeSets` refuses to flatten a wave — "5 × 5" would be a lie.
-      const body = sameReps && sameWeight
-        ? `${entry.sets.length} × ${reps[0]} @ ${formatLoad(weights[0])} ${unitLabel}`
-        : entry.sets.map((s) => `${formatLoad(s.weight)}×${s.reps}`).join(", ")
-      out[entry.exerciseId] = `${body} · ${new Date(log.logged_at).toLocaleDateString(DISPLAY_LOCALE)}`
-    }
-  }
-  return out
-}
-
-/**
- * Exercise ids in a logged session that the program does not contain.
- *
- * A session was accepted, stored and returned 200 while naming lifts that do
- * not exist in the enrollment's program — `bench` against a program whose lift
- * is `ul_bench`. Nothing downstream could recover: the engine has no state to
- * progress for an id it has never seen, and every screen that turns an id back
- * into a name falls through to printing the raw id for ever.
- *
- * Returns the offending ids rather than a boolean, because "unknown exercise"
- * with no name is a support ticket rather than an error message.
- *
- * An ENDURANCE session legitimately has no entries at all, so an empty list is
- * always valid — this only ever rejects an id that was actually sent.
- */
-export function unknownExerciseIds(
-  program: ProgramDefinition,
-  entries: { exerciseId: string }[]
-): string[] {
-  if (entries.length === 0) return []
-  const known = new Set<string>()
-  // `scheduleDays` throws on an endurance plan, which genuinely has weeks and
-  // not days. Such a plan has no exercises at all, so ANY entry sent against it
-  // is unknown — that is the answer, not a crash.
-  if (program.schedule.kind !== "endurance_weeks") {
-    for (const day of scheduleDays(program.schedule)) {
-      for (const ex of day.exercises) known.add(ex.id)
-    }
-  }
-  return [...new Set(entries.map((e) => e.exerciseId))].filter((id) => !known.has(id))
-}
-
 
 /**
  * Which plates to load for a target weight.
