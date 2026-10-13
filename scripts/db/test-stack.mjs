@@ -71,8 +71,8 @@ function versionOf(file) {
   return BigInt(m[1].padEnd(14, "0"))
 }
 
-/** Writes the generated migrations folder and returns a hash of what it holds. */
-function assemble() {
+/** The migrations the stack is built from, in order, and a hash of their names and contents. */
+function plan() {
   const first = fs.readFileSync(BASELINE, "utf8").split("\n", 1)[0]
   const m = /^-- baseline-stamp: (\d+)$/.exec(first)
   if (!m) throw new Error(`${BASELINE} has no "-- baseline-stamp:" line. Re-run scripts/db/baseline.sh.`)
@@ -82,8 +82,6 @@ function assemble() {
     .filter((f) => f.endsWith(".sql") && versionOf(f) > stamp)
     .sort((a, b) => (versionOf(a) < versionOf(b) ? -1 : 1))
 
-  fs.rmSync(GENERATED, { recursive: true, force: true })
-  fs.mkdirSync(GENERATED, { recursive: true })
   // The order is the point: see the header. Before-baseline must run first, or
   // the baseline's objects are created under the local stack's wide defaults.
   const files = [
@@ -91,14 +89,61 @@ function assemble() {
     ["00000000000001_baseline.sql", BASELINE],
     ["00000000000002_auth_shim.sql", SHIM],
     ...newer.map((f) => [f, path.join(REPO_MIGRATIONS, f)]),
-  ]
+  ].map(([name, from]) => [name, fs.readFileSync(from)])
   const hash = createHash("sha256")
-  for (const [name, from] of files) {
-    const sql = fs.readFileSync(from)
-    fs.writeFileSync(path.join(GENERATED, name), sql)
-    hash.update(name).update(sql)
+  for (const [name, sql] of files) hash.update(name).update(sql)
+  return { files, hash: hash.digest("hex"), newer }
+}
+
+/**
+ * Writes the generated folder next to itself and swaps it in, so a reader never
+ * sees it half-written. Only called under the lock, and only when the schema
+ * changed — several suites call `up` at once and must not rewrite it under each
+ * other.
+ */
+function writeGenerated(files) {
+  const staging = `${GENERATED}.${process.pid}`
+  fs.rmSync(staging, { recursive: true, force: true })
+  fs.mkdirSync(staging, { recursive: true })
+  for (const [name, sql] of files) fs.writeFileSync(path.join(staging, name), sql)
+  fs.rmSync(GENERATED, { recursive: true, force: true })
+  fs.renameSync(staging, GENERATED)
+}
+
+const LOCK = path.join(WORKDIR, "supabase/.temp/up.lock")
+const LOCK_STALE_MS = 15 * 60_000
+
+/**
+ * ONE `up` AT A TIME CHANGES THE STACK. The browser suite, the database suite
+ * and several sessions all call `up`; two of them starting or resetting the
+ * same stack at once would break both. A directory is the lock because
+ * creating one is atomic. A lock older than any real start is someone's
+ * crashed run and is taken over, loudly.
+ */
+function withLock(run) {
+  fs.mkdirSync(path.dirname(LOCK), { recursive: true })
+  const deadline = Date.now() + LOCK_STALE_MS
+  for (;;) {
+    try {
+      fs.mkdirSync(LOCK)
+      break
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error
+      const age = Date.now() - fs.statSync(LOCK).mtimeMs
+      if (age > LOCK_STALE_MS) {
+        console.error(`[test-stack] taking over a lock left ${Math.round(age / 60_000)} min ago by a run that did not finish`)
+        fs.rmSync(LOCK, { recursive: true, force: true })
+        continue
+      }
+      if (Date.now() > deadline) throw new Error(`[test-stack] still locked after ${LOCK_STALE_MS / 60_000} min: ${LOCK}`)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500)
+    }
   }
-  return { hash: hash.digest("hex"), newer }
+  try {
+    return run()
+  } finally {
+    fs.rmSync(LOCK, { recursive: true, force: true })
+  }
 }
 
 function isRunning() {
@@ -152,20 +197,29 @@ function requirePinnedCli() {
 
 function up() {
   requirePinnedCli()
-  const { hash, newer } = assemble()
-  const previous = fs.existsSync(STAMP_FILE) ? fs.readFileSync(STAMP_FILE, "utf8") : null
+  const { files, hash, newer } = plan()
+  const stamp = () => (fs.existsSync(STAMP_FILE) ? fs.readFileSync(STAMP_FILE, "utf8") : null)
 
-  if (!isRunning()) {
-    console.error("[test-stack] starting the local test backend…")
-    supabase(["start", "-x", EXCLUDED.join(",")])
-  } else if (previous !== hash) {
-    // Running, but built from different SQL (a new migration, a new baseline).
-    console.error("[test-stack] schema changed since this stack started; resetting…")
-    supabase(["db", "reset"])
-  }
-  fs.mkdirSync(path.dirname(STAMP_FILE), { recursive: true })
-  fs.writeFileSync(STAMP_FILE, hash)
-  if (newer.length) console.error(`[test-stack] applied on top of the baseline: ${newer.join(", ")}`)
+  // The common case touches nothing: running, and built from this exact SQL.
+  if (stamp() === hash && isRunning()) return readEnv()
+
+  withLock(() => {
+    // Re-check under the lock: another run may have done the work meanwhile.
+    const running = isRunning()
+    if (running && stamp() === hash) return
+    writeGenerated(files)
+    if (!running) {
+      console.error("[test-stack] starting the local test backend…")
+      supabase(["start", "-x", EXCLUDED.join(",")])
+    } else {
+      // Running, but built from different SQL (a new migration, a new baseline).
+      console.error("[test-stack] schema changed since this stack started; resetting…")
+      supabase(["db", "reset"])
+    }
+    fs.mkdirSync(path.dirname(STAMP_FILE), { recursive: true })
+    fs.writeFileSync(STAMP_FILE, hash)
+    if (newer.length) console.error(`[test-stack] applied on top of the baseline: ${newer.join(", ")}`)
+  })
   return readEnv()
 }
 
