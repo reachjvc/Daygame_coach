@@ -2,7 +2,7 @@
  * THE BACKEND THE BROWSER SUITE RUNS AGAINST.
  *
  * A throwaway local Supabase built from production's schema by
- * `scripts/db/test-stack.mjs` (Phase 7 of docs/plans/tests-worth-their-keep.md),
+ * `scripts/db/test-stack.mjs` (Phase 7 of Plans/tests-worth-their-keep.md),
  * never the live project. Until Phase 8 every browser run signed in to three
  * real accounts in production and created and wiped rows there.
  *

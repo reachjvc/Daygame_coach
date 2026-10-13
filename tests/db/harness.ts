@@ -11,7 +11,7 @@
  * and nothing has to be wiped between them. That is what lets the suite run in
  * parallel. `TEST_SHARED_USER=1` hands every caller the same user instead; a
  * suite that stays green with it set is not relying on its isolation, which is
- * the proof the plan asks for (docs/plans/tests-worth-their-keep.md, R5).
+ * the proof the plan asks for (Plans/tests-worth-their-keep.md, R5).
  *
  * THE APP'S OWN DATA CODE RUNS UNCHANGED. Repos build their client through
  * `src/db/supabase.ts`. A test file replaces that one module:

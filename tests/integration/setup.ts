@@ -39,7 +39,7 @@ export async function getClient(): Promise<Client> {
  * The argument only labels the address, to make a failure readable; an email
  * passed in is cut at the `@`. Every call is a NEW account, unless
  * `TEST_SHARED_USER=1`, when every call returns the same one (the isolation
- * proof, docs/plans/tests-worth-their-keep.md R5).
+ * proof, Plans/tests-worth-their-keep.md R5).
  */
 export async function createTestUser(label = "user"): Promise<string> {
   const safe = label.split("@")[0]!.replace(/[^a-z0-9-]/gi, "-") || "user"

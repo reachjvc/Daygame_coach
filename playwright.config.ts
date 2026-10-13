@@ -9,7 +9,7 @@ dotenv.config({ path: '.env.local', override: true })
 /**
  * THE BACKEND THE APP UNDER TEST TALKS TO: the throwaway local Supabase built
  * from production's schema (`scripts/db/test-stack.mjs`), never the live
- * project. Until Phase 8 of docs/plans/tests-worth-their-keep.md every browser
+ * project. Until Phase 8 of Plans/tests-worth-their-keep.md every browser
  * run created and wiped rows in production through three real accounts.
  *
  * Started, or reused in about a second, once per run, here in the runner;

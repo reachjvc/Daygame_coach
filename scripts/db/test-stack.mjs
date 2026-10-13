@@ -20,7 +20,7 @@
  *      nobody has applied to production yet is already in the tests.
  *
  * Every test makes its own user here, so nothing is ever truncated and nothing
- * touches production. Plan: docs/plans/tests-worth-their-keep.md, Phase 7.
+ * touches production. Plan: Plans/tests-worth-their-keep.md, Phase 7.
  */
 import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"

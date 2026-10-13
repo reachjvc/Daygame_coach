@@ -574,7 +574,7 @@ bump), `playwright.config.ts` (webServer), `.github/workflows/ci.yml`,
 `tests/unit/ciWorkflows.test.ts`, `scripts/build.sh` (container case).
 
 **Three other sessions share this checkout.** `git commit --only <paths>`; never
-`git add -A`; never `git stash`. `docs/plans/tests-worth-their-keep.md` is
+`git add -A`; never `git stash`. `Plans/tests-worth-their-keep.md` is
 somebody else's untracked file — leave it alone.
 
 ## What would make this plan wrong

@@ -8,7 +8,7 @@
  * these run against real Postgres because its CHECK and the signup trigger that
  * writes it are the whole mechanism — a fake client cannot refuse a bad value.
  *
- * Removed 2026-10-13 (docs/plans/tests-worth-their-keep.md, Phase 2): nineteen
+ * Removed 2026-10-13 (Plans/tests-worth-their-keep.md, Phase 2): nineteen
  * tests that updated a profile and read the same row back (D2/D4), restated a
  * default (D1), or deleted a profile and counted purchases — now one rule for
  * every table in `userDataCascades.integration.test.ts` (D5). Also removed, and

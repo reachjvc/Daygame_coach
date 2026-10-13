@@ -20,7 +20,7 @@ Supabase") is its acceptance test after the STOP line. **It does not touch the d
 stays exactly as it is.
 
 **Who owns what.** The browser test workflow, `.github/workflows/e2e.yml`, belongs to
-`docs/plans/tests-worth-their-keep.md`, which another session rewrote today; its Phase 9 rebuilds that
+`Plans/tests-worth-their-keep.md`, which another session rewrote today; its Phase 9 rebuilds that
 workflow. This plan edits `e2e.yml` in exactly one place, the runner pin in step 2.3, agreed with that
 plan's session first. The fix for the leaking test reports (C9) belongs to the session
 `daygame-coach-bf`, which the owner asked to do it on 2026-10-13; this plan does not touch those files.
@@ -842,7 +842,7 @@ finish), and confirming the emails in steps 6 and 7.
   - Never run `git stash`, `git add -A`, `git add .`, `git commit -a` or `--no-verify`.
   - Commit with `git commit --only <paths>`, which commits whole files. So edit a shared file
     (`package.json`, `package-lock.json`, `next.config.mjs`, `playwright.config.ts`,
-    `.github/workflows/*`, `.husky/*`, `docs/plans/tests-worth-their-keep.md`) only when
+    `.github/workflows/*`, `.husky/*`, `Plans/tests-worth-their-keep.md`) only when
     `git diff <file>` shows it clean. Check again just before committing. If a peer's hunk has
     appeared, message them and agree who commits; never commit or revert their hunk.
   - Leave nothing staged.
@@ -918,7 +918,7 @@ finish), and confirming the emails in steps 6 and 7.
 - `.github/workflows/ci.yml`, and `.github/workflows/e2e.yml` in one coordinated place (the runner pin)
 - `.husky/pre-push`, `src/qa/config.ts`, `src/inner-game/config.ts`
 - `infra/run-local.sh`, `infra/caddy/Caddyfile.local`, `infra/README.md`
-- `tests/unit/infra/localDeploy.test.ts`, `docs/plans/tests-worth-their-keep.md` (dated notes only),
+- `tests/unit/infra/localDeploy.test.ts`, `Plans/tests-worth-their-keep.md` (dated notes only),
   and this plan
 
 **Deleted:** `infra/compose.local.yaml`, `infra/systemd/daygame-local.service.template`, and the

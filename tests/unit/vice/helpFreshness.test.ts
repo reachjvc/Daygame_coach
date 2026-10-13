@@ -45,7 +45,7 @@ function daysSince(iso: string): number {
 describe("the crisis numbers are not allowed to rot quietly", () => {
   /**
    * NOT PART OF `npm test`. Run with `RUN_FRESHNESS=1`; a scheduled CI job does
-   * (added in a later wave of `docs/plans/tests-worth-their-keep.md`, Q12).
+   * (added in a later wave of `Plans/tests-worth-their-keep.md`, Q12).
    *
    * A check whose answer depends on today's date turned `npm test` red on a fixed
    * day with no code change — 2026-12-24, 90 days after `VERIFIED` — blocking every

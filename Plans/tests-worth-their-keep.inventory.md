@@ -1,6 +1,6 @@
 # Tests worth their keep — the inventory
 
-The file-by-file verdicts that `docs/plans/tests-worth-their-keep.md` executes.
+The file-by-file verdicts that `Plans/tests-worth-their-keep.md` executes.
 
 **Snapshot:** 2026-10-13, HEAD `b62c809c` plus the shared working tree as it stood
 that morning. Eight auditing agents read every test file in full (unit, database,

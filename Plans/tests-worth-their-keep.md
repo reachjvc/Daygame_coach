@@ -3,11 +3,11 @@
 **Status:** executing since 2026-10-13 — Phases 1–3 in progress; Phase 7's backend,
 harness and first repo-level tests built (see "Progress" at the end). Replaces the 2026-10-01 version of this
 file, which was never executed apart from the test-gate fix
-(`git show 5c3554aa:docs/plans/tests-worth-their-keep.md`).
+(`git show 5c3554aa:Plans/tests-worth-their-keep.md`).
 
 **Serves** vision item 13 ("Tests are worth their keep: the useless ones removed,
 the missing ones written") and item 43 (CI). **The file-by-file verdicts** are in
-`docs/plans/tests-worth-their-keep.inventory.md`.
+`Plans/tests-worth-their-keep.inventory.md`.
 
 ---
 
@@ -686,8 +686,8 @@ numbers written into this file.
 
 Paste after `/goal`. Kept here so it outlives the session that wrote it.
 
-> Execute `docs/plans/tests-worth-their-keep.md` end to end. Read it first, then
-> `docs/plans/tests-worth-their-keep.inventory.md`, then `docs/testing_behavior.md`.
+> Execute `Plans/tests-worth-their-keep.md` end to end. Read it first, then
+> `Plans/tests-worth-their-keep.inventory.md`, then `docs/testing_behavior.md`.
 >
 > **Order:** Phases 1, 2 and 3 first, in parallel where you can — they need no
 > measurement and no decision. Phase 4 only for the questions the owner has

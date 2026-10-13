@@ -328,7 +328,7 @@ describe('E2E Test Isolation Compliance', () => {
 
     /**
      * Floors lowered on 2026-10-13, and only because the suite was cut on
-     * purpose: Phase 3 of docs/plans/tests-worth-their-keep.md deleted 23 spec
+     * purpose: Phase 3 of Plans/tests-worth-their-keep.md deleted 23 spec
      * files (18 under mobile/, cross-browser/ and integration/ became 8) and
      * merged three more. Still set below the real counts, which were 8 and 55.
      */

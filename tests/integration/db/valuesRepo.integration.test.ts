@@ -7,7 +7,7 @@
  * needs the key below to conflict on — without it the upsert inserts a second
  * copy of the same pick.
  *
- * Removed 2026-10-13 (docs/plans/tests-worth-their-keep.md, Phase 2): ten tests
+ * Removed 2026-10-13 (Plans/tests-worth-their-keep.md, Phase 2): ten tests
  * that inserted rows and read them back (D2/D4), or deleted a profile and
  * counted rows — now one rule for every table in
  * `userDataCascades.integration.test.ts` (D5). Also removed: "deleting a value

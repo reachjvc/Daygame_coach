@@ -14,7 +14,7 @@
  * refused; drop the index and duplicates go through. Both indexes exist in
  * production (tests/db/baseline.sql) with the same names and predicates.
  *
- * Removed 2026-10-13 (docs/plans/tests-worth-their-keep.md, Phase 2): nineteen
+ * Removed 2026-10-13 (Plans/tests-worth-their-keep.md, Phase 2): nineteen
  * tests that inserted rows and read them back (D2/D4), restated a declaration
  * (D1), or are now covered by `userDataCascades` (D5). Also removed: "deleting a
  * parent goal deletes its children". The mirror says CASCADE; production has

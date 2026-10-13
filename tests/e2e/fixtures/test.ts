@@ -1,7 +1,7 @@
 /**
  * EVERY PLAYWRIGHT WORKER GETS AN ACCOUNT OF ITS OWN.
  *
- * Until Phase 8 of docs/plans/tests-worth-their-keep.md the whole browser suite
+ * Until Phase 8 of Plans/tests-worth-their-keep.md the whole browser suite
  * signed in as three real accounts, so two tests on one account deleted each
  * other's rows, and ten projects, `workers: 1` pins and `describe.serial`
  * blocks existed only to keep them apart. Here each worker makes a fresh,

@@ -6,7 +6,7 @@
 #
 # Ports are in the 553xx range so this stack never collides with another local
 # Supabase on the default 543xx ports. Everything not listed takes the CLI's
-# default. Plan: docs/plans/tests-worth-their-keep.md, Phase 7.
+# default. Plan: Plans/tests-worth-their-keep.md, Phase 7.
 project_id = "daygame-tests"
 
 [api]

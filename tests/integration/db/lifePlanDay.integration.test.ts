@@ -21,7 +21,7 @@
  * ALTER, by a rebuild, by somebody tidying a join — deleting one daily question
  * silently takes months of writing with it, with nothing on screen to say so.
  *
- * Removed 2026-10-13 (docs/plans/tests-worth-their-keep.md, Phase 2): the two
+ * Removed 2026-10-13 (Plans/tests-worth-their-keep.md, Phase 2): the two
  * "what two devices do to one day" tests. They ran an `ON CONFLICT` written in
  * the test, not `saveDay`, so they checked the test's SQL (D4, D8). The
  * `DAY_NOTE_SAVED` sentence they were pinning is unpinned until a repo-level

@@ -5,7 +5,7 @@ import path from "path"
  * THE DATABASE SUITE: one real test backend, files in parallel, nothing truncated.
  *
  * The backend is a throwaway local Supabase built from production's own schema
- * (scripts/db/test-stack.mjs; docs/plans/tests-worth-their-keep.md, Phase 7).
+ * (scripts/db/test-stack.mjs; Plans/tests-worth-their-keep.md, Phase 7).
  * `tests/db/globalSetup.ts` starts it once — or reuses the one already running —
  * and hands its address to every worker.
  *

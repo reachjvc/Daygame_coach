@@ -7,7 +7,7 @@
  * the browser runs drove one — the time tracker's whole suite, the archived
  * vice module, the goals prototypes — so in CI they were testing a 404 page,
  * and locally they were testing a copy of the product nobody uses. Rule R3 of
- * docs/plans/tests-worth-their-keep.md: tests check the product, not the lab.
+ * Plans/tests-worth-their-keep.md: tests check the product, not the lab.
  *
  * What counts as driving one: any string in a file under tests/e2e (specs and
  * helpers) that IS a lab address — `/test`, `/test/…`, `/test?…` — because an
