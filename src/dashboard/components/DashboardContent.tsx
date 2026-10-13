@@ -237,10 +237,14 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
               ? "Sign up now to unlock all features and start improving your social skills today."
               : "Your account is ready. Subscribe to unlock every module."}
           </p>
-          <Link href={unlockHref}>
-            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md font-medium">
-              {viewer === "visitor" ? "Get Started Free" : "See plans"}
-            </button>
+          {/* The link IS the button: a <button> inside an <a> is invalid HTML and
+              two controls where the page means one. Every account that has not
+              bought sees this card, which until 2026-10-13 meant no test did. */}
+          <Link
+            href={unlockHref}
+            className="inline-block bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md font-medium"
+          >
+            {viewer === "visitor" ? "Get Started Free" : "See plans"}
           </Link>
         </div>
       )}
