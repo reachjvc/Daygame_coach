@@ -124,17 +124,6 @@ function toIsoZ(value: string): string {
   return Number.isNaN(at) ? value : new Date(at).toISOString()
 }
 
-/** Whether this account holds any Black Box rows at all. */
-export async function accountHasViceRows(userId: string): Promise<boolean> {
-  const supabase = await createServerSupabaseClient()
-  const { count, error } = await supabase
-    .from("vice_attempts")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-  if (error) throw new Error(`Failed to count vice attempts: ${error.message}`)
-  return (count ?? 0) > 0
-}
-
 /**
  * Write the rows a device is sending.
  *

@@ -16,12 +16,7 @@ export {
 } from "./modules/progress"
 
 // Progress utilities (client-safe - can use in components)
-export {
-  getCompletedSteps,
-  getResumeStep,
-  calculateCompletionPercentage,
-  canNavigateToStep,
-} from "./modules/progressUtils"
+export { getCompletedSteps } from "./modules/progressUtils"
 
 // Value inference
 export { inferValues, ValueInferenceError } from "./modules/valueInference"

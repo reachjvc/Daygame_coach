@@ -7,8 +7,8 @@
  * places the app offers. One of them additionally snapped the old name back
  * when the box was cleared, via a `|| day.label` guard.
  *
- * Trimming belongs on commit. `DraftInput` is the one box that does that, and
- * this is what stops a fourth rename box being added the old way — which is how
+ * Trimming belongs on commit — a dialog's Save, or an `onCommit` handler — and
+ * this is what stops a fourth rename box being added the old way, which is how
  * there came to be three.
  *
  * There is no allowlist on purpose. The count is zero and there is no reason
@@ -44,7 +44,7 @@ function sourceFiles(dir: string): string[] {
 const TRIMMING_RENAMES = /\b(?:on)?(?:R|r)ename(?:Day|SplitDay)\s*\(/
 
 /**
- * What a commit looks like in this codebase: `DraftInput`'s `onCommit`, a
+ * What a commit looks like in this codebase: an `onCommit` handler, a
  * Save button's `save…`/`commit…` function, or the `onRename…` handler itself,
  * whose own callers this same rule checks.
  */
@@ -116,7 +116,7 @@ describe("day names are trimmed on commit, never per keystroke", () => {
     expect(
       found,
       "These trim on every keystroke, which makes a two-word day name untypeable.\n" +
-        "Rename from a commit — DraftInput's onCommit, or a save…/commit… function\n" +
+        "Rename from a commit — an onCommit handler, or a save…/commit… function\n" +
         "behind a Save button — never from onChange, onInput or a key handler:\n" +
         found.join("\n")
     ).toEqual([])

@@ -8,8 +8,6 @@
 
 import { z } from "zod"
 
-const NoteField = z.string().trim().max(500).nullable().optional()
-
 /**
  * WHEN IT HAPPENED — the same two optional fields on every health entry.
  *
@@ -43,35 +41,9 @@ export const NEEDS_DATE_FOR_TIME = {
   path: ["entry_date"],
 }
 
-export const WorkoutSetSchema = z.object({
-  exercise: z.string().min(1).max(100),
-  /**
-   * The ceiling matches the column, which is NUMERIC(5,2). It said 1000 while
-   * the database stopped at 999.99, so a 1000 kg entry passed validation and
-   * then failed in Postgres with a numeric-overflow message.
-   */
-  weight_kg: z.number().min(0).max(999.99),
-  // 0 = attempted and failed. A set not attempted has no row at all.
-  reps: z.number().int().min(0).max(1000),
-  set_number: z.number().int().positive(),
-  /**
-   * `set_kind` REPLACED `is_warmup`, and this schema was never updated — so the
-   * warm-up switch on the logging form did nothing at all. Zod deletes fields
-   * it was not told about, so the form sent `set_kind: "warmup"`, the schema
-   * quietly dropped it, and every warm-up single was stored as ordinary work:
-   * counted in volume, and able to be announced as a personal record.
-   *
-   * Worse, `is_warmup` is a column that no longer exists. Anything that reached
-   * the insert with it set failed against the real database and left the
-   * workout row behind with no sets under it.
-   */
-  set_kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]).optional(),
-  notes: NoteField,
-  exercise_notes: NoteField,
-})
-
 /**
  * `CreateWorkoutSchema` was here — the body of `POST /api/health/workout`,
  * which wrote a finished workout and all its sets in one call. That route no
- * longer has a POST. `WorkoutSetSchema` above stays: History still edits sets.
+ * longer has a POST. `WorkoutSetSchema` went later: nothing imported it, and
+ * History edits sets through `src/programs/schemas.ts`.
  */

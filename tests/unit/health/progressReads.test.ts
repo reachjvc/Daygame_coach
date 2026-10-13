@@ -317,16 +317,16 @@ describe("the account's calendar, not the machine's", () => {
 })
 
 /**
- * AND THE DEBT IS NAMED, so it cannot quietly grow back.
+ * AND THE DEBT IS PAID, so it cannot quietly grow back.
  *
- * Three ways this file can still derive a calendar fact from the machine's
- * clock: `localDateKey`, `mondayOf`, and `periodStartFor` given a `Date` that
- * has not been through `toZonedDate`. Two functions still do it — the activity
- * heatmap and the week streak — and neither is one of this phase's screens.
- * Every other function in the file takes the account's zone as an argument.
+ * Three ways this file could derive a calendar fact from the machine's clock:
+ * `localDateKey`, `mondayOf`, and `periodStartFor` given a `Date` that has not
+ * been through `toZonedDate`. The last two functions that did — the activity
+ * heatmap and the week streak — had no caller and were deleted, helpers and
+ * all. Every function in the file takes the account's zone as an argument.
  *
- * The counts may only fall. A new call site is a new screen filing somebody's
- * Sunday-night session on Monday.
+ * A new call site is a new screen filing somebody's Sunday-night session on
+ * Monday.
  */
 describe("what is still on the machine's clock", () => {
   /**
@@ -338,11 +338,6 @@ describe("what is still on the machine's clock", () => {
     .readFileSync(path.resolve(__dirname, "../../../src/health/healthService.ts"), "utf-8")
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/\/\/[^\n]*/g, "")
-
-  const ALLOWED: Record<string, number> = {
-    buildWorkoutHeatmapWeeks: 4,
-    computeWeekStreak: 2,
-  }
 
   /** The source split into top-level function bodies, by their declarations. */
   function bodies(): Record<string, string> {
@@ -373,32 +368,19 @@ describe("what is still on the machine's clock", () => {
     return helpers + bare
   }
 
-  it("is used only inside the two functions that are still owed the fix", () => {
+  it("is not used by any function in the file", () => {
     const offenders: string[] = []
     for (const [name, body] of Object.entries(bodies())) {
-      // The two helpers themselves are where the machine-local arithmetic
-      // lives; that is what they are.
-      if (name === "localDateKey" || name === "mondayOf") continue
       const hits = machineClockUses(body)
-      if (hits === 0) continue
-      const allowed = ALLOWED[name] ?? 0
-      if (hits > allowed) offenders.push(`${name}: ${hits}, allowed ${allowed}`)
+      if (hits > 0) offenders.push(`${name}: ${hits}`)
     }
     expect(
       offenders,
       "These decide a calendar fact from the machine's clock. Take the\n" +
         "account's timezone as an argument, the way every other function in\n" +
-        "this file now does:\n" +
+        "this file does:\n" +
         offenders.join("\n")
     ).toEqual([])
-  })
-
-  it("the allowance only shrinks", () => {
-    const found = bodies()
-    const stale = Object.entries(ALLOWED)
-      .filter(([name, n]) => machineClockUses(found[name] ?? "") < n)
-      .map(([name, n]) => `${name}: allowance ${n}, actual ${machineClockUses(found[name] ?? "")}`)
-    expect(stale, `Fixed — lower these in ALLOWED:\n${stale.join("\n")}`).toEqual([])
   })
 })
 

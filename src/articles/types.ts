@@ -87,11 +87,6 @@ export type ArticleSortBy = "newest" | "oldest" | "readTime"
 export const FEEDBACK_TYPE_VALUES = ["excellent", "good", "almost", "angle", "ai", "note", "source", "alternatives", "negative"] as const
 export type FeedbackType = (typeof FEEDBACK_TYPE_VALUES)[number]
 
-// Type guard
-export function isKnownFeedbackType(val: string): val is FeedbackType {
-  return (FEEDBACK_TYPE_VALUES as readonly string[]).includes(val)
-}
-
 export interface FeedbackTypeConfig {
   label: string
   tooltip: string

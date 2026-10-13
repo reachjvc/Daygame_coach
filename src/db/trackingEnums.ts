@@ -1,8 +1,8 @@
 /**
  * Canonical source of truth for all tracking-related enum values.
  *
- * All TypeScript types, Zod schemas, and type guards are derived from
- * the const arrays defined here. To add or remove a value, edit the
+ * All TypeScript types and Zod schemas are derived from the const
+ * arrays defined here. To add or remove a value, edit the
  * array — everything else follows automatically.
  *
  * DB constraints (CHECK / ALTER TYPE) must be kept in sync via a
@@ -184,34 +184,3 @@ export type MilestoneType = (typeof MILESTONE_TYPES)[number]
 export const ApproachOutcomeSchema = z.enum(APPROACH_OUTCOMES)
 export const SetTypeSchema = z.enum(SET_TYPES)
 export const ReviewTypeSchema = z.enum(REVIEW_TYPES)
-export const FieldTypeSchema = z.enum(FIELD_TYPES)
-export const StickingPointStatusSchema = z.enum(STICKING_POINT_STATUSES)
-export const SessionEndReasonSchema = z.enum(SESSION_END_REASONS)
-
-// ============================================================================
-// Type guards
-// ============================================================================
-
-export function isKnownOutcome(val: string): val is ApproachOutcome {
-  return (APPROACH_OUTCOMES as readonly string[]).includes(val)
-}
-
-export function isKnownSetType(val: string): val is SetType {
-  return (SET_TYPES as readonly string[]).includes(val)
-}
-
-export function isKnownReviewType(val: string): val is ReviewType {
-  return (REVIEW_TYPES as readonly string[]).includes(val)
-}
-
-export function isKnownFieldType(val: string): val is FieldType {
-  return (FIELD_TYPES as readonly string[]).includes(val)
-}
-
-export function isKnownStickingPointStatus(val: string): val is StickingPointStatus {
-  return (STICKING_POINT_STATUSES as readonly string[]).includes(val)
-}
-
-export function isKnownSessionEndReason(val: string): val is SessionEndReason {
-  return (SESSION_END_REASONS as readonly string[]).includes(val)
-}

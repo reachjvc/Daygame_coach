@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest"
 import {
-  buildWorkoutHeatmapWeeks,
-  computeWeekStreak,
   liftHistory,
   liftsWithHistory,
   workoutsToCsv,
@@ -57,9 +55,6 @@ function set(exercise: string, weight: number, reps: number, overrides: Partial<
   }
 }
 
-// Wed 2026-07-15 noon local — fixed reference date for determinism
-const TODAY = new Date(2026, 6, 15, 12, 0, 0)
-
 /**
  * The lifter's own calendar day, which `detectPersonalRecords` requires rather
  * than taking from the clock — it used to default to the SERVER's calendar,
@@ -68,55 +63,6 @@ const TODAY = new Date(2026, 6, 15, 12, 0, 0)
  * test that IS about the date passes its own day and asserts on it.
  */
 const ON_DAY = "2026-09-17"
-
-describe("buildWorkoutHeatmapWeeks", () => {
-  it("returns the requested number of Monday-start weeks ending with the current week", () => {
-    const grid = buildWorkoutHeatmapWeeks([], TODAY, 13)
-    expect(grid).toHaveLength(13)
-    expect(grid.every((w) => w.length === 7)).toBe(true)
-    // Current week: Mon 2026-07-13 … Sun 2026-07-19
-    expect(grid[12][0].date).toBe("2026-07-13")
-    expect(grid[12][6].date).toBe("2026-07-19")
-    // First column starts 12 weeks before the current Monday
-    expect(grid[0][0].date).toBe("2026-04-20")
-  })
-
-  it("counts workouts on their local date and flags future days", () => {
-    const logs = [log("a", "2026-07-13T10:00:00"), log("b", "2026-07-13T18:00:00"), log("c", "2026-07-14T09:00:00")]
-    const grid = buildWorkoutHeatmapWeeks(logs, TODAY, 2)
-    const currentWeek = grid[1]
-    expect(currentWeek[0]).toEqual({ date: "2026-07-13", count: 2, future: false })
-    expect(currentWeek[1]).toEqual({ date: "2026-07-14", count: 1, future: false })
-    expect(currentWeek[2].future).toBe(false) // today itself
-    expect(currentWeek[3].future).toBe(true)
-    expect(currentWeek[6].future).toBe(true)
-  })
-})
-
-describe("computeWeekStreak", () => {
-  it("returns 0 with no workouts", () => {
-    expect(computeWeekStreak([], TODAY)).toBe(0)
-  })
-
-  it("counts consecutive weeks back from the current week", () => {
-    const logs = [
-      log("a", "2026-07-14T10:00:00"), // current week
-      log("b", "2026-07-08T10:00:00"), // last week
-      log("c", "2026-06-30T10:00:00"), // 2 weeks ago
-    ]
-    expect(computeWeekStreak(logs, TODAY)).toBe(3)
-  })
-
-  it("does not break the streak when the current week is still empty", () => {
-    const logs = [log("a", "2026-07-08T10:00:00"), log("b", "2026-06-30T10:00:00")]
-    expect(computeWeekStreak(logs, TODAY)).toBe(2)
-  })
-
-  it("stops at a gap week", () => {
-    const logs = [log("a", "2026-07-14T10:00:00"), log("b", "2026-06-30T10:00:00")]
-    expect(computeWeekStreak(logs, TODAY)).toBe(1)
-  })
-})
 
 /**
  * "summarizeWorkoutSets", "findLastExerciseSets" and "workoutsOnDate" were

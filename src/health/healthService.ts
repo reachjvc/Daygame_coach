@@ -5,8 +5,7 @@
  * cross-domain correlations, and PR detection.
  */
 
-import { periodStartFor, previousPeriodStart, isStreakCurrent, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
-import { weeklyStreakRun } from "@/src/shared/streakRuns"
+import { periodStartFor, middayInstant, localTimeInstant, getTodayInTimezone, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { estimateOneRepMax } from "@/src/programs/programsService"
 import { isTimedLift, liftDisplayName, liftKey } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
@@ -21,7 +20,6 @@ import type {
   WorkoutLogRow,
   WorkoutLogWithSets,
   WorkoutSetRow,
-  HeatmapDay,
   PersonalRecord,
   NutritionLogRow,
   NutritionStats,
@@ -338,23 +336,6 @@ export function cappedEstimate(weightKg: number, reps: number): number {
   return reps > 10 ? weightKg : estimateOneRepMax(weightKg, reps)
 }
 
-/** Local-date key (YYYY-MM-DD) so a 23:30 workout counts on the day the user trained. */
-function localDateKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
-
-/**
- * The Monday of the week containing `d`, as a Date at local midnight.
- *
- * The boundary itself comes from `periodStartFor` — the one implementation of a
- * week in this codebase. This wrapper only turns the answer back into a Date,
- * because the heatmap grid steps forward in days from it.
- */
-function mondayOf(d: Date): Date {
-  const [y, m, day] = periodStartFor("weekly", d).split("-").map(Number)
-  return new Date(y, m - 1, day)
-}
-
 /**
  * WHAT A SESSION WAS, IN WORDS, for a row that has no lifts to name.
  *
@@ -534,60 +515,6 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): str
  * clock. Its one caller was the deleted form. What day a workout belongs to is
  * answered in the account's zone, by `workoutsByLocalDate`.
  */
-
-/**
- * Aligned activity grid: `weeks` Monday-start columns of 7 days, ending with
- * the week containing `today`. Days after `today` are flagged future.
- */
-export function buildWorkoutHeatmapWeeks(
-  logs: WorkoutLogRow[],
-  today: Date,
-  weeks: number = 13
-): HeatmapDay[][] {
-  const counts = new Map<string, number>()
-  for (const log of logs) {
-    const key = localDateKey(new Date(log.logged_at))
-    counts.set(key, (counts.get(key) ?? 0) + 1)
-  }
-
-  const todayKey = localDateKey(today)
-  const start = mondayOf(today)
-  start.setDate(start.getDate() - (weeks - 1) * 7)
-
-  const grid: HeatmapDay[][] = []
-  for (let w = 0; w < weeks; w++) {
-    const week: HeatmapDay[] = []
-    for (let d = 0; d < 7; d++) {
-      const day = new Date(start)
-      day.setDate(start.getDate() + w * 7 + d)
-      const key = localDateKey(day)
-      week.push({ date: key, count: counts.get(key) ?? 0, future: key > todayKey })
-    }
-    grid.push(week)
-  }
-  return grid
-}
-
-/**
- * Consecutive weeks with at least one workout, as of `today`.
- *
- * An empty current week does not break the run — it is not over yet. That was
- * already right here and wrong in `healthRepo.getConsecutiveTrainingWeeks`,
- * which is exactly why both now go through `streakRun`: one rule written twice
- * is one rule that will eventually disagree with itself.
- *
- * `today` is the viewer's own Date, so this uses the viewer's calendar. The
- * server-side twin takes an explicit timezone instead.
- */
-export function computeWeekStreak(logs: WorkoutLogRow[], today: Date): number {
-  const mondays = logs.map((log) => periodStartFor("weekly", new Date(log.logged_at)))
-  const thisWeek = periodStartFor("weekly", today)
-
-  const { run, last } = weeklyStreakRun(mondays, (monday) =>
-    previousPeriodStart("weekly", monday)
-  )
-  return isStreakCurrent("weekly", last, thisWeek) ? run : 0
-}
 
 /**
  * `summarizeWorkoutSets` was here. It built "Squat 120 kg × 5" from a set

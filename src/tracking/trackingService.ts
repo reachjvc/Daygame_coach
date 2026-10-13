@@ -96,7 +96,7 @@ import type {
   StickingPointUpdate,
   DailyStats,
 } from "@/src/db/trackingTypes"
-import type { ConversationFieldValue, DailyWeekSummary } from "./types"
+import type { DailyWeekSummary } from "./types"
 import { ALL_MILESTONES } from "@/src/tracking/data/milestones"
 import { syncLinkedGoals } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
@@ -777,32 +777,6 @@ export async function getUserStickingPoints(
   status?: StickingPointRow["status"]
 ): Promise<StickingPointRow[]> {
   return repoGetUserStickingPoints(userId, status)
-}
-
-// ============================================
-// Conversation Field Helpers
-// ============================================
-
-/**
- * Extract text from a conversation field value.
- * Handles both plain string (legacy) and ConversationFieldValue object formats.
- */
-export function getConversationText(value: unknown): string {
-  if (typeof value === "string") return value
-  if (typeof value === "object" && value !== null && "text" in value) {
-    return (value as ConversationFieldValue).text
-  }
-  return ""
-}
-
-/**
- * Extract audio URL from a conversation field value, if present.
- */
-export function getConversationAudioUrl(value: unknown): string | null {
-  if (typeof value === "object" && value !== null && "audioUrl" in value) {
-    return (value as ConversationFieldValue).audioUrl || null
-  }
-  return null
 }
 
 // ============================================

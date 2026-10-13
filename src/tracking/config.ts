@@ -795,18 +795,6 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
   },
 ]
 
-/**
- * Suggested fields for new users.
- * These appear muted in the UI but are easily addable.
- */
-export const SUGGESTED_FIELD_IDS = [
-  "approaches",
-  "best_moment",
-  "why_ended",
-  "do_differently",
-  "key_takeaway",
-] as const
-
 // ============================================
 // Default Session Intention Suggestions
 // ============================================

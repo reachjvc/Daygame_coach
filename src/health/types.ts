@@ -173,13 +173,6 @@ export interface WorkoutSetInsert {
 // A workout log with its sets attached (GET /api/health/workout?include=sets)
 export type WorkoutLogWithSets = WorkoutLogRow & { sets: WorkoutSetRow[] }
 
-// One cell of the aligned weekly activity grid
-export interface HeatmapDay {
-  date: string
-  count: number
-  future: boolean
-}
-
 // Compact per-exercise summary of a workout's sets, for history rows and hints
 /**
  * `ExerciseSummary` was here — the return of `summarizeWorkoutSets`, which

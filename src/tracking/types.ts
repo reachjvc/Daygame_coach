@@ -13,12 +13,10 @@ import type {
 // Re-export database types that UI needs
 export type { SessionRow, ApproachRow, ApproachOutcome, SetType, UserTrackingStatsRow, SessionSummary, FieldReportRow, ReviewRow }
 
-// Re-export const arrays and type guards from canonical enum source
+// Re-export const arrays from canonical enum source
 export {
   APPROACH_OUTCOMES, SET_TYPES, REVIEW_TYPES, FIELD_TYPES,
   STICKING_POINT_STATUSES, SESSION_END_REASONS,
-  isKnownOutcome, isKnownSetType, isKnownReviewType,
-  isKnownFieldType, isKnownStickingPointStatus, isKnownSessionEndReason,
 } from "@/src/db/trackingEnums"
 export type { ReviewType, FieldType, StickingPointStatus, SessionEndReason } from "@/src/db/trackingEnums"
 
@@ -224,14 +222,6 @@ export interface CustomReportConfig {
 // ============================================
 // Conversation Audio Upload Types
 // ============================================
-
-/** Value for a conversation field that has an audio attachment */
-export interface ConversationFieldValue {
-  text: string
-  audioUrl: string | null
-  audioFileName: string | null
-  transcribedAt: string | null
-}
 
 /** Result from uploading and transcribing an audio file */
 export interface AudioUploadResult {

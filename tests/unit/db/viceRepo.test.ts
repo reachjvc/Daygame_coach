@@ -20,7 +20,7 @@ vi.mock("@/src/db/supabase", () => ({
   createServerSupabaseClient: async () => createFakeSupabase(tables),
 }))
 
-import { accountHasViceRows, readViceRows, writeViceRows } from "@/src/db/viceRepo"
+import { readViceRows, writeViceRows } from "@/src/db/viceRepo"
 import type { ViceAttemptRow, ViceReportRow } from "@/src/db/viceTypes"
 
 const USER = "11111111-1111-1111-1111-111111111111"
@@ -203,18 +203,5 @@ describe("an instant comes back spelled the way the app spells it", () => {
     const rows = await readViceRows(USER, null)
     expect(rows.attempts[0].updated_at > "2026-09-23T10:00:02.000Z").toBe(false)
     expect(rows.attempts[0].updated_at < "2026-09-23T10:00:02.000Z").toBe(false)
-  })
-})
-
-describe("whether the account holds anything", () => {
-  it("is false for an account with no runs, and true once it has one", async () => {
-    expect(await accountHasViceRows(USER)).toBe(false)
-    await writeViceRows(USER, { attempts: [attempt()], reports: [] })
-    expect(await accountHasViceRows(USER)).toBe(true)
-  })
-
-  it("does not count another account's runs", async () => {
-    tables.vice_attempts.push({ ...attempt({ id: "theirs", user_id: OTHER }) })
-    expect(await accountHasViceRows(USER)).toBe(false)
   })
 })

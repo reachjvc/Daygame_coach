@@ -16,7 +16,7 @@ export type {
 } from "./types"
 
 // Feedback type config & enum utilities
-export { FEEDBACK_TYPES, FEEDBACK_TYPE_VALUES, isKnownFeedbackType } from "./types"
+export { FEEDBACK_TYPES, FEEDBACK_TYPE_VALUES } from "./types"
 
 // Config
 export {

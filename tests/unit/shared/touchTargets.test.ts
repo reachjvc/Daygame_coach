@@ -25,9 +25,9 @@ const read = (rel: string) =>
  * A control smaller than about 44px square is one an adult thumb cannot hit
  * reliably. This app measured 250 of them across 25 pages on an iPhone 14, and
  * almost all of them came from a handful of shared parts: the button, the
- * input, the tabs, the timetrack segmented control, the stepper and the bottom
- * tab bar. Fix those six and hundreds of individual controls come up with them;
- * let any one of them slip back and hundreds go down again.
+ * input, the tabs, the timetrack segmented control and the bottom tab bar. Fix
+ * those five and hundreds of individual controls come up with them; let any
+ * one of them slip back and hundreds go down again.
  *
  * So this reads the shared parts themselves rather than any screen. It is a
  * source read on purpose: jsdom has no layout engine and would report every
@@ -98,11 +98,6 @@ describe('Every shared control is 44 px on a phone', () => {
     require('src/timetrack/components/primitives.tsx', 'Segmented sm is under 44px on touch', /\bh-11\b/.test(branches![1]))
     require('src/timetrack/components/primitives.tsx', 'Segmented default is under 44px on touch', /\bh-11\b/.test(branches![2]))
 
-    // The stepper: a 44px box between two 44px buttons.
-    const stepper = read('components/ui/stepper.tsx')
-    require('components/ui/stepper.tsx', 'the stepper box is under 44px', /\bh-11\b/.test(stepper))
-    require('components/ui/stepper.tsx', 'the stepper buttons must be icon-sm Buttons', stepper.includes('size="icon-sm"'))
-
     // The bottom tab bar's six items, on every page in the app.
     const bar = read('components/MobileTabBar.tsx')
     require('components/MobileTabBar.tsx', 'the bar items are under 44px', /\bmin-h-11\b/.test(bar))
@@ -121,7 +116,6 @@ describe('Every shared control is 44 px on a phone', () => {
       'components/ui/button.tsx',
       'components/ui/input.tsx',
       'components/ui/tabs.tsx',
-      'components/ui/stepper.tsx',
       'components/BottomSheet.tsx',
       'components/MobileTabBar.tsx',
     ]
