@@ -1,21 +1,21 @@
 # Site structure: addresses that say what belongs to what, and one frame around every page
 
-**Status:** Phase 0 done 2026-10-13, in the session that wrote this plan. Phases 1–6 can run without
-you, apart from the blockers listed below. Phase 7 is after the STOP line and needs you (a deploy or
-a share link).
+**Status:** Phase 0 done 2026-10-13. **Every decision is taken** (the owner accepted all
+recommendations on 2026-10-13); one item still needs the owner's word, and it has a safe default
+(Q-ICON). Phases 1–5 run without the owner. Phase 6 is after the STOP line.
 
-**Written 2026-10-13** for the owner, and for the AI session that will carry it out. A friend opened
-`daygame-coach.vercel.app` and said the site "appears weird": Settings looks like a subset of
-something, and the sections are not logical slices. This plan checks that claim against the site
-itself, says what causes it, and fixes every instance of it, not only the ones he saw.
+**Written 2026-10-13, revised the same day after a review for a smaller executing model** (see
+"What the review changed" at the end of Part 1). For the owner, and for the AI session that carries
+it out. A friend opened `daygame-coach.vercel.app` and said the site "appears weird": Settings looks
+like a subset of something, and the sections are not logical slices. This plan checks that against
+the site itself, names the cause, and fixes every instance.
 
-**Where it sits.** It delivers part of vision item 38 ("Dashboard, front page, settings and every other
-page need another pass") and item 12 ("It works on a phone and in a browser"). It finishes item 32
+**Where it sits.** Part of vision item 38 ("Dashboard, front page, settings and every other page need
+another pass") and item 12 ("It works on a phone and in a browser"). It finishes item 32
 ("Preferences onboarding moves … into daygame / Scenarios where it belongs"), which moved the form
-but left its address at `/preferences`. It has to stay compatible with D8 of
-`docs/plans/own-platform-and-app.md` (the phone app is Capacitor with bundled assets), and it must not
-collide with `docs/plans/tests-worth-their-keep.md`, which is cutting the same test files right now
-(B-PEER-TREE).
+but not its address. It stays compatible with D8 of `docs/plans/own-platform-and-app.md` (the phone
+app is Capacitor with bundled assets), and it builds on `docs/plans/tests-worth-their-keep.md`,
+which is cutting the test suite in this same checkout (B-PEER-TREE).
 
 ---
 
@@ -25,42 +25,36 @@ collide with `docs/plans/tests-worth-their-keep.md`, which is cutting the same t
 
 | Word | Meaning |
 |---|---|
-| Address, route | What appears after the domain in the browser bar, such as `/dashboard/settings`. |
-| Tab destination | A page the bottom tab bar or the "More" sheet opens directly: Dashboard, Training, Tracking, Scenarios, Time, Your plan, Ask Coach, Articles, Settings. It is a place in its own right, not a child of another page. |
-| Sub-page | A page you reach from inside a tab destination, such as a single tracking session. It has a back link to its parent. |
-| Frame | The navigation drawn around every page: the header at the top on a laptop and the tab bar at the bottom on a phone. |
-| Layout | A Next.js file (`layout.tsx`) that wraps every page inside its folder. It is how one frame reaches many pages without each page drawing it. |
-| Route group | A folder whose name is in brackets, such as `app/(app)/`. It shares a layout between pages **without appearing in the address**. |
-| Proxy | `proxy.ts`, Next 16's name for middleware. It runs before every matched request; this app uses it to send signed-out visitors to the login page. |
-| Redirect, 308 | An answer that says "this page has moved permanently to …". Browsers follow it automatically, keep the query string, and remember it. |
-| Route list (registry) | The one file, `src/shared/routes.ts`, that will hold every page address. Everything else imports from it. |
-| Service worker | `public/sw.js`, a script the browser keeps that lets two pages open with no network (the time tracker and the Black Box). |
-| Preview deployment | The copy of the site Vercel builds for every push to a branch other than `main`. |
-| D8 | The decision in `docs/plans/own-platform-and-app.md` that the phone app is built with Capacitor, with the web pages bundled inside it. Server-only code does not run there. |
+| Address, route | What follows the domain in the browser bar, such as `/dashboard/settings`. |
+| Tab destination | A page the bottom tab bar or its "More" sheet opens directly: Dashboard, Training, Tracking, Scenarios, Time, Your plan, Ask Coach, Articles, Settings. A place in its own right, not a child of another page. |
+| Sub-page | A page reached from inside a tab destination, such as one tracking session. It has a back link to its parent. |
+| Frame | The navigation drawn around every signed-in page: a header on a laptop, the tab bar on a phone. |
+| Layout | A Next.js `layout.tsx`. It wraps every page in its folder, which is how one frame reaches many pages. |
+| Route group | A folder named in brackets, such as `app/(app)/`. It shares a layout **without appearing in the address**. |
+| Proxy | `proxy.ts`, Next 16's name for middleware. It runs before matched requests; here it sends signed-out visitors to login. |
+| 308 redirect | "This page has moved permanently." Browsers follow it and keep the query string. |
+| Route list | `src/shared/routes.ts`, the one file that will hold every signed-in page address. |
+| Service worker | `public/sw.js`, which lets two pages open with no network (the time tracker and the Black Box). |
+| Preview deployment | The copy Vercel builds for every push to a branch other than `main`. |
+| D8 | The decision that the phone app is Capacitor with the pages bundled inside. Server-only code does not run there. |
 
 ## What the friend saw, and why it is an old build
 
-- **`daygame-coach.vercel.app` serves `main` at commit `c1680654`, from 2026-09-17.** GitHub's
-  deployment record for the Production environment says so. Your daily build, `training-rebuild`,
-  is **440 commits ahead** of it.
-- The problem he described is present on both. On the current branch it is slightly worse, because
-  `/life-mastery` added another top-level address with yet another name.
-- **Nothing in this plan reaches him until something is deployed.** `main` can be fast-forwarded
-  without conflicts, but that redeploys production with 440 commits at once (B-DEPLOY). The other
-  route is a preview link (B-PREVIEW).
+- **`daygame-coach.vercel.app` serves `main` at `c1680654`, from 2026-09-17** (GitHub's deployment
+  record for Production). Your daily build, `training-rebuild`, is **440 commits ahead**.
+- The problem is present on both. Nothing here reaches him until something is deployed (B-DEPLOY) or
+  shared (B-PREVIEW).
 
 ## What is wrong — four things with one cause
 
 ### 1. The addresses do not say what belongs to what
 
 Seven separate sections sit under `/dashboard/`, as if they were parts of the landing page:
-
 `/dashboard/settings`, `/dashboard/tracking`, `/dashboard/scenarios`, `/dashboard/time`,
-`/dashboard/qa`, `/dashboard/articles`, `/dashboard/inner-game`
-
-Sections of the same rank sit at the top level instead: Training at `/programs`, the dating answers
-at `/preferences`, and the plan at `/life-mastery`. On the live site, `/settings`, `/tracking`,
-`/scenarios`, `/training` and `/time` all answer "not found" (checked with `curl`, 2026-10-13).
+`/dashboard/qa`, `/dashboard/articles`, `/dashboard/inner-game`. Sections of the same rank sit at the
+top level instead: Training at `/programs`, the dating answers at `/preferences`, the plan at
+`/life-mastery`. On the live site `/settings`, `/tracking`, `/scenarios`, `/training` and `/time` all
+answer "not found".
 
 ### 2. Most sections have two or three names
 
@@ -68,281 +62,334 @@ at `/preferences`, and the plan at `/life-mastery`. On the live site, `/settings
 |---|---|---|
 | Training | `/programs` | `src/programs/` |
 | Ask Coach | `/dashboard/qa` | `src/qa/` |
-| Your plan | `/life-mastery` (its page heading says "Life Mastery") | `src/goals/` |
+| Your plan | `/life-mastery` (heading: "Life Mastery") | `src/goals/` |
 | Time | `/dashboard/time` | `src/timetrack/` |
 | (dating answers) | `/preferences` | `src/profile/` |
 
-Training's own heading adds a third claim about where it belongs: "Training · part of your Life
-Mastery plan", under a "← Dashboard" link, at an address that is neither.
+Training's own heading adds a third claim: "Training · part of your Life Mastery plan", under a
+"← Dashboard" link, at an address that is neither.
 
-### 3. There is no shared frame, so every page draws its own (or doesn't)
+### 3. No shared frame, so every page draws its own (or doesn't)
 
-No layout covers the signed-in pages, so each page decides whether to draw the header and the tab
-bar. This is what the friend most likely felt. Checked on 2026-10-13 by signing in as the test
-account on `localhost:3000` (the current branch) and screenshotting each page at phone width
-(390 px) and laptop width (1280 px):
+Checked on 2026-10-13, signed in as the test account on `localhost:3000`, at 390 px and 1280 px:
 
 | Page | Phone | Laptop |
 |---|---|---|
-| Dashboard | tab bar | header: Your plan · Ask Coach · Articles · Settings · Log Out. **Training, Tracking, Scenarios and Time are not in it.** |
-| Settings | app header with ☰ menu, **"‹ Back"**, and the tab bar: three navigation systems | header and **"‹ Back"** |
-| Tracking | tab bar | **nothing: no header, no links, no way back.** Only the browser's Back button. |
-| Scenarios | its own "Scenarios" header with **"← Back to Dashboard"**, plus the tab bar | the same header, **no site navigation** |
+| Dashboard | tab bar | header: Your plan · Ask Coach · Articles · Settings · Log Out. **No Training, Tracking, Scenarios or Time.** |
+| Settings | header with ☰, **"‹ Back"**, tab bar | header, **"‹ Back"** |
+| Tracking | tab bar | **nothing: no header, no links, no way back** |
+| Scenarios | own header with **"← Back to Dashboard"**, tab bar | own header, **no site navigation** |
 | Training | **"← Dashboard"**, "part of your Life Mastery plan", tab bar | **"← Dashboard"** only |
-| Time | its own header with **"← Dashboard"** and its own bottom bar | the same |
-| Your plan | its own header and controls | the same |
+| Time | own header **"← Dashboard"**, own bottom bar | the same |
+| Your plan | own header and controls | the same |
 | Preferences | **nothing** | **nothing** |
-| Ask Coach | header and tab bar | header |
+| Ask Coach | header, tab bar | header |
 
-So **every tab destination presents itself as a child of Dashboard**: Settings with "Back", Scenarios
-with "Back to Dashboard", Training and Time with "← Dashboard". On a laptop, three sections cannot be
-left at all except with the browser. The tab bar is `sm:hidden`, so above 640 px it does not exist,
-and the desktop header is mounted on only five pages.
+Every tab destination presents itself as a child of Dashboard. On a laptop, three sections can only be
+left with the browser's Back button. The tab bar is `sm:hidden` (above 640 px it does not exist), and
+the desktop header is mounted on five pages. **An unpaid account gets no tab bar on the Dashboard at
+all** (`DashboardPage.tsx:57–66`).
 
-### 4. The rules about addresses live in hand-kept lists that drift
+### 4. The rules live in hand-kept lists that drift
 
-- **Addresses are typed out by hand in about 60 app files** (the list is in Phase 1), plus 87 test
-  files. Three files each hold part of a route list: `components/navTabs.ts`,
-  `src/shared/lifeMasteryRoutes.ts` and `src/shared/trainingRoutes.ts`.
-- **One has already drifted.** `src/settings/actions.ts:98` refreshes `/scenarios` after you change
-  difficulty, an address that has never existed, so the Scenarios page is never refreshed.
-- **The sign-in guard is a hand-kept list of address prefixes**, typed twice in `proxy.ts` (the check
-  and the `matcher`). A page outside the list is not guarded by the proxy. Moving Tracking to
-  `/tracking` without editing both lists would leave it guarded only by whatever check the page does
-  itself. The list also still names `/lair`, a page deleted on 2026-09-09.
-- **The service worker's list of pages that work offline** (`public/sw.js`) is a third hand-kept copy.
+- Addresses are typed by hand in about 60 app files and 87 test files. Three files each hold part of
+  a route list (`components/navTabs.ts`, `src/shared/lifeMasteryRoutes.ts`,
+  `src/shared/trainingRoutes.ts`).
+- **One has already drifted:** `src/settings/actions.ts:98` refreshes `/scenarios`, which has never
+  existed, so changing difficulty never refreshes the Scenarios page.
+- **The sign-in guard is a hand-kept prefix list**, typed twice in `proxy.ts`. A page outside it is
+  unguarded at the edge. It still names `/lair`, deleted on 2026-09-09.
+- **The offline page list** in `public/sw.js` is a third hand-kept copy.
+- **The tests keep three copies of "folder → address"** (`tests/support/appRoutes.ts`,
+  `backNavigation.test.ts`, `routeReachability.test.ts`) and three copies of the import walk.
 
-**The cause of all four: no single place owns the app's structure.** Each page decides its own frame;
-each file types its own addresses; each list keeps its own copy.
-
-## The short answer
-
-1. **One route list** that every file imports. Nothing visible changes, but every later step becomes
-   a small edit, and the `/scenarios` bug is fixed on the way.
-2. **The test tooling learns route groups and layouts**, so the navigation checks keep working when
-   the frame moves into a layout.
-3. **The sign-in guard protects everything by default** and lists only what is public (the home page
-   and `/auth/*`). Pages can then move without falling out of the guard.
-4. **One frame for the signed-in app.** A route group layout draws the header on a laptop and the tab
-   bar on a phone, from the same list. Every page gets navigation at every width, and the fake
-   "Back to Dashboard" controls on tab destinations go.
-5. **New addresses**, one top-level address per tab destination and named after its tab. A deeper
-   address only when the page really is part of the page above it. Old addresses redirect permanently,
-   from one table.
-6. **Clean-ups found on the way**, then the product map is updated.
-7. **After the STOP line: show the friend**, through a deploy or a preview share link.
+**The cause of all four: no single place owns the app's structure.**
 
 ## The rule for addresses after this plan
 
-> **A path segment means "is part of".** A tab destination gets its own top-level address, named what
-> its tab says. A page goes deeper only if you reach it from inside its parent and it makes no sense
-> without it.
+> **A path segment means "is part of".** A tab destination gets its own top-level address, named
+> what its tab says. A page goes deeper only if you reach it from inside its parent.
 
-| Today | After | Why |
-|---|---|---|
-| `/dashboard` | `/dashboard` (unchanged) | It is the Dashboard tab; it is the installed app's start page (`app/manifest.ts`) and where login lands |
-| `/dashboard/tracking` and `/session`, `/session/[id]`, `/report`, `/review`, `/daily`, `/history` under it | `/tracking/…` (same sub-pages) | A tab |
-| `/dashboard/scenarios` | `/scenarios` | A tab |
-| `/preferences`, `/preferences/archetypes` | `/scenarios/preferences`, `/scenarios/preferences/archetypes` | Vision item 32, and the page's own words: "These answers shape the people you meet in scenarios. Nothing else in the app uses them." Settings links to it (Q1) |
-| `/dashboard/time` | `/time` | A tab |
-| `/dashboard/qa` | `/coach` | Its label is "Ask Coach" (Q2) |
-| `/dashboard/articles` | `/articles` | A "More" destination |
-| `/dashboard/inner-game` | `/inner-game` | A destination opened from a Dashboard card; not part of the Dashboard |
-| `/dashboard/settings` | `/settings` | A "More" destination |
-| `/programs`, `/programs/live`, `/programs/workout/[id]` | `/training`, `/training/live`, `/training/workout/[id]` | Its label is "Training" (Q4) |
-| `/life-mastery` | `/plan` | Its label is "Your plan" (Q3) |
-| `/life-mastery/quit-vice` | `/plan/quit-vice` | You reach it from the Vices card inside the plan, so nesting it is accurate (Q6) |
-| `/qa`, `/dashboard/goals/plan` (pages that only redirect) | deleted; the redirect table sends them to `/coach` and `/plan` | One table of old addresses instead of stub pages |
-| `/`, `/auth/*`, `/redirect`, `/admin/ai-usage`, `/test/*` | unchanged | Not part of the problem |
+| Today | After |
+|---|---|
+| `/dashboard` | `/dashboard` (unchanged; the installed app's start page and the login landing) |
+| `/dashboard/tracking`, `…/session`, `…/session/[id]`, `…/report`, `…/review`, `…/daily`, `…/history` | `/tracking`, `/tracking/session`, `/tracking/session/[id]`, `/tracking/report`, `/tracking/review`, `/tracking/daily`, `/tracking/history` |
+| `/dashboard/scenarios` | `/scenarios` |
+| `/preferences`, `/preferences/archetypes` | `/scenarios/preferences`, `/scenarios/preferences/archetypes` |
+| `/dashboard/time` | `/time` |
+| `/dashboard/qa` and `/qa` | `/coach` |
+| `/dashboard/articles` | `/articles` |
+| `/dashboard/inner-game` | `/inner-game` |
+| `/dashboard/settings` | `/settings` |
+| `/programs`, `/programs/live`, `/programs/workout/[id]` | `/training`, `/training/live`, `/training/workout/[id]` |
+| `/life-mastery`, `/life-mastery/quit-vice` | `/plan`, `/plan/quit-vice` |
+| `/dashboard/goals/plan` | `/plan` |
+| `/`, `/auth/*`, `/redirect`, `/admin/ai-usage`, `/test/*` | unchanged |
+
+## DECISIONS — all taken 2026-10-13 (owner accepted every recommendation)
+
+| # | Decision | Why | Cost if wrong |
+|---|---|---|---|
+| D1 | Dating answers live at **`/scenarios/preferences`**; Settings keeps a row linking there | Vision item 32; the page says only Scenarios uses them | One route-list line and one redirect |
+| D2 | Ask Coach is **`/coach`** | Its label | The same |
+| D3 | The plan is **`/plan`**; the navigation calls it "Your plan" (already true). Training's line becomes "part of your plan"; the plan's own "Life Mastery" heading is left as it is | Label and address agree | The same |
+| D4 | Training is **`/training`** | Its label | The same |
+| D5 | Dashboard keeps **`/dashboard`** | Start page of installed copies; login landing | — |
+| D6 | Quit-a-vice is **`/plan/quit-vice`** | Reached from the plan's Vices card | One line and one redirect |
+| D7 | **Tab destinations have no back control.** Removed: Settings' "‹ Back", Scenarios' own header bar with "Back to Dashboard" (all branches), Training's "← Dashboard". **Kept:** sub-pages' `BackLink`s; Time's and the plan's own exits (they draw their own frame, D15); Inner Game's "Exit" and "Back to Dashboard" (Inner Game is not a tab; you open it from a Dashboard card, so returning there is honest) | The frame is the way out | — |
+| D8 | **A laptop header built from the same `TABS` and `MORE_ITEMS` as the phone bar**, then Log Out | One list feeds both, so they cannot disagree | A redesign later |
+| D9 | **No header on a phone inside the frame** (the ☰ menu duplicates "More", which already has Log Out at `MobileTabBar.tsx:102`). *Revised by the review from "logo-only header": a logo strip would add 56 px to every phone page, including Tracking and Training, which have none today.* The public home page keeps its own header | Fewer things, same reach | Branding on phone pages, if missed, is one component |
+| D10 | Old addresses redirect from **`proxy.ts`**, from a table in `src/shared/routes.ts`. `next.config.mjs` is not edited | The proxy reloads live in `next dev` and can import the route list; `next.config.mjs` is shared with the Caddy plan and restarts the dev server on every edit | Moving the table later is one function |
+| D11 | **Generalise the existing guard** in `lifeMasteryRoutes.test.ts` ("is not written out by hand anywhere in the product") from one address to every route-list address, instead of adding a new test | It already exists for one address and caught real drift | — |
+| D12 | **Code folders keep their names** | 200+ files of churn for nothing visible | — |
+| D13 | **API addresses are not renamed now**; Phase 7 records them for the database move | No visitor sees them; that move rewrites the layer | Renames redone later |
+| D14 | **Remove the home page's "Preview Dashboard" card and every signed-out branch behind the proxy** (`DashboardPage`, Articles, Inner Game, Scenarios) | The proxy already sends signed-out visitors to login first; the button opens the login page | A real public preview would be a feature and a security review |
+| D15 | **`HIDDEN_ROUTE_PREFIXES` hides the whole frame** (laptop header and phone bar) on the plan and quit-vice, weekly review, live workout and Time | Each draws its own top and bottom controls and its own exit | Two headers stacked on four pages |
+| D16 | **Old addresses redirect permanently** | A 308 costs nothing; a test keeps targets valid | A dead bookmark |
+| D17 | **The friend sees it through a preview share link** after Phase 5 | Does not touch production | — |
+| D18 | **Every signed-in account gets the same frame, paid or not.** Page gates are unchanged (Ask Coach still redirects unpaid accounts; Scenarios, Articles and Inner Game still show their previews) | One rule; nobody can pay yet (no webhook), and the phone "More" sheet already shows Ask Coach to everyone | An unpaid account sees links to pages that show a preview |
+| D19 | **The header's "Preview Mode" pill and "Subscribe" button go.** The frame holds no purchase state (D8 forbids server data in it). Preview pages keep their in-page notices; checkout is a placeholder anyway | No server data in the frame | A paying flow later adds its own entry point |
+| D20 | **The route list holds only signed-in product pages** (the ones that move). `/`, `/auth/*`, `/redirect`, `/admin/ai-usage` and `/test/*` stay literal | `/auth/*` is a contract with Supabase's emails and never moves; pulling 27 `"/auth/login"` literals in is churn | — |
+
+## Still open — needs the owner's word
+
+| # | Question | Recommendation | Default if unanswered |
+|---|---|---|---|
+| Q-ICON | May the laptop header show **the same icons the phone bar already shows for the same destinations** (`LayoutDashboard`, `Dumbbell`, `BarChart3`, `Swords`, `Timer`, `ScrollText`, `HelpCircle`, `BookOpen`, `Settings`)? `.claude/rules/ui.md` says "Ask before reusing an existing icon in a new context", and `src/shared/iconRoles.ts` needs approval by name. The icons are drawn from `navTabs.ts`'s own data, so no file gains a new import and the registry need not change | **Yes**: same destination, same meaning, one list | **Text-only links in the laptop header — final unless the line `Q-ICON: yes` appears in this file, written by the owner.** The executor never infers a yes, does not wait, and does not ask. Adding icons later is one line in `AppFrame.tsx`. |
 
 ## What this plan deliberately does not do
 
-- **It does not rename code folders.** `src/programs/` → `src/training/` and the rest would touch
-  200+ files and change nothing a person sees. The route list is where a folder name and an address
-  meet, so the mismatch stays in one readable place (Q12).
-- **It does not rename API addresses.** The gym's data is spread across `/api/workouts`,
-  `/api/programs` and `/api/health/workout`, the plan's across `/api/goals`, `/api/life-plan` and
-  `/api/life-answers`, and the vice record sits at `/api/black-box`. It is the same problem, but no
-  visitor sees it, and the database move will reshape that layer anyway. Phase 8 records the
-  inventory, marked "not now" (Q13).
-- **It does not bring back `tests/unit/architecture/orientation.test.ts`.** That test failed when a
-  new route appeared that `docs/product/map.md` did not list. It was deleted in `2fea6697`, and on
-  2026-10-13 you said the rule probably did not make sense. `docs/product/map.md` still claims the
-  test exists; Phase 6 removes that sentence.
-- **It does not change who may see what.** Paid gating stays inside the pages that have it. The frame
-  is navigation only.
+- Rename code folders (D12) or API addresses (D13).
+- Bring back `tests/unit/architecture/orientation.test.ts` (deleted in `2fea6697`; per the owner the
+  rule did not make sense). Phase 5 removes `docs/product/map.md`'s claim that it exists.
+- Change who may see what. Paid gating stays in the pages (D18).
 
 ## Future-proofing, said before anything is built
 
-- **D8 (Capacitor, bundled assets) means server-only code does not run in the phone app.** So the new
-  frame is a client component with **no server data**. It does not fetch the user, the purchase state
-  or the profile. The `(app)` layout adds no sign-in check of its own: the proxy owns that for the
-  website, and the pages keep their existing checks. Anything else would add server-only logic that
-  D8 must later remove.
-- **The redirects and the proxy are website-only.** That is correct: a freshly installed app has no
-  old bookmarks. The route list itself is plain data, and it is what the phone app's notification
-  links (vision item 48) will need.
-- **Addresses become expensive to change once notifications link into them.** Today nobody else uses
-  the app, and the only bookmarks are yours. This is the cheapest the move will ever be.
+- **D8:** the frame is a client component with **no server data** and no sign-in check. The proxy
+  owns sign-in for the website; pages keep their own checks.
+- **Redirects and the proxy are website-only.** A freshly installed app has no old bookmarks. The
+  route list is plain data, which is what the phone app's notification links (vision item 48) need.
+- **This is the cheapest the move will ever be:** today the only bookmarks are yours.
 
 ## Security, stated plainly and unasked
 
-- **Today, a page outside the proxy's prefix list is unguarded at the edge.** Each page that reads
-  data also checks sign-in itself, or the layout above it does (checked: each page file or the
-  component it renders calls `getUser()`/`requireAuth()`; Tracking's sub-pages are covered by
-  `app/dashboard/tracking/layout.tsx`, and quit-vice by `app/life-mastery/layout.tsx`), and the database
-  enforces row-level security. So nothing leaks today. The risk is the move itself: Phase 5 would
-  create six new top-level prefixes. **Phase 3 inverts the guard before anything moves**, so a page
-  is private unless it is on a short public list. A forgotten page then fails closed.
-- **Server actions are guarded by the proxy only on the address of the page that uses them** (Next's
-  own warning, `proxy.md` "Execution order"). Checked one by one: all 17 exported actions in
-  `src/settings/actions.ts` (11) and `src/profile/actions.ts` (6) call `requireAuth()` or `getUser()`
-  themselves; `signOut` in `app/actions/auth.ts` needs none. Phase 5 must not move a server action into a file that skips that check.
-- **The signed-out preview branches are dead code.** `DashboardPage`, the Articles page and the Inner
-  Game page each render a signed-out "preview", but the proxy redirects signed-out visitors before
-  any of them run. The home page's "Preview Dashboard" button therefore opens the login page (checked
-  on the live site). This is not a leak, only a broken promise (Q14).
-- **The test API routes are sealed** (checked live: `/api/test/*` answers 404, `/api/admin/*` 401,
-  `/api/qa-test` requires a paid account). Nothing to do.
+- **Today a page outside the proxy's prefix list is unguarded at the edge.** Every page that reads
+  data checks sign-in itself or through its layout (Tracking's sub-pages via
+  `app/dashboard/tracking/layout.tsx`, quit-vice via `app/life-mastery/layout.tsx`), and row-level
+  security holds at the database, so nothing leaks. The move would create six new top-level
+  prefixes. **Phase 2 makes the guard private-by-default before anything moves**, so a forgotten page
+  fails closed.
+- **Server actions are covered by the proxy only on the page that uses them** (Next's warning in
+  `proxy.md`, "Execution order"). Checked one by one: all 17 exported actions in
+  `src/settings/actions.ts` (11) and `src/profile/actions.ts` (6) call `requireAuth()` or
+  `getUser()` themselves. Moving pages changes nothing there.
+- **The test API routes are sealed** (live: `/api/test/*` 404, `/api/admin/*` 401, `/api/qa-test`
+  needs a paid account). Phase 2 keeps `/api/test/` and `/api/timetrack/` in the matcher.
+
+## What the review changed (2026-10-13, second pass)
+
+Found by reading the plan as a smaller model would, then checking each step against the code:
+
+1. **Phase 1 could not have been committed.** `routeReachability.test.ts` and
+   `backNavigation.test.ts` find links by reading literal address strings, and resolve only three
+   named constants. Replacing literals with `ROUTES.x` would have made every page an orphan, and the
+   pre-commit hook would have refused. Phase 1 now teaches the test tooling first.
+2. **A wrong fact:** `viceArchiveStep` lives in `app/test/archive/quit-vice/routes.ts`, not in
+   `lifeMasteryRoutes.ts`. It stays where it is.
+3. **DRY:** the proposed "no typed addresses" test duplicated an existing one (now D11). The three
+   copies of "folder → address" and of the import walk in the tests become one.
+4. **YAGNI:** `PRIVATE_PREFIXES` and `OFFLINE_SHELL` constants (used only by tests, or only until
+   Phase 2) are gone; so is a planned "walk enclosing layouts" feature, replaced by a direct check.
+5. **Guesswork removed:** the proxy matcher, the redirect table, the route list's contents, the frame,
+   the per-page removals, the test-update rule, the ports and every verification command are now
+   given literally (Appendix).
+6. **Decisions the first draft left open:** unpaid accounts and the frame (D18), the preview pill and
+   Subscribe button (D19), Inner Game's exits (D7), the route list's scope (D20), the phone header
+   (D9, revised).
+7. **Traps found:** a test imports a page file by relative path (`lifeMasteryRoutes.test.ts:26`), a
+   test pins `app/programs/` by path (`lintRatchet.test.ts:171`), the dev-check and production-build
+   ports collided, and `/qa`'s deletion was filed under the wrong section.
+8. **A smaller model (Haiku) then dry-read the revised plan** against the code and listed 24 places
+   it would have to guess. All 24 are fixed here. The ones that would have failed a phase: Phase 3's
+   check counted Time and Your plan as framed pages, though D15 hides their frame; the hidden-route
+   list was never written out; e2e files another session is editing were not covered by B-PEER-TREE;
+   the old plan page's import had no removal step; `programs-offline.spec.ts` runs only in the
+   `training` project, so the offline command would have skipped it and passed. Also fixed:
+   the manual "change difficulty" check became a class-level test ("every `revalidatePath` target
+   is a real page"); and **sign-out is checked by a unit test only**, because `signOut()` ends
+   every session of the account, which would log out other sessions' browser tests on a shared
+   account.
+9. **A third Haiku pass** found the commits that would still fail the hook (`proxy.ts` importing a
+   deleted file; an existing test pinning the literal `"/programs"` in `navTabs.ts`; `"/qa"` as a
+   sweep-debt key; `routes.ts` tripping the old one-address guard; `SETTINGS_CONFIG.paths` hiding
+   `revalidatePath` targets) and one contradiction (dirty test files in Phase 4). All fixed. It also
+   found that **the browser suite moved today to a throwaway local test backend** (Docker; every
+   test makes its own account; nothing touches production — `playwright.config.ts`,
+   `tests/e2e/fixtures/`). So the plan no longer checks the frame with screenshots of the live
+   database through a shared account: the check is now **`tests/e2e/site-frame.spec.ts`**, a
+   permanent test of the friend's complaint on that backend (Appendix D), and every server used for
+   checks runs against the test backend (Appendix C).
 
 ---
 
 # BLOCKERS — things only a person can do, or that wait on someone else
 
-Each was attempted on 2026-10-13. The result column says what actually happened.
+Each was attempted on 2026-10-13; the result column is what happened.
 
-| ID | What | Attempted, and what happened | Blocks | Recommendation |
+| ID | What | Attempted, and what happened | Blocks | What to do |
 |---|---|---|---|---|
-| B-PEER-TREE | Another session is cutting the test suite in this same checkout | `ListAgents`: three peer sessions (`daygame-coach-6e` busy, `-ac` busy, `-bf` idle). About 250 test files are modified and uncommitted, including four this plan must edit: `tests/unit/navigation/backNavigation`, `lifeMasteryRoutes`, `routeReachability` and `tabBarDestinations` (−87 lines between them). `docs/plans/tests-worth-their-keep.md` says "executing since 2026-10-13 — Phases 1–3 in progress", and its inventory marks all four "TRIM". | Every step that edits `tests/` (Phase 1's test step, all of Phase 2, the e2e parts of Phases 4–5) | **Update, same day:** the four navigation tests were committed trimmed in `812f496d`, and `playwright.config.ts` with `e2e.yml` in `9274a742` (session `daygame-coach-ac`, which owns the browser cut). Re-check `git status --short tests/` before each test step; the cut was still running. The executor waits until those four files show clean in `git diff` (the other session has committed), then builds on the trimmed versions. It asks with `SendMessage` which session owns `tests-worth-their-keep.md`, and never edits or commits a peer's hunk. App-code steps (Phase 1 steps 1–6, Phase 3's proxy code) do not wait. |
-| B-DEPLOY | Put the fixed site on `daygame-coach.vercel.app` | `git push --dry-run origin training-rebuild:main` → `c1680654..d659ac47  training-rebuild -> main` (a clean fast-forward). Not pushed: it redeploys production with 440 commits, and the same push was refused by the safety classifier on 2026-10-12 (see `Plans/caddy-deploy-and-cicd.md`, B-MAIN). | Phase 7 | **You** run `git push origin training-rebuild:main` after Phase 6 (the same act as R8 in the Caddy plan). To undo: `git push --force-with-lease origin c1680654:main`. Or use B-PREVIEW instead. |
-| B-PREVIEW | Show the friend a preview without touching production | GitHub's deployment records show a Preview deployment for every push to `training-rebuild` (latest: `d659ac47`, 10:28 UTC). Opening it answers `302 → vercel.com/sso-api`: Vercel's deployment protection requires a Vercel login. The `vercel` CLI is not installed. | Phase 7, if you choose not to deploy | In the Vercel dashboard, open the preview deployment of the final commit and use **Share** to create a link that bypasses protection. Sign-in works there with a password; sign-up emails would not, because Supabase's redirect allow-list has only the production URL and localhost. |
-| B-DEVSERVER | Your `next dev` on `:3000` (pid 928633, running 15 days) | Not touched. Folder moves under `app/` normally appear without a restart. A new route group and new layouts sometimes leave stale routes until restart. | Nothing; the executor verifies on a second instance (`NEXT_DIST_DIR=.next-verify npx next dev -p 3100`, as the comment in `next.config.mjs` describes) | If `:3000` shows a 404 for a moved page after Phase 4 or 5 while `:3100` does not, restart `npm run dev` when convenient. The executor never kills or restarts it. |
-| B-SW-PHONE | Your phone's installed app keeps the old offline pages until it updates | `public/sw.js` names its cache after the build (`?v=`), calls `skipWaiting()` and `clients.claim()`, and deletes old caches on activation. So it updates itself, but only on an **online** visit. | Nothing in this plan. Until that visit, opening `/time` or `/plan/quit-vice` with no signal shows the browser's error page. | After Phase 5 reaches wherever your phone points, open the app once with signal. |
-| B-SIGNIN | A signed-in browser for before/after screenshots | Worked: `tests/e2e/.auth/user.json` (written 14:14 today by another session's test run) signed into `localhost:3000`. 17 of 18 page loads rendered signed in. **The first load was sent to `/auth/login` once**, for a reason not investigated. | Phase 0 evidence and every phase's acceptance screenshots | The executor uses the test accounts only, never your account. If the file is stale, it regenerates it with `npx playwright test --project=setup` (the script reads `.env.local`; the executor never reads or prints those values). If the first-load bounce repeats, it is recorded in Phase 6, not chased here. |
-| B-SHARED-FILES | Files another plan also edits | `proxy.ts`, `public/sw.js` and `next.config.mjs` are clean now (`git status`). `Plans/caddy-deploy-and-cicd.md` edits `next.config.mjs` and warns that "each edit restarts the owner's `next dev`". | Phases 3 and 5 | This plan **does not edit `next.config.mjs` at all**: the old-address redirects live in `proxy.ts` (Q10). `proxy.ts` and `sw.js` are edited only when `git diff` shows them clean, and the executor checks again just before committing. |
-| B-ICON | Desktop header icons for Training, Tracking, Scenarios, Time | `src/shared/iconRoles.ts` says icons may not be reused without your approval, and `.claude/hooks/never.py` asks before any edit to it. The test that enforced the registry was deleted with the architecture tests (`2fea6697`). | Nothing, if the design below is followed | **Avoided by design:** the desktop header draws each item's icon from `navTabs.ts`'s own data, so no file imports a new icon and the registry is untouched. Only a deviation from that would need your approval. |
-| B-SUPABASE | Email links and the redirect allow-list | **Cleared.** Read through the Supabase management API (only these fields were printed): `site_url` is `https://daygame-coach.vercel.app`, `uri_allow_list` is `…vercel.app/**,http://localhost:3000/**`, and none of the 13 email templates names a page. The app's own links go to `/auth/confirm?next=/redirect` and `/auth/reset-password`, which do not move. | Nothing | None |
-| B-STRIPE | Stripe-side return addresses | **Cleared.** Checkout is still a placeholder dialog ("Stripe migration in progress"). The billing portal's `return_url` comes from code (`SETTINGS_CONFIG.billingPortalReturnUrl`), which Phase 1 points at the route list. The Stripe CLI is not installed and the Stripe dashboard was not read; a default return URL set there would be overridden by the code's value anyway. | Nothing | None |
-| B-DATA | Addresses saved in the database or the browser | **Cleared.** No repository column holds a link (only `voice_note_url`, `avatar_url`, `photo_url`). Migrations mention addresses only in comments. No `localStorage`/`sessionStorage` key stores a path. The one address people copy is the time tracker's "start link" (`startLinkFor`), with a query string. The redirect keeps query strings. | Nothing | None |
-
----
-
-# OPEN QUESTIONS — each with a recommendation
-
-The executor uses the recommendation unless this file records a different answer from you. Q1–Q6 are
-names. After Phase 1 a name is one line in the route list plus one redirect, so a wrong guess is cheap
-to correct until notifications link into these addresses.
-
-| # | Question | Recommendation | Alternative | Cost if the recommendation is wrong |
-|---|---|---|---|---|
-| Q1 | Where do the dating answers live? | **`/scenarios/preferences`.** Vision item 32 says they belong in Scenarios, the page says only Scenarios uses them, and Scenarios already embeds the same form before your first scenario. Settings keeps a row linking to it. | `/settings/preferences`: where people look for "change my answers" | One route-list line and one redirect |
-| Q2 | What is Ask Coach's address? | **`/coach`** | `/ask-coach`, or keep `/qa` at the top level | The same |
-| Q3 | What is the plan's address, and what is it called? | **`/plan`, and "Your plan" wherever the navigation names it** (already true). The page's own heading ("Life Mastery") and Training's "part of your Life Mastery plan" line are wording; the executor changes the Training line to "part of your plan" and leaves the plan's heading to you. | Keep `/life-mastery` | A label and an address that disagree, which is the friend's complaint |
-| Q4 | Training: `/training` or keep `/programs`? | **`/training`**. The tab says Training, and "programs" is one of its three tabs' contents. | Keep `/programs` (the most-linked address in the code: about 147 references) | None after Phase 1, which reduces those 147 to one |
-| Q5 | Does the Dashboard keep `/dashboard`? | **Yes.** It is the tab's name, the installed app's start page and the login landing. | `/home` | A manifest change on every installed copy, for no gain |
-| Q6 | Quit-a-vice: under the plan or on its own? | **`/plan/quit-vice`.** You reach it from the plan's Vices card, and its back link returns there. The code being its own slice (`src/vice/`) is not a reason for its address. | `/quit-vice` at the top level | One line and one redirect |
-| Q7 | What does a tab destination show at the top? | **No back control at all.** The frame is the way out. Training's "← Dashboard", Scenarios' "Back to Dashboard" (twice), Settings' "‹ Back" and the Inner Game page's dashboard links are removed. Sub-pages keep their `BackLink`. | Keep a back control everywhere | The "child of Dashboard" feel stays |
-| Q8 | How does a laptop navigate? | **A top header drawn from the same `TABS` and `MORE_ITEMS` the phone bar uses**: Dashboard, Training, Tracking, Scenarios, Time, then Your plan, Ask Coach, Articles, Settings, Log Out. One list feeds both, so they cannot disagree again. | A left sidebar | A redesign later. The header is the smaller change and keeps today's look. |
-| Q9 | What happens to the phone header's ☰ menu? | **Remove it inside the app frame.** It duplicates the "More" sheet, which already has Log Out (`MobileTabBar.tsx:102`). The signed-out home page keeps its own header. | Keep both | Two menus that can disagree |
-| Q10 | Where do old addresses redirect from? | **`proxy.ts`, from a table in `src/shared/routes.ts`.** The proxy reloads live in `next dev`, can import the route list, already runs on every old prefix, and can be unit-tested with a `NextRequest` (as `testRoutesSealed.test.ts` does). It needs no edit to `next.config.mjs`, which the Caddy plan is changing and which restarts your dev server. | `redirects()` in `next.config.mjs` (Next's documented way; it runs before the proxy) | Slightly later redirects (after the proxy starts instead of before it). Moving the table later is one function. |
-| Q11 | Should a test forbid typed-out addresses outside the route list? | **Yes, narrowly.** It scans `app/`, `src/` and `components/` (not `app/test/`, comments, tests or docs) for a quoted string starting with a page address, and allows only `src/shared/routes.ts`. Unlike the deleted orientation test, it checks code against code, not code against a document, and it is the only thing that stops the `/scenarios` bug from recurring. | No test; rely on habit | Drift returns slowly, as it did before |
-| Q12 | Rename code folders to match the addresses? | **No.** | Rename `programs/` → `training/`, `qa/` → `coach/` and so on | 200+ files of churn and merge conflicts with three peer sessions, for nothing a person sees |
-| Q13 | Rename API addresses? | **Not now.** Do it with the database move (`own-platform-and-app.md`, M5), which rewrites that layer anyway. Phase 8 holds the inventory. | Do it now | Each rename now is redone during the move |
-| Q14 | The home page's "Preview Dashboard" button sends signed-out visitors to login | **Remove the button and the three dead signed-out branches.** Nobody is signed out on purpose yet, and the sales page is the preview. The signed-in, unpaid preview stays (that one is alive). | Make `/dashboard` public in a real preview mode | A real preview is a feature, not a fix. It also means a public page that reads the database, which is a security review in itself. |
-| Q15 | Which pages draw their own frame and hide the app's? | **The ones already listed in `HIDDEN_ROUTE_PREFIXES`** (Your plan and quit-vice, weekly review, live workout, Time). The list now hides **both** bars, the header on a laptop as well as the tab bar on a phone, because each of those pages has its own top and bottom controls and its own way out. | Hide only the phone bar, and draw the header above them on a laptop | Two headers stacked on four pages |
-| Q16 | How long do the old addresses keep redirecting? | **Permanently.** The table is a few lines, and a 308 costs nothing. A unit test keeps every target pointing at a page that exists. | Remove them after the Hetzner move | A dead bookmark on your phone |
-| Q17 | When does the friend see it? | **After Phase 6, through B-PREVIEW's share link**, because it does not touch production. Fast-forward `main` when the Caddy plan's R8 is due anyway. | Fast-forward `main` now | Production jumps 440 commits for one person's look |
+| B-PEER-TREE | Another session cuts the test suite in this checkout | Three peer sessions (`daygame-coach-6e`, `-ac`, `-bf`). At 14:30, ~250 test files were uncommitted, including four navigation tests. By 14:50, `-ac` had committed those (`812f496d`) and `playwright.config.ts` with `e2e.yml` (`9274a742`), and the suite was green. Their cut (`tests-worth-their-keep.md` Phases 1–3) is still running. | Any commit while their unfinished change breaks `npm test` | Before each phase: `git status --short tests/ playwright.config.ts .github/`. If a file this plan edits is dirty, message its owner (`-ac` owns the test cut) and do other work. If the pre-commit hook fails on a test this plan did not touch, quote it, message `-ac`, and wait; never `--no-verify`. |
+| B-DEPLOY | Put the fix on `daygame-coach.vercel.app` | `git push --dry-run origin training-rebuild:main` → `c1680654..d659ac47` (clean fast-forward). Not pushed: it ships 440 commits to production, and the same push was refused by the safety classifier on 2026-10-12 (Caddy plan, B-MAIN). | Phase 6, only if you choose to deploy | **You** run `git push origin training-rebuild:main`. Undo: `git push --force-with-lease origin c1680654:main`. |
+| B-PREVIEW | Show the friend without touching production | Every push to `training-rebuild` gets a Preview deployment; opening one answers `302 → vercel.com/sso-api` (Vercel's login wall). `vercel` CLI not installed. | Phase 6 (D17) | **You**: Vercel dashboard → the Preview of the last commit → **Share**. Password sign-in works there; sign-up emails would not (Supabase's allow-list has only the production URL and localhost). |
+| B-DEVSERVER | Your `next dev` on `:3000` | Not touched. Folder moves usually appear without a restart; a new route group sometimes leaves stale routes. | Nothing; checks never use `:3000` | **You** (never the executor): if `:3000` shows a 404 for a moved page, restart `npm run dev` when convenient. The executor only notes it. |
+| B-SW-PHONE | Your phone's installed app keeps old offline pages until it updates | `sw.js` versions its cache by build, calls `skipWaiting()`/`clients.claim()`, and deletes old caches; it updates on an **online** visit. | Nothing in this plan | After the change reaches your phone's address, open the app once with signal. |
+| B-STACK | The local test backend every browser check runs on | **Up.** Docker 29.1.3 with 8 containers running; `node scripts/db/test-stack.mjs env` exits 0 and its JSON has `API_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY` (only the key names were printed); `jq` is at `~/.local/bin`. Phase 0's screenshots were taken differently, through the shared live test account on `:3000` (17 of 18 loads signed in; one first load bounced to login) — the executor does **not** repeat that. | Every browser check in Phases 1–4 | If it is down: `node scripts/db/test-stack.mjs up`. If Docker itself is down, **you** start it; record the blocker meanwhile. Never point a browser test at the live project. |
+| B-SUPABASE | Email links and redirect allow-list | **Cleared.** Read through the management API (only these fields printed): `site_url` is the Vercel URL, `uri_allow_list` is `…vercel.app/**,http://localhost:3000/**`, and no email template names a page. The app's links use `/auth/confirm?next=/redirect` and `/auth/reset-password`, which do not move. | — | — |
+| B-STRIPE | Stripe return addresses | **Cleared.** Checkout is a placeholder; the billing portal's `return_url` comes from `SETTINGS_CONFIG.billingPortalReturnUrl()`, which Phase 1 points at the route list. | — | — |
+| B-DATA | Addresses saved in the database or browser | **Cleared.** No column holds a link; no storage key holds a path. The one copied address, the time tracker's start link, carries a query string, which the redirect keeps. | — | — |
+| B-BASELINES | Lint and type baselines keyed by file path | **Cleared.** `eslint-baseline.json` and `tsc-baseline.json` have no entry in any folder that moves. | — | — |
 
 ---
 
 # PHASES
 
-Each phase ends in a working app, says what it depends on, and names acceptance checks that are run,
-not asserted. A step that hits a blocker is marked "blocked: <ID>", and work continues with the next
-step that does not depend on it.
+Every commit must pass the pre-commit hook (`npm test`). Each phase ends in a working app and names
+acceptance checks that are **run**, with the decisive output quoted under the phase. A step that hits a
+blocker is marked `blocked: <ID>`; work continues with the next step that does not depend on it.
+
+**Servers used for checks — all on the local test backend (Appendix C):** Playwright's own dev
+server on `:3200`, which `npx playwright test` starts by itself when `PW_BASE_URL` is unset (the
+normal case); a dev server on **`:3101`** for the `curl` loops; and, for the two offline specs only,
+a production build on **`:3100`**. Their build folders (`.next-e2e`, `.next-verify-dev`,
+`.next-verify`) are git-ignored (`.next-*`). Never touch `:3000`.
 
 ## Phase 0 — Inventory, screenshots, blocker attempts. **Status: done 2026-10-13**
 
-- **Live site** (`curl`, signed out): every `/dashboard/*`, `/programs*`, `/preferences*`, `/qa` and
-  `/admin/*` address answers 307 to `/auth/login?next=…`. `/life-mastery` answers 404 (it is not on
-  `main`). `/settings`, `/tracking`, `/scenarios`, `/training`, `/time` and `/test` answer 404.
-  The home page links to `/dashboard`, `/dashboard/articles`, `/auth/login` and `/auth/sign-up`.
-- **Production commit:** `gh api repos/reachjvc/Daygame_coach/deployments?environment=Production` →
-  `c1680654`, 2026-09-17T07:17Z. `origin/main` is 0 ahead and 440 behind `origin/training-rebuild`.
-- **Signed-in screenshots** of nine pages at 390×844 and 1280×800 on `localhost:3000`, as the test
-  account. The table under "What is wrong", point 3, is their summary. The script is reproducible: it
-  loads `tests/e2e/.auth/user.json` into Playwright's `chromium`, visits each address, and records the
-  visible `<header>` count, the links inside visible `<nav>` elements, any visible control whose text
-  starts with "Back" or "←", and the `<h1>`.
-- **Code inventory:** the per-file lists in Phases 1, 3 and 4, the page-by-page sign-in and frame
-  table below, the five navigation tests that derive addresses from folders, the hand-kept lists in
-  `proxy.ts` and `sw.js`, and the `/scenarios` bug.
-- **Next 16's own docs read:** `03-file-conventions/route-groups.md` (brackets do not appear in the
-  address; caveats are conflicting paths and multiple *root* layouts, neither of which applies here),
-  `03-file-conventions/proxy.md` (matcher, execution order, the server-action warning) and
-  `05-config/01-next-config-js/redirects.md` (query values pass through to the destination).
-- **Every blocker attempted** (table above). The plan format is saved as a memory for future plans.
+- Live site probed with `curl` (signed out); production commit read from GitHub's deployment API.
+- Signed-in screenshots of nine pages at two widths (recorded in Appendix D as "Phase 0 evidence"); the table in Part 1.
+- Code inventory: the file lists in Phase 1, the per-page table below, the test tooling, the proxy and
+  `sw.js` lists, the `/scenarios` bug.
+- Next 16's docs read: `route-groups.md`, `proxy.md` (matcher, execution order, the server-action
+  warning), `redirects.md` (query strings pass through).
+- Every blocker attempted (table above).
 
-**Page-by-page today** (sign-in check in the page file; paid gate; which frame it mounts):
+**Per page today** (sign-in check, paid gate, frame):
 
-| Page file | Own sign-in check | Paid gate | Header | Tab bar | Notes |
+| Page | Own sign-in | Paid gate | Header | Tab bar | Notes |
 |---|---|---|---|---|---|
-| `app/dashboard/page.tsx` → `DashboardPage` | in component | preview if unpaid | yes | yes | dead signed-out branch (Q14) |
-| `app/dashboard/settings/page.tsx` → `SettingsPage` | yes | — | yes | yes | `router.back()` "Back" at `SettingsPage.tsx:234` |
-| `app/dashboard/tracking/page.tsx` → `ProgressDashboard` | yes, plus `tracking/layout.tsx` | — | no | yes | no way out on a laptop |
-| `app/dashboard/tracking/{session,session/[id],report,review,daily,history}` | via `tracking/layout.tsx` | — | no | no | sub-pages with `BackLink`; `review` hides the bar |
-| `app/dashboard/scenarios/page.tsx` → `ScenariosPage`/`ScenariosHub` | in component | in component | own "Scenarios" header | yes | four `href="/dashboard"` "Back to Dashboard" links (`ScenariosPage.tsx:44,113,148,181`) |
-| `app/dashboard/time/page.tsx` → `TimetrackScreen` | yes | — | own | own | `TogglLab backHref="/dashboard"` (`TimetrackScreen.tsx:20`) |
-| `app/dashboard/qa/page.tsx` | yes | redirects unpaid to `/dashboard` | yes | yes | |
-| `app/dashboard/articles/page.tsx` | yes | preview | yes | yes | dead signed-out branch |
-| `app/dashboard/inner-game/page.tsx` | yes | preview | yes | yes | dead signed-out branch; `InnerGamePage.tsx:389,441` and `SummaryPage.tsx:137` link to `/dashboard` |
-| `app/programs/page.tsx` → `TrainingScreen` | yes | — | no | yes | "← Dashboard" (`TrainingScreen.tsx:208–210`) and "part of your Life Mastery plan" (`:237`) |
-| `app/programs/live/page.tsx`, `app/programs/workout/[id]/page.tsx` | yes | — | no | live: hidden | sub-pages |
-| `app/life-mastery/page.tsx`, `quit-vice/page.tsx`, `layout.tsx` | layout + page | none (deliberate) | own | hidden | `backHref="/dashboard"` (`life-mastery/page.tsx:72`) |
-| `app/preferences/page.tsx`, `archetypes/page.tsx` | yes | — | no | no | no way out at all except Save |
-| `app/admin/ai-usage/page.tsx` | admin key | — | no | no | stays outside the frame |
-| `app/page.tsx` → `HomePage` | yes | — | yes | yes | public; stays outside the frame |
+| `/dashboard` → `DashboardPage` | in component | preview if unpaid | yes | **paid only** | dead signed-out branch (D14) |
+| `/dashboard/settings` → `SettingsPage` | yes | — | yes | yes | "‹ Back" at `SettingsPage.tsx:234` |
+| `/dashboard/tracking` → `ProgressDashboard` | yes + layout | — | no | yes | dead end on a laptop |
+| `/dashboard/tracking/*` sub-pages | via `tracking/layout.tsx` | — | no | no | `BackLink`; `review` hides the bar |
+| `/dashboard/scenarios` → `ScenariosPage` | in component | in component | own bar (4 branches) | yes | "Back to Dashboard" at `ScenariosPage.tsx:46,115,150,183`; branch 1 (lines ~30–60) is signed-out, dead |
+| `/dashboard/time` → `TimetrackScreen` | yes | — | own | own | `backHref="/dashboard"` at `TimetrackScreen.tsx:20` (kept, D15) |
+| `/dashboard/qa` | yes | redirects unpaid | yes | yes | |
+| `/dashboard/articles` | yes | preview | yes | yes | dead signed-out branch |
+| `/dashboard/inner-game` | yes | preview | yes | yes | dead signed-out branch; Exit links kept (D7) |
+| `/programs` → `TrainingScreen` | yes | — | no | yes | "← Dashboard" at `:208–210`; "Life Mastery plan" at `:237` |
+| `/programs/live`, `/programs/workout/[id]` | yes | — | no | live: hidden | sub-pages |
+| `/life-mastery`, `/life-mastery/quit-vice` | layout + page | none | own | hidden | |
+| `/preferences`, `/preferences/archetypes` | yes | — | no | no | no way out but Save |
+| `/admin/ai-usage`, `/` (home) | key / yes | — | — | — | stay outside the frame |
 
-## Phase 1 — One route list (nothing visible changes)
+## Phase 1 — One route list, and the navigation tests read it (nothing visible changes)
 
-**Depends on:** nothing for steps 1–6. Step 7 waits for B-PEER-TREE. **Working state:** every page
-address comes from `src/shared/routes.ts`. The values are still today's addresses, so the site is
-unchanged apart from the `/scenarios` fix.
+**Depends on:** B-PEER-TREE: before editing any file under `tests/` (unit or e2e), `git status --short <file>`
+must be empty. If it is not, skip that file, note it under this phase, message `daygame-coach-ac`
+(owner of the test cut), and come back to it after their commit. **Working state:** every signed-in
+page address comes from `src/shared/routes.ts`, with today's values. Only the `/scenarios` fix is
+visible.
 
-1. **Create `src/shared/routes.ts`** with today's values:
-   - a `ROUTES` object with every static page address. Names follow the tab label, not the folder:
-     `dashboard`, `tracking`, `trackingSession`, `trackingReport`, `trackingReview`, `trackingDaily`,
-     `trackingHistory`, `scenarios`, `scenarioPreferences`, `scenarioArchetypes`, `time`, `coach`,
-     `articles`, `innerGame`, `settings`, `training`, `liveWorkout`, `plan`, `quitVice`, `home`,
-     `login`, `redirect`, `adminAiUsage`;
-   - builder functions for dynamic pages: `trackingSessionDetail(id)`, `workoutReceipt(id)`,
-     `programSession(id)`, plus `withFrom()` and `TRAINING_HISTORY` moved unchanged from
-     `trainingRoutes.ts`, and `viceArchiveStep` and `SUPERSEDED_LIFE_MASTERY_PATHS` from
-     `lifeMasteryRoutes.ts`;
-   - `PRIVATE_PREFIXES` (today's proxy list, used by Phase 3's test) and `OFFLINE_SHELL` (today's
-     `sw.js` list);
-   - an empty `LEGACY_ROUTES` table, which Phase 5 fills.
-   Keep the existing explanatory comments from the two old files; they record real incidents.
-   `TRAINING_DOOR_API` is an API address. It moves too, under an `API` heading, so that
-   `trainingRoutes.ts` can be deleted, but no other API address is added (Q13).
-2. **Delete `src/shared/lifeMasteryRoutes.ts` and `src/shared/trainingRoutes.ts`.** Update their 37 and
-   11 importers (app code now, tests in step 7). Use one name per page; do not leave re-exports
-   behind, or the two-list problem survives in a new form.
-3. **`components/navTabs.ts` reads every `href` from `ROUTES`.** `ROUTE_LABELS`,
-   `HIDDEN_ROUTE_PREFIXES` and `TAB_ROUTES` keep their shapes.
-4. **Replace every typed-out page address in app code.** These are the files, with the number of
-   non-comment occurrences (comments that mention an address are left alone, but re-read so they do
-   not lie after Phase 5):
-   - `app/`: `admin/ai-usage/page.tsx` (1), `dashboard/qa/page.tsx` (1), `dashboard/settings/page.tsx`
-     (1), `dashboard/tracking/history/page.tsx` (3), `dashboard/tracking/session/page.tsx` (1),
-     `life-mastery/page.tsx` (1), `manifest.ts` (1), `preferences/archetypes/page.tsx` (1),
-     `preferences/page.tsx` (1), `programs/live/page.tsx` (1), `programs/workout/[id]/page.tsx` (1),
-     `qa/page.tsx` (1)
+**First, record the start:** write `**Start SHA:** <output of git rev-parse HEAD>` under this
+heading and commit it with the plan. Part 2's reviews and the escape clause use it.
+
+Do it as **three kinds of commit, in order**. Each must pass `npm test` on its own.
+
+### 1.A — The route list exists, and the test tooling understands it (one commit)
+
+1. **Create `src/shared/routes.ts`** exactly as Appendix A, part 1 (today's values). Copy the
+   explanatory comments from `src/shared/lifeMasteryRoutes.ts` and `src/shared/trainingRoutes.ts`
+   onto the matching entries; they record real incidents. Do not delete those two files yet.
+2. **One copy of each rule the route list touches, in `tests/support/appRoutes.ts`.** Move into it,
+   exported:
+   - `productRoutes()` — already there. Change one thing: drop every path segment wrapped in
+     **parentheses** (a route group), so `app/(app)/settings/page.tsx` becomes `/settings`:
+     `relDir.split("/").filter((s) => !/^\(.+\)$/.test(s)).join("/")`. Segments in **square
+     brackets** (`[id]`) stay; they are what sets `dynamic`.
+   - **Not moved, on purpose:** each test's own import walker. They are three different rules, not
+     three copies of one: `routeReachability`'s `componentTree` returns a `Set` and follows every
+     `@/` import 6 deep; `tabBarDestinations`' returns an array, 4 deep; `backNavigation`'s
+     `mentions` follows only `components/` and `index.ts` imports, 2 deep. Merging them would change
+     what each test proves.
+   - From `routeReachability.test.ts`, **with everything they call**: `root`, `rel()`,
+     `productFiles()` (line ~65), `normalize()` (~143), `DYNAMIC_VICE_STEP` (~189), `viceFlowIds()`
+     (~197), and the imports of `viceArchiveStep`/`QUIT_VICE_ARCHIVE` they use. Then:
+   - `gateRoutes()` — take `routeReachability.test.ts`'s version (line ~234), delete the copy in
+     `backNavigation.test.ts` (line ~94). Extend its regex so `redirect(ROUTES.x)` also counts:
+     `/redirect\((?:"(\/[^"]*)"|ROUTES\.(\w+))\)/g`, mapping group 2 through `ROUTES`.
+   - `linksIn(files)` and `symbolicLinksIn(src)` — from `routeReachability.test.ts` (lines
+     ~143–232). Keep the literal pattern and the `viceArchiveStep` handling. **Add** a generic
+     resolver: `/(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(?:`\$\{)?ROUTES\.(\w+)/g`
+     → `ROUTES[m[1]]` (skip unknown keys).
+   - Replace `routePages()` in `backNavigation.test.ts` (line ~28) and in `routeReachability.test.ts`
+     (line ~83) with `productRoutes()`.
+3. **`routeConstantsResolve.test.ts`:** add `import * as routes from "@/src/shared/routes"` and
+   `...routesOf(routes, "src/shared/routes.ts")` to its list. **`routesOf()` reads only exported
+   strings and one-argument functions, so it would skip `ROUTES`:** add a branch for a plain object,
+   pushing `[file, \`${name}.${key}\`, value]` for each string value starting with `/`. Its
+   `isServed(dir)` must accept a page reached through a route-group folder: when `app/<path>` does
+   not exist, also try `app/(<group>)/<path>` for every folder in `app/` whose name is in
+   parentheses.
+4. **`lifeMasteryRoutes.test.ts` must allow the new file.** Its tests "is not written out by hand
+   anywhere in the product" and "is not reached through an address it has already left" exempt only
+   `src/shared/lifeMasteryRoutes.ts`; `routes.ts` now holds the same literals
+   (`"/life-mastery"`, `SUPERSEDED_LIFE_MASTERY_PATHS`), so add
+   `path.join(root, "src/shared/routes.ts")` to both exemptions in this commit.
+5. **A premise test, so the resolver cannot go quiet:** in `routeReachability.test.ts`, next to
+   "counts only navigation, never a path that is merely named", add "resolves a link written as a
+   route-list entry": `symbolicLinksIn('<Link href={ROUTES.settings}>')`,
+   `symbolicLinksIn('router.push(`${ROUTES.tracking}?tab=week`)')` and
+   `symbolicLinksIn('redirect(ROUTES.plan)')` return the **values** `ROUTES.settings`,
+   `ROUTES.tracking` and `ROUTES.plan` (today `"/dashboard/settings"`, `"/dashboard/tracking"`,
+   `"/life-mastery"`; compare against `ROUTES.x`, not against literals, so Phase 4 does not break it);
+   `symbolicLinksIn('import { ROUTES } from "@/src/shared/routes"')` returns nothing.
+   **Acceptance for 1.A:** `npm test` passes.
+
+### 1.B — Move every literal and old constant onto `ROUTES` (one commit per slice)
+
+6. **Slices, one commit each:** `components/` (navTabs, AppHeader); `app/` page files;
+   `src/tracking`; `src/programs`; `src/goals`; `src/profile`; `src/settings`; `src/scenarios`;
+   `src/inner-game`; `src/dashboard`; `src/home`; `src/timetrack`; `src/vice`; the 4 `app/test/`
+   files that link into the product (`app/test/page.tsx`, `app/test/archive/quit-vice/routes.ts`,
+   `app/test/archive/quit-vice/page.tsx`, `app/test/archive/goals-hub/page.tsx`).
+   **`proxy.ts`** belongs to the `components/` commit: its `import { LIFE_MASTERY }` becomes
+   `import { ROUTES }` and `pathname.startsWith(LIFE_MASTERY)` becomes
+   `pathname.startsWith(ROUTES.plan)`; its `matcher` stays literal (step 8). In the same commit,
+   `lifeMasteryRoutes.test.ts`'s check `expect(proxy).toMatch(/pathname\.startsWith\(LIFE_MASTERY\)/)`
+   becomes `/pathname\.startsWith\(ROUTES\.plan\)/`.
+   **`src/settings/config.ts`'s `paths` object is a second copy of two addresses: delete it**, and
+   every `revalidatePath(SETTINGS_CONFIG.paths.settings|dashboard)` in `src/settings/actions.ts` (14
+   calls) becomes `revalidatePath(ROUTES.settings|dashboard)`.
+   **The same `components/` commit rewrites the premise test** in `routeReachability.test.ts`
+   ("counts only navigation, never a path that is merely named", line ~435), which asserts the
+   literal `'"/programs"'` in `navTabs.ts`: it becomes "navTabs.ts names `ROUTES.trackingHistory`
+   as a label key (`toContain("[ROUTES.trackingHistory]")`) and `linksIn(navTabs)` does not contain
+   `ROUTES.trackingHistory`" (a label, never a link; `/programs` is now a real `href:`).
+   In `components/navTabs.ts`, `HIDDEN_ROUTE_PREFIXES` becomes exactly
+   `[ROUTES.plan, ROUTES.trackingReview, ROUTES.liveWorkout, ROUTES.time]` (the same four it holds
+   today: `LIFE_MASTERY`, `"/dashboard/tracking/review"`, `"/programs/live"`, `"/dashboard/time"`;
+   quit-vice is under the plan). Keep its comments. Files and counts (non-comment occurrences):
+   - `app/`: `dashboard/qa/page.tsx` (1), `dashboard/settings/page.tsx` (1),
+     `dashboard/tracking/history/page.tsx` (3), `dashboard/tracking/session/page.tsx` (1),
+     `life-mastery/page.tsx` (1), `manifest.ts` (1: `start_url` → `ROUTES.dashboard`),
+     `preferences/archetypes/page.tsx` (1), `preferences/page.tsx` (1), `programs/live/page.tsx` (1),
+     `programs/workout/[id]/page.tsx` (1), `qa/page.tsx` (1), `admin/ai-usage/page.tsx` (1)
    - `components/`: `AppHeader.tsx` (6), `navTabs.ts` (13)
    - `src/dashboard/components/DashboardContent.tsx` (5)
    - `src/goals/components/`: `new-goals/GoalsConfigStep.tsx` (1), `north-star/NorthStarFlow.tsx` (1),
-     `north-star/RoutineCard.tsx` (1), `north-star/SeasonBand.tsx` (1), `north-star/WorkoutPrograms.tsx`
-     (3), `tree-of-life/EmptyTreeState.tsx` (1)
+     `north-star/RoutineCard.tsx` (1), `north-star/SeasonBand.tsx` (1),
+     `north-star/WorkoutPrograms.tsx` (3), `tree-of-life/EmptyTreeState.tsx` (1)
    - `src/home/components/`: `Checkout.tsx` (1), `HomePage.tsx` (1)
    - `src/inner-game/components/`: `InnerGamePage.tsx` (2), `SummaryPage.tsx` (1), `WelcomeCard.tsx` (1)
    - `src/profile/`: `actions.ts` (11, all `revalidatePath`), `components/ArchetypeSelector.tsx` (1),
@@ -351,262 +398,342 @@ unchanged apart from the `/scenarios` fix.
      `StartLooseWorkout.tsx` (2), `TrainingCard.tsx` (1), `TrainingScreen.tsx` (2),
      `live/LiveWorkoutScreen.tsx` (3)
    - `src/scenarios/components/ScenariosPage.tsx` (5)
-   - `src/settings/`: `actions.ts` (1 literal, plus the two `"/scenarios"` and `"/programs"`
-     `revalidatePath` calls), `components/SettingsPage.tsx` (1), `config.ts` (2, including
-     `billingPortalReturnUrl`)
+   - `src/settings/`: `actions.ts` (1, plus the `"/scenarios"` and `"/programs"` `revalidatePath`
+     calls), `components/SettingsPage.tsx` (1), `config.ts` (2, including `billingPortalReturnUrl`)
    - `src/timetrack/`: `components/TimetrackScreen.tsx` (1), `components/TogglLab.tsx` (1),
-     `timetrackService.ts` (1, `startLinkFor`'s default)
+     `timetrackService.ts` (1: `startLinkFor`'s default `path`)
    - `src/tracking/components/`: `DailyReviewPage.tsx` (2), `FieldReportPage.tsx` (4),
      `ProgressDashboard.tsx` (1), `SessionDetailPage.tsx` (5), `SessionTrackerPage.tsx` (4),
      `VoiceRecorderButton.tsx` (1), `WeeklyReviewPage.tsx` (2), `dashboard/DailyReviewCard.tsx` (1),
      `dashboard/QuickActionsCard.tsx` (4), `dashboard/RecentFieldReportsCard.tsx` (3),
-     `dashboard/RecentSessionsCard.tsx` (4), `dashboard/WeeklyReviewsCard.tsx` (1)
+     `dashboard/RecentSessionsCard.tsx` (4; line 129 becomes `trackingSessionDetail(session.id)`),
+     `dashboard/WeeklyReviewsCard.tsx` (1)
    - `src/vice/components/blackbox/BlackBoxPage.tsx` (2)
-   - Pages under `app/test/` that link into the product (4 files) also import from `ROUTES`, so
-     Phase 5 does not leave them pointing at old addresses.
-   This regex finds them all: `["'\`](/dashboard|/programs|/preferences|/life-mastery|/qa)([/?"'\`$]|$)`.
-   Run it again at the end. It must find nothing outside `src/shared/routes.ts`, comments and
-   `tests/`.
-5. **Fix `src/settings/actions.ts:98`**: `revalidatePath("/scenarios")` becomes
-   `revalidatePath(ROUTES.scenarios)`, which is `/dashboard/scenarios` until Phase 5.
-6. **`proxy.ts` and `public/sw.js` keep their literals.** Next reads the `matcher` at build time and
-   cannot evaluate an import, and `sw.js` is plain JavaScript served as-is. Both are already checked
-   against constants by `tests/unit/navigation/lifeMasteryRoutes.test.ts` for the plan's address.
-   Generalise that check in step 7: the `matcher` covers every `PRIVATE_PREFIXES` entry, and
-   `sw.js`'s `SHELL_PATHS` equals `OFFLINE_SHELL`.
-7. **Tests** (blocked until B-PEER-TREE clears for each file):
-   - update the importers of the two deleted files;
-   - generalise the proxy and `sw.js` agreement checks (step 6), in whichever file survives the
-     peer's trim, or in a new `tests/unit/navigation/routeList.test.ts`;
-   - `routeConstantsResolve.test.ts` walks `ROUTES` and the builders instead of the two old files;
-   - if Q11 stays "yes", add `tests/unit/navigation/noTypedAddresses.test.ts` using step 4's regex,
-     skipping comment lines and `app/test/`;
-   - **e2e specs import `ROUTES`** instead of typing addresses (43 spec files name one today). Do this
-     after `tests-worth-their-keep.md` Phase 3 has committed its cuts, so no time is spent on specs
-     that are about to be deleted. Then Phase 5 does not touch them.
+   **Every file** listed by `grep -rln "shared/lifeMasteryRoutes\|shared/trainingRoutes" app src components tests`
+   (46 on 2026-10-13, including `app/life-mastery/layout.tsx` and three files under
+   `app/test/archive/quit-vice/_module/`; tests are done in 1.C) changes its import: `LIFE_MASTERY`, `QUIT_VICE`, `TRACKING`, `PROGRAMS`, `LIVE_WORKOUT` become `ROUTES.plan`, `ROUTES.quitVice`, `ROUTES.tracking`, `ROUTES.training`,
+   `ROUTES.liveWorkout`. `TRAINING_HISTORY`, `TRAINING_DOOR_API`, `workoutReceipt`, `programSession`
+   and `withFrom` keep their names and move their import to `@/src/shared/routes`. A template such as
+   `` `/dashboard/tracking?tab=week` `` becomes `` `${ROUTES.tracking}?tab=week` ``.
+7. **The `/scenarios` bug:** `src/settings/actions.ts:98` becomes `revalidatePath(ROUTES.scenarios)`.
+8. **Leave literal, on purpose:** `proxy.ts`'s matcher and `public/sw.js` (Next reads the matcher at
+   build time and cannot evaluate an import; `sw.js` is served as plain JavaScript). Their agreement
+   tests are in step 11.
+9. **Finder for what is left** — must print nothing when 1.B is done (the two old route files are
+   exempt until 1.C deletes them):
+   `grep -rnE "[\"'\`](/dashboard|/programs|/preferences|/life-mastery|/qa)([/?\"'\`\$]|$)" --include=*.ts --include=*.tsx app src components | grep -vE ":\s*(\*|//)" | grep -vE "^(src/shared/routes|src/shared/lifeMasteryRoutes|src/shared/trainingRoutes)\.ts:"`
+   (`proxy.ts` is not searched: its prefix list is rewritten in Phase 2.)
 
-**Acceptance:**
-- `npm test` passes.
-- Step 4's regex finds nothing outside the allowed places (quote the command and its empty output).
-- Re-running Phase 0's screenshot script gives the same table.
-- Changing difficulty in Settings, then opening Scenarios, shows the new difficulty without a manual
-  reload. That is the `/scenarios` fix, checked on `:3100` as the test account.
+### 1.C — One owner (one commit)
 
-## Phase 2 — The route tooling understands route groups and layouts (nothing visible changes)
+10. **Delete `src/shared/lifeMasteryRoutes.ts` and `src/shared/trainingRoutes.ts`.** First move the
+   remaining test importers (such as `tests/unit/goals/northStarSteps.test.ts`) to
+   `@/src/shared/routes`, and reword comments that name the two files so they name
+   `src/shared/routes.ts`. Then
+   `grep -rn "shared/lifeMasteryRoutes\|shared/trainingRoutes" app src components tests | grep -vE ":\s*(\*|//)"`
+   must print nothing. Remove the
+   `LIFE_MASTERY`/`QUIT_VICE` special cases from `symbolicLinksIn` (the generic `ROUTES` resolver
+   covers them). Keep `viceArchiveStep`/`QUIT_VICE_ARCHIVE` handling: they live in
+   `app/test/archive/quit-vice/routes.ts` and stay there.
+11. **`lifeMasteryRoutes.test.ts` → `tests/unit/navigation/routeList.test.ts`** (D11), generalised:
+    - "is not written out by hand anywhere in the product" runs **for every `ROUTES` value**, using
+      the file's existing `writesPath()` and `code()`. The only allowed file is
+      `src/shared/routes.ts` (no folder exemption: after 1.B no page file needs one).
+    - **New, the class behind the `/scenarios` bug:** "every `revalidatePath` target is a real
+      page". Scan `app/` and `src/` for every `revalidatePath(` call. Its argument must be
+      `ROUTES.x` or a string literal; **any other argument fails the test, naming the file and
+      line** (so a new indirection cannot hide a dead target, as `SETTINGS_CONFIG.paths` did).
+      Resolve `ROUTES.x` through `ROUTES`, and expect each target in `productRoutes()`. Before 1.B step 7
+      this test would have failed on `"/scenarios"`; it must pass after.
+    - "still has a page" runs for every `ROUTES` value (via `productRoutes()`).
+    - "is gated by the proxy": read `proxy.ts` as text; collect the matcher prefixes with
+      `/"(\/[^"]*?)\/:path\*"/g`; for every `ROUTES` value some prefix `p` satisfies
+      `v === p || v.startsWith(p + "/")`. (Phase 2 replaces this with a behavioural test.)
+    - "is named by the service worker": read `public/sw.js` as text; take what lies between
+      `const SHELL_PATHS = [` and the next `]`; drop lines starting with `//`; collect the quoted
+      strings. They equal exactly `[ROUTES.time, ROUTES.quitVice]`, and none is `QUIT_VICE_ARCHIVE`.
+    - "keeps the old address working" and "is not reached through an address it has left" stay as
+      they are until Phase 4 replaces them.
+    - Its `import OldPlanPage from "../../../app/dashboard/goals/plan/page"` stays until Phase 3
+      moves that file (then it must follow, see 3.3).
+12. **e2e:** the 9 specs importing `@/src/shared/lifeMasteryRoutes` import `ROUTES` from
+    `@/src/shared/routes` instead. Other e2e literals are updated in Phase 4.
 
-**Depends on:** B-PEER-TREE (every file here is a test file another session is trimming). **Working
-state:** the navigation tests give the same answers as before, and would keep giving correct answers
-after Phases 4–5.
+**Acceptance (Phase 1):**
+- `npm test` passes, including the new `revalidatePath` test; the finder in step 9 prints nothing.
+- `npx playwright test --project=sweep-desktop --project=sweep-phone` passes (no `PW_BASE_URL`:
+  Playwright starts the test backend and its own server).
 
-1. **`tests/support/appRoutes.ts`, `productRoutes()`:** drop path segments wrapped in brackets, such as
-   `(app)`, when building the address. Make this the only place that turns a folder into an address.
-2. **`backNavigation.test.ts` has its own copy of that walk** (`routePages()`). Replace it with
-   `productRoutes()`.
-3. **`routeConstantsResolve.test.ts`'s `isServed()`** says "Route groups `(name)` are not used here".
-   Teach it that a directory may also be served through a bracketed folder at any level.
-4. **"Does this page render the tab bar?"** (`tabBarDestinations`, `backNavigation`,
-   `routeReachability`) follows imports from the page file only. Add the `layout.tsx` files that
-   enclose the page, walking up the folders, to the files whose imports are followed.
-5. **A desktop gap in the back-navigation rule.** Today, a page that renders the tab bar counts as
-   having a way out. Above 640 px that bar does not exist, which is how Tracking became a dead end on
-   a laptop. Change the exemption to "renders the bar **and** a desktop header", which will be one
-   component, the frame (Phase 4). Until Phase 4 lands, record the pages this newly fails as the
-   expected list, in the test itself. Phase 4 must empty that list.
+## Phase 2 — The sign-in guard protects everything by default
 
-**Acceptance:** in a scratch worktree (`git worktree add --detach <scratchpad>/wt HEAD`), create
-`app/(probe)/probe-x/page.tsx` and `app/(probe)/layout.tsx` mounting `MobileTabBar`. The route tooling
-reports `/probe-x` (not `/(probe)/probe-x`), and the bar check sees the bar. Delete the worktree and
-run `git worktree prune`. Then `npm test` passes in the shared folder.
+**Depends on:** Phase 1. **Working state:** signed-in use unchanged; every page is private unless it
+is `/`, under `/auth/`, or under `/test/` (never guarded; 404 in production by its own layout).
+`git diff proxy.ts` must be clean before starting.
 
-## Phase 3 — The sign-in guard protects everything by default
+1. **Add to `src/shared/routes.ts`** (Appendix A, part 2): `isUnder()`, `isPublicPage()`,
+   `LEGACY_ROUTES` (empty for now) and `legacyRedirect()`.
+2. **Rewrite `proxy.ts`** to Appendix B: legacy redirect → `/api/test/` production gate → public pages
+   skip `getUser()` → `getUser()` → `/api/timetrack/` answers 401 → every other `/api/` path passes
+   through → anything else without a user goes to `/auth/login?next=<path+search>`. The separate
+   `/admin` rule and `/lair` disappear (the default covers `/admin`). Keep the existing explanatory
+   comments that still apply (`getUser()` not `getSession()`, `next` keeps the query string).
+3. **Matcher**, literally:
+   `["/((?!api/|_next/static|_next/image|.*\\..*).*)", "/api/test/:path*", "/api/timetrack/:path*"]`.
+   Anything with a dot (`/sw.js`, `/manifest.webmanifest`, icons, `favicon.ico`) is excluded, and
+   no page address contains a dot.
+4. **`isActive()` moves:** delete the private `isActive` function from `components/MobileTabBar.tsx`
+   (line 19), add it to `components/navTabs.ts` as an export —
+   `export function isActive(pathname: string, href: string, exact: boolean) { return exact ? pathname === href : isUnder(pathname, href) }` —
+   and import it in `MobileTabBar.tsx`. Its hidden-route check becomes
+   `HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(pathname, p))`. `tabBarCurrent.test.tsx` must still pass
+   unchanged.
+5. **Tests**, in `tests/unit/navigation/proxyPrivateByDefault.test.ts`, modelled on
+   `testRoutesSealed.test.ts` (`setNodeEnv`, `stubSupabaseEnv`, `req()`). Mock the network:
+   `vi.mock("@supabase/ssr", () => ({ createServerClient: () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }) }))`.
+   - For every route in `productRoutes()` except `/` and `/auth/*` (replace `[id]` with `x`): status
+     307, and `location` starts with `/auth/login?next=`.
+   - `/`, `/auth/login`, `/test/goals`: no `location` header.
+   - `/api/tracking/stats` and `/api/test/scripts` (development): no login redirect.
+   - `/api/timetrack/sync` without a user: 401.
+   - `isUnder`: `/time` is not under `/timeline`'s prefix and vice versa; `/plan` is under `/plan`.
+   - The old "is gated by the proxy" string check from 1.C step 11 is deleted (this replaces it).
 
-**Depends on:** Phase 1. **Working state:** signed-in use is unchanged, and every product page is
-private unless listed as public.
+**Acceptance:** `npm test` passes. On `:3101` (Appendix C), signed out, the "before Phase 4" loop:
+every product address answers 307 to login with `next`; `/`, `/auth/login`, `/sw.js` and
+`/manifest.webmanifest` answer 200. The sweep projects still pass. **Build `:3100` now**
+(Appendix C) and run the two offline specs; both pass, neither skipped.
 
-Read `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md` first.
+## Phase 3 — One frame for the signed-in app
 
-1. **In `src/shared/routes.ts`, add `PUBLIC_PATHS`:** `/` (exact), `/auth/` (prefix), and the files
-   the browser fetches without a session: `/manifest.webmanifest` (from `app/manifest.ts`), `/sw.js`,
-   icons and other files in `public/`. Look at `public/` and `app/` for the real list; do not guess.
-2. **Rewrite `proxy.ts`'s order:**
-   1. legacy redirects (empty until Phase 5);
-   2. the `/api/test/` production gate (unchanged);
-   3. public paths: `NextResponse.next()` without calling `getUser()`, which is the same as today,
-      since the proxy does not run on them now;
-   4. `getUser()`, then the `/admin` and `/api/timetrack/` rules (unchanged);
-   5. **anything else without a user** → `/auth/login?next=<path+search>`.
-3. **The matcher becomes a negative pattern:** every path except `_next/static`, `_next/image`,
-   static files by extension, and `/api/` other than `/api/test/` and `/api/timetrack/` (API routes
-   check sign-in themselves and answer 401; running `getUser()` on each would add a network call per
-   request). It is a literal, because Next requires one.
-4. **Remove `/lair`**, deleted on 2026-09-09.
-5. **Test** (extend `tests/unit/navigation/testRoutesSealed.test.ts`'s `NextRequest` pattern, or a new
-   `proxyPrivateByDefault.test.ts`): for every route from `productRoutes()`, a request without a
-   cookie is redirected to login unless it is in `PUBLIC_PATHS`. Also test the reverse: `/` and
-   `/auth/login` are not redirected, and `/sw.js` and `/manifest.webmanifest` are not intercepted.
+**Depends on:** Phases 1–2. **Working state:** navigation on every signed-in page at both widths; no
+tab destination poses as a child of the Dashboard; every address unchanged.
 
-**Acceptance:**
-- `npm test` passes.
-- On `:3100`, signed out: `curl -s -o /dev/null -w "%{http_code} %{redirect_url}"` for every product
-  address gives 307 to login with `next`; `/`, `/auth/login`, `/sw.js` and `/manifest.webmanifest`
-  give 200.
-- Signed in as the test account, Phase 0's screenshot table is unchanged.
-- The offline Black Box still opens: `tests/e2e/vice-offline.spec.ts` against a production build
-  (`npm run build`, then `NEXT_DIST_DIR`-separated `next start` on another port), since it skips
-  under `next dev`.
+Read `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route-groups.md` and
+`layout.md` first.
 
-## Phase 4 — One frame for the signed-in app
-
-**Depends on:** Phases 1 and 2. **Working state:** every signed-in page has navigation at both widths,
-no tab destination pretends to be a child of the Dashboard, and every address is still today's.
-
-Read `03-file-conventions/route-groups.md` and `layout.md` first.
-
-1. **`components/AppFrame.tsx`** (`"use client"`, no server data, per D8):
-   - reads `usePathname()`;
-   - when the path is under `HIDDEN_ROUTE_PREFIXES`, renders the children with no frame (Q15);
-   - otherwise renders a **desktop header** (`hidden sm:flex`) built from `TABS` then `MORE_ITEMS`,
-     using each item's own `icon` (B-ICON), with the current item marked by the same rule the bar
-     uses (`exact` or prefix), plus Log Out (the existing `signOut` form) and, in development only,
-     the existing "Test Pages" link;
-   - renders a slim phone header with the logo only (Q9), and `<MobileTabBar />`;
-   - keeps the page's bottom padding (`pb-tab-bar`) in one place, the frame, instead of in each page.
-2. **`app/(app)/layout.tsx`** renders `<AppFrame>{children}</AppFrame>`. It has no sign-in check and no
-   data fetching.
-3. **Move (with `git mv`, so history follows) into `app/(app)/`:** `dashboard/`, `programs/`,
-   `preferences/`, `life-mastery/`. Addresses do not change. `app/page.tsx`, `app/auth/`,
-   `app/admin/`, `app/redirect/`, `app/qa/`, `app/test/` and `app/api/` stay outside.
-   `app/dashboard/tracking/layout.tsx` and `app/life-mastery/layout.tsx` move with their folders and
-   nest inside the new layout unchanged.
+1. **`components/AppLogo.tsx`:** move the logo `<Link href="/">` block out of `AppHeader.tsx`
+   (line 251) so `AppHeader` and the frame share it. Add `shrink-0` to its class list so a crowded
+   header never squeezes it.
+2. **`components/AppFrame.tsx`** as Appendix E: a client component, no server data. Under a hidden
+   prefix it renders the children bare (D15). Otherwise: the laptop header (`hidden sm:block`),
+   built from `[...TABS, ...MORE_ITEMS]` using `isActive()`, with icons only if Q-ICON was answered
+   yes, then the existing `signOut` form, then the development-only "Test Pages" link exactly as
+   `AppHeader` does it; the children inside `<div className="pb-tab-bar">`; and `<MobileTabBar />`.
+   Appendix E gives the classes (copied from `AppHeader.tsx`, `.claude/rules/ui.md`: reuse the
+   nearest sibling) and **the test IDs the e2e helpers depend on**: `header-dashboard-link`,
+   `header-life-mastery-link` (Your plan), `header-settings-link`, `header-logout-button`
+   (`tests/e2e/helpers/selectors.ts:15–17`, `auth.helper.ts:207`).
+3. **`app/(app)/layout.tsx`** renders `<AppFrame>{children}</AppFrame>`; nothing else. Then move,
+   with history:
+   ```
+   mkdir -p "app/(app)"
+   git mv app/dashboard "app/(app)/dashboard"
+   git mv app/programs "app/(app)/programs"
+   git mv app/preferences "app/(app)/preferences"
+   git mv app/life-mastery "app/(app)/life-mastery"
+   ```
+   Before each `git mv`, `git status --short app/<folder>` must be empty (B-PEER-TREE). `app/page.tsx`,
+   `app/auth/`, `app/admin/`, `app/redirect/`, `app/qa/`, `app/test/`, `app/api/` stay where they are.
+   Update `lifeMasteryRoutes`→`routeList.test.ts`'s import to
+   `"../../../app/(app)/dashboard/goals/plan/page"`, and `lintRatchet.test.ts:171`'s `"app/programs/"`
+   to `"app/(app)/programs/"`.
 4. **Remove every per-page frame:**
-   - `<AppHeader>` from `DashboardPage.tsx` (three branches), `SettingsPage.tsx`,
-     `app/dashboard/{qa,articles,inner-game}/page.tsx` (six mounts);
-   - `<MobileTabBar>` from `DashboardPage.tsx`, `SettingsPage.tsx`, `ScenariosHub.tsx`,
-     `ProgressDashboard.tsx`, `TrainingScreen.tsx`, `app/dashboard/{qa,articles,inner-game}/page.tsx`;
-   - `AppHeader` itself remains only for the public home page. Rename its prop `currentPage` to what
-     it now serves, or fold it into `HomePage` if nothing else uses it.
-5. **Remove the fake back controls from tab destinations (Q7):** `SettingsPage.tsx:234` ("‹ Back"),
-   `ScenariosPage.tsx:44,113,148,181` and Scenarios' own header, `TrainingScreen.tsx:208–210`
-   ("← Dashboard"), `InnerGamePage.tsx:389,441`, `SummaryPage.tsx:137` and `WelcomeCard.tsx:85` where
-   they act as "back to Dashboard". Training's line becomes "part of your plan" (Q3). Pages with
-   their own frame keep their own exits: Time (`TimetrackScreen.tsx:20`) and Your plan
-   (`life-mastery/page.tsx:72`, `NorthStarFlow`'s `backHref`).
-6. **Preferences gets a way out:** inside the frame, the tab bar and header now cover it. Its
-   archetype sub-page keeps its `BackLink`, with its fallback pointing at the preferences page rather
-   than `/dashboard` (`ArchetypeSelector.tsx:140`).
-7. **Paid gating is unchanged.** Ask Coach's page still redirects unpaid accounts, and Articles and
-   Inner Game still show their signed-in preview. Ask Coach appears in the laptop header for
-   everyone, as it already does in the phone's "More" sheet.
-8. **Phase 2's expected-failure list must now be empty.** Remove it.
+   - `<AppHeader …>`: `DashboardPage.tsx` (3 branches), `SettingsPage.tsx:229`,
+     `app/(app)/dashboard/qa/page.tsx`, `…/articles/page.tsx` (2), `…/inner-game/page.tsx` (3).
+   - `<MobileTabBar />`: `DashboardPage.tsx`, `SettingsPage.tsx`, `ScenariosHub.tsx`,
+     `ProgressDashboard.tsx`, `TrainingScreen.tsx`, `…/qa/page.tsx`, `…/articles/page.tsx`,
+     `…/inner-game/page.tsx`.
+   - `pb-tab-bar` (the frame owns it now): `DashboardPage.tsx:76`, `…/articles/page.tsx:29`,
+     `…/inner-game/page.tsx:45`, `…/qa/page.tsx:30`, `ScenariosHub.tsx:173`,
+     `ProgressDashboard.tsx:81`, `TrainingScreen.tsx:207`, `SettingsPage.tsx:228` (and
+     `WorkoutReceipt.tsx:293`, below). **Keep** it in `HomePage.tsx:21` (outside the frame).
+   - `AppHeader` now serves only the public home page. Delete its `isPreviewMode` prop and the
+     "Preview Mode" badge (`AppHeader.tsx:265–268`), stop passing `isPreviewMode` to `MobileNav`
+     (`:275`) and delete that prop from `MobileNav` if nothing else passes it, and delete the
+     `currentPage` values no page passes any more. **The "Subscribe" button stays** in `AppHeader`:
+     the home page is the sales page, and D19 is about the frame only. Keep `MobileNav` for the home
+     page.
+   - `WorkoutReceipt.tsx:293`: remove only `pb-tab-bar` from the class list. It has a `BackLink` and
+     no bottom bar of its own; the frame now pads it.
+5. **Remove the fake back controls (D7):** `SettingsPage.tsx:234–237` (the
+   `<Button … onClick={() => router.back()}>` "Back"; keep the `<h1>Settings</h1>` beside it, and
+   remove `useRouter`/`ChevronLeft` imports if nothing else uses them); every `<header>` bar in `ScenariosPage.tsx` (the logo, "Preview Mode" pill and
+   "Back to Dashboard" — the hub's own "Practice Scenarios" heading stays); `TrainingScreen.tsx`'s
+   `<BackLink fallback="/dashboard" …>` (`:208–212`). Training's line at `:237` reads "part of your
+   plan", still linking to `ROUTES.plan` (D3). **Do not touch** Inner Game's Exit and "Back to
+   Dashboard", Time's `TogglLab backHref`, the plan's `backHref`, or any sub-page `BackLink`.
+6. **Preferences:** `ArchetypeSelector.tsx:140`'s `BackLink` fallback becomes
+   `ROUTES.scenarioPreferences`, label "Preferences".
+7. **D14:** delete the home page's "Preview Dashboard" card (`HomePage.tsx:88–114`) and the
+   signed-out branches: `DashboardPage.tsx`'s `if (!user)` branch (lines 45–52), `ScenariosPage.tsx`'s `if (!user)` branch, and the
+   `!user` branches in `…/articles/page.tsx` and `…/inner-game/page.tsx`. **Each removed branch is
+   replaced by one line, `if (!user) redirect("/auth/login")`** (add `import { redirect } from "next/navigation"`
+   where it is missing; `redirect` returns `never`, so `user` is non-null after it). The proxy
+   already sends signed-out visitors away first; this line is for the type checker and for defence
+   in depth. Then remove the now-dead `viewer === "visitor"` variant from
+   `src/dashboard/components/DashboardContent.tsx` (the type member and its branches, around lines
+   34, 57, 66, 82 and 236).
+8. **Tests:** add `hasAppFrame(route, file)` to `tests/support/appRoutes.ts`: true when `file` sits
+   under `app/(app)/` and `!HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(route, p))`.
+   - `backNavigation.test.ts`: `const hasTabBar = …` becomes
+     `const hasTabBar = hasAppFrame(route, file) || /<MobileTabBar[\s/>]/.test(tree)`. This is the
+     test's own rule ("a route needs a BackLink unless the app's own navigation is on screen"): a
+     framed sub-page is not a dead end. Sub-pages keep their `BackLink`s because D7 says so, not
+     because this test forces it.
+   - `tabBarDestinations.test.ts`: `mountsTheBar(page)` becomes `hasAppFrame(route, page)`; its
+     premise test expects `/dashboard` true and `ROUTES.liveWorkout` false.
+   - `pageFor(route)` in `tabBarDestinations` uses `productRoutes()` to find the file.
+   - **`tests/unit/navigation/appFrame.test.tsx`**, modelled on `tabBarCurrent.test.tsx` (same
+     `// @vitest-environment jsdom` line and the same `vi.mock("next/navigation", () => ({ usePathname: () => path }))`).
+     Query inside the frame's `<header>` with `within(container.querySelector("header")!)`, because
+     `MobileTabBar`'s own links render in jsdom too; count links inside the header's `<nav>` only
+     (the logo link sits outside it). Mock `@/app/actions/auth` with
+     `vi.mock("@/app/actions/auth", () => ({ signOut: vi.fn() }))`. At `ROUTES.settings` the header
+     `<nav>` has one link per item of `[...TABS, ...MORE_ITEMS]` with its `href` (plus "Test Pages"
+     when `NODE_ENV` is development; vitest runs as "test", so not here), exactly one
+     `aria-current="page"` (Settings), and a `<form>` with a "Log Out" button; at
+     `ROUTES.liveWorkout` and `ROUTES.time` it renders the children and no link. **The wiring:**
+     render the default export of `@/app/(app)/layout` around `<p>x</p>` at `ROUTES.dashboard` and
+     expect the header `<nav>` and the `<p>`; without this, every other check passes from file paths
+     alone even if the layout never draws the frame. **Never test sign-out by clicking it with a test account:**
+     `signOut()` (`app/actions/auth.ts`) uses Supabase's default global scope, which ends *every*
+     session of that account, including other sessions' browser tests.
 
-**Acceptance:**
-- `npm test` passes, and the e2e `route-sweep` passes at desktop and phone width.
-- Phase 0's screenshot script, re-run on `:3100`: every tab destination shows the header at 1280 px and
-  the bar at 390 px. None of them shows a control starting with "Back" or "←". Sub-pages still do.
-  The pages in `HIDDEN_ROUTE_PREFIXES` show their own frame only. Quote the table.
-- `tests/e2e/dashboard-navigation.spec.ts` and `mobile-navigation` (whatever survives the peer's
-  trim) pass.
-- Sign out from the laptop header and from the phone "More" sheet: both land on the home page.
+9. **e2e that the frame changes:**
+   - `tests/e2e/mobile/mobile-navigation.spec.ts` clicks the ☰ "Open menu" button that D9 removes.
+     Rewrite its one test to the "More" sheet: at `/dashboard` on the phone project,
+     `header-settings-link` is hidden; click the button named "More"; the sheet
+     (`getByTestId("more-sheet")`) shows "Log Out"; click its "Settings" row; the sheet closes and
+     the URL matches `ROUTES.settings`.
+   - `tests/support/sweepDebt.ts`: if the frame raises a page's `TAP_TARGET_DEBT` count, fix the frame
+     (every target at least 44 px) — never raise the number; the file says it may only go down.
+   - **Create `tests/e2e/site-frame.spec.ts`** exactly as Appendix D, and add
+     `/site-frame\.spec\.ts/` to `ON_OWN_ACCOUNTS` in `playwright.config.ts` (a file the test-cut
+     session edits: only when `git status --short playwright.config.ts` is clean; otherwise ask
+     `daygame-coach-ac` to add the line, and wait).
 
-## Phase 5 — Addresses that say what belongs to what
+**Acceptance (no `PW_BASE_URL` anywhere; Playwright starts the test backend and its server):**
+`npm test` passes; `npx playwright test tests/e2e/site-frame.spec.ts --project=desktop` passes
+(14 tests: 7 framed destinations × 2 widths); `npx playwright test --project=sweep-desktop --project=sweep-phone`
+passes; `npx playwright test tests/e2e/dashboard-navigation.spec.ts --project=chromium` and
+`npx playwright test tests/e2e/mobile/mobile-navigation.spec.ts --project=mobile-iphone` pass.
+**Never click Log Out on an account another test shares** (the `setup`-based projects): it ends
+every session of that account. Specs on `ON_OWN_ACCOUNTS` (such as `auth.spec.ts` in `desktop`)
+have their own account and may.
 
-**Depends on:** Phases 1, 3 and 4. **Working state:** the address table in Part 1 is true, and every
-old address redirects permanently, keeping its query string.
+## Phase 4 — Addresses that say what belongs to what
 
-**One commit per section, in this order:** Settings; Scenarios with its preferences; Time; Coach;
-Articles; Inner Game; Tracking; Training; Plan with quit-vice. Each commit contains everything for
-that section, because a redirect to a page that has not moved yet is a 404, and a moved page without
-its redirect breaks bookmarks:
+**Depends on:** Phases 1–3. **Working state:** the table in Part 1 is true; every old address
+redirects permanently with its query string.
 
-1. `git mv` the folder within `app/(app)/` (for example `app/(app)/dashboard/settings` →
-   `app/(app)/settings`).
-2. Change its value in `ROUTES`. Everything else already reads from there.
-3. Add its rows to `LEGACY_ROUTES` (an exact path, or a prefix for a section with sub-pages such as
-   `/dashboard/tracking` → `/tracking`). The proxy matches the longest prefix first, on segment
-   boundaries, so a hypothetical `/dashboard/timeline` is never caught by `/dashboard/time`.
-4. If the section is in `OFFLINE_SHELL`, update `public/sw.js`'s `SHELL_PATHS` in the same commit
-   (Time, and quit-vice with the Plan section). The agreement test catches a miss.
-5. `HIDDEN_ROUTE_PREFIXES` and `PRIVATE_PREFIXES` follow automatically, since they read `ROUTES`.
-6. **The Plan section also deletes `app/(app)/dashboard/goals/plan/page.tsx` and `app/qa/page.tsx`**,
-   and adds their rows to the table (`/dashboard/goals/plan` → `/plan`; `/qa` → `/coach`). The
-   `?step=` parameter they handled is carried by the redirect's query passthrough. Delete
-   `SUPERSEDED_LIFE_MASTERY_PATHS` if nothing reads it any more.
-7. **Unit test, `legacyRoutes.test.ts`:** every source no longer has a page, every target is in
-   `productRoutes()`, no target is itself a source (no chains), and a sample with a query string
-   (`/dashboard/time?start=1&description=x` → `/time?start=1&description=x`) is passed through intact.
+**Nine sections, one commit each, in this order.** Each commit contains all of its rows, because a
+redirect to a page that has not moved is a 404, and a moved page without its redirect breaks
+bookmarks.
 
-After the last section:
-- `app/(app)/dashboard/` holds only the Dashboard's own `page.tsx`.
-- `app/manifest.ts` still says `start_url: "/dashboard"` (Q5).
-- Re-read the comments that mention old addresses in the files from Phase 1 step 4. Fix the ones that
-  now state something false. Leave history-style comments ("was at … until 2026-10-…") alone.
+| # | `git mv` (from → to, both under `app/(app)/`) | `ROUTES` changes | `LEGACY_ROUTES` rows added | Also |
+|---|---|---|---|---|
+| 1 | `dashboard/settings` → `settings` | `settings: "/settings"` | `/dashboard/settings` → `/settings` | |
+| 2 | `dashboard/scenarios` → `scenarios`, then `preferences` → `scenarios/preferences` | `scenarios: "/scenarios"`, `scenarioPreferences: "/scenarios/preferences"`, `scenarioArchetypes: "/scenarios/preferences/archetypes"` | `/dashboard/scenarios` → `/scenarios`; `/preferences` → `/scenarios/preferences` | |
+| 3 | `dashboard/time` → `time` | `time: "/time"` | `/dashboard/time` → `/time` | `public/sw.js` `SHELL_PATHS`: `"/dashboard/time"` → `"/time"` |
+| 4 | `dashboard/qa` → `coach`; `git rm app/qa/page.tsx` | `coach: "/coach"` | `/dashboard/qa` → `/coach`; `/qa` → `/coach` | |
+| 5 | `dashboard/articles` → `articles` | `articles: "/articles"` | `/dashboard/articles` → `/articles` | |
+| 6 | `dashboard/inner-game` → `inner-game` | `innerGame: "/inner-game"` | `/dashboard/inner-game` → `/inner-game` | |
+| 7 | `dashboard/tracking` → `tracking` (with its `layout.tsx`, `loading.tsx`, `TrackingAuthContext.tsx`) | the seven `tracking*` values: `/tracking…` | `/dashboard/tracking` → `/tracking` | |
+| 8 | `programs` → `training` | `training: "/training"`, `liveWorkout: "/training/live"` | `/programs` → `/training` | `lintRatchet.test.ts`: `"app/(app)/programs/"` → `"app/(app)/training/"` |
+| 9 | `life-mastery` → `plan`; `git rm -r "app/(app)/dashboard/goals"` | `plan: "/plan"`, `quitVice: "/plan/quit-vice"` | `/life-mastery` → `/plan`; `/dashboard/goals/plan` → `/plan` | `sw.js`: `"/life-mastery/quit-vice"` → `"/plan/quit-vice"`. Delete `SUPERSEDED_LIFE_MASTERY_PATHS` from `routes.ts`. In `routeList.test.ts` delete the tests "keeps the old address working: it redirects to Life Mastery, step and all" and "is not reached through an address it has already left", the `import OldPlanPage …` line, and the `next/navigation` `redirect` mock and `redirected` array if nothing else uses them (step 2 below replaces them). In `tests/e2e/site-frame.spec.ts`, enable the one-segment line |
 
-**Acceptance, on `:3100` and then `:3000`:**
-- `curl` of every `LEGACY_ROUTES` source gives 308 to the right target, with the query string kept.
-- Every new address answers 307 to login signed out, and renders signed in.
-- The screenshot table is re-run and quoted with the new addresses.
-- `npm test` passes, `route-sweep` passes, and against a production build `vice-offline.spec.ts` and
-  `programs-offline.spec.ts` pass at the new addresses.
-- The browser bar on each tab destination shows a one-segment address.
+In every section:
 
-## Phase 6 — Clean-ups found on the way, and the product map
+1. **Tests that name the old address.** Search both the plain and the regex-escaped form (e2e
+   specs match URLs with regexes such as `/\/dashboard\/scenarios$/`):
+   `grep -rlnF -e "<old address>" -e "$(printf '%s' '<old address>' | sed 's#/#\\/#g')" tests/`.
+   Replace each occurrence that names our page with the `ROUTES` reference (import from
+   `@/src/shared/routes`); in a regex, build it with
+   `new RegExp(ROUTES.x.replace(/\//g, "\\/") + "$")` or match with `toHaveURL(new URL(ROUTES.x, base))`.
+   In `tests/support/sweepDebt.ts` replace the key with the route-list value
+   (`"/programs": 3` becomes `[ROUTES.training]: 3`) and keep the number; **a key whose page is
+   deleted is deleted** (section 4: remove `"/qa"`; `"/dashboard/qa"` becomes `[ROUTES.coach]`).
+   **A dirty test file is skipped, as in Phase 1:** if `git status --short <file>` is not empty,
+   leave it, note it under the section, and message `daygame-coach-ac`. The old address it names
+   still works through the redirect; come back to it after their commit. **Leave alone:** `tests/unit/shared/safeRedirect.test.ts` and
+   `tests/unit/shared/errorScrub.test.ts` (paths there are sample data for pure functions), and the
+   legacy test below (old addresses on purpose).
+2. **`tests/unit/navigation/legacyRoutes.test.ts`.** **Section 1 creates it** with the checks that
+   run over the whole table (they hold for any number of rows): every `from` has no page in
+   `productRoutes()`; every `to` is in `productRoutes()`; no `to` is another row's `from` (no
+   chains); no product file writes a `from` address (reuse `writesPath()` and `code()` from
+   `routeList.test.ts`, moved to `tests/support/appRoutes.ts`); `legacyRedirect("/dashboard")` is
+   `null`; `legacyRedirect("/dashboard/settings")` is `"/settings"`; and through the proxy (same
+   mocks as `proxyPrivateByDefault.test.ts`) `/dashboard/settings` answers 308 to `/settings`.
+   **Each later section adds one sample for its own rows:** section 3 adds
+   `/dashboard/time?start=1&description=x` → 308 with `location` ending
+   `/time?start=1&description=x`; section 7 adds `legacyRedirect("/dashboard/tracking/session/abc")`
+   is `"/tracking/session/abc"`; sections 2, 4, 5, 6, 8 and 9 add `legacyRedirect(<from>)` equals
+   `<to>` for each of their rows.
+3. Re-read the comments in that section's files that mention the old address. Fix any that now say
+   something false; leave dated history ("was at … until 2026-10-…").
 
-**Depends on:** Phase 5.
+**Acceptance (after section 9):**
+- On `:3101`, Appendix C's legacy loop: every row answers 308 to its target with the query kept.
+- On `:3101`, Appendix C's "after Phase 4" loop: every new address answers 307 to login signed out;
+  the public ones answer 200.
+- `npx playwright test tests/e2e/site-frame.spec.ts --project=desktop` passes; it reads `ROUTES`, so
+  it now visits the new addresses, and its one-segment check holds.
+- `npm test` passes; the sweep projects pass. **Rebuild `:3100` once now** (not per section) and run
+  the two offline specs; both pass at the new addresses.
+- `find "app/(app)/dashboard" -name page.tsx` prints only `app/(app)/dashboard/page.tsx`.
+- `app/manifest.ts`'s `start_url` is still `/dashboard`.
 
-1. **Q14:** remove the home page's "Preview Dashboard" card (`HomePage.tsx:88–114`) and the
-   signed-out branches in `DashboardPage.tsx`, `app/(app)/articles/page.tsx` and
-   `app/(app)/inner-game/page.tsx`. The proxy guarantees a user on every one of them.
-2. **The first-load bounce from B-SIGNIN:** re-run the screenshot script three times from a fresh
-   state file. If the first signed-in load is sent to login again, record it in `docs/product/map.md`
-   under "In flight now" with the evidence. Do not fix it in this plan; it is about token refresh, not
-   structure.
-3. **`docs/product/map.md`:**
-   - rewrite "Every address in the product" to the new table;
+## Phase 5 — The product map, and loose ends
+
+**Depends on:** Phase 4.
+
+1. **`docs/product/map.md`:**
+   - rewrite "Every address in the product" using the **After** column of Part 1's table;
    - update the slice lines that name addresses (`timetrack/` "at `/dashboard/time`", `vice/`,
-     `programs/`, and the Life Mastery paragraphs);
-   - correct "Signed out sees the home page and a preview dashboard";
-   - **remove the sentence that says `tests/unit/architecture/orientation.test.ts` fails when a new
-     route appears.** That test was deleted in `2fea6697`, and per the owner it stays deleted.
-   Leave `docs/plans/*`: they are dated records, and their old addresses are history.
-4. **Vision item 32:** add a dated line saying the address followed the form into Scenarios.
+     `programs/`, the Life Mastery paragraphs);
+   - replace "Signed out sees the home page and a preview dashboard" with "Signed out sees the home
+     page and the sign-in pages";
+   - delete the sentence claiming `tests/unit/architecture/orientation.test.ts` fails on a new route.
+   Leave `docs/plans/*`: they are dated records.
+2. **`docs/product/vision.md` item 45:** add a line dated with the day you write it (YYYY-MM-DD):
+   "<date>: the address followed the form into Scenarios (`/scenarios/preferences`)."
 
-**Acceptance:** `npm test` passes; `grep -n "/dashboard/\|/programs\|/life-mastery\|/preferences" docs/product/map.md` finds only historical mentions, each labelled as such.
+**Acceptance:** `npm test` passes;
+`grep -nE "/dashboard/(settings|tracking|scenarios|time|qa|articles|inner-game|goals)|/programs|/life-mastery|(^|[^s])/preferences" docs/product/map.md`
+piped through `| grep -v "2026-"` prints nothing (every remaining mention of an old address sits
+on a dated history line).
 
 ---
 
 # ████ STOP — the AI returns to you here ████
 
-Everything above runs on `training-rebuild` and is visible on `localhost:3000`. Nothing reaches the
-friend until you choose how (Q17):
-
-- **Preview share link (recommended):** Vercel dashboard → the Preview deployment of the last commit →
-  Share. Send him that link and the test steps: sign in, open each tab on a laptop and on a phone.
-- **Or deploy:** `git push origin training-rebuild:main` (B-DEPLOY). This also ships 440 other commits.
+Everything above is on `training-rebuild` and visible on `localhost:3000`. To show the friend (D17):
+Vercel dashboard → the Preview deployment of the last commit → **Share** (B-PREVIEW). Or deploy
+(B-DEPLOY), which also ships 440 other commits.
 
 ---
 
-## Phase 7 — The friend looks again
+## Phase 6 — The friend looks again
 
-**Depends on:** your choice above.
+1. On the shared URL: Appendix C's `curl` loops with `B=<that URL>` (old 308, new 307 signed out).
+2. **You** sign in there with your own account and open each tab on a laptop and on a phone. (The
+   browser tests cannot run there: a preview talks to the live project, and they only run on the
+   test backend.)
+3. Ask the friend his original question: "Does anything look like a subset of something it isn't?"
+   Record his answer here, verbatim and dated.
 
-1. On the shared or deployed URL, re-run Phase 0's `curl` probe: old addresses 308, new addresses 307
-   signed out.
-2. Re-run the screenshot script against that URL with the test account, if sign-in works there (a
-   preview shares the production database, so it does).
-3. Ask the friend the same question he answered: "Does anything look like a subset of something it
-   isn't?" Record his answer here, verbatim, with the date.
+## Phase 7 — API addresses (**not now**, D13)
 
-## Phase 8 — API addresses (optional; **not now**, Q13)
-
-Recorded so the inventory is not lost. Do it with the database move, which rewrites this layer.
+Recorded for the database move.
 
 | Family | Today | Problem |
 |---|---|---|
-| Gym | `/api/workouts/*` (12 routes), `/api/programs/*` (11), `/api/health/workout` and `/bests`, `/api/exercising/*` (3, a test-only slice) | One feature, four prefixes |
+| Gym | `/api/workouts/*` (12 routes), `/api/programs/*` (11), `/api/health/workout` and `/bests`, `/api/exercising/*` (3, test-only slice) | One feature, four prefixes |
 | Plan | `/api/goals/*` (18), `/api/life-plan/*` (3), `/api/life-answers` | One feature, three prefixes |
-| Vice | `/api/black-box` | Named after a screen, not the slice |
-| AI usage | `/api/api-ai-usage`, `/api/admin/api-ai-stats`, `/api/admin/api-ai-usage`, `/api/admin/check-ai-logs`, `/api/admin/test-ai-logging`, `/api/admin/test-user-logging` | `api` twice in one address; test endpoints in admin |
-| Test | `/api/test/*`, `/api/qa-test` | Sealed in production; fine as is |
+| Vice | `/api/black-box` | Named after a screen |
+| AI usage | `/api/api-ai-usage`, `/api/admin/{api-ai-stats,api-ai-usage,check-ai-logs,test-ai-logging,test-user-logging}` | `api` twice; test endpoints under admin |
+| Test | `/api/test/*`, `/api/qa-test` | Sealed in production |
 | Rest | `/api/tracking/*`, `/api/timetrack/*`, `/api/scenarios/*`, `/api/inner-game/*`, `/api/settings/*`, `/api/health/{nutrition,sleep,weight}`, `/api/qa`, `/api/errors`, `/api/whoami`, `/api/auth/destination` | Consistent enough |
 
 ---
@@ -615,84 +742,430 @@ Recorded so the inventory is not lost. Do it with the database move, which rewri
 
 ## Ground rules
 
-- **This checkout is shared with at least three other sessions** (`ListAgents` on 2026-10-13: `-6e`,
-  `-ac`, `-bf`).
-  - Never run `git stash`, `git add -A`, `git add .`, `git commit -a` or `--no-verify`.
-  - Commit with `git commit --only <paths>`. Edit a file another session might touch (`proxy.ts`,
-    `public/sw.js`, `components/*`, `tests/**`) only when `git diff <file>` shows it clean, and check
-    again just before committing. Never commit or revert another session's hunk.
-  - **Folder moves under `app/` touch many files at once.** Before each `git mv`, check
-    `git status --short app/` for that folder. If a peer has uncommitted changes inside it, message
-    that peer and wait. A move must not carry their edits into your commit.
-  - If the pre-commit hook fails because of another session's change, record **B-PEER-TREE** with the
-    failing test and file, and continue with work that needs no commit.
-- **Never kill, start or restart the dev server on `:3000`.** Verify on a second instance:
-  `NEXT_DIST_DIR=.next-verify npx next dev -p 3100`. Stop only that instance when done.
-- **Never edit `next.config.mjs`** (B-SHARED-FILES, Q10).
-- **Never read or print `.env.local` values.** Scripts read them.
-- **Never write to the live database.** The screenshots and e2e runs use the test accounts only, never
-  the owner's.
-- **Builds only through `npm run build`** (it keeps `--webpack`; the default bundler exhausts WSL
-  memory).
-- **Read Next's own docs before writing Next code:** `route-groups.md`, `layout.md` and `proxy.md`
-  under `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/`. This version
-  differs from older ones.
-- **Every phase ends with:** commit, push, read the CI result for that commit
-  (`gh run list --branch training-rebuild --limit 3`; `gh` is logged in), then write
-  `**Status:** done <date>` and the acceptance evidence under that phase here. A status-only commit to
+- **The checkout is shared** (`ListAgents` on 2026-10-13: `-6e`, `-ac`, `-bf`).
+  - Never `git stash`, `git add -A`, `git add .`, `git commit -a` or `--no-verify`.
+  - Commit with `git commit --only <paths>`. **A new file must be added first, by name:**
+    `git add <each new path>`, then `git commit --only <every path in the commit>`. A `git mv`
+    stages both sides; list **both** the old and the new folder in `--only`. Edit a file only when
+    `git status --short <file>` is clean, and check again just before committing. Never commit or
+    revert another session's hunk. After a failed commit, `git restore --staged <your paths>` so
+    nothing of yours is left staged for another session's `git commit`.
+  - **Before each `git mv` under `app/`:** `git status --short <that folder>` must be empty.
+  - When `.git/index.lock` exists, another session is mid-command: retry after a few seconds; never
+    delete the lock.
+  - If the hook fails on a test this plan did not touch, record B-PEER-TREE with the test and file,
+    message the owning session (`-ac` for the test cut), and do work that needs no commit.
+- **Never kill, start or restart `:3000`.** Checks run on `:3200` (Playwright's own), `:3101` and
+  `:3100` (Appendix C); stop only `:3101` and `:3100` when done.
+- **Never edit `next.config.mjs`.** Never read or print `.env.local` values, nor the test backend's
+  keys (keep them in shell variables). Never write to the live database. **Every browser check runs
+  on the local test backend**; set `PW_BASE_URL` only for Appendix C's `:3100` build.
+- **Builds only through `npm run build`** (it keeps `--webpack` and the memory cap).
+- **Read Next's own docs before writing Next code** (`route-groups.md`, `layout.md`, `proxy.md` under
+  `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/`).
+- **When a step and the code disagree** (a line number moved, a file was trimmed by the peer), find
+  the same thing by its content, do what the step intends, and note the difference under the phase.
+  If the intent itself no longer applies, stop and record it as a blocker rather than improvising.
+- **Every phase ends with:** commit, push, read the CI run (`gh run list --branch training-rebuild --limit 3`),
+  then write `**Status:** done <date>` and the evidence under that phase. A status-only commit to
   this file may carry `[skip ci]`.
-- **A permission refusal is a blocker, not a puzzle.** Quote it in the blocker table, do not work
-  around it, and continue with the next step that does not depend on it.
-- **Before calling the work done:** note the starting commit, then run `/code-review` and
-  `/security-review` on `<start>..HEAD`, limited to this plan's files. Fix or record every finding.
-  Then re-read each phase's acceptance list against what was actually run.
+- **Commit messages** follow the repository's style (`git log --oneline -10`): one sentence saying
+  what is now true for a person using the app, or what was wrong, not the mechanics. For example:
+  "Settings lives at /settings, and the old address still finds it". A short body for the why, then
+  a blank line and the `Co-Authored-By:` trailer this session's instructions give.
+- **The pre-push hook runs gitleaks** over the commits being pushed (`.husky/pre-push`, since
+  `5036e193`). A finding refuses the push. Never bypass it. A genuine false positive gets its
+  fingerprint added to `.gitleaksignore` with a one-line reason, in its own commit.
+- **Versions:** `package.json` pins `next` 16.3.8 and Node ≥ 24, but the shared `node_modules` and
+  `:3000` still run 16.3.5 on Node 20 until the owner moves them (Caddy plan, R11). Read the docs in
+  `node_modules` as installed; do not run `npm install` or `npm ci`.
+- **"Outside this plan's diff"** (the escape clause) means: `git log <Start SHA>..HEAD --format=%h -- <failing test file> <file it tests>`
+  lists no commit made by this session. Quote that command's output and the failing test's author
+  (`git log -1 --format='%h %an %s' -- <file>`) when using the clause.
+- **A permission refusal is a blocker, not a puzzle.** Quote it in the blocker table and continue with
+  the next independent step.
+- **Before calling the work done:** run `/code-review` and `/security-review` on `<start>..HEAD` for
+  this plan's files; fix or record every finding; re-read each acceptance list against what was run.
 
 ## Files
 
-**Created:** `src/shared/routes.ts`, `components/AppFrame.tsx`, `app/(app)/layout.tsx`, and the tests
-`tests/unit/navigation/routeList.test.ts`, `legacyRoutes.test.ts`, `proxyPrivateByDefault.test.ts`
-(or the same checks in surviving files), plus `noTypedAddresses.test.ts` if Q11 stays "yes".
+**Created:** `src/shared/routes.ts`, `components/AppFrame.tsx`, `components/AppLogo.tsx`,
+`app/(app)/layout.tsx`, `tests/unit/navigation/routeList.test.ts` (renamed from
+`lifeMasteryRoutes.test.ts`), `proxyPrivateByDefault.test.ts`, `legacyRoutes.test.ts`.
 
-**Moved:** `app/dashboard/`, `app/programs/`, `app/preferences/` and `app/life-mastery/` into
-`app/(app)/` (Phase 4), then each section to its new address (Phase 5).
+**Moved:** `app/dashboard/`, `app/programs/`, `app/preferences/`, `app/life-mastery/` into
+`app/(app)/` (Phase 3); then each section (Phase 4).
 
 **Edited:** `proxy.ts`, `public/sw.js`, `components/navTabs.ts`, `components/AppHeader.tsx`,
-`components/MobileTabBar.tsx`, the roughly 60 files in Phase 1 step 4, the pages and components in
-Phase 4 steps 4–6, `tests/support/appRoutes.ts`, the navigation tests in Phase 2, the e2e specs that
-name addresses, `docs/product/map.md`, `docs/product/vision.md` (one dated line), and this plan.
+`components/MobileTabBar.tsx`, the ~60 files of Phase 1 step 6, the files of Phase 3 steps 4–7,
+`tests/support/appRoutes.ts`, `tests/support/sweepDebt.ts`, the navigation tests,
+`tests/unit/lintRatchet.test.ts`, the tests and e2e specs that name moved addresses,
+`docs/product/map.md`, `docs/product/vision.md`, this plan.
 
 **Deleted:** `src/shared/lifeMasteryRoutes.ts`, `src/shared/trainingRoutes.ts`, `app/qa/page.tsx`,
-`app/dashboard/goals/plan/page.tsx`.
+`app/(app)/dashboard/goals/`.
 
-**Not touched:** `next.config.mjs`, `app/manifest.ts`'s `start_url`, anything under `src/db/`, every
-API route, every code folder name.
+**Not touched:** `next.config.mjs`, `app/manifest.ts`'s value, `src/db/`, API routes, code folder
+names, `src/shared/iconRoles.ts`.
 
 ## What would make this plan wrong
 
-- **If the peer's trim deletes a navigation test outright** rather than trimming it, Phase 2's steps
-  for that file disappear. Phase 4 step 8 and Phase 5's acceptance then rely on the screenshot script
-  and `route-sweep`, which still cover the same ground.
-- **If Next 16 treats a bracketed folder differently from what `route-groups.md` says** (for example, a
-  nested layout remounting on every navigation), Phase 4's acceptance catches it: the tab bar would
-  flicker or lose its state between tabs. Then put the frame in `app/layout.tsx` behind a
-  `usePathname()` check instead. The address work is unaffected.
-- **If the proxy's wider matcher measurably slows page loads** (one `getUser()` network call per
-  navigation, as every guarded page already pays today), narrow it back to an explicit list generated
-  from `PRIVATE_PREFIXES`, with the agreement test kept.
-- **If D8 is reversed to a shell that loads the remote site,** the frame and redirects still work
-  unchanged. Only the "no server data in the frame" constraint becomes optional.
-- **If the owner answers Q1–Q6 differently after Phase 5,** each answer is a one-line change in
-  `ROUTES` plus a new row in `LEGACY_ROUTES`. The old row must then point at the newest address (no
-  chains, enforced by the test).
+- **If the peer deletes a navigation test outright,** its steps here disappear; `site-frame.spec.ts`
+  and the sweep projects still cover the same ground.
+- **If a nested layout under a route group remounts on every navigation** (the bar flickers or loses
+  state between tabs), Phase 3's acceptance catches it. Then mount `AppFrame` in `app/layout.tsx`
+  with a `usePathname()` check that skips `/`, `/auth/*`, `/admin/*`, `/redirect` and `/test/*`.
+  The address work is unaffected.
+- **If the wider matcher measurably slows navigation** (one `getUser()` per page load, as guarded
+  pages already pay), generate an explicit matcher list instead and keep Phase 2's behavioural test.
+- **If the laptop header looks crowded** (ten links scroll inside it below ~1100 px), put
+  `MORE_ITEMS` behind one "More" menu in the header, as the phone does. One component; the data
+  does not change.
+- **If D8 is reversed** to a shell loading the remote site, nothing here breaks.
+- **If the owner later renames a section,** it is one `ROUTES` value plus one `LEGACY_ROUTES` row;
+  the existing row's `to` must then point at the newest address (the no-chains test enforces it).
 
 ---
 
-## Execution prompt
+# APPENDIX
 
-Kept beside the plan it executes, so a session that has never seen this conversation can run it.
+## A. `src/shared/routes.ts`
 
-### Phases 1–6. Paste after `/goal`.
+**Part 1 — created in Phase 1 (today's values):**
+
+```ts
+/**
+ * EVERY SIGNED-IN PAGE ADDRESS, IN ONE PLACE.
+ * (Carry over the incident comments from lifeMasteryRoutes.ts and trainingRoutes.ts.)
+ * `/`, `/auth/*`, `/redirect`, `/admin/ai-usage` and `/test/*` are deliberately not here (D20).
+ */
+export const ROUTES = {
+  dashboard: "/dashboard",
+  tracking: "/dashboard/tracking",
+  trackingSession: "/dashboard/tracking/session",
+  trackingReport: "/dashboard/tracking/report",
+  trackingReview: "/dashboard/tracking/review",
+  trackingDaily: "/dashboard/tracking/daily",
+  trackingHistory: "/dashboard/tracking/history",
+  scenarios: "/dashboard/scenarios",
+  scenarioPreferences: "/preferences",
+  scenarioArchetypes: "/preferences/archetypes",
+  time: "/dashboard/time",
+  coach: "/dashboard/qa",
+  articles: "/dashboard/articles",
+  innerGame: "/dashboard/inner-game",
+  settings: "/dashboard/settings",
+  training: "/programs",
+  liveWorkout: "/programs/live",
+  plan: "/life-mastery",
+  quitVice: "/life-mastery/quit-vice",
+} as const
+
+export const trackingSessionDetail = (id: string): string => `${ROUTES.trackingSession}/${id}`
+export const workoutReceipt = (workoutId: string): string => `${ROUTES.training}/workout/${workoutId}`
+export const programSession = (enrollmentId: string): string =>
+  `${ROUTES.training}?program=${encodeURIComponent(enrollmentId)}`
+export const TRAINING_HISTORY = `${ROUTES.training}?tab=history`
+export function withFrom(href: string, from: string): string {
+  return `${href}${href.includes("?") ? "&" : "?"}from=${encodeURIComponent(from)}`
+}
+
+/** An API address, here only because trainingRoutes.ts held it. No other API address joins (D13). */
+export const TRAINING_DOOR_API = "/api/programs/today"
+
+/** Removed in Phase 4, section 9; LEGACY_ROUTES replaces it. */
+export const SUPERSEDED_LIFE_MASTERY_PATHS = ["/dashboard/goals/plan", "/test/life-mastery"] as const
+```
+
+**Part 2 — added in Phase 2:**
+
+```ts
+/** Is `pathname` this address or below it? Segment-aware: "/timeline" is not under "/time". */
+export function isUnder(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)
+}
+
+/**
+ * The only pages a signed-out visitor may open. Everything else is private by default.
+ * `/test` is here to keep today's behaviour: it was never guarded, and `app/test/layout.tsx`
+ * answers 404 in production whoever asks.
+ */
+export function isPublicPage(pathname: string): boolean {
+  return pathname === "/" || isUnder(pathname, "/auth") || isUnder(pathname, "/test")
+}
+
+/** Addresses that moved, and where they went. Filled section by section in Phase 4. */
+export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = []
+
+/** Where an old address now lives, or null. The longest matching `from` wins. */
+export function legacyRedirect(pathname: string): string | null {
+  let best: { from: string; to: string } | null = null
+  for (const row of LEGACY_ROUTES) {
+    if (isUnder(pathname, row.from) && (!best || row.from.length > best.from.length)) best = row
+  }
+  return best ? best.to + pathname.slice(best.from.length) : null
+}
+```
+
+**Final values after Phase 4:** `dashboard` `/dashboard`; `tracking` `/tracking` and its six
+sub-pages under `/tracking/`; `scenarios` `/scenarios`; `scenarioPreferences`
+`/scenarios/preferences`; `scenarioArchetypes` `/scenarios/preferences/archetypes`; `time` `/time`;
+`coach` `/coach`; `articles` `/articles`; `innerGame` `/inner-game`; `settings` `/settings`;
+`training` `/training`; `liveWorkout` `/training/live`; `plan` `/plan`; `quitVice`
+`/plan/quit-vice`. `LEGACY_ROUTES` holds the twelve rows of Phase 4's table.
+
+## B. `proxy.ts` shape (Phase 2)
+
+```ts
+export async function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl
+
+  const moved = legacyRedirect(pathname)
+  if (moved) return NextResponse.redirect(new URL(moved + search, request.url), 308)
+
+  if (pathname.startsWith("/api/test/")) {
+    /* existing production gate, unchanged: 404 unless dev or ENABLE_TEST_ROUTES */
+  }
+
+  if (isPublicPage(pathname)) return NextResponse.next()
+
+  const response = NextResponse.next({ request: { headers: request.headers } })
+  const supabase = createServerClient(/* unchanged, including setAll onto `response` */)
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (pathname.startsWith("/api/timetrack/") && !user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+  }
+  if (pathname.startsWith("/api/")) return response
+
+  if (!user) {
+    const redirectUrl = new URL("/auth/login", request.url)
+    redirectUrl.searchParams.set("next", pathname + search)
+    return NextResponse.redirect(redirectUrl)
+  }
+  return response
+}
+
+export const config = {
+  matcher: ["/((?!api/|_next/static|_next/image|.*\\..*).*)", "/api/test/:path*", "/api/timetrack/:path*"],
+}
+```
+
+## C. Servers and `curl` checks — all on the local test backend
+
+```bash
+# 1. The test backend's settings, once per shell. Kept in variables: never echo them.
+export E2E_STACK_ENV="$(node scripts/db/test-stack.mjs up)"
+export NEXT_PUBLIC_SUPABASE_URL="$(jq -r .API_URL <<<"$E2E_STACK_ENV")"
+export NEXT_PUBLIC_SUPABASE_ANON_KEY="$(jq -r .ANON_KEY <<<"$E2E_STACK_ENV")"
+export SUPABASE_SERVICE_ROLE_KEY="$(jq -r .SERVICE_ROLE_KEY <<<"$E2E_STACK_ENV")"
+# Next does not let .env.local override variables already set, so both servers below use these.
+
+# 2. Dev server for the curl loops (never :3000). Background; stop it when done.
+NEXT_DIST_DIR=.next-verify-dev npx next dev -p 3101
+
+# 3. Production build for the two offline specs only. Build at the end of Phase 2 and again at the
+#    end of Phase 4. The NEXT_PUBLIC_ values are baked in at build time, hence step 1 first.
+NEXT_DIST_DIR=.next-verify npm run build
+NEXT_DIST_DIR=.next-verify npx next start -p 3100          # background; stop it when done
+PW_BASE_URL=http://localhost:3100 npx playwright test tests/e2e/vice-offline.spec.ts --project=chromium
+PW_BASE_URL=http://localhost:3100 npx playwright test tests/e2e/programs-offline.spec.ts --project=training
+# Each spec lives in a different project (chromium ignores programs-offline). "Skipped" is not a
+# pass: vice-offline skips when no service worker controls the page. If a spec cannot sign in on
+# this server, record B-STACK with its output rather than pointing it anywhere else.
+
+B=http://localhost:3101
+
+# BEFORE PHASE 4 (Phase 2's check). Signed out: product addresses → 307 to login; the last four → 200.
+for p in /dashboard /dashboard/tracking /dashboard/tracking/session /dashboard/tracking/history \
+         /dashboard/scenarios /preferences /dashboard/time /dashboard/qa /dashboard/articles \
+         /dashboard/inner-game /dashboard/settings /programs /programs/live /life-mastery \
+         /life-mastery/quit-vice /redirect /admin/ai-usage \
+         / /auth/login /sw.js /manifest.webmanifest; do
+  printf "%-32s " "$p"; curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$B$p"; done
+
+# AFTER PHASE 4. Signed out: product addresses → 307 to login; the last four → 200.
+for p in /dashboard /tracking /tracking/session /tracking/history /scenarios /scenarios/preferences \
+         /time /coach /articles /inner-game /settings /training /training/live /plan /plan/quit-vice \
+         /redirect /admin/ai-usage \
+         / /auth/login /sw.js /manifest.webmanifest; do
+  printf "%-32s " "$p"; curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$B$p"; done
+
+# AFTER PHASE 4. Old addresses → 308 to the new one, query kept.
+for p in /dashboard/settings /dashboard/scenarios /preferences /preferences/archetypes \
+         "/dashboard/time?start=1&description=x" /dashboard/qa /qa /dashboard/articles \
+         /dashboard/inner-game /dashboard/tracking/session /programs/live /life-mastery/quit-vice \
+         "/dashboard/goals/plan?step=today"; do
+  printf "%-40s " "$p"; curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" "$B$p"; done
+```
+
+## D. The frame check: `tests/e2e/site-frame.spec.ts` (created in Phase 3)
+
+The friend's complaint as a permanent test. It runs on its own fresh account in the test backend
+(`ON_OWN_ACCOUNTS`, `desktop` project). It reads `TABS`, `MORE_ITEMS` and `ROUTES`, so Phase 4's
+moves need no edit here. A fresh account is unpaid: Ask Coach redirects it to the Dashboard and
+Scenarios shows the preferences form; both are still inside the frame, which is what is checked.
+
+```ts
+import { test, expect } from "./fixtures/test"
+import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, TABS } from "@/components/navTabs"
+import { isUnder } from "@/src/shared/routes"
+
+/**
+ * EVERY TAB DESTINATION HAS THE APP'S NAVIGATION, AND NONE POSES AS A CHILD OF ANOTHER PAGE.
+ *
+ * A friend opened the site on 2026-10-13 and said Settings looked like "a subset of something".
+ * It did: Settings drew "‹ Back", Scenarios "Back to Dashboard", Training "← Dashboard", and on a
+ * laptop Tracking had no navigation at all. Plans/site-structure.md.
+ */
+const ITEMS = [...TABS, ...MORE_ITEMS]
+const FRAMED = ITEMS.filter((item) => !HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(item.href, p)))
+const WIDTHS = [
+  { name: "laptop", viewport: { width: 1280, height: 800 }, labels: ITEMS.map((i) => i.label) },
+  { name: "phone", viewport: { width: 390, height: 844 }, labels: TABS.map((t) => t.label) },
+]
+
+for (const item of FRAMED) {
+  for (const width of WIDTHS) {
+    test(`${item.label} on a ${width.name}: the app's navigation, no back control`, async ({ page }) => {
+      await page.setViewportSize(width.viewport)
+      await page.goto(item.href)
+      await page.waitForLoadState("networkidle")
+      const seen = await page.evaluate(() => {
+        const visible = (el: Element) => {
+          const s = getComputedStyle(el)
+          const b = el.getBoundingClientRect()
+          return s.display !== "none" && s.visibility !== "hidden" && b.width > 0 && b.height > 0
+        }
+        const text = (el: Element) => (el as HTMLElement).innerText.trim()
+        return {
+          navLinks: [...document.querySelectorAll("nav")].filter(visible)
+            .flatMap((nav) => [...nav.querySelectorAll("a")].filter(visible).map(text)),
+          backControls: [...document.querySelectorAll("a, button")]
+            .filter((el) => visible(el) && !el.closest("nav"))
+            .map(text)
+            .filter((t) => /^(←\s*)?back\b|^←|^‹/i.test(t) || t === "Dashboard"),
+        }
+      })
+      for (const label of width.labels) expect(seen.navLinks).toContain(label)
+      expect(seen.backControls).toEqual([])
+      // One segment: a tab destination is not part of another page.
+      expect(item.href.split("/").filter(Boolean)).toHaveLength(1)
+    })
+  }
+}
+```
+
+**The one-segment line fails until Phase 4** (`/dashboard/settings` has two). In Phase 3 add it
+commented out with `// enabled in Phase 4`; Phase 4's section 9 commit enables it.
+
+**Phase 0 evidence** — what the same measurements showed on 2026-10-13, taken with a scratch script
+through the shared live test account on `:3000` (the method the executor must not repeat; see
+B-STACK). One line per page and width: the address, the links in each visible `<nav>`, and on-page
+back controls.
 
 ```
-Execute Plans/site-structure.md, Phases 1 to 6 in order, and stop at its STOP line. Read the whole plan first, including Part 2's ground rules, and follow them. The goal is met only when all of these are true and shown in this session: (1) every step of Phases 1-6 is marked in the plan either done, with its acceptance check actually run (the command and its decisive output quoted under that phase), or "blocked: <ID>" with the exact refusal or the peer's uncommitted files quoted; nothing after the STOP line has been started. (2) The regex from Phase 1 step 4 finds no page address outside src/shared/routes.ts, comments and tests/. (3) On a second dev instance on :3100, signed in as the test account, Phase 0's screenshot script shows the desktop header at 1280px and the tab bar at 390px on every tab destination, no "Back"/"←" control on any tab destination, and the address table from Part 1 is true; every LEGACY_ROUTES source answers 308 to its target with the query string kept; signed out, every product address answers 307 to /auth/login with next, and /, /auth/login, /sw.js and /manifest.webmanifest answer 200. (4) npm test passes; the e2e route-sweep passes at desktop and phone width; vice-offline.spec.ts and programs-offline.spec.ts pass against a production build at the new addresses. (5) Every phase is committed with git commit --only <paths> and pushed to origin training-rebuild, and that commit's CI run is read; Status lines and the blocker table say what actually happened; /code-review and /security-review were run on <start SHA>..HEAD for this plan's files, with every finding fixed or recorded. (6) The final reply starts with what is not yet true, then lists the open questions whose recommendation was used without an answer from the owner. Escape clause: if (3) or (4) cannot be met because of a permission refusal, an open blocker, or a failure caused outside this plan's diff (quote the test, the file and the commit author), record it as a blocker in the plan and that condition counts as met. While working: other sessions share this checkout. Never git stash, git add -A or --no-verify; edit a shared file only when git diff shows it clean; before each git mv under app/, check that no peer has uncommitted changes inside that folder; commit only your own files. Never kill, start or restart the :3000 dev server; never edit next.config.mjs; never read or print .env.local values; never write to the live database; use only the test accounts. Build only through npm run build. When the permission system refuses something, record it with the exact message, do not route around it, and continue with the next step that does not depend on it. Put doubt in the first line of every report, not the last.
+phone /dashboard               {"url":"/dashboard","nav":["Dashboard|Training|Tracking|Scenarios|Time"],"back":[]}
+phone /dashboard/settings      {"url":"/dashboard/settings","nav":["Dashboard|Training|Tracking|Scenarios|Time"],"back":["Back"]}
+phone /dashboard/tracking      {"url":"/dashboard/tracking","nav":["Dashboard|Training|Tracking|Scenarios|Time"],"back":[]}
+phone /dashboard/scenarios     {"url":"/dashboard/scenarios","nav":["Dashboard|Training|Tracking|Scenarios|Time"],"back":["Back to Dashboard"]}
+phone /programs                {"url":"/programs","nav":["Dashboard|Training|Tracking|Scenarios|Time"],"back":["Dashboard"]}
+phone /dashboard/time          {"url":"/dashboard/time","nav":[""],"back":["←\nDashboard"]}
+phone /life-mastery            {"url":"/life-mastery","nav":[""],"back":["Dashboard"]}
+phone /preferences             {"url":"/preferences","nav":[],"back":[]}
+phone /dashboard/qa            {"url":"/dashboard/qa","nav":["Dashboard|Training|Tracking|Scenarios|Time"],"back":[]}
+desk  /dashboard               {"url":"/dashboard","nav":["Your plan|Ask Coach|Articles|Settings|Test Pages"],"back":[]}
+desk  /dashboard/settings      {"url":"/dashboard/settings","nav":["Dashboard|Your plan|Ask Coach|Articles|Test Pages"],"back":["Back"]}
+desk  /dashboard/tracking      {"url":"/dashboard/tracking","nav":[],"back":[]}
+desk  /dashboard/scenarios     {"url":"/dashboard/scenarios","nav":[],"back":["Back to Dashboard"]}
+desk  /programs                {"url":"/programs","nav":[],"back":["Dashboard"]}
+desk  /dashboard/time          {"url":"/dashboard/time","nav":[""],"back":["←\nDashboard"]}
+desk  /life-mastery            {"url":"/life-mastery","nav":[""],"back":["Dashboard"]}
+desk  /preferences             {"url":"/preferences","nav":[],"back":[]}
+desk  /dashboard/qa            {"url":"/dashboard/qa","nav":["Dashboard|Your plan|Articles|Settings|Test Pages"],"back":[]}
+```
+
+## E. `components/AppFrame.tsx` shape (Phase 3)
+
+```tsx
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import type { ReactNode } from "react"
+import { signOut } from "@/app/actions/auth"
+import { AppLogo } from "@/components/AppLogo"
+import { MobileTabBar } from "@/components/MobileTabBar"
+import { Button } from "@/components/ui/button"
+import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, TABS, isActive } from "@/components/navTabs"
+import { ROUTES, isUnder } from "@/src/shared/routes"
+
+/** The e2e helpers find these (tests/e2e/helpers/selectors.ts). Same IDs AppHeader used. */
+const TEST_IDS: Record<string, string> = {
+  [ROUTES.dashboard]: "header-dashboard-link",
+  [ROUTES.plan]: "header-life-mastery-link",
+  [ROUTES.settings]: "header-settings-link",
+}
+
+/** The signed-in app's navigation. No server data, by design (D8 of own-platform-and-app.md). */
+export function AppFrame({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+  if (HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(pathname, p))) return <>{children}</>
+
+  const items = [...TABS, ...MORE_ITEMS].map((item) => ({ ...item, exact: "exact" in item ? item.exact : false }))
+  return (
+    <>
+      <header className="hidden sm:block border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
+        <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+          <AppLogo />
+          {/* Ten destinations plus Log Out do not fit beside the logo below ~1100px. The nav scrolls
+              inside the header instead of pushing the page sideways (the sweep checks that). */}
+          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto">
+            {items.map((item) => (
+              <Button key={item.href} asChild variant="ghost" size="sm" className="shrink-0 text-foreground hover:text-primary"
+                data-testid={TEST_IDS[item.href]}>
+                <Link href={item.href} aria-current={isActive(pathname, item.href, item.exact) ? "page" : undefined}>
+                  {/* Q-ICON: only if the plan holds the line "Q-ICON: yes": <item.icon className="size-4 mr-2" /> */}
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
+            {process.env.NODE_ENV === "development" && (
+              <Button asChild variant="ghost" size="sm" className="shrink-0 text-amber-500 hover:text-amber-400">
+                <Link href="/test">Test Pages</Link>
+              </Button>
+            )}
+            <form action={signOut}>
+              <Button variant="ghost" type="submit" size="sm" className="shrink-0 text-foreground hover:text-primary"
+                data-testid="header-logout-button">
+                Log Out
+              </Button>
+            </form>
+          </nav>
+        </div>
+      </header>
+      <div className="pb-tab-bar">{children}</div>
+      <MobileTabBar />
+    </>
+  )
+}
+```
+
+`app/(app)/layout.tsx`:
+
+```tsx
+import type { ReactNode } from "react"
+import { AppFrame } from "@/components/AppFrame"
+
+export default function AppLayout({ children }: { children: ReactNode }) {
+  return <AppFrame>{children}</AppFrame>
+}
+```
+
+---
+
+## Execution prompt — Phases 1–5. Paste after `/goal`.
+
+```
+Execute Plans/site-structure.md, Phases 1 to 5 in order, and stop at its STOP line. Read the whole plan first, including the DECISIONS table (all final), the Still-open table, Part 2's ground rules and the Appendix, and follow them. First record the Start SHA under Phase 1 as the plan says. Q-ICON: build the laptop header text-only unless the line "Q-ICON: yes" appears in the plan; never infer it, never wait for it. The goal is met only when all of these are true and shown in this session: (1) every step of Phases 1-5 is marked in the plan either done, with its acceptance check actually run (command and decisive output quoted under that phase), or "blocked: <ID>" with the refusal or the peer's dirty files quoted; nothing after the STOP line was started. (2) Phase 1 step 9's finder prints nothing, and grep -rn "shared/lifeMasteryRoutes\|shared/trainingRoutes" app src components tests | grep -vE ":\s*(\*|//)" prints nothing. (3) On the local test backend (never the live project): npx playwright test tests/e2e/site-frame.spec.ts --project=desktop passes with its one-segment check enabled; on the :3101 server of Appendix C, the "after Phase 4" loops show every product address answering 307 to /auth/login with next when signed out, /, /auth/login, /sw.js and /manifest.webmanifest answering 200, and every old address answering 308 to its new one with the query string kept. (4) npm test passes; the sweep-desktop and sweep-phone projects pass; dashboard-navigation.spec.ts (chromium) and mobile/mobile-navigation.spec.ts (mobile-iphone) pass; against Appendix C's production build on :3100, vice-offline.spec.ts passes in the chromium project and programs-offline.spec.ts in the training project, neither skipped. (5) Every commit added new files by name, used git commit --only <paths>, passed the pre-commit hook, and was pushed to origin training-rebuild through the gitleaks pre-push hook without bypassing it; each phase's CI run was read; Status lines and the blocker table say what happened; /code-review and /security-review ran on <Start SHA>..HEAD for this plan's files with every finding fixed or recorded. (6) The final reply starts with what is not yet true. Escape clause: if (3) or (4) cannot be met because of a permission refusal, an open blocker, or a failure outside this plan's diff as Part 2 defines it (quote the git log output and the test's author), record it as a blocker in the plan and that condition counts as met. While working: other sessions share this checkout. Never git stash, git add -A or --no-verify; edit a file only when git status --short shows it clean, including test, e2e and playwright.config.ts files; before each git mv under app/, check that folder has no uncommitted changes; never delete .git/index.lock; commit only your own files. Never kill, start or restart the :3000 dev server; never edit next.config.mjs; never run npm install or npm ci; never read or print .env.local values or the test backend's keys; never write to the live database; run every browser check on the local test backend and set PW_BASE_URL only for the :3100 build; never click Log Out on an account another test shares. Build only through npm run build. When a step and the code disagree, find the same thing by content and do what the step intends, noting the difference; if the intent no longer applies, record a blocker instead of improvising. When the permission system refuses something, record the exact message and continue with the next independent step. Put doubt in the first line of every report, not the last.
 ```
