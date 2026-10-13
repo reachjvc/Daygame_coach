@@ -125,20 +125,30 @@ describe("a server does not start without what it needs", () => {
   })
 
   it("exits non-zero and names the missing variable when run as the container runs it", () => {
-    const env = { PATH: process.env.PATH, ...complete } as Record<string, string>
+    // NODE_ENV as the container sets it; everything else is exactly the list.
+    const env: NodeJS.ProcessEnv = { NODE_ENV: "production", PATH: process.env.PATH, ...complete }
     delete env.SUPABASE_SERVICE_ROLE_KEY
     const run = spawnSync(process.execPath, [SCRIPT], { env, encoding: "utf8" })
     expect(run.status).toBe(1)
     expect(run.stderr).toContain("SUPABASE_SERVICE_ROLE_KEY is required and not set")
 
-    const ok = spawnSync(process.execPath, [SCRIPT], { env: { PATH: process.env.PATH, ...complete }, encoding: "utf8" })
+    const ok = spawnSync(process.execPath, [SCRIPT], {
+      env: { NODE_ENV: "production", PATH: process.env.PATH, ...complete },
+      encoding: "utf8",
+    })
     expect(ok.status).toBe(0)
     expect(ok.stdout).toContain("every required variable is set")
   })
 
   it("prints names only, never a value", () => {
     const secret = "do-not-print-this-value"
-    const env = { PATH: process.env.PATH, ...complete, ANTHROPIC_API_KEY: secret, ENABLE_TEST_ROUTES: "true" }
+    const env: NodeJS.ProcessEnv = {
+      NODE_ENV: "production",
+      PATH: process.env.PATH,
+      ...complete,
+      ANTHROPIC_API_KEY: secret,
+      ENABLE_TEST_ROUTES: "true",
+    }
     const run = spawnSync(process.execPath, [SCRIPT], { env, encoding: "utf8" })
     expect(run.stdout + run.stderr).not.toContain(secret)
   })

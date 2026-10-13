@@ -1,4 +1,3 @@
-/* global process */
 // Runs in Node at build time (next.config.mjs imports it), not in a browser.
 import { execFileSync } from "node:child_process"
 
