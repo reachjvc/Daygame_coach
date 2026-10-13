@@ -3,6 +3,9 @@
 **Status:** Phases 0–5 executed 2026-10-13 (session daygame-coach-6e, renamed daygame-coach-c5 after
 WSL restarted). Phases 1–3 and 5 done. Phase 4 done except steps 4.6–4.7: this machine cannot pull a
 private GHCR image yet, because the GitHub CLI login has no `read:packages` scope (B-GH, half open).
+Staging publishing was switched on, and its first live run stopped at the privacy check as designed:
+the package GitHub created was **public**. Publishing is switched off again until the owner makes
+the package private (B-GHCR, R5).
 Evidence is quoted under each phase; what is still open is in "Blocker state after Phases 1–5" and
 under the STOP line. Phases 6–7 wait for the STOP line (a domain and a server).
 
@@ -281,7 +284,8 @@ what happened, not a guess.
 | B-DISK (new) | **Open, owner's.** C: holds WSL's virtual disk and is 99 % full (30 GB free). A full C: detached WSL and killed every session today (recorded by the site-structure plan's session). This plan's buildx builder held **30 GB of build cache** on that disk at the time, so its image builds very likely contributed. The cache was pruned to 4 GB, and `infra/build-image.sh` now refuses to build below 20 GB free on C: and trims the cache after every build (a1f82f6b). Space freed inside WSL is reused but does not shrink the file on C:. | `df -h /mnt/c`: "1.9T 1.8T 30G 99%"; `docker buildx prune --builder dg-capped --keep-storage 4gb`: "Total: 26.49GB" |
 | B-DEVSERVER | **Open, and the dev server is down.** The WSL restart at 17:49 stopped the owner's `npm run dev` on :3000. This plan does not start it (R11). | `curl http://localhost:3000/`: 000 after the restart (200 before) |
 | B-CI-ARTIFACTS / R12 | **R12 done by daygame-coach-bf**: the three test accounts have new passwords, every session revoked, the 10 reports holding the old ones deleted, `.env.local` and the CI secrets updated. New report artifacts keep being uploaded by e2e.yml (23 now); since f92a16f1 they type passwords through `fillSecret`, so their step names hold none (not downloaded here). | bf's message 2026-10-13; `gh api repos/reachjvc/Daygame_coach/actions/artifacts`: "total_count=23" |
-| B-GHCR, B-DNS, B-HETZNER, B-TAILSCALE, B-MAIN, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
+| B-GHCR | **Open, and now concrete.** The first live `image-staging` run pushed an empty placeholder to create `ghcr.io/reachjvc/daygame-coach-staging`; GitHub made the new package **public**, as this plan's "What would make this plan wrong" foresaw, and the privacy check stopped the job before any real image. The package holds only that placeholder: one text file, nothing from the app. CI no longer creates packages (8c17898d), and `STAGING_PUBLISH` is `off` again. | run 38429479662: "ghcr.io/reachjvc/daygame-coach-staging:placeholder can be read without logging in: the package is PUBLIC. Stopping before any image is pushed."; anonymous manifest request: 200 |
+| B-DNS, B-HETZNER, B-TAILSCALE, B-MAIN, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
 
 # OPEN QUESTIONS — every one decided, with the cost if the decision is wrong
 
@@ -424,7 +428,8 @@ start when misconfigured, and has no critical advisory in what ships.
   four sources, the failure naming BUILD_SHA, and a short SHA refused). The same edit of
   `next.config.mjs` carries step 3.1's self-hosted switch, to restart the owner's dev server once;
   `http://localhost:3000` answered 200 before and after it.
-- **1.6** `app/api/healthz/route.ts` and `src/db/readinessProbe.ts` (a HEAD query on the public
+- **1.6** `app/api/healthz/route.ts` and `src/db/readinessRepo.ts` (named `readinessProbe.ts` in this
+  step; renamed after review, because all database access goes through `src/db/*Repo.ts`; a HEAD query on the public
   `values` catalogue): "Tests 9 passed" (200, 503 on a throw, false after 2 s with the query aborted,
   one probe per 10 s shared by concurrent callers, failures cached too, proto from the first hop).
   The live check is Phase 3's.
@@ -729,6 +734,14 @@ reads it through `process.cwd()`, and Next's tracing then copies it into the ima
   clean. `http://localhost:3000`: 200 before the switch and after the sweep.
 - **Reboot (B-REBOOT).** Observed at 17:49, see the blocker state: the deployment came back by
   itself.
+- **Deviation from step 7.8, after review.** A digest is marked failed only when the new image never
+  answered `/api/healthz` with its own commit (it crashed or never started) while the previous image
+  is healthy. If it did answer with its own commit and only the check failed, a database blip may be
+  to blame: it is rolled back and deferred, and a second such failure marks it. Failures caused
+  outside the image are deferred, and the agent retries a deferred digest after 15 minutes instead of
+  every minute. Re-checked after the change: a crash-type broken image was "unhealthy after 90s …
+  (it answered with its own commit: no)", rolled back and marked failed. The deploy lock moved into
+  the state directory, so root and the deploy user share it.
 
 ## Phase 4 — CD to staging: CI publishes; this machine deploys itself. **Status: done except 4.6–4.7, blocked: B-GH (no `read:packages`)**
 
@@ -834,6 +847,14 @@ reaches https://localhost with no person involved.
   `branch:training-rebuild`; `["NEXT_PUBLIC_APP_URL","NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "NEXT_PUBLIC_SUPABASE_URL"]`; `STAGING_PUBLISH=on`; `all_external_contributors`. Every session was
   told that each push now runs `image-staging`, which fails when e2e.yml failed on the same commit.
+  **The first live run** (38429479662, on a peer's commit ad528b66; the run on this plan's 0ba9f54c had
+  been cancelled by that push): `checks` success, then `image-staging` waited for e2e.yml, pushed the
+  placeholder, and stopped: "…:placeholder can be read without logging in: the package is PUBLIC.
+  Stopping before any image is pushed." The privacy check worked; creating the package from CI cannot
+  give a private one in a public repository. `STAGING_PUBLISH` was set back to `off`
+  (`gh variable set STAGING_PUBLISH --body off`), and the composite action now refuses to create a
+  package: an existing tag must be proven private first. To resume: R5, then
+  `gh variable set STAGING_PUBLISH --body on`.
 - **4.5** Not this plan's (B9 of tests-worth-their-keep.md).
 - **4.6–4.7 blocked: B-GH.** The CLI token has no `read:packages` ("You need at least read:packages
   scope to list packages. (HTTP 403)"), so `gh auth token | docker login ghcr.io` would not let this
@@ -956,6 +977,34 @@ fingerprints checked when written in.
   below). No Cloudflare or Hetzner resource was touched. GitHub settings were changed only by step
   4.4, after B-GH's login existed.
 
+### Reviews (2026-10-13), on d659ac47..HEAD, this plan's files only
+
+- **`/code-review`**: 15 findings. Fixed in 8c17898d: the image search ran as uid 1000, so `find`
+  exited 1 and killed the step under `bash -e` (now as root); CI created the package, which comes out
+  public (now refused); the prune could delete untagged parts of an index (now only `<prefix>-<sha>`
+  versions); a deploy failing for an outside reason was retried every minute (now deferred 15
+  minutes); the lock path differed between root and the deploy user (now in `STATE_DIR`); a good
+  digest could be marked failed after a database blip or when redeploying what already runs (see
+  Phase 3's deviation note); `sync-infra.sh` recreated the app outside `deploy.sh` (now never touches
+  it); the unit's 300 s start timeout could kill a rollback (now 900 s); `run-local.sh` ignored
+  `DAYGAME_CONFIG_DIR` for `deploy.sh` and could be undone by the agent (now passes the file and
+  refuses while the timer runs); `push-env.sh` swallowed an SSH failure and could replace the server's
+  key (now stops); `records.sh` overwrote whichever TXT record came first, such as a verification
+  token (now matches the record's kind and stops on several); the probe lived outside a `*Repo.ts`
+  (now `readinessRepo.ts`); `deploy.sh` and the agent now read quoted values like the other scripts.
+  **Recorded, not changed:** `scripts/training-data/11.EXT.retrieval-smoke.ts:181` keeps its own
+  `|| "http://localhost:11434"`; it is a local pipeline script outside this plan, where a local Ollama
+  is the norm.
+- **`/security-review`** could not run on this checkout: "fatal: ambiguous argument 'origin/HEAD...':
+  unknown revision or path not in the working tree." (there is no `origin/HEAD` ref, and setting one
+  would change shared git metadata). The same review was run by a subagent on the exact range and
+  files: **no high or medium finding**. Its three low findings are fixed: the privacy check now
+  counts as private only a 401/403 from the token endpoint or from the manifest, so a registry outage
+  can no longer read as "private" (tested against GHCR: the public staging package fails, the missing
+  production one passes); the Cloudflare token goes to curl as a header file and the Tailscale key is
+  substituted in the shell, so neither is ever on a command line; `sync-infra.sh` reads `deploy.env`
+  instead of sourcing it as root, and `push-env.sh` accepts only a plain e-mail address.
+
 ---
 
 # ████ STOP — the AI returns to you here ████
@@ -987,7 +1036,7 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R2 Cloudflare token | Open |
 | R3 Hetzner | Open |
 | R4 GitHub CLI | **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
-| R5 read-only registry tokens | Open. Until then this machine can use the CLI's token once R4 has `read:packages`. |
+| R5 read-only registry tokens | Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
 | R6 Tailscale | Open |
 | R7 Supabase redirect URLs | Open |
 | R8 fast-forward `main` | Open. Note: Vercel will build `main` on Node 24 (`engines`). |
@@ -1134,7 +1183,7 @@ finish), and confirming the emails in steps 6 and 7.
 - `.nvmrc`, `audit-baseline.json`, `.gitleaksignore`, `.dockerignore`
 - `scripts/build-id.mjs`, `scripts/check-runtime-env.mjs`, `scripts/audit-ratchet.mjs`,
   `scripts/ci/await-workflow.mjs`
-- `app/api/healthz/route.ts`, `src/db/readinessProbe.ts`
+- `app/api/healthz/route.ts`, `src/db/readinessRepo.ts` (named `readinessProbe.ts` until the review)
 - `infra/Dockerfile`, `infra/compose.yaml`, `infra/caddy/common.caddy`,
   `infra/caddy/Caddyfile.production`
 - `infra/build-image.sh`, `infra/write-env-file.sh`, `infra/deploy.sh`, `infra/deploy-agent.sh`,

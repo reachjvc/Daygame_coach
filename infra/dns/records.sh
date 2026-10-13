@@ -62,8 +62,13 @@ if [ "$dry_run" = yes ]; then
 fi
 
 [ -f "$CONFIG_DIR/cloudflare.token" ] || die "no Cloudflare token at $CONFIG_DIR/cloudflare.token (R2)."
-auth=(-H "Authorization: Bearer $(cat "$CONFIG_DIR/cloudflare.token")" -H "Content-Type: application/json")
-cf() { curl -fsS "${auth[@]}" "$@"; }
+# The token goes to curl as a header file, never as an argument, so it is
+# never on a command line that `ps` can show.
+headers="$(mktemp)"
+trap 'rm -f "$headers"' EXIT
+chmod 600 "$headers"
+printf 'Authorization: Bearer %s\nContent-Type: application/json\n' "$(cat "$CONFIG_DIR/cloudflare.token")" > "$headers"
+cf() { curl -fsS -H @"$headers" "$@"; }
 
 zone="$(cf "$API/zones?name=$domain" | jq -r '.result[0].id // empty')"
 [ -n "$zone" ] || die "Cloudflare has no zone named $domain for this token."

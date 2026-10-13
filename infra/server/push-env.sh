@@ -36,7 +36,7 @@ plan() { printf 'push-env: %s\n' "$*"; }
 dry_run=no
 if [ "${1:-}" = "--dry-run" ]; then dry_run=yes; shift; fi
 domain="${1:-}" email="${2:-}"
-if ! [[ "$domain" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] || ! [[ "$email" =~ ^[^@[:space:]]+@[^@[:space:]]+$ ]]; then
+if ! [[ "$domain" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] || ! [[ "$email" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]+$ ]]; then
   die "usage: infra/server/push-env.sh [--dry-run] <domain> <acme-email>"
 fi
 

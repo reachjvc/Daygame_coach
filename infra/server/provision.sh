@@ -106,7 +106,10 @@ if exists server "$NAME"; then
   plan "server $NAME exists; not touched (rebuilding a server is a decision, not a side effect)"
 else
   chmod 600 "$user_data"
-  sed "s|@@TAILSCALE_AUTHKEY@@|$authkey|" "$HERE/cloud-init.yaml" > "$user_data"
+  # Substituted in the shell, not by sed, so the key is never a command-line
+  # argument that `ps` can show.
+  template="$(cat "$HERE/cloud-init.yaml")"
+  printf '%s\n' "${template//@@TAILSCALE_AUTHKEY@@/$authkey}" > "$user_data"
   if grep -q '@@TAILSCALE_AUTHKEY@@' "$user_data"; then die "the Tailscale key was not filled into cloud-init."; fi
   plan "server $NAME: $SERVER_TYPE, $IMAGE, $LOCATION, firewall $FIREWALL, key $KEY_NAME, cloud-init from infra/server/cloud-init.yaml with the one-hour Tailscale key"
   hc server create --name "$NAME" --type "$SERVER_TYPE" --image "$IMAGE" --location "$LOCATION" \

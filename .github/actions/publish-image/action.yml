@@ -81,23 +81,34 @@ runs:
           echo "::error::$IMAGE has neither a ${{ inputs.tag-prefix }} nor a placeholder tag, so its privacy cannot be proven. CI does not create it: a package first pushed from this public repository comes out public. Create it private once (Plans/caddy-deploy-and-cicd.md, R5)."
           exit 1
         fi
-        # Ask the registry the way an anonymous stranger would: an anonymous
-        # token, then the manifest. 200 means anyone can pull it. Only 401 or
-        # 403 counts as private; anything else means "could not check".
-        # (Checked 2026-10-13: a public GHCR image answers 200, a private or
-        # missing one refuses the token with DENIED and the manifest with 401.)
+        # Ask the registry the way an anonymous stranger would. Checked
+        # 2026-10-13: for a private or missing package the anonymous token
+        # endpoint answers 403 (DENIED); for a public one it answers 200 with a
+        # token, and the manifest then answers 200. Only those two refusals
+        # count as private; any other answer means "could not check" and
+        # stops the job, so an outage can never read as "private".
         repo="${IMAGE#ghcr.io/}"
         tag="${probe##*:}"
-        token="$(curl -s "https://ghcr.io/token?scope=repository:$repo:pull&service=ghcr.io" | jq -r '.token // empty')"
-        code="$(curl -s -o /dev/null -w '%{http_code}' ${token:+-H "Authorization: Bearer $token"} \
-          -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json' \
-          "https://ghcr.io/v2/$repo/manifests/$tag")"
-        case "$code" in
-          200) echo "::error::$probe can be read without logging in: the package is PUBLIC. Stopping before any image is pushed. Delete the package, recreate it private, and give this repository write access (Plans/caddy-deploy-and-cicd.md, R5)."
-               exit 1 ;;
-          401|403) echo "An anonymous pull of $probe is refused ($code): the package is private." ;;
-          *) echo "::error::could not check whether $probe is private: the registry answered $code"
-             exit 1 ;;
+        public() {
+          echo "::error::$probe can be read without logging in: the package is PUBLIC. Stopping before any image is pushed. Make it private and give this repository write access (Plans/caddy-deploy-and-cicd.md, R5)."
+          exit 1
+        }
+        unknown() { echo "::error::could not check whether $probe is private: $1"; exit 1; }
+        resp="$(curl -s -w '\n%{http_code}' "https://ghcr.io/token?scope=repository:$repo:pull&service=ghcr.io")"
+        case "${resp##*$'\n'}" in
+          401|403) echo "The registry refuses an anonymous token for $repo (${resp##*$'\n'}): the package is private." ;;
+          200)
+            token="$(jq -r '.token // empty' <<<"${resp%$'\n'*}")"
+            [ -n "$token" ] || unknown "the token endpoint answered 200 without a token"
+            code="$(curl -s -o /dev/null -w '%{http_code}' -H @<(printf 'Authorization: Bearer %s\n' "$token") \
+              -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json' \
+              "https://ghcr.io/v2/$repo/manifests/$tag")"
+            case "$code" in
+              200) public ;;
+              401|403) echo "An anonymous pull of $probe is refused ($code): the package is private." ;;
+              *) unknown "the manifest answered $code" ;;
+            esac ;;
+          *) unknown "the token endpoint answered ${resp##*$'\n'}" ;;
         esac
 
     - name: Set up buildx

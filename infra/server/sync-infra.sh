@@ -90,8 +90,10 @@ tar -C "$stage" -c infra units infra-version | ssh_root "
   rm -rf \"\$tmp\""
 plan "installed; /etc/daygame/infra-version = $sha"
 
-# APP_IMAGE only satisfies compose's interpolation; the app is not started here.
-compose="set -a; . /etc/daygame/deploy.env; set +a; cd $DEST && APP_IMAGE=unused docker compose -f compose.yaml"
+# deploy.env is read, never executed as root: only these keys, and only values
+# made of plain characters, reach compose's environment. APP_IMAGE only
+# satisfies compose's interpolation; the app is not started here.
+compose="cd $DEST && env \$(grep -E '^(APP_ENV_FILE|CADDYFILE|SITE_HOST|ACME_EMAIL)=[A-Za-z0-9._@/:+-]+\$' /etc/daygame/deploy.env) APP_IMAGE=unused docker compose -f compose.yaml"
 for c in "${changed[@]}"; do
   case "$c" in
     unit:*) ssh_root "systemctl daemon-reload && systemctl enable --now daygame-deploy.timer && systemctl restart daygame-deploy.timer"

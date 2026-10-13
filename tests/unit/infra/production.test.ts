@@ -116,6 +116,24 @@ describe("the firewall", () => {
   })
 })
 
+describe("secrets stay off command lines, and settings are never executed as root", () => {
+  it("records.sh hands the Cloudflare token to curl in a header file", () => {
+    const script = read("infra/dns/records.sh")
+    expect(script).toMatch(/curl -fsS -H @"\$headers"/)
+    expect(script).not.toMatch(/-H "Authorization: Bearer/)
+  })
+
+  it("provision.sh fills the Tailscale key in without passing it to another program", () => {
+    expect(read("infra/server/provision.sh")).not.toMatch(/sed[^\n]*TAILSCALE_AUTHKEY/)
+  })
+
+  it("sync-infra.sh reads deploy.env instead of sourcing it", () => {
+    const script = read("infra/server/sync-infra.sh")
+    expect(script).not.toMatch(/\. \/etc\/daygame\/deploy\.env/)
+    expect(script).toMatch(/grep -E '\^\(APP_ENV_FILE\|CADDYFILE\|SITE_HOST\|ACME_EMAIL\)=\[A-Za-z0-9\._@\/:\+-\]\+/)
+  })
+})
+
 describe("DNS", () => {
   it("never puts a record behind Cloudflare's proxy (Q11: Caddy owns TLS end to end)", () => {
     const script = read("infra/dns/records.sh")
