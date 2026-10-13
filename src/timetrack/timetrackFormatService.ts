@@ -63,8 +63,8 @@ export function pad2(n: number): string {
  * looking — which is the failure this project has written down more times than any
  * other, committed here in the act of closing it.
  *
- * The file exists now, and it guards two things rather than one, because the premise
- * needed both: every `type="date"` in the slice deals with an empty value, AND every
+ * That file was written afterwards and has since been removed. The premise needs two
+ * things, not one: every `type="date"` in the slice deals with an empty value, AND every
  * writer of a report's date range produces keys that parse. The live bug was not at an
  * input — `decodeReportConfig` cast any JSON to a `ReportConfig`, so a share link could
  * put empty strings in the range and the ‹ › arrows reached this throw inside a click

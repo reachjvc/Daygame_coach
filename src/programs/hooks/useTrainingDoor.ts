@@ -8,8 +8,8 @@
  * third answer landed, and the button FLIPPED from Start to Resume in front of
  * whoever was reaching for it.
  *
- * Built on `src/shared/useLoad.ts`, the loader the architecture rule names,
- * rather than a second one of its own: three states, and nothing
+ * Built on `src/shared/useLoad.ts`, the shared loader, rather than a second
+ * one of its own: three states, and nothing
  * decision-bearing exists until `ready`.
  */
 

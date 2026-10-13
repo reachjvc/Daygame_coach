@@ -62,9 +62,7 @@ export function dayIsWritable(date: string, accountToday: string): boolean {
   // Counted with the one helper that already knows how to subtract two calendar
   // keys without a second timezone getting a vote. The first draft of this did
   // its own `Date.UTC` arithmetic and ended on `toISOString().slice(0, 10)`,
-  // which is the same mistake `toISOString().split("T")[0]` is banned for —
-  // caught here only because the guard that bans it does not scan `app/` or
-  // this file's neighbours.
+  // which is the same mistake `toISOString().split("T")[0]` is banned for.
   return daysBetweenDateKeys(accountToday, date) <= 1
 }
 

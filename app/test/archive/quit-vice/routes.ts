@@ -2,13 +2,12 @@
  * THE ARCHIVED MODULE OWNS ITS OWN ADDRESS.
  *
  * These two constants were in `src/shared/lifeMasteryRoutes.ts` for about an
- * hour, and `tests/unit/architecture.test.ts` was right to fail that: its rule
- * "nothing links to the archived surfaces" exists because a link from
- * production into the archive is a link somebody has to remove again the day
- * the archive goes. A path constant is a link.
+ * hour, and the architecture test, since removed, was right to fail that: a
+ * link from production into the archive is a link somebody has to remove again
+ * the day the archive goes. A path constant is a link.
  *
- * So the address lives here, beside the pages it names, under `app/test/` —
- * which that rule skips, because archive pages may link to each other. When
+ * So the address lives here, beside the pages it names, under `app/test/`,
+ * where archive pages may link to each other. When
  * this folder is eventually deleted for real, this file goes with it and
  * nothing in `src/` has to be touched.
  *

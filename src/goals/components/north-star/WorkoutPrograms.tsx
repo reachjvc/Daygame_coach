@@ -34,9 +34,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 /**
  * THROUGH THE ONE DOOR. `src/goals` reaches `src/programs` only through
- * `forLifeMastery.ts`, and `tests/unit/architecture.test.ts` fails on a direct
- * import — every direct one was a place the plan could quietly grow a second
- * copy of the program, which is the fault this whole phase is unpicking.
+ * `forLifeMastery.ts` — every direct import was a place the plan could quietly
+ * grow a second copy of the program, which is the fault this whole phase is
+ * unpicking.
  */
 import {
   ProgramRow,

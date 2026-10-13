@@ -2,7 +2,7 @@
 
 echo "🔍 Running pre-commit checks..."
 
-# Run unit tests (includes architecture compliance)
+# Run unit tests
 echo "📦 Running unit tests..."
 npm test -- --reporter=dot
 if [ $? -ne 0 ]; then

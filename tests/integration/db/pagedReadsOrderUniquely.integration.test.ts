@@ -9,10 +9,9 @@
  * the whole failure class `paging.ts` exists to end, arriving through the door
  * it left open.
  *
- * `architecture.test.ts` refuses a read with no `.range()`. Nothing asked
- * whether the `.order()` on it was unique. So this reads the repo's own paged
- * reads out of the source, and asks POSTGRES whether each one's sort key is
- * backed by a unique index.
+ * Nothing asked whether the `.order()` on a paged read was unique. So this
+ * reads the repo's own paged reads out of the source, and asks POSTGRES whether
+ * each one's sort key is backed by a unique index.
  *
  * **Why this rather than a volume test.** The named gap was "does `readDayRows`
  * page correctly at four thousand rows". A volume test samples one number and

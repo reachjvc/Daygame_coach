@@ -124,9 +124,7 @@ export function LiftHistory({
                     Green in this app means "finished" — a ticked set, a rest
                     that is over, a program complete — and a screen that
                     borrows it for "went up" takes the meaning away from the
-                    ticks that need it. That rule is enforced
-                    (`tests/unit/architecture.test.ts`, "green typed out
-                    instead of taken from DONE") and it is newer than the plan.
+                    ticks that need it. That rule is newer than the plan.
                     The sign and the arrow already say the direction.
                   */}
                   <span className="ml-1.5 text-xs text-muted-foreground">

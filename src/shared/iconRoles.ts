@@ -1,8 +1,7 @@
 /**
  * Icon Roles Registry
  *
- * Governs which lucide-react icons can appear in multiple files.
- * Enforced by tests/unit/architecture.test.ts.
+ * Lists which lucide-react icons may appear in multiple files.
  *
  * CLAUDE: Do NOT add icons to this registry or expand roles
  * without explicit user approval. See CLAUDE.md Rule 16.
@@ -161,7 +160,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Zap: ["energy", "quick actions", "onboarding"],
 }
 
-// All registered icon names (utility + semantic) for test enforcement
+// All registered icon names (utility + semantic)
 export const ALL_REGISTERED_ICONS = new Set([
   ...UTILITY_ICONS,
   ...Object.keys(SEMANTIC_ICON_ROLES),
@@ -180,7 +179,7 @@ export const ALL_REGISTERED_ICONS = new Set([
 // An icon listed here may only be imported from the files named. The list may
 // SHRINK (a file is deleted, a screen stops using it) and never grow without
 // the owner saying yes, the same convention every allowlist in this codebase
-// follows. Enforced by tests/unit/architecture.test.ts.
+// follows.
 //
 // CLAUDE: Do NOT add entries or expand allowed patterns without explicit user approval.
 // ---------------------------------------------------------------------------
@@ -202,7 +201,6 @@ export const CONTEXT_LOCKED_ICONS: Record<string, RegExp[]> = {
 // ---------------------------------------------------------------------------
 // Custom icon components — project-specific SVG components that act as icons.
 // Each entry maps an import path fragment to the file patterns allowed to use it.
-// Enforced by tests/unit/architecture.test.ts.
 //
 // CLAUDE: Do NOT add entries or expand allowed patterns without explicit user approval.
 // ---------------------------------------------------------------------------

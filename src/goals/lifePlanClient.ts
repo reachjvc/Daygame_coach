@@ -1,8 +1,8 @@
 /**
  * THE BROWSER'S SIDE OF `/api/life-plan`.
  *
- * A module rather than a hook or a component: `NorthStarFlow` is not on the
- * architecture test's fetch allowlist, and that allowlist only ever shrinks.
+ * A module rather than a hook or a component: screens such as `NorthStarFlow`
+ * do not fetch directly; they go through a client module.
  * `lifePlanDayClient` next door works the same way. (`planSnapshotClient` did
  * too, and was deleted on 2026-09-24 with the mirror it served.)
  *
@@ -174,8 +174,7 @@ export async function saveGoalLinks(links: Record<string, string | null>): Promi
  * ARCHIVE A COUNTED GOAL, asked for when its plan goal is removed.
  *
  * Here rather than in the flow because a screen that fetches has to decide what
- * to show when the request fails, and `NorthStarFlow` is not on the
- * architecture test's list of screens allowed to — a list that only shrinks.
+ * to show when the request fails, and `NorthStarFlow` does not fetch directly.
  * The boolean is the whole contract: the caller removes the plan goal only on
  * true, because doing the two halves independently is how somebody ends up with
  * the plan goal gone, the counted one still running, and no link left to find

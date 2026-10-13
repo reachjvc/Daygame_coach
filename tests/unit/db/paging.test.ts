@@ -8,11 +8,10 @@
  * 1,000 — and in the training case the correction screen then saved the short
  * list back, deleting the missing sets for real.
  *
- * **It had no test.** `tests/unit/architecture.test.ts` refuses new unpaged
- * reads, so the rule that you must use this is enforced; what this function then
- * DOES was covered by nothing. Every paged read in the app — the plan's twenty
- * tables, a year of days, every workout set — is one bug in these ten lines away
- * from the silent truncation it was written to end.
+ * **It had no test.** What this function DOES was covered by nothing. Every
+ * paged read in the app — the plan's twenty tables, a year of days, every
+ * workout set — is one bug in these ten lines away from the silent truncation
+ * it was written to end.
  *
  * `page` is given as a fake here rather than a database. That is the right level:
  * the thing under test is the loop's arithmetic and its stopping rule, and both

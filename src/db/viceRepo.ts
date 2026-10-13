@@ -62,8 +62,7 @@ export async function readViceRows(userId: string, since: string | null): Promis
    * One table's delta, paged.
    *
    * Written as one whole chain per case rather than built up in a variable, so
-   * the `.range()` is visible ON the chain — to a reader, and to the
-   * architecture test that refuses a read with no upper bound. The table name
+   * the `.range()` is visible ON the chain to a reader. The table name
    * is a parameter for the same reason it is next door in `lifePlanRepo`: the
    * generated client types do not know these tables yet.
    */

@@ -34,9 +34,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
  *   - `parse` throwing, because a body in a shape the caller cannot read is not
  *     data the caller can show.
  *
- * `tests/unit/architecture.test.ts` names this module as the loader a new screen
- * must go through. That comment described something that did not exist until
- * this file; it is now true.
+ * This is the loader a new screen must go through.
  */
 /**
  * `reload` is on EVERY state, not just `failed`.

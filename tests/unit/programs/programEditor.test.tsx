@@ -9,16 +9,12 @@
  * exists to say was the thing that got clipped. The four icons were also four
  * decisions on a row whose job is to name a day.
  *
- * TWO OF THE STEP'S SIX TESTS ARE NOT HERE, ON PURPOSE. "Every input is a
- * shadcn Input" and "no class matches /zinc-|sky-|emerald-|text-\[10/" are
- * facts about the FILE, and `tests/unit/architecture.test.ts` already owns both
- * ("no NEW training file speaks a second visual language", "no training input
- * under 16 px on a phone"). Writing them again here would be a second copy of
- * one rule, and the copies drift. What was done instead is the thing that makes
- * the architecture test enforce them: `ProgramEditor.tsx` is off
- * `TRAINING_STYLE_DEBT` and off `UNREADABLE_TEXT_ALLOWED`, and both lists carry
- * a companion assertion that fails if a name on them is already clean — so the
- * removal is not optional and cannot be quietly undone.
+ * TWO OF THE STEP'S SIX TESTS ARE NOT HERE. "Every input is a shadcn Input"
+ * and "no class matches /zinc-|sky-|emerald-|text-\[10/" are facts about the
+ * FILE, and were left to the architecture test, since removed.
+ * `trainingTypeFloor.test.ts` still checks zinc-, sky- and text-[10 in this
+ * file, and emerald- only on a Button or Link; nothing checks that every input
+ * is a shadcn Input.
  */
 
 import { cleanup, render, screen, within } from "@testing-library/react"

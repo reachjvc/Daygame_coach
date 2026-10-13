@@ -161,21 +161,11 @@ describe("every hook that exists is actually wired up", () => {
   const scripts = readdirSync(join(root, ".claude/hooks"))
     .filter((f) => f.endsWith(".sh") || f.endsWith(".py"))
 
-  it.each(scripts)("%s is reachable from settings.json", (script) => {
+  it.each(scripts)("%s is registered in settings.json", (script) => {
     // check-code-review.sh failed this for months while looking like enforcement.
-    //
-    // "Reachable" rather than "referenced": a hook may also be a helper that a
-    // registered hook sources, which is how check-test-results.sh and
-    // clear-test-marker.sh came to agree on one session-keyed marker path
-    // instead of sharing one fixed path between three sessions. A helper nobody
-    // sources is still dead, so it has to be named by something that runs.
-    const registered = scripts.filter((f) => settings.includes(f))
-    const sourcedBy = registered
-      .map((f) => readFileSync(join(root, ".claude/hooks", f), "utf8"))
-      .join("\n")
     expect(
-      settings.includes(script) || sourcedBy.includes(script),
-      `${script} is neither registered in settings.json nor sourced by a registered hook, so nothing runs it.`,
+      settings.includes(script),
+      `${script} is not registered in settings.json, so nothing runs it.`,
     ).toBe(true)
   })
 

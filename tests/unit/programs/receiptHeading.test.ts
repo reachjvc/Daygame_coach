@@ -9,10 +9,10 @@
  * down the same page said "Delete the workout from Tue, Aug 24?". The page
  * disagreed with itself about which workout you were looking at.
  *
- * `today` IS A PARAMETER. Taking it from the running process's clock is the
- * mistake `architecture.test.ts` bans by shape: on the server that clock is
- * UTC, so a Copenhagen lifter's 00:30 Tuesday session would be headed
- * "Yesterday's workout" by the very function meant to name the day.
+ * `today` IS A PARAMETER. Taking it from the running process's clock is a
+ * mistake: on the server that clock is UTC, so a Copenhagen lifter's 00:30
+ * Tuesday session would be headed "Yesterday's workout" by the very function
+ * meant to name the day.
  *
  * ASSERTED BY BUCKET, NOT BY SPELLING — and the reason has changed since this
  * was written. It used to be that `dateKeyLabel` took the runtime's locale, so

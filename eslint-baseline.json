@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 323,
+  "total": 322,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -498,9 +498,6 @@
     },
     "tests/integration/db/trackingRepo.integration.test.ts": {
       "@typescript-eslint/no-unused-vars: 'userId' is assigned a value but never used.": 1
-    },
-    "tests/unit/architecture.test.ts": {
-      "@typescript-eslint/no-unused-vars: 'DOC_HEADER_SKIP_PATTERNS' is assigned a value but never used.": 1
     },
     "tests/unit/articles/feedbackEnum.test.ts": {
       "@typescript-eslint/no-unused-vars: 'key' is assigned a value but never used.": 1

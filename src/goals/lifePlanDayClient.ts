@@ -4,8 +4,8 @@
  * THE BROWSER'S SIDE OF `/api/life-plan/day`.
  *
  * A module rather than a hook, for the same reason `lifePlanClient` next door
- * is one: `NorthStarFlow` is not on the architecture test's fetch allowlist and
- * that allowlist only ever shrinks.
+ * is one: screens such as `NorthStarFlow` do not call `fetch` themselves; they
+ * go through a client module.
  *
  * WHAT THIS NEVER DOES IS GUESS. A read that fails returns `undefined`, which
  * is not an empty record — `undefined` means "nobody knows" and an empty record

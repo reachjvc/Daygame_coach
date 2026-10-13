@@ -45,14 +45,13 @@ export const QUIT_VICE = `${LIFE_MASTERY}/quit-vice`
  * The six flows, the teaching spine, the shortlist and the seven tools were
  * retired to the test archive on 2026-09-24, on the owner's instruction to
  * keep them reachable. Their address lives with them, in the `routes.ts` beside
- * those pages — deliberately not spelled out here, because the rule below
- * greps for the literal and it is right to.
+ * those pages — deliberately not spelled out here, because nothing in
+ * production links into the archive.
  *
- * It was here for about an hour and `tests/unit/architecture.test.ts` failed
- * it, correctly: "nothing links to the archived surfaces" exists because a link
- * from production into the archive has to be removed again the day the archive
- * goes, and a path constant is a link. Nothing under `QUIT_VICE` but the Black
- * Box now.
+ * It was here for about an hour and the architecture test, since removed,
+ * failed it, correctly: a link from production into the archive has to be
+ * removed again the day the archive goes, and a path constant is a link.
+ * Nothing under `QUIT_VICE` but the Black Box now.
  */
 
 /**

@@ -245,9 +245,8 @@ export function WorkoutCorrection({
             }
             /**
              * 16px, NOT 12. Anything under 16 makes iOS Safari zoom the whole
-             * page when the box is tapped — `tests/unit/architecture.test.ts`
-             * holds the line and caught this one before it shipped. A select
-             * counts: it is a typed box as far as Safari is concerned.
+             * page when the box is tapped. A select counts: it is a typed box
+             * as far as Safari is concerned.
              */
             className="h-11 shrink-0 rounded-md border border-border bg-background px-1 text-base"
           >

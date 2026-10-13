@@ -16,8 +16,7 @@
  *
  * `errors.ts` predicted this in its own header — "the alternative is each route
  * deciding for itself whether to pass a `code`" — and the route that drifted is
- * the one the stale-read guard was added to a round earlier. The architecture
- * test beside this one is what stops the sixth route doing it again.
+ * the one the stale-read guard was added to a round earlier.
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
@@ -207,8 +206,8 @@ describe("the stale-read guard's own read failing", () => {
    * verbatim, so a statement timeout on that read put the database's own
    * sentence on the correction screen.
    *
-   * `architecture.test.ts` said `workoutRepo.ts` was at zero raw messages and
-   * it was — of the FILE. The leak was one function call away in
+   * `architecture.test.ts`, since removed, said `workoutRepo.ts` was at zero
+   * raw messages and it was — of the FILE. The leak was one function call away in
    * `src/db/paging.ts`, which the table grandfathered at 1. A GREEN guard is
    * a claim about the guard's reach.
    */

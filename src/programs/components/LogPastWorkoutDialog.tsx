@@ -14,10 +14,9 @@
  * there is one way to record a workout and one set of rules about what it may
  * contain — the screen just knows it is describing the past.
  *
- * It goes through `startWorkoutRequest` rather than posting itself. That is
- * enforced by an architecture test, and it is the reason a lost reply cannot
- * open two workouts: the helper keeps the start key exactly as long as nobody
- * knows whether the first request landed.
+ * It goes through `startWorkoutRequest` rather than posting itself, and that
+ * is the reason a lost reply cannot open two workouts: the helper keeps the
+ * start key exactly as long as nobody knows whether the first request landed.
  */
 
 import { useState } from "react"

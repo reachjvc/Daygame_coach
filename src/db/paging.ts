@@ -12,8 +12,8 @@
  *
  * WHY IT LIVES HERE. Three repos had each written this loop out by hand and
  * three others had never heard of it. A rule that every reader has to remember
- * is a rule that gets forgotten by the next one. `tests/unit/architecture.test.ts`
- * refuses new unpaged reads, and this is what they are supposed to use instead.
+ * is a rule that gets forgotten by the next one. A read that can outgrow one
+ * page uses this instead of an unpaged read.
  */
 
 import { CouldNotTell } from "@/src/programs/errors"
@@ -66,9 +66,9 @@ export async function readAllRows<T>(
        * the last door in the workout slice they came through.
        *
        * `workoutRepo` wraps every read of its own in `readRefused`, and
-       * `architecture.test.ts` pins that file at zero raw messages. Both were
-       * true of the FILE and false of the PATH: the stale-read guard added to
-       * `reviseWorkout` calls this function, which threw
+       * `architecture.test.ts`, since removed, pinned that file at zero raw
+       * messages. Both were true of the FILE and false of the PATH: the
+       * stale-read guard added to `reviseWorkout` calls this function, which threw
        * `Failed to read that workout's sets: <postgres>` as a bare Error —
        * a 500 carrying Postgres's sentence to the correction screen, which is
        * the exact fault the whole round was dug out of, one call away, inside

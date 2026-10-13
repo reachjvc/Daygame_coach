@@ -19,9 +19,8 @@
  * its own stored copy, and nothing that lets it edit a program's days. Those
  * were the two faults.
  *
- * `tests/unit/architecture.test.ts` holds a list of the direct imports that
- * exist today and fails if a new one is added. The list only shrinks; a later
- * phase empties it.
+ * The direct imports from `src/goals` into `src/programs` that exist today are
+ * not added to; a later phase removes them.
  */
 
 export { useActiveEnrollments, refreshEnrollments } from "./hooks/useEnrollment"

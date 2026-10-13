@@ -7,7 +7,7 @@
  *  - knee detection → take the natural cluster of relevant chunks, not a fixed N
  *  - budget escalation → spend more context + output tokens only when warranted
  *
- * No type exports here (architecture rule) — types live in types.ts.
+ * No type exports here — types live in types.ts.
  */
 
 /** Default knobs. Tunable per-call via AdaptiveRetrievalConfig. */

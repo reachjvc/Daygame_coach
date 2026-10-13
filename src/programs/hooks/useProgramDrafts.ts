@@ -3,9 +3,8 @@
 /**
  * THE SAVED WEEKS, AND EVERY REQUEST THAT TOUCHES ONE.
  *
- * Here rather than in the screen because `tests/unit/architecture.test.ts`
- * fails any file under `components/` containing `fetch(` that is not on an
- * allowlist this phase may not grow — and the reason for that rule is what this
+ * Here rather than in the screen because files under `components/` do not call
+ * `fetch(` themselves — and the reason for that rule is what this
  * feature has already been caught by twice: a screen that fetches for itself is
  * a screen whose loading, failed and empty states are three lines apart from
  * the data, and the failed one ends up rendering as the empty one.

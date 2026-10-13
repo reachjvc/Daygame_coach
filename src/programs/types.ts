@@ -1076,8 +1076,8 @@ export interface ProgramSelection {
 /**
  * What a running program says about itself — `describeProgramWeek`'s answer.
  *
- * Here rather than beside the function because the architecture rule holds the
- * slice's types in one file, and it is read by three screens.
+ * Here rather than beside the function because the slice's types live in one
+ * file, and it is read by three screens.
  */
 /**
  * A TRAINING WEEK SOMEBODY SAVED, as the app understands it.
@@ -1103,9 +1103,7 @@ export interface ProgramDraft {
 // ============================================================================
 // Saved weeks — what the drafts hook takes and answers with
 //
-// Here rather than beside the hook because the architecture rule holds a
-// slice's types in one file, and another session's run of the suite caught the
-// same thing on `programWeekService` this afternoon.
+// Here rather than beside the hook because a slice's types live in one file.
 // ============================================================================
 
 /** What a write answers with: the row on success, a sentence on failure. */
@@ -1255,8 +1253,7 @@ export type MovementPattern =
 // What the screens read
 //
 // These three lived in `programsService.ts` — the engine — for months, and
-// nothing noticed, because the architecture rule that keeps types in types.ts
-// walked a list of slices that did not include `programs`. That list now does.
+// nothing noticed.
 // ============================================================================
 
 /** What one lift did over every session logged on a program. */

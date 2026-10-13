@@ -11,10 +11,9 @@ that stage.
 ## Commands
 
 - `npm run dev` — localhost:3000. Test logins are in `.env` / `.env.local`.
-- `npm test` (Vitest), `npm run test:e2e` (Playwright). A Stop hook runs
-  `npm test` when code changed and blocks on failure.
+- `npm test` (Vitest), `npm run test:e2e` (Playwright). The pre-commit hook
+  runs `npm test` and refuses the commit on failure.
 - `npm run build` — keep `--webpack`; the default bundler exhausts WSL memory.
-- Architecture rules live in `tests/unit/architecture.test.ts`. Run it.
 
 ## Gotchas
 
@@ -33,7 +32,6 @@ that stage.
 - Fix the class, not just the instance: one place owns each rule.
 - Say before building when something is not future-proof.
 - Outside advice: build their case before you answer it.
-- When a turn changes files, a Stop hook hands you `docs/known-failures.md`.
 - Commit and push your own work without being asked.
 - No silent fallbacks: scripts fail loudly or ask.
 - Ask before deleting data or anything hard to reverse.

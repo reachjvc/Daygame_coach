@@ -28,8 +28,8 @@ export const WEEKLY_COUNTER_COLUMNS = [
   "current_week_field_reports",
 ] as const
 
-/** Not exported: the architecture test keeps type exports in `types.ts`, and
- *  nothing outside this file needs to name it. */
+/** Not exported: type exports live in `types.ts`, and nothing outside this
+ *  file needs to name it. */
 type WeeklyCounterColumn = (typeof WEEKLY_COUNTER_COLUMNS)[number]
 
 /** Every weekly counter set to zero — the patch a rollover applies. */

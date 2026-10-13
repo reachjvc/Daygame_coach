@@ -36,11 +36,9 @@ describe("the black box does not touch the old module's storage", () => {
     // rewritten. The cheapest guarantee is that this file has no way of naming
     // the old key in CODE.
     //
-    // Comments are blanked first, exactly as the guards in architecture.test.ts
-    // do, and for the reason that file records: the first version of this test
-    // failed on the store's own comment explaining that it leaves the old key
-    // alone. A rule that fires on its own explanation trains people to delete
-    // the explanation.
+    // Comments are blanked first: the first version of this test failed on the
+    // store's own comment explaining that it leaves the old key alone. A rule
+    // that fires on its own explanation trains people to delete the explanation.
     const src = readFileSync("src/vice/blackbox/blackboxStore.ts", "utf8")
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/\/\/[^\n]*/g, "")

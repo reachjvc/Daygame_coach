@@ -37,8 +37,8 @@ export async function POST(request: Request) {
      * `CouldNotTell` — a 503, because it may work on a retry. This flattened
      * every non-`StartRefused` error to a flat 500 "Could not start the
      * workout", so the one state that says "try again in a moment" arrived as
-     * "we are broken". The exemption this route used to hold in the
-     * architecture guard is what kept it quiet; there is no exemption now.
+     * "we are broken". The exemption this route held in the architecture
+     * guard, since removed, is what kept it quiet.
      */
     const answer = workoutErrorResponse(e, 500)
     /**

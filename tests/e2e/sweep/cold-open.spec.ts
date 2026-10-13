@@ -1,9 +1,9 @@
 /**
  * EVERY LIVE ROUTE, OPENED COLD.
  *
- * WHY A BROWSER AND NOT A REGEX. `tests/unit/architecture.test.ts` has two
+ * WHY A BROWSER AND NOT A REGEX. The architecture test, since removed, had two
  * static rules for this family — one for text that differs between the server
- * render and hydration, one for a `<Link>` wrapping a `<Button>`. Neither can
+ * render and hydration, one for a `<Link>` wrapping a `<Button>`. Neither could
  * see the shape that actually took a page down.
  *
  * On 2026-09-24 `/programs` was found to have been failing hydration for weeks.
@@ -35,13 +35,11 @@
  *
  * Loading every route six times to fix that would cost six times the runtime to
  * make an intermittent test slightly less intermittent, which is the wrong
- * trade. The timing class has a DETERMINISTIC owner instead: the rule in
- * `tests/unit/architecture.test.ts` that fails when a client component formats
- * `new Date()` into render position at all. It cannot be flaky because it never
- * opens a browser.
+ * trade. The timing class was left to a static rule in the architecture test,
+ * since removed, that failed when a client component formatted `new Date()`
+ * into render position at all. Nothing static owns it now.
  *
- * So: static analysis owns "could this text differ", this file owns "did
- * anything actually nest or disagree". Neither owns the other, and a hydration
+ * So this file owns "did anything actually nest or disagree", and a hydration
  * failure caught HERE is a bonus rather than the design.
  *
  * ONE OCCURRENCE THIS FILE HAS SEEN AND COULD NOT EXPLAIN, recorded so the next
@@ -191,10 +189,10 @@ test("every exclusion from this sweep still exists", () => {
  * The reason: what a browser counts depends on the account's data. Three logged
  * sessions put three "Edit"/"Report" pairs on the tracking page and an empty
  * account puts none, so a count here would go red for a fresh account rather
- * than for a defect. Counts are owned where they are deterministic —
- * `NESTED_CONTROL_DEBT` in `tests/unit/architecture.test.ts`, per file, off the
- * source. This file owns the question no file can answer: does anything nest at
- * runtime, anywhere else.
+ * than for a defect. The per-file count, off the source, was
+ * `NESTED_CONTROL_DEBT` in the architecture test, since removed; nothing counts
+ * them now. This file owns the question no file can answer: does anything nest
+ * at runtime, anywhere else.
  */
 const MAY_NEST = new Set(["/dashboard/tracking", "/dashboard/tracking/history"])
 

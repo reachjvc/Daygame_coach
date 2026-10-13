@@ -12,8 +12,7 @@
  * typing a name was the one gesture with no effect.
  *
  * Both halves of the rule live here rather than at the call sites, because the call
- * sites are how six copies of it came to disagree. `aButtonSaysWhetherItWillWork` in
- * the architecture tests fails on the next one written the old way.
+ * sites are how six copies of it came to disagree.
  *
  * `onSubmit` may return `false` to KEEP the text — for a value the submit itself
  * rejects, like a malformed webhook URL, where clearing the box throws away the thing

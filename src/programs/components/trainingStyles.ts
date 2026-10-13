@@ -12,12 +12,13 @@
  * changes it here, once, and every training screen moves together.
  *
  * Every value below is built from the app's own colour tokens (primary, muted,
- * border, foreground) rather than a raw palette colour, so training can never
- * drift into a second colour scheme again. The one exception is the green of
- * "done" -- see `DONE` at the bottom.
+ * border, foreground) rather than a raw palette colour, so a screen built from
+ * them cannot drift into a second colour scheme. The one exception is the green
+ * of "done" -- see `DONE` at the bottom.
  *
- * The rule that keeps it this way is a lint in tests/unit/architecture.test.ts
- * ("no NEW training file speaks a second visual language"), not this file.
+ * The rule that keeps it this way ("no training file speaks a second visual
+ * language") is not this file's to enforce; part of it is checked by
+ * tests/unit/programs/trainingTypeFloor.test.ts.
  */
 
 /**

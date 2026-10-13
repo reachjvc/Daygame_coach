@@ -18,7 +18,7 @@
  * put on it. One owner for "which of the two is this", instead of an
  * `instanceof` ladder growing a rung in every route — which is what pushed
  * `app/api/health/workout/route.ts` to within four lines of the 50-line limit
- * the architecture test holds routes to.
+ * routes were then held to.
  */
 
 /**
@@ -130,8 +130,7 @@ export class CouldNotTell extends Error {
  *
  * It exists as a named function so the one legitimate `error.message` in a
  * thrown error lives in one place with its reason beside it, instead of being
- * inlined at each call site where the guard in `tests/unit/architecture.test.ts`
- * cannot tell it from a leak.
+ * inlined at each call site where it cannot be told from a leak.
  *
  * `null` when it is not a deliberate refusal: the caller then decides, and for
  * a workout write that means asking the database which of four states the

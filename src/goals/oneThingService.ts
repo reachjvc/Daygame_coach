@@ -350,7 +350,7 @@ export function planOneThingWrite(
  * The writers are handed in. That keeps every rule in this file — including the
  * one that is easiest to get wrong and hardest to see, that an EXTENSION must
  * carry the supports across — testable without a database, and it keeps the API
- * route a thin wrapper, which is what `tests/unit/architecture.test.ts` is for.
+ * route a thin wrapper.
  *
  * Returns what was written, or null for "nothing needed doing".
  */

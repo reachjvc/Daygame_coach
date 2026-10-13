@@ -400,9 +400,8 @@ export function instantToWallClock(iso: string, timezone: string): string {
  * What a `datetime-local` box should read as "now" for THIS account.
  *
  * One line, but it has a name because a component reaching for `new Date()`
- * is the start of every "whose clock" bug in this codebase, and an
- * architecture test says so. The instant is universal; turning it into a date
- * and a time is the part that needs a zone.
+ * is the start of every "whose clock" bug in this codebase. The instant is
+ * universal; turning it into a date and a time is the part that needs a zone.
  */
 export function wallClockNow(timezone: string, now: Date = new Date()): string {
   return instantToWallClock(now.toISOString(), timezone)
@@ -421,10 +420,10 @@ export function wallClockNow(timezone: string, now: Date = new Date()): string {
  * loads locally, where the gap between the two renders is milliseconds; the
  * longer that gap, the likelier the second has ticked.
  *
- * WHY THE EXISTING RULE MISSED IT. `architecture.test.ts` bans a training
- * screen from reading the browser clock, and exempts any `toLocale*` call that
- * pins a `timeZone`. This call pinned one. Pinning a zone answers "whose
- * calendar" and says nothing about "does this text still say the same thing a
+ * WHY THE OLD RULE MISSED IT. `architecture.test.ts`, since removed, banned a
+ * training screen from reading the browser clock, and exempted any `toLocale*`
+ * call that pinned a `timeZone`. This call pinned one. Pinning a zone answers
+ * "whose calendar" and says nothing about "does this text still say the same thing a
  * second from now" — two different properties, and only the first had an owner.
  *
  * This formats no time fields at all, so there is no second to tick. The zone

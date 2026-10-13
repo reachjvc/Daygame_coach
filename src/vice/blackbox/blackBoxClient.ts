@@ -2,8 +2,8 @@
  * THE BROWSER'S SIDE OF `/api/black-box`.
  *
  * A module rather than a hook or a component, for the reason `lifePlanClient`
- * next door is one: the architecture test keeps an allowlist of files that may
- * call `fetch`, and that allowlist only ever shrinks.
+ * next door is one: screens do not call `fetch` directly; they go through a
+ * client module.
  *
  * WHAT THIS FILE NEVER DOES IS GUESS. A read that fails returns `undefined` —
  * which is not `null`, and the difference is the whole safety design:

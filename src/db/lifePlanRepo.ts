@@ -165,8 +165,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
       const col = on === "plan" ? "plan_id" : "user_id"
       const val = on === "plan" ? planId : userId
       // Written as one chain per case rather than built up in a variable, so
-      // the `.range()` is visible ON the chain — both to a reader and to the
-      // architecture test that counts reads with no upper bound.
+      // the `.range()` is visible ON the chain to a reader.
       return order.length === 2
         ? supabase.from(table).select("*").eq(col, val).order(order[0]).order(order[1]).range(from, to)
         : supabase.from(table).select("*").eq(col, val).order(order[0]).range(from, to)

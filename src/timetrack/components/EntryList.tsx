@@ -617,7 +617,8 @@ function EntryFields({
             type="button"
             onClick={onToggleExpand}
             /* `size-11` never applies: this row is `hidden sm:grid`. Stated
-               anyway so the source scan needs no entry excusing it. */
+               anyway so the source holds the 44px phone floor without an
+               exception. */
             className="flex size-11 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary sm:size-6"
             aria-label={expanded ? "Collapse group" : "Expand group"}
           >

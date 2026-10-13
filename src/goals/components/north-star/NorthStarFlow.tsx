@@ -94,8 +94,7 @@ import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
-// ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts and the
-// architecture test that holds the line.
+// ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts.
 import {
   useActiveEnrollments,
   enrollmentName,

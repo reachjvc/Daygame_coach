@@ -747,9 +747,9 @@ export function BlackBoxPage() {
           should not have to click around old work to reach it." The module was
           retired to the test archive on 2026-09-24 and is reachable from the
           `/test` dashboard, which is where a laboratory belongs. Its address is
-          deliberately not written here: `architecture.test.ts` forbids
-          production naming an archive path, because that is a link somebody has
-          to remove again the day the archive goes. */}
+          deliberately not written here: production does not name an archive
+          path, because that is a link somebody has to remove again the day the
+          archive goes. */}
 
       {/* NO `ready` GUARD, unlike every dialog below it.
           The others read or write the record and must wait for it. This one

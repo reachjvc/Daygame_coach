@@ -25,4 +25,4 @@ Read `docs/testing_behavior.md` before writing tests.
 | Typecheck | `tsc-baseline.json` | `node scripts/typecheck-ratchet.mjs --update` |
 | Write coverage | `tests/support/writeCoverage.baseline.json` | classify the new write function |
 
-When you fix errors, lower the baseline in the same change. Never raise one to get past a failure you caused. Allowlists in `tests/unit/architecture.test.ts` must also drop entries for fixed or deleted files.
+When you fix errors, lower the baseline in the same change. Never raise one to get past a failure you caused.

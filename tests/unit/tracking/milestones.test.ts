@@ -9,9 +9,8 @@
  *
  * What is left is behaviour: the lookup falls back safely, tiers are visually
  * distinct and correctly ordered, and every badge is both describable and
- * earnable. Earnability is enforced twice more — by the type system
- * (`Record<MilestoneType, MilestoneRule>`) and by tests/unit/architecture.test.ts,
- * which runs even though the build skips type checking.
+ * earnable. Earnability is enforced once more, by the type system
+ * (`Record<MilestoneType, MilestoneRule>`).
  */
 
 import { describe, test, expect } from "vitest"

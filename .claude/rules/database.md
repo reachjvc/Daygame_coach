@@ -6,7 +6,7 @@ paths:
 
 # Database
 
-- All database access goes through `src/db/*Repo.ts`; the architecture test fails otherwise.
+- All database access goes through `src/db/*Repo.ts`.
 - Tables holding earned or computed data are system-only. Ask before adding any INSERT/UPDATE/DELETE RLS policy.
 - RLS binds only the app's client. The service-role key, SQL editor and scripts bypass it. A rule that must always hold is a `CHECK`, `NOT NULL`, foreign key or trigger.
 - Probes against live data are read-only or wrapped in `begin; … rollback;`. Live writes happen only through a migration or the app.

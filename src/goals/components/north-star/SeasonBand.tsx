@@ -21,9 +21,8 @@
  * people open daily, and Phase 1 is what makes it fixable: the plan is on the
  * account now, so the page reads it there and passes it down.
  *
- * Nothing is fetched or read from storage here any more, which is also why this
- * file came OFF the architecture test's allowlist of components that fetch —
- * and that list only ever shrinks.
+ * Nothing is fetched or read from storage here any more, and it should stay
+ * that way.
  *
  * It still renders nothing until both halves are in hand. A "no plan yet" that
  * flips to somebody's one thing a tick later is a page that lies for one frame,
@@ -81,8 +80,7 @@ export function SeasonBand({ plan, oneThing, ready = true, today: accountToday =
    * This band is the first thing on the page the owner opens daily, and it
    * counted hand ticks only — so a morning whose gym session the schedule had
    * already struck through still read "0 of 2 done today" here. Handed in
-   * rather than fetched, because this file came OFF the architecture test's
-   * list of components that load their own data and that list only shrinks.
+   * rather than fetched, because this file does not load its own data.
    */
   ticks: TrainingTicks
   /**

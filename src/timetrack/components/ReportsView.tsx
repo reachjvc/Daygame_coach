@@ -1159,10 +1159,8 @@ function RangeDateField({
        *
        * This field holds a draft and commits on blur, so `draft` legitimately reads ""
        * while a year is half-typed and the emptiness has to be refused at the COMMIT.
-       * `aDateInputCannotSendNothing` excuses exactly the fields carrying this marker,
-       * and runs the named guard to check it really refuses "" — the first version of
-       * that excuse keyed on the `onBlur`+flush PATTERN, which let a reviewer add a
-       * staged field handing "" straight to `dateKey` with the suite still green.
+       * `aDateInputCannotSendNothing`, since removed, read this marker and ran the
+       * named guard to check it really refused "".
        */
       data-staged-commit="clampRange"
       aria-label={label}

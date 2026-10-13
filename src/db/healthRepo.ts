@@ -210,8 +210,6 @@ export function finishedWorkouts<T extends { or: (f: string) => T }>(query: T): 
  * The database's own sentence goes to the log, which is where it helps.
  *
  * The weight, sleep and nutrition reads in this file still do the old thing.
- * They are counted in `RAW_DB_MESSAGES` in `tests/unit/architecture.test.ts`,
- * which may only go down.
  */
 function workoutReadFailed(what: string, error: { code?: string; message: string }): Error {
   console.error(`could not read ${what} (code ${error.code ?? "none"}): ${error.message}`)
@@ -258,11 +256,8 @@ export async function getWorkoutLogs(
         /**
          * "all" is a bound below every row rather than no bound at all.
          *
-         * Dropping the filter would need a wrapper around the builder, and the
-         * paging guard in `tests/unit/architecture.test.ts` reads the CHAIN: a
-         * query built through a helper hides its own `.range()` from the
-         * detector, which then reports this as an unpaged read. (A neighbouring
-         * session hit the same wall the same day and fixed it the same way.)
+         * Dropping the filter would need a wrapper around the builder, and a
+         * query built through a helper hides its own `.range()` from a reader.
          * One whole chain, and `days` says what it means.
          */
         .gte("logged_at", days === "all" ? EPOCH : since.toISOString())
@@ -704,8 +699,8 @@ export async function getExerciseMax(userId: string, exercise: string): Promise<
   const libraryId = libraryByName(exercise)?.id ?? null
   /**
    * Either match is this lift. Written as one `or` rather than a branch so the
-   * query stays a single chain — `.range()` has to be on the same expression, and
-   * `tests/unit/architecture.test.ts` refuses a read that cannot be seen to page.
+   * query stays a single chain, with `.range()` on the same expression where a
+   * reader can see it page.
    */
   const isThisLift = libraryId
     ? `library_id.eq.${libraryId},exercise.ilike.${exercise}`
@@ -782,11 +777,9 @@ export async function personalBestBaseline(
      * TWO WHOLE CHAINS RATHER THAN ONE BUILT UP IN STEPS, and `.range()` inside
      * the `finishedWorkouts(...)` wrapper rather than after it.
      *
-     * Both are so the paging is VISIBLE. `tests/unit/architecture.test.ts`
-     * counts reads with no upper bound by looking at the chain that starts at
-     * `.from(` — so a query assembled across several statements, or one whose
-     * `.range()` lands outside the wrapper's parentheses, reads as unbounded.
-     * The guard that catches a genuinely unbounded read is worth the repetition.
+     * Both are so the paging is VISIBLE: a query assembled across several
+     * statements, or one whose `.range()` lands outside the wrapper's
+     * parentheses, reads as unbounded.
      * `getWorkoutLogs` above is written the same way, for the same reason.
      */
     const logs = await readAllRows<{ id: string; logged_at: string }>(
@@ -1047,9 +1040,8 @@ export async function getYogaSessionsWeekly(userId: string, timezone: string): P
 
 export async function getFlexibilityHoursCumulative(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
-  // PAGED, and the filter is written inline rather than wrapped: the guard in
-  // tests/unit/architecture.test.ts reads the chain that starts at `.from(`, and
-  // a `.range()` outside the `finishedWorkouts(...)` wrapper is invisible to it.
+  // PAGED, and the filter is written inline rather than wrapped, so the
+  // `.range()` is visible on the chain that starts at `.from(`.
   // A lifetime total is exactly the read that outgrows one page.
   const data = await readAllRows<{ duration_min: number }>("flexibility sessions", (from, to) =>
     supabase
@@ -1204,10 +1196,9 @@ export async function readHistoryMonths(
      * THE TWO CHAINS ARE WRITTEN OUT, not built through a variable.
      *
      * A query assembled in a `const` and then chained hides its own `.limit()`
-     * from the paging guard in `tests/unit/architecture.test.ts`, which reads
-     * the chain — so a bounded read gets reported as an unpaged one. I wrote it
-     * the tidy way first and the guard caught it. Duplication here, one whole
-     * chain each, is the price of a guard that can see.
+     * from a reader of the chain, so a bounded read looks like an unpaged one.
+     * Duplication here, one whole chain each, is the price of a bound that can
+     * be seen.
      */
     const answer = lift
       ? await finishedWorkouts(

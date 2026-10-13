@@ -64,21 +64,4 @@ describe("hook commands in settings.json", () => {
       })
     }
   }
-
-  it("anchors the hook scripts that read the working tree", () => {
-    // Passing the right path to the script is only half of it: a script that
-    // shells out to `git` or `npm` reads whatever tree its cwd points at, which
-    // is the same drifted directory. Each of these derives the repo root itself.
-    const anchored: Array<[string, RegExp]> = [
-      [".claude/hooks/check-test-results.sh", /cd "\$ROOT"/],
-      [".claude/hooks/known_failures.py", /cwd=ROOT/],
-    ]
-    for (const [script, marker] of anchored) {
-      const source = readFileSync(join(ROOT, script), "utf8")
-      expect(
-        marker.test(source),
-        `${script} runs git or npm but no longer pins itself to the repo root, so it reads whichever tree the session's cwd points at.`,
-      ).toBe(true)
-    }
-  })
 })

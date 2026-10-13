@@ -1,9 +1,9 @@
 /**
  * THE TRAINING SCREENS' OWN TYPE FLOOR, AND THE PALETTE THEY MAY NOT SPEAK.
  *
- * `architecture.test.ts` already forbids 10-px type and `zinc-600` across a
- * wide scope with a floor of 11 px, and that rule also guards Life Mastery
- * files that are not training screens, so it keeps its scope and its floor.
+ * `architecture.test.ts`, since removed, forbade 10-px type and `zinc-600`
+ * across a wide scope with a floor of 11 px, Life Mastery files that are not
+ * training screens included; nothing checks that wider scope now.
  * Nothing forbade 11-px type, the zinc/sky palette at any shade, or a 12.5-px
  * input — which is how an iPhone-zooming box and a whole second colour scheme
  * shipped on these screens.
@@ -13,10 +13,9 @@
  * COUNTS PER FILE, NOT LINE NUMBERS. The step asked for one allowlist entry per
  * file:line, each asserted to still exist. A line number goes stale the moment
  * anything above it is edited, so that list would spend its life being
- * renumbered and would eventually be renumbered wrongly. A count is the
- * `TRAINING_BROWSER_CLOCK_ALLOWED` pattern this repo already uses, it is
- * asserted EXACTLY rather than as a ceiling — a file that drops one must lower
- * its number in the same sitting — and it cannot go stale for a reason that has
+ * renumbered and would eventually be renumbered wrongly. A count is asserted
+ * EXACTLY rather than as a ceiling — a file that drops one must lower its
+ * number in the same sitting — and it cannot go stale for a reason that has
  * nothing to do with the rule.
  *
  * RULE (c) OF THE STEP IS NOT HERE. "No rename inside an onChange" is owned by

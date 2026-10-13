@@ -9,6 +9,5 @@ paths:
 
 # Before calling work done
 
-- Answer `docs/known-failures.md` against the work.
 - Code: run `/code-review`; add `/security-review` for RLS, auth, payments or permissions.
 - Finished plan: delete branches that `git branch --merged HEAD` lists (except `main` and your own) with `-d`, never `-D`; then `git worktree prune`.

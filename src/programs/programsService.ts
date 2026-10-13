@@ -286,10 +286,9 @@ export function weekdayNameIn(iso: string, timezone: string): string {
  * "Delete the workout from Tue, Aug 24?", so the page disagreed with itself.
  *
  * `today` IS A PARAMETER, and that is the rule rather than a preference: a day
- * taken from the running process's clock is UTC on the server, which is what
- * `architecture.test.ts` bans by shape. A Copenhagen lifter's 00:30 Tuesday
- * session would otherwise be headed "Yesterday's workout" by the very function
- * written to name the day.
+ * taken from the running process's clock is UTC on the server. A Copenhagen
+ * lifter's 00:30 Tuesday session would otherwise be headed "Yesterday's
+ * workout" by the very function written to name the day.
  *
  * Inside a week a weekday names one day and no other. At seven days it names
  * today as well, which is where it stops being an answer.

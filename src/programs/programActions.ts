@@ -20,11 +20,10 @@
  * anything; the screen decides that, because the screens do it differently and
  * the decision is theirs.
  *
- * `tests/unit/architecture.test.ts` fails if any other file under `src/` or
- * `components/` fetches these routes, so a screen added later cannot quietly go
- * back to not looking. ProgressionView is replaced by the program sheet in a
- * later phase — the rule living in a module rather than in that component is
- * what makes it survive the replacement.
+ * No other file under `src/` or `components/` fetches these routes; a screen
+ * added later that did could quietly go back to not looking. ProgressionView is
+ * replaced by the program sheet in a later phase — the rule living in a module
+ * rather than in that component is what makes it survive the replacement.
  */
 
 /**
