@@ -113,6 +113,15 @@ describe("ci.yml says what it may do, and stops its own stale runs", () => {
   })
 })
 
+type Composite = { runs: { steps: Array<{ name?: string; uses?: string; run?: string; with?: Record<string, unknown> }> } }
+const loadAction = (uses: string): Composite => parse(readFileSync(join(ROOT, uses, "action.yml"), "utf8"))
+
+/** The actions a local composite action (`./.github/actions/x`) uses in turn. */
+function localActionUses(uses: string): string[] {
+  if (!uses.startsWith("./")) return []
+  return loadAction(uses).runs.steps.flatMap((st) => (st.uses ? [st.uses] : []))
+}
+
 /** Every way a publishing job breaks the rules, as readable lines. */
 function publishingViolations(file: string, w: Workflow): string[] {
   return publishingJobs(w).flatMap(([name, job]) => {
@@ -127,8 +136,9 @@ function publishingViolations(file: string, w: Workflow): string[] {
       if (secret !== "GITHUB_TOKEN") out.push(`${where} uses secrets.${secret}`)
     }
     // A tag can be moved to different code after review; a commit SHA cannot.
-    for (const uses of (job.steps ?? []).map((st) => st.uses)) {
-      if (uses && !uses.startsWith("./") && !FULL_SHA.test(uses)) out.push(`${where} uses ${uses}, not pinned to a commit SHA`)
+    // A local composite action is part of the job, so its actions count too.
+    for (const uses of (job.steps ?? []).flatMap((st) => (st.uses ? [st.uses, ...localActionUses(st.uses)] : []))) {
+      if (!uses.startsWith("./") && !FULL_SHA.test(uses)) out.push(`${where} uses ${uses}, not pinned to a commit SHA`)
     }
     return out
   })
@@ -150,12 +160,60 @@ jobs:
       - uses: docker/login-action@v4
         with: { password: "\${{ secrets.DEPLOY_TOKEN }}" }
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-      - uses: ./local-action
+      - uses: ./.github/actions/publish-image
 `)
     expect(publishingViolations("made-up.yml", bad)).toEqual([
       "made-up.yml image-staging can run for something other than a push: if: github.event_name == 'pull_request'",
       "made-up.yml image-staging uses secrets.DEPLOY_TOKEN",
       "made-up.yml image-staging uses docker/login-action@v4, not pinned to a commit SHA",
     ])
+  })
+})
+
+describe("the staging image job", () => {
+  const job = ci.jobs["image-staging"]
+  const publish = loadAction("./.github/actions/publish-image")
+  const stepIndex = (pred: (st: Composite["runs"]["steps"][number]) => boolean) => publish.runs.steps.findIndex(pred)
+
+  it("runs only after the checks, only for a push to training-rebuild, only when switched on", () => {
+    expect(job, "ci.yml has an image-staging job").toBeDefined()
+    expect(job.needs).toBe("checks")
+    expect(job.if).toContain("github.event_name == 'push'")
+    expect(job.if).toContain("github.ref == 'refs/heads/training-rebuild'")
+    expect(job.if).toContain("vars.STAGING_PUBLISH == 'on'")
+    expect(job.environment).toBe("staging")
+    expect(job.permissions).toEqual({ contents: "read", packages: "write", actions: "read" })
+  })
+
+  it("waits for e2e.yml on the same commit before it builds anything", () => {
+    const steps = job.steps ?? []
+    const wait = steps.findIndex((st) => st.run === "node scripts/ci/await-workflow.mjs")
+    const build = steps.findIndex((st) => st.uses === "./.github/actions/publish-image")
+    expect(wait).toBeGreaterThan(-1)
+    expect(build).toBeGreaterThan(wait)
+  })
+
+  it("proves the package private before building, and boots and searches the image before pushing", () => {
+    const privacy = stepIndex((st) => st.name === "The package is private")
+    const build = stepIndex((st) => !!st.uses?.startsWith("docker/build-push-action@"))
+    const smoke = stepIndex((st) => !!st.run?.includes("/api/healthz") && !!st.run?.includes(".env*"))
+    const push = stepIndex((st) => st.name === "Push")
+    expect(privacy).toBeGreaterThan(-1)
+    expect(build).toBeGreaterThan(privacy)
+    expect(smoke).toBeGreaterThan(build)
+    expect(push).toBeGreaterThan(smoke)
+  })
+
+  it("builds with no cache, no provenance and no SBOM, and only loads (the push is a later step)", () => {
+    const build = publish.runs.steps.find((st) => st.uses?.startsWith("docker/build-push-action@"))!
+    expect(build.with).toMatchObject({ provenance: false, sbom: false, "no-cache": true, load: true, push: false })
+    expect(build.with).not.toHaveProperty("cache-from")
+    expect(build.with).not.toHaveProperty("cache-to")
+    expect(String(build.with?.["build-args"])).toContain("BUILD_SHA=${{ github.sha }}")
+  })
+
+  it("says so in the run summary while publishing is switched off", () => {
+    const off = (ci.jobs.checks.steps ?? []).find((st) => st.run?.includes("Staging publishing is off: blocker B-GH"))
+    expect(off, "the checks job no longer reports that staging publishing is off").toBeDefined()
   })
 })

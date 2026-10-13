@@ -1,0 +1,171 @@
+# BUILD, PROVE AND PUBLISH ONE IMAGE: the steps image-staging and
+# image-production share, so the two cannot drift apart.
+#
+#   1. every input is checked, and an empty one stops the job by name;
+#   2. the package is proven private BEFORE any real image is pushed: if it
+#      does not exist yet, an empty placeholder creates it, and an anonymous
+#      inspect must be refused. If anyone can read it, the job stops (R5);
+#   3. the image is built from this commit with no build cache (pull requests
+#      from forks can read some caches), no provenance and no SBOM, so every
+#      stored version is one tagged image;
+#   4. it is booted with a dummy runtime file and must answer /api/healthz
+#      (the database may be unreachable; the server must start), and it must
+#      hold no .env file. Only then is it pushed;
+#   5. old versions are pruned: the newest 10 tagged <prefix>-* are kept.
+#
+# Every action is pinned to a full commit SHA (tests/unit/ci/pipelineRules.test.ts).
+# Plans/caddy-deploy-and-cicd.md, Phase 4 step 3 and Phase 5 step 5.
+
+name: Publish image
+description: Build the app image from this commit, prove it, and push it to a private GHCR package.
+
+inputs:
+  package:
+    description: GHCR package name, e.g. daygame-coach-staging
+    required: true
+  tag-prefix:
+    description: staging or production; tags are <prefix>-<sha> and <prefix>
+    required: true
+  supabase-url:
+    description: NEXT_PUBLIC_SUPABASE_URL
+    required: true
+  supabase-anon-key:
+    description: NEXT_PUBLIC_SUPABASE_ANON_KEY (public by design)
+    required: true
+  app-url:
+    description: NEXT_PUBLIC_APP_URL
+    required: true
+  token:
+    description: GITHUB_TOKEN with packages write
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Every input is set
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+        PREFIX: ${{ inputs.tag-prefix }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ inputs.supabase-url }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ inputs.supabase-anon-key }}
+        NEXT_PUBLIC_APP_URL: ${{ inputs.app-url }}
+      run: |
+        missing=""
+        for name in PACKAGE PREFIX NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_APP_URL; do
+          [ -n "${!name}" ] || missing="$missing $name"
+        done
+        if [ -n "$missing" ]; then
+          echo "::error::empty:$missing. Set them as variables of this job's GitHub environment (infra/github-config.sh)."
+          exit 1
+        fi
+        echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/$PACKAGE" >> "$GITHUB_ENV"
+
+    - name: Log in to GHCR
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.token }}
+
+    - name: The package is private
+      shell: bash
+      run: |
+        probe="$IMAGE:${{ inputs.tag-prefix }}"
+        if ! docker buildx imagetools inspect "$probe" >/dev/null 2>&1; then
+          echo "No $probe yet: creating the package with an empty placeholder, before any real image."
+          ctx="$(mktemp -d)"
+          echo "placeholder: proves the package is private before a real image is pushed" > "$ctx/placeholder.txt"
+          printf 'FROM scratch\nCOPY placeholder.txt /\n' > "$ctx/Dockerfile"
+          docker build -q -t "$IMAGE:placeholder" "$ctx" >/dev/null
+          docker push -q "$IMAGE:placeholder" >/dev/null
+          probe="$IMAGE:placeholder"
+        fi
+        # Ask the registry the way an anonymous stranger would: an anonymous
+        # token, then the manifest. 200 means anyone can pull it. Only 401 or
+        # 403 counts as private; anything else means "could not check".
+        # (Checked 2026-10-13: a public GHCR image answers 200, a private or
+        # missing one refuses the token with DENIED and the manifest with 401.)
+        repo="${IMAGE#ghcr.io/}"
+        tag="${probe##*:}"
+        token="$(curl -s "https://ghcr.io/token?scope=repository:$repo:pull&service=ghcr.io" | jq -r '.token // empty')"
+        code="$(curl -s -o /dev/null -w '%{http_code}' ${token:+-H "Authorization: Bearer $token"} \
+          -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json' \
+          "https://ghcr.io/v2/$repo/manifests/$tag")"
+        case "$code" in
+          200) echo "::error::$probe can be read without logging in: the package is PUBLIC. Stopping before any image is pushed. Delete the package, recreate it private, and give this repository write access (Plans/caddy-deploy-and-cicd.md, R5)."
+               exit 1 ;;
+          401|403) echo "An anonymous pull of $probe is refused ($code): the package is private." ;;
+          *) echo "::error::could not check whether $probe is private: the registry answered $code"
+             exit 1 ;;
+        esac
+
+    - name: Set up buildx
+      uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+    - name: Build the image of this commit
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      with:
+        context: .
+        file: infra/Dockerfile
+        build-args: |
+          NEXT_PUBLIC_SUPABASE_URL=${{ inputs.supabase-url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ inputs.supabase-anon-key }}
+          NEXT_PUBLIC_APP_URL=${{ inputs.app-url }}
+          BUILD_SHA=${{ github.sha }}
+        tags: ${{ env.IMAGE }}:${{ inputs.tag-prefix }}-${{ github.sha }}
+        load: true
+        push: false
+        provenance: false
+        sbom: false
+        no-cache: true
+
+    - name: Boot it, and look inside it, before it is pushed
+      shell: bash
+      run: |
+        ref="$IMAGE:${{ inputs.tag-prefix }}-$GITHUB_SHA"
+        found="$(docker run --rm --entrypoint sh "$ref" -c 'find / -xdev -name ".env*" 2>/dev/null')"
+        if [ -n "$found" ]; then echo "::error::the image holds env files: $found"; exit 1; fi
+        [ "$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$ref")" = "$GITHUB_SHA" ] ||
+          { echo "::error::the image's revision label is not $GITHUB_SHA"; exit 1; }
+        dummy="$(mktemp)"
+        printf 'SUPABASE_SERVICE_ROLE_KEY=dummy\nNEXT_SERVER_ACTIONS_ENCRYPTION_KEY=%s\n' "$(openssl rand -base64 32)" > "$dummy"
+        docker run -d --name smoke --read-only --tmpfs /tmp --tmpfs /app/.next/cache:uid=1000,gid=1000 \
+          --cap-drop ALL --env-file "$dummy" "$ref" >/dev/null
+        status=0
+        for _ in $(seq 1 45); do
+          status="$(docker exec smoke node -e "fetch('http://127.0.0.1:3000/api/healthz').then(r => console.log(r.status), () => console.log(0))" 2>/dev/null || echo 0)"
+          case "$status" in 200|503) break ;; esac
+          sleep 2
+        done
+        echo "healthz answered $status (503 only means the database was not reachable from here)"
+        docker logs smoke 2>&1 | tail -5
+        docker rm -f smoke >/dev/null
+        case "$status" in 200|503) ;; *) echo "::error::the server never answered /api/healthz"; exit 1 ;; esac
+
+    - name: Push
+      shell: bash
+      run: |
+        docker tag "$IMAGE:${{ inputs.tag-prefix }}-$GITHUB_SHA" "$IMAGE:${{ inputs.tag-prefix }}"
+        docker push -q "$IMAGE:${{ inputs.tag-prefix }}-$GITHUB_SHA"
+        docker push -q "$IMAGE:${{ inputs.tag-prefix }}"
+        digest="$(docker buildx imagetools inspect "$IMAGE:${{ inputs.tag-prefix }}" --format '{{json .Manifest}}' | jq -r .digest)"
+        echo "Published $IMAGE@$digest (commit $GITHUB_SHA)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+    - name: Keep the newest 10
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PACKAGE: ${{ inputs.package }}
+        PREFIX: ${{ inputs.tag-prefix }}
+      run: |
+        owner="${GITHUB_REPOSITORY_OWNER,,}"
+        versions="$(gh api --paginate "/users/$owner/packages/container/$PACKAGE/versions" \
+          --jq '.[] | [.id, .created_at, ((.metadata.container.tags // []) | join(","))] | @tsv')"
+        keep="$(printf '%s\n' "$versions" | awk -F'\t' -v p="$PREFIX-" 'index($3, p) || $3 == p' | sort -t$'\t' -k2 -r | head -10 | cut -f1)"
+        printf '%s\n' "$versions" | cut -f1 | while read -r id; do
+          [ -n "$id" ] || continue
+          if ! grep -qx "$id" <<<"$keep"; then
+            gh api -X DELETE "/users/$owner/packages/container/$PACKAGE/versions/$id" >/dev/null && echo "pruned version $id"
+          fi
+        done

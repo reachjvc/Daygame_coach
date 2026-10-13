@@ -1,0 +1,18 @@
+# Runs daygame-deploy.service every minute, starting 30 s after the service
+# manager starts. OnStartupSec is that "after start" line: without it a
+# monotonic timer has nothing to count from after a reboot and never fires.
+# For a system unit the manager starts at boot, so it is the same as
+# OnBootSec; for a user unit it is the user manager's start (with lingering,
+# also at boot).
+# Plans/caddy-deploy-and-cicd.md, Phase 4 step 1.
+
+[Unit]
+Description=daygame-coach deploy agent, every minute
+
+[Timer]
+OnStartupSec=30s
+OnUnitActiveSec=60s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

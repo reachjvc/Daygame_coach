@@ -101,3 +101,61 @@ jobs:
       - name: Database tests
         run: npm run test:integration
         timeout-minutes: 15
+
+      # Visible, not silent: when staging publishing is switched off, the run
+      # says so and says why, instead of the image job simply not appearing.
+      - name: Staging publishing is off
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/training-rebuild' && vars.STAGING_PUBLISH != 'on' }}
+        run: |
+          echo "Staging publishing is off: blocker B-GH, Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
+
+  # ===========================================================================
+  # THE STAGING IMAGE. After the checks above pass on a push to
+  # training-rebuild, and only when the repository variable STAGING_PUBLISH is
+  # `on` (a job's own `if:` cannot read environment variables).
+  #
+  # It first waits for e2e.yml's run on the same commit and stops unless that
+  # passed: a red check cannot publish (rule 4). e2e.yml is another workflow,
+  # owned by tests-worth-their-keep.md, and cross-workflow triggers fire only
+  # from main, so the wait is an API poll (scripts/ci/await-workflow.mjs).
+  #
+  # Then .github/actions/publish-image proves the package private, builds the
+  # image of this commit, boots it, looks inside it, and only then pushes it to
+  # ghcr.io/reachjvc/daygame-coach-staging as staging-<sha> and staging. This
+  # machine's deploy agent pulls it from there; GitHub never logs into it.
+  #
+  # Every action here is pinned to a commit SHA, it never runs for a pull
+  # request, and it uses no secret but GITHUB_TOKEN
+  # (tests/unit/ci/pipelineRules.test.ts). Plans/caddy-deploy-and-cicd.md, step 4.3.
+  # ===========================================================================
+  image-staging:
+    needs: checks
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/training-rebuild' && vars.STAGING_PUBLISH == 'on' }}
+    runs-on: ubuntu-24.04
+    environment: staging
+    timeout-minutes: 75
+    permissions:
+      contents: read
+      packages: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Wait for the browser tests on this commit
+        run: node scripts/ci/await-workflow.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build, prove and publish the staging image
+        uses: ./.github/actions/publish-image
+        with:
+          package: daygame-coach-staging
+          tag-prefix: staging
+          supabase-url: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          supabase-anon-key: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          app-url: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          token: ${{ secrets.GITHUB_TOKEN }}

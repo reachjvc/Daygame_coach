@@ -1,0 +1,20 @@
+# The deploy agent, once: ask the registry which image the watched tag points
+# at, and deploy it through infra/deploy.sh if it is new and has not failed.
+# Started every minute by daygame-deploy.timer. Installed by hand on this
+# machine (a user unit) and by infra/server/sync-infra.sh on a server (a
+# system unit run as the deploy user). @@INFRA@@ is the infra/ directory and
+# @@DEPLOY_ENV@@ the machine's settings file.
+# Plans/caddy-deploy-and-cicd.md, Phase 4 step 1.
+
+[Unit]
+Description=daygame-coach deploy agent (pull the newest image, deploy, roll back on failure)
+Documentation=file://@@INFRA@@/deploy-agent.sh
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=DAYGAME_DEPLOY_ENV=@@DEPLOY_ENV@@
+ExecStart=@@INFRA@@/deploy-agent.sh
+# A deploy waits up to 90 s for health, twice when it rolls back.
+TimeoutStartSec=300

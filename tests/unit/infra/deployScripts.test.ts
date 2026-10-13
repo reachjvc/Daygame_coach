@@ -75,6 +75,14 @@ describe("infra/deploy.sh refuses", () => {
   })
 })
 
+describe("infra/deploy-agent.sh refuses", () => {
+  it("a watched reference that is not <repo>:<tag>", () => {
+    const r = run("infra/deploy-agent.sh", [], { DAYGAME_DEPLOY_ENV: settings([`WATCH=ghcr.io/x/y@${DIGEST}`]) })
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain("is not <repo>:<tag>")
+  })
+})
+
 describe("infra/build-image.sh", () => {
   it("extracts the commit with umask 022, so the image's non-root user can read its own files", () => {
     // 2026-10-13: a caller's umask 077 leaked into the extraction, every file
