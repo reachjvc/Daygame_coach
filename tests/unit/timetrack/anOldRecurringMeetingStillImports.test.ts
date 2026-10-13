@@ -243,7 +243,13 @@ describe("whatever the rule says, across 1,700 shapes", () => {
      * monthly rule is also the plainer statement of what the rule means, which is what
      * an oracle is for.
      */
-    const candidates: Date[] = []
+    /**
+     * Generated lazily: the walk below stops at the window's end, and an eager list
+     * built 4,600 dates for every daily and weekly shape before that stop could
+     * act — about thirty million Dates per run, which is what made this file the
+     * slowest in the suite and the first to time out on a busy machine.
+     */
+    function* candidates(): Generator<Date> {
     if (parts.FREQ === "MONTHLY" || parts.FREQ === "YEARLY") {
       const monthsPer = parts.FREQ === "MONTHLY" ? interval : 12 * interval
       const ordinal = byDay ? /^([+-]?\d+)(MO|TU|WE|TH|FR|SA|SU)$/.exec(byDay[0]) : null
@@ -275,18 +281,19 @@ describe("whatever the rule says, across 1,700 shapes", () => {
 
         const at = new Date(month.getFullYear(), month.getMonth(), dayOfMonth)
         at.setHours(start.getHours(), start.getMinutes(), start.getSeconds(), 0)
-        candidates.push(at)
+        yield at
       }
     } else {
       for (let day = 0; day < 4_600; day++) {
         const at = new Date(start)
         at.setDate(start.getDate() + day)
         at.setHours(start.getHours(), start.getMinutes(), start.getSeconds(), 0)
-        candidates.push(at)
+        yield at
       }
     }
+    }
 
-    for (const at of candidates) {
+    for (const at of candidates()) {
       if (at > WINDOW_END && emitted > 0) break
 
       let member = false
@@ -322,12 +329,25 @@ describe("whatever the rule says, across 1,700 shapes", () => {
     return out
   }
 
+  /**
+   * Each shape's expansion, computed once and shared by the five properties below:
+   * they are different questions about the same output, and asking the function
+   * five times was five times the work for no extra coverage.
+   */
+  const expanded = new Map<(typeof SHAPES)[number], ReturnType<typeof expandRecurrence>>()
+  const expand = (shape: (typeof SHAPES)[number]) => {
+    let result = expanded.get(shape)
+    if (!result) {
+      result = expandRecurrence(event(shape.start, shape.rule, shape.minutes), WINDOW_START, WINDOW_END)
+      expanded.set(shape, result)
+    }
+    return result
+  }
+
   test("matches a day-by-day walk of the same rule, for every shape", () => {
     const wrong: string[] = []
     for (const shape of SHAPES) {
-      const fast = expandRecurrence(event(shape.start, shape.rule, shape.minutes), WINDOW_START, WINDOW_END).map(
-        (i) => i.start,
-      )
+      const fast = expand(shape).map((i) => i.start)
       const slow = byBruteForce(shape.start, shape.rule, shape.minutes)
       if (fast.join("|") !== slow.join("|")) {
         wrong.push(`${shape.rule} from ${shape.start} dur=${shape.minutes}: got ${fast.length}, expected ${slow.length}`)
@@ -341,9 +361,7 @@ describe("whatever the rule says, across 1,700 shapes", () => {
   test("no instance is emitted twice, and none is out of order", () => {
     const wrong: string[] = []
     for (const shape of SHAPES) {
-      const times = expandRecurrence(event(shape.start, shape.rule, shape.minutes), WINDOW_START, WINDOW_END).map((i) =>
-        new Date(i.start).getTime(),
-      )
+      const times = expand(shape).map((i) => new Date(i.start).getTime())
       if (new Set(times).size !== times.length) wrong.push(`${shape.rule} from ${shape.start}: a repeat`)
       for (let i = 1; i < times.length; i++) {
         if (times[i] < times[i - 1]) { wrong.push(`${shape.rule} from ${shape.start}: out of order`); break }
@@ -357,7 +375,7 @@ describe("whatever the rule says, across 1,700 shapes", () => {
     for (const shape of SHAPES) {
       const count = Number(/COUNT=(\d+)/.exec(shape.rule)?.[1] ?? 0)
       if (!count) continue
-      const n = expandRecurrence(event(shape.start, shape.rule, shape.minutes), WINDOW_START, WINDOW_END).length
+      const n = expand(shape).length
       if (n > count) wrong.push(`${shape.rule} from ${shape.start}: ${n} > ${count}`)
     }
     expect(wrong.slice(0, 5)).toEqual([])
@@ -372,7 +390,7 @@ describe("whatever the rule says, across 1,700 shapes", () => {
     const wrong: string[] = []
     let keptAnEndOverlap = 0
     for (const shape of SHAPES) {
-      for (const i of expandRecurrence(event(shape.start, shape.rule, shape.minutes), WINDOW_START, WINDOW_END)) {
+      for (const i of expand(shape)) {
         const startMs = new Date(i.start).getTime()
         const endMs = new Date(i.end).getTime()
         if (endMs < WINDOW_START.getTime() || startMs > WINDOW_END.getTime()) {
@@ -391,7 +409,7 @@ describe("whatever the rule says, across 1,700 shapes", () => {
     for (const shape of SHAPES) {
       const byday = /BYDAY=([A-Z,]+)/.exec(shape.rule)?.[1]?.split(",")
       if (!byday) continue
-      for (const i of expandRecurrence(event(shape.start, shape.rule, shape.minutes), WINDOW_START, WINDOW_END)) {
+      for (const i of expand(shape)) {
         const day = names[new Date(i.start).getDay()]
         if (!byday.includes(day)) wrong.push(`${shape.rule}: landed on ${day}`)
       }
