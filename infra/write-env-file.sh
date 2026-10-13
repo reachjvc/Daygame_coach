@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 #
-# Write this machine's runtime and build env files from .env.local.
+# Write the runtime and build env files from .env.local.
 #
 #   infra/write-env-file.sh staging
+#   infra/write-env-file.sh production <domain>    (used by infra/server/push-env.sh)
 #
 # Writes, mode 600, in ~/.config/daygame/ (outside the repository and the image):
-#   staging.env        what the container reads at runtime: every required and
+#   <environment>.env  what the container reads at runtime: every required and
 #                      optional variable in scripts/check-runtime-env.mjs that
 #                      .env.local sets, plus NEXT_SERVER_ACTIONS_ENCRYPTION_KEY,
-#                      generated once and kept on later runs.
-#   build-public.env   the three public build values for infra/build-image.sh,
-#                      with NEXT_PUBLIC_APP_URL=https://localhost.
+#                      generated once and kept on later runs (production also
+#                      keeps the one SERVER_ACTIONS_KEY names: the server's own),
+#                      and for production NEXT_PUBLIC_APP_URL=https://<domain>.
+#   build-public.env   staging only: the three public build values for
+#                      infra/build-image.sh, with NEXT_PUBLIC_APP_URL=https://localhost.
+#                      CI builds production's images from GitHub's variables.
 #
 # Left out on purpose: the test accounts (they are not on the list), the test
 # routes switch, and the two Claude-CLI switches (USE_CLAUDE_CODE, CLAUDE_PATH):
@@ -31,7 +35,11 @@ SOURCE="${ENV_SOURCE:-$REPO/.env.local}"
 
 die() { printf 'write-env-file: ERROR: %s\n' "$*" >&2; exit 1; }
 
-[ "${1:-}" = "staging" ] || die "usage: infra/write-env-file.sh staging"
+case "${1:-}" in
+  staging) [ $# -eq 1 ] || die "usage: infra/write-env-file.sh staging" ;;
+  production) [[ "${2:-}" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] || die "usage: infra/write-env-file.sh production <domain>" ;;
+  *) die "usage: infra/write-env-file.sh staging | production <domain>" ;;
+esac
 [ -f "$SOURCE" ] || die "$SOURCE does not exist."
 [ -f "$REPO/node_modules/dotenv/package.json" ] || die "dotenv is not installed in $REPO/node_modules (npm ci)."
 
@@ -39,14 +47,14 @@ umask 077
 mkdir -p "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR"
 
-node --input-type=module - "$SOURCE" "$CONFIG_DIR" "$REPO" <<'JS'
+node --input-type=module - "$SOURCE" "$CONFIG_DIR" "$REPO" "$1" "${2:-}" <<'JS'
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { randomBytes } from "node:crypto"
 import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 
-const [source, dir, repo] = process.argv.slice(2)
+const [source, dir, repo, environment, domain] = process.argv.slice(2)
 const require = createRequire(join(repo, "package.json"))
 const dotenv = require("dotenv")
 const { ALL } = await import(pathToFileURL(join(repo, "scripts/check-runtime-env.mjs")).href)
@@ -88,16 +96,23 @@ const runtimeNames = Object.entries(ALL)
 const missingRequired = runtimeNames.filter((n) => ALL[n].kind === "required" && !local[n])
 if (missingRequired.length) fail(`${source} does not set ${missingRequired.join(", ")}, which the server cannot start without.`)
 
-const runtimePath = join(dir, "staging.env")
-const kept = previous(runtimePath).NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
-const actionsKey = kept && /^[A-Za-z0-9+/]{43}=$/.test(kept) ? kept : randomBytes(32).toString("base64")
+const runtimePath = join(dir, `${environment}.env`)
+const isKey = (k) => typeof k === "string" && /^[A-Za-z0-9+/]{43}=$/.test(k)
+const kept = [process.env.SERVER_ACTIONS_KEY, previous(runtimePath).NEXT_SERVER_ACTIONS_ENCRYPTION_KEY].find(isKey)
+const actionsKey = kept ?? randomBytes(32).toString("base64")
 
 const written = runtimeNames.filter((n) => local[n])
 writeAtomically(runtimePath, [
   "# Written by infra/write-env-file.sh from .env.local. Runtime values for the container.",
   ...written.map((n) => line(n, local[n])),
+  ...(environment === "production" ? [line("NEXT_PUBLIC_APP_URL", `https://${domain}`)] : []),
   line("NEXT_SERVER_ACTIONS_ENCRYPTION_KEY", actionsKey),
 ])
+
+const skipped = runtimeNames.filter((n) => !local[n])
+console.log(`write-env-file: ${runtimePath}: ${written.length} variables (${written.join(", ")}), plus NEXT_SERVER_ACTIONS_ENCRYPTION_KEY (${kept ? "kept" : "generated"}).`)
+if (skipped.length) console.log(`write-env-file: optional and not set in .env.local, so not configured: ${skipped.join(", ")}.`)
+if (environment === "production") process.exit(0)
 
 for (const n of ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"]) {
   if (!local[n]) fail(`${source} does not set ${n}, which the build needs.`)
@@ -109,8 +124,5 @@ writeAtomically(join(dir, "build-public.env"), [
   line("NEXT_PUBLIC_APP_URL", "https://localhost"),
 ])
 
-const skipped = runtimeNames.filter((n) => !local[n])
-console.log(`write-env-file: ${runtimePath}: ${written.length} variables (${written.join(", ")}), plus NEXT_SERVER_ACTIONS_ENCRYPTION_KEY (${kept ? "kept" : "generated"}).`)
-if (skipped.length) console.log(`write-env-file: optional and not set in .env.local, so not configured: ${skipped.join(", ")}.`)
 console.log(`write-env-file: ${join(dir, "build-public.env")}: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_APP_URL=https://localhost.`)
 JS

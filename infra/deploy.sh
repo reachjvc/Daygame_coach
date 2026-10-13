@@ -37,6 +37,7 @@
 #   CA_CERT       a CA file to verify Caddy's certificate with (optional;
 #                 unset means the system's CAs, as on a real domain)
 #   STATE_DIR     where failed digests are recorded (default ~/.local/state/daygame)
+#   ACME_EMAIL    production only: Caddy's contact for Let's Encrypt
 #   WATCH         the tag infra/deploy-agent.sh watches (not read here)
 #
 # Plans/caddy-deploy-and-cicd.md, Phase 3 step 7.
@@ -74,12 +75,13 @@ fi
 # --- machine settings -------------------------------------------------------------
 settings="${DAYGAME_DEPLOY_ENV:-$HOME/.config/daygame/deploy.env}"
 [ -f "$settings" ] || die "no machine settings at $settings."
-APP_ENV_FILE="" CADDYFILE="" SITE_HOST="" CA_CERT="" STATE_DIR=""
+APP_ENV_FILE="" CADDYFILE="" SITE_HOST="" CA_CERT="" STATE_DIR="" ACME_EMAIL=""
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in ''|'#'*) continue ;; esac
   key="${line%%=*}" value="${line#*=}"
   case "$key" in
     APP_ENV_FILE|CADDYFILE|SITE_HOST|CA_CERT|STATE_DIR) printf -v "$key" '%s' "$value" ;;
+    ACME_EMAIL) printf -v "$key" '%s' "$value" ;;
     WATCH) ;; # the deploy agent's setting
     *) die "unknown setting '$key' in $settings." ;;
   esac
@@ -92,7 +94,7 @@ STATE_DIR="${STATE_DIR:-$HOME/.local/state/daygame}"
 mkdir -p "$STATE_DIR"
 FAILED="$STATE_DIR/failed-digests"
 touch "$FAILED"
-export APP_ENV_FILE CADDYFILE
+export APP_ENV_FILE CADDYFILE SITE_HOST ACME_EMAIL
 
 if [ "$retry_failed" = no ] && grep -qxF "$ref" "$FAILED"; then
   die "$ref is marked failed in $FAILED. Deploy it again only on purpose: infra/deploy.sh --retry-failed $ref"

@@ -159,3 +159,87 @@ jobs:
           supabase-anon-key: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           app-url: ${{ vars.NEXT_PUBLIC_APP_URL }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================================================================
+  # PRODUCTION. Only a push to main, only when the repository variable
+  # PRODUCTION_PUBLISH is `on`, and only after the owner approves in the
+  # `production` environment (required reviewer, set up in Phase 6).
+  #
+  # The checks above must have passed. e2e.yml's result for this commit is
+  # written beside the approval, but does not gate it yet (Q7): that suite has
+  # been red for weeks and belongs to another plan. It becomes a hard gate when
+  # tests-worth-their-keep.md's Phase 9 makes it green.
+  #
+  # Runs never cancel each other (group publish-production), and a run whose
+  # commit is no longer main's tip after the approval wait publishes nothing.
+  # Plans/caddy-deploy-and-cicd.md, Phase 5 step 5.
+  # ===========================================================================
+  image-production:
+    needs: checks
+    if: ${{ !cancelled() && needs.checks.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.PRODUCTION_PUBLISH == 'on' }}
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency:
+      group: publish-production
+      cancel-in-progress: false
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Only main's tip is published
+        run: |
+          tip="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)"
+          if [ "$tip" != "$GITHUB_SHA" ]; then
+            echo "::error::main has moved on to $tip since this run started; not publishing $GITHUB_SHA."
+            exit 1
+          fi
+
+      - name: The browser tests' answer for this commit, beside the approval
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          answer="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA" \
+            --jq '[.workflow_runs[] | select(.path == ".github/workflows/e2e.yml")] | sort_by(.created_at) | last | select(. != null) | "\(.status) \(.conclusion // "") \(.html_url)"')"
+          echo "e2e.yml on $GITHUB_SHA: ${answer:-no run found}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build, prove and publish the production image
+        uses: ./.github/actions/publish-image
+        with:
+          package: daygame-coach-production
+          tag-prefix: production
+          supabase-url: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          supabase-anon-key: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          app-url: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # The server's deploy agent pulls the image within a minute of the push and
+  # deploys it through infra/deploy.sh. This job waits until the site itself
+  # reports the commit. No `environment:` here: that would ask for a second
+  # approval.
+  verify-production:
+    needs: image-production
+    if: ${{ !cancelled() && needs.image-production.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: The site serves this commit
+        env:
+          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+        run: |
+          if [ -z "$SITE_DOMAIN" ]; then echo "::error::the repository variable SITE_DOMAIN is not set"; exit 1; fi
+          body=""
+          deadline=$((SECONDS + 600))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            body="$(curl -s --max-time 10 "https://$SITE_DOMAIN/api/healthz" || true)"
+            if [ "$(jq -r '.buildId // empty' <<<"$body" 2>/dev/null)" = "$GITHUB_SHA" ]; then
+              echo "https://$SITE_DOMAIN serves $GITHUB_SHA" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::after 10 minutes https://$SITE_DOMAIN/api/healthz does not report $GITHUB_SHA: $body"
+          exit 1

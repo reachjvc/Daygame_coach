@@ -40,6 +40,12 @@ degraded. If it stops, the message says what to do.
 | `caddy/Caddyfile.production` | The real domain: Let's Encrypt only, HSTS, timeouts. |
 | `deploy.sh` | **The only deploy path.** Digest in, health checked inside and through Caddy, rolled back on failure. |
 | `deploy-agent.sh` + `systemd/daygame-deploy.*` | Every minute: is there a new digest on the watched tag? Then `deploy.sh`. |
+| `github-config.sh` | Sets the `staging` environment, its public variables and `STAGING_PUBLISH=on`. |
+| `server/cloud-init.yaml` | The production server's first boot: Docker, Tailscale SSH, no OpenSSH, containers kept off the metadata service and the tailnet. |
+| `server/provision.sh` | Creates the Hetzner firewall (80/443 only, IPv4 and IPv6), key and server. `--dry-run` first. |
+| `server/sync-infra.sh` | The only way files reach the server, from `git archive <commit>`; restarts only what changed. |
+| `server/push-env.sh` | Sends the server its secrets file, settings and read-only registry login. |
+| `dns/records.sh` | Cloudflare records: DNS only, CAA for Let's Encrypt, SPF and DMARC that refuse mail. |
 
 ## This is not the dev server
 

@@ -94,6 +94,16 @@ describe("infra/build-image.sh", () => {
     expect(umask).toBeLessThan(script.indexOf("archive --format=tar"))
   })
 
+  it("checks for room on C: before it builds, and trims its cache after", () => {
+    // 2026-10-13: a full C: detached WSL and killed every session, while the
+    // builder held 30 GB of cache. B-DISK in Plans/caddy-deploy-and-cicd.md.
+    const script = readFileSync(join(ROOT, "infra/build-image.sh"), "utf8")
+    const guard = script.indexOf("df -BG --output=avail /mnt/c")
+    expect(guard).toBeGreaterThan(-1)
+    expect(guard).toBeLessThan(script.indexOf("docker buildx build"))
+    expect(script).toMatch(/docker buildx prune --builder "\$BUILDER" --keep-storage 4gb/)
+  })
+
   it("refuses something that is not a commit", () => {
     const r = run("infra/build-image.sh", ["not-a-commit-anywhere"])
     expect(r.status).toBe(1)
@@ -161,6 +171,22 @@ describe("infra/write-env-file.sh", () => {
     const r = write({ ENV_SOURCE: path })
     expect(r.status).toBe(1)
     expect(r.stderr).toContain("ADMIN_SECRET_KEY holds a newline or a single quote")
+    expect(r.stdout + r.stderr).not.toContain(SECRET)
+  })
+
+  it("writes production's file with the domain's URL and keeps the server's own Server Actions key", () => {
+    const serverKey = "A".repeat(43) + "="
+    const r = run("infra/write-env-file.sh", ["production", "example.com"], {
+      DAYGAME_CONFIG_DIR: join(dir, "cfg"),
+      ENV_SOURCE: source(),
+      SERVER_ACTIONS_KEY: serverKey,
+    })
+    expect(r.status, r.stderr).toBe(0)
+    const prod = readFileSync(join(dir, "cfg", "production.env"), "utf8")
+    expect(prod).toContain("NEXT_PUBLIC_APP_URL='https://example.com'")
+    expect(prod).toContain(`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY='${serverKey}'`)
+    expect(statSync(join(dir, "cfg", "production.env")).mode & 0o777).toBe(0o600)
+    expect(() => statSync(join(dir, "cfg", "build-public.env")), "production writes no build file").toThrow()
     expect(r.stdout + r.stderr).not.toContain(SECRET)
   })
 

@@ -1,0 +1,60 @@
+# PRODUCTION — Caddy in front of the app on the real domain.
+#
+# The same compose file as this machine's staging (infra/compose.yaml) runs it,
+# with CADDYFILE=caddy/Caddyfile.production. SITE_DOMAIN and ACME_EMAIL reach
+# the Caddy container from the server's /etc/daygame/deploy.env (SITE_HOST and
+# ACME_EMAIL, written by infra/server/push-env.sh). What both Caddyfiles share
+# is in common.caddy.
+#
+# CERTIFICATES. Let's Encrypt only, over HTTP-01 (Q12): no DNS token sits on the
+# server, and the domain's CAA record names exactly this one authority
+# (infra/dns/records.sh). Port 80 stays open for the challenge and for the
+# http-to-https redirect. Let's Encrypt stopped sending expiry emails in June
+# 2025, so expiry warnings come only from the external monitor (Phase 7).
+#
+# HSTS HERE, AND ONLY HERE. On a real domain it is wanted: the browser stops
+# trying http at all. Never on localhost (see Caddyfile.local).
+# tests/unit/infra/production.test.ts fails if it disappears.
+#
+# Plans/caddy-deploy-and-cicd.md, Phase 5 step 1.
+
+{
+	# No admin API: it has no authentication and would bind :2019.
+	admin off
+
+	email {$ACME_EMAIL}
+	cert_issuer acme {
+		dir https://acme-v02.api.letsencrypt.org/directory
+	}
+
+	servers {
+		# Slow-client protection. No write timeout: streamed pages
+		# (Suspense) keep a response open for as long as they render.
+		timeouts {
+			read_body 30s
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+{$SITE_DOMAIN} {
+	header {
+		# One year, no preload: preload is a list browsers ship, and getting
+		# off it takes months. It can be added once the domain is settled.
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	log {
+		output stdout
+		format json
+	}
+
+	import /etc/caddy/common.caddy
+}
