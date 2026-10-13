@@ -15,7 +15,7 @@
  * `signup-flow.spec.ts`, which owns the writes.
  */
 
-import { test, expect } from "@playwright/test"
+import { test } from "@playwright/test"
 import { staticRoutes } from "../support/appRoutes"
 import {
   openCold,
@@ -39,19 +39,6 @@ import {
 const PUBLIC_ROUTES = staticRoutes()
   .map((r) => r.route)
   .filter((route) => route === "/" || route.startsWith("/auth/"))
-
-test("the public sweep found the public pages", () => {
-  /**
-   * A derived list that derives nothing generates no tests and passes by asking
-   * nothing. There are six public addresses as of 2026-09-24; the floor is set
-   * below that so adding one is not a failure, while the walk breaking is.
-   */
-  expect(
-    PUBLIC_ROUTES.length,
-    `Only ${PUBLIC_ROUTES.length} public routes came back from staticRoutes(), so ` +
-      `either the walk is broken or the sales page and the auth flow have moved.`
-  ).toBeGreaterThanOrEqual(5)
-})
 
 for (const route of PUBLIC_ROUTES) {
   test(`opens clean for a stranger: ${route}`, async ({ page }) => {

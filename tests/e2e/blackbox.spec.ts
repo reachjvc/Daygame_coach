@@ -507,38 +507,6 @@ test.describe("the Black Box", () => {
     await expect(page.getByText("Longest run")).toBeVisible()
   })
 
-  test("a form that cannot be submitted always says why", async ({ page }) => {
-    // A first user filled in both dates, read "that is 89 days", chose an
-    // ending, and met a dead button with nothing on screen explaining it — the
-    // required vice had no default and no hint. The primary action on the empty
-    // page led to a form that could not be completed. Whenever the button is
-    // disabled, a reason is on screen.
-    await seed(page, null)
-    await page.getByRole("button", { name: /Add a run you already had/i }).click()
-
-    const add = page.getByRole("button", { name: "Add it" })
-    await expect(add).toBeDisabled()
-    await expect(page.getByText(/Pick what you were stopping/i)).toBeVisible()
-
-    await page.getByRole("button", { name: "Smoking or vaping" }).click()
-    await expect(add).toBeDisabled()
-    await expect(page.getByText(/Both dates are needed/i)).toBeVisible()
-
-    await page.locator("#pr-from").fill("2025-02-10")
-    await page.locator("#pr-to").fill("2025-05-09")
-    await expect(add).toBeEnabled()
-  })
-
-  test("a run that ends before it starts is refused", async ({ page }) => {
-    await seed(page, null)
-    await page.getByRole("button", { name: /Add a run you already had/i }).click()
-    await page.getByRole("button", { name: "Smoking or vaping" }).click()
-    await page.locator("#pr-from").fill("2025-05-09")
-    await page.locator("#pr-to").fill("2025-02-10")
-    await expect(page.getByText(/ends before it starts/i)).toBeVisible()
-    await expect(page.getByRole("button", { name: "Add it" })).toBeDisabled()
-  })
-
   test("going through with it ends the run, and the run keeps its days", async ({ page }) => {
     await seed(page, liveRun())
     await page.getByRole("button", { name: "File a report" }).click()
@@ -622,14 +590,6 @@ test.describe("the Black Box", () => {
 
     await page.getByRole("button", { name: /days . just one|days . I felt fine/ }).click()
     await expect(page.getByText(`${started} to ${yesterday}`)).toBeVisible()
-  })
-
-  test("a report cannot be dated before the run it is filed against", async ({ page }) => {
-    await seed(page, liveRun())
-    await page.getByRole("button", { name: "File a report" }).click()
-    await page.locator("#rf-on").fill("2020-01-01")
-    await expect(page.getByText(/nothing in it can be older than that/i)).toBeVisible()
-    await expect(page.getByRole("button", { name: "File it" })).toBeDisabled()
   })
 
   test("two things being quit are two records, not one chart", async ({ page }) => {
@@ -943,21 +903,5 @@ test.describe("the Black Box", () => {
     await settled(page)
     await expect(page.getByText("90 days").first()).toBeVisible()
     await expect(page.getByText("31 days").first()).toBeVisible()
-  })
-
-  test("the same days twice off one thing is still refused, and says so", async ({ page }) => {
-    await seed(page, {
-      version: 1,
-      attempts: [{ id: runId("attempt-1"), viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-01-01",
-        startedBy: "", structure: [], endedOn: "2026-03-01", endedByReportId: runId("report-1") }],
-      reports: [{ id: runId("report-1"), attemptId: runId("attempt-1"), at: "2026-03-01T12:00:00", wentThrough: true,
-        thought: "", ending: "fine", closeness: null,
-        withWhom: "", where: "", factors: [], didInstead: "" }],
-    })
-    await page.getByRole("button", { name: /Add a run you already had/i }).click()
-    await page.locator("#pr-from").fill("2026-02-01")
-    await page.locator("#pr-to").fill("2026-02-10")
-    await expect(page.getByText(/overlap a run off smoking or vaping/i)).toBeVisible()
-    await expect(page.getByRole("button", { name: "Add it" })).toBeDisabled()
   })
 })

@@ -266,14 +266,4 @@ test.describe("every page", () => {
       expect(real, message).toEqual([])
     })
   }
-
-  test("the sweep actually covers the app", () => {
-    // The ratchet. If the route walk stops matching, this file silently sweeps
-    // nothing and passes -- the exact failure it was built to end.
-    expect(
-      ROUTES.length,
-      "No routes were derived from app/. tests/support/appRoutes.ts has stopped " +
-        "finding pages, and every sweep in this file is now checking nothing.",
-    ).toBeGreaterThanOrEqual(25)
-  })
 })

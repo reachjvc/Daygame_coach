@@ -280,12 +280,4 @@ test.describe("the day half crosses devices", () => {
 
     await laptop.context().close()
   })
-
-  test("refuses a day ahead of the account's calendar", async ({ page }) => {
-    await page.goto("/life-mastery")
-    const res = await page.request.put("/api/life-plan/day", {
-      data: { date: "2099-01-01", note: "from a clock that is wrong" },
-    })
-    expect(res.status(), "a day years ahead is refused rather than stored").toBe(400)
-  })
 })

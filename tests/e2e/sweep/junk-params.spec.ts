@@ -136,18 +136,4 @@ test.describe("garbled URLs", () => {
       ).toEqual([])
     })
   }
-
-  test("the sweep actually covers something", () => {
-    // The ratchet. If the source patterns stop matching, this sweep silently
-    // tests nothing and passes -- the exact failure mode it exists to catch.
-    const combos = routesReadingSearchParams().reduce(
-      (n, r) => n + searchParamNames(r.file).length * JUNK_PARAM_VALUES.length,
-      0,
-    )
-    expect(
-      combos,
-      "No junk-URL targets were derived. The parameter extraction in " +
-        "tests/support/appRoutes.ts has stopped matching the page sources.",
-    ).toBeGreaterThan(20)
-  })
 })

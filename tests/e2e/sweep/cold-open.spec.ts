@@ -82,7 +82,7 @@
  * 740 loads could not.
  */
 
-import { test, expect } from "@playwright/test"
+import { test } from "@playwright/test"
 import { staticRoutes } from "../../support/appRoutes"
 import {
   openCold,
@@ -119,9 +119,11 @@ import {
 
 /**
  * Not swept, each for a reason that is about the route and not about
- * convenience. Every one of these is asserted to still exist below: an
- * exclusion whose page is gone is a line that silences a sweep for a route that
- * could come back at that address.
+ * convenience. Every one of these is asserted to still exist by
+ * `tests/unit/navigation/sweepCoverage.test.ts`, which reads this object out of
+ * this file — keep it one quoted route per line. An exclusion whose page is
+ * gone is a line that silences a sweep for a route that could come back at
+ * that address.
  *
  * TWO MORE ARE MISSING AND ARE NOT IN THIS LIST, which is worth saying out loud
  * because nothing else would ever mention them. `staticRoutes()` drops routes
@@ -154,25 +156,6 @@ const NOT_SWEPT: Record<string, string> = {
 
 const ON_DISK = staticRoutes().map((r) => r.route)
 const ROUTES = ON_DISK.filter((route) => !(route in NOT_SWEPT))
-
-test("every exclusion from this sweep still exists", () => {
-  /**
-   * "The walk found nothing" is asserted by `route-sweep.spec.ts`'s "the sweep
-   * actually covers the app", which runs in these same three projects off the
-   * same `staticRoutes()`. One owner, so it is not re-asserted here.
-   *
-   * This is the half that is this file's own: an exclusion whose page has gone
-   * is a line that silences a sweep for whatever gets built at that address
-   * next, and nothing else would ever mention it.
-   */
-  const gone = Object.keys(NOT_SWEPT).filter((route) => !ON_DISK.includes(route))
-  expect(
-    gone,
-    "These are excluded from the cold-open sweep but no longer exist in app/. " +
-      "Remove them — an exclusion for a deleted page silences this sweep for " +
-      `whatever is built at that address next:\n${gone.join("\n")}`
-  ).toEqual([])
-})
 
 /**
  * The routes that render a control inside another control, and may.

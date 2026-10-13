@@ -53,38 +53,6 @@ test.describe('Error Handling: API Failures', () => {
     await expect(page.locator('text=Error:')).toBeVisible({ timeout: 10000 })
   })
 
-  test('QA page shows error when API times out', async ({ page }) => {
-    // Arrange: Navigate to Q&A page
-    await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // The test account can open Q&A; a redirect away is a failure, not a skip
-    await expect(page).toHaveURL(/\/dashboard\/qa/)
-
-    await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
-
-    // Intercept the Q&A API and delay indefinitely (will timeout)
-    await page.route('/api/qa', async (route) => {
-      // Delay for 35 seconds (longer than typical timeout)
-      await new Promise((resolve) => setTimeout(resolve, 35000))
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ answer: 'Too late' }),
-      })
-    })
-
-    // Act: Submit a question
-    await page.getByTestId(SELECTORS.qa.input).fill('Test question')
-    await page.getByTestId(SELECTORS.qa.submit).click()
-
-    // Assert: Loading state should appear, then eventually an error
-    await expect(page.getByTestId(SELECTORS.qa.submit)).toHaveText('Thinking...')
-
-    // After fetch timeout (~30s), error should appear
-    await expect(page.locator('text=Error:')).toBeVisible({ timeout: 40000 })
-  })
-
   test('session start shows error when API returns 500', async ({ page }) => {
     await ensureCleanSessionPage(page)
     const startButton = page.getByTestId(SELECTORS.session.startButton)

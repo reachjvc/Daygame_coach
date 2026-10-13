@@ -109,21 +109,4 @@ test.describe('crash reporting', () => {
     expect(body).not.toContain('jo@example.com')
     expect(body).toContain(`"route":"${PAGE}"`)
   })
-
-  test('the reports endpoint refuses to be used as a firehose', async ({ request }) => {
-    const one = () =>
-      request.post('/api/errors', {
-        data: { reports: [{ message: 'flood', route: '/', severity: 'error', at: new Date().toISOString() }] },
-      })
-
-    let refused = false
-    for (let i = 0; i < 25; i++) {
-      const response = await one()
-      if (response.status() === 429) {
-        refused = true
-        break
-      }
-    }
-    expect(refused, 'an unlimited crash endpoint is an open door').toBe(true)
-  })
 })

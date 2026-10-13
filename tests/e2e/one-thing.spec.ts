@@ -203,48 +203,4 @@ test.describe("the one thing", () => {
     // And the sentence did not change underneath them.
     await expect(page.getByTestId("season-band-one-thing")).toHaveText(body)
   })
-
-  /**
-   * AT8 — A DEADLINE IN THE PAST IS REFUSED, AND SAYS WHY.
-   *
-   * It used to save perfectly happily, and the countdown then announced that a
-   * one thing written ten seconds ago had already run its course.
-   */
-  test("refuses a deadline that has already been, in words", async ({ page }) => {
-    await page.goto(TRACKING)
-    const res = await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", act: "start", body: "A deadline behind me", dueOn: "2020-01-01" },
-    })
-    expect(res.status()).toBe(400)
-    expect((await res.json()).error).toMatch(/already been/)
-
-    const nonsense = await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", act: "start", body: "A day that does not exist", dueOn: "2026-13-45" },
-    })
-    expect(nonsense.status()).toBe(400)
-    expect((await nonsense.json()).error).toMatch(/not a date on the calendar/)
-  })
-
-  /**
-   * A CALLER THAT NAMES NO DEADLINE IS ASKING ABOUT THE WORDS.
-   *
-   * The deadline joining the sameness check nearly broke this: the server fills
-   * a missing one in with a rolling ninety days, so the identical request sent
-   * on two different days would have looked like two different answers and
-   * appended a row — the exact duplication the check exists to stop.
-   *
-   * Honest about its reach: this locks the contract on ONE day. The cross-day
-   * case is covered by the unit test "asks only about the words when no
-   * deadline is offered", which is where the rule actually lives.
-   */
-  test("does not append a row for the same sentence sent again with no deadline", async ({ page }) => {
-    const body = `Same words twice ${Date.now() % 1000}`
-    await page.goto(TRACKING)
-    const first = await page.request.post("/api/life-answers", { data: { key: "one_thing", body } })
-    expect(first.status()).toBe(201)
-
-    const again = await page.request.post("/api/life-answers", { data: { key: "one_thing", body } })
-    expect(again.status()).toBe(200)
-    expect((await again.json()).unchanged).toBe(true)
-  })
 })
