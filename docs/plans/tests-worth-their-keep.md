@@ -1,6 +1,7 @@
 # Tests worth their keep — cut first, then make what is left fast
 
-**Status:** written 2026-10-13, not started. Replaces the 2026-10-01 version of this
+**Status:** executing since 2026-10-13 — Phases 1–3 in progress; Phase 7's backend,
+harness and first repo-level tests built (see "Progress" at the end). Replaces the 2026-10-01 version of this
 file, which was never executed apart from the test-gate fix
 (`git show 5c3554aa:docs/plans/tests-worth-their-keep.md`).
 
@@ -210,6 +211,7 @@ secrets, and opening the measurement pull request.
 the API without login returns 403 "Must have admin rights to Repository".
 `gh auth login` is interactive, so I cannot run it.
 *Needs from you:* run `gh auth login` once, in a terminal.
+*Resolved 2026-10-13:* the `daygame-coach-bf` session logged `gh` in as reachjvc.
 
 **B2 · Which Supabase project CI's browser tests use.** Your account has two:
 `supabase-daygame` (production) and `CI_daygame` (created 2026-02-05, the day CI
@@ -268,7 +270,10 @@ they held no trace; that was wrong.
 trace upload, and adds the guard `tests/unit/infra/e2eSecretsStayOutOfReports.test.ts`.
 On your instruction that session is rotating the three test passwords
 (TEST_USER, TEST_USER_B, TEST_USER_TRAINING) and deleting the live artifacts.
-Nothing left for you here unless it reports otherwise.
+*Done 2026-10-13* (reported by that session): all 10 artifacts deleted; the
+three passwords changed with every session revoked; `.env`, `.env.local` and the
+three GitHub secrets updated. The report from `b62c809c` did hold a password in
+plain text.
 
 ## Open questions — each with my recommendation
 
@@ -323,6 +328,25 @@ Nothing left for you here unless it reports otherwise.
 - `blackbox.spec.ts` seeds fixed UUIDs; two accounts writing them collide.
 - The database harness silently falls back to a shared connection file another
   session can overwrite (`tests/integration/setup.ts:124-137`).
+- **Found by the real schema, 2026-10-13 — every scenario attempt fails to save.**
+  Production's `scenarios` table has `difficulty`, `archetype` (both NOT NULL),
+  `score`, `completed_at` and no `scenario_data`, `user_response` or
+  `evaluation`. `createScenarioAttempt` fails with "Could not find the
+  'evaluation' column of 'scenarios'", and `persistScenarioAttempt` swallows it.
+  Both `getScenarioStats` (scenarioRepo and settingsRepo) select `evaluation`,
+  get an error, ignore it and report 0 — the settings one also orders by
+  `created_at`, which the table does not have. Pinned with `it.fails` in
+  `tests/integration/repos/scenarioRepo.stack.test.ts`; the fix is your call
+  (which columns are right).
+- **Five composite foreign keys can abort a plan save** (found by the Phase 2
+  agent): `life_plan_goals_area_fk`, `life_plan_routines_area_fk`,
+  `life_plan_experiences_area_fk`, `life_plan_experiences_goal_fk`,
+  `life_plan_fields_target_fk` use a bare `ON DELETE SET NULL` on
+  `(x, user_id)`, which nulls `user_id` too, so deleting an area that has goals
+  filed under it fails ("null value in column user_id"). `save_life_plan` deletes
+  removed nodes before upserting goals, so a save that removes such an area
+  fails. Migration `20260922100000` lines 248, 412, 529, 531, 566; the fix
+  `20260923130000` applied to season focus only. Needs a migration (ask-first).
 
 ## What I verified, and what I am inferring
 
@@ -454,7 +478,8 @@ test; a new unit check fails on a bare `.rejects.toThrow()` under
   and 450 with the nightly projects.
 - New unit checks: no spec under `tests/e2e` navigates to `/test/`; no
   `waitForTimeout(` outside an allowlist of `@timing` tests that may only shrink;
-  no `test.skip(` without a matching entry in `.test-known-failures.json`.
+  no `test.skip(` outside a shrink-only allowlist, with a reason per entry, kept
+  inside that check (`.test-known-failures.json` was deleted on 2026-10-13).
 - Every changed spec run green once locally against the dev server, named in the
   commit. Run one project at a time; the shared `next dev` is the local limit.
   As today, this uses the three existing test accounts in the live project —
@@ -636,7 +661,7 @@ numbers written into this file.
   second and watching it fail.
 - The checks from Phases 2, 3 and 7 stay: no bare `rejects.toThrow()` in
   integration, no `/test/` navigation, no `waitForTimeout` outside the `@timing`
-  allowlist, no `test.skip` without a known-failure entry.
+  allowlist, no `test.skip` outside its allowlist.
 
 ## Ordering
 
@@ -688,3 +713,27 @@ Paste after `/goal`. Kept here so it outlives the session that wrote it.
 > Commit each phase separately with its before and after counts. Commit with
 > `git commit --only <paths>`. Run `npm run ci` before saying a phase is done. If
 > a result contradicts this plan, say so in the reply and correct the plan.
+
+---
+
+## Progress
+
+**2026-10-13**
+- Phase 7, built and proven:
+  - `scripts/db/baseline.sh` writes `tests/db/baseline.sql` (84 tables, stamp
+    `20260924100000`); its `--check` mode confirmed it matches production.
+  - `tests/db/shim.sql`, and `tests/db/supabase/config.toml` (own project id,
+    553xx ports, the 1,000-row read cap, email confirmation on, rate limits
+    raised).
+  - `scripts/db/test-stack.mjs up` starts the stack in 24 s (0.7 s when it is
+    already running) and applies `20260927120000`, which production lacks, on top.
+  - `tests/db/harness.ts` (`newUser`, `actAs`, `asOwner`, `asUser`,
+    `stackSupabaseModule`) and `tests/db/globalSetup.ts`.
+  - The first repo-level database tests in the repository:
+    `tests/integration/repos/settingsRepo.stack.test.ts` (3, green; red with row
+    security off on `profiles`; red with `TEST_SHARED_USER=1`) and
+    `scenarioRepo.stack.test.ts` (2 `it.fails`: the bug above).
+  - `tests/unit/db/selectsMatchTheSchema.test.ts`: every column the code selects
+    exists in production's schema (red when a known entry is removed).
+- Phases 1–3 running as nine parallel work packages; results land here when
+  they are committed.

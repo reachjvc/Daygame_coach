@@ -1,0 +1,74 @@
+# THE TEST BACKEND: a throwaway local Supabase built from production's schema.
+#
+# Started and stopped by `scripts/db/test-stack.mjs`; never linked to a remote
+# project. Its migrations folder is generated on every start (baseline + shim +
+# every repo migration production does not have yet), so it is not committed.
+#
+# Ports are in the 553xx range so this stack never collides with another local
+# Supabase on the default 543xx ports. Everything not listed takes the CLI's
+# default. Plan: docs/plans/tests-worth-their-keep.md, Phase 7.
+project_id = "daygame-tests"
+
+[api]
+port = 55321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+# Production silently caps every read at 1,000 rows (`readAllRows` exists for
+# that reason). Kept the same here, or a paging bug passes locally.
+max_rows = 1000
+
+[db]
+port = 55322
+shadow_port = 55320
+major_version = 17
+
+[db.pooler]
+enabled = false
+port = 55329
+
+[db.seed]
+enabled = false
+
+[realtime]
+enabled = false
+
+[studio]
+enabled = false
+port = 55323
+
+# The local mail catcher. Signup confirmation and password reset land here,
+# readable over HTTP, so those flows can be tested end to end.
+[inbucket]
+enabled = true
+port = 55324
+
+[storage]
+enabled = false
+
+[analytics]
+enabled = false
+port = 55327
+
+[edge_runtime]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://localhost:3200"
+additional_redirect_urls = ["http://localhost:3000", "http://localhost:3200"]
+enable_signup = true
+
+# Parallel test workers all sign in from one address. The production-shaped
+# defaults (30 sign-ins per 5 minutes) would throttle the suite, not the app.
+[auth.rate_limit]
+email_sent = 100000
+token_refresh = 100000
+sign_in_sign_ups = 100000
+token_verifications = 100000
+
+[auth.email]
+enable_signup = true
+# As in production: a new address must be confirmed. Test fixtures create their
+# users already confirmed through the admin API, so only signup tests see this.
+enable_confirmations = true
+max_frequency = "1s"
