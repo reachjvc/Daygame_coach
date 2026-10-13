@@ -1,6 +1,7 @@
 ---
 name: debate
-description: This skill should be used when the user asks to "debate", "run a debate", "have agents debate", "stress-test this idea", "get multiple perspectives on", or "argue for and against". Orchestrates a structured multi-agent debate using the SMAD protocol.
+description: Structured multi-agent debate (SMAD) to stress-test an idea from several sides.
+disable-model-invocation: true
 ---
 
 # Structured Multi-Agent Debate (SMAD)

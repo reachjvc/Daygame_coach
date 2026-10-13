@@ -1,6 +1,7 @@
 ---
 name: review-until-clean
-description: This skill should be used when the user asks to review something "until nothing is found", "until it converges", "until a new agent finds nothing", "keep going until clean", "round after round", or asks for successive/repeated critical review of a plan, design, spec or diff. Runs adversarial review ROUNDS in succession and only stops when a fresh reviewer finds nothing significant. Use it whenever the user's stopping condition is a RESULT ("until nothing new") rather than a count ("review it once").
+description: Repeated adversarial review rounds of a plan, design, spec or diff until a fresh reviewer finds nothing significant.
+disable-model-invocation: true
 ---
 
 # Review until clean

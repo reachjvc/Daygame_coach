@@ -7,20 +7,10 @@ paths:
 
 # Pipeline
 
-Read `docs/pipeline/learnings.md` before pipeline work.
-
-Stages 02–10 run as `.venv/bin/python -u scripts/training-data/<stage> ...`.
-**Never system python** — the venv has pinned torch/ctranslate2/pyannote, and
-the wrong interpreter fails late and confusingly rather than at import.
-
-Read `docs/pipeline/learnings.md` before changing a stage, and add to it when you learn something new. Quality > speed > coverage.
-
-**Assuming a stage does what its docstring says is the recurring failure here.** Open it. Count the artifacts.
-
-**Count by YouTube ID, not source folder.** Source folders mix batches — `coach_kyle_how_to_approach_a_girl` holds P001 *and* P002 videos. Pull the IDs from the manifest, then `find data/<stage> -name "*<id>*"` per ID. A folder-level count is never a batch-level count.
-
-**One entrypoint.** Fold new automation into the existing top-level command instead of adding a parallel one. A single state file and a single human-readable progress plan, both updated automatically. Before adding a command, ask whether it belongs inside the existing one.
-
-**Fail closed.** A required LLM stage returning nothing is a `BLOCK`, never a pass. No heuristic may stand in for an LLM quality decision. Stage `07b` "Claude returned no output" emits a reason-coded BLOCK artifact so quarantine can act on it.
-
-**The quality signal is 06h confidence, not 06b flag count.** 06b lists individual issues; 06h aggregates them per segment. Few 06b flags alongside 90%-contaminated 06h segments is common. And `quality_gate.blocked=False` is necessary but not sufficient for ingest — the pre-ingest QA screen in `10.EXT.ingest-test.ts` is the real gate.
+- Read `docs/pipeline/learnings.md` before changing a stage; add to it when you learn something.
+- Run stages with `.venv/bin/python -u scripts/training-data/<stage>`. Never system python.
+- Open a stage and count its artifacts; don't trust its docstring.
+- Count by YouTube ID from the manifest, not by source folder — folders mix batches.
+- One entrypoint: fold new automation into the existing top-level command.
+- Fail closed: an empty LLM stage result is a BLOCK, never a pass.
+- The quality signal is 06h confidence, not 06b flag count. The real ingest gate is the pre-ingest QA in `10.EXT.ingest-test.ts`.

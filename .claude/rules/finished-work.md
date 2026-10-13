@@ -7,27 +7,8 @@ paths:
   - "components/**"
 ---
 
-# The attack pass
+# Before calling work done
 
-The checklist itself lives in **`docs/known-failures.md`** — one copy, read it
-there. It is every failure this project actually had, written as questions to
-answer before saying done. Two copies of a checklist drift, and the drifted one
-is the one somebody reads.
-
-**How to run it.** For a design or schema, the failure list is written before the
-design is presented and appears in the same message. For code, run
-`/code-review`, plus `security-review` for anything touching RLS, auth, payments
-or permissions. Hand-rolling one pass is not a review. For a plan, see
-`plans.md`.
-
-# When a plan is done
-
-Set its `**Status:**` to `done <date>`. Delete every branch
-`git branch --merged HEAD` lists but `main` and your own, push, then
-`git worktree remove` and `git worktree prune`. That filter makes `-d` safe;
-alone it checks the upstream, which deleted `beta` 2026-10-01. Never `-D`.
-
-**Why a stand-in never feels like one.** The full account, with six worked
-examples, is under "How this plan's author kept being wrong" in
-`docs/plans/life-mastery-deployment.md`. The short version: a stand-in never
-feels like a stand-in at the time. It feels like checking.
+- Answer `docs/known-failures.md` against the work.
+- Code: run `/code-review`; add `/security-review` for RLS, auth, payments or permissions.
+- Finished plan: delete branches that `git branch --merged HEAD` lists (except `main` and your own) with `-d`, never `-D`; then `git worktree prune`.

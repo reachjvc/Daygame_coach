@@ -1,58 +1,43 @@
 # daygame-coach
 
 Next.js + TypeScript + Supabase. Slices in `src/<slice>/`, routes in `app/`,
-pipeline in `scripts/training-data/`.
+Python video pipeline in `scripts/training-data/`.
 
-**A subscription web app that helps a man get better with women, which grew a
-life-improvement half around it.** **Nobody has ever paid and nothing is in front
-of users**: no Stripe webhook, and no code writes `has_purchased`, so checkout
-cannot grant access. Price every recommendation for that stage.
-
-## The five rules
-
-End-of-turn checklist: `docs/known-failures.md`, handed to you by a hook
-whenever a turn changed something.
-
-1. **Check the thing itself, never a stand-in.** Read output in full, the way the
-   user will — never from a doc, a comment or a summary of it.
-2. **Attack it before you show it; be the critic, not the cheerleader.** Doubt
-   goes in the first line, not the last.
-3. **Fix it now, and fix the class.** One place owns each rule, plus the test
-   that fails when the next caller forgets.
-4. **Build it once.** An extra day beats a rebuild; say *before* building when
-   something is not future-proof.
-5. **Outside advice: build their case before you answer.** Never make the owner
-   fetch the reasoning.
-
-## Never, and ask first
-
-`.claude/hooks/never.py` refuses stray screenshots, sweeping git adds, stashing
-and unwrapped writes to live data, and asks first about auth, payments,
-migrations, access control and icon reuse. The ones no hook can catch:
-
-- Never add a silent fallback; scripts fail loudly or ask the user.
-- Never delete code you can't explain the purpose of.
-- Ask first before deleting data, or anything else hard to reverse.
-- When asked to see text, put it in the reply, not through a tool.
-- Warn about security risk every time it arises, unasked.
-
-## Read before you act
-
-Before saying what the app does, read `docs/product/map.md` — having code is not
-being reachable. Before proposing work, `docs/product/vision.md`.
-
-Architecture: run `tests/unit/architecture.test.ts`, don't memorise it.
-A cited `docs/` path not on disk is expected: 482 were deleted
-2026-09-09; `git log --diff-filter=D -- <path>` finds it.
+A subscription web app that helps a man get better with women, plus a
+life-improvement half. **Nobody has ever paid and nothing is in front of users**
+(no Stripe webhook; nothing writes `has_purchased`). Size recommendations for
+that stage.
 
 ## Commands
 
-`npm run dev` (localhost:3000), `npm run test:e2e`. A Stop hook runs `npm test`
-and blocks on failure.
+- `npm run dev` — localhost:3000. Test logins are in `.env` / `.env.local`.
+- `npm test` (Vitest), `npm run test:e2e` (Playwright). A Stop hook runs
+  `npm test` when code changed and blocks on failure.
+- `npm run build` — keep `--webpack`; the default bundler exhausts WSL memory.
+- Architecture rules live in `tests/unit/architecture.test.ts`. Run it.
 
-**Commit and push your own work without being asked**, with
-`git commit --only <paths>` — a bare commit takes a peer's staged work.
-**A finished plan leaves no branches:** `.claude/rules/finished-work.md`.
+## Gotchas
+
+- Other Claude sessions may share this working tree. Commit with
+  `git commit --only <paths>`; never `git add -A` or `git stash`.
+- All DB access goes through `src/db/*Repo.ts`. Never write to the live
+  database to test something; wrap probes in `begin; … rollback;`.
+- Hosting is moving to Hetzner (decided; see `docs/plans/own-platform-and-app.md`).
+- What a user can actually reach: `docs/product/map.md`. Where it is going,
+  before proposing work: `docs/product/vision.md`.
+
+## Working agreement
+
+- Check the thing itself (the page, the output, the data), never a stand-in.
+- Be the critic, not the cheerleader: doubt goes in the first line.
+- Fix the class, not just the instance: one place owns each rule.
+- Say before building when something is not future-proof.
+- Outside advice: build their case before you answer it.
+- When a turn changes files, a Stop hook hands you `docs/known-failures.md`.
+- Commit and push your own work without being asked.
+- No silent fallbacks: scripts fail loudly or ask.
+- Ask before deleting data or anything hard to reverse.
+- Flag security risks when you see them, unasked.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
