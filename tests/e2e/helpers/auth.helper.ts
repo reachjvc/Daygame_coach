@@ -1,6 +1,7 @@
 import { Page, expect } from '@playwright/test'
 import { SELECTORS } from './selectors'
 import { TEST_USER, TEST_USER_B, validateTestConfig, validateSecondUserConfig } from '../fixtures/test-user'
+import { fillSecret } from './secret'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external auth service latency
@@ -183,7 +184,7 @@ export async function login(page: Page): Promise<void> {
   await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
 
   await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER.email, { timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.auth.passwordInput).fill(TEST_USER.password, { timeout: ACTION_TIMEOUT })
+  await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER.password, { timeout: ACTION_TIMEOUT })
   await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
 
   // Wait for redirect to complete (longer timeout for external auth service)
@@ -229,7 +230,7 @@ export async function loginAsUserB(page: Page): Promise<void> {
   await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
 
   await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER_B.email, { timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.auth.passwordInput).fill(TEST_USER_B.password, { timeout: ACTION_TIMEOUT })
+  await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER_B.password, { timeout: ACTION_TIMEOUT })
   await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
 
   // Wait for redirect to complete

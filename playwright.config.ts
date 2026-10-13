@@ -40,7 +40,9 @@ export default defineConfig({
   timeout: 60000,
   use: {
     baseURL: BASE_URL,
-    trace: 'on-first-retry',
+    // Off under CI: a trace records typed values, request bodies and auth
+    // cookies, and CI's artifacts on this public repo are downloadable.
+    trace: process.env.CI ? 'off' : 'on-first-retry',
     headless: true,
   },
   projects: [
@@ -619,7 +621,7 @@ export default defineConfig({
       },
     },
 
-    // === Cross-browser authenticated tests (Firefox + WebKit with traces) ===
+    // === Cross-browser authenticated tests (Firefox + WebKit; traces locally only) ===
     {
       name: 'cross-firefox',
       testMatch: /cross-browser\//,
@@ -627,7 +629,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Firefox'],
         storageState: 'tests/e2e/.auth/user.json',
-        trace: 'on',
+        trace: process.env.CI ? 'off' : 'on',
       },
     },
     {
@@ -637,7 +639,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Safari'],
         storageState: 'tests/e2e/.auth/user.json',
-        trace: 'on',
+        trace: process.env.CI ? 'off' : 'on',
       },
     },
 

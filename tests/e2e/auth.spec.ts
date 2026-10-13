@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
 import { TEST_USER, validateTestConfig } from './fixtures/test-user'
 import { login } from './helpers/auth.helper'
+import { fillSecret } from './helpers/secret'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external auth service latency
@@ -18,7 +19,7 @@ test.describe('Authentication Flow', () => {
 
     // Act: Fill login form and submit
     await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER.email, { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.auth.passwordInput).fill(TEST_USER.password, { timeout: ACTION_TIMEOUT })
+    await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER.password, { timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
 
     // Assert: Should redirect to dashboard or redirect page (or show no error)
@@ -52,7 +53,7 @@ test.describe('Authentication Flow', () => {
 
     // Act: Fill form and submit
     await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER.email, { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.auth.passwordInput).fill(TEST_USER.password, { timeout: ACTION_TIMEOUT })
+    await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER.password, { timeout: ACTION_TIMEOUT })
 
     // Assert: Button shows loading text immediately after click
     // Use Promise.all to click and check simultaneously since loading state is brief

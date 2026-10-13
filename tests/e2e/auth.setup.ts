@@ -2,6 +2,7 @@ import { test as setup, expect } from '@playwright/test'
 import { TEST_USER, validateTestConfig } from './fixtures/test-user'
 import { SELECTORS } from './helpers/selectors'
 import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
+import { fillSecret } from './helpers/secret'
 
 const AUTH_TIMEOUT = 15000
 const ACTION_TIMEOUT = 5000
@@ -13,7 +14,7 @@ setup('authenticate as test user', async ({ page }) => {
 
   await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
   await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER.email, { timeout: ACTION_TIMEOUT })
-  await page.getByTestId(SELECTORS.auth.passwordInput).fill(TEST_USER.password, { timeout: ACTION_TIMEOUT })
+  await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), TEST_USER.password, { timeout: ACTION_TIMEOUT })
   await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
 
   await page.waitForURL(/\/(dashboard|redirect|preferences)/, { timeout: AUTH_TIMEOUT })

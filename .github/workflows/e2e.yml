@@ -224,10 +224,3 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-      - name: Upload cross-browser traces
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-traces
-          path: test-results/**/trace.zip
-          retention-days: 14
