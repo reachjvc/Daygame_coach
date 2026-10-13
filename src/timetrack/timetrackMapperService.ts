@@ -73,16 +73,34 @@ interface Prefs {
 
 const nowIso = (at?: string) => at ?? new Date().toISOString()
 
-/** A stable name for this browser, so a running timer says where it came from */
+let deviceIdThisTab: string | null = null
+
+/**
+ * A stable name for this browser, so a running timer says where it came from.
+ *
+ * Storage can be full or blocked (private windows, a full quota). That used to
+ * throw out of the sync effect and take the whole tracker down with an
+ * uncaught QuotaExceededError, before the "could not save to this browser"
+ * warning could show. The id only has to be stable while this tab runs, so it
+ * is kept in memory when storage refuses it.
+ */
 function deviceId(): string {
   if (typeof window === "undefined") return "server"
   const key = "toggl-clone:device"
-  let id = window.localStorage.getItem(key)
-  if (!id) {
-    id = newId()
-    window.localStorage.setItem(key, id)
+  try {
+    const stored = window.localStorage.getItem(key)
+    if (stored) return stored
+  } catch {
+    // storage is blocked: fall through to this tab's id
   }
-  return id
+  deviceIdThisTab ??= newId()
+  try {
+    window.localStorage.setItem(key, deviceIdThisTab)
+  } catch {
+    // full or blocked: this tab keeps its id in memory, and the warning about
+    // saving to this browser is raised where the workspace itself is saved
+  }
+  return deviceIdThisTab
 }
 
 // ---------------------------------------------------------------------------
