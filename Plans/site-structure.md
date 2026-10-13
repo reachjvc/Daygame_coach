@@ -14,7 +14,7 @@ the site itself, names the cause, and fixes every instance.
 another pass") and item 12 ("It works on a phone and in a browser"). It finishes item 32
 ("Preferences onboarding moves … into daygame / Scenarios where it belongs"), which moved the form
 but not its address. It stays compatible with D8 of `docs/plans/own-platform-and-app.md` (the phone
-app is Capacitor with bundled assets), and it builds on `docs/plans/tests-worth-their-keep.md`,
+app is Capacitor with bundled assets), and it builds on `Plans/tests-worth-their-keep.md`,
 which is cutting the test suite in this same checkout (B-PEER-TREE).
 
 ---
@@ -245,6 +245,7 @@ Each was attempted on 2026-10-13; the result column is what happened.
 | B-DEVSERVER | Your `next dev` on `:3000` | Not touched. Folder moves usually appear without a restart; a new route group sometimes leaves stale routes. | Nothing; checks never use `:3000` | **You** (never the executor): if `:3000` shows a 404 for a moved page, restart `npm run dev` when convenient. The executor only notes it. |
 | B-SW-PHONE | Your phone's installed app keeps old offline pages until it updates | `sw.js` versions its cache by build, calls `skipWaiting()`/`clients.claim()`, and deletes old caches; it updates on an **online** visit. | Nothing in this plan | After the change reaches your phone's address, open the app once with signal. |
 | B-STACK | The local test backend every browser check runs on | **Up.** Docker 29.1.3 with 8 containers running; `node scripts/db/test-stack.mjs env` exits 0 and its JSON has `API_URL`, `ANON_KEY`, `SERVICE_ROLE_KEY` (only the key names were printed); `jq` is at `~/.local/bin`. Phase 0's screenshots were taken differently, through the shared live test account on `:3000` (17 of 18 loads signed in; one first load bounced to login) — the executor does **not** repeat that. | Every browser check in Phases 1–4 | If it is down: `node scripts/db/test-stack.mjs up`. If Docker itself is down, **you** start it; record the blocker meanwhile. Never point a browser test at the live project. |
+| B-DISK | WSL's virtual disk lives on C:, and C: is nearly full | `df -h /mnt/c`: **1.8 of 1.9 TB used, 30 GB free (99%)**. A full C: detached WSL at 16:39 today and killed every session (memory note `c-drive-full-wsl-risk`). WSL crash dumps on C: total 3.9 GB. Existing build folders here: `.next` 9.3 GB, `.next-prod` 1.5 GB, `.next-verify` 1.6 GB (a peer's), `.next-e2e` 1.0 GB. | Every build in Phases 2 and 4 (~1.5 GB each) and the second dev server (~1 GB) | **You:** free space on C:. The crash dumps in `C:\Users\jonas\AppData\Local\Temp\wsl-crashes` are the safe first 3.9 GB. **The executor:** before each build or server start, `df -h /mnt/c`; below 20 GB free, stop and record B-DISK. Delete its own `.next-site-build` and `.next-site-dev` after each phase's checks. Deleting inside WSL frees room in the virtual disk but does not shrink it on C:. |
 | B-SUPABASE | Email links and redirect allow-list | **Cleared.** Read through the management API (only these fields printed): `site_url` is the Vercel URL, `uri_allow_list` is `…vercel.app/**,http://localhost:3000/**`, and no email template names a page. The app's links use `/auth/confirm?next=/redirect` and `/auth/reset-password`, which do not move. | — | — |
 | B-STRIPE | Stripe return addresses | **Cleared.** Checkout is a placeholder; the billing portal's `return_url` comes from `SETTINGS_CONFIG.billingPortalReturnUrl()`, which Phase 1 points at the route list. | — | — |
 | B-DATA | Addresses saved in the database or browser | **Cleared.** No column holds a link; no storage key holds a path. The one copied address, the time tracker's start link, carries a query string, which the redirect keeps. | — | — |
@@ -261,8 +262,8 @@ blocker is marked `blocked: <ID>`; work continues with the next step that does n
 **Servers used for checks — all on the local test backend (Appendix C):** Playwright's own dev
 server on `:3200`, which `npx playwright test` starts by itself when `PW_BASE_URL` is unset (the
 normal case); a dev server on **`:3101`** for the `curl` loops; and, for the two offline specs only,
-a production build on **`:3100`**. Their build folders (`.next-e2e`, `.next-verify-dev`,
-`.next-verify`) are git-ignored (`.next-*`). Never touch `:3000`.
+a production build on **`:3100`**. Their build folders (`.next-e2e`, `.next-site-dev`,
+`.next-site-build`) are git-ignored (`.next-*`). Never touch `:3000`.
 
 ## Phase 0 — Inventory, screenshots, blocker attempts. **Status: done 2026-10-13**
 
@@ -374,8 +375,10 @@ Do it as **three kinds of commit, in order**. Each must pass `npm test` on its o
    **The same `components/` commit rewrites the premise test** in `routeReachability.test.ts`
    ("counts only navigation, never a path that is merely named", line ~435), which asserts the
    literal `'"/programs"'` in `navTabs.ts`: it becomes "navTabs.ts names `ROUTES.trackingHistory`
-   as a label key (`toContain("[ROUTES.trackingHistory]")`) and `linksIn(navTabs)` does not contain
-   `ROUTES.trackingHistory`" (a label, never a link; `/programs` is now a real `href:`).
+   as a label key (`toContain("[ROUTES.trackingHistory]")` on the file's text) and
+   `[...linksIn([navTabs])]` does not contain the **value** `ROUTES.trackingHistory`
+   (`not.toContain(ROUTES.trackingHistory)`, today `"/dashboard/tracking/history"`)" — a label, never
+   a link; `/programs` is now a real `href:`.
    In `components/navTabs.ts`, `HIDDEN_ROUTE_PREFIXES` becomes exactly
    `[ROUTES.plan, ROUTES.trackingReview, ROUTES.liveWorkout, ROUTES.time]` (the same four it holds
    today: `LIFE_MASTERY`, `"/dashboard/tracking/review"`, `"/programs/live"`, `"/dashboard/time"`;
@@ -421,7 +424,10 @@ Do it as **three kinds of commit, in order**. Each must pass `npm test` on its o
    tests are in step 11.
 9. **Finder for what is left** — must print nothing when 1.B is done (the two old route files are
    exempt until 1.C deletes them):
-   `grep -rnE "[\"'\`](/dashboard|/programs|/preferences|/life-mastery|/qa)([/?\"'\`\$]|$)" --include=*.ts --include=*.tsx app src components | grep -vE ":\s*(\*|//)" | grep -vE "^(src/shared/routes|src/shared/lifeMasteryRoutes|src/shared/trainingRoutes)\.ts:"`
+   `grep -rnE "([\"'\`]|next=)(/dashboard|/programs|/preferences|/life-mastery|/qa)([/?&\"'\`\$]|$)" --include=*.ts --include=*.tsx app src components | grep -vE ":\s*(\*|//)" | grep -vE "^(src/shared/routes|src/shared/lifeMasteryRoutes|src/shared/trainingRoutes)\.ts:"`
+   (`next=` catches the two login redirects that carry a return address:
+   `app/dashboard/time/page.tsx:28` and `app/programs/workout/[id]/page.tsx:29` become
+   `` redirect(`/auth/login?next=${ROUTES.time}`) `` and `` redirect(`/auth/login?next=${ROUTES.training}`) ``.)
    (`proxy.ts` is not searched: its prefix list is rewritten in Phase 2.)
 
 ### 1.C — One owner (one commit)
@@ -440,7 +446,9 @@ Do it as **three kinds of commit, in order**. Each must pass `npm test` on its o
       the file's existing `writesPath()` and `code()`. The only allowed file is
       `src/shared/routes.ts` (no folder exemption: after 1.B no page file needs one).
     - **New, the class behind the `/scenarios` bug:** "every `revalidatePath` target is a real
-      page". Scan `app/` and `src/` for every `revalidatePath(` call. Its argument must be
+      page". Scan the **comment-stripped** source (`code()`) of every file in `app/` and `src/`
+      (prose such as `profileService.ts:28`'s "revalidatePath()" must not count) for every
+      `revalidatePath(` call. Its argument must be
       `ROUTES.x` or a string literal; **any other argument fails the test, naming the file and
       line** (so a new indirection cannot hide a dead target, as `SETTINGS_CONFIG.paths` did).
       Resolve `ROUTES.x` through `ROUTES`, and expect each target in `productRoutes()`. Before 1.B step 7
@@ -491,7 +499,8 @@ is `/`, under `/auth/`, or under `/test/` (never guarded; 404 in production by i
    `testRoutesSealed.test.ts` (`setNodeEnv`, `stubSupabaseEnv`, `req()`). Mock the network:
    `vi.mock("@supabase/ssr", () => ({ createServerClient: () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }) }))`.
    - For every route in `productRoutes()` except `/` and `/auth/*` (replace `[id]` with `x`): status
-     307, and `location` starts with `/auth/login?next=`.
+     307; parse the header (`new URL(res.headers.get("location")!)`, it is absolute) and expect
+     `pathname === "/auth/login"` and `searchParams.get("next") === route`.
    - `/`, `/auth/login`, `/test/goals`: no `location` header.
    - `/api/tracking/stats` and `/api/test/scripts` (development): no login redirect.
    - `/api/timetrack/sync` without a user: 401.
@@ -510,6 +519,11 @@ tab destination poses as a child of the Dashboard; every address unchanged.
 
 Read `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route-groups.md` and
 `layout.md` first.
+
+**Commits:** step 1 alone (no behaviour change). **Steps 2–8 are one commit**: the move breaks
+`tabBarDestinations`' `pageFor()` and removing the per-page bars breaks `mountsTheBar()` until
+step 8's test changes land, so they cannot be split. Step 9 is its own commit. Check
+`git status --short` for every file in steps 2–8 before starting; the commit is large.
 
 1. **`components/AppLogo.tsx`:** move the logo `<Link href="/">` block out of `AppHeader.tsx`
    (line 251) so `AppHeader` and the frame share it. Add `shrink-0` to its class list so a crowded
@@ -572,7 +586,13 @@ Read `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/ro
    already sends signed-out visitors away first; this line is for the type checker and for defence
    in depth. Then remove the now-dead `viewer === "visitor"` variant from
    `src/dashboard/components/DashboardContent.tsx` (the type member and its branches, around lines
-   34, 57, 66, 82 and 236).
+   34, 57, 66, 82 and 236). **Same commit:** `tests/unit/dashboard/dashboardViewer.test.tsx` tests
+   that variant — change "a logged-out visitor is a visitor, with no profile" (line ~115) to "a
+   logged-out visitor is sent to sign in":
+   `await expect(DashboardPage()).rejects.toMatchObject({ digest: expect.stringContaining(";/auth/login;") })`
+   (Next's real `redirect()` throws an error whose `digest` is `NEXT_REDIRECT;replace;<url>;307;`;
+   the file does not mock `next/navigation`, and should not start to). Delete "a visitor is sent to
+   sign up" (line ~169).
 8. **Tests:** add `hasAppFrame(route, file)` to `tests/support/appRoutes.ts`: true when `file` sits
    under `app/(app)/` and `!HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(route, p))`.
    - `backNavigation.test.ts`: `const hasTabBar = …` becomes
@@ -661,13 +681,16 @@ In every section:
 2. **`tests/unit/navigation/legacyRoutes.test.ts`.** **Section 1 creates it** with the checks that
    run over the whole table (they hold for any number of rows): every `from` has no page in
    `productRoutes()`; every `to` is in `productRoutes()`; no `to` is another row's `from` (no
-   chains); no product file writes a `from` address (reuse `writesPath()` and `code()` from
-   `routeList.test.ts`, moved to `tests/support/appRoutes.ts`); `legacyRedirect("/dashboard")` is
+   chains); no product file **other than `src/shared/routes.ts`** (which holds the table) writes a
+   `from` address (reuse `writesPath()` and `code()` from `routeList.test.ts`, moved to
+   `tests/support/appRoutes.ts`); `legacyRedirect("/dashboard")` is
    `null`; `legacyRedirect("/dashboard/settings")` is `"/settings"`; and through the proxy (same
-   mocks as `proxyPrivateByDefault.test.ts`) `/dashboard/settings` answers 308 to `/settings`.
+   mocks as `proxyPrivateByDefault.test.ts`) `/dashboard/settings` answers 308 whose parsed
+   `location` has `pathname === "/settings"` (the header is absolute; compare `pathname` and
+   `search`, never the raw string).
    **Each later section adds one sample for its own rows:** section 3 adds
-   `/dashboard/time?start=1&description=x` → 308 with `location` ending
-   `/time?start=1&description=x`; section 7 adds `legacyRedirect("/dashboard/tracking/session/abc")`
+   `/dashboard/time?start=1&description=x` → 308 whose parsed `location` has `pathname === "/time"`
+   and `search === "?start=1&description=x"`; section 7 adds `legacyRedirect("/dashboard/tracking/session/abc")`
    is `"/tracking/session/abc"`; sections 2, 4, 5, 6, 8 and 9 add `legacyRedirect(<from>)` equals
    `<to>` for each of their rows.
 3. Re-read the comments in that section's files that mention the old address. Fix any that now say
@@ -760,7 +783,10 @@ Recorded for the database move.
 - **Never edit `next.config.mjs`.** Never read or print `.env.local` values, nor the test backend's
   keys (keep them in shell variables). Never write to the live database. **Every browser check runs
   on the local test backend**; set `PW_BASE_URL` only for Appendix C's `:3100` build.
-- **Builds only through `npm run build`** (it keeps `--webpack` and the memory cap).
+- **Builds only through `npm run build`** (it keeps `--webpack` and the memory cap). **Before every
+  build or server start, `df -h /mnt/c`; below 20 GB free on C:, stop (B-DISK).** Use only this
+  plan's folders (`.next-site-build`, `.next-site-dev`), never another session's (`.next-verify`,
+  `.next-prod`, `.next-e2e`), and delete them when a phase's checks are done.
 - **Read Next's own docs before writing Next code** (`route-groups.md`, `layout.md`, `proxy.md` under
   `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/`).
 - **When a step and the code disagree** (a line number moved, a file was trimmed by the peer), find
@@ -779,6 +805,12 @@ Recorded for the database move.
 - **Versions:** `package.json` pins `next` 16.3.8 and Node ≥ 24, but the shared `node_modules` and
   `:3000` still run 16.3.5 on Node 20 until the owner moves them (Caddy plan, R11). Read the docs in
   `node_modules` as installed; do not run `npm install` or `npm ci`.
+- **Playwright projects are being consolidated** by the test-cut session (`e10f08ee`: specs move
+  one by one from the shared-account projects such as `chromium`, `training` and `mobile-iphone`
+  into `desktop`, and those projects then go). Before running a spec in the project this plan
+  names, run `npx playwright test <spec> --list`; if it lists nothing, find the spec's current
+  project with `npx playwright test <spec> --list --project='*'` and use that one. Note the change
+  under the phase.
 - **"Outside this plan's diff"** (the escape clause) means: `git log <Start SHA>..HEAD --format=%h -- <failing test file> <file it tests>`
   lists no commit made by this session. Quote that command's output and the failing test's author
   (`git log -1 --format='%h %an %s' -- <file>`) when using the clause.
@@ -962,12 +994,12 @@ export SUPABASE_SERVICE_ROLE_KEY="$(jq -r .SERVICE_ROLE_KEY <<<"$E2E_STACK_ENV")
 # Next does not let .env.local override variables already set, so both servers below use these.
 
 # 2. Dev server for the curl loops (never :3000). Background; stop it when done.
-NEXT_DIST_DIR=.next-verify-dev npx next dev -p 3101
+NEXT_DIST_DIR=.next-site-dev npx next dev -p 3101
 
 # 3. Production build for the two offline specs only. Build at the end of Phase 2 and again at the
 #    end of Phase 4. The NEXT_PUBLIC_ values are baked in at build time, hence step 1 first.
-NEXT_DIST_DIR=.next-verify npm run build
-NEXT_DIST_DIR=.next-verify npx next start -p 3100          # background; stop it when done
+NEXT_DIST_DIR=.next-site-build npm run build
+NEXT_DIST_DIR=.next-site-build npx next start -p 3100          # background; stop it when done
 PW_BASE_URL=http://localhost:3100 npx playwright test tests/e2e/vice-offline.spec.ts --project=chromium
 PW_BASE_URL=http://localhost:3100 npx playwright test tests/e2e/programs-offline.spec.ts --project=training
 # Each spec lives in a different project (chromium ignores programs-offline). "Skipped" is not a
