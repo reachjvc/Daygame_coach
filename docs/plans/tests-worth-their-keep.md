@@ -256,23 +256,19 @@ the whole time and edited about 25 test files during this audit.
 it breaks CI and your `.env.local` until both are updated. Not attempted for that
 reason. Do it at the end of Phase 9, once CI no longer needs it.
 
-**B9 · A public CI report may hold a test account's login.** Raised by the
-`daygame-coach-6e` session, checked here. Anyone signed in to GitHub can download
-a public repository's CI artifacts. A Playwright trace records typed values
-(including the password the login step types) and request headers (including
-session cookies), and the config records one on every retry; the cross-browser
-projects record one always. Three reports are live until 2026-10-20. Two are
-215 KB, which is the size of a report with no trace. The third, from run
-`38368655433`, is 812 KB — consistent with a trace inside, not proof of one.
-*Attempted:* listed the artifacts and their sizes through the public API; the
-run's public annotations do not say whether anything retried; downloading needs
-B1's login.
-*Needs from you, after B1:* `gh run download 38368655433 -n playwright-report-fast`
-and look for a `data/*.zip` inside. If one is there, delete the artifact
-(`gh api -X DELETE repos/reachjvc/Daygame_coach/actions/artifacts/11798476564`),
-change TEST_USER's password, and update it in `.env.local` and the CI secret. If
-not, let it expire. The `daygame-coach-6e` plan turns traces off under CI and
-stops uploading them, which stops new exposure.
+**B9 · Public CI reports published the test accounts' passwords** — found by
+peer sessions, being fixed by one. Anyone signed in to GitHub can download a
+public repository's CI artifacts. Playwright titles a fill step `Fill "<value>"`
+(confirmed in `playwright-core`'s own step titles), so **every uploaded HTML
+report carried the password of each account it logged in with** — traces or not.
+My first version of this entry said the two 215 KB reports were safe because
+they held no trace; that was wrong.
+*Status:* `f92a16f1` (session `daygame-coach-bf`) types secrets through
+`tests/e2e/helpers/secret.ts`, turns every trace off under CI, removes the
+trace upload, and adds the guard `tests/unit/infra/e2eSecretsStayOutOfReports.test.ts`.
+On your instruction that session is rotating the three test passwords
+(TEST_USER, TEST_USER_B, TEST_USER_TRAINING) and deleting the live artifacts.
+Nothing left for you here unless it reports otherwise.
 
 ## Open questions — each with my recommendation
 
@@ -300,8 +296,9 @@ stops uploading them, which stops new exposure.
 - **Local browser runs write to production** today (`.env.local` points there).
   Phase 8 ends that.
 - **The schema baseline** (Q2) would publish the full schema in a public repository.
-- **CI test reports are public** and a trace can hold a typed password and session
-  cookies (B9). Traces stay off under CI until Phase 9 says otherwise.
+- **CI test reports are public** and published the three test passwords (B9);
+  rotation and the fix are in hand. Any secret a test types goes through
+  `fillSecret`, and traces stay off under CI until Phase 9 says otherwise.
 - **What I did to production today:** one schema-only dump through the Supabase
   CLI, which creates a temporary login role to run it. No rows were read or written.
 - Not a today-emergency: there are no users and no payments. These matter before
@@ -614,8 +611,9 @@ config unit check fails if any Playwright project declares `dependencies`.
    20–25-minute estimate (cache them if it is not). A `merge-reports` job merges the blobs. `@timing` tests in a
    one-worker shard.
 3. `retries: 1` (Q6). Browser cache for `~/.cache/ms-playwright`.
-   **Traces stay off under CI**, and blob reports passed between jobs carry no
-   trace (B9). Turning `on-first-retry` back on is safe only once every account
+   **Traces stay off under CI**, blob reports passed between jobs carry no
+   trace, every typed secret goes through `fillSecret`, and
+   `tests/unit/infra/e2eSecretsStayOutOfReports.test.ts` stays green (B9). Turning `on-first-retry` back on is safe only once every account
    CI signs in with is a throwaway user in the local backend (Phase 8), so a
    trace can hold no real credential; that is a named decision, recorded here if
    taken. Keep `runs-on: ubuntu-24.04` (pinned by the `caddy-deploy-and-cicd`
