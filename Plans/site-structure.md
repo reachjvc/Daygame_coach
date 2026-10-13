@@ -793,7 +793,10 @@ Recorded for the database move.
   the same thing by its content, do what the step intends, and note the difference under the phase.
   If the intent itself no longer applies, stop and record it as a blocker rather than improvising.
 - **Every phase ends with:** commit, push, read the CI run (`gh run list --branch training-rebuild --limit 3`),
-  then write `**Status:** done <date>` and the evidence under that phase. A status-only commit to
+  then write `**Status:** done <date>` and the evidence under that phase. **Judge your change by the
+  `checks` job only.** Since `STAGING_PUBLISH` was switched on, every run also has an
+  `image-staging` job that waits for `e2e.yml` on the same commit and fails when that fails; a red
+  `image-staging` with a green `checks` is not this plan's failure (record it, do not chase it). A status-only commit to
   this file may carry `[skip ci]`.
 - **Commit messages** follow the repository's style (`git log --oneline -10`): one sentence saying
   what is now true for a person using the app, or what was wrong, not the mechanics. For example:
