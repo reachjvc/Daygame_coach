@@ -20,32 +20,20 @@
  * enrols in one, which is why every other training spec passed.
  */
 
-import { test, expect, type Page } from "@playwright/test"
-import { PHONE, cleanUp, guardTrainingAccount } from "./helpers/training.helper"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
+import { PHONE, cleanUp, guardTrainingAccount, resetTraining } from "./helpers/training.helper"
 
-test.describe.configure({ mode: "serial" })
+// Not serial: every test builds its two programs on the worker's own account
+// (tests/e2e/fixtures/test.ts) from an emptied one.
 guardTrainingAccount()
 
 let startedAt = new Date().toISOString()
 
 /** Two programs from two disciplines, so neither deactivates the other. */
 async function twoProgramsRunning(page: Page): Promise<void> {
+  await resetTraining(page)
   await page.evaluate(async () => {
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-    for (const e of await (await fetch("/api/programs/enrollments?past=1")).json()) {
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-    for (let pass = 0; pass < 12; pass++) {
-      const facts = await (await fetch("/api/programs/today")).json()
-      const done = facts.recentlyFinished ?? []
-      if (done.length === 0) break
-      for (const d of done) await fetch(`/api/health/workout?id=${d.workoutId}`, { method: "DELETE" })
-    }
     for (const programId of ["stronglifts-5x5", "bodyweight-foundations"]) {
       const res = await fetch("/api/programs/enrollments", {
         method: "POST",

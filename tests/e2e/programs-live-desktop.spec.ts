@@ -28,10 +28,12 @@
  *      it can.
  */
 
-import { test, expect, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { cleanUp, resetAndEnroll, guardTrainingAccount } from "./helpers/training.helper"
 
-test.describe.configure({ mode: "serial" })
+// Not serial: each test starts its own workout on the worker's own account
+// (tests/e2e/fixtures/test.ts), after `resetAndEnroll` has emptied it.
 guardTrainingAccount()
 
 /** A window, not a phone. The whole point of the file. */

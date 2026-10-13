@@ -12,14 +12,18 @@
  * you open it, and the weekly total counts working sets only.
  */
 
-import { test, expect } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
-import { guardTrainingAccount } from "./helpers/training.helper"
+import { guardTrainingAccount, resetTraining } from "./helpers/training.helper"
 import { networkQuiet } from "./helpers/settle"
 
-test.describe.configure({ mode: "serial" })
-/** Refuses to run as anybody but the training account — see the helper. */
+/**
+ * Not serial: every test seeds the history it reads, on the worker's own
+ * account (tests/e2e/fixtures/test.ts), and none reads another's. A fresh
+ * account has no history at all, so nothing here may lean on one.
+ */
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 
@@ -190,17 +194,11 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
   await page.goto("/programs")
+  // A clean account: no program, nothing open.
+  await resetTraining(page)
 
   const seeded = await page.evaluate(async () => {
-    // A clean program, then one session done in full.
-    const live0 = await (await fetch("/api/workouts/live")).json()
-    if (live0) await fetch(`/api/workouts/${live0.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const d = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of d.logs ?? []) await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
+    // A program, then one session done in full.
     const made = await (
       await fetch("/api/programs/enrollments", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -324,16 +322,9 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
 test("deleting a program session moves the weights back down", async ({ page }) => {
   test.setTimeout(240000)
   await page.goto("/programs")
+  await resetTraining(page)
 
   const seeded = await page.evaluate(async () => {
-    const live0 = await (await fetch("/api/workouts/live")).json()
-    if (live0) await fetch(`/api/workouts/${live0.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const d = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of d.logs ?? []) await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
     const made = await (
       await fetch("/api/programs/enrollments", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -431,8 +422,8 @@ test("deleting a program session moves the weights back down", async ({ page }) 
  * train twice, delete a session. The assertions read the numbers back from the
  * server, not off the screen.
  *
- * It cleans up ONLY what it made. The shared training account carries a seeded
- * year of workouts that later phases measure against.
+ * It cleans up ONLY what it made: the next test on this worker's account is
+ * entitled to whatever it seeded itself.
  */
 test("deleting a session on a program edited after it started moves the weights back", async ({ page }) => {
   test.setTimeout(240000)

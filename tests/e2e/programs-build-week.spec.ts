@@ -9,25 +9,26 @@
  * This is the path a person actually takes, and it is here because I walked it
  * by hand first and a measurement nobody will take again is not a test.
  *
- * In the `training` project: it writes drafts and enrollments on the shared
- * training account.
+ * It writes drafts and enrollments on the worker's own account
+ * (tests/e2e/fixtures/test.ts), emptied before every test, so the tests run in
+ * any order and beside any other file.
  */
 
-import { test, expect, type Page } from "@playwright/test"
-import { PHONE, cleanUp, guardTrainingAccount } from "./helpers/training.helper"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
+import { PHONE, guardTrainingAccount, resetTraining } from "./helpers/training.helper"
 
 test.use({ viewport: PHONE })
-test.describe.configure({ mode: "serial" })
-/** Refuses to run as anybody but the training account — see the helper. */
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 
 const WEEK = "Push\nBench Press 3x8 @60\n\nPull\nBarbell Row 3x8 @50"
 
-/** Nothing running, nothing open, and no saved weeks left by an earlier run. */
+/** Nothing running, nothing open, and no saved weeks left by an earlier test. */
 async function wipe(page: Page): Promise<void> {
   await page.goto("/programs", { waitUntil: "networkidle" })
-  await cleanUp(page)
+  await resetTraining(page)
   await page.evaluate(async () => {
     for (const d of await (await fetch("/api/programs/drafts")).json()) {
       await fetch(`/api/programs/drafts/${d.id}`, { method: "DELETE" })
@@ -48,10 +49,6 @@ async function writeAndName(page: Page, text: string, name: string, action: "wee
 
 test.beforeEach(async ({ page }) => {
   test.setTimeout(180000)
-  await wipe(page)
-})
-
-test.afterEach(async ({ page }) => {
   await wipe(page)
 })
 

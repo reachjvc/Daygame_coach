@@ -14,81 +14,25 @@
  *     phone, and invisible on a laptop.
  *   - **You can log what actually happened**, not just what was asked for.
  *
- * Runs on the `mobile-iphone` / `mobile-pixel` projects, and the same file is
- * picked up by the WebKit and Firefox smoke projects — see `playwright.config.ts`.
+ * It measures at whatever phone its project gives it (it sets no viewport of
+ * its own), on the worker's own account (tests/e2e/fixtures/test.ts), which
+ * every test empties first.
  */
 
-import { test, expect } from "@playwright/test"
+import { test, expect } from "../fixtures/test"
 import { openTab } from "../helpers/trainingTabs"
-import { cleanUp, guardTrainingAccount } from "../helpers/training.helper"
-import { TRAINING_STATE } from "../../../playwright.config"
-/** Refuses to run as anybody but the training account — see the helper. */
+import { guardTrainingAccount, resetTraining } from "../helpers/training.helper"
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 /**
- * THIS FILE FINISHES A WORKOUT AND USED TO LEAVE IT THERE.
- *
- * "a session records what you actually did" ticks four of five prescribed sets
- * and finishes, which writes a one-minute, four-set workout dated today. This
- * file had no `afterEach`, no `afterAll` and no `cleanUp` call, so that row
- * stayed on the shared training account — and one finished workout dated today
- * puts the card into its `done` state, which correctly offers "See today's
- * workout" and no Start.
- *
- * Measured 2026-09-26, and the card said it in its own words:
- *
- *   " TrainingTrained todayWorkout · 1 min · 4 setsNext is Workout A…"
- *
- * where `dashboard-training-card` was waiting for "Squat". Four failures in one
- * run from that single row: the card naming nothing, two specs timing out at 60
- * and 180 seconds on a `start-workout` button the product had deliberately
- * removed, and a weight field on a live screen that never opened.
- *
- * `resetAndEnroll` learned to clear this earlier the same day, which fixed the
- * specs that call it — and `dashboard-training-card` and `programs-past-workout`
- * use their own inline resets and never did. Patching every reader is the wrong
- * end. The file that creates the row removes it.
- *
- * `afterAll` rather than `afterEach` deliberately: these five tests run serially
- * and clearing the account between them would take state out from under the one
- * that follows. The instant is captured at module load, so `cleanUp` removes
- * what this FILE started and cannot touch the account's older history.
+ * NO `afterAll` CLEANUP ANY MORE. "a session records what you actually did"
+ * finishes a workout dated today, and on the SHARED training account that row
+ * put the card into its `done` state for every file after this one — four
+ * failures in one run, measured 2026-09-26. The account is the worker's own
+ * now, and `resetTraining` clears anything finished in the last two days at the
+ * start of every training test, so the next test is protected where it begins.
  */
-const fileStarted = new Date(Date.now() - 60_000).toISOString()
-
-test.afterAll(async ({ browser }) => {
-  /**
-   * `baseURL` PASSED EXPLICITLY, AND THE PAGE NAVIGATED BEFORE CLEANING.
-   *
-   * `browser.newPage()` builds its own context and does not inherit the
-   * project's options, and `cleanUp` works by calling the app's own routes with
-   * relative paths from inside the page. On a fresh page that has never
-   * navigated, the origin those paths resolve against does not exist, and the
-   * first version of this hook died with
-   * `TypeError: URL is not valid or contains user credentials` — which it then
-   * swallowed, so the only visible symptom was a live workout left behind.
-   */
-  const page = await browser.newPage({
-    storageState: TRAINING_STATE,
-    baseURL: test.info().project.use.baseURL,
-  })
-  await page.goto("/programs", { waitUntil: "networkidle" })
-  /**
-   * ALLOWED TO FAIL, BUT NOT ALLOWED TO FAIL SILENTLY.
-   *
-   * A file that has already failed must not also report a cleanup error on top
-   * of the reason it failed — so this does not throw. But the first version
-   * swallowed the reason entirely with `.catch(() => {})`, and that is the
-   * exact silent-failure shape this whole session has been removing: the run
-   * that followed left a live workout behind and nothing said whether the
-   * cleanup had run, errored, or never been reached.
-   */
-  await cleanUp(page, fileStarted).catch((e: unknown) => {
-    console.error(`[mobile-training] cleanUp failed: ${(e as Error).message}`)
-  })
-  await page.close()
-})
-
 
 /**
  * A ceiling that the WORST realistic case has to pass, not the best.
@@ -103,15 +47,13 @@ test.afterAll(async ({ browser }) => {
 const MAX_PAGE_HEIGHT = 1800
 
 /**
- * SERIAL, because these share one account.
- *
- * `fullyParallel` is on, and each test here clears the account's enrollments in
- * `beforeEach` so it starts from a known state. Run in parallel that is two
- * tests deleting each other's program mid-assertion — which is exactly what
- * happened: the same spec passed alone and failed in a suite. The repo already
- * isolates its other account-mutating specs for this reason.
+ * NOT SERIAL ANY MORE. These were, because they shared one account and each
+ * cleared its enrollments in `beforeEach` — in parallel that was two tests
+ * deleting each other's program mid-assertion. Each worker has an account of
+ * its own now and runs one test at a time on it; every test below starts from
+ * the empty account `beforeEach` leaves and enrols what it needs itself.
  */
-test.describe.serial("training on a phone", () => {
+test.describe("training on a phone", () => {
   test.beforeEach(async ({ page }) => {
     /**
      * THE SAME BUDGET ITS SIBLINGS TAKE, and for the same reason.
@@ -130,56 +72,13 @@ test.describe.serial("training on a phone", () => {
      */
     test.setTimeout(180000)
 
-    // Start from nothing so the run does not depend on what a previous one left.
+    // Start from nothing so the run does not depend on what a previous one left:
+    // no program, no ended programs (they would lengthen the page and make the
+    // height assertion depend on run order), nothing open, and nothing finished
+    // in the last two days (which puts the card in its `done` state, with no
+    // Start). The helper says why each one matters.
     await page.goto("/programs")
-    await page.evaluate(async () => {
-      // Clear BOTH lists. Leftover finished programs from a previous test would
-      // otherwise lengthen the page and make the height assertion depend on run
-      // order rather than on the layout it is meant to measure.
-      for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-        await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      }
-      for (const e of await (await fetch("/api/programs/enrollments?past=1")).json()) {
-        await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-      }
-
-      /**
-       * AND THE WORKOUTS, WHICH CLEARING ENROLLMENTS DOES NOT TOUCH.
-       *
-       * This reset cleared both enrollment lists and stopped there, so a test
-       * still started with whatever workout the one before it had left. Two
-       * ways that bites, and the second is the one that cost an evening:
-       *
-       *   an OPEN workout      refuses every start in the test that follows
-       *   a FINISHED one dated today puts the card into its `done` state, which
-       *                        deliberately offers "See today's workout" and no
-       *                        Start at all
-       *
-       * `/api/workouts/{id}` only discards an OPEN workout — it answers 400,
-       * "That workout is not open any more", for a finished one — so the
-       * finished rows go through the route History uses. `recentlyFinished` is
-       * the server's own answer to "what would put the card in `done`", which
-       * makes it the right thing to ask rather than a date comparison here.
-       */
-      const live = await (await fetch("/api/workouts/live")).json()
-      if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-      /**
-       * DRAINED, not read once. `recentlyFinished` is what the CARD needs to
-       * choose its state, so it is free to report only the latest — and a
-       * single pass over it then leaves the account in `done` with an older
-       * finished workout still there. Measured: two finished workouts planted,
-       * one pass, and the page still had no "Start a workout now" for the test
-       * after it. Ask again until the answer is empty.
-       */
-      for (let pass = 0; pass < 12; pass++) {
-        const facts = await (await fetch("/api/programs/today")).json()
-        const done = facts.recentlyFinished ?? []
-        if (done.length === 0) break
-        for (const d of done) {
-          await fetch(`/api/health/workout?id=${d.workoutId}`, { method: "DELETE" })
-        }
-      }
-    })
+    await resetTraining(page)
   })
 
   test("the page fits a phone and never scrolls sideways", async ({ page }) => {

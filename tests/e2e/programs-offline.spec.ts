@@ -12,11 +12,10 @@
  * what stops a flaky connection turning three sets into five.
  */
 
-import { test, expect } from "@playwright/test"
-import { guardTrainingAccount } from "./helpers/training.helper"
+import { test, expect } from "./fixtures/test"
+import { guardTrainingAccount, resetAndEnroll } from "./helpers/training.helper"
 
-test.describe.configure({ mode: "serial" })
-/** Refuses to run as anybody but the training account — see the helper. */
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 
@@ -27,22 +26,10 @@ test("sets ticked with no connection are kept and sent when it comes back", asyn
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto("/programs")
-
-  await page.evaluate(async () => {
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const d = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of d.logs ?? []) await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-    await fetch("/api/programs/enrollments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" }),
-    })
-  })
+  // The worker's own account (tests/e2e/fixtures/test.ts), emptied and given
+  // one program: whichever training test ran on it before this one left
+  // whatever it left.
+  await resetAndEnroll(page)
 
   await page.reload({ waitUntil: "networkidle" })
   await page.getByTestId("start-workout").click()
@@ -87,13 +74,4 @@ test("sets ticked with no connection are kept and sent when it comes back", asyn
 
   expect(saved.workouts, "one workout, not one per attempt").toBe(1)
   expect(saved.sets, "both sets arrived, exactly once each").toEqual([1, 2])
-
-  await page.evaluate(async () => {
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-  })
 })

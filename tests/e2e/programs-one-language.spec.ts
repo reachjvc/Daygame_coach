@@ -12,17 +12,18 @@
  * `#e63946`, and a bordered button hovering red reads as a warning rather than
  * as something you may press.
  *
- * IN THE `training` PROJECT AND IGNORED BY `chromium`. The chromium project
- * matches every `*.spec.ts` it is not told to ignore, so without both edits
- * this runs in parallel against the one shared training account and corrupts
- * the specs that are wiping it clean.
+ * ON THE WORKER'S OWN ACCOUNT (tests/e2e/fixtures/test.ts), reset and enrolled
+ * before EVERY test. It used to enrol once in `beforeAll` and run serially,
+ * which hid an order dependence: the live-screen test ends by emptying the
+ * account, so any test after it measured the EMPTY Today (two oranges, not
+ * one). Now the tests can run in any order, on any worker.
  */
 
-import { test, expect, type Browser, type Page } from "@playwright/test"
-import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
+import { PHONE, resetAndEnroll } from "./helpers/training.helper"
 
 test.use({ viewport: PHONE, hasTouch: true })
-test.describe.configure({ mode: "serial" })
 
 /** The one orange, as the stylesheet declares it. */
 const ORANGE = "rgb(255, 107, 53)"
@@ -159,26 +160,13 @@ async function openTab(page: Page, tab: "today" | "history" | "progress") {
 }
 
 /**
- * A page from `browser.newPage()` is on `about:blank`, and both helpers run
- * relative `fetch`es inside the page — which is "Failed to parse URL from
- * /api/workouts/live" until something has actually loaded from the origin.
+ * One program running and nothing open. The page has to be on the app's origin
+ * first: the reset runs relative `fetch`es inside it, which are "Failed to
+ * parse URL" on `about:blank`.
  */
-async function onTheApp(browser: Browser) {
-  const page = await browser.newPage()
+test.beforeEach(async ({ page }) => {
   await page.goto("/programs", { waitUntil: "domcontentloaded" })
-  return page
-}
-
-test.beforeAll(async ({ browser }) => {
-  const page = await onTheApp(browser)
   await resetAndEnroll(page)
-  await page.close()
-})
-
-test.afterAll(async ({ browser }) => {
-  const page = await onTheApp(browser)
-  await cleanUp(page)
-  await page.close()
 })
 
 test("Today, History and Progress: every control is 44px and no text is under 12px", async ({
@@ -277,39 +265,35 @@ test("the live screen: every control is 44px, and only the caption row is 11px",
   await page.waitForURL(/\/programs\/live/)
   await expect(page.getByTestId("live-column")).toBeVisible({ timeout: 30000 })
 
-  try {
-    const small = (await controls(page)).filter((c) => c.height < FLOOR)
-    expect(small.map((c) => `<${c.tag}> "${c.label}" is ${c.height}px`)).toEqual([])
+  const small = (await controls(page)).filter((c) => c.height < FLOOR)
+  expect(small.map((c) => `<${c.tag}> "${c.label}" is ${c.height}px`)).toEqual([])
 
-    /**
-     * The set grid's column captions — SET · PREVIOUS · KG · REPS — are the one
-     * place in all of training allowed under 12 px, because they are four words
-     * that never change sitting directly above the numbers they label.
-     */
-    const under12 = await tinyText(page)
-    const notCaption = await page.$$eval("body *", (nodes) =>
-      nodes
-        .filter((el) => el.getRootNode() === document)
-        .filter((el) => {
-          const size = parseFloat(window.getComputedStyle(el).fontSize)
-          if (size >= 12) return false
-          const box = el.getBoundingClientRect()
-          if (box.width === 0 || box.height === 0) return false
-          const hasText = [...el.childNodes].some(
-            (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim().length > 0
-          )
-          return hasText && !el.closest('[data-testid^="lift-"]')
-        })
-        .map((el) => (el.textContent ?? "").trim().slice(0, 40))
-    )
-    expect(
-      notCaption,
-      `under 12px and not a column caption: ${notCaption.join(" | ")} (all: ${under12.length})`
-    ).toEqual([])
+  /**
+   * The set grid's column captions — SET · PREVIOUS · KG · REPS — are the one
+   * place in all of training allowed under 12 px, because they are four words
+   * that never change sitting directly above the numbers they label.
+   */
+  const under12 = await tinyText(page)
+  const notCaption = await page.$$eval("body *", (nodes) =>
+    nodes
+      .filter((el) => el.getRootNode() === document)
+      .filter((el) => {
+        const size = parseFloat(window.getComputedStyle(el).fontSize)
+        if (size >= 12) return false
+        const box = el.getBoundingClientRect()
+        if (box.width === 0 || box.height === 0) return false
+        const hasText = [...el.childNodes].some(
+          (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim().length > 0
+        )
+        return hasText && !el.closest('[data-testid^="lift-"]')
+      })
+      .map((el) => (el.textContent ?? "").trim().slice(0, 40))
+  )
+  expect(
+    notCaption,
+    `under 12px and not a column caption: ${notCaption.join(" | ")} (all: ${under12.length})`
+  ).toEqual([])
 
-    const orange = await oranges(page)
-    expect(orange, `the live screen's one orange is Finish: ${orange.join(" | ")}`).toHaveLength(1)
-  } finally {
-    await cleanUp(page)
-  }
+  const orange = await oranges(page)
+  expect(orange, `the live screen's one orange is Finish: ${orange.join(" | ")}`).toHaveLength(1)
 })

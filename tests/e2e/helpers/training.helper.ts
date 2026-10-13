@@ -1,11 +1,18 @@
 /**
- * ONE ACCOUNT, AND EVERY TRAINING SPEC LEAVES IT AS IT FOUND IT.
+ * EVERY TRAINING TEST STARTS FROM A KNOWN STATE.
  *
- * These two functions lived inside `programs-live-workout.spec.ts`, and the
+ * These functions lived inside `programs-live-workout.spec.ts`, and the
  * second browser spec for this screen needed exactly the same pair. Two copies
  * of "clean the account" is two chances to clean it differently — and a spec
  * that half-cleans leaves the next one starting from a workout it did not
  * open, failing for a reason that has nothing to do with the code under test.
+ *
+ * SINCE PHASE 8 the account is the worker's own (tests/e2e/fixtures/test.ts),
+ * so nothing here protects another FILE any more. What it still protects is the
+ * next TEST: one worker runs its tests one after another on one account, and
+ * with `fullyParallel` the test before this one may be from any training file.
+ * So a test resets at its start (`resetTraining`, `resetAndEnroll`) rather than
+ * trusting whoever ran before it to have tidied up.
  *
  * Everything runs IN THE PAGE, through the real routes with the real session,
  * rather than around them through a service key. A fixture that writes rows the
@@ -78,15 +85,23 @@ export function guardTrainingAccount(): void {
 export const PHONE = { width: 390, height: 844 }
 
 /**
- * One program, no workout open, no history.
+ * No program, no workout open, nothing finished in the last two days, no ended
+ * programs. The page must already be on the app's origin (the routes are
+ * called relative to it).
  *
  * `permanent=1` follows the soft delete: an ended enrollment still answers
- * "what are you running", so leaving it behind makes the next spec's Start
- * ambiguous.
+ * "what are you running", so leaving it behind makes the next test's Start
+ * ambiguous. ENDED ones from earlier tests go too: starting a second program
+ * of one discipline ends the first, and a past program left by the test before
+ * this one lengthens the page and fails "nothing was archived" on its own.
+ *
+ * IT CHECKS ITS OWN WORK, at the end, by asking the same routes the screens
+ * read. A reset that quietly half-ran is a test that fails three minutes later
+ * on a Start button the product had correctly taken away.
  */
-export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Promise<void> {
+export async function resetTraining(page: Page): Promise<void> {
   refuseUnlessTrainingAccount()
-  await page.evaluate(async (unitSystem) => {
+  const left = await page.evaluate(async () => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
     for (const e of await (await fetch("/api/programs/enrollments")).json()) {
@@ -95,6 +110,9 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
         await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
       }
       await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
+      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
+    }
+    for (const e of await (await fetch("/api/programs/enrollments?past=1")).json()) {
       await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
     }
     /**
@@ -126,9 +144,11 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
      * and answers 400 "That workout is not open any more". The route that can
      * is the one History uses, which `cleanUp` below has always used.
      *
-     * Safe on this account: `/api/workouts/history?days=400` returns exactly
-     * one workout, so there is no seeded year here to destroy — the fixture
-     * that warning in `cleanUp` is about belongs to a different account.
+     * DRAINED, not read once. `recentlyFinished` is what the CARD needs to
+     * choose its state, and the server caps it, so a single pass can leave an
+     * older finished workout still putting the card in `done`.
+     * `mobile-training.spec.ts` measured exactly that with its own copy of
+     * this loop, which this one now replaces.
      */
     /**
      * LOUDLY, BOTH WAYS — because the whole point of this block is that a row
@@ -142,40 +162,75 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
      * next test waits out a 180-second timeout for a Start button, which is
      * where this started.
      */
-    const todayRes = await fetch("/api/programs/today")
-    if (!todayRes.ok) {
-      throw new Error(`reset could not read /api/programs/today: ${todayRes.status}`)
-    }
-    const facts = await todayRes.json()
-    if (!Array.isArray(facts.recentlyFinished)) {
-      throw new Error(
-        "reset expected `recentlyFinished` from /api/programs/today and got " +
-          `${JSON.stringify(Object.keys(facts))}. Without it this reset cannot clear a ` +
-          "finished workout, and the card will sit in its `done` state with no Start button."
-      )
-    }
-    for (const done of facts.recentlyFinished) {
-      const del = await fetch(`/api/health/workout?id=${done.workoutId}`, { method: "DELETE" })
-      if (!del.ok) {
+    const recentlyFinished = async (): Promise<{ workoutId: string }[]> => {
+      const todayRes = await fetch("/api/programs/today")
+      if (!todayRes.ok) {
+        throw new Error(`reset could not read /api/programs/today: ${todayRes.status}`)
+      }
+      const facts = await todayRes.json()
+      if (!Array.isArray(facts.recentlyFinished)) {
         throw new Error(
-          `reset could not delete the finished workout ${done.workoutId}: ` +
-            `${del.status} ${await del.text()}. It will remove the Start button for every ` +
-            "test after this one."
+          "reset expected `recentlyFinished` from /api/programs/today and got " +
+            `${JSON.stringify(Object.keys(facts))}. Without it this reset cannot clear a ` +
+            "finished workout, and the card will sit in its `done` state with no Start button."
         )
+      }
+      return facts.recentlyFinished
+    }
+    for (let pass = 0; pass < 12; pass++) {
+      const done = await recentlyFinished()
+      if (done.length === 0) break
+      for (const d of done) {
+        const del = await fetch(`/api/health/workout?id=${d.workoutId}`, { method: "DELETE" })
+        if (!del.ok) {
+          throw new Error(
+            `reset could not delete the finished workout ${d.workoutId}: ` +
+              `${del.status} ${await del.text()}. It will remove the Start button for every ` +
+              "test after this one."
+          )
+        }
       }
     }
 
-    await fetch("/api/programs/enrollments", {
+    // THE POSTCONDITION, asked of the routes the screens read.
+    const problems: string[] = []
+    if (await (await fetch("/api/workouts/live")).json()) problems.push("a workout is still open")
+    const active = (await (await fetch("/api/programs/enrollments")).json()) as unknown[]
+    if (active.length) problems.push(`${active.length} program(s) still running`)
+    const past = (await (await fetch("/api/programs/enrollments?past=1")).json()) as unknown[]
+    if (past.length) problems.push(`${past.length} ended program(s) still listed`)
+    const finished = await recentlyFinished()
+    if (finished.length) problems.push(`${finished.length} workout(s) finished in the last 48 hours`)
+    return problems
+  })
+  if (left.length) {
+    throw new Error(`the training reset did not leave the account empty: ${left.join("; ")}`)
+  }
+}
+
+/**
+ * One program — StrongLifts 5×5 at beginner, in `unit` — no workout open, no
+ * recent history. `resetTraining`, then the enrolment, which is refused loudly:
+ * a test that thinks a program is running when none is fails on a screen it
+ * did not mean to measure.
+ */
+export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Promise<void> {
+  await resetTraining(page)
+  const refused = await page.evaluate(async (unitSystem) => {
+    const res = await fetch("/api/programs/enrollments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem }),
     })
+    return res.ok ? null : `${res.status} ${await res.text()}`
   }, unit)
+  if (refused) throw new Error(`could not enrol in StrongLifts 5×5 after the reset: ${refused}`)
 }
 
 /**
- * The same, minus the enrolment. Called in `afterEach` and allowed to fail: a
- * test that has already failed must not be reported as a cleanup error.
+ * What one test did, undone: the open workout, the programs, and — given
+ * `since` — the workouts it finished. Called in `afterEach` and allowed to
+ * fail: a test that has already failed must not be reported as a cleanup error.
  *
  * `since` IS WHAT MAKES THESE SPECS RE-RUNNABLE. Cleaning up only the OPEN
  * workout left every FINISHED one behind, and a finished workout dated today
@@ -188,11 +243,14 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
  * deliberately taken away.
  *
  * A workout started at or after the instant the test began is one THIS test
- * opened — the project runs a single worker on one account, so there is
- * nothing else it could be. The seeded training year is months of workouts and
- * none of them can match, which is the property that makes this safe: an
- * earlier version of this cleanup deleted the account's whole history and
- * silently destroyed the fixture the rest of the suite is measured against.
+ * opened — a worker runs one test at a time on an account nobody else uses
+ * (Phase 8), so there is nothing else it could be. Older history, including a
+ * test's deliberately PAST-dated seed, cannot match. (An earlier version of
+ * this cleanup deleted a shared account's whole history and with it the
+ * fixture the rest of the suite was measured against.)
+ *
+ * Since `resetTraining` runs at the start of every test, this is a courtesy to
+ * the next test in the worker rather than what it depends on.
  */
 /**
  * IF YOU ARE HERE BECAUSE A TEST WAITED MINUTES FOR `start-workout`, READ THIS.
@@ -201,9 +259,9 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
  * screen, and `getByTestId("start-workout")` never appears, so the test times
  * out after 180 or 240 seconds on a click. The card is in its `done` state and
  * is showing "See today's workout" instead — correctly, because a workout
- * finished TODAY is still on the account. `resetAndEnroll` above does not clear
- * that: it clears the open workout and the current enrollment's logs, and a
- * finished workout from an EARLIER FILE is neither.
+ * finished TODAY is still on the account. `resetAndEnroll` above did not clear
+ * that: it cleared the open workout and the current enrollment's logs, and a
+ * finished workout from an EARLIER FILE is neither. (It does now — below.)
  *
  * The tell that separates it from a product bug, visible in the saved snapshot:
  * the card says "See today's workout" while its own History underneath says

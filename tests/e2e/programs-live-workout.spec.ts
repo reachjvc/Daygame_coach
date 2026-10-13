@@ -17,8 +17,8 @@
  * the end is still there after it saves.
  */
 
-import { test, expect, type Page } from "@playwright/test"
-import { TRAINING_STATE } from "../../playwright.config"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { PHONE, cleanUp, resetAndEnroll, guardTrainingAccount } from "./helpers/training.helper"
 import { networkQuiet } from "./helpers/settle"
 
@@ -36,11 +36,13 @@ import { networkQuiet } from "./helpers/settle"
  * THE ALTERNATIVE DESTROYED THE ACCOUNT'S HISTORY, and it did it silently. To
  * prove "a first is not a best" a test needs a lift with nothing behind it, and
  * the obvious way to get one is to delete every workout on the account first.
- * That is what an earlier version of these two tests did — and this account
- * carries the seeded training year (roughly 150 sessions, written by
- * `npm run seed:training`) that History, Progress, the month paging and the
- * all-time bests are measured against. One run of this file wiped all of it.
- * The tests passed; the fixture the rest of the suite depends on was gone.
+ * That is what an earlier version of these two tests did — and the shared
+ * training account it ran on carried a seeded training year (roughly 150
+ * sessions) that History, Progress, the month paging and the all-time bests
+ * were measured against. One run of this file wiped all of it. The tests
+ * passed; the fixture the rest of the suite depended on was gone. Each worker
+ * has an account of its own now, and a minted name still beats a wipe: it
+ * deletes nothing the test did not make.
  *
  * A name nobody has lifted is a first with nothing deleted. Every run mints its
  * own, so the same test can prove BOTH halves in one session: the first finish
@@ -62,16 +64,16 @@ async function addOwnLift(page: Page, name: string): Promise<void> {
 }
 
 /**
- * ONE AT A TIME, ON PURPOSE.
+ * NOT SERIAL ANY MORE, and that is safe for a reason worth writing down.
  *
- * These share the one test account, and the app allows exactly one workout open
- * per person — that is the rule being tested. Run in parallel they delete each
- * other's workout between the start and the first set, and fail with a null
- * live workout that has nothing to do with the code. `fullyParallel` is on for
- * the suite, so the file has to say so itself.
+ * The app allows exactly one workout open per person — that is the rule being
+ * tested — and these used to share one account, so in parallel they deleted
+ * each other's workout between the start and the first set. Since Phase 8 each
+ * worker has an account of its own (tests/e2e/fixtures/test.ts) and runs one
+ * test at a time on it; every test below resets that account in `beforeEach`,
+ * so none depends on another having run first.
  */
-test.describe.configure({ mode: "serial" })
-/** Refuses to run as anybody but the training account — see the helper. */
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 
@@ -79,9 +81,9 @@ guardTrainingAccount()
  * When the running test began, a minute of slack back.
  *
  * Everything the account gained after this instant is this test's own, because
- * the `training` project runs one worker on one account — which is what lets
- * the cleanup remove a FINISHED workout without going anywhere near the seeded
- * training year.
+ * a worker runs one test at a time on an account nobody else uses — which is
+ * what lets the cleanup remove a FINISHED workout without touching older
+ * history.
  */
 let startedAt = new Date().toISOString()
 
@@ -618,7 +620,7 @@ test.describe("live workout", () => {
    * "duplicate key value violates unique constraint" on the card — every tap,
    * for ever, with nothing a person could do about it.
    */
-  test("finished on another device, Start on this one still works", async ({ page, browser }) => {
+  test("finished on another device, Start on this one still works", async ({ page, browser, account }) => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
@@ -626,13 +628,12 @@ test.describe("live workout", () => {
 
     // The other device: a second browser context on the same account.
     /**
-    * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim. This
-    * said `.auth/user.json` and passed only while the training projects
-    * shared that account; once they moved to their own it became a second
-    * browser signed in as a DIFFERENT PERSON, which proves nothing about
-    * what a phone and a laptop see.
+    * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim: this
+    * worker's own account, signed in a second time from its saved state. It
+    * once said `.auth/user.json`, a DIFFERENT PERSON, which proves nothing
+    * about what a phone and a laptop see.
     */
-    const other = await browser.newContext({ storageState: TRAINING_STATE })
+    const other = await browser.newContext({ storageState: account.storageState })
     const otherPage = await other.newPage()
     await otherPage.goto("/programs")
     await otherPage.evaluate(async () => {
@@ -694,7 +695,7 @@ test.describe("live workout", () => {
    * which feeds `refuseWrite` those exact codes and asserts the wording never
    * carries them.
    *
-   * WHY IT IS IN THIS FILE AND NOT ITS OWN. This file runs in all four
+   * WHY IT IS IN THIS FILE AND NOT ITS OWN. This file ran in all four
    * training projects — desktop Chromium, iPhone Safari, Android Chrome,
    * Firefox — and a phone is the device this happens on. Nothing in a browser
    * had ever driven any of it, so the reported bug's only guard was a unit
@@ -703,6 +704,7 @@ test.describe("live workout", () => {
   test("thrown away on another device, and the screen says so in its own words", async ({
     page,
     browser,
+    account,
   }) => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
@@ -718,11 +720,11 @@ test.describe("live workout", () => {
     expect((await firstSaved).ok(), "the set before the discard should land").toBe(true)
 
     /**
-     * The other device. `TRAINING_STATE` and not `.auth/user.json`: the same
+     * The other device: this worker's account in a second browser. The same
      * ACCOUNT on a second browser is the claim, and a different person's
      * browser would prove nothing about a phone and a laptop.
      */
-    const other = await browser.newContext({ storageState: TRAINING_STATE })
+    const other = await browser.newContext({ storageState: account.storageState })
     const otherPage = await other.newPage()
     await otherPage.goto("/programs")
     const thrownAway = await otherPage.evaluate(async () => {

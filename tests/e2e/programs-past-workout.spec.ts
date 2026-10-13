@@ -10,17 +10,18 @@
  * filed under Thursday, so a Tuesday workout was invisible on Tuesday and
  * Thursday claimed one that never happened.
  *
- * In the `training` project: it starts and deletes workouts on the shared
- * account, at 390px, one worker.
+ * It starts and deletes workouts at 390px on the worker's own account
+ * (tests/e2e/fixtures/test.ts), reset before every test — so not serial, and
+ * no test depends on another having run first.
  */
 
-import { test, expect, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout } from "./helpers/seedWorkout"
-import { guardTrainingAccount } from "./helpers/training.helper"
+import { guardTrainingAccount, resetAndEnroll } from "./helpers/training.helper"
 
-test.describe.configure({ mode: "serial" })
-/** Refuses to run as anybody but the training account — see the helper. */
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 
@@ -35,36 +36,11 @@ guardTrainingAccount()
  */
 async function reset(page: Page): Promise<void> {
   await page.goto("/programs")
+  // Empties the account (open workout, programs, ended programs, anything
+  // finished in the last two days) and enrols, each step checked.
+  await resetAndEnroll(page)
   const out = await page.evaluate(async () => {
     const problems: string[] = []
-    const check = async (res: Response, what: string) => {
-      if (!res.ok) problems.push(`${what}: HTTP ${res.status}`)
-      return res
-    }
-
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await check(await fetch(`/api/workouts/${live.id}`, { method: "DELETE" }), "discard open workout")
-
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const detail = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of detail.logs ?? []) {
-        await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      }
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await check(
-        await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" }),
-        `delete enrollment ${e.id}`
-      )
-    }
-
-    await check(
-      await fetch("/api/programs/enrollments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" }),
-      }),
-      "enrol"
-    )
 
     // THE POSTCONDITION, not the requests. Exactly one program, and it began
     // moments ago — which is what makes "two days ago" backdated at all.
@@ -97,50 +73,15 @@ test.beforeEach(async ({ page }) => {
 })
 
 /**
- * EVERY WORKOUT THIS FILE WRITES, REMOVED — which `reset()` does not do.
- *
- * `reset` clears enrolments and starts a fresh one; it has never deleted
- * finished workouts. Three tests here seed one, and all three left it on the
- * shared account. A 2-set, 60-minute session dated today puts the Tracking
- * card into its "Trained today" state, which is exactly how the width test
- * added on 2026-09-27 turned `dashboard-training-card` red — "names today's
- * session and its lifts" got "Trained today · Workout · 60 min · 2 sets" —
- * and left the account broken for every run afterwards until it was cleared
- * by hand.
- *
- * Not `deleteWorkoutsNamed`: one of the three seeds a RUN, which has no sets,
- * so no exercise prefix can find it. By date, which catches all of them.
- *
- * In `afterEach` rather than at the end of each test, because a test that
- * fails half way through must still leave the account as it found it — one
- * red test making the next three red is how a single defect reads as a
- * collapse.
+ * NO `afterEach` ANY MORE. This file used to delete every workout it wrote, and
+ * assert it had, because `reset()` cleared enrolments and never finished
+ * workouts: a session dated today left on the SHARED account put the Tracking
+ * card into "Trained today" and turned `dashboard-training-card` red for every
+ * run afterwards. The account is the worker's own now, and `resetAndEnroll`
+ * clears anything finished in the last two days at the start of every test, in
+ * every training file — so the next test is protected where it starts, not by
+ * whoever ran before it remembering to tidy.
  */
-test.afterEach(async ({ page }) => {
-  /**
-   * IT FAILS LOUDLY. The first version ended `.catch(() => {})`, which hides
-   * exactly the thing it was written to stop — a cleanup that did not clean —
-   * and `CLAUDE.md` says never to add a silent fallback. A reviewer caught it
-   * within the hour.
-   *
-   * THE OPEN ONE FIRST. `GET /api/health/workout` reads FINISHED workouts, so
-   * a test that fails after opening a past workout leaves a live row this
-   * cannot see, and the next spec's Start is refused by it.
-   */
-  const left = await page.evaluate(async () => {
-    const live = (await (await fetch("/api/workouts/live")).json()) as { id: string } | null
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    const logs = (await (await fetch("/api/health/workout?days=3")).json()) as { id: string }[]
-    for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
-    const after = (await (await fetch("/api/health/workout?days=3")).json()) as { id: string }[]
-    const open = await (await fetch("/api/workouts/live")).json()
-    return { finished: after.length, open: Boolean(open) }
-  })
-  expect(left, "this spec left rows on the shared training account").toEqual({
-    finished: 0,
-    open: false,
-  })
-})
 
 test("History opens the live screen at the time you choose, and it knows it is the past", async ({
   page,

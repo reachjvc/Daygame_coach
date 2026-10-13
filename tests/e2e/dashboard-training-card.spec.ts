@@ -15,72 +15,41 @@
  *   - it says the right thing after you have trained, rather than "Start"
  *   - a failed door says so, and offers no Start it cannot honour
  *
- * In the `training` project: it starts and ends programs on the shared account.
+ * It starts and ends programs on the worker's own account
+ * (tests/e2e/fixtures/test.ts), and every test resets that account first.
  */
 
-import { test, expect, type Page } from "@playwright/test"
-import { TRAINING_STATE } from "../../playwright.config"
-import { guardTrainingAccount } from "./helpers/training.helper"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
+import { guardTrainingAccount, resetAndEnroll, resetTraining } from "./helpers/training.helper"
 
 /**
- * SERIAL, AND THE COST OF IT IS KNOWN AND ACCEPTED — which is worth writing
- * down, because the cost is real and somebody will meet it.
+ * NOT SERIAL ANY MORE, and the case that kept it here is gone.
  *
- * What serial mode costs: it skips every remaining test in this file the moment
- * one fails. On 2026-09-24 another session proved what that hides —
- * `blackbox.spec.ts` aborted after its first failure in every bad run, 4 to 21
- * tests "did not run", so each run gave one data point about one test, and a
- * fault failing HALF its runs looked like five different broken tests over six
- * runs while the code was blamed and exonerated in turn. A file that cannot
- * fail twice in one run cannot show you a 1-in-2 fault. Measured here too: with
- * a failure planted in the first test, dropping serial gives "1 failed, 6
- * passed" where serial gives "1 failed, 6 did not run".
- *
- * Why it stays anyway. Dropping it looked safe — the `training` project sets
- * `fullyParallel: false` and `workers: 1`, so nothing here runs beside anything
- * else, and every test below opens with its own `reset()`. But this file is kept
- * out of the parallel `chromium` project by one `testIgnore` entry in
- * `playwright.config.ts`, a shared file that was swept into another session's
- * commit twice in one day. Without serial, the only thing standing between
- * these six tests and running concurrently against ONE training account is that
- * entry. Losing samples on a failure is a diagnosis problem; six workers
- * deleting each other's enrollments mid-assertion is a corruption problem that
- * looks like a product bug.
- *
- * `tests/unit/e2e-isolation.test.ts` enforces this, and it caught the change
- * that removed it. The guard was right and the reasoning above was incomplete:
- * it weighed what serial does inside this project and not what protects the
- * file if its project assignment ever changes.
+ * Serial skips every remaining test the moment one fails — with a failure
+ * planted in the first test, "1 failed, 6 did not run" where dropping it gives
+ * "1 failed, 6 passed", and a file that cannot fail twice in one run cannot
+ * show you a 1-in-2 fault. It stayed anyway because one `testIgnore` entry in a
+ * shared config was all that kept six tests from running concurrently against
+ * ONE training account. Since Phase 8 there is no shared account to corrupt:
+ * each worker has its own, and every test below starts with its own `reset()`.
  */
-test.describe.configure({ mode: "serial" })
-/** Refuses to run as anybody but the training account — see the helper. */
+/** Refuses to run as anybody but a throwaway fixture account — see the helper. */
 guardTrainingAccount()
 
 
 const CARD = "training-card"
 
-/** Nothing running, nothing open, and optionally one program enrolled. */
+/**
+ * Nothing running, nothing open, nothing finished today, and optionally one
+ * program enrolled. "Nothing finished today" is the part this file's own reset
+ * used to miss: a workout another test finished put the card into "Trained
+ * today", and "names today's session" failed on a missing "Squat".
+ */
 async function reset(page: Page, enrol: boolean): Promise<void> {
   await page.goto("/programs")
-  await page.evaluate(async (withProgram) => {
-    const live = await (await fetch("/api/workouts/live")).json()
-    if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
-    for (const e of await (await fetch("/api/programs/enrollments")).json()) {
-      const detail = await (await fetch(`/api/programs/enrollments/${e.id}`)).json()
-      for (const l of detail.logs ?? []) {
-        await fetch(`/api/programs/enrollments/${e.id}/log/${l.id}`, { method: "DELETE" })
-      }
-      await fetch(`/api/programs/enrollments/${e.id}`, { method: "DELETE" })
-      await fetch(`/api/programs/enrollments/${e.id}?permanent=1`, { method: "DELETE" })
-    }
-    if (withProgram) {
-      await fetch("/api/programs/enrollments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ programId: "stronglifts-5x5", level: "beginner", unitSystem: "kg" }),
-      })
-    }
-  }, enrol)
+  if (enrol) await resetAndEnroll(page)
+  else await resetTraining(page)
 }
 
 async function openTracking(page: Page): Promise<void> {
@@ -89,7 +58,7 @@ async function openTracking(page: Page): Promise<void> {
 }
 
 test.beforeEach(() => {
-  // The door waits on the real programs API, and this project runs one worker.
+  // The door waits on the real programs API, on a dev server other workers share.
   test.setTimeout(180000)
 })
 
@@ -172,19 +141,6 @@ test("when the door cannot be loaded the card says so and offers no Start", asyn
   await expect(page.getByTestId(CARD)).not.toContainText(/No program/i)
 })
 
-test.afterAll(async ({ browser }) => {
-  /**
-  * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim. This
-  * said `.auth/user.json` and passed only while the training projects
-  * shared that account; once they moved to their own it became a second
-  * browser signed in as a DIFFERENT PERSON, which proves nothing about
-  * what a phone and a laptop see.
-  */
-  const page = await browser.newPage({ storageState: TRAINING_STATE })
-  await reset(page, false)
-  await page.close()
-})
-
 test("the two doors name the same session and the same other program", async ({ page }) => {
   /**
    * THE WALK'S §2 DISAGREEMENT, from both ends at once.
@@ -211,41 +167,37 @@ test("the two doors name the same session and the same other program", async ({ 
   })
   expect(second.status, "premise: a second discipline must start alongside the first").toBe(201)
 
-  try {
-    await openTracking(page)
-    const card = page.getByTestId(CARD)
-    await expect(card).toBeVisible({ timeout: 30000 })
+  await openTracking(page)
+  const card = page.getByTestId(CARD)
+  await expect(card).toBeVisible({ timeout: 30000 })
 
-    // Which program the card decided to be about, and which it names as the other.
-    const chosen = card.getByTestId("training-card-program")
-    await expect(chosen).toBeVisible()
-    const chosenHref = (await chosen.getAttribute("href")) ?? ""
-    const chosenId = new URL(chosenHref, "http://x").searchParams.get("program")
-    expect(chosenId, "the card names a program, so its link carries that program").toBeTruthy()
+  // Which program the card decided to be about, and which it names as the other.
+  const chosen = card.getByTestId("training-card-program")
+  await expect(chosen).toBeVisible()
+  const chosenHref = (await chosen.getAttribute("href")) ?? ""
+  const chosenId = new URL(chosenHref, "http://x").searchParams.get("program")
+  expect(chosenId, "the card names a program, so its link carries that program").toBeTruthy()
 
-    const other = card.locator('[data-testid^="also-running-"]').first()
-    await expect(other, "two programs running, so the card names the other one").toBeVisible()
-    const otherId = (await other.getAttribute("data-testid"))!.replace("also-running-", "")
-    expect(otherId).not.toBe(chosenId)
+  const other = card.locator('[data-testid^="also-running-"]').first()
+  await expect(other, "two programs running, so the card names the other one").toBeVisible()
+  const otherId = (await other.getAttribute("data-testid"))!.replace("also-running-", "")
+  expect(otherId).not.toBe(chosenId)
 
-    /**
-     * THE OTHER DOOR. `/programs` lists both, and the ids are the same two —
-     * this is the assertion that the two surfaces are reading one answer rather
-     * than each working it out.
-     */
-    await page.goto("/programs", { waitUntil: "networkidle" })
-    await expect(page.getByTestId(`running-${chosenId}`)).toBeVisible({ timeout: 30000 })
-    await expect(page.getByTestId(`running-${otherId}`)).toBeVisible()
+  /**
+   * THE OTHER DOOR. `/programs` lists both, and the ids are the same two —
+   * this is the assertion that the two surfaces are reading one answer rather
+   * than each working it out.
+   */
+  await page.goto("/programs", { waitUntil: "networkidle" })
+  await expect(page.getByTestId(`running-${chosenId}`)).toBeVisible({ timeout: 30000 })
+  await expect(page.getByTestId(`running-${otherId}`)).toBeVisible()
 
-    /**
-     * AND THE DEEP LINK LANDS ON THE SESSION, not back on the inventory. The
-     * card's label row went to `/programs` full stop, so tapping the name of the
-     * program it had just told you about asked you to pick it again.
-     */
-    await page.goto(chosenHref, { waitUntil: "networkidle" })
-    await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 30000 })
-    await expect(page).toHaveURL(new RegExp(`program=${chosenId}`))
-  } finally {
-    await reset(page, false)
-  }
+  /**
+   * AND THE DEEP LINK LANDS ON THE SESSION, not back on the inventory. The
+   * card's label row went to `/programs` full stop, so tapping the name of the
+   * program it had just told you about asked you to pick it again.
+   */
+  await page.goto(chosenHref, { waitUntil: "networkidle" })
+  await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 30000 })
+  await expect(page).toHaveURL(new RegExp(`program=${chosenId}`))
 })
