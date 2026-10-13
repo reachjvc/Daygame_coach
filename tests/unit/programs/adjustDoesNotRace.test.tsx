@@ -72,11 +72,15 @@ describe("ticking faster than the round trip", () => {
      * race. A tap is an event with a render after it, which is why the
      * browser reproduced this and the first version of this test did not.
      */
+    // Not awaited between taps — that is the race — but awaited before the test
+    // ends: a response landing after the test's DOM is torn down throws
+    // "window is not defined" from React, and that failed the suite under load.
+    const inFlight: Promise<unknown>[] = []
     for (const i of [0, 1, 2]) {
       await act(async () => {
         // Exactly what the screen does: read the current list, append, send.
         const now = result.current.workout?.adjustments.blocksDone ?? []
-        void result.current.adjust({ blocksDone: [...now, i].sort((a, b) => a - b) })
+        inFlight.push(result.current.adjust({ blocksDone: [...now, i].sort((a, b) => a - b) }))
       })
     }
 
@@ -85,6 +89,9 @@ describe("ticking faster than the round trip", () => {
       (sent[2] as { blocksDone: number[] }).blocksDone,
       "the third tap must carry the first two"
     ).toEqual([0, 1, 2])
+    await act(async () => {
+      await Promise.all(inFlight)
+    })
   })
 
   it("puts it back when the server refuses, so a failed tick does not stay ticked", async () => {
