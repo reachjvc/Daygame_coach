@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { SELECTORS } from './helpers/selectors'
+import { grantPurchase } from './helpers/purchase'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -10,8 +11,13 @@ const AUTH_TIMEOUT = 15000
  * One test. There were six, and every one began with
  * `test.skip(!page.url().includes('/dashboard/qa'))` — so the day the test
  * account lost access to Q&A, the whole file would have reported green having
- * checked nothing. The account can open the page (verified 2026-10-13), so a
- * redirect away from it now fails the test instead.
+ * checked nothing. A redirect away from the page now fails the test instead.
+ *
+ * Ask Coach is the subscriber's: `/dashboard/qa` sends anyone without
+ * `profiles.has_purchased` back to the dashboard, and no route in the app sets
+ * that flag (there is no purchase flow yet). So the worker's fresh account is
+ * marked paid on the test backend, as the database owner, before the page is
+ * opened — a system-only row, not something a person could do.
  *
  * The answer is stubbed because what this checks is the page — question in,
  * answer and sources out — not the model, which is slow, costs money, and says
@@ -33,15 +39,16 @@ const ANSWER = {
 }
 
 test.describe('Q&A Chat Flow', () => {
-  test.describe.configure({ mode: 'serial' })
-
+  // No serial mode: it existed for the shared account. The stub below is this
+  // page's own and is removed after each test.
   test.afterEach(async ({ page }) => {
     await page.unrouteAll({ behavior: 'ignoreErrors' })
   })
 
-  test('a question gets an answer, with the sources it came from', async ({ page }) => {
+  test('a question gets an answer, with the sources it came from', async ({ page, account }) => {
+    await grantPurchase(account.id)
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
-    // The test account can open Q&A; a redirect away is a failure, not a skip
+    // A paid account can open Q&A; a redirect away is a failure, not a skip
     await expect(page).toHaveURL(/\/dashboard\/qa/)
 
     await page.route('**/api/qa', (route) =>

@@ -1,11 +1,20 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { SELECTORS } from './helpers/selectors'
+import { grantPurchase } from './helpers/purchase'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
 test.describe('Inner Game Flow', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, account }) => {
+    /**
+     * PAID FIRST. Inner Game is the subscriber's: an account without
+     * `has_purchased` is shown a locked preview with no start button. The old
+     * shared account had been marked paid by hand; nothing in the app can mark
+     * a fresh one (no purchase flow yet), so it is set on the test backend.
+     */
+    await grantPurchase(account.id)
+
     /**
      * THIS SPEC USED TO POISON ITSELF.
      *
@@ -16,15 +25,15 @@ test.describe('Inner Game Flow', () => {
      * did not. The state is reset here rather than assumed, which is the only
      * thing that makes a test about a first-time screen repeatable.
      */
+    // Read first, as the page does: the progress row is made on the first
+    // read, and a write to an account that has none is refused with a 500
+    // (`updateProgress` in src/db/innerGameProgressRepo.ts updates zero rows
+    // and calls `.single()`) — reported, not this test's subject.
+    const read = await page.request.get('/api/inner-game/progress')
+    expect(read.status(), `could not read inner game progress: ${await read.text()}`).toBe(200)
+    const reset = await page.request.post('/api/inner-game/progress', { data: { welcomeDismissed: false } })
+    expect(reset.status(), `could not reset the welcome card: ${await reset.text()}`).toBe(200)
     await page.goto('/dashboard/inner-game', { timeout: AUTH_TIMEOUT })
-    await page.evaluate(async () => {
-      await fetch('/api/inner-game/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ welcomeDismissed: false }),
-      })
-    })
-    await page.reload({ timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
 
@@ -33,8 +42,8 @@ test.describe('Inner Game Flow', () => {
      * One test. Three of the five only asserted the card rendered, one accepted
      * a start button OR a signup link, and the two that walked the flow skipped
      * themselves when the start button was missing — so a signed-in account
-     * shown the preview would have passed. Signed in, the start button is the
-     * only right answer.
+     * shown the preview would have passed. Signed in and paid, the start
+     * button is the only right answer.
      */
     const welcomeCard = page.getByTestId(SELECTORS.innerGame.welcomeCard)
     await expect(welcomeCard).toBeVisible({ timeout: AUTH_TIMEOUT })

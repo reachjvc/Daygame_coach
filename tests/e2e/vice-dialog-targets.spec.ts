@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 
 /**
@@ -46,6 +47,10 @@ import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  * this on any spec that does either, and it caught this file the first time it
  * ran — the rule is not decoration: a route left installed by an aborted test
  * answers the next one's requests.
+ *
+ * Since Phase 8 the browser record is each test's own context and the account
+ * the worker's own, so the guard is the only reason left; it predates per-worker
+ * accounts and is not this file's to change.
  */
 test.describe.configure({ mode: "serial" })
 

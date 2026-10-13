@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures/test'
 import { SELECTORS } from '../helpers/selectors'
 import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from '../helpers/auth.helper'
 
@@ -12,8 +12,10 @@ const AUTH_TIMEOUT = 15000
  * one run that proves the same gesture works where it is actually made — in the
  * street, on a phone — instead of all thirteen desktop tests run again at
  * 390px, which is what the iPhone and Pixel projects used to do.
+ *
+ * Not serial: that kept the shared account's one active session to one test at
+ * a time. Each worker's account holds its own.
  */
-test.describe.configure({ mode: 'serial' })
 
 test.afterEach(async ({ page }) => {
   await ensureNoActiveSessionViaAPI(page)

@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { randomUUID } from 'node:crypto'
 import { SELECTORS } from './helpers/selectors'
 
@@ -29,8 +30,9 @@ async function seedReport(page: Page, isDraft: boolean, note: string): Promise<s
 }
 
 test.describe('Tracking History', () => {
-  test.describe.configure({ mode: 'serial' })
-
+  // No serial mode: it kept the shared account's reports in one order. Each
+  // worker's account is its own, and every test finds its cards by the ids it
+  // seeded, so it neither reads nor deletes a report another test made.
   const seeded: string[] = []
   test.afterEach(async ({ page }) => {
     for (const id of seeded.splice(0)) await page.request.delete(`/api/tracking/field-report/${id}`)

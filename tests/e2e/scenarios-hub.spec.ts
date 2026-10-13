@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { SELECTORS } from './helpers/selectors'
+import { ensureDatingPreferences } from './helpers/datingPreferences'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -10,6 +11,9 @@ const AUTH_TIMEOUT = 15000
  * a signed-out one that accepted either the hub or a login redirect.
  */
 test('the scenarios hub shows its phases and leads back to the dashboard', async ({ page }) => {
+  // The hub is what an account that has answered the dating questions sees; a
+  // fresh one is asked them first (dating-preferences-gate.spec.ts owns that).
+  await ensureDatingPreferences(page)
   await page.goto('/dashboard/scenarios', { timeout: AUTH_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.scenarios.hub)).toBeVisible({ timeout: AUTH_TIMEOUT })
   await expect(page.getByRole('heading', { name: /practice scenarios/i })).toBeVisible()
