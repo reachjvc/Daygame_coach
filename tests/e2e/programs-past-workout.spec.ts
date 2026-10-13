@@ -18,6 +18,7 @@
 import type { Page } from "@playwright/test"
 import { test, expect } from "./fixtures/test"
 import { openTab } from "./helpers/trainingTabs"
+import { whenHydrated } from "./helpers/hydration"
 import { seedFinishedWorkout } from "./helpers/seedWorkout"
 import { guardTrainingAccount, resetAndEnroll } from "./helpers/training.helper"
 
@@ -426,7 +427,10 @@ test("the catalogue will not restart the program you are already running", async
   )
 
   await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: /StrongLifts/i }).first().click()
+  // A click before React owns the card opens nothing (helpers/hydration.ts).
+  const strongLifts = page.getByRole("button", { name: /StrongLifts/i }).first()
+  await whenHydrated(strongLifts)
+  await strongLifts.click()
 
   await expect(
     page.getByTestId("program-already-running"),

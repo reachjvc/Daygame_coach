@@ -154,12 +154,14 @@ test.describe('Session Tracking Flow', () => {
 
     // Wait for the page to settle into one of the honest states — the ended
     // banner, a fresh start screen, or the dashboard — then require that the
-    // dead session's controls are not among what is on screen.
+    // dead session's controls are not among what is on screen. `.first()`:
+    // the production build shows the banner ON the dashboard, two at once.
     await expect(
       page
         .getByTestId(SELECTORS.session.sessionEndedBanner)
         .or(page.getByTestId(SELECTORS.session.startButton))
-        .or(page.getByTestId(SELECTORS.trackingDashboard.page)),
+        .or(page.getByTestId(SELECTORS.trackingDashboard.page))
+        .first(),
     ).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.session.tapButton)).toBeHidden()
   })

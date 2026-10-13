@@ -50,6 +50,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { SELECTORS } from '../helpers/selectors'
 import { fillSecret } from '../helpers/secret'
+import { whenHydrated } from '../helpers/hydration'
 import { findUserId, stackAdmin } from './stack'
 
 export { expect }
@@ -102,7 +103,8 @@ async function theSharedAccount(): Promise<Credentials> {
  */
 export async function signIn(page: Page, account: Credentials): Promise<void> {
   await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
-  await waitForReactOn(page, SELECTORS.auth.emailInput)
+  // Typing before React owns the form does a native submit: helpers/hydration.ts.
+  await whenHydrated(page.getByTestId(SELECTORS.auth.emailInput), AUTH_TIMEOUT)
   await page.getByTestId(SELECTORS.auth.emailInput).fill(account.email, { timeout: AUTH_TIMEOUT })
   await fillSecret(page.getByTestId(SELECTORS.auth.passwordInput), account.password, { timeout: AUTH_TIMEOUT })
   await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: AUTH_TIMEOUT })
@@ -122,27 +124,6 @@ export async function signIn(page: Page, account: Credentials): Promise<void> {
       },
     )
     .toBe('signed in')
-}
-
-/**
- * WAIT UNTIL REACT OWNS THE FIELD, NOT JUST UNTIL IT IS VISIBLE.
- *
- * The login form is server-rendered, so its inputs are visible 0.5–0.8 s before
- * React attaches to them on a busy machine. Typing and clicking in that window
- * does a native submit that reloads the page empty: no request reaches the auth
- * server, and the account never signs in. Under parallel load most WebKit and
- * phone workers failed to provision this way (2026-10-13). `networkidle` is not
- * proof (helpers/hydration.ts says why); React's props on the element are.
- */
-async function waitForReactOn(page: Page, testId: string): Promise<void> {
-  await page.waitForFunction(
-    (id) => {
-      const el = document.querySelector(`[data-testid="${id}"]`)
-      return !!el && Object.keys(el).some((key) => key.startsWith('__reactProps'))
-    },
-    testId,
-    { timeout: AUTH_TIMEOUT },
-  )
 }
 
 /** Records the account's zone as CHOSEN, so the one-time browser sync never overwrites it. */
