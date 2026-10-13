@@ -33,14 +33,17 @@
  * has never pressed Start, which must still name the program running on the
  * account.
  *
- * In the `training` project: it starts programs on the shared account.
+ * ON THE WORKER'S OWN ACCOUNT (Phase 8). It used to sit in the one-worker
+ * `training` project because it started and ended programs on the account the
+ * other training specs shared. Each test still ends every program on the
+ * account before it starts, because the tests of a worker share its account.
  */
 
-import { test, expect, type Page } from "@playwright/test"
-import { TRAINING_STATE } from "../../playwright.config"
+import { test, expect } from "./fixtures/test"
+import type { Page } from "@playwright/test"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 import { guardTrainingAccount } from "./helpers/training.helper"
-/** Refuses to run as anybody but the training account — see the helper. */
+/** Refuses to delete training rows on any account but a throwaway one — see the helper. */
 guardTrainingAccount()
 
 
@@ -87,6 +90,9 @@ async function openTemplates(page: Page) {
 }
 
 test.describe("Life Mastery and the training database", () => {
+  // Not for the account's sake any more: tests/unit/e2e-isolation.test.ts
+  // requires serial mode of every file that intercepts requests (`page.route`
+  // in the last test but one).
   test.describe.configure({ mode: "serial" })
 
   test.beforeEach(async ({ page }) => {
@@ -139,6 +145,7 @@ test.describe("Life Mastery and the training database", () => {
   test("a program started on the Training page is named here, in a browser that never pressed Start", async ({
     page,
     browser,
+    account,
   }) => {
     await startStrongLifts(page)
 
@@ -165,12 +172,12 @@ test.describe("Life Mastery and the training database", () => {
      */
     /**
     * THE SAME ACCOUNT ON ANOTHER DEVICE — which is the whole claim. This
-    * said `.auth/user.json` and passed only while the training projects
-    * shared that account; once they moved to their own it became a second
-    * browser signed in as a DIFFERENT PERSON, which proves nothing about
-    * what a phone and a laptop see.
+    * once said `.auth/user.json` while the program was started on the
+    * training account: a second browser signed in as a DIFFERENT PERSON,
+    * which proves nothing about what a phone and a laptop see. It is the
+    * worker's own account's saved session, in a context of its own.
     */
-    const other = await browser.newContext({ storageState: TRAINING_STATE })
+    const other = await browser.newContext({ storageState: account.storageState })
     const fresh = await other.newPage()
     try {
       await fresh.setViewportSize({ width: 1280, height: 1000 })
@@ -210,6 +217,30 @@ test.describe("Life Mastery and the training database", () => {
      * which ends the first. The unit suite draws this state directly; this is
      * the half that proves the wiring reaches it from a real failed request.
      */
+
+    /**
+     * A TRAINING WEEK THAT NAMES A PROGRAM, which a fresh account does not
+     * have: the default plan ships without a training routine, and the
+     * Systems step draws the program's week — and so its failed state — only
+     * for a routine that references one. Got the way a person gets it: start
+     * a program, open the plan while the list can be read, and let it adopt
+     * the program and save the reference. The account this used to run on
+     * had kept one from earlier runs.
+     */
+    await startStrongLifts(page)
+    await openTemplates(page)
+    await expect
+      .poll(
+        async () => {
+          const body = (await (await page.request.get("/api/life-plan")).json()) as {
+            plan: { routines: Array<{ blueprint_id: string; enrollment_id: string | null }> } | null
+          }
+          return (body.plan?.routines ?? []).some((r) => r.blueprint_id === "workout" && r.enrollment_id !== null)
+        },
+        { timeout: 20000, message: "the plan never saved the program it adopted into its training week" },
+      )
+      .toBe(true)
+
     await page.setViewportSize({ width: 390, height: 844 })
     await page.route("**/api/programs/enrollments*", (route) => route.abort())
 
@@ -238,7 +269,9 @@ test.describe("Life Mastery and the training database", () => {
        */
       await page.goto(`${LIFE_MASTERY}?step=systems`, { waitUntil: "domcontentloaded" })
       await page.getByRole("button", { name: /Systems/ }).first().click()
-      await page.getByText("Training week", { exact: false }).first().click()
+      const week = page.getByText("Training week", { exact: false }).first()
+      await expect(week, "the plan's training week is on the Systems step").toBeVisible({ timeout: 20000 })
+      await week.click()
       await expect(page.getByTestId("training-week-failed")).toBeVisible({ timeout: 20000 })
       await expect(page.getByTestId("training-week-failed")).not.toContainText(/\d+\s?(?:days a week|×\/wk)/)
     } finally {

@@ -7,23 +7,23 @@
  * that the tag survives the round trip, and that pressing the button twice does
  * not write the plan twice. That is what this is for.
  *
- * It creates real rows on the shared test user and deletes exactly the ones it
- * created, by id. It never calls DELETE /api/goals, which would take the whole
- * account's goals with it.
+ * ON THE WORKER'S OWN ACCOUNT (Phase 8). Each test puts this file's plan on
+ * the account and empties its goals before it starts, so what it counts is
+ * what it pushed. On the old shared account it had to tag its goals with a run
+ * id of its own and delete only those, and run its tests one at a time.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from './fixtures/test'
+import type { Page } from '@playwright/test'
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
-
-const PLAN_KEY = 'north-star-v1'
-const RUN_KEY = 'north-star-track-run'
-const RUN = 'e2etrack'
+import { seedLifePlan } from './helpers/lifePlan'
 
 /**
- * A plan with one of each shape, written straight into localStorage.
+ * A plan with one of each shape, put on the account through the plan's own
+ * route (helpers/lifePlan.ts).
  *
  * Driving eleven steps of UI to get three goals in would be testing the eleven
- * steps, which have their own tests. `loadNsPlan` fills every field this omits,
+ * steps, which have their own tests. The loader fills every field this omits,
  * so a short object here is the same plan the flow would have written.
  */
 const PLAN = {
@@ -41,6 +41,8 @@ const PLAN = {
         // Placed on Monday and Thursday at 07:00, so the day view has something
         // it can actually draw.
         { id: 's1', title: 'E2E cold shower', minutes: 5, daysPerWeek: 2, dimension: 'body', servesGoalIds: [], days: [0, 3], startMin: 420 },
+        // Every day, so Today has a box to tick whatever day the test runs on.
+        { id: 's2', title: 'E2E vitamins', minutes: 1, daysPerWeek: 7, dimension: 'body', servesGoalIds: [], days: [], startMin: 425 },
       ],
     },
   ],
@@ -93,7 +95,7 @@ const PLAN = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 }
 
-/** Every goal the test user currently has, straight from the API. */
+/** Every goal the account currently has, straight from the API. */
 async function goals(
   page: Page
 ): Promise<
@@ -105,60 +107,22 @@ async function goals(
   return Array.isArray(body) ? body : body.goals ?? []
 }
 
-/** A goal made outside the plan, by this spec, so "not in the plan's hub" has something to be about */
-const FOREIGN_TITLE = `E2E goal from outside the plan (${RUN})`
-
-/** Only what this test made. Never DELETE /api/goals — that is everything. */
-async function cleanUp(page: Page) {
-  for (const goal of await goals(page)) {
-    if (goal.template_id?.startsWith(`ns:${RUN}:`) || goal.title === FOREIGN_TITLE) {
-      await page.request.delete(`/api/goals/${goal.id}?permanent=true`)
-    }
-  }
+/** The goals this plan pushed: the Track step tags each one `ns:<run>:<plan goal id>`. */
+async function pushedGoals(page: Page) {
+  return (await goals(page)).filter((g) => g.template_id?.startsWith('ns:'))
 }
 
+/** A goal made outside the plan, by this spec, so "not in the plan's hub" has something to be about */
+const FOREIGN_TITLE = 'E2E goal from outside the plan'
+
 test.describe('Life Mastery — the track step', () => {
-  /**
-   * Serial, because both tests push the same plan to the same account under
-   * the same run id. Run in parallel (the project default) each one's cleanup
-   * deletes the other's goals mid-assertion, and the failure looks like the
-   * feature rather than the fixture.
-   */
-  test.describe.configure({ mode: 'serial' })
-
-  test.beforeEach(async ({ page }) => {
-    /**
-     * Seeded BEFORE the page's own scripts, not after.
-     *
-     * Writing it with `page.evaluate` after `goto` races the flow's own save
-     * effect: the component mounts, loads nothing, and writes the empty plan
-     * back to the same key. Sometimes that lands after the seed and the test
-     * opens on a blank plan — which reads exactly like the feature being
-     * broken. `addInitScript` runs on every navigation before anything else,
-     * so the first mount already has the plan.
-     */
-    await page.addInitScript(
-      ([planKey, runKey, run, plan]) => {
-        // Seed ONLY when there is nothing there. An init script runs on every
-        // navigation, so an unconditional write re-seeds on `reload()` too —
-        // which silently undoes whatever the test just typed and makes a
-        // working "does it survive a reload" read as a broken one.
-        if (!window.localStorage.getItem(planKey as string)) {
-          window.localStorage.setItem(planKey as string, plan as string)
-        }
-        if (!window.localStorage.getItem(runKey as string)) {
-          window.localStorage.setItem(runKey as string, run as string)
-        }
-      },
-      [PLAN_KEY, RUN_KEY, RUN, JSON.stringify(PLAN)]
-    )
+  test.beforeEach(async ({ page, account }) => {
+    // The account is this worker's alone, so every goal on it is a leftover of
+    // an earlier test here: start from none.
+    const emptied = await page.request.delete('/api/goals')
+    expect(emptied.status(), `could not empty the account's goals: ${await emptied.text()}`).toBe(200)
+    await seedLifePlan(page, account.id, PLAN)
     await page.goto(LIFE_MASTERY)
-    await cleanUp(page)
-    await page.reload()
-  })
-
-  test.afterEach(async ({ page }) => {
-    await cleanUp(page)
   })
 
   test('pushes the plan into real goals, and pressing it twice does not double them', async ({ page }) => {
@@ -169,17 +133,19 @@ test.describe('Life Mastery — the track step', () => {
     // getByText matches twice and says nothing about either.
     const pushList = page.locator('section', { hasText: 'Start tracking these' })
     await expect(pushList.getByText('E2E gym sessions')).toBeVisible()
-    await expect(pushList.getByText('Fitness · 4× a week')).toBeVisible()
+    // The ramp's FIRST week, not the 4 it eases into: starting a ramp at its
+    // steady rate starts somebody at the hardest setting (`goalToInsert`).
+    await expect(pushList.getByText('Fitness · 2× a week')).toBeVisible()
     await expect(pushList.getByText('Fitness · 60 → 100')).toBeVisible()
     await expect(pushList.getByText('Fun · done or not done')).toBeVisible()
 
     // Nothing has been written yet.
-    expect((await goals(page)).filter((g) => g.template_id?.startsWith(`ns:${RUN}:`))).toHaveLength(0)
+    expect(await pushedGoals(page)).toHaveLength(0)
 
     await page.getByRole('button', { name: 'Track 3 goals' }).click()
     await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 15000 })
 
-    const afterFirst = (await goals(page)).filter((g) => g.template_id?.startsWith(`ns:${RUN}:`))
+    const afterFirst = await pushedGoals(page)
     expect(afterFirst).toHaveLength(3)
     expect(afterFirst.map((g) => g.title).sort()).toEqual([
       'E2E bench press',
@@ -200,13 +166,17 @@ test.describe('Life Mastery — the track step', () => {
     await page.reload()
     await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
     await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 15000 })
-    expect((await goals(page)).filter((g) => g.template_id?.startsWith(`ns:${RUN}:`))).toHaveLength(3)
+    expect(await pushedGoals(page)).toHaveLength(3)
   })
 
   test('shows what you will be doing, week by week and day by day, without the milestones', async ({ page }) => {
     await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
     const schedule = page.locator('section', { hasText: 'What you will actually be doing' })
     await expect(schedule.getByRole('heading', { name: 'What you will actually be doing' })).toBeVisible({ timeout: 15000 })
+
+    // A plan with steps on named days opens on the day view; the grid is one
+    // press away, and opens with every group unfolded.
+    await schedule.getByRole('button', { name: 'By week' }).click()
 
     // THE WHOLE POINT: an outcome is not an activity. A weekly grid holding
     // "bench 100 kg" reads as a week you failed at it, every week, until the
@@ -216,7 +186,10 @@ test.describe('Life Mastery — the track step', () => {
     await expect(schedule.getByText('E2E gym sessions')).toBeVisible()
     await expect(schedule.getByText('E2E cold shower')).toBeVisible()
 
-    // The ramp is legible: 2, 2, then the steady 4.
+    // The ramp is legible: 2, 2, then the steady 4. (The goal this pushes
+    // settles at 2 after its ramp instead — `rampTargetForPeriod` reads past
+    // the end as the ramp's last step, this grid as `daysPerWeek`. Reported as
+    // a product disagreement on 2026-10-13; this line moves with the fix.)
     const gymRow = schedule.getByRole('row', { name: /E2E gym sessions/ })
     await expect(gymRow.getByRole('cell').nth(0)).toHaveText(/^2$/)
     await expect(gymRow.getByRole('cell').nth(1)).toHaveText(/^2$/)
@@ -224,7 +197,9 @@ test.describe('Life Mastery — the track step', () => {
 
     await schedule.getByRole('button', { name: 'By day' }).click()
     // The cold shower has days; the gym driver says "4× a week" and names none,
-    // so it is listed rather than invented onto a day.
+    // so it is listed rather than invented onto a day. A day's routine starts
+    // folded unless the day is today, so a folded one is opened to look inside.
+    await schedule.getByRole('button', { name: /^Morning/, expanded: false }).first().click()
     await expect(schedule.getByText('E2E cold shower').first()).toBeVisible()
     await expect(schedule.getByText('Runs weekly, no day chosen')).toBeVisible()
     await expect(schedule.getByText('E2E bench press')).toHaveCount(0)
@@ -240,20 +215,20 @@ test.describe('Life Mastery — the track step', () => {
 
     // The driver counts into the REAL goal, not a note in a browser.
     const before = (await goals(page)).find((g) => g.title === 'E2E gym sessions')!
-    await page.getByRole('button', { name: 'One more E2E gym sessions' }).click()
+    await page.getByRole('button', { name: 'Log one E2E gym sessions' }).click()
     await expect
       .poll(async () => (await goals(page)).find((g) => g.title === 'E2E gym sessions')?.current_value)
       .toBe((before.current_value ?? 0) + 1)
 
     // …and it comes back off again.
-    await page.getByRole('button', { name: 'One fewer E2E gym sessions' }).click()
+    await page.getByRole('button', { name: 'Take one back off E2E gym sessions' }).click()
     await expect
       .poll(async () => (await goals(page)).find((g) => g.title === 'E2E gym sessions')?.current_value)
       .toBe(before.current_value ?? 0)
 
-    // A step tick, an area rating and a note — all on the plan, all local.
-    const shower = page.getByRole('checkbox', { name: 'Did E2E cold shower' })
-    if (await shower.count()) await shower.check()
+    // A step tick, an area rating and a note.
+    const vitamins = page.getByRole('checkbox', { name: 'Did E2E vitamins' })
+    await vitamins.check()
     await page.getByRole('button', { name: 'Fitness today: 7 out of 10' }).click()
     const note = page.getByLabel('Anything worth remembering about today')
     await note.fill('Tired but went anyway.')
@@ -265,7 +240,7 @@ test.describe('Life Mastery — the track step', () => {
     await page.getByRole('button', { name: /^\d+\s*Today\b/ }).click()
     await expect(page.getByLabel('Anything worth remembering about today')).toHaveValue('Tired but went anyway.')
     await expect(page.getByRole('button', { name: 'Fitness today: 7 out of 10' })).toHaveAttribute('aria-pressed', 'true')
-    if (await shower.count()) await expect(shower).toBeChecked()
+    await expect(vitamins).toBeChecked()
   })
 
   test('shows the real goals hub on the same tab, holding the pushed goals', async ({ page }) => {
@@ -284,10 +259,10 @@ test.describe('Life Mastery — the track step', () => {
     const hub = page.locator('section', { hasText: 'This plan, running' })
     await expect(hub.getByText('E2E gym sessions')).toBeVisible({ timeout: 15000 })
 
-    // Goals made outside this plan must not be in it. This spec seeds one of
-    // its own above rather than relying on whatever the shared account holds —
-    // with none, this assertion would pass vacuously.
-    const foreign = (await goals(page)).filter((g) => !g.template_id?.startsWith(`ns:${RUN}:`))
+    // Goals made outside this plan must not be in it. A fresh account holds
+    // none, so this spec seeds one above — with none, this assertion would
+    // pass vacuously.
+    const foreign = (await goals(page)).filter((g) => !g.template_id?.startsWith('ns:'))
     expect(foreign.map((g) => g.title)).toContain(FOREIGN_TITLE)
     for (const g of foreign) await expect(hub.getByText(g.title, { exact: true })).toHaveCount(0)
 

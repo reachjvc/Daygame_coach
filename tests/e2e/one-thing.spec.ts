@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
+import type { Page } from "@playwright/test"
 import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 
 /**
@@ -19,16 +20,21 @@ const PLAN = `${LIFE_MASTERY}?step=one`
 const TRACKING = "/dashboard/tracking"
 
 /**
- * Serial, because all three tests write to the same account and the one thing
- * is by definition singular: run in parallel, one test's save becomes another
- * test's "current" mid-assertion. That is not a product bug — it is three
- * people sharing one login, which is exactly what parallel workers are here.
+ * ON THE WORKER'S OWN ACCOUNT (Phase 8). The one thing is singular, so these
+ * ran one at a time while every worker shared one login; now each worker has
+ * its own, and a test that needs a one thing in place starts one itself
+ * through the route the button uses, so none depends on another having run.
  */
-test.describe.configure({ mode: "serial" })
+async function startOneThing(page: Page, body: string, dueOn?: string): Promise<void> {
+  const res = await page.request.post("/api/life-answers", {
+    data: { key: "one_thing", act: "start", body, ...(dueOn ? { dueOn } : {}) },
+  })
+  expect(res.status(), `could not start a one thing: ${await res.text()}`).toBe(201)
+}
 
 test.describe("the one thing", () => {
   test("what you write on the step is what the tracking page shows", async ({ page }) => {
-    const written = `Quit weed for ${Date.now() % 1000} days`
+    const written = "Quit weed for 90 days"
 
     await page.goto(PLAN)
     const box = page.locator("textarea").first()
@@ -60,33 +66,28 @@ test.describe("the one thing", () => {
   })
 
   test("clicking it on the tracking page returns you to the step that owns it", async ({ page }) => {
-    // Seeded through the same route the button uses, so this test does not
-    // depend on the one above it having run.
-    await page.goto(TRACKING)
-    await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", act: "start", body: `Something to aim at ${Date.now() % 1000}` },
-    })
+    await startOneThing(page, "Something to aim at")
     await page.goto(TRACKING)
     const header = page.getByTestId("season-band-one-thing")
     await header.waitFor({ state: "visible" })
     await header.click()
 
-    await expect(page).toHaveURL(new RegExp(`${LIFE_MASTERY}\\?step=one`))
+    // A client-side navigation into the largest page in the app. On a busy
+    // `next dev` it took longer than the 5 s default (3 of 4 runs, 2026-10-13)
+    // and always arrived within 20 s.
+    await expect(page).toHaveURL(new RegExp(`${LIFE_MASTERY}\\?step=one`), { timeout: 20_000 })
     // …and carries the way back, so you are not stranded in a thirteen-step flow.
     await expect(page.getByTestId("back-link")).toHaveText(/Tracking/)
   })
 
   test("starting a new one moves the old one into the history", async ({ page }) => {
-    const replacement = `Bench ${Date.now() % 500} kg`
+    const previous = "Read twelve books this season"
+    const replacement = "Bench 140 kg"
 
-    await page.goto(TRACKING)
-    await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", act: "start", body: `The one before ${Date.now() % 999}` },
-    })
+    await startOneThing(page, previous)
     await page.goto(PLAN)
     const box = page.locator("textarea").first()
-    await box.waitFor({ state: "visible" })
-    const previous = await box.inputValue()
+    await expect(box).toHaveValue(previous)
 
     await box.fill(replacement)
     await box.blur()
@@ -101,7 +102,7 @@ test.describe("the one thing", () => {
 
     // The one before it is kept, and reachable.
     await page.getByRole("button", { name: /before this/ }).click()
-    if (previous.trim()) await expect(page.getByText(previous, { exact: false })).toBeVisible()
+    await expect(page.getByText(previous, { exact: false })).toBeVisible()
   })
 
   /**
@@ -117,10 +118,7 @@ test.describe("the one thing", () => {
     // that starts failing on a particular morning for no reason anybody
     // remembers, because the server correctly refuses a day that has been.
     const soon = new Date(Date.now() + 60 * 86_400_000).toISOString().slice(0, 10)
-    await page.goto(TRACKING)
-    await page.request.post("/api/life-answers", {
-      data: { key: "one_thing", act: "start", body: `Quit weed ${Date.now() % 1000}`, dueOn: soon },
-    })
+    await startOneThing(page, "Quit weed", soon)
 
     await page.goto(PLAN)
     const countdown = page.getByTestId("one-thing-countdown")
@@ -128,7 +126,7 @@ test.describe("the one thing", () => {
     const before = await countdown.textContent()
 
     const box = page.locator("textarea").first()
-    await box.fill(`Quit weed, properly ${Date.now() % 1000}`)
+    await box.fill("Quit weed, properly")
     await box.blur()
     const save = page.getByTestId("one-thing-save")
     await expect(save).toHaveText(/Save this wording/)
@@ -160,9 +158,8 @@ test.describe("the one thing", () => {
    * date should end up.
    */
   test("changing only the deadline saves, and reaches the tracking page", async ({ page }) => {
-    const body = `Quit weed for ${Date.now() % 1000} days`
-    await page.goto(TRACKING)
-    await page.request.post("/api/life-answers", { data: { key: "one_thing", act: "start", body } })
+    const body = "Quit weed for 100 days"
+    await startOneThing(page, body)
 
     await page.goto(PLAN)
     const due = page.getByTestId("one-thing-due")

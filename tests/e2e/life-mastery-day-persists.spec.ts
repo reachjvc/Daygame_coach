@@ -1,4 +1,6 @@
-import { test, expect, type Page, type BrowserContext } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
+import type { Browser, Page } from "@playwright/test"
+import { planWithSteps, seedLifePlan } from "./helpers/lifePlan"
 
 /**
  * M1'S ACCEPTANCE: YOUR DAY IS ON YOUR ACCOUNT, NOT IN ONE BROWSER.
@@ -21,26 +23,26 @@ import { test, expect, type Page, type BrowserContext } from "@playwright/test"
  * proved is that the DATA crosses, and coupling this to a tab's DOM would make
  * it fail on a wording change and pass on a broken save. So both contexts talk
  * to `/api/life-plan/day`, which is the boundary the feature actually is.
+ *
+ * ON THE WORKER'S OWN ACCOUNT (Phase 8). It used to share one with the rest of
+ * the suite, which is why it once wrote to three dates in 2019 "that nothing
+ * else touches", accepted a 409 from its own plan save "because another device
+ * saved first", put the plan back afterwards, and relied on a routine step
+ * somebody had added to that account by hand. Each test now seeds the plan it
+ * needs, and nothing else writes to this account.
  */
 
 /**
- * ONE DAY PER TEST, and it is not a stylistic choice.
- *
- * `fullyParallel` is on, so the tests in this file run at the same time in
- * different workers against the SAME account. The first draft shared one date
- * between all four: the test that clears a note raced the test that reads one
- * back, and two failed with "expected … received undefined" — which reads
- * exactly like the day half not saving, the very bug this file exists to
- * disprove. A shared mutable fixture in a parallel suite is a false report
- * waiting to happen.
- *
- * Dates far enough back that nothing else in the suite writes to them.
+ * A past day, because back-filling a day is allowed and a day ahead of the
+ * account's calendar is refused. One day for every test: a test reads only
+ * what it wrote itself, and each one starts from a freshly seeded plan whose
+ * step nobody has ticked (helpers/lifePlan.ts).
  */
-const DAYS = {
-  crosses: "2019-03-01",
-  survives: "2019-03-02",
-  cleared: "2019-03-03",
-} as const
+const DAY = "2026-01-05"
+
+/** The one routine step every test here ticks. */
+const STEP = "s1"
+
 /** Only the parts of the stored plan this file touches. */
 type PlanShape = {
   plan_id: string
@@ -69,66 +71,27 @@ async function writeDay(page: Page, patch: Record<string, unknown>) {
 }
 
 /**
- * A ROUTINE STEP THE ACCOUNT ACTUALLY HAS, because a tick must name one.
- *
- * The day route resolves every tick against the plan's own nodes and answers
- * 409 `plan-behind` for an id it does not know, so this cannot invent one. It
- * fails loudly rather than skipping: a cross-device test that quietly stops
- * asserting when the fixture is thin is how this file spent a day claiming to
- * prove something it never sent.
+ * A second browser, same account, sharing nothing but the database: its own
+ * context, signed in from the account's saved session rather than this
+ * page's cookies or storage.
  */
-async function aTickableStep(page: Page): Promise<string> {
-  const res = await page.request.get("/api/life-plan")
-  expect(res.status(), "the plan route answers a signed-in read").toBe(200)
-  const body = (await res.json()) as { plan: { nodes: Array<{ kind: string; local_id: string }> } | null }
-  /**
-   * THE FIRST BY LOCAL ID, NOT THE FIRST POSTGRES HAPPENED TO RETURN.
-   *
-   * This was a bare `.find()` over an unordered read, so which step it picked
-   * changed between runs — and when it picked the one
-   * `mobile/mobile-life-mastery-day.spec.ts` taps, the two specs ticked and
-   * unticked one step on one account from two projects at once and failed each
-   * other. A nondeterministic fixture choice is a flake whichever spec loses.
-   * Sorted, this takes the lowest id and the phone spec takes the one placed on
-   * today, so the two cannot collide.
-   */
-  const step = [...(body.plan?.nodes ?? [])]
-    .filter((n) => n.kind === "routine_step")
-    .sort((a, b) => a.local_id.localeCompare(b.local_id))[0]
-  expect(
-    step,
-    "this account's plan has no routine step, so no tick can be sent and this " +
-      "suite cannot prove the thing it exists for. Add one: open /life-mastery, " +
-      "go to Systems, click a routine and turn a library step on.",
-  ).toBeTruthy()
-  return step!.local_id
-}
-
-/** A second browser, same account, sharing nothing but the database. */
-async function secondDevice(context: BrowserContext): Promise<Page> {
-  const other = await context.browser()!.newContext({
-    storageState: "tests/e2e/.auth/user.json",
-  })
+async function secondDevice(browser: Browser, storageState: string): Promise<Page> {
+  const other = await browser.newContext({ storageState })
   return other.newPage()
 }
 
 test.describe("the day half crosses devices", () => {
-  test("a line AND a tick written on one device are there on another", async ({ page, context }) => {
-    const DAY = DAYS.crosses
+  test.beforeEach(async ({ page, account }) => {
+    // A tick must name a routine step the plan has: the day route answers 409
+    // `plan-behind` for an id it does not know, so this cannot invent one.
+    await seedLifePlan(page, account.id, planWithSteps([{ id: STEP, title: "E2E cold shower", daysPerWeek: 7 }]))
+  })
+
+  test("a line AND a tick written on one device are there on another", async ({ page, browser, account }) => {
     await page.goto("/life-mastery")
-    const stepId = await aTickableStep(page)
-    /**
-     * CLEAR IT FIRST, because the account remembers the last run.
-     *
-     * These day rows survive between runs, so an assertion that the tick is
-     * present passes on a tick this run never sent — proved by removing the
-     * `ticks` key below and watching the test stay green. Clearing first makes
-     * every assertion here about THIS run, which is the only version worth
-     * having.
-     */
-    await writeDay(page, { date: DAY, note: "", ticks: { [stepId]: false } })
-    const blank = await readDay(page)
-    expect(blank.logged[DAY] ?? [], "the day starts clear, or the test below proves nothing").not.toContain(stepId)
+    // The seed is a plan nobody has ticked, so the assertion below can only be
+    // satisfied by the write this test sends.
+    expect((await readDay(page)).logged[DAY] ?? [], "the day starts clear, or the test below proves nothing").not.toContain(STEP)
 
     await writeDay(page, {
       date: DAY,
@@ -138,10 +101,10 @@ test.describe("the day half crosses devices", () => {
       // file sent four writes and every one of them was a `note`. The words
       // `ticks` and `logged` appeared in no payload, so the sentence M1 is
       // named after was the one thing never tested.
-      ticks: { [stepId]: true },
+      ticks: { [STEP]: true },
     })
 
-    const laptop = await secondDevice(context)
+    const laptop = await secondDevice(browser, account.storageState)
     await laptop.goto("/life-mastery")
     const seen = await readDay(laptop)
 
@@ -152,7 +115,7 @@ test.describe("the day half crosses devices", () => {
     expect(
       seen.logged[DAY] ?? [],
       "the TICK must cross too, which is the sentence this milestone is named after",
-    ).toContain(stepId)
+    ).toContain(STEP)
 
     await laptop.context().close()
   })
@@ -164,36 +127,22 @@ test.describe("the day half crosses devices", () => {
    * day tables, one keystroke on a laptop would wipe a year of journal written
    * on a phone — and nothing on either screen would say so.
    */
-  test("editing the plan on one device does not destroy a day written on the other", async ({ page, context }) => {
-    const DAY = DAYS.survives
+  test("editing the plan on one device does not destroy a day written on the other", async ({ page, browser, account }) => {
     await page.goto("/life-mastery")
-    const stepId = await aTickableStep(page)
-    // Cleared first for the same reason as the test above: these rows outlive
-    // the run, so a survivor from last time reads exactly like a pass.
-    await writeDay(page, { date: DAY, note: "", ticks: { [stepId]: false } })
     await writeDay(page, {
       date: DAY,
       note: "a day I do not want to lose",
-      ticks: { [stepId]: true },
+      ticks: { [STEP]: true },
       journal: { [ORPHAN]: "and a line under a question" },
     })
 
     // The other device changes the PLAN — the thing that is replaced wholesale.
-    const laptop = await secondDevice(context)
+    const laptop = await secondDevice(browser, account.storageState)
     await laptop.goto("/life-mastery")
     const before = await laptop.request.get("/api/life-plan")
     expect(before.status()).toBe(200)
     const body = (await before.json()) as { plan: PlanShape | null; revision: number }
-
-    /**
-     * A PLAN MUST EXIST, AND THE TEST MUST SAY SO RATHER THAN SHRUG.
-     *
-     * This was `if (body.plan) { … }`. On an account with no plan row the whole
-     * save was skipped and the test passed having asserted only that a note it
-     * had written one line earlier came back — a green tick for the most
-     * dangerous case in the design, earned by doing nothing.
-     */
-    expect(body.plan, "no plan on this account, so nothing can be saved over the day half").toBeTruthy()
+    expect(body.plan, "the seeded plan is on the account").toBeTruthy()
     const plan = body.plan!
 
     /**
@@ -206,11 +155,10 @@ test.describe("the day half crosses devices", () => {
      * has to actually move here or the assertion below is free.
      *
      * A sub-step is the cheapest node that changes it: one node row and one
-     * detail row, hanging off a node the plan already has, and removed again at
-     * the end so the account is left as it was found.
+     * detail row, hanging off a node the plan already has.
      */
-    const anchor = plan.nodes.find((n) => n.kind === "routine_step")!
-    const addedLocalId = `sub_acceptance_${DAY}`
+    const anchor = plan.nodes.find((n) => n.kind === "routine_step" && n.local_id === STEP)!
+    const addedLocalId = "sub_acceptance"
     const addedId = crypto.randomUUID()
     const grown = {
       ...plan,
@@ -220,56 +168,38 @@ test.describe("the day half crosses devices", () => {
         { id: addedId, user_id: plan.user_id, plan_id: plan.plan_id, node_kind: "sub_step", position: plan.sub_steps.length, target_id: anchor.id, title: "added by M1's acceptance" },
       ],
     }
+    // Nobody else saves to this account, so the revision just read is current:
+    // anything but 200 is this save failing.
     const saved = await laptop.request.put("/api/life-plan", { data: { plan: grown, revision: body.revision } })
-    // A 409 is a legitimate answer here (another device saved first) and is
-    // NOT a failure of this test — what matters is what survives below.
-    expect([200, 409], "the plan save answered").toContain(saved.status())
-    if (saved.status() === 200) {
-      const back = await laptop.request.get("/api/life-plan")
-      const grownBody = (await back.json()) as { plan: PlanShape }
-      expect(
-        grownBody.plan.nodes.some((n) => n.local_id === addedLocalId),
-        "the save has to have CHANGED the node set, or this test watches nothing",
-      ).toBe(true)
-    }
+    expect(saved.status(), `the plan save answered: ${await saved.text()}`).toBe(200)
+    const grownBody = (await (await laptop.request.get("/api/life-plan")).json()) as { plan: PlanShape }
+    expect(
+      grownBody.plan.nodes.some((n) => n.local_id === addedLocalId),
+      "the save has to have CHANGED the node set, or this test watches nothing",
+    ).toBe(true)
 
     const after = await readDay(page)
     expect(after.notes[DAY], "the day note survived a whole-plan save").toBe("a day I do not want to lose")
     expect(
       after.logged[DAY] ?? [],
       "the tick survived a structural plan save — the cascade this design exists to prevent",
-    ).toContain(stepId)
+    ).toContain(STEP)
     expect(
       after.journal[DAY]?.[ORPHAN],
       "an answer under a question the plan does not carry survived too",
     ).toBe("and a line under a question")
 
-    // Put the account back the way it was found.
-    if (saved.status() === 200) {
-      const now = await laptop.request.get("/api/life-plan")
-      const nowBody = (await now.json()) as { plan: PlanShape; revision: number }
-      await laptop.request.put("/api/life-plan", {
-        data: {
-          plan: {
-            ...nowBody.plan,
-            nodes: nowBody.plan.nodes.filter((n) => n.local_id !== addedLocalId),
-            sub_steps: nowBody.plan.sub_steps.filter((r) => r.id !== addedId),
-          },
-          revision: nowBody.revision,
-        },
-      })
-    }
-
     await laptop.context().close()
   })
 
-  test("clearing a cell on one device clears it on the other, rather than coming back", async ({ page, context }) => {
-    const DAY = DAYS.cleared
+  test("clearing a cell on one device clears it on the other, rather than coming back", async ({ page, browser, account }) => {
     await page.goto("/life-mastery")
     await writeDay(page, { date: DAY, note: "this will be cleared" })
+    // Read back before the clear, so the clear below has something to undo.
+    expect((await readDay(page)).notes[DAY]).toBe("this will be cleared")
     await writeDay(page, { date: DAY, note: "" })
 
-    const laptop = await secondDevice(context)
+    const laptop = await secondDevice(browser, account.storageState)
     await laptop.goto("/life-mastery")
     const seen = await readDay(laptop)
 

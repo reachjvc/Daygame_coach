@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
-import { test, expect } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { seedLifePlan } from "./helpers/lifePlan"
 
 /**
  * The Black Box, end to end.
@@ -14,8 +15,14 @@ import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  * not assert an address that no longer exists.
  */
 
-/** Serial: every test writes the same browser-local record. */
-test.describe.configure({ mode: "serial" })
+/**
+ * NOT SERIAL ANY MORE. Serial mode kept every test here on one worker because
+ * they all emptied and re-seeded the ONE shared account's record — and it
+ * skipped the rest of the file after the first failure, so a run could report
+ * one fault at most. Each worker now has an account of its own (fixtures/test),
+ * runs its tests one after another, and `seed()` empties that account first.
+ * The browser record needs nothing: every test gets a fresh context.
+ */
 
 type Page = import("@playwright/test").Page
 
@@ -203,19 +210,42 @@ test.describe("the Black Box", () => {
     await expect(page.getByRole("link", { name: /the flows, tools and reading/i })).toHaveCount(0)
   })
 
-  test("is reachable from the Vices routine inside Life Mastery", async ({ page }) => {
+  test("is reachable from the Vices routine inside Life Mastery", async ({ page, account }) => {
     // Moved here from quit-vice.spec.ts when that suite went with the archived
     // module it tested: this is the one test in it that drove product routes.
     // The routine there is a list of days you hold a line, which is the right
     // shape for a scoreboard and no help on the evening you do not hold it.
+    //
+    // A plan with a Vices routine in it, through the app's own plan route. The
+    // old shared account happened to hold one; a fresh account holds no plan.
+    await seedLifePlan(page, account.id, {
+      version: 1,
+      routines: [
+        {
+          id: "vices",
+          label: "Vices",
+          blueprintId: "vices",
+          steps: [{ id: "no-smoke", libraryStepId: "no-smoke", title: "No smoking or vaping", minutes: 0, daysPerWeek: 7 }],
+        },
+      ],
+      goals: [],
+    })
     await page.goto(LIFE_MASTERY, { waitUntil: "domcontentloaded" })
     await page.getByText("Opening your plan…").waitFor({ state: "hidden", timeout: 30_000 })
     // The routines live under this step, and only under this one: the wanting
     // half and the doing half are two steps again, and a routine is always a
     // system. TAB_LABELS in src/goals/data/northStar.ts is the source of truth
     // for the name.
-    await page.locator('nav[aria-label="Sections"] button', { hasText: "Systems" }).click()
-    await page.locator("#ns-routines button", { hasText: "Vices" }).first().click()
+    //
+    // Until the routine is OPEN, not merely clicked: under a loaded machine the
+    // first click can land on server-rendered markup before React has attached
+    // its handler, and the routine stays shut (seen once in a 3-worker run).
+    const vices = page.locator("#ns-routines button", { hasText: "Vices" }).first()
+    await expect(async () => {
+      await page.locator('nav[aria-label="Sections"] button', { hasText: "Systems" }).click()
+      if ((await vices.getAttribute("aria-pressed")) !== "true") await vices.click()
+      await expect(vices).toHaveAttribute("aria-pressed", "true", { timeout: 2000 })
+    }).toPass({ timeout: 20_000 })
 
     const link = page.getByRole("link", { name: /Working on one of these properly/ })
     await expect(link).toBeVisible()
