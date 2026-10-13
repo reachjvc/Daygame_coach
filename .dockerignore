@@ -1,0 +1,32 @@
+# AN ALLOW-LIST: everything is left out of the image build, then the build's
+# inputs are let back in by name. A new file, a secret one included, therefore
+# never reaches an image by default; it has to be added here on purpose.
+# infra/build-image.sh builds from `git archive <commit>`, so untracked files
+# are absent anyway; this is the second wall.
+# Plans/caddy-deploy-and-cicd.md, Phase 3 step 3.
+
+*
+
+!app/
+!components/
+!lib/
+!src/
+!public/
+!proxy.ts
+!next.config.mjs
+!next-env.d.ts
+!tsconfig.json
+!postcss.config.mjs
+!package.json
+!package-lock.json
+!scripts/build.sh
+!scripts/build-id.mjs
+!scripts/check-runtime-env.mjs
+
+# Read at runtime through process.cwd() (src/scenarios/keepitgoing/chat.ts).
+!data/woman-responses/prompts/
+
+# Never, even inside a directory let back in above. Later lines win.
+**/.env*
+**/node_modules
+**/.next*

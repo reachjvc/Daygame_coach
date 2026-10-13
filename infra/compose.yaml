@@ -1,0 +1,80 @@
+# THE APP AND ITS PROXY, THE SAME FILE ON EVERY MACHINE.
+#
+# This machine (staging, https://localhost) and the production server run this
+# file unchanged. What differs is passed in, and a missing value stops compose
+# rather than starting something half-configured (`:?`):
+#   APP_IMAGE      the image, by digest (repo@sha256:...) or, in a local
+#                  rehearsal, by image ID. Only infra/deploy.sh sets it.
+#   APP_ENV_FILE   the runtime secrets file, outside the repository and image.
+#   CADDYFILE      ./caddy/Caddyfile.local here, ./caddy/Caddyfile.production
+#                  on the server.
+#
+# `name: infra` keeps the project name the old compose.local.yaml had, so the
+# Caddy volumes below are the existing infra_caddy_data and infra_caddy_config:
+# the local root certificate you may have trusted does not change.
+#
+# Plans/caddy-deploy-and-cicd.md, Phase 3 step 5.
+
+name: infra
+
+services:
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE is set by infra/deploy.sh}
+    container_name: dg-app
+    env_file: ${APP_ENV_FILE:?APP_ENV_FILE names the runtime env file}
+
+    # NO `ports:`. The app is reachable only by Caddy, over the network below.
+    # tests/unit/infra/localDeploy.test.ts fails if a port appears here.
+
+    # tini as PID 1: it reaps zombies and passes the stop signal on.
+    init: true
+    restart: unless-stopped
+    # Next drains in-flight requests on SIGTERM; give it the time to.
+    stop_grace_period: 30s
+
+    # Nothing in the image can be changed at runtime. The two writable places
+    # are memory, size-capped, and count against the memory limit below.
+    # Never mount anything over .next/server: it holds the prerendered pages.
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,uid=1000,gid=1000,mode=0700
+      - /app/.next/cache:size=256m,uid=1000,gid=1000,mode=0700
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+
+    networks: [web]
+    logging: &capped-logs
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+    container_name: dg-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ${CADDYFILE:?CADDYFILE names the Caddyfile for this machine}:/etc/caddy/Caddyfile:ro
+      - ./caddy/common.caddy:/etc/caddy/common.caddy:ro
+      # The certificates, and here the local root that a browser may trust.
+      # Persistent: lose it and every certificate changes overnight.
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [web]
+    logging: *capped-logs
+
+networks:
+  web:
+    # IPv6 inside too. Without it Docker hands an IPv6 visitor to Caddy from the
+    # network gateway's address, and every IPv6 visitor looks like one client.
+    enable_ipv6: true
+
+volumes:
+  caddy_data:
+  caddy_config:

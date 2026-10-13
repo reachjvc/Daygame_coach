@@ -29,6 +29,20 @@ if [ -n "${CI:-}" ] || [ -n "${VERCEL:-}" ]; then
   exec npx next build "$@"
 fi
 
+# Inside an image build (infra/Dockerfile). The ceiling there is the buildx
+# builder's own memory limit (infra/build-image.sh refuses a builder without
+# one), and there is no systemd inside a container. Webpack only, because
+# Turbopack's native memory is what ran away here; Node's heap is capped so a
+# runaway heap fails as a JavaScript error with a stack, not as an OOM kill.
+if [ "${BUILD_CONTEXT:-}" = "container" ]; then
+  case " $* " in
+    *" --webpack "*) ;;
+    *) echo "ERROR: an image build uses webpack. Run it as: npm run build (which passes --webpack)." >&2; exit 1 ;;
+  esac
+  export NODE_OPTIONS="--max-old-space-size=${BUILD_NODE_HEAP_MB:-6144}${NODE_OPTIONS:+ $NODE_OPTIONS}"
+  exec npx next build "$@"
+fi
+
 # Applying the ceiling needs systemd-run plus a delegated memory controller.
 # If either is missing we do NOT quietly build uncapped — that is exactly the
 # configuration that took the machine down three times. Say so and stop.

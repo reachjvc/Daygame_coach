@@ -1,13 +1,13 @@
 # infra/ — the machine, written down
 
 **What this is.** Everything needed to run this app as a deployment rather than
-as a dev server. Today that machine is the owner's WSL box; the same files are
-the rehearsal for the Hetzner server in `docs/plans/own-platform-and-app.md`.
+as a dev server. Today that machine is the owner's WSL box, which is staging;
+the same files run the production server in Phase 6 of the plan.
 
-**The rule this directory exists to make true:** *nothing exists on the box that
-these files did not put there, except the secrets file.* A restored backup is
-only worth something if the machine it is restored onto can be rebuilt, so the
-backup plan is only as good as the machine plan.
+**The rule this directory exists to make true:** *nothing exists on a machine
+that these files did not put there, except the secrets file.* A restored backup
+is only worth something if the machine it is restored onto can be rebuilt, so
+the backup plan is only as good as the machine plan.
 
 The plan that owns this work, including its blockers and its decisions, is
 `Plans/caddy-deploy-and-cicd.md` (it replaced `docs/plans/local-deploy-and-cd-pipeline.md`
@@ -15,40 +15,44 @@ on 2026-10-13).
 
 ## Run it
 
-    infra/run-local.sh              # build, then (re)start app + proxy
-    infra/run-local.sh --no-build   # restart, reuse the last build
-    infra/run-local.sh --status      # what is running, and which build
-    infra/run-local.sh --stop       # stop both
+    infra/run-local.sh [<commit>]             # build the image of a commit (default HEAD), deploy it
+    infra/run-local.sh --no-build [<commit>]  # deploy the image already built for that commit
+    infra/run-local.sh --status               # what is running, and which commit
+    infra/run-local.sh --stop                 # stop the app and Caddy
 
-Then open **https://localhost**.
+Then open **https://localhost**. The script prints the full commit SHA it built,
+and `https://localhost/api/healthz` reports the same SHA as `buildId`.
 
 The script checks every prerequisite by name and refuses rather than carrying on
 degraded. If it stops, the message says what to do.
 
-## What runs where, and why it is split
+## The pieces
 
-| Piece | How it runs | Why |
-|---|---|---|
-| The app | systemd **user** service, `127.0.0.1:3100` | No privileges needed; restarts on crash (verified: `kill -9` recovered in 2 s); configured to start at boot via `loginctl enable-linger`, which has not yet been observed across a real reboot |
-| Caddy | **Docker** container, host network, ports 80 + 443 | Only root may bind ports below 1024. There is no passwordless sudo here; the Docker daemon is already root and the owner is in the `docker` group, so a container binds 443 with no password |
-
-That split looks backwards — the proxy containerised, the app not — and it is
-the only arrangement that needs no administrator rights. Phase 3 of the plan
-moves the app into a container too, so that local and server run one artifact.
+| File | What it is |
+|---|---|
+| `Dockerfile` | The app as one image, built from one commit. Debian slim (onnxruntime-node needs glibc), Node 24, non-root, `exec`s the server so a stop signal drains it. |
+| `../.dockerignore` | An allow-list: a new file reaches an image only when added there on purpose; `.env*` never. |
+| `build-image.sh` | Builds the image from `git archive <commit>` in the 12 GB-capped buildx builder `dg-capped`. A build on this machine once took 29 GB. |
+| `write-env-file.sh` | Writes `~/.config/daygame/staging.env` (runtime secrets) and `build-public.env` from `.env.local`, mode 600, printing names only. |
+| `compose.yaml` | The app and Caddy, the same file on every machine. The app publishes no port, runs read-only with no capabilities, 2 GB. |
+| `caddy/common.caddy` | What both Caddyfiles share: compression, body limit, no version banners, the preview headers stripped, `reverse_proxy app:3000`. |
+| `caddy/Caddyfile.local` | localhost with Caddy's own CA. No HSTS. |
+| `caddy/Caddyfile.production` | The real domain: Let's Encrypt only, HSTS, timeouts. |
+| `deploy.sh` | **The only deploy path.** Digest in, health checked inside and through Caddy, rolled back on failure. |
+| `deploy-agent.sh` + `systemd/daygame-deploy.*` | Every minute: is there a new digest on the watched tag? Then `deploy.sh`. |
 
 ## This is not the dev server
 
 | | `npm run dev` | `infra/run-local.sh` |
 |---|---|---|
-| Port | 3000 | 3100, behind Caddy on 443 |
-| Serves | the working tree, as you save | a built artifact |
+| Port | 3000 | 443 through Caddy; the app itself publishes none |
+| Serves | the working folder, as you save | an image built from one commit |
 | `NODE_ENV` | development | **production** |
 | `/test/*`, `/api/test/*` | available | **404 by design** |
-| Build dir | `.next` | `.next-prod` |
+| Node | the machine's default | 24, inside the image |
 
-Both run at the same time and never touch each other's build directory. The dev
-server on :3000 is the owner's daily driver; nothing here stops, restarts or
-reconfigures it.
+Both run at the same time. The dev server on :3000 is the owner's daily driver;
+nothing here stops, restarts or reconfigures it.
 
 ## The certificate
 
@@ -60,34 +64,37 @@ Trust it once — no administrator rights needed:
 
 Firefox has its own store: Settings → Privacy → Certificates → View → Import.
 
-`caddy_data` is a **named Docker volume** on purpose. It holds the CA's root key;
-delete it and Caddy mints a new root, the one you trusted stops matching, and a
-site that worked yesterday shows a certificate error.
+`caddy_data` is a **named Docker volume** (`infra_caddy_data`) on purpose. It
+holds the CA's root key; delete it and Caddy mints a new root, the one you
+trusted stops matching, and a site that worked yesterday shows a certificate
+error. `compose.yaml` keeps the project name `infra` so the volume carried over
+from the systemd deployment this replaced.
 
 **There is deliberately no HSTS in the local config.** That header applies to a
 host and ignores the port, so serving it for `localhost` would make the browser
 force HTTPS on `http://localhost:3000` as well — and the dev server has no
-certificate. One header would break the daily driver in a way that looks like a
-dead dev server. HSTS belongs on the real domain.
+certificate. HSTS belongs on the real domain, and only there.
 
 ## What stops this drifting
 
-`tests/unit/infra/localDeploy.test.ts` reads these files the way Caddy and
-systemd read them and fails when a rule here stops being true: the port named in
-three places disagreeing, `-H 127.0.0.1` going missing, the LAN-address check
-disappearing from `run-local.sh`, HSTS appearing in the local Caddyfile (or
-missing from the production one, once it exists), or Caddy losing its restart
-policy, its log cap or its persistent certificate volume. It was checked by
-breaking two of those rules on purpose and watching it fail, then reverting.
+`tests/unit/infra/localDeploy.test.ts` reads these files the way Docker, compose
+and Caddy read them, and fails when a rule stops being true: a port published
+for the app, HSTS on localhost, a restart policy, log cap, tmpfs cap or the
+certificate volume going missing, the Dockerfile running as root or dropping
+`exec` or a required build argument, `.dockerignore` letting `.env*` in, compose
+no longer failing on a missing setting, or `common.caddy` no longer stripping
+the preview headers. `tests/unit/infra/production.test.ts` does the same for the
+production files.
 
 ## Things that will bite
 
-- **`next build` edits `tsconfig.json`**, adding the dist dir to `include`.
-  `run-local.sh` reverts its own entry every time; three from earlier sessions
-  are already committed.
 - **Sign-up and password reset bounce to Vercel** on the local deployment, because
   `https://localhost/**` is not on Supabase's redirect allow-list and those two
   flows build their redirect from `window.location.origin`. Ordinary password
   login works. See the plan's blocker `B-SUPABASE-REDIRECT`.
-- **`journalctl --user -u daygame-local.service -f`** is where the app's output
-  goes; `docker logs -f dg-caddy` is the proxy's. Both are capped.
+- **Features that shell out to the Claude CLI do not work in the container**, and
+  neither does Ollama on this machine's own localhost: inside the container,
+  localhost is the container. The master plan's D4 moves the Claude features to
+  the API.
+- **Logs:** `docker logs -f dg-app` and `docker logs -f dg-caddy`; the deploy
+  agent's in `journalctl --user -u daygame-deploy`. All capped.

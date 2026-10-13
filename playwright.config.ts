@@ -31,6 +31,18 @@ export const TRAINING_STATE = 'tests/e2e/.auth/training.json'
 const BASE_URL = process.env.PW_BASE_URL ?? 'http://localhost:3000'
 
 /**
+ * THE LOCAL DEPLOYMENT HAS ITS OWN CERTIFICATE AUTHORITY.
+ *
+ * https://localhost (infra/run-local.sh) is served by Caddy with a certificate
+ * from Caddy's local CA, which the browsers Playwright starts do not trust.
+ * For an https address on this machine only, certificate errors are ignored,
+ * by the browsers and by `webServer` alike. Without the second, `webServer`
+ * cannot see the running server and starts `npm run dev` in the shared folder
+ * instead. Plans/caddy-deploy-and-cicd.md, Phase 3 step 10.
+ */
+const LOCAL_HTTPS = /^https:\/\/(localhost|127\.0\.0\.1|[a-z0-9-]+\.localhost)(:\d+)?(\/|$)/.test(BASE_URL)
+
+/**
  * WHICH TRAINING TESTS RUN OFF CHROMIUM.
  *
  * Matched against "project file describe title tags", so a file name selects
@@ -50,6 +62,7 @@ export default defineConfig({
   timeout: 60000,
   use: {
     baseURL: BASE_URL,
+    ignoreHTTPSErrors: LOCAL_HTTPS,
     // Off under CI: a trace records typed values, request bodies and auth
     // cookies, and CI's artifacts on this public repo are downloadable.
     trace: process.env.CI ? 'off' : 'on-first-retry',
@@ -595,6 +608,7 @@ export default defineConfig({
   webServer: {
     command: process.env.CI ? 'npm run build && npm start' : 'npm run dev',
     url: BASE_URL,
+    ignoreHTTPSErrors: LOCAL_HTTPS,
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // Allow more time for build in CI
   },

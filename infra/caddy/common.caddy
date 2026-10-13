@@ -1,0 +1,37 @@
+# WHAT EVERY CADDYFILE HERE SHARES, imported by Caddyfile.local and
+# Caddyfile.production inside their site blocks. One place, so local and
+# production cannot drift on the parts that are not about certificates.
+# Plans/caddy-deploy-and-cicd.md, Phase 3 step 5.
+
+encode zstd gzip
+
+# The payload ceiling Next's self-hosting guide asks the proxy to own. Nothing
+# here uploads files; the largest bodies are goal trees as JSON, in kilobytes.
+request_body {
+	max_size 10MB
+}
+
+# A version banner is free reconnaissance.
+header {
+	-Server
+	-X-Powered-By
+}
+
+# Headers a request must never carry in from outside. A Next build bakes a
+# draft-mode preview key into its output; if an image leaked, these headers are
+# what that key would be used with (forced re-renders, cache bypass), and
+# x-middleware-subrequest is the header of the 2025 middleware-bypass advisory.
+# Nothing legitimate sends them from a browser.
+request_header -x-prerender-revalidate*
+request_header -x-middleware-subrequest
+request_header -x-next-revalidate*
+
+# The app, on the compose network only. Caddy sets X-Forwarded-For, -Proto and
+# -Host itself; they are deliberately not restated, because src/db/authCookies.ts
+# depends on -Proto and a "tidied" default is how that breaks.
+reverse_proxy app:3000 {
+	# A deploy restarts the app. A request in that window waits up to 10 s
+	# instead of failing with a 502.
+	lb_try_duration 10s
+	lb_try_interval 250ms
+}

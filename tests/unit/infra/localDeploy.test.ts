@@ -2,138 +2,183 @@
 /**
  * THE DEPLOYMENT'S RULES, MADE TO BITE.
  *
- * `infra/` carries four rules that are invisible until the day they are broken,
- * and each of them is currently written down in more than one file. A rule
- * stored twice is a rule that can disagree with itself, which is the shape of
- * many past failures here.
+ * `infra/` holds the only statement of what a machine running this app is: the
+ * image (infra/Dockerfile), what goes into it (.dockerignore), how it runs
+ * (infra/compose.yaml) and what stands in front of it (infra/caddy/). Each rule
+ * below is invisible until the day it is broken, and each break looks like
+ * nothing at all until then:
  *
- *   1. THE PORT. 3100 appears in the Caddyfile, in the systemd unit and in
- *      run-local.sh. Change one and the proxy answers 502 — on a deployment
- *      whose whole point is that it is not the dev server, so nobody is
- *      watching it closely.
+ *   1. NO PORT FOR THE APP. Caddy reaches the app over the compose network. A
+ *      `ports:` entry would put the app on the machine's network with no proxy
+ *      in front of it, which Next's own self-hosting guide tells you not to do.
+ *      Nothing fails; it just becomes true.
  *
- *   2. LOOPBACK ONLY. `next start` binds every interface unless given
- *      -H 127.0.0.1. Drop that flag and the app is reachable on the LAN with no
- *      proxy in front of it, which is the one thing Next.js's own self-hosting
- *      guide tells you not to do. Nothing fails; it just becomes true.
- *
- *   3. NO HSTS LOCALLY. Strict-Transport-Security applies to a HOST and ignores
+ *   2. NO HSTS LOCALLY. Strict-Transport-Security applies to a HOST and ignores
  *      the PORT, so serving it for `localhost` makes the browser force HTTPS on
  *      http://localhost:3000 as well — the owner's `next dev`, which has no
- *      certificate. One header here breaks the daily driver, and it presents as
- *      a dead dev server rather than as a proxy misconfiguration.
+ *      certificate. It presents as a dead dev server. (The production
+ *      Caddyfile must send it; tests/unit/infra/production.test.ts guards that
+ *      with the file itself.)
  *
- *   4. ...AND HSTS ON THE REAL DOMAIN, when that file arrives. The same rule
- *      inverts once there is a public hostname, so the guard inverts with it
- *      rather than being deleted.
+ *   3. NOTHING STAYS DOWN OR FILLS THE DISK: restart policies, capped logs,
+ *      size-capped tmpfs, the persistent certificate volume.
  *
- * Why text assertions. These files are the only statement of what the machine
- * is; there is no second copy to compare them against. So this reads them the
- * way Caddy and systemd read them, exactly as tests/unit/ciWorkflows.test.ts
- * reads the workflow YAML and tests/unit/hooks/hookCommandPaths.test.ts reads
- * settings.json.
+ *   4. THE IMAGE HOLDS NO SECRET AND RUNS AS NOBODY IMPORTANT: an allow-list
+ *      .dockerignore that still excludes .env*, no secret at build time, a
+ *      non-root user, a read-only filesystem, and `exec` so the stop signal
+ *      reaches Next.
+ *
+ *   5. A MISSING SETTING STOPS COMPOSE instead of starting something
+ *      half-configured, and the preview headers a leaked build key would need
+ *      are stripped at the proxy.
+ *
+ * The port-agreement and loopback tests that guarded the systemd deployment
+ * went with it (2026-10-13): there is no host port and no `next start` any more.
+ *
+ * Text and YAML assertions, because these files are the only statement of what
+ * the machine is; there is no second copy to compare them against.
  */
 
 import { describe, it, expect } from "vitest"
-import { existsSync, readFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
+import { parse } from "yaml"
 
 const ROOT = resolve(__dirname, "../../..")
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8")
+const withoutComments = (text: string) => text.replace(/^\s*#.*$/gm, "")
 
+const COMPOSE = "infra/compose.yaml"
+const DOCKERFILE = "infra/Dockerfile"
+const DOCKERIGNORE = ".dockerignore"
 const CADDYFILE_LOCAL = "infra/caddy/Caddyfile.local"
-const CADDYFILE_PROD = "infra/caddy/Caddyfile.production"
-const UNIT = "infra/systemd/daygame-local.service.template"
-const SCRIPT = "infra/run-local.sh"
-const COMPOSE = "infra/compose.local.yaml"
+const COMMON = "infra/caddy/common.caddy"
 
-describe("the local deployment's files agree with each other", () => {
-  it("every file that names the app's port names the same one", () => {
-    const caddy = read(CADDYFILE_LOCAL).match(/reverse_proxy\s+127\.0\.0\.1:(\d+)/)
-    const unit = read(UNIT).match(/next start .*-p (\d+)/)
-    const script = read(SCRIPT).match(/^APP_PORT=(\d+)/m)
+type Service = {
+  image?: string
+  env_file?: string
+  ports?: unknown[]
+  restart?: string
+  logging?: { options?: Record<string, string> }
+  tmpfs?: string[]
+  read_only?: boolean
+  cap_drop?: string[]
+  security_opt?: string[]
+  mem_limit?: string
+  init?: boolean
+  volumes?: string[]
+}
+const compose = parse(read(COMPOSE)) as { name: string; services: Record<string, Service>; networks: Record<string, { enable_ipv6?: boolean }> }
+const app = compose.services.app
+const caddy = compose.services.caddy
 
-    expect(caddy, `${CADDYFILE_LOCAL} no longer proxies to 127.0.0.1:<port>`).not.toBeNull()
-    expect(unit, `${UNIT} no longer starts Next with an explicit -p <port>`).not.toBeNull()
-    expect(script, `${SCRIPT} no longer declares APP_PORT`).not.toBeNull()
-
-    const ports = { caddy: caddy![1], unit: unit![1], script: script![1] }
-    expect(
-      new Set(Object.values(ports)).size,
-      `these three disagree about the app's port, so Caddy will answer 502: ${JSON.stringify(ports)}`,
-    ).toBe(1)
+describe("the app is reachable only through Caddy", () => {
+  it("publishes no port", () => {
+    expect(app.ports, `${COMPOSE}: the app must not publish a port; Caddy reaches it as app:3000.`).toBeUndefined()
+    expect(read(COMPOSE)).not.toMatch(/network_mode:\s*host/)
   })
 
-  it("the app is started on loopback only, so the proxy is the only door in", () => {
-    // -H / --hostname is what stops `next start` listening on every interface.
-    expect(
-      /next start .*(-H|--hostname)\s+127\.0\.0\.1/.test(read(UNIT)),
-      `${UNIT} must start Next with -H 127.0.0.1. Without it the app answers on the machine's LAN address with no proxy in front of it.`,
-    ).toBe(true)
-  })
-
-  it("run-local.sh still proves the loopback rule instead of asserting it", () => {
-    // The check that is easiest to quietly delete, because everything still
-    // works without it — right up until the app is on the network.
-    const script = read(SCRIPT)
-    expect(
-      script.includes("hostname -I"),
-      `${SCRIPT} no longer checks the machine's own LAN address. That check is the only thing that would notice the app had stopped being loopback-only.`,
-    ).toBe(true)
-    expect(
-      /loopback-only/.test(script),
-      `${SCRIPT} no longer reports on the loopback guarantee.`,
-    ).toBe(true)
+  it("Caddy proxies to the app over the compose network", () => {
+    expect(withoutComments(read(COMMON))).toMatch(/reverse_proxy\s+app:3000/)
   })
 })
 
-describe("HSTS is kept away from localhost and required on the real domain", () => {
-  const HSTS = /strict-transport-security/i
-
-  it("the local Caddyfile sends no HSTS header", () => {
-    expect(
-      HSTS.test(read(CADDYFILE_LOCAL).replace(/^\s*#.*$/gm, "")),
-      `${CADDYFILE_LOCAL} sets Strict-Transport-Security. That header ignores the port, so it would force HTTPS on http://localhost:3000 — the dev server, which has no certificate — and present as a dead dev server.`,
-    ).toBe(false)
-  })
-
-  it("the production Caddyfile, once it exists, does send HSTS", () => {
-    // Phase 5 of Plans/caddy-deploy-and-cicd.md creates this file.
-    // Until then there is nothing to check, and saying so is better than a
-    // test that silently passes on a missing file forever.
-    if (!existsSync(join(ROOT, CADDYFILE_PROD))) {
-      expect(existsSync(join(ROOT, CADDYFILE_LOCAL))).toBe(true)
-      return
+describe("HSTS is kept away from localhost", () => {
+  it("the local Caddyfile, and what it imports, send no HSTS header", () => {
+    for (const file of [CADDYFILE_LOCAL, COMMON]) {
+      expect(
+        /strict-transport-security/i.test(withoutComments(read(file))),
+        `${file} sets Strict-Transport-Security. That header ignores the port, so it would force HTTPS on http://localhost:3000 — the dev server, which has no certificate.`,
+      ).toBe(false)
     }
-    expect(
-      HSTS.test(read(CADDYFILE_PROD).replace(/^\s*#.*$/gm, "")),
-      `${CADDYFILE_PROD} exists but sets no Strict-Transport-Security. On a real domain that header is wanted; it is only localhost it must stay away from.`,
-    ).toBe(true)
+    expect(withoutComments(read(CADDYFILE_LOCAL))).toMatch(/import\s+\/etc\/caddy\/common\.caddy/)
   })
 })
 
-describe("the proxy cannot quietly fill the disk or stay down", () => {
-  it("Caddy restarts itself and caps its logs", () => {
-    const compose = read(COMPOSE)
-    expect(
-      /restart:\s*unless-stopped/.test(compose),
-      `${COMPOSE} has no restart policy, so Caddy stays down after a crash or a reboot.`,
-    ).toBe(true)
-    // Docker's default json-file driver has no size limit at all, and the disk
-    // is the single point of failure on a one-box deployment.
-    expect(
-      /max-size:/.test(compose),
-      `${COMPOSE} does not cap the container log size. Docker's default is unbounded.`,
-    ).toBe(true)
+describe("nothing stays down or fills the disk", () => {
+  it.each([
+    ["app", app],
+    ["caddy", caddy],
+  ])("%s restarts itself and caps its logs", (name, service) => {
+    expect(service.restart, `${COMPOSE} ${name}: no restart policy`).toBe("unless-stopped")
+    expect(service.logging?.options?.["max-size"], `${COMPOSE} ${name}: unbounded logs`).toBeDefined()
+    expect(service.logging?.options?.["max-file"], `${COMPOSE} ${name}: unbounded log files`).toBeDefined()
   })
 
-  it("the certificate volume is persistent, so the trusted root survives a restart", () => {
-    // A fresh volume means a fresh CA root, which means the root the owner
-    // trusted in their browser stops matching and a working site starts
-    // showing certificate errors.
-    expect(
-      /caddy_data:\s*\/data/.test(read(COMPOSE)),
-      `${COMPOSE} no longer mounts a named volume at /data. Caddy would mint a new CA root on every restart and invalidate the one trusted in the browser.`,
-    ).toBe(true)
+  it("the app's writable places are size-capped tmpfs", () => {
+    const tmpfs = app.tmpfs ?? []
+    expect(tmpfs.find((t) => t.startsWith("/tmp:"))).toMatch(/size=\d+m/)
+    expect(tmpfs.find((t) => t.startsWith("/app/.next/cache:"))).toMatch(/size=\d+m/)
+    // .next/server holds the prerendered pages; a mount there would hide them.
+    expect(tmpfs.some((t) => t.startsWith("/app/.next/server"))).toBe(false)
+  })
+
+  it("the certificate volume is the persistent one the old deployment used", () => {
+    // `name: infra` + `caddy_data` is the existing volume infra_caddy_data: a new
+    // one would mint a new local root and break the one trusted in a browser.
+    expect(compose.name).toBe("infra")
+    expect(caddy.volumes).toContain("caddy_data:/data")
+    expect(caddy.volumes).toContain("caddy_config:/config")
+  })
+})
+
+describe("the container holds no secret and has no power it does not need", () => {
+  const dockerfile = withoutComments(read(DOCKERFILE))
+
+  it("runs as a non-root user, read-only, with no capabilities and a memory limit", () => {
+    expect(dockerfile).toMatch(/^USER\s+1000:1000\s*$/m)
+    expect(app.read_only).toBe(true)
+    expect(app.cap_drop).toEqual(["ALL"])
+    expect(app.security_opt).toContain("no-new-privileges:true")
+    expect(app.mem_limit).toBe("2g")
+    expect(app.init).toBe(true)
+  })
+
+  it("execs the server, so the stop signal reaches Next and it drains", () => {
+    expect(dockerfile).toMatch(/CMD \["sh", "-c", "node scripts\/check-runtime-env\.mjs && exec node server\.js"\]/)
+  })
+
+  it.each(["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_APP_URL", "BUILD_SHA"])(
+    "refuses to build without %s",
+    (arg) => {
+      expect(dockerfile).toMatch(new RegExp(`\\$\\{${arg}:\\?`))
+    },
+  )
+
+  it("never receives the Server Actions key at build time", () => {
+    // Each server sets its own at runtime, which replaces the one a build bakes in.
+    expect(dockerfile).not.toMatch(/NEXT_SERVER_ACTIONS_ENCRYPTION_KEY/)
+  })
+
+  it(".dockerignore is an allow-list that still shuts out every .env file", () => {
+    const lines = withoutComments(read(DOCKERIGNORE)).split("\n").map((l) => l.trim()).filter(Boolean)
+    expect(lines[0], "the first rule excludes everything").toBe("*")
+    const lastEnvRule = lines.lastIndexOf("**/.env*")
+    expect(lastEnvRule, ".dockerignore no longer excludes .env* files").toBeGreaterThan(-1)
+    // A later `!` rule could let one back in.
+    expect(lines.slice(lastEnvRule + 1).some((l) => l.startsWith("!"))).toBe(false)
+  })
+})
+
+describe("a missing setting stops compose, and the proxy strips what a leaked key needs", () => {
+  it("fails on a missing image, env file or Caddyfile instead of guessing", () => {
+    expect(app.image).toMatch(/^\$\{APP_IMAGE:\?/)
+    expect(app.env_file).toMatch(/^\$\{APP_ENV_FILE:\?/)
+    expect(caddy.volumes?.[0]).toMatch(/^\$\{CADDYFILE:\?/)
+  })
+
+  it("strips the preview and subrequest headers before they reach the app", () => {
+    const common = withoutComments(read(COMMON))
+    for (const header of ["x-prerender-revalidate*", "x-middleware-subrequest", "x-next-revalidate*"]) {
+      expect(common, `${COMMON} no longer strips ${header}`).toContain(`request_header -${header}`)
+    }
+  })
+
+  it("pins Caddy by digest", () => {
+    expect(caddy.image).toMatch(/^caddy:[\w.-]+@sha256:[0-9a-f]{64}$/)
+  })
+
+  it("keeps IPv6 visitors' own addresses", () => {
+    expect(compose.networks.web.enable_ipv6).toBe(true)
   })
 })
