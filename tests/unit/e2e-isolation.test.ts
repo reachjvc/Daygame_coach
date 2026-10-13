@@ -23,19 +23,15 @@ const e2eDir = path.join(projectRoot, 'tests/e2e')
 // These tests existed before the isolation rules were implemented.
 // TODO: Gradually migrate these to use serial mode and remove from allowlist.
 const GRANDFATHERED_PARALLEL_TESTS = new Set([
-  'tests/e2e/articles.spec.ts',
   'tests/e2e/auth.spec.ts',
   'tests/e2e/dashboard-navigation.spec.ts',
   'tests/e2e/field-report.spec.ts',
   'tests/e2e/inner-game-flow.spec.ts',
-  'tests/e2e/onboarding.spec.ts',
-  'tests/e2e/preferences.spec.ts',
   'tests/e2e/qa-chat.spec.ts',
   'tests/e2e/scenarios-hub.spec.ts',
   'tests/e2e/security-input.spec.ts',
   'tests/e2e/settings.spec.ts',
   'tests/e2e/tracking-dashboard.spec.ts',
-  'tests/e2e/weekly-review.spec.ts',
 ])
 
 // Tests that are explicitly designed to run in parallel (stateless)
@@ -241,11 +237,12 @@ describe('E2E Test Isolation Compliance', () => {
    * counts on 2026-09-23 were 4, 5 and 0.
    */
   const SLEEP_CEILING: Record<string, number> = {
-    'tests/e2e/programs-live-workout.spec.ts': 4,
-    'tests/e2e/programs-history-progress.spec.ts': 5,
-    // One, and it is waiting for a CSS hover transition to land before reading
-    // the computed colour — there is no event for "the transition finished".
-    'tests/e2e/programs-one-language.spec.ts': 1,
+    // The ten-second background of the rest-clock test, which IS the thing
+    // under test (tagged @timing). The other three became waits on a condition.
+    'tests/e2e/programs-live-workout.spec.ts': 1,
+    'tests/e2e/programs-history-progress.spec.ts': 0,
+    // Was one, for a CSS hover transition: it waits on the element's own
+    // animations finishing now (`getAnimations()`), which is that event.
   }
 
   /** Every spec the `training` project runs, read off the config. */
@@ -355,18 +352,24 @@ describe('E2E Test Isolation Compliance', () => {
   test('sees the whole e2e suite, including subdirectories', () => {
     const seen = getAllE2EFiles().map((f) => path.relative(projectRoot, f))
 
+    /**
+     * Floors lowered on 2026-10-13, and only because the suite was cut on
+     * purpose: Phase 3 of docs/plans/tests-worth-their-keep.md deleted 23 spec
+     * files (18 under mobile/, cross-browser/ and integration/ became 8) and
+     * merged three more. Still set below the real counts, which were 8 and 55.
+     */
     const inSubdirs = seen.filter((f) => f.split('/').length > 3)
     expect(
       inSubdirs.length,
       `Only top-level specs are visible. Subdirectories (mobile/, cross-browser/, ` +
-        `integration/) hold real tests, and a guard that cannot see them passes ` +
+        `sweep/) hold real tests, and a guard that cannot see them passes ` +
         `without checking them.`,
-    ).toBeGreaterThan(10)
+    ).toBeGreaterThanOrEqual(6)
 
     expect(
       seen.length,
-      `Found ${seen.length} spec files; expected at least 55. A guard that ` +
+      `Found ${seen.length} spec files; expected at least 50. A guard that ` +
         `narrows its own input goes quiet without going red.`,
-    ).toBeGreaterThanOrEqual(55)
+    ).toBeGreaterThanOrEqual(50)
   })
 })

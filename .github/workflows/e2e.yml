@@ -52,7 +52,7 @@ jobs:
   # is worth minutes on a pull request and not worth them on every push.
   # ===========================================================================
   e2e-fast:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
           retention-days: 7
 
   e2e-chromium:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # WAITS FOR THE FAST JOB, and the reason is not speed.
     #
     # Every browser job here signs in as the same test accounts, and the specs
@@ -138,7 +138,7 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Run E2E tests (Chromium)
-        run: npx playwright test --project=setup --project=setup-user-b --project=training-setup --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=integration --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-iphone-safari --project=toggl-android --project=error-reporting
+        run: npx playwright test --project=setup --project=setup-user-b --project=training-setup --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-android --project=error-reporting
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -162,7 +162,7 @@ jobs:
           retention-days: 7
 
   e2e-cross-browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Both jobs sign in as the same accounts, and the training specs delete that
     # account's programs mid-run. Running them at the same time meant one job
     # could pull the rug out from under the other, so this one waits.
@@ -201,7 +201,7 @@ jobs:
         # `sweep-desktop` moved to the e2e-fast job above, so the desktop sweep
         # answers on every push. The phone and WebKit sweeps stay here: a second
         # and third engine earns its minutes on a pull request, not on a push.
-        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav --project=cross-firefox --project=cross-webkit --project=auth-webkit --project=auth-firefox --project=auth-iphone --project=auth-android --project=sweep-phone --project=sweep-webkit
+        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=cross-firefox --project=cross-webkit --project=auth-iphone --project=sweep-phone --project=sweep-webkit
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

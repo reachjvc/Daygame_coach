@@ -30,6 +30,16 @@ export const TRAINING_STATE = 'tests/e2e/.auth/training.json'
  */
 const BASE_URL = process.env.PW_BASE_URL ?? 'http://localhost:3000'
 
+/**
+ * WHICH TRAINING TESTS RUN OFF CHROMIUM.
+ *
+ * Matched against "project file describe title tags", so a file name selects
+ * the whole file. Three files are engine-sensitive throughout; in the
+ * live-workout file only the tests tagged @engine are.
+ */
+const TRAINING_OFF_CHROMIUM =
+  /@engine|mobile-training\.spec\.ts|programs-offline\.spec\.ts|programs-live-desktop\.spec\.ts/
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -84,8 +94,10 @@ export default defineConfig({
         /security-auth\.spec\.ts/,
         /auth\.spec\.ts/,
         /protected-routes\.spec\.ts/,
-        /security-rls\.spec\.ts/,
         /security-idor\.spec\.ts/,
+        // The tracker's own behaviour, on the account the sync specs empty —
+        // so it runs in their project, one test at a time.
+        /toggl-time-tracker\.spec\.ts/,
         // Training tests run in their own project: they share one account and
         // each wipes it clean, so in parallel they delete each other's data.
         /programs-live-workout\.spec\.ts/,
@@ -105,27 +117,16 @@ export default defineConfig({
         /programs-offline\.spec\.ts/,
         // Session-creating tests run in isolated project to avoid parallel conflicts
         /session-tracking\.spec\.ts/,
-        /approach-logging\.spec\.ts/,
-        /data-persistence\.spec\.ts/,
-        /start-session\.spec\.ts/,
-        // Goals tests share a user and mutate goals data — run serially
-        /goals-hub\.spec\.ts/,
-        /goals-data-consistency\.spec\.ts/,
-        /goals-tour\.spec\.ts/,
+        // Goals tests share a user and mutate goals data — run in their own projects
         /life-mastery-track\.spec\.ts/,
-        // Mobile-specific tests run in dedicated cross-browser projects
+        // `goals-4`'s. It was missing from this list, so it ran twice per pass.
+        /life-mastery-day-persists\.spec\.ts/,
+        // Mobile-specific tests run in dedicated phone projects
         /mobile\//,
-        // Integration tests run in dedicated project after session chain
-        /integration\//,
         // Cross-browser tests run in dedicated Firefox/WebKit projects
         /cross-browser\//,
         // Derived per-route sweeps run in their own desktop/phone/WebKit projects
         /sweep\//,
-        // Prototype smoke specs for /test/goalsv4. They are written to run
-        // SIGNED OUT and fail with a session, so they belong to `no-auth`,
-        // which lists them explicitly. Before the smoke pattern was anchored
-        // they were swept up by it into five browser projects at once.
-        /variant-[a-z0-9-]*smoke\.spec\.ts/,
         // The signed-OUT half of the cold-open sweep. It asserts what a
         // stranger sees on the sales page and in the auth flow, so a session
         // would render a different app and prove nothing about either.
@@ -141,10 +142,7 @@ export default defineConfig({
     // === Multi-user security tests (depend on both setups) ===
     {
       name: 'security-multi-user',
-      testMatch: [
-        /security-rls\.spec\.ts/,
-        /security-idor\.spec\.ts/,
-      ],
+      testMatch: /security-idor\.spec\.ts/,
       dependencies: ['setup', 'setup-user-b'],
       use: {
         ...devices['Desktop Chrome'],
@@ -157,10 +155,6 @@ export default defineConfig({
       name: 'no-auth',
       testMatch: [
         /(?:^|\/)smoke\.spec\.ts$/,
-        // The /test/goalsv4 prototype smoke specs: signed-out, and this is the
-        // only project that runs them. Named rather than pattern-matched so
-        // they cannot silently spread across the browser projects again.
-        /variant-[a-z0-9-]*smoke\.spec\.ts/,
         /signup-flow\.spec\.ts/,
         // Password reset is an unauthenticated flow: half of it asserts what a
         // logged-OUT visitor sees, so it must not inherit the signed-in state.
@@ -170,6 +164,9 @@ export default defineConfig({
         // console. The only pages a person can reach without an account, so the
         // only ones where a hydration failure can be shown to a stranger.
         /cold-open-signed-out\.spec\.ts/,
+        // Signed out by its own `test.use`; it logs nothing in or out, so it
+        // has no reason to wait for `auth-destructive`.
+        /protected-routes\.spec\.ts/,
       ],
       use: { ...devices['Desktop Chrome'] },
     },
@@ -244,36 +241,41 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: TRAINING_STATE },
     },
 
-    // === Time tracker: does it really reach the account? ===
-    // This one talks to the live database, so it runs alone rather than beside
-    // the others: two workers uploading to the same account would fight.
+    // === Time tracker, at /dashboard/time, on the account it syncs to ===
+    // Every spec here empties TEST_USER's time-tracking data before it starts
+    // (helpers/timetrack.ts), so the files run one at a time: a second worker
+    // would empty the account under a test halfway through asserting on it.
+    // Until 2026-10-13 two of these files drove `/test/toggl`, a signed-out lab
+    // copy that returns 404 in the production build CI runs.
     {
       name: 'timetrack-sync',
-      testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/],
+      testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/, /toggl-time-tracker\.spec\.ts/],
+      fullyParallel: false,
+      workers: 1,
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
-    // Syncing, on a phone. It was only ever run on a desktop, and the first
-    // phone run found three faults a desktop cannot see: the sync status badge
-    // was hidden below 640px, and the entry menu opened underneath the bottom
-    // navigation bar, so "Delete" could not be tapped at all.
+    // The tracker on a phone. Syncing was only ever run on a desktop, and the
+    // first phone run found three faults a desktop cannot see: the sync status
+    // badge was hidden below 640px, and the entry menu opened underneath the
+    // bottom navigation bar, so "Delete" could not be tapped at all.
+    //
+    // ONE iPhone project. `mobile-toggl` also ran in `mobile-iphone` and
+    // `toggl-iphone-safari` — the same device twice, the same tests twice.
     {
       name: 'timetrack-sync-phone',
-      testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/],
+      testMatch: [/timetrack-sync\.spec\.ts/, /timetrack-edge-cases\.spec\.ts/, /mobile\/mobile-toggl\.spec\.ts/],
+      fullyParallel: false,
+      workers: 1,
       dependencies: ['setup'],
       /**
        * DO NOT RUN THIS PROJECT AND `timetrack-sync` IN THE SAME INVOCATION
-       * LOCALLY. CI is safe because it pins `workers: 1`; locally `workers` is
-       * unset, and the two together fail 2-3 tests that move between runs —
-       * session expiry, deletion merge, "nothing queued is thrown away" — none
-       * of which has anything to do with the race. That misdirection is the
-       * whole reason this note exists; it cost two rounds of diagnosis.
-       *
-       * Giving this project its own account was tried and is NOT the fix: the
-       * failures survived it, because the contention is the single `next dev`
-       * process both suites are driving, not the rows they write. Run them one
-       * at a time:
+       * LOCALLY. CI is safe because it pins `workers: 1`; locally the two
+       * projects run side by side, and both empty the same account. The
+       * contention found first was the single `next dev` process both suites
+       * drive, which a separate account would not fix either. Run them one at
+       * a time:
        *
        *   npx playwright test --project=timetrack-sync
        *   npx playwright test --project=timetrack-sync-phone
@@ -281,31 +283,33 @@ export default defineConfig({
       use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
     },
 
-    // === Time tracker on every engine ===
-    // The tracker is the one feature people will open on a phone, a laptop and
-    // whatever browser is on the machine in front of them. Chromium alone does
-    // not prove that. These three run the full suite, not a smoke test.
+    // === Time tracker on the other engines: NIGHTLY (Q5) ===
+    // Desktop Safari and Firefox run only the tests tagged @engine — layout,
+    // focus and storage events, where an engine difference can bite. The rest
+    // is the same JavaScript on every engine and Chromium proves it.
     {
       name: 'toggl-webkit',
       testMatch: /toggl-time-tracker\.spec\.ts/,
+      grep: /@engine/,
+      fullyParallel: false,
+      workers: 1,
       dependencies: ['setup'],
       use: { ...devices['Desktop Safari'], storageState: 'tests/e2e/.auth/user.json' },
     },
     {
       name: 'toggl-firefox',
       testMatch: /toggl-time-tracker\.spec\.ts/,
+      grep: /@engine/,
+      fullyParallel: false,
+      workers: 1,
       dependencies: ['setup'],
       use: { ...devices['Desktop Firefox'], storageState: 'tests/e2e/.auth/user.json' },
     },
     {
-      name: 'toggl-iphone-safari',
-      testMatch: /mobile\/mobile-toggl\.spec\.ts/,
-      dependencies: ['setup'],
-      use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
-    },
-    {
       name: 'toggl-android',
       testMatch: /mobile\/mobile-toggl\.spec\.ts/,
+      fullyParallel: false,
+      workers: 1,
       dependencies: ['setup'],
       use: { ...devices['Pixel 7'], storageState: 'tests/e2e/.auth/user.json' },
     },
@@ -330,6 +334,12 @@ export default defineConfig({
     // everywhere now. The rest are API round trips that Chromium proves
     // adequately, and running them three times over would buy minutes of CI for
     // nothing.
+    //
+    // 2026-10-13: that rule now reaches inside the live-workout file too. Off
+    // Chromium it runs only its four tests tagged @engine (the tick, the
+    // finish, the backgrounded rest clock, the dropped reply); its other nine
+    // are API round trips and single-engine logic. iPhone is a pull-request
+    // lane; Android and Firefox are NIGHTLY (Q5).
     {
       name: 'training-iphone-safari',
       testMatch: [
@@ -337,6 +347,7 @@ export default defineConfig({
         /programs-live-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
       ],
+      grep: TRAINING_OFF_CHROMIUM,
       fullyParallel: false,
       workers: 1,
       dependencies: ['training'],
@@ -349,6 +360,7 @@ export default defineConfig({
         /programs-live-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
       ],
+      grep: TRAINING_OFF_CHROMIUM,
       fullyParallel: false,
       workers: 1,
       dependencies: ['training-iphone-safari'],
@@ -368,37 +380,27 @@ export default defineConfig({
         // 390px default above does not apply to it.
         /programs-live-desktop\.spec\.ts/,
       ],
+      grep: TRAINING_OFF_CHROMIUM,
       fullyParallel: false,
       workers: 1,
       dependencies: ['training-android'],
       use: { ...devices['Desktop Firefox'], viewport: { width: 390, height: 844 }, storageState: TRAINING_STATE },
     },
 
-    // === Auth on phones and other engines ===
+    // === Auth on a phone ===
     // The signed-out flows -- signup, confirmation, password reset -- are the
     // first thing every new user meets, and until 2026-09-04 they were tested
     // on Chromium alone. The risk is not layout (measured fine at 390px) but
     // Safari's stricter cookie handling, which is exactly the machinery the
     // confirmation link depends on. No storageState: these are logged-out.
-    {
-      name: 'auth-webkit',
-      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'auth-firefox',
-      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
-      use: { ...devices['Desktop Firefox'] },
-    },
+    //
+    // Chromium (`no-auth`) and the iPhone, since 2026-10-13. Desktop Safari is
+    // the same WebKit cookie machinery as the iPhone, and Firefox and Android
+    // had never found a fault here that those two did not (Q5).
     {
       name: 'auth-iphone',
       testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
       use: { ...devices['iPhone 14'] },
-    },
-    {
-      name: 'auth-android',
-      testMatch: [/signup-flow\.spec\.ts/, /password-reset\.spec\.ts/],
-      use: { ...devices['Pixel 7'] },
     },
 
     // === Cross-browser smoke (unauthenticated only) ===
@@ -407,7 +409,11 @@ export default defineConfig({
     // prototype specs for /test/goalsv4 -- so each of these four projects ran
     // 27 tests of which only 5 were the real smoke test, and the same loose
     // pattern in the chromium ignore list kept the prototypes out of the one
-    // project that should have run them. They now run once, on chromium.
+    // project that should have run them. They were deleted on 2026-10-13.
+    //
+    // Two tests, both about what a browser paints or follows: the auth gate's
+    // redirect and the font. The iPhone is a pull-request lane; Firefox,
+    // desktop Safari and Android are NIGHTLY (Q5).
     {
       name: 'smoke-firefox',
       testMatch: /(?:^|\/)smoke\.spec\.ts$/,
@@ -429,43 +435,14 @@ export default defineConfig({
       use: { ...devices['Pixel 7'] },
     },
 
-    // === Goals tests (chained to run ONE file at a time) ===
-    // These files share a test user and mutate goals data, so they must not
-    // run in parallel. Each project contains one file and depends on the
-    // previous, ensuring strict sequential execution.
-    {
-      name: 'goals-1',
-      testMatch: /goals-hub\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'goals-2',
-      testMatch: /goals-data-consistency\.spec\.ts/,
-      dependencies: ['goals-1'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'goals-tour',
-      testMatch: /goals-tour\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    // Creates goals on the same shared user, so it queues behind the others
-    // rather than racing them for the same account's goal list.
+    // === Goals tests (one file per project) ===
+    // These files share a test user and write goals data. `goals-1`, `goals-2`
+    // and `goals-tour` drove the archived goals hub under `/test/archive` and
+    // were deleted on 2026-10-13 with their specs.
     {
       name: 'goals-3',
       testMatch: /life-mastery-track\.spec\.ts/,
-      dependencies: ['goals-2'],
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/e2e/.auth/user.json',
@@ -477,7 +454,7 @@ export default defineConfig({
      *
      * It was chained behind `goals-3` for tidiness, which cost it the one thing
      * it is for: Playwright SKIPS a project whose dependency failed, `goals-1`
-     * is currently red, and a skipped spec reports as a green run. The trap
+     * (since deleted) was red, and a skipped spec reports as a green run. The trap
      * this plan already records — a spec that runs nowhere — reached for it
      * through the back door.
      *
@@ -497,10 +474,12 @@ export default defineConfig({
       },
     },
 
-    // === Session-creating tests (chained to run ONE file at a time) ===
-    // These files create/end sessions via UI for the same user. Since only one session
-    // can be active at a time, they MUST NOT run in parallel. Each project contains
-    // one file and depends on the previous, ensuring strict sequential execution.
+    // === Session-creating tests ===
+    // These create and end sessions for the shared user, and one account can
+    // hold one active session, so they run after `chromium` rather than beside
+    // it. Three more files used to queue here — approach-logging,
+    // data-persistence and start-session — and were merged into this one on
+    // 2026-10-13.
     {
       name: 'session-1',
       testMatch: /session-tracking\.spec\.ts/,
@@ -510,68 +489,28 @@ export default defineConfig({
         storageState: 'tests/e2e/.auth/user.json',
       },
     },
-    {
-      name: 'session-2',
-      testMatch: /approach-logging\.spec\.ts/,
-      dependencies: ['session-1'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'session-3',
-      testMatch: /data-persistence\.spec\.ts/,
-      dependencies: ['session-2'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'session-4',
-      testMatch: /start-session\.spec\.ts/,
-      dependencies: ['session-3'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
 
     // === Auth-destructive tests (run LAST - login/logout invalidates shared session) ===
     {
       name: 'auth-destructive',
-      testMatch: [
-        /(?:^|\/)auth\.spec\.ts$/,
-        /protected-routes\.spec\.ts/,
-      ],
-      dependencies: ['chromium', 'security-multi-user', 'session-4'],
+      testMatch: /(?:^|\/)auth\.spec\.ts$/,
+      dependencies: ['chromium', 'security-multi-user', 'session-1'],
       use: { ...devices['Desktop Chrome'] },
     },
 
-    // === Mobile viewport: beta-critical specs on iPhone 14 ===
+    // === Phone-only checks, on iPhone 14 ===
+    // Things that only exist or only break at phone width. Until 2026-10-13
+    // this project re-ran six desktop specs at 390px (and `mobile-pixel` ran
+    // them again on a Pixel), and `mobile-nav` was a project of its own on the
+    // same iPhone for one file. The session flow keeps one phone test of its
+    // own; the tracker's phone suite lives in `timetrack-sync-phone`.
     {
       name: 'mobile-iphone',
       testMatch: [
-        /goals-hub\.spec\.ts/,
-        /session-tracking\.spec\.ts/,
-        /scenarios-hub\.spec\.ts/,
-        /dashboard-navigation\.spec\.ts/,
-        /tracking-dashboard\.spec\.ts/,
-        /field-report\.spec\.ts/,
-        /mobile\/mobile-goals\.spec\.ts/,
-        /mobile\/mobile-tracking\.spec\.ts/,
-        /mobile\/mobile-scenarios\.spec\.ts/,
-        /mobile\/mobile-toggl\.spec\.ts/,
+        /mobile\/mobile-session\.spec\.ts/,
         /mobile\/mobile-life-mastery-day\.spec\.ts/,
-        /*
-         * NOT mobile-life-mastery-day.spec.ts in `mobile-pixel`, for the same
-         * reason as the training spec below: it ticks and unticks ONE step on
-         * the one shared test account, `fullyParallel` is on, and two phone
-         * projects doing that at the same time race each other into a false
-         * failure. Check 5 wants a thumb on the control, which one phone
-         * answers; it does not want the same account driven twice at once.
-         */
+        // The header's menu: genuine phone-only UI
+        /mobile\/mobile-navigation\.spec\.ts/,
         /*
          * NOT mobile-training.spec.ts. It shares the one test account with the
          * `training` project, which runs in the OTHER CI job — and the two jobs
@@ -589,39 +528,8 @@ export default defineConfig({
       },
     },
 
-    // === Mobile viewport: beta-critical specs on Pixel 7 ===
-    {
-      name: 'mobile-pixel',
-      testMatch: [
-        /goals-hub\.spec\.ts/,
-        /session-tracking\.spec\.ts/,
-        /scenarios-hub\.spec\.ts/,
-        /dashboard-navigation\.spec\.ts/,
-        /tracking-dashboard\.spec\.ts/,
-        /field-report\.spec\.ts/,
-        /mobile\/mobile-goals\.spec\.ts/,
-        /mobile\/mobile-tracking\.spec\.ts/,
-        /mobile\/mobile-scenarios\.spec\.ts/,
-      ],
-      dependencies: ['setup'],
-      use: {
-        ...devices['Pixel 7'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-
-    // === Mobile navigation (genuine mobile-only UI: hamburger menu) ===
-    {
-      name: 'mobile-nav',
-      testMatch: /mobile\/mobile-navigation\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['iPhone 14'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-
     // === Cross-browser authenticated tests (Firefox + WebKit; traces locally only) ===
+    // NIGHTLY (Q5). Only vice-cross is left in cross-browser/ since 2026-10-13.
     {
       name: 'cross-firefox',
       testMatch: /cross-browser\//,
@@ -671,6 +579,7 @@ export default defineConfig({
       timeout: 180_000,
       use: { ...devices['iPhone 14'], storageState: 'tests/e2e/.auth/user.json' },
     },
+    // NIGHTLY (Q5): desktop and phone are the pull-request lanes.
     {
       name: 'sweep-webkit',
       testMatch: /sweep\//,
@@ -681,17 +590,6 @@ export default defineConfig({
       // CI runs a production build, where this is never approached.
       timeout: 180_000,
       use: { ...devices['Desktop Safari'], storageState: 'tests/e2e/.auth/user.json' },
-    },
-
-    // === Cross-feature integration tests (run after session chain) ===
-    {
-      name: 'integration',
-      testMatch: /integration\//,
-      dependencies: ['session-4'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
     },
   ],
   webServer: {
