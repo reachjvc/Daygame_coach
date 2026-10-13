@@ -11,25 +11,24 @@
  * Every one of these was unreachable before Phase 6: a 26px "Skip this one"
  * chip and a read-only rest line were the whole of it.
  *
- * WHY A SECOND FILE RATHER THAN MORE TESTS IN THE FIRST. Both share the one
- * training account and each wipes it clean, so they cannot run beside each
- * other — they are in the `training` project, one worker, and serial within
- * the file. Splitting keeps each file's failures readable: a broken menu does
- * not report itself as a broken tick.
+ * WHY A SECOND FILE RATHER THAN MORE TESTS IN THE FIRST. Splitting keeps each
+ * file's failures readable: a broken menu does not report itself as a broken
+ * tick. Both used to share the one training account and wipe it clean, so they
+ * ran one worker, serial within the file; since Phase 8 each worker has an
+ * account of its own (tests/e2e/fixtures/test.ts) and this file runs in
+ * `desktop`, beside everything.
  */
 
-import { test, expect } from "@playwright/test"
+import { test, expect } from "./fixtures/test"
 import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
-
-test.describe.configure({ mode: "serial" })
 
 /**
  * When the running test began, a minute of slack back.
  *
  * Everything the account gained after this instant is this test's own, because
- * the `training` project runs one worker on one account — which is what lets
- * the cleanup remove a FINISHED workout without going anywhere near the seeded
- * training year.
+ * a worker runs one test at a time on an account nobody else uses — which is
+ * what lets the cleanup remove a FINISHED workout without going anywhere near
+ * older history.
  */
 let startedAt = new Date().toISOString()
 
@@ -241,8 +240,8 @@ test.describe("the live screen's menus", () => {
     const y = box.y + box.height / 2
     /**
      * THE EVENTS, NOT THE TOUCHSCREEN. `page.touchscreen` needs a context
-     * created with `hasTouch`, and this project runs Desktop Chrome for the
-     * same reason the rest of the training specs do — one account, one worker.
+     * created with `hasTouch`, and this file runs on Desktop Chrome at a
+     * phone's size.
      * The row listens for touchstart/touchmove, so dispatching them is the
      * gesture as far as the component is concerned; what a real finger does
      * to a real phone is blocker B3's job, not a headless browser's.
@@ -288,8 +287,8 @@ test.describe("the live screen's menus", () => {
     const sheet = page.getByTestId("lift-history-sheet")
     await expect(sheet).toBeVisible()
     /**
-     * Either answer is correct here — this account carries a seeded training
-     * year, so Squat has history, and a reset account does not. What must
+     * Either answer is correct here — an account with a training year behind
+     * it has Squat history, and the worker's fresh account does not. What must
      * never appear is a blank sheet, which is what "could not load" used to
      * look like.
      */

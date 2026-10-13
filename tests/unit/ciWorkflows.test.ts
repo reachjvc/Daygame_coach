@@ -207,5 +207,20 @@ describe("when CI runs at all", () => {
 
     // And before the step that needs it.
     expect(ci.indexOf("supabase/setup-cli")).toBeLessThan(ci.indexOf("npm run test:integration"))
+
+    /**
+     * THE BROWSER JOBS TOO. playwright.config.ts starts the same test backend
+     * when it loads, so a browser job without this CLI fails before its first
+     * test — and one with another version runs against another backend.
+     */
+    for (const job of browserJobs) {
+      const steps = e2eJobs[job] ?? ""
+      const browserCli = steps.match(/- uses: supabase\/setup-cli@v\d+\n\s+with:\n\s+version: ([\d.]+)/)
+      expect(browserCli, `e2e.yml's ${job} does not install the Supabase CLI`).not.toBeNull()
+      expect(browserCli![1], `e2e.yml's ${job} installs another Supabase CLI than the test stack`).toBe(pinned)
+      expect(steps.indexOf("supabase/setup-cli"), `${job} installs the CLI after Playwright needs it`).toBeLessThan(
+        steps.indexOf("npx playwright test"),
+      )
+    }
   })
 })

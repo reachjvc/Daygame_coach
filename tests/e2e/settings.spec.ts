@@ -1,6 +1,5 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { SELECTORS } from './helpers/selectors'
-import { TEST_USER } from './fixtures/test-user'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external service latency
@@ -12,12 +11,10 @@ test.describe('Settings Management Flow', () => {
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
 
-  test('the profile tab shows the account that is signed in', async ({ page }) => {
+  test('the profile tab shows the account that is signed in', async ({ page, account }) => {
     await expect(page.getByText('Account Information')).toBeVisible({ timeout: AUTH_TIMEOUT })
-    // Compared in code rather than with toHaveText, so a failure does not
-    // print the test account's address into a report this public repo uploads.
-    const shown = ((await page.getByTestId(SELECTORS.settings.userEmail).textContent()) ?? '').trim()
-    expect(shown === TEST_USER.email, 'the profile tab shows a different account').toBe(true)
+    // The worker's own throwaway address, so a failure may print it.
+    await expect(page.getByTestId(SELECTORS.settings.userEmail)).toHaveText(account.email)
   })
 
   test('a sandbox switch keeps its new position after a reload', async ({ page }) => {

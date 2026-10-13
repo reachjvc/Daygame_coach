@@ -228,14 +228,23 @@ describe('E2E Test Isolation Compliance', () => {
    * per-file ceiling that lived here covered three training files; that check
    * covers the whole suite, by test, and is the one owner.
    */
-  /** Every spec the `training` project runs, read off the config. */
+  /**
+   * Every training spec: what the `training` project runs, read off the
+   * config, and every spec that drives the training helper. The second half
+   * is since Phase 8, when a converted spec leaves that project for `desktop`
+   * — reading the project alone would quietly stop checking it.
+   */
   function trainingSpecs(): string[] {
     const config = fs.readFileSync(path.join(projectRoot, 'playwright.config.ts'), 'utf-8')
     const block = config.match(/name: 'training',[\s\S]*?testMatch: \[([\s\S]*?)\]/)
     if (!block) throw new Error("could not find the training project's testMatch")
-    return [...block[1].matchAll(/\/([a-zA-Z0-9/-]+)\\\.spec\\\.ts\//g)].map(
+    const inProject = [...block[1].matchAll(/\/([a-zA-Z0-9/-]+)\\\.spec\\\.ts\//g)].map(
       (m) => `tests/e2e/${m[1]}.spec.ts`
     )
+    const viaHelper = getAllE2EFiles()
+      .filter((file) => /helpers\/training\.helper['"]/.test(fs.readFileSync(file, 'utf-8')))
+      .map((file) => path.relative(projectRoot, file).replace(/\\/g, '/'))
+    return [...new Set([...inProject, ...viaHelper])]
   }
 
   test('no training spec builds a calendar fact from the machine clock', () => {

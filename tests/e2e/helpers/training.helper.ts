@@ -14,6 +14,7 @@
 
 import { test, type Page } from "@playwright/test"
 import { TRAINING_STATE } from "../../../playwright.config"
+import { isOnFixtureAccount } from "../fixtures/test"
 
 /**
  * THE GUARD THAT MAKES THE THIRD ACCOUNT WORTH HAVING.
@@ -29,6 +30,12 @@ import { TRAINING_STATE } from "../../../playwright.config"
  * already done.
  */
 function refuseUnlessTrainingAccount(): void {
+  /**
+   * OR AN ACCOUNT NOBODY OWNS: one `tests/e2e/fixtures/test.ts` made for this
+   * worker in the local test backend (Phase 8). Wiping it can take nothing
+   * from a person, which is the only thing this guard is for.
+   */
+  if (isOnFixtureAccount()) return
   const state = test.info().project.use.storageState
   if (state !== TRAINING_STATE) {
     throw new Error(

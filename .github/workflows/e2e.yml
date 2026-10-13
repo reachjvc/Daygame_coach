@@ -71,6 +71,14 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # The browser suite runs against a local test backend that
+      # playwright.config.ts starts when it loads (scripts/db/test-stack.mjs),
+      # built by this exact CLI version; the script refuses any other.
+      # tests/unit/ciWorkflows.test.ts fails if this and ci.yml disagree.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
       # `setup` is not named here on purpose: Playwright runs a project's
       # dependencies itself, and `sweep-desktop` depends on it.
       - name: Every route, opened cold
@@ -137,8 +145,16 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox webkit
 
+      # The browser suite runs against a local test backend that
+      # playwright.config.ts starts when it loads (scripts/db/test-stack.mjs),
+      # built by this exact CLI version; the script refuses any other.
+      # tests/unit/ciWorkflows.test.ts fails if this and ci.yml disagree.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
       - name: Run E2E tests (Chromium)
-        run: npx playwright test --project=setup --project=setup-user-b --project=training-setup --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-android --project=error-reporting
+        run: npx playwright test --project=setup --project=setup-user-b --project=training-setup --project=desktop --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-android --project=error-reporting
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -190,6 +206,14 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit firefox
+
+      # The browser suite runs against a local test backend that
+      # playwright.config.ts starts when it loads (scripts/db/test-stack.mjs),
+      # built by this exact CLI version; the script refuses any other.
+      # tests/unit/ciWorkflows.test.ts fails if this and ci.yml disagree.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
 
       # The auth-* projects belong here, not in the chromium job: signup, login
       # and password reset are the first thing every new user meets, and they

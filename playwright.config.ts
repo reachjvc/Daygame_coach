@@ -1,9 +1,40 @@
 import { defineConfig, devices } from '@playwright/test'
 import dotenv from 'dotenv'
+import { startTestStack, type StackEnv } from './tests/e2e/fixtures/stack'
 
 // Load environment variables from .env and .env.local (local takes precedence)
 dotenv.config({ path: '.env' })
 dotenv.config({ path: '.env.local', override: true })
+
+/**
+ * THE BACKEND THE APP UNDER TEST TALKS TO: the throwaway local Supabase built
+ * from production's schema (`scripts/db/test-stack.mjs`), never the live
+ * project. Until Phase 8 of docs/plans/tests-worth-their-keep.md every browser
+ * run created and wiped rows in production through three real accounts.
+ *
+ * Started, or reused in about a second, once per run, here in the runner;
+ * workers inherit its env (tests/e2e/fixtures/stack.ts says why only once).
+ *
+ * The production keys `.env.local` just loaded are overwritten in this
+ * process, so no test, helper or worker can reach the live project by reading
+ * `process.env` — the service-role key above all.
+ *
+ * Not when a unit test imports this file for its project list
+ * (tests/unit/ciWorkflows.test.ts): that must not need Docker.
+ */
+const STACK: StackEnv | null = process.env.VITEST ? null : startTestStack()
+if (STACK) {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = STACK.API_URL
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = STACK.ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY = STACK.SERVICE_ROLE_KEY
+}
+
+/**
+ * The app under test runs on its own port and build folder, so a run never
+ * touches the `npm run dev` on :3000 (and its `.next`) that the owner and other
+ * sessions use — which also talks to the live project.
+ */
+const E2E_PORT = 3200
 
 /**
  * WHERE THE TRAINING ACCOUNT'S SESSION LIVES.
@@ -14,21 +45,22 @@ dotenv.config({ path: '.env.local', override: true })
 export const TRAINING_STATE = 'tests/e2e/.auth/training.json'
 
 /**
- * WHERE THE APP UNDER TEST IS.
+ * WHERE THE APP UNDER TEST IS: the server `webServer` below starts on
+ * E2E_PORT, pointed at the test backend.
  *
- * Overridable because some things cannot be tested against `npm run dev` at
- * all. The service worker is the case that forced this: `OfflineShell`
- * registers only in a production build, by design, so "can this page be opened
- * with no connection" is untestable on the dev server — and a test that went
- * green there would be asserting nothing. A production build on another port
- * (`NEXT_DIST_DIR=.next-verify npx next start -p 3100`) can now be driven
- * without disturbing `npm run dev` on 3000, which the owner and two other
- * sessions are using.
+ * Overridable because some things cannot be tested against `next dev` at all.
+ * The service worker is the case that forced this: `OfflineShell` registers
+ * only in a production build, by design, so "can this page be opened with no
+ * connection" is untestable on the dev server — and a test that went green
+ * there would be asserting nothing. An override must be a server started with
+ * the test backend's three Supabase variables (the ones `webServer.env` sets
+ * below); one pointed at the live project cannot sign in as the accounts the
+ * fixtures create, and the fixture says so.
  *
  * `webServer.url` follows it, so Playwright checks the server it is actually
  * pointed at rather than starting a second one.
  */
-const BASE_URL = process.env.PW_BASE_URL ?? 'http://localhost:3000'
+const BASE_URL = process.env.PW_BASE_URL ?? `http://localhost:${E2E_PORT}`
 
 /**
  * THE LOCAL DEPLOYMENT HAS ITS OWN CERTIFICATE AUTHORITY.
@@ -37,10 +69,29 @@ const BASE_URL = process.env.PW_BASE_URL ?? 'http://localhost:3000'
  * from Caddy's local CA, which the browsers Playwright starts do not trust.
  * For an https address on this machine only, certificate errors are ignored,
  * by the browsers and by `webServer` alike. Without the second, `webServer`
- * cannot see the running server and starts `npm run dev` in the shared folder
- * instead. Plans/caddy-deploy-and-cicd.md, Phase 3 step 10.
+ * cannot see the running server and starts one of its own instead.
+ * Plans/caddy-deploy-and-cicd.md, Phase 3 step 10.
  */
 const LOCAL_HTTPS = /^https:\/\/(localhost|127\.0\.0\.1|[a-z0-9-]+\.localhost)(:\d+)?(\/|$)/.test(BASE_URL)
+
+/**
+ * THE SPECS THAT RUN ON AN ACCOUNT OF THEIR OWN (Phase 8).
+ *
+ * Each imports `test` from tests/e2e/fixtures/test.ts, which gives every
+ * worker a fresh account in the test backend, so these need no setup project,
+ * no storage state, no chain and no worker limit: they run in `desktop`, as
+ * parallel as the machine allows. Every other project leaves them out. A spec
+ * joins this list in the same change that converts it (the fixture file's
+ * header says how), until it is every spec and the old projects go.
+ */
+const ON_OWN_ACCOUNTS = [
+  /(?:^|\/)settings\.spec\.ts$/,
+  /tracking-tiles\.spec\.ts/,
+  /session-tracking\.spec\.ts/,
+  /security-idor\.spec\.ts/,
+  /(?:^|\/)auth\.spec\.ts$/,
+  /programs-live-menus\.spec\.ts/,
+]
 
 /**
  * WHICH TRAINING TESTS RUN OFF CHROMIUM.
@@ -59,6 +110,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  // Recreates the three old test accounts in the test backend for the specs
+  // not yet on their own accounts. The file says when it goes.
+  globalSetup: './tests/e2e/fixtures/global-setup.ts',
   timeout: 60000,
   use: {
     baseURL: BASE_URL,
@@ -92,6 +146,16 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
+    // === Specs on accounts of their own: no setup, no chain, no worker limit ===
+    // `storageState` is the fixture's (tests/e2e/fixtures/test.ts), one per
+    // worker, so the project sets none. Desktop Chrome; the phone and the other
+    // engines join as lanes once every spec is converted (Phase 8, step 3).
+    {
+      name: 'desktop',
+      testMatch: ON_OWN_ACCOUNTS,
+      use: { ...devices['Desktop Chrome'] },
+    },
+
     // === Authenticated tests (depend on setup, get storageState) ===
     {
       name: 'chromium',
@@ -105,31 +169,26 @@ export default defineConfig({
         /signup-flow\.spec\.ts/,
         /password-reset\.spec\.ts/,
         /security-auth\.spec\.ts/,
-        /auth\.spec\.ts/,
         /protected-routes\.spec\.ts/,
-        /security-idor\.spec\.ts/,
+        // On accounts of their own, in `desktop`.
+        ...ON_OWN_ACCOUNTS,
         // The tracker's own behaviour, on the account the sync specs empty —
         // so it runs in their project, one test at a time.
         /toggl-time-tracker\.spec\.ts/,
         // Training tests run in their own project: they share one account and
         // each wipes it clean, so in parallel they delete each other's data.
         /programs-live-workout\.spec\.ts/,
-        /programs-live-menus\.spec\.ts/,
         /programs-live-desktop\.spec\.ts/,
         /programs-open-workout\.spec\.ts/,
-        /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         // Measures the rendered boxes on the shared account's program.
         /programs-one-language\.spec\.ts/,
         /programs-build-week\.spec\.ts/,
         // Starts programs on the shared account, so it belongs beside the rest.
         /life-mastery-program-link\.spec\.ts/,
-        /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,
         /programs-past-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
-        // Session-creating tests run in isolated project to avoid parallel conflicts
-        /session-tracking\.spec\.ts/,
         // Goals tests share a user and mutate goals data — run in their own projects
         /life-mastery-track\.spec\.ts/,
         // `goals-4`'s. It was missing from this list, so it ran twice per pass.
@@ -153,9 +212,12 @@ export default defineConfig({
     },
 
     // === Multi-user security tests (depend on both setups) ===
+    // EMPTY since Phase 8: its one spec, security-idor, runs in `desktop` with
+    // a `secondUser` of its own. Kept only because e2e.yml still names it;
+    // delete it there and here together, with the rest of the chains.
     {
       name: 'security-multi-user',
-      testMatch: /security-idor\.spec\.ts/,
+      testMatch: [],
       dependencies: ['setup', 'setup-user-b'],
       use: {
         ...devices['Desktop Chrome'],
@@ -224,10 +286,8 @@ export default defineConfig({
       name: 'training',
       testMatch: [
         /programs-live-workout\.spec\.ts/,
-        // The same screen's menus. A second file because both wipe the one
-        // training account clean, so they cannot run beside each other — and
-        // because a broken menu should not report itself as a broken tick.
-        /programs-live-menus\.spec\.ts/,
+        // programs-live-menus, the same screen's menus, runs in `desktop` on
+        // accounts of its own since Phase 8.
         // The same screen in a WINDOW. Every other file here starts with
         // `setViewportSize(PHONE)`, which is right — a workout is logged on a
         // phone — and meant that until 2026-09-26 nothing had ever pressed the
@@ -238,12 +298,10 @@ export default defineConfig({
         // enrolling in exactly one — and which is the state where the open
         // workout had no door on the training screen.
         /programs-open-workout\.spec\.ts/,
-        /programs-drafts\.spec\.ts/,
         /programs-history-progress\.spec\.ts/,
         /programs-one-language\.spec\.ts/,
         /programs-build-week\.spec\.ts/,
         /life-mastery-program-link\.spec\.ts/,
-        /health-past-workout\.spec\.ts/,
         /dashboard-training-card\.spec\.ts/,
         /programs-past-workout\.spec\.ts/,
         /programs-offline\.spec\.ts/,
@@ -493,9 +551,13 @@ export default defineConfig({
     // it. Three more files used to queue here — approach-logging,
     // data-persistence and start-session — and were merged into this one on
     // 2026-10-13.
+    //
+    // EMPTY since Phase 8: session-tracking runs in `desktop`, where each
+    // worker's account holds its own one active session. Kept only because
+    // e2e.yml still names it; delete it there and here together.
     {
       name: 'session-1',
-      testMatch: /session-tracking\.spec\.ts/,
+      testMatch: [],
       dependencies: ['chromium', 'security-multi-user'],
       use: {
         ...devices['Desktop Chrome'],
@@ -504,9 +566,12 @@ export default defineConfig({
     },
 
     // === Auth-destructive tests (run LAST - login/logout invalidates shared session) ===
+    // EMPTY since Phase 8: auth.spec logs out a `throwawayAccount` of its own,
+    // in `desktop`, so it ends nobody else's session. Kept only because e2e.yml
+    // still names it; delete it there and here together.
     {
       name: 'auth-destructive',
-      testMatch: /(?:^|\/)auth\.spec\.ts$/,
+      testMatch: [],
       dependencies: ['chromium', 'security-multi-user', 'session-1'],
       use: { ...devices['Desktop Chrome'] },
     },
@@ -605,11 +670,34 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'], storageState: 'tests/e2e/.auth/user.json' },
     },
   ],
+  /**
+   * THE APP, ON ITS OWN PORT AND ITS OWN BUILD FOLDER, AGAINST THE TEST BACKEND.
+   *
+   * `env` reaches the BUILD as well as the server: Next inlines every
+   * `NEXT_PUBLIC_*` value into the client bundle at build time, so a CI build
+   * made without these would send the browser to whichever backend the build
+   * machine's env named. The server's own `.env.local` loading never overrides
+   * a variable already set, so these win over the live project's there too.
+   *
+   * Locally a dev server: a production build freezes this WSL machine
+   * (scripts/build.sh). CI builds with webpack and starts it; Phase 9 moves the
+   * build into a job of its own.
+   */
   webServer: {
-    command: process.env.CI ? 'npm run build && npm start' : 'npm run dev',
+    command: process.env.CI
+      ? `npm run build && npm start -- -p ${E2E_PORT}`
+      : `npx next dev -p ${E2E_PORT}`,
     url: BASE_URL,
     ignoreHTTPSErrors: LOCAL_HTTPS,
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // Allow more time for build in CI
+    env: STACK
+      ? {
+          NEXT_PUBLIC_SUPABASE_URL: STACK.API_URL,
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: STACK.ANON_KEY,
+          SUPABASE_SERVICE_ROLE_KEY: STACK.SERVICE_ROLE_KEY,
+          NEXT_DIST_DIR: '.next-e2e',
+        }
+      : undefined,
   },
 })

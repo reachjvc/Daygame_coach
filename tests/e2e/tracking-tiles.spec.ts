@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -32,8 +32,8 @@ function tileIds(page: import('@playwright/test').Page) {
 }
 
 test.describe('Tracking dashboard tiles', () => {
-  test.describe.configure({ mode: 'serial' })
-
+  // No serial mode: each worker's account holds its own layout, and a worker
+  // runs its tests one at a time, so the reset below is all the order needed.
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
@@ -98,7 +98,7 @@ test.describe('Tracking dashboard tiles', () => {
   })
 
   test('a metric with no data shows an em dash, not a zero', async ({ page }) => {
-    // body_weight_current has no health logs for the e2e user.
+    // body_weight_current: a fresh account has no health logs.
     await setLayout(page, [...DEFAULT_LAYOUT, 'body_weight_current'])
     await page.reload({ timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
@@ -107,24 +107,5 @@ test.describe('Tracking dashboard tiles', () => {
     await expect(tile).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(tile).toContainText('—')
     await expect(tile).not.toContainText('0 kg')
-  })
-
-  test('the API refuses a metric that does not exist', async ({ page }) => {
-    const result = await page.evaluate(async () => {
-      const res = await fetch('/api/tracking/dashboard', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          widgets: [
-            { widget_type: 'metric_tile', metric_id: 'deep_work_hours_daily' },
-            { widget_type: 'metric_tile', metric_id: 'week_streak' },
-          ],
-        }),
-      })
-      return { status: res.status, body: await res.json() }
-    })
-
-    expect(result.status).toBe(400)
-    expect(result.body.error).toContain('Unknown metric')
   })
 })

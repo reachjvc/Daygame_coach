@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from './fixtures/test'
+import type { Page } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
 import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 
@@ -51,8 +52,9 @@ async function endSession(page: Page) {
 }
 
 test.describe('Session Tracking Flow', () => {
-  // One account can hold one active session, so these never run side by side
-  test.describe.configure({ mode: 'serial' })
+  // One account can hold one active session. Each worker has an account of
+  // its own and runs one test at a time, so no serial mode: it kept these on
+  // one worker and skipped the rest of the file after the first failure.
 
   test.beforeEach(async ({ page }) => {
     await ensureCleanSessionPage(page)
