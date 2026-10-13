@@ -24,7 +24,7 @@ import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  * ----------------------------------------------------------------------------
  * WHY THIS FILE EXISTS RATHER THAN "we ran it ten times and it stopped
  * failing". A one-in-two fault that has gone quiet is indistinguishable from a
- * one-in-two fault that got luckier, and `mode: "serial"` means each run yields
+ * one-in-two fault that got luckier, and `mode: "serial"` meant each run yielded
  * one data point. So this holds the push back until the tombstone has certainly
  * landed, which makes the losing order guaranteed instead of likely.
  *
@@ -32,14 +32,6 @@ import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  * `blackbox.spec.ts` and run this file. It went red naming the surviving rows.
  * Put it back and it is green. That is the whole proof.
  */
-
-/**
- * SERIAL ONLY BECAUSE tests/unit/e2e-isolation.test.ts DEMANDS IT of any spec
- * that installs a route. Since Phase 8 the account is the worker's own and the
- * browser record is the test's own context, so nothing here is shared; the
- * guard predates that and is not this file's to change.
- */
-test.describe.configure({ mode: "serial" })
 
 const PUSH_DELAY_MS = 2500
 

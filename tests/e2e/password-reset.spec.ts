@@ -17,12 +17,7 @@ const AUTH_TIMEOUT = 15000
  * emails to one address is one second (tests/db/supabase/config.toml,
  * `max_frequency`), so a real 429 is a race against the clock. The stubbed
  * body is the one the local auth service gives inside the cooldown.
- *
- * Serial for tests/unit/e2e-isolation.test.ts, which requires it of any file
- * that stubs a route — not for the stubs' sake (a `page.route` is the test's
- * own page's) nor an account's: every test here makes its own.
  */
-test.describe.configure({ mode: 'serial' })
 
 // Every test here is someone who is not signed in.
 test.use({ storageState: SIGNED_OUT })
@@ -34,7 +29,7 @@ const COOLDOWN = {
   body: JSON.stringify({ message: 'For security purposes, you can only request this after 51 seconds.' }),
 }
 
-test.describe('Password reset', () => {
+test.describe('Password reset', { tag: '@phone' }, () => {
   test('is reachable from the login page', async ({ page }) => {
     await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
     await waitForHydration(page)
@@ -105,7 +100,7 @@ test.describe('Password reset', () => {
   })
 })
 
-test.describe('Email confirmation callback', () => {
+test.describe('Email confirmation callback', { tag: '@phone' }, () => {
   test('sends a link with no code back to login with a readable reason', async ({ page }) => {
     await page.goto('/auth/confirm', { timeout: AUTH_TIMEOUT })
     await waitForHydration(page)
@@ -123,7 +118,7 @@ test.describe('Email confirmation callback', () => {
   })
 })
 
-test.describe('Confirmation email resend', () => {
+test.describe('Confirmation email resend', { tag: '@phone' }, () => {
   test('the resend button mails a new confirmation link, and that link signs the account in', async ({ page }) => {
     test.fail(true, 'product bug: a resent link lands on /auth/login?error=missing_code — resend() sends no PKCE challenge, so its tokens come back in the #fragment and /auth/confirm finds no ?code')
     // Without this button the page is a dead end: the only other route is to
@@ -164,7 +159,7 @@ test.describe('Confirmation email resend', () => {
   })
 })
 
-test.describe('Unconfirmed login', () => {
+test.describe('Unconfirmed login', { tag: '@phone' }, () => {
   test('explains an unconfirmed account and links to the resend', async ({ page }) => {
     // The auth service answers "Email not confirmed" -- true, and useless on
     // its own. A real account that never confirmed, and the real answer.

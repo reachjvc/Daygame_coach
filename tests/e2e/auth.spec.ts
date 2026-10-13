@@ -14,7 +14,7 @@ const AUTH_TIMEOUT = 15000 // Increased for external auth service latency
  *
  * Logging out revokes EVERY session of the account (Supabase's signOut is
  * global), which is why this file once ran last, in `auth-destructive`, after
- * everything else signed in as TEST_USER. It logs out a `throwawayAccount`
+ * everything else signed in as the one shared account. It logs out a `throwawayAccount`
  * made for that one test now, so it ends nobody else's session and runs
  * beside everything.
  */

@@ -28,7 +28,7 @@ async function signUp(page: Page, fields: { name: string; email: string; passwor
   await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
 }
 
-test.describe('Signup Flow', () => {
+test.describe('Signup Flow', { tag: '@phone' }, () => {
   // A stranger signing up: no session of the worker's.
   test.use({ storageState: SIGNED_OUT })
 

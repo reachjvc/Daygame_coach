@@ -77,12 +77,6 @@ const nav = (page: import('@playwright/test').Page, name: string | RegExp) =>
   page.getByRole('navigation').getByRole('button', { name })
 
 test.describe('Toggl-style time tracker', () => {
-  // Not for isolation: each worker has an account of its own, every test
-  // empties it first, and a stub lives and dies with its test's page.
-  // tests/unit/e2e-isolation.test.ts asks for serial mode in any file that
-  // intercepts a route, and one test here stubs the calendar route.
-  test.describe.configure({ mode: 'serial' })
-
   test.afterEach(async ({ page }) => {
     await page.unrouteAll({ behavior: 'ignoreErrors' })
   })

@@ -23,12 +23,7 @@ import {
   trackEntry,
 } from './helpers/timetrack'
 
-test.describe('time is kept on the server, not just in one browser', () => {
-  // Not for isolation: each worker has an account of its own, and every test
-  // here empties it first. tests/unit/e2e-isolation.test.ts asks for serial
-  // mode in any file that intercepts a route, and the @timing test below does.
-  test.describe.configure({ mode: 'serial' })
-
+test.describe('time is kept on the server, not just in one browser', { tag: '@phone' }, () => {
   test('the real page saves, and says so', async ({ page }) => {
     /**
      * This is here because the sync was once broken on the product route in a

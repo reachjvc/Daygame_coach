@@ -73,11 +73,6 @@ async function expectStored(mark: string): Promise<void> {
 }
 
 test.describe('crash reporting', () => {
-  // Not for isolation: every worker has its own account and its own rate-limit
-  // allowance at /api/errors. tests/unit/e2e-isolation.test.ts requires serial
-  // mode of any file that stubs a route, and the last test does.
-  test.describe.configure({ mode: 'serial' })
-
   test('an error thrown outside rendering reaches the database', async ({ page }) => {
     const mark = markOfThisTest()
     await page.goto(PAGE, { waitUntil: 'domcontentloaded' })

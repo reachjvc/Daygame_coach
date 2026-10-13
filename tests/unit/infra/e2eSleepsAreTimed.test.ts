@@ -26,7 +26,7 @@ import { callSites, e2eSourceFiles, parse } from "./e2eSource"
 /** `file › test title` → how many sleeps that test may have */
 const TIMED_SLEEPS: Record<string, number> = {
   // ten seconds in the background is the experience under test
-  "tests/e2e/programs-live-workout.spec.ts › the rest clock is still right after the tab has been in the background @timing @engine": 1,
+  "tests/e2e/programs-live-workout.spec.ts › the rest clock is still right after the tab has been in the background @timing @engine @phone": 1,
   // a retry RATE: POSTs counted over twelve seconds
   "tests/e2e/timetrack-sync.spec.ts › a server it cannot reach is not asked once a second @timing": 1,
   // a stop pressed 120ms into a pull, then long enough for that pull to land

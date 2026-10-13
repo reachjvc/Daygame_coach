@@ -1,8 +1,8 @@
 /**
  * Phone-viewport coverage for the time tracker, on the product route.
  *
- * Runs in `timetrack-sync-phone` (iPhone 14) on pull requests and in
- * `toggl-android` (Pixel 7) nightly. It guards the things that actually broke at
+ * Runs in the `phone` lane (iPhone 14) on pull requests and in `android`
+ * (Pixel 7) nightly. It guards the things that actually broke at
  * 390px: page-width overflow, the bottom tab bar, the compact entry rows, the
  * report filter sheet and touch-target sizes.
  *

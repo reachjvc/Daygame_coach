@@ -19,11 +19,6 @@ import { SELECTORS } from './helpers/selectors'
 const AUTH_TIMEOUT = 15000
 
 test.describe('Error Handling: API Failures', () => {
-  // Not for isolation any more: every worker has its own account, and a
-  // `page.route` stub is the test's own page's. tests/unit/e2e-isolation.test.ts
-  // still requires serial mode of any file that stubs a route.
-  test.describe.configure({ mode: 'serial' })
-
   // Cleanup route handlers and sessions after each test
   test.afterEach(async ({ page }) => {
     await page.unrouteAll({ behavior: 'wait' })

@@ -19,7 +19,7 @@ import { guardTrainingAccount, resetAndEnroll } from "./helpers/training.helper"
 guardTrainingAccount()
 
 
-test("sets ticked with no connection are kept and sent when it comes back", async ({
+test("sets ticked with no connection are kept and sent when it comes back", { tag: ["@phone", "@engine"] }, async ({
   page,
   context,
 }) => {

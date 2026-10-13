@@ -90,11 +90,6 @@ async function openTemplates(page: Page) {
 }
 
 test.describe("Life Mastery and the training database", () => {
-  // Not for the account's sake any more: tests/unit/e2e-isolation.test.ts
-  // requires serial mode of every file that intercepts requests (`page.route`
-  // in the last test but one).
-  test.describe.configure({ mode: "serial" })
-
   test.beforeEach(async ({ page }) => {
     test.setTimeout(240000)
     await page.setViewportSize({ width: 1280, height: 1000 })

@@ -3,29 +3,33 @@ name: E2E Tests
 # Every branch, not only main and beta — the same reason as ci.yml: a branch
 # nobody checks is a branch that breaks quietly.
 #
-# WHAT RUNS WHEN, AND WHY IT IS NOT ALL OF IT EVERY TIME.
+# WHAT RUNS WHEN.
 #
-# Measured 2026-09-26 from 179 real runs on this repository: every push started
-# a 3h45m run of 1,169 browser tests, one at a time (`workers: 1` under CI, with
-# `retries: 2`), and every completed run was red. Two things follow, and they
-# cancel each other out:
+#   every push          `e2e-fast`: the desktop route sweep, minutes.
+#   pull requests into  `lanes`: every pull-request lane of playwright.config.ts,
+#   main and beta, and  split into shards that run side by side.
+#   pushes to them
+#   nightly, on demand  `nightly`: the other engines (Q5) — Firefox, desktop
+#                       Safari, Android, and the route sweep on Safari.
 #
-#   - four hours is longer than the work it is checking. The answer arrives
-#     after twenty more commits have landed, so it cannot change what anybody
-#     does.
-#   - permanently red means a NEW breakage looks exactly like the old ones.
-#     Proven here: `quit-vice.spec.ts` was red for four days with 22 failures
-#     while three sessions reported work finished, because the red they would
-#     have had to notice was already there.
+# Until 2026-10-13 a full pass was 1,169 browser tests, one at a time, on three
+# shared accounts in the live database: 3h45m, and red. Every test now signs in
+# as an account of its own, made in a throwaway backend that each job starts
+# for itself (playwright.config.ts → scripts/db/test-stack.mjs), so nothing
+# needs an order and every shard can run at once. Plans/tests-worth-their-keep.md,
+# Phases 8 and 9.
 #
-# A check that is too slow to act on and too noisy to trust is worse than none,
-# because its existence is reassuring. So the shape changed rather than the
-# coverage: the fast job below answers every push in minutes, and the two heavy
-# jobs keep every test they had — on pull requests into main and beta, on a
-# nightly schedule, and on demand.
+# NO SECRETS. The browser suite needs no Supabase key and no account password:
+# the backend is local and the accounts are made per worker.
+# tests/unit/ciWorkflows.test.ts fails if one is passed here again.
 #
-# `schedule` only ever fires on the default branch. That is a GitHub rule, not
-# a choice, and it is why the heavy jobs also run on a push to main or beta.
+# EACH SHARD BUILDS ITS OWN APP. Measured on these runners on 2026-10-13: the
+# build takes ~90 s and the backend ~50 s. One shared build would be a job of
+# its own, plus an upload and a download, in front of every shard; building in
+# the shard keeps it off the critical path. The build has to know the backend's
+# address anyway, and each shard's backend is its own.
+#
+# `schedule` only ever fires on the default branch. That is a GitHub rule.
 on:
   push:
     branches: ['**']
@@ -36,215 +40,170 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# A newer push to the same branch stops the older run: its answer is about a
+# commit nobody is looking at. Never on main, whose runs ci.yml's staging job
+# waits for, and never the nightly run.
+concurrency:
+  group: e2e-${{ github.event_name }}-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.run_id) || '' }}
+  cancel-in-progress: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && github.ref != 'refs/heads/main' }}
+
 jobs:
   # ===========================================================================
-  # THE FAST ONE. Every push, and the only browser job that runs on a push.
+  # THE FAST ONE. Every push.
   #
-  # `sweep-desktop` is the per-route sweep: it opens every address in `app/` and
-  # asks the boring universal questions — does the page answer at all, does it
-  # hydrate without throwing, is anything overflowing, is a control nested
-  # inside another control, does a junk URL parameter render "Step NaN of 5".
-  # Those are the failures that make a page useless rather than imperfect, and
-  # they are the ones a unit test cannot see.
-  #
-  # Chromium alone, one engine, no training account. The same sweep on iPhone
-  # and WebKit stays in the cross-browser job, because a second and third engine
-  # is worth minutes on a pull request and not worth them on every push.
+  # `sweep-desktop` opens every address in `app/` and asks the boring universal
+  # questions — does the page answer, does it hydrate without throwing, is
+  # anything overflowing, is a control nested inside another, does a junk URL
+  # parameter render "Step NaN of 5". Those make a page useless rather than
+  # imperfect, and a unit test cannot see them.
   # ===========================================================================
   e2e-fast:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      # Chromium only. The heavy jobs install three engines; this one does not
-      # need them, and the install is a measurable part of a short job.
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      # The browser suite runs against a local test backend that
-      # playwright.config.ts starts when it loads (scripts/db/test-stack.mjs),
-      # built by this exact CLI version; the script refuses any other.
-      # tests/unit/ciWorkflows.test.ts fails if this and ci.yml disagree.
+      # playwright.config.ts starts the test backend with this exact CLI
+      # version; scripts/db/test-stack.mjs refuses any other.
       - uses: supabase/setup-cli@v1
         with:
           version: 2.120.0
 
-      # `setup` is not named here on purpose: Playwright runs a project's
-      # dependencies itself, and `sweep-desktop` depends on it.
       - name: Every route, opened cold
         run: npx playwright test --project=sweep-desktop
         env:
           CI: true
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: report-e2e-fast.zip
 
-      - name: Upload test results
+      - name: Keep the report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-fast
-          path: playwright-report/
+          name: blob-e2e-fast
+          path: blob-report/
           retention-days: 7
 
-  e2e-chromium:
+  # ===========================================================================
+  # THE PULL-REQUEST LANES, SHARDED.
+  #
+  # `browser` is the engine the lane's device runs on, installed alone: the
+  # iPhone is WebKit, the desktop is Chromium. ciWorkflows.test.ts checks every
+  # lane against playwright.config.ts — the engine, and that the shards of a
+  # lane are 1..N of N with none missing.
+  # ===========================================================================
+  lanes:
+    if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' }}
+    name: ${{ matrix.lane }} ${{ matrix.shard }}
     runs-on: ubuntu-24.04
-    # WAITS FOR THE FAST JOB, and the reason is not speed.
-    #
-    # Every browser job here signs in as the same test accounts, and the specs
-    # inside them delete that account's rows mid-run. Two jobs at once means one
-    # pulls the rug from under the other, and the failures surface in unrelated
-    # tests that move between runs — which is unreadable. `e2e-cross-browser`
-    # has waited on this job for that reason since 2026-09-04.
-    #
-    # The first version of this split missed it: `e2e-fast` had no `needs` and
-    # no condition, so on a pull request or the nightly run it would have run
-    # BESIDE this job on the same accounts. Caught by `daygame-coach-28`, who
-    # also supplied the part that is easy to get wrong — `timetrack-sync` and
-    # `timetrack-sync-phone` contend over the single `next dev`, not over rows,
-    # so giving a project its own account does NOT make it safe to run beside
-    # another job. Only serialising does.
-    #
-    # `always()` so a red fast job does not SKIP this one: a skipped job reads
-    # as a check that had nothing to say.
-    #
-    # The second clause keeps it off ordinary pushes — see the note at the top.
-    needs: e2e-fast
-    if: ${{ always() && (github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') }}
-    # Measured at 3h45m before the training account could sign in, and the four
-    # training projects add roughly 90 minutes now that it can. The ceiling is
-    # here so a hung run releases the machine instead of holding it for
-    # GitHub's default six hours.
-    timeout-minutes: 330
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 45
+    strategy:
+      # Every shard reports: one red shard must not hide what the others found.
+      fail-fast: false
+      matrix:
+        include:
+          - { lane: desktop, shard: 1/4, browser: chromium }
+          - { lane: desktop, shard: 2/4, browser: chromium }
+          - { lane: desktop, shard: 3/4, browser: chromium }
+          - { lane: desktop, shard: 4/4, browser: chromium }
+          - { lane: timing, shard: 1/1, browser: chromium }
+          - { lane: phone, shard: 1/2, browser: webkit }
+          - { lane: phone, shard: 2/2, browser: webkit }
+          - { lane: timing-phone, shard: 1/1, browser: webkit }
+          - { lane: sweep-phone, shard: 1/1, browser: webkit }
+    steps: &lane-steps
+      - uses: actions/checkout@v7
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      # The three chained training projects need WebKit and Firefox, so this job
-      # installs all three engines rather than chromium alone.
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install --with-deps ${{ matrix.browser }}
 
-      # The browser suite runs against a local test backend that
-      # playwright.config.ts starts when it loads (scripts/db/test-stack.mjs),
-      # built by this exact CLI version; the script refuses any other.
-      # tests/unit/ciWorkflows.test.ts fails if this and ci.yml disagree.
       - uses: supabase/setup-cli@v1
         with:
           version: 2.120.0
 
-      - name: Run E2E tests (Chromium)
-        run: npx playwright test --project=setup --project=setup-user-b --project=training-setup --project=desktop --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=training --project=training-iphone-safari --project=training-android --project=training-firefox --project=auth-destructive --project=timetrack-sync --project=timetrack-sync-phone --project=toggl-webkit --project=toggl-firefox --project=toggl-android --project=error-reporting
+      - name: Run the lane
+        run: npx playwright test --project=${{ matrix.lane }} --shard=${{ matrix.shard }}
         env:
           CI: true
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
-          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
-          # The training projects' own account. They delete every enrollment and
-          # every open workout on it, which is why it must not be TEST_USER's.
-          TEST_USER_TRAINING_EMAIL: ${{ secrets.TEST_USER_TRAINING_EMAIL }}
-          TEST_USER_TRAINING_PASSWORD: ${{ secrets.TEST_USER_TRAINING_PASSWORD }}
+          # One name per shard, or the merge overwrites one lane's shard 1 with another's.
+          PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ matrix.lane }}-${{ strategy.job-index }}.zip
 
-      - name: Upload test results
+      # A blob per shard; `report` merges them into one. Traces are off under
+      # CI (playwright.config.ts), so a blob carries no credential.
+      - name: Keep the report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report-chromium
-          path: playwright-report/
+          name: blob-${{ matrix.lane }}-${{ strategy.job-index }}
+          path: blob-report/
           retention-days: 7
 
-  e2e-cross-browser:
+  # ===========================================================================
+  # NIGHTLY (Q5): the other engines, on the tests tagged for them.
+  # ===========================================================================
+  nightly:
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    name: ${{ matrix.lane }} ${{ matrix.shard }}
     runs-on: ubuntu-24.04
-    # Both jobs sign in as the same accounts, and the training specs delete that
-    # account's programs mid-run. Running them at the same time meant one job
-    # could pull the rug out from under the other, so this one waits.
-    # `always()` is the other half: without it a red chromium job would skip
-    # this one entirely, and a skipped check looks like a check that passed.
-    needs: e2e-chromium
-    # `always()` is load-bearing and must stay: without it a RED chromium job
-    # skips this one, and a skipped check reads as a check that passed. The
-    # second half repeats the chromium job's own condition, so an ordinary push
-    # does not run this either — `always()` alone would run it on every push
-    # after chromium had been skipped.
-    if: ${{ always() && (github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta') }}
-    timeout-minutes: 330
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { lane: firefox, shard: 1/1, browser: firefox }
+          - { lane: webkit, shard: 1/1, browser: webkit }
+          - { lane: android, shard: 1/1, browser: chromium }
+          - { lane: sweep-webkit, shard: 1/1, browser: webkit }
+    steps: *lane-steps
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+  # ===========================================================================
+  # ONE REPORT FOR THE WHOLE RUN, whichever jobs ran and however they ended.
+  # ===========================================================================
+  report:
+    needs: [e2e-fast, lanes, nightly]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium webkit firefox
-
-      # The browser suite runs against a local test backend that
-      # playwright.config.ts starts when it loads (scripts/db/test-stack.mjs),
-      # built by this exact CLI version; the script refuses any other.
-      # tests/unit/ciWorkflows.test.ts fails if this and ci.yml disagree.
-      - uses: supabase/setup-cli@v1
+      - uses: actions/download-artifact@v4
         with:
-          version: 2.120.0
+          pattern: blob-*
+          path: all-blob-reports
+          merge-multiple: true
 
-      # The auth-* projects belong here, not in the chromium job: signup, login
-      # and password reset are the first thing every new user meets, and they
-      # were only ever run on Chromium until 2026-09-04. The first WebKit and
-      # iPhone run found four failures Chromium had never shown -- the click
-      # landing before React hydrated. auth-webkit and auth-firefox need the
-      # engines this job already installs.
-      - name: Run cross-browser E2E tests
-        # `sweep-desktop` moved to the e2e-fast job above, so the desktop sweep
-        # answers on every push. The phone and WebKit sweeps stay here: a second
-        # and third engine earns its minutes on a pull request, not on a push.
-        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=cross-firefox --project=cross-webkit --project=auth-iphone --project=sweep-phone --project=sweep-webkit
-        env:
-          CI: true
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-          TEST_USER_B_EMAIL: ${{ secrets.TEST_USER_B_EMAIL }}
-          TEST_USER_B_PASSWORD: ${{ secrets.TEST_USER_B_PASSWORD }}
-          # The training projects' own account. They delete every enrollment and
-          # every open workout on it, which is why it must not be TEST_USER's.
-          TEST_USER_TRAINING_EMAIL: ${{ secrets.TEST_USER_TRAINING_EMAIL }}
-          TEST_USER_TRAINING_PASSWORD: ${{ secrets.TEST_USER_TRAINING_PASSWORD }}
+      - name: Merge the shards' reports
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
+      - uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-cross-browser
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
-

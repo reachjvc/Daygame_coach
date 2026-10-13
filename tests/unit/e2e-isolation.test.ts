@@ -1,14 +1,13 @@
 /**
- * E2E Test Isolation Compliance Tests
+ * E2E TEST ISOLATION: EVERY SPEC ON AN ACCOUNT NOBODY ELSE IS USING.
  *
- * These tests enforce isolation rules for E2E tests:
- * - Stateful tests (login, route interception) must use serial mode
- * - Tests with route interceptions should have cleanup
- *
- * Prevents test isolation issues where tests pass individually
- * but fail when run together (parallel execution conflicts).
- *
- * NOTE: Uses allowlists for tests that are safe to run in parallel.
+ * Until Phase 8 of Plans/tests-worth-their-keep.md the browser suite signed in
+ * as three shared accounts, and this file enforced the workarounds: serial mode
+ * for any spec that logged in or stubbed a route, allowlists for the ones that
+ * did not yet comply. Each worker now gets a fresh account of its own from
+ * tests/e2e/fixtures/test.ts, so the rule that matters is the one that makes
+ * that true — every spec takes `test` from the fixture — and the workarounds
+ * are gone.
  */
 
 import { describe, test, expect } from 'vitest'
@@ -18,38 +17,6 @@ import { isRedirectShim, productRoutes } from '@/tests/support/appRoutes'
 
 const projectRoot = path.resolve(__dirname, '../..')
 const e2eDir = path.join(projectRoot, 'tests/e2e')
-
-// Pre-existing tests that were grandfathered in before isolation rules were enforced.
-// These tests existed before the isolation rules were implemented.
-// TODO: Gradually migrate these to use serial mode and remove from allowlist.
-const GRANDFATHERED_PARALLEL_TESTS = new Set([
-  'tests/e2e/auth.spec.ts',
-  'tests/e2e/dashboard-navigation.spec.ts',
-  'tests/e2e/field-report.spec.ts',
-  'tests/e2e/inner-game-flow.spec.ts',
-  'tests/e2e/qa-chat.spec.ts',
-  'tests/e2e/scenarios-hub.spec.ts',
-  'tests/e2e/security-input.spec.ts',
-  'tests/e2e/settings.spec.ts',
-  'tests/e2e/tracking-dashboard.spec.ts',
-])
-
-// Tests that are explicitly designed to run in parallel (stateless)
-// Add tests here ONLY if they don't:
-// - Call login()
-// - Use page.route()
-// - Create/modify database state
-const ALLOWED_PARALLEL_TESTS = new Set([
-  // Auth tests that don't log in (testing login/signup forms themselves)
-  // These are stateless - they just fill forms and check responses
-])
-
-// Tests that use route interception but are safe because:
-// - They use serial mode, OR
-// - They properly cleanup with page.unrouteAll()
-const ROUTE_TESTS_WITH_CLEANUP = new Set<string>([
-  // Will be populated as we fix the tests
-])
 
 /**
  * Every spec file, at any depth.
@@ -69,8 +36,7 @@ function getAllE2EFiles(): string[] {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name)
       if (entry.isDirectory()) {
-        // .auth holds saved login state, not tests.
-        if (entry.name === '.auth' || entry.name === 'node_modules') continue
+        if (entry.name === 'node_modules') continue
         walk(full)
       } else if (entry.isFile() && entry.name.endsWith('.spec.ts')) {
         files.push(full)
@@ -113,84 +79,37 @@ function usesWorkerAccount(content: string): boolean {
 }
 
 describe('E2E Test Isolation Compliance', () => {
-  test('stateful E2E tests must use serial mode', () => {
-    const e2eFiles = getAllE2EFiles()
+  test('every spec signs in through the per-worker account fixture', () => {
+    /**
+     * A spec that takes `test` from '@playwright/test' gets no account: it
+     * either runs signed out by accident or brings a signed-in state of its
+     * own, and that state is shared with whoever else loads it. Type-only
+     * imports (`import type { Page }`) are fine.
+     */
     const violations: string[] = []
-
-    for (const file of e2eFiles) {
+    for (const file of getAllE2EFiles()) {
       const content = fs.readFileSync(file, 'utf-8')
-      const relativePath = path.relative(projectRoot, file)
-
-      // Skip if in allowlist (grandfathered or explicitly parallel-safe)
-      if (GRANDFATHERED_PARALLEL_TESTS.has(relativePath)) continue
-      if (ALLOWED_PARALLEL_TESTS.has(relativePath)) continue
-
-      // A spec on the per-worker account fixture (tests/e2e/fixtures/test.ts)
-      // owns its account: nothing it does can reach another worker's data,
-      // which is the only thing serial mode was protecting here. (Route
-      // interception is per page in Playwright and never leaked between tests.)
-      // When every spec is on the fixture, this rule goes with the shared
-      // accounts it existed for — Plans/tests-worth-their-keep.md, Phase 8.
-      if (usesWorkerAccount(content)) continue
-
-      // Check if file is stateful (uses login or route interception)
-      const usesLogin = /login\(page\)/.test(content) || /loginAsUserB\(page\)/.test(content)
-      const usesRouteInterception = /page\.route\(/.test(content)
-      const isStateful = usesLogin || usesRouteInterception
-
-      if (!isStateful) continue
-
-      // Check if serial mode is configured
-      const hasSerialMode = /test\.describe\.configure\(\s*\{\s*mode:\s*['"]serial['"]\s*\}\s*\)/.test(content)
-
-      if (!hasSerialMode) {
-        const reasons: string[] = []
-        if (usesLogin) reasons.push('uses login()')
-        if (usesRouteInterception) reasons.push('uses page.route()')
-        violations.push(`${relativePath}: missing serial mode (${reasons.join(', ')})`)
+      const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+      if (!usesWorkerAccount(content)) violations.push(`${rel}: does not import test from fixtures/test`)
+      if (/import\s*\{[^}]*\btest\b[^}]*\}\s*from\s*['"]@playwright\/test['"]/.test(content)) {
+        violations.push(`${rel}: takes test from @playwright/test`)
       }
+      if (/storageState:\s*['"`]/.test(content)) violations.push(`${rel}: loads a saved signed-in state by path`)
     }
-
-    expect(
-      violations,
-      `Stateful E2E tests without serial mode (add test.describe.configure({ mode: 'serial' })):\n${violations.join('\n')}`
-    ).toHaveLength(0)
+    expect(violations, `Specs not on an account of their own:\n${violations.join('\n')}`).toEqual([])
   })
 
-  test('tests with route interceptions should have cleanup or serial mode', () => {
-    const e2eFiles = getAllE2EFiles()
-    const violations: string[] = []
-
-    for (const file of e2eFiles) {
-      const content = fs.readFileSync(file, 'utf-8')
-      const relativePath = path.relative(projectRoot, file)
-
-      // Skip if in cleanup allowlist
-      if (ROUTE_TESTS_WITH_CLEANUP.has(relativePath)) continue
-      // Per-worker fixture specs use the test-scoped `page`: an interception
-      // dies with the page at the end of its test, so there is nothing to
-      // clean up. (A page shared across tests is the one way it could leak.)
-      if (usesWorkerAccount(content) && !/let\s+page\s*:\s*Page/.test(content)) continue
-
-      // Check if file uses route interception
-      const routeMatches = content.match(/page\.route\(/g)
-      if (!routeMatches || routeMatches.length === 0) continue
-
-      // Check for cleanup mechanisms
-      const hasSerialMode = /test\.describe\.configure\(\s*\{\s*mode:\s*['"]serial['"]\s*\}\s*\)/.test(content)
-      const hasUnrouteAll = /page\.unrouteAll\(/.test(content)
-      const hasUnroute = /page\.unroute\(/.test(content)
-
-      // Serial mode OR cleanup is required
-      if (!hasSerialMode && !hasUnrouteAll && !hasUnroute) {
-        violations.push(`${relativePath}: has ${routeMatches.length} route interception(s) without cleanup (add afterEach with page.unrouteAll() or use serial mode)`)
-      }
-    }
-
-    expect(
-      violations,
-      `Route interceptions without cleanup:\n${violations.join('\n')}`
-    ).toHaveLength(0)
+  test('no spec keeps one page across its tests', () => {
+    /**
+     * The one way a stubbed route, a signed-in session or a half-finished
+     * screen can leak from one test into the next: a `page` opened in
+     * `beforeAll` and shared. The fixture's `page` is the test's own and dies
+     * with it.
+     */
+    const shared = getAllE2EFiles()
+      .filter((file) => /let\s+page\s*:\s*Page/.test(fs.readFileSync(file, 'utf-8')))
+      .map((file) => path.relative(projectRoot, file))
+    expect(shared, 'These hold a page across tests; use the test\'s own `page`').toEqual([])
   })
 
   test('tests that create sessions should have cleanup', () => {
@@ -246,22 +165,17 @@ describe('E2E Test Isolation Compliance', () => {
    * covers the whole suite, by test, and is the one owner.
    */
   /**
-   * Every training spec: what the `training` project runs, read off the
-   * config, and every spec that drives the training helper. The second half
-   * is since Phase 8, when a converted spec leaves that project for `desktop`
-   * — reading the project alone would quietly stop checking it.
+   * Every training spec: each one that drives the training helper, and each
+   * named for the programs or training screens.
    */
   function trainingSpecs(): string[] {
-    const config = fs.readFileSync(path.join(projectRoot, 'playwright.config.ts'), 'utf-8')
-    const block = config.match(/name: 'training',[\s\S]*?testMatch: \[([\s\S]*?)\]/)
-    if (!block) throw new Error("could not find the training project's testMatch")
-    const inProject = [...block[1].matchAll(/\/([a-zA-Z0-9/-]+)\\\.spec\\\.ts\//g)].map(
-      (m) => `tests/e2e/${m[1]}.spec.ts`
-    )
-    const viaHelper = getAllE2EFiles()
-      .filter((file) => /helpers\/training\.helper['"]/.test(fs.readFileSync(file, 'utf-8')))
+    return getAllE2EFiles()
+      .filter(
+        (file) =>
+          /helpers\/training\.helper['"]/.test(fs.readFileSync(file, 'utf-8')) ||
+          /(?:programs-|training)[^/]*\.spec\.ts$/.test(file),
+      )
       .map((file) => path.relative(projectRoot, file).replace(/\\/g, '/'))
-    return [...new Set([...inProject, ...viaHelper])]
   }
 
   test('no training spec builds a calendar fact from the machine clock', () => {

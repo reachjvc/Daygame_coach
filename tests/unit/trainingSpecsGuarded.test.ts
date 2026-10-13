@@ -2,26 +2,18 @@
  * A SPEC THAT DELETES TRAINING ROWS MUST REFUSE THE WRONG ACCOUNT ITSELF.
  *
  * `resetAndEnroll` and `cleanUp` in `tests/e2e/helpers/training.helper.ts` check
- * the account before they touch anything. On 2026-09-24 it turned out that the
- * specs going through them are a minority: ten spec files run their own
- * `fetch(…, { method: "DELETE" })` loops inside `page.evaluate` —
- * `programs-history-progress` seventeen of them — and not one of those calls
- * passed through a function that could refuse.
+ * the account before they touch anything. Ten spec files also run their own
+ * `fetch(…, { method: "DELETE" })` loops inside `page.evaluate`, and none of
+ * those calls passes through a function that could refuse.
  *
- * Nothing was broken. Every one of those files is listed in a `training*`
- * project and signed in as the training account, which was verified rather than
- * assumed. The objection is to WHAT the safety rests on: a `testMatch` entry in
- * `playwright.config.ts`, a shared file that was swept into another session's
- * commit twice in a single day. Until 2026-09-23 those specs were pointed at
- * `TEST_USER` — the account `.claude/rules/ui.md` sends a person to for
- * hand-checking — and `npm run test:e2e` took somebody's program away
- * mid-walkthrough. The fix then was a third account. This is the other half:
- * the spec itself says which account it is willing to run as.
- *
- * So: one `guardTrainingAccount()` call at the top of any spec that deletes
- * training rows, which registers a `beforeEach` refusing any project not signed
- * in as the training account — before the test body runs, rather than on an
- * assertion three minutes later with the rows already gone.
+ * Since Phase 8 every spec signs in as an account the fixtures made in the
+ * local test backend, so today nothing they delete is anybody's. This keeps it
+ * that way per file rather than per config: one `guardTrainingAccount()` call
+ * at the top of any spec that deletes training rows registers a `beforeEach`
+ * that refuses any other account — before the test body runs, rather than on
+ * an assertion three minutes later with the rows already gone. Until
+ * 2026-09-23 such specs ran as the account `.claude/rules/ui.md` sends a
+ * person to for hand-checking, and took somebody's program away.
  */
 
 import { describe, test, expect } from "vitest"
@@ -76,8 +68,8 @@ describe("specs that delete training rows refuse the wrong account", () => {
         "the top, after the imports:\n\n" +
         "  import { guardTrainingAccount } from \"./helpers/training.helper\"\n" +
         "  guardTrainingAccount()\n\n" +
-        "Being listed in a training project is not enough: that is one line in a\n" +
-        "shared config, and the account it points at has been the wrong one before:\n" +
+        "The guard refuses any account the fixtures did not make, before the test\n" +
+        "body deletes anything:\n" +
         unguarded.join("\n")
     ).toEqual([])
   })

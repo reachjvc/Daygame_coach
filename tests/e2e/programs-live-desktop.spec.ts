@@ -110,7 +110,7 @@ async function startAWorkout(page: Page): Promise<void> {
   await expect(page.getByTestId("tick-1").first()).toBeVisible({ timeout: 30000 })
 }
 
-test.describe("the live workout in a window", () => {
+test.describe("the live workout in a window", { tag: "@engine" }, () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(180000)
     startedAt = new Date(Date.now() - 60_000).toISOString()

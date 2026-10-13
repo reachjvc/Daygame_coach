@@ -14,7 +14,7 @@ Read `docs/testing_behavior.md` before writing tests.
 | `*.spec.ts` | Playwright | `tests/e2e/` |
 
 - Test production functions, not raw SQL. No tests that pass by doing nothing.
-- The `training` Playwright project runs real flows at 390×844 on one worker; its specs share one account, so never run them in parallel.
+- Every spec imports `test` from `tests/e2e/fixtures/test.ts`: each worker gets a fresh account in the local test backend, so specs run in parallel. Lanes in `playwright.config.ts` pick extra devices by tag: `@phone`, `@engine`, `@timing`.
 
 ## Ratchets — counts that may only fall
 

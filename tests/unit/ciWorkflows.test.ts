@@ -2,23 +2,19 @@
 /**
  * WHAT THE ROBOT ACTUALLY RUNS WHEN YOU PUSH.
  *
- * THE FAULT THIS CATCHES. `playwright.config.ts` defines 42 browser "projects"
- * — a project is one set of tests on one device or engine, say the route sweep
- * on a phone. Ten of them were listed in neither of the two CI commands, so
- * they ran on nobody's machine: the route sweep, the time-tracker sync, the
- * four Toggl engines, the crash reporter. Nothing was red; they simply never
- * ran, which looks exactly like passing.
+ * THE FAULT THIS CATCHES. `playwright.config.ts` once defined 42 browser
+ * "projects" — a project is one set of tests on one device or engine — and ten
+ * of them were named by no CI command, so they ran on nobody's machine. Nothing
+ * was red; they simply never ran, which looks exactly like passing.
  *
- * The other half is the two browser jobs. They sign in as the same test
- * accounts, and the training tests delete that account's programs while they
- * run. With no ordering between the jobs, one could wipe the data the other was
- * halfway through reading — a failure that only shows up sometimes, which is
- * the worst kind to chase.
+ * Since Phase 9 of Plans/tests-worth-their-keep.md the projects are lanes, and
+ * e2e.yml runs each one in a matrix of shards. A lane missing from the matrix,
+ * a shard missing from a lane (`2/4` gone: a quarter of the lane never runs),
+ * or a lane installed with the wrong engine all fail here.
  *
- * WHY IT READS THE YAML AS TEXT. The GitHub workflow files are the only
- * statement of what CI does; there is no other copy to check them against. So
- * this test reads them the way GitHub does and compares against the real
- * project list imported from `playwright.config.ts`.
+ * WHY IT READS THE YAML AS TEXT. The workflow files are the only statement of
+ * what CI does, so this reads them the way GitHub does and compares against
+ * the real project list imported from `playwright.config.ts`.
  */
 
 import { describe, test, expect } from "vitest"
@@ -30,32 +26,8 @@ const root = resolve(__dirname, "../..")
 const ci = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8")
 const e2e = readFileSync(join(root, ".github/workflows/e2e.yml"), "utf8")
 
-const PROJECT_NAMES = (playwrightConfig.projects ?? []).map((p) => p.name as string)
-
-/**
- * The login projects save a signed-in browser for everything after them, and
- * Playwright runs a project's dependencies whatever else was asked for, so
- * naming them in both jobs is honest rather than duplicated work.
- * `training-setup` is Phase 10 step 5's login for the third account.
- */
-const MAY_APPEAR_IN_BOTH = new Set(["setup", "setup-user-b", "training-setup"])
-
-/**
- * Does a `--project=` argument name this project?
- *
- * The commands use shell globs (`--project='goals-*'`), which Playwright itself
- * expands, so a plain string comparison would silently match nothing. Only `*`
- * is supported, which is all the workflows use; everything else is compared
- * literally.
- */
-function namesProject(arg: string, project: string): boolean {
-  if (!arg.includes("*")) return arg === project
-  const pattern = arg
-    .split("*")
-    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("[^\\s]*")
-  return new RegExp(`^${pattern}$`).test(project)
-}
+const PROJECTS = playwrightConfig.projects ?? []
+const PROJECT_NAMES = PROJECTS.map((p) => p.name as string)
 
 /** Split a workflow file into its jobs, keyed by job name. */
 function jobs(yaml: string): Record<string, string> {
@@ -85,89 +57,112 @@ function jobs(yaml: string): Record<string, string> {
   return out
 }
 
-/** Every `--project=` name in a job, quotes stripped. */
-function projectArgs(job: string): string[] {
-  return [...job.matchAll(/--project=('([^']+)'|"([^"]+)"|([^\s'"]+))/g)].map((m) => m[2] ?? m[3] ?? m[4])
+interface Shard {
+  job: string
+  lane: string
+  shard: number
+  of: number
+  browser: string
+}
+
+/** Every `- { lane: x, shard: i/n, browser: y }` matrix entry, and every literal `--project=x` (one shard of one). */
+function shardsOf(job: string, body: string): Shard[] {
+  const matrix = [...body.matchAll(/- \{ lane: ([\w-]+), shard: (\d+)\/(\d+), browser: (\w+) \}/g)].map((m) => ({
+    job,
+    lane: m[1],
+    shard: Number(m[2]),
+    of: Number(m[3]),
+    browser: m[4],
+  }))
+  const literal = [...body.matchAll(/--project=([\w-]+)/g)].map((m) => {
+    const installs = body.match(/playwright install --with-deps ([\w ]+)/)?.[1].trim() ?? ""
+    return { job, lane: m[1], shard: 1, of: 1, browser: installs }
+  })
+  return [...matrix, ...literal]
 }
 
 const e2eJobs = jobs(e2e)
-/**
- * Every job in `e2e.yml` that runs Playwright. `e2e-fast` joined them on
- * 2026-09-26, when the heavy suite came off the every-push path: it runs
- * `sweep-desktop` on every push while the other two run on pull requests into
- * main and beta, nightly, and on demand.
- *
- * This list is what "run in exactly one job" is counted against, so a new
- * browser job that is not named here makes its projects look like projects
- * nothing runs.
- */
-const browserJobs = ["e2e-fast", "e2e-chromium", "e2e-cross-browser"]
-
-/** The jobs that sign in as the training account, so must be given its keys. */
-const trainingJobs = browserJobs.filter((job) => /--project=training/.test(e2eJobs[job] ?? ""))
+/** The jobs that run Playwright. A new one not named here makes its lanes look like lanes nothing runs. */
+const browserJobs = ["e2e-fast", "lanes", "nightly"]
+const SHARDS = browserJobs.flatMap((job) => shardsOf(job, e2eJobs[job] ?? ""))
 
 describe("the browser tests that CI actually runs", () => {
+  test("every browser job is in e2e.yml and runs something", () => {
+    for (const job of browserJobs) {
+      expect(e2eJobs[job], `e2e.yml has no ${job} job`).toBeTruthy()
+      expect(SHARDS.some((s) => s.job === job), `${job} runs no lane`).toBe(true)
+    }
+  })
+
   test("every Playwright project is run by exactly one CI job", () => {
-    const runsIn: Record<string, string[]> = Object.fromEntries(PROJECT_NAMES.map((n) => [n, []]))
-    for (const job of browserJobs) {
-      for (const arg of projectArgs(e2eJobs[job])) {
-        for (const name of PROJECT_NAMES) {
-          // A '*' in the command is a glob GitHub passes straight to Playwright,
-          // so it has to be expanded against the real names, not matched as text.
-          if (namesProject(arg, name)) runsIn[name].push(job)
-        }
+    const runsIn = (name: string) => [...new Set(SHARDS.filter((s) => s.lane === name).map((s) => s.job))]
+    expect(PROJECT_NAMES.filter((n) => runsIn(n).length === 0), "defined but run by no CI job").toEqual([])
+    expect(PROJECT_NAMES.filter((n) => runsIn(n).length > 1), "run by two jobs, doubling the minutes").toEqual([])
+  })
+
+  test("every lane named in e2e.yml is a project that exists", () => {
+    // Playwright fails the whole run on a name it does not know.
+    expect([...new Set(SHARDS.map((s) => s.lane))].filter((l) => !PROJECT_NAMES.includes(l))).toEqual([])
+  })
+
+  test("every sharded lane runs every one of its shards, once", () => {
+    const broken: string[] = []
+    for (const lane of new Set(SHARDS.map((s) => s.lane))) {
+      const mine = SHARDS.filter((s) => s.lane === lane)
+      const totals = new Set(mine.map((s) => s.of))
+      const numbers = mine.map((s) => s.shard).sort((a, b) => a - b)
+      const expected = Array.from({ length: mine[0].of }, (_, i) => i + 1)
+      if (totals.size !== 1 || JSON.stringify(numbers) !== JSON.stringify(expected)) {
+        broken.push(`${lane}: shards ${numbers.join(",")} of ${[...totals].join("/")}`)
       }
     }
-    const neverRun = PROJECT_NAMES.filter((n) => runsIn[n].length === 0)
-    expect(neverRun, "these Playwright projects are defined but run in no CI job").toEqual([])
-
-    const runTwice = PROJECT_NAMES.filter((n) => runsIn[n].length > 1 && !MAY_APPEAR_IN_BOTH.has(n))
-    expect(runTwice, "these run in both jobs, doubling the minutes and the account contention").toEqual([])
+    expect(broken, "a missing shard is a slice of the lane that never runs").toEqual([])
   })
 
-  test("every project named in a CI command is a project that exists", () => {
-    const dangling: string[] = []
-    for (const job of browserJobs) {
-      for (const arg of projectArgs(e2eJobs[job])) {
-        const matched = PROJECT_NAMES.some((name) => namesProject(arg, name))
-        // Playwright fails the whole run on a name it does not know, so a
-        // rename in playwright.config.ts has to reach the workflow too.
-        if (!matched) dangling.push(`${job}: ${arg}`)
+  test("each lane installs the engine its device runs on", () => {
+    const wrong: string[] = []
+    for (const shard of SHARDS) {
+      const project = PROJECTS.find((p) => p.name === shard.lane)
+      const engine = project?.use?.defaultBrowserType ?? project?.use?.browserName
+      if (engine && !shard.browser.split(" ").includes(engine)) {
+        wrong.push(`${shard.job} ${shard.lane}: installs ${shard.browser}, runs on ${engine}`)
       }
     }
-    expect(dangling, "no Playwright project answers to this name").toEqual([])
+    expect(wrong).toEqual([])
   })
 
-  test("the job that shares the training account waits for the other and still reports", () => {
-    expect(e2eJobs["e2e-cross-browser"]).toMatch(/^\s*needs:\s*e2e-chromium\s*$/m)
-    // Without always(), a red chromium job skips this one, and a skipped job
-    // reads as a check that had nothing to say.
-    /**
-     * `always()` must APPEAR in the condition, rather than be the whole of it.
-     * It was pinned as the entire expression until 2026-09-26, when the heavy
-     * jobs came off the every-push path and this one needed a second clause —
-     * `always()` on its own would have run the cross-browser suite on every
-     * push, after the chromium job it waits for had been skipped.
-     *
-     * What matters is unchanged and still asserted: `always()` is present, so a
-     * red chromium job cannot skip this one into looking like a pass.
-     */
-    expect(e2eJobs["e2e-cross-browser"]).toMatch(/^\s*if:\s*\$\{\{.*\balways\(\)/m)
+  test("every shard keeps a uniquely named report, and one job merges them whatever happened", () => {
+    // Without a name per shard, merging overwrites shard 1 of one lane with another's.
+    expect(e2eJobs["lanes"]).toMatch(/PLAYWRIGHT_BLOB_OUTPUT_NAME: report-\$\{\{ matrix\.lane \}\}-\$\{\{ strategy\.job-index \}\}\.zip/)
+    expect(e2eJobs["report"]).toMatch(/needs: \[e2e-fast, lanes, nightly\]/)
+    // `always()`: a red shard must not skip the report that says what went red.
+    expect(e2eJobs["report"]).toMatch(/if: \$\{\{ always\(\) \}\}/)
   })
 
-  test("the training account's secrets reach every job that signs in as it", () => {
+  test("no browser job is handed a Supabase key or an account's password", () => {
     /**
-     * Scoped to the jobs that actually run a `training*` project rather than to
-     * every browser job. `e2e-fast` runs the desktop route sweep and never
-     * touches that account, and demanding its keys there would be a rule
-     * asserting something it does not need — the kind of line that gets
-     * satisfied by pasting secrets in rather than by thinking.
+     * Since Phase 8 the browser suite runs against a throwaway local backend
+     * that playwright.config.ts starts, and every account it signs in as is one
+     * the fixtures made there. A production key in this file can only be used
+     * for something it should not be: the service-role key opens every row in
+     * the live database, and CI's logs and artifacts on this public repo are
+     * downloadable.
      */
-    expect(trainingJobs.length, "no CI job runs the training projects at all").toBeGreaterThan(0)
-    for (const job of trainingJobs) {
-      expect(e2eJobs[job], `${job} cannot sign in as the training account`).toContain("TEST_USER_TRAINING_EMAIL")
-      expect(e2eJobs[job], `${job} cannot sign in as the training account`).toContain("TEST_USER_TRAINING_PASSWORD")
-    }
+    expect(e2e).not.toMatch(/secrets\.(?:NEXT_PUBLIC_SUPABASE|SUPABASE_|TEST_USER)/)
+  })
+
+  test("no Playwright project waits on another or loads a saved sign-in", () => {
+    /**
+     * Chains and saved states were how three shared accounts were kept apart
+     * (33 projects, most of them for that). Each worker has an account of its
+     * own now, so a `dependencies` edge is an order nothing needs, and a
+     * failing upstream project SKIPS its dependants — which reads as green.
+     */
+    const chained = PROJECTS.filter(
+      (p) => (p.dependencies ?? []).length > 0 || typeof p.use?.storageState === "string",
+    ).map((p) => p.name)
+    expect(chained).toEqual([])
+    expect(playwrightConfig.globalSetup, "a global setup runs before every lane; the fixtures make what a test needs").toBeUndefined()
   })
 })
 
@@ -214,7 +209,8 @@ describe("when CI runs at all", () => {
      * test — and one with another version runs against another backend.
      */
     for (const job of browserJobs) {
-      const steps = e2eJobs[job] ?? ""
+      // `nightly` reuses `lanes`' steps through a YAML anchor (`steps: *lane-steps`).
+      const steps = /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? "")
       const browserCli = steps.match(/- uses: supabase\/setup-cli@v\d+\n\s+with:\n\s+version: ([\d.]+)/)
       expect(browserCli, `e2e.yml's ${job} does not install the Supabase CLI`).not.toBeNull()
       expect(browserCli![1], `e2e.yml's ${job} installs another Supabase CLI than the test stack`).toBe(pinned)

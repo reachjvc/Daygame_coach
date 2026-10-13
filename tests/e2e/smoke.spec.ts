@@ -10,7 +10,7 @@ import { test, expect, SIGNED_OUT } from "./fixtures/test"
  * opened `/test`, which returns 404 in the production build CI runs.
  */
 
-test.describe("Smoke Tests", () => {
+test.describe("Smoke Tests", { tag: ["@phone", "@engine"] }, () => {
   // A stranger: no session, so no account is made for this file at all.
   test.use({ storageState: SIGNED_OUT })
 

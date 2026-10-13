@@ -40,7 +40,7 @@ async function goToSettings(page: Page) {
 // No serial mode: each worker signs in to an account of its own and every test
 // empties it first, so these may run side by side. `clearCookies` drops only
 // this test's browser cookies; the session itself is not ended on the server.
-test.describe('edge cases', () => {
+test.describe('edge cases', { tag: '@phone' }, () => {
   test('being signed out mid-session says so, and offers the way back', async ({ page, context }) => {
     await openFreshTracker(page)
     // Throw away the session cookies without touching anything else

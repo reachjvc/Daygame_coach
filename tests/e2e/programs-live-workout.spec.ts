@@ -103,7 +103,7 @@ test.describe("live workout", () => {
     await cleanUp(page, startedAt).catch(() => {})
   })
 
-  test("a set is saved when it is ticked, and is still ticked after a reload @engine", async ({ page }) => {
+  test("a set is saved when it is ticked, and is still ticked after a reload @engine @phone", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
 
@@ -154,7 +154,7 @@ test.describe("live workout", () => {
     expect(overflows, "the live screen should not scroll sideways").toBe(false)
   })
 
-  test("finishing shows what you did, and the summary stays on screen @engine", async ({ page }) => {
+  test("finishing shows what you did, and the summary stays on screen @engine @phone", async ({ page }) => {
     /**
      * A lift with no past, minted for this run, so the first finish below has
      * nothing to beat and the second one does — without deleting a single row
@@ -343,7 +343,7 @@ test.describe("live workout", () => {
     await expect(summary).not.toContainText(/new best/i)
   })
 
-  test("the rest clock is still right after the tab has been in the background @timing @engine", async ({ page }) => {
+  test("the rest clock is still right after the tab has been in the background @timing @engine @phone", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
     await page.getByTestId("start-workout").click()
     await page.waitForURL("**/programs/live", { timeout: 20000 })
@@ -553,7 +553,7 @@ test.describe("live workout", () => {
    * refused too. It now asks the server whether a workout is still open, finds
    * none, and fetches the summary the person earned.
    */
-  test("a dropped finish reply still ends in the summary, and Start works afterwards @engine", async ({
+  test("a dropped finish reply still ends in the summary, and Start works afterwards @engine @phone", async ({
     page,
   }) => {
     await page.reload({ waitUntil: "networkidle" })
@@ -695,9 +695,8 @@ test.describe("live workout", () => {
    * which feeds `refuseWrite` those exact codes and asserts the wording never
    * carries them.
    *
-   * WHY IT IS IN THIS FILE AND NOT ITS OWN. This file ran in all four
-   * training projects — desktop Chromium, iPhone Safari, Android Chrome,
-   * Firefox — and a phone is the device this happens on. Nothing in a browser
+   * WHY IT IS IN THIS FILE AND NOT ITS OWN. This file is where the live
+   * screen is driven, and a phone is the device this happens on. Nothing in a browser
    * had ever driven any of it, so the reported bug's only guard was a unit
    * test of the layer underneath the screen that showed it.
    */

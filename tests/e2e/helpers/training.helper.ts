@@ -20,65 +20,41 @@
  */
 
 import { test, type Page } from "@playwright/test"
-import { TRAINING_STATE } from "../../../playwright.config"
 import { isOnFixtureAccount } from "../fixtures/test"
 
 /**
- * THE GUARD THAT MAKES THE THIRD ACCOUNT WORTH HAVING.
+ * EVERYTHING BELOW DELETES EVERY ENROLLMENT AND OPEN WORKOUT ON WHATEVER
+ * ACCOUNT THE PAGE IS SIGNED IN AS, so it refuses any account but one
+ * tests/e2e/fixtures/test.ts made for this worker in the local test backend.
+ * Wiping that takes nothing from a person.
  *
- * Everything below deletes every enrollment and every open workout on whatever
- * account the page is signed in as. Until 2026-09-23 that was `TEST_USER` — the
- * account the goals and session specs share, and the one `.claude/rules/ui.md`
- * sends a person to for hand-checking — so `npm run test:e2e` took somebody's
- * program away mid-walkthrough.
- *
- * A spec pasted into the wrong project now fails HERE, before it deletes
- * anything, rather than on an assertion three minutes later with the damage
- * already done.
+ * It used to accept a shared "training account" in the live project, and
+ * before 2026-09-23 the account the goals specs and hand-checking used, so
+ * `npm run test:e2e` once took somebody's program away mid-walkthrough. Every
+ * spec is on the fixture since Phase 8; this stays so a spec that ever signs in
+ * some other way fails here, before it deletes anything.
  */
-function refuseUnlessTrainingAccount(): void {
-  /**
-   * OR AN ACCOUNT NOBODY OWNS: one `tests/e2e/fixtures/test.ts` made for this
-   * worker in the local test backend (Phase 8). Wiping it can take nothing
-   * from a person, which is the only thing this guard is for.
-   */
+function refuseUnlessFixtureAccount(): void {
   if (isOnFixtureAccount()) return
-  const state = test.info().project.use.storageState
-  if (state !== TRAINING_STATE) {
-    throw new Error(
-      `This helper wipes the account clean and may only run on the training account.\n` +
-        `Project "${test.info().project.name}" is signed in as ${String(state)}.\n` +
-        `Move the spec into a training* project, or stop deleting other people's data.`
-    )
-  }
+  throw new Error(
+    `This helper wipes the account clean and runs only on an account tests/e2e/fixtures/test.ts made.\n` +
+      `Project "${test.info().project.name}" is signed in as ${String(test.info().project.use.storageState)}.\n` +
+      `Import \`test\` from fixtures/test, and do not set a storageState of your own.`
+  )
 }
 
 /**
  * THE SAME GUARD, FOR A FILE THAT DELETES ROWS ITSELF.
  *
- * `resetAndEnroll` and `cleanUp` check the account before they touch anything,
- * which protects the specs that go through them — and on 2026-09-24 that turned
- * out to be a minority. Ten spec files run their own `fetch(…, { method:
- * "DELETE" })` loops inside `page.evaluate`, `programs-history-progress` alone
- * seventeen of them, and not one of those calls passes through a function that
- * could refuse. Their only protection was being listed in a training project's
- * `testMatch`.
- *
- * That is one line in `playwright.config.ts`, a file two other sessions edit
- * and which was swept into someone else's commit twice in a single day. Nothing
- * was ever wrong with the assignment; the problem is that a spec which deletes
- * every enrollment on whatever account it is handed should not be relying on a
- * config entry to be pointed at the right one. Until 2026-09-23 it was pointed
- * at `TEST_USER`, and `npm run test:e2e` took somebody's program away
- * mid-walkthrough.
- *
- * So: one call at the top of any spec that deletes training rows, and every
- * test in that file then fails before its body runs if the project is signed in
- * as anybody else. `tests/unit/trainingSpecsGuarded.test.ts` fails when the next
- * such spec forgets.
+ * `resetAndEnroll` and `cleanUp` check the account before they touch anything.
+ * A spec that runs its own `fetch(…, { method: "DELETE" })` loops inside
+ * `page.evaluate` passes through nothing that could refuse, so it calls this
+ * once at the top, and every test in the file fails before its body runs if it
+ * is signed in as anybody else. `tests/unit/trainingSpecsGuarded.test.ts` fails
+ * when the next such spec forgets.
  */
 export function guardTrainingAccount(): void {
-  test.beforeEach(() => refuseUnlessTrainingAccount())
+  test.beforeEach(() => refuseUnlessFixtureAccount())
 }
 
 /** A phone, because that is where a workout is logged. */
@@ -100,7 +76,7 @@ export const PHONE = { width: 390, height: 844 }
  * on a Start button the product had correctly taken away.
  */
 export async function resetTraining(page: Page): Promise<void> {
-  refuseUnlessTrainingAccount()
+  refuseUnlessFixtureAccount()
   const left = await page.evaluate(async () => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
@@ -298,7 +274,7 @@ export async function resetAndEnroll(page: Page, unit: "kg" | "lb" = "kg"): Prom
  * 1.8 minutes.
  */
 export async function cleanUp(page: Page, since?: string): Promise<void> {
-  refuseUnlessTrainingAccount()
+  refuseUnlessFixtureAccount()
   await page.evaluate(async (from) => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })

@@ -51,14 +51,6 @@ import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  * asked once, on its own, against the real endpoint — a status, not rows.
  */
 
-/**
- * SERIAL ONLY BECAUSE tests/unit/e2e-isolation.test.ts DEMANDS IT of any spec
- * that installs a route. Since Phase 8 the account is the worker's own and the
- * browser record is the test's own context, so nothing here is shared; the
- * guard predates that and is not this file's to change.
- */
-test.describe.configure({ mode: "serial" })
-
 type Page = import("@playwright/test").Page
 
 /** The night this test files, chosen to be unambiguous in any zone. */
