@@ -193,6 +193,17 @@ describe("the staging image job", () => {
     expect(build).toBeGreaterThan(wait)
   })
 
+  it("never creates the package itself: from this public repository it would come out public", () => {
+    const privacy = publish.runs.steps.find((st) => st.name === "The package is private")!
+    expect(privacy.run).not.toMatch(/docker push/)
+    expect(privacy.run).toMatch(/case "\$code" in\s*200\)/)
+  })
+
+  it("searches the image as root, so no directory is hidden from the search", () => {
+    const smoke = publish.runs.steps.find((st) => !!st.run?.includes(".env*"))!
+    expect(smoke.run).toMatch(/docker run --rm --user 0:0 --entrypoint sh "\$ref" -c 'find \/ -xdev -name "\.env\*"'/)
+  })
+
   it("proves the package private before building, and boots and searches the image before pushing", () => {
     const privacy = stepIndex((st) => st.name === "The package is private")
     const build = stepIndex((st) => !!st.uses?.startsWith("docker/build-push-action@"))
@@ -213,7 +224,7 @@ describe("the staging image job", () => {
   })
 
   it("says so in the run summary while publishing is switched off", () => {
-    const off = (ci.jobs.checks.steps ?? []).find((st) => st.run?.includes("Staging publishing is off: blocker B-GH"))
+    const off = (ci.jobs.checks.steps ?? []).find((st) => st.run?.includes("Staging publishing is off: see blockers"))
     expect(off, "the checks job no longer reports that staging publishing is off").toBeDefined()
   })
 })

@@ -20,5 +20,6 @@ Environment=DAYGAME_DEPLOY_ENV=@@DEPLOY_ENV@@
 # the service manager.
 Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=@@INFRA@@/deploy-agent.sh
-# A deploy waits up to 90 s for health, twice when it rolls back.
-TimeoutStartSec=300
+# A deploy can pull a ~1.2 GB image, then wait 90 s for health, twice when it
+# rolls back. Killing it halfway through a rollback is the worst outcome.
+TimeoutStartSec=900

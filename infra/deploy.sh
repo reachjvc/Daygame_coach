@@ -21,16 +21,22 @@
 #   7. waits up to 90 s for /api/healthz to answer 200 with the image's own
 #      commit, inside the container and again through Caddy (where it must
 #      also report proto "https");
-#   8. on failure, starts the previous image again. If that one is healthy, the
-#      new digest is marked failed and is never retried automatically. If the
-#      previous one fails too, the cause is not the image (Supabase down, a
-#      broken Caddy, the network), so nothing is marked. On a first deploy
-#      there is no previous image: the failed container is left stopped.
-#      Every failure exits non-zero and raises an alert;
+#   8. on failure, starts the previous image again. If that one is healthy and
+#      the new image never even answered with its own commit (it crashed, or
+#      never started), the new digest is marked failed and is never retried
+#      automatically. If the new image did answer with its own commit and only
+#      the database check failed, a blip may be to blame: it is deferred, and a
+#      second such failure marks it failed. If the previous image fails too,
+#      the cause is not the image (Supabase down, a broken Caddy, the network):
+#      nothing is marked and the digest is deferred. Deferred means the agent
+#      leaves it alone for 15 minutes instead of retrying every minute. On a
+#      first deploy there is no previous image: the failed container is left
+#      stopped. Every failure exits non-zero and raises an alert;
 #   9. removes old app images, never the current or the previous; keeps 3.
 #
-# Machine settings come from ~/.config/daygame/deploy.env (on a server,
-# /etc/daygame/deploy.env, named by DAYGAME_DEPLOY_ENV), KEY=VALUE lines:
+# Machine settings come from ~/.config/daygame/deploy.env (DAYGAME_CONFIG_DIR
+# moves the directory; on a server DAYGAME_DEPLOY_ENV names
+# /etc/daygame/deploy.env), KEY=VALUE lines, a value optionally in single quotes:
 #   APP_ENV_FILE  runtime env file for the container (required)
 #   CADDYFILE     Caddyfile for this machine, relative to infra/ (required)
 #   SITE_HOST     the name Caddy serves, e.g. localhost (required)
@@ -73,12 +79,13 @@ else
 fi
 
 # --- machine settings -------------------------------------------------------------
-settings="${DAYGAME_DEPLOY_ENV:-$HOME/.config/daygame/deploy.env}"
+settings="${DAYGAME_DEPLOY_ENV:-${DAYGAME_CONFIG_DIR:-$HOME/.config/daygame}/deploy.env}"
 [ -f "$settings" ] || die "no machine settings at $settings."
 APP_ENV_FILE="" CADDYFILE="" SITE_HOST="" CA_CERT="" STATE_DIR="" ACME_EMAIL=""
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in ''|'#'*) continue ;; esac
   key="${line%%=*}" value="${line#*=}"
+  if [[ "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; fi
   case "$key" in
     APP_ENV_FILE|CADDYFILE|SITE_HOST|CA_CERT|STATE_DIR) printf -v "$key" '%s' "$value" ;;
     ACME_EMAIL) printf -v "$key" '%s' "$value" ;;
@@ -93,7 +100,8 @@ done < "$settings"
 STATE_DIR="${STATE_DIR:-$HOME/.local/state/daygame}"
 mkdir -p "$STATE_DIR"
 FAILED="$STATE_DIR/failed-digests"
-touch "$FAILED"
+DEFERRED="$STATE_DIR/deferred-digests"
+touch "$FAILED" "$DEFERRED"
 export APP_ENV_FILE CADDYFILE SITE_HOST ACME_EMAIL
 
 if [ "$retry_failed" = no ] && grep -qxF "$ref" "$FAILED"; then
@@ -101,7 +109,9 @@ if [ "$retry_failed" = no ] && grep -qxF "$ref" "$FAILED"; then
 fi
 
 # --- 2. one deploy at a time --------------------------------------------------------
-lock="${XDG_RUNTIME_DIR:-$STATE_DIR}/daygame-deploy.lock"
+# In the state directory, so every caller (the agent, a person, root or the
+# deploy user) takes the same lock.
+lock="$STATE_DIR/deploy.lock"
 exec 9>"$lock"
 if ! flock -n 9; then
   log "another deploy holds $lock; nothing to do"
@@ -130,12 +140,16 @@ want="$(revision_of "$ref")"
 previous="$(docker inspect -f '{{if .State.Running}}{{.Config.Image}}{{end}}' "$APP_CONTAINER" 2>/dev/null || true)"
 log "image ready: commit $want; previous: ${previous:-none}"
 
+# Set when the app answered /api/healthz with the expected commit at all, even
+# with a 503: proof that the image itself started.
+answered_own_commit=no
 healthy_now() { # $1 = expected commit
   local inside outside
   inside="$(docker exec "$APP_CONTAINER" node -e \
     "fetch('http://127.0.0.1:3000/api/healthz').then(async r => console.log(r.status, await r.text()), () => console.log(0))" 2>/dev/null || echo 0)"
-  [ "${inside%% *}" = 200 ] || return 1
   [ "$(jq -r .buildId <<<"${inside#* }" 2>/dev/null)" = "$1" ] || return 1
+  answered_own_commit=yes
+  [ "${inside%% *}" = 200 ] || return 1
   outside="$(curl -s --max-time 5 --resolve "$SITE_HOST:443:127.0.0.1" ${CA_CERT:+--cacert "$CA_CERT"} \
     -w '\n%{http_code}' "https://$SITE_HOST/api/healthz" 2>/dev/null || true)"
   [ "${outside##*$'\n'}" = 200 ] || return 1
@@ -166,18 +180,32 @@ if start_and_check "$ref" "$want"; then
   log "healthy: /api/healthz answers 200 with commit $want, inside and through Caddy (proto https)"
 else
   # --- 8. roll back ---------------------------------------------------------------------
-  log "unhealthy after ${HEALTH_WAIT_SECONDS}s: $ref"
+  started="$answered_own_commit"
+  defer() { printf '%s %s\n' "$ref" "$(date +%s)" >> "$DEFERRED"; }
+  log "unhealthy after ${HEALTH_WAIT_SECONDS}s: $ref (it answered with its own commit: $started)"
+  if [ "$previous" = "$ref" ]; then
+    defer
+    alert "$ref is what was already running, and it is unhealthy: the cause is outside the image; nothing marked, deferred"
+    exit 1
+  fi
   if [ -z "$previous" ]; then
     APP_IMAGE="$ref" "${COMPOSE[@]}" stop app >/dev/null 2>&1 || true
-    alert "first deploy of $ref failed its health check; the container is stopped, nothing was marked"
+    defer
+    alert "first deploy of $ref failed its health check; the container is stopped, nothing was marked, deferred"
     exit 1
   fi
   log "rolling back to $previous"
   if start_and_check "$previous" "$(revision_of "$previous")"; then
-    printf '%s\n' "$ref" >> "$FAILED"
-    alert "$ref failed its health check and was rolled back to $previous; marked failed in $FAILED"
+    if [ "$started" = yes ] && ! grep -q "^$ref " "$DEFERRED"; then
+      defer
+      alert "$ref started but failed its health check, and $previous is healthy again: rolled back, not marked failed this once (a database blip?), deferred 15 minutes"
+    else
+      printf '%s\n' "$ref" >> "$FAILED"
+      alert "$ref failed its health check and was rolled back to $previous; marked failed in $FAILED"
+    fi
   else
-    alert "$ref failed, and so did the previous image $previous: the cause is outside the image; nothing marked"
+    defer
+    alert "$ref failed, and so did the previous image $previous: the cause is outside the image; nothing marked, deferred"
   fi
   exit 1
 fi

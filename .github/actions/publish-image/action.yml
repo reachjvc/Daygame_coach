@@ -2,9 +2,11 @@
 # image-production share, so the two cannot drift apart.
 #
 #   1. every input is checked, and an empty one stops the job by name;
-#   2. the package is proven private BEFORE any real image is pushed: if it
-#      does not exist yet, an empty placeholder creates it, and an anonymous
-#      inspect must be refused. If anyone can read it, the job stops (R5);
+#   2. the package is proven private BEFORE any real image is pushed: an
+#      anonymous pull of an existing tag must be refused. CI never creates the
+#      package: a package first pushed with GITHUB_TOKEN from this public
+#      repository comes out PUBLIC (seen 2026-10-13, run 38429479662). The
+#      owner creates it private once (R5); until then the job stops here;
 #   3. the image is built from this commit with no build cache (pull requests
 #      from forks can read some caches), no provenance and no SBOM, so every
 #      stored version is one tagged image;
@@ -71,15 +73,13 @@ runs:
     - name: The package is private
       shell: bash
       run: |
-        probe="$IMAGE:${{ inputs.tag-prefix }}"
-        if ! docker buildx imagetools inspect "$probe" >/dev/null 2>&1; then
-          echo "No $probe yet: creating the package with an empty placeholder, before any real image."
-          ctx="$(mktemp -d)"
-          echo "placeholder: proves the package is private before a real image is pushed" > "$ctx/placeholder.txt"
-          printf 'FROM scratch\nCOPY placeholder.txt /\n' > "$ctx/Dockerfile"
-          docker build -q -t "$IMAGE:placeholder" "$ctx" >/dev/null
-          docker push -q "$IMAGE:placeholder" >/dev/null
-          probe="$IMAGE:placeholder"
+        probe=""
+        for tag in "${{ inputs.tag-prefix }}" placeholder; do
+          if docker buildx imagetools inspect "$IMAGE:$tag" >/dev/null 2>&1; then probe="$IMAGE:$tag"; break; fi
+        done
+        if [ -z "$probe" ]; then
+          echo "::error::$IMAGE has neither a ${{ inputs.tag-prefix }} nor a placeholder tag, so its privacy cannot be proven. CI does not create it: a package first pushed from this public repository comes out public. Create it private once (Plans/caddy-deploy-and-cicd.md, R5)."
+          exit 1
         fi
         # Ask the registry the way an anonymous stranger would: an anonymous
         # token, then the manifest. 200 means anyone can pull it. Only 401 or
@@ -124,7 +124,9 @@ runs:
       shell: bash
       run: |
         ref="$IMAGE:${{ inputs.tag-prefix }}-$GITHUB_SHA"
-        found="$(docker run --rm --entrypoint sh "$ref" -c 'find / -xdev -name ".env*" 2>/dev/null')"
+        # As root, so no directory is unreadable: the image's own user cannot
+        # read /root, and find would then fail and see less.
+        found="$(docker run --rm --user 0:0 --entrypoint sh "$ref" -c 'find / -xdev -name ".env*"')"
         if [ -n "$found" ]; then echo "::error::the image holds env files: $found"; exit 1; fi
         [ "$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$ref")" = "$GITHUB_SHA" ] ||
           { echo "::error::the image's revision label is not $GITHUB_SHA"; exit 1; }
@@ -152,6 +154,9 @@ runs:
         digest="$(docker buildx imagetools inspect "$IMAGE:${{ inputs.tag-prefix }}" --format '{{json .Manifest}}' | jq -r .digest)"
         echo "Published $IMAGE@$digest (commit $GITHUB_SHA)" | tee -a "$GITHUB_STEP_SUMMARY"
 
+    # Only versions tagged <prefix>-<sha> are ever deleted, the newest 10 kept.
+    # Untagged versions are left alone: they can be the per-platform parts of
+    # a tagged index, and deleting them would break it.
     - name: Keep the newest 10
       shell: bash
       env:
@@ -162,10 +167,8 @@ runs:
         owner="${GITHUB_REPOSITORY_OWNER,,}"
         versions="$(gh api --paginate "/users/$owner/packages/container/$PACKAGE/versions" \
           --jq '.[] | [.id, .created_at, ((.metadata.container.tags // []) | join(","))] | @tsv')"
-        keep="$(printf '%s\n' "$versions" | awk -F'\t' -v p="$PREFIX-" 'index($3, p) || $3 == p' | sort -t$'\t' -k2 -r | head -10 | cut -f1)"
-        printf '%s\n' "$versions" | cut -f1 | while read -r id; do
-          [ -n "$id" ] || continue
-          if ! grep -qx "$id" <<<"$keep"; then
+        printf '%s\n' "$versions" | awk -F'\t' -v p="$PREFIX-" 'index($3, p)' | sort -t$'\t' -k2 -r | tail -n +11 | cut -f1 |
+          while read -r id; do
+            [ -n "$id" ] || continue
             gh api -X DELETE "/users/$owner/packages/container/$PACKAGE/versions/$id" >/dev/null && echo "pruned version $id"
-          fi
-        done
+          done

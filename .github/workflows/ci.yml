@@ -107,7 +107,7 @@ jobs:
       - name: Staging publishing is off
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/training-rebuild' && vars.STAGING_PUBLISH != 'on' }}
         run: |
-          echo "Staging publishing is off: blocker B-GH, Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "Staging publishing is off: see blockers B-GH and B-GHCR in Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
 
   # ===========================================================================
   # THE STAGING IMAGE. After the checks above pass on a push to

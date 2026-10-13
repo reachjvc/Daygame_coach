@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { requestIsHttps } from "@/src/db/authCookies"
-import { databaseAnswers } from "@/src/db/readinessProbe"
+import { databaseAnswers } from "@/src/db/readinessRepo"
 
 /**
  * IS THIS SERVER UP, WHICH COMMIT IS IT, AND DOES IT REACH ITS DATABASE?

@@ -49,6 +49,11 @@ require_prereqs() {
   if systemctl --user is-active --quiet "$OLD_UNIT" 2>/dev/null; then
     die "the old $OLD_UNIT is still running. Stop it first: systemctl --user disable --now $OLD_UNIT"
   fi
+  # The deploy agent deploys the registry's image; a local build deployed
+  # beside it would be replaced within a minute.
+  if systemctl --user is-active --quiet daygame-deploy.timer 2>/dev/null; then
+    die "the deploy agent's timer is on, and it would replace this deploy with the registry's image within a minute. Turn it off first: systemctl --user disable --now daygame-deploy.timer"
+  fi
 }
 
 ensure_env_files() {
@@ -151,7 +156,7 @@ main() {
 
   APP_IMAGE="$image" start_caddy
   say "Deploying $image through infra/deploy.sh"
-  "$INFRA/deploy.sh" "$image"
+  DAYGAME_DEPLOY_ENV="$DEPLOY_ENV" "$INFRA/deploy.sh" "$image"
   verify "$sha"
 
   cat <<EOF

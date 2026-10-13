@@ -19,13 +19,16 @@ set -euo pipefail
 
 INFRA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_CONTAINER=dg-app
-settings="${DAYGAME_DEPLOY_ENV:-$HOME/.config/daygame/deploy.env}"
+settings="${DAYGAME_DEPLOY_ENV:-${DAYGAME_CONFIG_DIR:-$HOME/.config/daygame}/deploy.env}"
+DEFER_SECONDS=900
 
 log() { printf '%s agent: %s\n' "$(date -Is)" "$*" >&2; }
 
 [ -f "$settings" ] || { log "no settings at $settings"; exit 1; }
-watch="$(sed -n 's/^WATCH=//p' "$settings" | tail -1)"
-state_dir="$(sed -n 's/^STATE_DIR=//p' "$settings" | tail -1)"
+# The same KEY=value format infra/deploy.sh reads; a value may be in single quotes.
+setting() { sed -n "s/^$1=//p" "$settings" | tail -1 | sed "s/^'\(.*\)'\$/\1/"; }
+watch="$(setting WATCH)"
+state_dir="$(setting STATE_DIR)"
 state_dir="${state_dir:-$HOME/.local/state/daygame}"
 [[ "$watch" =~ ^[a-z0-9][a-z0-9._/:-]*:[A-Za-z0-9._-]+$ ]] || { log "WATCH '$watch' in $settings is not <repo>:<tag>"; exit 1; }
 repo="${watch%:*}"
@@ -64,6 +67,13 @@ if [ "$running" = "$target" ]; then
 fi
 if grep -qxF "$target" "$state_dir/failed-digests" 2>/dev/null; then
   log "$target is marked failed; not retrying it (a newer push will replace it)"
+  exit 0
+fi
+# A deploy that failed for a reason outside the image is retried, but not
+# every minute: each attempt recreates the app twice.
+last="$(awk -v t="$target" '$1 == t {print $2}' "$state_dir/deferred-digests" 2>/dev/null | tail -1)"
+if [ -n "$last" ] && [ "$(( $(date +%s) - last ))" -lt "$DEFER_SECONDS" ]; then
+  log "$target was deferred at $(date -d "@$last" -Is); retrying after $(date -d "@$((last + DEFER_SECONDS))" -Is)"
   exit 0
 fi
 

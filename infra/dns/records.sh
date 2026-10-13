@@ -68,6 +68,21 @@ cf() { curl -fsS "${auth[@]}" "$@"; }
 zone="$(cf "$API/zones?name=$domain" | jq -r '.result[0].id // empty')"
 [ -n "$zone" ] || die "Cloudflare has no zone named $domain for this token."
 
+# Which existing record a desired one replaces. TXT: only the one holding the
+# same kind of policy (v=spf1, v=DMARC1), never another TXT record at that
+# name such as a verification token. CAA: the `issue` record. A, AAAA: the one
+# record of that type. More than one candidate means somebody else manages
+# them, so the script stops instead of guessing.
+match_id() { # type name content
+  local all
+  all="$(cf "$API/zones/$zone/dns_records?type=$1&name=$2&per_page=100")"
+  case "$1" in
+    TXT) jq -r --arg p "${3%% *}" '[.result[] | select(.content | ltrimstr("\"") | startswith($p))] | if length > 1 then "MANY" else (.[0].id // "") end' <<<"$all" ;;
+    CAA) jq -r '[.result[] | select(.data.tag == "issue")] | if length > 1 then "MANY" else (.[0].id // "") end' <<<"$all" ;;
+    *) jq -r 'if (.result | length) > 1 then "MANY" else (.result[0].id // "") end' <<<"$all" ;;
+  esac
+}
+
 while read -r type name content; do
   if [ "$type" = CAA ]; then
     read -r flags tag value <<<"$content"
@@ -77,7 +92,8 @@ while read -r type name content; do
     body="$(jq -nc --arg ty "$type" --arg n "$name" --arg c "$content" \
       '{type:$ty, name:$n, content:$c, ttl:3600} + (if $ty == "A" or $ty == "AAAA" then {proxied:false} else {} end)')"
   fi
-  existing="$(cf "$API/zones/$zone/dns_records?type=$type&name=$name" | jq -r '.result[0].id // empty')"
+  existing="$(match_id "$type" "$name" "$content")"
+  [ "$existing" != MANY ] || die "$name has more than one $type record of this kind at Cloudflare. Resolve them by hand; nothing more was changed."
   if [ -n "$existing" ]; then
     cf -X PUT "$API/zones/$zone/dns_records/$existing" --data "$body" >/dev/null
     plan "updated $type $name"

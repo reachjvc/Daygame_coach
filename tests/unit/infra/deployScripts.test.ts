@@ -62,6 +62,20 @@ describe("infra/deploy.sh refuses", () => {
     expect(r.stderr).toContain("is marked failed")
   })
 
+  it("a failed digest even when the settings are written with quotes, which it reads like the other scripts", () => {
+    const ref = `ghcr.io/reachjvc/daygame-coach-staging@${DIGEST}`
+    writeFileSync(join(dir, "failed-digests"), `${ref}\n`)
+    writeFileSync(join(dir, "runtime.env"), "X='1'\n")
+    const path = join(dir, "quoted.env")
+    writeFileSync(
+      path,
+      [`APP_ENV_FILE='${join(dir, "runtime.env")}'`, "CADDYFILE='caddy/Caddyfile.local'", "SITE_HOST='localhost'", `STATE_DIR='${dir}'`].join("\n") + "\n",
+    )
+    const r = run("infra/deploy.sh", [ref], { DAYGAME_DEPLOY_ENV: path })
+    expect(r.status).toBe(2)
+    expect(r.stderr).toContain("is marked failed")
+  })
+
   it("a settings file with a key it does not know", () => {
     const r = run("infra/deploy.sh", [DIGEST], { DAYGAME_DEPLOY_ENV: settings(["SIET_HOST=typo"]) })
     expect(r.status).toBe(2)
@@ -72,6 +86,25 @@ describe("infra/deploy.sh refuses", () => {
     const r = run("infra/deploy.sh", [DIGEST], { DAYGAME_DEPLOY_ENV: join(dir, "missing.env") })
     expect(r.status).toBe(2)
     expect(r.stderr).toContain("no machine settings")
+  })
+})
+
+describe("one deploy path, one lock", () => {
+  it("deploy.sh locks in the state directory, so the agent and a person share one lock", () => {
+    // XDG_RUNTIME_DIR differs between root and the deploy user, so a lock there
+    // would let two deploys run at once.
+    expect(readFileSync(join(ROOT, "infra/deploy.sh"), "utf8")).toMatch(/^lock="\$STATE_DIR\/deploy\.lock"$/m)
+  })
+
+  it("sync-infra.sh never starts or recreates the app; only deploy.sh does, with a health check", () => {
+    const script = readFileSync(join(ROOT, "infra/server/sync-infra.sh"), "utf8").replace(/^\s*#.*$/gm, "")
+    expect(script).not.toMatch(/up -d[^\n]*\bapp\b/)
+  })
+
+  it("the agent leaves a deferred digest alone for 15 minutes instead of retrying every minute", () => {
+    const agent = readFileSync(join(ROOT, "infra/deploy-agent.sh"), "utf8")
+    expect(agent).toMatch(/DEFER_SECONDS=900/)
+    expect(agent).toMatch(/deferred-digests/)
   })
 })
 

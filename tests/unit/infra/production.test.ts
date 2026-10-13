@@ -125,6 +125,15 @@ describe("DNS", () => {
     expect(script).toMatch(/TXT \$domain v=spf1 -all/)
     expect(script).toMatch(/TXT _dmarc\.\$domain v=DMARC1; p=reject/)
   })
+
+  it("replaces only the record of the same kind, and stops when there are several", () => {
+    // An apex TXT record is often someone's verification token; overwriting it
+    // because it came back first would be silent and hard to undo.
+    const script = read("infra/dns/records.sh")
+    expect(script).toContain('select(.content | ltrimstr("\\"") | startswith($p))')
+    expect(script).toContain('select(.data.tag == "issue")')
+    expect(script).toMatch(/\[ "\$existing" != MANY \] \|\| die/)
+  })
 })
 
 describe("the production jobs", () => {

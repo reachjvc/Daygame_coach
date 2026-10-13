@@ -13,7 +13,10 @@
 #   /etc/daygame/infra-version                         the commit, logged by the agent
 # and then restarts only what changed:
 #   a Caddy file          -> Caddy is recreated (its admin API is off, so no reload)
-#   compose.yaml          -> Caddy and the app are recreated, the app on the image it runs
+#   compose.yaml          -> Caddy is recreated. The app is never touched here:
+#                            infra/deploy.sh is its only path, with a health
+#                            check and a rollback, and it applies the new file
+#                            at the next deploy.
 #   a unit                -> daemon-reload, and the timer is (re)started
 #   a script              -> nothing; the timer runs the new one next minute
 #
@@ -54,9 +57,10 @@ printf '%s\n' "$sha" > "$stage/infra-version"
 if [ "$dry_run" = yes ]; then
   plan "dry run: the server is not contacted. At commit $sha it would install on root@$SERVER:"
   for f in "${FILES[@]}"; do plan "  $f -> $DEST/${f#infra/} ($(sha256sum "$stage/$f" | cut -c1-12))"; done
-  for u in "${UNITS[@]}"; do plan "  infra/systemd/$u.template -> /etc/systemd/system/$u, User=deploy ($(sha256sum "$stage/units/$u" | cut -c1-12))"; done
+  for u in "${UNITS[@]}"; do plan "  infra/systemd/$u.template -> /etc/systemd/system/$u ($(sha256sum "$stage/units/$u" | cut -c1-12))"; done
+  plan "  (the service runs as User=deploy)"
   plan "  /etc/daygame/infra-version = $sha"
-  plan "then restart only what changed: Caddy for a Caddy file, Caddy and the app for compose.yaml, daemon-reload and the timer for a unit; nothing for a script"
+  plan "then restart only what changed: Caddy for a Caddy file or compose.yaml, daemon-reload and the timer for a unit; nothing for a script; never the app, which only infra/deploy.sh touches"
   exit 0
 fi
 
@@ -86,7 +90,8 @@ tar -C "$stage" -c infra units infra-version | ssh_root "
   rm -rf \"\$tmp\""
 plan "installed; /etc/daygame/infra-version = $sha"
 
-compose="set -a; . /etc/daygame/deploy.env; set +a; cd $DEST && APP_IMAGE=\$(docker inspect -f '{{.Config.Image}}' dg-app 2>/dev/null || echo none) docker compose -f compose.yaml"
+# APP_IMAGE only satisfies compose's interpolation; the app is not started here.
+compose="set -a; . /etc/daygame/deploy.env; set +a; cd $DEST && APP_IMAGE=unused docker compose -f compose.yaml"
 for c in "${changed[@]}"; do
   case "$c" in
     unit:*) ssh_root "systemctl daemon-reload && systemctl enable --now daygame-deploy.timer && systemctl restart daygame-deploy.timer"
@@ -94,10 +99,10 @@ for c in "${changed[@]}"; do
   esac
 done
 if printf '%s\n' "${changed[@]}" | grep -qx infra/compose.yaml; then
-  ssh_root "$compose up -d caddy && if docker inspect dg-app >/dev/null 2>&1; then $compose up -d --no-deps app; fi"
-  plan "compose.yaml changed: Caddy and the app recreated"
+  ssh_root "$compose up -d --no-deps caddy"
+  plan "compose.yaml changed: Caddy recreated; the app takes the new file at its next deploy (infra/deploy.sh)"
 elif printf '%s\n' "${changed[@]}" | grep -q '^infra/caddy/'; then
-  ssh_root "$compose up -d --force-recreate caddy"
+  ssh_root "$compose up -d --no-deps --force-recreate caddy"
   plan "a Caddy file changed: Caddy recreated"
 fi
 plan "done"

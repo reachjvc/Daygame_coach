@@ -4,6 +4,9 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js"
  * DOES THIS SERVER REACH ITS DATABASE? Asked by `/api/healthz` only.
  *
  * Not the health-tracking feature: that is `healthRepo.ts` and `app/api/health/`.
+ * A repo like the others, because all database access goes through
+ * `src/db/*Repo.ts`. It builds its own cookie-free anon client on purpose: a
+ * health check must not depend on, or refresh, anybody's session.
  *
  * The question is answered with the cheapest real query there is: a HEAD
  * request for one row of `values`, a public catalogue that the anon role may

@@ -12,12 +12,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 import { GET } from "@/app/api/healthz/route"
-import { PROBE_CACHE_MS, PROBE_TIMEOUT_MS } from "@/src/db/readinessProbe"
+import { PROBE_CACHE_MS, PROBE_TIMEOUT_MS } from "@/src/db/readinessRepo"
 
 const probeAnswer = vi.hoisted(() => ({ value: true }))
 
-vi.mock("@/src/db/readinessProbe", async (importOriginal) => {
-  const real = await importOriginal<typeof import("@/src/db/readinessProbe")>()
+vi.mock("@/src/db/readinessRepo", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/src/db/readinessRepo")>()
   return {
     ...real,
     databaseAnswers: vi.fn(async () => probeAnswer.value),
@@ -68,10 +68,10 @@ describe("GET /api/healthz", () => {
 
 describe("the database probe", () => {
   // The real function, not the route's mock above.
-  type Probe = typeof import("@/src/db/readinessProbe")
+  type Probe = typeof import("@/src/db/readinessRepo")
   let real: Probe["databaseAnswers"]
   beforeEach(async () => {
-    const actual = await vi.importActual<Probe>("@/src/db/readinessProbe")
+    const actual = await vi.importActual<Probe>("@/src/db/readinessRepo")
     real = actual.databaseAnswers
     actual.forgetReadiness()
   })

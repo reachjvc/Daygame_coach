@@ -61,7 +61,10 @@ fi
 ssh_root() { ssh -o ConnectTimeout=20 "root@$SERVER" "$@"; }
 
 # Keep the server's own Server Actions key: it was generated for this server.
-existing_key="$(ssh_root "sed -n \"s/^NEXT_SERVER_ACTIONS_ENCRYPTION_KEY='\\(.*\\)'\$/\\1/p\" /etc/daygame/production.env 2>/dev/null" || true)"
+# A missing file (the first push) answers empty; a failed connection stops here,
+# because carrying on would replace the server's key with another one.
+existing_key="$(ssh_root "if [ -f /etc/daygame/production.env ]; then sed -n \"s/^NEXT_SERVER_ACTIONS_ENCRYPTION_KEY='\\(.*\\)'\$/\\1/p\" /etc/daygame/production.env; fi")" ||
+  die "could not read the server's settings over Tailscale SSH; nothing was sent."
 SERVER_ACTIONS_KEY="$existing_key" "$REPO/infra/write-env-file.sh" production "$domain"
 
 ssh_root "install -m 640 -o root -g deploy /dev/stdin /etc/daygame/production.env" < "$CONFIG_DIR/production.env"
