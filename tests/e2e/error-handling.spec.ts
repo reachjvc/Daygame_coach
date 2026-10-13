@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/test'
 import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
+import { grantPurchase } from './helpers/purchase'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -10,12 +11,17 @@ import { SELECTORS } from './helpers/selectors'
  *
  * Note: This tests the ACTUAL error handling behavior, not ideal behavior.
  * If tests fail, it may indicate missing error handling in the app.
+ *
+ * Signed in as the worker's own account (fixtures/test.ts), so the sessions
+ * these start and end are nobody else's.
  */
 
 const AUTH_TIMEOUT = 15000
 
 test.describe('Error Handling: API Failures', () => {
-  // Run tests serially to avoid parallel conflicts with auth state and route handlers
+  // Not for isolation any more: every worker has its own account, and a
+  // `page.route` stub is the test's own page's. tests/unit/e2e-isolation.test.ts
+  // still requires serial mode of any file that stubs a route.
   test.describe.configure({ mode: 'serial' })
 
   // Cleanup route handlers and sessions after each test
@@ -26,12 +32,15 @@ test.describe('Error Handling: API Failures', () => {
 
   // Moved from auth-errors.spec.ts, whose other four tests duplicated
   // auth.spec, signup-flow and protected-routes.
-  test('401 on API call mid-session shows error', async ({ page }) => {
+  test('401 on API call mid-session shows error', async ({ page, account }) => {
+    // Ask Coach is for accounts that have paid, and a fresh one has not.
+    await grantPurchase(account.id)
+
     // Arrange: Navigate to a protected page
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
-    // The test account can open Q&A; a redirect away is a failure, not a skip
+    // The account can open Q&A; a redirect away is a failure, not a skip
     await expect(page).toHaveURL(/\/dashboard\/qa/)
 
     await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })

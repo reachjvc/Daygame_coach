@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, SIGNED_OUT } from './fixtures/test'
 
 /**
  * Security E2E Tests: Authentication Enforcement
  *
- * Verifies that all protected API endpoints properly reject unauthenticated requests.
- * These tests run against real Supabase to verify production security.
+ * Verifies that all protected API endpoints properly reject unauthenticated requests,
+ * from the app under test (playwright.config.ts's baseURL) on the local test backend.
  */
 
 // API endpoints that require authentication
@@ -44,11 +44,11 @@ const PROTECTED_ENDPOINTS = [
 ]
 
 /**
- * Signed out, from whatever server this run points at. It named
- * `http://localhost:3000` outright, so pointed at a production build on
- * another port it went on asking the dev server.
+ * Signed out. The `request` fixture takes the test's storage state, so without
+ * this it would carry the worker's session and every endpoint would answer 200.
+ * Paths only, never a host: the run's baseURL decides which server is asked.
  */
-test.use({ storageState: { cookies: [], origins: [] } })
+test.use({ storageState: SIGNED_OUT })
 
 test.describe('Security: Authentication Enforcement', () => {
   test('all protected endpoints require authentication', async ({ request }) => {

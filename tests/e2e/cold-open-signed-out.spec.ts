@@ -4,7 +4,8 @@
  * `cold-open.spec.ts` covers the app signed in, and could not cover these: a
  * project with a session never renders the sales page or the sign-up form, so
  * the one surface an actual visitor arrives on was the one surface the sweep
- * did not watch. This file runs in `no-auth`, which has no `storageState`.
+ * did not watch. Every test here opens its page with no session at all
+ * (`SIGNED_OUT`), whichever project runs the file.
  *
  * It matters more here than anywhere else in the app. `/` is the only page a
  * person can reach without an account, so a hydration failure on it is the only
@@ -15,7 +16,7 @@
  * `signup-flow.spec.ts`, which owns the writes.
  */
 
-import { test } from "@playwright/test"
+import { test, SIGNED_OUT } from "./fixtures/test"
 import { staticRoutes } from "../support/appRoutes"
 import {
   openCold,
@@ -39,6 +40,8 @@ import {
 const PUBLIC_ROUTES = staticRoutes()
   .map((r) => r.route)
   .filter((route) => route === "/" || route.startsWith("/auth/"))
+
+test.use({ storageState: SIGNED_OUT })
 
 for (const route of PUBLIC_ROUTES) {
   test(`opens clean for a stranger: ${route}`, async ({ page }) => {

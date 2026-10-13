@@ -1,16 +1,37 @@
-import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import { test, expect, SIGNED_OUT } from './fixtures/test'
+import { emailedAuthLink, freshAddress, openEmailedLink, strongPassword } from './helpers/authEmail'
 import { waitForHydration } from './helpers/hydration'
+import { fillSecret } from './helpers/secret'
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
-// Serial: one of these tests intercepts a network route, and a parallel worker
-// hitting the same page mid-interception sees the stub. Required by
-// tests/unit/e2e-isolation.test.ts.
-test.describe.configure({ mode: 'serial' })
+/**
+ * Signing up, end to end, on the test backend: the form, the email the auth
+ * service sends (caught by Mailpit), and the link in it. Until Phase 8 these
+ * stubbed the auth service's answers, because a real signup would have made
+ * an account in the live project and mailed a real address; the two that did
+ * are real now, so they also prove the answers the stubs assumed.
+ */
+
+/** Fills the signup form and submits it. The password goes through `fillSecret`. */
+async function signUp(page: Page, fields: { name: string; email: string; password: string }): Promise<void> {
+  await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
+  await waitForHydration(page)
+  await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+  await page.getByTestId(SELECTORS.signup.fullNameInput).fill(fields.name, { timeout: ACTION_TIMEOUT })
+  await page.getByTestId(SELECTORS.signup.emailInput).fill(fields.email, { timeout: ACTION_TIMEOUT })
+  await fillSecret(page.getByTestId(SELECTORS.signup.passwordInput), fields.password, { timeout: ACTION_TIMEOUT })
+  await fillSecret(page.getByTestId(SELECTORS.signup.repeatPasswordInput), fields.password, { timeout: ACTION_TIMEOUT })
+  await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
+}
 
 test.describe('Signup Flow', () => {
+  // A stranger signing up: no session of the worker's.
+  test.use({ storageState: SIGNED_OUT })
+
   test('should show error for password mismatch', async ({ page }) => {
     // Arrange: Navigate to signup page
     await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
@@ -45,65 +66,39 @@ test.describe('Signup Flow', () => {
     await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
   })
 
-  test('sends the confirmation link to /auth/confirm, not straight to /dashboard', async ({ page }) => {
-    // This is the regression guard for the defect that broke every real signup:
-    // the emailed link carries a one-time code that must be exchanged for a
-    // session. Pointing it at /dashboard meant the code was never redeemed and
-    // the confirmed user was bounced back to the login page.
-    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
-    await waitForHydration(page)
-    await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+  test('the emailed confirmation link goes through /auth/confirm and signs the new account in', async ({ page }) => {
+    // The regression this guards broke every real signup: the emailed link
+    // carries a one-time code that must be exchanged for a session. Pointing
+    // it at /dashboard meant the code was never redeemed and the confirmed
+    // user was bounced back to the login page. So: sign up, open the link the
+    // email holds, and be signed in as the account just made.
+    const email = freshAddress('signup')
+    await signUp(page, { name: 'New Signup', email, password: strongPassword() })
+    await page.waitForURL(/\/auth\/sign-up-success/, { timeout: AUTH_TIMEOUT })
 
-    // Intercept before it reaches Supabase: this test must not create a live
-    // account or trigger a bouncing confirmation email. We only care what the
-    // client asked for.
-    let redirectTo = ''
-    await page.route('**/auth/v1/signup**', async (route) => {
-      redirectTo = new URL(route.request().url()).searchParams.get('redirect_to') ?? ''
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ id: 'stub', email: 'stub@example.com' }),
-      })
-    })
+    const link = await emailedAuthLink(email, 'signup')
+    expect(link.redirectTo, 'where the confirmation link sends the browser').toContain('/auth/confirm')
+    expect(link.redirectTo).not.toMatch(/\/dashboard(\?|$)/)
 
-    await page.getByTestId(SELECTORS.signup.fullNameInput).fill('Redirect Check', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.emailInput).fill('e2e-redirect-check@example.com', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.passwordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
+    expect(await openEmailedLink(page, link), 'where the link left the browser').not.toMatch(/^\/auth\//)
 
-    // Assert on what the client ASKED for, not on where the page went next:
-    // the stubbed response is deliberately not a full GoTrue payload, so the
-    // client may not navigate. The request is the thing under test.
-    await expect.poll(() => redirectTo, { timeout: AUTH_TIMEOUT }).not.toBe('')
-
-    expect(redirectTo).toContain('/auth/confirm')
-    expect(redirectTo).not.toMatch(/\/dashboard(\?|$)/)
+    // Signed in, and as the new account rather than anyone else.
+    await page.goto('/dashboard/settings', { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.settings.userEmail)).toHaveText(email, { timeout: AUTH_TIMEOUT })
   })
 
-  test('offers a way forward when the email already has an account', async ({ page }) => {
-    // Supabase answers "User already registered", which reads as a dead end.
-    // The most likely person to see it is someone who signed up months ago and
-    // forgot -- so the page must point at logging in or resetting, not just
+  test('offers a way forward when the email already has an account', async ({ page, throwawayAccount }) => {
+    // The auth service answers "User already registered", which reads as a dead
+    // end. The most likely person to see it is someone who signed up months ago
+    // and forgot -- so the page must point at logging in or resetting, not just
     // report a failure. This happened to the owner on 2026-09-03.
-    await page.goto('/auth/sign-up', { timeout: AUTH_TIMEOUT })
-    await waitForHydration(page)
-    await expect(page.getByTestId(SELECTORS.signup.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    await page.route('**/auth/v1/signup**', (route) =>
-      route.fulfill({
-        status: 422,
-        contentType: 'application/json',
-        body: JSON.stringify({ code: 'user_already_exists', message: 'User already registered' }),
-      })
-    )
-
-    await page.getByTestId(SELECTORS.signup.fullNameInput).fill('Returning User', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.emailInput).fill('returning@example.com', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.passwordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.repeatPasswordInput).fill('CorrectHorse9!', { timeout: ACTION_TIMEOUT })
-    await page.getByTestId(SELECTORS.signup.submitButton).click({ timeout: ACTION_TIMEOUT })
+    //
+    // A real, confirmed account and a real answer. The stub this replaced
+    // assumed the 422 `user_already_exists`. Supabase documents that answer
+    // only while email OR phone confirmation is off; with both on, signUp
+    // returns a made-up user instead and this page would say nothing. This is
+    // the test that notices if the backend's settings ever make that so.
+    await signUp(page, { name: 'Returning User', email: throwawayAccount.email, password: strongPassword() })
 
     await expect(page.getByTestId('signup-existing-account')).toBeVisible({ timeout: AUTH_TIMEOUT })
     // The raw error must NOT be what the user is left with.
@@ -112,6 +107,6 @@ test.describe('Signup Flow', () => {
     // And the way out must carry the address over, so it need not be retyped.
     await page.getByTestId('signup-existing-login-link').click({ timeout: ACTION_TIMEOUT })
     await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId('login-email-input')).toHaveValue('returning@example.com', { timeout: AUTH_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.auth.emailInput)).toHaveValue(throwawayAccount.email, { timeout: AUTH_TIMEOUT })
   })
 })

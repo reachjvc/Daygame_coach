@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect, SIGNED_OUT } from "./fixtures/test"
 
 /**
  * The two signed-out checks that need a real browser and that nothing else
@@ -11,6 +11,9 @@ import { test, expect } from "@playwright/test"
  */
 
 test.describe("Smoke Tests", () => {
+  // A stranger: no session, so no account is made for this file at all.
+  test.use({ storageState: SIGNED_OUT })
+
   test("unauthenticated dashboard redirects to login", async ({ page }) => {
     await page.goto("/dashboard/tracking")
     await expect(page).toHaveURL(/\/auth\/login/)

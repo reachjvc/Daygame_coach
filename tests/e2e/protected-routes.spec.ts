@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { test, SIGNED_OUT } from './fixtures/test'
 
 const AUTH_TIMEOUT = 15000
 
@@ -13,7 +13,7 @@ const AUTH_TIMEOUT = 15000
  * What happens after logging OUT is `auth.spec.ts`'s, which logs out for real
  * rather than clearing cookies by hand.
  */
-test.use({ storageState: { cookies: [], origins: [] } })
+test.use({ storageState: SIGNED_OUT })
 
 test('every signed-in page sends a stranger to log in', async ({ page }) => {
   for (const route of ['/dashboard', '/dashboard/tracking', '/dashboard/settings', '/dashboard/qa']) {
