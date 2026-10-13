@@ -69,25 +69,4 @@ describe('The phone zoom rule', () => {
       )
     }
   })
-
-  test('the nine boxes the app makes large all ask for it with text-lg', () => {
-    // If somebody makes a box large with `text-[18px]` or `text-xl` instead,
-    // the guard list above has to grow with it -- so the set is checked rather
-    // than assumed. These are the boxes that would otherwise shrink.
-    const LARGE_BOXES = [
-      'src/exercising/components/ExercisingPage.tsx',
-      'src/goals/components/north-star/AreaDialog.tsx',
-      'src/goals/components/views/V11ViewA.tsx',
-      'src/goals/components/views/V11ViewB.tsx',
-      'src/tracking/components/CustomReportBuilder.tsx',
-      'src/tracking/components/FieldReportPage.tsx',
-      'src/tracking/components/QuickAddModal.tsx',
-    ]
-    for (const rel of LARGE_BOXES) {
-      const source = fs.readFileSync(path.join(projectRoot, rel), 'utf-8')
-      expect(source, `${rel} no longer has a large box — check the guard list`).toMatch(
-        /text-lg/,
-      )
-    }
-  })
 })

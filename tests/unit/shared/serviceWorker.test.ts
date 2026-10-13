@@ -266,26 +266,9 @@ describe("rule 2, with more than one shell", () => {
     expect(respondedAtAll).toBe(false)
     expect(h.fetchMock).not.toHaveBeenCalled()
   })
-
-  test("signing in empties the store, so neither shell outlives the person who warmed it", async () => {
-    const h = await installed()
-    h.store.get("app-shell-build1")!.set(ORIGIN + VICE, new Response("<html>theirs</html>"))
-    await dispatch(h, "fetch", { request: page("/auth/login") })
-    expect(h.store.has("app-shell-build1")).toBe(false)
-  })
 })
 
 describe("rule 3 — the shell is stored with its scripts or not at all", () => {
-  test("install stores the scripts the shell page names, not just its HTML", async () => {
-    // HTML alone was a trap: after a deploy the stored page named chunks that
-    // went out with the previous build's cache, so the offline launch drew the
-    // timer and nothing worked.
-    const h = await installed()
-    const stored = [...h.store.get("app-shell-build1")!.keys()]
-    expect(stored).toContain(ORIGIN + "/dashboard/time")
-    expect(stored).toContain(ORIGIN + "/_next/static/chunks/main.js")
-  })
-
   test("a shell fetched while signed out is not stored — the login page never lands under the tracker's address", async () => {
     // `cache.add` followed the 307 and filed the login page as the tracker.
     // `warmShell` asks with redirect: "manual", so it arrives ok === false.

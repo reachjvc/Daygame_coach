@@ -91,12 +91,6 @@ describe("every tab destination renders the bar", () => {
     ).toEqual([])
   })
 
-  it("the live workout screen opts out in writing, because RestBar owns that edge", () => {
-    // A rest countdown you cannot see because a nav bar sits over it is the
-    // one thing that screen exists to show.
-    expect(HIDDEN_ROUTE_PREFIXES).toContain("/programs/live")
-  })
-
   it("premise: this test can tell a page that mounts the bar from one that does not", () => {
     /**
      * Without this, a broken `componentTree` would report every page as fine

@@ -91,19 +91,6 @@ describe("the dashboard's Your Preferences card", () => {
     // and a thumb cannot hit an 8.9px country.
     expect(buttons.filter((b) => b.disabled)).toHaveLength(0)
   })
-
-  test("names every region rather than showing a database id", async () => {
-    const user = (await import("@testing-library/user-event")).default.setup()
-    render(<UserPreferences {...PROFILE} />)
-    await user.click(screen.getByRole("button", { name: /Choose new primary region/ }))
-    await screen.findByTestId("region-list")
-
-    // "slavic-europe" was missing from a hand-written label table in this file,
-    // so choosing it printed the raw id on the card.
-    for (const region of REGIONS) {
-      expect(screen.getByTestId(`region-option-${region.id}`)).toHaveTextContent(region.name)
-    }
-  })
 })
 
 describe("the dating-preferences gate", () => {

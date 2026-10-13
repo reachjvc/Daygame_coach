@@ -47,11 +47,6 @@ describe("getTodayInTimezone", () => {
     vi.useRealTimers()
   })
 
-  it("returns YYYY-MM-DD format", () => {
-    const result = getTodayInTimezone("UTC")
-    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-  })
-
   it("cannot be asked what day it is without saying whose day", () => {
     // `getTodayInTimezone(null)` used to mean "fall back to UTC". It is now a
     // compile error, which is the point: a caller with no timezone was a caller
@@ -96,11 +91,6 @@ describe("getTodayInTimezone", () => {
 describe("getNowInTimezone", () => {
   afterEach(() => {
     vi.useRealTimers()
-  })
-
-  it("returns a Date object", () => {
-    const result = getNowInTimezone("UTC")
-    expect(result).toBeInstanceOf(Date)
   })
 
   it("returns correct day-of-week for timezone", () => {

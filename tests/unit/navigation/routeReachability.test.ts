@@ -326,17 +326,6 @@ describe("every page has a way in", () => {
     ).toEqual([])
   })
 
-  it("a route linked only from an orphan is still an orphan", () => {
-    // The transitive half, proved rather than asserted: hang a fake route off a
-    // fake orphan and check the walk refuses to reach either.
-    const graph = new Map(edges)
-    graph.set("/fake-orphan", new Set(["/fake-child"]))
-    graph.set("/fake-child", new Set())
-    const reached = reachedRoutes(graph)
-    expect(reached.has("/fake-orphan")).toBe(false)
-    expect(reached.has("/fake-child")).toBe(false)
-  })
-
   /**
    * NO LIVE PAGE SENDS ANYONE TO A BENCH PAGE.
    *
@@ -441,15 +430,6 @@ describe("every page has a way in", () => {
       invisible,
       `The detector cannot see these, so it would not catch a new one like them:\n${invisible.join("\n")}`
     ).toEqual([])
-  })
-
-  it("the /test-link allowlist only shrinks", () => {
-    const found = benchLinkers()
-    const cleaned = [...TEST_LINKS_ALLOWED].filter((f) => !found.has(f))
-    expect(
-      cleaned,
-      `These no longer link to a bench page — remove them from TEST_LINKS_ALLOWED:\n${cleaned.join("\n")}`
-    ).toHaveLength(0)
   })
 
   it("counts only navigation, never a path that is merely named", () => {

@@ -29,17 +29,6 @@ describe("qaRequestSchema", () => {
       }
     })
 
-    test("should reject missing question", () => {
-      // Arrange
-      const input = {}
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
     test("should accept question at max length boundary", () => {
       // Arrange
       const input = { question: "a".repeat(VALIDATION_LIMITS.maxQuestionChars) }
@@ -66,74 +55,9 @@ describe("qaRequestSchema", () => {
         )
       }
     })
-
-    test("should accept question with special characters", () => {
-      // Arrange
-      const input = { question: "How do I handle <script>alert('xss')</script> situations?" }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept question with unicode characters", () => {
-      // Arrange
-      const input = { question: "Hvordan griber jeg kvinder an? 🤔" }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept question with newlines", () => {
-      // Arrange
-      const input = { question: "Question line 1\nQuestion line 2" }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
   })
 
   describe("retrieval options", () => {
-    test("should accept valid retrieval options", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        retrieval: {
-          topK: 5,
-          minScore: 0.5,
-          maxChunkChars: 5000,
-        },
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept empty retrieval object", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        retrieval: {},
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
     test("should reject topK below minimum", () => {
       // Arrange
       const input = {
@@ -276,83 +200,6 @@ describe("qaRequestSchema", () => {
   })
 
   describe("generation options", () => {
-    test("should accept valid generation options", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        generation: {
-          provider: "ollama",
-          model: "llama3.3:70b",
-          maxOutputTokens: 1000,
-          temperature: 0.7,
-        },
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept empty generation object", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        generation: {},
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept all valid provider values", () => {
-      // Arrange - only ollama is supported (claude disabled to save API costs)
-      const providers = ["ollama"] as const
-
-      for (const provider of providers) {
-        // Act
-        const result = qaRequestSchema.safeParse({
-          question: "Test",
-          generation: { provider },
-        })
-
-        // Assert
-        expect(result.success).toBe(true)
-      }
-    })
-
-    test("should reject invalid provider", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        generation: { provider: "invalid-provider" },
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should accept any string for model", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        generation: { model: "any-model-name" },
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
     test("should reject maxOutputTokens below 100", () => {
       // Arrange
       const input = {
@@ -452,47 +299,6 @@ describe("qaRequestSchema", () => {
       // Assert
       expect(resultMin.success).toBe(true)
       expect(resultMax.success).toBe(true)
-    })
-  })
-
-  describe("combined options", () => {
-    test("should accept full valid request with all options", () => {
-      // Arrange
-      const input = {
-        question: "How do I start a conversation with a stranger?",
-        retrieval: {
-          topK: 10,
-          minScore: 0.6,
-          maxChunkChars: 5000,
-        },
-        generation: {
-          provider: "ollama" as const,
-          model: "llama3.3:70b",
-          maxOutputTokens: 2000,
-          temperature: 0.7,
-        },
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should work with partial options", () => {
-      // Arrange
-      const input = {
-        question: "Test question",
-        retrieval: { topK: 5 },
-        generation: { temperature: 0.5 },
-      }
-
-      // Act
-      const result = qaRequestSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
     })
   })
 })

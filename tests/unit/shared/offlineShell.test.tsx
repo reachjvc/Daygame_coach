@@ -86,12 +86,19 @@ describe("offline support", () => {
 
   test("a failed registration is reported, never swallowed", async () => {
     vi.stubEnv("NODE_ENV", "production")
+    // A real build id, so this reaches `register` — without one the component
+    // stops at the no-build-id branch above, and an error from THAT would
+    // satisfy a bare "console.error was called".
+    vi.stubEnv("NEXT_PUBLIC_BUILD_ID", "abc1234")
     const error = vi.spyOn(console, "error").mockImplementation(() => {})
-    vi.stubGlobal("navigator", {
-      serviceWorker: { register: vi.fn().mockRejectedValue(new Error("blocked")), getRegistrations: vi.fn() },
-    })
+    const blocked = new Error("blocked")
+    const register = vi.fn().mockRejectedValue(blocked)
+    vi.stubGlobal("navigator", { serviceWorker: { register, getRegistrations: vi.fn() } })
     render(<OfflineShell />)
-    await waitFor(() => expect(error).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(error).toHaveBeenCalledWith(expect.stringContaining("could not be enabled"), blocked),
+    )
+    expect(register).toHaveBeenCalledWith("/sw.js?v=abc1234")
     error.mockRestore()
   })
 })

@@ -23,17 +23,6 @@ function createChunk(overrides: Partial<RetrievedChunk> = {}): RetrievedChunk {
 // ============================================
 
 describe('buildUserPrompt', () => {
-  test('should return trimmed question', () => {
-    // Arrange
-    const question = 'How do I open?'
-
-    // Act
-    const result = buildUserPrompt(question)
-
-    // Assert
-    expect(result).toBe('How do I open?')
-  })
-
   test('should trim leading and trailing whitespace', () => {
     // Arrange
     const question = '   How do I open?   '
@@ -43,28 +32,6 @@ describe('buildUserPrompt', () => {
 
     // Assert
     expect(result).toBe('How do I open?')
-  })
-
-  test('should handle empty string', () => {
-    // Arrange
-    const question = ''
-
-    // Act
-    const result = buildUserPrompt(question)
-
-    // Assert
-    expect(result).toBe('')
-  })
-
-  test('should preserve internal whitespace', () => {
-    // Arrange
-    const question = 'How do I  open with  multiple  spaces?'
-
-    // Act
-    const result = buildUserPrompt(question)
-
-    // Assert
-    expect(result).toBe('How do I  open with  multiple  spaces?')
   })
 })
 

@@ -1,6 +1,9 @@
 import { describe, test, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
+import type { VariantProps } from 'class-variance-authority'
+
+import { buttonVariants } from '@/components/ui/button'
 
 const projectRoot = path.resolve(__dirname, '../../..')
 /**
@@ -35,6 +38,23 @@ const read = (rel: string) =>
  * `sm:` heights are not this test's business -- those apply on a desktop, where
  * the pointer is a mouse.
  */
+type ButtonSize = NonNullable<VariantProps<typeof buttonVariants>['size']>
+
+/**
+ * Every Button size, typed against the variant itself. Add a size to
+ * components/ui/button.tsx and this record stops compiling (the typecheck
+ * ratchet fails) until the size is listed here -- so a new size cannot skip the
+ * 44px check the way `sm` and `icon-sm` once sat at 40px.
+ */
+const BUTTON_SIZES: Record<ButtonSize, true> = {
+  default: true,
+  sm: true,
+  lg: true,
+  icon: true,
+  'icon-sm': true,
+  'icon-lg': true,
+}
+
 describe('Every shared control is 44 px on a phone', () => {
   test('every shared control is 44 px on a phone', () => {
     const failures: string[] = []
@@ -42,19 +62,18 @@ describe('Every shared control is 44 px on a phone', () => {
       if (!ok) failures.push(`${file}: ${what}`)
     }
 
-    // The Button's sizes. Every one of them, because a new size added without
-    // a touch height is exactly how `sm` and `icon-sm` ended up at 40px.
-    const button = read('components/ui/button.tsx')
-    const sizeBlock = button.slice(button.indexOf('size: {'), button.indexOf('defaultVariants'))
-    // Key-then-value: some of the keys are quoted too ('icon-sm'), so a bare
-    // scan for quoted strings would test the names rather than the classes.
-    const sizes = [...sizeBlock.matchAll(/(?:'([\w-]+)'|(\w+))\s*:\s*'([^']*)'/g)].map((m) => ({
-      name: m[1] ?? m[2],
-      classes: m[3],
-    }))
-    expect(sizes.length, 'could not read the Button size variants').toBeGreaterThanOrEqual(6)
-    for (const { name, classes } of sizes) {
-      require('components/ui/button.tsx', `size "${name}" is under 44px on touch`, /\b(h-11|size-11)\b/.test(classes))
+    // The Button's sizes, as the component computes them. A phone sees only
+    // the unprefixed height: `sm:h-11` would be a desktop height, and a second
+    // bare `h-*` beside `h-11` would be a conflict, so exactly one is allowed.
+    for (const size of Object.keys(BUTTON_SIZES) as ButtonSize[]) {
+      const heights = buttonVariants({ size })
+        .split(/\s+/)
+        .filter((c) => /^(h|size)-/.test(c))
+      require(
+        'components/ui/button.tsx',
+        `size "${size}" is [${heights.join(' ')}] on touch, not h-11 or size-11`,
+        heights.length === 1 && (heights[0] === 'h-11' || heights[0] === 'size-11'),
+      )
     }
 
     const input = read('components/ui/input.tsx')

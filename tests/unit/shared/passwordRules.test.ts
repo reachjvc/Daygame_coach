@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { PASSWORD_MIN_LENGTH, checkPassword, isWeakPasswordError } from "@/src/shared/passwordRules"
+import { checkPassword, isWeakPasswordError } from "@/src/shared/passwordRules"
 
 /**
  * These assert the exact wording, not just that something was rejected.
@@ -34,10 +34,6 @@ describe("checkPassword", () => {
   it("counts characters, not bytes, so accented input is not penalised", () => {
     // 8 visible characters, all valid classes present.
     expect(checkPassword("Pæssord1")).toBeNull()
-  })
-
-  it("exports the minimum so pages can state it without hardcoding a number", () => {
-    expect(PASSWORD_MIN_LENGTH).toBe(8)
   })
 })
 

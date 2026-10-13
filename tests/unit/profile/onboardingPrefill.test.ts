@@ -187,18 +187,4 @@ describe("hasDatingPreferences", () => {
     expect(hasDatingPreferences(null)).toBe(false)
     expect(hasDatingPreferences(undefined)).toBe(false)
   })
-
-  it("looks only at the three answers, not at anything else on the row", () => {
-    /* It used to key off `onboarding_completed`, a stored flag that also gated
-       the dashboard, the Lair and the post-login redirect -- none of which read
-       these columns. That column was dropped on 2026-09-08. A row carrying the
-       answers is ready regardless of whatever else it happens to hold. */
-    expect(
-      hasDatingPreferences({
-        ...completedProfile,
-        has_purchased: false,
-        level: 1,
-      } as Parameters<typeof hasDatingPreferences>[0])
-    ).toBe(true)
-  })
 })

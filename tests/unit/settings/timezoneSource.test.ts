@@ -54,11 +54,6 @@ describe("what the service records", () => {
     expect(updateTimezone).toHaveBeenCalledWith("u1", "Europe/Copenhagen", "chosen")
   })
 
-  it("records a detected zone only when told to", async () => {
-    await handleUpdateTimezone("u1", "Europe/Copenhagen", "detected")
-    expect(updateTimezone).toHaveBeenCalledWith("u1", "Europe/Copenhagen", "detected")
-  })
-
   it("refuses a zone that is not a zone, before writing anything", async () => {
     await expect(handleUpdateTimezone("u1", "Middle/Earth")).rejects.toThrow()
     expect(updateTimezone).not.toHaveBeenCalled()

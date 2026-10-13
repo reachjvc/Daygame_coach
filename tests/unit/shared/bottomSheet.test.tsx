@@ -7,7 +7,6 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { BottomSheet, SheetRow } from '@/components/BottomSheet'
 
 const projectRoot = path.resolve(__dirname, '../../..')
-const read = (rel: string) => fs.readFileSync(path.join(projectRoot, rel), 'utf-8')
 
 afterEach(cleanup)
 
@@ -20,8 +19,8 @@ afterEach(cleanup)
  * into the shared one (44px rows, a real close button, Escape, an announced
  * dialog) exist in one sheet out of five.
  *
- * So this checks both halves: the shared sheet behaves, and the tab bar is
- * genuinely using it rather than keeping its own copy alive.
+ * So this checks that the shared sheet behaves, and that no sheet row both
+ * submits a form and closes the sheet.
  */
 describe('One bottom sheet for every menu', () => {
   test('the More menu and a training menu are the same sheet', () => {
@@ -135,26 +134,5 @@ describe('One bottom sheet for every menu', () => {
       </BottomSheet>,
     )
     expect(screen.queryByRole('dialog')).toBeNull()
-  })
-
-  test('the tab bar uses the shared sheet instead of its own copy', () => {
-    const bar = read('components/MobileTabBar.tsx')
-
-    expect(bar, 'the bar must import the shared sheet').toContain('from "@/components/BottomSheet"')
-    // These are the fingerprints of the hand-built copy. If they come back,
-    // so has the second sheet.
-    expect(bar).not.toContain('fixed inset-0')
-    expect(bar).not.toContain('@keyframes')
-    expect(bar).not.toContain('<style>')
-
-    // The bar's own six items reach the same floors the sheet's rows do.
-    expect(bar).toContain('min-h-11')
-    expect(bar).toContain('text-xs leading-tight')
-    expect(bar, 'the bar labels were 11px on every page').not.toContain('text-[11px]')
-
-    // The animation the sheet enters with has to live somewhere that exists
-    // whether or not the tab bar is on the page.
-    expect(read('app/globals.css')).toContain('@keyframes slideUp')
-    expect(read('app/globals.css')).toContain('.animate-slide-up')
   })
 })

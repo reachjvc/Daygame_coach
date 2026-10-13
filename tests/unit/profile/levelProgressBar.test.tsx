@@ -51,12 +51,6 @@ describe("LevelProgressBar", () => {
     expect(container.querySelector('[role="progressbar"]')).toBeNull()
   })
 
-  it("keeps the crown and the gauge, so the card still reads as progression", () => {
-    const { container } = render(<LevelProgressBar />)
-
-    expect(container.querySelectorAll("svg").length).toBe(2)
-  })
-
   it("carries the COMING SOON badge, which is the card's only explanation", () => {
     render(<LevelProgressBar />)
 

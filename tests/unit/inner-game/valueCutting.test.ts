@@ -561,35 +561,6 @@ describe("formatValueDisplayName", () => {
 // ============================================================================
 
 describe("getValueSource", () => {
-  const shadowInferred: InferredValue[] = [
-    { id: "honesty", reason: "From shadow work" },
-  ]
-  const peakInferred: InferredValue[] = [
-    { id: "confidence", reason: "From peak experience" },
-  ]
-  const hurdlesInferred: InferredValue[] = [
-    { id: "courage", reason: "From hurdles" },
-  ]
-  const selectedValues = ["creativity", "confidence"]
-
-  test("should return 'picked' for user-selected values (highest priority)", () => {
-    // Even though confidence is also in peakInferred, selected takes priority
-    expect(getValueSource("confidence", selectedValues, shadowInferred, peakInferred, hurdlesInferred)).toBe("picked")
-    expect(getValueSource("creativity", selectedValues, shadowInferred, peakInferred, hurdlesInferred)).toBe("picked")
-  })
-
-  test("should return 'peak_experience' for peak inferred values", () => {
-    expect(getValueSource("confidence", [], shadowInferred, peakInferred, hurdlesInferred)).toBe("peak_experience")
-  })
-
-  test("should return 'shadow' for shadow inferred values", () => {
-    expect(getValueSource("honesty", [], shadowInferred, peakInferred, hurdlesInferred)).toBe("shadow")
-  })
-
-  test("should return 'hurdles' for hurdles inferred values", () => {
-    expect(getValueSource("courage", [], shadowInferred, peakInferred, hurdlesInferred)).toBe("hurdles")
-  })
-
   test("should handle null inference arrays", () => {
     expect(getValueSource("courage", ["courage"], null, null, null)).toBe("picked")
     expect(getValueSource("unknown", [], null, null, null)).toBe("picked") // fallback
@@ -684,13 +655,6 @@ describe("buildValuesWithSource", () => {
     expect(find("hurdles-value")?.source).toBe("hurdles")
   })
 
-  test("should format display names correctly", () => {
-    const selected = ["self-reliance"]
-    const result = buildValuesWithSource(selected, null, null, null)
-
-    expect(result[0].displayName).toBe("Self Reliance")
-  })
-
   test("should include reasons for inferred values", () => {
     const shadow: InferredValue[] = [{ id: "honesty", reason: "Because you value truth" }]
     const result = buildValuesWithSource([], shadow, null, null)
@@ -727,28 +691,16 @@ describe("buildValuesWithSource", () => {
   })
 })
 
-// ============================================================================
-// getAspirationalDefault
-// ============================================================================
-
+// The cutting screen pre-selects "I live this" or "I aspire to this" from where a
+// value came from. A peak experience is lived; a hurdle or a shadow is aspired
+// to; a value somebody simply picked gets no default, so they must choose.
 describe("getAspirationalDefault", () => {
-  test("should return false (not aspirational) for peak_experience values", () => {
-    // Peak experience = user already embodies this value
-    expect(getAspirationalDefault("peak_experience")).toBe(false)
-  })
-
-  test("should return true (aspirational) for hurdles values", () => {
-    // Hurdles = growth area, user is developing this
-    expect(getAspirationalDefault("hurdles")).toBe(true)
-  })
-
-  test("should return true (aspirational) for shadow values", () => {
-    // Shadow = growth area revealed through frustrations
-    expect(getAspirationalDefault("shadow")).toBe(true)
-  })
-
-  test("should return null (no default) for picked values", () => {
-    // Picked = user must decide themselves
-    expect(getAspirationalDefault("picked")).toBeNull()
+  test.each([
+    ["peak_experience", false],
+    ["hurdles", true],
+    ["shadow", true],
+    ["picked", null],
+  ] as const)("a value from %s defaults to %s", (source, expected) => {
+    expect(getAspirationalDefault(source)).toBe(expected)
   })
 })

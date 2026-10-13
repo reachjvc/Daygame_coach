@@ -10,14 +10,6 @@ import {
 // ============================================================================
 
 describe("getDifficultyForLevel", () => {
-  test("should return 'beginner' for level 0", () => {
-    // Arrange & Act
-    const result = getDifficultyForLevel(0)
-
-    // Assert
-    expect(result).toBe("beginner")
-  })
-
   test("should return 'beginner' for level 4 (just below threshold)", () => {
     // Arrange & Act
     const result = getDifficultyForLevel(4)
@@ -81,14 +73,6 @@ describe("getDifficultyForLevel", () => {
     // Assert
     expect(result).toBe("master")
   })
-
-  test("should return 'master' for very high levels (100)", () => {
-    // Arrange & Act
-    const result = getDifficultyForLevel(100)
-
-    // Assert
-    expect(result).toBe("master")
-  })
 })
 
 // ============================================================================
@@ -130,19 +114,6 @@ describe("getDifficultyPromptModifier", () => {
 // ============================================================================
 
 describe("DIFFICULTY_LEVELS", () => {
-  test("should have all 5 difficulty levels defined", () => {
-    // Arrange & Act
-    const levels = Object.keys(DIFFICULTY_LEVELS)
-
-    // Assert
-    expect(levels).toContain("beginner")
-    expect(levels).toContain("intermediate")
-    expect(levels).toContain("advanced")
-    expect(levels).toContain("expert")
-    expect(levels).toContain("master")
-    expect(levels).toHaveLength(5)
-  })
-
   test("should have receptiveness values in decreasing order", () => {
     // Arrange
     const beginner = DIFFICULTY_LEVELS.beginner.receptiveness

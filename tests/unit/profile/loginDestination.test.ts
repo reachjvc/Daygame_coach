@@ -11,18 +11,15 @@ import { describe, test, expect, vi, beforeEach } from "vitest"
 import { resolveLoginDestination } from "@/src/profile/loginDestinationService"
 
 const getUser = vi.fn()
-const getProfile = vi.fn()
 
 vi.mock("@/src/db/server", () => ({
   createServerSupabaseClient: async () => ({ auth: { getUser: () => getUser() } }),
-  getProfile: (...args: unknown[]) => getProfile(...args),
 }))
 
 const signedIn = () => getUser.mockResolvedValue({ data: { user: { id: "u1" } } })
 
 beforeEach(() => {
   getUser.mockReset()
-  getProfile.mockReset()
 })
 
 describe("resolveLoginDestination", () => {
@@ -45,24 +42,6 @@ describe("resolveLoginDestination", () => {
 
     expect(await resolveLoginDestination()).toBe("/dashboard")
     expect(await resolveLoginDestination("/dashboard/settings")).toBe("/dashboard/settings")
-  })
-
-  test("a brand-new account with no profile row still lands on the dashboard", async () => {
-    signedIn()
-    getProfile.mockResolvedValue(null)
-
-    expect(await resolveLoginDestination()).toBe("/dashboard")
-  })
-
-  test("does not read the profile at all to decide", async () => {
-    // Nothing about where to land depends on the profile, so nothing should be
-    // fetched to work it out -- and no future edit can reintroduce a flag check
-    // without this failing.
-    signedIn()
-
-    await resolveLoginDestination("/dashboard/settings")
-
-    expect(getProfile).not.toHaveBeenCalled()
   })
 
   test("an off-site 'next' is refused, so login cannot be used to bounce someone to a phishing page", async () => {

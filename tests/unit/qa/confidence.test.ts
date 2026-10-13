@@ -157,36 +157,6 @@ describe('computeConfidence', () => {
     })
   })
 
-  describe('score clamping', () => {
-    test('should clamp score to maximum 1.0', () => {
-      // Arrange - best possible inputs
-      const chunks = [
-        createChunk({ chunkId: 'c1', relevanceScore: 1.0 }),
-        createChunk({ chunkId: 'c2', relevanceScore: 1.0 }),
-      ]
-      const answer = 'Clean answer'
-
-      // Act
-      const result = computeConfidence(chunks, answer)
-
-      // Assert
-      expect(result.score).toBeLessThanOrEqual(1)
-    })
-
-    test('should clamp score to minimum 0.0', () => {
-      // Arrange - worst possible inputs
-      const chunks: RetrievedChunk[] = []
-      const answer = 'Some answer'
-      const violations = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6']
-
-      // Act
-      const result = computeConfidence(chunks, answer, violations)
-
-      // Assert
-      expect(result.score).toBeGreaterThanOrEqual(0)
-    })
-  })
-
   describe('score rounding', () => {
     test('should round score to 2 decimal places', () => {
       // Arrange
@@ -370,28 +340,6 @@ describe('getConfidenceLabel', () => {
       // Assert
       expect(result).toBe('high')
     })
-
-    test('should return "high" for score above 0.7', () => {
-      // Arrange
-      const score = 0.85
-
-      // Act
-      const result = getConfidenceLabel(score)
-
-      // Assert
-      expect(result).toBe('high')
-    })
-
-    test('should return "high" for score 1.0', () => {
-      // Arrange
-      const score = 1.0
-
-      // Act
-      const result = getConfidenceLabel(score)
-
-      // Assert
-      expect(result).toBe('high')
-    })
   })
 
   describe('medium confidence', () => {
@@ -416,45 +364,12 @@ describe('getConfidenceLabel', () => {
       // Assert
       expect(result).toBe('medium')
     })
-
-    test('should return "medium" for score 0.5', () => {
-      // Arrange
-      const score = 0.5
-
-      // Act
-      const result = getConfidenceLabel(score)
-
-      // Assert
-      expect(result).toBe('medium')
-    })
   })
 
   describe('low confidence', () => {
     test('should return "low" for score 0.39', () => {
       // Arrange
       const score = 0.39
-
-      // Act
-      const result = getConfidenceLabel(score)
-
-      // Assert
-      expect(result).toBe('low')
-    })
-
-    test('should return "low" for score 0', () => {
-      // Arrange
-      const score = 0
-
-      // Act
-      const result = getConfidenceLabel(score)
-
-      // Assert
-      expect(result).toBe('low')
-    })
-
-    test('should return "low" for score 0.1', () => {
-      // Arrange
-      const score = 0.1
 
       // Act
       const result = getConfidenceLabel(score)

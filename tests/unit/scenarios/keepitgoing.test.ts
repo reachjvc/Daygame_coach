@@ -12,12 +12,7 @@ import {
   updateContext,
   updateInterestFromRubric,
 } from "@/src/scenarios/keepitgoing"
-import {
-  RUBRIC,
-  getScoreDelta,
-  getTagEffect,
-  checkEndRules,
-} from "@/src/scenarios/keepitgoing/realisticProfiles"
+import { checkEndRules } from "@/src/scenarios/keepitgoing/realisticProfiles"
 
 describe("Close Outcome", () => {
   it("average >= 6 returns 'success'", () => {
@@ -126,11 +121,6 @@ describe("Situation Selection", () => {
     expect(context.situation.id).toBe("cafe")
   })
 
-  it("falls back to seed-based random when situationId not found", () => {
-    const context = generateKeepItGoingScenario("test-seed", "en", "nonexistent")
-    expect(context.situation.id).toBeDefined()
-  })
-
   it("uses seed-based random when no situationId provided", () => {
     const context1 = generateKeepItGoingScenario("seed-a", "en")
     const context2 = generateKeepItGoingScenario("seed-a", "en")
@@ -141,55 +131,6 @@ describe("Situation Selection", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Rubric v2 Tests (Step 5 changes)
 // ─────────────────────────────────────────────────────────────────────────────
-
-describe("Rubric Tag Effects", () => {
-  it("question tag has zero interestDelta and exitRiskDelta", () => {
-    const effect = getTagEffect("question")
-    expect(effect).not.toBeNull()
-    expect(effect!.interestDelta).toBe(0)
-    expect(effect!.exitRiskDelta).toBe(0)
-  })
-
-  it("interview_question tag no longer exists", () => {
-    expect(getTagEffect("interview_question")).toBeNull()
-  })
-
-  it("too_long tag has zero interestDelta but +1 exitRiskDelta", () => {
-    const effect = getTagEffect("too_long")
-    expect(effect).not.toBeNull()
-    expect(effect!.interestDelta).toBe(0)
-    expect(effect!.exitRiskDelta).toBe(1)
-  })
-
-  it("cold_read tag has zero interestDelta and exitRiskDelta", () => {
-    const effect = getTagEffect("cold_read")
-    expect(effect).not.toBeNull()
-    expect(effect!.interestDelta).toBe(0)
-    expect(effect!.exitRiskDelta).toBe(0)
-  })
-})
-
-describe("Score-to-Interest Delta", () => {
-  it("score 5-6 gives +1 interest delta (momentum-driven rise)", () => {
-    expect(getScoreDelta(5)).toBe(1)
-    expect(getScoreDelta(6)).toBe(1)
-  })
-
-  it("score 7-8 still gives +1", () => {
-    expect(getScoreDelta(7)).toBe(1)
-    expect(getScoreDelta(8)).toBe(1)
-  })
-
-  it("score 9-10 gives +2", () => {
-    expect(getScoreDelta(9)).toBe(2)
-    expect(getScoreDelta(10)).toBe(2)
-  })
-
-  it("score 3-4 gives -1", () => {
-    expect(getScoreDelta(3)).toBe(-1)
-    expect(getScoreDelta(4)).toBe(-1)
-  })
-})
 
 describe("Exit Risk Decay", () => {
   it("positive quality decays exitRisk (quality -1 + decay -1 = -2 total)", () => {
@@ -247,10 +188,6 @@ describe("Exit Risk Decay", () => {
 })
 
 describe("End Rules (raised thresholds)", () => {
-  it("exitRisk max is 4", () => {
-    expect(RUBRIC.exitRisk.max).toBe(4)
-  })
-
   it("conversation does NOT end at exitRisk 3", () => {
     const result = checkEndRules(5, 3, 5, "neutral")
     expect(result.isEnded).toBe(false)

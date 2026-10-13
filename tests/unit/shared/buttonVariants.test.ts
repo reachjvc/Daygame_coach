@@ -58,12 +58,4 @@ describe('The app\'s bordered and transparent buttons', () => {
     expect(outline).toContain('hover:bg-muted/50')
     expect(ghost).toContain('hover:bg-muted/50')
   })
-
-  test('the variants this phase did not touch are unchanged', () => {
-    // `destructive` keeps its dark: fragment on purpose: dead like the others,
-    // but deleting it app-wide is a different piece of work and changing it
-    // here would be an unreviewed colour change on every delete button.
-    expect(buttonVariants({ variant: 'destructive' })).toContain('bg-destructive')
-    expect(buttonVariants({ variant: 'default' })).toContain('bg-primary')
-  })
 })

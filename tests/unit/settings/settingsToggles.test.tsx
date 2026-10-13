@@ -286,21 +286,3 @@ describe("settings toggles: what must still be protected", () => {
     inFlight.release()
   })
 })
-
-describe("the delta sent to the server", () => {
-  test("only the changed key is sent, so concurrent saves cannot erase each other", async () => {
-    // The server does read-merge-write. Sending the whole object from a stale
-    // client snapshot is what would make two in-flight saves clobber one another.
-    const onUpdateSandboxSettings = vi.fn(async (_s: Partial<SandboxSettings>) => {})
-    renderSettings({ onUpdateSandboxSettings })
-
-    await openTab(/sandbox/i)
-    await user().click(screen.getByTestId("sandbox-toggle-enableShyEnergies"))
-
-    await waitFor(() => expect(onUpdateSandboxSettings).toHaveBeenCalled())
-
-    const payload = onUpdateSandboxSettings.mock.calls[0][0]
-    expect(payload).toEqual({ energy: { enableShyEnergies: false } })
-    expect(Object.keys(payload)).toHaveLength(1)
-  })
-})

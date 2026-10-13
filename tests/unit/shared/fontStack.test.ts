@@ -49,10 +49,6 @@ describe("the app's font tokens", () => {
     expect(sans, `--font-sans is "${sans}" — a mono fallback here paints every page ~28% too large`).not.toMatch(/mono/i)
   })
 
-  test("the mono stack is the one that names the mono stand-in", () => {
-    expect(token("font-mono")).toMatch(/mono/i)
-  })
-
   test("both come from next/font rather than being typed out by hand", () => {
     // Typed-out family names are how the two drifted apart in the first place:
     // next/font owns which faces exist and what they are called, and a literal

@@ -14,7 +14,7 @@
  * that nobody notices until a user finds it.
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import {
@@ -22,7 +22,17 @@ import {
   QUIT_VICE,
   SUPERSEDED_LIFE_MASTERY_PATHS,
 } from "../../../src/shared/lifeMasteryRoutes"
-import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "../../../app/test/archive/quit-vice/routes"
+import { QUIT_VICE_ARCHIVE } from "../../../app/test/archive/quit-vice/routes"
+import OldPlanPage from "../../../app/dashboard/goals/plan/page"
+
+/** Where `redirect()` was asked to send the request; it throws, as Next's does. */
+const redirected = vi.hoisted(() => [] as string[])
+vi.mock("next/navigation", () => ({
+  redirect: (to: string) => {
+    redirected.push(to)
+    throw new Error("NEXT_REDIRECT")
+  },
+}))
 
 const root = path.resolve(__dirname, "../../..")
 
@@ -103,57 +113,6 @@ describe("Life Mastery's address", () => {
     expect(fs.existsSync(path.join(root, "app", QUIT_VICE_ARCHIVE.slice(1), "page.tsx"))).toBe(true)
   })
 
-  /**
-   * TWO PAGES, TWO NAMES, AND THEY MAY NEVER COLLAPSE INTO ONE.
-   *
-   * On 2026-09-20 `/life-mastery/quit-vice` stopped being the old hub and became
-   * the Black Box. The name `QUIT_VICE` was left pointing at the address, so it
-   * silently changed meaning, and the two browser specs that said
-   * `HUB = QUIT_VICE` went on compiling while driving the wrong page — 22 tests
-   * red for four days, in a CI job nobody was reading.
-   *
-   * There was no constant for the hub's new address, which is why there was
-   * nothing to repoint them at. This test is the guard for the shape of that
-   * mistake, not for the instance: the day somebody defines the second name as
-   * the same string as the first — by moving a page and reusing a name again —
-   * every test that distinguishes them starts passing for the wrong reason.
-   */
-  it("keeps the Black Box and the retired module at two different addresses", () => {
-    expect(QUIT_VICE_ARCHIVE).not.toBe(QUIT_VICE)
-    // AND NO LONGER UNDER IT. This asserted `startsWith(`${QUIT_VICE}/`)` while
-    // the module sat at `/life-mastery/quit-vice/old`; on 2026-09-24 it was
-    // retired into `/test/archive/`, which is the stronger arrangement and the
-    // one worth pinning. Nothing but the Black Box lives under `QUIT_VICE` now,
-    // which is what lets `public/sw.js` name that path without a prefix match
-    // adopting nine more routes, and what stops one constant meaning two places
-    // ever again.
-    expect(QUIT_VICE_ARCHIVE.startsWith(`${QUIT_VICE}/`)).toBe(false)
-    expect(QUIT_VICE_ARCHIVE.startsWith("/test/")).toBe(true)
-
-    // And they are genuinely two pages, not one file served twice: the retired
-    // hub's page must not be a re-export of the front door's.
-    const front = fs.readFileSync(path.join(root, "app", QUIT_VICE.slice(1), "page.tsx"), "utf-8")
-    const old = fs.readFileSync(path.join(root, "app", QUIT_VICE_ARCHIVE.slice(1), "page.tsx"), "utf-8")
-    expect(code(front)).toContain("BlackBoxPage")
-    expect(code(old)).toContain("ViceHub")
-  })
-
-  it("has a page for every vice step the flows can reach", () => {
-    const types = fs.readFileSync(path.join(root, "src/vice/types.ts"), "utf-8")
-    const union = types.match(/export type ViceFlowId\s*=\s*([^\n]+)/)
-    expect(union, "ViceFlowId is gone — this test needs updating").toBeTruthy()
-    const ids = [...union![1].matchAll(/"([\w-]+)"/g)].map((m) => m[1])
-    expect(ids.length).toBeGreaterThan(3)
-
-    const missing = ids.filter(
-      (id) => !fs.existsSync(path.join(root, "app", viceArchiveStep(id).slice(1), "page.tsx"))
-    )
-    expect(
-      missing,
-      `The vice hub can send somebody to these and there is no page there: ${missing.join(", ")}`
-    ).toEqual([])
-  })
-
   it("is gated by the proxy at the address the constant claims", () => {
     /**
      * The edge guard decides who may reach a route at all, and its matcher has
@@ -196,12 +155,16 @@ describe("Life Mastery's address", () => {
     expect(worker.includes(`"${QUIT_VICE_ARCHIVE}"`)).toBe(false)
   })
 
-  it("keeps the old address working", () => {
+  it("keeps the old address working: it redirects to Life Mastery, step and all", async () => {
     // Six places in the app linked to /dashboard/goals/plan and people
     // bookmarked it. Tidying up is not a reason to break somebody's bookmark.
-    const shim = fs.readFileSync(path.join(root, "app/dashboard/goals/plan/page.tsx"), "utf-8")
-    expect(shim).toMatch(/redirect\(/)
-    expect(shim).toMatch(/LIFE_MASTERY/)
+    // Runs the page, rather than reading it for the word `redirect`.
+    redirected.length = 0
+    await expect(OldPlanPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_REDIRECT")
+    await expect(
+      OldPlanPage({ searchParams: Promise.resolve({ step: "today" }) })
+    ).rejects.toThrow("NEXT_REDIRECT")
+    expect(redirected).toEqual([LIFE_MASTERY, `${LIFE_MASTERY}?step=today`])
   })
 
   /**

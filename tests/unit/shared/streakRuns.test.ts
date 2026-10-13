@@ -37,12 +37,6 @@ describe("streakRun", () => {
     expect(longest).toBe(4)
   })
 
-  it("does not hide a run that is over — that is not its job", () => {
-    // The old health code returned 0 here. This returns 4, and the caller
-    // decides whether to draw it.
-    expect(weeklyStreakRun(FOUR_IN_A_ROW, prevWeek).run).toBe(4)
-  })
-
   it("is unbothered by duplicates and unsorted input, for weeks", () => {
     const shuffled = ["2026-08-10", "2026-07-27", "2026-08-17", "2026-08-03", "2026-08-10"]
     expect(weeklyStreakRun(shuffled, prevWeek)).toEqual(

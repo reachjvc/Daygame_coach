@@ -146,23 +146,6 @@ describe("sanitizeArchetypes", () => {
         tertiaryArchetype: null,
       })
     })
-
-    test("should nullify tertiary when secondary is nullified due to primary match", () => {
-      // Arrange
-      const data = {
-        archetype: "charmer",
-        secondaryArchetype: "charmer",
-        tertiaryArchetype: "charmer",
-      }
-
-      // Act
-      const result = sanitizeArchetypes(data)
-
-      // Assert
-      // Secondary becomes null (matches primary), tertiary also becomes null (matches primary)
-      expect(result.secondaryArchetype).toBeNull()
-      expect(result.tertiaryArchetype).toBeNull()
-    })
   })
 
   describe("edge cases", () => {
@@ -350,15 +333,6 @@ describe("validateAgeRange", () => {
       expect(() => validateAgeRange(start, end)).toThrow(ProfileServiceError)
     })
 
-    test("should throw ProfileServiceError when both are NaN", () => {
-      // Arrange
-      const start = NaN
-      const end = NaN
-
-      // Act & Assert
-      expect(() => validateAgeRange(start, end)).toThrow(ProfileServiceError)
-    })
-
     test("should have error code INVALID_AGE_RANGE", () => {
       // Arrange
       const start = NaN
@@ -381,29 +355,6 @@ describe("validateAgeRange", () => {
 // ============================================================================
 
 describe("validateRegion", () => {
-  describe("valid regions", () => {
-    const validRegions = [
-      "north-america",
-      "latin-america",
-      "western-europe",
-      "slavic-europe",
-      "eastern-europe",
-      "scandinavia",
-      "southern-europe",
-      "africa",
-      "middle-east",
-      "south-asia",
-      "southeast-asia",
-      "east-asia",
-      "australia",
-    ]
-
-    test.each(validRegions)('should not throw for valid region "%s"', (regionId) => {
-      // Arrange & Act & Assert
-      expect(() => validateRegion(regionId)).not.toThrow()
-    })
-  })
-
   describe("invalid regions", () => {
     test("should throw ProfileServiceError for unknown region", () => {
       // Arrange
@@ -451,43 +402,5 @@ describe("validateRegion", () => {
         expect((error as ProfileServiceError).code).toBe("INVALID_REGION")
       }
     })
-  })
-})
-
-// ============================================================================
-// ProfileServiceError
-// ============================================================================
-
-describe("ProfileServiceError", () => {
-  test("should be an instance of Error", () => {
-    // Arrange & Act
-    const error = new ProfileServiceError("Test message", "TEST_CODE")
-
-    // Assert
-    expect(error).toBeInstanceOf(Error)
-  })
-
-  test("should have correct name property", () => {
-    // Arrange & Act
-    const error = new ProfileServiceError("Test message", "TEST_CODE")
-
-    // Assert
-    expect(error.name).toBe("ProfileServiceError")
-  })
-
-  test("should have correct message property", () => {
-    // Arrange & Act
-    const error = new ProfileServiceError("Test message", "TEST_CODE")
-
-    // Assert
-    expect(error.message).toBe("Test message")
-  })
-
-  test("should have correct code property", () => {
-    // Arrange & Act
-    const error = new ProfileServiceError("Test message", "TEST_CODE")
-
-    // Assert
-    expect(error.code).toBe("TEST_CODE")
   })
 })

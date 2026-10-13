@@ -71,10 +71,6 @@ describe("weight conversion", () => {
 })
 
 describe("the weight ceiling", () => {
-  it("matches what the column can actually hold", () => {
-    expect(MAX_WEIGHT_KG).toBe(999.99)
-  })
-
   it("is what the database column says, read from the migration", () => {
     // If somebody widens the column, this fails and the constant follows it —
     // rather than the two drifting apart, which is how 1000 got through.

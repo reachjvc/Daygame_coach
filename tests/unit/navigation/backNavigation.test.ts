@@ -117,10 +117,6 @@ function gateRoutes(): Set<string> {
 
 
 describe("every screen has a way back", () => {
-  it("has routes to check", () => {
-    expect(routePages().length).toBeGreaterThan(15)
-  })
-
   /**
    * Walks the routes once and records WHY each was skipped, so the same pass
    * feeds both the rule and the ratchet below. Recording the reason is the
