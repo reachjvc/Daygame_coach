@@ -977,6 +977,20 @@ fingerprints checked when written in.
   below). No Cloudflare or Hetzner resource was touched. GitHub settings were changed only by step
   4.4, after B-GH's login existed.
 
+### Final gates (2026-10-13), on a3e7ba7e77a25eb1f725bc94ed81ef7d526d7ec0
+
+Run in the isolated worktree on Node 24.21.0: `npm run lint:ratchet` "Lint errors: 291, none new.";
+`node scripts/typecheck-ratchet.mjs` "Type errors: 91, none new."; `npm test` "Test Files 366
+passed (366)", "Tests 4652 passed | 1 skipped (4653)"; `npm run audit:ratchet` "Dependency audit: 5
+vulnerable package version(s), none new."; `actionlint` exit 0; `shellcheck` over all ten
+`infra/**/*.sh` exit 0; `hadolint infra/Dockerfile` exit 0. CI run 38433989945 on that commit:
+"CI completed success" (`checks` success in 280 s; the image jobs skipped while publishing is off).
+`infra/run-local.sh a3e7ba7e77a25eb1f725bc94ed81ef7d526d7ec0`: "Commit
+a3e7ba7e77a25eb1f725bc94ed81ef7d526d7ec0", "https://localhost/api/healthz 200, buildId
+a3e7ba7e77a25eb1f725bc94ed81ef7d526d7ec0, proto https", "run-local exit=0"; from Windows the same
+JSON with "HTTP 200". The builder's cache was trimmed back to 3.96 GB after that build; C: had 28 GB
+free.
+
 ### Reviews (2026-10-13), on d659ac47..HEAD, this plan's files only
 
 - **`/code-review`**: 15 findings. Fixed in 8c17898d: the image search ran as uid 1000, so `find`
