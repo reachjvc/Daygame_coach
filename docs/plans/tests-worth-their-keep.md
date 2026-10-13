@@ -1,826 +1,666 @@
-# Tests worth their keep — the speed and the worth
+# Tests worth their keep — cut first, then make what is left fast
 
-**Serves vision item 13** ("Tests are worth their keep: the useless ones removed,
-the missing ones written") and item 43 (CI exists). Written 2026-10-01.
+**Status:** written 2026-10-13, not started. Replaces the 2026-10-01 version of this
+file, which was never executed apart from the test-gate fix
+(`git show 5c3554aa:docs/plans/tests-worth-their-keep.md`).
+
+**Serves** vision item 13 ("Tests are worth their keep: the useless ones removed,
+the missing ones written") and item 43 (CI). **The file-by-file verdicts** are in
+`docs/plans/tests-worth-their-keep.inventory.md`.
 
 ---
 
 # THE HUMAN HALF
 
-## Start with the uncomfortable part: your premise about speed is wrong, and acting on it would have wasted the work
+## What I am least sure of
 
-You asked to clean aggressively *before* measuring, because measuring costs four
-hours. Two of the three suites turned out to be measurable in under seven
-minutes, so I measured first. It redirected the whole plan, and I would have
-handed you a plan that spent its effort in the wrong place otherwise.
+1. **The verdicts are a reading, not a run.** Eight agents read every test file in
+   full; I re-checked six of their claims by hand and all six held. But a reader
+   can be wrong about a test that looks useless and guards a real bug. That is why
+   Phase 1 deletes only on a written reason, and why the executor re-reads each
+   file first.
+2. **Every speed-up after the cut is arithmetic, not a measurement.** The numbers
+   marked "projected" below have not been run. Phase 5 and Phase 9 measure them.
+3. **The new test backend is proven to boot and to log a user in, not yet to run
+   the whole browser suite.** I built it and signed into the app with it today
+   (see finding 6). Content pages that need seeded data, and the AI calls, have
+   not been tried against it.
 
-**The four hours is almost entirely the browser suite. Unit tests are 56
-seconds.**
+## What you will see when this is done
 
-| Suite | What it is | Wall time | CPU used | Where I got the number |
-|---|---|---|---|---|
-| Unit (`npm test`) | 6,628 tests, 384 files | **56.1 s** | 1506 % (15 cores busy) | ran it today, solo |
-| Database (`npm run test:integration`) | 300 tests, 22 files | **6 m 14 s** | **5 %** — 21.5 s of CPU in a 374 s run | ran it today |
-| Browser (`npm run test:e2e`) | 1,196 test runs, 84 files, 44 projects | **3 h 45 m – 5 h 15 m** | one worker | recorded in `.github/workflows/e2e.yml` from 179 real CI runs |
+| | Today | After the cut (Phases 1–4) | After the speed work (Phases 6–9) |
+|---|---|---|---|
+| Unit tests | 6,022 tests in 375 files | about 5,300 after Phase 1; about 4,060 after Phase 4 as recommended | same count |
+| Unit time | 56 s on this machine (2026-10-01); **216 s in CI** (today's run) | — | about 100 s in CI (projected) |
+| Database tests | 300 tests; **0 of them run the app's own code** | about 105 real ones | plus the first repo-level tests, running in parallel |
+| Database time | 108 s in CI | — | under 60 s in CI (projected) |
+| Browser test runs per pass | 1,191 | 349 per pull request, 450 nightly | same |
+| Browser time | 3 h 4 m + 27 m CI jobs; **87 of 87 full runs failed** since February | — | about 20–25 minutes per pull request (projected) |
 
-So: **deleting unit tests cannot buy you speed.** The entire unit suite finishes
-in the time it takes the browser suite to log in. If every one of the 6,628 unit
-tests vanished you would save 56 seconds off a four-hour wait. (There *is* a 2×
-win available in the unit suite — see the next section — but it comes from how the
-suite is configured, not from deleting anything.)
+## What I found
 
-That does **not** mean your quality instinct is wrong. It is right, and I found
-exactly the thing you described. It means the cleanup is justified by *worth* —
-tests that lie to you, tests that pass by not running, tests that will break when
-somebody renames a field — and never by speed. The plan keeps those two arguments
-apart on purpose, because mixing them is how a speed project ends up deleting the
-tests that were holding real bugs down.
+### 1. The four-hour suite has never passed — so nothing is protected by measuring it first
 
-## Two unit-suite wins that are real — and the mistake I made finding them
+I pulled every recorded CI run from GitHub's public API instead of spending four
+hours on a benchmark. The full browser suite runs only on a push to `main` or a
+pull request into it, and there has never been such a pull request. It ran 87 times between 2026-02-04 and 2026-09-17, and **failed all 87 times**. The
+long runs took a median of 247 minutes; the Chromium job alone takes about 184.
 
-I nearly handed you the opposite of this section, and the way it went wrong is
-worth more than the numbers.
+It has not run at all since 2026-09-17, because this branch is 430 commits ahead of
+`main` and pushes here run only a 4-minute route sweep. The nightly run has never
+fired once: `main`'s copy of the workflow has no schedule.
 
-I tested two theories about the unit suite, measured both, got "no gain" on both,
-and wrote "there is no cheap speed win in the unit suite" into this plan.
-**Then a peer session told me it had been running the unit suite three times
-during exactly that window.** I re-ran everything in a clean solo window, in one
-batch, with the A/B alternated to cancel drift. Both theories are right. My
-measurement was measuring the other session.
+**So your instinct to clean before measuring is right, and for a stronger reason
+than cost.** There is no green baseline to protect and no "before" worth four
+hours. The one long measurement belongs at the end (Phase 9), once.
 
-| Run | Wall | Note |
-|---|---|---|
-| Full unit suite, clean baseline | **56.1 s** | vs 49.8 s in the dirty window — ±12 % run to run |
-| Full suite minus the slowest file | **44.2 s** | **−12 s, −21 %** |
-| 292 non-DOM files, jsdom | 26.3 s / 24.6 s | two runs |
-| 292 non-DOM files, Node env | **13.6 s / 12.7 s / 13.2 s** | three runs — **~2× faster** |
+### 2. A quarter of the browser runs test pages that do not exist where CI runs them
 
-**Theory 1 holds: one file is a fifth of the suite.**
-`anOldRecurringMeetingStillImports.test.ts` is a combinatorial property sweep —
-four frequencies × three intervals × four counts × several end dates × weekday
-sets × two durations, thousands of cases inside 28 tests. Sharding it recovers
-12 seconds.
+CI starts the app as a production build. Every `/test/*` page returns 404 in
+production, on purpose, since 2026-02-27 (`app/test/layout.tsx`). **About 295 of
+the 1,191 browser runs per pass drive `/test/*` pages** — the archived goals hub,
+the archived quit-vice module, the time-tracker bench at `/test/toggl`, prototype
+variants. They can never pass in CI. Each one waits out a 15–30 second timeout and
+is then retried twice. That is very likely a large share of both the four hours
+and the red.
 
-**Theory 2 holds, and bigger: jsdom is a tax on three quarters of the suite.**
-292 of 311 `.test.ts` files touch no DOM at all. Only 39 declare
-`@vitest-environment node`. The rest build a whole fake browser they never use —
-**394 seconds of summed worker time per full run**, which falls to 51 ms under
-the Node environment.
+I checked one by hand: the production build on :3100 answers 404 for
+`/test/toggl`; the dev server on :3000 answers 200.
 
-**So the unit suite can roughly halve, 56 s → around 30 s.** That combined figure
-is a projection, not a measurement: the property file sits inside the 292, so the
-two wins overlap and do not simply add. M0 measures the real combined number.
+### 3. Most of the useless tests are tests of code nobody can reach
 
-**What this cost and what it teaches.** Two correct optimisations were nearly
-discarded because I measured on a shared machine and reported the result as fact.
-The lesson is already in this plan as M0, and it earned its place: **a wall-time
-number from this checkout means nothing unless one session is working in it.** I
-would have told you to skip a 2× win.
+You expected getter-and-setter tests. They are there — about 430 tests restate a
+declaration (a list of allowed values accepts its own members, a copy function
+copies). But the bigger class is different: **about 1,260 unit tests check code
+that no user can reach.** Either nothing in the app calls it (about 40 functions
+are dead), or only a `/test` lab page does.
 
-One caveat I still cannot test: 56 s is with a warm Vite transform cache. CI
-starts cold, so CI's unit step is slower by an unknown amount.
+| Kind of useless test | Approximate count |
+|---|---|
+| Tests of code only a `/test` lab reaches | 960 |
+| Tests of functions nothing calls | 300 |
+| Restating a declaration (enum members, constants, identity copies) | 430 |
+| Duplicates of a stronger test | 170 |
+| Brittle: source-text regexes, CSS class names, exact copy | 110 |
+| Cannot fail, or pass without running | 50 |
 
-**And a warning for whoever executes theory 2.** When I ran the 292 files under
-Node, 6 tests failed — not because of the change, but because vitest treats
-positional file arguments as *substring filters*, so
-`tests/unit/programs/enduranceBlocks.test.ts` also matched its sibling
-`enduranceBlocks.test.tsx`, which does need a DOM. **Classify files by what they
-use, never by extension or by name.** That mistake is the one way this change
-breaks, and it broke that way on the first attempt.
+(These overlap; the inventory gives each test one primary reason.)
 
-## Where the four hours actually goes, and why it is not the tests' fault
+With no decision from you, about **700 unit tests (12 %)** go on rule-backed
+reasons alone (Phase 1). Following every recommendation below — tests of dead code
+and of lab-only code retired too — about **1,960 (33 %)** go.
+A peer session is separately deleting the 10 architecture test files you asked it
+to remove.
 
-The browser suite is slow for one reason, and it is not test count.
+### 4. The database tests test the database, not the app
 
-**Every browser test signs in as one of three real accounts in the live Supabase
-project.** Because they share those accounts, they cannot run at the same time —
-one test deletes the rows another is mid-assertion on. So:
+**0 of the 300 database tests call the app's own data code.** 266 of them run SQL
+the test wrote itself — insert a row, read it back — which proves Postgres works.
+The suite also runs against a hand-written 2,640-line copy of the schema that is
+missing 29 live tables (all of time tracking, the health logs, the vice tables).
 
-- CI pins **one worker** (`playwright.config.ts:38`). 1,196 tests, one at a time.
-- 44 Playwright projects exist, and **ten of them exist *only* to force an
-  order** — seven of those hold a single spec file each and chain to the previous.
-  `goals-1 → goals-2 → goals-3`. `session-1 → session-2 → session-3 → session-4`.
-  `training → training-iphone-safari → training-android → training-firefox`,
-  all four pinned to one worker — 143 tests, strictly one after another.
-- `retries: 2` on a suite the workflow's own comment calls permanently red, so
-  failures cost three runs each.
+About 105 tests are real: constraints, triggers, row-security checks and database
+functions. The other 185 go.
 
-The config says so itself, in its own words: *"These files share a test user and
-mutate goals data, so they must not run in parallel."* Not one chain exists
-because a later test needs an earlier one's output. **Every chain is there to
-stop two tests touching one account.**
+The reason the app's code is untested is structural: every data function builds
+its own Supabase client, which talks over HTTP. A plain Postgres container cannot
+answer that. Finding 6 is what fixes it.
 
-**That is the whole bottleneck, and it is fixable at the data layer rather than
-the schedule.** Give each parallel worker its own account and the reason for
-every chain disappears at once.
+### 5. The browser tests are slow because they share three accounts, not because there are many
 
-And the chains cost you something worse than time. From the config's own comment
-on `goals-4`: *"Playwright SKIPS a project whose dependency failed, `goals-1` is
-currently red, and a skipped spec reports as a green run."* **One red test at the
-head of a chain silently converts everything behind it into a non-run that reads
-as a pass.** That is a correctness argument for pulling the chains apart, not a
-speed one. (That sentence is the config author's, not my measurement — but the
-Playwright behaviour it describes is documented and real.)
+Every browser test signs in as one of three real accounts in the live Supabase
+project. Two tests on one account delete each other's rows, so CI runs one test
+at a time, and ten projects exist only to force an order. A per-test-user
+design removes the reason for every chain at once.
 
-### One honest limit on all of this: the four hours is a CI number
+Locally, your `.env.local` points at the **production** Supabase project, so local
+browser runs create and wipe test data in production today.
 
-`workers: 1` applies **only when `CI` is set**. Locally `workers` is undefined, so
-Playwright already uses half your cores, and the local suite is already far faster
-than four hours — except where a project pins `workers: 1` itself.
+### 6. A real, local copy of the backend works — I built one
 
-So if your four hours is the CI tick, M3 fixes it. **If your pain is the local
-run, M3 helps less than it looks**, because locally the limiter is a different
-thing: one `next dev` serving every worker, compiling each route on first request.
-`memory/e2e-runs-need-a-frozen-src` records this being misdiagnosed as an account
-race — *"Giving the phone project its own account did not fix it: the contention is
-the single dev server both suites drive, not the rows they write."*
+The question that decided the old plan was "where can tests get a database of
+their own?" I tried it instead of reasoning about it:
 
-**Per-worker accounts do not fix a shared dev server.** The fix for the local case
-is to run the suite against a production build (`npm run build && npx next start`)
-on its own port, which also matches what CI does. M3 includes that, and it is the
-part I am least able to verify from here, because building freezes WSL
-(`memory/next-build-oom-freezes-wsl`; `--webpack` is the workaround already wired
-into `npm run build`).
+- **Migrations alone cannot build the schema.** I started a local Supabase from
+  `supabase/migrations/`; it failed on the second file, which alters `user_goals`
+  — a table no migration creates. Eighteen tables were made outside migrations.
+- **A schema-only copy of production can.** `supabase db dump --linked` (schema
+  only, no rows) gave 84 tables and 320 row-security policies. With a three-line
+  fix for one trigger, a local Supabase booted from it in **29 seconds**.
+- **It behaves like production.** I created four accounts in 105 milliseconds;
+  each got its profile row from the real trigger; one account could not see the
+  other's goal (row security works); deleting an account removed its rows.
+- **The app runs against it.** I started a dev server on :3300 pointed at the local
+  copy and signed in with an account that exists only there. It landed on the
+  dashboard.
 
-## The database suite is the other easy win, and the number is embarrassing
+This means every test — database and browser — can get its **own fresh user, in
+a throwaway backend, created in milliseconds**. No shared accounts, no wiping, no
+writes to production, and no production secret in CI.
 
-300 database tests take 6 minutes 14 seconds and use **21.5 seconds of CPU**.
-94 % of that run is a single core waiting on a socket.
+### 7. Unit-suite speed comes from configuration, not deletion
 
-Three causes, all structural, none about the tests:
-
-- `fileParallelism: false` in `vitest.integration.config.ts` — 22 files, strictly
-  one at a time, because they share one database.
-- Every helper call opens a **brand-new database connection** and closes it.
-  There are 249 `getClient()` call sites.
-- 45 `beforeEach` blocks each run a **27-table `TRUNCATE`**.
-
-A 24-core machine is running one of them.
-
-## What I also found, which is the "missing tests" half of item 13
-
-The database suite builds its Postgres from one hand-written file,
-`tests/integration/schema.sql`. I diffed it against `supabase/migrations/` today,
-by table name:
-
-- **52 tables in the mirror. 66 created by the migrations. 32 absent — and 3 of
-  those were deliberately dropped** (`plan_snapshots`, `program_session_logs`,
-  `workout_templates`), so **29 live tables have never existed in the test
-  database.**
-- 18 of the 29 are `timetrack_*`. `grep -ci timetrack tests/integration/schema.sql`
-  returns **0**. Also absent: `vice_attempts`, `vice_reports`, `error_reports`,
-  `life_chapters`, and the five health logging tables (`sleep_logs`,
-  `nutrition_logs`, `weight_logs`, `body_measurements`, `dashboard_widgets`).
-- The mirror carries **24** row-security policies. The migrations contain 68
-  `CREATE POLICY` and 22 `DROP POLICY`, so the live total is lower than 68 — but
-  **every policy on those 29 missing tables is unrepresented by construction.**
-
-So whole slices — timetrack, quit-vice, health logging — have **no database-level
-coverage at all**. They are not failing; they are absent, which is worse, because
-the suite reads as covering the database.
-`tests/unit/db/schemaMirror.test.ts` already documents this blind spot in its own
-header, and says why: its rule 1 only checks policies "on a table the mirror
-actually has", so a missing table makes the guard silent rather than red. Nothing
-has closed it.
-
-Cleaning is half of this job. The other half is that a real coverage hole sits
-behind a green tick.
-
-## A brittleness finding that arrived while this was being written
-
-A peer session ran the unit suite three times during my measurement window and
-reported something I would not have found alone. **The suite's two slowest tests
-are also the first two to fail when the machine is busy:**
-
-| Test | Alone | Under load |
-|---|---|---|
-| `architecture.test.ts > no date is spelled in whichever locale the runtime happens to have` | 5.3 s | **22.8 s — failed** |
-| `anOldRecurringMeetingStillImports.test.ts > matches a day-by-day walk of the same rule, for every shape` | 41.8 s | **85.8 s — failed** |
-
-`vitest.config.ts` pins `testTimeout: 20000`, and its own comment explains that
-the timeout was raised from 5 s precisely because contention was failing tests
-that assert nothing about duration. **These two have now outgrown 20 s the same
-way.** Raising it again is the same cliff further away — which that comment says
-itself.
-
-So both need a **budget or a split, not a bigger number**: shard the property
-sweep so each shard is bounded, and give the locale scan a cap. This is a quality
-finding, not a timing artefact: a test that goes red on a busy machine teaches
-everybody to re-run it instead of reading it, and this repo has already recorded
-where that ends.
-
-**One honest qualification, raised by the session that measured it.** That 22.8 s
-is wall-clock for the whole test; nobody isolated what it was spent on.
-`architecture.test.ts` globs and reads source files, so *CPU contention* and *a
-tree being written by three sessions* are two different causes with the same
-signature, and a budget sized against the wrong one is sized wrong. Contention is
-the explanation that fits; it is not proved. **Before setting either budget,
-measure that test alone under CPU load with a quiet tree, and alone with a
-churning tree.** Two runs, and the cause stops being a guess.
-
-The same session hit a third thing: a run collected
-`tests/unit/docs/planStatus.test.ts` and then lost it, because another session
-created or deleted it mid-collection. **No pass/fail or wall-time number from this
-checkout means anything unless one session is working in it** — which is why M0's
-lock has to refuse on file churn under `tests/`, not only on a concurrent suite.
+Deleting tests buys little time here: the unit suite already runs on fifteen
+cores at once, and its cost sits in a few files. The real wins, measured on
+2026-10-01:
+three quarters of the files build a fake browser they never use (292 files ran in
+13 s under Node against 25 s under the fake browser), and one 40-second
+combinatorial test is a fifth of the suite. Both are configuration (Phase 6).
 
 ## The rules this plan follows — approve these, not the counts
 
-Per `.claude/rules/plans.md`: you approve rules and costs. Counts are outputs.
+**R1 — Cut first; measure in CI, not on this machine.** Four sessions share this
+checkout and they edited about 25 test files during the audit; no timing taken
+here is clean. CI runners are isolated, and GitHub already records how long every
+step took.
+*If wrong:* a deletion whose only value was speed gets made on worth alone — low
+cost, because nothing here is deleted for speed.
 
-**R1 — Speed work goes where the time is, and that is the browser suite only.**
-Unit and database cleanup is argued on worth alone; this plan never claims a
-deletion made anything faster.
-*If I am wrong:* effort goes into a 50-second suite while a four-hour one stays slow.
+**R2 — No test is deleted without a reason from a fixed list (D1–D9), named in
+the commit.** A scanner gives a shortlist; a reader decides; the executor re-reads
+the file before cutting.
+*If wrong:* the one test holding down a real bug goes, and the bug comes back.
 
-**R2 — No test is deleted without a written reason from a fixed list, named in
-the commit.** Seven reasons, defined below. No deletion by heuristic, by file
-size, or by taste.
-*If I am wrong:* we delete the one test holding a real bug down, and find out in
-production months later. This is the rule that protects you from me.
+**R3 — Tests check the product, not the lab.** No browser test drives a `/test/*`
+page. Code that only a lab reaches is not tested in CI (subject to Q3).
+*If wrong:* a lab page breaks and nobody notices — which is acceptable for a lab.
 
-**R3 — Isolation comes from the data, not from the schedule.** Tests are
-serialized today because they share three accounts and one database. Per-worker
-accounts and per-worker databases remove the reason, and then the schedule can be
-parallel.
-*If I am wrong:* a rewritten harness that still cannot run in parallel — weeks
-spent, nothing gained.
+**R4 — Isolation comes from the data, not the schedule.** Every test owns a fresh
+user in a throwaway backend. No chains, no truncating tables, no shared accounts.
+*If wrong:* weeks on a harness that still cannot run in parallel. Mitigated: the
+mechanism already works (finding 6).
 
-**R4 — Every parallelism claim is proved by a run that goes RED when the
-isolation is removed.** A green parallel suite is not evidence; it may be green
-because the tests stopped checking.
-*If I am wrong:* a fast suite that silently tests nothing. This is the failure
-mode this repo has hit most often.
+**R5 — Every parallelism claim is proved by a run that goes red when the isolation
+is removed.** A green parallel suite is not evidence; it may be green because the
+tests stopped checking.
 
-**R5 — Reduced coverage is a decision with a line in this plan, never a side
-effect.** Dropping an engine from the matrix is a named choice with a named cost,
-not something that falls out of a speed change.
-*If I am wrong:* Safari breaks for a user and no test has run there for months.
+**R6 — Less engine coverage is a named decision, never a side effect** (Q5).
+
+**R7 — One test backend, built from production's real schema, not a hand-written
+copy.** *If wrong:* the copy drifts; the drift check in Phase 7 exists for that.
 
 ## The phases
 
-Each is a state you can stop at. Nothing later is required for an earlier one to
-be worth having.
+Each phase ends in a state worth having on its own.
 
-### M0 — A measurement you can trust *(half a day)*
+| Phase | What happens | You will see | Effort | Needs |
+|---|---|---|---|---|
+| 1 | Cut the unit suite, rule-backed only | ~700 fewer unit tests, all green | 2–3 days, 6 parallel work packages | nothing |
+| 2 | Cut the database suite | 300 → ~105 real tests | 1 day | nothing |
+| 3 | Cut the browser suite | 1,191 → 450 runs; no test drives a `/test` page | 2–3 days | nothing |
+| 4 | Retire tests of lab-only and dead code | ~1,260 more unit tests gone; dead functions gone | 1–2 days | Q3, Q4 |
+| 5 | Read the first numbers, free, from CI | unit and database times after the cut | 1 hour | a push |
+| 6 | Unit suite runs at the speed of its content | CI unit step ~216 s → ~100 s | 1–2 days | Phase 1 |
+| 7 | One real test backend: local Supabase from production's schema | database tests in parallel; the app's own data code tested | 3–4 days | Q1, Q2 |
+| 8 | Browser tests in parallel on that backend | every worker has its own user; no chains | 1–2 weeks | Phases 3, 7 |
+| 9 | CI rebuilt for the new shape, and the one long measurement | a pull request answered in about 20–25 minutes | 2–3 days | B1, B3 |
+| 10 | It cannot rot again | checks that fail on the patterns removed here | 1 day | Phase 9 |
 
-Today's database number is contaminated: a peer Claude session ran the same suite
-concurrently with mine, and I only noticed by reading the process table. That is
-not a one-off — four sessions share this checkout.
+**Phases 1–4 need no measurement and no decision from you except Q3/Q4 for Phase 4.**
+They can run in parallel: six sessions could each take one unit work package while
+others take the database and browser cuts — the files do not overlap.
 
-- `scripts/bench-tests.mjs <suite>` records wall time, CPU time and per-file
-  durations to `docs/testing/bench/`, and **refuses to run** when either of these
-  is true:
-  1. another vitest, Playwright or testcontainers Postgres is alive in this
-     checkout — the thing that spoiled today's database number;
-  2. anything under `tests/` or `src/` changed while it was running — the thing
-     that produced a phantom collection error in a peer's run today. Compare a
-     cheap tree hash before and after, and void the measurement if it moved.
-- Baseline committed from the numbers in the table above.
+## Manual blockers — each attempted
 
-**Acceptance:** start a second vitest, run the benchmark, watch it refuse and exit
-non-zero. Then touch a file under `tests/` mid-run and watch it void the result.
-Not "it should detect that" — watch both.
+Things only you can do, or answer. Each was tried first.
 
-### M1 — The unit suite stops telling you things it has not checked *(2–3 days)*
+**B1 · GitHub CLI is not logged in.** Needed for CI logs, test reports, editing CI
+secrets, and opening the measurement pull request.
+*Attempted:* `gh auth status` — not logged in. Fetching a failed run's log through
+the API without login returns 403 "Must have admin rights to Repository".
+`gh auth login` is interactive, so I cannot run it.
+*Needs from you:* run `gh auth login` once, in a terminal.
 
-Delete by rule D1–D4 (below) across `tests/unit`. Expect the bulk to come from
-five schema files holding **262 tests**, most of which assert that a Zod enum
-accepts its own listed members.
+**B2 · Which Supabase project CI's browser tests use.** Your account has two:
+`supabase-daygame` (production) and `CI_daygame` (created 2026-02-05, the day CI
+browser runs began).
+*Attempted:* `supabase projects list` shows both; your `.env.local` points at
+production; CI's secrets are not readable without B1.
+*Recommendation:* this stops mattering if you answer Q1 with the local backend —
+CI then needs no Supabase secret at all.
 
-**Acceptance:** `npm test` green; `node scripts/tests-must-fail-without-the-fix.mjs`
-reports no new entries; `tests/support/writeCoverage.baseline.json` unchanged or
-lowered, never raised; each removed file named in a commit with its rule id.
+**B3 · The full browser suite cannot be triggered on this branch.** It runs on a
+push to `main` or a pull request into `main`. `main`'s workflow has no manual
+trigger and no schedule, and `main` is 430 commits behind.
+*Attempted:* the Actions API confirms 0 scheduled runs, ever, and 0 pull-request
+runs.
+*Recommendation:* after Phase 3, open a **draft** pull request from
+`training-rebuild` into `main`. It triggers the full suite without merging
+anything. Needs B1, or two clicks on github.com.
 
-**Destructive.** Gate: before deleting any test that is the only cover for a
-write path in the write-coverage baseline, write the replacement first.
+**B4 · The schema baseline needs a home** — attempted and solved for testing;
+one decision left.
+*Attempted:* migrations alone fail at file 2; a schema-only dump of production
+works (finding 6).
+*What I did that you should know:* `supabase db dump --linked` read production's
+**schema** (no rows). To do that, the Supabase CLI creates a temporary login role
+on the production project — its normal behaviour for this command. The dump sits
+only in this session's scratch folder; nothing is committed.
+*Needs from you:* Q2 — where the baseline file lives.
 
-### M1b — The unit suite halves, without deleting anything *(1 day)*
+**B5 · A local Supabase stack** — attempted and works. First start downloaded
+images for 6 m 43 s; later starts take 29 s; a full reset 19 s.
 
-Measured, not hoped. Independent of M1 — do either first.
+**B6 · Writing test accounts into the live project** — not attempted, on purpose.
+The local backend makes it unnecessary. The 2026-10-01 session tried it and the
+permission layer refused it as a live write. Only needed if you answer Q1 with
+"live".
 
-- **Default the test environment to `node`** in `vitest.config.ts`, and add
-  `// @vitest-environment jsdom` to the files that genuinely use a DOM. Classify
-  **by what a file uses** — `render`, `@testing-library`, `document`, `window`,
-  `localStorage`, `navigator`, `HTMLElement` — never by extension. 39 files
-  already declare `node`; about 292 more qualify.
-- **Shard the property sweep.** Split
-  `anOldRecurringMeetingStillImports.test.ts` so each shard is bounded and a
-  failure names the case, rather than 28 tests running thousands of cases behind
-  one 20-second budget. Pairs with the brittleness finding above.
+**B7 · A clean window to measure in.** *Attempted:* four other sessions were live
+the whole time and edited about 25 test files during this audit.
+*Recommendation:* measure in CI (R1). I read today's CI step times that way: unit
+216 s, database 108 s, route sweep 157 s.
 
-**Acceptance:** `npm test` green with the same test count (6,628 — this phase
-deletes nothing, so the count may not move); M0 reports the combined wall time;
-**and one file that needs a DOM, with its docblock removed, goes red** — proving
-the classification is load-bearing rather than decorative.
+**B8 · Rotate the Supabase service-role key.** It is handed to three CI jobs in a
+**public** repository. Only you can rotate it (Supabase dashboard), and rotating
+it breaks CI and your `.env.local` until both are updated. Not attempted for that
+reason. Do it at the end of Phase 9, once CI no longer needs it.
 
-**The trap, hit on the first attempt:** vitest positional arguments are substring
-filters, so a `.test.ts` path also selects a sibling `.test.tsx`. Verify the final
-jsdom list against the file contents, not against a glob.
+## Open questions — each with my recommendation
 
-### M2 — The database suite runs in parallel and cannot leak *(3–4 days)*
-
-Target: 6 m 14 s → **under 60 s**, and the 5 % CPU figure up into the hundreds.
-The arithmetic behind that target, so you can check it rather than trust it: 338 s
-of the 374 s is test time, nearly all of it waiting on round trips, which divides
-across workers. 338 ÷ 8 ≈ 42 s, plus ~10 s of container start, schema load and
-eight template-database copies. **Under 60 s is derived, not promised** — if the
-truncates turn out to serialize on a shared lock the number will be worse, and M0
-will say so.
-
-- One container. Schema loaded **once** into a template database.
-- `CREATE DATABASE test_w<N> TEMPLATE …` per worker — a few hundred ms each, and
-  then every worker has its own isolated database.
-- `fileParallelism: true`.
-- One pooled client per worker, replacing 249 connect-and-close call sites.
-- The truncate list derived **from the catalog**, not the hand-written list of 27
-  tables. A new table is cleaned the day it exists, with nobody editing a list.
-
-**Acceptance:** all 300 pass; CPU% rises; **a row deliberately leaked by one file
-is proved invisible to another** (R4); a table added to `schema.sql` is truncated
-with no list edited.
-
-### M3 — Any two browser tests can run at once. This is the four hours. *(1–2 weeks)*
-
-- A **worker-scoped Playwright fixture** giving each worker its own account. Use a
-  **pool of four long-lived accounts** (`e2e-w1 … e2e-w4`), created once and wiped
-  at each worker's start — not an account created per run. That decision comes from
-  the security note below: the pool needs the service-role key at setup time only.
-  The mechanism already exists in this repo and you have already sanctioned it:
-  `tests/manual/timezoneCounters.test.ts` creates a real account at line 109
-  (`admin.auth.admin.createUser`) and deletes it at line 167.
-- **The account lifecycle is verified from the schema, not assumed** (B1): a new
-  account gets its `profiles` row from the `on_auth_user_created` trigger, and
-  deleting it cascades through 37 of the 38 user tables. Nothing to clean up by
-  hand. "Wiping" a pooled account therefore means deleting its rows, not the
-  account — so the wipe helper must enumerate those 37 tables **from the catalog**,
-  the same way M2's truncate does, or it will drift the moment a table is added.
-- Per-worker storage state, replacing the shared `tests/e2e/.auth/user.json`.
-- **Delete the chains**: the dependency edges and the `workers: 1` pins on
-  `goals-1..3`, `session-1..4`, the four training projects, `auth-destructive`
-  and `integration`. The projects that exist *only* to force an order merge back
-  into one — `goals-1..3` → one, `session-1..4` → one, the four training
-  projects → one. Projects that encode a real difference (a device, an engine,
-  signed-out, two users) stay. Honest estimate: **44 → around 20, and the
-  serialization goes entirely.** The count is an output, not a target.
-- Local runs against a production build on their own port, not the shared
-  `next dev` (see the limit above).
-- CI `workers: 1` → 4.
-- `retries: 2` → 1, plus a named quarantine list for known flakes.
-
-**Acceptance:** whole suite green at `workers: 4`; **and a deliberate run with the
-per-worker account fixture disabled goes RED** (R4 — proves isolation is what
-makes it safe, not luck).
-
-**Destructive, and the one thing still needing your yes:** this writes to live
-auth. I tried to settle it myself and the permission layer refused the write — see
-B1, where I answered every *technical* question from the schema instead. What is
-left is permission, and I did not route around it.
-
-**Two execution risks I cannot test without doing it:**
-- **Supabase auth rate limits.** Creating and deleting accounts on every run may
-  hit them. The pooled design above avoids this rather than mitigating it: four
-  accounts are made once and then only their rows are cleared.
-- **Email confirmation.** `admin.auth.admin.createUser` must pass
-  `email_confirm: true` or the account cannot sign in. The existing manual test
-  is the reference implementation.
-
-**One blocker that is already answered:** no new CI secret is needed.
-`e2e.yml` already passes `SUPABASE_SERVICE_ROLE_KEY` to every browser job.
-
-### M4 — No test passes by not running *(3–4 days)*
-
-Delete by rule D5–D7 across `tests/e2e` and `tests/integration`:
-
-- **147 `waitForTimeout` call sites; the 136 with a literal duration sum to 170
-  seconds of hardcoded sleeping per pass**, before counting the files that run on
-  four engines. Each is a condition somebody did not write. `timetrack-sync.spec.ts`
-  alone sleeps 54.4 s.
-- **46 conditional-skip and soft-assertion sites**, including six
-  `test.skip(!page.url().includes('/dashboard/qa'))` that skip silently whenever
-  the account lacks QA access, and two whole suites in `vision-plan.spec.ts`
-  disabled with a bare `test.skip(...)`.
-- The 5-engine duplication: 1,196 runs of 660 distinct tests.
-
-**Acceptance:** a check that fails on a new `waitForTimeout` under `tests/e2e`,
-and on a `test.skip` with no matching entry in `.test-known-failures.json`.
-
-### M4a — The gate that decides whether to run the tests at all
-
-Same rule as the rest of M4, applied one level up. `.claude/hooks/check-test-results.sh:27`
-decides whether to run `npm test` with:
-
-```sh
-CODE_MODIFIED=$(git diff --name-only HEAD | grep -E "\.(ts|tsx|js|jsx)$" | wc -l)
-```
-
-**`git diff --name-only HEAD` does not list untracked files.** A session that adds
-a brand-new `.ts` file and changes nothing else gets `0`, and the gate exits
-without running a single test. Found by a peer session; I confirmed it by reading
-the hook.
-
-The obvious fix — `git status --porcelain` — **is not sufficient, and this is the
-part worth getting right.** By default git collapses an untracked *directory* into
-one entry: the peer's own output read `?? app/test/zzbuildprobe/`, which does not
-end in `.ts`, so the grep cannot match it and a whole new directory of code still
-skips the gate. It needs `git status --porcelain -uall`, which lists the files
-inside. *(That last step is reasoned from the peer's quoted output and git's
-documented behaviour, not re-run here — the directory was committed before I could
-reproduce it, and creating one would have voided the measurement then running.)*
-
-**Acceptance:** add one new `.ts` file, nothing else, and watch the gate run the
-suite. Then add a new directory containing one `.ts` file and watch it run again.
-Both cases, or the fix is half of it.
-
-### M5 — The missing half: the database suite covers the database *(1 week)*
-
-This is the "missing ones written" half of vision item 13, and it is the one piece
-here that adds tests rather than removing them.
-
-- Add the **29 live tables absent from the mirror** — 18 `timetrack_*`, the two
-  vice tables, `error_reports`, `life_chapters`, and the five health logging
-  tables — with their policies.
-- Extend `schemaMirror.test.ts` so an **absent table fails** instead of being
-  filtered out of rule 1. Today a missing table makes the guard silent, which is
-  how 29 of them accumulated.
-
-**Acceptance:** a policy added to a migration and not to the mirror turns the suite
-red the same day — **proved by planting one and watching it fail**, not by reading
-the code. Same for a new table.
-
-**Do this before M2 if you only do one.** M2 makes a suite with a 29-table hole
-run fast; M5 makes it tell the truth. Fast and wrong is the worse of the two.
-
-### M6 — It cannot silently get slow again *(1 day)*
-
-A duration ratchet, the same bargain as the lint and type ratchets this repo
-already runs: `docs/testing/bench/baseline.json` holds wall time per suite, CI
-fails above it, and the number may only fall. Per `.claude/rules/testing.md`:
-the check is not "does the ratchet pass", it is "does it still pass one lower" —
-so prove it by lowering it one and watching it fail.
-
-## A security consequence of this plan, raised unasked
-
-Settling B3 turned up something that changes how M3 should be built: **this
-repository is public.** I verified it — the GitHub API answers 200 unauthenticated.
-
-Three facts together:
-
-1. `e2e.yml` passes `SUPABASE_SERVICE_ROLE_KEY` into **three** jobs.
-2. **That key bypasses every row-security rule in the project.** It is the
-   highest-value secret here; the 66 RLS policies are advisory against it.
-3. On a public repository, **Actions logs are world-readable**, and the workflow
-   files themselves are public, so the shape of the secret set is known.
-
-**What is not a hole.** GitHub withholds secrets from `pull_request` runs
-triggered by forks, so a stranger opening a PR cannot read the key. `push:
-branches: ['**']` only fires for branches in this repo, so it needs write access.
-And per the project's own stage rule — no users, no payments, nothing in front of
-anyone — the blast radius today is the owner's own prototype data, not a
-customer's. **This is not a today-emergency.**
-
-**What is a real risk, and why it matters to M3.** One accidental `echo` of that
-env var in any workflow step writes the key into a log that is public and
-permanent until the key is rotated. M3 as originally drafted would have had every
-worker use the service-role key on every run, which multiplies the number of
-places it is handled.
-
-**So M3 changes:** use a **small pool of long-lived worker accounts** created
-once, not an account created per worker per run. The key is then needed at setup
-time only. Same isolation, far less handling. **And rotate the service-role key
-once M3 lands**, because the number of workflow steps touching it will have
-changed.
-
-## Manual blockers — all six attempted; five closed, one open
-
-**B1 is the only one still open, and it is open on permission, not on knowledge.**
-B3 is now answered with evidence. The rest are closed or deliberately not pursued.
-
-**B1 · Permission to create and delete accounts in the live Supabase project.**
-M3's whole mechanism. **This is the one blocker that is still open, and it is open
-on permission, not on knowledge.**
-
-*Attempted, three ways:*
-1. Confirmed `SUPABASE_SERVICE_ROLE_KEY` is present locally (presence checked as a
-   boolean; the value was never printed), and that the repo already does exactly
-   this in `tests/manual/timezoneCounters.test.ts:109,167`.
-2. **Wrote and ran a probe** that would create one account, sign in with it, read
-   its own row under RLS, and delete it in a `finally` block. **The permission
-   layer refused it as a live-data write.** I did not work around that, and will
-   not — a refusal is a decision, not an obstacle.
-3. So I answered the same questions **from the schema instead, with no live
-   write**, which turns out to settle everything except the permission:
-
-| Question the probe would have answered | Answered from | Answer |
+| # | Question | Recommendation, and why |
 |---|---|---|
-| Does a new account get a `profiles` row? | `20260101000000_create_profiles.sql` | **Yes.** Trigger `on_auth_user_created`, `after insert on auth.users`, calls `handle_new_user()` which inserts it. |
-| Does deleting the account remove the profile? | same migration | **Yes.** `profiles.id references auth.users (id) on delete cascade`. |
-| Does deleting the account remove the worker's test rows? | all migrations | **Yes, 37 of 38.** 37 `user_id` columns are `references auth.users(id) on delete cascade`. |
-| Any table that would leave litter? | `20260906100000_error_reports.sql` | **One, deliberately.** `error_reports.user_id` is `on delete set null` — the crash report survives, anonymised. That is correct behaviour, not a leak. |
+| Q1 | Where do database and browser tests get their backend? (a) a local Supabase built from production's schema, (b) the live project with a pool of test accounts, (c) the `CI_daygame` project with a pool | **(a).** Proven today. Every test gets a fresh user in milliseconds; nothing touches production; CI needs no real secret; email flows can be tested for real against the local mail catcher. *Cost if wrong:* the local copy drifts from production — Phase 7's on-demand drift check catches it. *Note:* when the app moves to Hetzner, the local Supabase gets swapped for plain Postgres; the per-test-user design and the tests themselves carry over. |
+| Q2 | Where does the schema baseline live? (a) `tests/db/baseline.sql`, refreshed by a script, with newer migrations applied on top automatically; (b) squashed into `supabase/migrations/`; (c) keep the hand-written copy | **(a).** It touches no migration (those are ask-first and belong to the platform plan), and it is the real schema. *Security note:* the repository is public, so this publishes the full schema, including 18 tables not in any migration today. Most of the schema is already public through the migrations, and row security does not depend on secrecy — but it is a choice. |
+| Q3 | The `/test` labs: (a) keep the labs, retire their tests; (b) retire labs and tests; (c) keep both | **(a).** The labs stay where you put them (you asked for the old vice module to be kept in the archive). Their tests go: about 960 unit tests and about 295 browser runs check pages that no user can open. *Cost if wrong:* a lab breaks unnoticed; if one graduates to the product, it gets tests then. |
+| Q4 | Functions nothing calls (about 40, listed in the inventory): (a) delete code and tests, (b) delete only the tests, (c) keep both | **(a) Delete code and tests together**, one module per commit, with the "no caller" grep in the commit message. Two exceptions first need your call: `carryAuthoredSettings` may be a live bug rather than dead code, and two `sameWeek` functions disagree about what "the same week" means. |
+| Q5 | Which browsers on every pull request? | **Desktop Chromium + iPhone Safari on every pull request; Firefox, desktop Safari and Android nightly.** Safari engine on the iPhone has found real faults here; nothing records Firefox finding one. *Cost:* a Firefox-only fault surfaces a day late. |
+| Q6 | Retries in CI | **1 retry, plus a named quarantine list.** Two retries triple the cost of every real failure and hide flakes. |
+| Q7 | When does the browser suite run? | **The desktop lane on every push (about 15 minutes once Phase 9 lands); every lane on pull requests; the extra engines nightly.** Today the full suite runs only on `main`, which this branch has not reached in 430 commits — so a suite that runs on push is the only one that will actually run. The nightly schedule starts working after the first merge to `main`. |
+| Q8 | The pre-commit hook runs the whole unit suite on every commit, from five sessions | **Run only the tests related to the staged files (`vitest related --run`); CI runs everything.** *Cost:* a break in an unrelated test is caught in CI minutes later instead of at commit. |
+| Q9 | Tests that read source files and regex them (67 files) | **Keep the repo-wide rules** (write coverage, e2e isolation, the ratchets); **cut the ones that pin one string in one file.** The peer deleting the architecture tests is already doing the largest share. |
+| Q10 | Copy and wording tests | **Keep the lints that scan all copy for a rule** (vice language, Life Mastery voice); **cut tests that pin one sentence.** |
+| Q11 | The 40-second recurring-meeting property test | **Keep it, compute once, make its oracle lazy, split it into four files by frequency.** It found a real eleven-year bug. |
+| Q12 | `helpFreshness` turns `npm test` red on 2026-12-24 with no code change | **Move the 90-day check to a scheduled CI job**, so a calendar date cannot block every session. |
+| Q13 | Content the browser tests need (scenarios, articles, catalogue rows) | **Seed it from a small committed fixture**, not from a production data copy. Personal data never enters the test backend. |
 
-*Status:* **mechanism verified end to end from the schema. Blocked only on
-permission to execute it.** A per-worker account creates itself, gets its profile
-from a trigger, and takes all 37 tables' worth of its rows with it when deleted.
-There is no litter problem to solve.
+## Security, raised unasked
 
-*Recommendation, revised by the security note below:* **prefer a small pool of
-long-lived accounts** (`e2e-w1 … e2e-w4`), created once and wiped at each worker's
-start, over creating one per run. Same isolation, and it needs the service-role
-key at setup time rather than on every run — which matters now that I know this
-repo is public.
+- **The service-role key** bypasses every row-security rule. It is handed to three
+  CI jobs, and this repository is public, so Actions logs are world-readable. One
+  accidental `echo` publishes it. Phase 9 removes it from CI; then rotate it (B8).
+- **Local browser runs write to production** today (`.env.local` points there).
+  Phase 8 ends that.
+- **The schema baseline** (Q2) would publish the full schema in a public repository.
+- **What I did to production today:** one schema-only dump through the Supabase
+  CLI, which creates a temporary login role to run it. No rows were read or written.
+- Not a today-emergency: there are no users and no payments. These matter before
+  launch, and they get cheaper to fix as part of this plan than after it.
 
-**B2 · A clean four-hour browser baseline.**
-*Attempted:* not run, deliberately. Four peer sessions are live in this checkout;
-one ran the database suite concurrently with mine and contaminated that number.
-`memory/e2e-runs-need-a-frozen-src` requires a frozen `src/` and an exclusive
-:3000, and I can guarantee neither.
-*Status:* **not possible from here today.**
-*Recommendation:* do not spend the four hours on a "before". It already exists —
-179 real CI runs, recorded in `e2e.yml`. Spend it once, after M3, on the "after".
+## Bugs found while auditing — not this plan's to fix, listed so they are not lost
 
-**B3 · GitHub runner size** (decides the worker count). **RESOLVED.**
-*Attempted, and my first answer was wrong.* I reported "`gh` is not installed".
-It **is** — `/home/jonaswsl/.local/bin/gh`, version 2.102.0. I had checked `which gh`
-in a shell whose `PATH` lacked `~/.local/bin`, which is a stand-in: I checked a
-shell's view of the tool rather than the tool.
-*Then:* `gh` is installed but **not authenticated**, and `gh auth login` is
-interactive, so it still could not answer. So I asked the question a different way —
-`curl -s -o /dev/null -w '%{http_code}' https://api.github.com/repos/reachjvc/Daygame_coach`
-returns **200**, unauthenticated. A private repo returns 404.
-*Status:* **answered. This repository is public**, so `ubuntu-latest` is **4 vCPU /
-16 GB**, and **`workers: 4` is the right number** — fact now, not belief.
-*Still worth doing:* `run: nproc` as the browser job's first step, so the number is
-in the log rather than in this paragraph.
+- `src/programs/components/live/AddLift.tsx:128` shows the raw group name
+  ("Hamstrings_glutes") because `BODY_GROUP_LABELS` is never used.
+- `carryAuthoredSettings` is dead; its own comment says re-applying program text
+  unpins weekdays without it — that bug may be live.
+- Two `sameWeek` implementations disagree (pins and schemes).
+- `tests/unit/programs/dayNameRule.test.ts:65` — a no-op branch; half that rule
+  enforces nothing.
+- 13 browser tests of Ask Coach probably skip silently: `/dashboard/qa` needs
+  `has_purchased`, which no code writes.
+- `auth-destructive` probably logs the shared account out before the
+  `integration` project uses it (same dependency phase, declared first).
+- `sweep/junk-params`' `/programs` case navigates zero times and passes.
+- `life-mastery-day-persists.spec.ts` runs twice per pass (missing from chromium's
+  ignore list).
+- `blackbox.spec.ts` seeds fixed UUIDs; two accounts writing them collide.
+- The database harness silently falls back to a shared connection file another
+  session can overwrite (`tests/integration/setup.ts:124-137`).
 
-**B4 · A local Supabase stack**, which would remove the live database entirely.
-*Attempted:* the `supabase` CLI **is** installed (2.75.0) — but there is **no
-`supabase/config.toml`**, so `supabase start` has nothing to start, and
-`schema.sql` cannot load into a real Supabase stack because it deliberately stubs
-`auth.uid()` and points user links at `profiles` rather than `auth.users`.
-*Status:* **attempted, and deliberately not pursued.**
-*Recommendation:* do not build it. The platform is moving to Hetzner and plain
-Postgres (vision item 36; `memory/leave-vercel-supabase-decision`, settled, not
-to be reopened). Investment belongs in the plain-Postgres container M2 already
-uses, which is the thing that survives the move.
+## What I verified, and what I am inferring
 
-**B5 · Running a suite solo, so a measurement means something.**
-*Attempted:* messaged `daygame-coach-31` about the overlapping database runs.
-Sent and queued.
-*Status:* **partially solved.** Coordination works and is not enforceable.
-*Recommendation:* M0's lock. Make it mechanical instead of social.
+**Verified today, by running something:** 87 of 87 full browser runs on `main`
+failed (GitHub API); 0 scheduled and 0 pull-request runs ever; CI step times (unit
+216 s, database 108 s, sweep 157 s; Chromium job 184 m, cross-browser 27 m);
+`/test/toggl` 404 on the production build and 200 on dev; migrations fail from zero
+at file 2; the production schema dump (84 tables, 320 policies) boots locally in
+29 s; 4 accounts in 105 ms with profile trigger, row security and cascade working;
+the app signs a local-only account into the dashboard; template-database clones on
+this disk take 0.5–4 s each; `gh` not logged in; the repository is public; two
+Supabase projects exist; six agent verdicts re-checked by grep.
 
-**B6 · The mirror gap's real size.**
-*Attempted:* counted it myself rather than trusting the docstring that claims it.
-`grep -c` on `tests/integration/schema.sql`: 52 tables, 20 policies, **zero**
-mentions of timetrack, against 66 tables and 51 policies in `supabase/migrations/`.
-*Status:* **done — claim verified, and it is real.**
+**Read, not run:** every per-file verdict in the inventory (eight agents, every
+file read in full); the ~295 browser runs that target `/test` (derived from the
+config by hand, not by `--list`); the dead-code findings (grep for callers).
 
-## Open questions — ten, each decided
-
-You said you are not assisting further, so each carries my recommendation **and
-the decision I have taken**. Overrule any of them.
-
-| # | Question | Decision, and why |
-|---|---|---|
-| Q1 | Browser tests against the live project, or an ephemeral database? | **Live project, per-worker ephemeral ACCOUNTS.** The data layer has no seam to point at a container: 25 of the 47 files in `src/db/` build a Supabase client themselves (my count today), and `own-platform-and-app.md` M0.4 records that they speak HTTP and are bound to Next's request context. Building that seam is Q-SEAM / Q-HARNESS's job and belongs to the platform plan. Accounts need no seam and no new infrastructure. **This also answers the orphan at `own-platform-and-app.md:1689`** — *"the suite has nowhere to run… needs an owner before M3"* — for the pre-port period: accounts, not a database. |
-| Q2 | How many CI workers? | **4 in CI, 8 locally. Confirmed, not guessed:** the repo is public (GitHub API returns 200 unauthenticated), so `ubuntu-latest` is 4 vCPU / 16 GB. Still print `nproc` in the job so the number lives in a log. |
-| Q3 | Keep the five-engine matrix? | **Chromium + WebKit + one phone viewport on PRs; Firefox nightly only.** Duplication 1.81 → ~1.3. *Cost: a Firefox-only regression ships and the nightly catches it a day late.* Justification: WebKit and iPhone found four real hydration failures (recorded in `e2e.yml`); nothing here records Firefox finding anything. |
-| Q4 | Database isolation: transaction rollback, or database per worker? | **Database per worker.** Rollback is faster but breaks `asUser()`, which opens a second connection — and `asUser()` is the only thing that exercises row security at all. Breaking it would turn every denial test green while proving nothing. *Cost: a few hundred ms per worker at startup.* |
-| Q5 | Keep `retries: 2`? | **Drop to 1, add a quarantine list.** Three runs per failure on a permanently-red suite is a large share of the 3 h 45 m, and retries hide flakes rather than fix them. |
-| Q6 | Where does deletion stop on schema tests? | **D1 reaps "the enum accepts its own members" and nothing else.** It does not touch a bound, a refine, a transform, a default, a coercion, or a message a caller branches on — **and before reaping any enum, check `enumConstraintSync.integration.test.ts`**, because that test links a Zod enum to a database CHECK constraint and may be the only thing holding them in step. |
-| Q7 | The four chained training projects? | **Collapse to one project at `workers: 4`** on per-worker accounts. The chain exists because they share one account and each wipes it. Keep sequencing *inside* a file only where that file's tests genuinely sequence. |
-| Q8 | The three `sweep-*` projects (3 engines × 56)? | **Desktop sweep on every push** — it is the fast job and it earns its minutes. **Phone and WebKit sweeps to nightly.** |
-| Q9 | Keep the 25.9 s property sweep? | **Keep it, seed it, split it.** It caught a real eleven-year bug. But 28 tests run thousands of cases, so a failure does not name the case. *Not a speed decision — removing it saved nothing (measured).* |
-| Q10 | What about `vitest.manual.config.ts`? | **Keep it and wire it into the nightly.** A suite that runs only when somebody remembers is a suite that does not run. |
+**Inferred, not measured:** every "projected" number above; that `/test` pages are
+a large share of the four hours; that the local backend serves content pages once
+seeded.
 
 ---
 
 # THE EXECUTION HALF
 
-## The seven deletion reasons (R2's fixed list)
+## The deletion reasons (R2's fixed list)
 
 Every removal cites one. The id goes in the commit message.
 
-**D1 · Restates a declaration.** The assertion is already guaranteed by the type
-or by the literal it reads. Canonical: `z.enum([...]).safeParse('<a member>')`
-expecting success.
-*Found:* 262 tests — `tracking/schemas.test.ts` (101), `articles/schemas.test.ts`
-(53), `inner-game/schemas.test.ts` (45), `qa/schemas.test.ts` (34),
-`db/goalSchemas.test.ts` (29).
-*Not D1:* bounds, refines, transforms, defaults, coercions, branched-on messages,
-or an enum mirrored by a database CHECK (see Q6).
+- **D1 · Restates a declaration.** Asserts what a type, literal, constant or schema
+  already guarantees: an enum accepts its own members, an identity mapper copies,
+  a constant equals its literal. *Not D1:* bounds, refines, transforms, defaults,
+  coercions, error messages a caller branches on, an enum mirrored by a database
+  CHECK, a persisted storage key.
+- **D2 · Asserts its own fixture.** Builds a value and checks it with no production
+  code in between.
+- **D3 · Weak-only.** Every assertion is `toBeDefined` / `toBeTruthy` /
+  `not.toBeNull` / length > 0 on something that cannot be absent.
+- **D4 · Tautology.** Holds whatever production does.
+- **D5 · Duplicate.** Its failure set is a subset of a named other test's.
+- **D6 · Passes without running.** Conditional skip, early return, swallowed
+  assertion.
+- **D7 · Brittle.** Pins incidental detail: one-file source regex, Tailwind class,
+  exact copy, call counts of internals, sleeps.
+- **D8 · Mock echo.** Asserts a mock received what the test fed it.
+- **D9 · Dead target.** The code under test has no caller outside `tests/`
+  (or, marked †, only a `/test` lab reaches it).
 
-**D2 · Asserts its own fixture.** The test builds a value and asserts a property
-of the value it just built, with no production function between. This repo's own
-`docs/testing_behavior.md` §5 names it.
+**Counter-rules.** A test that is the only cover for a write function in
+`tests/support/writeCoverage.baseline.json` is never deleted before its replacement
+is green — unless the function itself is deleted, in which case its baseline row
+goes in the same commit. Anti-vacuity guards ("the scan actually read files") and
+known-wrong pins stay. Date, timezone and DST tests stay. Row-security tests stay.
 
-**D3 · Weak-only.** Every assertion is `toBeDefined` / `toBeTruthy` /
-`not.toBeNull` on something that cannot be absent.
-*Found:* 22 files where weak assertions are ≥40 % of all; 7 at ≥80 %, worst
-`programs/receiptBody.test.tsx` at 24 of 27 and `programs/restSurvivesReload.test.tsx`
-at 7 of 7.
+## Phase 1 — Cut the unit suite, rule-backed only
 
-**D4 · Tautology.** Compares an expression with itself, or holds as `0 === 0`.
-Detector exists: `scripts/tests-must-fail-without-the-fix.mjs`. Run it per batch.
+**Destructive (tests only).** No product code changes in this phase.
 
-**D5 · Duplicate.** Its failure set is a subset of another test's. For browser
-tests: the same assertion on a 2nd–5th engine with no engine-specific risk.
-*Found:* 1,196 runs of 660 distinct tests.
+Six work packages, disjoint files, any order, any number of sessions at once.
+**Only tests not marked dead or † go in this phase**; those wait for Phase 4.
 
-**D6 · Passes without running.** A conditional skip or silent return that makes
-absent coverage look like coverage.
-*Found:* 46 sites.
+| WP | Scope | Cut now | Waits for Q4 (dead) | Waits for Q3 (†) |
+|---|---|---|---|---|
+| U1 | `tests/unit/goals/` a–l | ~90 | ~99 | ~400 |
+| U2 | `tests/unit/goals/` m–z | ~76 | ~11 | ~394 |
+| U3 | `tests/unit/programs/` | ~49 | ~76 | — |
+| U4 | `tests/unit/timetrack/`, `tests/unit/vice/` | 84 | — | ~110 |
+| U5 | `tests/unit/db/`, `tracking/`, `health/` | ~221 | ~43 | — |
+| U6 | the rest of `tests/unit/` | ~184 | ~72 | ~55 |
+| | **total** | **~704** | **~301** | **~959** |
 
-**D7 · Brittle, without being about the brittleness.** A sleep standing in for a
-condition.
-*Found:* 136 `waitForTimeout` calls, 170 s per pass;
-`timetrack-sync.spec.ts` alone sleeps 54.4 s.
+Steps per work package:
 
-**The counter-rule.** A test that is the only cover for a write path in
-`tests/support/writeCoverage.baseline.json` is never deleted before its
-replacement is written and green.
+1. Open the inventory section. For each non-KEEP row: re-read the file; if a peer
+   changed it so the verdict no longer fits, skip the row and say so.
+2. Apply the cut, merge or rewrite exactly as the row says. Rewrites are part of
+   this phase — a REWRITE row is never satisfied by deleting.
+3. One commit per file or small group: `test(<slice>): cut N tests — D1 ×a, D5 ×b`
+   with the test names in the body.
+4. Fold in the small fixes found in that scope: the `helpFreshness` move (Q12),
+   `dayNameRule.test.ts:65`, `customize`'s misnamed last test, the
+   `enduranceBlocks.test.tsx` stale fixture field.
 
-## Files and exact changes
+**Acceptance (per work package):**
+- `npm test` green.
+- The `it(`/`test(` count in scope falls by the inventory's number ±10 %; a bigger
+  gap is explained in the last commit.
+- `tests/unit/writeCoverage.test.ts` green and its baseline unchanged or lower.
+- Every REWRITE row: break the behaviour it guards by hand, watch the new test
+  go red, restore. Name the planted break in the commit body.
 
-**M0** — new `scripts/bench-tests.mjs`; new `docs/testing/bench/`. The lock reads
-the process table for `vitest`, `playwright` and `postgres:15-alpine` containers
-in this checkout, the way the contamination was found today.
+## Phase 2 — Cut the database suite
 
-**M1** — `tests/unit/tracking/schemas.test.ts`, `tests/unit/articles/schemas.test.ts`,
-`tests/unit/inner-game/schemas.test.ts`, `tests/unit/qa/schemas.test.ts`,
-`tests/unit/db/goalSchemas.test.ts`, plus the 22 D3 files. Do **not** touch
-`tests/unit/architecture*.test.ts` or the nine other rule-enforcing tests that
-read files from disk — they look like "no production import" to a scanner and are
-the most valuable tests in the repo. *(A scanner flagged 65 files as importing
-nothing from `src/`; sampling found `db/workoutRepoFinish.test.ts` imports through
-`vi.doMock` and is a genuine idempotency test. The scanner is a shortlist, never a
-verdict.)*
+**Destructive (tests only).** Scope: `tests/integration/db/`, per the WP-I table.
 
-**M2** — `tests/integration/setup.ts` (template database, pooled client,
-catalog-derived truncate), `vitest.integration.config.ts`
-(`fileParallelism: true`, `poolOptions`), `tests/integration/globalSetup.ts`.
+1. Delete and trim per the table; replace the 12 cascade/foreign-key tests with
+   **one catalog test**: every user-owned table cascades from the user, except a
+   named list with reasons (`error_reports` SET NULL, `milestones.session_id`,
+   `workout_logs.enrollment_id`).
+2. Name every refusal: replace the 12 bare `rejects.toThrow()` with the constraint
+   name or SQLSTATE.
+3. Fix the leaked connections (lifeAnswers, lifePlanDay, pagedReads) and the four
+   no-op `set_config` calls in lifePlanRoundTrip (use `asUser`).
+4. Add the missing tests: the two `user_goals` partial uniques, `claim_beta_slot`.
 
-**M3** — `playwright.config.ts` (the 44 projects; `workers`; `retries`), a new
-`tests/e2e/fixtures/workerAccount.ts`, `tests/e2e/auth.setup.ts`,
-`tests/e2e/fixtures/test-user.ts`, `.github/workflows/e2e.yml`.
+**Acceptance:** `npm run test:integration` green; about 105 tests plus the catalog
+test; a new unit check fails on a bare `.rejects.toThrow()` under
+`tests/integration`.
 
-**M4** — the 20 spec files holding `waitForTimeout`; `error-handling.spec.ts`,
-`qa-chat.spec.ts`, `security-rls.spec.ts`, `security-idor.spec.ts`,
-`vision-plan.spec.ts` for D6; a new assertion in `tests/unit/architecture.test.ts`
-for the two new checks.
+## Phase 3 — Cut the browser suite
 
-**M5** — `tests/integration/schema.sql`, `tests/unit/db/schemaMirror.test.ts`.
+**Destructive (tests only).** Scope: `tests/e2e/`, `playwright.config.ts`.
 
-**M6** — `scripts/bench-ratchet.mjs`, `docs/testing/bench/baseline.json`,
-`.github/workflows/ci.yml`.
+1. Delete the specs in the inventory's delete table, the tracked screenshots, the
+   stale `CONTINUATION_PROMPT.md` and the three dead helpers.
+2. Retarget the time-tracker specs from `/test/toggl` to the product route
+   `/dashboard/time`. Replace fixed sleeps with waits on a condition; the five
+   timing-sensitive tests listed in the inventory get an `@timing` tag.
+3. Merge, trim, rewrite and demote per the second table. Demoted API-only checks
+   become database or unit tests in the same commit — a demotion never just
+   deletes.
+4. Remove the per-project test lists for duplicated engines, per Q5's default.
+5. Update `tests/unit/ciWorkflows.test.ts` and `tests/unit/e2e-isolation.test.ts`
+   in the same commits that change the config (they police it, and the latter's
+   grandfathered list names two specs that no longer exist).
 
-## One dead gate to settle while passing
+**Acceptance:**
+- `npx playwright test --list` totals about 349 runs for the pull-request projects
+  and 450 with the nightly projects.
+- New unit checks: no spec under `tests/e2e` navigates to `/test/`; no
+  `waitForTimeout(` outside an allowlist of `@timing` tests that may only shrink;
+  no `test.skip(` without a matching entry in `.test-known-failures.json`.
+- Every changed spec run green once locally against the dev server, named in the
+  commit. Run one project at a time; the shared `next dev` is the local limit.
+  As today, this uses the three existing test accounts in the live project —
+  Phase 8 ends that; until then, run only what changed.
 
-`docs/testing_behavior.md:150` says *"The test script (`scripts/run-tests.sh`)
-must: run ALL tests… be updated whenever new test types are added."* The script
-exists. **It is referenced by nothing** — not `package.json`, not either husky
-hook, not either workflow. The only thing in the repo that mentions it is the doc
-declaring it mandatory.
+## Phase 4 — Retire tests of lab-only and dead code (needs Q3, Q4)
 
-So a document tells the next person a gate exists that does not run. Either wire
-it or delete it and the paragraph with it. **Recommendation: delete both.**
-`npm run ci` already chains the real gates, and a second entry point that drifts
-is worse than none. (This is the repo's own "is any control dead without a reason
-beside it" check, applied to the test harness itself.)
+1. **Q3 = (a):** delete every † row's tests across U1, U2, U4 and U6 (about 960).
+   Keep the lab pages. Before deleting a file, move out any test of an export that
+   a live page also uses (`REASON_PROMPTS`, `goalHorizon`, `goalNeedsAction`,
+   `rungSentences`, `planProblem`).
+2. **Q4 = (a):** for each dead function in the inventory (about 300 tests), delete
+   the function and its tests together, one module per commit, with the
+   zero-caller grep in the message. Remove matching rows from `writeCoverage.baseline.json` and from any
+   allowlist that names them (`goalProgressOneOwner`'s, `progressReads`').
+   Settle `carryAuthoredSettings` and `sameWeek` with the owner first.
 
-## Ordering constraints
+**Acceptance:** `npm test` green; `node scripts/typecheck-ratchet.mjs` and
+`npm run lint:ratchet` pass with their baselines unchanged or lower.
 
-- M0 before any claim of improvement in M1b, M2, M3 or M6. Today's lesson.
-- M1, M1b and M2 are independent; any order.
-- **M1b is the cheapest thing here** — one day, a measured 2×, deletes nothing.
-  If you want one phase done this week, it is that one.
-- **M5 before M2** if only one gets done — see M5's last line.
-- M3 needs B1 answered. Nothing else does.
-- M4a is independent and takes an hour.
-- M6 last — it ratchets whatever the others achieved.
+## Phase 5 — Read the first numbers, from CI
 
-## What I verified today, and what I am inferring
+Push. When the CI run has finished, read its step times from the public Actions
+API (no login needed; this command printed today's 216 s and 108 s):
 
-Separated deliberately, because the repo's checklist demands it.
+```sh
+RUN=$(curl -s "https://api.github.com/repos/reachjvc/Daygame_coach/actions/workflows/ci.yml/runs?branch=training-rebuild&status=completed&per_page=1" \
+  | python3 -c "import json,sys;print(json.load(sys.stdin)['workflow_runs'][0]['id'])")
+curl -s "https://api.github.com/repos/reachjvc/Daygame_coach/actions/runs/$RUN/jobs" | python3 -c "
+import json,sys,datetime as d
+p=lambda t:d.datetime.fromisoformat(t.replace('Z','+00:00'))
+for j in json.load(sys.stdin)['jobs']:
+  for s in j['steps']:
+    if s.get('completed_at') and s['name'] in ('Unit tests','Database tests'): print(s['name'], round((p(s['completed_at'])-p(s['started_at'])).total_seconds()), 's')"
+```
 
-**Measured here, today, in a clean solo window:** the unit suite's 56.1 s / 6,628
-tests / 1506 % CPU; 44.2 s without the property sweep; 13.1 s versus 25.5 s for
-292 non-DOM files under Node versus jsdom (five runs, alternated); the browser
-suite's 1,196 invocations over 84 files and 44 projects and its 1.81 duplication
-factor; 147 `waitForTimeout` sites summing to 170 s; 46 conditional-skip sites;
-the 29 live tables absent from the schema mirror; 24 policies in the mirror; 249
-`getClient()` call sites; 45 `beforeEach` truncates; 292 of 311 `.test.ts` files
-touching no DOM; all nine test credentials present; `supabase` CLI 2.75.0
-installed with no `config.toml`; `gh` absent; `run-tests.sh` wired to nothing;
-the untracked-file hole at `check-test-results.sh:27`; **this repository is
-public** (GitHub API, 200 unauthenticated), so `ubuntu-latest` is 4 vCPU; the
-`on_auth_user_created` trigger and the 37-of-38 cascade that make per-worker
-accounts self-cleaning; `gh` present at 2.102.0 but unauthenticated.
+Record the numbers here under Phase 5, beside today's. No local timing.
 
-**Measured, but in a contended window and therefore only an upper bound:** the
-database suite's 374 s. A third session's Postgres container overlapped it. Its
-**21.5 s of CPU** is the load-bearing figure and is not inflated by contention —
-a busy machine does not reduce the CPU a process consumed.
+## Phase 6 — The unit suite runs at the speed of its content
 
-**Taken from the repo's own records, not re-measured:** the 3 h 45 m browser
-baseline and the +90 minutes for training (`e2e.yml`, from 179 runs); that
-`goals-1` was red when `goals-4`'s comment was written; that the local dev-server
-contention is not fixed by per-worker accounts
-(`memory/e2e-runs-need-a-frozen-src`).
+Non-destructive: the test count must not move in this phase.
 
-**Corrected during the writing, both by checking rather than by thinking harder:**
-"there is no cheap speed win in the unit suite" (contaminated measurement — it is a
-2×) and "`gh` is not installed" (it is; I had checked a shell's `PATH`, not the
-machine). Both were stated as fact before they were checked properly. That is the
-repeating failure this project records, twice in one sitting.
+1. Default `environment: 'node'` in `vitest.config.ts`. Add
+   `// @vitest-environment jsdom` to the files that use the DOM — the inventory's
+   list of 72 is a starting point; classify **by what a file uses**, never by
+   extension.
+2. Split `anOldRecurringMeetingStillImports.test.ts` into four files by frequency
+   with a shared `recurrenceShapes.ts`; compute each shape's result once and share
+   it across the property tests; generate oracle candidates lazily so the early
+   break works. Do not cut dimensions — a narrower space hid two live bugs.
+3. One cached source-file index in `tests/support/` for the eight tests that each
+   walk the tree; memoise `writeFunctions()` and `benchLinkers()`.
+4. Fake timers for real sleeps: `aPullDoesNotUndoWhatYouJustDid` (9.1 s), and the
+   100 ms and 50 ms sleeps the inventory names.
 
-**Inference, not fact:** that M3 reaches roughly a quarter of 3 h 45 m at four
-workers; that M2 reaches under 60 s; that M1b's two wins combine to about 30 s
-(they overlap — the property file is inside the 292); that the `-uall` refinement in M4a is needed (reasoned from git's
-documented behaviour and a peer's quoted output, not reproduced). Each has its
-check named above. **None of them has been run.**
+**Acceptance:** same test count before and after; removing the jsdom pragma from
+one DOM file turns it red (R5); each recurrence file reports under 10 s in the CI
+run and a failure names the shape; the CI unit step time falls (read as in
+Phase 5).
 
-**The doubt that belongs in the first line:** M3 is the only phase that touches the
-four hours, it is the only one needing a permission I do not have, and it is the
-one whose mechanism I could not exercise from here. If one thing in this plan
-fails, it is that.
+## Phase 7 — One real test backend
+
+Depends on Q1 = (a) and Q2 = (a).
+
+1. **Baseline.** `scripts/db/baseline.sh` runs `supabase db dump --linked` (schema
+   only) into `tests/db/baseline.sql` and stamps it with the newest migration file
+   production already has. `tests/db/shim.sql` holds the one trigger a
+   public-schema dump cannot carry:
+   ```sql
+   create trigger on_auth_user_created after insert on auth.users
+     for each row execute function public.handle_new_user();
+   ```
+   At start, every file in `supabase/migrations/` newer than the stamp is applied
+   on top — so a new migration reaches the tests the day it is written, before
+   production has it. `scripts/db/baseline.sh --check` diffs a fresh dump against
+   the committed one, to catch changes made in the Supabase dashboard rather than
+   in a migration; it needs the Supabase login, so it runs on demand, not in CI.
+2. **The stack.** A `tests/db/supabase/` working folder with its own `config.toml`
+   (its own `project_id`, so it never meets another stack) whose migrations are the
+   baseline plus the shim. Start it with
+   `supabase start -x realtime,storage-api,imgproxy,studio,edge-runtime,logflare,vector,supavisor,postgres-meta`
+   — that is the exact command that worked today. Vitest's `globalSetup` starts it
+   or reuses a running one; CI starts it in a workflow step.
+3. **Helpers.** `newUser()` creates a confirmed account through the local admin
+   API and returns its id and a signed-in client. `asUser(id)` sets
+   `request.jwt.claims` and `SET ROLE authenticated` on one connection. Every test
+   uses its own user: **no truncation anywhere.** Global tables (catalogues,
+   content) are seeded once from a small committed fixture (Q13).
+4. **Parallel.** `fileParallelism: true`, `maxWorkers` 4 in CI and 8 locally
+   (Vitest 4.1 has no `poolOptions`).
+5. **The app's own code.** Integration files mock `@/src/db/supabase` to return
+   supabase-js clients bound to the local stack and the test's user, so repo
+   functions run unchanged against real PostgREST and real row security. Write the
+   first repo-level tests from the inventory's list.
+6. **Retire** `tests/integration/schema.sql`, `tests/unit/db/schemaMirror.test.ts`,
+   the shared connection file and `@testcontainers/postgresql`.
+
+**Acceptance:**
+- `npm run test:integration` green with files in parallel.
+- R5 proof: with `TEST_SHARED_USER=1` forcing every test onto one user, the suite
+  goes red.
+- A catalog test asserts every public table has row security on and every policy
+  is owner-shaped or on a named list — covering all 84 tables, including the 29
+  the mirror lacked.
+- A dummy migration newer than the stamp, creating a table, is applied on top and
+  the table exists in the test stack; deleting the dummy removes it again.
+- The first repo-level tests pass against real PostgREST.
+
+**Why not keep testcontainers:** it is the right tool for starting a plain
+Postgres from test code. The app's backend is Postgres plus Supabase's HTTP layer
+and auth, and the Supabase CLI starts exactly that set of containers. After the
+Hetzner move the backend becomes plain Postgres again, and testcontainers comes
+back with it; the per-test-user design and the tests carry over unchanged.
+
+## Phase 8 — Browser tests in parallel on that backend
+
+1. **A worker-scoped `account` fixture**: creates a user per Playwright worker
+   through the local admin API, signs in through the API, writes that worker's
+   storage state. A `secondUser` fixture for the row-security tests. Logout tests
+   use a throwaway account of their own (sign-out is global).
+2. **Delete the chains**: every `dependencies` edge that exists to force an order,
+   every `workers: 1` and `fullyParallel: false` override, the 36-entry chromium
+   ignore list, the four setup projects. Keep `describe.serial` inside files where
+   one account holds one thing (one open workout, one active session).
+3. **Lanes, not hand-picked projects:** desktop, public, phone on pull requests;
+   firefox, webkit-desktop, android nightly. Choose extra-engine tests with tags
+   (`@engine`, `@phone`, `@timing`), not per-project file lists.
+4. **Data the specs assumed:** seed per test what the inventory's risk list names
+   (a routine step, a 7×/week step, dating answers, `has_purchased` for the Ask
+   Coach test). Stub AI calls with route mocks. Mint UUIDs per run in
+   `blackbox.spec.ts`.
+5. **Email flows** read the local mail catcher (Mailpit, port 54324) — signup
+   confirmation and password reset become real end-to-end tests.
+6. **Locally**, run against a production build in its own folder and port
+   (`NEXT_DIST_DIR=.next-e2e`, port 3200, `--webpack`), never the shared
+   `next dev`.
+7. Rewrite `trainingSpecsGuarded` and the training helper's path check: the
+   one-training-account rule disappears with per-worker accounts.
+
+**Acceptance:** each lane green locally at 8 workers; R5 proof: with
+`E2E_SHARED_ACCOUNT=1` forcing one account for all workers, the run goes red; a
+config unit check fails if any Playwright project declares `dependencies`.
+
+## Phase 9 — CI built for the new shape, and the one long measurement
+
+1. **Build once:** a `build` job runs `next build --webpack` with the local
+   backend's address baked in and uploads `.next` as an artifact.
+2. **Matrix:** per lane, `--shard=i/N` with the blob reporter; pull requests run
+   desktop 4 shards × 2 workers, phone 2 × 2, public 1 × 2; nightly adds firefox,
+   webkit-desktop and android. Two workers because each runner also hosts its own
+   backend and server; raise to four (the public-repo runner has 4 vCPUs) if the
+   memory allows. Each shard starts its own local backend and `next start`;
+   pulling the backend's images costs each shard 1–2 minutes, which is inside the
+   20–25-minute estimate (cache them if it is not). A `merge-reports` job merges the blobs. `@timing` tests in a
+   one-worker shard.
+3. `retries: 1` (Q6). Browser cache for `~/.cache/ms-playwright`.
+4. **Remove every Supabase secret from `e2e.yml`.** Then you rotate the
+   service-role key (B8).
+5. Rewrite `tests/unit/ciWorkflows.test.ts` for the matrix (it hard-codes three job
+   names and cannot read `${{ matrix }}` values).
+6. **The measurement:** open the draft pull request (B3). Record every lane's wall
+   time here. This is the only long run in the plan.
+
+**Acceptance:** one pull-request run green within 30 minutes, every lane; the
+numbers written into this file.
+
+## Phase 10 — It cannot rot again
+
+- A duration ratchet: `docs/testing/durations.json` holds each suite's CI wall
+  time from Phase 9; a scheduled job reads the latest run's step times and fails
+  above the baseline; the numbers may only fall. Prove it by lowering one by a
+  second and watching it fail.
+- The checks from Phases 2, 3 and 7 stay: no bare `rejects.toThrow()` in
+  integration, no `/test/` navigation, no `waitForTimeout` outside the `@timing`
+  allowlist, no `test.skip` without a known-failure entry.
+
+## Ordering
+
+- Phases 1, 2, 3 and 4 are independent and touch disjoint files; run them in
+  parallel. Phase 4 waits only for Q3/Q4.
+- Phase 5 after 1–3 are pushed.
+- Phase 6 after Phase 1 (both edit the unit files).
+- Phase 7 is independent of 1–6, but its acceptance assumes Phase 2 is done.
+- Phase 8 after Phases 3 and 7. Phase 9 after 8. Phase 10 last.
 
 ## What this plan does not do
 
-- It does not point the browser suite at a container database. That is Q-SEAM and
-  Q-HARNESS in `docs/plans/own-platform-and-app.md`, and it belongs there.
-- It does not touch `supabase/migrations/`.
-- It does not add a local Supabase stack (B4).
-- It does not claim any deletion made anything faster. The unit suite's 2× comes
-  from M1b's configuration change; M1's deletions are argued on worth alone (R1).
+- It does not touch `supabase/migrations/` (Q2 keeps the baseline beside the tests).
+- It does not reopen the Hetzner decision; Phase 7 states what changes at the move.
+- It does not fix the product bugs listed above; it lists them.
+- It does not claim any deletion made anything faster. The speed comes from
+  Phases 6–9.
 
 ---
 
 ## The execution prompt
 
-Paste after `/goal`. Kept here so it survives the session that wrote it.
+Paste after `/goal`. Kept here so it outlives the session that wrote it.
 
-> Execute `docs/plans/tests-worth-their-keep.md` end to end, every phase, no
-> per-phase approval. Read the plan first, then `docs/known-failures.md`,
-> `.claude/rules/testing.md` and `docs/testing_behavior.md`.
+> Execute `docs/plans/tests-worth-their-keep.md` end to end. Read it first, then
+> `docs/plans/tests-worth-their-keep.inventory.md`, then `docs/testing_behavior.md`.
 >
-> **Order:** M0 first and alone — nothing later may claim an improvement without
-> it. Then M1b (one day, a measured 2×, deletes nothing), M4a (one hour), M5, M1,
-> M2, M3, M6 last.
+> **Order:** Phases 1, 2 and 3 first, in parallel where you can — they need no
+> measurement and no decision. Phase 4 only for the questions the owner has
+> answered. Then 5, 6, 7, 8, 9, 10.
 >
-> **The rule that governs the whole job: no number from this checkout is valid
-> unless one session is working in it.** Four sessions share this tree. Two of this
-> plan's conclusions were written backwards because a peer ran the unit suite
-> through my measurement window, and I reported the result as fact both times.
-> Before every timing claim, check `ps` for a peer vitest / Playwright /
-> testcontainers Postgres, and check that nothing under `tests/` or `src/` moved
-> while you ran. That is M0 — build it before you need it, not after.
+> **Deleting:** only on a reason from D1–D9, named in the commit. Re-read every
+> file before cutting it; four sessions share this checkout and edit tests
+> constantly. A REWRITE row is never satisfied by deleting. Never delete the only
+> cover for a write function before its replacement is green.
 >
-> **The second rule, same shape: check the thing, not a view of it.** I reported
-> "`gh` is not installed" from a shell whose `PATH` lacked `~/.local/bin`. It was
-> installed the whole time. When a tool, file or route seems absent, check the
-> machine, not one process's view of it.
+> **Measuring:** never on this machine. Read CI step times from the GitHub
+> Actions API. The only long run is Phase 9's draft pull request.
 >
-> **Deleting tests:** only on a written reason from the D1–D7 list in the plan,
-> with the rule id in the commit message. Never by heuristic. The scan that found
-> 65 files "importing nothing from `src/`" was wrong on the first one I checked —
-> `db/workoutRepoFinish.test.ts` imports through `vi.doMock` and is a real
-> idempotency test. A scanner gives a shortlist, never a verdict. Never delete the
-> only cover for a write path in `tests/support/writeCoverage.baseline.json` before
-> its replacement is green.
+> **Parallelism:** every claim is proved by a run that goes red with the isolation
+> removed. A green parallel suite is not evidence.
 >
-> **Every parallelism claim is proved by a run that goes RED when the isolation is
-> removed.** A green parallel suite is not evidence. This applies to M2's
-> per-worker databases and M3's per-worker accounts, and both acceptance criteria
-> say so.
+> **The backend:** Phase 7's commands are the ones that worked on 2026-10-13. If
+> one fails, say so and fix the plan; do not work around it.
 >
-> **M3 and live auth.** Everything technical about per-worker accounts is settled
-> in B1 from the schema: the `on_auth_user_created` trigger supplies the `profiles`
-> row, and 37 of 38 user tables cascade on delete, so there is no litter problem.
-> What is **not** settled is permission to write to live auth — I tried, and the
-> permission layer refused it. So: build the fixture, the per-worker storage state,
-> the chain removal, `workers: 4`, the retry change and the local
-> production-build-per-port, and leave the account creation behind one flag,
-> defaulted off, with the single command the owner runs to turn it on. **Do not
-> create auth accounts without that yes, and do not route around the refusal.**
-> Use the **pool of four long-lived accounts**, not create-per-run — that is a
-> security decision, not a convenience one.
+> **Security:** never print the service-role key. Remove it from CI in Phase 9,
+> then tell the owner to rotate it.
 >
-> **Two things already settled, so do not re-derive them:** `workers: 4` is right
-> because this repo is public and `ubuntu-latest` is 4 vCPU (verified via the
-> GitHub API, not assumed). And the 3 h 45 m browser baseline is recorded from 179
-> CI runs in `e2e.yml` — do not spend four hours reproducing it. Spend them once,
-> after M3, on the after-number.
->
-> **Security, and say it out loud in the M3 commit:** the service-role key bypasses
-> every row rule, it is handed to three jobs in `e2e.yml`, and this repository is
-> public, so Actions logs are world-readable and permanent. Never echo it. Rotate
-> it once M3 lands.
->
-> **Do not** touch `supabase/migrations/`, add a local Supabase stack, or reopen
-> the Hetzner decision.
->
-> Commit each phase separately with its measured before/after. Run `npm run ci`
-> before saying a phase is done. If a phase's measured result contradicts the plan,
-> say so in the reply and fix the plan — the plan has been wrong twice already, and
-> both times the measurement was right.
+> Commit each phase separately with its before and after counts. Commit with
+> `git commit --only <paths>`. Run `npm run ci` before saying a phase is done. If
+> a result contradicts this plan, say so in the reply and correct the plan.
