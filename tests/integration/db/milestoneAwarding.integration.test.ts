@@ -8,16 +8,17 @@
  *
  * The repo function itself talks to Supabase over HTTP and cannot run here, so
  * what is exercised is the SQL it issues — the same `ON CONFLICT
- * (user_id, milestone_type) DO NOTHING`, against real Postgres with the real
- * constraint from schema.sql.
+ * (user_id, milestone_type) DO NOTHING`, against production's own constraint
+ * (tests/db/baseline.sql). The repo itself runs in
+ * tests/integration/repos/trackingRepo.integration.test.ts.
  *
  * "Re-awarding never rewrites the day it was earned" was removed 2026-10-13
  * (D5): with `DO NOTHING` the second award writes no row, which the first test
  * already asserts — a `DO UPDATE` would return the row and fail it there.
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { describe, test, expect } from "vitest"
+import { getClient, createTestUser } from "../setup"
 
 /** The statement `insertMilestones` issues, as PostgREST renders an ignoring upsert. */
 const AWARD = `
@@ -28,10 +29,6 @@ const AWARD = `
 `
 
 describe("milestone awarding — the database's half of the promise", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("a badge can only be held once", async () => {
     // Arrange
     const userId = await createTestUser()
@@ -68,7 +65,8 @@ describe("milestone awarding — the database's half of the promise", () => {
       await client.query(AWARD, [two, "first_approach", "2026-02-01T10:00:00Z", null])
 
       const { rows } = await client.query(
-        `SELECT count(*)::int AS n FROM milestones WHERE milestone_type = 'first_approach'`
+        `SELECT count(*)::int AS n FROM milestones WHERE milestone_type = 'first_approach' AND user_id = ANY($1::uuid[])`,
+        [[one, two]]
       )
 
       // Assert: the constraint is per user, not global.

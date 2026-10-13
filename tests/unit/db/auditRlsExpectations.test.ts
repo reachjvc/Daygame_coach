@@ -58,15 +58,17 @@ describe("the RLS audit's list of deliberate exceptions", () => {
 
     // The weaker half, for the tables that predate the migrations folder: the
     // name has to appear in the repo's SQL as a TABLE, not just as a word. A
-    // typo, or a table that was never in this project, gets caught here.
+    // typo, or a table that was never in this project, gets caught here. The
+    // tables made outside migrations are in production's schema dump
+    // (tests/db/baseline.sql), which replaced the hand-written test schema.
     //
     // The "as a table" part is load-bearing. Searching for the bare word would
     // let `values` pass on the `VALUES (...)` in any INSERT in the repo — the
     // excuse would look checked while nothing had been checked at all. So the
     // name has to follow one of the words that can only be followed by a table.
-    const allSql = migrations.map((m) => m.sql).join("\n") + fs.readFileSync(path.join(root, "tests/integration/schema.sql"), "utf8")
+    const allSql = migrations.map((m) => m.sql).join("\n") + fs.readFileSync(path.join(root, "tests/db/baseline.sql"), "utf8")
     const namedAsATable = (table: string) =>
-      new RegExp(`\\b(?:table|on|from|into|update)\\s+(?:if\\s+not\\s+exists\\s+)?(?:public\\.)?"?${table}"?\\b`, "i")
+      new RegExp(`\\b(?:table|on|from|into|update)\\s+(?:if\\s+not\\s+exists\\s+)?(?:"?public"?\\.)?"?${table}"?\\b`, "i")
     const unheardOf = Object.keys(INTENTIONAL).filter((table) => !namedAsATable(table).test(allSql))
     expect(unheardOf.sort(), "no SQL in this repo mentions these tables at all").toEqual([])
   })

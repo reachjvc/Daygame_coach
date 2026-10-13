@@ -44,11 +44,18 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      # The database tests start a real Postgres in Docker (testcontainers) and
-      # run the app's own schema against it — row-level security, the finish
-      # function, the weight ceiling. They had never run anywhere but a laptop,
-      # so nothing stopped a schema rule from being wrong for weeks.
-      # GitHub's ubuntu runners ship Docker.
+      # The database tests run against a throwaway local Supabase built from
+      # production's own schema (scripts/db/test-stack.mjs; tests/db/) — row
+      # security, the finish function, the signup trigger, and the app's repos
+      # through real PostgREST. They had never run anywhere but a laptop, so
+      # nothing stopped a schema rule from being wrong for weeks. GitHub's
+      # ubuntu runners ship Docker; the CLI that starts the stack comes from
+      # here, pinned to SUPABASE_CLI_VERSION in scripts/db/test-stack.mjs
+      # (tests/unit/ciWorkflows.test.ts fails if the two disagree).
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
       - name: Database tests
         run: npm run test:integration
         timeout-minutes: 15

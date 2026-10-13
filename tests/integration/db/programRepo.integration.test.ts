@@ -29,15 +29,13 @@
  *      a program they did before — and it breaks at *enrollment* time, far from
  *      the change that caused it.
  *
- * Like the other files here, these run raw SQL against the testcontainers
- * PostgreSQL rather than calling `programRepo` — the container is plain Postgres
- * and the repo needs a Supabase client. See the same note in
- * `goalRepo.integration.test.ts`. What can be proven at this layer is the shape
- * of the database, which is exactly where this feature's danger lives.
+ * These run raw SQL against production's schema on the test backend rather
+ * than calling `programRepo`. What can be proven at this layer is the shape of
+ * the database, which is exactly where this feature's danger lives.
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { describe, test, expect } from "vitest"
+import { getClient, createTestUser } from "../setup"
 
 const CURSOR = JSON.stringify({ cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 })
 
@@ -110,10 +108,6 @@ async function isActive(id: string): Promise<boolean> {
 }
 
 describe("program schema", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   describe("deleting a person", () => {
     test("deleting a person takes their programs and sessions with them", async () => {
       const userId = await createTestUser("gdpr@example.com")
@@ -122,7 +116,9 @@ describe("program schema", () => {
 
       const client = await getClient()
       try {
-        await client.query(`DELETE FROM profiles WHERE id = $1`, [userId])
+        // The person is the auth.users row: in production every user-owned
+        // table's key points there, not at profiles (which the old mirror had).
+        await client.query(`DELETE FROM auth.users WHERE id = $1`, [userId])
         const left = await client.query(
           `SELECT count(*)::int AS n FROM program_enrollments WHERE user_id = $1`,
           [userId]
@@ -197,9 +193,9 @@ describe("program schema", () => {
              VALUES ($2, 'weights', 52, 3, $1, 'A', 1, 1, 11)`,
             [enrollmentId, userId]
           )
-          // Production names this one `workout_logs_rpe_range`; the mirror's is
-          // the generated name. Same rule, same bounds.
-        ).rejects.toMatchObject({ code: "23514", constraint: "workout_logs_rpe_check" })
+          // Production's name; the old mirror's was the generated
+          // `workout_logs_rpe_check`. Same rule, same bounds.
+        ).rejects.toMatchObject({ code: "23514", constraint: "workout_logs_rpe_range" })
         await expect(
           client.query(
             `INSERT INTO workout_logs (user_id, session_type, duration_min, intensity, enrollment_id, program_day_id, program_cycle, program_week, rpe)
@@ -265,10 +261,6 @@ describe("program schema", () => {
  * refused half takes the other half with it.
  */
 describe("a program write is one statement", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   async function sessionCount(id: string): Promise<number> {
     const [row] = await sql<{ n: number }>(
       `SELECT (cursor ->> 'sessionCount')::int AS n FROM program_enrollments WHERE id = $1`,
@@ -647,9 +639,6 @@ describe("a program write is one statement", () => {
 describe("a busy program refuses to be switched off, whoever writes", () => {
   const END_IT = `UPDATE program_enrollments SET is_active = false WHERE id = $1`
 
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
 
   test("ending a program is refused while a workout is open on it, and the program stays on", async () => {
     const me = await createTestUser("busy-program@example.com")

@@ -7,11 +7,12 @@
  * shape rules hold for writes that do not come through the app at all.
  *
  * The table owner bypasses RLS, so every denial test runs under the
- * `authenticated` role via `asUser` (tests/integration/setup.ts).
+ * `authenticated` role via `asUser` (tests/db/harness.ts). Every test has two
+ * fresh accounts of its own, and reads as the owner are scoped to them.
  */
 
-import { describe, it, expect, beforeEach, afterAll } from "vitest"
-import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
+import { describe, it, expect, beforeEach } from "vitest"
+import { getClient, createTestUser, asUser } from "../setup"
 
 const WEEK = JSON.stringify({
   kind: "linear_rotation",
@@ -51,14 +52,10 @@ describe("program_drafts", () => {
   let someoneElse = ""
 
   beforeEach(async () => {
-    await truncateAllTables()
     me = await createTestUser()
     someoneElse = await createTestUser()
   })
 
-  afterAll(async () => {
-    await truncateAllTables()
-  })
 
   /**
    * A DRAFT MAY BE HALF-BUILT. Building a week over two sittings is the
@@ -162,14 +159,14 @@ describe("program_drafts", () => {
   it("changes nothing when one person edits another's week", async () => {
     await sql(`INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Mine', $2)`, [me, WEEK])
     await asUser(someoneElse, (q) => q(`UPDATE program_drafts SET name = 'Stolen'`))
-    const [row] = await sql<{ name: string }>(`SELECT name FROM program_drafts`)
-    expect(row!.name).toBe("Mine")
+    const rows = await sql<{ name: string }>(`SELECT name FROM program_drafts WHERE user_id = $1`, [me])
+    expect(rows.map((r) => r.name)).toEqual(["Mine"])
   })
 
   it("deletes nothing when one person deletes another's week", async () => {
     await sql(`INSERT INTO program_drafts (user_id, name, schedule) VALUES ($1, 'Mine', $2)`, [me, WEEK])
     await asUser(someoneElse, (q) => q(`DELETE FROM program_drafts`))
-    const rows = await sql(`SELECT id FROM program_drafts`)
+    const rows = await sql(`SELECT id FROM program_drafts WHERE user_id = $1`, [me])
     expect(rows).toHaveLength(1)
   })
 

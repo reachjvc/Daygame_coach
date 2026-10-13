@@ -187,8 +187,25 @@ describe("when CI runs at all", () => {
   })
 
   test("the database tests are a CI step", () => {
-    // They start a real Postgres in Docker. Until this line existed, every rule
-    // in tests/integration/schema.sql was checked on laptops only.
+    // They start a real backend in Docker. Until this line existed, every
+    // schema rule they check was checked on laptops only.
     expect(ci).toContain("npm run test:integration")
+  })
+
+  test("CI builds the test backend with the same Supabase CLI as everyone else", () => {
+    // The CLI picks the Postgres, auth and API images, so another version is
+    // another backend. scripts/db/test-stack.mjs refuses any version but its
+    // constant locally; this holds CI to the same one. Read as text: importing
+    // the script would run it.
+    const script = readFileSync(join(root, "scripts/db/test-stack.mjs"), "utf8")
+    const pinned = script.match(/export const SUPABASE_CLI_VERSION = "([\d.]+)"/)?.[1]
+    expect(pinned, "scripts/db/test-stack.mjs no longer declares SUPABASE_CLI_VERSION").toBeTruthy()
+
+    const setup = ci.match(/- uses: supabase\/setup-cli@v\d+\n\s+with:\n\s+version: ([\d.]+)/)
+    expect(setup, "ci.yml no longer installs the Supabase CLI with a pinned version").not.toBeNull()
+    expect(setup![1], "ci.yml's Supabase CLI differs from scripts/db/test-stack.mjs").toBe(pinned)
+
+    // And before the step that needs it.
+    expect(ci.indexOf("supabase/setup-cli")).toBeLessThan(ci.indexOf("npm run test:integration"))
   })
 })

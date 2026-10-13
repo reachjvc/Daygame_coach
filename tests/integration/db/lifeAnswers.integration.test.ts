@@ -10,11 +10,18 @@
  * Every connection opened here is closed: these used to call
  * `(await getClient()).query(...)` inline, which leaked one connection per
  * statement for the rest of the run.
+ *
+ * PRODUCTION'S SHAPE, NOT THE OLD MIRROR'S. The deadline moved off the answer
+ * and onto the chapter it belongs to (20260903100000_life_chapters.sql): every
+ * answer names a `chapter_id`, and `life_chapters.due_on` is the NOT NULL that
+ * refuses to guess a deadline. The hand-written test schema still had
+ * `life_answers.due_on`, which production keeps only as a frozen
+ * `legacy_due_on`. Same rule, one table over — so that is where it is tested.
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
+import { describe, test, expect } from "vitest"
 import type { Client } from "pg"
-import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
+import { getClient, createTestUser, asUser } from "../setup"
 
 async function withClient<T>(run: (client: Client) => Promise<T>): Promise<T> {
   const client = await getClient()
@@ -25,21 +32,31 @@ async function withClient<T>(run: (client: Client) => Promise<T>): Promise<T> {
   }
 }
 
-const insert = (userId: string, over: Record<string, unknown> = {}) => {
-  const row = { answer_key: "one_thing", body: "Quit weed for 100 days", due_on: "2026-12-01", ...over }
+/** A chapter for `userId`: what they committed to, and when it is due. */
+const chapter = (userId: string) =>
+  withClient(
+    async (client) =>
+      (
+        await client.query(
+          `INSERT INTO life_chapters (user_id, statement_key, started_on, due_on)
+           VALUES ($1, 'one_thing', '2026-09-01', '2026-12-01') RETURNING id`,
+          [userId]
+        )
+      ).rows[0].id as string
+  )
+
+const insert = async (userId: string, over: Record<string, unknown> = {}) => {
+  const row = { answer_key: "one_thing", body: "Quit weed for 100 days", ...over }
+  const chapterId = await chapter(userId)
   return withClient((client) =>
     client.query(
-      `INSERT INTO life_answers (user_id, answer_key, body, due_on) VALUES ($1, $2, $3, $4) RETURNING id`,
-      [userId, row.answer_key, row.body, row.due_on]
+      `INSERT INTO life_answers (user_id, chapter_id, answer_key, body) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [userId, chapterId, row.answer_key, row.body]
     )
   )
 }
 
 describe("life_answers constraints", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("rejects a blank answer", async () => {
     const userId = await createTestUser()
     await expect(insert(userId, { body: "   " })).rejects.toMatchObject({
@@ -64,20 +81,28 @@ describe("life_answers constraints", () => {
     })
   })
 
-  test("rejects a row with no deadline — the database must not guess one", async () => {
+  test("rejects a chapter with no deadline, and an answer with no chapter — the database must not guess one", async () => {
     const userId = await createTestUser()
+    await expect(
+      withClient((client) =>
+        client.query(
+          `INSERT INTO life_chapters (user_id, statement_key, started_on) VALUES ($1, 'one_thing', '2026-09-01')`,
+          [userId]
+        )
+      )
+    ).rejects.toMatchObject({ code: "23502", column: "due_on" })
     await expect(
       withClient((client) =>
         client.query(`INSERT INTO life_answers (user_id, answer_key, body) VALUES ($1, 'one_thing', 'x')`, [userId])
       )
-    ).rejects.toMatchObject({ code: "23502", column: "due_on" })
+    ).rejects.toMatchObject({ code: "23502", column: "chapter_id" })
   })
 
   test("refuses an update, even from a connection that bypasses RLS", async () => {
     const userId = await createTestUser()
     await insert(userId)
     await expect(
-      withClient((client) => client.query(`UPDATE life_answers SET body = 'rewritten'`))
+      withClient((client) => client.query(`UPDATE life_answers SET body = 'rewritten' WHERE user_id = $1`, [userId]))
     ).rejects.toMatchObject({ code: "23001", message: expect.stringMatching(/append-only/) })
   })
 

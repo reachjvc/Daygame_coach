@@ -23,7 +23,7 @@ const ROOT = path.resolve(__dirname, "../../..")
 /** Column references that are wrong today, with why. Delete an entry when it is fixed. */
 const KNOWN_WRONG: Record<string, string> = {
   "src/db/scenarioRepo.ts scenarios.evaluation":
-    "column does not exist in production — tests/integration/repos/scenarioRepo.stack.test.ts",
+    "column does not exist in production — tests/integration/repos/scenarioRepo.integration.test.ts",
   "src/db/settingsRepo.ts scenarios.evaluation": "same defect, the settings page's scenario stats",
   "src/db/valuesRepo.ts values.display_name":
     "deliberate: listValues falls back when the column is missing (it branches on that error)",
@@ -110,5 +110,44 @@ describe("the code and production's schema agree", () => {
     // An embedded relation keeps its name here; scan() then skips it as a table.
     const columns = topLevelColumns("id, nope, rel:other_table(x, y), score::text")
     expect(columns).toEqual(["id", "nope", "other_table", "score"])
+  })
+})
+
+/**
+ * Production's schema as the test backend builds it: the baseline, plus every
+ * migration newer than its stamp (scripts/db/test-stack.mjs does the same).
+ */
+function productionSql(): string {
+  const baseline = fs.readFileSync(path.join(ROOT, "tests/db/baseline.sql"), "utf8")
+  const stamp = /^-- baseline-stamp: (\d+)$/m.exec(baseline)?.[1]
+  if (!stamp) throw new Error("tests/db/baseline.sql has no baseline-stamp line")
+  const version = (file: string) => BigInt((/^(\d+)_/.exec(file)?.[1] ?? "0").padEnd(14, "0"))
+  const dir = path.join(ROOT, "supabase/migrations")
+  const newer = fs
+    .readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.endsWith(".sql") && version(e.name) > BigInt(stamp))
+    .map((e) => fs.readFileSync(path.join(dir, e.name), "utf8"))
+  return [baseline, ...newer].join("\n")
+}
+
+describe("the functions the code calls exist in production's schema", () => {
+  /**
+   * Moved here 2026-10-13 from tests/unit/db/schemaMirror.test.ts, which
+   * checked the same names against the hand-written test schema; that schema
+   * is gone, and production's is the one that answers the app. A name that
+   * is missing fails every call at runtime with "function not found".
+   */
+  it("every `.rpc(\"name\")` in src/ and app/ is a function production has", () => {
+    const sql = productionSql()
+    const called = new Set<string>()
+    for (const file of [...sourceFiles(path.join(ROOT, "src")), ...sourceFiles(path.join(ROOT, "app"))]) {
+      for (const m of fs.readFileSync(file, "utf8").matchAll(/\.rpc\(\s*["'`]([a-zA-Z0-9_]+)["'`]/g)) called.add(m[1])
+    }
+    expect(called.size, "no .rpc( call found at all — the search has stopped working").toBeGreaterThan(5)
+
+    const defined = (name: string) =>
+      new RegExp(`function\\s+(?:"?public"?\\.)?"?${name}"?\\s*\\(`, "i").test(sql)
+    expect([...called].filter((name) => !defined(name)).sort(), "the app calls these; production has no such function").toEqual([])
+    expect(defined("no_such_function_anywhere"), "the search would accept any name").toBe(false)
   })
 })

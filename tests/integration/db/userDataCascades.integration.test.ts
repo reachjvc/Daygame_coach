@@ -9,33 +9,44 @@
  * covered by nothing. This asks Postgres for every foreign key instead, so a new
  * table is checked the day it is created.
  *
+ * THE PERSON IS THE `auth.users` ROW. In production every user-owned table's
+ * key points at auth.users — not one points at `profiles`, which itself
+ * cascades from auth.users. (The old hand-written mirror hung everything off
+ * profiles; this walked from there and, on production's schema, reached
+ * nothing.) Deleting an account is deleting that row.
+ *
  * THREE RULES, each read from `pg_constraint` and `information_schema`:
  *
- *   1. Every table with a `user_id` is reached from `profiles` by ON DELETE
+ *   1. Every table with a `user_id` is reached from auth.users by ON DELETE
  *      CASCADE through a foreign key that includes `user_id`; every table
  *      without one that hangs off such a table is reached through that key.
  *      Reached means deleting the person removes the rows, and the key on
  *      `user_id` means the row cannot name a person who does not exist.
+ *      The exceptions are named in NOT_DELETED_WITH_THE_PERSON.
  *   2. Every ON DELETE SET NULL — a row that deliberately outlives what it
  *      points at — is named below with the reason. A new one fails until
  *      somebody writes down why the child should survive.
- *   3. No SET NULL clears a `user_id`. On a two-column key `(x, user_id)` a bare
- *      SET NULL nulls BOTH columns, `user_id` is NOT NULL, and the delete
- *      aborts — the defect 20260923130000_season_focus_is_any_node.sql fixed for
- *      one constraint. Five more carry it; they are listed as KNOWN WRONG and
- *      the list must shrink, never grow.
+ *   3. No SET NULL to a parent other than the person clears a `user_id`. On a
+ *      two-column key `(x, user_id)` a bare SET NULL nulls BOTH columns,
+ *      `user_id` is NOT NULL, and the delete aborts — the defect
+ *      20260923130000_season_focus_is_any_node.sql fixed for one constraint.
+ *      Five more carry it; they are listed as KNOWN WRONG and the list must
+ *      shrink, never grow. (A key to the person that is SET NULL clears
+ *      `user_id` on purpose; those are rule 1's named exceptions.)
  *
- * THE PLAN'S EXCEPTION LIST, CHECKED. `error_reports` (SET NULL to the user, so
- * a crash report outlives the account) is production's only user key that does
- * not cascade, but the table is not in this mirror, so it cannot be named here.
- * `milestones.session_id` and `workout_logs.enrollment_id` are not exceptions to
- * rule 1 — both tables cascade from the user — they are SET NULLs to a parent
- * that is not the user, and they are in rule 2's list.
+ * THE PLAN'S EXCEPTION LIST, CHECKED against production's schema:
+ * `error_reports` (SET NULL to the user, so a crash report outlives the
+ * account) is named below. `milestones.session_id` and
+ * `workout_logs.enrollment_id` are not exceptions to rule 1 — both tables
+ * cascade from the user — they are SET NULLs to a parent that is not the user,
+ * and they are in rule 2's list. Production adds one the plan did not know
+ * about: `user_values` has no key on `user_id` at all (KNOWN WRONG, below).
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "vitest"
 import type { Client } from "pg"
-import { getClient } from "../setup"
+import { randomUUID } from "node:crypto"
+import { getClient, createTestUser } from "../setup"
 
 interface ForeignKey {
   name: string
@@ -49,10 +60,30 @@ interface ForeignKey {
 }
 
 /**
+ * Tables holding a person's rows that are NOT deleted with the person, and why.
+ * Everything unreached must be here, and everything here must be unreached.
+ */
+const NOT_DELETED_WITH_THE_PERSON: Record<string, string> = {
+  error_reports:
+    "a crash report outlives the account it came from; its user_id is SET NULL (20260906100000_error_reports.sql)",
+  user_values:
+    "KNOWN WRONG — user_values.user_id has no foreign key at all in production, so a person's value picks " +
+    "survive their account and a pick can name nobody. Pinned by the test.fails below; fix with " +
+    "`REFERENCES auth.users(id) ON DELETE CASCADE` and delete this line.",
+}
+
+/**
  * Rows that outlive what they point at, and why. Every SET NULL in the schema
  * must be here, and everything here must be a SET NULL in the schema.
  */
 const OUTLIVES_ITS_PARENT: Record<string, string> = {
+  error_reports_user_id_fkey: "a crash report outlives the account; see NOT_DELETED_WITH_THE_PERSON",
+  fk_parent_goal: "deleting a parent goal un-parents its children rather than deleting them",
+  field_reports_template_id_fkey: "a field report stays written when the template it was written from is deleted",
+  reviews_template_id_fkey: "a review stays written when the template it was written from is deleted",
+  timetrack_entries_project_id_fkey: "tracked time stays tracked when its project is deleted (20260903120000_timetrack.sql)",
+  timetrack_entries_task_id_fkey: "tracked time stays tracked when its task is deleted (20260903120000_timetrack.sql)",
+  timetrack_projects_client_id_fkey: "a project outlives the client it was filed under (20260903120000_timetrack.sql)",
   milestones_session_id_fkey: "a badge stays earned when the session it was earned in is deleted",
   field_reports_session_id_fkey: "a field report stays written when its session is deleted",
   workout_logs_enrollment_id_fkey:
@@ -93,7 +124,8 @@ async function foreignKeys(db: Client): Promise<ForeignKey[]> {
     // and would then never equal information_schema's table_name.
     `SELECT c.conname AS name,
             child.relname AS child,
-            parent.relname AS parent,
+            CASE WHEN parent.relnamespace = 'public'::regnamespace THEN parent.relname
+                 ELSE parent.relnamespace::regnamespace::text || '.' || parent.relname END AS parent,
             c.confdeltype::text AS "onDelete",
             ARRAY(SELECT a.attname::text
                     FROM unnest(c.conkey) WITH ORDINALITY AS k(attnum, ord)
@@ -149,7 +181,7 @@ describe("a person's data goes with the person", () => {
 
     // Reached: deleting the person deletes it, by a cascade that carries the
     // owner (through a key that includes user_id, where the table has one).
-    const reached = new Set(["profiles"])
+    const reached = new Set(["auth.users"])
     for (let grew = true; grew; ) {
       grew = false
       for (const fk of fks) {
@@ -166,8 +198,14 @@ describe("a person's data goes with the person", () => {
 
     expect
       .soft(
-        [...owned].filter((t) => !reached.has(t)).sort(),
+        [...owned].filter((t) => !reached.has(t) && !(t in NOT_DELETED_WITH_THE_PERSON)).sort(),
         "these hold a person's rows but are not deleted with the person — give the key on user_id ON DELETE CASCADE"
+      )
+      .toEqual([])
+    expect
+      .soft(
+        Object.keys(NOT_DELETED_WITH_THE_PERSON).filter((t) => reached.has(t) || !owned.has(t)).sort(),
+        "named as not deleted with the person, but it now is (or holds no one's rows) — remove it from the list"
       )
       .toEqual([])
 
@@ -187,10 +225,41 @@ describe("a person's data goes with the person", () => {
 
     expect
       .soft(
-        setNull.filter((fk) => fk.nulls.includes("user_id")).map((fk) => fk.name).sort(),
+        setNull
+          .filter((fk) => fk.parent !== "auth.users" && fk.nulls.includes("user_id"))
+          .map((fk) => fk.name)
+          .sort(),
         "a SET NULL that clears user_id aborts the delete it should survive — use SET NULL (<pointer column>). " +
           "If one was FIXED, remove it from KNOWN_TO_NULL_THE_OWNER."
       )
       .toEqual([...KNOWN_TO_NULL_THE_OWNER].sort())
   })
+})
+
+/**
+ * KNOWN WRONG IN PRODUCTION, found 2026-10-13 when this first ran on
+ * production's schema: `user_values.user_id` references nothing. Deleting an
+ * account leaves every value that person picked behind, under an id that no
+ * longer names anyone. Proven by doing it, not only by the catalog. When the
+ * key is added this passes, `test.fails` turns red, and the pin comes off —
+ * together with its line in NOT_DELETED_WITH_THE_PERSON.
+ */
+test.fails("KNOWN WRONG: deleting a person deletes the values they picked", async () => {
+  const userId = await createTestUser("values-owner")
+  const valueId = `test-value-${randomUUID()}`
+  const db = await getClient()
+  try {
+    await db.query(`INSERT INTO core_values (id, category) VALUES ($1, 'core')`, [valueId])
+    try {
+      await db.query(`INSERT INTO user_values (user_id, value_id) VALUES ($1, $2)`, [userId, valueId])
+      await db.query(`DELETE FROM auth.users WHERE id = $1`, [userId])
+      const { rows } = await db.query(`SELECT 1 FROM user_values WHERE user_id = $1`, [userId])
+      expect(rows, "the picks of a deleted account").toHaveLength(0)
+    } finally {
+      await db.query(`DELETE FROM user_values WHERE value_id = $1`, [valueId])
+      await db.query(`DELETE FROM core_values WHERE id = $1`, [valueId])
+    }
+  } finally {
+    await db.end()
+  }
 })

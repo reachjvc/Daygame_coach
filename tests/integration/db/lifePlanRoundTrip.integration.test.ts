@@ -23,9 +23,10 @@
  * and the one that drifts is the one proving less.
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
+import { describe, test, expect } from "vitest"
 import type { Client } from "pg"
-import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
+import { randomUUID } from "node:crypto"
+import { getClient, createTestUser, asUser } from "../setup"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { dayRowsToRecord, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import type { DayRows } from "@/src/db/lifePlanDayTypes"
@@ -95,18 +96,21 @@ function saveAs(userId: string, rows: unknown, expectedRevision: number) {
       .revision as number)
 }
 
-/** Deterministic ids, exactly as the repo's own `idFor` is. */
+/**
+ * Stable ids within one plan, exactly as the repo's own `idFor` is: a local id
+ * keeps the UUID it was first given. Random rather than counted, because ids are
+ * primary keys across the whole backend and nothing here is wiped — a counter
+ * would hand the next test's plan the same node ids as this one's.
+ */
 function context(planId: string, userId: string) {
   const minted = new Map<string, string>()
-  let n = 0
   return {
     planId,
     userId,
     idFor(localId: string): string {
       const had = minted.get(localId)
       if (had) return had
-      n += 1
-      return minted.set(localId, `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`).get(localId)!
+      return minted.set(localId, randomUUID()).get(localId)!
     },
   }
 }
@@ -151,10 +155,6 @@ async function readBackOn(db: Client, planId: string, userId: string): Promise<P
 }
 
 describe("a plan that goes through a real Postgres comes back the same plan", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   /**
    * THE TEST ABOVE THE TEST.
    *
@@ -281,10 +281,6 @@ function everyDay(from: string, n: number): string[] {
 }
 
 describe("a year of days goes in and comes back the same year", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("365 days of ratings, ticks, notes and journal survive the schema", async () => {
     const { userId, planId } = await personWithPlan()
 

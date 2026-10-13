@@ -7,11 +7,17 @@
  *   node scripts/db/test-stack.mjs down   stop it and throw its data away
  *
  * WHY NOT supabase/migrations/ DIRECTLY: they cannot build the schema from
- * nothing (the second file alters a table no migration creates). The stack
- * starts from tests/db/baseline.sql — a schema-only dump of production, made by
- * scripts/db/baseline.sh — plus tests/db/shim.sql, plus every repo migration
- * newer than the baseline's stamp. So a migration nobody has applied to
- * production yet is already in the tests.
+ * nothing (the second file alters a table no migration creates). The stack is
+ * built from, in this order:
+ *   1. tests/db/before-baseline.sql — clears the local stack's default
+ *      privileges, so the baseline restores production's grants and not wider
+ *      ones (the file says why);
+ *   2. tests/db/baseline.sql — a schema-only dump of production, made by
+ *      scripts/db/baseline.sh;
+ *   3. tests/db/shim.sql — the auth.users trigger a public-schema dump cannot
+ *      carry;
+ *   4. every repo migration newer than the baseline's stamp. So a migration
+ *      nobody has applied to production yet is already in the tests.
  *
  * Every test makes its own user here, so nothing is ever truncated and nothing
  * touches production. Plan: docs/plans/tests-worth-their-keep.md, Phase 7.
@@ -24,11 +30,25 @@ import { fileURLToPath } from "node:url"
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const WORKDIR = path.join(ROOT, "tests/db")
+const BEFORE_BASELINE = path.join(WORKDIR, "before-baseline.sql")
 const BASELINE = path.join(WORKDIR, "baseline.sql")
 const SHIM = path.join(WORKDIR, "shim.sql")
 const GENERATED = path.join(WORKDIR, "supabase/migrations")
 const STAMP_FILE = path.join(WORKDIR, "supabase/.temp/assembled.sha256")
 const REPO_MIGRATIONS = path.join(ROOT, "supabase/migrations")
+
+/**
+ * THE ONE SUPABASE CLI VERSION THIS STACK IS BUILT WITH, here and in CI.
+ *
+ * The CLI decides which Postgres, auth and API images the stack runs, so two
+ * versions are two different backends. On 2026-10-13 a second binary landed
+ * earlier on PATH mid-session; the next reset swapped the database image under
+ * a stack the older CLI had started, and the result was a mix of both. `up`
+ * now refuses any other version rather than build something nobody proved.
+ * .github/workflows/ci.yml installs the same version; tests/unit/ciWorkflows.test.ts
+ * fails if the two disagree.
+ */
+export const SUPABASE_CLI_VERSION = "2.120.0"
 
 // Services this suite never uses. Starting them costs memory and minutes.
 const EXCLUDED = [
@@ -64,9 +84,12 @@ function assemble() {
 
   fs.rmSync(GENERATED, { recursive: true, force: true })
   fs.mkdirSync(GENERATED, { recursive: true })
+  // The order is the point: see the header. Before-baseline must run first, or
+  // the baseline's objects are created under the local stack's wide defaults.
   const files = [
-    ["00000000000000_baseline.sql", BASELINE],
-    ["00000000000001_auth_shim.sql", SHIM],
+    ["00000000000000_before_baseline.sql", BEFORE_BASELINE],
+    ["00000000000001_baseline.sql", BASELINE],
+    ["00000000000002_auth_shim.sql", SHIM],
     ...newer.map((f) => [f, path.join(REPO_MIGRATIONS, f)]),
   ]
   const hash = createHash("sha256")
@@ -100,7 +123,35 @@ function readEnv() {
   return env
 }
 
+/** Fails, naming both versions, unless the `supabase` on PATH is SUPABASE_CLI_VERSION. */
+function requirePinnedCli() {
+  let found
+  try {
+    found = execFileSync("supabase", ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+      .trim()
+      .split("\n")[0]
+      .replace(/^v/, "")
+  } catch {
+    found = null
+  }
+  if (found === SUPABASE_CLI_VERSION) return
+  let where
+  try {
+    where = execFileSync("sh", ["-c", "command -v supabase"], { encoding: "utf8" }).trim()
+  } catch {
+    where = "not on PATH"
+  }
+  throw new Error(
+    `[test-stack] needs Supabase CLI ${SUPABASE_CLI_VERSION}, but \`supabase\` on PATH is ` +
+      `${found ?? "missing"} (${where}). Put ${SUPABASE_CLI_VERSION} first on PATH — releases are at ` +
+      `https://github.com/supabase/cli/releases/tag/v${SUPABASE_CLI_VERSION} — or, if the version is ` +
+      `meant to move, change SUPABASE_CLI_VERSION in scripts/db/test-stack.mjs and the setup-cli step in ` +
+      `.github/workflows/ci.yml together, then \`down\` and \`up\` so the stack is rebuilt by it.`
+  )
+}
+
 function up() {
+  requirePinnedCli()
   const { hash, newer } = assemble()
   const previous = fs.existsSync(STAMP_FILE) ? fs.readFileSync(STAMP_FILE, "utf8") : null
 

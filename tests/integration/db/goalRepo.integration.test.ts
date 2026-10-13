@@ -1,9 +1,9 @@
 /**
  * WHAT THE DATABASE REFUSES ON `user_goals`, WHOEVER IS WRITING.
  *
- * Raw SQL against the testcontainers PostgreSQL; no `goalRepo` function runs
- * here (the repo needs a Supabase client this container cannot answer). What
- * only this layer can prove is what the schema itself refuses.
+ * Raw SQL against production's schema on the test backend; no `goalRepo`
+ * function runs here. What only this layer can prove is what the schema itself
+ * refuses.
  *
  * THE TWO PARTIAL UNIQUE INDEXES are what keeps a person from holding the same
  * goal twice. Re-pushing a plan, a double tap on "add", or two devices adding
@@ -23,9 +23,9 @@
  * the real behaviour.
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
+import { describe, test, expect } from "vitest"
 import type { Client } from "pg"
-import { getClient, truncateAllTables, createTestUser, createTestGoal } from "../setup"
+import { getClient, createTestUser, createTestGoal } from "../setup"
 
 async function withClient<T>(run: (client: Client) => Promise<T>): Promise<T> {
   const client = await getClient()
@@ -37,30 +37,50 @@ async function withClient<T>(run: (client: Client) => Promise<T>): Promise<T> {
 }
 
 describe("user_goals refusals", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("a goal cannot hang off a parent that does not exist", async () => {
     const userId = await createTestUser()
     const parentId = await createTestGoal(userId, { title: "Parent Goal" })
 
     await withClient(async (client) => {
+      // goal_type named, as the repo always names it — see the KNOWN WRONG
+      // test below for what the column's own default does.
       const child = await client.query(
-        `INSERT INTO user_goals (user_id, title, category, parent_goal_id)
-         VALUES ($1, 'Child Goal', 'custom', $2) RETURNING id`,
+        `INSERT INTO user_goals (user_id, title, category, goal_type, parent_goal_id)
+         VALUES ($1, 'Child Goal', 'custom', 'recurring', $2) RETURNING id`,
         [userId, parentId]
       )
       expect(child.rows).toHaveLength(1)
 
       await expect(
         client.query(
-          `INSERT INTO user_goals (user_id, title, category, parent_goal_id)
-           VALUES ($1, 'Orphan Child', 'custom', '00000000-0000-0000-0000-000000000000')`,
+          `INSERT INTO user_goals (user_id, title, category, goal_type, parent_goal_id)
+           VALUES ($1, 'Orphan Child', 'custom', 'recurring', '00000000-0000-0000-0000-000000000000')`,
           [userId]
         )
-      ).rejects.toMatchObject({ code: "23503", constraint: "user_goals_parent_goal_id_fkey" })
+        // Production carries TWO keys on parent_goal_id — `fk_parent_goal`
+        // (ON DELETE SET NULL) and `user_goals_parent_goal_id_fkey` (NO ACTION) —
+        // and either may be the one that refuses first. Both name this rule.
+      ).rejects.toMatchObject({
+        code: "23503",
+        constraint: expect.stringMatching(/^(fk_parent_goal|user_goals_parent_goal_id_fkey)$/),
+      })
     })
+  })
+
+  /**
+   * KNOWN WRONG IN PRODUCTION, found 2026-10-13 when these first ran on
+   * production's schema: `user_goals.goal_type` DEFAULTs to 'process', which
+   * production's own `chk_goal_type` (and `user_goals_goal_type_check`) refuse.
+   * So any write that leaves the type out fails. The app never does today —
+   * goalRepo always sends one, falling back to "recurring" — so this is a trap,
+   * not live breakage. Fix: `ALTER COLUMN goal_type SET DEFAULT 'recurring'`;
+   * then this passes, `test.fails` turns red, and the pin comes off.
+   */
+  test.fails("KNOWN WRONG: a goal written without a type gets one the table accepts", async () => {
+    const userId = await createTestUser()
+    await withClient((client) =>
+      client.query(`INSERT INTO user_goals (user_id, title, category) VALUES ($1, 'Untyped', 'custom')`, [userId])
+    )
   })
 
   test("one live goal per template per person — an archived copy, another person and no template do not count", async () => {

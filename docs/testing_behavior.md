@@ -1,7 +1,7 @@
 # Testing Behavior
 
 **Status:** Active
-**Updated:** 02-02-2026
+**Updated:** 2026-10-13
 
 ## Core Principles
 
@@ -14,8 +14,8 @@
 | `Math.random()` | Seed-based generators or fixed test data |
 | `Date.now()` | Inject time dependency or freeze time |
 | `setTimeout` delays | Explicit waits for conditions |
-| Network race conditions | Testcontainers with controlled state |
-| Shared mutable state | Isolated test setup/teardown |
+| Network race conditions | The local test backend, with controlled state |
+| Shared mutable state | A fresh user per test (`newUser()`), never a shared account |
 
 ### 2. False Pass Anti-Pattern (CRITICAL)
 
@@ -46,11 +46,24 @@ const sessionId = await createTestSessionViaAPI(page, 'Test Location')
 2. Use helpers: `createTestSessionViaAPI()`, `createTestApproachViaAPI()`
 3. Clean up in `finally` block: `ensureNoActiveSessionViaAPI()`
 
-### 3. Real Dependencies via Testcontainers
+### 3. A Real Backend, Built From Production's Schema
 
-**No mocking of external services.** Use testcontainers for:
-- Database (PostgreSQL/Supabase)
-- Redis/cache layers
+**No mocking of the database.** Database tests run against a throwaway local
+Supabase (`scripts/db/test-stack.mjs`) built from `tests/db/baseline.sql`, a
+schema-only dump of production, plus every repo migration production does not
+have yet. Never write a schema by hand for tests: the hand-written copy this
+replaced drifted far enough to hide a feature that never saved.
+
+- **Isolation comes from users, not truncation.** Every test makes its own user
+  with `newUser()` (`tests/db/harness.ts`); nothing is wiped between tests, so
+  files run in parallel.
+- **The app's own data code runs unchanged.** Mock `@/src/db/supabase` with
+  `stackSupabaseModule` and call the repo function; `actAs(user)` decides whose
+  session it runs with, through real PostgREST and real row security.
+- **Prove isolation, not just green:** `TEST_SHARED_USER=1` puts every test on
+  one account; the cross-user tests must go red.
+- Refresh the baseline with `scripts/db/baseline.sh` once production has a new
+  migration; `--check` reports drift made outside a migration.
 
 ### 4. Sensitive Information
 
@@ -83,19 +96,20 @@ expect(users).toHaveLength(1)  // Tests real code path
 
 ### 6. Schema Tests vs Function Tests (Know the Difference)
 
-**Schema tests** (raw SQL against testcontainers):
+**Schema tests** (raw SQL as `asOwner` / `asUser`):
 - Validate constraints, FKs, cascades
 - Don't test production code
 - Good for catching database drift
 
 **Function tests** (call actual repo/service functions):
-- Validate business logic, error handling
-- Require solving dependency injection for Supabase client
-- Better coverage but harder to set up
+- Validate business logic, error handling, row security as the app meets it
+- Live in `tests/integration/repos/`; see their headers for the module mock
 
 **If you can't call production functions**, document what the test actually validates. Don't claim it tests the repo when it only tests the schema.
 
-See `tests/integration/db/*.integration.test.ts` headers for examples of proper documentation.
+Name every refusal: assert the constraint name or SQLSTATE, never a bare
+`.rejects.toThrow()` (`tests/unit/infra/integrationNamesItsRefusals.test.ts`
+fails on one).
 
 ## Test Structure: Arrange-Act-Assert
 Every test follows AAA pattern with explicit comments:
@@ -144,11 +158,3 @@ When a test fails during development:
 2. **Fix the production code** throughout the system
 3. **Add a regression test** that would have caught this error
 4. **Run all tests** to ensure no regressions
-
-## Test Script Requirements
-
-The test script (`scripts/run-tests.sh`) must:
-1. Run ALL tests (unit, integration, e2e)
-2. Fail fast on first error
-3. Exit with non-zero code if any test fails
-4. Be updated whenever new test types are added

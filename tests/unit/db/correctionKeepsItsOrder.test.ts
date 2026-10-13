@@ -22,9 +22,10 @@
  * "the repo already sends both fields", and it did not: `CorrectedSet` declares
  * `completedAt` and `prescribedIndex`, and the mapping to database rows dropped
  * them one line later. Fixing only the SQL would have changed nothing on any
- * screen while looking like a fix. `tests/unit/db/schemaMirror.test.ts` guards
- * the SQL half by comparing the migration to the integration schema word for
- * word; this guards the half that no SQL can see.
+ * screen while looking like a fix. The SQL half runs for real in
+ * `tests/integration/db/programRepo.integration.test.ts` ("a correction that
+ * SUCCEEDS keeps…"), on a test backend that applies the migration on top of
+ * production's schema; this guards the half that no SQL can see.
  *
  * WHY NOT `setsInWorkoutOrder.test.ts`. That one feeds rows to the comparator
  * and asserts the order — it hands the comparator timestamps that are already

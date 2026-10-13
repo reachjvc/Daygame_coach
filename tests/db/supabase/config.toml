@@ -38,7 +38,7 @@ port = 55323
 
 # The local mail catcher. Signup confirmation and password reset land here,
 # readable over HTTP, so those flows can be tested end to end.
-[inbucket]
+[local_smtp]
 enabled = true
 port = 55324
 

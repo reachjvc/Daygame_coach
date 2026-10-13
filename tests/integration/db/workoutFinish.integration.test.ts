@@ -24,8 +24,8 @@
  * rules, so a denial test run as the owner proves nothing.
  */
 
-import { describe, it, expect, beforeEach, afterAll } from "vitest"
-import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
+import { describe, it, expect, beforeEach } from "vitest"
+import { getClient, createTestUser, asUser } from "../setup"
 
 /** One statement, one connection — the pattern the sibling files here use. */
 async function sql<T extends Record<string, unknown> = Record<string, unknown>>(
@@ -70,7 +70,6 @@ describe("finish_program_workout", () => {
   let workoutId = ""
 
   beforeEach(async () => {
-    await truncateAllTables()
     me = await createTestUser("finisher@example.com")
     someoneElse = await createTestUser("bystander@example.com")
 
@@ -94,9 +93,6 @@ describe("finish_program_workout", () => {
     workoutId = workout!.id
   })
 
-  afterAll(async () => {
-    await truncateAllTables()
-  })
 
   it("finishing a workout twice is refused the second time, and the program moves once", async () => {
     const [first] = await sql<{ id: string }>(FINISH, [

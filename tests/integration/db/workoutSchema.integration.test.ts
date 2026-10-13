@@ -1,11 +1,10 @@
 /**
  * The schema rules the one-record-per-workout change rests on.
  *
- * Like the other files here, these run raw SQL against the testcontainers
- * PostgreSQL rather than calling a repo — the container is plain Postgres with
- * no Supabase auth, so a repo function has no client to talk to. What can only
- * be proven here is the part no TypeScript test can reach: that the DATABASE
- * refuses the states the app must never produce, whoever is writing.
+ * These run raw SQL against production's schema on the test backend rather
+ * than calling a repo. What can only be proven here is the part no TypeScript
+ * test can reach: that the DATABASE refuses the states the app must never
+ * produce, whoever is writing.
  *
  * Every test names the bug it prevents. Three of them replace a whole class:
  * a workout that is both running and finished, two workouts running at once,
@@ -13,7 +12,7 @@
  */
 
 import { describe, test, expect, beforeEach } from "vitest"
-import { getClient, truncateAllTables, createTestUser, asUser } from "../setup"
+import { getClient, createTestUser, asUser } from "../setup"
 
 const CURSOR = JSON.stringify({ cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 })
 
@@ -45,7 +44,6 @@ let otherUserId: string
 let enrollmentId: string
 
 beforeEach(async () => {
-  await truncateAllTables()
   userId = await createTestUser("lifter@example.test")
   otherUserId = await createTestUser("someone-else@example.test")
   enrollmentId = await enroll(userId)

@@ -13,14 +13,10 @@
  * every table in `userDataCascades.integration.test.ts` (D5).
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { describe, test, expect } from "vitest"
+import { getClient, createTestUser } from "../setup"
 
 describe("inner_game_progress", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("a person has at most one progress row", async () => {
     const userId = await createTestUser()
     const client = await getClient()

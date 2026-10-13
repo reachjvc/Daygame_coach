@@ -8,12 +8,10 @@
  * "if a rule must hold for everyone, it is a CHECK, a NOT NULL, a foreign key
  * or a trigger."
  *
- * **What this is NOT.** The plan's Check 1 asks for "your real plan in, the
- * identical plan back out" through the repo. That cannot run here and saying so
- * is better than a test that looks like it: `lifePlanRepo` talks through
- * supabase-js and this container is reached with `pg`, so a repo round trip in
- * this file would be testing a client that is not the one the app uses. The
- * mapper's round trip is a unit test (`lifePlanMapper.test.ts`); the two
+ * **What this is NOT.** This file speaks raw SQL with `pg`; it does not run the
+ * repo. The day half's repo round trip — `saveDay` and `readDayRows` through
+ * real PostgREST — is tests/integration/repos/lifePlanDayRepo.integration.test.ts.
+ * The mapper's round trip is a unit test (`lifePlanMapper.test.ts`); the two
  * browsers writing one account are an e2e (`life-mastery-day-persists.spec.ts`).
  * What only THIS can prove is what the schema itself refuses.
  *
@@ -30,9 +28,9 @@
  * test drives `saveDay` itself.
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
+import { describe, test, expect } from "vitest"
 import type { Client } from "pg"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { getClient, createTestUser } from "../setup"
 
 const DAY = "2026-09-23"
 
@@ -76,10 +74,6 @@ async function seed(db: Client, userId: string) {
 }
 
 describe("what you wrote outlives what asked for it", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("deleting the question KEEPS the answer", async () => {
     const userId = await createTestUser()
     await withClient(async (db) => {
@@ -135,10 +129,6 @@ describe("what you wrote outlives what asked for it", () => {
 })
 
 describe("the shapes the day half refuses", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("one answer per question per day", async () => {
     const userId = await createTestUser()
     await withClient(async (db) => {

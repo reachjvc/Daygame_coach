@@ -91,7 +91,7 @@ async function uniqueIndexes(table: string): Promise<string[][]> {
          JOIN pg_class t ON t.oid = x.indrelid
          JOIN unnest(x.indkey) WITH ORDINALITY k(attnum, ord) ON TRUE
          JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum
-        WHERE t.relname = $1 AND x.indisunique
+        WHERE t.relname = $1 AND t.relnamespace = 'public'::regnamespace AND x.indisunique
         GROUP BY i.relname`,
       [table],
     )

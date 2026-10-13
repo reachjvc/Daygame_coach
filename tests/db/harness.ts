@@ -73,23 +73,50 @@ let sharedUser: Promise<TestUser> | null = null
 /** A confirmed account of its own, signed in. Its profile row comes from the real trigger. */
 export function newUser(label = "user"): Promise<TestUser> {
   if (process.env.TEST_SHARED_USER === "1") {
-    sharedUser ??= createUser("shared")
+    sharedUser ??= theSharedUser()
     return sharedUser
   }
   return createUser(label)
 }
 
 async function createUser(label: string): Promise<TestUser> {
-  const env = stackEnv()
   const email = `${label}-${randomUUID()}@test.local`
   const password = randomUUID()
   const { data, error } = await admin().auth.admin.createUser({ email, password, email_confirm: true })
   if (error || !data.user) throw new Error(`newUser: could not create ${email}: ${error?.message}`)
+  return signIn(email, password)
+}
 
+/**
+ * ONE ACCOUNT FOR THE WHOLE RUN — every file, every worker. Vitest gives each
+ * test file a fresh copy of this module, so a user kept in a module variable is
+ * shared only within one file, and a test that leans on another FILE's rows
+ * being somewhere else would stay green. A fixed address makes it the same
+ * account everywhere. Whichever worker arrives first creates it. The rest are
+ * refused — as `email_exists`, or, when two creates race inside the auth
+ * service, as a bare "Database error creating new user" — and then sign in to
+ * the one that exists. A refusal followed by a failed sign-in throws both.
+ */
+async function theSharedUser(): Promise<TestUser> {
+  const email = "shared-user@test.local"
+  const password = "shared-user-password"
+  const { error } = await admin().auth.admin.createUser({ email, password, email_confirm: true })
+  if (!error) return signIn(email, password)
+  try {
+    return await signIn(email, password)
+  } catch (signInError) {
+    throw new Error(
+      `newUser: could not create the shared user (${error.message}) and could not sign in to it ` +
+        `either (${(signInError as Error).message})`
+    )
+  }
+}
+
+async function signIn(email: string, password: string): Promise<TestUser> {
+  const env = stackEnv()
   const client = createClient(env.API_URL, env.ANON_KEY, NO_SESSION_STORAGE)
-  const { error: signInError } = await client.auth.signInWithPassword({ email, password })
-  if (signInError) throw new Error(`newUser: could not sign in as ${email}: ${signInError.message}`)
-
+  const { data, error } = await client.auth.signInWithPassword({ email, password })
+  if (error || !data.user) throw new Error(`newUser: could not sign in as ${email}: ${error?.message}`)
   return { id: data.user.id, email, client }
 }
 

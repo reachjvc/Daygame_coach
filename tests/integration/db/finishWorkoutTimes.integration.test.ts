@@ -16,8 +16,8 @@
  * once.)
  */
 
-import { describe, test, expect, beforeEach } from "vitest"
-import { getClient, truncateAllTables, createTestUser } from "../setup"
+import { describe, test, expect } from "vitest"
+import { getClient, createTestUser } from "../setup"
 
 /** A workout open since `startedAt`, with no program attached. */
 async function openWorkout(
@@ -57,10 +57,6 @@ function finish(
 }
 
 describe("finishing a workout that happened earlier", () => {
-  beforeEach(async () => {
-    await truncateAllTables()
-  })
-
   test("a started_at moves started_at and logged_at together", async () => {
     const userId = await createTestUser()
     const client = await getClient()
@@ -150,7 +146,9 @@ describe("finishing a workout that happened earlier", () => {
         // Not the app's validation — this connection has no app in it.
         await expect(finish(client, id, { distanceKm: bad }), String(bad)).rejects.toMatchObject({
           code: "23514",
-          constraint: "workout_logs_distance_km_check",
+          // Production's name for the 0–1000 km bound; the old mirror's was the
+          // generated `workout_logs_distance_km_check`. Same rule, same bounds.
+          constraint: "workout_logs_distance_range",
         })
       }
 
