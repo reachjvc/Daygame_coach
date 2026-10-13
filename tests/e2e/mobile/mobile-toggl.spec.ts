@@ -86,21 +86,31 @@ test.describe('time tracker on a phone', () => {
    * pushed the alerts bell 28px off a 390px viewport whenever the sync badge was
    * also keeping its words, which it does whenever there is something to say.
    */
-  test('every screen still fits while a timer is running', async ({ page }) => {
+  test('every screen still fits while a timer is running', async ({ page, context }) => {
     await openFreshTracker(page)
 
     await page.getByPlaceholder('What are you working on?').fill('a timer left running')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
     await expect(page.locator('main').getByRole('button', { name: 'Stop timer' })).toBeVisible()
 
-    for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
-      if (screen !== 'Timer') await goTo(page, screen)
-      // the pill is what makes this different from the test above
-      if (screen !== 'Timer') {
-        await expect(page.locator('header').getByRole('button', { name: 'Stop the running timer' })).toBeVisible()
+    // OFFLINE, so the badge keeps its words ("Offline · 1 waiting") for every
+    // measurement. Signed in, it is a bare dot once saved and words only while
+    // a save is in flight — so measuring "whenever" measured whichever state
+    // the save happened to be in, and the widest one is the one that matters.
+    await context.setOffline(true)
+    try {
+      await expect(page.locator('header').getByRole('button', { name: /^Offline/ })).toBeVisible()
+      for (const screen of ['Timer', 'Calendar', 'Reports', 'Projects', 'Manage', 'Settings']) {
+        if (screen !== 'Timer') await goTo(page, screen)
+        // the pill is what makes this different from the test above
+        if (screen !== 'Timer') {
+          await expect(page.locator('header').getByRole('button', { name: 'Stop the running timer' })).toBeVisible()
+        }
+        const { scrollWidth, innerWidth } = await pageOverflow(page)
+        expect(scrollWidth, `${screen} overflows horizontally with a timer running`).toBeLessThanOrEqual(innerWidth + 1)
       }
-      const { scrollWidth, innerWidth } = await pageOverflow(page)
-      expect(scrollWidth, `${screen} overflows horizontally with a timer running`).toBeLessThanOrEqual(innerWidth + 1)
+    } finally {
+      await context.setOffline(false)
     }
   })
 
@@ -308,13 +318,10 @@ test.describe('time tracker on a phone', () => {
       for (const place of places) {
         const inner = place.includes(' › ') ? place.split(' › ')[1] : null
         if (inner && !(await openInnerTab(inner))) continue
-        if (inner) {
-          // the inner tab is a segmented control: it marks the one that is open
-          await expect(
-            page.locator('main button[data-active="true"]').filter({ hasText: new RegExp(`^${inner}$`) }),
-          ).toHaveCount(1)
-          await painted(page)
-        }
+        // The inner tabs mark nothing as selected (no aria-selected, no
+        // aria-current), so "the tab has opened" is the frame after the click
+        // having been drawn.
+        if (inner) await painted(page)
 
         const found = await tooSmall(TAPPABLE)
         expect(found, `${place} has controls under 44px: ${JSON.stringify(found)}`).toEqual([])

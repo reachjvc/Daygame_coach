@@ -91,12 +91,19 @@ export async function openFreshTracker(page: Page): Promise<void> {
 export const entryInList = (page: Page, description: string) =>
   page.locator(`ul.divide-y li:has(input[value="${description}"]), ul.divide-y li:has-text("${description}")`)
 
-/** Track one short entry through the timer bar */
+/**
+ * Track one short entry through the timer bar.
+ *
+ * It runs until the clock in the tab title has ticked past 0:00:00, so the
+ * entry has a duration: a zero-second entry is left out of the reports, and a
+ * test about totals would be reading nothing.
+ */
 export async function trackEntry(page: Page, description: string): Promise<void> {
   await page.getByPlaceholder('What are you working on?').fill(description)
   await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
   const stop = page.locator('main').getByRole('button', { name: 'Stop timer' })
   await stop.waitFor({ timeout: 15_000 })
+  await expect.poll(() => page.title(), { timeout: 10_000 }).toMatch(/^(?!0:00:00)\d+:\d\d:\d\d · /)
   await stop.click()
   await expect(entryInList(page, description).first()).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()

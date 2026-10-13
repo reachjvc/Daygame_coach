@@ -52,6 +52,8 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 test.describe('Security: Authentication Enforcement', () => {
   test('all protected endpoints require authentication', async ({ request }) => {
+    // Twenty-three routes, each compiled on first request by `next dev`
+    test.setTimeout(180_000)
     const failures: string[] = []
     for (const endpoint of PROTECTED_ENDPOINTS) {
       const response =
