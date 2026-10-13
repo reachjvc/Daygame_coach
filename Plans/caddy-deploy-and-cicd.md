@@ -21,9 +21,10 @@ stays exactly as it is.
 
 **Who owns what.** The browser test workflow, `.github/workflows/e2e.yml`, belongs to
 `docs/plans/tests-worth-their-keep.md`, which another session rewrote today; its Phase 9 rebuilds that
-workflow. This plan edits `e2e.yml` in exactly two places, both small and both agreed with that plan's
-session first (steps 1.1 and 2.3). Everything else this plan adds to CI goes into `ci.yml` or into new
-files.
+workflow. This plan edits `e2e.yml` in exactly one place, the runner pin in step 2.3, agreed with that
+plan's session first. The fix for the leaking test reports (C9) belongs to the session
+`daygame-coach-bf`, which the owner asked to do it on 2026-10-13; this plan does not touch those files.
+Everything else this plan adds to CI goes into `ci.yml` or into new files.
 
 ---
 
@@ -80,7 +81,7 @@ Every row was checked on 2026-10-13, not copied from earlier notes.
 |---|---|---|
 | Local deployment (`infra/`) | Running since 2026-10-01. The app is a systemd user service on 127.0.0.1:3100; Caddy runs in Docker on ports 80 and 443 | `infra/run-local.sh --status`; `curl`: `/` 200, `/dashboard` 307, `http://` 308 |
 | What it serves | A build from 2026-10-01 12:52. No committed app code changed since. The build was made from the shared working folder, so it may hold other sessions' unfinished edits from that hour; ten app files are being edited by other sessions right now. That is why Phase 3 builds from commits only. | `git log --since` on app paths: empty; `git status` |
-| Owner's dev server | `npm run dev` on :3000, up 15 days, started outside any AI session. It is the owner's daily driver and is never restarted by this plan. | `ps` |
+| Owner's dev server | `npm run dev` on :3000, up 15 days. Whatever started it has since exited, so it belongs to no running session. It is the owner's daily driver, and this plan never restarts it. | `ps` (its parent is `/init`) |
 | Caddy's local certificate | Valid to 2036. **Not trusted by Windows yet**, so the browser warns | `certutil -user -store Root` → not found |
 | Repository | **Public** on GitHub. Default branch `main`; daily work happens on `training-rebuild` | GitHub API |
 | `main` vs `training-rebuild` | `main` is 432 commits behind and can fast-forward cleanly. Its last 10 CI runs (2026-09-09 → 09-17) are red. Vercel deploys `main`. | `git rev-list`, `git merge-base --is-ancestor`, GitHub API |
@@ -114,7 +115,7 @@ Every row was checked on 2026-10-13, not copied from earlier notes.
 | C6 | CI runs on Node 20, which reached end of life on 2026-04-30. Runs print a deprecation warning for the GitHub actions they use. | run annotations | Phases 1–2 for `ci.yml`. `e2e.yml` belongs to the other plan. |
 | C7 | `ubuntu-latest` moves to Ubuntu 26.04 **from 2026-10-19**, six days after this was written. Browser dependencies and Docker on a new OS release are what break first. | run annotation | Phase 2 (pin `ubuntu-24.04`) |
 | C8 | `ci.yml` has no `concurrency` (two quick pushes run two full pipelines, and the older can finish last) and no explicit `permissions` (the token's rights depend on a repository setting). | workflow files | Phase 2 |
-| C9 | **On this public repository, CI publishes Playwright reports as artifacts that any signed-in GitHub user can download.** Playwright records a trace when a test is retried. Traces contain network requests, which can include the test accounts' passwords and session cookies. | `e2e.yml` upload steps; `trace: 'on-first-retry'` in `playwright.config.ts` | Phase 1.1 stops new exposure; it is the first step of the whole plan. Checking and deleting the three live reports is B9 of `tests-worth-their-keep.md`, which took it on the same day. |
+| C9 | **On this public repository, CI publishes Playwright reports as artifacts that any signed-in GitHub user can download, and every report holds a test password.** The report names each step after the value typed (`Fill "<value>"`), so the login step's password is in it even without a trace. Traces add network requests and session cookies on top. | `e2e.yml` uploads the report with `if: always()`; the step titles were verified locally by session `daygame-coach-bf` | Session `daygame-coach-bf` (the fix, under way 2026-10-13); B9 of `tests-worth-their-keep.md` (the live reports); R12 (changing the passwords) |
 
 **One finding corrects the earlier plan.** It suspected the heavy suite was red because Playwright gives
 the build only 120 seconds. That is refuted. The fast job uses the same 120-second budget and builds and
@@ -186,13 +187,14 @@ Nothing in GitHub can log into a server. Servers pull; GitHub only builds and pu
 reports) needs action this week. The rest is hygiene to finish before Phase 6 puts a server on the
 internet, which is the moment exposure begins.
 
-- **Published test reports (C9) — act first.** A Playwright trace records network traffic, so a trace
-  from a retried login test can contain a test account's password. On this public repository every
-  uploaded report is downloadable by any signed-in GitHub user. Phase 1.1 turns traces off in CI. The
-  three live reports belong to B9 of `tests-worth-their-keep.md`: two are 215 KB, the size of a report
-  without a trace; one, from run 38368655433, is 812 KB, which fits a trace but does not prove one.
-  After the GitHub CLI login, that one is opened and, if it holds a trace, deleted, and the test
-  account's password is changed (R12).
+- **Published test reports (C9) — act first.** On this public repository every uploaded Playwright
+  report is downloadable by any signed-in GitHub user. Even without a trace, the report names each step
+  after the value it typed (`Fill "<value>"`), so every report uploaded so far holds the password typed
+  at login. The session `daygame-coach-bf` verified this locally on 2026-10-13. The leak is being fixed
+  by that session, not by this plan: a helper that sets passwords without naming them, trace settings
+  switched off under CI, the trace upload removed, and a test that fails if either comes back. The
+  live reports and the password change are B9 of `tests-worth-their-keep.md` and R12 below. **The test
+  accounts' passwords should be treated as public and changed.**
 - **Dependencies.** The critical advisory (remote code execution in `next/og`) is not reachable here,
   because nothing generates images. But the same patch release, `next` 16.3.8, also fixes two
   cache-poisoning advisories, one of them specific to self-hosted Next.js, which is what this plan
@@ -257,7 +259,7 @@ what happened, not a guess.
 | B-SUPABASE-REDIRECT | Add `https://localhost/**` now, and `https://<domain>/**` in Phase 6, to Supabase's redirect allow-list | Reading the setting was refused today by the safety classifier as a production read, and was not routed around. The last reading (2026-10-01) listed only the Vercel URL and `http://localhost:3000`. | Sign-up confirmation and password reset on any new address. Ordinary login works. | Supabase dashboard → Authentication → URL Configuration → add the two entries (R7) |
 | B-CA | Trust Caddy's local certificate in Windows | Checked: not trusted. The command and path were verified on 2026-10-01 (`certutil -dump` through the network path). It was not installed, because it changes what your browser trusts, which is the machine owner's call. | Only a certificate warning on https://localhost | In Windows: `certutil -user -addstore Root "\\wsl.localhost\Ubuntu\home\jonaswsl\projects\daygame-coach\infra\caddy\local-root-ca.crt"`, or skip it (Q19) |
 | B-DEVSERVER | Move the owner's dev server to Node 24 and the patched `next` | Not attempted on purpose. The dev server on :3000 is the owner's own process; a restart by an AI session would either be refused or leave the server dying with that session. | Nothing in this plan. Until then :3000 runs Node 20 and `next` 16.3.5 while CI and the image run the new versions. | R11: `nvm alias default 24.21.0`, then `npm ci` and restart `npm run dev` when convenient |
-| B-CI-ARTIFACTS | Act on reports that may contain a test password (C9) | Listed the live artifacts today: three reports, live until 2026-10-20. Downloading one to look inside needs a login. `tests-worth-their-keep.md` recorded this as its B9 the same day, so it is listed here only so that your return visit covers it. | Nothing in this plan; it is cleanup | R12 |
+| B-CI-ARTIFACTS | Act on published reports that hold a test password (C9) | Listed the live artifacts today: three reports, live until 2026-10-20. Downloading one needs a login. The fix belongs to session `daygame-coach-bf`; the live reports are B9 of `tests-worth-their-keep.md`. It is listed here only so your return visit covers it. | Nothing in this plan | R12 |
 | B-PEER-TREE | Another session's unfinished change breaks a check that runs on our commit, such as the pre-commit unit tests | May happen during execution; it cannot be attempted in advance | Committing, until the other session fixes its change | The executor records the failing test and the file, messages that session, and continues with work that needs no commit. It never edits another session's files. |
 | B-REBOOT | See the local deployment come back after a restart | Uptime is 24 days, so this has never been observed. Not forced: restarting WSL would cut off the owner's editor and two other working sessions. | Nothing. The claim stays "configured, not observed". | Next time WSL restarts, run `infra/run-local.sh --status`. |
 | B-UPTIME | An account with an external uptime monitor | Cannot be attempted: it needs your email and a sign-up | Phase 7 | healthchecks.io or UptimeRobot, free tier |
@@ -315,21 +317,15 @@ depends on. Where a step needs a blocker, the phase says what to do instead, and
 - Pointers fixed. The old plan carries a "superseded" banner, and `infra/README.md`,
   `infra/caddy/Caddyfile.local` and `tests/unit/infra/localDeploy.test.ts` now point here.
 
-## Phase 1 — Stop leaking test traces; patched, pinned and observable
+## Phase 1 — Patched, pinned and observable
 
-**Depends on:** nothing. **Working state:** CI publishes no traces; the app reports its own health and
-version, refuses to start when misconfigured, and has no critical advisory in what ships.
+**Depends on:** nothing. **Working state:** the app reports its own health and version, refuses to
+start when misconfigured, and has no critical advisory in what ships.
 
-1. **Stop publishing traces (C9).** Message the session working on `tests-worth-their-keep.md` first
-   (`SendMessage`), then:
-   - set `trace: process.env.CI ? 'off' : 'on-first-retry'` in `playwright.config.ts`;
-   - delete the `Upload cross-browser traces` step from `e2e.yml`.
-
-   These are this plan's first of two edits to `e2e.yml`. Add a dated line to
-   `tests-worth-their-keep.md` saying what changed and why, so its Phase 9 keeps it. Commit and push this
-   step on its own, straight away.
-   *Acceptance:* the next `e2e.yml` run's artifact list (API) contains no traces. A test in the new
-   `tests/unit/ci/pipelineRules.test.ts` fails if traces are switched back on under CI.
+1. **The leaking test reports (C9) are fixed elsewhere.** Session `daygame-coach-bf` owns that fix (see
+   Security), so this plan does not edit `tests/e2e/`, the trace settings, or `e2e.yml`'s upload steps.
+   Before Phase 4 publishes anything, check with `git log` that the fix has landed. If it has not,
+   record that in the blocker table and continue.
 2. **Set up an isolated worktree** for everything that changes dependencies, Node or the build:
    `git worktree add --detach <scratchpad>/wt HEAD`, then use Node 24 by path
    (`PATH=$HOME/.nvm/versions/node/v24.21.0/bin:$PATH`; `nvm` is not loaded in non-interactive shells)
@@ -409,9 +405,11 @@ what it ran, checks dependencies and secrets, and cannot be surprised by a runne
    - `actions/checkout` and `actions/setup-node` move to their current major (v7 on 2026-10-13). Read
      the tags with `git ls-remote`, not the rate-limited API. `setup-node` reads
      `node-version-file: .nvmrc`.
-3. **This plan's second and last edit to `e2e.yml`: `runs-on: ubuntu-24.04`**, because the Ubuntu 26.04
-   switch on 2026-10-19 lands before the other plan's Phase 9. Do it in the same coordinated way as
-   step 1.1.
+3. **This plan's only edit to `e2e.yml`: `runs-on: ubuntu-24.04`**, because the Ubuntu 26.04 switch on
+   2026-10-19 lands before the other plan's Phase 9. It is agreed with both sessions that touch that
+   file (`daygame-coach-ac` and `daygame-coach-bf`), and the other plan's Phase 9 keeps it. Still send
+   them a one-line `SendMessage` before editing, because sessions change. **If it is still 2026-10-18 or earlier when the executor gets here,
+   do this step first,** before Phase 1's other steps.
 4. **Add a dependency audit, as a ratchet** (rule 7). `scripts/audit-ratchet.mjs` plus
    `audit-baseline.json`, which records advisory IDs per package version.
    - It **fails** when the pushed lockfile adds or changes a package version that carries an advisory,
@@ -444,8 +442,9 @@ what it ran, checks dependencies and secrets, and cannot be surprised by a runne
    - any workflow uses `pull_request_target` or `workflow_run`;
    - `ci.yml` lacks top-level `permissions: contents: read` or the concurrency rule;
    - a publishing job runs on `pull_request`, or uses any secret except `GITHUB_TOKEN`;
-   - a publishing job uses a third-party action not pinned to a 40-character SHA;
-   - `playwright.config.ts` records traces under CI.
+   - a publishing job uses a third-party action not pinned to a 40-character SHA.
+
+   Guarding the test reports themselves is `daygame-coach-bf`'s test, not this one.
 
    Each rule is broken once on purpose in the worktree, seen to fail, and restored.
 7. *Phase acceptance:*
@@ -708,6 +707,8 @@ production is a matter of running scripts that have already been dry-run.
    - `provision.sh` uses `hcloud`. It uploads nothing secret, and is idempotent by name. It creates:
      - a firewall with inbound 80/tcp, 443/tcp and 443/udp from `0.0.0.0/0` **and** `::/0` — no port
        22;
+     - the owner's SSH **public** key in the Hetzner project. OpenSSH stays off on the server, but the
+       key stops Hetzner emailing a root password, and Hetzner's rescue mode logs in with it;
      - the server (Q8, Q18), attached to that firewall.
    - `infra/server/push-env.sh` copies the secrets file and the registry token from R5 over Tailscale
      SSH, to `/etc/daygame/production.env` (mode 640 root:deploy) and the `deploy` user's Docker login.
@@ -762,7 +763,7 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R9 | Optional: trust the local certificate (the B-CA command above) | Windows |
 | R10 | The email address for certificate and uptime alerts | Tell the AI |
 | R11 | When convenient: `nvm alias default 24.21.0`, then in the repository `npm ci`, then restart `npm run dev` (B-DEVSERVER) | WSL terminal |
-| R12 | B9 of `tests-worth-their-keep.md`, after R4: `gh run download 38368655433 -n playwright-report-fast` and look for a `data/*.zip` inside. If one is there, delete that artifact, change the test account's password, and update it in `.env.local` and in the CI secret. Also confirm which Supabase project CI's secrets point at. | WSL terminal; Supabase dashboard; GitHub → Settings → Secrets |
+| R12 | Change the passwords of the test accounts CI signs in with (`TEST_USER`, and `TEST_USER_B` and `TEST_USER_TRAINING`, whose reports were published by earlier runs). Update them in `.env.local` and in the CI secrets, and delete the live report artifacts (B9 of `tests-worth-their-keep.md`). Also confirm which Supabase project CI's secrets point at. | Supabase dashboard; GitHub → Settings → Secrets; WSL terminal after R4 |
 | R13 | Only if B-ENV was refused: run `infra/write-env-file.sh staging` once | WSL terminal |
 
 Then start a new session with the Phase 6 prompt at the end of this file.
@@ -778,8 +779,8 @@ finish), and confirming the emails in steps 6 and 7.
 1. Run `provision.sh` for real. Then connect over Tailscale SSH (one browser check by the owner) and run
    `cloud-init status --wait`.
 2. Run `sync-infra.sh <commit>`, then `push-env.sh`. `push-env.sh` sends the runtime values with
-   `NEXT_PUBLIC_APP_URL` set to the domain, a newly generated `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, and
-   the R5 token.
+   `NEXT_PUBLIC_APP_URL` set to the domain, and the R5 token. It also sends a
+   `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` that is generated once for this server and kept on later runs.
 3. Run `records.sh` for real. `dig @1.1.1.1 <domain>` (A and AAAA) must show the server.
 4. Set up the GitHub `production` environment:
    - its variables: the Supabase public values and `NEXT_PUBLIC_APP_URL`;
@@ -852,7 +853,8 @@ finish), and confirming the emails in steps 6 and 7.
   when done.
 - **Never kill, start or restart the dev server on :3000, and never change the default Node.** Those are
   the owner's (R11). Message peers with `SendMessage` before changes they will feel. If `ListAgents` is
-  not available, use the names in `.claude` session messages, or record that you could not.
+  not available, use the sender names from cross-session messages you have received. If you have
+  none, record that you could not message them.
 - **Never read or print `.env.local` values.** The scripts read the file. The safety layer refuses
   direct reads (B-ENV).
 - **Hands off shared and live systems.** Never write to the live database or change Supabase settings;
@@ -913,7 +915,7 @@ finish), and confirming the emails in steps 6 and 7.
 
 **Edited:**
 - `package.json`, `package-lock.json`, `next.config.mjs`, `scripts/build.sh`, `playwright.config.ts`
-- `.github/workflows/ci.yml`, and `.github/workflows/e2e.yml` in two coordinated places
+- `.github/workflows/ci.yml`, and `.github/workflows/e2e.yml` in one coordinated place (the runner pin)
 - `.husky/pre-push`, `src/qa/config.ts`, `src/inner-game/config.ts`
 - `infra/run-local.sh`, `infra/caddy/Caddyfile.local`, `infra/README.md`
 - `tests/unit/infra/localDeploy.test.ts`, `docs/plans/tests-worth-their-keep.md` (dated notes only),
