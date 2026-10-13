@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE LEVEL CARD MUST NOT SHOW A NUMBER AGAIN.
  *

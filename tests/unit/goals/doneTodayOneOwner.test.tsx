@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * "IS THIS DONE TODAY" HAD FIVE ANSWERS, AND FOUR OF THEM WERE WRONG.
  *

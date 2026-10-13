@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A RUN IS A WORKOUT TOO.
  *

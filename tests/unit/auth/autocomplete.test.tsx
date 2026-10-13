@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE FOUR AUTH FORMS, RENDERED, AND WHAT EACH INPUT TELLS A PASSWORD MANAGER.
  *

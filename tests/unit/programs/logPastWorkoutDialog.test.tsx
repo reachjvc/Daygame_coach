@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * "LOG A PAST WORKOUT" — the only remaining way to record a session afterwards.
  *

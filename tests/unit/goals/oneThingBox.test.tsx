@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE BOX — the four things it must not do again.
  *

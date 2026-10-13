@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * RESTORING A BACKUP IS A DELETION, AND IT ASKS FIRST.
  *

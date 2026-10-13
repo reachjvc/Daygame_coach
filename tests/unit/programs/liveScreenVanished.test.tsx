@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * "THIS WORKOUT IS FINISHED" IS THE ONE THING THIS SCREEN MUST NOT GET WRONG.
  *

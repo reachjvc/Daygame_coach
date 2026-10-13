@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE BAR SAYS WHICH TAB YOU ARE ON, in more than colour.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A SECOND DEVICE RECOGNISED YOUR PUSHED GOALS AND COULD NOT COUNT AGAINST THEM.
  *

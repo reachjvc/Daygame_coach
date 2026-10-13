@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * WHAT HAPPENS IN THE FIRST SECOND AFTER THE TRACKER OPENS.
  *

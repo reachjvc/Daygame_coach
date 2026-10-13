@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * ENTER COMMITS AND ESCAPE THROWS AWAY, ON ALL FOUR INLINE FIELDS OF A ROW.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE LIVE SCREEN, WHEN THE SESSION ALREADY HAPPENED.
  *

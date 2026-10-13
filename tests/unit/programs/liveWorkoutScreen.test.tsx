@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE REST CLOCK, AND WHAT COUNTS AS A MISS.
  *

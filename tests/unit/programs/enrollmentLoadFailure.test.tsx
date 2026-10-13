@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A FAILED REQUEST IS NOT AN EMPTY LIST.
  *

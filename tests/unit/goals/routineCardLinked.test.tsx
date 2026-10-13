@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE SYSTEMS STEP STOPPED OFFERING TO EDIT A WEEK IT DOES NOT OWN.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE THREE FACTS A SET CARRIES BEYOND ITS WEIGHT AND REPS.
  *

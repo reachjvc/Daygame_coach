@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * WHAT THE FINISH SHEET IS ALLOWED TO INVENT: nothing.
  *

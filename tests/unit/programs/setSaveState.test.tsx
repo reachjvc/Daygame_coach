@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * "NOT SAVED" ONLY WHEN IT IS TRUE.
  *

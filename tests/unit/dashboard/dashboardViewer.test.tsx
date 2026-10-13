@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE DASHBOARD TELLS A VISITOR FROM A SIGNED-UP NON-SUBSCRIBER.
  *

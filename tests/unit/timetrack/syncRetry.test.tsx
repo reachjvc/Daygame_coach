@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * WHAT THE UPLOAD DOES WHEN IT CANNOT REACH THE SERVER.
  *

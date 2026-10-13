@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The live workout hook, on the two things that lose a set.
  *

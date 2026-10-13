@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE WIRING, WHICH IS THE HALF THAT KEEPS BEING WRONG.
  *

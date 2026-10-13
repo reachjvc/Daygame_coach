@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * FINISHED PROGRAMS: STARTING ONE AGAIN, AND REMOVING ONE.
  *

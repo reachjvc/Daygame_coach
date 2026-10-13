@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE EDITOR IS ALREADY OPEN WHEN IT APPEARS.
  *

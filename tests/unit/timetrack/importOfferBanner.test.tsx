@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * "This browser has 19 entries your account does not."
  *

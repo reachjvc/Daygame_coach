@@ -32,7 +32,17 @@ export default defineConfig({
      * used in, so the assertion means the same thing everywhere.
      */
     env: { TZ: 'Europe/Copenhagen' },
-    environment: 'jsdom',
+    /**
+     * NODE BY DEFAULT; A FILE THAT RENDERS ASKS FOR A BROWSER.
+     *
+     * Three quarters of these files never touch the DOM, and building a fake
+     * browser for each of them was most of the suite's run time. A file that
+     * renders, or uses `window`, `document` or user-event, starts with
+     * `// @vitest-environment jsdom`. Classified 2026-10-13 by running the whole
+     * suite under Node and marking exactly the files that failed for want of a
+     * DOM — by what a file does, not by its extension.
+     */
+    environment: 'node',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     // tests/manual/** talks to the REAL project database and creates and deletes
     // its own accounts. It is never part of `npm test` — run it deliberately with

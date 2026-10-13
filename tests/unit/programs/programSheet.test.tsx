@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * EVERYTHING YOU DO TO A PROGRAM, AND WHAT IT PROMISES FIRST.
  *

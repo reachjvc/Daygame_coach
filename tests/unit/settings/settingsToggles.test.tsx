@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A SECOND SETTINGS CLICK MUST NOT BE THROWN AWAY.
  *

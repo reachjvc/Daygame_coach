@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * EVERYTHING YOU CAN DO TO ONE LIFT, MID-WORKOUT.
  *

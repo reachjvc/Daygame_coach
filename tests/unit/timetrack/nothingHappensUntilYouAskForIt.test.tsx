@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * TWO THINGS THE SYNC DID WITHOUT BEING ASKED.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * ASKING THE SERVER WHAT CHANGED MUST NOT UNDO WHAT YOU JUST DID.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE LIST OF PROGRAMS YOU COULD START.
  *

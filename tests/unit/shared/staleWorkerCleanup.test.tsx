@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A LEFTOVER SERVICE WORKER IS REMOVED ON EVERY PAGE, NOT JUST THE TRACKER'S.
  *

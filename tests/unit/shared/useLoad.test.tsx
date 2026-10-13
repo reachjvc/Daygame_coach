@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A FAILED LOAD NEVER ARRIVES AS EMPTY DATA.
  *

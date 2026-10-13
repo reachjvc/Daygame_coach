@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE REGION LIST RENDERS WHERE IT WAS ASKED FOR, AND NOWHERE ELSE.
  *

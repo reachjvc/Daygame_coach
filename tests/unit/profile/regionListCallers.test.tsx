@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE TWO SCREENS THAT RENDER THE MAP, RENDERED.
  *

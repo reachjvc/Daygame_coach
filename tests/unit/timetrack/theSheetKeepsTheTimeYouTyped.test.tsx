@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * A TIME TYPED INTO THE DETAIL SHEET SURVIVES THE WAY PEOPLE LEAVE IT.
  *

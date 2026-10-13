@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * ONE RECEIPT, WHEREVER IT IS SHOWN.
  *

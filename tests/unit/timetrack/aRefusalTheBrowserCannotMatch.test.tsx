@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * WHAT THE BROWSER DOES WITH A REFUSAL IT CANNOT MATCH.
  *

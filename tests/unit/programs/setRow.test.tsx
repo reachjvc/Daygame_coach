@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE ✓ IS THE WHOLE FEATURE, AND IT MUST NOT SAVE A GUESS.
  *

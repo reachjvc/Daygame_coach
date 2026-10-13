@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The service worker is what lets the tracker open with no connection.
  *

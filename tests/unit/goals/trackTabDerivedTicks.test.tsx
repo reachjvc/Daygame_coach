@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE TRACK STEP DID NOT KNOW YOU HAD TRAINED.
  *

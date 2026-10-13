@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE STRIP SHOWS THE ACCOUNT'S DAY, NOT THE PHONE'S.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE WORKOUT WENT AWAY WHILE THIS SCREEN WAS SHOWING IT.
  *

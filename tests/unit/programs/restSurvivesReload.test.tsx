@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE REST CLOCK SURVIVES THE PHONE LOCKING.
  *

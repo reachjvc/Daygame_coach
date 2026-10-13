@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE BUG THIS SLICE SHIPPED FOR AS LONG AS THE TIMER BAR HAS EXISTED.
  *

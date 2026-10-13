@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * WHAT A TIME FIELD SHOWS MUST PARSE BACK TO THE TIME IT SHOWED.
  *

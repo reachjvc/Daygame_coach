@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * REMOVING A PLAN GOAL USED TO ORPHAN ITS COUNTED TWIN, SILENTLY.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Guards the bug class that has now bitten three times in this slice:
  * composing two state updates in one handler, each computed from the same

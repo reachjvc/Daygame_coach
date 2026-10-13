@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * THE ONE-TIME CLOCK SYNC.
  *
