@@ -35,8 +35,39 @@ function sourceFiles(dir: string): string[] {
   return out
 }
 
-/** The renames that trim, and so must never be wired to a keystroke. */
-const TRIMMING_RENAMES = /\b(renameDay|renameSplitDay)\s*\(/
+/**
+ * The renames that trim, and so must never be wired to a keystroke — called
+ * directly, or through the handler a screen is given for them
+ * (`handlers.onRenameSplitDay(…)` in `RoutineCard`, which `NorthStarFlow`
+ * wires to `renameSplitDay`).
+ */
+const TRIMMING_RENAMES = /\b(?:on)?(?:R|r)ename(?:Day|SplitDay)\s*\(/
+
+/**
+ * What a commit looks like in this codebase: `DraftInput`'s `onCommit`, a
+ * Save button's `save…`/`commit…` function, or the `onRename…` handler itself,
+ * whose own callers this same rule checks.
+ */
+const COMMIT_POINT = /^(?:onCommit|onRename(?:Day|SplitDay)|save\w*|commit\w*)$/
+
+/** A function, an arrow assigned to a name, an object handler or a JSX prop. */
+const HANDLER_HEAD =
+  /\bfunction\s+(\w+)|\b(?:const|let)\s+(\w+)\s*=\s*(?:async\s*)?\(|\b(\w+)\s*:\s*(?:async\s*)?\(|\b(on\w+)=\{/g
+
+/**
+ * The name of the nearest handler that opens above the call: on the call's own
+ * line (before the call), or on one of the lines above it. Null when none is
+ * found within reach, which the rule reports rather than forgives.
+ */
+function enclosingHandler(lines: string[], i: number, callAt: number): string | null {
+  for (let j = i; j >= Math.max(0, i - 40); j--) {
+    const text = j === i ? lines[j].slice(0, callAt) : lines[j]
+    const heads = [...text.matchAll(HANDLER_HEAD)]
+    const last = heads[heads.length - 1]
+    if (last) return last[1] ?? last[2] ?? last[3] ?? last[4] ?? null
+  }
+  return null
+}
 
 function offenders(): string[] {
   const found: string[] = []
@@ -50,8 +81,9 @@ function offenders(): string[] {
         .replace(/\/\/[^\n]*/g, "")
       const lines = code.split("\n")
       lines.forEach((line, i) => {
-        if (!TRIMMING_RENAMES.test(line)) return
-        // The definition itself, and any call that is not inside a handler.
+        const call = TRIMMING_RENAMES.exec(line)
+        if (!call) return
+        // The definition itself.
         if (/^\s*(export\s+)?function\s+(renameDay|renameSplitDay)\b/.test(line)) return
 
         // On the same line as an onChange is the exact shape that was wrong.
@@ -59,10 +91,12 @@ function offenders(): string[] {
           found.push(`${rel}:${i + 1} — renames on every keystroke (onChange)`)
           return
         }
-        // Otherwise it must be reached through a commit: this line or one of
-        // the three above it names onCommit.
-        const context = lines.slice(Math.max(0, i - 3), i + 1).join("\n")
-        if (!/onCommit/.test(context)) return
+        // Otherwise it must be reached through a commit: the handler it sits
+        // in is one. `onInput`, `onKeyUp` and an unnamed callback are not.
+        const owner = enclosingHandler(lines, i, call.index)
+        if (!owner || !COMMIT_POINT.test(owner)) {
+          found.push(`${rel}:${i + 1} — renames from ${owner ?? "no named handler"}, which is not a commit`)
+        }
       })
       // A multi-line onChange handler wrapping one of the renames.
       const multiline = code.matchAll(/onChange=\{[\s\S]{0,200}?\}/g)
@@ -82,69 +116,9 @@ describe("day names are trimmed on commit, never per keystroke", () => {
     expect(
       found,
       "These trim on every keystroke, which makes a two-word day name untypeable.\n" +
-        "Use DraftInput from components/ui/draft-input.tsx and commit on blur:\n" +
+        "Rename from a commit — DraftInput's onCommit, or a save…/commit… function\n" +
+        "behind a Save button — never from onChange, onInput or a key handler:\n" +
         found.join("\n")
-    ).toEqual([])
-  })
-
-  /**
-   * THIS USED TO ASSERT THAT ALL THREE BOXES WERE A `DraftInput`, and that was
-   * a test of the MECHANISM rather than of the rule.
-   *
-   * On 2026-09-23 two of the three stopped being boxes at all: the rename moved
-   * behind a row's ⋮ into a dialog with a Save button, which satisfies the rule
-   * more strongly than `DraftInput` did — nothing is committed until Save, and
-   * a blank name is refused with something to READ rather than by the trim
-   * quietly doing nothing. The old assertion went red for a change that made
-   * the thing it was protecting better, which is what a proxy assertion does.
-   *
-   * So it asks the two questions that actually matter instead: the rename is
-   * still REACHABLE from each of these screens (a control nobody can find is
-   * the other way to pass "nothing renames per keystroke"), and no keystroke
-   * event of any name reaches it. `onChange` is the shape that was wrong and
-   * the test above owns it; `onInput` and `onKeyUp` are the two ways the same
-   * mistake would be made next.
-   */
-  test("each screen can still rename a day, and no keystroke event reaches the rename", () => {
-    const screens = [
-      "src/programs/components/ProgramEditor.tsx",
-      "src/goals/components/north-star/RoutineCard.tsx",
-    ]
-
-    /**
-     * The handler form too: `RoutineCard` never calls `renameSplitDay` — it
-     * calls `handlers.onRenameSplitDay`, and the flow above it calls the
-     * trimming function. Looking only for the direct call said the control had
-     * been lost when it had merely been passed down, which is a test failing
-     * for a spelling rather than for a fact.
-     */
-    const REACHES_A_RENAME = /\b(?:on)?(?:R|r)ename(?:Day|SplitDay)\s*\(/
-    const unreachable = screens.filter((rel) => {
-      const src = fs.readFileSync(path.join(projectRoot, rel), "utf-8")
-      return !REACHES_A_RENAME.test(src)
-    })
-    expect(
-      unreachable,
-      "These no longer rename a training day at all — the control was lost, not fixed:\n" +
-        unreachable.join("\n")
-    ).toEqual([])
-
-    const keystroke: string[] = []
-    for (const rel of screens) {
-      const code = fs
-        .readFileSync(path.join(projectRoot, rel), "utf-8")
-        .replace(/\/\*[\s\S]*?\*\//g, "")
-        .replace(/\/\/[^\n]*/g, "")
-      for (const [block] of code.matchAll(/on(?:Input|KeyUp|KeyDown)=\{[\s\S]{0,200}?\}/g)) {
-        if (/\b(?:on)?(?:R|r)ename(?:Day|SplitDay)\s*\(/.test(block)) {
-          keystroke.push(`${rel} — renames inside a keystroke handler`)
-        }
-      }
-    }
-    expect(
-      keystroke,
-      "A rename reached from a keystroke makes a two-word day name untypeable:\n" +
-        keystroke.join("\n")
     ).toEqual([])
   })
 })

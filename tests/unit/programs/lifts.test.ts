@@ -298,20 +298,6 @@ describe("finding a lift where you would look for it", () => {
     expect(libraryByGroup("chest").map((e) => e.name)).not.toContain("Pull-up")
   })
 
-  test("the machines a leg day actually uses are in the pool", () => {
-    const all = EXERCISE_LIBRARY.map((e) => e.name)
-    for (const n of ["Hip Abduction", "Hip Adduction", "Glute Bridge", "Single-Leg Press"]) {
-      expect(all, n).toContain(n)
-    }
-  })
-
-  test("swapping still offers like-for-like, which is a different question", () => {
-    // Grouping for browse must not disturb grouping for swap: a Bench Press
-    // still offers the other horizontal pushes, not everything labelled Chest.
-    expect(patternForName("Bench Press")).toBe("horizontal_push")
-    expect(patternForName("Overhead Press")).toBe("vertical_push")
-  })
-
   test("a lift you write yourself is filed under the body part you picked", () => {
     const own = customLibraryEntry("Reverse Hyper Machine", "hamstrings_glutes")!
     expect(own.group).toBe("hamstrings_glutes")

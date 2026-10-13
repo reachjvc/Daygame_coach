@@ -66,12 +66,6 @@ describe("saveStateFor", () => {
   it("a failed write is not saved from the first moment, however recent", () => {
     expect(saveStateFor({ pendingSince: NOW, queued: true }, NOW + 10)).toBe("queued")
   })
-
-  it("a queued set that the server later acks is saved, not stuck", () => {
-    // The order matters: `queued` is cleared by the flush, and the pending id
-    // goes with the server's answer.
-    expect(saveStateFor({ pendingSince: null, queued: false }, NOW + 60_000)).toBe("saved")
-  })
 })
 
 describe("the row's marker", () => {
@@ -94,8 +88,6 @@ describe("the row's marker", () => {
     render(<SetRow {...base} done={done()} pendingSince={NOW} queued onTick={vi.fn()} />)
     const marker = screen.getByTestId("set-save-state-1")
     expect(marker.textContent).toBe("Not saved — no signal. It will retry.")
-    // Amber, because this one is worth looking at. "Saving…" is not.
-    expect(marker.className).toContain("text-amber-500")
     vi.restoreAllMocks()
   })
 

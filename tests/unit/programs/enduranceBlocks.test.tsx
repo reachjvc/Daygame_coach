@@ -50,9 +50,15 @@ const run = {
   exercises: [],
   summary: "5 × (60 s jog / 90 s walk)",
   enduranceSets: [
-    { repeat: 1, blocks: [{ label: "5 min brisk walk", minutes: 5 }] },
-    { repeat: 5, blocks: [{ label: "60 s jog", minutes: 1 }, { label: "90 s walk", minutes: 1.5 }] },
-    { repeat: 1, blocks: [{ label: "5 min walk", minutes: 5 }] },
+    { repeat: 1, blocks: [{ kind: "warmup", label: "Brisk walk", durationSec: 300 }] },
+    {
+      repeat: 5,
+      blocks: [
+        { kind: "jog", label: "Jog", durationSec: 60 },
+        { kind: "walk", label: "Walk", durationSec: 90 },
+      ],
+    },
+    { repeat: 1, blocks: [{ kind: "cooldown", label: "Walk", durationSec: 300 }] },
   ],
 } as unknown as SessionPrescription
 

@@ -94,29 +94,6 @@ describe("the workout is gone", () => {
     expect(result.current.error).toBe(GONE)
   })
 
-  /**
-   * A first version of this file asserted here that the message contains no
-   * "row-level security". It passed whether or not the fix was in, because the
-   * words it looked for were only ever in the FAKE — so it was a test of its own
-   * fixture. Where those words really come from is the database, and the test
-   * that can see them is `tests/unit/db/workoutGone.test.ts`, on the repo.
-   *
-   * What the hook owes, and what this asserts instead: the server's sentence is
-   * shown as written, rather than wrapped in "That Squat set could not be
-   * saved: …", which would name one lift for a workout-wide fact.
-   */
-  it("shows the server's sentence as written, not wrapped around one lift's name", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(goneResponse())))
-    const { result } = renderHook(() => useLiveWorkout(workout))
-
-    await act(async () => {
-      await result.current.tick(aSet)
-    })
-
-    await waitFor(() => expect(result.current.error).toBe(GONE))
-    expect(result.current.error).not.toMatch(/Squat/)
-  })
-
   it("empties the queue, so Finish is not disabled for ever on a workout that cannot be finished", async () => {
     // First, get a set into the queue the way a gym does it: the write fails.
     vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("offline"))))

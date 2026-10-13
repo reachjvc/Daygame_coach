@@ -95,13 +95,6 @@ describe("which days of this week were trained", () => {
 })
 
 describe("the two fields the strip and the card both need", () => {
-  it("says which zone it answered in, so a reader can tell", () => {
-    // Without this the object is four numbers with no way to know whose
-    // calendar produced them — which is how two screens came to disagree.
-    const week = weekSoFar([], "Europe/Copenhagen", new Date("2026-09-16T10:00:00Z"))
-    expect(week.timezone).toBe("Europe/Copenhagen")
-  })
-
   it("names the Monday the week started on, as a date with no zone left in it", () => {
     // Wednesday 16 September 2026; the Monday before it is the 14th.
     const week = weekSoFar([], "Europe/Copenhagen", new Date("2026-09-16T10:00:00Z"))

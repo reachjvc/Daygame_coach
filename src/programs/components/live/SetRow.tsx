@@ -442,9 +442,7 @@ export function SetRow({
           height. It did not move before because it was `absolute`.
 
           The comment lives out here rather than between the testid and the
-          class: `liveTouchTargets.test.ts` reads this file and looks for
-          `h-11 w-11` within 400 characters of the testid, and a doc comment in
-          between pushes it out of reach.
+          class, so the two stay next to each other when read.
         */}
         {onDelete && (
           <button

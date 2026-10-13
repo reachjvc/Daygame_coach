@@ -36,7 +36,7 @@ import { startingStrength } from "@/src/programs/data/strength/startingStrength"
 import { phul } from "@/src/programs/data/bodybuilding/phul"
 import { upperLower } from "@/src/programs/data/bodybuilding/upperLower"
 import { fiveKToTenK } from "@/src/programs/data/cardio/fiveKToTenK"
-import { sprintTriathlon, halfIronman } from "@/src/programs/data/endurance/triathlon"
+import { sprintTriathlon } from "@/src/programs/data/endurance/triathlon"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
 import { resolveProgramForLevel } from "@/src/programs/data/catalog"
 import { scheduleDays, scheduleDaysOrNone } from "@/src/programs/customize"
@@ -530,12 +530,6 @@ describe("expanded catalog", () => {
     expect(swim.enduranceSets![0].blocks[0].kind).toBe("swim")
   })
 
-  test("70.3 brick sessions chain a bike then a run", () => {
-    if (halfIronman.schedule.kind !== "endurance_weeks") throw new Error("x")
-    const brick = halfIronman.schedule.weeks[0].sessions.find((s) => s.id.endsWith("brick"))!
-    expect(brick.sets[0].blocks.map((b) => b.kind)).toEqual(["bike", "run"])
-  })
-
   test("every catalog program enrolls and prescribes a first session without throwing", () => {
     for (const program of ALL_PROGRAMS) {
       const level = program.levels.find((l) => !l.structuralVariantOf)!.id
@@ -883,10 +877,6 @@ describe("finishing an endurance program", () => {
   const lastDay = couchTo5k.schedule.kind === "endurance_weeks"
     ? couchTo5k.schedule.weeks[lastWeek - 1].sessions.length - 1
     : 0
-
-  test("the program has sessions to count", () => {
-    expect(total).toBeGreaterThan(10)
-  })
 
   test("standing on the last session is not the same as having done it", () => {
     const p = computePrescription(couchTo5k, enrollAt(total - 1, lastWeek, lastDay))

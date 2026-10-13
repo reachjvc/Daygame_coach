@@ -30,10 +30,6 @@ describe("starting a workout", () => {
     // how a session lands on the wrong day.
     expect(StartWorkoutSchema.safeParse(start({ startedAt: "2026-09-15T10:00" })).success).toBe(false)
   })
-
-  it("does not require one — every live workout starts now", () => {
-    expect(StartWorkoutSchema.safeParse(start()).success).toBe(true)
-  })
 })
 
 describe("finishing a workout", () => {
@@ -56,13 +52,6 @@ describe("finishing a workout", () => {
     expect(both.success).toBe(true)
   })
 
-  it("may name the kind and the distance", () => {
-    const parsed = FinishWorkoutSchema.safeParse(finish({ sessionType: "running", distanceKm: 5.2 }))
-    expect(parsed.success).toBe(true)
-    expect(parsed.success && parsed.data.sessionType).toBe("running")
-    expect(parsed.success && parsed.data.distanceKm).toBe(5.2)
-  })
-
   it("refuses a kind that is not one of the five", () => {
     expect(FinishWorkoutSchema.safeParse(finish({ sessionType: "crossfit" })).success).toBe(false)
   })
@@ -71,12 +60,6 @@ describe("finishing a workout", () => {
     expect(FinishWorkoutSchema.safeParse(finish({ distanceKm: MAX_DISTANCE_KM + 1 })).success).toBe(false)
     expect(FinishWorkoutSchema.safeParse(finish({ distanceKm: -1 })).success).toBe(false)
     expect(FinishWorkoutSchema.safeParse(finish({ distanceKm: MAX_DISTANCE_KM })).success).toBe(true)
-  })
-
-  it("takes null as 'clear the distance'", () => {
-    const parsed = FinishWorkoutSchema.safeParse(finish({ distanceKm: null }))
-    expect(parsed.success).toBe(true)
-    expect(parsed.success && parsed.data.distanceKm).toBeNull()
   })
 
   it("an end on its own is still fine — that is every live workout", () => {

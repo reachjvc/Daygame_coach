@@ -13,8 +13,6 @@
  */
 
 import { describe, it, expect } from "vitest"
-import fs from "fs"
-import path from "path"
 import { ALL_PROGRAMS, OFFERED_DISCIPLINES, programsByDiscipline } from "@/src/programs/data/catalog"
 import { DISCIPLINES } from "@/src/programs/config"
 
@@ -49,30 +47,5 @@ describe("the catalogue and what is offered", () => {
     const halfIronman = ALL_PROGRAMS.find((p) => /half ironman/i.test(p.name))
     expect(halfIronman, "premise: the Half Ironman is still in the catalogue").toBeDefined()
     expect(OFFERED_DISCIPLINES).toContain(halfIronman!.discipline)
-  })
-
-  it("no screen spells the catalogue's size as a word", () => {
-    // "Thirteen cited programs" was right when it was written and wrong the
-    // moment a fourteenth was added — which is what a hand-counted number does.
-    const projectRoot = path.resolve(__dirname, "../../..")
-    const offenders: string[] = []
-    const walk = (dir: string) => {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name)
-        if (entry.isDirectory()) {
-          if (entry.name !== "node_modules") walk(full)
-        } else if (/\.tsx?$/.test(entry.name)) {
-          const src = fs.readFileSync(full, "utf-8")
-          if (/\b(Eleven|Twelve|Thirteen|Fourteen|Fifteen) cited\b/.test(src)) {
-            offenders.push(path.relative(projectRoot, full).replace(/\\/g, "/"))
-          }
-        }
-      }
-    }
-    walk(path.join(projectRoot, "src"))
-    expect(
-      offenders,
-      "These count the catalogue by hand. Use ALL_PROGRAMS.length:\n" + offenders.join("\n")
-    ).toEqual([])
   })
 })

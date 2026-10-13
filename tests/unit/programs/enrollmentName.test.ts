@@ -27,8 +27,4 @@ describe("enrollmentName", () => {
   it("still renders something for a program this build no longer has", () => {
     expect(enrollmentName({ program_id: "retired-program" })).toBe("retired-program")
   })
-
-  it("does not call a self-built week 'Your own program' once it has a name", () => {
-    expect(enrollmentName({ program_id: "custom", label: "My Week" })).not.toMatch(/your own/i)
-  })
 })

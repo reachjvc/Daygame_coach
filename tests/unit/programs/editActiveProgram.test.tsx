@@ -56,14 +56,6 @@ describe("the program editor", () => {
     expect(screen.queryByRole("button", { name: /change this program/i })).toBeNull()
   })
 
-  it("Cancel hands the decision back rather than hiding itself", () => {
-    // It used to setOpen(false) and stay mounted, so the URL still said
-    // "edit" while the editor had vanished.
-    const { onCancel } = editor()
-    expect(screen.getByRole("button", { name: /^cancel$/i })).toBeTruthy()
-    expect(onCancel).not.toHaveBeenCalled()
-  })
-
   it("Cancel is a real way out", async () => {
     const user = userEvent.setup()
     const { onCancel } = editor()

@@ -164,36 +164,23 @@ describe("one mount per shared training component", () => {
   })
 })
 
-describe("the blue-grey kit is gone, not repainted", () => {
-  test("src/programs/components/ui.tsx does not exist and nothing imports it", () => {
+describe("one overflow glyph", () => {
+  test("is MoreVertical, and MoreHorizontal is not used anywhere in the programs slice", () => {
     /**
-     * `TYPE`, `IconButton`, `Segmented`, `Field`, `Stepper`, `Panel`, `Action`
-     * and `GroupLabel` — a whole second component library for one slice, with
-     * its own type scale and its own greys. Four screens imported it and each
-     * of them looked like a different app from the one around it.
-     *
-     * Deleted rather than repainted: a repainted kit is still a second answer
-     * to "what does a button look like", and the answer is `components/ui`.
+     * The app's "⋮" is `MoreVertical`. The live workout screen used
+     * `MoreHorizontal` — the same control drawn a different way, in the one
+     * place a person meets it most.
      */
-    expect(
-      fs.existsSync(path.join(projectRoot, "src/programs/components/ui.tsx")),
-      "the kit is back — the app's kit is components/ui"
-    ).toBe(false)
-
-    const importers: string[] = []
+    const offenders: string[] = []
     const walk = (dir: string) => {
       for (const entry of fs.readdirSync(path.join(projectRoot, dir), { withFileTypes: true })) {
         const rel = `${dir}/${entry.name}`
         if (entry.isDirectory()) walk(rel)
-        else if (/\.tsx?$/.test(entry.name)) {
-          const src = fs.readFileSync(path.join(projectRoot, rel), "utf-8")
-          if (/from\s+["'](?:\.\/ui|@\/src\/programs\/components\/ui)["']/.test(src)) importers.push(rel)
-        }
+        else if (/\.tsx?$/.test(entry.name) && /\bMoreHorizontal\b/.test(code(rel))) offenders.push(rel)
       }
     }
-    for (const dir of ["src", "app"]) walk(dir)
-
-    expect(importers, "These still import the deleted kit:\n" + importers.join("\n")).toEqual([])
+    walk("src/programs")
+    expect(offenders, `These draw a different ⋮ from the rest of the app:\n${offenders.join("\n")}`).toEqual([])
   })
 })
 

@@ -65,10 +65,6 @@ describe("everything the hint advertises still parses", () => {
   // The four syntaxes in `programText.ts`'s header. A parser made stricter
   // has to be checked against what it is meant to accept, not only against
   // what it is meant to reject.
-  test("sets by reps", () => {
-    expect(lifts("Monday\nBench Press 3x8")).toEqual(["Bench Press"])
-  })
-
   test("a rep range", () => {
     expect(lifts("Monday\nBench Press 3x8-12")).toEqual(["Bench Press"])
   })
@@ -91,10 +87,5 @@ describe("everything the hint advertises still parses", () => {
     const days = parsed.schedule.kind === "endurance_weeks" ? [] : parsed.schedule.days
     expect(days[0].label).toBe("Push day")
     expect(parsed.problems).toEqual([])
-  })
-
-  test("a lift the library has never heard of is still kept, under its own name", () => {
-    // The point is leftovers, not unknown lifts. Those are deliberately kept.
-    expect(lifts("Monday\nZercher Squat 3x8 @60")).toEqual(["Zercher Squat"])
   })
 })

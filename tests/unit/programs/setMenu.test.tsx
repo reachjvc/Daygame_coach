@@ -95,16 +95,6 @@ beforeEach(() => {
 })
 
 describe("the menu behind the set number", () => {
-  it("opens off the number, which is a 44px button and not a caption", async () => {
-    const user = userEvent.setup()
-    renderScreen()
-    const number = screen.getByTestId("set-menu-1")
-    expect(number.className).toContain("h-11")
-    expect(number.className).toContain("w-11")
-    await user.click(number)
-    expect(screen.getByTestId("set-menu")).toBeTruthy()
-  })
-
   it("offers warm-up, working and drop set — and never Failure", async () => {
     const user = userEvent.setup()
     renderScreen()

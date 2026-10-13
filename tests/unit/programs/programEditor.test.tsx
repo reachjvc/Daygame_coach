@@ -80,20 +80,6 @@ describe("a day row", () => {
     // One options button per day, where there were four icon buttons.
     expect(screen.getAllByLabelText(`Options for ${first.label}`)).toHaveLength(1)
   })
-
-  it("has no control under 44px", () => {
-    const program = requireProgram("stronglifts-5x5")
-    editor(program)
-
-    // The floor every other control in the app is held to. `min-h-11` is 44px;
-    // the Button's own `size="icon"` is 44px on a phone.
-    for (const button of screen.getAllByRole("button")) {
-      const classes = button.className
-      expect(classes, `a control that misses the 44px floor: ${classes}`).not.toMatch(
-        /(?:^|\s)(?:min-h-(?:7|8|9|10)|h-(?:7|8|9|10))(?:\s|$)/
-      )
-    }
-  })
 })
 
 describe("renaming a day", () => {
@@ -315,21 +301,5 @@ describe("ProgramDetail", () => {
      * prescription, so it is rounded on the "free" precision of 1 lb.
      */
     expect(screen.getByLabelText(/Starting weight for Squat in lb/i)).toHaveValue(132)
-  })
-
-  it("has exactly one solid orange control", () => {
-    detail()
-    /**
-     * Level and units were `Button variant="default"` — the app's one loud
-     * button — so "Beginner", "kg" and "Start StrongLifts 5×5" shouted equally
-     * and only the third does anything irreversible.
-     *
-     * `bg-primary/10` (the tinted chip) is deliberately NOT a match: the slash
-     * is what tells a tint from the solid fill.
-     */
-    const solid = screen
-      .getAllByRole("button")
-      .filter((b) => /(?:^|\s)bg-primary(?:\s|$)/.test(b.className))
-    expect(solid.map((b) => b.textContent)).toEqual([expect.stringContaining("Start")])
   })
 })

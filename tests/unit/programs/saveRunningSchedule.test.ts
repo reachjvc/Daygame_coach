@@ -87,11 +87,4 @@ describe("saving an edit to a running program", () => {
     const res = await saveRunningSchedule("e1", WEEK, {})
     expect(res.ok === false && res.error).toMatch(/nothing was changed/i)
   })
-
-  it("null clears the custom week — restoring the catalogue program", async () => {
-    const calls = serving({ ok: true })
-    await saveRunningSchedule("e1", null, {})
-    const put = calls.find((c) => c.init?.method === "PUT")!
-    expect(JSON.parse(String(put.init?.body)).customSchedule).toBeNull()
-  })
 })

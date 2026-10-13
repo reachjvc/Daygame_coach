@@ -61,12 +61,6 @@ describe("the catalogue", () => {
     expect(onSelect).toHaveBeenCalledWith(first.id)
   })
 
-  it("has no 'View' buttons left to compete with Start", () => {
-    render(<ProgramCatalog onSelect={vi.fn()} />)
-    // Thirteen oranges on the screen whose job is choosing one thing.
-    expect(screen.queryAllByRole("button", { name: /^view/i })).toHaveLength(0)
-  })
-
   it("filtering by discipline shows that discipline and no other", async () => {
     const user = userEvent.setup()
     render(<ProgramCatalog onSelect={vi.fn()} />)

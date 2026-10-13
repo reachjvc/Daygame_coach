@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach, vi } from 'vitest'
-import { render, screen, cleanup, fireEvent } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent, within } from '@testing-library/react'
 
 import { ProgramRow } from '@/src/programs/components/ProgramRow'
 
@@ -13,10 +13,12 @@ afterEach(cleanup)
  * way that happens is not carelessness; it is five files each making the same
  * decision separately, months apart.
  *
- * So the contract pinned here is the row's shape, not its colours: what element
- * it is (a link goes somewhere, a button does something), that it is big enough
- * to hit, and that a long program name truncates instead of making one row in
- * the list taller than the rest.
+ * So the contract pinned here is the row's shape, not its classes: what element
+ * it is (a link goes somewhere, a button does something), what it carries, and
+ * that a control in its slot is never nested inside it. Whether it is big
+ * enough to hit, and whether a long name truncates, are measurements, and jsdom
+ * cannot measure — a class list asserted here would only restate the
+ * component's own source.
  */
 describe('One row shape for every program list', () => {
   test('one row shape for every program list', () => {
@@ -35,15 +37,12 @@ describe('One row shape for every program list', () => {
     const link = screen.getByTestId('row-link')
     expect(link.tagName).toBe('A')
     expect(link).toHaveAttribute('href', '/programs/strong-lifts')
-    expect(link.className).toContain('min-h-14')
 
-    const name = screen.getByText('StrongLifts 5×5')
-    // jsdom cannot measure overflow, so the class is the contract.
-    expect(name.className).toContain('truncate')
-    expect(name.className).toContain('font-medium')
-
-    expect(screen.getByText('Beginner · 12 weeks').className).toContain('text-xs')
-    expect(screen.getByTestId('right-slot')).toBeTruthy()
+    // The name and the meta line are what the link is announced as, so they
+    // live inside it; the right slot is beside it.
+    expect(within(link).getByText('StrongLifts 5×5')).toBeTruthy()
+    expect(within(link).getByText('Beginner · 12 weeks')).toBeTruthy()
+    expect(link.contains(screen.getByTestId('right-slot'))).toBe(false)
   })
 
   test('a row that acts rather than navigates is a real button', () => {
@@ -53,7 +52,6 @@ describe('One row shape for every program list', () => {
     const row = screen.getByTestId('row-button')
     expect(row.tagName).toBe('BUTTON')
     expect(row).toHaveAttribute('type', 'button')
-    expect(row.className).toContain('min-h-14')
 
     fireEvent.click(row)
     expect(onClick).toHaveBeenCalledTimes(1)

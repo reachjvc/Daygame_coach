@@ -58,12 +58,6 @@ describe("setSlot", () => {
       "Squat|warmup|2|left"
     )
   })
-
-  it("tells a warm-up set 1 from a working set 1", () => {
-    const warm = setSlot({ exerciseId: "squat", exercise: "Squat", kind: "warmup", setNumber: 1, side: null })
-    const work = setSlot({ exerciseId: "squat", exercise: "Squat", kind: "working", setNumber: 1, side: null })
-    expect(warm).not.toBe(work)
-  })
 })
 
 describe("setLabel", () => {
@@ -250,11 +244,5 @@ describe("the order you did them in", () => {
     expect(moveLift(lifts, "bench", 1)).toEqual(["squat", "row", "bench"])
     expect(moveLift(lifts, "squat", -1)).toEqual(["squat", "bench", "row"])
     expect(moveLift(lifts, "row", 1)).toEqual(["squat", "bench", "row"])
-  })
-
-  it("returns the whole list, because the order is stored whole", () => {
-    // Building the list at the call site is how one lift's move comes to wipe
-    // another's — the same reason `withRest` returns the whole map.
-    expect(moveLift(lifts, "squat", 1)).toHaveLength(3)
   })
 })

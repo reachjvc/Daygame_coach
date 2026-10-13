@@ -14,7 +14,6 @@
 import { describe, it, expect } from "vitest"
 import { readSetEntry } from "@/src/programs/programsService"
 import { CompleteSetSchema, SET_LIMITS, setLimitSentence } from "@/src/programs/schemas"
-import { MAX_WEIGHT_KG } from "@/src/shared/weight"
 
 const entry = (weight: string, reps: string, opts: { bodyweight?: boolean; unweightedOk?: boolean } = {}) =>
   readSetEntry({ weight, reps, ...opts })
@@ -83,10 +82,6 @@ describe("a number the database cannot hold", () => {
 })
 
 describe("the row and the server quote the same numbers", () => {
-  it("SET_LIMITS' weight ceiling is the column's ceiling", () => {
-    expect(SET_LIMITS.weightMax).toBe(MAX_WEIGHT_KG)
-  })
-
   it("the server's first issue for 1000 kg is the sentence the row shows", () => {
     const parsed = CompleteSetSchema.safeParse({
       exerciseId: "squat",

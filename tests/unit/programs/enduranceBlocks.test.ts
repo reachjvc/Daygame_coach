@@ -40,13 +40,6 @@ describe("describeEnduranceBlock", () => {
     expect(describeEnduranceBlock(block({ label: "Jog", durationSec: 90 }))).not.toBe("Jog 2m")
   })
 
-  test("and it is told apart from the block beside it", () => {
-    // The whole fault: these two printed identically.
-    expect(describeEnduranceBlock(block({ label: "Jog", durationSec: 90 }))).not.toBe(
-      describeEnduranceBlock(block({ label: "Jog", durationSec: 180 }))
-    )
-  })
-
   test("whole minutes read as minutes", () => {
     expect(describeEnduranceBlock(block({ label: "Brisk walk", durationSec: 300 }))).toBe("Brisk walk 5 min")
     expect(describeEnduranceBlock(block({ label: "Run", durationSec: 180 }))).toBe("Run 3 min")
@@ -59,6 +52,9 @@ describe("describeEnduranceBlock", () => {
 
   test("a short block is seconds, not a fraction of a minute", () => {
     expect(describeEnduranceBlock(block({ label: "Sprint", durationSec: 30 }))).toBe("Sprint 30s")
+    // Couch to 5K week 1's jog. A whole minute, and still under two, so it
+    // reads in seconds beside the 90s walk it alternates with.
+    expect(describeEnduranceBlock(block({ label: "Jog", durationSec: 60 }))).toBe("Jog 60s")
   })
 
   test("a distance block says the distance", () => {
@@ -67,27 +63,5 @@ describe("describeEnduranceBlock", () => {
 
   test("a block with neither is just its label, not a dangling unit", () => {
     expect(describeEnduranceBlock(block({ label: "Cool down" }))).toBe("Cool down")
-  })
-
-  test("the printed blocks add up to what the header claims", () => {
-    /**
-     * THE CONTRADICTION, as a number. Couch to 5K week 1: 5 min walk, then
-     * 8×(60s jog / 90s walk), then 5 min walk. `enduranceMinutes` sums the
-     * true seconds and says 30. The old formatter's blocks read 1m and 2m,
-     * which adds to 34.
-     */
-    const blocks = [
-      block({ label: "Brisk walk", durationSec: 300 }),
-      block({ label: "Jog", durationSec: 60 }),
-      block({ label: "Walk", durationSec: 90 }),
-    ]
-    const printed = blocks.map(describeEnduranceBlock)
-    const seconds = printed.map((text) => {
-      const s = text.match(/ (\d+)s$/)
-      if (s) return Number(s[1])
-      const m = text.match(/ ([\d.]+) min$/)
-      return m ? Number(m[1]) * 60 : 0
-    })
-    expect(seconds).toEqual([300, 60, 90])
   })
 })

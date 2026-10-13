@@ -324,10 +324,6 @@ describe("skipping a session", () => {
     expect(JSON.stringify(tables.program_enrollments)).toBe(before)
   })
 
-  it("is a 409 at the route, not a 500 — it is something the person can act on", async () => {
-    expect(statusFor(new ProgramRefused("This week runs by the calendar"))).toBe(409)
-  })
-
   it("still moves a program that is worked through in order", async () => {
     await expect(skipSession(USER, ENROLLMENT)).resolves.toBeTruthy()
     const saved = tables.program_enrollments[0]

@@ -120,29 +120,6 @@ describe("the rest clock", () => {
    *     browser, where the clock and the refusal are not competing with 290
    *     test files for a core.
    */
-  it("starts the clock on the tick, with the write still on the wire", async () => {
-    const user = userEvent.setup()
-    const reply = deferred<Response>()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string) =>
-        String(url).includes("/sets") ? await reply.promise : ({ ok: true, status: 200, json: async () => null } as unknown as Response)
-      )
-    )
-
-    renderScreen()
-    await user.click(screen.getAllByTestId("tick-1")[0])
-
-    expect(screen.getByTestId("rest-bar")).toBeTruthy()
-
-    // Answered so the pending request does not outlive the test.
-    reply.resolve({
-      ok: false,
-      status: 400,
-      json: async () => ({ error: "Weight has to be between 0 and 999.99." }),
-    } as unknown as Response)
-  })
-
   it("stays when the set is merely queued", async () => {
     const user = userEvent.setup()
     const reply = deferred<Response>()

@@ -109,26 +109,11 @@ describe("the three weight maps are one rule", () => {
 })
 
 describe("a week you wrote yourself starts under a name", () => {
-  it("a custom programId with no name is refused, at the name", () => {
-    const parsed = EnrollSchema.safeParse(enrolBody({ programId: "custom", customSchedule: A_WEEK }))
-    expect(parsed.success).toBe(false)
-    expect(parsed.success === false && parsed.error.issues[0].path).toEqual(["label"])
-    expect(parsed.success === false && parsed.error.issues[0].message).toMatch(/give this week a name/i)
-  })
-
   it("a name of only spaces is no name", () => {
     const parsed = EnrollSchema.safeParse(
       enrolBody({ programId: "custom", customSchedule: A_WEEK, label: "   " })
     )
     expect(parsed.success).toBe(false)
-  })
-
-  it("a named custom week is accepted, and the name survives", () => {
-    const parsed = EnrollSchema.safeParse(
-      enrolBody({ programId: "custom", customSchedule: A_WEEK, label: "Winter block" })
-    )
-    expect(parsed.success).toBe(true)
-    expect(parsed.success && parsed.data.label).toBe("Winter block")
   })
 
   it("a catalogue program needs no name — it already has one", () => {

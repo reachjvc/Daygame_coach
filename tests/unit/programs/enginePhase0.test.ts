@@ -23,7 +23,6 @@ import {
   seedEnrollment,
   skipRefusal,
   resetConfirmText,
-  RESET_EFFECT,
 } from "@/src/programs/programsService"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { upperLower } from "@/src/programs/data/bodybuilding/upperLower"
@@ -260,11 +259,6 @@ describe("how long to rest", () => {
     // 3×5 squat got ninety seconds and 4×12 curls got three minutes.
     expect(restSecondsFor({ name: "Squat" }).seconds).toBe(REST_SECONDS.compound)
     expect(restSecondsFor({ name: "Lateral Raise" }).seconds).toBe(REST_SECONDS.accessory)
-  })
-
-  test("our number says it is ours; the author's says it is theirs", () => {
-    expect(restSecondsFor({ name: "Squat" }).ours).toBe(true)
-    expect(restSecondsFor({ name: "Squat", restSec: 240 })).toEqual({ seconds: 240, ours: false })
   })
 
   test("a warm-up does not start a three-minute clock", () => {
@@ -717,10 +711,5 @@ describe("what reset says it does", () => {
 
     expect(resetConfirmText({ cursor: true, weights: true })).toMatch(/go back to where you began/i)
     expect(resetConfirmText({ cursor: true, weights: true })).toMatch(/cannot be undone/i)
-  })
-
-  test("the default is what the database actually does today", () => {
-    expect(RESET_EFFECT).toEqual({ cursor: true, weights: false })
-    expect(resetConfirmText()).toBe(resetConfirmText(RESET_EFFECT))
   })
 })

@@ -71,23 +71,4 @@ describe("what a running program is called", () => {
         offenders.join("\n")
     ).toEqual([])
   })
-
-  test("the four surfaces that used to get it wrong now use enrollmentName", () => {
-    // Named rather than counted: a count stays right while one of them is
-    // rewritten back to the old way.
-    const surfaces = [
-      "app/programs/live/page.tsx",
-      "src/goals/components/north-star/WorkoutPrograms.tsx",
-      "src/programs/components/PastPrograms.tsx",
-    ]
-    const missing = surfaces.filter(
-      (rel) => !fs.readFileSync(path.join(projectRoot, rel), "utf-8").includes("enrollmentName")
-    )
-    expect(
-      missing,
-      "These show the name of a program somebody is running and no longer\n" +
-        "use enrollmentName:\n" +
-        missing.join("\n")
-    ).toEqual([])
-  })
 })

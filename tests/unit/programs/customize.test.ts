@@ -490,11 +490,23 @@ describe("the swap pool", () => {
   })
 
   test("every library entry builds an exercise the wire schema accepts", () => {
-    let s = materializeSchedule(upperLower)
+    // One lift at a time, each on its own copy of a schedule the schema already
+    // accepts, so a refusal names the entry that caused it.
+    expect(EXERCISE_LIBRARY.length, "premise: the library has entries to check").toBeGreaterThan(0)
+    const refused: string[] = []
+    let all = materializeSchedule(upperLower)
     for (const entry of EXERCISE_LIBRARY) {
-      s = addExercise(s, "upper", libraryExercise(entry.id)!).schedule
+      const one = addExercise(materializeSchedule(upperLower), "upper", libraryExercise(entry.id)!).schedule
+      const parsed = CustomScheduleSchema.safeParse(one)
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0]
+        refused.push(`${entry.id}: ${issue?.path.join(".")} ${issue?.message}`)
+      }
+      all = addExercise(all, "upper", libraryExercise(entry.id)!).schedule
     }
-    const day = scheduleDays(s).find((d) => d.id === "upper")!
+    expect(refused, "The palette offers these, and the save would refuse them:\n" + refused.join("\n")).toEqual([])
+
+    const day = scheduleDays(all).find((d) => d.id === "upper")!
     expect(new Set(day.exercises.map((e) => e.id)).size).toBe(day.exercises.length) // no id collisions
   })
 })

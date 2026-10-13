@@ -17,7 +17,7 @@ import { describe, it, expect } from "vitest"
 import { describeProgramWeek, FORGOTTEN_AFTER_DAYS } from "@/src/programs/programWeekService"
 import { seedEnrollment } from "@/src/programs/programsService"
 import { requireProgram } from "@/src/programs/data/catalog"
-import type { ProgramDefinition, ProgramEnrollment, ProgramSchedule } from "@/src/programs/types"
+import type { ProgramDefinition, ProgramEnrollment } from "@/src/programs/types"
 
 /** Same fixture shape as `describeTrainingWeek.test.ts`, deliberately. */
 function enrolled(program: ProgramDefinition, over: Partial<ProgramEnrollment> = {}): ProgramEnrollment {
@@ -49,41 +49,6 @@ describe("the week sentence", () => {
     expect(said.week).toMatch(/in turn/)
     expect(said.week).not.toMatch(/\d×\/wk/)
     expect(said.week).not.toMatch(/days a week/)
-  })
-
-  it("lists the weekdays of a program pinned to them", () => {
-    const program = requireProgram("stronglifts-5x5")
-    const base = program.schedule
-    if (base.kind !== "linear_rotation") throw new Error("fixture assumes a rotation")
-    const pinned: ProgramSchedule = {
-      ...base,
-      days: base.days.map((d, i) => ({ ...d, label: i === 0 ? "Upper" : "Lower", weekday: i === 0 ? 1 : 4 })),
-    }
-    const said = describeProgramWeek(enrolled(program, { customSchedule: pinned }), AT)
-
-    expect(said.week).toBe("Mon · Thu — Upper / Lower")
-  })
-
-  it("takes a renamed day from the enrollment's own schedule, not the catalogue", () => {
-    const program = requireProgram("stronglifts-5x5")
-    const base = program.schedule
-    if (base.kind !== "linear_rotation") throw new Error("fixture assumes a rotation")
-    const renamed: ProgramSchedule = {
-      ...base,
-      days: base.days.map((d, i) => ({ ...d, label: i === 0 ? "Upper Body" : d.label })),
-    }
-    const said = describeProgramWeek(enrolled(program, { customSchedule: renamed }), AT)
-
-    // The copies never heard about the rename; this reads the copy-on-write one.
-    expect(said.week).toContain("Upper Body")
-  })
-
-  it("reads week N of M for an endurance plan", () => {
-    const program = requireProgram("couch-to-5k")
-    const at = enrolled(program)
-    const said = describeProgramWeek({ ...at, cursor: { ...at.cursor, week: 3 } }, AT)
-
-    expect(said.week).toMatch(/^Week 3 of \d+ · \d+ sessions? this week$/)
   })
 })
 

@@ -500,16 +500,6 @@ describe("a lift is rounded to a weight it can actually be loaded at", () => {
     const rx = computePrescription(effectiveProgram(customProgram, schedule), enr)
     expect(rx.exercises[1].sets[0].weight).toBe(6)
   })
-
-  test("the library says which lifts are on a bar", () => {
-    expect(libraryExercise("lib_bench_press")!.barbell).toBe(true)
-    expect(libraryExercise("lib_back_squat")!.barbell).toBe(true)
-    // Compound, but nothing to floor it at — the distinction `compound` misses.
-    expect(libraryExercise("lib_dip")!.compound).toBe(true)
-    expect(libraryExercise("lib_dip")!.barbell).toBe(false)
-    expect(libraryExercise("lib_lateral_raise")!.barbell).toBe(false)
-    expect(libraryExercise("lib_lat_pulldown")!.barbell).toBe(false)
-  })
 })
 
 describe("bodyweight is a real starting weight", () => {

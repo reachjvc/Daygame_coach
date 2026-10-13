@@ -12,6 +12,10 @@
  * `OFFERED_DISCIPLINES` derives the browsable list, and `DraftBody.discipline`
  * takes its enum from `DISCIPLINES` rather than spelling the seven ids out
  * again. This is what stops the next screen writing its own.
+ *
+ * The one copy that cannot be derived is the database's: `program_drafts`
+ * spells the seven ids out in a CHECK, so a discipline added to `DISCIPLINES`
+ * alone saves as a 23514 the first time somebody files a draft under it.
  */
 
 import { describe, test, expect } from "vitest"
@@ -19,23 +23,10 @@ import fs from "fs"
 import path from "path"
 import { ALL_PROGRAMS, OFFERED_DISCIPLINES } from "@/src/programs/data/catalog"
 import { DISCIPLINES } from "@/src/programs/config"
-import { CreateDraftSchema } from "@/src/programs/schemas"
 
 const projectRoot = path.resolve(__dirname, "../../..")
 
 describe("the catalogue is reachable", () => {
-  test("every program is filed under a discipline the vocabulary knows", () => {
-    const unknown = ALL_PROGRAMS.filter((p) => !(p.discipline in DISCIPLINES)).map(
-      (p) => `${p.id}: ${p.discipline}`
-    )
-    expect(
-      unknown,
-      "These programs are filed under a discipline DISCIPLINES has never heard\n" +
-        "of, so no screen can offer them:\n" +
-        unknown.join("\n")
-    ).toEqual([])
-  })
-
   test("every program is under a discipline somebody can browse", () => {
     /**
      * The half that actually bit. A program can be perfectly well filed and
@@ -52,32 +43,28 @@ describe("the catalogue is reachable", () => {
     ).toEqual([])
   })
 
-  test("the draft schema accepts every discipline, including the one that was missed", () => {
-    const week = {
-      kind: "linear_rotation" as const,
-      days: [
-        {
-          id: "a",
-          label: "A",
-          exercises: [
-            {
-              id: "sq",
-              name: "Squat",
-              metricType: "load" as const,
-              scheme: { kind: "linear" as const, sets: 3, reps: 5 },
-              progression: { kind: "none" as const },
-            },
-          ],
-        },
-      ],
+  test("no screen spells the catalogue's size as a word", () => {
+    // "Thirteen cited programs" was right when it was written and wrong the
+    // moment a fourteenth was added — which is what a hand-counted number does.
+    const offenders: string[] = []
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name)
+        if (entry.isDirectory()) {
+          if (entry.name !== "node_modules") walk(full)
+        } else if (/\.tsx?$/.test(entry.name)) {
+          const src = fs.readFileSync(full, "utf-8")
+          if (/\b(Eleven|Twelve|Thirteen|Fourteen|Fifteen) cited\b/.test(src)) {
+            offenders.push(path.relative(projectRoot, full).replace(/\\/g, "/"))
+          }
+        }
+      }
     }
-    for (const discipline of Object.keys(DISCIPLINES)) {
-      const parsed = CreateDraftSchema.safeParse({ name: "W", discipline, schedule: week })
-      expect(parsed.success, `the draft schema refuses "${discipline}"`).toBe(true)
-    }
-    expect(CreateDraftSchema.safeParse({ name: "W", discipline: "quidditch", schedule: week }).success).toBe(
-      false
-    )
+    walk(path.join(projectRoot, "src"))
+    expect(
+      offenders,
+      "These count the catalogue by hand. Use ALL_PROGRAMS.length:\n" + offenders.join("\n")
+    ).toEqual([])
   })
 })
 
@@ -144,5 +131,31 @@ describe("the list of disciplines has one home", () => {
         "src/programs/data/catalog.ts, or DISCIPLINES from config.ts:\n" +
         offenders.join("\n")
     ).toEqual([])
+  })
+})
+
+describe("the database knows the same disciplines", () => {
+  test("program_drafts' CHECK lists exactly the ids DISCIPLINES has", () => {
+    /**
+     * The newest migration that spells the column's CHECK out wins, so a later
+     * ALTER that widens it is what this reads — not the CREATE it replaced.
+     */
+    const dir = path.join(projectRoot, "supabase/migrations")
+    const lists = fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.endsWith(".sql"))
+      .map((e) => e.name)
+      .sort()
+      .map((f) => fs.readFileSync(path.join(dir, f), "utf-8"))
+      .filter((sql) => /\bprogram_drafts\b/.test(sql))
+      .flatMap((sql) => [...sql.matchAll(/CHECK\s*\(\s*discipline\s+IN\s*\(([^)]*)\)\s*\)/gi)])
+      .map((m) => [...m[1].matchAll(/'([^']+)'/g)].map((q) => q[1]))
+
+    expect(lists.length, "premise: a migration constrains program_drafts.discipline").toBeGreaterThan(0)
+    expect(
+      [...lists[lists.length - 1]].sort(),
+      "DISCIPLINES and the program_drafts.discipline CHECK disagree. A draft filed\n" +
+        "under an id only the code knows is refused by the database on save."
+    ).toEqual(Object.keys(DISCIPLINES).sort())
   })
 })

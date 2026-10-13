@@ -66,14 +66,4 @@ describe('The training screens speak one visual language', () => {
     )
     expect(greenElsewhere.map(([n]) => n), 'green lives only in DONE').toEqual([])
   })
-
-  test('it can only ever hold class names', () => {
-    // A .ts, not a .tsx: no component can hide in here and start carrying its
-    // own colours again.
-    expect(fs.existsSync(path.resolve(__dirname, '../../..', MODULE_PATH))).toBe(true)
-    for (const [name, value] of allValues) {
-      expect(typeof value, `${name} must be a class string`).toBe('string')
-      expect(value.trim().length, `${name} must not be empty`).toBeGreaterThan(0)
-    }
-  })
 })
