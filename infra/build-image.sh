@@ -74,6 +74,19 @@ for key in "${PUBLIC_KEYS[@]}"; do
   [ -n "${!key:-}" ] || die "$key is missing or empty in $PUBLIC_ENV."
 done
 
+# --- room on C: ----------------------------------------------------------------
+# WSL's virtual disk lives on C:, and a full C: detached WSL and killed every
+# session on 2026-10-13, while this builder held 30 GB of cache. A build writes
+# several GB, so it does not start below MIN_FREE_GB free there, and the
+# builder's cache is trimmed to 4 GB after every build. Deleting inside WSL
+# frees room in the virtual disk but never shrinks it on C:.
+MIN_FREE_GB="${MIN_FREE_GB:-20}"
+if [ -d /mnt/c ]; then
+  free_gb="$(df -BG --output=avail /mnt/c | tail -1 | tr -dc '0-9')"
+  [ "${free_gb:-0}" -ge "$MIN_FREE_GB" ] ||
+    die "C: has ${free_gb:-?} GB free and a build needs ${MIN_FREE_GB}. A full C: detaches WSL (blocker B-DISK). Free space on C: first."
+fi
+
 # --- the capped builder -------------------------------------------------------
 if ! docker buildx inspect "$BUILDER" >/dev/null 2>&1; then
   say "creating the buildx builder $BUILDER, capped at 12 GB"
@@ -115,6 +128,9 @@ docker buildx build \
 # The ID Docker gives the loaded image, which is what infra/deploy.sh accepts
 # for a local rehearsal.
 image_id="$(docker image inspect -f '{{.Id}}' "$IMAGE_NAME:$sha")"
+
+docker buildx prune --builder "$BUILDER" --keep-storage 4gb -f >/dev/null 2>&1 ||
+  say "WARNING: could not trim the builder's cache; check: docker buildx du --builder $BUILDER"
 
 revision="$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id")"
 [ "$revision" = "$sha" ] || die "the image's revision label is '$revision', not $sha."
