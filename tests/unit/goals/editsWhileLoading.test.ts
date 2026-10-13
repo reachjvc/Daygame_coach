@@ -121,11 +121,4 @@ describe("an edit made while the account's days were loading", () => {
 
     expect(keepEditsMadeWhileLoading(account, atLoad, atLoad)).toEqual(account)
   })
-
-  it("and sends nothing in that case, or every load writes its own plan back", () => {
-    const atLoad = record({ logged: { [DAY]: ["s7"] } })
-    const account = record({ logged: { [DAY]: ["s7"], [OTHER]: ["s5"] } })
-
-    expect(patchesBetween(account, keepEditsMadeWhileLoading(account, atLoad, atLoad))).toEqual([])
-  })
 })

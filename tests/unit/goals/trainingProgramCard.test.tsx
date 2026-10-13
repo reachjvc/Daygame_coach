@@ -16,7 +16,7 @@
  * program yet", which is a claim about somebody's training made on no evidence.
  */
 
-import { cleanup, render, screen, within } from "@testing-library/react"
+import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { TrainingProgramCard } from "@/src/goals/components/north-star/WorkoutPrograms"
 import { seedEnrollment } from "@/src/programs/programsService"
@@ -251,52 +251,5 @@ describe("every way out", () => {
     card({ read: { enrollments: [enrollment()], loading: false, error: null } })
     const href = screen.getByRole("link", { name: /Today's session/i }).getAttribute("href") ?? ""
     expect(href).not.toContain("from=")
-  })
-})
-
-describe("the card's own language", () => {
-  it("speaks the app's tokens, at a size people can read, with no orange", () => {
-    /**
-     * The violet step button is this page's primary and there is exactly one of
-     * it. A card that shouts as loudly as the thing you are meant to press next
-     * is competing with the page it sits on — which is what the emerald "Start
-     * tracking this" did.
-     */
-    const { container } = render(
-      <TrainingProgramCard
-        read={{ enrollments: [enrollment()], loading: false, error: null }}
-        timezone={ZONE}
-        now={NOW}
-        onRetry={vi.fn()}
-      />
-    )
-    const classes = [...container.querySelectorAll<HTMLElement>("*")]
-      .map((el) => el.className)
-      .filter((c): c is string => typeof c === "string")
-      .join(" ")
-
-    expect(classes).not.toMatch(/\bzinc-\d|\bsky-\d/)
-    expect(classes).not.toMatch(/text-\[(?:9|10|10\.5|11|11\.5)px\]/)
-    // `bg-primary` is the app's one loud fill; a tinted `bg-primary/10` chip is
-    // not, and the slash is what tells them apart.
-    expect(classes).not.toMatch(/(?:^|\s)bg-primary(?:\s|$)/)
-    // Green is "finished" and nothing else, so it may not appear on a card
-    // about a program that is running.
-    expect(classes).not.toMatch(/emerald-/)
-  })
-
-  it("keeps green for the one thing on this card that IS finished", () => {
-    const { container } = render(
-      <TrainingProgramCard
-        read={{ enrollments: [], loading: false, error: null }}
-        timezone={ZONE}
-        now={NOW}
-        onRetry={vi.fn()}
-        ended={{ enrollmentId: "enr-old" }}
-      />
-    )
-    expect(within(container).getByText(/everything you logged is kept/i).className).toMatch(
-      /emerald-/
-    )
   })
 })

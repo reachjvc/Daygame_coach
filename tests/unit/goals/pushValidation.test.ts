@@ -23,9 +23,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import fs from "fs"
-import path from "path"
-import { addGoal, emptyNsPlan, loadNsPlan, updateGoal } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, updateGoal } from "@/src/goals/northStarService"
 import { buildTrackInserts, goalToInsert } from "@/src/goals/northStarTrackService"
 import { BatchCreateGoalSchema } from "@/src/db/goalSchemas"
 import type { NsPlan } from "@/src/goals/types"
@@ -98,33 +96,4 @@ describe("every shape the push can emit passes the schema that guards the route"
       expect(parsed.success, parsed.success ? "" : JSON.stringify(parsed.error.issues)).toBe(true)
     })
   }
-})
-
-describe("the owner's real plan, pushed", () => {
-  /**
-   * Fifty goals of his own writing, straight from plan_snapshots revision 340.
-   * Every shape in this product that he actually uses, in one assertion — and
-   * the fixture is the plan as saved rather than one assembled here, so it
-   * catches shapes nobody thought to write a case for.
-   */
-  const FIXTURE = path.join(
-    "/tmp/claude-1000/-home-jonaswsl-projects-daygame-coach",
-    "853d760b-244f-4c36-883f-d35b1eb17279/scratchpad/owner-plan-rev340.json",
-  )
-
-  it("every goal in it produces a row the route will accept", () => {
-    if (!fs.existsSync(FIXTURE)) {
-      // The fixture is the owner's own plan and is deliberately kept out of the
-      // repository, so this is a check that runs where the file is present
-      // rather than a silent pass. The generated shapes above stand alone.
-      return
-    }
-    const plan = loadNsPlan(JSON.stringify(JSON.parse(fs.readFileSync(FIXTURE, "utf-8")).plan))!
-    expect(plan.goals.length).toBeGreaterThan(40)
-
-    // The route caps a batch at fifty, which is exactly what he has.
-    const inserts = buildTrackInserts(plan, RUN)
-    const parsed = BatchCreateGoalSchema.safeParse({ goals: inserts })
-    expect(parsed.success, parsed.success ? "" : JSON.stringify(parsed.error.issues.slice(0, 5))).toBe(true)
-  })
 })

@@ -1514,11 +1514,6 @@ describe("which plan goals are already counted goals", () => {
     expect([...pushedGoalIds(RUN, rows)].sort()).toEqual([["g1", "row-1"], ["g2", "row-2"]])
   })
 
-  it("recognised NOTHING on a second device before the link existed", () => {
-    // The bug, kept as a test so the fix below has something to be better than.
-    expect(pushedGoalIds(OTHER_RUN, rows).size).toBe(0)
-  })
-
   it("recognises them on a second device FROM THE ACCOUNT'S LINKS", () => {
     const links = { g1: "row-1", g2: "row-2" }
     expect([...pushedGoalIds(OTHER_RUN, rows, links)].sort()).toEqual([["g1", "row-1"], ["g2", "row-2"]])

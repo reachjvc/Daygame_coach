@@ -11,14 +11,13 @@ import { deriveIntents } from "@/src/goals/visionPlanService"
  * M1 acceptance test with the REAL embedder — the same transformers.js model the
  * browser uses, run headlessly in node (pattern: memory intake-matcher-verification).
  *
- * Opt-in via RUN_EMBEDDER_TESTS=1: it downloads the model on first run (~100MB,
- * then cached) and takes ~30s, so it is excluded from the default deterministic
- * suite via test.skip-with-reason (never a silent return — see testing_behavior.md).
+ * Lives in tests/manual because it downloads the model on first run (~100MB,
+ * then cached) and takes ~30s. In tests/unit it sat behind an env flag and so
+ * never ran in `npm test` while counting as a test; here the folder is the
+ * opt-in, so it runs every time it is asked for:
  *
- *   RUN_EMBEDDER_TESTS=1 npx vitest run tests/unit/goals/visionPlanService.embedder.test.ts
+ *   npx vitest run --config vitest.manual.config.ts tests/manual/visionPlanService.embedder.test.ts
  */
-
-const RUN = process.env.RUN_EMBEDDER_TESTS === "1"
 
 const MODEL_ID = "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
 
@@ -32,7 +31,7 @@ async function makeEmbedder() {
 }
 
 describe("vision → intents with the real embedder (acceptance)", () => {
-  it.skipIf(!RUN)(
+  it(
     "the example vision yields ≥3 distinct pillar-tagged intents",
     async () => {
       // Arrange: embed taxonomy + the plan's canonical example vision

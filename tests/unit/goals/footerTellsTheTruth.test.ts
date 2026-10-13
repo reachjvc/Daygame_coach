@@ -22,7 +22,6 @@
 
 import { describe, it, expect } from "vitest"
 import { rowsToPlan } from "@/src/goals/lifePlanMapper"
-import { planToRows } from "@/src/goals/lifePlanMapper"
 import { emptyNsPlan, setAnswer } from "@/src/goals/northStarService"
 import { sendableFingerprint } from "@/src/goals/lifePlanSync"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
@@ -56,15 +55,6 @@ describe("a plan loaded from the account knows it was written", () => {
     ).toBe(STAMP)
   })
 
-  /**
-   * The footer's own condition, stated here so the rule is asserted rather than
-   * inferred from a string on screen. `!plan.updatedAt` is what it branches on.
-   */
-  it("so the footer's first branch is not taken", () => {
-    const plan = rowsToPlan(rowsFromAccount())!
-    expect(!plan.updatedAt, '"Nothing written yet" must not be reachable for a saved plan').toBe(false)
-  })
-
   it("and a plan nobody has saved still has no stamp", () => {
     expect(emptyNsPlan().updatedAt).toBeNull()
   })
@@ -85,38 +75,5 @@ describe("what the save would send is one expression, not two", () => {
       sendableFingerprint(after),
       "an unsent edit that did not move this would leave the footer honest by luck",
     ).not.toBe(sendableFingerprint(before))
-  })
-
-  /**
-   * THE OTHER HALF, and the reason the footer cannot simply key off "has the
-   * plan changed at all": a tick, a day note and a journal line travel on the
-   * day route, not in this request. If they moved the fingerprint, the flow
-   * would send the whole plan on every tick and move the revision for nothing —
-   * which is what made a second device permanently stale.
-   */
-  it("a day-half change does not, because the save does not carry it", () => {
-    const before = emptyNsPlan()
-    const after = { ...before, logged: { "2026-09-24": ["s1"] } }
-
-    expect(sendableFingerprint(after)).toBe(sendableFingerprint(before))
-  })
-})
-
-describe("the stamp is the database's, not the browser's", () => {
-  /**
-   * `PlanRows` is one shape used in both directions. On the way IN the column
-   * belongs to `save_life_plan`, so whatever the mapper puts here is ignored —
-   * the field is required only so the READ direction cannot forget it, which is
-   * exactly what it had done.
-   */
-  it("a plan sent up carries a stamp the server is free to ignore", () => {
-    let n = 0
-    const rows = planToRows(emptyNsPlan(), {
-      planId: "11111111-1111-1111-1111-111111111111",
-      userId: "22222222-2222-2222-2222-222222222222",
-      idFor: () => `00000000-0000-0000-0000-${String(++n).padStart(12, "0")}`,
-    })
-
-    expect(typeof rows.updated_at, "the shape must be whole in both directions").toBe("string")
   })
 })

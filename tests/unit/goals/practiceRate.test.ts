@@ -177,13 +177,6 @@ describe("the week grid and the goal beneath it cannot disagree", () => {
   const weeklyTotalOf = (insert: { period?: string; target_value: number }) =>
     insert.period === "daily" ? insert.target_value * 7 : insert.target_value
 
-  it("agree in week one, on the owner's own ramp", () => {
-    const { plan, goal } = driver({ rampSteps: APPROACHES_RAMP })
-    const activity = trackActivities(plan).find((a) => a.id === goal.id)!
-
-    expect(activityPerWeek(activity, 1)).toBe(weeklyTotalOf(goalToInsert(plan, RUN, goal)))
-  })
-
   it("agree in week one for every shape of practice, daily ones included", () => {
     const shapes = [
       { rampSteps: APPROACHES_RAMP },

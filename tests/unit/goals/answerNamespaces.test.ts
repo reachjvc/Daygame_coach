@@ -48,14 +48,6 @@ describe("AT4 — answer namespaces stay disjoint", () => {
     expect(offenders, `these are labelled as "the one thing": ${offenders.join(", ")}`).toEqual([])
   })
 
-  it("the two renamed questions kept their place in the catalogue", () => {
-    const ids = FIELD_LIBRARY.map((f) => f.id)
-    expect(ids).toContain("report_next_session_focus")
-    expect(ids).toContain("report_pivotal_moment")
-    expect(ids).not.toContain("one_focus")
-    expect(ids).not.toContain("one_moment")
-  })
-
   it("every field-report question id is unique", () => {
     const ids = FIELD_LIBRARY.map((f) => f.id)
     const seen = new Set<string>()

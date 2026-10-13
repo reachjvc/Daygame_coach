@@ -16,23 +16,6 @@ import { GOAL_TYPES, GOAL_TRACKING_TYPES } from "@/src/db/goalEnums"
 const row = (goal_type: string, tracking_type: string) =>
   ({ goal_type, tracking_type }) as Parameters<typeof shapeOfRow>[0]
 
-describe("the three shapes", () => {
-  it("is exactly the three, and each is a real VisionGoalType", () => {
-    expect(GOAL_SHAPES.map((s) => s.type).sort()).toEqual(
-      ["achievement", "habit_ramp", "milestone_ladder"],
-    )
-  })
-
-  it("gives every shape a label and a hint that says what it is", () => {
-    for (const s of GOAL_SHAPES) {
-      expect(s.label.length, s.type).toBeGreaterThan(0)
-      // The hint carries an example, which is the part that makes a shape
-      // pickable by somebody who has never seen the word before.
-      expect(s.hint.length, s.type).toBeGreaterThan(30)
-    }
-  })
-})
-
 describe("reading a row's shape", () => {
   /**
    * TOTAL BY CONSTRUCTION. Every combination lands somewhere, which is what

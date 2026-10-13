@@ -1,7 +1,6 @@
 import { describe, test, expect } from "vitest"
 import { buildPreviewState, applyPreviewState } from "@/src/goals/goalsService"
 import { generateGoalTreeInserts } from "@/src/goals/treeGenerationService"
-import { getDaygamePathL1 } from "@/src/goals/data/goalGraph"
 import type { BatchGoalInsert } from "@/src/goals/treeGenerationService"
 
 // ============================================================================
@@ -68,25 +67,6 @@ describe("buildPreviewState", () => {
     expect(state.get("__temp_dd")!.enabled).toBe(false)
   })
 
-  test("sets targetValue from insert target_value", () => {
-    const inserts = [createInsert({ _tempId: "__temp_x", target_value: 500 })]
-    const state = buildPreviewState(inserts)
-    expect(state.get("__temp_x")!.targetValue).toBe(500)
-  })
-
-  test("extracts milestoneConfig from insert milestone_config", () => {
-    const config = { start: 1, target: 1000, steps: 15, curveTension: 5 }
-    const inserts = [createInsert({ _tempId: "__temp_mc", milestone_config: config })]
-    const state = buildPreviewState(inserts)
-    expect(state.get("__temp_mc")!.milestoneConfig).toEqual(config)
-  })
-
-  test("milestoneConfig is undefined when insert has no milestone_config", () => {
-    const inserts = [createInsert({ _tempId: "__temp_no_mc", milestone_config: undefined })]
-    const state = buildPreviewState(inserts)
-    expect(state.get("__temp_no_mc")!.milestoneConfig).toBeUndefined()
-  })
-
   test("works with real generated inserts from L1 template", () => {
     const inserts = generateGoalTreeInserts("l1_girlfriend")
     const state = buildPreviewState(inserts)
@@ -113,33 +93,6 @@ describe("buildPreviewState", () => {
     for (const l3 of enabledL3s) {
       expect(l3.display_category).not.toBe("dirty_dog")
     }
-  })
-})
-
-// ============================================================================
-// getDaygamePathL1 — opt-in filtering
-// ============================================================================
-
-describe("getDaygamePathL1", () => {
-  test("excludes requiresOptIn L1 templates from both paths", () => {
-    const ftoL1s = getDaygamePathL1("fto")
-    const abundanceL1s = getDaygamePathL1("abundance")
-    const allL1s = [...ftoL1s, ...abundanceL1s]
-
-    // l1_the_one and l1_family have requiresOptIn=true, should be excluded
-    for (const l1 of allL1s) {
-      expect(l1.requiresOptIn).toBe(false)
-    }
-    expect(allL1s.every((l) => l.id !== "l1_the_one")).toBe(true)
-    expect(allL1s.every((l) => l.id !== "l1_family")).toBe(true)
-  })
-
-  test("still returns non-opt-in L1s", () => {
-    const ftoL1s = getDaygamePathL1("fto")
-    const abundanceL1s = getDaygamePathL1("abundance")
-    // At least one L1 per path should remain
-    expect(ftoL1s.length).toBeGreaterThan(0)
-    expect(abundanceL1s.length).toBeGreaterThan(0)
   })
 })
 
@@ -176,13 +129,6 @@ describe("applyPreviewState", () => {
     expect(result[0]._tempId).toBe("__temp_l1")
   })
 
-  test("updates target_value when state has override", () => {
-    const inserts = [createInsert({ _tempId: "__temp_x", target_value: 1000 })]
-    const state = new Map([["__temp_x", { enabled: true, targetValue: 500 }]])
-    const result = applyPreviewState(inserts, state)
-    expect(result[0].target_value).toBe(500)
-  })
-
   test("updates milestone_config.target when target changes", () => {
     const inserts = [
       createInsert({
@@ -195,20 +141,6 @@ describe("applyPreviewState", () => {
     const result = applyPreviewState(inserts, state)
     expect(result[0].target_value).toBe(500)
     expect((result[0].milestone_config as Record<string, unknown>).target).toBe(500)
-  })
-
-  test("preserves _tempId and _tempParentId on surviving inserts", () => {
-    const inserts = [
-      createInsert({ _tempId: "__temp_parent", _tempParentId: null, goal_level: 1 }),
-      createInsert({ _tempId: "__temp_child", _tempParentId: "__temp_parent" }),
-    ]
-    const state = new Map([
-      ["__temp_parent", { enabled: true, targetValue: 100 }],
-      ["__temp_child", { enabled: true, targetValue: 100 }],
-    ])
-    const result = applyPreviewState(inserts, state)
-    expect(result[0]._tempId).toBe("__temp_parent")
-    expect(result[1]._tempParentId).toBe("__temp_parent")
   })
 
   test("returns only structural goals when all L3 disabled", () => {

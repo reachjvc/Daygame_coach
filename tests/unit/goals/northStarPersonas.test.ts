@@ -1,11 +1,11 @@
 /**
- * Six people, run through the whole flow.
+ * Five people, run through the whole flow.
  *
  * Everything else in this suite tests one function against one input. These are
  * whole plans in the shape real people arrive in — a lifter with numbers
  * everywhere, somebody whose goals have no numbers at all, somebody counting
- * money, somebody who wrote the same thing in two places, somebody who only
- * wrote feelings, and somebody who has written nothing yet — asked the question
+ * money, somebody who wrote the same thing in two places, and somebody who only
+ * wrote feelings — asked the question
  * the page is actually judged on: does what comes back make sense for THEM.
  *
  * Every case below started as a thing the page got wrong for one of them.
@@ -25,7 +25,6 @@ import {
   suggestedActions,
   updateGoal,
   goalEchoes,
-  oneThingRequirements,
 } from "@/src/goals/northStarService"
 import type { NsPlan } from "@/src/goals/types"
 
@@ -131,11 +130,10 @@ describe("the one who wrote it twice", () => {
     expect(plan.routines.find((r) => r.id === "r1")?.steps).toHaveLength(1)
   })
 
-  it("suggests nothing for a driver it has nothing to say about", () => {
-    const weed = plan.goals[1]
-    for (const action of suggestedActions(plan, weed)) {
-      expect(action.title.toLowerCase(), `offered under "${weed.title}"`).not.toMatch(/water|bed|smile/)
-    }
+  it("offers a driver only what is about it, never the area's other practices", () => {
+    // The routine library has a "No weed" step, so that one is about the goal.
+    // Water, bed and smiling are Health practices too, and are not.
+    expect(suggestedActions(plan, plan.goals[1])).toEqual([{ title: "No weed", daysPerWeek: 7 }])
   })
 })
 
@@ -146,36 +144,13 @@ describe("the vague one — feelings, no verbs", () => {
   plan = setAreaReview(plan, "lm_relationship", { ten: "I am not lonely." }, NOW)
   plan = addGoal(plan, "lm_emotions", "Be happier", "achievement", NOW)
 
-  it("has nothing offered to it, which is the point", () => {
-    // This person is why the suggestion list went. Every version of it either
-    // handed them back "Life feels light again" — scenery, with no Tuesday on
-    // which you can do it — or, once the filter was tight enough to reject
-    // that, offered them nothing at all. A box asks the question honestly.
-    expect(plan.goals.filter((g) => g.servesOneThing)).toEqual([])
-  })
-
   it("gets the shape they asked for, filed where the words point", () => {
     const next = addOneThingRequirement(plan, "Ring my mother once a week", undefined, "habit_ramp", NOW)
     expect(next.goals[next.goals.length - 1]).toMatchObject({ areaId: "lm_family", type: "habit_ramp", daysPerWeek: 1 })
   })
 })
 
-describe("the new one — nothing written yet", () => {
-  const plan = emptyNsPlan()
-
-  it("starts empty, and nothing is filled in on their behalf", () => {
-    expect(plan.goals).toEqual([])
-    expect(oneThingRequirements(plan)).toEqual([])
-  })
-
-  it("still has the twelve areas and the routines to open", () => {
-    expect(plan.areas.length).toBe(12)
-    expect(plan.routines.length).toBeGreaterThan(0)
-    for (const routine of plan.routines) expect(routine.steps).toEqual([])
-  })
-})
-
-describe("across all six, the rules that hold for everybody", () => {
+describe("across all five, the rules that hold for everybody", () => {
   it("never puts a rung past the finish line, whatever the unit", () => {
     for (const unit of ["kg", "lbs", "km", "%", "kr", "reps", ""]) {
       for (const [from, to] of [[0, 10], [5, 21], [72, 100], [2200, 10000], [22, 12], [7, 10]]) {

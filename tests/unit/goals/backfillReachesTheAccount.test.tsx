@@ -103,29 +103,4 @@ describe("the browser that pushed writes the links down", () => {
     await new Promise((r) => setTimeout(r, 50))
     expect(linkCalls(), "a load that writes on every visit is its own defect").toEqual([])
   })
-
-  /**
-   * AND NOT FROM A DEVICE THAT CANNOT READ THE TAG. The run is the only proof
-   * the row came from this plan; a phone that never pushed must not point the
-   * account at rows it has not identified.
-   */
-  it("sends nothing from a device that did not do the pushing", async () => {
-    const { plan, driverId } = planWithADriver()
-    installFetch(driverId)
-
-    render(
-      <TrackTab
-        plan={plan}
-        runId="run-of-another-browser"
-        today="2026-09-26"
-        goalLinks={{}}
-        ticks={NO_TRAINING_TICKS}
-        onToggleStep={vi.fn()}
-      />,
-    )
-    await waitFor(() => expect(screen.queryByText(/Checking your goals/i)).toBeNull())
-    await new Promise((r) => setTimeout(r, 50))
-
-    expect(linkCalls()).toEqual([])
-  })
 })

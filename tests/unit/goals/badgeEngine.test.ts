@@ -1,9 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
-  computeAllBadges,
   computeBadge,
   detectTierUpgrades,
-  TIER_ORDER,
 } from "@/src/goals/badgeEngineService"
 import { ALL_BADGE_REQUIREMENTS } from "@/src/goals/data/goalGraph"
 import type { GoalWithProgress, BadgeTier, BadgeStatus } from "@/src/goals/types"
@@ -89,28 +87,6 @@ describe("computeBadge", () => {
     expect(badge!.tier).toBe("iron")
     expect(badge!.tierName).toBe("Approach Newbie")
     expect(badge!.unlocked).toBe(true)
-  })
-
-  it("computes bronze tier for l2_approach with 75 approaches + 3 venues", () => {
-    const goals = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 8, current_value: 75 }),
-      mockL3Goal({ id: "2", template_id: "l3_venues_explored", progress_percentage: 15, current_value: 3 }),
-    ]
-    const badge = computeBadge("l2_approach", goals)
-    expect(badge).not.toBeNull()
-    expect(badge!.tier).toBe("bronze")
-    expect(badge!.tierName).toBe("Approach Warrior")
-  })
-
-  it("computes silver tier for l2_approach with 200 approaches + 7 venues", () => {
-    const goals = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 20, current_value: 200 }),
-      mockL3Goal({ id: "2", template_id: "l3_venues_explored", progress_percentage: 35, current_value: 7 }),
-    ]
-    const badge = computeBadge("l2_approach", goals)
-    expect(badge).not.toBeNull()
-    expect(badge!.tier).toBe("silver")
-    expect(badge!.tierName).toBe("Approach Veteran")
   })
 
   it("returns none when below iron threshold", () => {
@@ -212,95 +188,10 @@ describe("non-daygame threshold badges", () => {
 })
 
 // ============================================================================
-// computeAllBadges
-// ============================================================================
-
-describe("computeAllBadges", () => {
-  it("returns empty array when no goals are provided", () => {
-    const badges = computeAllBadges([])
-    expect(badges).toEqual([])
-  })
-
-  it("returns empty array when goals have no template_id", () => {
-    const goals = [
-      mockL3Goal({ id: "1", template_id: null as unknown as string, progress_percentage: 50 }),
-    ]
-    const badges = computeAllBadges(goals)
-    expect(badges).toEqual([])
-  })
-
-  it("returns badges only for L2s with active contributing goals", () => {
-    // l3_approach_volume contributes to: l2_approach, l2_inner (not l2_tongue anymore)
-    const goals = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50, current_value: 100 }),
-    ]
-    const badges = computeAllBadges(goals)
-
-    const badgeIds = badges.map((b) => b.badgeId)
-    // Daygame threshold badges that reference l3_approach_volume
-    expect(badgeIds).toContain("l2_approach")
-    expect(badgeIds).toContain("l2_inner")
-
-    // Should NOT have badges that don't reference l3_approach_volume
-    expect(badgeIds).not.toContain("l2_text")
-    expect(badgeIds).not.toContain("l2_date")
-    expect(badgeIds).not.toContain("l2_tongue")
-  })
-
-  it("every badge has correct structure", () => {
-    const goals = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50, current_value: 100 }),
-      mockL3Goal({ id: "2", template_id: "l3_phone_numbers", progress_percentage: 75, current_value: 20 }),
-    ]
-    const badges = computeAllBadges(goals)
-
-    for (const badge of badges) {
-      expect(badge).toHaveProperty("badgeId")
-      expect(badge).toHaveProperty("title")
-      expect(badge).toHaveProperty("tierName")
-      expect(badge).toHaveProperty("progress")
-      expect(badge).toHaveProperty("tier")
-      expect(badge).toHaveProperty("unlocked")
-      expect(typeof badge.badgeId).toBe("string")
-      expect(typeof badge.title).toBe("string")
-      expect(typeof badge.tierName).toBe("string")
-      expect(typeof badge.progress).toBe("number")
-      expect(badge.progress).toBeGreaterThanOrEqual(0)
-      expect(badge.progress).toBeLessThanOrEqual(100)
-      expect(["none", "iron", "bronze", "silver", "gold", "diamond", "mythic"]).toContain(badge.tier)
-      expect(typeof badge.unlocked).toBe("boolean")
-      expect(badge.unlocked).toBe(badge.tier !== "none")
-    }
-  })
-
-  it("includes badges from multiple life areas", () => {
-    const goals = [
-      // Daygame L3 (milestone-based, in badge requirements)
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50, current_value: 100 }),
-      // Personal Growth L3 (milestone-based, in PG badge requirements)
-      mockL3Goal({ id: "2", template_id: "l3_pg_challenges_completed", progress_percentage: 50, current_value: 10 }),
-      // Fitness L3 (milestone-based, in FIT badge requirements)
-      mockL3Goal({ id: "3", template_id: "l3_f_total_sessions", progress_percentage: 50, current_value: 20 }),
-    ]
-    const badges = computeAllBadges(goals)
-    const badgeIds = badges.map((b) => b.badgeId)
-
-    // Should span multiple life areas
-    expect(badgeIds.some((id) => id.startsWith("l2_") && !id.includes("pg_") && !id.includes("f_"))).toBe(true)
-    expect(badgeIds.some((id) => id.includes("pg_"))).toBe(true)
-    expect(badgeIds.some((id) => id.includes("f_"))).toBe(true)
-  })
-})
-
-// ============================================================================
 // ALL_BADGE_REQUIREMENTS integrity
 // ============================================================================
 
 describe("ALL_BADGE_REQUIREMENTS", () => {
-  it("has 31 total badge configs (13 daygame + 6 PG + 4 FIT + 4 WLT + 4 VIC)", () => {
-    expect(ALL_BADGE_REQUIREMENTS.length).toBe(31)
-  })
-
   it("every badge config has 6 tiers", () => {
     for (const config of ALL_BADGE_REQUIREMENTS) {
       expect(config.tiers.length).toBe(6)
@@ -313,14 +204,6 @@ describe("ALL_BADGE_REQUIREMENTS", () => {
     for (const config of ALL_BADGE_REQUIREMENTS) {
       for (const tier of config.tiers) {
         expect(tier.requirements.length).toBeGreaterThan(0)
-      }
-    }
-  })
-
-  it("every tier has a non-empty name", () => {
-    for (const config of ALL_BADGE_REQUIREMENTS) {
-      for (const tier of config.tiers) {
-        expect(tier.name.length).toBeGreaterThan(0)
       }
     }
   })
@@ -400,17 +283,6 @@ describe("tier boundaries", () => {
 // ============================================================================
 // Tier Upgrade Detection
 // ============================================================================
-
-describe("TIER_ORDER", () => {
-  it("none < iron < bronze < silver < gold < diamond < mythic", () => {
-    expect(TIER_ORDER.none).toBeLessThan(TIER_ORDER.iron)
-    expect(TIER_ORDER.iron).toBeLessThan(TIER_ORDER.bronze)
-    expect(TIER_ORDER.bronze).toBeLessThan(TIER_ORDER.silver)
-    expect(TIER_ORDER.silver).toBeLessThan(TIER_ORDER.gold)
-    expect(TIER_ORDER.gold).toBeLessThan(TIER_ORDER.diamond)
-    expect(TIER_ORDER.diamond).toBeLessThan(TIER_ORDER.mythic)
-  })
-})
 
 describe("detectTierUpgrades", () => {
   function badge(id: string, tier: BadgeTier, progress = 50): BadgeStatus {

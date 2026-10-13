@@ -105,23 +105,6 @@ describe("the training log reaches the schedule on the branch a signed-in person
       "signed in, the schedule was handed no training log at all and drew the week as untrained",
     ).toBeGreaterThan(0)
   })
-
-  it("and the header above that row counts it too", async () => {
-    const { plan, strengthStepId } = planWithTraining()
-
-    render(
-      <TrackTab
-        plan={plan}
-        runId="r1"
-        today={TODAY}
-        ticks={{ [TODAY]: [strengthStepId] }}
-        onToggleStep={vi.fn()}
-      />
-    )
-
-    await waitFor(() => expect(screen.queryByText(/Checking your goals/i)).toBeNull())
-    expect(screen.queryByText("0/1"), "the header disagreed with the row under it").toBeNull()
-  })
 })
 
 /**

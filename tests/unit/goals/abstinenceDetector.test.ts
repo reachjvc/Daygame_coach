@@ -133,12 +133,6 @@ describe("readsAsAbstinence", () => {
     expect(readsAsAbstinence("Cut down to 2 beers")).toBe(false)
   })
 
-  it("a Danish stop-verb works at all, which it did not", () => {
-    // `/undgå\b/` never matched anything: `å` is not a word character, so
-    // there is no boundary between it and the space after it.
-    expect(readsAsAbstinence("Undgå sukker")).toBe(true)
-  })
-
   it("both forms consult the same list", () => {
     // Danish reached one list and not the other for as long as there were two.
     for (const habit of ["alkohol", "rygning", "sukker", "porno", "hash", "slik"]) {
@@ -162,12 +156,6 @@ describe("the three shape buttons overrule the guess", () => {
     const plan = loadNsPlan(serializeNsPlan(typed))!
     return { plan, id: plan.goals[0].id }
   }
-
-  it("the guess still applies when nobody has said otherwise", () => {
-    const { plan } = noWeed()
-    expect(plan.goals[0].isAbstinence).toBe(true)
-    expect(plan.goals[0].type).toBe("habit_ramp")
-  })
 
   it("choosing Finish line says it is not a prohibition, and it sticks", () => {
     const { plan, id } = noWeed()

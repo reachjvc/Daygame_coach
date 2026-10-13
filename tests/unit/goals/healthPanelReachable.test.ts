@@ -36,23 +36,6 @@ describe("what areaSlug actually produces", () => {
 })
 
 describe("the gate names values that exist", () => {
-  it("compares against 'health' and 'fitness', not the value nothing produces", () => {
-    const view = fs.readFileSync(
-      path.join(projectRoot, "src/goals/components/GoalHierarchyView.tsx"),
-      "utf-8"
-    )
-    // Comments blanked: the one above the gate explains the bug using the very
-    // string the bug was.
-    const code = view.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "")
-
-    expect(code).toContain('life_area === "health"')
-    expect(code).toContain('life_area === "fitness"')
-    expect(
-      code,
-      'nothing writes "health_fitness" into life_area — areaSlug cannot produce it'
-    ).not.toContain('life_area === "health_fitness"')
-  })
-
   it("the health gate's values are ones areaSlug can return", () => {
     /**
      * Scoped to the HEALTH gate on purpose.

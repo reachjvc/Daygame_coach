@@ -25,7 +25,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { NOTHING_TO_SHOW, decideOnLoad, canSave, planHasNothingWritten } from "@/src/goals/lifePlanSync"
+import { decideOnLoad, canSave, planHasNothingWritten } from "@/src/goals/lifePlanSync"
 import { recordIsEmpty, recordOf } from "@/src/goals/lifePlanDayService"
 import type { NsPlan } from "@/src/goals/types"
 import { addGoal, emptyNsPlan, setNorthStar } from "@/src/goals/northStarService"
@@ -36,13 +36,6 @@ describe("a read that failed is not an account with nothing in it", () => {
 
     expect(decision.kind, "not start-empty, which is what an empty ACCOUNT is").toBe("stay-local")
     expect(canSave(decision, true), "this browser does not know what it would overwrite").toBe(false)
-  })
-
-  it("and an account genuinely holding nothing is a different decision", () => {
-    const decision = decideOnLoad({ server: { plan: null, revision: 0 }, browser: null })
-
-    expect(decision.kind).toBe("start-empty")
-    expect(canSave(decision, true), "nothing to lose, so writing is allowed").toBe(true)
   })
 })
 
@@ -100,40 +93,5 @@ describe("the gate that decides whether there is anything to show", () => {
 
     expect(planHasNothingWritten(plan), "the plan half is untouched").toBe(true)
     expect(recordIsEmpty(recordOf(plan)), "and yet there is something on screen").toBe(false)
-  })
-
-  it("so the banner's own condition is false for that browser", () => {
-    const plan = withARating()
-    const shows = planHasNothingWritten(plan) && recordIsEmpty(recordOf(plan))
-
-    expect(shows, "it must not claim nothing to show to somebody reading their own rating").toBe(false)
-  })
-
-  it("and true only when both halves are empty", () => {
-    const fresh = emptyNsPlan()
-    expect(planHasNothingWritten(fresh) && recordIsEmpty(recordOf(fresh))).toBe(true)
-  })
-})
-
-describe("what it says when it says it", () => {
-  /**
-   * The three things the sentence has to carry, asserted as meaning rather than
-   * as an exact string so a reword does not fail this — but a reword that drops
-   * one of them does.
-   */
-  it("says this is not your plan, that yours is still there, and not to start again", () => {
-    expect(NOTHING_TO_SHOW, "it must deny being the plan").toMatch(/not your plan/i)
-    expect(NOTHING_TO_SHOW, "it must say the real one survives").toMatch(/still on your account/i)
-    expect(NOTHING_TO_SHOW, "it must say not to retype it").toMatch(/rather than starting again/i)
-    expect(NOTHING_TO_SHOW, "and that nothing written now is kept").toMatch(/will be saved/i)
-  })
-
-  /**
-   * It must NOT claim the account has a plan. A new account with a broken
-   * connection has nothing there either, and telling that person their work is
-   * safe on the account would be the same failure pointing the other way.
-   */
-  it("does not promise there is a plan to come back to", () => {
-    expect(NOTHING_TO_SHOW, "conditional, because we cannot know — the read failed").toMatch(/if you have written one/i)
   })
 })

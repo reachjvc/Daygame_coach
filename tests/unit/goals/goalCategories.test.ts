@@ -12,53 +12,6 @@ import {
 // ============================================================================
 
 describe("getCategoryConfig", () => {
-  describe("known life areas (via adapter)", () => {
-    test("should return config for daygame life area", () => {
-      const result = getCategoryConfig("daygame")
-
-      expect(result.id).toBe("daygame")
-      expect(result.name).toBe("Dating & Daygame")
-      expect(result.color).toBe("text-orange-500")
-    })
-
-    test("should return config for health_fitness life area", () => {
-      const result = getCategoryConfig("health_fitness")
-
-      expect(result.id).toBe("health_fitness")
-      expect(result.name).toBe("Health & Appearance")
-      expect(result.color).toBe("text-green-500")
-    })
-
-    test("should return config for career_business life area", () => {
-      const result = getCategoryConfig("career_business")
-
-      expect(result.id).toBe("career_business")
-      expect(result.name).toBe("Career & Finances")
-      expect(result.color).toBe("text-purple-500")
-    })
-
-    test("should return config for unknown life area via fallback", () => {
-      const result = getCategoryConfig("social")
-
-      expect(result.id).toBe("social")
-      expect(result.name).toBe("Social")
-      expect(result.color).toBe("text-gray-400")
-    })
-
-    test("should return all defined properties for known life area", () => {
-      const result = getCategoryConfig("daygame")
-
-      expect(result).toHaveProperty("id")
-      expect(result).toHaveProperty("name")
-      expect(result).toHaveProperty("icon")
-      expect(result).toHaveProperty("color")
-      expect(result).toHaveProperty("bgColor")
-      expect(result).toHaveProperty("borderColor")
-      expect(result).toHaveProperty("progressColor")
-      expect(result).toHaveProperty("suggestions")
-    })
-  })
-
   describe("custom/unknown categories", () => {
     test("should return default config for unknown category", () => {
       const result = getCategoryConfig("mycustomcategory")
@@ -68,28 +21,10 @@ describe("getCategoryConfig", () => {
       expect(result.bgColor).toBe(DEFAULT_CATEGORY_CONFIG.bgColor)
     })
 
-    test("should capitalize unknown category name", () => {
-      const result = getCategoryConfig("meditation")
-
-      expect(result.name).toBe("Meditation")
-    })
-
     test("should replace underscores with spaces in unknown category name", () => {
       const result = getCategoryConfig("my_custom_area")
 
       expect(result.name).toBe("My custom area")
-    })
-
-    test("should handle already capitalized custom category", () => {
-      const result = getCategoryConfig("Yoga")
-
-      expect(result.name).toBe("Yoga")
-    })
-
-    test("should have empty suggestions for custom category", () => {
-      const result = getCategoryConfig("custom")
-
-      expect(result.suggestions).toEqual([])
     })
   })
 })

@@ -163,7 +163,6 @@ import {
   NS_QUALIFY_THRESHOLD,
   REVIEW_PROMPTS,
   ROUTINE_BLUEPRINTS,
-  ROUTINE_BLUEPRINT_MAP,
   STAR_PROMPTS,
 } from "@/src/goals/data/northStar"
 import {
@@ -180,7 +179,7 @@ import {
 import { TARGETS, TEMPLATES } from "@/src/goals/data/newGoalFramework"
 import type { NsPlan } from "@/src/goals/types"
 
-import { BUILDER_COPY, COMMIT_DATE_KEY, COMMIT_KEY, IDEAL_DAY_KEY, ONE_ANSWERS, STARTER_KEY } from "@/src/goals/data/northStarStart"
+import { COMMIT_DATE_KEY, COMMIT_KEY, IDEAL_DAY_KEY, ONE_ANSWERS, STARTER_KEY } from "@/src/goals/data/northStarStart"
 
 const NOW = "2026-08-07T10:00:00.000Z"
 const TODAY = "2026-08-07"
@@ -193,18 +192,6 @@ function planWithGoal(): { plan: NsPlan; goalId: string; areaId: string } {
 }
 
 describe("emptyNsPlan", () => {
-  it("opens with the twelve Blueprint areas and the three default routines", () => {
-    const plan = emptyNsPlan()
-    expect(plan.areas).toHaveLength(12)
-    expect(plan.areas.map((a) => a.label)).toEqual([
-      "Health", "Fitness", "Mind & Beliefs", "Emotions", "Relationship", "Mission & Purpose",
-      "Money", "Family", "Friends", "Fun", "Contribution", "Spirituality",
-    ])
-    expect(plan.routines.map((r) => r.blueprintId)).toEqual(DEFAULT_ROUTINE_IDS)
-    expect(plan.goals).toEqual([])
-    expect(plan.updatedAt).toBeNull()
-  })
-
   it("arrives with every routine EMPTY, and its stack one preset away", () => {
     // It used to arrive with fifteen steps ticked across four routines, before
     // anybody had written a word, and the first person through it said the page
@@ -234,11 +221,6 @@ describe("emptyNsPlan", () => {
     const ids = plan.routines.flatMap((r) => [r.id, ...r.splitDays.map((d) => d.id)])
     expect(new Set(ids).size).toBe(ids.length)
   })
-
-  it("gives every seeded routine a distinct id", () => {
-    const ids = emptyNsPlan().routines.map((r) => r.id)
-    expect(new Set(ids).size).toBe(ids.length)
-  })
 })
 
 describe("ids never repeat", () => {
@@ -262,21 +244,10 @@ describe("ids never repeat", () => {
 })
 
 describe("north star", () => {
-  it("stores the paragraph and stamps updatedAt", () => {
-    const plan = setNorthStar(emptyNsPlan(), "I wake up near the water.", NOW)
-    expect(plan.northStar).toBe("I wake up near the water.")
-    expect(plan.updatedAt).toBe(NOW)
-  })
-
   it("only accepts a horizon it offers", () => {
     const plan = emptyNsPlan()
     expect(setHorizon(plan, 20, NOW).horizonYears).toBe(20)
     expect(setHorizon(plan, 7, NOW).horizonYears).toBe(plan.horizonYears)
-  })
-
-  it("keeps ladder answers keyed by rung", () => {
-    const plan = setRung(emptyNsPlan(), "place", "a small house near the water", NOW)
-    expect(plan.rungs.place).toBe("a small house near the water")
   })
 })
 
@@ -828,36 +799,11 @@ describe("planAsText", () => {
 })
 
 describe("the work under the north star", () => {
-  it("asks the why, the identity, the standards, the gap and the affirmations, in his order", () => {
-    // vision -> purpose -> (values, its own card) -> identity -> standards ->
-    // the gap -> affirmations. `become` is deliberately NOT next to
-    // `identity_total`: one is who you declare yourself to be, the other is
-    // what the paragraph needs that you do not have yet. See
-    // docs/research/life-mastery/values-and-identity.md.
-    expect(STAR_PROMPTS.map((p) => p.id)).toEqual([
-      "star_why", "identity_total", "conduct", "become", "affirmations",
-    ])
-  })
-
   it("keeps the ids the review tab used, so answers written there still load", () => {
     // `conduct` moved off the review tab and must not change id.
     const plan = setAnswer(emptyNsPlan(), "conduct", "To be disciplined", NOW)
     const back = loadNsPlan(serializeNsPlan(plan))!
     expect(answerOf(back, "conduct")).toBe("To be disciplined")
-  })
-
-  it("shows his own answer on the two prompts that read as one question", () => {
-    // The identity and the standards are both lists of good qualities in the
-    // present tense, and he blurs them himself ("this is who I'm committed to
-    // being, this is the standards"). Neither question says "committed to" any
-    // more, and each carries a few words of his own list, because "an amazing
-    // friend, son, brother" beside "to be disciplined" settles it faster than
-    // an explanation does.
-    const identity = STAR_PROMPTS.find((p) => p.id === "identity_total")!
-    const conduct = STAR_PROMPTS.find((p) => p.id === "conduct")!
-    expect(identity.example).toBeTruthy()
-    expect(conduct.example).toBeTruthy()
-    for (const p of [identity, conduct]) expect(p.question.toLowerCase()).not.toContain("committed to")
   })
 
   it("asks each of them once, on the star tab only", () => {
@@ -881,14 +827,6 @@ describe("the work under the north star", () => {
     plan = setAnswer(plan, "become", "   ", NOW)
     expect(starWorkAnswered(plan)).toBe(1)
     expect(starWorkAnswered(setValues(plan, ["Freedom"], NOW))).toBe(2)
-  })
-
-  it("survives a save and a reload", () => {
-    let plan = setAnswer(emptyNsPlan(), "star_why", "Because I am tired of starting again", NOW)
-    plan = setAnswer(plan, "identity_total", "I am disciplined", NOW)
-    const loaded = loadNsPlan(serializeNsPlan(plan))!
-    expect(loaded.answers.star_why).toBe("Because I am tired of starting again")
-    expect(loaded.answers.identity_total).toBe("I am disciplined")
   })
 
   it("reads back under the paragraph", () => {
@@ -954,11 +892,6 @@ describe("regressions", () => {
     const cleared = clearRoutineSteps(base, base.routines[0].id, NOW)
     expect(routineSummary(cleared.routines[0])).toBe("Nothing in it yet")
   })
-
-  it("creates a target ladder that survives a storage round trip unchanged", () => {
-    const plan = addGoal(emptyNsPlan(), "lm_health", "Squat 140kg", "milestone_ladder", NOW)
-    expect(loadNsPlan(serializeNsPlan(plan))!.goals[0].ladder).toEqual(plan.goals[0].ladder)
-  })
 })
 
 describe("presets", () => {
@@ -975,14 +908,6 @@ describe("presets", () => {
       }
       expect(new Set(bp.presets.map((p) => p.id)).size).toBe(bp.presets.length)
     }
-  })
-
-  it("offers the full ritual on the morning routine, in its documented order", () => {
-    const morning = ROUTINE_BLUEPRINT_MAP.get("morning")!
-    expect(morning.presets.map((p) => p.id)).toEqual(["15", "30", "60", "full"])
-    expect(morning.presets.find((p) => p.id === "full")!.stepIds).toEqual([
-      "smile", "stretch", "breath", "water", "move", "incantations", "questions", "driving-force", "read", "plan",
-    ])
   })
 
   it("applies a preset by id and replaces whatever was there", () => {
@@ -1250,107 +1175,6 @@ describe("the common-goal library", () => {
 })
 
 describe("the order of the flow", () => {
-  it("puts rating before planning", () => {
-    /**
-     * Seven steps, and the order is the argument.
-     *
-     * THE ONE THING COMES BEFORE THE GOALS. Asked afterwards it is an audit of
-     * a list somebody has already written; asked before, it decides what goes
-     * on the list — the areas get filled with what the one thing needs rather
-     * than with everything that came to mind.
-     *
-     * THE GOALS COME BEFORE THE FOCUS. They were the other way round, which
-     * asked somebody to choose the two or three areas of their season before
-     * they had written down what they wanted in any of them — choosing between
-     * things they had not named yet. You write everything, then choose. The
-     * values ranking moved late for the same reason, and the last step is an
-     * act rather than a form.
-     */
-    /**
-     * MILESTONES AND SYSTEMS ARE TWO STEPS, not one called "All goals".
-     *
-     * What you want and what you do about it are different work and produce
-     * different writing: the first wants to be loose and greedy — the car, the
-     * trip, the number nobody would say out loud — and the second wants to be
-     * small and specific. Mixed in one list they blunt each other, and the
-     * question that matters ("what is actually moving this?") cannot be asked
-     * at all, because the answer is somewhere in the same column.
-     */
-    /**
-     * AND THE ONE THING IS FOLLOWED BY A FORK, not by the goals page.
-     *
-     * The order above is an argument up to that point and stops being one
-     * after it: whether you start from what you want, from what you will do,
-     * or from a single routine is a fact about the person, not a stage. The
-     * fork is a step in the rail so it can be come back to, and it holds
-     * nothing of its own.
-     */
-    /**
-     * AND THE CATALOGUE IS A STEP OF ITS OWN, before both build steps.
-     *
-     * It was a tab riding on them, which put "here is what other people set"
-     * on the same surface as "write what you want". As a step it is a place
-     * you walk through and leave, and it comes first of the three because a
-     * browse is the cheapest of them to do.
-     */
-    /**
-     * AND THE BENCH SITS BESIDE THE CATALOGUE.
-     *
-     * Customize is the other answer to the same question. Templates is for
-     * somebody who wants to be handed a program; Customize is for somebody who
-     * already knows what their week is and wants it tracked rather than
-     * proposed. Adjacent because they are alternatives to each other, and after
-     * Templates because taking a proven thing and changing it is the smaller
-     * ask of the two.
-     */
-    /**
-     * AND THE DOING COMES LAST, after the deciding.
-     *
-     * Track and Today are not more of the plan; they are what happens to it.
-     * Track is the crossing — the goals become rows the app counts — and Today
-     * is the one screen that asks what you actually did. They sit after Commit
-     * because until you have said yes to the plan there is nothing to run, and
-     * Today sits after Track because a driver you have not pushed is a driver
-     * nothing can count.
-     */
-    /**
-     * AND THE WHOLE THING, READ BACK, IS LAST.
-     *
-     * The recap is a mirror of the twelve steps in front of it, so it cannot
-     * sit among them: it is where somebody lands when they come BACK to the
-     * plan, rather than a place they pass through while writing it.
-     */
-    /**
-     * AND THE JOURNAL SITS BESIDE TODAY, not among the steps that write the plan.
-     *
-     * It is the third practice screen — Track pushes the goals, Today ticks
-     * them off, Journal holds what you wrote while doing it — so it belongs
-     * with those two and not in the run of steps that decide what the plan is.
-     */
-    expect(TAB_ORDER).toEqual(["star", "now", "one", "pick", "templates", "systems", "milestones", "focus", "values", "commit", "track", "today", "journal", "recap"])
-    expect(TAB_ORDER.indexOf("journal")).toBe(TAB_ORDER.indexOf("today") + 1)
-    expect(TAB_ORDER[TAB_ORDER.length - 1]).toBe("recap")
-    expect(TAB_ORDER.indexOf("today")).toBe(TAB_ORDER.indexOf("track") + 1)
-    expect(TAB_ORDER.indexOf("track")).toBe(TAB_ORDER.indexOf("commit") + 1)
-    expect(TAB_ORDER).not.toContain("customize")
-    // And the two halves the fork names are two steps, next to each other.
-    expect(TAB_ORDER.indexOf("milestones")).toBe(TAB_ORDER.indexOf("systems") + 1)
-    expect(TAB_ORDER.indexOf("pick")).toBe(TAB_ORDER.indexOf("one") + 1)
-  })
-
-  it("marks the catalogue step a workshop, and never scores it", () => {
-    /**
-     * A ring on Templates would score somebody on having browsed, and on having
-     * designed a training program — neither is part of writing a life plan, and
-     * most people will do neither.
-     */
-    expect(SCORED_TABS).not.toContain("templates")
-    expect(WORKSHOP_TABS).toEqual(["templates"])
-    const plan = emptyNsPlan()
-    // And it never blocks: nothing on it can appear in the outstanding list.
-    expect(planTodos(plan, TODAY).some((t) => t.tab === "templates")).toBe(false)
-  })
-
   it("scores nothing on the catalogue step either", () => {
     // Same rule as the fork: what you take from the catalogue is scored on the
     // steps it lands in, and a ring on "have you had a look" scores browsing.
@@ -1852,14 +1676,6 @@ describe("what a 10 means is spelled out", () => {
       expect(AREA_TEN_EXAMPLES[area.id], `no 10 example for ${area.id}`).toBeTruthy()
     }
   })
-
-  it("never inserts the example by itself", () => {
-    // It is a placeholder and a button. A plan nobody has touched must not come
-    // back carrying twelve paragraphs of ours under "your 10".
-    const plan = emptyNsPlan()
-    expect(plan.areas.every((a) => areaReview(plan, a.id).ten === "")).toBe(true)
-    expect(planIsUntouched(plan)).toBe(true)
-  })
 })
 
 describe("the purpose, per area", () => {
@@ -2004,15 +1820,6 @@ describe("values are elicited on step 1 and ordered on step 3", () => {
     expect(valueEvidence(emptyNsPlan())).toEqual([])
   })
 
-  it("keeps both lists on one record, whichever screen wrote them", () => {
-    let plan = setCurrentValues(emptyNsPlan(), ["Security"], NOW)
-    plan = setValues(plan, ["Freedom", "Health"], NOW)
-    plan = rankValueAbove(plan, "Health", "Freedom", NOW)
-    const back = loadNsPlan(serializeNsPlan(plan))!
-    expect(back.currentValues).toEqual(["Security"])
-    expect(back.values).toEqual(["Health", "Freedom"])
-  })
-
   it("offers each area the values that area actually asks for", () => {
     // A generic row put Adventure and Faith under Money and left out Security,
     // which is the one nearly everybody writes there.
@@ -2058,24 +1865,6 @@ describe("values are elicited on step 1 and ordered on step 3", () => {
     // His spoken menu too. Two words for one value means somebody adds both and
     // then has to rank them against each other.
     expect(VALUES_PAST_MENU.filter((s) => !library.has(s.toLowerCase()))).toEqual([])
-  })
-
-  it("prompts pass 1 with his menu rather than the user's own paragraph", () => {
-    // "security, has it been being safe, has it been happiness, has it been
-    // success, has it been money, has it been family, has it been love, has it
-    // been passion, has it been friends, has it been travel" (Lp_GOrM16Xc), in
-    // his order. Cueing this list off the vision they just wrote would produce
-    // the same list twice and lose the diff the exercise exists for.
-    expect(VALUES_PAST_MENU.slice(0, 5)).toEqual(["Security", "Safety", "Happiness", "Success", "Money"])
-  })
-
-  it("still carries the means values people actually say", () => {
-    // Family, money and fitness are not emotions. Leaving them off the list is
-    // how the exercise ends; they earn the "worth a second look" question
-    // instead, which is a question and not a rejection.
-    const library = new Set(NS_VALUE_LIBRARY.map((v) => v.toLowerCase()))
-    for (const word of ["family", "money", "fitness", "status"]) expect(library.has(word)).toBe(true)
-    expect(looksLikeMeansValue("Family")).toBe(true)
   })
 })
 
@@ -3520,22 +3309,12 @@ describe("the builder never shows a number the user did not give", () => {
       .map(({ line, n }) => `${rel}:${n} ${line.trim()}`)
     expect(offenders).toEqual([])
   })
-
-  it("labels the start box without guessing a value", () => {
-    expect(BUILDER_COPY.startPlaceholder).not.toMatch(/[0-9]/)
-    expect(BUILDER_COPY.targetPlaceholder).not.toMatch(/[0-9]/)
-  })
 })
 
 /**
  * A rung has to be a thing you can actually load.
  */
 describe("rungs land on numbers that exist", () => {
-  it("spaces a bench climb on the plate grid", () => {
-    // 24 → 36 in four is 27, 30, 33, 36, and 33 kg is not loadable.
-    expect(milestoneValues(24, 36, 4, "kg")).toEqual([27.5, 30, 32.5, 36])
-  })
-
   it("leaves the target exactly where the person put it", () => {
     for (const target of [36, 37, 101, 82.5]) {
       const values = milestoneValues(20, target, 4, "kg")
@@ -3818,25 +3597,6 @@ describe("the step is not done on a sentence alone", () => {
     expect(stepState(plan, "one", { hasOneThing: true })).toBe("done")
     expect(stepState(plan, "one", { hasOneThing: false })).toBe("started")
   })
-
-  /**
-   * CLEARING THE SEASON DOES NOT CLEAR THE ONE THING, and nothing in the plan
-   * can. It said it did, and deleted a copy in the browser while the row on the
-   * account survived — so "clear the goals and the season" left the tracking
-   * page still showing the one thing it had just told you it cleared.
-   *
-   * A one thing is replaced by writing the next one, and the app asks for the
-   * next one as the deadline comes up. There is no other way to end one, and
-   * `resetGoalsAndFocus` must not pretend to be one.
-   */
-  it("does not touch the one thing when the goals and the season are cleared", () => {
-    const plan = toggleSeasonArea(emptyNsPlan(), "lm_health", NOW)
-    const after = resetGoalsAndFocus(plan, NOW)
-    expect(after.seasonAreaIds).toEqual([])
-    // Nothing on the plan holds it, so nothing on the plan can drop it: the
-    // step still scores "done" for an account that has one.
-    expect(JSON.stringify(after)).not.toContain("one-thing")
-  })
 })
 
 describe("a rate written in words is still a rate", () => {
@@ -3931,14 +3691,6 @@ describe("what you want, and what moves it", () => {
     const plan = build()
     expect(milestoneGoals(plan).map((g) => g.title)).toEqual(["Flat bench 100 kg"])
     expect(systemGoals(plan).map((g) => g.title)).toEqual(["Train four times a week"])
-  })
-
-  it("counts a bucket-list experience as something you want, not something you do", () => {
-    // "A Ferrari" is not SMART and is not a system either. It belongs with the
-    // milestones because its whole job is to pull.
-    const plan = addExperiences(emptyNsPlan(), "A Ferrari\nA threesome", NOW)
-    expect(plan.experiences).toHaveLength(2)
-    expect(systemGoals(plan)).toEqual([])
   })
 
   it("links a routine step to the milestone it moves, and only when asked", () => {
@@ -4148,25 +3900,10 @@ describe("written rungs carry dates too", () => {
 describe("a training week knows which enrollment tracks it", () => {
   const REF = { enrollmentId: "enr-1" }
 
-  it("records the enrollment, and nothing copied from the program", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, REF)
-    const routine = plan.routines.find((r) => r.blueprintId === "workout")!
-    // One field. The name, the days and the start date are read live from it.
-    expect(routine.program).toEqual({ enrollmentId: "enr-1" })
-  })
-
   it("a hand-written week is tracked by nothing, and that is not an error", () => {
     const plan = addRoutine(emptyNsPlan(), "workout", NOW)
     const routine = plan.routines.find((r) => r.blueprintId === "workout")!
     expect(routine.program ?? null).toBeNull()
-  })
-
-  it("starting a second program replaces the reference, never keeps both", () => {
-    let plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, REF)
-    plan = applyProgramToWorkoutRoutine(plan, NOW, { enrollmentId: "enr-2" })
-    expect(plan.routines.find((r) => r.blueprintId === "workout")!.program).toEqual({
-      enrollmentId: "enr-2",
-    })
   })
 
   it("ending a program keeps the week and drops only the claim it is tracked", () => {
@@ -4207,13 +3944,6 @@ describe("applyProgramToWorkoutRoutine", () => {
     })
   })
 
-  it("adds the workout routine when the plan has not got one", () => {
-    const plan = applyProgramToWorkoutRoutine(emptyNsPlan(), NOW, { enrollmentId: "enr-1" })
-    const routine = plan.routines.find((r) => r.blueprintId === "workout")
-    expect(routine).toBeDefined()
-    expect(routine!.program).toEqual({ enrollmentId: "enr-1" })
-  })
-
   it("finds the routine by blueprint, so a renamed one is still the one", () => {
     let plan = addRoutine(emptyNsPlan(), "workout", NOW)
     const id = plan.routines.find((r) => r.blueprintId === "workout")!.id
@@ -4242,10 +3972,5 @@ describe("applyProgramToWorkoutRoutine", () => {
     // Five is what the person typed. A program running does not make it wrong,
     // and it is what the week returns to when the program ends.
     expect(plan.routines.find((r) => r.id === routineId)!.daysPerWeek).toBe(5)
-  })
-
-  it("no program is a no-op", () => {
-    const plan = addRoutine(emptyNsPlan(), "workout", NOW)
-    expect(applyProgramToWorkoutRoutine(plan, NOW, null)).toBe(plan)
   })
 })

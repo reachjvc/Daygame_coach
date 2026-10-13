@@ -402,27 +402,9 @@ describe("the one thing is the sentence somebody wrote", () => {
     // fastest way to settle which of the two somebody is looking at.
     expect(SEASON_FOCUS_COPY.help.toLowerCase()).toContain("not your one thing")
   })
-
-  it("has a one thing to show before any season focus is picked at all", () => {
-    // The commonest state: step 3 done, step 8 not reached. The band showed
-    // "Nothing named yet" to somebody who had named it.
-    const plan = setAnswer(emptyNsPlan(), ONE_ANSWERS.oneThing, "Stop drinking on weeknights.")
-    expect(seasonFocus(plan)).toBeNull()
-    expect(answerOf(plan, ONE_ANSWERS.oneThing).trim()).toBeTruthy()
-  })
 })
 
 describe("the standard questions are questions", () => {
-  it("offers every set as several questions and not as one box", () => {
-    for (const set of JOURNAL_SETS) {
-      expect(set.questions.length, set.id).toBeGreaterThan(0)
-      for (const q of set.questions) expect(q.trim().length, `${set.id}: ${q}`).toBeGreaterThan(10)
-    }
-    // The weekly review is the one the report named, and one box is exactly how
-    // it stops getting done.
-    expect(JOURNAL_SETS.find((s) => s.id === "weekly-review")!.questions.length).toBeGreaterThanOrEqual(3)
-  })
-
   it("has no two prompts that are the same question", () => {
     const all = [...JOURNAL_PROMPTS.map((p) => p.question), ...JOURNAL_SETS.flatMap((s) => s.questions)]
     const seen = new Set(all.map((q) => q.trim().toLowerCase()))

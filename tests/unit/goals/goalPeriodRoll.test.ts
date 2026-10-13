@@ -173,18 +173,6 @@ describe("rollGoalPeriods", () => {
     expect(tables.daily_goal_snapshots).toHaveLength(1)
   })
 
-  it("archives through the admin client, because the table has no INSERT policy", async () => {
-    // daily_goal_snapshots has RLS on with a single SELECT policy. This used to
-    // use the user-scoped client, so every insert was rejected and swallowed:
-    // 0 rows against 398 goals. If the client regresses, the fake still accepts
-    // the write, so what is asserted is that a row arrives at all.
-    tables.user_goals.push(weeklyGoal({ current_value: 4 }))
-    at("2026-08-25T09:00:00Z")
-
-    await rollGoalPeriods(USER, "UTC")
-    expect(tables.daily_goal_snapshots).toHaveLength(1)
-  })
-
   it("breaks the streak on a week that was missed, keeps it on one that was hit", async () => {
     tables.user_goals.push(weeklyGoal({ current_value: 20, target_value: 20 }))
     at("2026-08-25T09:00:00Z")

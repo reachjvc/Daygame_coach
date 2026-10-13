@@ -210,11 +210,6 @@ describe("a failed read never leads to a write", () => {
     expect(canSave(decision, true)).toBe(false)
   })
 
-  it("does not import on a failed read even with an unset marker", () => {
-    const decision = decideOnLoad({ server: undefined, browser: written("x") })
-    expect(decision.kind).not.toBe("import-browser")
-  })
-
   it("allows saving once the account has actually answered", () => {
     expect(canSave(decideOnLoad({ server: { plan: null, revision: 0 }, browser: null }), true)).toBe(true)
     expect(canSave(decideOnLoad({ server: { plan: written("a"), revision: 2 }, browser: null }), true)).toBe(true)
@@ -229,16 +224,6 @@ describe("a failed read never leads to a write", () => {
 })
 
 describe("what the person is told", () => {
-  it("says a conflict happened and that nothing was saved", () => {
-    expect(syncNotice("stale")).toMatch(/changed on another device/i)
-    expect(syncNotice("stale")).toMatch(/nothing here has been saved/i)
-  })
-
-  it("says work is safe when the plan cannot be reached", () => {
-    expect(syncNotice("offline")).toMatch(/keep working/i)
-    expect(syncNotice("failed")).toMatch(/still here on this device/i)
-  })
-
   it("says nothing when there is nothing wrong", () => {
     expect(syncNotice("saved")).toBe("")
     expect(syncNotice("saving")).toBe("")

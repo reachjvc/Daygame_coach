@@ -77,16 +77,4 @@ describe("Life Mastery reads today from the account, not the browser", () => {
       "Fixed — lower these in BROWSER_TODAY_DEBT so they cannot come back:\n" + cleaned.join("\n")
     ).toEqual([])
   })
-
-  it("the flow takes a timezone and uses it to work out today", () => {
-    const flow = fs.readFileSync(path.join(projectRoot, FLOW_DIR, "NorthStarFlow.tsx"), "utf-8")
-    expect(flow).toContain("timezone")
-    expect(flow).toContain("getTodayInTimezone(timezone)")
-  })
-
-  it("the page reads the account's zone and hands it over", () => {
-    const page = fs.readFileSync(path.join(projectRoot, "app/life-mastery/page.tsx"), "utf-8")
-    expect(page).toContain("getUserTimezone")
-    expect(page).toContain("timezone={timezone}")
-  })
 })

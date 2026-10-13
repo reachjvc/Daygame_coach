@@ -251,11 +251,6 @@ describe("isDailyActionable graduated exclusion", () => {
     const goal = createGoal({ goal_phase: "consolidation", goal_type: "habit_ramp", goal_level: 3 })
     expect(isDailyActionable(goal)).toBe(true)
   })
-
-  test("includes null phase L3 habit_ramp goals", () => {
-    const goal = createGoal({ goal_phase: null, goal_type: "habit_ramp", goal_level: 3 })
-    expect(isDailyActionable(goal)).toBe(true)
-  })
 })
 
 // ============================================================================

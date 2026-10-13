@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 /**
  * The circle on each step, and whether it is telling the truth.
  *
@@ -14,9 +16,11 @@
  * backwards as you write more, and every step is reachable to done.
  */
 
-import { describe, expect, it } from "vitest"
-import fs from "fs"
-import path from "path"
+import { createElement } from "react"
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
+import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 import { SCORED_TABS, TAB_ORDER } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY, ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import { VISION_RUNGS } from "@/src/goals/data/lifeMasteryWhy"
@@ -85,22 +89,6 @@ function completePlan(): NsPlan {
 }
 
 describe("the circles on the rail", () => {
-  it("shows nothing done on a plan nobody has touched", () => {
-    const states = stepStates(emptyNsPlan())
-    expect(Object.values(states).every((s) => s === "empty")).toBe(true)
-  })
-
-  it("fills every one of them when every box is filled", () => {
-    const states = stepStates(completePlan(), SAVED)
-    // SCORED_TABS, not TAB_ORDER: the fork after the one thing draws no ring,
-    // because it holds nothing — its doors write into the steps they open.
-    const unfinished = SCORED_TABS.filter((tab) => states[tab] !== "done")
-    // Naming which step is not reachable is the point of the failure message:
-    // a step that can never fill its circle is a step somebody will keep
-    // returning to looking for the thing they missed.
-    expect(unfinished).toEqual([])
-  })
-
   it("never reports done for a step with nothing in it", () => {
     const empty = emptyNsPlan()
     for (const tab of TAB_ORDER) expect(stepState(empty, tab), tab).toBe("empty")
@@ -208,16 +196,6 @@ describe("what each step counts as full", () => {
     plan = setAnswer(plan, COMMIT_DATE_KEY, TODAY, NOW)
     expect(stepState(plan, "commit")).toBe("done")
   })
-
-  it("covers every step in the flow, so none of them can go unjudged", () => {
-    const judged: NorthStarTabId[] = [...SCORED_TABS]
-    for (const tab of judged) {
-      // A tab with no rule of its own would fall through to the commit branch
-      // and report on somebody else's work.
-      expect(stepState(completePlan(), tab, SAVED), tab).toBe("done")
-      expect(stepState(emptyNsPlan(), tab), tab).toBe("empty")
-    }
-  })
 })
 
 /**
@@ -230,42 +208,48 @@ describe("what each step counts as full", () => {
  *
  * WHY `replaceState` AND NOT THE ROUTER. `app/life-mastery/page.tsx` is a
  * server component: a router navigation re-runs it, so every step change would
- * repeat the auth check, the timezone read and the goals pre-read. These tests
- * are what stop somebody "tidying" it into `router.replace` later, because the
- * cost of that is invisible on a fast connection.
+ * repeat the auth check, the timezone read and the goals pre-read. A router
+ * call has no router to call here, and does not write the address jsdom
+ * reads, so "tidying" it into `router.replace` turns this red — the cost of
+ * that is invisible on a fast connection.
  */
 describe("changing step writes the address", () => {
-  const flowCode = () =>
-    fs
-      .readFileSync(
-        path.join(path.resolve(__dirname, "../../.."), "src/goals/components/north-star/NorthStarFlow.tsx"),
-        "utf-8"
-      )
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/\/\/[^\n]*/g, "")
-
-  const stepSetter = () => flowCode().match(/const setTab = useCallback\([\s\S]*?\}, \[\]\)/)?.[0] ?? ""
-
-  it("writes ?step= through history, not through a navigation", () => {
-    expect(flowCode()).toContain("window.history.replaceState")
-    expect(flowCode()).toMatch(/\?step=\$\{next\}/)
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.history.replaceState(null, "", "/")
+    // The flow reads the account on mount. Answered emptily: this is about the
+    // rail and the address, not about what the account holds.
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })))
   })
 
-  it("does not navigate on a step change", () => {
-    const setter = stepSetter()
-    expect(setter, "premise: the step setter should be findable").not.toBe("")
-    expect(setter).not.toMatch(/router\.(replace|push)/)
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+    window.localStorage.clear()
+    window.history.replaceState(null, "", "/")
   })
 
-  it("builds the address from the one route constant, never by hand", () => {
-    expect(flowCode()).toContain("`${LIFE_MASTERY}?step=")
-  })
+  it("writes ?step= on a step change, and still changes step when history refuses", async () => {
+    render(createElement(NorthStarFlow))
+    const rail = await screen.findByRole("navigation", { name: "Sections" })
+    const buttons = within(rail).getAllByRole("button")
+    expect(buttons, "premise: one rail button per step, in order").toHaveLength(TAB_ORDER.length)
+    const step = (id: NorthStarTabId) => buttons[TAB_ORDER.indexOf(id)]
 
-  it("survives a browser that refuses history writes", () => {
-    const setter = stepSetter()
-    // The step must still change if the address cannot be written.
-    expect(setter).toContain("try")
-    expect(setter).toContain("catch")
-    expect(setter.indexOf("setTabState")).toBeLessThan(setter.indexOf("replaceState"))
+    fireEvent.click(step("systems"))
+    expect(step("systems").getAttribute("aria-current")).toBe("page")
+    expect(window.location.pathname).toBe(LIFE_MASTERY)
+    expect(window.location.search).toBe("?step=systems")
+
+    // A browser that refuses history writes must not take the step change
+    // down with it; only the address is left behind.
+    vi.spyOn(window.history, "replaceState").mockImplementation(() => {
+      throw new DOMException("history writes refused", "SecurityError")
+    })
+    fireEvent.click(step("values"))
+    expect(step("values").getAttribute("aria-current")).toBe("page")
+    expect(step("systems").getAttribute("aria-current")).toBeNull()
+    expect(window.location.search).toBe("?step=systems")
   })
 })

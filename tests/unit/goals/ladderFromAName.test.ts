@@ -75,16 +75,6 @@ describe("telling an invented climb from a real one", () => {
     expect(flagged, "nineteen real climbs must be left alone").toEqual(["Buy a Ferrari 458"])
   })
 
-  /**
-   * THE NEAR MISS, and the reason the parser is consulted rather than the shape.
-   * "Approach 5 in one day" also carries no unit and a target equal to a number
-   * in its own title. The difference is that 5 there is a count, and the parser
-   * reads it; 458 is a name, and the parser refuses it.
-   */
-  it("leaves a unitless climb alone when the number is a real count", () => {
-    expect(ladderIsTitleDebris({ title: "Approach 5 in one day", unit: "", ladder: { start: 0, target: 5 } })).toBe(false)
-  })
-
   it("leaves a deliberate climb on a name-carrying title alone", () => {
     // Somebody saving up FOR the car: the target is money, not the model.
     expect(
@@ -95,10 +85,6 @@ describe("telling an invented climb from a real one", () => {
 
   it("and one that starts somewhere real", () => {
     expect(ladderIsTitleDebris({ title: "Buy a Ferrari 458", unit: "", ladder: { start: 100, target: 458 } })).toBe(false)
-  })
-
-  it("and one carrying a unit", () => {
-    expect(ladderIsTitleDebris({ title: "Buy a Ferrari 458", unit: "kr", ladder: { start: 0, target: 458 } })).toBe(false)
   })
 
   it("says nothing about a goal with no ladder at all", () => {

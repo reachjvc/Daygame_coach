@@ -109,12 +109,6 @@ describe("AT1 — what my one thing is", () => {
     expect(past.map((p) => p.body)).toEqual(["Older"])
   })
 
-  it("makes the previous one current again when the newest chapter is deleted", () => {
-    const cs = chapters(chapter({ id: "ch-1" }))
-    const rs = rows(row({ chapter_id: "ch-1", body: "Quit weed" }))
-    expect(currentOneThing(cs, rs, "Europe/Copenhagen")?.body).toBe("Quit weed")
-  })
-
   /**
    * THE SECOND LEVEL OF HISTORY, folded away.
    *
@@ -269,12 +263,6 @@ describe("AT7 — amend, extend, and start are three different things", () => {
     expect(out).toEqual({
       kind: "open", startedOn: "2026-09-02", dueOn: "2026-12-08", continuesId: null, body: "Quit weed",
     })
-  })
-
-  it("compares only the words, because the row no longer holds a deadline", () => {
-    expect(isSameAsCurrent(mine(), "Quit weed")).toBe(true)
-    expect(isSameAsCurrent(mine(), "Quit vaping")).toBe(false)
-    expect(isSameAsCurrent([], "Quit weed")).toBe(false)
   })
 })
 

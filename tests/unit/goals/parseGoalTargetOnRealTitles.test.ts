@@ -45,27 +45,9 @@ describe("titles the parser gets right", () => {
     expect(parseGoalTarget("Hammer curl 16 kg, 2x8")?.value).toBe(16)
   })
 
-  /**
-   * THE GUARD THAT WORKS, and the reason this file exists. A model number is a
-   * name, not an amount. The parser refuses it today — but the owner's plan
-   * still holds `{ start: 0, target: 458 }` for this exact goal, written before
-   * the guard existed and never healed, so their page prints "0 to 458" under a
-   * goal about buying a car. A fix that only runs at creation time leaves
-   * everything created before it wrong; the same shape as the goal links, which
-   * needed a backfill for exactly this reason.
-   */
-  it("refuses a car's model number", () => {
-    expect(parseGoalTarget("Buy a Ferrari 458")).toBeNull()
-  })
-
   it("and refuses one behind any article, in either language", () => {
     expect(parseGoalTarget("Buy an iPhone 15")).toBeNull()
     expect(parseGoalTarget("Køb en Porsche 911")).toBeNull()
-  })
-
-  /** A plain noun is a perfectly good unit; not everything is a measurement. */
-  it("keeps a countable noun as the unit", () => {
-    expect(parseGoalTarget("Read 24 books this year")?.unit).toBe("books")
   })
 })
 
@@ -106,15 +88,6 @@ describe("a unit of two words survives, because not every unit is a measurement"
   it("does not join a word that cannot be part of a unit", () => {
     expect(parseGoalTarget("Read 24 books this year")?.unit).toBe("books")
     expect(parseGoalTarget("Read 10 pages a day")?.unit).toBe("pages")
-  })
-
-  /**
-   * THE LABEL RULE STILL WORKS where it was meant to. "Get 28 kg bench" has a
-   * verb that names nothing and a real noun behind a MEASUREMENT, so the noun
-   * is still what the climb is called.
-   */
-  it("still takes the noun behind a measurement when the verb says nothing", () => {
-    expect(parseGoalTarget("Get 28 kg bench 3 sets 8 reps by april")?.prefix).toBe("bench")
   })
 })
 

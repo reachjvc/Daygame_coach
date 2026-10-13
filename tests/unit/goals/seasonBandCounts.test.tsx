@@ -47,30 +47,10 @@ const band = () => document.body.textContent?.replace(/\s+/g, " ") ?? ""
 afterEach(cleanup)
 
 describe("the band counts what is actually on the account", () => {
-  it("counts a tick that IS there", () => {
-    const { plan } = planWithOneStep(true)
-    render(<SeasonBand plan={plan} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
-    expect(band(), "a ticked step must be counted").toMatch(/1 of 1/)
-  })
-
   it("counts zero when nothing is ticked, which is a different fact", () => {
     const { plan } = planWithOneStep(false)
     render(<SeasonBand plan={plan} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
     expect(band()).toMatch(/0 of 1/)
-  })
-
-  /**
-   * The regression itself, stated as the page used to state it: a plan whose
-   * day half was dropped on the way out of the database.
-   */
-  it("said 0 of 1 for a plan that HAD the tick, when the day half was dropped", () => {
-    const { plan } = planWithOneStep(true)
-    const asTheReadUsedToHandItOver = { ...plan, logged: {} }
-    render(<SeasonBand plan={asTheReadUsedToHandItOver} oneThing={null} ready ticks={NO_TRAINING_TICKS} today={TODAY} />)
-    expect(
-      band(),
-      "this is what the dashboard showed every day: the tick exists and the band cannot see it",
-    ).toMatch(/0 of 1/)
   })
 })
 

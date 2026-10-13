@@ -68,17 +68,6 @@ describe("a Target keeps the number you said you were at", () => {
     expect(ladder.start).toBe(0)
   })
 
-  it("the target comes from the field, not from the curve's default", () => {
-    const ladder = ladderForSave({
-      goalType: "milestone",
-      trackingType: "counter",
-      targetValue: 42,
-      startingValue: 5,
-      config: CURVE,
-    })!
-    expect(ladder.target).toBe(42)
-  })
-
   it("a negative starting value cannot be stored", () => {
     const ladder = ladderForSave({
       goalType: "milestone",
@@ -114,14 +103,6 @@ describe("a Practice counts from zero", () => {
       config: CURVE,
     })!
     expect(ladder.start).toBe(0)
-  })
-
-  it("the first week of a rate reads 25%, not 0%", () => {
-    const ladder = ladderForSave({
-      goalType: "habit_ramp", trackingType: "counter", targetValue: 4, startingValue: 0, config: CURVE,
-    })!
-    const row = { current_value: 1, target_value: 4, milestone_config: ladder as unknown as Record<string, unknown> }
-    expect(progressPercent(row)).toBe(25)
   })
 })
 

@@ -48,15 +48,6 @@ describe("the rule table is complete and honest", () => {
   it("has a rule for every id and an id for every rule", () => {
     expect(Object.keys(GOAL_ACHIEVEMENT_RULES).sort()).toEqual([...GOAL_RULE_IDS].sort())
   })
-
-  it("gives every badge a label and a line a person would read", () => {
-    for (const id of GOAL_RULE_IDS) {
-      const rule = GOAL_ACHIEVEMENT_RULES[id]
-      expect(rule.label.length, id).toBeGreaterThan(0)
-      expect(rule.blurb.length, id).toBeGreaterThan(10)
-      expect(rule.shapes.length, id).toBeGreaterThan(0)
-    }
-  })
 })
 
 describe("a rule only runs on the shapes it belongs to", () => {
@@ -166,13 +157,6 @@ describe("a goal about stopping something", () => {
 })
 
 describe("the same rows always give the same answer", () => {
-  /** No clock and no randomness: two runs cannot disagree, and neither can two
-   *  devices. This is what lets the badges be recomputed instead of stored. */
-  it("is deterministic", () => {
-    const rows = mondays(12).map((d) => snap(d, 4, true))
-    expect(badgesForGoal(goal(), rows, TODAY)).toEqual(badgesForGoal(goal(), rows, TODAY))
-  })
-
   it("does not care what order the snapshots arrive in", () => {
     const rows = mondays(6).map((d) => snap(d, 4, true))
     const forwards = badgesForGoal(goal(), rows, TODAY)

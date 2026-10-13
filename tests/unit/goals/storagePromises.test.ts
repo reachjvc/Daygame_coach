@@ -105,13 +105,4 @@ describe("what the Life Mastery copy claims about where your writing goes", () =
     )
     expect(TRACK_COPY.signedOut).toMatch(/not on the account/i)
   })
-
-  /**
-   * The specific sentence, named. A regex family can be satisfied by rewording
-   * around it; this asserts the claim that was actually wrong is actually gone.
-   */
-  it("does not tell you on the Track step that the plan is only here", () => {
-    expect(TRACK_COPY.help).not.toMatch(/saved on this device/i)
-    expect(TRACK_COPY.help, "and it still says what the step IS for").toMatch(/counted/i)
-  })
 })

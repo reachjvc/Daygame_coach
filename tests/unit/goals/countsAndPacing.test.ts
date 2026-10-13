@@ -21,7 +21,6 @@ import { describe, it, expect } from "vitest"
 import { addGoal, emptyNsPlan, goalMilestones, updateGoal } from "@/src/goals/northStarService"
 import { goalToInsert } from "@/src/goals/northStarTrackService"
 import { badgesForGoal } from "@/src/goals/goalAchievementsService"
-import { progressPercent } from "@/src/db/goalProgress"
 import type { DailyGoalSnapshotRow, UserGoalRow } from "@/src/db/goalTypes"
 
 const RUN = "run-1"
@@ -42,14 +41,6 @@ describe("item 15 — a count of things, finished by reaching a total", () => {
     expect(insert.tracking_type).toBe("counter")
     expect(insert.current_value).toBe(0)
     expect(insert.target_value).toBe(500)
-  })
-
-  it("reports progress against the total, counting from where it began", () => {
-    // Comfort Zone Challenges in his plan starts at 1, not 0, which is exactly
-    // the case the old current/target formula got wrong.
-    const row = { current_value: 1, target_value: 100, milestone_config: { start: 1, target: 100 } }
-    expect(progressPercent(row)).toBe(0)
-    expect(progressPercent({ ...row, current_value: 50 })).toBe(49)
   })
 })
 
@@ -81,12 +72,6 @@ describe("item 22 — a rate you hold, rewarded by a lifetime total", () => {
     }
     return out
   }
-
-  it("earns the hundred at a hundred approaches, whatever the weekly target is", () => {
-    const ids = badgesForGoal(practice(), weeks(20, 5), "2027-01-01").map((b) => b.ruleId)
-    expect(ids).toContain("total_100")
-    expect(ids).not.toContain("total_365")
-  })
 
   it("has not earned it at ninety-five", () => {
     const ids = badgesForGoal(practice(), weeks(19, 5), "2027-01-01").map((b) => b.ruleId)

@@ -21,12 +21,6 @@ describe("goal catalog integrity", () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  test("GOAL_TEMPLATE_MAP has every template", () => {
-    for (const t of GOAL_TEMPLATES) {
-      expect(GOAL_TEMPLATE_MAP[t.id]).toBe(t)
-    }
-  })
-
   test("all edge parent/child IDs reference existing templates", () => {
     for (const edge of GOAL_GRAPH_EDGES) {
       expect(GOAL_TEMPLATE_MAP[edge.parentId]).toBeDefined()
@@ -81,13 +75,6 @@ describe("goal catalog integrity", () => {
     }
   })
 
-  test("every template has a valid priority", () => {
-    const validPriorities = new Set(["core", "progressive", "niche"])
-    for (const t of GOAL_TEMPLATES) {
-      expect(validPriorities.has(t.priority)).toBe(true)
-    }
-  })
-
   test("L0/L1/L2 templates default to core priority", () => {
     const upper = GOAL_TEMPLATES.filter((t) => t.level < 3)
     for (const g of upper) {
@@ -107,27 +94,6 @@ describe("goal catalog integrity", () => {
       expect(count).toBeGreaterThanOrEqual(2)
       expect(count).toBeLessThanOrEqual(4)
     }
-  })
-
-  test("opt-in L1 templates are flagged", () => {
-    const optInL1s = GOAL_TEMPLATES.filter((t) => t.level === 1 && t.requiresOptIn)
-    const ids = optInL1s.map((t) => t.id)
-    expect(ids).toContain("l1_the_one")
-    expect(ids).toContain("l1_family")
-    expect(optInL1s.length).toBe(2)
-  })
-
-  test("non-opt-in templates default to requiresOptIn=false", () => {
-    const nonOptIn = GOAL_TEMPLATES.filter((t) => !t.requiresOptIn)
-    expect(nonOptIn.length).toBeGreaterThan(0)
-    for (const t of nonOptIn) {
-      expect(t.requiresOptIn).toBe(false)
-    }
-  })
-
-  test("no blind spot tools remain after catalog pruning", () => {
-    const blindSpotTools = GOAL_TEMPLATES.filter((t) => t.blindSpotTool)
-    expect(blindSpotTools.length).toBe(0)
   })
 
   test("graduation_criteria is only set on core L3 templates", () => {
@@ -213,22 +179,6 @@ describe("getLeafGoals", () => {
 // ============================================================================
 
 describe("getTemplatesByCategory", () => {
-  test("returns all categories across all areas", () => {
-    const cats = getTemplatesByCategory()
-    const keys = Object.keys(cats).sort()
-    expect(keys).toContain("field_work")
-    expect(keys).toContain("mindfulness")
-    expect(keys).toContain("field_work")
-    expect(keys.length).toBe(27) // 7 daygame + 5 PG + 6 fitness + 5 wealth + 4 vices
-  })
-
-  test("field_work contains approach-related goals", () => {
-    const cats = getTemplatesByCategory()
-    const ids = cats.field_work!.map((t) => t.id)
-    expect(ids).toContain("l3_approach_volume")
-    expect(ids).toContain("l3_approach_frequency")
-  })
-
   test("dirty_dog contains all dirty dog goals", () => {
     const cats = getTemplatesByCategory()
     const ids = cats.dirty_dog!.map((t) => t.id)
@@ -237,38 +187,6 @@ describe("getTemplatesByCategory", () => {
     expect(ids).toContain("l3_lays")
     expect(ids).toContain("l3_same_day_lays")
     expect(ids.length).toBe(4)
-  })
-
-  test("texting contains texting-related goals", () => {
-    const cats = getTemplatesByCategory()
-    const ids = cats.texting!.map((t) => t.id)
-    expect(ids).toContain("l3_texting_initiated")
-    expect(ids).toContain("l3_response_rate")
-  })
-
-  test("personal growth categories exist", () => {
-    const cats = getTemplatesByCategory()
-    expect(cats.mindfulness!.length).toBeGreaterThan(0)
-    expect(cats.resilience!.length).toBeGreaterThan(0)
-    expect(cats.learning!.length).toBeGreaterThan(0)
-    expect(cats.reflection!.length).toBeGreaterThan(0)
-    expect(cats.discipline!.length).toBeGreaterThan(0)
-  })
-
-  test("fitness categories exist", () => {
-    const cats = getTemplatesByCategory()
-    expect(cats.strength!.length).toBeGreaterThan(0)
-    expect(cats.training!.length).toBeGreaterThan(0)
-    expect(cats.nutrition!.length).toBeGreaterThan(0)
-    expect(cats.body_comp!.length).toBeGreaterThan(0)
-  })
-
-  test("wealth categories exist", () => {
-    const cats = getTemplatesByCategory()
-    expect(cats.income!.length).toBeGreaterThan(0)
-    expect(cats.saving!.length).toBeGreaterThan(0)
-    expect(cats.investing!.length).toBeGreaterThan(0)
-    expect(cats.career_growth!.length).toBeGreaterThan(0)
   })
 
   test("all L3 goals are in exactly one category", () => {

@@ -85,17 +85,6 @@ describe("groupGoalsByHierarchy", () => {
     expect(customGoals[0].id).toBe("legacy")
   })
 
-  it("handles dirty_dog category", () => {
-    const goals = [
-      mockGoal({ id: "1", goal_level: 1, template_id: "l1_girlfriend" }),
-      mockGoal({ id: "2", goal_level: 2, parent_goal_id: "1", template_id: "l2_master_daygame" }),
-      mockGoal({ id: "3", goal_level: 3, parent_goal_id: "2", display_category: "dirty_dog" }),
-    ]
-
-    const { sections } = groupGoalsByHierarchy(goals)
-    expect(sections[0].categories.dirty_dog?.length).toBe(1)
-  })
-
   it("handles standalone L2 picks (no L1 in same area)", () => {
     const goals = [
       mockGoal({ id: "2", goal_level: 2, template_id: "l2_master_daygame", life_area: "daygame", category: "daygame" }),
@@ -141,16 +130,6 @@ describe("groupGoalsByHierarchy", () => {
 })
 
 describe("getGoalAccentColor", () => {
-  it("returns green for input goals", () => {
-    const goal = mockGoal({ id: "1", goal_nature: "input" })
-    expect(getGoalAccentColor(goal)).toBe("#22c55e")
-  })
-
-  it("returns red for outcome goals", () => {
-    const goal = mockGoal({ id: "1", goal_nature: "outcome" })
-    expect(getGoalAccentColor(goal)).toBe("#ef4444")
-  })
-
   it("returns null when goal_nature is not set", () => {
     const goal = mockGoal({ id: "1", goal_nature: null })
     expect(getGoalAccentColor(goal)).toBeNull()

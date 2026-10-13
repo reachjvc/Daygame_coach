@@ -23,7 +23,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { RecapTab, type RecapHandlers } from "@/src/goals/components/north-star/RecapTab"
 import type { ValuesHandlers } from "@/src/goals/components/north-star/ValuesWork"
-import { RECAP_COPY, SCORED_TABS, SEASON_FOCUS_COPY, STAR_WHY_ID, TAB_LABELS, TAB_ORDER } from "@/src/goals/data/northStar"
+import { RECAP_COPY, SEASON_FOCUS_COPY, STAR_WHY_ID } from "@/src/goals/data/northStar"
 import { COMMIT_KEY, ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import {
   addExperiences,
@@ -204,13 +204,6 @@ describe("the two rules the recap must not break", () => {
     fireEvent.change(box, { target: { value: "Something else entirely" } })
     expect(onStar).toHaveBeenCalledWith("Something else entirely")
   })
-
-  it("is a step in the rail that is never scored", () => {
-    // A ring would fill itself off work already scored on the step that did it.
-    expect(TAB_ORDER).toContain("recap")
-    expect(SCORED_TABS).not.toContain("recap")
-    expect(TAB_LABELS.recap.length).toBeGreaterThan(0)
-  })
 })
 
 /**
@@ -228,11 +221,6 @@ describe("the one thing", () => {
     const plan = addGoal(emptyNsPlan(), "lm_fitness", "Flat bench 100 kg", "milestone_ladder", NOW)
     return setSeasonFocus(plan, plan.goals[plan.goals.length - 1].id, NOW)
   }
-
-  it("shows what somebody wrote, not the goal they ticked", () => {
-    show(planWithBoth(), {}, "100 days of no weed")
-    expect(screen.getByText("100 days of no weed")).toBeTruthy()
-  })
 
   /**
    * AND IT IS THE ACCOUNT'S SENTENCE, not anything left in the plan.

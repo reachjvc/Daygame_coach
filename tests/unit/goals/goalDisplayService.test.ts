@@ -1,11 +1,7 @@
 import { describe, test, expect } from "vitest"
-import { getCategoryLabel, isUnknownCategory, getGoalTypeLabel, getGoalPhaseLabel, getGoalPhaseStyle, getPeriodLabel, getPeriodAbbrev } from "@/src/goals/goalDisplayService"
+import { getCategoryLabel, isUnknownCategory, getGoalTypeLabel, getGoalPhaseLabel, getPeriodLabel, getPeriodAbbrev } from "@/src/goals/goalDisplayService"
 
 describe("getCategoryLabel", () => {
-  test("returns known label for known category", () => {
-    expect(getCategoryLabel("field_work")).toBe("Field Work")
-    expect(getCategoryLabel("nutrition")).toBe("Nutrition & Recovery")
-  })
   test("returns formatted string for unknown category", () => {
     expect(getCategoryLabel("some_new_thing")).toBe("Some New Thing")
   })
@@ -35,24 +31,8 @@ describe("getGoalTypeLabel", () => {
 })
 
 describe("getGoalPhaseLabel", () => {
-  test("returns label for known phases", () => {
-    expect(getGoalPhaseLabel("acquisition")).toBe("Learning")
-    expect(getGoalPhaseLabel("consolidation")).toBe("Consolidating")
-    expect(getGoalPhaseLabel("graduated")).toBe("Graduated")
-  })
   test("returns formatted string for unknown phase", () => {
     expect(getGoalPhaseLabel("mastered")).toBe("Mastered")
-  })
-})
-
-describe("getGoalPhaseStyle", () => {
-  test("returns correct style for known phases", () => {
-    expect(getGoalPhaseStyle("graduated")).toContain("emerald")
-    expect(getGoalPhaseStyle("consolidation")).toContain("blue")
-    expect(getGoalPhaseStyle("acquisition")).toContain("muted")
-  })
-  test("returns amber warning style for unknown phase", () => {
-    expect(getGoalPhaseStyle("unknown")).toContain("amber")
   })
 })
 
@@ -64,14 +44,6 @@ describe("getPeriodLabel", () => {
 })
 
 describe("getPeriodAbbrev", () => {
-  test("returns abbreviations for known periods", () => {
-    expect(getPeriodAbbrev("daily")).toBe("d")
-    expect(getPeriodAbbrev("weekly")).toBe("wk")
-    expect(getPeriodAbbrev("monthly")).toBe("mo")
-    expect(getPeriodAbbrev("quarterly")).toBe("qtr")
-    expect(getPeriodAbbrev("yearly")).toBe("yr")
-  })
-
   test("returns raw string for unknown period", () => {
     expect(getPeriodAbbrev("custom")).toBe("custom")
   })

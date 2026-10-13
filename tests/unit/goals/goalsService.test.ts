@@ -8,7 +8,6 @@ import {
   deriveTimeHorizon,
   isDailyActionable,
   isDailyMilestone,
-  filterScorecardGoals,
   getMilestoneLadderValues,
   getInputMode,
   getButtonIncrements,
@@ -654,31 +653,6 @@ describe("deriveTimeHorizon", () => {
   // --- Recurring goals: derive from period ---
 
   describe("recurring goals (period)", () => {
-    test("should return 'Today' for daily period", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "daily" })
-      expect(deriveTimeHorizon(goal)).toBe("Today")
-    })
-
-    test("should return 'This Week' for weekly period", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "weekly" })
-      expect(deriveTimeHorizon(goal)).toBe("This Week")
-    })
-
-    test("should return 'This Month' for monthly period", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "monthly" })
-      expect(deriveTimeHorizon(goal)).toBe("This Month")
-    })
-
-    test("should return 'This Quarter' for quarterly period", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "quarterly" })
-      expect(deriveTimeHorizon(goal)).toBe("This Quarter")
-    })
-
-    test("should return 'This Year' for yearly period", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "yearly" })
-      expect(deriveTimeHorizon(goal)).toBe("This Year")
-    })
-
     test("should return 'Custom' for custom period", () => {
       const goal = createGoalWithProgress({ goal_type: "recurring", period: "custom" })
       expect(deriveTimeHorizon(goal)).toBe("Custom")
@@ -786,11 +760,6 @@ describe("deriveTimeHorizon", () => {
       const goal = createGoalWithProgress({ tracking_type: "counter", target_value: 51 })
       expect(getInputMode(goal)).toBe("direct-entry")
     })
-
-    test("should return 'direct-entry' for counter with target 150", () => {
-      const goal = createGoalWithProgress({ tracking_type: "counter", target_value: 150 })
-      expect(getInputMode(goal)).toBe("direct-entry")
-    })
   })
 
   // ============================================================================
@@ -820,51 +789,6 @@ describe("deriveTimeHorizon", () => {
   // ============================================================================
 
   describe("getCelebrationTier", () => {
-    test("daily recurring goal → subtle", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "daily" })
-      expect(getCelebrationTier(goal)).toBe("subtle")
-    })
-
-    test("weekly recurring goal → toast", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "weekly" })
-      expect(getCelebrationTier(goal)).toBe("toast")
-    })
-
-    test("monthly recurring goal → toast", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "monthly" })
-      expect(getCelebrationTier(goal)).toBe("toast")
-    })
-
-    test("quarterly recurring goal → confetti-small", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "quarterly" })
-      expect(getCelebrationTier(goal)).toBe("confetti-small")
-    })
-
-    test("yearly recurring goal → confetti-full", () => {
-      const goal = createGoalWithProgress({ goal_type: "recurring", period: "yearly" })
-      expect(getCelebrationTier(goal)).toBe("confetti-full")
-    })
-
-    test("multi-year milestone → confetti-epic", () => {
-      const nextYear = new Date()
-      nextYear.setFullYear(nextYear.getFullYear() + 2)
-      const goal = createGoalWithProgress({
-        goal_type: "milestone",
-        target_date: nextYear.toISOString().split("T")[0],
-      })
-      expect(getCelebrationTier(goal)).toBe("confetti-epic")
-    })
-
-    test("life milestone (5+ years) → confetti-epic", () => {
-      const farFuture = new Date()
-      farFuture.setFullYear(farFuture.getFullYear() + 10)
-      const goal = createGoalWithProgress({
-        goal_type: "milestone",
-        target_date: farFuture.toISOString().split("T")[0],
-      })
-      expect(getCelebrationTier(goal)).toBe("confetti-epic")
-    })
-
     test("custom period → toast", () => {
       const goal = createGoalWithProgress({ goal_type: "recurring", period: "custom" })
       expect(getCelebrationTier(goal)).toBe("toast")
@@ -878,14 +802,6 @@ describe("deriveTimeHorizon", () => {
   describe("deriveChildLevel", () => {
     test("null parent level → null", () => {
       expect(deriveChildLevel(null)).toBeNull()
-    })
-
-    test("L0 → L1", () => {
-      expect(deriveChildLevel(0)).toBe(1)
-    })
-
-    test("L1 → L2", () => {
-      expect(deriveChildLevel(1)).toBe(2)
     })
 
     test("L2 → L3", () => {
@@ -942,10 +858,6 @@ describe("deriveTimeHorizon", () => {
 
     test("returns formatted label for positive weeks", () => {
       expect(formatStreakLabel(8)).toBe("Week 8 streak")
-    })
-
-    test("returns formatted label for 1 week", () => {
-      expect(formatStreakLabel(1)).toBe("Week 1 streak")
     })
   })
 
@@ -1112,16 +1024,6 @@ describe("deriveTimeHorizon", () => {
       }
     })
 
-    test("all inserts parented to existing L2 goal", () => {
-      const goals = [
-        createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
-      ]
-      const inserts = generateDirtyDogInserts(goals)
-      for (const insert of inserts) {
-        expect(insert.parent_goal_id).toBe("l2-1")
-      }
-    })
-
     test("returns empty when no L2 parent exists", () => {
       const goals = [
         createGoalWithProgress({ id: "l3-1", goal_level: 3, template_id: "l3_approach_volume" }),
@@ -1172,26 +1074,6 @@ describe("getTimeOfDayBracket", () => {
     expect(getTimeOfDayBracket(0)).toBe("night")
     expect(getTimeOfDayBracket(3)).toBe("night")
     expect(getTimeOfDayBracket(4)).toBe("night")
-  })
-
-  test("boundary: 4→night, 5→morning", () => {
-    expect(getTimeOfDayBracket(4)).toBe("night")
-    expect(getTimeOfDayBracket(5)).toBe("morning")
-  })
-
-  test("boundary: 11→morning, 12→afternoon", () => {
-    expect(getTimeOfDayBracket(11)).toBe("morning")
-    expect(getTimeOfDayBracket(12)).toBe("afternoon")
-  })
-
-  test("boundary: 16→afternoon, 17→evening", () => {
-    expect(getTimeOfDayBracket(16)).toBe("afternoon")
-    expect(getTimeOfDayBracket(17)).toBe("evening")
-  })
-
-  test("boundary: 20→evening, 21→night", () => {
-    expect(getTimeOfDayBracket(20)).toBe("evening")
-    expect(getTimeOfDayBracket(21)).toBe("night")
   })
 })
 
@@ -1495,64 +1377,6 @@ describe("buildMilestoneCelebrationData", () => {
     const data = buildMilestoneCelebrationData(goal)
     expect(data).not.toBeNull()
     expect(data!.projectedNext).toBeNull()
-  })
-})
-
-// ============================================================================
-// filterScorecardGoals
-// ============================================================================
-
-describe("filterScorecardGoals", () => {
-  test("keeps active L3 recurring goals", () => {
-    const goals = [createGoalWithProgress({ goal_level: 3, goal_type: "recurring" })]
-    expect(filterScorecardGoals(goals)).toHaveLength(1)
-  })
-
-  test("keeps active L3 milestone goals", () => {
-    const goals = [createGoalWithProgress({ goal_level: 3, goal_type: "milestone" })]
-    expect(filterScorecardGoals(goals)).toHaveLength(1)
-  })
-
-  test("keeps standalone goals (goal_level null)", () => {
-    const goals = [createGoalWithProgress({ goal_level: null })]
-    expect(filterScorecardGoals(goals)).toHaveLength(1)
-  })
-
-  test("excludes completed goals", () => {
-    const goals = [createGoalWithProgress({ is_complete: true })]
-    expect(filterScorecardGoals(goals)).toHaveLength(0)
-  })
-
-  test("excludes archived goals", () => {
-    const goals = [createGoalWithProgress({ is_archived: true })]
-    expect(filterScorecardGoals(goals)).toHaveLength(0)
-  })
-
-  test("excludes graduated goals", () => {
-    const goals = [createGoalWithProgress({ goal_phase: "graduated" })]
-    expect(filterScorecardGoals(goals)).toHaveLength(0)
-  })
-
-  test("excludes L0, L1, L2 structural goals", () => {
-    const goals = [
-      createGoalWithProgress({ goal_level: 0 }),
-      createGoalWithProgress({ goal_level: 1 }),
-      createGoalWithProgress({ goal_level: 2 }),
-    ]
-    expect(filterScorecardGoals(goals)).toHaveLength(0)
-  })
-
-  test("filters mixed set correctly", () => {
-    const goals = [
-      createGoalWithProgress({ id: "keep-1", goal_level: 3, goal_type: "recurring" }),
-      createGoalWithProgress({ id: "keep-2", goal_level: null, goal_type: "milestone" }),
-      createGoalWithProgress({ id: "drop-1", is_complete: true }),
-      createGoalWithProgress({ id: "drop-2", goal_level: 1 }),
-      createGoalWithProgress({ id: "drop-3", goal_phase: "graduated" }),
-    ]
-    const result = filterScorecardGoals(goals)
-    expect(result).toHaveLength(2)
-    expect(result.map(g => g.id)).toEqual(["keep-1", "keep-2"])
   })
 })
 

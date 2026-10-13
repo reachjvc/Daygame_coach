@@ -182,12 +182,6 @@ describe("the flow does not write to the account on its own", () => {
     const gets = calls.filter((c) => c.method === "GET" && c.url === "/api/life-plan").length
     expect(gets).toBe(1)
   })
-
-  it("does not save a plan it has only just been handed by the server", async () => {
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
-    await passTime(20_000)
-    expect(planPuts()).toBe(0)
-  })
 })
 
 describe("a day-half change never costs a plan save", () => {

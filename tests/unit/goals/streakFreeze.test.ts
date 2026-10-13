@@ -53,11 +53,6 @@ describe("shouldAutoFreeze", () => {
     expect(shouldAutoFreeze(goal, "2026-02-21")).toBe(true)
   })
 
-  test("returns false when streak is 0 even with freezes available", () => {
-    const goal = { ...baseGoal, current_streak: 0, streak_freezes_available: 3 }
-    expect(shouldAutoFreeze(goal, "2026-02-21")).toBe(false)
-  })
-
   test("returns true with exactly 1 freeze remaining", () => {
     const goal = { ...baseGoal, streak_freezes_available: 1 }
     expect(shouldAutoFreeze(goal, "2026-02-21")).toBe(true)

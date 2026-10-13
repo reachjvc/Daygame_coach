@@ -86,8 +86,7 @@ describe("the offers are worth showing at all", () => {
     // and where there is no pillar either, it must offer nothing rather than
     // everything.
     const invented = { id: "custom-1", label: "Surfing", color: "#fff", rating: null, ten: "" }
-    const offer = areaOffer(invented as never)
-    expect(offer === null || offer.objectiveIds.length > 0).toBe(true)
+    expect(areaOffer(invented as never)).toBeNull()
   })
 })
 

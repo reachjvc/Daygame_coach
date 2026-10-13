@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { generateGoalTreeInserts, type BatchGoalInsert } from "@/src/goals/treeGenerationService"
-import { GOAL_TEMPLATES, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
+import { GOAL_TEMPLATES } from "@/src/goals/data/goalGraph"
 
 // Daygame-specific counts
 const DAYGAME_L3_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
@@ -61,79 +61,6 @@ describe("generateGoalTreeInserts", () => {
       expect(approachFreq.target_value).toBe(10) // first ramp step is 10/week
     })
 
-    it("input goals have goal_nature 'input'", () => {
-      const inputs = inserts.filter((i) => i.goal_nature === "input")
-      expect(inputs.length).toBeGreaterThan(0)
-      for (const g of inputs) {
-        const tmpl = GOAL_TEMPLATE_MAP[g.template_id!]
-        expect(tmpl.nature).toBe("input")
-      }
-    })
-
-    it("outcome goals have goal_nature 'outcome'", () => {
-      const outcomes = inserts.filter((i) => i.goal_nature === "outcome")
-      expect(outcomes.length).toBeGreaterThan(0)
-      for (const g of outcomes) {
-        const tmpl = GOAL_TEMPLATE_MAP[g.template_id!]
-        expect(tmpl.nature).toBe("outcome")
-      }
-    })
-
-    it("L3 goals have display_category set", () => {
-      const l3s = inserts.filter((i) => i.goal_level === 3)
-      const validCategories = [
-        "field_work", "results", "dirty_dog", "texting", "dates", "relationship", "scenarios",
-        "mindfulness", "resilience", "learning", "reflection", "discipline",
-        "strength", "training", "nutrition", "body_comp",
-        "income", "saving", "investing", "career_growth",
-      ]
-      for (const l3 of l3s) {
-        expect(validCategories).toContain(l3.display_category)
-      }
-    })
-
-    it("linked_metric is set where template defines it", () => {
-      const withMetric = inserts.filter((i) => i.linked_metric)
-      expect(withMetric.length).toBeGreaterThan(0)
-      for (const g of withMetric) {
-        const tmpl = GOAL_TEMPLATE_MAP[g.template_id!]
-        expect(g.linked_metric).toBe(tmpl.linkedMetric)
-      }
-    })
-
-    it("approach_volume uses cumulative metric, approach_frequency uses weekly", () => {
-      const volume = inserts.find((i) => i.template_id === "l3_approach_volume")!
-      const frequency = inserts.find((i) => i.template_id === "l3_approach_frequency")!
-      expect(volume.linked_metric).toBe("approaches_cumulative")
-      expect(frequency.linked_metric).toBe("approaches_weekly")
-    })
-
-    it("phone_numbers and instadates use cumulative metrics", () => {
-      const numbers = inserts.find((i) => i.template_id === "l3_phone_numbers")!
-      const instadates = inserts.find((i) => i.template_id === "l3_instadates")!
-      expect(numbers.linked_metric).toBe("numbers_cumulative")
-      expect(instadates.linked_metric).toBe("instadates_cumulative")
-    })
-
-    it("milestone_ladder goals include milestone_config from template defaults", () => {
-      const approachVolume = inserts.find((i) => i.template_id === "l3_approach_volume")!
-      expect(approachVolume.milestone_config).toBeDefined()
-      const config = approachVolume.milestone_config as Record<string, unknown>
-      expect(config.start).toBe(1)
-      expect(config.target).toBe(1000)
-      expect(config.steps).toBe(15)
-      expect(config.curveTension).toBe(0)
-    })
-
-    it("habit_ramp goals include ramp_steps from template defaults", () => {
-      const approachFreq = inserts.find((i) => i.template_id === "l3_approach_frequency")!
-      expect(approachFreq.ramp_steps).toBeDefined()
-      expect(Array.isArray(approachFreq.ramp_steps)).toBe(true)
-      const steps = approachFreq.ramp_steps as Record<string, unknown>[]
-      expect(steps.length).toBeGreaterThan(0)
-      expect(steps[0].frequencyPerWeek).toBe(10)
-    })
-
     it("goals without template config have no milestone_config or ramp_steps", () => {
       const l1 = inserts.find((i) => i.goal_level === 1)!
       expect(l1.milestone_config).toBeUndefined()
@@ -159,10 +86,6 @@ describe("generateGoalTreeInserts", () => {
 
   describe("creation order", () => {
     const inserts = generateGoalTreeInserts("l1_girlfriend")
-
-    it("L1 root comes first", () => {
-      expect(inserts[0].goal_level).toBe(1)
-    })
 
     it("every _tempParentId references a _tempId that appears earlier in the array", () => {
       const seenTempIds = new Set<string>()

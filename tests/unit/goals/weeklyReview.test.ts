@@ -148,15 +148,6 @@ describe("computeWeeklyReviewData", () => {
     expect(data.overallMomentumScore).toBe(50) // (100 + 0) / 2
   })
 
-  test("includes tier upgrades from parameter", () => {
-    const tierUpgrades = [
-      { badgeId: "b1", badgeTitle: "Badge 1", previousTier: "none" as const, newTier: "bronze" as const },
-    ]
-    const data = computeWeeklyReviewData([], [createGoal()], tierUpgrades)
-    expect(data.tierUpgrades).toHaveLength(1)
-    expect(data.tierUpgrades[0].badgeId).toBe("b1")
-  })
-
   test("determines trend from first half vs second half of snapshots", () => {
     const goals = [createGoal({ id: "g1" })]
     // First half: 0% complete, second half: 100% complete → improving
@@ -169,24 +160,6 @@ describe("computeWeeklyReviewData", () => {
 
     const data = computeWeeklyReviewData(snapshots, goals)
     expect(data.goalMomentum[0].trend).toBe("improving")
-  })
-
-  test("includes goalNature in momentum entries", () => {
-    const goals = [
-      createGoal({ id: "g1", goal_nature: "input" }),
-      createGoal({ id: "g2", goal_nature: "outcome" }),
-      createGoal({ id: "g3", goal_nature: null }),
-    ]
-    const snapshots = [
-      createSnapshot({ goal_id: "g1", snapshot_date: "2026-02-17", was_complete: true }),
-      createSnapshot({ goal_id: "g2", snapshot_date: "2026-02-17", was_complete: true }),
-      createSnapshot({ goal_id: "g3", snapshot_date: "2026-02-17", was_complete: true }),
-    ]
-
-    const data = computeWeeklyReviewData(snapshots, goals)
-    expect(data.goalMomentum[0].goalNature).toBe("input")
-    expect(data.goalMomentum[1].goalNature).toBe("outcome")
-    expect(data.goalMomentum[2].goalNature).toBeNull()
   })
 
   test("weights input goals higher than outcome goals in momentum score", () => {

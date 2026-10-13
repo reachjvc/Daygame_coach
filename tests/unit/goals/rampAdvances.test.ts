@@ -107,10 +107,18 @@ describe("what the roll leaves alone — null means the target is not touched", 
 
   it("the time of day the goal was created does not shift the week", () => {
     // `created_at` is a timestamp; the week is counted from its DATE. A goal
-    // made at half past nine must not sit in a different week from one made at
-    // midnight.
-    expect(targetOn(CREATED, "2026-02-23", RAMP)).toBe(5) // week 8
-    expect(targetOn(CREATED, "2026-03-02", RAMP)).toBe(10) // week 9
+    // made at midnight and one made at half past eleven that night sit in the
+    // same week — checked on both sides of the step-up, where an hour's drift
+    // would show.
+    const at = (time: string, today: string) =>
+      rampTargetForPeriod(
+        { period: "weekly", ramp_steps: RAMP, created_at: `${CREATED}T${time}Z`, target_value: 7 },
+        today,
+      )
+    for (const time of ["00:00:00", "23:30:00"]) {
+      expect(at(time, "2026-03-01"), `created ${time}, last day of week 8`).toBe(5)
+      expect(at(time, "2026-03-02"), `created ${time}, first day of week 9`).toBe(10)
+    }
   })
 })
 
