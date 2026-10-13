@@ -1,8 +1,10 @@
 # Self-hosting behind Caddy, and a GitHub Actions pipeline that deploys it
 
-**Status:** Phase 0 done 2026-10-13. Phases 1–5 run without you; a few of their steps may stop at a
-blocker, and those are listed for your return. Phases 6–7 wait for the STOP line (a domain and a
-server).
+**Status:** Phases 0–5 executed 2026-10-13 (session daygame-coach-6e, renamed daygame-coach-c5 after
+WSL restarted). Phases 1–3 and 5 done. Phase 4 done except steps 4.6–4.7: this machine cannot pull a
+private GHCR image yet, because the GitHub CLI login has no `read:packages` scope (B-GH, half open).
+Evidence is quoted under each phase; what is still open is in "Blocker state after Phases 1–5" and
+under the STOP line. Phases 6–7 wait for the STOP line (a domain and a server).
 
 **Written 2026-10-13** for an outside consultant who does not know this project, and for the AI session
 that executes it. The `/goal` prompts are at the end. Three independent reviewers checked the plan
@@ -267,6 +269,20 @@ what happened, not a guess.
 
 ---
 
+## Blocker state after Phases 1–5 (2026-10-13, end of execution)
+
+| ID | State now | Evidence |
+|---|---|---|
+| B-GH | **Half open.** `gh` is logged in as reachjvc (done by the owner during the day), so `infra/github-config.sh` ran (step 4.4). Its token scopes are `gist, read:org, repo`: **no `read:packages`**, so this machine cannot pull the private image (steps 4.6–4.7). | `gh auth status`: "Token scopes: 'gist', 'read:org', 'repo'"; `gh api user/packages?package_type=container`: "You need at least read:packages scope to list packages. (HTTP 403)" |
+| B-ENV | **Not hit.** `infra/write-env-file.sh staging` ran and wrote both files (mode 600, names only on screen). A direct `ls` of `.env.local` was refused and not routed around. | "ls from '/home/jonaswsl/projects/daygame-coach/.env.local' was blocked by a deny rule." |
+| B-SHARED-DEPS (new) | **Closed by the owner.** Copying `package.json`, `package-lock.json` and `.nvmrc` into the shared folder was refused once; the owner then approved it in this session ("Yes, apply and commit"), and it landed in cdd7446a. | "Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Modify Shared Resources]." |
+| B-PEER-TREE | **Hit three times, each cleared by the peer.** The pre-commit hook failed on other sessions' uncommitted test work: `e2e-isolation.test.ts` and `lintRatchet.test.ts` (daygame-coach-ac, 14:17), then `e2e-isolation.test.ts` "stateful E2E tests must use serial mode" (daygame-coach-7c, fixed in b8d823d0). CI's type ratchet was red from 7e66dd8a (`tests/e2e/blackbox-seed-race.spec.ts:96` TS2769) until c86b601c; the CI run on efe1ab1f, before any commit of this plan in that window, failed the same step. | messages in this session; CI runs 38408000694 and 38408593068 (Type-check ratchet: failure) |
+| B-REBOOT | **Closed: observed.** WSL restarted at 17:49 (not by this plan). Without anyone acting, `dg-app` and `dg-caddy` came back healthy, `https://localhost/api/healthz` answered 200 with the deployed commit, and the agent timer fired 30 s after boot. | `who -b`: "system boot 2026-10-13 17:49"; healthz `{"status":"ok","buildId":"d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed","db":"ok","proto":"https"}`; journal "17:50:01 agent: infra checkout e10f08ee60af; watching …" |
+| B-DISK (new) | **Open, owner's.** C: holds WSL's virtual disk and is 99 % full (30 GB free). A full C: detached WSL and killed every session today (recorded by the site-structure plan's session). This plan's buildx builder held **30 GB of build cache** on that disk at the time, so its image builds very likely contributed. The cache was pruned to 4 GB, and `infra/build-image.sh` now refuses to build below 20 GB free on C: and trims the cache after every build (a1f82f6b). Space freed inside WSL is reused but does not shrink the file on C:. | `df -h /mnt/c`: "1.9T 1.8T 30G 99%"; `docker buildx prune --builder dg-capped --keep-storage 4gb`: "Total: 26.49GB" |
+| B-DEVSERVER | **Open, and the dev server is down.** The WSL restart at 17:49 stopped the owner's `npm run dev` on :3000. This plan does not start it (R11). | `curl http://localhost:3000/`: 000 after the restart (200 before) |
+| B-CI-ARTIFACTS / R12 | **R12 done by daygame-coach-bf**: the three test accounts have new passwords, every session revoked, the 10 reports holding the old ones deleted, `.env.local` and the CI secrets updated. New report artifacts keep being uploaded by e2e.yml (23 now); since f92a16f1 they type passwords through `fillSecret`, so their step names hold none (not downloaded here). | bf's message 2026-10-13; `gh api repos/reachjvc/Daygame_coach/actions/artifacts`: "total_count=23" |
+| B-GHCR, B-DNS, B-HETZNER, B-TAILSCALE, B-MAIN, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
+
 # OPEN QUESTIONS — every one decided, with the cost if the decision is wrong
 
 | # | Question | Decision (recommendation) | Alternative | Cost if wrong |
@@ -317,7 +333,7 @@ depends on. Where a step needs a blocker, the phase says what to do instead, and
 - Pointers fixed. The old plan carries a "superseded" banner, and `infra/README.md`,
   `infra/caddy/Caddyfile.local` and `tests/unit/infra/localDeploy.test.ts` now point here.
 
-## Phase 1 — Patched, pinned and observable
+## Phase 1 — Patched, pinned and observable. **Status: done 2026-10-13**
 
 **Depends on:** nothing. **Working state:** the app reports its own health and version, refuses to
 start when misconfigured, and has no critical advisory in what ships.
@@ -386,7 +402,46 @@ start when misconfigured, and has no critical advisory in what ships.
    `curl` (Part 2 says how). *Phase acceptance:* CI is green on the pushed commit, or a failure caused
    outside this plan's diff is recorded with its evidence.
 
-## Phase 2 — CI earns its minutes
+### Phase 1 evidence (2026-10-13)
+
+- **1.1** `git log`: f92a16f1 "CI's public test reports carried the test accounts' passwords"
+  (12:19), by daygame-coach-bf. R12 was then done by the same session (see the blocker state).
+- **1.2** `git worktree add --detach <scratchpad>/wt HEAD`, Node 24.21.0 by path, `npm ci`: "added 957
+  packages". It was recreated after WSL restarted at 17:49 and wiped `/tmp`.
+- **1.3** `npm audit --omit=dev` before: `"critical": 1`; after the upgrade and `npm audit fix`:
+  `{"low":3,"moderate":6,"high":2,"critical":0,"total":11}`. On Node 24 in the worktree: "Lint errors:
+  322, none new."; "Type errors: 98, none new."; "Tests 4558 passed | 1 skipped (4559)"; `npm run
+  build`: "✓ Compiled successfully in 71s", exit 0 (built with placeholder public values, because
+  `.env.local` is not readable from the worktree). Applying the patch to the shared folder was refused
+  by the classifier (B-SHARED-DEPS) and then approved by the owner: cdd7446a. **Incident, stated:**
+  one copy of `package.json`/`package-lock.json` from a stale worktree base overwrote a peer's
+  committed removal of testcontainers (3aaea00e) in the working folder for a few seconds; it was
+  restored with `git checkout HEAD --` before anything was committed, and the patch was regenerated
+  on the current base. The shared `node_modules` was never changed. Peers were told.
+- **1.4** `.nvmrc` = 24.21.0 and `"engines": {"node": ">=24 <25"}`, in cdd7446a. Note for R8: Vercel
+  reads `engines`, so the next deploy of `main` builds on Node 24.
+- **1.5** `scripts/build-id.mjs`, dbe09f12; `tests/unit/infra/buildId.test.ts`: "Tests 6 passed" (all
+  four sources, the failure naming BUILD_SHA, and a short SHA refused). The same edit of
+  `next.config.mjs` carries step 3.1's self-hosted switch, to restart the owner's dev server once;
+  `http://localhost:3000` answered 200 before and after it.
+- **1.6** `app/api/healthz/route.ts` and `src/db/readinessProbe.ts` (a HEAD query on the public
+  `values` catalogue): "Tests 9 passed" (200, 503 on a throw, false after 2 s with the query aborted,
+  one probe per 10 s shared by concurrent callers, failures cached too, proto from the first hop).
+  The live check is Phase 3's.
+- **1.7** `scripts/check-runtime-env.mjs`: with `SUPABASE_SERVICE_ROLE_KEY` removed it printed
+  "check-runtime-env: SUPABASE_SERVICE_ROLE_KEY is required and not set — error reports, tracking,
+  embeddings and backups write with it." and exited 1. Deliberate breaks in the worktree: an unlisted
+  `process.env.UNLISTED_PROBE_X` failed with `"UNLISTED_PROBE_X (src/shared/ollama.ts)"`; an import of
+  `@ai-sdk/openai` failed with `"OPENAI_API_KEY, read by @ai-sdk/openai (src/shared/ollama.ts)"`. Both
+  Ollama defaults are gone (`src/shared/ollama.ts` says "Ollama is not configured"). The container
+  also refuses `ENABLE_TEST_ROUTES=true`.
+- **1.8** dbe09f12 turned CI's lint ratchet red ("3 lint error(s) that are not in
+  eslint-baseline.json", `no-redeclare` from two `/* global */` comments; run 38401588068, reported
+  by daygame-coach-ac) — this plan's fault, fixed in 0831d87c. The type ratchet then stayed red from
+  a peer's 7e66dd8a until c86b601c (B-PEER-TREE). First green CI with this plan's code: 88e71125, run
+  38411441358 "CI completed success".
+
+## Phase 2 — CI earns its minutes. **Status: done 2026-10-13**
 
 **Depends on:** Phase 1 (`.nvmrc`, and the patched `next`). **Working state:** `ci.yml` is honest about
 what it ran, checks dependencies and secrets, and cannot be surprised by a runner upgrade.
@@ -452,7 +507,39 @@ what it ran, checks dependencies and secrets, and cannot be surprised by a runne
    - The pushed `ci.yml` run is green in under 12 minutes.
    - Pushing again while that run is still in progress cancels it (checked once through the API).
 
-## Phase 3 — One artifact: a Docker image built from a commit, and this machine runs it
+### Phase 2 evidence (2026-10-13)
+
+- **2.2** 5036e193: `permissions: contents: read`, the concurrency rule, `ubuntu-24.04`, checkout and
+  setup-node v7 with `node-version-file: .nvmrc`; the job is now called `checks`. The peer's
+  `supabase/setup-cli` step (3aaea00e) was merged in unchanged.
+- **2.3** Done first, on 2026-10-13. Both owners of `e2e.yml` agreed by message. Because the file then
+  also held daygame-coach-ac's uncommitted project-list edits, ac committed it with the three
+  `runs-on: ubuntu-24.04` lines in 9274a742, crediting this step.
+- **2.4** `scripts/audit-ratchet.mjs` + `audit-baseline.json` (5 vulnerable versions):
+  "Dependency audit: 5 vulnerable package version(s), none new."; `tests/unit/ci/auditRatchet.test.ts`
+  "Tests 13 passed" (each rule, plus empty, non-JSON, error and non-report output, and a fake `npm`
+  that fails twice: "could not check, so this is a failure, not a pass", 2 attempts).
+- **2.5** `gitleaks git` over 751 commits: "leaks found: 3", all non-secrets, now in `.gitleaksignore`:
+  "no leaks found". Scratch clone with `core.hooksPath .husky` and a scratch bare remote: a clean
+  push passed ("no leaks found", "* [new branch] main -> main"); a commit with a fake `ghp_` token was
+  refused as a range ("pre-push: gitleaks found a secret in the commits for refs/heads/main
+  (refs/heads/main). Push refused.", exit 1) and as a new branch (refs/heads/feature, exit 1);
+  `gitleaks git` also found it ("leaks found: 1"); the bare repository held only the clean commit; a
+  missing gitleaks refused the push with install instructions; a deletion was skipped. Both were
+  deleted. The old `.husky/pre-push` had been removed in c9a9d65b ("never blocked; CI is the gate"),
+  so the new one is the secret scan alone. Every push since ran it, e.g. "2 commits scanned … no
+  leaks found".
+- **2.6** `tests/unit/ci/pipelineRules.test.ts`, each rule broken once on the real files in the
+  worktree and seen to fail: `pull_request_target` and `workflow_run` triggers; top-level permissions
+  removed; `cancel-in-progress: true`; `ubuntu-latest`; the gitleaks checksum line removed; and, once
+  the staging job existed, a pull-request condition, a `secrets.DEPLOY_PAT`, an unpinned
+  `actions/checkout@v7`, an unpinned action inside the composite action, and a build cache.
+- **2.7** `actionlint`: clean. e10f08ee: `checks` succeeded in 227 s ("Secret scan: success",
+  "Dependency audit ratchet: success"). Cancellation, seen through the API: the run for d8c955ee
+  (38414887900) was cancelled when e10f08ee was pushed: "Canceling since a higher priority waiting
+  request for ci-push-refs/heads/training-rebuild exists".
+
+## Phase 3 — One artifact: a Docker image built from a commit, and this machine runs it. **Status: done 2026-10-13**
 
 **Depends on:** Phase 1. **Working state:** https://localhost serves an image built from a named commit,
 behind Caddy, and a bad deploy undoes itself.
@@ -595,7 +682,55 @@ behind Caddy, and a bad deploy undoes itself.
     - **Lint and the dev server.** `hadolint` and `shellcheck` are clean, and `http://localhost:3000`
       answered 200 before and after.
 
-## Phase 4 — CD to staging: CI publishes; this machine deploys itself
+### Phase 3 evidence (2026-10-13)
+
+Files: 88e71125 (all of steps 2–9; step 1 landed with Phase 1), then d9e675e4. Decisions taken
+while building, each stated: Debian 13 `node:24.21.0-trixie-slim` and `caddy:2.11.7-alpine`, both
+by digest (2.11.4 was current when the plan was written); `USER 1000:1000` (hadolint DL3066);
+`data/woman-responses/prompts/` is let into the build because `src/scenarios/keepitgoing/chat.ts`
+reads it through `process.cwd()`, and Next's tracing then copies it into the image.
+
+- **The first two deploys failed safely**, and `deploy.sh` did its job: compose read
+  `CADDYFILE=caddy/Caddyfile.local` as a volume name ("refers to undefined volume"), and once that was
+  fixed every file in the image was 0600 (EACCES on `scripts/check-runtime-env.mjs`) because
+  `run-local.sh` leaked `umask 077` into the build. "ALERT: first deploy of sha256:a63c47f3… failed its
+  health check; the container is stopped, nothing was marked". Both fixed in d9e675e4, with a test.
+- **The deploy.** `infra/run-local.sh d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed`: "run-local exit=0".
+  It printed "Commit d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed" and "deploy: healthy: /api/healthz
+  answers 200 with commit d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed, inside and through Caddy (proto
+  https)". Its checks: "https://localhost/api/healthz 200, buildId
+  d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed, proto https"; "/ 200"; "/dashboard 307"; "http://localhost/
+  308"; "/test/crash 404"; "/api/test/pending-draft 404"; "dg-app publishes no port". The old
+  `daygame-local.service` was stopped, disabled and its unit file deleted before the switch.
+- **From Windows.** `curl.exe -k https://localhost/api/healthz`:
+  `{"status":"ok","buildId":"d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed","db":"ok","proto":"https"}`,
+  "HTTP 200".
+- **Not on the network.** `docker port dg-app`: empty; `PortBindings={} NetworkMode=infra_web`;
+  nothing listens on :3100.
+- **The image.** 1,180,019,888 bytes; `Config.User` 1000:1000; `find / -xdev -name '.env*'`: nothing;
+  `id -u` 1000.
+- **Rollback.** A broken image `FROM` the good one (`CMD … exit 3`), deployed with `infra/deploy.sh`:
+  "unhealthy after 90s", "rolling back to sha256:f6f7d70e…", "ALERT: sha256:d05fa3c9… failed its health
+  check and was rolled back …; marked failed", "deploy exit=1"; afterwards the good image runs and
+  healthz reports d9e675e4…; `failed-digests` holds only the broken ID.
+- **Crash.** `kill -9` of the container's PID 1 from the host: "healthy again after 1.744569899 s:
+  HTTP 200 …", "restart count 0 -> 1".
+- **Idempotent.** A second `run-local.sh` on the same commit rebuilt from cache to the same image ID
+  and "deploy: already running sha256:f6f7d70e… and healthy; nothing changed"; same container ID and
+  start time before and after.
+- **Route sweep against the container.** `PW_BASE_URL=https://localhost npx playwright test
+  --project=sweep-desktop --output <scratchpad>/pw` (HTML report to the scratchpad): "54 passed
+  (1.5m)". It used the running server; the dev server was not started.
+- **The proxy's headers.** A throwaway Caddy with `common.caddy`'s `request_header` lines echoed
+  `sub=[] pre=[] pre2=[] next=[] keep=[yes]` for a request carrying `x-middleware-subrequest`,
+  `x-prerender-revalidate`, `x-prerender-revalidate-if-generated` and `x-next-revalidate-tag-token`.
+  Responses from https://localhost carry no `Server` or `X-Powered-By` and no HSTS.
+- **Lint and the dev server.** `hadolint infra/Dockerfile` and `shellcheck` over every `infra/**/*.sh`:
+  clean. `http://localhost:3000`: 200 before the switch and after the sweep.
+- **Reboot (B-REBOOT).** Observed at 17:49, see the blocker state: the deployment came back by
+  itself.
+
+## Phase 4 — CD to staging: CI publishes; this machine deploys itself. **Status: done except 4.6–4.7, blocked: B-GH (no `read:packages`)**
 
 **Depends on:** Phases 2 and 3. Steps 4.4–4.7 need B-GH. **Working state:** a push to `training-rebuild`
 reaches https://localhost with no person involved.
@@ -664,7 +799,51 @@ reaches https://localhost with no person involved.
    If B-GH is still open, steps 1–3 are done (the job is merged and switched off), steps 4–7 move to
    the return visit, and the status reads "blocked on B-GH; local-registry rehearsal passed".
 
-## Phase 5 — Production, prepared to the last step without a domain or a server
+### Phase 4 evidence (2026-10-13)
+
+- **4.1** `infra/deploy-agent.sh` and the two systemd templates, d8c955ee. The rehearsal found that
+  systemd's PATH has no `~/.local/bin` (where `jq` is), so the template sets PATH (a1f82f6b).
+- **4.2** Throwaway `registry:2` (pinned by digest) on 127.0.0.1:5000; the user timer watching
+  `localhost:5000/daygame-coach-staging:staging`. (Whether `docker buildx imagetools` or the agent's
+  curl fallback read the plain-HTTP registry was not logged.) From the agent's journal:
+  1. "16:38:04 agent: new digest: localhost:5000/daygame-coach-staging@sha256:063b8755… (running:
+     sha256:f6f7d70e…)" … "16:38:10 deploy: healthy: /api/healthz answers 200 with commit
+     d9e675e4805b40e0ec3abd2ba7ba3704fc7758ed, inside and through Caddy (proto https)" … "done".
+  2. A newer image (commit d8c955ee44be179df5d43b9857b591beb92d0452) pushed at about 17:59:20: "18:00:11
+     agent: new digest: …@sha256:16a42f7e…", "18:00:15 deploy: done" — well inside 2 minutes.
+  3. A broken image: "18:01:12 agent: new digest: …@sha256:86c28006…", "18:02:43 deploy: unhealthy
+     after 90s", "rolling back to …@sha256:16a42f7e…", "ALERT: … failed its health check and was
+     rolled back …; marked failed", then "18:02:46 agent: …@sha256:86c28006… is marked failed; not
+     retrying it".
+  4. A fixed image: "18:03:46 agent: new digest: …@sha256:70ceffb2…", "18:03:50 deploy: healthy …",
+     "done: … is live".
+  The registry container and its volume were removed afterwards (and only that volume: the other
+  dangling volumes are peers' Postgres data). The WSL restart fell between outcomes 1 and 2.
+- **4.3** `scripts/ci/await-workflow.mjs` ("Tests 10 passed": no run yet, other workflows ignored,
+  in progress, every conclusion, newest run, renamed workflow, timeout, three API errors) and the
+  `image-staging` job with `.github/actions/publish-image`, a composite action shared with
+  production so the two cannot drift, d8c955ee. The privacy check asks the registry anonymously
+  (token, then manifest), because an empty `DOCKER_CONFIG` also hides the buildx plugin and would have
+  made "could not check" look like "private"; checked against GHCR: a public image answers 200, a
+  private or missing one "DENIED" and 401. While the switch was off, the `checks` job printed
+  "Staging publishing is off" (e10f08ee: "Staging publishing is off: success", image-staging
+  skipped).
+- **4.4** `infra/github-config.sh` (after B-GH's login appeared): "environment staging: deployable
+  from training-rebuild only", three variables set, "repository variable STAGING_PUBLISH=on",
+  "workflow runs from all outside contributors need approval". Read back through the API:
+  `branch:training-rebuild`; `["NEXT_PUBLIC_APP_URL","NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "NEXT_PUBLIC_SUPABASE_URL"]`; `STAGING_PUBLISH=on`; `all_external_contributors`. Every session was
+  told that each push now runs `image-staging`, which fails when e2e.yml failed on the same commit.
+- **4.5** Not this plan's (B9 of tests-worth-their-keep.md).
+- **4.6–4.7 blocked: B-GH.** The CLI token has no `read:packages` ("You need at least read:packages
+  scope to list packages. (HTTP 403)"), so `gh auth token | docker login ghcr.io` would not let this
+  machine pull the private image. The agent's settings already watch
+  `ghcr.io/reachjvc/daygame-coach-staging:staging`; its timer is **disabled** until R4/R5, so it does
+  not fail every minute. To finish: R4, then `gh auth token | docker login ghcr.io -u reachjvc
+  --password-stdin` (or R5's token), then `systemctl --user enable --now daygame-deploy.timer`.
+
+## Phase 5
+## Phase 5 — Production, prepared to the last step without a domain or a server. **Status: done 2026-10-13**
 
 **Depends on:** Phase 3 and steps 4.1–4.3. **Working state:** once the domain and server exist,
 production is a matter of running scripts that have already been dry-run.
@@ -743,6 +922,40 @@ production is a matter of running scripts that have already been dry-run.
    Tests, `actionlint`, `shellcheck` (over `infra/**/*.sh`) and `hadolint` are clean. **No real
    Cloudflare, Hetzner or GitHub-settings resource was touched.**
 
+### Phase 5 evidence (2026-10-13)
+
+All in 0ba9f54c. Decisions taken while building: the production jobs' condition is
+`!cancelled() && needs.checks.result == 'success' && …`, because `!cancelled()` alone would let a run
+with failed checks publish (rule 4); Caddy gets `SITE_DOMAIN` and `ACME_EMAIL` from the server's
+`deploy.env` through compose; the default server type is `cpx21` (the shared x86 type with 4 GB in
+Ashburn; check current prices); cloud-init embeds the Docker and Tailscale signing keys, their
+fingerprints checked when written in.
+
+- **5.1** `caddy validate` in `caddy:2.11.7-alpine@sha256:d8542f48…` with `SITE_DOMAIN=example.com`:
+  "Valid configuration". Without the variables Caddy refuses ("parsing caddyfile tokens for 'email':
+  wrong argument count"), which is the intended loud failure.
+- **5.2** `cloud-init schema --config-file` in a throwaway `ubuntu:24.04` (cloud-init 26.1): "Valid
+  schema /ci.yaml".
+- **5.3** `infra/server/sync-infra.sh --dry-run 0ba9f54c`: "At commit 0ba9f54ca981… it would install on
+  root@daygame-prod:" the five files under `/opt/daygame/infra/`, both units in `/etc/systemd/system/`,
+  "/etc/daygame/infra-version = 0ba9f54ca981…", then "restart only what changed".
+- **5.4** `infra/server/provision.sh --dry-run`: "firewall daygame-web: inbound 80/tcp, 443/tcp, 443/udp
+  from 0.0.0.0/0 and ::/0; nothing else, no 22"; "would run: hcloud server create --name daygame-prod
+  --type cpx21 --image ubuntu-24.04 --location ash --ssh-key daygame-owner --firewall daygame-web
+  --user-data-from-file …". `infra/server/push-env.sh --dry-run example.com ops@example.com`: the
+  secrets file, `deploy.env` (quoted line by line, no secrets) and the read-only GHCR login.
+  `infra/dns/records.sh --dry-run example.com`: A and AAAA for the apex and www "DNS only (not
+  proxied)", "CAA example.com -> 0 issue "letsencrypt.org"", "TXT example.com -> v=spf1 -all", "TXT
+  _dmarc.example.com -> v=DMARC1; p=reject". `infra/github-config.sh --dry-run` printed its plan
+  before step 4.4 ran it.
+- **5.5** `image-production` and `verify-production` in ci.yml; `actionlint` clean.
+- **5.6** `tests/unit/infra/production.test.ts`: "Tests 21 passed". Each rule broken once on purpose
+  and seen to fail: HSTS removed, `ssh_pwauth: true`, the metadata DROP removed, port 22 opened, a rule
+  without `::/0`, a proxied record, publishing without green checks, and `cancel-in-progress: true`.
+- **5.7** Tests, `actionlint`, `shellcheck` over `infra/**/*.sh` and `hadolint` clean (final run
+  below). No Cloudflare or Hetzner resource was touched. GitHub settings were changed only by step
+  4.4, after B-GH's login existed.
+
 ---
 
 # ████ STOP — the AI returns to you here ████
@@ -765,6 +978,25 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R11 | When convenient: `nvm alias default 24.21.0`, then in the repository `npm ci`, then restart `npm run dev` (B-DEVSERVER) | WSL terminal |
 | R12 | Change the passwords of the test accounts CI signs in with (`TEST_USER`, and `TEST_USER_B` and `TEST_USER_TRAINING`, whose reports were published by earlier runs). Update them in `.env.local` and in the CI secrets, and delete the live report artifacts (B9 of `tests-worth-their-keep.md`). Also confirm which Supabase project CI's secrets point at. | Supabase dashboard; GitHub → Settings → Secrets; WSL terminal after R4 |
 | R13 | Only if B-ENV was refused: run `infra/write-env-file.sh staging` once | WSL terminal |
+
+**State of each return item at the end of Phases 1–5 (2026-10-13):**
+
+| | State |
+|---|---|
+| R1 domain | Open |
+| R2 Cloudflare token | Open |
+| R3 Hetzner | Open |
+| R4 GitHub CLI | **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
+| R5 read-only registry tokens | Open. Until then this machine can use the CLI's token once R4 has `read:packages`. |
+| R6 Tailscale | Open |
+| R7 Supabase redirect URLs | Open |
+| R8 fast-forward `main` | Open. Note: Vercel will build `main` on Node 24 (`engines`). |
+| R9 trust the local certificate | Open (optional) |
+| R10 alert email | Open |
+| R11 Node 24 and `npm ci` for the dev server | Open. **The dev server is down** since WSL restarted at 17:49; start it after R11. |
+| R12 test passwords | **Done** by daygame-coach-bf |
+| R13 env file | **Not needed**: `infra/write-env-file.sh staging` ran in this session |
+| New: B-DISK | Free space on C: (30 GB left, 99 %). WSL crash dumps in `C:\Users\jonas\AppData\Local\Temp\wsl-crashes` are a safe first 3.9 GB (per the site-structure plan). |
 
 Then start a new session with the Phase 6 prompt at the end of this file.
 
@@ -923,6 +1155,14 @@ finish), and confirming the emails in steps 6 and 7.
 
 **Deleted:** `infra/compose.local.yaml`, `infra/systemd/daygame-local.service.template`, and the
 installed user unit.
+
+**Also created during execution, beyond the list above:** `.github/actions/publish-image/action.yml`
+(the build-prove-publish steps both image jobs share), `src/shared/ollama.ts` (the one owner of the
+Ollama URL rule), `.husky/pre-push` (created rather than edited: the old hook was deleted in
+c9a9d65b), and the tests `tests/unit/infra/{buildId,healthz,runtimeEnv,deployScripts,production}.test.ts`
+and `tests/unit/ci/{pipelineRules,auditRatchet,awaitWorkflow}.test.ts`. `yaml` 2.9.1 became an exact
+devDependency for the workflow tests. `app/api/errors/route.ts` and `OfflineShell.tsx` had comments
+pointing at the old build ID code corrected.
 
 ## What would make this plan wrong
 
