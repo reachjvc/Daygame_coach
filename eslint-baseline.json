@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 322,
+  "total": 291,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -396,9 +396,6 @@
     "src/goals/config.ts": {
       "@typescript-eslint/no-unused-vars: 'GOAL_DISPLAY_CATEGORIES' is defined but never used.": 1
     },
-    "src/goals/data/goalCategories.ts": {
-      "@typescript-eslint/no-unused-vars: 'LIFE_AREA_MAP' is defined but never used.": 1
-    },
     "src/goals/data/goalGraph.ts": {
       "@typescript-eslint/no-unused-vars: 'L2_TO_L3_EDGES' is assigned a value but never used.": 1
     },
@@ -468,18 +465,8 @@
       "@typescript-eslint/no-unused-vars: 'APPROACH_OUTCOMES' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'SET_TYPES' is defined but never used.": 1
     },
-    "tests/e2e/security-idor.spec.ts": {
-      "@typescript-eslint/no-unused-vars: 'AUTH_TIMEOUT' is assigned a value but never used.": 1
-    },
-    "tests/e2e/security-input.spec.ts": {
-      "@typescript-eslint/no-unused-vars: 'ACTION_TIMEOUT' is assigned a value but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'AUTH_TIMEOUT' is assigned a value but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'SELECTORS' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'session' is assigned a value but never used.": 1
-    },
     "tests/unit/db/linkedMetrics.test.ts": {
-      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1,
-      "@typescript-eslint/no-unused-vars: 'LinkedMetric' is defined but never used.": 1
+      "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 1
     },
     "tests/unit/goals/goalCategories.test.ts": {
       "@typescript-eslint/no-unused-vars: 'GoalSuggestion' is defined but never used.": 1
@@ -492,12 +479,6 @@
     },
     "tests/unit/goals/graduation.test.ts": {
       "@typescript-eslint/no-unused-vars: 'PacingInfo' is defined but never used.": 1
-    },
-    "tests/unit/goals/lifeDirectionService.test.ts": {
-      "prefer-const: 'p' is never reassigned. Use 'const' instead.": 3
-    },
-    "tests/unit/goals/lifeMasteryCopyLint.test.ts": {
-      "no-useless-escape: Unnecessary escape character: \\\".": 1
     },
     "tests/unit/goals/streakFreeze.test.ts": {
       "@typescript-eslint/no-unused-vars: 'afterEach' is defined but never used.": 1,
@@ -514,14 +495,11 @@
       "@typescript-eslint/no-unused-vars: 'level' is assigned a value but never used.": 1
     },
     "tests/unit/settings/settingsToggles.test.tsx": {
-      "@typescript-eslint/no-unused-vars: '_s' is defined but never used.": 3,
+      "@typescript-eslint/no-unused-vars: '_s' is defined but never used.": 2,
       "@typescript-eslint/no-unused-vars: 'beforeEach' is defined but never used.": 1
     },
     "tests/unit/shared/historyBarrier.test.ts": {
       "@typescript-eslint/no-unused-vars: 'addEventSpy' is assigned a value but never used.": 1
-    },
-    "tests/unit/tracking/schemas.test.ts": {
-      "@typescript-eslint/no-unused-vars: '_' is assigned a value but never used.": 4
     }
   }
 }

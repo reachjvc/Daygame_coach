@@ -1,7 +1,7 @@
 {
   "_comment": "Type errors that already existed, by file and message. May only shrink. Regenerate with: node scripts/typecheck-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "signatures-v2",
-  "total": 98,
+  "total": 91,
   "files": {
     "app/test/goalsv11/page.tsx": {
       "TS2345: Argument of type '\"a\" | \"b\" | \"c\" | \"d\" | \"e\"' is not assignable to parameter of type 'SetStateAction<\"a\">'.": 1
@@ -102,9 +102,6 @@
       "TS18047: 'result' is possibly 'null'.": 1,
       "TS2345: Argument of type '(prev: VisionDrivingForce | null) => { identity: string[]; purpose?: string | undefined; reasons?: string[] | undefined; mission?: string | undefined; conduct?: string[] | undefined; primaryQuestion?: string | undefined; primaryQuestionOld?: string | undefined; missionParts?: { ...; } | undefined; }' is not assignable to parameter of type 'SetStateAction<VisionDrivingForce | null>'.": 1
     },
-    "src/goals/goalsService.ts": {
-      "TS2322: Type 'string | null' is not assignable to type 'string'.": 1
-    },
     "src/goals/visionPlanService.ts": {
       "TS2741: Property '0' is missing in type 'string[] & { index: number; }' but required in type 'RegExpMatchArray'.": 1
     },
@@ -134,23 +131,14 @@
     "tests/unit/goals/graduation.test.ts": {
       "TS2322: Type '\"approaches\"' is not assignable to type 'LinkedMetric'.": 1
     },
-    "tests/unit/goals/lifeMasteryRegressions.test.ts": {
-      "TS2698: Spread types may only be created from object types.": 1
-    },
     "tests/unit/goals/northStarTrack.test.ts": {
       "TS2353: Object literal may only specify known properties, and 'curve' does not exist in type 'MilestoneLadderConfig'.": 1
     },
     "tests/unit/inner-game/progressUtils.test.ts": {
       "TS2322: Type '{ currentStep: InnerGameStep; currentSubstep: number; welcomeDismissed: boolean; valuesCompleted: boolean; shadowCompleted: boolean; peakExperienceCompleted: boolean; hurdlesCompleted: boolean; ... 14 more ...; deathbedInferredValues?: InferredValue[] | null | undefined; }' is not assignable to type 'InnerGameProgress'.": 1
     },
-    "tests/unit/qa/qaServiceHelpers.test.ts": {
-      "TS2345: Argument of type '\"claude\"' is not assignable to parameter of type '\"ollama\"'.": 2
-    },
     "tests/unit/shared/periodEquivalence.test.ts": {
       "TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.": 1
-    },
-    "tests/unit/tracking/customReportConfig.test.ts": {
-      "TS2352: Conversion of type 'CategoryInfo' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.": 1
     },
     "tests/unit/tracking/goalTotalTile.test.ts": {
       "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 2
@@ -160,10 +148,6 @@
     },
     "tests/unit/tracking/rollTrackingCounters.test.ts": {
       "TS1378: Top-level 'await' expressions are only allowed when the 'module' option is set to 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', 'nodenext', or 'preserve', and the 'target' option is set to 'es2017' or higher.": 1
-    },
-    "tests/unit/tracking/schemas.test.ts": {
-      "TS2741: Property 'approachNotes' is missing in type '{ approachCount: number; duration: null; location: null; outcomes: { blowout: number; short: number; good: number; number: number; instadate: number; }; averageMood: null; tags: never[]; startedAt: string; ... 6 more ...; approachMoods: never[]; }' but required in type 'SessionSummaryData'.": 1,
-      "TS2741: Property 'approachNotes' is missing in type '{ approachCount: number; duration: number; location: string; outcomes: { blowout: number; short: number; good: number; number: number; instadate: number; }; averageMood: number; tags: string[]; startedAt: string; ... 6 more ...; approachMoods: { ...; }[]; }' but required in type 'SessionSummaryData'.": 1
     },
     "tests/unit/tracking/streakDecay.test.ts": {
       "TS2353: Object literal may only specify known properties, and 'current_week' does not exist in type 'UserTrackingStatsRow'.": 1
