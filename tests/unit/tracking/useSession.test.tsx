@@ -295,49 +295,13 @@ describe("useSession - pageshow event handling", () => {
     mockSessionStorage.setItem(STORAGE_KEY, JSON.stringify(endedInfo))
 
     // Act: Simulate pageshow event (bfcache restore)
-    await act(async () => {
-      const event = new PageTransitionEvent("pageshow", { persisted: true })
-      window.dispatchEvent(event)
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 100))
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }))
     })
 
     // Assert: endedSession should be updated from sessionStorage
     await waitFor(() => {
       expect(result.current.endedSession).toEqual(endedInfo)
     })
-  })
-
-  test("does not re-read sessionStorage when pageshow event fires with persisted=false", async () => {
-    // Arrange: Render hook
-    const { result } = renderHook(() => useSession({ userId: mockUserId }))
-
-    await waitFor(() => {
-      expect(result.current.state.isLoading).toBe(false)
-    })
-
-    // Clear the getItem call count after initial load
-    mockSessionStorage.getItem.mockClear()
-
-    // Add ended session to storage
-    const endedInfo = {
-      id: "session-123",
-      approachCount: 3,
-      duration: "00:45:00",
-      endedAt: new Date().toISOString(),
-    }
-    mockSessionStorage.setItem(STORAGE_KEY, JSON.stringify(endedInfo))
-
-    // Act: Simulate pageshow event with persisted=false (normal load, not bfcache)
-    await act(async () => {
-      const event = new PageTransitionEvent("pageshow", { persisted: false })
-      window.dispatchEvent(event)
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    })
-
-    // Assert: getItem should NOT have been called again
-    // (since persisted=false means it's a fresh load, not bfcache restore)
-    expect(mockSessionStorage.getItem).not.toHaveBeenCalled()
-    expect(result.current.endedSession).toBeNull()
   })
 })

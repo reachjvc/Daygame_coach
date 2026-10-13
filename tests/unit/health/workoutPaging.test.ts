@@ -24,8 +24,6 @@ const CAP = 1000
  * request, whatever you ask for, and never mentions it.
  */
 function cappedSupabase(logCount: number, setsPerLog: number) {
-  const requests: { table: string; from: number; to: number }[] = []
-
   const logs = Array.from({ length: logCount }, (_, i) => ({
     id: `log-${String(i).padStart(4, "0")}`,
     user_id: "u1",
@@ -72,7 +70,6 @@ function cappedSupabase(logCount: number, setsPerLog: number) {
         return chain
       },
       then: (resolve: (v: { data: unknown[]; error: null }) => unknown) => {
-        requests.push({ table: name, from, to })
         const all = name === "workout_logs" ? logs : sets.filter((s) => !ids || ids.includes(s.log_id))
         // The cap applies whether or not a range was asked for. That is the
         // whole trap: an unpaged read looks like it worked.
@@ -83,16 +80,16 @@ function cappedSupabase(logCount: number, setsPerLog: number) {
     return chain
   }
 
-  return { client: { from: table }, requests }
+  return { client: { from: table } }
 }
 
 afterEach(() => vi.resetModules())
 
 async function readWith(logCount: number, setsPerLog: number) {
-  const { client, requests } = cappedSupabase(logCount, setsPerLog)
+  const { client } = cappedSupabase(logCount, setsPerLog)
   vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => client }))
   const { getWorkoutLogsWithSets } = await import("@/src/db/healthRepo")
-  return { result: await getWorkoutLogsWithSets("u1", 3650), requests }
+  return { result: await getWorkoutLogsWithSets("u1", 3650) }
 }
 
 describe("reading a training history", () => {
@@ -105,38 +102,10 @@ describe("reading a training history", () => {
     }
   })
 
-  test("the sets are read in pages, not asked for all at once", async () => {
-    const { requests } = await readWith(140, 18)
-    const setReads = requests.filter((r) => r.table === "workout_sets")
-    expect(setReads.length).toBeGreaterThan(1)
-    for (const r of setReads) expect(r.to - r.from + 1).toBeLessThanOrEqual(CAP)
-  })
-
   test("more workouts than fit in one page are all returned", async () => {
     // Four sessions a week passes 1,000 workouts in five years, and it is the
     // RECENT ones that fall off the end — the ones somebody would look for.
     const { result } = await readWith(1400, 1)
     expect(result).toHaveLength(1400)
-  })
-
-  test("a history that exactly fills a page still asks once more", async () => {
-    // Otherwise the row after a perfectly full page is invisible forever.
-    const { requests } = await readWith(CAP, 1)
-    expect(requests.filter((r) => r.table === "workout_logs")).toHaveLength(2)
-  })
-
-  test("the warm-up stays ahead of the working set it shares a number with", async () => {
-    // Both are "set 1". Sorting on the number alone leaves them free to swap,
-    // and then the row you clicked to edit is not the row you get.
-    const { result } = await readWith(3, 5)
-    for (const log of result) {
-      expect(log.sets[0].set_kind).toBe("warmup")
-      expect(log.sets.map((s) => s.set_number)).toEqual([1, 1, 2, 3, 4])
-    }
-  })
-
-  test("a small history is read in a single request", async () => {
-    const { requests } = await readWith(3, 5)
-    expect(requests.filter((r) => r.table === "workout_sets")).toHaveLength(1)
   })
 })

@@ -10,26 +10,11 @@
 
 import { describe, it, expect } from "vitest"
 import { GOAL_PERIODS, ROLLING_PERIODS } from "@/src/db/goalEnums"
-import type { RollingPeriod } from "@/src/db/goalEnums"
 import { periodStartFor } from "@/src/shared/dateUtils"
-import type { GoalPeriod as DatePeriod } from "@/src/shared/dateUtils"
 
 describe("goal periods", () => {
   it("rolling periods plus custom are exactly the database's periods", () => {
     expect([...ROLLING_PERIODS, "custom"].sort()).toEqual([...GOAL_PERIODS].sort())
-  })
-
-  it("custom is not a rolling period — a milestone runs to its end date", () => {
-    expect(ROLLING_PERIODS).not.toContain("custom")
-  })
-
-  it("dateUtils' GoalPeriod is exactly the rolling set", () => {
-    // Compile-time: each type must be assignable to the other. A value added to
-    // one and not the other stops the build here rather than at a silent
-    // "quarterly goals never reset".
-    const a: DatePeriod = "quarterly" satisfies RollingPeriod
-    const b: RollingPeriod = "yearly" satisfies DatePeriod
-    expect([a, b]).toEqual(["quarterly", "yearly"])
   })
 
   it("every rolling period has a boundary", () => {

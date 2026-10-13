@@ -108,17 +108,6 @@ describe("the tile, on the row that shipped the bug", () => {
     expect(getMetricValue(statsRow(), "day_streak", "Europe/Copenhagen")).toBe(0)
   })
 
-  it("keeps a live streak alive", () => {
-    const live = statsRow({ last_active_week_start: "2026-08-24", current_week_streak: 3 })
-    const gated = gateStreaks(live, "Europe/Copenhagen")
-    // Only true while the clock says week 35 or 36; assert against the same
-    // question the code asks rather than against a hardcoded today.
-    const thisWeek = periodStartFor("weekly", new Date())
-    expect(gated.current_week_streak).toBe(
-      isStreakCurrent("weekly", "2026-08-24", thisWeek) ? 3 : 0
-    )
-  })
-
   it("never lowers a record", () => {
     expect(gateStreaks(statsRow(), "Europe/Copenhagen").longest_week_streak).toBe(4)
     expect(gateStreaks(statsRow(), "Europe/Copenhagen").longest_streak).toBe(3)

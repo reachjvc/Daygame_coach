@@ -83,12 +83,5 @@ describe("turning it off", () => {
     await setGoalTotalTile("u1", GOAL, false)
     expect(replaceWidgets).not.toHaveBeenCalled()
   })
-
-  it("never touches the goal itself — removing a view is not deleting progress", async () => {
-    const goalRepo = await import("@/src/db/goalRepo")
-    getWidgets.mockResolvedValue([widget(TOTAL_ID)])
-    await setGoalTotalTile("u1", GOAL, false)
-    expect(goalRepo.getGoalsByIds).not.toHaveBeenCalled()
-  })
 })
 

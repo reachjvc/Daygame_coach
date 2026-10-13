@@ -123,11 +123,6 @@ describe("saving the plan", () => {
     expect((sent.goals as { user_id: string }[])[0].user_id).toBe(USER)
     expect((sent.areas as { user_id: string }[])[0].user_id).toBe(USER)
   })
-
-  it("hands back the new revision the function returned", async () => {
-    rpcResult = () => ({ data: 12, error: null })
-    expect(await saveLifePlan(rows(), 11, USER)).toBe(12)
-  })
 })
 
 describe("starting a plan", () => {

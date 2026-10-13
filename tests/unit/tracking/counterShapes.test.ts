@@ -164,13 +164,20 @@ describe.each([
   })
 
   it("shows the streak throughout the week after the last active one, then stops", () => {
-    const lastMonday = mondays[mondays.length - 1]
-    const during = samples.filter((s) => s.week === lastMonday)
-    const weekAfter = samples.filter(
-      (s) => s.week > lastMonday && s.week <= periodStartFor("weekly", new Date(`${lastMonday}T00:00:00Z`))
-    )
-    expect(during.length).toBeGreaterThan(0)
-    for (const s of during) expect(s.shown.current_week_streak).toBe(4)
-    for (const s of weekAfter) expect(s.shown.current_week_streak).toBe(4)
+    const mondayPlus = (days: number) => {
+      const [y, m, d] = mondays[mondays.length - 1].split("-").map(Number)
+      return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
+    }
+    const during = samples.filter((s) => s.week === mondayPlus(0))
+    const weekAfter = samples.filter((s) => s.week === mondayPlus(7))
+    const weekAfterThat = samples.filter((s) => s.week === mondayPlus(14))
+    // Each window asserted non-empty: an empty one passes every loop below, which
+    // is how this test once checked "the week after" without ever reaching it.
+    expect(during.length, "no sample in the last active week").toBeGreaterThan(0)
+    expect(weekAfter.length, "no sample in the week after").toBeGreaterThan(0)
+    expect(weekAfterThat.length, "no sample in the week after that").toBeGreaterThan(0)
+    for (const s of during) expect(s.shown.current_week_streak, s.at.toISOString()).toBe(4)
+    for (const s of weekAfter) expect(s.shown.current_week_streak, s.at.toISOString()).toBe(4)
+    for (const s of weekAfterThat) expect(s.shown.current_week_streak, s.at.toISOString()).toBe(0)
   })
 })

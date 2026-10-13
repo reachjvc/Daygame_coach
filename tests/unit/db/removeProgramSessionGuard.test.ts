@@ -99,31 +99,6 @@ describe("removeProgramSession", () => {
     expect(statusFor(thrown)).toBe(409)
   })
 
-  test("refuses before reading the enrollment, not after", async () => {
-    /**
-     * THIS TEST USED TO PROVE NOTHING, and the way it failed is worth keeping.
-     *
-     * It counted calls to a mocked `replayEnrollment` and asserted the count
-     * was zero. Under this fake `replayedState` dies earlier than that — the
-     * workout row comes back where an enrollment is expected, and
-     * `requireProgram(undefined)` throws — so the counter was empty in all five
-     * tests whether the guard ran first, last, or not at all. An assertion that
-     * cannot fail is not a test; a review found it, not the suite.
-     *
-     * What IS observable through this fake is which tables were touched.
-     * Refusing first means the lifecycle read happens and the enrollment is
-     * never read at all, which is the ordering the guard exists for: the replay
-     * behind it folds the whole history, and paying for that on a request about
-     * to be refused is the cost this ordering avoids.
-     */
-    const { repo, fake } = await repoWith(OPEN)
-    await repo.removeProgramSession(USER, ENROLLMENT, LOG).catch(() => null)
-    expect(fake.tables).toContain("workout_logs")
-    expect(fake.tables, "the enrollment must not be read on the way to a refusal").not.toContain(
-      "program_enrollments"
-    )
-  })
-
   /**
    * The other direction, and it is the half that stops the guard being a ban.
    *

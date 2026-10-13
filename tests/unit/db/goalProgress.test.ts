@@ -87,9 +87,9 @@ describe("progressPercent — the defect this change exists to fix", () => {
   })
 
   test("a target of zero has nothing to measure against", () => {
-    // The contract `tests/unit/db/goalTypes.test.ts` has asserted for a long
-    // time. The first version of this file got it wrong in the other
-    // direction and that test caught it.
+    // This file owns that contract now; goalTypes.test.ts held a duplicate of
+    // it until 2026-10-13. The first version of this file got it wrong in the
+    // other direction and that duplicate caught it.
     expect(progressPercent(row(0, 0))).toBe(0)
     expect(progressPercent(row(5, 0))).toBe(0)
     expect(progressPercent(row(3, -1))).toBe(0)

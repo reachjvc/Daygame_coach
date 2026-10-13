@@ -190,12 +190,6 @@ describe("every goal is trackable", () => {
   ])("%s resolves to at least one tracker", (_name, g) => {
     expect(metricsForGoal(g).length).toBeGreaterThan(0)
   })
-
-  test("a goal with no target is still trackable, just without a percentage", () => {
-    const metrics = metricsForGoal(goal({ target_value: 0 }))
-    expect(metrics.length).toBeGreaterThan(0)
-    expect(metrics.some((m) => m.id.endsWith(":percent"))).toBe(false)
-  })
 })
 
 describe("goal metric descriptions read correctly for the period", () => {

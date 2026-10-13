@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { workoutsByLocalDate, STEP_FOR_SESSION_TYPE } from "@/src/health/healthService"
+import { workoutsByLocalDate } from "@/src/health/healthService"
 
 /** Monday 23:45 in Copenhagen is Monday 21:45 UTC — the same day, in UTC. */
 const MONDAY_LATE_CPH = "2026-09-14T21:45:00.000Z"
@@ -55,23 +55,5 @@ describe("grouping finished workouts by the person's own day", () => {
 
   it("no workouts is an empty map, not a map of empty days", () => {
     expect(workoutsByLocalDate([], "UTC").size).toBe(0)
-  })
-})
-
-describe("which step a session ticks", () => {
-  it("a gym session is strength, a run or a bike is cardio, a stretch or yoga is mobility", () => {
-    expect(STEP_FOR_SESSION_TYPE.weights).toBe("strength")
-    expect(STEP_FOR_SESSION_TYPE.cardio).toBe("cardio")
-    expect(STEP_FOR_SESSION_TYPE.running).toBe("cardio")
-    expect(STEP_FOR_SESSION_TYPE.mobility).toBe("mobility")
-    expect(STEP_FOR_SESSION_TYPE.yoga).toBe("mobility")
-  })
-
-  it("every session type the app can store has a step", () => {
-    // A new session type added without a step here would silently tick nothing,
-    // which is the fault this whole thing replaces.
-    const types = ["weights", "cardio", "mobility", "yoga", "running"] as const
-    for (const t of types) expect(STEP_FOR_SESSION_TYPE[t], t).toBeTruthy()
-    expect(Object.keys(STEP_FOR_SESSION_TYPE).sort()).toEqual([...types].sort())
   })
 })

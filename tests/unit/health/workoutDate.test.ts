@@ -198,40 +198,12 @@ describe("every health entry answers 'when' the same way", () => {
    * "this was yesterday's dinner".
    *
    * All four now take the same two optional fields and go through the same
-   * conversion. What follows asserts that in the only two pieces it can be
-   * asserted in: the shared fragment behaves correctly, and all four routes
-   * actually use the shared fragment rather than a copy of it.
-   *
-   * THIS USED TO CLAIM MORE THAN IT CHECKED. The loop below was written for four
-   * schemas and left holding one, because sleep/weight/nutrition declare theirs
-   * as a module-private `CreateSchema` inside the route file and a test cannot
-   * import them. A docstring saying "all four" over a list of one is how a gap
-   * hides in a green suite.
+   * conversion. That is asserted in the only two pieces it can be asserted in:
+   * the shared fragment behaves correctly ("what the API will and will not
+   * accept", above), and every route uses the shared fragment rather than a
+   * copy of it (below). The routes declare their schemas module-private, so a
+   * test cannot import them; it reads their source instead.
    */
-  const withWhen = (shape: z.ZodRawShape) =>
-    z.object({ ...shape, ...entryWhenFields }).refine(hasDateIfTime, NEEDS_DATE_FOR_TIME)
-
-  /** One per real route, shaped like the route's own schema. */
-  const schemas = [
-    // No "workout" row: a workout is dated by `startedAt`, an instant on the
-    // start call, not by these two fields. The route that took them is gone.
-    ["sleep", withWhen({ bedtime: z.string(), wake_time: z.string() }), { bedtime: "23:00", wake_time: "07:00" }],
-    ["weight", withWhen({ weight_kg: z.number().positive().max(500), time_of_day: z.enum(["morning", "post_workout", "evening"]) }), { weight_kg: 80, time_of_day: "morning" }],
-    ["nutrition", withWhen({ quality_score: z.number().int().min(1).max(5), note: z.string().min(1).max(500) }), { quality_score: 4, note: "ok" }],
-  ] as const
-
-  it("accepts a date, accepts a date and time, refuses a bare time", () => {
-    for (const [name, schema, base] of schemas) {
-      expect(schema.safeParse(base).success, `${name}: no date`).toBe(true)
-      expect(schema.safeParse({ ...base, entry_date: "2026-09-01" }).success, `${name}: date`).toBe(true)
-      expect(
-        schema.safeParse({ ...base, entry_date: "2026-09-01", entry_time: "07:30" }).success,
-        `${name}: date+time`
-      ).toBe(true)
-      expect(schema.safeParse({ ...base, entry_time: "07:30" }).success, `${name}: bare time`).toBe(false)
-    }
-  })
-
   it("every health route builds its schema from the shared fragment, not a copy", async () => {
     // The half the type system cannot check: a route could hand-roll the same
     // two fields and drift. Four copies of a date rule is how the streaks broke.

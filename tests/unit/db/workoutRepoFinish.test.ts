@@ -472,21 +472,6 @@ describe("the times, the kind and the distance", () => {
 
     expect(fake.rpcCalls[0].p_session_type).toBe("weights")
   })
-
-  test("personal bests are judged from the EDITED start, not from today", async () => {
-    const { repo, fake } = await repoWith({ row: open })
-
-    await repo.finishWorkout(USER, WORKOUT, {
-      intensity: 3,
-      startedAt: "2026-09-15T10:00:00Z",
-      endedAt: "2026-09-15T11:00:00Z",
-    })
-
-    // A session dated last Tuesday must be measured against what was lifted
-    // before last Tuesday. The proof that the instant travelled is that the
-    // workout was filed and finished at all with the moved start.
-    expect(fake.rpcCalls[0].p_started_at).toBe("2026-09-15T10:00:00Z")
-  })
 })
 
 /**

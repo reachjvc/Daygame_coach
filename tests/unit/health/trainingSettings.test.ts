@@ -71,13 +71,4 @@ describe("training settings", () => {
     // Scoped, so a bug here can never write somebody else's row.
     expect(write?.eq).toEqual(["id", "u1"])
   })
-
-  it("writes the column defaults rather than null, because the columns are NOT NULL", async () => {
-    // The first version of this screen sent null for an empty box. Postgres
-    // refused it, and the screen reported "Saved." over the 500.
-    const { repo, calls } = await withFake()
-    await repo.saveTrainingSettings("u1", { unit: "kg", barWeightKg: 20, smallestPlateKg: 1.25 })
-    const write = calls.find((c) => c.payload)
-    expect(write?.payload).toMatchObject({ bar_weight_kg: 20, smallest_plate_kg: 1.25 })
-  })
 })

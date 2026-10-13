@@ -17,48 +17,6 @@ import type { SessionSummaryData } from "@/src/tracking/types"
 // ============================================================================
 
 describe("getMoodEmoji", () => {
-  describe("valid mood values", () => {
-    test("should return correct emoji for mood 1 (Frustrated)", () => {
-      // Act
-      const result = getMoodEmoji(1)
-
-      // Assert
-      expect(result).toBe("😤")
-    })
-
-    test("should return correct emoji for mood 2 (Meh)", () => {
-      // Act
-      const result = getMoodEmoji(2)
-
-      // Assert
-      expect(result).toBe("🙄")
-    })
-
-    test("should return correct emoji for mood 3 (Neutral)", () => {
-      // Act
-      const result = getMoodEmoji(3)
-
-      // Assert
-      expect(result).toBe("😐")
-    })
-
-    test("should return correct emoji for mood 4 (Good)", () => {
-      // Act
-      const result = getMoodEmoji(4)
-
-      // Assert
-      expect(result).toBe("😊")
-    })
-
-    test("should return correct emoji for mood 5 (On fire)", () => {
-      // Act
-      const result = getMoodEmoji(5)
-
-      // Assert
-      expect(result).toBe("🔥")
-    })
-  })
-
   describe("null and invalid values", () => {
     test("should return dash for null (no mood selected)", () => {
       // Act
@@ -71,22 +29,6 @@ describe("getMoodEmoji", () => {
     test("should return neutral emoji for mood 0 (out of range)", () => {
       // Act
       const result = getMoodEmoji(0)
-
-      // Assert
-      expect(result).toBe("😶")
-    })
-
-    test("should return neutral emoji for mood 6 (out of range)", () => {
-      // Act
-      const result = getMoodEmoji(6)
-
-      // Assert
-      expect(result).toBe("😶")
-    })
-
-    test("should return neutral emoji for negative value", () => {
-      // Act
-      const result = getMoodEmoji(-1)
 
       // Assert
       expect(result).toBe("😶")
@@ -240,25 +182,6 @@ describe("hasSessionContext", () => {
       // Assert
       expect(result).toBe(true)
     })
-
-    test("should return true when multiple context fields are set", () => {
-      // Arrange
-      const session = {
-        ...emptySessionData,
-        goal: 15,
-        preSessionMood: 4,
-        sessionFocus: "Be confident",
-        approachMoods: [
-          { approachNumber: 1, mood: 4, timestamp: "2024-01-15T14:10:00Z" },
-        ],
-      }
-
-      // Act
-      const result = hasSessionContext(session)
-
-      // Assert
-      expect(result).toBe(true)
-    })
   })
 })
 
@@ -324,27 +247,5 @@ describe("getDefaultExpanded", () => {
 
     // Assert
     expect(result).toBe(false)
-  })
-
-  test("should return false for large approach count (50)", () => {
-    // Arrange
-    const session = { ...baseSessionData, approachCount: 50 }
-
-    // Act
-    const result = getDefaultExpanded(session)
-
-    // Assert
-    expect(result).toBe(false)
-  })
-})
-
-// ============================================================================
-// COLLAPSE_THRESHOLD constant
-// ============================================================================
-
-describe("COLLAPSE_THRESHOLD", () => {
-  test("should be defined as 5", () => {
-    // Assert
-    expect(COLLAPSE_THRESHOLD).toBe(5)
   })
 })

@@ -18,6 +18,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
+import { createFakeSupabase, type Row } from "../../helpers/fakeSupabase"
 
 const USER = "u1"
 
@@ -63,6 +64,18 @@ async function readWith(rows: unknown[] | null, error: { message: string } | nul
   vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => fake.client }))
   const repo = await import("@/src/db/workoutRepo")
   return { repo, fake }
+}
+
+/**
+ * The shared in-memory engine, for the questions about WHICH workouts are read:
+ * its filters and sort run, so a dropped `user_id` or `ended_at` filter, or a
+ * missing tie-break, changes the answer. It ignores the select list, so each
+ * log row carries its nested `workout_sets` as PostgREST would embed them.
+ */
+async function readFrom(tables: Record<string, Row[]>) {
+  const client = createFakeSupabase(tables)
+  vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => client }))
+  return import("@/src/db/workoutRepo")
 }
 
 /** One finished workout, as PostgREST nests its sets. */
@@ -133,17 +146,41 @@ describe("lastSetsForLifts", () => {
     expect((thrown as Error).message).not.toMatch(/connection lost/)
   })
 
-  test("asks for finished workouts only, newest first, with a tie-break and a bound", async () => {
-    const { repo, fake } = await readWith([])
-    await repo.lastSetsForLifts(USER, [{ key: "squat", name: "Squat" }], "kg")
-    expect(fake.asked.filters).toContain("eq:user_id")
-    expect(fake.asked.filters).toContain("not:ended_at:is:null")
-    expect(fake.asked.orders).toEqual([{ column: "logged_at", ascending: false }, { column: "id" }])
-    expect(fake.asked.limit).toBe(100)
-    // Every column the conversion and the matching rule need, and no others.
-    for (const column of ["exercise", "library_id", "weight_kg", "reps", "set_number", "set_kind"]) {
-      expect(fake.asked.columns, `missing ${column}`).toContain(column)
+  test("last time is your newest FINISHED workout — not the open one, not someone else's", async () => {
+    const squat = (weight_kg: number) => [
+      { exercise: "Squat", library_id: null, weight_kg, reps: 5, set_number: 1, set_kind: "working" },
+    ]
+    const repo = await readFrom({
+      workout_logs: [
+        { id: "w-old", user_id: USER, logged_at: "2026-09-10T10:00:00Z", ended_at: "2026-09-10T11:00:00Z", workout_sets: squat(90) },
+        { id: "w-last", user_id: USER, logged_at: "2026-09-15T10:00:00Z", ended_at: "2026-09-15T11:00:00Z", workout_sets: squat(100) },
+        // Newer, but still open: these are the sets on screen right now.
+        { id: "w-open", user_id: USER, logged_at: "2026-09-18T10:00:00Z", ended_at: null, workout_sets: squat(120) },
+        // Newer and finished, but another account's.
+        { id: "w-theirs", user_id: "u2", logged_at: "2026-09-19T10:00:00Z", ended_at: "2026-09-19T11:00:00Z", workout_sets: squat(140) },
+      ],
+    })
+    const byLift = await repo.lastSetsForLifts(USER, [{ key: "squat", name: "Squat" }], "kg")
+    expect(byLift.squat.map((w) => [w.at, w.sets[0].weight])).toEqual([["2026-09-15T10:00:00Z", 100]])
+  })
+
+  test("two workouts logged at the same instant answer the same whichever the database hands back first", async () => {
+    const workout = (id: string, weight_kg: number) => ({
+      id,
+      user_id: USER,
+      logged_at: "2026-09-15T10:00:00Z",
+      ended_at: "2026-09-15T11:00:00Z",
+      workout_sets: [{ exercise: "Squat", library_id: null, weight_kg, reps: 5, set_number: 1, set_kind: "working" }],
+    })
+    const answer = async (logs: Row[]) => {
+      const repo = await readFrom({ workout_logs: logs })
+      const byLift = await repo.lastSetsForLifts(USER, [{ key: "squat", name: "Squat" }], "kg")
+      return byLift.squat[0].sets[0].weight
     }
+    const one = await answer([workout("w-a", 100), workout("w-b", 105)])
+    vi.resetModules()
+    const other = await answer([workout("w-b", 105), workout("w-a", 100)])
+    expect(other).toBe(one)
   })
 
   test("reads nothing at all when there are no lifts to ask about", async () => {

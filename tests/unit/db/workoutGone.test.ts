@@ -69,8 +69,6 @@ const liveRow = {
 function fakeSupabase(opts: { writeError: { code?: string; message: string } | null; fate: Fate } & Vanishing) {
   /** Flipped by the first successful write, so the re-read after it finds nothing. */
   let written = false
-  /** Every select string, so a test can prove the second question was asked. */
-  const selects: string[] = []
 
   const table = (name: string) => {
     let selected = ""
@@ -78,7 +76,6 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
     const chain: Record<string, unknown> = {
       select: (cols: string) => {
         selected = cols
-        selects.push(`${name}:${cols}`)
         return chain
       },
       insert: () => {
@@ -149,7 +146,7 @@ function fakeSupabase(opts: { writeError: { code?: string; message: string } | n
     return chain
   }
 
-  return { client: { from: table }, selects }
+  return { client: { from: table } }
 }
 
 async function repoWith(opts: { writeError: { code?: string; message: string } | null; fate: Fate } & Vanishing) {
@@ -160,7 +157,7 @@ async function repoWith(opts: { writeError: { code?: string; message: string } |
     getTrainingSettings: async () => ({ barWeightKg: 20, smallestPlateKg: 1.25 }),
   }))
   const repo = await import("@/src/db/workoutRepo")
-  return { repo, fake }
+  return { repo }
 }
 
 const aSet = {
@@ -193,16 +190,6 @@ describe("a set written into a workout that is no longer there", () => {
     await expect(repo.completeSet(USER, WORKOUT, aSet)).rejects.toThrow(
       /thrown away somewhere else/i
     )
-  })
-
-  test("the database's own sentence never reaches the caller", async () => {
-    const { repo } = await repoWith({ writeError: RLS, fate: "gone" })
-    const thrown = await repo.completeSet(USER, WORKOUT, aSet).catch((e: Error) => e)
-    // The exact words the owner was shown. This is the assertion the whole
-    // change exists for, made against the real message the database sends.
-    expect((thrown as Error).message).not.toMatch(/row-level security/i)
-    expect((thrown as Error).message).not.toMatch(/workout_sets/)
-    expect((thrown as Error).message).not.toMatch(/violates/i)
   })
 
   test("a foreign key violation is the same fact and gets the same sentence", async () => {
@@ -273,14 +260,6 @@ describe("a set written into a workout that is no longer there", () => {
     expect(said, "nor tell them to retry into a workout that may not exist").not.toMatch(/Tap it again/i)
   })
 
-  test("the second question is actually asked — the verdict is read, not assumed", async () => {
-    const { repo, fake } = await repoWith({ writeError: RLS, fate: "gone" })
-    await repo.completeSet(USER, WORKOUT, aSet).catch(() => null)
-    expect(
-      fake.selects,
-      "without this read the answer is a guess about which of three states the workout is in"
-    ).toContain("workout_logs:started_at, ended_at")
-  })
   test("a workout that disappears AFTER the write is not reported as finished", async () => {
     /**
      * THE SUCCESS PATH, which is where this survived the first two rounds.

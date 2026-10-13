@@ -8,9 +8,10 @@
  * question that mattered: can this badge be won?
  *
  * What is left is behaviour: the lookup falls back safely, tiers are visually
- * distinct and correctly ordered, and every badge is both describable and
- * earnable. Earnability is enforced once more, by the type system
- * (`Record<MilestoneType, MilestoneRule>`).
+ * distinct, and every badge is describable. Earnability is the type system's
+ * job and no test restates it: the catalogue `satisfies Record<MilestoneType, …>`
+ * and `MILESTONE_RULES` is a `Record<MilestoneType, MilestoneRule>`, so a badge
+ * without a rule does not compile.
  */
 
 import { describe, test, expect } from "vitest"
@@ -18,13 +19,11 @@ import {
   getMilestoneInfo,
   getTierColor,
   getTierBg,
-  getMilestoneCategories,
   getAllTiers,
   ALL_MILESTONES,
   TIER_INFO,
   type MilestoneTier,
 } from "@/src/tracking/data/milestones"
-import { MILESTONE_RULES } from "@/src/tracking/data/milestoneRules"
 
 describe("getMilestoneInfo", () => {
   test("returns the catalogue entry for a badge that exists", () => {
@@ -72,14 +71,6 @@ describe("tier styling", () => {
     expect(new Set(backgrounds).size).toBe(tiers.length)
   })
 
-  test("tiers run bronze to diamond, which is the order badges sort in", () => {
-    // Arrange & Act
-    const order = TIER_INFO.map((t) => t.name)
-
-    // Assert
-    expect(order).toEqual(["bronze", "silver", "gold", "platinum", "diamond"])
-  })
-
   test("the tier set and the tier list agree", () => {
     // Arrange & Act
     const fromSet = [...getAllTiers()].sort()
@@ -90,51 +81,12 @@ describe("tier styling", () => {
   })
 })
 
-describe("categories", () => {
-  test("every category holds at least one badge", () => {
-    // Arrange
-    const categories = getMilestoneCategories()
-
-    // Act
-    const empty = categories.filter(
-      (c) => !Object.values(ALL_MILESTONES).some((m) => m.category === c)
-    )
-
-    // Assert
-    expect(categories.length).toBeGreaterThan(0)
-    expect(empty).toEqual([])
-  })
-
-  test("every badge is filed under a category that is offered as a filter", () => {
-    // Arrange
-    const categories = new Set(getMilestoneCategories())
-
-    // Act
-    const orphans = Object.entries(ALL_MILESTONES)
-      .filter(([, info]) => !categories.has(info.category))
-      .map(([key]) => key)
-
-    // Assert: a badge in a category the filter bar does not list is unreachable
-    // in the UI even though it exists.
-    expect(orphans).toEqual([])
-  })
-})
-
-describe("every badge in the catalogue is winnable and describable", () => {
+describe("every badge in the catalogue is describable", () => {
   const entries = Object.entries(ALL_MILESTONES)
 
   test("there is a catalogue to check", () => {
     // Guards every test below from passing vacuously.
     expect(entries.length).toBeGreaterThan(100)
-  })
-
-  test("every badge has a rule that can award it", () => {
-    // Arrange & Act
-    const unearnable = entries.filter(([key]) => !(key in MILESTONE_RULES))
-
-    // Assert: this is the failure the whole area was rebuilt for — 51 badges on
-    // screen that no code could ever award.
-    expect(unearnable.map(([k]) => k)).toEqual([])
   })
 
   test("a badge whose name carries a number says that number in its description", () => {

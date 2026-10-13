@@ -90,12 +90,6 @@ describe("the owner is stamped here, never taken from the row", () => {
       expect(tables.vice_reports[0]).toEqual(report())
     })
   })
-
-  it("sends nothing at all when there is nothing to send", async () => {
-    await writeViceRows(USER, { attempts: [], reports: [] })
-    expect(tables.vice_attempts).toEqual([])
-    expect(tables.vice_reports).toEqual([])
-  })
 })
 
 describe("a removal is written as a row, never as a delete", () => {

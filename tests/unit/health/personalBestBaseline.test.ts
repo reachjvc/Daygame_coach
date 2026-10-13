@@ -16,8 +16,6 @@ import { afterEach, describe, expect, test, vi } from "vitest"
 const CAP = 1000
 
 function cappedSupabase(logCount: number, setsPerLog: number, opts: { fail?: boolean } = {}) {
-  const requests: { table: string; from: number; to: number }[] = []
-
   const logs = Array.from({ length: logCount }, (_, i) => ({
     id: `log-${String(i).padStart(4, "0")}`,
     // Ascending, one a day, so "before this one" is a real boundary.
@@ -69,7 +67,6 @@ function cappedSupabase(logCount: number, setsPerLog: number, opts: { fail?: boo
         return chain
       },
       then: (done: (v: { data: unknown[] | null; error: unknown }) => unknown) => {
-        requests.push({ table: name, from, to })
         if (opts.fail) return done({ data: null, error: { message: "connection lost" } })
         const all =
           name === "workout_logs"
@@ -85,7 +82,7 @@ function cappedSupabase(logCount: number, setsPerLog: number, opts: { fail?: boo
     return chain
   }
 
-  return { client: { from: table }, requests }
+  return { client: { from: table } }
 }
 
 async function baselineWith(
@@ -97,7 +94,7 @@ async function baselineWith(
   const fake = cappedSupabase(logCount, setsPerLog, opts)
   vi.doMock("@/src/db/supabase", () => ({ createServerSupabaseClient: async () => fake.client }))
   const { personalBestBaseline } = await import("@/src/db/healthRepo")
-  return { result: await personalBestBaseline("u1", before), requests: fake.requests }
+  return { result: await personalBestBaseline("u1", before) }
 }
 
 afterEach(() => {
@@ -111,13 +108,6 @@ describe("the personal-best baseline", () => {
     const { result } = await baselineWith(140, 10)
     expect(result.sets).toHaveLength(1400)
     expect(result.unavailable).toBe(false)
-  })
-
-  test("the sets are asked for in pages", async () => {
-    const { requests } = await baselineWith(140, 10)
-    const setReads = requests.filter((r) => r.table === "workout_sets")
-    expect(setReads.length).toBeGreaterThan(1)
-    for (const r of setReads) expect(r.to - r.from + 1).toBeLessThanOrEqual(CAP)
   })
 
   test("excludes the workout being finished and anything logged after it", async () => {

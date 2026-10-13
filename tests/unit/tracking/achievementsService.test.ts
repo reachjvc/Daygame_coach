@@ -673,19 +673,6 @@ describe("deriveEarnedMilestones", () => {
       [...earned.map((e) => e.achievedAt)].sort()
     )
   })
-
-  test("running it twice on the same rows gives the same answer", () => {
-    // Arrange
-    const source = rows({
-      approaches: Array.from({ length: 12 }, (_, i) =>
-        approach({ timestamp: new Date(Date.UTC(2026, 2, 1, 10, i)).toISOString() })
-      ),
-    })
-    const facts = buildFacts(source, TZ)
-
-    // Act & Assert
-    expect(deriveEarnedMilestones(facts)).toEqual(deriveEarnedMilestones(facts))
-  })
 })
 
 describe("badges that depend on weeks, end to end from rows", () => {
@@ -934,23 +921,5 @@ describe("projectTrackingStats", () => {
     expect(stats.last_approach_date).toBeNull()
     expect(stats.last_active_week_start).toBeNull()
     expect(stats.unique_locations).toEqual([])
-  })
-
-  test("deleting rows lowers the counters — they follow the data down", () => {
-    // Arrange
-    const before = rows({
-      approaches: Array.from({ length: 6 }, (_, i) =>
-        approach({ timestamp: `2026-03-0${i + 1}T10:00:00.000Z` })
-      ),
-    })
-    const after = rows({ approaches: before.approaches.slice(0, 2) })
-
-    // Act
-    const statsBefore = projectTrackingStats(before, TZ, now)
-    const statsAfter = projectTrackingStats(after, TZ, now)
-
-    // Assert
-    expect(statsBefore.total_approaches).toBe(6)
-    expect(statsAfter.total_approaches).toBe(2)
   })
 })

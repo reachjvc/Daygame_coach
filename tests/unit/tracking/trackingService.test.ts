@@ -100,72 +100,6 @@ describe("estimateMinutes", () => {
     expect(minutes).toBe(3)
   })
 
-  test("text field adds 1 minute", () => {
-    // Arrange
-    const fields = [createField("text")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert
-    expect(minutes).toBe(1)
-  })
-
-  test("select field adds 1 minute", () => {
-    // Arrange
-    const fields = [createField("select")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert
-    expect(minutes).toBe(1)
-  })
-
-  test("multiselect field adds 1 minute", () => {
-    // Arrange
-    const fields = [createField("multiselect")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert
-    expect(minutes).toBe(1)
-  })
-
-  test("scale field adds 0.5 minutes (rounds to 1)", () => {
-    // Arrange
-    const fields = [createField("scale")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert - 0.5 rounds to 1 (minimum)
-    expect(minutes).toBe(1)
-  })
-
-  test("number field adds 0.5 minutes (rounds to 1)", () => {
-    // Arrange
-    const fields = [createField("number")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert - 0.5 rounds to 1 (minimum)
-    expect(minutes).toBe(1)
-  })
-
-  test("unknown field types default to 1 minute", () => {
-    // Arrange - datetime, list, tags, audio are not explicitly handled
-    const fields = [createField("datetime")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert - falls through to default case
-    expect(minutes).toBe(1)
-  })
-
   test("returns minimum of 1 minute for empty array", () => {
     // Arrange
     const fields: TemplateField[] = []
@@ -192,17 +126,6 @@ describe("estimateMinutes", () => {
 
     // Assert - 3 + 1 + 1 + 0.5 + 0.5 = 6
     expect(minutes).toBe(6)
-  })
-
-  test("rounds to nearest minute", () => {
-    // Arrange - 2 scale fields = 1.0 minutes
-    const fields = [createField("scale", "f1"), createField("scale", "f2")]
-
-    // Act
-    const minutes = estimateMinutes(fields)
-
-    // Assert - 0.5 + 0.5 = 1.0, rounds to 1
-    expect(minutes).toBe(1)
   })
 
   test("rounds up when above 0.5", () => {

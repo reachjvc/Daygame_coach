@@ -1,8 +1,15 @@
-import { describe, test, expect } from "vitest"
+/**
+ * WHAT THE TRACKING SCHEMAS DECIDE.
+ *
+ * Every case here is a bound, a refine or a default: where a range starts and
+ * stops, which strings a refine refuses, what a field left out becomes. That an
+ * enum accepts its own members, an optional field may be left out, or a
+ * complete payload parses only restates the declaration, so none of that is
+ * asserted (it was, 56 times, until 2026-10-13).
+ */
+
+import { afterEach, beforeEach, describe, test, expect, vi } from "vitest"
 import {
-  ApproachOutcomeSchema,
-  SetTypeSchema,
-  ReviewTypeSchema,
   CreateSessionSchema,
   UpdateSessionSchema,
   CreateApproachSchema,
@@ -10,957 +17,141 @@ import {
   CreateFieldReportSchema,
   CreateReviewSchema,
 } from "@/src/tracking/schemas"
-import type { ApproachMoodEntry, SessionSummaryData } from "@/src/tracking/types"
+
+type Verdict = "accepts" | "refuses"
+type Case = [verdict: Verdict, name: string, input: Record<string, unknown>]
+
+const verdictOf = (result: { success: boolean }): Verdict => (result.success ? "accepts" : "refuses")
+const chars = (n: number) => "a".repeat(n)
+const tags = (n: number) => Array.from({ length: n }, (_, i) => `tag${i}`)
 
 // ============================================================================
-// Enum Schemas
-// ============================================================================
-
-describe("ApproachOutcomeSchema", () => {
-  const validOutcomes = ["blowout", "short", "good", "number", "instadate"]
-
-  test.each(validOutcomes)('should accept valid outcome "%s"', (outcome) => {
-    // Arrange & Act
-    const result = ApproachOutcomeSchema.safeParse(outcome)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should reject invalid outcome", () => {
-    // Arrange
-    const invalidOutcome = "invalid"
-
-    // Act
-    const result = ApproachOutcomeSchema.safeParse(invalidOutcome)
-
-    // Assert
-    expect(result.success).toBe(false)
-  })
-
-  test("should reject empty string", () => {
-    // Arrange
-    const outcome = ""
-
-    // Act
-    const result = ApproachOutcomeSchema.safeParse(outcome)
-
-    // Assert
-    expect(result.success).toBe(false)
-  })
-})
-
-describe("SetTypeSchema", () => {
-  const validSetTypes = [
-    "solo",
-    "two_set",
-    "three_plus",
-    "mixed_group",
-    "mom_daughter",
-    "sisters",
-    "tourist",
-    "moving",
-    "seated",
-    "working",
-    "gym",
-    "foreign_language",
-    "celebrity_vibes",
-    "double_set",
-    "triple_set",
-  ]
-
-  test.each(validSetTypes)('should accept valid set type "%s"', (setType) => {
-    // Arrange & Act
-    const result = SetTypeSchema.safeParse(setType)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should reject invalid set type", () => {
-    // Arrange
-    const invalidSetType = "invalid"
-
-    // Act
-    const result = SetTypeSchema.safeParse(invalidSetType)
-
-    // Assert
-    expect(result.success).toBe(false)
-  })
-})
-
-describe("ReviewTypeSchema", () => {
-  const validReviewTypes = ["daily", "weekly", "monthly", "quarterly"]
-
-  test.each(validReviewTypes)('should accept valid review type "%s"', (reviewType) => {
-    // Arrange & Act
-    const result = ReviewTypeSchema.safeParse(reviewType)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should reject invalid review type", () => {
-    // Arrange
-    const invalidReviewType = "yearly"
-
-    // Act
-    const result = ReviewTypeSchema.safeParse(invalidReviewType)
-
-    // Assert
-    expect(result.success).toBe(false)
-  })
-})
-
-// ============================================================================
-// CreateSessionSchema
+// Sessions
 // ============================================================================
 
 describe("CreateSessionSchema", () => {
-  describe("valid inputs", () => {
-    test("should accept empty object (all fields optional)", () => {
-      // Arrange
-      const input = {}
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept full valid input", () => {
-      // Arrange
-      const input = {
-        goal: 10,
-        primary_location: "Copenhagen",
-        session_focus: "Approach anxiety",
-        technique_focus: "Eye contact",
-        if_then_plan: "If I feel nervous, then I take a deep breath",
-        custom_intention: "Have fun",
-        pre_session_mood: 4,
-      }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept goal at minimum (1)", () => {
-      // Arrange
-      const input = { goal: 1 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept goal at maximum (100)", () => {
-      // Arrange
-      const input = { goal: 100 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept pre_session_mood at minimum (1)", () => {
-      // Arrange
-      const input = { pre_session_mood: 1 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept pre_session_mood at maximum (5)", () => {
-      // Arrange
-      const input = { pre_session_mood: 5 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-  })
-
-  describe("invalid inputs", () => {
-    test("should reject goal below minimum (0)", () => {
-      // Arrange
-      const input = { goal: 0 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject goal above maximum (101)", () => {
-      // Arrange
-      const input = { goal: 101 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject non-integer goal", () => {
-      // Arrange
-      const input = { goal: 5.5 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject primary_location exceeding 200 chars", () => {
-      // Arrange
-      const input = { primary_location: "a".repeat(201) }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject session_focus exceeding 500 chars", () => {
-      // Arrange
-      const input = { session_focus: "a".repeat(501) }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject pre_session_mood below minimum (0)", () => {
-      // Arrange
-      const input = { pre_session_mood: 0 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject pre_session_mood above maximum (6)", () => {
-      // Arrange
-      const input = { pre_session_mood: 6 }
-
-      // Act
-      const result = CreateSessionSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
+  test.each<Case>([
+    ["accepts", "goal at minimum (1)", { goal: 1 }],
+    ["accepts", "goal at maximum (100)", { goal: 100 }],
+    ["refuses", "goal below minimum (0)", { goal: 0 }],
+    ["refuses", "goal above maximum (101)", { goal: 101 }],
+    ["refuses", "a non-integer goal", { goal: 5.5 }],
+    ["accepts", "pre_session_mood at minimum (1)", { pre_session_mood: 1 }],
+    ["accepts", "pre_session_mood at maximum (5)", { pre_session_mood: 5 }],
+    ["refuses", "pre_session_mood below minimum (0)", { pre_session_mood: 0 }],
+    ["refuses", "pre_session_mood above maximum (6)", { pre_session_mood: 6 }],
+    ["refuses", "primary_location over 200 chars", { primary_location: chars(201) }],
+    ["refuses", "session_focus over 500 chars", { session_focus: chars(501) }],
+  ])("%s %s", (verdict, _name, input) => {
+    expect(verdictOf(CreateSessionSchema.safeParse(input))).toBe(verdict)
   })
 })
-
-// ============================================================================
-// UpdateSessionSchema
-// ============================================================================
 
 describe("UpdateSessionSchema", () => {
-  test("should accept empty object", () => {
-    // Arrange
-    const input = {}
-
-    // Act
-    const result = UpdateSessionSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid goal update", () => {
-    // Arrange
-    const input = { goal: 15 }
-
-    // Act
-    const result = UpdateSessionSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid primary_location update", () => {
-    // Arrange
-    const input = { primary_location: "Stockholm" }
-
-    // Act
-    const result = UpdateSessionSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should reject invalid goal", () => {
-    // Arrange
-    const input = { goal: 150 }
-
-    // Act
-    const result = UpdateSessionSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(false)
+  test("refuses a goal above the maximum", () => {
+    expect(verdictOf(UpdateSessionSchema.safeParse({ goal: 150 }))).toBe("refuses")
   })
 })
 
 // ============================================================================
-// CreateApproachSchema
+// Approaches
 // ============================================================================
 
 describe("CreateApproachSchema", () => {
-  describe("valid inputs", () => {
-    test("should accept empty object", () => {
-      // Arrange
-      const input = {}
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept full valid input", () => {
-      // Arrange
-      const input = {
-        session_id: "123e4567-e89b-12d3-a456-426614174000",
-        outcome: "good",
-        set_type: "solo",
-        tags: ["blonde", "tall"],
-        mood: 4,
-        note: "Great conversation",
-        latitude: 55.6761,
-        longitude: 12.5683,
-        timestamp: "2024-01-15T14:30:00Z",
-      }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept valid UUID for session_id", () => {
-      // Arrange
-      const input = { session_id: "550e8400-e29b-41d4-a716-446655440000" }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept mood at minimum (1)", () => {
-      // Arrange
-      const input = { mood: 1 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept mood at maximum (5)", () => {
-      // Arrange
-      const input = { mood: 5 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept latitude at minimum (-90)", () => {
-      // Arrange
-      const input = { latitude: -90 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept latitude at maximum (90)", () => {
-      // Arrange
-      const input = { latitude: 90 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept longitude at minimum (-180)", () => {
-      // Arrange
-      const input = { longitude: -180 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept longitude at maximum (180)", () => {
-      // Arrange
-      const input = { longitude: 180 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept empty tags array", () => {
-      // Arrange
-      const input = { tags: [] }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept tags array at maximum (10)", () => {
-      // Arrange
-      const input = { tags: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"] }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
+  test.each<Case>([
+    ["accepts", "mood at minimum (1)", { mood: 1 }],
+    ["accepts", "mood at maximum (5)", { mood: 5 }],
+    ["refuses", "mood below minimum (0)", { mood: 0 }],
+    ["refuses", "mood above maximum (6)", { mood: 6 }],
+    ["accepts", "latitude at minimum (-90)", { latitude: -90 }],
+    ["accepts", "latitude at maximum (90)", { latitude: 90 }],
+    ["refuses", "latitude below minimum (-91)", { latitude: -91 }],
+    ["refuses", "latitude above maximum (91)", { latitude: 91 }],
+    ["accepts", "longitude at minimum (-180)", { longitude: -180 }],
+    ["accepts", "longitude at maximum (180)", { longitude: 180 }],
+    ["refuses", "longitude below minimum (-181)", { longitude: -181 }],
+    ["refuses", "longitude above maximum (181)", { longitude: 181 }],
+    ["accepts", "tags at maximum (10)", { tags: tags(10) }],
+    ["refuses", "tags over maximum (11)", { tags: tags(11) }],
+    ["refuses", "a tag over 50 chars", { tags: [chars(51)] }],
+    ["refuses", "a note over 2000 chars", { note: chars(2001) }],
+  ])("%s %s", (verdict, _name, input) => {
+    expect(verdictOf(CreateApproachSchema.safeParse(input))).toBe(verdict)
   })
 
-  describe("invalid inputs", () => {
-    test("should reject invalid UUID for session_id", () => {
-      // Arrange
-      const input = { session_id: "not-a-uuid" }
+  /**
+   * NOT IN THE FUTURE. One approach dated 2099 is "the most recent" forever, so
+   * every recount collapses the daily and weekly streaks to zero — and the
+   * recount is deterministic, so it never recovers. A minute of slack absorbs a
+   * phone clock that runs slightly ahead.
+   */
+  describe("timestamp", () => {
+    const NOW = new Date("2026-10-13T12:00:00.000Z")
+    const offset = (ms: number) => new Date(NOW.getTime() + ms).toISOString()
 
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(NOW)
+    })
+    afterEach(() => {
+      vi.useRealTimers()
     })
 
-    test("should reject invalid outcome", () => {
-      // Arrange
-      const input = { outcome: "amazing" }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject invalid set_type", () => {
-      // Arrange
-      const input = { set_type: "quad" }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject mood below minimum (0)", () => {
-      // Arrange
-      const input = { mood: 0 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject mood above maximum (6)", () => {
-      // Arrange
-      const input = { mood: 6 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject note exceeding 2000 chars", () => {
-      // Arrange
-      const input = { note: "a".repeat(2001) }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject latitude below minimum (-91)", () => {
-      // Arrange
-      const input = { latitude: -91 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject latitude above maximum (91)", () => {
-      // Arrange
-      const input = { latitude: 91 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject longitude below minimum (-181)", () => {
-      // Arrange
-      const input = { longitude: -181 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject longitude above maximum (181)", () => {
-      // Arrange
-      const input = { longitude: 181 }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject tags array exceeding maximum (11)", () => {
-      // Arrange
-      const input = { tags: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"] }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject tag exceeding 50 chars", () => {
-      // Arrange
-      const input = { tags: ["a".repeat(51)] }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject invalid timestamp format", () => {
-      // Arrange
-      const input = { timestamp: "2024-01-15" }
-
-      // Act
-      const result = CreateApproachSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
+    test.each<Case>([
+      ["accepts", "an approach an hour ago", { timestamp: offset(-3_600_000) }],
+      ["accepts", "a phone clock 59 seconds ahead", { timestamp: offset(59_000) }],
+      ["refuses", "two minutes in the future", { timestamp: offset(120_000) }],
+      ["refuses", "an approach dated 2099", { timestamp: "2099-01-01T10:00:00.000Z" }],
+    ])("%s %s", (verdict, _name, input) => {
+      expect(verdictOf(CreateApproachSchema.safeParse(input))).toBe(verdict)
     })
   })
 })
-
-// ============================================================================
-// UpdateApproachSchema
-// ============================================================================
 
 describe("UpdateApproachSchema", () => {
-  test("should accept empty object", () => {
-    // Arrange
-    const input = {}
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid outcome update", () => {
-    // Arrange
-    const input = { outcome: "number" }
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid set_type update", () => {
-    // Arrange
-    const input = { set_type: "two_set" }
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid tags update", () => {
-    // Arrange
-    const input = { tags: ["updated", "tags"] }
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid mood update", () => {
-    // Arrange
-    const input = { mood: 3 }
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should accept valid note update", () => {
-    // Arrange
-    const input = { note: "Updated note" }
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(true)
-  })
-
-  test("should reject invalid mood", () => {
-    // Arrange
-    const input = { mood: 10 }
-
-    // Act
-    const result = UpdateApproachSchema.safeParse(input)
-
-    // Assert
-    expect(result.success).toBe(false)
+  test("refuses a mood above the maximum", () => {
+    expect(verdictOf(UpdateApproachSchema.safeParse({ mood: 10 }))).toBe("refuses")
   })
 })
 
 // ============================================================================
-// CreateFieldReportSchema
+// Field reports
 // ============================================================================
 
 describe("CreateFieldReportSchema", () => {
-  describe("valid inputs", () => {
-    test("should accept minimal valid input with fields", () => {
-      // Arrange
-      const input = { fields: {} }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept full valid input", () => {
-      // Arrange
-      const input = {
-        template_id: "550e8400-e29b-41d4-a716-446655440000",
-        session_id: "550e8400-e29b-41d4-a716-446655440001",
-        fields: { title: "My Report", content: "Great session" },
-        approach_count: 5,
-        location: "Copenhagen",
-        tags: ["day1", "solo"],
-        is_draft: true,
-      }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should default is_draft to false", () => {
-      // Arrange
-      const input = { fields: {} }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.is_draft).toBe(false)
-      }
-    })
-
-    test("should accept approach_count at minimum (0)", () => {
-      // Arrange
-      const input = { fields: {}, approach_count: 0 }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept approach_count at maximum (1000)", () => {
-      // Arrange
-      const input = { fields: {}, approach_count: 1000 }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept tags array at maximum (20)", () => {
-      // Arrange
-      const tags = Array.from({ length: 20 }, (_, i) => `tag${i}`)
-      const input = { fields: {}, tags }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept valid report_date ISO datetime", () => {
-      // Arrange
-      const input = { fields: {}, report_date: "2024-01-15T14:30:00.000Z" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept report_date without milliseconds", () => {
-      // Arrange
-      const input = { fields: {}, report_date: "2024-01-15T14:30:00Z" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept optional title", () => {
-      // Arrange
-      const input = { fields: {}, title: "My Session Report" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept title at max length (200)", () => {
-      // Arrange
-      const input = { fields: {}, title: "a".repeat(200) }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
+  test.each<Case>([
+    ["accepts", "approach_count at minimum (0)", { approach_count: 0 }],
+    ["accepts", "approach_count at maximum (1000)", { approach_count: 1000 }],
+    ["refuses", "approach_count below minimum (-1)", { approach_count: -1 }],
+    ["refuses", "approach_count above maximum (1001)", { approach_count: 1001 }],
+    ["accepts", "tags at maximum (20)", { tags: tags(20) }],
+    ["refuses", "tags over maximum (21)", { tags: tags(21) }],
+    ["refuses", "a tag over 50 chars", { tags: [chars(51)] }],
+    ["refuses", "a location over 200 chars", { location: chars(201) }],
+    ["accepts", "a title at maximum (200)", { title: chars(200) }],
+    ["refuses", "a title over 200 chars", { title: chars(201) }],
+  ])("%s %s", (verdict, _name, input) => {
+    expect(verdictOf(CreateFieldReportSchema.safeParse({ fields: {}, ...input }))).toBe(verdict)
   })
 
-  describe("invalid inputs", () => {
-    test("should reject missing fields", () => {
-      // Arrange
-      const input = {}
+  test("defaults is_draft to false", () => {
+    const result = CreateFieldReportSchema.safeParse({ fields: {} })
+    if (!result.success) throw result.error
+    expect(result.data.is_draft).toBe(false)
+  })
 
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
+  test("refuses both template_id and system_template_slug", () => {
+    const result = CreateFieldReportSchema.safeParse({
+      fields: {},
+      template_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      system_template_slug: "quick-log",
     })
-
-    test("should accept system template slugs via system_template_slug field", () => {
-      // Arrange - system templates now use system_template_slug (not template_id)
-      const input = { fields: {}, system_template_slug: "standard" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should reject non-UUID template_id (system template IDs should use system_template_slug)", () => {
-      // Arrange - template_id must be UUID now, system templates use system_template_slug
-      const input = { fields: {}, template_id: "system-standard" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject providing both template_id and system_template_slug", () => {
-      // Arrange - can't have both
-      const input = {
-        fields: {},
-        template_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        system_template_slug: "quick-log",
-      }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject approach_count below minimum (-1)", () => {
-      // Arrange
-      const input = { fields: {}, approach_count: -1 }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject approach_count above maximum (1001)", () => {
-      // Arrange
-      const input = { fields: {}, approach_count: 1001 }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject location exceeding 200 chars", () => {
-      // Arrange
-      const input = { fields: {}, location: "a".repeat(201) }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject tags array exceeding maximum (21)", () => {
-      // Arrange
-      const tags = Array.from({ length: 21 }, (_, i) => `tag${i}`)
-      const input = { fields: {}, tags }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject tag exceeding 50 chars", () => {
-      // Arrange
-      const input = { fields: {}, tags: ["a".repeat(51)] }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject invalid report_date format (not ISO)", () => {
-      // Arrange
-      const input = { fields: {}, report_date: "January 15, 2024" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject report_date as date-only string", () => {
-      // Arrange
-      const input = { fields: {}, report_date: "2024-01-15" }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject title exceeding 200 chars", () => {
-      // Arrange
-      const input = { fields: {}, title: "a".repeat(201) }
-
-      // Act
-      const result = CreateFieldReportSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
+    expect(verdictOf(result)).toBe("refuses")
   })
 })
 
 // ============================================================================
-// CreateReviewSchema
+// Reviews
 // ============================================================================
 
 describe("CreateReviewSchema", () => {
@@ -971,386 +162,39 @@ describe("CreateReviewSchema", () => {
     period_end: "2024-01-14",
   }
 
-  describe("valid inputs", () => {
-    test("should accept minimal valid input", () => {
-      // Arrange
-      const input = validInput
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept full valid input", () => {
-      // Arrange
-      const input = {
-        ...validInput,
-        template_id: "550e8400-e29b-41d4-a716-446655440000",
-        previous_commitment: "Approach 5 women per session",
-        commitment_fulfilled: true,
-        new_commitment: "Approach 7 women per session",
-        is_draft: false,
-      }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept weekly review type", () => {
-      // Arrange
-      const input = { ...validInput, review_type: "weekly" as const }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept monthly review type", () => {
-      // Arrange
-      const input = { ...validInput, review_type: "monthly" as const }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should accept quarterly review type", () => {
-      // Arrange
-      const input = { ...validInput, review_type: "quarterly" as const }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should default is_draft to false", () => {
-      // Arrange
-      const input = validInput
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.is_draft).toBe(false)
-      }
-    })
+  test("defaults is_draft to false", () => {
+    const result = CreateReviewSchema.safeParse(validInput)
+    if (!result.success) throw result.error
+    expect(result.data.is_draft).toBe(false)
   })
 
-  describe("invalid inputs", () => {
-    test("should reject missing review_type", () => {
-      // Arrange
-      const { review_type: _, ...input } = validInput
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject missing fields", () => {
-      // Arrange
-      const { fields: _, ...input } = validInput
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject missing period_start", () => {
-      // Arrange
-      const { period_start: _, ...input } = validInput
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject missing period_end", () => {
-      // Arrange
-      const { period_end: _, ...input } = validInput
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject invalid review_type", () => {
-      // Arrange
-      const input = { ...validInput, review_type: "yearly" }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject an instant where a calendar date belongs", () => {
-      // Arrange: this is the payload that filed every weekly review one week
-      // early — an ISO instant lands in a DATE column as its UTC date, which for
-      // a Copenhagen Monday midnight is the Sunday before.
-      const input = { ...validInput, period_start: "2024-01-08T00:00:00Z" }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("accepts the calendar date the review pages send", () => {
-      // Arrange
-      const input = { ...validInput, period_start: "2026-08-24", period_end: "2026-08-30" }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(true)
-    })
-
-    test("should reject invalid period_end format", () => {
-      // Arrange
-      const input = { ...validInput, period_end: "January 14, 2024" }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject previous_commitment exceeding 1000 chars", () => {
-      // Arrange
-      const input = { ...validInput, previous_commitment: "a".repeat(1001) }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject new_commitment exceeding 1000 chars", () => {
-      // Arrange
-      const input = { ...validInput, new_commitment: "a".repeat(1001) }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-
-    test("should reject invalid UUID for template_id", () => {
-      // Arrange
-      const input = { ...validInput, template_id: "not-uuid" }
-
-      // Act
-      const result = CreateReviewSchema.safeParse(input)
-
-      // Assert
-      expect(result.success).toBe(false)
-    })
-  })
-})
-
-// ============================================================================
-// Type Shape Tests (compile-time validated, runtime structure verified)
-// ============================================================================
-
-describe("ApproachMoodEntry type shape", () => {
-  test("should accept valid ApproachMoodEntry with mood", () => {
-    // Arrange
-    const entry: ApproachMoodEntry = {
-      approachNumber: 1,
-      mood: 4,
-      timestamp: "2024-01-15T14:30:00Z",
-    }
-
-    // Assert: Type compiles and has expected properties
-    expect(entry.approachNumber).toBe(1)
-    expect(entry.mood).toBe(4)
-    expect(entry.timestamp).toBe("2024-01-15T14:30:00Z")
+  test("refuses an instant where a calendar date belongs", () => {
+    // This is the payload that filed every weekly review one week early — an ISO
+    // instant lands in a DATE column as its UTC date, which for a Copenhagen
+    // Monday midnight is the Sunday before.
+    const input = { ...validInput, period_start: "2024-01-08T00:00:00Z" }
+    expect(verdictOf(CreateReviewSchema.safeParse(input))).toBe("refuses")
   })
 
-  test("should accept ApproachMoodEntry with null mood", () => {
-    // Arrange
-    const entry: ApproachMoodEntry = {
-      approachNumber: 3,
-      mood: null,
-      timestamp: "2024-01-15T15:00:00Z",
-    }
-
-    // Assert
-    expect(entry.mood).toBeNull()
+  test("accepts the calendar date the review pages send", () => {
+    const input = { ...validInput, period_start: "2026-08-24", period_end: "2026-08-30" }
+    expect(verdictOf(CreateReviewSchema.safeParse(input))).toBe("accepts")
   })
 
-  test("should accept zero-indexed approach number", () => {
-    // Arrange
-    const entry: ApproachMoodEntry = {
-      approachNumber: 0,
-      mood: 1,
-      timestamp: "2024-01-15T14:00:00Z",
-    }
-
-    // Assert
-    expect(entry.approachNumber).toBe(0)
+  test("refuses a period_end that is not YYYY-MM-DD", () => {
+    const input = { ...validInput, period_end: "January 14, 2024" }
+    expect(verdictOf(CreateReviewSchema.safeParse(input))).toBe("refuses")
   })
 
-  test("should accept mood at boundaries (1-5)", () => {
-    // Arrange
-    const minMood: ApproachMoodEntry = {
-      approachNumber: 1,
-      mood: 1,
-      timestamp: "2024-01-15T14:00:00Z",
-    }
-    const maxMood: ApproachMoodEntry = {
-      approachNumber: 2,
-      mood: 5,
-      timestamp: "2024-01-15T14:05:00Z",
-    }
-
-    // Assert
-    expect(minMood.mood).toBe(1)
-    expect(maxMood.mood).toBe(5)
-  })
-})
-
-describe("SessionSummaryData type shape", () => {
-  const validSessionSummary: SessionSummaryData = {
-    approachCount: 10,
-    duration: 3600,
-    location: "Copenhagen",
-    outcomes: {
-      blowout: 2,
-      short: 3,
-      good: 3,
-      number: 1,
-      instadate: 1,
-    },
-    averageMood: 3.5,
-    tags: ["day", "solo"],
-    startedAt: "2024-01-15T14:00:00Z",
-    goal: 15,
-    preSessionMood: 4,
-    sessionFocus: "Be more playful",
-    techniqueFocus: "Cold reads",
-    ifThenPlan: "If nervous, then breathe",
-    customIntention: "Have fun today",
-    approachMoods: [
-      { approachNumber: 1, mood: 3, timestamp: "2024-01-15T14:10:00Z" },
-      { approachNumber: 2, mood: 4, timestamp: "2024-01-15T14:20:00Z" },
-    ],
-  }
-
-  test("should accept full SessionSummaryData", () => {
-    // Assert: All required properties exist
-    expect(validSessionSummary.approachCount).toBe(10)
-    expect(validSessionSummary.duration).toBe(3600)
-    expect(validSessionSummary.location).toBe("Copenhagen")
-    expect(validSessionSummary.outcomes.number).toBe(1)
-    expect(validSessionSummary.averageMood).toBe(3.5)
-    expect(validSessionSummary.tags).toContain("day")
-    expect(validSessionSummary.startedAt).toBeDefined()
+  test("refuses a template_id that is neither a UUID nor a system id", () => {
+    const input = { ...validInput, template_id: "not-uuid" }
+    expect(verdictOf(CreateReviewSchema.safeParse(input))).toBe("refuses")
   })
 
-  test("should accept all pre-session intention fields", () => {
-    // Assert: Pre-session fields
-    expect(validSessionSummary.goal).toBe(15)
-    expect(validSessionSummary.preSessionMood).toBe(4)
-    expect(validSessionSummary.sessionFocus).toBe("Be more playful")
-    expect(validSessionSummary.techniqueFocus).toBe("Cold reads")
-    expect(validSessionSummary.ifThenPlan).toBe("If nervous, then breathe")
-    expect(validSessionSummary.customIntention).toBe("Have fun today")
-  })
-
-  test("should accept approachMoods timeline", () => {
-    // Assert
-    expect(validSessionSummary.approachMoods).toHaveLength(2)
-    expect(validSessionSummary.approachMoods[0].approachNumber).toBe(1)
-    expect(validSessionSummary.approachMoods[1].mood).toBe(4)
-  })
-
-  test("should accept SessionSummaryData with all null optional fields", () => {
-    // Arrange: Minimal session with nulls
-    const minimalSession: SessionSummaryData = {
-      approachCount: 0,
-      duration: null,
-      location: null,
-      outcomes: {
-        blowout: 0,
-        short: 0,
-        good: 0,
-        number: 0,
-        instadate: 0,
-      },
-      averageMood: null,
-      tags: [],
-      startedAt: "2024-01-15T14:00:00Z",
-      goal: null,
-      preSessionMood: null,
-      sessionFocus: null,
-      techniqueFocus: null,
-      ifThenPlan: null,
-      customIntention: null,
-      approachMoods: [],
-    }
-
-    // Assert
-    expect(minimalSession.approachCount).toBe(0)
-    expect(minimalSession.duration).toBeNull()
-    expect(minimalSession.goal).toBeNull()
-    expect(minimalSession.preSessionMood).toBeNull()
-    expect(minimalSession.sessionFocus).toBeNull()
-    expect(minimalSession.approachMoods).toHaveLength(0)
-  })
-
-  test("should accept empty approachMoods array", () => {
-    // Arrange
-    const session: SessionSummaryData = {
-      ...validSessionSummary,
-      approachMoods: [],
-    }
-
-    // Assert
-    expect(session.approachMoods).toEqual([])
-  })
-
-  test("should accept mixed null/non-null moods in approachMoods", () => {
-    // Arrange: Some approaches have mood, some don't
-    const session: SessionSummaryData = {
-      ...validSessionSummary,
-      approachMoods: [
-        { approachNumber: 1, mood: 3, timestamp: "2024-01-15T14:10:00Z" },
-        { approachNumber: 2, mood: null, timestamp: "2024-01-15T14:20:00Z" },
-        { approachNumber: 3, mood: 5, timestamp: "2024-01-15T14:30:00Z" },
-      ],
-    }
-
-    // Assert
-    expect(session.approachMoods[0].mood).toBe(3)
-    expect(session.approachMoods[1].mood).toBeNull()
-    expect(session.approachMoods[2].mood).toBe(5)
+  test.each<Case>([
+    ["refuses", "previous_commitment over 1000 chars", { previous_commitment: chars(1001) }],
+    ["refuses", "new_commitment over 1000 chars", { new_commitment: chars(1001) }],
+  ])("%s %s", (verdict, _name, input) => {
+    expect(verdictOf(CreateReviewSchema.safeParse({ ...validInput, ...input }))).toBe(verdict)
   })
 })

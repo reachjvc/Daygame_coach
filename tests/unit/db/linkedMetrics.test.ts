@@ -72,29 +72,15 @@ afterEach(() => {
 
 describe("getMetricValue", () => {
   describe("weekly metrics (current week)", () => {
-    test("field_reports_weekly returns count for current week", () => {
-      const stats = createStats({ current_week_field_reports: 3 })
-      expect(getMetricValue(stats, "field_reports_weekly", TZ)).toBe(3)
-    })
-
-    test("approaches_weekly returns count for current week", () => {
-      const stats = createStats({ current_week_approaches: 15 })
-      expect(getMetricValue(stats, "approaches_weekly", TZ)).toBe(15)
-    })
-
-    test("sessions_weekly returns count for current week", () => {
-      const stats = createStats({ current_week_sessions: 4 })
-      expect(getMetricValue(stats, "sessions_weekly", TZ)).toBe(4)
-    })
-
-    test("numbers_weekly returns count for current week", () => {
-      const stats = createStats({ current_week_numbers: 7 })
-      expect(getMetricValue(stats, "numbers_weekly", TZ)).toBe(7)
-    })
-
-    test("instadates_weekly returns count for current week", () => {
-      const stats = createStats({ current_week_instadates: 2 })
-      expect(getMetricValue(stats, "instadates_weekly", TZ)).toBe(2)
+    test.each<[LinkedMetric, keyof UserTrackingStatsRow, number]>([
+      ["field_reports_weekly", "current_week_field_reports", 3],
+      ["approaches_weekly", "current_week_approaches", 15],
+      ["sessions_weekly", "current_week_sessions", 4],
+      ["numbers_weekly", "current_week_numbers", 7],
+      ["instadates_weekly", "current_week_instadates", 2],
+    ])("%s returns %s for the current week", (metric, column, value) => {
+      const stats = createStats({ [column]: value })
+      expect(getMetricValue(stats, metric, TZ)).toBe(value)
     })
   })
 
@@ -116,29 +102,15 @@ describe("getMetricValue", () => {
   })
 
   describe("cumulative metrics", () => {
-    test("field_reports_cumulative returns total count", () => {
-      const stats = createStats({ total_field_reports: 42 })
-      expect(getMetricValue(stats, "field_reports_cumulative", TZ)).toBe(42)
-    })
-
-    test("approaches_cumulative returns total count", () => {
-      const stats = createStats({ total_approaches: 500 })
-      expect(getMetricValue(stats, "approaches_cumulative", TZ)).toBe(500)
-    })
-
-    test("sessions_cumulative returns total count", () => {
-      const stats = createStats({ total_sessions: 80 })
-      expect(getMetricValue(stats, "sessions_cumulative", TZ)).toBe(80)
-    })
-
-    test("numbers_cumulative returns total count", () => {
-      const stats = createStats({ total_numbers: 30 })
-      expect(getMetricValue(stats, "numbers_cumulative", TZ)).toBe(30)
-    })
-
-    test("instadates_cumulative returns total count", () => {
-      const stats = createStats({ total_instadates: 10 })
-      expect(getMetricValue(stats, "instadates_cumulative", TZ)).toBe(10)
+    test.each<[LinkedMetric, keyof UserTrackingStatsRow, number]>([
+      ["field_reports_cumulative", "total_field_reports", 42],
+      ["approaches_cumulative", "total_approaches", 500],
+      ["sessions_cumulative", "total_sessions", 80],
+      ["numbers_cumulative", "total_numbers", 30],
+      ["instadates_cumulative", "total_instadates", 10],
+    ])("%s returns %s, the total", (metric, column, value) => {
+      const stats = createStats({ [column]: value })
+      expect(getMetricValue(stats, metric, TZ)).toBe(value)
     })
   })
 

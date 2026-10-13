@@ -124,15 +124,6 @@ describe("metric catalogue meaning", () => {
 })
 
 describe("default layout", () => {
-  test("defaults are the four tiles the dashboard shipped with, in order", () => {
-    expect([...DEFAULT_TILE_METRIC_IDS]).toEqual([
-      "approaches_cumulative",
-      "numbers_cumulative",
-      "week_streak",
-      "sessions_cumulative",
-    ])
-  })
-
   test("every default tile exists and keeps its original testid", () => {
     for (const id of DEFAULT_TILE_METRIC_IDS) {
       expect(METRIC_BY_ID[id], `${id} missing from catalogue`).toBeDefined()

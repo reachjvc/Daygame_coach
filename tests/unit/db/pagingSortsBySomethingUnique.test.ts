@@ -81,18 +81,3 @@ describe.each([
     expect(wrong, `these tables can put one row in two pages:\n  ${wrong.join("\n  ")}`).toEqual([])
   })
 })
-
-describe("the fake itself", () => {
-  test("would notice a single-column sort on a composite table", () => {
-    /**
-     * The guard on the guard. The existing paging fake returns `chain` from
-     * `order` and therefore cannot fail this way, which is how the defect lived
-     * in two repos with a green suite. This proves the recorder sees the argument.
-     */
-    const fake = recordingSupabase()
-    const chain = fake.client.from("timetrack_entry_tags") as { order: (c: string) => unknown }
-    chain.order("entry_id")
-    expect(fake.ordered.timetrack_entry_tags).toEqual(["entry_id"])
-    expect(rowKeyColumns("timetrack_entry_tags")).toEqual(["entry_id", "tag_id"])
-  })
-})

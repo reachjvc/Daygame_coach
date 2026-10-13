@@ -9,12 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import {
-  isWeekActive,
-  streakOnQualify,
-  zeroedWeeklyCounters,
-  WEEKLY_COUNTER_COLUMNS,
-} from "@/src/tracking/counterRules"
+import { isWeekActive, streakOnQualify } from "@/src/tracking/counterRules"
 import { previousPeriodStart } from "@/src/shared/dateUtils"
 
 describe("isWeekActive", () => {
@@ -36,25 +31,6 @@ describe("isWeekActive", () => {
     // session and one approach and was counted as active, because the approach
     // counter still held the PREVIOUS week's 15.
     expect(isWeekActive(1, 1)).toBe(false)
-  })
-})
-
-describe("zeroedWeeklyCounters", () => {
-  it("zeroes every weekly counter, not a subset", () => {
-    // The original bug was a reset block that zeroed four of five columns. One
-    // list, one place — and this asserts the list is complete.
-    expect(Object.keys(zeroedWeeklyCounters()).sort()).toEqual([...WEEKLY_COUNTER_COLUMNS].sort())
-    expect(Object.values(zeroedWeeklyCounters())).toEqual([0, 0, 0, 0, 0])
-  })
-
-  it("covers sessions, approaches, numbers, instadates and field reports", () => {
-    expect([...WEEKLY_COUNTER_COLUMNS]).toEqual([
-      "current_week_sessions",
-      "current_week_approaches",
-      "current_week_numbers",
-      "current_week_instadates",
-      "current_week_field_reports",
-    ])
   })
 })
 

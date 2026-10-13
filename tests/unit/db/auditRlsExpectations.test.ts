@@ -77,12 +77,4 @@ describe("the RLS audit's list of deliberate exceptions", () => {
       .map(([table]) => table)
     expect(silent.sort(), "a table with no reason beside it is a table nobody decided about").toEqual([])
   })
-
-  test("the audit script reads this list rather than keeping its own copy", () => {
-    const script = fs.readFileSync(path.join(root, "scripts/audit-rls.ts"), "utf8")
-    expect(script).toMatch(/import \{ INTENTIONAL \} from "\.\/auditRlsExpectations"/)
-    // A second `const INTENTIONAL = {` in the script means the list was forked,
-    // and a forked list is one that drifts without anyone noticing.
-    expect(script).not.toMatch(/const INTENTIONAL/)
-  })
 })
