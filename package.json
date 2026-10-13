@@ -2,18 +2,22 @@
   "name": "daygame-coach",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "bash scripts/build.sh --webpack",
     "start": "next start",
     "lint": "eslint .",
     "lint:ratchet": "node scripts/lint-ratchet.mjs",
+    "audit:ratchet": "node scripts/audit-ratchet.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
     "test:all": "npm run test && npm run test:integration && npm run test:e2e",
-    "ci": "npm run lint:ratchet && node scripts/typecheck-ratchet.mjs && npm test && npm run test:integration",
+    "ci": "npm run lint:ratchet && node scripts/typecheck-ratchet.mjs && npm run audit:ratchet && npm test && npm run test:integration",
     "ingest": "node node_modules/tsx/dist/cli.mjs scripts/training-data/08.ingest.ts",
     "seed:values": "tsx scripts/seed_values.ts",
     "audit:rls": "tsx scripts/audit-rls.ts",
@@ -47,7 +51,7 @@
     "driver.js": "^1.4.0",
     "googleapis": "^171.4.0",
     "lucide-react": "^0.454.0",
-    "next": "16.3.5",
+    "next": "16.3.8",
     "react": "^19.2.3",
     "react-day-picker": "^9.13.0",
     "react-dom": "^19.2.3",
@@ -72,7 +76,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "dotenv": "^17.2.3",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.0.10",
+    "eslint-config-next": "16.3.8",
     "husky": "^9.1.7",
     "jsdom": "^27.4.0",
     "pg": "^8.18.0",
@@ -80,6 +84,7 @@
     "tailwindcss": "^4.1.18",
     "tsx": "^4.7.1",
     "typescript": "^5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "yaml": "2.9.1"
   }
 }

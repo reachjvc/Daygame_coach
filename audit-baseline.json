@@ -1,0 +1,23 @@
+{
+  "_comment": "Advisories already present when this was written. A NEW one fails `npm run audit:ratchet` when the lockfile added or changed the version; one published against an unchanged version only warns. Regenerate: node scripts/audit-ratchet.mjs --update",
+  "_format": "npm-audit-advisories-v1",
+  "advisories": {
+    "@ai-sdk/provider-utils@4.0.1": [
+      "GHSA-866g-f22w-33x8"
+    ],
+    "braces@3.0.3": [
+      "GHSA-vfj7-8cjw-p6xm"
+    ],
+    "postcss-selector-parser@6.0.10": [
+      "GHSA-rj75-hqrm-r3gf"
+    ],
+    "sharp@0.34.5": [
+      "GHSA-f88m-g3jw-g9cj",
+      "GHSA-rgj7-g3m4-5g8c",
+      "GHSA-wq5f-xc86-pv6w"
+    ],
+    "sprintf-js@1.1.3": [
+      "GHSA-hp3w-g68c-fv3c"
+    ]
+  }
+}
