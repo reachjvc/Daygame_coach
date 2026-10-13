@@ -106,8 +106,18 @@ describe('E2E Test Isolation Compliance', () => {
      * `beforeAll` and shared. The fixture's `page` is the test's own and dies
      * with it.
      */
+    // Any page or context opened in a `beforeAll`, whatever it is called.
+    const opensInBeforeAll = (code: string) =>
+      [...code.matchAll(/\.beforeAll\(/g)].some((m) => {
+        const ends = ['\n})', '\n  })'].map((close) => code.indexOf(close, m.index)).filter((i) => i > 0)
+        const body = code.slice(m.index, ends.length ? Math.min(...ends) : undefined)
+        return /\b(newPage|newContext)\(/.test(body)
+      })
     const shared = getAllE2EFiles()
-      .filter((file) => /let\s+page\s*:\s*Page/.test(fs.readFileSync(file, 'utf-8')))
+      .filter((file) => {
+        const code = fs.readFileSync(file, 'utf-8')
+        return /let\s+\w+!?\s*:\s*Page\b/.test(code) || opensInBeforeAll(code)
+      })
       .map((file) => path.relative(projectRoot, file))
     expect(shared, 'These hold a page across tests; use the test\'s own `page`').toEqual([])
   })

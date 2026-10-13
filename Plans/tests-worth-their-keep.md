@@ -229,6 +229,9 @@ runs.
 *Recommendation:* after Phase 3, open a **draft** pull request from
 `training-rebuild` into `main`. It triggers the full suite without merging
 anything. Needs B1, or two clicks on github.com.
+*Resolved 2026-10-13 without a pull request:* `e2e.yml` on this branch has
+`workflow_dispatch`, and `gh workflow run e2e.yml --ref training-rebuild` runs
+every lane, nightly ones included (runs 38435568018 and 38437166271).
 
 **B4 · The schema baseline needs a home** — attempted and solved for testing;
 one decision left.
@@ -257,6 +260,15 @@ the whole time and edited about 25 test files during this audit.
 **public** repository. Only you can rotate it (Supabase dashboard), and rotating
 it breaks CI and your `.env.local` until both are updated. Not attempted for that
 reason. Do it at the end of Phase 9, once CI no longer needs it.
+*Corrected 2026-10-13:* the premise was wrong. The key was never a GitHub
+secret: `gh secret list` shows eight repository secrets and none is
+`SUPABASE_SERVICE_ROLE_KEY`, and the Preview, Production and staging
+environments hold none. The workflows referenced it and received an empty
+string. Phase 9 removed every reference, so there is nothing of CI's to rotate.
+What is left for you: the eight secrets (`NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, the six `TEST_USER*`) are referenced by no
+workflow now. Delete them in the repository's settings; the `TEST_USER*`
+passwords are the ones B9 found published.
 
 **B9 · Public CI reports published the test accounts' passwords** — found by
 peer sessions, being fixed by one. Anyone signed in to GitHub can download a
@@ -298,8 +310,12 @@ plain text.
 - **The service-role key** bypasses every row-security rule. It is handed to three
   CI jobs, and this repository is public, so Actions logs are world-readable. One
   accidental `echo` publishes it. Phase 9 removes it from CI; then rotate it (B8).
+  *2026-10-13:* it was referenced but never stored, so CI never had it (B8). Every
+  Supabase and account secret is gone from `e2e.yml`, and `ciWorkflows.test.ts`
+  fails if one comes back.
 - **Local browser runs write to production** today (`.env.local` points there).
-  Phase 8 ends that.
+  Phase 8 ends that. *Done:* `playwright.config.ts` overwrites the live keys with
+  the local backend's before anything runs, and every account is made there.
 - **The schema baseline** (Q2) would publish the full schema in a public repository.
 - **CI test reports are public** and published the three test passwords (B9);
   rotation and the fix are in hand. Any secret a test types goes through
@@ -627,6 +643,11 @@ config unit check fails if any Playwright project declares `dependencies`.
 
 1. **Build once:** a `build` job runs `next build --webpack` with the local
    backend's address baked in and uploads `.next` as an artifact.
+   *Corrected 2026-10-13, not done:* on these runners the build takes ~90 s
+   and the backend ~50 s (run 38433989966). A shared build is a job of its
+   own plus an upload and a download in front of every shard, which lengthens
+   the critical path; each shard builds its own app instead, beside its own
+   backend. Runner minutes are free on a public repository.
 2. **Matrix:** per lane, `--shard=i/N` with the blob reporter; pull requests run
    desktop 4 shards × 2 workers, phone 2 × 2, public 1 × 2; nightly adds firefox,
    webkit-desktop and android. Two workers because each runner also hosts its own
@@ -725,16 +746,42 @@ on `training-rebuild`.
 |---|---|---|
 | 1 Cut the unit suite | done | 8df2e292, 812f496d, a13dc9f3, b4edcaca, 705516d3. All six work packages; every rewrite proven by a planted break. |
 | 2 Cut the database suite | done | c498c5d4. 300 → 111 tests; every refusal named. |
-| 3 Cut the browser suite | mostly done | 9274a742, 7e66dd8a; the agent is finishing spec runs. 1,191 runs per pass → see its final numbers. |
+| 3 Cut the browser suite | done | 9274a742, 7e66dd8a, a94c3cec, d0e39942. 1,191 runs per pass → 497, before Phase 8's lanes. |
 | 4 Lab-only and dead code | done except two owner calls | b4edcaca, 705516d3, 812f496d (lab tests); 3fa860e3, 863fcf74, 31f0b466 (dead code with its tests, ~14,000 lines). `carryAuthoredSettings`, both `sameWeek`s and badgeEngine's `detectTierUpgrades` wait for you. |
-| 5 First CI numbers | blocked | CI is red at the lint step on another session's commit (dbe09f12), being fixed by that session, so the unit and database steps have not run since. |
+| 5 First CI numbers | done | Unit step 216 s → 68–97 s; database step 108 s → 64–73 s (backend start included). |
 | 6 Unit speed | done | 1b2b7fca (recurrence sweep 40 s → 5 s), b9a06180 (Node by default, jsdom only where a file renders: 47 s → 27 s here), 084742e3 (write-coverage guard 2.2 s → 0.5 s). |
 | 7 One real test backend | done | 7cb661a9, 3aaea00e, d7968eea. Production's schema, files in parallel, no truncation: 146 s → 11 s; 139 passing + 8 pinned known-wrong; `TEST_SHARED_USER=1` turns 99 red; row-security catalog over all 84 tables. |
-| 8–10 | not started | Phase 8 starts when Phase 3's agent finishes. |
+| 8 Browser tests in parallel | done | e10f08ee, ad528b66, b8d823d0, e1a68550, 8b87af86, fd5c3402, 53ac5397, 5f145527, 59900af3. One fresh account per worker in the local backend; R5 proved twice (the pilot, and 23 training tests red on one shared account). 33 projects → 10 lanes by tag; no setup project, chain, worker pin or serial block left. Signup and password reset are real, through Mailpit. |
+| 9 CI for the new shape | done | 59900af3, 741d1df4. Sharded matrix, a nightly matrix, one merged report, no secrets. Each shard builds its own app (step 1 corrected). Measured below. |
+| 10 It cannot rot again | done | e322186f and the commit after it. Duration ratchet (`scripts/ci/durations.mjs`, `docs/testing/durations.json`) and `.github/workflows/nightly.yml` with the helpline check (Q12). Proved: a lowered baseline fails, a suite with no green run fails. |
 
-**Counts:** unit 6,519 runtime tests this morning → 4,533 (the peer's
-architecture deletion included); database 300 → 147 (139 + 8 known-wrong, now
-including the app's own data code); browser per Phase 3's final report.
+**Counts:** unit 6,519 runtime tests this morning → 4,656 (the peer's
+architecture deletion included); database 300 → 161 (153 + 8 known-wrong, now
+including the app's own data code); browser 1,191 runs per pass → 380 per pull
+request (desktop 212, timing 4, phone 54, timing-phone 4, two sweeps 53 each)
+plus 159 nightly (Firefox 24, Safari 24, Android 58, Safari sweep 53).
+
+**The measurement (Phase 9 step 6).** Two full runs dispatched on this branch,
+every pull-request lane and every nightly lane at once, 14 jobs each:
+**7 min 3 s and 7 min 18 s** wall time, from the first job's start to the merged
+report (runs 38435568018, 38437166271). It was **3 h 45 min**, one test at a
+time, and red. Each shard is 4–6½ minutes, of which ~50 s is the backend, ~90 s
+the build and 3–4 minutes the tests. Both runs had red shards, each a real fault
+now fixed: an ambiguous locator (session-tracking), a click before React owned
+the card (programs-past-workout), and the Black Box seed's future timestamp
+(below). The nightly WebKit lane's "two tabs stay in step" failed both attempts
+in run 2 and passed in run 1; not yet diagnosed.
+
+**What changed from this plan, and why.** No shared build (Phase 9 step 1: it
+lengthens the critical path). No separate `public` lane (signed-out specs run in
+`desktop` with `SIGNED_OUT`; they need no account and no lane of their own).
+Service workers are blocked in every spec but `vice-offline`: the production
+build registers one that local runs never have, and it took requests out of
+reach of `setOffline`. `mobile-training.spec.ts` no longer runs on Firefox at
+390 px (the old `training-firefox`); it runs on the iPhone every pull request
+and on Android nightly. A deliberate cut: Gecko on a phone is rare, and Firefox
+still runs the live-workout tests tagged @engine. The duration ratchet has a
+30% tolerance, not zero: two green runs of one shard differed by 25%.
 
 **Bugs found by this work.** Fixed: the time tracker crashed when browser
 storage was full (c5ab3116); its phone header pushed the bell off screen
@@ -749,6 +796,21 @@ refuses; `user_values` has no foreign key to the person; five `life_plan_*`
 foreign keys abort a plan save that removes an area with goals under it.
 Also: migration `20260927120000_corrections_keep_set_order` is not applied in
 production (the test backend applies it on top of the baseline).
+
+**Found by Phases 8–10, not fixed (product code):**
+- *The Black Box loses edits made on a device whose clock is behind another's.*
+  The sync's watermark is the newest `updatedAt` it has pushed, and it pushes
+  rows merged in from other devices with their own stamps. A row stamped by a
+  clock running ahead moves the watermark ahead of this device's clock, and a
+  change made here before the clock catches up is stamped earlier than the
+  watermark: never pending, never sent, with "Saved to your account" on screen.
+  Found through the test seed, which stamps one second ahead and lost a report
+  filed half a second later (`src/vice/blackbox/useBlackBoxSync.ts`, `pendingSince`).
+- *The tracking stats row can be created and then not read.* CI logged "Failed to
+  create tracking stats: duplicate key" twice: the 23505 re-read added today came
+  back empty although the row exists, so that request's user-scoped read could
+  not see it. The dashboard degrades to "your tracking totals could not be read".
+  Not reproduced locally.
 
 **Found by the browser cut, not fixed:** the tracking history's "All" filter
 hides drafts; the custom report builder cannot save a notes-only report (400

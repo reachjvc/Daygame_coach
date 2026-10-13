@@ -23,8 +23,13 @@ import { join, resolve } from "node:path"
 import playwrightConfig from "../../playwright.config"
 
 const root = resolve(__dirname, "../..")
-const ci = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8")
-const e2e = readFileSync(join(root, ".github/workflows/e2e.yml"), "utf8")
+/**
+ * Comment lines dropped: a `# - { lane: desktop, shard: 3/4 … }` left behind
+ * is a shard nothing runs, and must not count as one that is.
+ */
+const uncommented = (yaml: string) => yaml.replace(/^\s*#.*$/gm, "")
+const ci = uncommented(readFileSync(join(root, ".github/workflows/ci.yml"), "utf8"))
+const e2e = uncommented(readFileSync(join(root, ".github/workflows/e2e.yml"), "utf8"))
 
 const PROJECTS = playwrightConfig.projects ?? []
 const PROJECT_NAMES = PROJECTS.map((p) => p.name as string)
@@ -94,6 +99,19 @@ describe("the browser tests that CI actually runs", () => {
     }
   })
 
+  test("the pull-request lanes run on pull requests, and the nightly ones at night", () => {
+    // Naming a lane in a job proves nothing if the job's condition never holds:
+    // `github.ref == 'refs/heads/main'` is never true on a pull request, whose
+    // ref is refs/pull/N/merge, and every lane would skip, green.
+    expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}if:/m)
+    expect(e2eJobs["lanes"]).toMatch(
+      /^ {4}if: \$\{\{ github\.event_name != 'push' \|\| github\.ref == 'refs\/heads\/main' \|\| github\.ref == 'refs\/heads\/beta' \}\}$/m,
+    )
+    expect(e2eJobs["nightly"]).toMatch(
+      /^ {4}if: \$\{\{ github\.event_name == 'schedule' \|\| github\.event_name == 'workflow_dispatch' \}\}$/m,
+    )
+  })
+
   test("every Playwright project is run by exactly one CI job", () => {
     const runsIn = (name: string) => [...new Set(SHARDS.filter((s) => s.lane === name).map((s) => s.job))]
     expect(PROJECT_NAMES.filter((n) => runsIn(n).length === 0), "defined but run by no CI job").toEqual([])
@@ -148,7 +166,10 @@ describe("the browser tests that CI actually runs", () => {
      * the live database, and CI's logs and artifacts on this public repo are
      * downloadable.
      */
-    expect(e2e).not.toMatch(/secrets\.(?:NEXT_PUBLIC_SUPABASE|SUPABASE_|TEST_USER)/)
+    // Any form: `secrets.X`, `secrets['X']`, `toJSON(secrets)`. Only the
+    // workflow's own token may appear.
+    const named = e2e.match(/\bsecrets\b[^\n]*/g) ?? []
+    expect(named.filter((use) => !/^secrets\.GITHUB_TOKEN\b/.test(use))).toEqual([])
   })
 
   test("no Playwright project waits on another or loads a saved sign-in", () => {
@@ -162,6 +183,15 @@ describe("the browser tests that CI actually runs", () => {
       (p) => (p.dependencies ?? []).length > 0 || typeof p.use?.storageState === "string",
     ).map((p) => p.name)
     expect(chained).toEqual([])
+    // A lane pattern is matched against "project file describe title tags",
+    // so one that matched a project's NAME would select every test in it.
+    const patterns = PROJECTS.flatMap((p) => [p.grep, p.grepInvert].flat()).filter((r): r is RegExp => r instanceof RegExp)
+    expect(patterns.length, "the lanes select by tag; no pattern found").toBeGreaterThan(5)
+    const clashes = patterns.flatMap((r) => PROJECT_NAMES.filter((name) => r.test(name)).map((name) => `${r} matches ${name}`))
+    expect(clashes).toEqual([])
+    // Production builds register a service worker that local runs never have;
+    // left on, CI tests a different app (playwright.config.ts says how it bit).
+    expect(playwrightConfig.use?.serviceWorkers, "service workers must stay blocked by default").toBe("block")
     expect(playwrightConfig.globalSetup, "a global setup runs before every lane; the fixtures make what a test needs").toBeUndefined()
   })
 })
@@ -173,7 +203,8 @@ describe("the duration ratchet watches what CI runs", () => {
    * added without a baseline would never be timed, and a renamed one would
    * fail every night until someone noticed. Both are caught here, on commit.
    */
-  const { suites } = JSON.parse(readFileSync(join(root, "docs/testing/durations.json"), "utf8")) as {
+  const { suites, tolerance } = JSON.parse(readFileSync(join(root, "docs/testing/durations.json"), "utf8")) as {
+    tolerance: unknown
     suites: { workflow: string; job: string; step?: string; seconds: number }[]
   }
   const workflows: Record<string, string> = { "ci.yml": ci, "e2e.yml": e2e }
@@ -193,6 +224,24 @@ describe("the duration ratchet watches what CI runs", () => {
       if (!(s.seconds > 0)) missing.push(`${s.workflow} › ${s.job}: no baseline`)
     }
     expect(missing).toEqual([])
+  })
+
+  test("its numbers are numbers", () => {
+    // A missing or quoted tolerance makes every comparison false: everything passes.
+    expect(typeof tolerance).toBe("number")
+    expect(tolerance as number).toBeGreaterThan(0)
+    expect(tolerance as number).toBeLessThan(1)
+    expect(suites.filter((s) => typeof s.seconds !== "number" || !(s.seconds > 0))).toEqual([])
+  })
+
+  test("the names it looks for are the names GitHub shows", () => {
+    // The ratchet matches the API's display name: `lane shard` for a matrix
+    // job, from this exact template, and the job key for a job with no `name:`.
+    for (const job of ["lanes", "nightly"]) {
+      expect(e2eJobs[job]).toMatch(/^ {4}name: \$\{\{ matrix\.lane \}\} \$\{\{ matrix\.shard \}\}$/m)
+    }
+    expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}name:/m)
+    expect(jobs(ci)["checks"]).not.toMatch(/^ {4}name:/m)
   })
 
   test("every browser shard has a baseline", () => {
