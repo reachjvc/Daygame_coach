@@ -32,7 +32,10 @@ that stage.
 - Fix the class, not just the instance: one place owns each rule.
 - Say before building when something is not future-proof.
 - Outside advice: build their case before you answer it.
-- Commit and push your own work without being asked.
+- Commit and push your own work without being asked, to `training-rebuild`.
+  `main` is what the live site serves (Vercel now, Hetzner later): push to it
+  only when the owner asks in that session, and only as
+  `git push origin origin/training-rebuild:main`.
 - No silent fallbacks: scripts fail loudly or ask.
 - Ask before deleting data or anything hard to reverse.
 - Flag security risks when you see them, unasked.
