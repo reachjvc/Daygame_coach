@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 import { ArrowLeft, PartyPopper, Sunrise, RotateCcw, LayoutGrid } from "lucide-react"
 import { InnerGameStep, type CoreValue } from "../types"
@@ -134,7 +135,7 @@ export function SummaryPage({
       {/* Actions - cleaner layout */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <Button asChild className="flex-1 h-11" size="lg">
-          <Link href="/dashboard">
+          <Link href={ROUTES.dashboard}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>

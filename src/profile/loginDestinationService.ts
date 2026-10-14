@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/src/db/server"
+import { ROUTES } from "@/src/shared/routes"
 import { safeNextPath } from "@/src/shared/safeRedirect"
 
 /**
@@ -33,5 +34,5 @@ export async function resolveLoginDestination(
 
   if (!user) return null
 
-  return safeNextPath(requestedNext, "/dashboard")
+  return safeNextPath(requestedNext, ROUTES.dashboard)
 }

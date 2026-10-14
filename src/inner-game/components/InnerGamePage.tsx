@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -386,7 +387,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold">Inner Game</h1>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard">
+            <Link href={ROUTES.dashboard}>
               <X className="mr-1 h-4 w-4" />
               Exit
             </Link>
@@ -438,7 +439,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold">Inner Game</h1>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard">
+            <Link href={ROUTES.dashboard}>
               <X className="mr-1 h-4 w-4" />
               Exit
             </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen, Swords } from "lucide-react";
@@ -95,7 +96,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
       */}
       <div className="grid md:grid-cols-3 gap-4 md:gap-8">
         {/* Scenarios */}
-        <Link href="/dashboard/scenarios" className="group" data-testid="dashboard-scenarios-link">
+        <Link href={ROUTES.scenarios} className="group" data-testid="dashboard-scenarios-link">
           <Card className="p-5 sm:p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
               <Swords className="size-10 text-primary" />
@@ -132,7 +133,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
         </Card>
 
         {/* Inner Game */}
-        <Link href="/dashboard/inner-game" className="group" data-testid="dashboard-inner-game-link">
+        <Link href={ROUTES.innerGame} className="group" data-testid="dashboard-inner-game-link">
           <Card className="p-5 sm:p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
               <Brain className="size-10 text-primary" />
@@ -154,7 +155,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
       </div>
 
       {/* Ask Your Coach - QA Section */}
-      <Link href={isPreviewMode ? unlockHref : "/dashboard/qa"} className="group block mt-8" data-testid="dashboard-qa-link">
+      <Link href={isPreviewMode ? unlockHref : ROUTES.coach} className="group block mt-8" data-testid="dashboard-qa-link">
         <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
@@ -180,7 +181,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
       </Link>
 
       {/* Progress Tracking Section */}
-      <Link href={isPreviewMode ? unlockHref : "/dashboard/tracking"} className="group block mt-4" data-testid="dashboard-tracking-link">
+      <Link href={isPreviewMode ? unlockHref : ROUTES.tracking} className="group block mt-4" data-testid="dashboard-tracking-link">
         <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
@@ -206,7 +207,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
       </Link>
 
       {/* Articles & Research Section - Always accessible */}
-      <Link href="/dashboard/articles" className="group block mt-4">
+      <Link href={ROUTES.articles} className="group block mt-4">
         <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">

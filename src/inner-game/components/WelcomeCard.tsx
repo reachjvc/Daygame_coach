@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes"
 import { X, Check, Compass, CircleDot, Eye, Flame, Sunrise, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { InnerGameStep, type InnerGameProgress } from "../types"
@@ -82,7 +83,7 @@ export function WelcomeCard({
 
           {isPreviewMode ? (
             <Link
-              href="/dashboard"
+              href={ROUTES.dashboard}
               className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
               aria-label="Close"
             >

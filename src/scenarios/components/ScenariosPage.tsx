@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes"
 import { ArrowLeft, CircleDot } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -41,7 +42,7 @@ export async function ScenariosPage() {
                 <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
               </div>
               <Button asChild variant="outline">
-                <Link href="/dashboard">
+                <Link href={ROUTES.dashboard}>
                   <ArrowLeft className="size-4 mr-2" />
                   Back to Dashboard
                 </Link>
@@ -110,7 +111,7 @@ export async function ScenariosPage() {
               <span>Scenarios</span>
             </div>
             <Button asChild variant="outline">
-              <Link href="/dashboard">
+              <Link href={ROUTES.dashboard}>
                 <ArrowLeft className="size-4 mr-2" />
                 Back to Dashboard
               </Link>
@@ -120,7 +121,7 @@ export async function ScenariosPage() {
 
         <DatingPreferencesGate
           initialValues={toOnboardingInitialValues(profile)}
-          next="/dashboard/scenarios"
+          next={ROUTES.scenarios}
           heading="Before your first scenario"
           intro="Scenarios put you in front of a specific person. These answers decide who she is. It is the only place in the app that uses them, and you can change them later."
           submitLabel="Start practising"
@@ -145,7 +146,7 @@ export async function ScenariosPage() {
                 <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
               </div>
               <Button asChild variant="outline">
-                <Link href="/dashboard">
+                <Link href={ROUTES.dashboard}>
                   <ArrowLeft className="size-4 mr-2" />
                   Back to Dashboard
                 </Link>
@@ -178,7 +179,7 @@ export async function ScenariosPage() {
             <span>Scenarios</span>
           </div>
           <Button asChild variant="outline">
-            <Link href="/dashboard">
+            <Link href={ROUTES.dashboard}>
               <ArrowLeft className="size-4 mr-2" />
               Back to Dashboard
             </Link>

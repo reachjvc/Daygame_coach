@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { BackLink } from "@/components/BackLink"
 import { CircleDot } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -137,7 +138,7 @@ export function ArchetypeSelector({
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <BackLink fallback="/dashboard" fallbackLabel="Dashboard" />
+            <BackLink fallback={ROUTES.dashboard} fallbackLabel="Dashboard" />
             <form action={updateArchetypes} className="flex items-center gap-2">
               <input type="hidden" name="archetype" value={selectedArchetypes[0] || ""} />
               <input type="hidden" name="secondaryArchetype" value={selectedArchetypes[1] || ""} />

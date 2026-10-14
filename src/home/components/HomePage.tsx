@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes"
 import { CheckCircle2, MessageCircle, BarChart3, Zap, LayoutDashboard, Swords } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -108,7 +109,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
                 className="bg-accent text-accent-foreground hover:bg-accent/80 whitespace-nowrap"
                 asChild
               >
-                <Link href="/dashboard">Preview Dashboard</Link>
+                <Link href={ROUTES.dashboard}>Preview Dashboard</Link>
               </Button>
             </div>
           </Card>

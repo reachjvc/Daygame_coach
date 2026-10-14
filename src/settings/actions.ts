@@ -16,8 +16,7 @@ import {
   handleReactivateSubscription,
   createBillingPortalSession,
 } from "./settingsService"
-import { SETTINGS_CONFIG } from "./config"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { saveTrainingSettings } from "@/src/db/workoutRepo"
 
 /**
@@ -44,8 +43,8 @@ export async function updateSandboxSettings(
 ): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateSandboxSettings(userId, settings)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.dashboard)
 }
 
 /**
@@ -54,8 +53,8 @@ export async function updateSandboxSettings(
 export async function resetSandboxSettings(): Promise<void> {
   const userId = await requireAuth()
   await handleResetSandboxSettings(userId)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.dashboard)
 }
 
 /**
@@ -64,8 +63,8 @@ export async function resetSandboxSettings(): Promise<void> {
 export async function updateDifficulty(difficulty: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateDifficulty(userId, difficulty)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.dashboard)
 }
 
 /**
@@ -74,8 +73,8 @@ export async function updateDifficulty(difficulty: string): Promise<void> {
 export async function updateVoiceLanguage(language: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateVoiceLanguage(userId, language)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.dashboard)
 }
 
 /**
@@ -84,8 +83,8 @@ export async function updateVoiceLanguage(language: string): Promise<void> {
 export async function updateTimezone(timezone: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateTimezone(userId, timezone)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.dashboard)
 }
 
 /**
@@ -94,8 +93,8 @@ export async function updateTimezone(timezone: string): Promise<void> {
 export async function updatePreferredLanguage(language: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdatePreferredLanguage(userId, language)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath("/scenarios")
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.scenarios)
 }
 
 /**
@@ -104,7 +103,7 @@ export async function updatePreferredLanguage(language: string): Promise<void> {
 export async function updateCurveStyle(style: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateCurveStyle(userId, style)
-  revalidatePath(LIFE_MASTERY)
+  revalidatePath(ROUTES.plan)
 }
 
 /**
@@ -113,7 +112,7 @@ export async function updateCurveStyle(style: string): Promise<void> {
 export async function cancelSubscription(): Promise<{ success: boolean }> {
   const userId = await requireAuth()
   await handleCancelSubscription(userId)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
+  revalidatePath(ROUTES.settings)
   return { success: true }
 }
 
@@ -123,7 +122,7 @@ export async function cancelSubscription(): Promise<{ success: boolean }> {
 export async function reactivateSubscription(): Promise<{ success: boolean }> {
   const userId = await requireAuth()
   await handleReactivateSubscription(userId)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
+  revalidatePath(ROUTES.settings)
   return { success: true }
 }
 
@@ -152,6 +151,6 @@ export async function updateTrainingSettings(settings: {
 }): Promise<void> {
   const userId = await requireAuth()
   await saveTrainingSettings(userId, settings)
-  revalidatePath(SETTINGS_CONFIG.paths.settings)
-  revalidatePath("/programs")
+  revalidatePath(ROUTES.settings)
+  revalidatePath(ROUTES.training)
 }

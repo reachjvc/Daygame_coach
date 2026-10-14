@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes"
 import { CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -28,7 +29,7 @@ export function Checkout({ productId }: { productId: string }) {
           <Link href="/auth/sign-up">Continue</Link>
         </Button>
         <Button asChild variant="outline" className="w-full">
-          <Link href="/dashboard/qa">Skip to Q&A</Link>
+          <Link href={ROUTES.coach}>Skip to Q&A</Link>
         </Button>
       </div>
     </div>

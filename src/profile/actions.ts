@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerSupabaseClient } from "@/src/db/server"
+import { ROUTES } from "@/src/shared/routes"
 import { safeNextPath } from "@/src/shared/safeRedirect"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -52,16 +53,16 @@ export async function saveDatingPreferences(formData: FormData) {
   })
 
   // Both surfaces that render the gate read the profile on the server.
-  revalidatePath("/dashboard/scenarios")
-  revalidatePath("/preferences")
-  revalidatePath("/dashboard")
+  revalidatePath(ROUTES.scenarios)
+  revalidatePath(ROUTES.scenarioPreferences)
+  revalidatePath(ROUTES.dashboard)
 
   /* `next` comes from the page, but it rides in a form field the browser owns,
      so it is user input. `safeNextPath` is the existing owner of that rule --
      it rejects "//evil.com" and "/\evil.com", which a bare startsWith("/") lets
      straight through as an off-site redirect. */
   const next = formData.get("next")
-  redirect(safeNextPath(typeof next === "string" ? next : null, "/dashboard"))
+  redirect(safeNextPath(typeof next === "string" ? next : null, ROUTES.dashboard))
 }
 
 export async function updateProfilePreference(formData: FormData) {
@@ -75,8 +76,8 @@ export async function updateProfilePreference(formData: FormData) {
     value: preferenceValue,
   })
 
-  revalidatePath("/dashboard")
-  redirect("/dashboard")
+  revalidatePath(ROUTES.dashboard)
+  redirect(ROUTES.dashboard)
 }
 
 export async function updatePreferredRegion(regionId: string) {
@@ -84,7 +85,7 @@ export async function updatePreferredRegion(regionId: string) {
 
   await updatePreferredRegionForUser(userId, regionId)
 
-  revalidatePath("/dashboard")
+  revalidatePath(ROUTES.dashboard)
 }
 
 export async function updateSecondaryRegionDirect(regionId: string | null) {
@@ -92,7 +93,7 @@ export async function updateSecondaryRegionDirect(regionId: string | null) {
 
   await updateSecondaryRegionDirectForUser(userId, regionId)
 
-  revalidatePath("/dashboard")
+  revalidatePath(ROUTES.dashboard)
 }
 
 export async function updateAgeRange(ageRangeStart: number, ageRangeEnd: number) {
@@ -100,7 +101,7 @@ export async function updateAgeRange(ageRangeStart: number, ageRangeEnd: number)
 
   await updateAgeRangeForUser(userId, ageRangeStart, ageRangeEnd)
 
-  revalidatePath("/dashboard")
+  revalidatePath(ROUTES.dashboard)
 }
 
 export async function updateArchetypes(formData: FormData) {
@@ -114,6 +115,6 @@ export async function updateArchetypes(formData: FormData) {
 
   await updateArchetypesForUser(userId, data)
 
-  revalidatePath("/dashboard")
-  redirect("/dashboard")
+  revalidatePath(ROUTES.dashboard)
+  redirect(ROUTES.dashboard)
 }

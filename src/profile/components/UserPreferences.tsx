@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react";
+import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -246,7 +247,7 @@ export function UserPreferences({
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Chosen archetypes</p>
             <p className="mt-1 text-sm font-semibold text-foreground">{archetypeSummary}</p>
             <Button asChild variant="outline" size="sm" className="mt-3 w-full">
-              <Link href="/preferences/archetypes">Choose new archetypes</Link>
+              <Link href={ROUTES.scenarioArchetypes}>Choose new archetypes</Link>
             </Button>
           </div>
 
@@ -423,7 +424,7 @@ export function UserPreferences({
         </div>
 
         <Button asChild variant="outline" className="w-full">
-          <Link href="/preferences">Edit Full Preferences</Link>
+          <Link href={ROUTES.scenarioPreferences}>Edit Full Preferences</Link>
         </Button>
       </CardContent>
 

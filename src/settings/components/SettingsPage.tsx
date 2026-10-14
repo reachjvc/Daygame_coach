@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition, useMemo, useRef, useEffect } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -391,7 +392,7 @@ export function SettingsPage({
                   {/* `asChild`, so the LINK *is* the button. A <button> inside
                       an <a> is invalid HTML and reads as two nested controls. */}
                   <Button variant="outline" size="sm" asChild>
-                    <Link href="/preferences">Edit Preferences</Link>
+                    <Link href={ROUTES.scenarioPreferences}>Edit Preferences</Link>
                   </Button>
                 </div>
               </CardContent>
