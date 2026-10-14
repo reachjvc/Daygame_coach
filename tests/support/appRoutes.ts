@@ -22,8 +22,28 @@
 
 import * as fs from "fs"
 import * as path from "path"
+import { ROUTES } from "@/src/shared/routes"
+import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 const root = path.resolve(__dirname, "../..")
+
+const rel = (file: string) => path.relative(root, file).replace(/\\/g, "/")
+
+/**
+ * THE ADDRESS A FOLDER UNDER `app/` SERVES.
+ *
+ * One owner, because three tests computed it and each did it by joining folder
+ * names. That is wrong the moment a route group exists: `app/(app)/settings/`
+ * serves `/settings`, because a folder named in parentheses is for sharing a
+ * layout and never appears in the address. Square-bracket segments (`[id]`)
+ * stay; they are what makes a route dynamic.
+ */
+export function routeOfDir(dir: string): string {
+  const relDir = path.relative(path.join(root, "app"), dir).replace(/\\/g, "/")
+  const segments = relDir.split("/").filter((s) => s && s !== "." && !/^\(.+\)$/.test(s))
+  return "/" + segments.join("/")
+}
 
 export interface AppRoute {
   /** URL path, e.g. "/dashboard/tracking". */
@@ -53,13 +73,8 @@ export function productRoutes(): AppRoute[] {
         if (entry.name === "api") continue
         walk(full)
       } else if (entry.name === "page.tsx") {
-        const relDir = path.relative(path.join(root, "app"), path.dirname(full))
-        const route = "/" + relDir.replace(/\\/g, "/")
-        out.push({
-          route: route === "/." ? "/" : route,
-          file: full,
-          dynamic: route.includes("["),
-        })
+        const route = routeOfDir(path.dirname(full))
+        out.push({ route, file: full, dynamic: route.includes("[") })
       }
     }
   }
@@ -202,4 +217,131 @@ export function coverageProblems(
   }
 
   return problems
+}
+
+/** Files the app actually ships: the prototypes under /test are not product. */
+export function productFiles(): string[] {
+  const out: string[] = []
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        if (rel(full) === "app/test" || entry.name === "node_modules") continue
+        walk(full)
+      } else if (/\.tsx?$/.test(entry.name)) {
+        out.push(full)
+      }
+    }
+  }
+  for (const dir of ["src", "components", "app"]) walk(path.join(root, dir))
+  return out
+}
+
+/** Strip a query, a hash and a trailing slash: `/x?y=1` is a link to `/x`. */
+export function normalize(target: string): string {
+  const bare = target.split("?")[0].split("#")[0]
+  return bare.length > 1 ? bare.replace(/\/$/, "") : bare
+}
+
+/**
+ * Where a set of files sends people.
+ *
+ * Only navigation, not any string that happens to be a path: `href=`, the
+ * router's push/replace, and a server `redirect()`.
+ */
+export function linksIn(files: Iterable<string>): Set<string> {
+  const out = new Set<string>()
+  const sources: string[] = []
+  const pattern = /(?:href=|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*["'`](\/[^"'`${}]*)["'`]/g
+  for (const file of files) {
+    let src: string
+    try {
+      src = fs.readFileSync(file, "utf-8")
+    } catch {
+      continue
+    }
+    for (const m of src.matchAll(pattern)) out.add(normalize(m[1]))
+    for (const target of symbolicLinksIn(src)) out.add(normalize(target))
+    sources.push(src)
+  }
+
+  /**
+   * `viceArchiveStep(flow.id)`: a link whose destination is decided by data.
+   *
+   * The vice hub draws a row per flow out of `modules.ts` and `plain.ts`, so
+   * which of the nine steps it points at is a fact about the data, not about
+   * the code, and no amount of reading the call site will say. Resolving it to
+   * every flow id NAMED IN THE SAME COMPONENT TREE is the honest answer: those
+   * are exactly the destinations this screen can produce.
+   *
+   * Not "every folder that exists": that would excuse a route nothing points
+   * at, which is the one thing these guards are for.
+   */
+  if (sources.some((src) => DYNAMIC_VICE_STEP.test(src))) {
+    for (const id of viceFlowIds()) out.add(viceArchiveStep(id))
+  }
+  return out
+}
+
+/** `viceArchiveStep(` with anything that is not a plain string in it. */
+const DYNAMIC_VICE_STEP = /viceArchiveStep\(\s*(?!["'`])/
+
+/**
+ * The flow ids a dynamic `viceArchiveStep(...)` can produce, read from the type
+ * that defines them. Add a flow and this picks it up; delete one and it stops
+ * claiming a route that no longer exists. A hand-kept copy of the list here
+ * would be a second place to forget.
+ */
+function viceFlowIds(): string[] {
+  const src = fs.readFileSync(path.join(root, "src/vice/types.ts"), "utf-8")
+  const union = src.match(/export type ViceFlowId\s*=\s*([^\n]+)/)
+  if (!union) throw new Error("ViceFlowId is gone — this resolver needs updating")
+  return [...union[1].matchAll(/"([\w-]+)"/g)].map((m) => m[1])
+}
+
+export function symbolicLinksIn(src: string): string[] {
+  const found: string[] = []
+  const named =
+    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(LIFE_MASTERY\b|QUIT_VICE_ARCHIVE\b|QUIT_VICE\b|viceArchiveStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
+  for (const m of src.matchAll(named)) {
+    if (m[2]) found.push(viceArchiveStep(m[2]))
+    else if (m[1] === "LIFE_MASTERY") found.push(LIFE_MASTERY)
+    // Before QUIT_VICE, because it is a prefix of the archive constant's name
+    // and an alternation takes the first branch that matches.
+    else if (m[1] === "QUIT_VICE_ARCHIVE") found.push(QUIT_VICE_ARCHIVE)
+    else if (m[1] === "QUIT_VICE") found.push(QUIT_VICE)
+  }
+  const fromList =
+    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(?:`\$\{)?ROUTES\.(\w+)/g
+  for (const m of src.matchAll(fromList)) {
+    const value = (ROUTES as Record<string, string>)[m[1]]
+    if (value) found.push(value)
+  }
+  return found
+}
+
+/**
+ * ROUTES THE APP PUSHES YOU INTO, which are gates rather than sub-pages.
+ *
+ * `/preferences` is the case that forced this: the dashboard itself redirected
+ * there until onboarding was finished, so a "back to Dashboard" control on it
+ * would bounce straight back, a loop rather than a way out. `/auth/login` is
+ * the same shape. Derived by looking for `redirect("<route>")` or
+ * `redirect(ROUTES.x)` anywhere in the product, so a new gate exempts itself
+ * the moment something redirects into it. A page redirecting to itself is a
+ * shim, not a gate.
+ */
+export function gateRoutes(): Set<string> {
+  const found = new Set<string>()
+  for (const file of productFiles()) {
+    const src = fs.readFileSync(file, "utf-8")
+    for (const m of src.matchAll(/redirect\((?:"(\/[^"]*)"|ROUTES\.(\w+))\)/g)) {
+      const raw = m[1] ?? (ROUTES as Record<string, string>)[m[2]]
+      if (!raw) continue
+      const target = normalize(raw)
+      const here = routeOfDir(path.dirname(file))
+      if (target && target !== here) found.add(target)
+    }
+  }
+  return found
 }

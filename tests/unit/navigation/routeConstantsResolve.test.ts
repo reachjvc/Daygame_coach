@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { existsSync, readdirSync } from "fs"
 import { join } from "path"
+import * as routes from "@/src/shared/routes"
 import * as trainingRoutes from "@/src/shared/trainingRoutes"
 import * as lifeMasteryRoutes from "@/src/shared/lifeMasteryRoutes"
 
@@ -30,12 +31,24 @@ import * as lifeMasteryRoutes from "@/src/shared/lifeMasteryRoutes"
 const APP = join(process.cwd(), "app")
 
 /** A route is served if the directory holds a page/route file, or a dynamic
- *  `[param]` child that does. Route groups `(name)` are not used here. */
-function isServed(dir: string): boolean {
+ *  `[param]` child that does. */
+function servesHere(dir: string): boolean {
   if (!existsSync(dir)) return false
   const entries = readdirSync(dir, { withFileTypes: true })
   if (entries.some((e) => e.isFile() && /^(page|route)\.(ts|tsx)$/.test(e.name))) return true
-  return entries.some((e) => e.isDirectory() && e.name.startsWith("[") && isServed(join(dir, e.name)))
+  return entries.some((e) => e.isDirectory() && e.name.startsWith("[") && servesHere(join(dir, e.name)))
+}
+
+/**
+ * Served at `app/<path>`, or through a route group: `app/(app)/settings/` serves
+ * `/settings`, because a folder named in parentheses only shares a layout and
+ * never appears in the address.
+ */
+function isServed(path: string): boolean {
+  if (servesHere(join(APP, path))) return true
+  return readdirSync(APP, { withFileTypes: true }).some(
+    (e) => e.isDirectory() && /^\(.+\)$/.test(e.name) && servesHere(join(APP, e.name, path)),
+  )
 }
 
 const SENTINEL = "__dynamic__"
@@ -46,6 +59,11 @@ function routesOf(mod: Record<string, unknown>, file: string): Array<[string, st
   for (const [name, value] of Object.entries(mod)) {
     if (typeof value === "string" && value.startsWith("/")) {
       out.push([file, name, value])
+    } else if (value && typeof value === "object" && !Array.isArray(value)) {
+      // `ROUTES` is an object of addresses: each entry is a constant in its own right.
+      for (const [key, inner] of Object.entries(value as Record<string, unknown>)) {
+        if (typeof inner === "string" && inner.startsWith("/")) out.push([file, `${name}.${key}`, inner])
+      }
     } else if (typeof value === "function" && value.length === 1) {
       const produced = (value as (s: string) => unknown)(SENTINEL)
       if (typeof produced === "string" && produced.includes(SENTINEL)) {
@@ -57,6 +75,7 @@ function routesOf(mod: Record<string, unknown>, file: string): Array<[string, st
 }
 
 const ROUTES = [
+  ...routesOf(routes, "src/shared/routes.ts"),
   ...routesOf(trainingRoutes, "src/shared/trainingRoutes.ts"),
   ...routesOf(lifeMasteryRoutes, "src/shared/lifeMasteryRoutes.ts"),
 ]
@@ -77,10 +96,10 @@ describe("every route constant has something behind it", () => {
      * it looked for a directory called `programs?program=` and reported that
      * the app serves nothing there, which is true and is not the point.
      */
-    const dir = join(APP, path.split("?")[0].replace(/^\/+|\/+$/g, ""))
+    const bare = path.split("?")[0].replace(/^\/+|\/+$/g, "")
     expect(
-      isServed(dir),
-      `${file} exports ${name}, which points at "${path}", but ${dir.replace(process.cwd() + "/", "")} ` +
+      isServed(bare),
+      `${file} exports ${name}, which points at "${path}", but app/${bare} ` +
         `serves nothing — no page.tsx, no route.ts, no dynamic [param] child.\n` +
         `A constant is not a page. Either build it, or do not name it yet.`,
     ).toBe(true)

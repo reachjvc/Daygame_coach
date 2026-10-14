@@ -50,54 +50,13 @@ import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
-import { isRedirectShim } from "@/tests/support/appRoutes"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
-import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
+import { gateRoutes, isRedirectShim, linksIn, productRoutes, symbolicLinksIn } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 const root = path.resolve(__dirname, "../../..")
 
 /** How far to follow imports out of a page before calling it someone else's screen. */
 const TREE_DEPTH = 6
-
-const rel = (file: string) => path.relative(root, file).replace(/\\/g, "/")
-
-/** Files the app actually ships — the prototypes under /test are not product. */
-function productFiles(): string[] {
-  const out: string[] = []
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (rel(full) === "app/test" || entry.name === "node_modules") continue
-        walk(full)
-      } else if (/\.tsx?$/.test(entry.name)) {
-        out.push(full)
-      }
-    }
-  }
-  for (const dir of ["src", "components", "app"]) walk(path.join(root, dir))
-  return out
-}
-
-/** Every real route: app/**\/page.tsx, minus the prototypes under /test. */
-function routePages(): { route: string; file: string }[] {
-  const out: { route: string; file: string }[] = []
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (entry.name === "test" && rel(full) === "app/test") continue
-        if (entry.name === "api") continue
-        walk(full)
-      } else if (entry.name === "page.tsx") {
-        const dirRel = path.relative(path.join(root, "app"), path.dirname(full))
-        out.push({ route: "/" + dirRel.replace(/\\/g, "/"), file: full })
-      }
-    }
-  }
-  walk(path.join(root, "app"))
-  return out
-}
 
 /** Resolve an import specifier to a file we can read, or null. */
 function resolveImport(spec: string, from: string): string | null {
@@ -139,112 +98,6 @@ function componentTree(file: string): Set<string> {
   return seen
 }
 
-/** Strip a query, a hash and a trailing slash — `/x?y=1` is a link to `/x`. */
-function normalize(target: string): string {
-  const bare = target.split("?")[0].split("#")[0]
-  return bare.length > 1 ? bare.replace(/\/$/, "") : bare
-}
-
-/**
- * Where a set of files sends people.
- *
- * Only navigation, not any string that happens to be a path: `href=`, the
- * router's push/replace, and a server `redirect()`.
- */
-function linksIn(files: Iterable<string>): Set<string> {
-  const out = new Set<string>()
-  const sources: string[] = []
-  const pattern = /(?:href=|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*["'`](\/[^"'`${}]*)["'`]/g
-  for (const file of files) {
-    let src: string
-    try {
-      src = fs.readFileSync(file, "utf-8")
-    } catch {
-      continue
-    }
-    for (const m of src.matchAll(pattern)) out.add(normalize(m[1]))
-    for (const target of symbolicLinksIn(src)) out.add(normalize(target))
-    sources.push(src)
-  }
-
-  /**
-   * `viceArchiveStep(flow.id)` — a link whose destination is decided by data.
-   *
-   * The vice hub draws a row per flow out of `modules.ts` and `plain.ts`, so
-   * which of the nine steps it points at is a fact about the data, not about
-   * the code, and no amount of reading the call site will say. Resolving it to
-   * every flow id NAMED IN THE SAME COMPONENT TREE is the honest answer: those
-   * are exactly the destinations this screen can produce.
-   *
-   * Not "every folder that exists" — that would excuse a route nothing points
-   * at, which is the one thing this file is for.
-   */
-  if (sources.some((src) => DYNAMIC_VICE_STEP.test(src))) {
-    for (const id of viceFlowIds()) out.add(viceArchiveStep(id))
-  }
-  return out
-}
-
-/** `viceArchiveStep(` with anything that is not a plain string in it. */
-const DYNAMIC_VICE_STEP = /viceArchiveStep\(\s*(?!["'`])/
-
-/**
- * The flow ids a dynamic `viceArchiveStep(...)` can produce, read from the type that
- * defines them. Add a flow and this picks it up; delete one and it stops
- * claiming a route that no longer exists. A hand-kept copy of the list here
- * would be a second place to forget.
- */
-function viceFlowIds(): string[] {
-  const src = fs.readFileSync(path.join(root, "src/vice/types.ts"), "utf-8")
-  const union = src.match(/export type ViceFlowId\s*=\s*([^\n]+)/)
-  if (!union) throw new Error("ViceFlowId is gone — this resolver needs updating")
-  return [...union[1].matchAll(/"([\w-]+)"/g)].map((m) => m[1])
-}
-
-/**
- * A LINK WRITTEN AS A CONSTANT IS STILL A LINK.
- *
- * Life Mastery's address lives in one place on purpose, so that moving it again
- * is a rename and an edit rather than a hunt (`src/shared/lifeMasteryRoutes.ts`).
- * The cost is that this file's grep for a literal path stops seeing those links,
- * and every route under it looks like an orphan — which is exactly what happened
- * the moment the constants went in.
- *
- * So the constants are RESOLVED here, imported from the same file the product
- * imports, which is why the two cannot drift. Still only navigation: the symbol
- * has to sit where a path would, so an import line that merely names it does not
- * count, the same rule the literal pattern follows.
- */
-function symbolicLinksIn(src: string): string[] {
-  const found: string[] = []
-  const pattern =
-    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(LIFE_MASTERY\b|QUIT_VICE_ARCHIVE\b|QUIT_VICE\b|viceArchiveStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
-  for (const m of src.matchAll(pattern)) {
-    if (m[2]) found.push(viceArchiveStep(m[2]))
-    else if (m[1] === "LIFE_MASTERY") found.push(LIFE_MASTERY)
-    // Before QUIT_VICE, because it is a prefix of the archive constant's name
-    // and an alternation takes the first branch that matches.
-    else if (m[1] === "QUIT_VICE_ARCHIVE") found.push(QUIT_VICE_ARCHIVE)
-    else if (m[1] === "QUIT_VICE") found.push(QUIT_VICE)
-  }
-  return found
-}
-
-/** Routes the app pushes you into — a gate is entered, not linked. */
-function gateRoutes(): Set<string> {
-  const found = new Set<string>()
-  for (const file of productFiles()) {
-    const src = fs.readFileSync(file, "utf-8")
-    for (const m of src.matchAll(/redirect\("(\/[^"]*)"\)/g)) {
-      const target = normalize(m[1])
-      const here = "/" + path.relative(path.join(root, "app"), path.dirname(file)).replace(/\\/g, "/")
-      if (target && target !== here) found.add(target)
-    }
-  }
-  return found
-}
-
-
 /** A page that shows nothing until the admin key is typed in. */
 function isAdminGated(tree: Set<string>): boolean {
   for (const file of tree) {
@@ -266,7 +119,7 @@ function buildGraph() {
   const edges = new Map<string, Set<string>>()
   const mustReach: string[] = []
 
-  for (const { route, file } of routePages()) {
+  for (const { route, file } of productRoutes()) {
     const tree = componentTree(file)
     edges.set(route, linksIn(tree))
 
@@ -311,7 +164,7 @@ describe("every page has a way in", () => {
   }
 
   it("has routes to check", () => {
-    expect(routePages().length).toBeGreaterThan(15)
+    expect(productRoutes().length).toBeGreaterThan(15)
     expect(mustReach.length).toBeGreaterThan(3)
   })
 
@@ -400,7 +253,7 @@ describe("every page has a way in", () => {
   /** Every product file that a live page can reach and that points at a bench page. */
   function benchLinkers(): Set<string> {
     const found = new Set<string>()
-    for (const { route, file } of routePages()) {
+    for (const { route, file } of productRoutes()) {
       if (route.startsWith("/test")) continue
       for (const f of componentTree(file)) {
         const rel = path.relative(root, f)
@@ -430,6 +283,23 @@ describe("every page has a way in", () => {
       invisible,
       `The detector cannot see these, so it would not catch a new one like them:\n${invisible.join("\n")}`
     ).toEqual([])
+  })
+
+  /**
+   * A LINK FROM THE ROUTE LIST IS SEEN.
+   *
+   * Every page address now comes from `ROUTES` (src/shared/routes.ts). If the
+   * resolver ever stopped reading those, every page would look like an orphan
+   * and this file would fail; worse, a change to the pattern could make it read
+   * an import line as a link. Both directions, checked on fixed text.
+   */
+  it("resolves a link written as a route-list entry", () => {
+    expect(symbolicLinksIn("<Link href={ROUTES.settings}>")).toEqual([ROUTES.settings])
+    expect(symbolicLinksIn("router.push(`${ROUTES.tracking}?tab=week`)")).toEqual([ROUTES.tracking])
+    expect(symbolicLinksIn("redirect(ROUTES.plan)")).toEqual([ROUTES.plan])
+    expect(symbolicLinksIn("{ label: \"Plan\", href: ROUTES.plan }")).toEqual([ROUTES.plan])
+    expect(symbolicLinksIn('import { ROUTES } from "@/src/shared/routes"')).toEqual([])
+    expect(symbolicLinksIn("const where = ROUTES.settings")).toEqual([])
   })
 
   it("counts only navigation, never a path that is merely named", () => {

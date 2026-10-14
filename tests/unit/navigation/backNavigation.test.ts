@@ -20,29 +20,15 @@ import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
 import { TAB_ROUTES } from "@/components/navTabs"
-import { coverageProblems, isRedirectShim, type CoverageReport } from "@/tests/support/appRoutes"
+import {
+  coverageProblems,
+  gateRoutes,
+  isRedirectShim,
+  productRoutes,
+  type CoverageReport,
+} from "@/tests/support/appRoutes"
 
 const root = path.resolve(__dirname, "../../..")
-
-/** Every real route: app/**\/page.tsx, minus the prototypes under /test. */
-function routePages(): { route: string; file: string }[] {
-  const out: { route: string; file: string }[] = []
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (entry.name === "test" && path.relative(root, full) === "app/test") continue
-        if (entry.name === "api") continue
-        walk(full)
-      } else if (entry.name === "page.tsx") {
-        const rel = path.relative(path.join(root, "app"), path.dirname(full))
-        out.push({ route: "/" + rel.replace(/\\/g, "/"), file: full })
-      }
-    }
-  }
-  walk(path.join(root, "app"))
-  return out
-}
 
 /** Resolve an import specifier to a file we can read, or null. */
 function resolveImport(spec: string, from: string): string | null {
@@ -82,40 +68,6 @@ function mentions(file: string, depth = 2, seen = new Set<string>()): string {
   return all
 }
 
-/**
- * ROUTES THE APP PUSHES YOU INTO, which are gates rather than sub-pages.
- *
- * `/preferences` is the case that forced this: the dashboard itself redirects
- * there until onboarding is finished, so a "back to Dashboard" control on it
- * would bounce straight back — a loop, not a way out. `/auth/login` is the same
- * shape. Derived by looking for `redirect("<route>")` anywhere in the app, so a
- * new gate exempts itself the moment something redirects into it.
- */
-function gateRoutes(): Set<string> {
-  const found = new Set<string>()
-  const walk = (dir: string) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) {
-        if (entry.name === "node_modules") continue
-        walk(full)
-      } else if (/\.tsx?$/.test(entry.name)) {
-        const src = fs.readFileSync(full, "utf-8")
-        for (const m of src.matchAll(/redirect\("(\/[^"]*)"\)/g)) {
-          const target = m[1].split("?")[0].replace(/\/$/, "")
-          const here = "/" + path.relative(path.join(root, "app"), path.dirname(full)).replace(/\\/g, "/")
-          // A page redirecting to itself is a shim, not a gate.
-          if (target && target !== here) found.add(target)
-        }
-      }
-    }
-  }
-  walk(path.join(root, "app"))
-  walk(path.join(root, "src"))
-  return found
-}
-
-
 describe("every screen has a way back", () => {
   /**
    * Walks the routes once and records WHY each was skipped, so the same pass
@@ -128,7 +80,7 @@ describe("every screen has a way back", () => {
     const skipped: Record<string, string> = {}
     const gates = gateRoutes()
 
-    for (const { route, file } of routePages()) {
+    for (const { route, file } of productRoutes()) {
       if (TAB_ROUTES.includes(route)) { skipped[route] = "renders the tab bar"; continue }
       // EXACTLY the redirect target, never its children -- the rule its sibling
       // routeReachability.test.ts already states at line 207. `/dashboard` is a
@@ -170,7 +122,7 @@ describe("every screen has a way back", () => {
    */
   it("still examines most of the app -- an exemption cannot empty it", () => {
     const { checked, skipped } = sweep()
-    const all = routePages().map((r) => r.route)
+    const all = productRoutes().map((r) => r.route)
 
     const report: CoverageReport = { checked, skipped, minChecked: 10 }
     expect(coverageProblems("backNavigation", report, all)).toEqual([])

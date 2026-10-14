@@ -305,6 +305,8 @@ visible.
 **First, record the start:** write `**Start SHA:** <output of git rev-parse HEAD>` under this
 heading and commit it with the plan. Part 2's reviews and the escape clause use it.
 
+**Start SHA:** `f9033db37d4ac52da1c72d5140323575ddfc65ce` (2026-10-14, session `daygame-coach-26`).
+
 Do it as **three kinds of commit, in order**. Each must pass `npm test` on its own.
 
 ### 1.A — The route list exists, and the test tooling understands it (one commit)

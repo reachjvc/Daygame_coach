@@ -94,6 +94,8 @@ describe("Life Mastery's address", () => {
     const offenders = productFiles()
       .filter((f) => !f.startsWith(routeFolder))
       .filter((f) => f !== path.join(root, "src/shared/lifeMasteryRoutes.ts"))
+      // The route list holds the same address while the two files are merged.
+      .filter((f) => f !== path.join(root, "src/shared/routes.ts"))
       .filter((f) => writesPath(code(fs.readFileSync(f, "utf-8")), LIFE_MASTERY))
       .map((f) => path.relative(root, f))
 
@@ -193,6 +195,7 @@ describe("Life Mastery's address", () => {
     for (const file of productFiles()) {
       if (owners.some((dir) => file.startsWith(dir))) continue
       if (file === path.join(root, "src/shared/lifeMasteryRoutes.ts")) continue
+      if (file === path.join(root, "src/shared/routes.ts")) continue
       const src = code(fs.readFileSync(file, "utf-8"))
       for (const stale of SUPERSEDED_LIFE_MASTERY_PATHS) {
         if (writesPath(src, stale)) {
