@@ -777,10 +777,17 @@ browser stay in step" fails on Firefox and Safari in CI — green in run 1, red 
 both attempts in runs 2 and 3, on both engines in run 3 — and passes on Chromium
 in every run, and 3 of 3 on WebKit locally against the dev server. In the second
 tab, Start never turns into Stop (`helpers/timetrack.ts:111`). Production build,
-non-Chromium engines, intermittent: possibly the cross-tab race the test exists
-for, on those engines. Not diagnosed; the next step is a trace of the second tab
-in CI (traces are off under CI on purpose, so run that lane with tracing on a
-branch, or reproduce against a local production build).
+non-Chromium engines, intermittent. *2026-10-14:* the test now says what each
+tab and the account held when it fails (3d243092). Run 38623226055 (Safari red,
+Firefox green): fifteen seconds after Start in the second tab, NO copy — either
+tab, the account — held "from tab B", running or not; so the start never took,
+or the whole state was replaced in the same tick. Ruled out: the click landing
+before React (the page is client-only, and the tab already showed "from tab A"
+from storage), the service worker (blocked; still failed), and a start made
+before the tab's first contact with the account (passes 4 of 4 on Chromium and
+WebKit locally). Next step: a trace from a failing CI run. Traces are off under
+CI by rule; turning them on for the nightly lanes is safe now that every account
+is a throwaway (Phase 9 step 3), but it is your named decision.
 
 **What changed from this plan, and why.** No shared build (Phase 9 step 1: it
 lengthens the critical path). No separate `public` lane (signed-out specs run in
@@ -816,11 +823,13 @@ production (the test backend applies it on top of the baseline).
   watermark: never pending, never sent, with "Saved to your account" on screen.
   Found through the test seed, which stamps one second ahead and lost a report
   filed half a second later (`src/vice/blackbox/useBlackBoxSync.ts`, `pendingSince`).
-- *The tracking stats row can be created and then not read.* CI logged "Failed to
-  create tracking stats: duplicate key" twice: the 23505 re-read added today came
-  back empty although the row exists, so that request's user-scoped read could
-  not see it. The dashboard degrades to "your tracking totals could not be read".
-  Not reproduced locally.
+- *Fixed 2026-10-14 (4ecc63f): a read repeated after a write, inside one page
+  render, got the first answer back.* Next.js memoizes identical `fetch` GETs for
+  a render, and supabase-js reads through `fetch`. Every new account's first
+  /dashboard/tracking hit it (its counters' re-read after a duplicate-key insert
+  was handed the earlier "no row"), and it turned e2e.yml red on 52d5e73e. Both
+  server clients now give every request its own signal, which opts out; 12
+  fresh-account loads went from 24 errors to 0, and CI's log from 2 to 0.
 
 **Found by the browser cut, not fixed:** the tracking history's "All" filter
 hides drafts; the custom report builder cannot save a notes-only report (400
