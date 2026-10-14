@@ -1,5 +1,5 @@
 import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText } from "lucide-react"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * WHERE THE TAB BAR CAN GO, as data rather than as markup.
@@ -21,7 +21,7 @@ import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
 const ROUTE_LABELS_LIFE_MASTERY = "Your plan"
 
 export const TABS = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
+  { label: "Dashboard", icon: LayoutDashboard, href: ROUTES.dashboard, exact: true },
   // NO GOALS TAB. The hub is archived at /test/archive/goals-hub and the
   // navigation is being rebuilt around one consolidated surface. Until that
   // exists, the plan is reachable by URL at /life-mastery, and nothing in the
@@ -38,10 +38,10 @@ export const TABS = [
    * It is a top-level thing people do several times a week; it belongs beside
    * the other things people do several times a week.
    */
-  { label: "Training", icon: Dumbbell, href: "/programs", exact: false },
-  { label: "Tracking", icon: BarChart3, href: "/dashboard/tracking", exact: false },
-  { label: "Scenarios", icon: Swords, href: "/dashboard/scenarios", exact: false },
-  { label: "Time", icon: Timer, href: "/dashboard/time", exact: false },
+  { label: "Training", icon: Dumbbell, href: ROUTES.training, exact: false },
+  { label: "Tracking", icon: BarChart3, href: ROUTES.tracking, exact: false },
+  { label: "Scenarios", icon: Swords, href: ROUTES.scenarios, exact: false },
+  { label: "Time", icon: Timer, href: ROUTES.time, exact: false },
 ] as const
 
 /** The Lair was a second goals surface. Deleted outright on 2026-09-09. */
@@ -71,10 +71,10 @@ export const MORE_ITEMS = [
    * entry at all, which is the cheaper answer to a question nobody needed to be
    * asked.
    */
-  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: LIFE_MASTERY },
-  { label: "Ask Coach", icon: HelpCircle, href: "/dashboard/qa" },
-  { label: "Articles", icon: BookOpen, href: "/dashboard/articles" },
-  { label: "Settings", icon: Settings, href: "/dashboard/settings" },
+  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: ROUTES.plan },
+  { label: "Ask Coach", icon: HelpCircle, href: ROUTES.coach },
+  { label: "Articles", icon: BookOpen, href: ROUTES.articles },
+  { label: "Settings", icon: Settings, href: ROUTES.settings },
 ] as const
 
 /** Every route the bar itself reaches: a destination, never a sub-page. */
@@ -95,12 +95,12 @@ export const HIDDEN_ROUTE_PREFIXES: string[] = [
   // currently doing any work. It is the answer for the day somebody mounts the
   // bar app-wide, which is the day this would otherwise sit on top of the
   // flow's own controls.
-  LIFE_MASTERY,
-  "/dashboard/tracking/review",
+  ROUTES.plan,
+  ROUTES.trackingReview,
   // The live workout screen: `RestBar` owns its bottom edge, and a rest
   // countdown you cannot see because a nav bar is over it is the one thing
   // that screen exists to show.
-  "/programs/live",
+  ROUTES.liveWorkout,
   // The time tracker draws its own six-section bar; two stacked bars would
   // take 120px of an 844px screen and leave you guessing which moves you
   // where. Its way out is the back arrow in its header.
@@ -110,7 +110,7 @@ export const HIDDEN_ROUTE_PREFIXES: string[] = [
   // second tab sending people somewhere with no bar, and the guard could not
   // tell that apart from the Training bug. A reason that is not in the data
   // is a reason no test can check.
-  "/dashboard/time",
+  ROUTES.time,
 ]
 
 export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
@@ -118,7 +118,7 @@ export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
 /** What to call a route in a back link, for the routes that have a name. */
 export const ROUTE_LABELS: Record<string, string> = {
   ...Object.fromEntries([...TABS, ...MORE_ITEMS].map((t) => [t.href, t.label])),
-  "/dashboard/tracking/history": "History",
-  [LIFE_MASTERY]: ROUTE_LABELS_LIFE_MASTERY,
-  "/programs": "Training",
+  [ROUTES.trackingHistory]: "History",
+  [ROUTES.plan]: ROUTE_LABELS_LIFE_MASTERY,
+  [ROUTES.training]: "Training",
 }

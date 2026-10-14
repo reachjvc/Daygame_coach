@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * Next 16 renamed middleware.ts to proxy.ts. This is the edge guard: it decides
@@ -90,7 +90,7 @@ export async function proxy(request: NextRequest) {
     // layout cannot be told WHICH page was asked for, so on its own it sends
     // everybody to the flow's front page; and because a route outside this list
     // never has its sign-in refreshed on the way past.
-    pathname.startsWith(LIFE_MASTERY)
+    pathname.startsWith(ROUTES.plan)
 
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL("/auth/login", request.url)

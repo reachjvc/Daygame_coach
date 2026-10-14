@@ -304,9 +304,11 @@ describe("every page has a way in", () => {
 
   it("counts only navigation, never a path that is merely named", () => {
     // ROUTE_LABELS names /programs, and named it throughout the time it was
-    // unreachable. If this ever starts counting, the test has lost its teeth.
+    // unreachable. Today its History entry is the one that is a label and
+    // never a link: Training is a real `href:` in the bar now. If this ever
+    // starts counting a label, the test has lost its teeth.
     const named = fs.readFileSync(path.join(root, "components/navTabs.ts"), "utf-8")
-    expect(named).toContain('"/programs"')
-    expect([...linksIn([path.join(root, "components/navTabs.ts")])]).not.toContain("/programs")
+    expect(named).toContain("[ROUTES.trackingHistory]")
+    expect([...linksIn([path.join(root, "components/navTabs.ts")])]).not.toContain(ROUTES.trackingHistory)
   })
 })

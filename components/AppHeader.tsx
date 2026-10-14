@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { Beaker, BookOpen, HelpCircle, LayoutDashboard, LogOut, Settings, ScrollText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
@@ -70,7 +70,7 @@ export function AppHeader({
     if (showDashboard) {
       navItems.push({
         type: "link",
-        href: "/dashboard",
+        href: ROUTES.dashboard,
         label: "Dashboard",
         icon: <LayoutDashboard className="size-4 mr-2" />,
         variant: "ghost",
@@ -101,7 +101,7 @@ export function AppHeader({
     if (currentPage !== "life-mastery") {
       navItems.push({
         type: "link",
-        href: LIFE_MASTERY,
+        href: ROUTES.plan,
         label: "Your plan",
         icon: <ScrollText className="size-4 mr-2" />,
         variant: "ghost",
@@ -118,7 +118,7 @@ export function AppHeader({
     if (showAskCoach) {
       navItems.push({
         type: "link",
-        href: "/dashboard/qa",
+        href: ROUTES.coach,
         label: "Ask Coach",
         icon: <HelpCircle className="size-4 mr-2" />,
         variant: "ghost",
@@ -128,7 +128,7 @@ export function AppHeader({
     if (showArticles) {
       navItems.push({
         type: "link",
-        href: "/dashboard/articles",
+        href: ROUTES.articles,
         label: "Articles",
         icon: <BookOpen className="size-4 mr-2" />,
         variant: "ghost",
@@ -138,7 +138,7 @@ export function AppHeader({
     if (showSettings) {
       navItems.push({
         type: "link",
-        href: "/dashboard/settings",
+        href: ROUTES.settings,
         label: "Settings",
         icon: <Settings className="size-4 mr-2" />,
         variant: "ghost",
@@ -179,7 +179,7 @@ export function AppHeader({
     if (showDashboard) {
       navItems.push({
         type: "link",
-        href: "/dashboard",
+        href: ROUTES.dashboard,
         label: "Dashboard",
         icon: <LayoutDashboard className="size-4 mr-2" />,
         variant: "ghost",
@@ -189,7 +189,7 @@ export function AppHeader({
     if (showArticles) {
       navItems.push({
         type: "link",
-        href: "/dashboard/articles",
+        href: ROUTES.articles,
         label: "Articles",
         icon: <BookOpen className="size-4 mr-2" />,
         variant: "ghost",

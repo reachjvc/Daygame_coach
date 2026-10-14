@@ -130,7 +130,7 @@ describe("Life Mastery's address", () => {
       `proxy.ts's matcher does not cover ${LIFE_MASTERY}. Add "${LIFE_MASTERY}/:path*" to it.`
     ).toBe(true)
     // And the check inside, which is what actually turns anyone away.
-    expect(proxy).toMatch(/pathname\.startsWith\(LIFE_MASTERY\)/)
+    expect(proxy).toMatch(/pathname\.startsWith\(ROUTES\.plan\)/)
   })
 
   it("is named by the service worker, which cannot import the constant", () => {
