@@ -14,6 +14,7 @@
  * only those. The one tagged @timing measures wall-clock time on purpose.
  */
 
+import type { Page } from '@playwright/test'
 import { test, expect } from './fixtures/test'
 import {
   STORAGE_KEY,
@@ -75,6 +76,44 @@ async function createProject(page: import('@playwright/test').Page, name: string
 
 const nav = (page: import('@playwright/test').Page, name: string | RegExp) =>
   page.getByRole('navigation').getByRole('button', { name })
+
+/**
+ * WHAT EACH TAB AND THE ACCOUNT HELD, for a failure that only happens in CI.
+ *
+ * "Two tabs stay in step" failed on Firefox and Safari in CI's production
+ * build (runs 38437166271, 38439853507) and never locally: the second tab's
+ * Start did not become Stop, or its entry never reached the list. The page
+ * snapshot Playwright keeps is the FIRST tab's, which says nothing about that.
+ * This puts both tabs' entries — running or not — and the account's beside the
+ * error, so the next red run says whose copy won.
+ */
+async function whatEachTabHolds(first: Page, second: Page): Promise<string> {
+  const entries = async (tab: Page) => {
+    const state = (await readState(tab).catch(() => null)) as { entries?: { description: string; stop: string | null }[] } | null
+    return (state?.entries ?? []).map((e) => `${e.description || '(none)'}${e.stop === null ? ' [running]' : ''}`)
+  }
+  // The sync line is a header button ("Saved. Saved to your account"); read them all rather than guess its other wordings.
+  const status = (tab: Page) =>
+    tab
+      .evaluate(() => [...document.querySelectorAll('header button')].map((b) => b.getAttribute('aria-label') ?? b.textContent ?? '').filter(Boolean).slice(0, 3).join(' | '))
+      .catch(() => '?')
+  return [
+    `first tab:  ${JSON.stringify(await entries(first))} · ${await status(first)}`,
+    `second tab: ${JSON.stringify(await entries(second))} · ${await status(second)}`,
+    `account:    ${JSON.stringify(await entriesOnAccount(first).catch((e) => [`unreadable: ${e}`]))}`,
+  ].join('\n')
+}
+
+/** Runs `steps`; if they fail, the error carries `context()`, read at the moment of failure. */
+async function explainedBy(context: () => Promise<string>, steps: () => Promise<void>): Promise<void> {
+  try {
+    await steps()
+  } catch (error) {
+    const said = await context().catch((e) => `(could not read: ${e})`)
+    if (error instanceof Error) error.message += `\n\n${said}`
+    throw error
+  }
+}
 
 test.describe('Toggl-style time tracker', () => {
   test.afterEach(async ({ page }) => {
@@ -452,11 +491,13 @@ test.describe('Toggl-style time tracker', () => {
     await expect(second.locator('main input[value="from tab A"]').first()).toBeVisible({ timeout: 20_000 })
 
     // now track in the second tab and watch the first one follow
-    await trackEntry(second, 'from tab B')
-    await expect(page.locator('main input[value="from tab B"]').first()).toBeVisible({ timeout: 10_000 })
+    await explainedBy(() => whatEachTabHolds(page, second), async () => {
+      await trackEntry(second, 'from tab B')
+      await expect(page.locator('main input[value="from tab B"]').first()).toBeVisible({ timeout: 10_000 })
 
-    // and the first tab's entry is still there — nothing was overwritten
-    await expect(page.locator('main input[value="from tab A"]').first()).toBeVisible()
+      // and the first tab's entry is still there — nothing was overwritten
+      await expect(page.locator('main input[value="from tab A"]').first()).toBeVisible()
+    })
     await second.close()
   })
 
