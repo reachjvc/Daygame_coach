@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/src/db/server"
+import { ROUTES } from "@/src/shared/routes"
 import { AppHeader } from "@/components/AppHeader"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { redirect } from "next/navigation"
@@ -40,7 +41,7 @@ export default async function ArchivedGoalsHubPage() {
     .single()
 
   if (!profile?.has_purchased) {
-    redirect("/dashboard")
+    redirect(ROUTES.dashboard)
   }
 
   return (

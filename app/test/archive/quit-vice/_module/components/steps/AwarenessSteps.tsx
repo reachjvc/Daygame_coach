@@ -25,7 +25,7 @@ import {
 } from "@/src/vice/viceService"
 import { Field, Panel, PrimaryButton, StepHeader, Why } from "@/src/vice/components/Ui"
 import type { StepProps } from "./BasicSteps"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { viceArchiveStep } from "../../../routes"
 
 // ---------------------------------------------------------------- count
@@ -455,7 +455,7 @@ export function StepDoors({ step, state, on }: StepProps) {
           return (
             // Same as Modules: no flow named is a data mistake, and the hub is the
             // destination that is never wrong. It used to link to `.../undefined`.
-            <Link key={option.id} href={option.flow ? viceArchiveStep(option.flow) : QUIT_VICE} className={shared}>
+            <Link key={option.id} href={option.flow ? viceArchiveStep(option.flow) : ROUTES.quitVice} className={shared}>
               {inner}
             </Link>
           )

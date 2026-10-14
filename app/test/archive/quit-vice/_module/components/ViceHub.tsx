@@ -31,7 +31,7 @@ import { HubGuided } from "./HubGuided"
 import { VersionSwitcher } from "./VersionSwitcher"
 import { useViceVersion } from "../hooks/useViceVersion"
 import { Panel, Stat } from "@/src/vice/components/Ui"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { viceArchiveStep } from "../../routes"
 import { BackLink } from "@/components/BackLink"
 
@@ -67,7 +67,7 @@ export function ViceHub() {
     <div className="min-h-screen bg-zinc-950 text-white" data-hydrated={loaded ? "true" : undefined}>
       <div className="max-w-3xl mx-auto px-6 py-10 pb-20">
         <BackLink
-          fallback={LIFE_MASTERY}
+          fallback={ROUTES.plan}
           fallbackLabel="Life Mastery"
           className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 hover:text-white transition-colors"
         />

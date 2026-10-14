@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { QUIT_VICE_ARCHIVE } from "./archive/quit-vice/routes"
 
 const testPages = [
@@ -163,7 +163,7 @@ const testPages = [
     // lives at /life-mastery. Kept on this list because this is where people
     // look for it, and pointed at its real address.
     name: "Life Mastery (North Star) — CANON, now live at /life-mastery",
-    href: LIFE_MASTERY,
+    href: ROUTES.plan,
     description: "The canonical life-planning flow, and the only one not in Archives. Thirteen steps, all reachable at any time: north star and values → your 10 and rating in each of the twelve areas → the one thing → the fork (want / will do / one routine) → templates, custom weeks, systems, experiences → focus, values, commit → track (pushes into real goals) → today",
     icon: Telescope,
   },
@@ -213,7 +213,7 @@ const testPages = [
     // The live one. The Black Box, reachable from Life Mastery's Vices routine
     // and from "Your plan" in the navigation's More sheet.
     name: "Quitting a vice — the Black Box, live at /life-mastery/quit-vice",
-    href: QUIT_VICE,
+    href: ROUTES.quitVice,
     description: "Every run you have had on one calendar chart, close calls filed on the same form as lapses, and a door that answers a 'maybe I could moderate' thought with your own record of it. On your account, on every device, and it opens with no connection. No streak counter anywhere, on purpose",
     icon: Waves,
   },
@@ -301,7 +301,7 @@ export default function TestPagesIndex() {
         {/* Header */}
         <div className="mb-8">
           <Button asChild variant="ghost" size="sm" className="mb-4">
-            <Link href="/dashboard">
+            <Link href={ROUTES.dashboard}>
               <ArrowLeft className="size-4 mr-2" />
               Back to Dashboard
             </Link>
