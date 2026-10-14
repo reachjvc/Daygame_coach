@@ -307,6 +307,23 @@ heading and commit it with the plan. Part 2's reviews and the escape clause use 
 
 **Start SHA:** `f9033db37d4ac52da1c72d5140323575ddfc65ce` (2026-10-14, session `daygame-coach-26`).
 
+**Status:** done 2026-10-14. Commits `d6b39e20` (1.A), `d5bf0a38`, `c612460c`, `642dd18b`,
+`a27767c3`, `dbeb9922`, `7323e917` (1.B), `7ac274e8` (1.C). Evidence:
+- `npm test` green at every commit (pre-commit hook); 4,731 unit tests after 1.C.
+- `routeList.test.ts` ("is the only place a page address is written out", comment-stripped) passes
+  over `app/`, `src/` and `components/`, `app/test/` included. The step 9 finder, which cannot see
+  block comments, prints only four prose lines inside them: `TrainingScreen.tsx:228`,
+  `TrainingCard.tsx:337`, `BlackBoxPage.tsx:279` and `:744`.
+- Type ratchet "90, none new"; lint ratchet "291, none new".
+- `npx playwright test --project=sweep-desktop --project=sweep-phone`: **106 passed (2.3m)** on
+  the local test backend.
+
+Differences from the steps, by content: the 1.B slices went in as five commits, not thirteen (the
+hook tests the whole tree either way). `tests/support/appRoutes.ts` gained `routeOfDir()`, one
+folder-to-address rule that also fixes `gateRoutes()`'s own-address check for route groups.
+`startLinkFor`'s `path` is typed `string` (a `ROUTES` default narrowed it). The bulk conversion used
+a scratch script that masks comments first, so prose quoting a path was left alone.
+
 Do it as **three kinds of commit, in order**. Each must pass `npm test` on its own.
 
 ### 1.A — The route list exists, and the test tooling understands it (one commit)
@@ -508,6 +525,17 @@ is `/`, under `/auth/`, or under `/test/` (never guarded; 404 in production by i
    - `/api/timetrack/sync` without a user: 401.
    - `isUnder`: `/time` is not under `/timeline`'s prefix and vice versa; `/plan` is under `/plan`.
    - The old "is gated by the proxy" string check from 1.C step 11 is deleted (this replaces it).
+
+**Status:** code done 2026-10-14 (`d36103d2`); **live acceptance blocked: B-DISK.** Unit evidence:
+`proxyPrivateByDefault.test.ts` runs Next's own matcher (`unstable_doesMiddlewareMatch`, the name
+this installed version exports; the docs call it `unstable_doesProxyMatch`) on every product page,
+two API prefixes, the API and the static files, then the signed-out answer on every private page;
+4,731 unit tests green; types and lint none new. It needed no Supabase mock: with no session
+cookie `getUser()` answers without a network call, as `testRoutesSealed.test.ts` already relied on.
+Not yet run: the `curl` loop, the sweep and the offline specs. At 19:13 UTC C: had **19.3 GiB**
+free, under the 20 GB line, so the `:3101` server was stopped seconds after starting and its
+folder deleted. Also: nothing listens on `:3000` (your dev server has not been restarted since the
+WSL crash), so there was no running copy to check signed out without starting one.
 
 **Acceptance:** `npm test` passes. On `:3101` (Appendix C), signed out, the "before Phase 4" loop:
 every product address answers 307 to login with `next`; `/`, `/auth/login`, `/sw.js` and
@@ -816,6 +844,14 @@ Recorded for the database move.
   names, run `npx playwright test <spec> --list`; if it lists nothing, find the spec's current
   project with `npx playwright test <spec> --list --project='*'` and use that one. Note the change
   under the phase.
+- **`next dev` with a new `NEXT_DIST_DIR` rewrites `tsconfig.json`** (it appends that folder's
+  `types` lines to `include`). Before committing, `git diff tsconfig.json`; if the only change is
+  your folder's lines, `git restore tsconfig.json`. Never commit it.
+- **The Playwright projects were consolidated on 2026-10-14**: `desktop`, `phone`, `timing`,
+  `timing-phone`, `firefox`, `webkit`, `android` and the three `sweep-*`; `chromium`, `training`,
+  `mobile-iphone` and the `setup` projects are gone, and lanes pick devices by tag (`@phone`,
+  `@engine`, `@timing`; `.claude/rules/testing.md`). Every project name in this plan that no longer
+  exists is resolved with the `--list` rule above.
 - **"Outside this plan's diff"** (the escape clause) means: `git log <Start SHA>..HEAD --format=%h -- <failing test file> <file it tests>`
   lists no commit made by this session. Quote that command's output and the failing test's author
   (`git log -1 --format='%h %an %s' -- <file>`) when using the clause.
