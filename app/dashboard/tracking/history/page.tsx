@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -53,7 +54,7 @@ export default function FieldReportHistoryPage() {
     <div className="max-w-4xl mx-auto px-4 py-8" data-testid="tracking-history-page">
       {/* Header */}
       <div className="mb-8">
-        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
         <h1 className="text-3xl font-bold">Field Report History</h1>
         <p className="text-muted-foreground mt-2">
           Review your past field reports and reflections
@@ -105,7 +106,7 @@ export default function FieldReportHistoryPage() {
               ? "You don't have any draft reports."
               : "Write your first field report to start reflecting on your sessions."}
           </p>
-          <Link href="/dashboard/tracking/report">
+          <Link href={ROUTES.trackingReport}>
             <Button>Write Field Report</Button>
           </Link>
         </Card>
@@ -228,7 +229,7 @@ function ReportCard({ report, isExpanded, onToggleExpand, onDelete, isDeleting }
               className="size-8 text-muted-foreground hover:text-primary"
               onClick={(e) => {
                 e.stopPropagation()
-                router.push(`/dashboard/tracking/report?edit=${report.id}`)
+                router.push(`${ROUTES.trackingReport}?edit=${report.id}`)
               }}
             >
               <Pencil className="size-4" />

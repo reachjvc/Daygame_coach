@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * MOVED. Life Mastery now lives at `/life-mastery`, on its own, rather than
@@ -19,5 +19,5 @@ export default async function GoalPlanPage({
   searchParams: Promise<{ step?: string }>
 }) {
   const { step } = await searchParams
-  redirect(step ? `${LIFE_MASTERY}?step=${encodeURIComponent(step)}` : LIFE_MASTERY)
+  redirect(step ? `${ROUTES.plan}?step=${encodeURIComponent(step)}` : ROUTES.plan)
 }

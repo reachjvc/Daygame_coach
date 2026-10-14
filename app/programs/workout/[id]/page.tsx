@@ -14,6 +14,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 import { requireAuth } from "@/src/db/auth"
 import { summaryFor } from "@/src/db/workoutRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
@@ -26,7 +27,7 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
   const auth = await requireAuth()
   // A page must return a page. `auth.response` is a Response, which is right
   // for a route handler and not a thing this can hand back.
-  if (!auth.success) redirect("/auth/login?next=/programs")
+  if (!auth.success) redirect(`/auth/login?next=${ROUTES.training}`)
 
   const { id } = await params
 
@@ -35,7 +36,7 @@ export default async function WorkoutReceiptPage({ params }: { params: Promise<{
   // A workout still open has a screen of its own; sending somebody to a
   // receipt for it would show a session that has not happened yet.
   if (!summary) notFound()
-  if (summary.unavailable) redirect("/programs")
+  if (summary.unavailable) redirect(ROUTES.training)
 
   const timezone = await getUserTimezone(auth.userId)
 

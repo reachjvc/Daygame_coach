@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/src/db/server"
+import { ROUTES } from "@/src/shared/routes"
 import { getUserGoals, rollGoalPeriods } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
@@ -69,7 +70,7 @@ export default async function LifeMasteryPage({
 
   return (
     <NorthStarFlow
-      backHref="/dashboard"
+      backHref={ROUTES.dashboard}
       backLabel="Dashboard"
       initialTab={initialTab}
       timezone={timezone}

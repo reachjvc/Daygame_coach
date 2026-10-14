@@ -1,6 +1,7 @@
 "use client"
 
 import { SessionTrackerPage } from "@/src/tracking/components/SessionTrackerPage"
+import { ROUTES } from "@/src/shared/routes"
 import { BackLink } from "@/components/BackLink"
 import { useTrackingAuth } from "../TrackingAuthContext"
 
@@ -13,7 +14,7 @@ export default function SessionPage() {
           Continue button — so leaving is recoverable and a screen you cannot
           leave is not. */}
       <div className="max-w-4xl mx-auto px-4 pt-6">
-        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" />
       </div>
       <SessionTrackerPage userId={userId} />
     </>

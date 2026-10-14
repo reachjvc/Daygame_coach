@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { DatingPreferencesGate } from "@/src/profile/components"
 import { toOnboardingInitialValues } from "@/src/profile/profileService"
@@ -26,7 +27,7 @@ export default async function PreferencesPage() {
     <div className="min-h-dvh bg-background">
       <DatingPreferencesGate
         initialValues={toOnboardingInitialValues(profile)}
-        next="/dashboard"
+        next={ROUTES.dashboard}
         heading="Who you want to practise with"
         intro="These answers shape the people you meet in scenarios. Nothing else in the app uses them, and you can change them whenever you like."
         submitLabel="Save"

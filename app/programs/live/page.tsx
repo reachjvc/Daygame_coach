@@ -7,6 +7,7 @@
  */
 
 import { redirect } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 import { requireAuth } from "@/src/db/auth"
 import { getLiveWorkout, lastSetsForLifts, prescriptionForDay } from "@/src/db/workoutRepo"
 import { getEnrollmentById } from "@/src/db/programRepo"
@@ -23,7 +24,7 @@ export default async function LiveWorkoutPage() {
   if (!auth.success) redirect("/auth/login")
 
   const live = await getLiveWorkout(auth.userId)
-  if (!live) redirect("/programs")
+  if (!live) redirect(ROUTES.training)
 
   let prescription: SessionPrescription | null = null
   /**

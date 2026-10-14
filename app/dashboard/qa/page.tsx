@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
 import { MobileTabBar } from "@/components/MobileTabBar"
@@ -23,7 +24,7 @@ export default async function DashboardQAPage() {
 
   // Redirect if no subscription
   if (!hasPurchased) {
-    redirect("/dashboard")
+    redirect(ROUTES.dashboard)
   }
 
   return (

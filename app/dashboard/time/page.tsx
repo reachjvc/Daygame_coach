@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 
 import { createServerSupabaseClient } from "@/src/db/server"
 import { TimetrackScreen } from "@/src/timetrack/components/TimetrackScreen"
@@ -25,7 +26,7 @@ export default async function TimetrackPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/login?next=/dashboard/time")
+  if (!user) redirect(`/auth/login?next=${ROUTES.time}`)
 
   return <TimetrackScreen />
 }

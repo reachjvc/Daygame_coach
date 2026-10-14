@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * What "Add to Home Screen" installs.
@@ -37,7 +38,7 @@ export default function manifest(): MetadataRoute.Manifest {
     // Home screens truncate at roughly 12 characters.
     short_name: "Daygame",
     description: "Practice approaching, track your sessions, and build the habits behind them.",
-    start_url: "/dashboard",
+    start_url: ROUTES.dashboard,
     scope: "/",
     display: "standalone",
     orientation: "portrait",

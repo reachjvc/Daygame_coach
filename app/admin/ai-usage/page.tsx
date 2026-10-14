@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import {
   Dialog,
   DialogContent,
@@ -194,7 +195,7 @@ export default function AdminAIUsagePage() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <BackLink fallback="/dashboard" fallbackLabel="Dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-2" />
+            <BackLink fallback={ROUTES.dashboard} fallbackLabel="Dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-2" />
             <h1 className="text-3xl font-bold">AI Usage Dashboard</h1>
           </div>
           <div className="flex gap-4">

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { ROUTES } from "@/src/shared/routes"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { getSettingsPageData, SettingsPage } from "@/src/settings"
 import { getTrainingSettings } from "@/src/db/workoutRepo"
@@ -22,7 +23,7 @@ export default async function SettingsPageWrapper() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/auth/login?next=${encodeURIComponent("/dashboard/settings")}`)
+    redirect(`/auth/login?next=${encodeURIComponent(ROUTES.settings)}`)
   }
 
   const training = await getTrainingSettings(user.id)

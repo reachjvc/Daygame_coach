@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * THE GATE, once, for the flow and everything under it.
@@ -27,7 +27,7 @@ export default async function LifeMasteryLayout({ children }: { children: React.
   // Encoded, though today's address needs no escaping. It is a value going
   // into a query string, and the day this moves to something carrying a `?` or
   // an `&` the unencoded version would silently truncate the return address.
-  if (!user) redirect(`/auth/login?next=${encodeURIComponent(LIFE_MASTERY)}`)
+  if (!user) redirect(`/auth/login?next=${encodeURIComponent(ROUTES.plan)}`)
 
   return <>{children}</>
 }
