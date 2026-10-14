@@ -29,6 +29,7 @@
  */
 
 import { enrollmentName } from "../data/catalog"
+import { ROUTES } from "@/src/shared/routes"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { AlertTriangle } from "lucide-react"
@@ -421,7 +422,7 @@ export function BuildYourWeek({ enrollments, draftId = null, onStarted }: Props)
            the one already running, so the old screen's enabled Start silently
            paused the very week it had just started. */
         <Button asChild size="lg" className="w-full" data-testid="week-already-running">
-          <Link href={`/programs?program=${already.id}`}>Already running — go to today&apos;s session</Link>
+          <Link href={`${ROUTES.training}?program=${already.id}`}>Already running — go to today&apos;s session</Link>
         </Button>
       ) : (
         <Button

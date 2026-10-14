@@ -46,14 +46,14 @@ import {
 } from "@/src/programs/forLifeMastery"
 import { DONE } from "@/src/programs/forLifeMastery"
 import { withReturn } from "@/src/shared/returnTo"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import type { NsRoutineProgram } from "@/src/goals/types"
 
 /** Where "back" goes from anything this card links to. */
-const HERE = `${LIFE_MASTERY}?step=templates`
+const HERE = `${ROUTES.plan}?step=templates`
 
-const PROGRAMS = "/programs?view=programs"
-const BUILD = "/programs?view=build"
+const PROGRAMS = `${ROUTES.training}?view=programs`
+const BUILD = `${ROUTES.training}?view=build`
 
 export interface TrainingProgramCardProps {
   /** The shared read, whole — `loading` and `error` are states this draws. */
@@ -231,7 +231,7 @@ export function TrainingProgramCard({
                 <Link href={change(one.id)}>Change program</Link>
               </Button>
               <Link
-                href={`/programs?program=${one.id}`}
+                href={`${ROUTES.training}?program=${one.id}`}
                 className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline underline-offset-4"
               >
                 Today&apos;s session ›

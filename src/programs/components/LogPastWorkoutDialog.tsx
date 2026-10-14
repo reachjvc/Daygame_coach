@@ -36,7 +36,7 @@ import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { effectiveProgram, scheduleDaysOrNone } from "../customize"
 import { enrollmentName, getProgram } from "../data/catalog"
 import { wallClockNow, wallClockToInstant } from "@/src/shared/dateUtils"
-import { LIVE_WORKOUT } from "@/src/shared/trainingRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { CHIP_ON } from "./trainingStyles"
 import type { ProgramEnrollment } from "../types"
 
@@ -137,7 +137,7 @@ export function LogPastWorkoutDialog({ enrollments, liveOpen, timezone }: Props)
       startedAt: wallClockToInstant(when, timezone),
     })
     if (outcome.kind === "started" || outcome.kind === "already-open") {
-      router.push(LIVE_WORKOUT)
+      router.push(ROUTES.liveWorkout)
       return
     }
     // `refused` and `unreachable` each carry their own sentence, and they mean
@@ -172,7 +172,7 @@ export function LogPastWorkoutDialog({ enrollments, liveOpen, timezone }: Props)
           {liveOpen ? (
             <p className="text-sm" data-testid="past-blocked-by-live">
               Finish the workout you have open first.{" "}
-              <a href={LIVE_WORKOUT} className="underline underline-offset-2">
+              <a href={ROUTES.liveWorkout} className="underline underline-offset-2">
                 Open it
               </a>
               .

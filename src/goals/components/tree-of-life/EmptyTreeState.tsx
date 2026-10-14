@@ -1,6 +1,7 @@
 "use client"
 
 import { Sprout, TreePine } from "lucide-react"
+import { ROUTES } from "@/src/shared/routes"
 import { Button } from "@/components/ui/button"
 
 interface EmptyTreeStateProps {
@@ -48,7 +49,7 @@ export function EmptyTreeState({ onCreateGoal, hasSoil }: EmptyTreeStateProps) {
 
         {!hasSoil && (
           <Button variant="outline" className="gap-2" asChild>
-            <a href="/dashboard/inner-game">
+            <a href={ROUTES.innerGame}>
               <Sprout className="h-4 w-4" />
               Discover your soil
             </a>

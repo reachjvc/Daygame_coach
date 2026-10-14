@@ -27,7 +27,7 @@ import { TRAINING_CARD, TRAINING_CARD_BODY, CHIP_ON } from "./trainingStyles"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { WeekStrip } from "./WeekStrip"
-import { LIVE_WORKOUT, workoutReceipt, withFrom } from "@/src/shared/trainingRoutes"
+import { ROUTES, withFrom, workoutReceipt } from "@/src/shared/routes"
 import type {
   SessionPrescription,
   TrainingCardState,
@@ -103,7 +103,7 @@ export function TodayCard({
     const outcome = await startWorkoutRequest({ enrollmentId, dayId })
     setStarting(false)
     if (outcome.kind === "started" || outcome.kind === "already-open") {
-      go(LIVE_WORKOUT)
+      go(ROUTES.liveWorkout)
       return
     }
     setError(outcome.message)
@@ -141,7 +141,7 @@ export function TodayCard({
           variant="outline"
           className="w-full"
           data-testid="other-workout-open"
-          onClick={() => go(LIVE_WORKOUT)}
+          onClick={() => go(ROUTES.liveWorkout)}
         >
           {elsewhere}
         </Button>
@@ -155,7 +155,7 @@ export function TodayCard({
             size="lg"
             className="w-full"
             data-testid="resume-workout"
-            onClick={() => go(LIVE_WORKOUT)}
+            onClick={() => go(ROUTES.liveWorkout)}
           >
             Resume · {state.setsTicked} {state.setsTicked === 1 ? "set" : "sets"} in
           </Button>
@@ -169,7 +169,7 @@ export function TodayCard({
             variant="outline"
             className="w-full"
             data-testid="resume-workout"
-            onClick={() => go(LIVE_WORKOUT)}
+            onClick={() => go(ROUTES.liveWorkout)}
           >
             Finish or discard {state.startedOnWeekday}&apos;s workout
           </Button>

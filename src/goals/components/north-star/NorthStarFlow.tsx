@@ -93,7 +93,7 @@ import { ValuesWork } from "./ValuesWork"
 import { RecapTab, type RecapHandlers } from "./RecapTab"
 import { BackLink } from "@/components/BackLink"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 // ONE DOOR into the gym slice — see src/programs/forLifeMastery.ts.
 import {
   useActiveEnrollments,
@@ -124,7 +124,7 @@ function newRunId(): string {
  * address should be able to get back to.
  */
 export function NorthStarFlow({
-  backHref = "/dashboard",
+  backHref = ROUTES.dashboard,
   backLabel = "Dashboard",
   initialTab = "star",
   timezone = "UTC",
@@ -182,7 +182,7 @@ export function NorthStarFlow({
   const setTab = useCallback((next: NorthStarTabId) => {
     setTabState(next)
     try {
-      window.history.replaceState(null, "", `${LIFE_MASTERY}?step=${next}`)
+      window.history.replaceState(null, "", `${ROUTES.plan}?step=${next}`)
     } catch {
       /* The step still changes; only the address is left behind. */
     }

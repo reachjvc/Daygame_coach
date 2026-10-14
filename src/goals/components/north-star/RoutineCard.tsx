@@ -37,7 +37,7 @@ import type { LinkedProgram, NsArea, NsRoutine } from "@/src/goals/types"
 import { NS_SPLITS, ROUTINES_INTRO, ROUTINE_BLUEPRINT_MAP, SERVES_COPY } from "@/src/goals/data/northStar"
 import { libraryStepsInStack, presetCost, routineCoverage, routineIsUntouched, routineMinutes, routineSummary, splitPreview } from "@/src/goals/northStarService"
 import { Peek } from "./Peek"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { withReturn } from "@/src/shared/returnTo"
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -246,7 +246,7 @@ export function RoutineCard({
               so the routine links to it rather than trying to be it. */}
           {routine.blueprintId === "vices" && (
             <Link
-              href={QUIT_VICE}
+              href={ROUTES.quitVice}
               className="block rounded-xl border border-violet-400/25 bg-violet-500/[0.06] px-3.5 py-2.5 hover:border-violet-400/50 hover:bg-violet-500/[0.1] transition-colors"
             >
               <span className="block text-[12px] text-violet-100">Working on one of these properly →</span>
@@ -619,7 +619,7 @@ export function RoutineCard({
 function TrainingWeek({ linked }: { linked: LinkedProgram }) {
   const change = (
     <Link
-      href={withReturn("/programs", `${LIFE_MASTERY}?step=systems`)}
+      href={withReturn(ROUTES.training, `${ROUTES.plan}?step=systems`)}
       className="inline-flex min-h-11 items-center text-[12px] text-zinc-300 underline underline-offset-4 hover:text-white"
     >
       Change on the Training page ›

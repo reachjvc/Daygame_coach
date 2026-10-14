@@ -17,9 +17,9 @@ import { SummaryStep } from "./SummaryStep"
 import { GoalCatalogPicker } from "../GoalCatalogPicker"
 import { getDaygamePathL1, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 import type { DaygamePath, HabitRampStep, MilestoneLadderConfig, SetupCustomGoal, SetupCustomCategory } from "@/src/goals/types"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
-export function GoalSetupWizard({ returnPath = LIFE_MASTERY }: { returnPath?: string } = {}) {
+export function GoalSetupWizard({ returnPath = ROUTES.plan }: { returnPath?: string } = {}) {
   const router = useRouter()
   const catalog = useSetupCatalog()
 

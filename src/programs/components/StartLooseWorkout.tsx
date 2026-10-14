@@ -14,6 +14,7 @@
  */
 
 import { useState } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useRouter } from "next/navigation"
 import { Loader2, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -69,7 +70,7 @@ export function StartLooseWorkout({
         variant="outline"
         className="w-full"
         data-testid="open-workout-door"
-        onClick={() => router.push("/programs/live")}
+        onClick={() => router.push(ROUTES.liveWorkout)}
       >
         {openWorkoutInvitation(cardState) ??
           (live.enrollmentId ? "Finish the workout you have open first" : "Back to your workout")}
@@ -84,7 +85,7 @@ export function StartLooseWorkout({
     const outcome = await startWorkoutRequest({})
     setStarting(false)
     if (outcome.kind === "started" || outcome.kind === "already-open") {
-      router.push("/programs/live")
+      router.push(ROUTES.liveWorkout)
       return
     }
     setError(outcome.message)

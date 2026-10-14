@@ -19,7 +19,7 @@ import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
 import { TRAINING_COLUMN, TRAINING_CARD, TRAINING_CARD_BODY } from "./trainingStyles"
 import { describeLoggedSet } from "../programsService"
 import { collapseSets, describeSessionRow } from "@/src/health/healthService"
-import { PROGRAMS } from "@/src/shared/trainingRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import type { ReactNode } from "react"
 import type { WorkoutSummary } from "../types"
 
@@ -296,7 +296,7 @@ export function WorkoutReceipt({
             rather than saying "Back". A hand-rolled link here would be a
             second answer to "where does Back go". */}
         <BackLink
-          fallback={PROGRAMS}
+          fallback={ROUTES.training}
           fallbackLabel="Training"
           className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         />

@@ -25,7 +25,7 @@
  * page too.
  */
 
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 export type StartRampId = "write" | "ten" | "day" | "questions" | "week" | "experiences"
 
 export interface StartRamp {
@@ -177,7 +177,7 @@ export const PATHS_COPY = {
   note: "Nothing here is a commitment. You can do all three, in any order, and come back to this page from the rail at the top.",
   viceLabel: "Quit a vice",
   viceBlurb: "The one you would stop if you could. A plan for it, on its own page.",
-  viceHref: QUIT_VICE,
+  viceHref: ROUTES.quitVice,
   /** On the routine doors, once the routine has something in it. */
   routineSteps: (n: number) => `${n} ${n === 1 ? "step" : "steps"} in it`,
   routineEmpty: "Nothing in it yet",

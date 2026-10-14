@@ -3,7 +3,7 @@
 import { useState, useEffect, lazy, Suspense } from "react"
 import { Activity, ChevronDown, ChevronRight } from "lucide-react"
 import { TrainingCard } from "@/src/programs/forLifeMastery"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 const WeightTracker = lazy(() =>
   import("@/src/health/components/WeightTracker").then((m) => ({ default: m.WeightTracker }))
@@ -65,7 +65,7 @@ export function HealthTrackingPanel() {
             <WeightTracker />
             <SleepTracker />
             <NutritionTracker />
-            <TrainingCard from={`${LIFE_MASTERY}?step=track`} />
+            <TrainingCard from={`${ROUTES.plan}?step=track`} />
           </div>
         </Suspense>
       )}

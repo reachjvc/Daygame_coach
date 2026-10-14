@@ -14,7 +14,7 @@
  */
 
 import { useLoad } from "@/src/shared/useLoad"
-import { TRAINING_DOOR_API } from "@/src/shared/trainingRoutes"
+import { TRAINING_DOOR_API } from "@/src/shared/routes"
 import type { TrainingDoorFacts } from "../types"
 
 /**

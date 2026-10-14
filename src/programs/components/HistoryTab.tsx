@@ -37,7 +37,7 @@ import { describeSessionRow, isWorkingSet, workingVolumeKg } from "@/src/health/
 import { describeLoggedSet, fromKg } from "../programsService"
 import { DISPLAY_LOCALE, dateKeyLabel } from "@/src/shared/dateUtils"
 import { DEFAULT_SESSION_TYPE, UNIT_CONFIG } from "../config"
-import { TRAINING_HISTORY, withFrom, workoutReceipt } from "@/src/shared/trainingRoutes"
+import { TRAINING_HISTORY, withFrom, workoutReceipt } from "@/src/shared/routes"
 import { LogPastWorkoutDialog } from "./LogPastWorkoutDialog"
 import type { ProgramEnrollment, UnitSystem } from "../types"
 import type { WorkoutLogRow, WorkoutSetRow } from "@/src/health/types"

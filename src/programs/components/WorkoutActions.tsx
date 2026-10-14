@@ -29,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { PROGRAMS } from "@/src/shared/trainingRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { deleteWorkout, readWorkoutSets } from "../workoutActions"
 import { WorkoutCorrection } from "./WorkoutCorrection"
 import type { UnitSystem } from "../types"
@@ -95,7 +95,7 @@ export function WorkoutActions({
      * exists — staying would leave a receipt for nothing, and a refresh would
      * 404.
      */
-    router.push(`${PROGRAMS}?tab=history`)
+    router.push(`${ROUTES.training}?tab=history`)
   }
 
   if (editing) {

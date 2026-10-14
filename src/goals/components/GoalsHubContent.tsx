@@ -23,7 +23,7 @@ import { ActionToast } from "./ActionToast"
 import { FireStreakBadge } from "@/src/tracking/components/FireStreakBadge"
 import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData, pruneTreeToIds } from "../goalsService"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, MilestoneCelebrationData } from "../types"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 const VIEW_STORAGE_KEY = "goals-view-mode"
 const VALID_VIEWS: GoalViewMode[] = ["today", "hierarchy", "tree", "tree-of-life", "orrery"]
@@ -54,7 +54,7 @@ function getInitialView(): GoalViewMode {
  * editing and the weekly review all still work on what is shown.
  */
 export function GoalsHubContent({
-  setupPath = LIFE_MASTERY,
+  setupPath = ROUTES.plan,
   scope,
 }: {
   setupPath?: string
@@ -339,7 +339,7 @@ export function GoalsHubContent({
     try {
       const response = await fetch("/api/goals", { method: "DELETE" })
       if (!response.ok) throw new Error("Failed to delete all goals")
-      router.push(LIFE_MASTERY)
+      router.push(ROUTES.plan)
     } catch {
       showToast("Failed to delete goals", "error")
       setIsDeletingAll(false)

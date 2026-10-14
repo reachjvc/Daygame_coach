@@ -42,7 +42,7 @@ import { enrollmentName } from "../data/catalog"
 import { trainingCardState, weekdayNameIn } from "../programsService"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
 import { useTrainingDoor } from "../hooks/useTrainingDoor"
-import { LIVE_WORKOUT, PROGRAMS, programSession, withFrom, workoutReceipt } from "@/src/shared/trainingRoutes"
+import { ROUTES, programSession, withFrom, workoutReceipt } from "@/src/shared/routes"
 import { WEEKDAY_SHORT } from "../config"
 import { toZonedDate } from "@/src/shared/dateUtils"
 import type { AlsoRunning, TrainingCardState, TrainingDoorFacts } from "../types"
@@ -247,7 +247,7 @@ export function TrainingCard({ from, className }: { from: string; className?: st
           </p>
           {/* NEVER a Start here: it could collide with a workout that is open
               and that this card cannot currently see. */}
-          <TheButton onClick={() => router.push(PROGRAMS)}>Open training</TheButton>
+          <TheButton onClick={() => router.push(ROUTES.training)}>Open training</TheButton>
         </div>
       </Card>
     )
@@ -276,7 +276,7 @@ export function TrainingCard({ from, className }: { from: string; className?: st
     // A workout that was ALREADY open is not a failure: it is the thing the
     // person was reaching for. Both land on the live screen.
     if (outcome.kind === "started" || outcome.kind === "already-open") {
-      router.push(withFrom(LIVE_WORKOUT, from))
+      router.push(withFrom(ROUTES.liveWorkout, from))
       return
     }
 
@@ -338,7 +338,7 @@ function LabelRow({ name, enrollmentId }: { name: string | null; enrollmentId: s
            which with two running is a list asking you to pick the one the card
            had just told you about. */
         <Link
-          href={enrollmentId ? programSession(enrollmentId) : PROGRAMS}
+          href={enrollmentId ? programSession(enrollmentId) : ROUTES.training}
           data-testid="training-card-program"
           className="truncate text-xs text-muted-foreground hover:underline"
         >
@@ -387,7 +387,7 @@ function Action({
   router: ReturnType<typeof useRouter>
   from: string
 }) {
-  const live = () => router.push(withFrom(LIVE_WORKOUT, from))
+  const live = () => router.push(withFrom(ROUTES.liveWorkout, from))
   const spinner = starting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />
 
   switch (state.kind) {
@@ -445,7 +445,7 @@ function Action({
       )
     case "finished":
       return (
-        <TheButton onClick={() => router.push(PROGRAMS)} testId="training-card-next">
+        <TheButton onClick={() => router.push(ROUTES.training)} testId="training-card-next">
           Pick what&apos;s next
         </TheButton>
       )
@@ -471,7 +471,7 @@ function SecondaryLink({ state }: { state: TrainingCardState }) {
   if (!label) return null
   return (
     <Link
-      href={PROGRAMS}
+      href={ROUTES.training}
       className="inline-flex min-h-11 items-center text-sm text-primary hover:underline"
     >
       {label}

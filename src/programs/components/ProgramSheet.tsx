@@ -47,7 +47,7 @@ import { refreshEnrollments } from "../hooks/useEnrollment"
 import { resetConfirmText, skipConfirmText, skipRefusal } from "../programsService"
 import { effectiveProgram } from "../customize"
 import { getProgram, enrollmentName } from "../data/catalog"
-import { PROGRAMS } from "@/src/shared/trainingRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { UNIT_CONFIG } from "../config"
 import type { ProgramEnrollment, UnitSystem } from "../types"
 
@@ -134,7 +134,7 @@ export function ProgramSheet({
     if (what === "end") {
       // Ended programs are not on this screen any more, so staying here would
       // show a card for something that stopped existing.
-      router.replace(`${PROGRAMS}?view=programs`)
+      router.replace(`${ROUTES.training}?view=programs`)
       return
     }
     /**
@@ -217,7 +217,7 @@ export function ProgramSheet({
         <SheetRow icon={RotateCcw} onClick={() => setAsking("reset")} testId="sheet-reset">
           Reset to start
         </SheetRow>
-        <SheetRow icon={ListOrdered} href={`${PROGRAMS}?view=programs`} testId="sheet-all">
+        <SheetRow icon={ListOrdered} href={`${ROUTES.training}?view=programs`} testId="sheet-all">
           All programs
         </SheetRow>
         <SheetRow icon={Trash2} destructive onClick={() => setAsking("end")} testId="sheet-end">

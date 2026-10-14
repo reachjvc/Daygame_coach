@@ -23,7 +23,7 @@ import { refreshEnrollments, useActiveEnrollments, useEnrollment } from "../hook
 import { enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
 import { formatDateOnly, computePrescription, openWorkoutInvitation } from "../programsService"
-import { LIVE_WORKOUT } from "@/src/shared/trainingRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { LEVEL_LABELS } from "../config"
 import type {
   EnrollmentDetail,
@@ -174,7 +174,7 @@ export function ProgramsApp({
       variant="outline"
       className="w-full"
       data-testid="open-workout-door"
-      onClick={() => router.push(LIVE_WORKOUT)}
+      onClick={() => router.push(ROUTES.liveWorkout)}
     >
       {openWorkoutDoor}
     </Button>

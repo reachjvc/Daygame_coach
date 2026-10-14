@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback, useRef, type ReactNode } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import {
   PILLARS,
   OBJECTIVES,
@@ -1931,7 +1932,7 @@ export function GoalsConfigStep({
         return (
           <div className="mt-5">
             <Button asChild variant="outline" size="sm">
-              <Link href={withReturn("/programs?view=programs", "/test/new-goals")}>
+              <Link href={withReturn(`${ROUTES.training}?view=programs`, "/test/new-goals")}>
                 Pick a program on the Training page ›
               </Link>
             </Button>

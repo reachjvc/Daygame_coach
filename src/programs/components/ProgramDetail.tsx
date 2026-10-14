@@ -34,6 +34,7 @@
  */
 
 import Link from "next/link"
+import { ROUTES } from "@/src/shared/routes"
 import { useMemo, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -446,7 +447,7 @@ export function ProgramDetail({ programId, enrollments, onBack, onEnrolled }: Pr
             /* Not a second Start — see `alreadyRunning`. The way in, not a
                way to lose the weeks already on it. */
             <Button asChild className="h-auto whitespace-normal py-2 text-center" data-testid="program-already-running">
-              <Link href={`/programs?program=${alreadyRunning.id}`}>
+              <Link href={`${ROUTES.training}?program=${alreadyRunning.id}`}>
                 Already running — go to today&apos;s session
               </Link>
             </Button>

@@ -19,6 +19,7 @@
  */
 
 import { isTimedLift } from "@/src/programs/data/exerciseLibrary"
+import { ROUTES } from "@/src/shared/routes"
 import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -338,7 +339,7 @@ export function LiveWorkoutScreen({
           onFinish={live.finish}
           // Before saving this is "Keep going" and goes back to the sets. After
           // saving there are no sets to go back to, so it leaves.
-          onCancel={() => (workout ? setFinishing(false) : router.push("/programs"))}
+          onCancel={() => (workout ? setFinishing(false) : router.push(ROUTES.training))}
         />
       </div>
     )
@@ -359,7 +360,7 @@ export function LiveWorkoutScreen({
           {live.endedMessage ?? "This workout is finished."}
         </p>
         <Button asChild className="mt-3">
-          <Link href="/programs">Back to training</Link>
+          <Link href={ROUTES.training}>Back to training</Link>
         </Button>
       </div>
     )
@@ -1116,7 +1117,7 @@ function Elapsed({
             how thirteen of them ended up disagreeing about where "back" was;
             `tests/unit/navigation/backNavigation.test.ts` fails on a new one. */}
         <BackLink
-          fallback="/programs"
+          fallback={ROUTES.training}
           fallbackLabel="Training"
           className="inline-flex min-h-11 shrink-0 items-center text-xs"
         />

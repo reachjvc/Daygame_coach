@@ -44,9 +44,9 @@ import { oneThingCountdown, oneThingPrompt, oneThingStage, type OneThing } from 
 import { NO_PUSHED_GOALS, todayItems, todayProgress } from "@/src/goals/northStarTrackService"
 import type { TrainingTicks } from "@/src/goals/dayTicks"
 import { withReturn } from "@/src/shared/returnTo"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
-const PLAN_PATH = LIFE_MASTERY
+const PLAN_PATH = ROUTES.plan
 /**
  * WHERE THESE LINKS CAME FROM, carried on the link.
  *
@@ -54,7 +54,7 @@ const PLAN_PATH = LIFE_MASTERY
  * control aimed at the goals hub. Without the return address, opening your plan
  * from here and pressing back lands you somewhere you have never been.
  */
-const HERE = "/dashboard/tracking"
+const HERE = ROUTES.tracking
 
 /* The shape of the reply is `OneThing` from `oneThingService` — the same type
    the route builds it from. This file used to redeclare a four-field version of

@@ -37,7 +37,7 @@ import type {
   TrainingCardState,
   UnitSystem,
 } from "../types"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /* Two more tabs, each a year of workouts and a pile of charts. Nobody who stays
    on today's session downloads either. */
@@ -206,7 +206,7 @@ export function TrainingScreen({
       */}
       <div data-testid="training-screen" className={`${TRAINING_COLUMN} pb-tab-bar pt-4`}>
         <BackLink
-          fallback="/dashboard"
+          fallback={ROUTES.dashboard}
           fallbackLabel="Dashboard"
           className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         />
@@ -231,7 +231,7 @@ export function TrainingScreen({
           <span className="text-xs font-normal text-muted-foreground">
             · part of your{" "}
             <Link
-              href={LIFE_MASTERY}
+              href={ROUTES.plan}
               className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-foreground"
             >
               Life Mastery plan
