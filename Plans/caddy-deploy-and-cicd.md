@@ -1,13 +1,13 @@
 # Self-hosting behind Caddy, and a GitHub Actions pipeline that deploys it
 
-**Status:** Phases 0–5 executed 2026-10-13 (session daygame-coach-6e, renamed daygame-coach-c5 after
-WSL restarted). Phases 1–3 and 5 done. Phase 4 done except steps 4.6–4.7: this machine cannot pull a
-private GHCR image yet, because the GitHub CLI login has no `read:packages` scope (B-GH, half open).
-Staging publishing was switched on, and its first live run stopped at the privacy check as designed:
-the package GitHub created was **public**. **2026-10-14:** the owner granted `read:packages` and made
-the package private; this machine is logged in to GHCR and publishing is on again (Phase 4, 4.6–4.7).
-Evidence is quoted under each phase; what is still open is in "Blocker state after Phases 1–5" and
-under the STOP line. Phases 6–7 wait for the STOP line (a domain and a server).
+**Status:** **Phases 0–5 done** (executed 2026-10-13 and 2026-10-14 by session daygame-coach-6e,
+renamed daygame-coach-c5 after WSL restarted). CI now publishes a private staging image for every
+green push to `training-rebuild`, and this machine's deploy agent puts it on https://localhost within
+about a minute of publishing. On 2026-10-14 the owner unblocked the last two steps: `read:packages`
+for the GitHub CLI, and the staging package set private after the first live run found it public.
+`main` was fast-forwarded the same evening (R8). Evidence is quoted under each phase; what is still
+open is in "Blocker state after Phases 1–5" and under the STOP line. Phases 6–7 wait for the STOP
+line (a domain and a server).
 
 **Written 2026-10-13** for an outside consultant who does not know this project, and for the AI session
 that executes it. The `/goal` prompts are at the end. Three independent reviewers checked the plan
@@ -285,7 +285,8 @@ what happened, not a guess.
 | B-DEVSERVER | **Open, and the dev server is down.** The WSL restart at 17:49 stopped the owner's `npm run dev` on :3000. This plan does not start it (R11). | `curl http://localhost:3000/`: 000 after the restart (200 before) |
 | B-CI-ARTIFACTS / R12 | **R12 done by daygame-coach-bf**: the three test accounts have new passwords, every session revoked, the 10 reports holding the old ones deleted, `.env.local` and the CI secrets updated. New report artifacts keep being uploaded by e2e.yml (23 now); since f92a16f1 they type passwords through `fillSecret`, so their step names hold none (not downloaded here). | bf's message 2026-10-13; `gh api repos/reachjvc/Daygame_coach/actions/artifacts`: "total_count=23" |
 | B-GHCR | **Staging package closed 2026-10-14**: the owner made `daygame-coach-staging` private; it stays linked to the repository, which is why its settings show no separate "Manage Actions access" list. Anonymous token request now: 401. The production package and the two read-only tokens (R5) are still open. Before that: **Open, and now concrete.** The first live `image-staging` run pushed an empty placeholder to create `ghcr.io/reachjvc/daygame-coach-staging`; GitHub made the new package **public**, as this plan's "What would make this plan wrong" foresaw, and the privacy check stopped the job before any real image. The package holds only that placeholder: one text file, nothing from the app. CI no longer creates packages (8c17898d), and `STAGING_PUBLISH` is `off` again. | run 38429479662: "ghcr.io/reachjvc/daygame-coach-staging:placeholder can be read without logging in: the package is PUBLIC. Stopping before any image is pushed."; anonymous manifest request: 200 |
-| B-DNS, B-HETZNER, B-TAILSCALE, B-MAIN, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
+| B-MAIN | **Closed 2026-10-14**: `main` was fast-forwarded to 4ecc63fc372c085b6fb6a33b91a112a0d6413a52 (from c1680654) at 19:49 UTC by daygame-coach-ff, with the owner's approval as that session reported it. Main's CI on it: success, with `image-production` skipped because `PRODUCTION_PUBLISH` is unset. Vercel redeploys `main`, so production now runs current code (on Node 24 through `engines`). | `git ls-remote`: "4ecc63fc… refs/heads/main"; `git merge-base --is-ancestor origin/main origin/training-rebuild`: true |
+| B-DNS, B-HETZNER, B-TAILSCALE, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
 
 # OPEN QUESTIONS — every one decided, with the cost if the decision is wrong
 
@@ -874,6 +875,15 @@ reaches https://localhost with no person involved.
   Timing, plainly: live 3 min 12 s after the image job ended, because the timer was only switched on
   at 21:18; from the agent's pickup to live took 65 s, most of it the first pull. With the timer on,
   the bound is one timer interval (60 s) plus that.
+  **Steady state, measured with the timer already on:** 5f0330050ec3477d1cbb2977607da95c09d6df8f's
+  `image-staging` completed at 19:58:14 UTC; journal "21:58:09 agent: new digest: …@sha256:783c3524…",
+  "21:59:15 deploy: healthy: /api/healthz answers 200 with commit
+  5f0330050ec3477d1cbb2977607da95c09d6df8f, inside and through Caddy (proto https)" — **live about one
+  minute after the image job finished**. 4ecc63fc's image went the same way (pushed 19:48:00, live
+  19:49:59) although its run was cancelled by the next push seconds after publishing. The gate also
+  refused once, as designed: e2e.yml failed on 52d5e73e (a fetch-memoization bug in the tracking
+  page, fixed by daygame-coach-7c in 4ecc63f), and `image-staging` stopped with "e2e.yml finished with
+  failure" instead of publishing.
   Since then this machine is staging in the plan's sense: every published commit replaces the running
   image within about two minutes, and `infra/run-local.sh` refuses to run while the timer is on.
 - **After 4.7, a fix reported by daygame-coach-ff:** `scripts/ci/await-workflow.mjs` matched e2e.yml's
@@ -1078,7 +1088,7 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R5 read-only registry tokens | **Staging package made private 2026-10-14.** Still open: the production package and the two read-only tokens. Original note: Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
 | R6 Tailscale | Open |
 | R7 Supabase redirect URLs | Open |
-| R8 fast-forward `main` | Open. Note: Vercel will build `main` on Node 24 (`engines`). |
+| R8 fast-forward `main` | **Done 2026-10-14** (daygame-coach-ff, owner-approved): `main` = 4ecc63fc. |
 | R9 trust the local certificate | Open (optional) |
 | R10 alert email | Open |
 | R11 Node 24 and `npm ci` for the dev server | Open. **The dev server is down** since WSL restarted at 17:49; start it after R11. |
