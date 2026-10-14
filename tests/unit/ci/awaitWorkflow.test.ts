@@ -13,7 +13,7 @@ import { awaitWorkflow, decide } from "../../../scripts/ci/await-workflow.mjs"
 
 const SHA = "a".repeat(40)
 const PATH = ".github/workflows/e2e.yml"
-const want = { sha: SHA, path: PATH }
+const want = { sha: SHA, path: PATH, branch: "training-rebuild" }
 
 const run = (over: Record<string, unknown>) => ({
   path: PATH,
@@ -23,6 +23,7 @@ const run = (over: Record<string, unknown>) => ({
   created_at: "2026-10-13T10:00:00Z",
   html_url: "https://github.com/x/y/actions/runs/1",
   event: "push",
+  head_branch: "training-rebuild",
   name: "E2E Tests",
   ...over,
 })
@@ -55,6 +56,21 @@ describe("decide", () => {
       run({ conclusion: "success", created_at: "2026-10-13T11:00:00Z" }),
     ]
     expect(decide(runs, want).state).toBe("pass")
+  })
+
+  it("ignores main's run of the same commit, which is newer and runs the multi-hour heavy jobs", () => {
+    // Reported by daygame-coach-ff: once main is fast-forwarded to this commit,
+    // main's run would be the newest and the wait would time out on it.
+    const runs = [
+      run({ conclusion: "success", created_at: "2026-10-13T10:00:00Z" }),
+      run({ head_branch: "main", status: "in_progress", conclusion: null, created_at: "2026-10-13T11:00:00Z" }),
+    ]
+    expect(decide(runs, want).state).toBe("pass")
+  })
+
+  it("counts only push runs, not a manual or scheduled run of the same commit", () => {
+    expect(decide([run({ event: "workflow_dispatch" })], want).state).toBe("none")
+    expect(decide([run({ event: "schedule" })], want).state).toBe("none")
   })
 
   it("finds the workflow by its file, whatever it is called", () => {

@@ -11,27 +11,29 @@
  *
  *   node scripts/ci/await-workflow.mjs
  *
- * Reads GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_TOKEN (needs `actions: read`),
- * and optionally WORKFLOW_PATH (default .github/workflows/e2e.yml),
- * TIMEOUT_MINUTES (45) and POLL_SECONDS (30).
+ * Reads GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_REF_NAME, GITHUB_TOKEN (needs
+ * `actions: read`), and optionally WORKFLOW_PATH (default
+ * .github/workflows/e2e.yml), TIMEOUT_MINUTES (45) and POLL_SECONDS (30).
  *
  * The workflow is matched by its file path, not its name, so renaming it does
- * not break this. Exit 0 only for a run that finished with `success`; a
+ * not break this. Only the run started by a push to this same branch counts:
+ * when main is fast-forwarded to the same commit, main's run (which includes
+ * the multi-hour heavy jobs) is newer, and waiting on it would time out. Exit 0 only for a run that finished with `success`; a
  * failure, a cancellation, no run at all, or the timeout exit 1.
  */
 
 import { pathToFileURL } from "node:url"
 
 /**
- * @param {Array<{path: string, head_sha: string, status: string, conclusion: string|null, created_at: string, html_url: string, event: string}>} runs
- * @param {{ sha: string, path: string }} want
+ * @param {Array<{path: string, head_sha: string, head_branch: string, status: string, conclusion: string|null, created_at: string, html_url: string, event: string}>} runs
+ * @param {{ sha: string, path: string, branch: string }} want
  * @returns {{ state: "none" | "wait" | "pass" | "fail", detail: string }}
  */
-export function decide(runs, { sha, path }) {
+export function decide(runs, { sha, path, branch }) {
   const mine = runs
-    .filter((r) => r.path === path && r.head_sha === sha)
+    .filter((r) => r.path === path && r.head_sha === sha && r.head_branch === branch && r.event === "push")
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
-  if (mine.length === 0) return { state: "none", detail: `no run of ${path} for ${sha} yet` }
+  if (mine.length === 0) return { state: "none", detail: `no push run of ${path} for ${sha} on ${branch} yet` }
   const run = mine[0]
   if (run.status !== "completed") return { state: "wait", detail: `${path} is ${run.status}: ${run.html_url}` }
   if (run.conclusion === "success") return { state: "pass", detail: `${path} passed: ${run.html_url}` }
@@ -92,15 +94,15 @@ export async function awaitWorkflow({ getRuns, want, timeoutMs, pollMs, sleep, n
 }
 
 async function main() {
-  const { GITHUB_REPOSITORY: repository, GITHUB_SHA: sha, GITHUB_TOKEN: token } = process.env
-  if (!repository || !sha || !token) {
-    console.error("await-workflow: GITHUB_REPOSITORY, GITHUB_SHA and GITHUB_TOKEN must be set.")
+  const { GITHUB_REPOSITORY: repository, GITHUB_SHA: sha, GITHUB_REF_NAME: branch, GITHUB_TOKEN: token } = process.env
+  if (!repository || !sha || !branch || !token) {
+    console.error("await-workflow: GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_REF_NAME and GITHUB_TOKEN must be set.")
     process.exit(1)
   }
   const path = process.env.WORKFLOW_PATH || ".github/workflows/e2e.yml"
   const ok = await awaitWorkflow({
     getRuns: () => fetchRuns({ repository, sha, token }),
-    want: { sha, path },
+    want: { sha, path, branch },
     timeoutMs: Number(process.env.TIMEOUT_MINUTES || 45) * 60_000,
     pollMs: Number(process.env.POLL_SECONDS || 30) * 1000,
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),

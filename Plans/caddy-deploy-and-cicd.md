@@ -743,7 +743,7 @@ reads it through `process.cwd()`, and Next's tracing then copies it into the ima
   (it answered with its own commit: no)", rolled back and marked failed. The deploy lock moved into
   the state directory, so root and the deploy user share it.
 
-## Phase 4 — CD to staging: CI publishes; this machine deploys itself. **Status: done except 4.6–4.7, blocked: B-GH (no `read:packages`)**
+## Phase 4 — CD to staging: CI publishes; this machine deploys itself. **Status: done 2026-10-14** (4.6–4.7 finished after the owner unblocked B-GH and B-GHCR)
 
 **Depends on:** Phases 2 and 3. Steps 4.4–4.7 need B-GH. **Working state:** a push to `training-rebuild`
 reaches https://localhost with no person involved.
@@ -858,7 +858,29 @@ reaches https://localhost with no person involved.
 - **4.5** Not this plan's (B9 of tests-worth-their-keep.md).
 - **4.6 done 2026-10-14**: `gh auth token | docker login ghcr.io -u reachjvc --password-stdin`:
   "Login Succeeded"; an authenticated inspect of the package's placeholder answered with its digest.
-  `STAGING_PUBLISH` is `on` again. 4.7's result follows below once a CI run has published.
+  `STAGING_PUBLISH` is `on` again.
+- **4.7 done 2026-10-14.** The first private image was published by run 38620902615 on 7ac274e8
+  (a peer's push that contained this plan's 8616c532, which it had cancelled; the other sessions held
+  their pushes so the run could finish): `image-staging` success in 246 s, "Wait for the browser
+  tests on this commit: success", "Build, prove and publish the staging image: success". The package
+  holds `staging` and `staging-7ac274e86d94865a0290cb05f596122d15a12515` at
+  `sha256:f7c043e72ca3ab882f15dd203dc0b04b3989b3276b8f2f452648edcb28601052`; an anonymous token request
+  is refused with 401. The agent's timer was then enabled with `WATCH` on the staging tag. Its
+  journal: "21:18:19 agent: new digest: ghcr.io/reachjvc/daygame-coach-staging@sha256:f7c043e7…
+  (running: sha256:f421ccbf…)", "21:19:24 deploy: healthy: /api/healthz answers 200 with commit
+  7ac274e86d94865a0290cb05f596122d15a12515, inside and through Caddy (proto https)", "done: … is
+  live", then "agent: up to date". `https://localhost/api/healthz`:
+  `{"status":"ok","buildId":"7ac274e86d94865a0290cb05f596122d15a12515","db":"ok","proto":"https"}`.
+  Timing, plainly: live 3 min 12 s after the image job ended, because the timer was only switched on
+  at 21:18; from the agent's pickup to live took 65 s, most of it the first pull. With the timer on,
+  the bound is one timer interval (60 s) plus that.
+  Since then this machine is staging in the plan's sense: every published commit replaces the running
+  image within about two minutes, and `infra/run-local.sh` refuses to run while the timer is on.
+- **After 4.7, a fix reported by daygame-coach-ff:** `scripts/ci/await-workflow.mjs` matched e2e.yml's
+  run by path and commit only. Once `main` is fast-forwarded to the same commit (R8, approved by the
+  owner per that session), main's run, which includes the multi-hour heavy jobs, would be the newest
+  and `image-staging` would wait on it until its 45-minute timeout. It now counts only a push run on
+  the job's own branch (`GITHUB_REF_NAME`); "Tests 12 passed".
 - **4.6–4.7 were blocked: B-GH.** The CLI token has no `read:packages` ("You need at least read:packages
   scope to list packages. (HTTP 403)"), so `gh auth token | docker login ghcr.io` would not let this
   machine pull the private image. The agent's settings already watch
