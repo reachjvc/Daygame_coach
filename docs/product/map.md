@@ -52,13 +52,13 @@ Bottom tab bar: **Dashboard · Training · Tracking · Scenarios · Time**, plus
 reachable only by typing the address", which was true of it and of the
 **quit-a-vice** module inside it for as long as both existed.
 
-**ON A PHONE ONLY, AND THAT IS NOT PEDANTRY.** `MobileTabBar` is `sm:hidden`,
-so above 640px that sheet does not exist and Life Mastery is still address-only.
-The desktop equivalent, `components/AppHeader.tsx`, is blocked on one decision
-the owner has to make — an icon in two files needs registering in
-`src/shared/iconRoles.ts` and that file requires approval by name. And
-`AppHeader` is itself mounted on four pages, so even after a yes this is four
-pages rather than the app. See `docs/plans/vice-finished.md`, M4.
+**ON A DESKTOP IT IS THE HEADER, NOT THE SHEET.** `MobileTabBar` is
+`sm:hidden`, so above 640px the way in is the "Your plan" link in
+`components/AppHeader.tsx`, there since 2026-09-24 when the owner approved its
+icon. That header is mounted on the dashboard, Settings, Ask Coach, Articles,
+Inner Game and the home page; every other desktop page draws its own header and
+has no link. This entry said the desktop link was "blocked on one decision"
+until 2026-10-14, three weeks after it landed.
 
 There is deliberately no Goals tab — the old goals hub is archived and the app
 is being consolidated onto one surface.
@@ -257,8 +257,8 @@ the truthful record of what exists.
 
 ## In flight now
 
-- **Branch `training-rebuild`**, well ahead of main — a set-by-set rebuild of
-  the gym.
+- **Branch `training-rebuild`** is where all work lands, named for its first
+  job, a set-by-set rebuild of the gym. `main` is the live site.
 - **Leaving Vercel and Supabase for Hetzner** — decided 2026-09-17, provider
   settled 2026-09-27 on the friend's recommendation and not reopened. Read D1 in
   `docs/plans/own-platform-and-app.md`'s DECISIONS table and the memory note
@@ -271,8 +271,10 @@ the truthful record of what exists.
   but cannot count against them, because the goals hub under the Track step
   prunes by a code minted in one browser — plus M4, and M1's round-trip
   integration test, which was never written.
-- **None of it is deployed.** `app/life-mastery/` exists on `training-rebuild`
-  and on no other branch; `daygame-coach.vercel.app/life-mastery` is a 404 and
-  always has been. The owner uses it at `localhost:3000`, which serves this
-  branch — so `next dev` means an edit to `src/` reaches them the moment it is
-  saved. Ask localhost before calling anything unreachable.
+- **Deployed since 2026-10-14.** `main` was fast-forwarded from
+  `training-rebuild` (c1680654 → 4ecc63fc, 515 commits) and
+  `daygame-coach.vercel.app/life-mastery` serves it, checked signed in. Until
+  then it had never been deployed. `main` moves only when the owner asks
+  (CLAUDE.md), so the live site trails this branch between those pushes:
+  `localhost:3000` is still the newest, and the live site's `/api/healthz`
+  names the commit it serves.
