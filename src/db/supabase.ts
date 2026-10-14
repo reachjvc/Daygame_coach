@@ -5,6 +5,28 @@ import { cookies, headers } from "next/headers"
 import { authCookieOptions, requestIsHttps } from "./authCookies"
 
 /**
+ * EVERY DATABASE READ IS ANSWERED BY THE DATABASE, NOT BY THE RENDER.
+ *
+ * Next.js memoizes `fetch` GETs with the same URL and options for the length
+ * of a server render (node_modules/next/dist/docs/01-app/03-api-reference/
+ * 04-functions/fetch.md, "Memoization"), and supabase-js reads through
+ * `fetch`. So a read, a write and the same read again inside one render got
+ * the FIRST answer back. Found on 2026-10-14: every new account's first visit
+ * to /dashboard/tracking inserted its counters, was told the row already
+ * existed (another loader on the page had made it), re-read it — the identical
+ * GET — and was handed the earlier "no row" again, so the page said its totals
+ * could not be read, and e2e.yml went red on 52d5e73e. Proved by logging, at
+ * that moment, a different query that saw the row.
+ *
+ * A signal opts a fetch out of memoization; a caller's own signal (supabase-js
+ * `.abortSignal()`) does the same and is kept. The cost is that two identical
+ * reads in one render now both reach the database; a stale answer after a
+ * write is not a price worth that saving. Route Handlers were never memoized.
+ */
+export const unmemoizedFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, signal: init?.signal ?? new AbortController().signal })
+
+/**
  * Create a Supabase client for use in Server Components / Route Handlers.
  * Uses the anon key with cookie-based auth - respects RLS.
  */
@@ -17,6 +39,7 @@ export async function createServerSupabaseClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: authCookieOptions(requestIsHttps(headerStore)),
+      global: { fetch: unmemoizedFetch },
       cookies: {
         getAll() {
           return cookieStore.getAll()
@@ -56,7 +79,7 @@ export function createAdminSupabaseClient() {
     )
   }
 
-  return createClient(url, serviceKey)
+  return createClient(url, serviceKey, { global: { fetch: unmemoizedFetch } })
 }
 
 /**
