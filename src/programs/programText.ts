@@ -36,7 +36,7 @@
  * library when it does recognise something.
  */
 
-import type { DayTemplate, LoadExercise, ProgramSchedule } from "./types"
+import type { LoadExercise, ProgramSchedule } from "./types"
 import { EXERCISE_LIBRARY, freeLiftEntry, patternForName, customLiftId } from "./data/exerciseLibrary"
 import { freshId } from "./customize"
 import { buildExercise } from "./builder"
@@ -373,78 +373,5 @@ export function formatProgramText(
     return lines.join("\n")
   })
   return blocks.join("\n\n")
-}
-
-/**
- * Carry per-lift settings across a re-apply of the text.
- *
- * The text says what the days and lifts ARE. Progression rule, weight step and
- * note are set in the editor underneath and have no one-line written form, so
- * re-applying the text would otherwise silently reset them — somebody fixes a
- * typo in a day name and loses the four lifts they had set to "leave it to me".
- *
- * Matched on id AND name, both of which are deterministic: parser ids are
- * positional, so a lift that is still the same lift in the same slot keeps its
- * settings, and one that has been replaced does not inherit the settings of
- * whatever used to be there. No fuzzy matching, so it is never a guess.
- */
-export function carryAuthoredSettings(
-  previous: ProgramSchedule,
-  next: ProgramSchedule
-): ProgramSchedule {
-  if (previous.kind === "endurance_weeks" || next.kind === "endurance_weeks") return next
-
-  /**
-   * MATCH DAYS BY NAME FIRST, THEN BY POSITION — never by guessing.
-   *
-   * The rebuilt day was `{id, label, exercises}` and nothing else, so
-   * `weekday` was dropped on the floor. Type one character into the text box of
-   * a week pinned Monday/Thursday and both pins were gone: the week silently
-   * stopped running by the calendar and started running in order, with nothing
-   * on screen saying so.
-   *
-   * By label (trimmed, case-insensitive) because renaming a day is rarer than
-   * reordering one; by index only when the day count is unchanged, where the
-   * correspondence is not a guess. A changed count means days were added or
-   * removed and there is no honest answer, so nothing is carried.
-   */
-  const byLabel = new Map<string, DayTemplate>()
-  for (const d of previous.days) byLabel.set(d.label.trim().toLowerCase(), d as DayTemplate)
-  const sameCount = previous.days.length === next.days.length
-
-  const days: DayTemplate[] = next.days.map((d, i) => {
-    const oldDay = byLabel.get(d.label.trim().toLowerCase()) ?? (sameCount ? (previous.days[i] as DayTemplate) : undefined)
-
-    /**
-     * Within a matched day, by id first and by NAME second. After the id rule
-     * above a library lift keeps its id across a re-parse — but a week loaded
-     * from an account saved before that rule still holds positional ids, and
-     * matching only on id would silently reset its weight step and its note.
-     */
-    const oldById = new Map<string, LoadExercise>()
-    const oldByName = new Map<string, LoadExercise>()
-    for (const e of (oldDay?.exercises ?? []) as LoadExercise[]) {
-      oldById.set(e.id, e)
-      oldByName.set(e.name.trim().toLowerCase(), e)
-    }
-
-    const day: DayTemplate = {
-      id: d.id,
-      label: d.label,
-      exercises: (d.exercises as LoadExercise[]).map((e): LoadExercise => {
-        const old = oldById.get(e.id) ?? oldByName.get(e.name.trim().toLowerCase())
-        if (!old) return e
-        // `progression` is where the weight step lives (incrementKg/Lb) and
-        // where "leave it to me" is recorded as `kind: "none"`.
-        const carried: LoadExercise = { ...e, progression: old.progression }
-        if (old.note) carried.note = old.note
-        if (old.dropSets) carried.dropSets = old.dropSets
-        return carried
-      }),
-    }
-    if (oldDay?.weekday != null) day.weekday = oldDay.weekday
-    return day
-  })
-  return { kind: "linear_rotation", days }
 }
 

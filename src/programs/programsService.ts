@@ -344,40 +344,6 @@ export function formatDateOnly(iso: string, style: "weekday" | "short"): string 
 }
 
 /**
- * Two weeks are the same week when their days and lifts are, in order.
- *
- * Day ids, labels and weekday pins; each day's lifts by id, name and scheme.
- * Not the weights, and not the progression rules — a week you edited the
- * increment on is still the week you started.
- */
-export function sameWeek(a: ProgramSchedule, b: ProgramSchedule): boolean {
-  const left = scheduleDaysOrNone(a)
-  const right = scheduleDaysOrNone(b)
-  if (left.length === 0 || left.length !== right.length) return false
-
-  return left.every((day, i) => {
-    const other = right[i]
-    if (day.id !== other.id || day.label !== other.label) return false
-    if ((day as DayTemplate).weekday !== (other as DayTemplate).weekday) return false
-    if (day.exercises.length !== other.exercises.length) return false
-    return day.exercises.every((ex, j) => {
-      const mine = other.exercises[j]
-      if (ex.id !== mine.id || ex.name !== mine.name) return false
-      return JSON.stringify(sortedScheme(ex)) === JSON.stringify(sortedScheme(mine))
-    })
-  })
-}
-
-/** A scheme with its keys in a fixed order, so equality is not key-order luck. */
-function sortedScheme(exercise: unknown): unknown {
-  const scheme = (exercise as { scheme?: Record<string, unknown> }).scheme
-  if (!scheme) return null
-  return Object.keys(scheme)
-    .sort()
-    .map((k) => [k, scheme[k]])
-}
-
-/**
  * ONE SENTENCE FOR "WHAT DOES YOUR TRAINING WEEK LOOK LIKE".
  *
  * Four places invented this from the plan's own copy of the program, and each
