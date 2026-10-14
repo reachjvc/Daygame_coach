@@ -1,13 +1,26 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
-import { ROUTES } from "@/src/shared/routes"
+import { isPublicPage, legacyRedirect } from "@/src/shared/routes"
 
 /**
  * Next 16 renamed middleware.ts to proxy.ts. This is the edge guard: it decides
  * who may reach a route at all. It is NOT the data boundary -- RLS is.
+ *
+ * PRIVATE BY DEFAULT. It used to guard a hand-kept list of address prefixes, so
+ * a page outside the list was unguarded here, and moving a page to a new
+ * address took it out of the guard unless somebody remembered the list. Now
+ * every page is private unless `isPublicPage` (src/shared/routes.ts) says
+ * otherwise, and a forgotten page fails closed. Every page that reads data also
+ * checks the user itself; this remains defence in depth.
  */
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+
+  // An address that moved answers with a permanent redirect before anything
+  // else, signed in or not, and keeps its query string: a copied time-tracker
+  // start link is all query.
+  const moved = legacyRedirect(pathname)
+  if (moved) return NextResponse.redirect(new URL(moved + search, request.url), 308)
 
   // The /api/test/* routes are unauthenticated sandbox endpoints for the /test
   // pages. They read and write real data, so they must never answer in
@@ -19,6 +32,10 @@ export async function proxy(request: NextRequest) {
       return new NextResponse(null, { status: 404 })
     }
   }
+
+  // The home page, sign-in and the lab need no session, and asking the
+  // identity provider about one would cost a network call for nothing.
+  if (isPublicPage(pathname)) return NextResponse.next()
 
   const response = NextResponse.next({
     request: {
@@ -64,35 +81,15 @@ export async function proxy(request: NextRequest) {
 
   // API routes answer with 401, never a redirect to a login page: a fetch()
   // that receives an HTML login page reports a confusing parse error instead of
-  // "you are signed out". Defence in depth — every route below also calls
-  // requireAuth() itself.
-  // The admin pages are reachable by URL and were never behind the guard. The
-  // data they show is protected by an admin key, so nothing leaked — but the
-  // pages themselves loaded for anyone who guessed the address.
-  if (pathname.startsWith("/admin") && !user) {
-    const redirectUrl = new URL("/auth/login", request.url)
-    // Same as below: the query string is part of where they were going.
-    redirectUrl.searchParams.set("next", pathname + search)
-    return NextResponse.redirect(redirectUrl)
-  }
-
+  // "you are signed out". Defence in depth — every route also calls
+  // requireAuth() itself. Only these two API prefixes reach the proxy at all
+  // (see the matcher); the rest check the user in their own handlers.
   if (pathname.startsWith("/api/timetrack/") && !user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
+  if (pathname.startsWith("/api/")) return response
 
-  const isProtectedRoute =
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/preferences") ||
-    pathname.startsWith("/programs") ||
-    pathname.startsWith("/lair") ||
-    pathname.startsWith("/qa") ||
-    // Life Mastery has its own layout gate as well. It is here too because the
-    // layout cannot be told WHICH page was asked for, so on its own it sends
-    // everybody to the flow's front page; and because a route outside this list
-    // never has its sign-in refreshed on the way past.
-    pathname.startsWith(ROUTES.plan)
-
-  if (isProtectedRoute && !user) {
+  if (!user) {
     const redirectUrl = new URL("/auth/login", request.url)
     /**
      * Must be `next`: that is the parameter the login page reads to send the
@@ -113,17 +110,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/preferences/:path*",
-    "/programs/:path*",
-    "/lair/:path*",
-    "/qa/:path*",
-    // A literal because Next reads this list at build time and cannot evaluate
-    // an import. `tests/unit/navigation/routeList.test.ts` asserts it
-    // covers every address in the route list, so a move cannot leave this behind.
-    "/life-mastery/:path*",
+    // Every page. A literal, because Next reads this list at build time and
+    // cannot evaluate an import. Excluded: the API (its handlers check the
+    // user themselves, and a getUser() per call would add a network call to
+    // each), Next's own assets, and anything with a dot, which is every file in
+    // public/ plus /sw.js and /manifest.webmanifest. No page address has a dot.
+    "/((?!api/|_next/static|_next/image|.*\\..*).*)",
     "/api/test/:path*",
     "/api/timetrack/:path*",
-    "/admin/:path*",
   ],
 }

@@ -81,23 +81,8 @@ describe("the route list", () => {
     expect(missing).toEqual([])
   })
 
-  it("is gated by the proxy at every address it names", () => {
-    /**
-     * The edge guard decides who may reach a route at all, and its matcher has
-     * to be a literal: Next reads that list at build time and cannot evaluate
-     * an import. So it is a place an address is legitimately written out, and
-     * the one place a move would silently leave behind.
-     */
-    const proxy = fs.readFileSync(path.join(root, "proxy.ts"), "utf-8")
-    const prefixes = [...proxy.matchAll(/"(\/[^"]*?)\/:path\*"/g)].map((m) => m[1])
-    const unguarded = ADDRESSES.filter(([, v]) => !prefixes.some((p) => v === p || v.startsWith(`${p}/`)))
-    expect(
-      unguarded.map(([name, v]) => `ROUTES.${name} (${v})`),
-      "proxy.ts's matcher does not cover these. Add a \"<prefix>/:path*\" entry for them.",
-    ).toEqual([])
-    // And the check inside, which is what actually turns anyone away.
-    expect(proxy).toMatch(/pathname\.startsWith\(ROUTES\.plan\)/)
-  })
+  // Whether the proxy guards every page is tested by what it does, in
+  // proxyPrivateByDefault.test.ts: every page is private unless named public.
 
   it("is what the service worker keeps for offline, which cannot import it", () => {
     /**

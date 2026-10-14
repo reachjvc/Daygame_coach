@@ -122,3 +122,39 @@ export const SUPERSEDED_LIFE_MASTERY_PATHS = [
   "/dashboard/goals/plan",
   "/test/life-mastery",
 ] as const
+
+/** Is `pathname` this address or below it? Segment-aware: "/timeline" is not under "/time". */
+export function isUnder(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)
+}
+
+/**
+ * THE ONLY PAGES A SIGNED-OUT VISITOR MAY OPEN. Everything else is private by
+ * default, so a page added, or moved to a new address, cannot fall outside the
+ * sign-in guard by being forgotten in a list.
+ *
+ * `/test` is here to keep the behaviour it always had: it was never guarded,
+ * and `app/test/layout.tsx` answers 404 in production whoever asks.
+ */
+export function isPublicPage(pathname: string): boolean {
+  return pathname === "/" || isUnder(pathname, "/auth") || isUnder(pathname, "/test")
+}
+
+/**
+ * ADDRESSES THAT MOVED, AND WHERE THEY WENT.
+ *
+ * Bookmarks, the installed app's history and the time tracker's copied start
+ * links all carry old addresses. `proxy.ts` answers each with a permanent
+ * redirect that keeps the query string. Filled section by section in
+ * `Plans/site-structure.md` Phase 4.
+ */
+export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = []
+
+/** Where an old address now lives, or null. The longest matching `from` wins. */
+export function legacyRedirect(pathname: string): string | null {
+  let best: { from: string; to: string } | null = null
+  for (const row of LEGACY_ROUTES) {
+    if (isUnder(pathname, row.from) && (!best || row.from.length > best.from.length)) best = row
+  }
+  return best ? best.to + pathname.slice(best.from.length) : null
+}

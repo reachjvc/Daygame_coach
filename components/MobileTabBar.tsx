@@ -6,7 +6,8 @@ import { useState } from "react"
 import { Menu, LogOut } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
-import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES } from "@/components/navTabs"
+import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES, isActive } from "@/components/navTabs"
+import { isUnder } from "@/src/shared/routes"
 
 /**
  * Every item in the bar, measured on an iPhone 14, used to be 43.75px tall with
@@ -16,17 +17,12 @@ import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES } from "@/components/navTabs"
  */
 const BAR_ITEM = "flex min-h-11 flex-col items-center justify-center gap-0.5 min-w-[56px] py-1"
 
-function isActive(pathname: string, href: string, exact: boolean) {
-  if (exact) return pathname === href
-  return pathname.startsWith(href)
-}
-
 export function MobileTabBar() {
   const pathname = usePathname()
   const [moreOpen, setMoreOpen] = useState(false)
 
   // Hide on routes that have their own bottom bar
-  if (HIDDEN_ROUTE_PREFIXES.some((p) => pathname.startsWith(p))) {
+  if (HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(pathname, p))) {
     return null
   }
 

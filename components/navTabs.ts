@@ -1,5 +1,5 @@
 import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText } from "lucide-react"
-import { ROUTES } from "@/src/shared/routes"
+import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
  * WHERE THE TAB BAR CAN GO, as data rather than as markup.
@@ -121,4 +121,14 @@ export const ROUTE_LABELS: Record<string, string> = {
   [ROUTES.trackingHistory]: "History",
   [ROUTES.plan]: ROUTE_LABELS_LIFE_MASTERY,
   [ROUTES.training]: "Training",
+}
+
+/**
+ * Is this item the page you are on? One rule for every bar that marks it: the
+ * tab bar and the laptop header. Segment-aware, so `/dashboard` marked exactly
+ * does not light up under `/dashboard/tracking`, and a future `/timeline`
+ * would not light up Time.
+ */
+export function isActive(pathname: string, href: string, exact: boolean): boolean {
+  return exact ? pathname === href : isUnder(pathname, href)
 }
