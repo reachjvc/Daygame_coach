@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * THE RACE THAT MADE `blackbox.spec.ts` FAIL HALF ITS RUNS, MADE TO HAPPEN ON
@@ -39,7 +39,7 @@ test("a push already in flight cannot resurrect the rows the fixture just buried
   page,
 }) => {
   // A record on the account, put there the way a previous test would leave one.
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
   const planted = await page.evaluate(async () => {
     const id = crypto.randomUUID()
@@ -96,7 +96,7 @@ test("a push already in flight cannot resurrect the rows the fixture just buried
   // Now do what `seed()` does: land on the page, and bury what the account
   // holds. With the fix, `seed` waits for the page's own sync to finish first,
   // so by the time the tombstones go up there is nothing left in flight.
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
   await page
     .locator('[data-sync="synced"][data-pending="0"], [data-sync-settled="true"]:not([data-sync="synced"])')

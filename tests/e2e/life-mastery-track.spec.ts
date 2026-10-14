@@ -15,7 +15,7 @@
 
 import { test, expect } from './fixtures/test'
 import type { Page } from '@playwright/test'
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { seedLifePlan } from './helpers/lifePlan'
 
 /**
@@ -122,7 +122,7 @@ test.describe('Life Mastery — the track step', () => {
     const emptied = await page.request.delete('/api/goals')
     expect(emptied.status(), `could not empty the account's goals: ${await emptied.text()}`).toBe(200)
     await seedLifePlan(page, account.id, PLAN)
-    await page.goto(LIFE_MASTERY)
+    await page.goto(ROUTES.plan)
   })
 
   test('pushes the plan into real goals, and pressing it twice does not double them', async ({ page }) => {

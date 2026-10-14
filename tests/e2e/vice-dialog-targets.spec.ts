@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 import { test, expect } from "./fixtures/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * EVERY CONTROL ON THIS PAGE THAT THE TAP-TARGET SWEEP CANNOT SEE.
@@ -122,7 +122,7 @@ async function isolated(page: Page) {
 
 async function land(page: Page) {
   await isolated(page)
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 40000 })
   await page.evaluate((r) => {
     localStorage.setItem("vice-blackbox-v1", JSON.stringify(r))

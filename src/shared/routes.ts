@@ -5,8 +5,8 @@
  * catches. Next.js decides routes by folder name, so a move is always two
  * edits: rename the folder under `app/`, and change the value below. Nothing
  * else: every link in the product is built from here, and
- * `tests/unit/navigation/lifeMasteryRoutes.test.ts` fails the build if anyone
- * writes one of these paths out by hand.
+ * `tests/unit/navigation/routeList.test.ts` fails the build if anyone writes
+ * one of these paths out by hand.
  *
  * The page addresses users see are a product decision, made in
  * `Plans/site-structure.md`: a path segment means "is part of", and a tab
@@ -109,7 +109,7 @@ export const TRAINING_DOOR_API = "/api/programs/today"
  * THE ADDRESSES LIFE MASTERY HAS ALREADY LEFT.
  *
  * Writing the CURRENT path by hand is caught by
- * `tests/unit/navigation/lifeMasteryRoutes.test.ts`. Writing a SUPERSEDED one
+ * `tests/unit/navigation/routeList.test.ts`. Writing a SUPERSEDED one
  * was not, and on 2026-09-26 that gap let a real regression in: merging `main`
  * brought back `<Link href="/dashboard/goals/plan">` in
  * `src/inner-game/components/GoalsTab.tsx`, and all 6,103 unit tests stayed

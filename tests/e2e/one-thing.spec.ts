@@ -1,6 +1,6 @@
 import { test, expect } from "./fixtures/test"
 import type { Page } from "@playwright/test"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * AT6 — the one thing, end to end.
@@ -16,7 +16,7 @@ import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
  * now a redirect that carries the step across. Built from the constant so the
  * next move does not leave this asserting an address that no longer exists.
  */
-const PLAN = `${LIFE_MASTERY}?step=one`
+const PLAN = `${ROUTES.plan}?step=one`
 const TRACKING = "/dashboard/tracking"
 
 /**
@@ -75,7 +75,7 @@ test.describe("the one thing", () => {
     // A client-side navigation into the largest page in the app. On a busy
     // `next dev` it took longer than the 5 s default (3 of 4 runs, 2026-10-13)
     // and always arrived within 20 s.
-    await expect(page).toHaveURL(new RegExp(`${LIFE_MASTERY}\\?step=one`), { timeout: 20_000 })
+    await expect(page).toHaveURL(new RegExp(`${ROUTES.plan}\\?step=one`), { timeout: 20_000 })
     // …and carries the way back, so you are not stranded in a thirteen-step flow.
     await expect(page.getByTestId("back-link")).toHaveText(/Tracking/)
   })

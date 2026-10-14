@@ -1,5 +1,5 @@
 import { test, expect } from "../fixtures/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * THE BLACK BOX ON FIREFOX AND WEBKIT.
@@ -79,7 +79,7 @@ async function isolated(page: Page) {
 
 async function fresh(page: Page) {
   await isolated(page)
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   await landed(page)
   await page.evaluate(() => {
     for (const key of ["vice-blackbox-v1", "vice-blackbox-sent-v1", "vice-blackbox-view"]) {
@@ -94,7 +94,7 @@ test("this engine can reach the account at all", async ({ page }) => {
   // The one assertion that talks to the real endpoint: a status, never rows.
   // Everything below is isolated from the account on purpose, so without this
   // the file would never find out that an engine could not read it.
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   await landed(page)
   const status = await page.evaluate(async () => {
     const res = await fetch("/api/black-box").catch(() => null)

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { test, expect } from "./fixtures/test"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { seedLifePlan } from "./helpers/lifePlan"
 
 /**
@@ -52,7 +52,7 @@ function runId(name: string): string {
  * any one of them can be run on its own.
  */
 async function seed(page: Page, record: unknown | null) {
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   // Hydrated first, so the page has read its own storage before we replace it.
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
 
@@ -170,8 +170,8 @@ async function secondDevice(page: Page, browser: import("@playwright/test").Brow
     baseURL: origin,
   })
   const fresh = await context.newPage()
-  await fresh.goto(`${origin}${QUIT_VICE}`)
-  await expect(fresh).toHaveURL(new RegExp(`${QUIT_VICE}$`), { timeout: 20000 })
+  await fresh.goto(`${origin}${ROUTES.quitVice}`)
+  await expect(fresh).toHaveURL(new RegExp(`${ROUTES.quitVice}$`), { timeout: 20000 })
   await fresh.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
   await fresh.evaluate(() => {
     window.localStorage.removeItem("vice-blackbox-v1")
@@ -241,7 +241,7 @@ test.describe("the Black Box", () => {
       ],
       goals: [],
     })
-    await page.goto(LIFE_MASTERY, { waitUntil: "domcontentloaded" })
+    await page.goto(ROUTES.plan, { waitUntil: "domcontentloaded" })
     await page.getByText("Opening your plan…").waitFor({ state: "hidden", timeout: 30_000 })
     // The routines live under this step, and only under this one: the wanting
     // half and the doing half are two steps again, and a routine is always a
@@ -262,7 +262,7 @@ test.describe("the Black Box", () => {
     await expect(link).toBeVisible()
     await link.click()
 
-    await expect(page).toHaveURL(new RegExp(`${QUIT_VICE}$`))
+    await expect(page).toHaveURL(new RegExp(`${ROUTES.quitVice}$`))
     await expect(page.getByRole("heading", { name: "Black Box", level: 1 })).toBeVisible()
   })
 
@@ -701,7 +701,7 @@ test.describe("the Black Box", () => {
     await seed(page, liveRun())
 
     const second = await context.newPage()
-    await second.goto(QUIT_VICE)
+    await second.goto(ROUTES.quitVice)
     await second.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
 
     // Tab one files a close call.
@@ -758,9 +758,9 @@ test.describe("the Black Box", () => {
       baseURL: origin,
     })
     const fresh = await other.newPage()
-    await fresh.goto(`${origin}${QUIT_VICE}`)
+    await fresh.goto(`${origin}${ROUTES.quitVice}`)
     // Proves it is signed in before anything is concluded from what it shows.
-    await expect(fresh).toHaveURL(new RegExp(`${QUIT_VICE}$`), { timeout: 20000 })
+    await expect(fresh).toHaveURL(new RegExp(`${ROUTES.quitVice}$`), { timeout: 20000 })
     await fresh.locator('[data-hydrated="true"]').waitFor({ timeout: 20000 })
     await fresh.evaluate(() => {
       window.localStorage.removeItem("vice-blackbox-v1")

@@ -119,8 +119,8 @@ export const config = {
     "/lair/:path*",
     "/qa/:path*",
     // A literal because Next reads this list at build time and cannot evaluate
-    // an import. `tests/unit/navigation/lifeMasteryRoutes.test.ts` asserts it
-    // still agrees with LIFE_MASTERY, so a move cannot leave this behind.
+    // an import. `tests/unit/navigation/routeList.test.ts` asserts it
+    // covers every address in the route list, so a move cannot leave this behind.
     "/life-mastery/:path*",
     "/api/test/:path*",
     "/api/timetrack/:path*",

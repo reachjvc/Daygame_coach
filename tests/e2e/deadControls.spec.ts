@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import type { Page } from "@playwright/test"
 import { test, expect } from "./fixtures/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * Dead-control sweep.
@@ -19,7 +19,7 @@ import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
  */
 
 /** The Black Box, which is what the front door serves now. */
-const BLACK_BOX = QUIT_VICE
+const BLACK_BOX = ROUTES.quitVice
 
 async function settled(page: Page) {
   await page.locator('[data-hydrated="true"]').waitFor({ state: "attached", timeout: 30000 })

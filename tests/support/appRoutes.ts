@@ -23,7 +23,6 @@
 import * as fs from "fs"
 import * as path from "path"
 import { ROUTES } from "@/src/shared/routes"
-import { LIFE_MASTERY, QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
 import { QUIT_VICE_ARCHIVE, viceArchiveStep } from "@/app/test/archive/quit-vice/routes"
 
 const root = path.resolve(__dirname, "../..")
@@ -301,15 +300,11 @@ function viceFlowIds(): string[] {
 
 export function symbolicLinksIn(src: string): string[] {
   const found: string[] = []
-  const named =
-    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(LIFE_MASTERY\b|QUIT_VICE_ARCHIVE\b|QUIT_VICE\b|viceArchiveStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
-  for (const m of src.matchAll(named)) {
-    if (m[2]) found.push(viceArchiveStep(m[2]))
-    else if (m[1] === "LIFE_MASTERY") found.push(LIFE_MASTERY)
-    // Before QUIT_VICE, because it is a prefix of the archive constant's name
-    // and an alternation takes the first branch that matches.
-    else if (m[1] === "QUIT_VICE_ARCHIVE") found.push(QUIT_VICE_ARCHIVE)
-    else if (m[1] === "QUIT_VICE") found.push(QUIT_VICE)
+  // The retired vice module keeps its own address, beside its pages.
+  const archive =
+    /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(QUIT_VICE_ARCHIVE\b|viceArchiveStep\(\s*["'`]([\w-]+)["'`]\s*\))/g
+  for (const m of src.matchAll(archive)) {
+    found.push(m[2] ? viceArchiveStep(m[2]) : QUIT_VICE_ARCHIVE)
   }
   const fromList =
     /(?:href=|[A-Za-z]*[Hh]ref\s*:\s*|\.push\(|\.replace\(|\bredirect\()\s*\{?\s*(?:`\$\{)?ROUTES\.(\w+)/g
@@ -344,4 +339,32 @@ export function gateRoutes(): Set<string> {
     }
   }
   return found
+}
+
+/**
+ * Blank out comments so a doc comment naming a path is not a violation. Prose
+ * about where something lives is how this codebase explains itself; the rules
+ * that use this are about links, not sentences.
+ */
+export function code(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+}
+
+/**
+ * DOES THIS SOURCE WRITE THIS EXACT PATH AS TEXT?
+ *
+ * The boundary is the whole point. A bare prefix check reported
+ * `app/test/page.tsx` for linking `/test/life-mastery-v1` when the path being
+ * looked for was `/test/life-mastery`, a real, separate page, and a false
+ * accusation that would have taught the next person to distrust the guard. So
+ * a hit must END where the path ends: at the closing quote, or at a `/`, `?`
+ * or `#` that starts a segment, query or fragment BELOW it, which is a link to
+ * the same page and equally wrong to write by hand.
+ *
+ * Every quote, not just the double one: a path inside a template literal is
+ * exactly how a link carrying a query gets written.
+ */
+export function writesPath(src: string, target: string): boolean {
+  const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return new RegExp(`["'\`]${escaped}(?=["'\`?#/]|\\$\\{)`).test(src)
 }

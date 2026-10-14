@@ -20,7 +20,7 @@ import { createElement } from "react"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SCORED_TABS, TAB_ORDER } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY, ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import { VISION_RUNGS } from "@/src/goals/data/lifeMasteryWhy"
@@ -239,7 +239,7 @@ describe("changing step writes the address", () => {
 
     fireEvent.click(step("systems"))
     expect(step("systems").getAttribute("aria-current")).toBe("page")
-    expect(window.location.pathname).toBe(LIFE_MASTERY)
+    expect(window.location.pathname).toBe(ROUTES.plan)
     expect(window.location.search).toBe("?step=systems")
 
     // A browser that refuses history writes must not take the step change

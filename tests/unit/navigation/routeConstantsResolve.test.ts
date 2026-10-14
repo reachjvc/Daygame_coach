@@ -3,8 +3,6 @@ import { describe, it, expect } from "vitest"
 import { existsSync, readdirSync } from "fs"
 import { join } from "path"
 import * as routes from "@/src/shared/routes"
-import * as trainingRoutes from "@/src/shared/trainingRoutes"
-import * as lifeMasteryRoutes from "@/src/shared/lifeMasteryRoutes"
 
 /**
  * A NAMED ROUTE CONSTANT READS AS "BUILT" WHEN IT IS NOT.
@@ -76,8 +74,6 @@ function routesOf(mod: Record<string, unknown>, file: string): Array<[string, st
 
 const ROUTES = [
   ...routesOf(routes, "src/shared/routes.ts"),
-  ...routesOf(trainingRoutes, "src/shared/trainingRoutes.ts"),
-  ...routesOf(lifeMasteryRoutes, "src/shared/lifeMasteryRoutes.ts"),
 ]
 
 describe("every route constant has something behind it", () => {

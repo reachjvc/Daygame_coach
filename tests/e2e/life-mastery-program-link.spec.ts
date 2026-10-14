@@ -41,13 +41,13 @@
 
 import { test, expect } from "./fixtures/test"
 import type { Page } from "@playwright/test"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { guardTrainingAccount } from "./helpers/training.helper"
 /** Refuses to delete training rows on any account but a throwaway one — see the helper. */
 guardTrainingAccount()
 
 
-const TEMPLATES = `${LIFE_MASTERY}?step=templates`
+const TEMPLATES = `${ROUTES.plan}?step=templates`
 
 /** Every enrollment this spec made, ended and then removed. */
 async function cleanUp(page: Page): Promise<void> {
@@ -93,7 +93,7 @@ test.describe("Life Mastery and the training database", () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(240000)
     await page.setViewportSize({ width: 1280, height: 1000 })
-    await page.goto(LIFE_MASTERY, { waitUntil: "networkidle" })
+    await page.goto(ROUTES.plan, { waitUntil: "networkidle" })
     await cleanUp(page)
   })
 
@@ -262,7 +262,7 @@ test.describe("Life Mastery and the training database", () => {
        * own count of a program's day TEMPLATES, and a guessed number under an
        * amber warning is the exact failure this app keeps relearning.
        */
-      await page.goto(`${LIFE_MASTERY}?step=systems`, { waitUntil: "domcontentloaded" })
+      await page.goto(`${ROUTES.plan}?step=systems`, { waitUntil: "domcontentloaded" })
       await page.getByRole("button", { name: /Systems/ }).first().click()
       const week = page.getByText("Training week", { exact: false }).first()
       await expect(week, "the plan's training week is on the Systems step").toBeVisible({ timeout: 20000 })

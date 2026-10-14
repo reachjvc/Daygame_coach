@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures/test"
-import { QUIT_VICE } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * OPENING THE BLACK BOX WITH NO CONNECTION.
@@ -119,7 +119,7 @@ test.use({ serviceWorkers: "allow" })
 
 test("the Black Box opens with no connection, and its record is there", async ({ page, context }) => {
   await neverWriteToTheAccount(page)
-  await page.goto(QUIT_VICE)
+  await page.goto(ROUTES.quitVice)
   await landed(page)
 
   const controlled = await workerIsControlling(page)
@@ -159,7 +159,7 @@ test("the Black Box opens with no connection, and its record is there", async ({
   await page.reload()
   await landed(page)
 
-  expect(await shellIsStored(page, QUIT_VICE), "the worker never stored the Black Box's page").toBe(true)
+  expect(await shellIsStored(page, ROUTES.quitVice), "the worker never stored the Black Box's page").toBe(true)
 
   // THE ACTUAL QUESTION. Not "does it survive the network going" — that is
   // covered elsewhere — but "can it be opened at all from nothing".
