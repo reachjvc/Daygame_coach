@@ -4,8 +4,8 @@
 WSL restarted). Phases 1–3 and 5 done. Phase 4 done except steps 4.6–4.7: this machine cannot pull a
 private GHCR image yet, because the GitHub CLI login has no `read:packages` scope (B-GH, half open).
 Staging publishing was switched on, and its first live run stopped at the privacy check as designed:
-the package GitHub created was **public**. Publishing is switched off again until the owner makes
-the package private (B-GHCR, R5).
+the package GitHub created was **public**. **2026-10-14:** the owner granted `read:packages` and made
+the package private; this machine is logged in to GHCR and publishing is on again (Phase 4, 4.6–4.7).
 Evidence is quoted under each phase; what is still open is in "Blocker state after Phases 1–5" and
 under the STOP line. Phases 6–7 wait for the STOP line (a domain and a server).
 
@@ -276,7 +276,7 @@ what happened, not a guess.
 
 | ID | State now | Evidence |
 |---|---|---|
-| B-GH | **Half open.** `gh` is logged in as reachjvc (done by the owner during the day), so `infra/github-config.sh` ran (step 4.4). Its token scopes are `gist, read:org, repo`: **no `read:packages`**, so this machine cannot pull the private image (steps 4.6–4.7). | `gh auth status`: "Token scopes: 'gist', 'read:org', 'repo'"; `gh api user/packages?package_type=container`: "You need at least read:packages scope to list packages. (HTTP 403)" |
+| B-GH | **Closed 2026-10-14**: the owner approved `gh auth refresh -s read:packages` (device code); scopes now `gist, read:org, read:packages, repo`. Before that: **Half open.** `gh` is logged in as reachjvc (done by the owner during the day), so `infra/github-config.sh` ran (step 4.4). Its token scopes are `gist, read:org, repo`: **no `read:packages`**, so this machine cannot pull the private image (steps 4.6–4.7). | `gh auth status`: "Token scopes: 'gist', 'read:org', 'repo'"; `gh api user/packages?package_type=container`: "You need at least read:packages scope to list packages. (HTTP 403)" |
 | B-ENV | **Not hit.** `infra/write-env-file.sh staging` ran and wrote both files (mode 600, names only on screen). A direct `ls` of `.env.local` was refused and not routed around. | "ls from '/home/jonaswsl/projects/daygame-coach/.env.local' was blocked by a deny rule." |
 | B-SHARED-DEPS (new) | **Closed by the owner.** Copying `package.json`, `package-lock.json` and `.nvmrc` into the shared folder was refused once; the owner then approved it in this session ("Yes, apply and commit"), and it landed in cdd7446a. | "Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Modify Shared Resources]." |
 | B-PEER-TREE | **Hit three times, each cleared by the peer.** The pre-commit hook failed on other sessions' uncommitted test work: `e2e-isolation.test.ts` and `lintRatchet.test.ts` (daygame-coach-ac, 14:17), then `e2e-isolation.test.ts` "stateful E2E tests must use serial mode" (daygame-coach-7c, fixed in b8d823d0). CI's type ratchet was red from 7e66dd8a (`tests/e2e/blackbox-seed-race.spec.ts:96` TS2769) until c86b601c; the CI run on efe1ab1f, before any commit of this plan in that window, failed the same step. | messages in this session; CI runs 38408000694 and 38408593068 (Type-check ratchet: failure) |
@@ -284,7 +284,7 @@ what happened, not a guess.
 | B-DISK (new) | **Open, owner's.** C: holds WSL's virtual disk and is 99 % full (30 GB free). A full C: detached WSL and killed every session today (recorded by the site-structure plan's session). This plan's buildx builder held **30 GB of build cache** on that disk at the time, so its image builds very likely contributed. The cache was pruned to 4 GB, and `infra/build-image.sh` now refuses to build below 20 GB free on C: and trims the cache after every build (a1f82f6b). Space freed inside WSL is reused but does not shrink the file on C:. | `df -h /mnt/c`: "1.9T 1.8T 30G 99%"; `docker buildx prune --builder dg-capped --keep-storage 4gb`: "Total: 26.49GB" |
 | B-DEVSERVER | **Open, and the dev server is down.** The WSL restart at 17:49 stopped the owner's `npm run dev` on :3000. This plan does not start it (R11). | `curl http://localhost:3000/`: 000 after the restart (200 before) |
 | B-CI-ARTIFACTS / R12 | **R12 done by daygame-coach-bf**: the three test accounts have new passwords, every session revoked, the 10 reports holding the old ones deleted, `.env.local` and the CI secrets updated. New report artifacts keep being uploaded by e2e.yml (23 now); since f92a16f1 they type passwords through `fillSecret`, so their step names hold none (not downloaded here). | bf's message 2026-10-13; `gh api repos/reachjvc/Daygame_coach/actions/artifacts`: "total_count=23" |
-| B-GHCR | **Open, and now concrete.** The first live `image-staging` run pushed an empty placeholder to create `ghcr.io/reachjvc/daygame-coach-staging`; GitHub made the new package **public**, as this plan's "What would make this plan wrong" foresaw, and the privacy check stopped the job before any real image. The package holds only that placeholder: one text file, nothing from the app. CI no longer creates packages (8c17898d), and `STAGING_PUBLISH` is `off` again. | run 38429479662: "ghcr.io/reachjvc/daygame-coach-staging:placeholder can be read without logging in: the package is PUBLIC. Stopping before any image is pushed."; anonymous manifest request: 200 |
+| B-GHCR | **Staging package closed 2026-10-14**: the owner made `daygame-coach-staging` private; it stays linked to the repository, which is why its settings show no separate "Manage Actions access" list. Anonymous token request now: 401. The production package and the two read-only tokens (R5) are still open. Before that: **Open, and now concrete.** The first live `image-staging` run pushed an empty placeholder to create `ghcr.io/reachjvc/daygame-coach-staging`; GitHub made the new package **public**, as this plan's "What would make this plan wrong" foresaw, and the privacy check stopped the job before any real image. The package holds only that placeholder: one text file, nothing from the app. CI no longer creates packages (8c17898d), and `STAGING_PUBLISH` is `off` again. | run 38429479662: "ghcr.io/reachjvc/daygame-coach-staging:placeholder can be read without logging in: the package is PUBLIC. Stopping before any image is pushed."; anonymous manifest request: 200 |
 | B-DNS, B-HETZNER, B-TAILSCALE, B-MAIN, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
 
 # OPEN QUESTIONS — every one decided, with the cost if the decision is wrong
@@ -856,7 +856,10 @@ reaches https://localhost with no person involved.
   package: an existing tag must be proven private first. To resume: R5, then
   `gh variable set STAGING_PUBLISH --body on`.
 - **4.5** Not this plan's (B9 of tests-worth-their-keep.md).
-- **4.6–4.7 blocked: B-GH.** The CLI token has no `read:packages` ("You need at least read:packages
+- **4.6 done 2026-10-14**: `gh auth token | docker login ghcr.io -u reachjvc --password-stdin`:
+  "Login Succeeded"; an authenticated inspect of the package's placeholder answered with its digest.
+  `STAGING_PUBLISH` is `on` again. 4.7's result follows below once a CI run has published.
+- **4.6–4.7 were blocked: B-GH.** The CLI token has no `read:packages` ("You need at least read:packages
   scope to list packages. (HTTP 403)"), so `gh auth token | docker login ghcr.io` would not let this
   machine pull the private image. The agent's settings already watch
   `ghcr.io/reachjvc/daygame-coach-staging:staging`; its timer is **disabled** until R4/R5, so it does
@@ -1049,8 +1052,8 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R1 domain | Open |
 | R2 Cloudflare token | Open |
 | R3 Hetzner | Open |
-| R4 GitHub CLI | **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
-| R5 read-only registry tokens | Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
+| R4 GitHub CLI | **Done 2026-10-14** (`read:packages` added). Before that: **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
+| R5 read-only registry tokens | **Staging package made private 2026-10-14.** Still open: the production package and the two read-only tokens. Original note: Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
 | R6 Tailscale | Open |
 | R7 Supabase redirect URLs | Open |
 | R8 fast-forward `main` | Open. Note: Vercel will build `main` on Node 24 (`engines`). |
