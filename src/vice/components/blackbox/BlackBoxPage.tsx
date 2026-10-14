@@ -52,7 +52,7 @@ import {
 import { currentAttempt, forVice, runLanes, stats, thoughtCosts, vicesOn } from "../../blackboxService"
 import { mergeRecords } from "../../blackbox/viceSyncService"
 import { familyFor } from "../../data/blackbox"
-import { LIFE_MASTERY } from "@/src/shared/lifeMasteryRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { BackLink } from "@/components/BackLink"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { HelpDoor } from "../HelpDoor"
@@ -269,7 +269,7 @@ export function BlackBoxPage() {
       <div>
       <div className="mb-3 flex items-center justify-between gap-3">
         <BackLink
-          fallback={LIFE_MASTERY}
+          fallback={ROUTES.plan}
           fallbackLabel="Life Mastery"
           className="inline-flex min-h-11 items-center gap-1.5 text-[12px] text-zinc-500 transition-colors hover:text-white"
         />

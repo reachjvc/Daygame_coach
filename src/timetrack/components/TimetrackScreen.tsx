@@ -15,7 +15,8 @@
  */
 
 import { TogglLab } from "./TogglLab"
+import { ROUTES } from "@/src/shared/routes"
 
 export function TimetrackScreen() {
-  return <TogglLab backHref="/dashboard" backLabel="Dashboard" />
+  return <TogglLab backHref={ROUTES.dashboard} backLabel="Dashboard" />
 }

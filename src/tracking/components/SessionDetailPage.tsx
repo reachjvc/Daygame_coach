@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -298,7 +299,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
       }
       // Clear any ended session from sessionStorage so the session page picks it up cleanly
       sessionStorage.removeItem("daygame_ended_session")
-      router.push("/dashboard/tracking/session")
+      router.push(ROUTES.trackingSession)
     } catch (err) {
       setReactivateError(err instanceof Error ? err.message : "Failed to reactivate")
     } finally {
@@ -330,7 +331,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
   if (error || !session) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
         <Card className="p-8 text-center">
           <AlertCircle className="size-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <h2 className="text-xl font-semibold mb-2">{error || "Session not found"}</h2>
@@ -339,7 +340,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
               ? "You don't have permission to view this session."
               : "The session you're looking for doesn't exist or has been deleted."}
           </p>
-          <Link href="/dashboard/tracking">
+          <Link href={ROUTES.tracking}>
             <Button>Go to Dashboard</Button>
           </Link>
         </Card>
@@ -355,7 +356,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       {/* Back link */}
-      <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
+      <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6" />
 
       {/* Header */}
       <div className="mb-6">
@@ -715,7 +716,7 @@ export function SessionDetailPage({ sessionId }: SessionDetailPageProps) {
             Continue Session Live
           </Button>
 
-          <Link href={`/dashboard/tracking/report?session=${sessionId}`} className="flex-1">
+          <Link href={`${ROUTES.trackingReport}?session=${sessionId}`} className="flex-1">
             <Button variant="default" className="w-full gap-2">
               <FileText className="size-4" />
               Write Field Report

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -49,7 +50,7 @@ export function RecentFieldReportsCard({ reports, onDeleteReport }: RecentFieldR
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Recent Field Reports</h2>
           <Link
-            href="/dashboard/tracking/history"
+            href={ROUTES.trackingHistory}
             className="text-sm text-primary hover:underline"
           >
             View All
@@ -136,7 +137,7 @@ export function RecentFieldReportsCard({ reports, onDeleteReport }: RecentFieldR
                         className="size-8 text-muted-foreground hover:text-primary"
                         onClick={(e) => {
                           e.stopPropagation()
-                          router.push(`/dashboard/tracking/report?edit=${report.id}`)
+                          router.push(`${ROUTES.trackingReport}?edit=${report.id}`)
                         }}
                       >
                         <Pencil className="size-4" />
@@ -252,7 +253,7 @@ export function RecentFieldReportsCard({ reports, onDeleteReport }: RecentFieldR
                         <Button
                           size="sm"
                           className="flex-1"
-                          onClick={() => router.push(`/dashboard/tracking/report?edit=${report.id}`)}
+                          onClick={() => router.push(`${ROUTES.trackingReport}?edit=${report.id}`)}
                         >
                           <Pencil className="size-4 mr-2" />
                           Edit Report

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { Mic, Square, Loader2, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder"
@@ -180,7 +181,7 @@ export function VoiceRecorderButton({
         {showLanguageHint && (
           <span className="text-xs text-muted-foreground animate-in fade-in duration-300">
             Transcribing in {langLabel}. Change in{" "}
-            <a href="/dashboard/settings" className="underline hover:text-primary">Settings</a>.
+            <a href={ROUTES.settings} className="underline hover:text-primary">Settings</a>.
           </span>
         )}
       </div>

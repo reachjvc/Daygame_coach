@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useRouter } from "next/navigation"
 import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { toDateISO } from "@/src/shared/dateUtils"
@@ -332,7 +333,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
         throw new Error(error.error || "Failed to save review")
       }
 
-      router.push("/dashboard/tracking")
+      router.push(ROUTES.tracking)
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to save review")
     } finally {
@@ -353,7 +354,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8" data-testid="weekly-review-page">
         <div className="mb-8">
-          <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+          <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
           <h1 className="text-3xl font-bold">Weekly Review</h1>
           <p className="text-muted-foreground mt-2">
             Reflect on your week and set intentions for the next one

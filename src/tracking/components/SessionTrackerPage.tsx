@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSession } from "../hooks/useSession"
 import { invalidateTrackingStatsCache } from "../hooks/useTrackingStats"
@@ -234,7 +235,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   useEffect(() => {
     if (searchParams.get("autostart") === "true" && !state.isLoading) {
       // Clean up the URL first
-      router.replace("/dashboard/tracking/session", { scroll: false })
+      router.replace(ROUTES.trackingSession, { scroll: false })
       // If there's an existing active session, show the active session dialog
       if (state.isActive && state.session) {
         setExistingActiveSession(state.session)
@@ -279,7 +280,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     // Complete endSession FIRST to ensure sessionStorage is set before navigation
     await endSession()
     invalidateTrackingStatsCache()
-    router.push("/dashboard/tracking")
+    router.push(ROUTES.tracking)
   }
 
   // End session AND navigate to write field report
@@ -290,7 +291,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     // End session FIRST to ensure it's properly closed before navigating
     await endSession()
     invalidateTrackingStatsCache()
-    router.push(`/dashboard/tracking/report?session=${sessionId}`)
+    router.push(`${ROUTES.trackingReport}?session=${sessionId}`)
   }
 
   // Handle clicking "Start Session" - check for existing active session first
@@ -467,7 +468,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               </Button>
 
               <div className="flex gap-2">
-                <Link href={`/dashboard/tracking/report?session=${endedSession.id}`} className="flex-1">
+                <Link href={`${ROUTES.trackingReport}?session=${endedSession.id}`} className="flex-1">
                   <Button variant="outline" className="w-full">
                     <FileText className="size-4 mr-2" />
                     Write Report

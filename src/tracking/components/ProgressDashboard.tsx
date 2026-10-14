@@ -12,7 +12,7 @@ import type { NsPlan } from "@/src/goals/types"
 import type { OneThing } from "@/src/goals/oneThingService"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 import type { DashboardLayoutResponse } from "../types"
-import { TRACKING } from "@/src/shared/trainingRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { TrainingCard } from "@/src/programs/components/TrainingCard"
 import {
   DashboardSkeleton,
@@ -87,7 +87,7 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
             Track your approaches, write reports, and watch yourself improve
           </p>
         </div>
-        <Link href="/dashboard/tracking/session?autostart=true" className="shrink-0" data-testid="new-session-link">
+        <Link href={`${ROUTES.trackingSession}?autostart=true`} className="shrink-0" data-testid="new-session-link">
           <Button size="lg" className="gap-2 w-full sm:w-auto">
             <Play className="size-5" />
             Start Session
@@ -111,7 +111,7 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
         when there is no program, which is exactly when somebody needs the way
         in. A thing you act on belongs above the things you read.
       */}
-      <TrainingCard from={TRACKING} className="mb-6" />
+      <TrainingCard from={ROUTES.tracking} className="mb-6" />
 
       {/* Stat tiles — user-configurable; see StatTileGrid */}
       <StatTileGrid initial={initialDashboard} />

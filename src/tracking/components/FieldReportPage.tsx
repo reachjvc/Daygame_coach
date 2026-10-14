@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useBackableState } from "@/src/shared/useBackableState"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -593,7 +594,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
       if (isEditMode) {
         router.back()
       } else {
-        router.push("/dashboard/tracking")
+        router.push(ROUTES.tracking)
       }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to save report")
@@ -716,7 +717,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
   if (isEditMode && submitError && !existingReport) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <BackLink fallback="/dashboard/tracking/history" fallbackLabel="History" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors" />
+        <BackLink fallback={ROUTES.trackingHistory} fallbackLabel="History" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors" />
         <Card className="p-4 sm:p-6 rounded-2xl border-destructive/50">
           <div className="text-center">
             <FileText className="size-12 mx-auto mb-4 text-muted-foreground/30" />
@@ -751,7 +752,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
           setShowCustomBuilder(false)
         }}
         onSavedReport={() => {
-          router.push("/dashboard/tracking#recent-reports")
+          router.push(`${ROUTES.tracking}#recent-reports`)
         }}
       />
     )
@@ -762,7 +763,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
     return (
       <div className="max-w-6xl mx-auto px-4 py-8" data-testid="field-report-template-selection">
         <div className="mb-8">
-          <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+          <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
           <h1 className="text-3xl font-bold">Write Field Report</h1>
           <p className="text-muted-foreground mt-2">
             {sessionData ? "Review your session and choose a template" : "Choose a template that fits your session"}

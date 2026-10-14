@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ROUTES, trackingSessionDetail } from "@/src/shared/routes"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -42,7 +43,7 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Recent Sessions</h2>
           <Link
-            href="/dashboard/tracking/history"
+            href={ROUTES.trackingHistory}
             className="text-sm text-primary hover:underline"
           >
             View All
@@ -118,7 +119,7 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
                     </Badge>
                   )}
                   {session.is_active ? (
-                    <Link href="/dashboard/tracking/session">
+                    <Link href={ROUTES.trackingSession}>
                       <Button variant="outline" size="sm" className="gap-1 text-xs">
                         <Play className="size-3" />
                         Continue
@@ -126,13 +127,13 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
                     </Link>
                   ) : (
                     <>
-                      <Link href={`/dashboard/tracking/session/${session.id}`}>
+                      <Link href={trackingSessionDetail(session.id)}>
                         <Button variant="outline" size="sm" className="gap-1 text-xs">
                           <Pencil className="size-3" />
                           <span className="hidden sm:inline">Edit</span>
                         </Button>
                       </Link>
-                      <Link href={`/dashboard/tracking/report?session=${session.id}`}>
+                      <Link href={`${ROUTES.trackingReport}?session=${session.id}`}>
                         <Button variant="outline" size="sm" className="gap-1 text-xs">
                           <FileText className="size-3" />
                           <span className="hidden sm:inline">Report</span>

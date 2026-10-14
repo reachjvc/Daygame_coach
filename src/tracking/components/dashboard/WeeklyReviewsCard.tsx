@@ -1,6 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
+import { ROUTES } from "@/src/shared/routes"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, ArrowRight } from "lucide-react"
@@ -25,7 +26,7 @@ export function WeeklyReviewsCard({ stats, recentReviews }: WeeklyReviewsCardPro
               : `${4 - (stats?.weekly_reviews_completed || 0)} more to unlock monthly`}
           </p>
         </div>
-        <Link href="/dashboard/tracking/review">
+        <Link href={ROUTES.trackingReview}>
           <Button variant="outline">
             Write Review
             <ArrowRight className="size-4 ml-2" />

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { useRouter } from "next/navigation"
 import { toDateISO } from "@/src/shared/dateUtils"
 import { Button } from "@/components/ui/button"
@@ -185,7 +186,7 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
         throw new Error(error.error || "Failed to save review")
       }
 
-      router.push("/dashboard/tracking")
+      router.push(ROUTES.tracking)
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to save review")
     } finally {
@@ -204,7 +205,7 @@ export function DailyReviewPage({ userId }: DailyReviewPageProps) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8" data-testid="daily-review-page">
       <div className="mb-8">
-        <BackLink fallback="/dashboard/tracking" fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
+        <BackLink fallback={ROUTES.tracking} fallbackLabel="Tracking" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4" />
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-amber-500/10">
             <Sun className="size-6 text-amber-500" />

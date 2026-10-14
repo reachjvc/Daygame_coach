@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -519,7 +520,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               . Sign in again to carry on where you left off.
             </p>
             <Button size="sm" asChild>
-              <Link href={`/auth/login?next=${encodeURIComponent(typeof window === "undefined" ? "/dashboard/time" : window.location.pathname)}`}>
+              <Link href={`/auth/login?next=${encodeURIComponent(typeof window === "undefined" ? ROUTES.time : window.location.pathname)}`}>
                 Sign in again
               </Link>
             </Button>

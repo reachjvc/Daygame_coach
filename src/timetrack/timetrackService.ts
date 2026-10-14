@@ -55,6 +55,7 @@ import type {
 } from "./types"
 
 import { newId } from "./idService"
+import { ROUTES } from "@/src/shared/routes"
 
 // ---------------------------------------------------------------------------
 // Generic helpers
@@ -2035,7 +2036,7 @@ export function deleteWebhook(state: TimetrackState, id: Id): TimetrackState {
  * (`app/test/layout.tsx` calls `notFound()` there) — a "copy link" that hands
  * somebody a dead address.
  */
-export function startLinkFor(entry: TimeEntry, origin: string, path = "/dashboard/time"): string {
+export function startLinkFor(entry: TimeEntry, origin: string, path: string = ROUTES.time): string {
   const params = new URLSearchParams()
   if (entry.description) params.set("description", entry.description)
   if (entry.projectId !== null) params.set("project", String(entry.projectId))

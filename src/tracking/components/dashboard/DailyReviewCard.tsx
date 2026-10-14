@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { ROUTES } from "@/src/shared/routes"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Sun, ArrowRight, Check } from "lucide-react"
@@ -49,7 +50,7 @@ export function DailyReviewCard() {
             <Check className="size-4 text-green-500" />
           </div>
         ) : (
-          <Link href="/dashboard/tracking/daily">
+          <Link href={ROUTES.trackingDaily}>
             <Button variant="outline" size="sm" className="gap-1">
               {todayDraft ? "Continue" : "Reflect on Today"}
               <ArrowRight className="size-3" />
