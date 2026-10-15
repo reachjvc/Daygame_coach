@@ -16,6 +16,21 @@ import { isPublicPage, legacyRedirect } from "@/src/shared/routes"
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
+  /**
+   * THE API DECISIONS USE THE DECODED PATH. The router decodes a path before it
+   * picks a route, so a check on the raw one is beaten by encoding one letter:
+   * `/api/tes%74/articles` skipped the production seal below and reached the
+   * sandbox handler (found by the security review of Plans/site-structure.md,
+   * 2026-10-15; on Vercel it answered 500, on a self-hosted build it ran).
+   * Page checks stay on the raw path, where an encoded address fails closed.
+   */
+  let path: string
+  try {
+    path = decodeURIComponent(pathname)
+  } catch {
+    return new NextResponse(null, { status: 400 })
+  }
+
   // An address that moved answers with a permanent redirect before anything
   // else, signed in or not, and keeps its query string: a copied time-tracker
   // start link is all query.
@@ -25,7 +40,7 @@ export async function proxy(request: NextRequest) {
   // The /api/test/* routes are unauthenticated sandbox endpoints for the /test
   // pages. They read and write real data, so they must never answer in
   // production. Gated here, in one place, rather than in ten route files.
-  if (pathname.startsWith("/api/test/")) {
+  if (path.startsWith("/api/test/")) {
     const allowed =
       process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_ROUTES === "true"
     if (!allowed) {
@@ -84,10 +99,10 @@ export async function proxy(request: NextRequest) {
   // "you are signed out". Defence in depth — every route also calls
   // requireAuth() itself. Only these two API prefixes reach the proxy at all
   // (see the matcher); the rest check the user in their own handlers.
-  if (pathname.startsWith("/api/timetrack/") && !user) {
+  if (path.startsWith("/api/timetrack/") && !user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
-  if (pathname.startsWith("/api/")) return response
+  if (path.startsWith("/api/")) return response
 
   if (!user) {
     const redirectUrl = new URL("/auth/login", request.url)
@@ -117,8 +132,10 @@ export const config = {
     // development), and the files in public/ by their extension, plus /sw.js
     // and /manifest.webmanifest. By extension and not "anything with a dot":
     // that rule let `/tracking/session/a.b` past the guard, which is how
-    // "private by default" quietly stops being true. A flat list, because the
-    // matcher's path syntax refuses nested groups.
+    // "private by default" quietly stops being true. Still not total: a page
+    // address ending in one of these extensions (`/tracking/session/x.json`)
+    // skips this guard, so every page keeps its own check of the user. A flat
+    // list, because the matcher's path syntax refuses nested groups.
     "/((?!api/|_next/|__nextjs|.*\\.jpg$|.*\\.jpeg$|.*\\.png$|.*\\.gif$|.*\\.webp$|.*\\.svg$|.*\\.ico$|.*\\.mp4$|.*\\.pkl$|.*\\.json$|.*\\.js$|.*\\.css$|.*\\.map$|.*\\.txt$|.*\\.xml$|.*\\.webmanifest$).*)",
     "/api/test/:path*",
     "/api/timetrack/:path*",

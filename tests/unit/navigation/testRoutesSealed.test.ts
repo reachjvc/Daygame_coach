@@ -82,6 +82,28 @@ describe("the /test API surface is sealed in production", () => {
     expect(res.status).toBe(404)
   })
 
+  it("404s an address that only spells /api/test once decoded", async () => {
+    // The router decodes the path before it picks a route; the seal must too.
+    // `/api/tes%74/articles` used to pass the raw check and reach the handler.
+    setNodeEnv("production")
+    vi.stubEnv("ENABLE_TEST_ROUTES", "")
+    stubSupabaseEnv()
+
+    for (const shape of ["/api/tes%74/articles", "/api/test%2Farticles", "/%61pi/test/articles"]) {
+      const res = await proxy(req(shape))
+      expect(res.status, shape).toBe(404)
+    }
+  })
+
+  it("refuses a path it cannot decode rather than guessing", async () => {
+    setNodeEnv("production")
+    stubSupabaseEnv()
+
+    const res = await proxy(req("/api/test/%E0%A4%A"))
+
+    expect(res.status).toBe(400)
+  })
+
   it("still answers in development, or the /test pages are useless", async () => {
     setNodeEnv("development")
     stubSupabaseEnv()
