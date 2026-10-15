@@ -111,7 +111,7 @@ export function ReasonsPass({ goals, onWhy, onPainWhy, onReasons, onDone }: {
   const expand = async () => {
     setPhase("loading"); setErr("")
     try {
-      const res = await fetch("/api/goals/vision-plan/reasons", {
+      const res = await fetch("/api/test/goals/vision-plan/reasons", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ goalTitle: goal.title, why: goal.why, existing: reasons, want: 20 }),
       })

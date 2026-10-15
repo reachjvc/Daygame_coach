@@ -12,7 +12,7 @@
  * So a namespace is either in the registry or it is declared here. Two are:
  *
  *   `fw:` — the new-goals framework plan, validated and persisted through
- *           `/api/goals/plan` rather than the registry.
+ *           `/api/test/goals/plan` rather than the registry.
  *   `ns:` — goals pushed from the North Star flow's track step, tagged
  *           `ns:<run>:<plan goal id>` so a second push is idempotent.
  *

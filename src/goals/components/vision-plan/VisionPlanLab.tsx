@@ -5136,7 +5136,7 @@ function MonthlyReportSection({
   const fetchCommentary = async () => {
     setBusy(true); setError("")
     try {
-      const res = await fetch("/api/goals/vision-plan/report", {
+      const res = await fetch("/api/test/goals/vision-plan/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vision, report }),
@@ -5691,7 +5691,7 @@ function ReasonsDrill({ goalTitle, goalWhy, reasons, onAdd, onAddMany, onRemove 
   const expand = async () => {
     setPhase("loading"); setErr("")
     try {
-      const res = await fetch("/api/goals/vision-plan/reasons", {
+      const res = await fetch("/api/test/goals/vision-plan/reasons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ goalTitle, why: goalWhy, existing: reasons, want: 20 }),
@@ -8131,7 +8131,7 @@ export function VisionPlanLab() {
     if (!result || result.intents.length === 0) return
     setGoalPhase("generating"); setGoalErr("")
     try {
-      const res = await fetch("/api/goals/vision-plan", {
+      const res = await fetch("/api/test/goals/vision-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -8369,7 +8369,7 @@ export function VisionPlanLab() {
     setRefiningId(goalId)
     setRefineErrs((p) => ({ ...p, [goalId]: "" }))
     try {
-      const res = await fetch("/api/goals/vision-plan/refine", {
+      const res = await fetch("/api/test/goals/vision-plan/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ vision: matchedText, instruction, goal }),
@@ -8942,7 +8942,7 @@ export function VisionPlanLab() {
         ].map((title) => ({ title: title.slice(0, 160) })),
         [],
       ).map((g) => g.title)
-      const res = await fetch("/api/goals/vision-plan", {
+      const res = await fetch("/api/test/goals/vision-plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -7,7 +7,7 @@ import { queryVisionClaude } from "@/src/goals/visionPlanClaude"
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
 /**
- * POST /api/goals/vision-plan/report — coach commentary on a deterministic
+ * POST /api/test/goals/vision-plan/report — coach commentary on a deterministic
  * Monthly Goals Report (PLM layer). Fail-closed like generate/refine: empty or
  * unusable LLM output → explicit 502, never fabricated commentary.
  */

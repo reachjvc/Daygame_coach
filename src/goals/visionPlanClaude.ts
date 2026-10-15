@@ -1,7 +1,7 @@
 /**
  * Vision-plan LLM caller — thin wrapper over the shared Claude CLI headless
  * helper (src/shared/claudeHeadless.ts). Server-only: used by
- * app/api/goals/vision-plan.
+ * app/api/test/goals/vision-plan.
  *
  * Fail-closed: empty output or a dead CLI throws — callers surface an explicit
  * error, never a fallback plan (CLAUDE.md rule 15).

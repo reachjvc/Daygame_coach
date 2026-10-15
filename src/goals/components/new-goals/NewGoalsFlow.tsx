@@ -16,7 +16,7 @@ import { clarifierPrompt, clarifierOption, AUTHORED_CLARIFIERS } from "./clarifi
 import { ArrowLeft, ArrowRight, Check, Compass, Dumbbell, Heart, Landmark, type LucideIcon } from "lucide-react"
 import { applyProgramReference } from "@/src/goals/northStarStorage"
 
-/** What POST /api/goals/plan reports back about the programs it enrolled. */
+/** What POST /api/test/goals/plan reports back about the programs it enrolled. */
 interface EnrolledRef {
   programId: string
   enrollmentId: string
@@ -69,7 +69,7 @@ export function NewGoalsFlow({
   onSandboxSave,
 }: {
   onSaved?: () => void
-  /** Fully disconnected mode: no rehydrate from /api/goals/plan, no POST on save. */
+  /** Fully disconnected mode: no rehydrate from /api/test/goals/plan, no POST on save. */
   sandbox?: boolean
   /** Sandbox save hands the flow state up instead of persisting it. */
   onSandboxSave?: (state: NewGoalsFlowState) => void
@@ -112,7 +112,7 @@ export function NewGoalsFlow({
   useEffect(() => {
     if (sandbox) return
     let cancelled = false
-    fetch("/api/goals/plan")
+    fetch("/api/test/goals/plan")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (cancelled || !data) return
@@ -148,7 +148,7 @@ export function NewGoalsFlow({
     }
     setSaveStatus("saving")
     try {
-      const res = await fetch("/api/goals/plan", {
+      const res = await fetch("/api/test/goals/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

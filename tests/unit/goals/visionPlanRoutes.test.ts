@@ -1,12 +1,12 @@
 /**
- * THE DEPLOYED VISION-PLAN ROUTES' CONTRACT.
+ * THE VISION-PLAN SERVICE'S CONTRACT.
  *
- * app/api/goals/vision-plan/{,reasons,refine,report} are not under /api/test:
- * they ship, any signed-in account can call them, and each call runs Claude.
- * Only the /test/vision-plan lab calls them today, but a deployed route's
- * request schema and its parsing of the model's reply are product surface.
- * These tests came back from the retired visionPlanService.test.ts on
- * 2026-10-13 for that reason; the lab-only tests stayed retired.
+ * These came back from the retired visionPlanService.test.ts on 2026-10-13
+ * because app/api/goals/vision-plan/* shipped: any signed-in account could
+ * call it, and each call ran Claude, though only the /test/vision-plan lab
+ * used it. On 2026-10-15 the routes moved under app/api/test/goals/, where the
+ * proxy refuses them in production. The tests stay for the service, which
+ * Life Mastery also uses (northStarService, north-star/GoalCard).
  */
 import { describe, it, expect } from "vitest"
 import {

@@ -6,7 +6,7 @@ import { queryVisionClaude } from "@/src/goals/visionPlanClaude"
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
 /**
- * POST /api/goals/vision-plan/reasons — expand the 100-reasons drill for ONE
+ * POST /api/test/goals/vision-plan/reasons — expand the 100-reasons drill for ONE
  * goal, written in the user's own voice. Fail-closed like generate/refine:
  * unparseable output or an all-duplicate batch → explicit 502, never a silent
  * empty list that looks like "the button does nothing".

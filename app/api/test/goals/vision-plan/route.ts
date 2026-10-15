@@ -6,7 +6,7 @@ import { queryVisionClaude } from "@/src/goals/visionPlanClaude"
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
 /**
- * POST /api/goals/vision-plan — turn a vision + its embedding-derived intents
+ * POST /api/test/goals/vision-plan — turn a vision + its embedding-derived intents
  * into framework-grounded goal drafts via the Claude CLI (test-page beta).
  * Fail-closed: LLM failure or invalid output → explicit 502, never a fallback.
  */

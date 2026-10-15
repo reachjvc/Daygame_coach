@@ -7,7 +7,7 @@ import type { VisionGoalDraft } from "@/src/goals/types"
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
 /**
- * POST /api/goals/vision-plan/refine — apply a free-text change request to ONE
+ * POST /api/test/goals/vision-plan/refine — apply a free-text change request to ONE
  * goal ("one more gym day", "make it calisthenics"). Fail-closed like generate:
  * invalid LLM output → explicit 502, never a silently unchanged goal.
  */

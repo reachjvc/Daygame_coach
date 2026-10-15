@@ -194,7 +194,7 @@ interface GoalsConfigStepProps {
    * Kept so the flow's shape does not change, and unread here.
    *
    * Programs are chosen on the Training page now; this step links there. The
-   * field and the enrol loop behind `/api/goals/plan` are left alone
+   * field and the enrol loop behind `/api/test/goals/plan` are left alone
    * deliberately — nothing sends a selection any more, and deciding whether
    * that path should exist at all belongs with the goals work, not here.
    */
