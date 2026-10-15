@@ -852,6 +852,15 @@ Vercel dashboard → the Preview deployment of the last commit → **Share** (B-
 
 ## Phase 6 — The friend looks again
 
+**Step 1 done 2026-10-15** on production itself: `main` was fast-forwarded to `e2a1c5ae` (by another
+session, after `CLAUDE.md` dropped the ask-first rule) and Vercel deployed it at 11:33Z
+(`/api/healthz` buildId `e2a1c5ae`). Signed out: the 12 new addresses answer 307 to sign-in with
+`next`; old addresses 308 to the new ones with the query kept (`/dashboard/time?start=1&…`,
+`/dashboard/goals/plan?step=today`); `/api/tes%74/articles` now 404 like `/api/test/articles`; `/`,
+`/auth/login`, `/sw.js`, `/manifest.webmanifest` 200. CI on `b49cf23c` was cancelled by a newer
+push, not failed; `1d4379ff` is the last commit with both workflows green. Steps 2–3 (the friend)
+are the owner's.
+
 1. On the shared URL: Appendix C's `curl` loops with `B=<that URL>` (old 308, new 307 signed out).
 2. **You** sign in there with your own account and open each tab on a laptop and on a phone. (The
    browser tests cannot run there: a preview talks to the live project, and they only run on the
