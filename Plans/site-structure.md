@@ -532,16 +532,20 @@ is `/`, under `/auth/`, or under `/test/` (never guarded; 404 in production by i
    - `isUnder`: `/time` is not under `/timeline`'s prefix and vice versa; `/plan` is under `/plan`.
    - The old "is gated by the proxy" string check from 1.C step 11 is deleted (this replaces it).
 
-**Status:** code done 2026-10-14 (`d36103d2`); **live acceptance blocked: B-DISK.** Unit evidence:
-`proxyPrivateByDefault.test.ts` runs Next's own matcher (`unstable_doesMiddlewareMatch`, the name
-this installed version exports; the docs call it `unstable_doesProxyMatch`) on every product page,
-two API prefixes, the API and the static files, then the signed-out answer on every private page;
-4,731 unit tests green; types and lint none new. It needed no Supabase mock: with no session
-cookie `getUser()` answers without a network call, as `testRoutesSealed.test.ts` already relied on.
-Not yet run: the `curl` loop, the sweep and the offline specs. At 19:13 UTC C: had **19.3 GiB**
-free, under the 20 GB line, so the `:3101` server was stopped seconds after starting and its
-folder deleted. Also: nothing listens on `:3000` (your dev server has not been restarted since the
-WSL crash), so there was no running copy to check signed out without starting one.
+**Status:** done 2026-10-15. Code `d36103d2` (2026-10-14). It reached production before its live
+checks, because `main` was fast-forwarded on the owner's word on 2026-10-14 (`b55c374c`), so the
+address check ran **on production itself** (`/api/healthz` buildId `3e72d130`, which contains it),
+signed out: every product address, `/redirect` and `/admin/ai-usage` answer 307 to
+`/auth/login?next=<path+query>` (`/dashboard/tracking?tab=week` keeps its query); `/`,
+`/auth/login`, `/auth/sign-up`, `/sw.js`, `/manifest.webmanifest`, `/favicon.ico` and
+`/icon-192.png` answer 200; `/test` 404; `/api/tracking/stats` and `/api/timetrack/sync` 401.
+Sweep (`sweep-desktop` + `sweep-phone`, test backend): **106 passed (1.9m)**. A first run the same
+morning had 3 junk-URL timeouts on phone while another session ran `blackbox.spec.ts` at 4
+workers on the same `:3200` server; all three passed alone, and the full rerun on a quiet machine
+passed. Offline specs against a production build of `fc3ec48e` on `:3100` (test backend):
+`vice-offline.spec.ts` and `programs-offline.spec.ts` both **passed, neither skipped** (both now
+in the `desktop` project). `tsconfig.json`, rewritten by the build, restored. The earlier
+B-DISK stop (2026-10-14, 19.3 GiB) cleared: C: had 1,034 GiB free on 2026-10-15.
 
 **Acceptance:** `npm test` passes. On `:3101` (Appendix C), signed out, the "before Phase 4" loop:
 every product address answers 307 to login with `next`; `/`, `/auth/login`, `/sw.js` and
