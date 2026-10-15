@@ -41,8 +41,17 @@ describe("the current tab", () => {
   })
 
   it("marks none when you are somewhere the bar does not name", () => {
-    path = ROUTES.scenarioPreferences
+    path = "/admin/ai-usage"
     render(<MobileTabBar />)
     expect(currentTabs()).toEqual([])
+  })
+
+  it("marks Scenarios on its preferences, which are part of it", () => {
+    // The dating answers moved from /preferences to /scenarios/preferences
+    // (Plans/site-structure.md, D1): only Scenarios uses them, so the bar says
+    // you are in Scenarios rather than nowhere.
+    path = ROUTES.scenarioPreferences
+    render(<MobileTabBar />)
+    expect(currentTabs()).toEqual(["Scenarios"])
   })
 })

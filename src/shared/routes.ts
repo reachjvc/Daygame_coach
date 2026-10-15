@@ -26,9 +26,9 @@ export const ROUTES = {
   trackingReview: "/dashboard/tracking/review",
   trackingDaily: "/dashboard/tracking/daily",
   trackingHistory: "/dashboard/tracking/history",
-  scenarios: "/dashboard/scenarios",
-  scenarioPreferences: "/preferences",
-  scenarioArchetypes: "/preferences/archetypes",
+  scenarios: "/scenarios",
+  scenarioPreferences: "/scenarios/preferences",
+  scenarioArchetypes: "/scenarios/preferences/archetypes",
   time: "/dashboard/time",
   coach: "/dashboard/qa",
   articles: "/dashboard/articles",
@@ -150,6 +150,8 @@ export function isPublicPage(pathname: string): boolean {
  */
 export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
   { from: "/dashboard/settings", to: "/settings" },
+  { from: "/dashboard/scenarios", to: "/scenarios" },
+  { from: "/preferences", to: "/scenarios/preferences" },
 ]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */
