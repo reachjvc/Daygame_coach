@@ -108,7 +108,11 @@ for (const suite of suites) {
   const line = `${label}: ${found.took}s (baseline ${suite.seconds}s, fails above ${ceiling}s)`
   console.log(line)
   if (found.took > ceiling) failures.push(`${line}\n    ${found.url}`)
-  else if (found.took < suite.seconds * (1 - tolerance)) lower.push(`${label}: ran in ${found.took}s; lower its baseline to that`)
+  // Not "lower it to this run": one fast run is noise (the unit step has taken
+  // 61 s and 97 s on the same code), and a baseline set from it fails the next
+  // ordinary night. The slowest of several recent green runs is the number.
+  else if (found.took < suite.seconds * (1 - tolerance))
+    lower.push(`${label}: ran in ${found.took}s, well under ${suite.seconds}s; lower the baseline to the slowest of its recent green runs`)
 }
 
 if (lower.length) console.log(`\nFaster than its baseline by more than the tolerance:\n  ${lower.join("\n  ")}`)
