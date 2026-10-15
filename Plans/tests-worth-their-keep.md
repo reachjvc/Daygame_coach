@@ -851,14 +851,21 @@ notes-only report (f34c603); both browser specs now assert the fix (9d00f02).
   (715f9d0, 3d2ee92);
 - a signed-in account that has not paid was told to "Sign up" on Inner Game,
   and offered "Login" on Scenarios (52cd764).
+- after a ramp, the Track grid and the goal it created disagreed both ways
+  (gym: grid 4, goal 2; Approaches: grid 7, goal 21). One `steadyRate` now,
+  carried into the goal as its ramp's last step; the class test compares the
+  two in every week, not only the first (0a4b2e9);
+- `vice-dialog-targets.spec` planted its record before the page's first sync
+  had settled, and lost it on the production build (5a84e0b9).
+
+All of the above is live: `main` at 5a84e0b9, every lane green (run
+38730086048), `/api/healthz` reporting that build.
 
 **Left for you:**
 - the migration `20260927120000_corrections_keep_set_order` (approved by you
   on 2026-09-28) is still not in production; it is the only pending one, and
   this session's permissions refuse `supabase db push`. Run
   `supabase migration list --linked`, then `supabase db push`.
-- after a ramped practice ends, the Track grid and the counted goal disagree
-  on the weekly target (4× vs 2×): a product question, not a fix.
 
 **Security, found along the way:** `/api/goals/plan` and the four
 `/api/goals/vision-plan/*` routes were deployed and callable by any signed-in
