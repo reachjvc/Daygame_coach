@@ -74,7 +74,7 @@ const CACHE = "app-shell-" + VERSION
  */
 const SHELL_PATHS = [
   // Started on a train, in a basement, on the underground.
-  "/dashboard/time",
+  "/time",
   // The Black Box. Its whole design premise is the moment somebody opens it
   // mid-thought, which is not a moment that waits for signal — and until
   // 2026-09-24 opening it without a connection showed the browser's error page

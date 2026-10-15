@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 
 import { FORGOTTEN_TIMER_HOURS, MIN_SPLIT_SECONDS } from "@/src/timetrack/config"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
@@ -390,7 +391,7 @@ describe("manual entries and start links", () => {
    */
   test("start link points at the tracker's real address, not the lab page", () => {
     const e = entry(1, "2026-08-09", "09:00", "10:00")
-    expect(startLinkFor(e, "https://app.test")).toContain("https://app.test/dashboard/time?start=1")
+    expect(startLinkFor(e, "https://app.test")).toContain(`https://app.test${ROUTES.time}?start=1`)
     expect(startLinkFor(e, "https://app.test")).not.toContain("/test/")
   })
 
