@@ -772,22 +772,25 @@ two runs had red shards, each a real fault now fixed: an ambiguous locator
 and the Black Box seed's future timestamp (below). **In the third, every
 pull-request lane is green.**
 
-**Open, nightly only:** `toggl-time-tracker.spec.ts` "two tabs of the same
-browser stay in step" fails on Firefox and Safari in CI — green in run 1, red on
-both attempts in runs 2 and 3, on both engines in run 3 — and passes on Chromium
-in every run, and 3 of 3 on WebKit locally against the dev server. In the second
-tab, Start never turns into Stop (`helpers/timetrack.ts:111`). Production build,
-non-Chromium engines, intermittent. *2026-10-14:* the test now says what each
-tab and the account held when it fails (3d243092). Run 38623226055 (Safari red,
-Firefox green): fifteen seconds after Start in the second tab, NO copy — either
-tab, the account — held "from tab B", running or not; so the start never took,
-or the whole state was replaced in the same tick. Ruled out: the click landing
-before React (the page is client-only, and the tab already showed "from tab A"
-from storage), the service worker (blocked; still failed), and a start made
-before the tab's first contact with the account (passes 4 of 4 on Chromium and
-WebKit locally). Next step: a trace from a failing CI run. Traces are off under
-CI by rule; turning them on for the nightly lanes is safe now that every account
-is a throwaway (Phase 9 step 3), but it is your named decision.
+**Closed 2026-10-15: the nightly "two tabs stay in step" failure was a product
+bug, now fixed (3e72d130) and released.** The test's report (3d243092,
+4e329837) showed the second tab's composer reset to "from tab A", which only the
+running-entry mirror writes: the second tab had briefly believed the stopped
+timer was running. Holding back tab A's stop upload reproduced it every time,
+in Chromium and WebKit: a tab opened while another tab's stop still waited in
+the shared upload queue adopted the account's copy (timer running) at first
+contact and broadcast it, and both tabs showed the stopped timer counting
+again. First contact now lays the shared queue's unsent rows over the
+server's copy. Pinned by `tests/unit/timetrack/queuedStopSurvivesFirstContact.test.tsx`.
+Run 38681532410 was the first with every lane green, WebKit included.
+
+**Released 2026-10-15:** `main` fast-forwarded to 3e72d130 on the owner's
+word in this session, with `checks`, the Vercel build and every e2e lane green
+on that commit; the live site's `/api/healthz` reports that build. The full
+e2e run and the nightly checks are green on `main` (runs 38682795018,
+38683482777). GitHub skipped the first 03:00 and 04:30 scheduled runs of the
+new crons, so both were dispatched by hand once. The 8 old repository secrets
+are deleted (B8).
 
 **What changed from this plan, and why.** No shared build (Phase 9 step 1: it
 lengthens the critical path). No separate `public` lane (signed-out specs run in
