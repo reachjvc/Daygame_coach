@@ -31,7 +31,7 @@ export const ROUTES = {
   scenarioArchetypes: "/scenarios/preferences/archetypes",
   time: "/time",
   coach: "/coach",
-  articles: "/dashboard/articles",
+  articles: "/articles",
   innerGame: "/dashboard/inner-game",
   settings: "/settings",
   training: "/programs",
@@ -155,6 +155,7 @@ export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
   { from: "/dashboard/time", to: "/time" },
   { from: "/dashboard/qa", to: "/coach" },
   { from: "/qa", to: "/coach" },
+  { from: "/dashboard/articles", to: "/articles" },
 ]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */
