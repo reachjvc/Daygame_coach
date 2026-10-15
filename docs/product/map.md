@@ -44,15 +44,16 @@ assuming anything is in the product.
 
 The navigation is the honest map, and it lives in `components/navTabs.ts`.
 
-Bottom tab bar: **Dashboard · Training · Tracking · Scenarios · Time**, plus a
-"More" sheet holding **Your plan · Ask Coach · Articles · Settings**.
+Bottom tab bar: **Dashboard · Training · Tracking · Your plan · Scenarios**,
+plus a "More" sheet holding **Time · Ask Coach · Articles · Settings**.
 
-**"Your plan" is Life Mastery, and it has only been in the navigation since
-2026-09-24.** Before that this line said "not in the navigation at all,
-reachable only by typing the address", which was true of it and of the
-**quit-a-vice** module inside it for as long as both existed.
+**"Your plan" is Life Mastery, a tab since 2026-10-15** on the owner's word,
+taking Time's place because a seventh item runs off-screen on every phone up to
+390px wide. It was in the More sheet from 2026-09-24, and before that "not in
+the navigation at all, reachable only by typing the address", which was true
+of it and of the **quit-a-vice** module inside it for as long as both existed.
 
-**ON A DESKTOP IT IS THE HEADER, NOT THE SHEET.** `MobileTabBar` is
+**ON A DESKTOP IT IS THE HEADER, NOT THE BAR.** `MobileTabBar` is
 `sm:hidden`, so above 640px the way in is the "Your plan" link in
 `components/AppHeader.tsx`, there since 2026-09-24 when the owner approved its
 icon. That header is mounted on the dashboard, Settings, Ask Coach, Articles,
