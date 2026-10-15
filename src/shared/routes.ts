@@ -34,8 +34,8 @@ export const ROUTES = {
   articles: "/articles",
   innerGame: "/inner-game",
   settings: "/settings",
-  training: "/programs",
-  liveWorkout: "/programs/live",
+  training: "/training",
+  liveWorkout: "/training/live",
   /**
    * Life Mastery, "Your plan" in the navigation.
    *
@@ -158,6 +158,7 @@ export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
   { from: "/dashboard/articles", to: "/articles" },
   { from: "/dashboard/inner-game", to: "/inner-game" },
   { from: "/dashboard/tracking", to: "/tracking" },
+  { from: "/programs", to: "/training" },
 ]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */
