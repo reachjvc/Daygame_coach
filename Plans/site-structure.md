@@ -554,6 +554,21 @@ every product address answers 307 to login with `next`; `/`, `/auth/login`, `/sw
 
 ## Phase 3 — One frame for the signed-in app
 
+**Status:** done 2026-10-15. Commits `08cf882c` (steps 2–8, one commit as planned) and `1ca27fa8`
+(step 9). Evidence: 4,743 unit tests green including `appFrame.test.tsx` (renders the real
+`app/(app)/layout.tsx`); `site-frame.spec.ts` **14 passed** (7 framed destinations × laptop and
+phone, fresh account, test backend); `mobile/mobile-navigation.spec.ts` passed in `phone` (now the
+More sheet); `dashboard-navigation.spec.ts` passed 3 of 3 (one earlier 2 ms setup failure right
+after another run, not reproduced); sweep **106 passed (2.3m)**; type check clean outside generated
+build folders; lint 290, one fewer, baseline lowered. Screenshots at 1280 and 390 px (Settings,
+Tracking, Training) looked right; they showed the header did not mark the current page in colour
+and that Log Out scrolled out of view at 1280 in development, both fixed in `1ca27fa8`.
+Differences from the steps: Q-ICON unanswered, so the header is text-only. While this ran, someone
+made Your plan a tab and moved Time to More (`3f755a3b`); the frame and the spec read the lists, so
+neither needed a change. Stale generated types for the old folder paths were deleted from `.next/`
+and `.next-e2e/` (build output only); another session's `.next-verify` was left alone, so a local
+type-ratchet run still lists its stale files.
+
 **Depends on:** Phases 1–2. **Working state:** navigation on every signed-in page at both widths; no
 tab destination poses as a child of the Dashboard; every address unchanged.
 
@@ -683,6 +698,28 @@ have their own account and may.
 
 ## Phase 4 — Addresses that say what belongs to what
 
+**Status:** done 2026-10-15. Commits: `f2dfd1b9` (first, every test names pages through `ROUTES`
+and `urlOf()`, so each section was a folder move, one value and one row), `c60d35cd` (1 Settings),
+`150e0b62` (2 Scenarios + preferences), `60bd49fd` (3 Time + `sw.js`), `b0382c8c` (4 Coach, `/qa`
+page deleted), `dfb52f12` (5 Articles), `70b1cc09` (6 Inner Game and 7 Tracking together: the route
+list carried both), `fc2f7ec3` (8 Training), `1443aef7` (9 Plan + quit-vice, old plan page deleted,
+`sw.js`, one-segment check on), `edeea95b` and `e7f8d1da` (browser-test follow-ups), `5fd39cfe`
+(comments). Evidence on the test backend: the `curl` loops gave 307-to-login with `next` on all 17
+product addresses, 200 on `/`, `/auth/login`, `/sw.js`, `/manifest.webmanifest`, and 308 on all 14
+old addresses with the query kept (`/dashboard/time?start=1&description=x` → `/time?start=1&…`,
+`/dashboard/goals/plan?step=today` → `/plan?step=today`); `site-frame.spec.ts` 14 passed with the
+one-segment check; sweep **98 passed** (8 fewer tests: two redirect-only pages are gone; one phone
+junk-URL timeout on `/plan?step=-1` in a first run passed 4 of 4 alone and in the full rerun, the
+same plan page that timed out under load before any move); `vice-offline` and `programs-offline`
+passed on a production build of `2a0563c8`; a full local run of the `desktop` and `phone` projects
+gave 276 passed, 4 failed, 1 skipped (programs-offline under dev, by design): two were real and
+fixed in `e7f8d1da` (Scenarios' removed Back button, a "first button on the page" that is now the
+frame's), two passed alone and in a quiet rerun. `legacyRoutes.test.ts` checks the whole redirect
+table. Differences from the steps: sections 6 and 7 share a commit; a converter turned three tests'
+sample-data paths into route values, which broke when Tracking moved, and they were put back to
+literals; 20 Playwright globs (`"**/programs/live"`) were missed by it and fixed in `edeea95b`; a
+stale `:3100` server from the morning answered the first offline run until it was stopped by PID.
+
 **Depends on:** Phases 1–3. **Working state:** the table in Part 1 is true; every old address
 redirects permanently with its query string.
 
@@ -750,6 +787,12 @@ In every section:
 ## Phase 5 — The product map, and loose ends
 
 **Depends on:** Phase 4.
+
+**Status:** done 2026-10-15. `docs/product/map.md`: the frame paragraph, "Every address", the
+access line and the slice lines describe the new structure; the orientation-test sentence is
+gone. The acceptance grep (`[\` (]/(…old addresses…)\b` without `2026-`) prints nothing.
+`docs/product/vision.md` item 45 has its dated line. Step 3 (the first-load bounce) was dropped in
+the review: checks run on the test backend now, not through the shared live account.
 
 1. **`docs/product/map.md`:**
    - rewrite "Every address in the product" using the **After** column of Part 1's table;

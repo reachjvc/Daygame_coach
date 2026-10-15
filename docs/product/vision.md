@@ -171,6 +171,9 @@ Re-check before relying on them.
     matters. What is left is smaller and nobody has asked for it: the map itself
     still has six hover states and zero touch handlers, so on a phone it is
     decoration above the list that does the work.
+    *2026-10-15: the address followed the form into Scenarios.* The edit
+    surface moved from `/preferences` to `/scenarios/preferences`, and the old
+    address redirects (`Plans/site-structure.md`, D1).
 
 48. **Notifications are 0% built, and nothing legal is built** (checked
     2026-09-26). Two places pop a message — `useTimetrack.ts:289` and

@@ -9,8 +9,10 @@ Over fifty pages under `/test`, nine abandoned generations of the goals screen,
 two gym slices where only one is reachable. Reading the folder list alone gets
 the product wrong in a way that is not obvious and not self-correcting.
 
-`tests/unit/architecture/orientation.test.ts` fails if a new slice or a new
-top-level route appears and nobody added it here.
+Every page address lives in one file, `src/shared/routes.ts`, and
+`tests/unit/navigation/routeList.test.ts` fails if any other file writes one out.
+(A test that failed when this map did not list a new route was deleted on
+2026-10-13; the owner judged the rule not worth keeping.)
 
 ## What this product is
 
@@ -53,30 +55,40 @@ taking Time's place because a seventh item runs off-screen on every phone up to
 the navigation at all, reachable only by typing the address", which was true
 of it and of the **quit-a-vice** module inside it for as long as both existed.
 
-**ON A DESKTOP IT IS THE HEADER, NOT THE BAR.** `MobileTabBar` is
-`sm:hidden`, so above 640px the way in is the "Your plan" link in
-`components/AppHeader.tsx`, there since 2026-09-24 when the owner approved its
-icon. That header is mounted on the dashboard, Settings, Ask Coach, Articles,
-Inner Game and the home page; every other desktop page draws its own header and
-has no link. This entry said the desktop link was "blocked on one decision"
-until 2026-10-14, three weeks after it landed.
+**ONE FRAME, ON EVERY SIGNED-IN PAGE, since 2026-10-15.** Every signed-in page
+lives under the route group `app/(app)/`, whose layout draws
+`components/AppFrame.tsx`: on a laptop a header with the same items as the bar
+and the More sheet, on a phone the bar. Pages that draw their own top and bottom
+controls (Your plan and the Black Box, Time, the live workout, the weekly
+review) opt out of both through `HIDDEN_ROUTE_PREFIXES` in navTabs.ts. Before
+that each page drew its own header or none, so on a laptop Tracking, Training
+and Preferences had no navigation at all, and Settings, Scenarios and Training
+drew a "Back to Dashboard" as if they were part of it (`Plans/site-structure.md`).
+`components/AppHeader.tsx` now serves only the public home page.
 
 There is deliberately no Goals tab — the old goals hub is archived and the app
 is being consolidated onto one surface.
 
-**Every address in the product**, so nothing is a surprise: `/` sales page,
-`/auth/*` sign-up, login and password reset, `/dashboard` and everything under
-it (tracking, scenarios, inner-game, qa, articles, settings, time),
-`/programs` the gym, `/life-mastery` the plan, `/life-mastery/quit-vice` (the
-Black Box since 2026-09-20) and `/life-mastery/quit-vice/old` (the module it
-replaced, intact),
-`/preferences` the dating answers, read by Scenarios, by the dashboard's
-welcome banner and by `loginDestinationService` to decide where you land after
-signing in, `/admin/ai-usage`
-what the AI is costing, `/qa` and `/dashboard/goals/plan` which only redirect,
-`/redirect` the post-login landing, and `/test/*` the laboratory.
+**Every address in the product**, so nothing is a surprise. Since 2026-10-15
+each tab destination has its own top-level address, named what its tab says, and
+a page goes deeper only if it is part of the page above it
+(`Plans/site-structure.md`): `/` sales page; `/auth/*` sign-up, login and
+password reset; `/dashboard`; `/tracking` and its session, report, review, daily
+and history pages; `/scenarios`, with the dating answers at
+`/scenarios/preferences` (read by Scenarios, by the dashboard's welcome banner
+and by `loginDestinationService`); `/time`; `/coach` (Ask Coach); `/articles`;
+`/inner-game`; `/settings`; `/training` the gym, `/training/live` and
+`/training/workout/<id>`; `/plan` (Your plan, Life Mastery) and
+`/plan/quit-vice` the Black Box; `/admin/ai-usage` what the AI is costing;
+`/redirect` the post-login landing; `/test/*` the laboratory. The addresses
+pages had before 2026-10-15 answer with a permanent redirect from one table,
+`LEGACY_ROUTES` in `src/shared/routes.ts`.
 
-**Three access levels.** Signed out sees the home page and a preview dashboard.
+**Three access levels.** Signed out sees the home page and the sign-in pages:
+every other page is private unless `isPublicPage` (`src/shared/routes.ts`) names
+it, so a new or moved page cannot fall outside the sign-in guard (since
+2026-10-14; the "preview dashboard" this line used to promise never rendered,
+because the guard sent visitors to sign in first).
 Signed in sees Life Mastery and Training. Paid (`profiles.has_purchased`, or an
 accepted beta tester — `hasAccess` in `src/db/profilesRepo.ts`) unlocks the
 training modules. Life Mastery deliberately needs no purchase.
@@ -107,7 +119,7 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
 **The life half**
 - `goals/` — **by far the biggest slice, over 100k lines, and mostly not live.** The
   live part is Life Mastery: `northStarService` plus the `north-star/`
-  components, a fourteen-step flow at `/life-mastery` — north star, your 10s,
+  components, a fourteen-step flow at `/plan` — north star, your 10s,
   the one thing, where to start, templates, systems, experiences, focus &
   season, values & identity, commit, track, today, journal, everything.
   **Since 2026-09-23 the plan lives on the ACCOUNT, and so does the day half** —
@@ -125,12 +137,12 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   entry said "the workout card creates a program enrollment" until 2026-09-23,
   when the Templates step's catalogue, picker, editor and builder were deleted.
   It is one status card now, drawn from the enrollment list, and picking,
-  changing, ending and building all happen on `/programs`. The rest is lab work behind `/test` — nine goal-screen generations
+  changing, ending and building all happen on `/training`. The rest is lab work behind `/test` — nine goal-screen generations
   (`goalsv2` to `goalsv9`, then `goalsv11`; there is no v10), `new-goals/`,
   `setup/`. One trap: the Vision Plan **Lab screen**
   is test-only, but `visionPlanService` behind it is live and Life Mastery calls
   it. Judge each file, not the folder.
-- `vice/` — quitting a vice, at `/life-mastery/quit-vice`. **Since 2026-09-20
+- `vice/` — quitting a vice, at `/plan/quit-vice` (`/life-mastery/quit-vice` until 2026-10-15). **Since 2026-09-20
   that address is the Black Box**, a new front door: every run you have had on
   one calendar chart, close calls filed on the same form as lapses (one
   `wentThrough` flag apart), and a door that answers a "maybe I could moderate"
@@ -160,7 +172,7 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   the `/test` dashboard; `/test/*` 404s in production by design, so it is a
   localhost surface the day anything deploys. `tests/e2e/quit-vice.spec.ts`
   follows it and is what keeps "retired, not deleted" true. Nothing under
-  `/life-mastery/quit-vice/` but the Black Box now, and the footer line that
+  `/plan/quit-vice/` but the Black Box now, and the footer line that
   pointed at it is gone — concept item 8.
   **TWO THINGS WENT WITH IT THAT HAVE CITATIONS AND NO HOME ON THE BLACK BOX:**
   the urge tool's four responses (the corpus teaches "play the tape forward",
@@ -170,10 +182,10 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   most-valued feature at 80.8%. The Black Box reads none of the corpus. Its
   research verdicts are otherwise intact: no streak counter, no pros-and-cons
   list, rulers that compare only downwards.
-- `programs/` — the gym, at `/programs`, with History and Progress as its other
+- `programs/` — the gym, at `/training`, with History and Progress as its other
   two tabs. Thirteen hand-encoded programs, a live workout screen you use set by
   set at the rack, a receipt for every finished session at
-  `/programs/workout/<id>`, and a written box at `?view=build` where a week you
+  `/training/workout/<id>`, and a written box at `?view=build` where a week you
   design yourself is typed out rather than tapped together. The engine handles
   four kinds of progression: load, endurance, skill tier and hold range. The
   comment at the top of `programs/types.ts` still says only load is built. That
@@ -182,14 +194,14 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   2026-09-23 with the blue-grey component kit it was written in; saved weeks
   moved from inside Life Mastery to rows under the running programs, where they
   can finally be started.
-- `timetrack/` — a Toggl Track clone, at `/dashboard/time`. Nineteen tables of
+- `timetrack/` — a Toggl Track clone, at `/time`. Nineteen tables of
   its own: workspaces, projects, tags, reports, alerts, webhooks. Ids are made
   on the device so two offline devices cannot collide.
 - `health/` — weight, sleep, nutrition, workouts. Rolling averages, plateau and
   trend detection, personal records, cross-domain correlation. Its **dedicated
   trackers** are test-only (`WeightTracker`, `SleepTracker`, `NutritionTracker`,
   mounted only at `/test/health`) — but a signed-in user **does** see this data
-  live, as stat tiles on `/dashboard/tracking`: `body_weight_current`,
+  live, as stat tiles on `/tracking`: `body_weight_current`,
   `sleep_hours_avg_weekly` and the nutrition metrics in
   `src/tracking/data/metricCatalog.ts`, resolved to real reads at
   `src/db/metricsRepo.ts:392`. This entry said "its screens are test-only" until
@@ -211,7 +223,7 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   line as if it did is the mistake it keeps causing: `unitFor` asks the
   enrolment first and this second, so the toggle decides only what you see when
   no program is running, or when two disagree. A running program is moved from
-  its own ⋮ menu on `/programs` ("Switch to lb"), which converts what it has
+  its own ⋮ menu on `/training` ("Switch to lb"), which converts what it has
   worked up to. Before 2026-09-28 there was no such control and no way out at
   all.
 - `api_ai/` — what every AI call cost, per user, against a budget.
@@ -274,7 +286,7 @@ the truthful record of what exists.
   integration test, which was never written.
 - **Deployed since 2026-10-14.** `main` was fast-forwarded from
   `training-rebuild` (c1680654 → 4ecc63fc, 515 commits) and
-  `daygame-coach.vercel.app/life-mastery` serves it, checked signed in. Until
+  `daygame-coach.vercel.app/life-mastery` served it on 2026-10-14, checked signed in. Until
   then it had never been deployed. `main` moves only when the owner asks
   (CLAUDE.md), so the live site trails this branch between those pushes:
   `localhost:3000` is still the newest, and the live site's `/api/healthz`
