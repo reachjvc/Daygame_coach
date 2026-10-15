@@ -188,7 +188,7 @@ export const CONTEXT_LOCKED_ICONS: Record<string, RegExp[]> = {
   // a rest timer is what people expect; the lock is what stops it drifting into
   // a third context without being noticed.
   Timer: [
-    /^components\/navTabs\.ts$/, // the Time tracker tab
+    /^components\/navTabs\.ts$/, // the Time tracker in the navigation (More sheet)
     /^src\/programs\/components\/live\/RestBar\.tsx$/, // the rest countdown
     // Already here when the lock was written, and found by running the check
     // rather than by listing files from memory — which is the point of running

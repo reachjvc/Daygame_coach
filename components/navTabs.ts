@@ -13,19 +13,17 @@ import { ROUTES, isUnder } from "@/src/shared/routes"
 /**
  * What Life Mastery is called, in one place.
  *
- * `ROUTE_LABELS` below and the "More" row above both name it, and a back link
- * reading "Your plan" next to a menu row reading "Life Mastery" is two names
- * for one page. Declared here because `MORE_ITEMS` is above `ROUTE_LABELS` and
- * a const cannot be read before it is defined.
+ * `ROUTE_LABELS` below and the tab in `TABS` both name it, and a back link
+ * reading "Your plan" next to a tab reading "Life Mastery" is two names for
+ * one page. Declared here because `TABS` is above `ROUTE_LABELS` and a const
+ * cannot be read before it is defined.
  */
 const ROUTE_LABELS_LIFE_MASTERY = "Your plan"
 
 export const TABS = [
   { label: "Dashboard", icon: LayoutDashboard, href: ROUTES.dashboard, exact: true },
-  // NO GOALS TAB. The hub is archived at /test/archive/goals-hub and the
-  // navigation is being rebuilt around one consolidated surface. Until that
-  // exists, the plan is reachable by URL at /life-mastery, and nothing in the
-  // bar points at goals at all.
+  // NO GOALS TAB. The hub is archived at /test/archive/goals-hub; the plan
+  // below is the one goals surface.
   /**
    * TRAINING, IN THE BAR.
    *
@@ -40,38 +38,38 @@ export const TABS = [
    */
   { label: "Training", icon: Dumbbell, href: ROUTES.training, exact: false },
   { label: "Tracking", icon: BarChart3, href: ROUTES.tracking, exact: false },
+  /**
+   * YOUR PLAN (LIFE MASTERY), A TAB SINCE 2026-10-15, on the owner's word.
+   *
+   * It sat in the More sheet from 2026-09-24 on the reasoning that "the bar is
+   * things somebody does several times a week, and a fourteen-step plan is not
+   * one of them". That missed half the plan: Today, Track and Journal are
+   * daily. The owner asked for it in the bar.
+   *
+   * IT TOOK TIME'S PLACE, because a seventh item does not fit. Measured on the
+   * real bar with a cloned tab: five tabs plus More at the 56px floor
+   * (`BAR_ITEM`) need 392px, and the bar ran off-screen at 320, 360, 375 and
+   * 390px, fitting only from 412px. The owner chose Time to move to the sheet.
+   *
+   * Beside Tracking on purpose: the vision's first item is that the plan is
+   * where you decide and Tracking is where you live it, one system.
+   *
+   * `ScrollText` is used nowhere else but the laptop header's link to the same
+   * page (`src/shared/iconRoles.ts`), so the icon means one thing.
+   */
+  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: ROUTES.plan, exact: false },
   { label: "Scenarios", icon: Swords, href: ROUTES.scenarios, exact: false },
-  { label: "Time", icon: Timer, href: ROUTES.time, exact: false },
 ] as const
 
 /** The Lair was a second goals surface. Deleted outright on 2026-09-09. */
 export const MORE_ITEMS = [
   /**
-   * LIFE MASTERY, REACHABLE WITHOUT TYPING AN ADDRESS.
-   *
-   * Until 2026-09-24 the only ways in were typing `/life-mastery`, the `/test`
-   * dashboard (which 404s in production), and the Vices routine card INSIDE
-   * Life Mastery — which you had to already be on. So the plan, and the whole
-   * vice module under it, were in the product and not in the navigation.
-   *
-   * IN THE SHEET, NOT AS A SIXTH TAB, and that is a judgement rather than a
-   * constraint. The bar is five things somebody does several times a week; a
-   * fourteen-step plan for your life is not one of them, and a sixth tab on a
-   * 390px screen costs every other tab its label. The sheet is one tap.
-   *
-   * It is FIRST here because the other three are reference and settings and
-   * this is a place you go to work. `ROUTE_LABELS` already called it "Your
-   * plan" before anything linked to it; that name is kept rather than
-   * re-invented, so the back links that already say it and this row agree.
-   *
-   * `ScrollText` is used nowhere else in the app, deliberately: every icon that
-   * fits — Compass, Target, Flag, Milestone — is already registered in
-   * `src/shared/iconRoles.ts` with roles of its own, and widening one of those
-   * roles needs the owner's approval by name. An unused icon needs no registry
-   * entry at all, which is the cheaper answer to a question nobody needed to be
-   * asked.
+   * TIME, FIRST IN THE SHEET since it gave its tab to the plan (2026-10-15).
+   * First because the other three are reference and settings, and this is a
+   * place you go to work. Its own pages hide the bar anyway (see
+   * `HIDDEN_ROUTE_PREFIXES`), so from inside Time nothing changed.
    */
-  { label: ROUTE_LABELS_LIFE_MASTERY, icon: ScrollText, href: ROUTES.plan },
+  { label: "Time", icon: Timer, href: ROUTES.time },
   { label: "Ask Coach", icon: HelpCircle, href: ROUTES.coach },
   { label: "Articles", icon: BookOpen, href: ROUTES.articles },
   { label: "Settings", icon: Settings, href: ROUTES.settings },

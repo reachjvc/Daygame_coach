@@ -50,7 +50,7 @@ export function MobileTabBar() {
                  */
                 aria-current={active ? "page" : undefined}
                 className={`${BAR_ITEM} ${active ? "text-primary" : "text-muted-foreground"}`}
-                data-testid={`tab-${tab.label.toLowerCase()}`}
+                data-testid={`tab-${tab.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 <tab.icon className="size-5" />
                 <span className="text-xs leading-tight">{tab.label}</span>
