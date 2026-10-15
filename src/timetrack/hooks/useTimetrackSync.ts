@@ -664,8 +664,26 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          * `sinceOpening` was only ever the changes made since the page opened,
          * which is a much smaller set than "everything the server has not got".
          */
+        /**
+         * AND IT DOES NOT WIN A ROW THIS BROWSER HAS CHANGED AND NOT YET SENT.
+         *
+         * `pending` was read from `PENDING_KEY`, which every tab of this
+         * browser shares, before the server was asked. A row in it is a change
+         * the server has not heard about, so the server's copy of that row is
+         * older by definition. Without this, a second tab opened while the
+         * first still held an unsent stop (it waits out the upload debounce)
+         * rebuilt itself from the account's copy — timer running — and handed
+         * that to the first tab: a stopped timer counting again in both.
+         * Found by the nightly WebKit lane, reproduced in both engines by
+         * holding back one upload, and pinned by
+         * tests/unit/timetrack/queuedStopSurvivesFirstContact.test.tsx.
+         */
         const base = mergeIncoming(
-          mergeIncoming(body.rows, rowsUnknownToServer(body.rows, stateToRows(latestState.current ?? state, userId.current)), new Set()),
+          mergeIncoming(
+            mergeIncoming(body.rows, rowsUnknownToServer(body.rows, stateToRows(latestState.current ?? state, userId.current)), new Set()),
+            pending.current,
+            new Set(),
+          ),
           sinceOpening.changed,
           new Set(),
         )
