@@ -321,3 +321,42 @@ describe("what the person is told", () => {
     expect(syncNotice("offline", 1)).toContain("nothing has been lost")
   })
 })
+
+describe("a device whose clock is behind another's", () => {
+  /**
+   * THE REPORT THAT WAS NEVER SENT. A run arrives from a device whose clock is
+   * an hour ahead, and is pushed on from here with its own stamp, so the
+   * watermark — the newest stamp pushed — sits an hour in this device's future.
+   * A report filed now was stamped with this device's clock: earlier than the
+   * watermark, so never pending and never sent, while the page said "Saved to
+   * your account". And on the account the older-stamped version would have lost
+   * the merge anyway. `stampFor` in the store floors every new stamp at the
+   * newest one the record holds.
+   */
+  it("stamps a change after everything it has seen, so it is sent and it wins", () => {
+    const aheadBy = 60 * 60_000
+    const fromFastDevice = startAttempt(emptyRecord(), {
+      viceId: "nicotine", label: "Smoking or vaping", startedOn: "2026-03-01",
+      startedBy: "", structure: [], acknowledgedRisk: false, today: TODAY,
+    })
+    const future = new Date(Date.now() + aheadBy).toISOString()
+    const arrived: BlackBoxRecord = {
+      ...fromFastDevice,
+      attempts: fromFastDevice.attempts.map((a) => ({ ...a, updatedAt: future })),
+    }
+    // pushed on from here, so the watermark is the fast device's stamp
+    const sentUpTo = watermark(pendingSince(arrived, null), null)
+    expect(sentUpTo).toBe(future)
+
+    const filed = fileReport(arrived, {
+      attemptId: arrived.attempts[0].id, at: "2026-09-20T22:00:00", wentThrough: false,
+      thought: "filed on the slow device", ending: "fine", closeness: null,
+      withWhom: "", where: "", factors: [], didInstead: "",
+    })
+
+    const due = pendingSince(filed, sentUpTo)
+    expect(due.reports.map((r) => r.thought), "the new report is never sent").toEqual(["filed on the slow device"])
+    // and it is the newer version wherever the two meet
+    expect(filed.reports[0].updatedAt > future).toBe(true)
+  })
+})

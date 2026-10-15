@@ -98,6 +98,33 @@ export function nowUtc(at: Date = new Date()): string {
   return stamp
 }
 
+/**
+ * A STAMP FOR A CHANGE TO THIS RECORD: later than now, AND later than every
+ * stamp the record already holds.
+ *
+ * `nowUtc` keeps its rule — a row's stamp is greater than the stamp of the
+ * version it came from — only for this device's own writes. A row merged in
+ * from a device whose clock runs ahead carries a stamp from this device's
+ * future, and the next change made here was stamped EARLIER than it. Two things
+ * then went wrong. The sync's watermark is the newest stamp it has pushed,
+ * which now included that future one, so the new change was "already sent":
+ * never pending, never pushed, with "Saved to your account" on screen. And on
+ * the account, where the newer stamp wins, it would have lost to the older
+ * version anyway. Found through the e2e seed, which stamps one second ahead
+ * and lost a report filed half a second later (blackbox.spec.ts, `seed`).
+ *
+ * Every change in this file is made to a record it is handed, so the floor is
+ * read from that record: nothing has to remember to report what it merged in.
+ */
+export function stampFor(record: BlackBoxRecord, at: Date = new Date()): string {
+  let newest = lastStamp
+  for (const row of [...record.attempts, ...record.reports]) {
+    if (row.updatedAt > newest) newest = row.updatedAt
+  }
+  lastStamp = newest
+  return nowUtc(at)
+}
+
 /** Only for tests, which need each case to start from a known clock. */
 export function resetStampClock(): void {
   lastStamp = ""
@@ -251,7 +278,7 @@ export function startAttempt(
     structure: input.structure,
     endedOn: null,
     endedByReportId: null,
-    updatedAt: nowUtc(),
+    updatedAt: stampFor(record),
     deletedAt: null,
   }
   return { ...record, attempts: [...record.attempts, attempt] }
@@ -324,7 +351,7 @@ export function recordPastRun(
   // is the guard that cannot be skipped.
   if (overlapsExisting(record, input.startedOn, input.endedOn, input.viceId)) return record
 
-  const stamp = nowUtc()
+  const stamp = stampFor(record)
   const report: ViceReport = {
     id: newId(),
     attemptId: "",
@@ -431,7 +458,7 @@ export function fileReport(
     return record
   }
 
-  const stamp = nowUtc()
+  const stamp = stampFor(record)
   const report: ViceReport = { id: newId(), ...input, updatedAt: stamp, deletedAt: null }
   const reports = [...record.reports, report]
   if (!input.wentThrough) return { ...record, reports }
@@ -525,7 +552,7 @@ export function revivalClashes(record: BlackBoxRecord, reportId: string): boolea
 export function removeReport(record: BlackBoxRecord, reportId: string): BlackBoxRecord {
   if (!living(record.reports).some((r) => r.id === reportId)) return record
   if (revivalClashes(record, reportId)) return record
-  const stamp = nowUtc()
+  const stamp = stampFor(record)
   return {
     ...record,
     attempts: record.attempts.map((a) =>
@@ -542,7 +569,7 @@ export function removeReport(record: BlackBoxRecord, reportId: string): BlackBox
 /** Remove one run, and every report filed against it. */
 export function removeAttempt(record: BlackBoxRecord, attemptId: string): BlackBoxRecord {
   if (!living(record.attempts).some((a) => a.id === attemptId)) return record
-  const stamp = nowUtc()
+  const stamp = stampFor(record)
   return {
     ...record,
     attempts: record.attempts.map((a) =>
