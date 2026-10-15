@@ -865,5 +865,18 @@ notes-only report (f34c603); both browser specs now assert the fix (9d00f02).
 account, though only `/test` lab pages use them (the vision-plan ones run
 Claude on every call). *Fixed and released 2026-10-15 (fc3ec48e):* they live
 under `/api/test/goals/`, which the proxy refuses in production; the live site
-answers 404. `npm audit` reports 21 advisories (1 critical, 8 high), not
-investigated here.
+answers 404.
+
+*`npm audit`, looked at 2026-10-15:* 16 advisories, none critical (the
+critical one had been fixed meanwhile). Of the 7 high, 5 are lint tooling
+(`eslint-config-next` → `fast-glob`/`micromatch`/`braces`) and never ship. The
+2 that ship are `sharp`'s libvips/libheif CVEs, pulled in by
+`@huggingface/transformers`; transformers is only ever loaded by a dynamic
+import inside three browser components (audio transcription in tracking, and
+two labs), and `next.config` aliases `sharp` and `onnxruntime-node` out of the
+bundle, so `sharp` never runs. The offered fix is a major upgrade of
+transformers, a real risk to transcription for no reachable gain: not done.
+The 6 moderate are build-time CSS tooling and transformers' Node-only
+`onnxruntime-node`; the 3 low are a resource-consumption issue in `ai`
+(6.0.3 → 6.0.307 fixes it), worth taking in a deliberate dependency pass,
+not in a working tree three sessions are running in.
