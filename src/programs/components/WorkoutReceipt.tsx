@@ -290,7 +290,7 @@ export function WorkoutReceipt({
     <div className="min-h-screen bg-background">
       {/* The column width every training screen shares, so the page does not
           change shape on the way here from the card that linked to it. */}
-      <div className={`${TRAINING_COLUMN} pb-tab-bar pt-4`}>
+      <div className={`${TRAINING_COLUMN} pt-4`}>
         {/* The shared one: it reads `?from=` itself, checks it for the
             open-redirect tricks a URL can carry, and names the destination
             rather than saying "Back". A hand-rolled link here would be a

@@ -10,15 +10,16 @@ import { hasDatingPreferences } from "@/src/profile/config";
 import type { DashboardProfileData } from "../types";
 
 /**
- * Who is looking at this dashboard. Three states, one value -- they cannot
- * contradict each other the way two booleans can.
+ * Who is looking at this dashboard. One value, so the states cannot contradict
+ * each other the way two booleans can.
  *
- * `visitor` and `unsubscribed` used to share a single isPreviewMode flag, so
- * someone who had just signed up and finished onboarding was told to
- * "Sign up to start practicing", and shown Level 1 when their profile said
- * level 7. Found by walking the flow with a real account, 2026-09-04.
+ * There was a third, `visitor`, for someone signed out. It could never render:
+ * the proxy sends a signed-out visitor to sign in before this page runs, so its
+ * "Sign up to start practicing!" copy and sign-up links were dead code. Removed
+ * 2026-10-15 with the home page's "Preview Dashboard" button that pointed here
+ * (Plans/site-structure.md, D14).
  */
-export type DashboardViewer = "visitor" | "unsubscribed" | "subscribed";
+export type DashboardViewer = "unsubscribed" | "subscribed";
 
 interface DashboardContentProps {
   profileData: DashboardProfileData | null;
@@ -29,10 +30,10 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
   // Both non-subscribed states show the locked module cards.
   const isPreviewMode = viewer !== "subscribed";
 
-  // Where a locked card sends someone depends on whether they HAVE an account.
-  // Sending a signed-up user to /auth/sign-up is how they get told to sign up
-  // for the account they already finished setting up.
-  const unlockHref = viewer === "visitor" ? "/auth/sign-up" : "/#pricing";
+  // Where a locked card sends someone: they have an account, so to the plans.
+  // Sending a signed-up user to /auth/sign-up is how they used to be told to
+  // sign up for the account they had already finished setting up.
+  const unlockHref = "/#pricing";
   const [primaryGoal, setPrimaryGoal] = useState<string | null>(
     profileData?.primary_goal ?? null
   );
@@ -55,22 +56,18 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
     <main className="mx-auto max-w-6xl px-4 sm:px-8 py-12 sm:py-24" data-testid="dashboard-content">
       <div className="text-center mb-8 sm:mb-16">
         <h1 className="text-balance text-3xl sm:text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
-          {viewer === "visitor"
-            ? "Explore the Dashboard"
-            : viewer === "unsubscribed"
-              ? answered
-                ? "You're all set up"
-                : "Welcome"
-              : "Welcome Back!"}
+          {viewer === "unsubscribed"
+            ? answered
+              ? "You're all set up"
+              : "Welcome"
+            : "Welcome Back!"}
         </h1>
         <p className="text-pretty text-base sm:text-lg text-muted-foreground leading-relaxed">
-          {viewer === "visitor"
-            ? "See what training modules are available. Sign up to start practicing!"
-            : viewer === "unsubscribed"
-              ? answered
-                ? "Your answers are saved. Subscribe to unlock the training modules below."
-                : "Have a look around. Scenarios will ask you a few questions the first time you open it."
-              : "Choose a training module to continue improving your daygame skills"
+          {viewer === "unsubscribed"
+            ? answered
+              ? "Your answers are saved. Subscribe to unlock the training modules below."
+              : "Have a look around. Scenarios will ask you a few questions the first time you open it."
+            : "Choose a training module to continue improving your daygame skills"
           }
         </p>
       </div>
@@ -80,7 +77,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
           uses for content that signing up unlocks. Signing up unlocks nothing
           here -- the card carries no per-user value any more, so the lock was
           promising a member something members do not get either. */}
-      {viewer === "visitor" || profileData ? (
+      {profileData ? (
         <div className="mb-12">
           <LevelProgressBar />
         </div>
@@ -234,9 +231,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
         <div className="mt-12 text-center p-4 sm:p-8 bg-primary/5 border border-primary/20 rounded-lg">
           <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Training?</h3>
           <p className="text-muted-foreground mb-6">
-            {viewer === "visitor"
-              ? "Sign up now to unlock all features and start improving your social skills today."
-              : "Your account is ready. Subscribe to unlock every module."}
+            Your account is ready. Subscribe to unlock every module.
           </p>
           {/* The link IS the button: a <button> inside an <a> is invalid HTML and
               two controls where the page means one. Every account that has not
@@ -245,7 +240,7 @@ export function DashboardContent({ profileData, viewer }: DashboardContentProps)
             href={unlockHref}
             className="inline-block bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md font-medium"
           >
-            {viewer === "visitor" ? "Get Started Free" : "See plans"}
+            See plans
           </Link>
         </div>
       )}

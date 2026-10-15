@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
-import { AppHeader } from "@/components/AppHeader"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import { DashboardContent } from "./DashboardContent"
 import type { DashboardProfileData } from "../types"
 
@@ -41,15 +39,9 @@ export async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Preview mode for non-logged-in users
-  if (!user) {
-    return (
-      <div className="min-h-dvh bg-background">
-        <AppHeader currentPage="dashboard" isLoggedIn={false} isPreviewMode={true} />
-        <DashboardContent profileData={null} viewer="visitor" />
-      </div>
-    )
-  }
+  // The proxy sends a signed-out visitor to sign in before this runs; this line
+  // is for the type checker and for defence in depth.
+  if (!user) redirect("/auth/login")
 
   const profile = await getProfile(user.id)
 
@@ -57,7 +49,6 @@ export async function DashboardPage() {
   if (!profile?.has_purchased) {
     return (
       <div className="min-h-dvh bg-background">
-        <AppHeader currentPage="dashboard" isLoggedIn={true} hasPurchased={false} isPreviewMode={true} />
         <DashboardContent
           profileData={profile ? toDashboardProfile(profile) : null}
           viewer="unsubscribed"
@@ -73,10 +64,8 @@ export async function DashboardPage() {
   const profileData = toDashboardProfile(profile)
 
   return (
-    <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader currentPage="dashboard" isLoggedIn={true} hasPurchased={true} />
+    <div className="min-h-dvh bg-background">
       <DashboardContent profileData={profileData} viewer="subscribed" />
-      <MobileTabBar />
     </div>
   )
 }

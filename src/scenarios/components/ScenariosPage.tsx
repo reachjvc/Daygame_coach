@@ -1,8 +1,5 @@
-import Link from "next/link"
+import { redirect } from "next/navigation"
 import { ROUTES } from "@/src/shared/routes"
-import { ArrowLeft, CircleDot } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
 import { createServerSupabaseClient } from "@/src/db/server"
 import type { DifficultyLevel } from "../openers/data/energy"
 import { ScenariosHub } from "@/src/scenarios/components/ScenariosHub"
@@ -27,42 +24,9 @@ export async function ScenariosPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Preview mode for non-logged-in users
-  if (!user) {
-    return (
-      <div className="min-h-dvh bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
-            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <CircleDot className="size-6 text-primary" />
-              <span>Scenarios</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
-              </div>
-              <Button asChild variant="outline">
-                <Link href={ROUTES.dashboard}>
-                  <ArrowLeft className="size-4 mr-2" />
-                  Back to Dashboard
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
-          <ScenariosHub
-            recommendedDifficulty="beginner"
-            userLevel={1}
-            scenariosCompleted={0}
-            isPreviewMode={true}
-            previewReason="not-signed-in"
-          />
-        </main>
-      </div>
-    )
-  }
+  // The proxy sends a signed-out visitor to sign in before this runs; this line
+  // is for the type checker and for defence in depth.
+  if (!user) redirect("/auth/login")
 
   // Query profile - preferred_language is optional (might not exist yet)
   const { data: profile } = await supabase
@@ -104,20 +68,6 @@ export async function ScenariosPage() {
   if (!hasDatingPreferences(profile)) {
     return (
       <div className="min-h-dvh bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
-            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <CircleDot className="size-6 text-primary" />
-              <span>Scenarios</span>
-            </div>
-            <Button asChild variant="outline">
-              <Link href={ROUTES.dashboard}>
-                <ArrowLeft className="size-4 mr-2" />
-                Back to Dashboard
-              </Link>
-            </Button>
-          </div>
-        </header>
 
         <DatingPreferencesGate
           initialValues={toOnboardingInitialValues(profile)}
@@ -135,25 +85,6 @@ export async function ScenariosPage() {
   if (!profile?.has_purchased) {
     return (
       <div className="min-h-dvh bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
-            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <CircleDot className="size-6 text-primary" />
-              <span>Scenarios</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
-              </div>
-              <Button asChild variant="outline">
-                <Link href={ROUTES.dashboard}>
-                  <ArrowLeft className="size-4 mr-2" />
-                  Back to Dashboard
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
 
         <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
           <ScenariosHub
@@ -172,20 +103,6 @@ export async function ScenariosPage() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-        <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
-          <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-            <CircleDot className="size-6 text-primary" />
-            <span>Scenarios</span>
-          </div>
-          <Button asChild variant="outline">
-            <Link href={ROUTES.dashboard}>
-              <ArrowLeft className="size-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
-        </div>
-      </header>
 
       <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
         <ScenariosHub

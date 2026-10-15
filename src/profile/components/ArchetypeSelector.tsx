@@ -138,7 +138,7 @@ export function ArchetypeSelector({
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <BackLink fallback={ROUTES.dashboard} fallbackLabel="Dashboard" />
+            <BackLink fallback={ROUTES.scenarioPreferences} fallbackLabel="Preferences" />
             <form action={updateArchetypes} className="flex items-center gap-2">
               <input type="hidden" name="archetype" value={selectedArchetypes[0] || ""} />
               <input type="hidden" name="secondaryArchetype" value={selectedArchetypes[1] || ""} />

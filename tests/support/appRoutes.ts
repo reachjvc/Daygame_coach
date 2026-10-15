@@ -368,3 +368,18 @@ export function writesPath(src: string, target: string): boolean {
   const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   return new RegExp(`["'\`]${escaped}(?=["'\`?#/]|\\$\\{)`).test(src)
 }
+
+/**
+ * DOES THIS PAGE SHOW THE APP'S OWN NAVIGATION?
+ *
+ * Since `Plans/site-structure.md` Phase 3 the header and the tab bar are drawn
+ * once, by `app/(app)/layout.tsx`, around every page inside that folder, except
+ * on the addresses in `HIDDEN_ROUTE_PREFIXES`, which draw their own top and
+ * bottom controls. A page no longer mounts the bar itself, so following its
+ * imports for `<MobileTabBar` would call every page frameless.
+ */
+export function hasAppFrame(route: string, file: string, hiddenPrefixes: readonly string[]): boolean {
+  const inGroup = rel(file).startsWith("app/(app)/")
+  const hidden = hiddenPrefixes.some((p) => route === p || route.startsWith(p.endsWith("/") ? p : `${p}/`))
+  return inGroup && !hidden
+}

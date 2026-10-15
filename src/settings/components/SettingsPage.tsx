@@ -17,14 +17,11 @@ import {
   ExternalLink,
   AlertCircle,
   CheckCircle2,
-  ChevronLeft,
   Globe,
   LocateFixed,
   Search,
   Check,
 } from "lucide-react"
-import { AppHeader } from "@/components/AppHeader"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -226,18 +223,12 @@ export function SettingsPage({
 
 
   return (
-    <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader currentPage="settings" isLoggedIn={true} hasPurchased={true} />
-
+    <div className="min-h-dvh bg-background">
       <main className="mx-auto max-w-6xl px-4 sm:px-8 py-6 sm:py-8">
-        {/* Page header with back button */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-xl font-semibold">Settings</h1>
-        </div>
+        {/* No Back control: Settings is a tab destination, and the app's frame
+            is the way out. A "Back" here made it look like part of the page
+            you came from. Plans/site-structure.md, D7. */}
+        <h1 className="mb-6 text-xl font-semibold">Settings</h1>
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="profile" className="gap-2" data-testid="settings-tab-profile">
@@ -929,8 +920,6 @@ export function SettingsPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <MobileTabBar />
     </div>
   )
 }

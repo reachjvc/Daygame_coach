@@ -1,6 +1,5 @@
+import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { AppHeader } from "@/components/AppHeader"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import { InnerGamePage } from "@/src/inner-game"
 
 export default async function DashboardInnerGamePage() {
@@ -10,17 +9,9 @@ export default async function DashboardInnerGamePage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Preview mode for non-logged-in users
-  if (!user) {
-    return (
-      <div className="min-h-dvh bg-background">
-        <AppHeader currentPage="inner-game" isLoggedIn={false} isPreviewMode={true} />
-        <main className="mx-auto max-w-2xl px-4 py-12">
-          <InnerGamePage isPreviewMode={true} />
-        </main>
-      </div>
-    )
-  }
+  // The proxy sends a signed-out visitor to sign in before this runs; this line
+  // is for the type checker and for defence in depth.
+  if (!user) redirect("/auth/login")
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -32,7 +23,6 @@ export default async function DashboardInnerGamePage() {
   if (!profile?.has_purchased) {
     return (
       <div className="min-h-dvh bg-background">
-        <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={false} isPreviewMode={true} />
         <main className="mx-auto max-w-2xl px-4 py-12">
           <InnerGamePage isPreviewMode={true} />
         </main>
@@ -42,10 +32,8 @@ export default async function DashboardInnerGamePage() {
 
   // Full access
   return (
-    <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={true} />
+    <div className="min-h-dvh bg-background">
       <InnerGamePage isPreviewMode={false} />
-      <MobileTabBar />
     </div>
   )
 }

@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation"
 import { ROUTES } from "@/src/shared/routes"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { AppHeader } from "@/components/AppHeader"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import { QAPage } from "@/src/qa"
 
 export default async function DashboardQAPage() {
@@ -28,10 +26,8 @@ export default async function DashboardQAPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader currentPage="qa" isLoggedIn={true} hasPurchased={true} />
+    <div className="min-h-dvh bg-background">
       <QAPage />
-      <MobileTabBar />
     </div>
   )
 }

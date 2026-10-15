@@ -168,7 +168,7 @@ describe("what the real baseline is allowed to contain", () => {
   test("the lint baseline excuses nothing in the training slice", () => {
     const trainingPrefixes = [
       "src/programs/",
-      "app/programs/",
+      "app/(app)/programs/",
       "src/health/",
       "app/api/workouts/",
       "app/api/programs/",

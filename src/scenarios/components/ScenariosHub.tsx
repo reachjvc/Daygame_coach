@@ -18,7 +18,6 @@ import type { DifficultyLevel } from "../openers/data/energy";
 import { PracticeOpenersTrainer } from "@/src/scenarios/openers/OpenersTrainer";
 import { VoiceChatWindow } from "@/src/scenarios/components/ChatWindow";
 import { cn } from "@/lib/utils"
-import { MobileTabBar } from "@/components/MobileTabBar";
 
 import {
   SCENARIO_CATALOG,
@@ -170,7 +169,7 @@ export function ScenariosHub({
   );
 
   return (
-    <div className="space-y-8 pb-tab-bar" data-testid="scenarios-hub">
+    <div className="space-y-8" data-testid="scenarios-hub">
       {/* Signup Prompt Modal */}
       {showSignupPrompt && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-safe pb-safe">
@@ -457,7 +456,6 @@ export function ScenariosHub({
         />
       )}
 
-      {!isPreviewMode && <MobileTabBar />}
     </div>
   );
 }

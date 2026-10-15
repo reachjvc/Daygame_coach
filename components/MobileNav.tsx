@@ -30,10 +30,9 @@ export type MobileNavItem =
 interface MobileNavProps {
   items: MobileNavItem[]
   ctaItems?: MobileNavItem[]
-  isPreviewMode?: boolean
 }
 
-export function MobileNav({ items, ctaItems = [], isPreviewMode = false }: MobileNavProps) {
+export function MobileNav({ items, ctaItems = [] }: MobileNavProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -49,11 +48,6 @@ export function MobileNav({ items, ctaItems = [], isPreviewMode = false }: Mobil
       <DialogContent className="sm:hidden top-0 left-0 translate-x-0 translate-y-0 w-full h-full max-w-none rounded-none pt-safe pb-safe">
         <DialogHeader className="text-left">
           <DialogTitle>Menu</DialogTitle>
-          {isPreviewMode && (
-            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-              <span className="text-xs text-amber-600 font-medium">Preview Mode</span>
-            </div>
-          )}
         </DialogHeader>
 
         <div className="mt-4 flex flex-col gap-2">

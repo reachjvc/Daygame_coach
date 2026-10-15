@@ -29,6 +29,7 @@ import type { ProfileRow } from "@/src/db"
 import { DashboardContent } from "@/src/dashboard/components/DashboardContent"
 import { DashboardPage } from "@/src/dashboard/components/DashboardPage"
 import type { DashboardProfileData } from "@/src/dashboard/types"
+import { ROUTES } from "@/src/shared/routes"
 
 const db = vi.hoisted(() => ({
   user: null as { id: string } | null,
@@ -112,8 +113,13 @@ const ONBOARDED_DASHBOARD: DashboardProfileData = {
 }
 
 describe("which viewer DashboardPage says each account is", () => {
-  it("a logged-out visitor is a visitor, with no profile", async () => {
-    expect(await contentProps()).toEqual({ viewer: "visitor", profileData: null })
+  it("a logged-out visitor is sent to sign in", async () => {
+    // The proxy does this first; the page repeats it for the type checker and
+    // as defence in depth. The "visitor" view it used to render was dead code.
+    // Next's real redirect() throws an error whose digest names the target.
+    await expect(DashboardPage()).rejects.toMatchObject({
+      digest: expect.stringContaining(";/auth/login;"),
+    })
   })
 
   it("a signed-up non-subscriber is unsubscribed and gets their real profile, not null", async () => {
@@ -166,12 +172,6 @@ describe("where a locked card sends each viewer", () => {
   const hrefs = () =>
     screen.getAllByRole("link").map((a) => a.getAttribute("href"))
 
-  it("a visitor is sent to sign up", () => {
-    render(<DashboardContent profileData={null} viewer="visitor" />)
-    expect(screen.getByTestId("dashboard-qa-link")).toHaveAttribute("href", "/auth/sign-up")
-    expect(screen.getByTestId("dashboard-tracking-link")).toHaveAttribute("href", "/auth/sign-up")
-  })
-
   it("someone who already has an account is never sent to the signup page", () => {
     render(<DashboardContent profileData={ONBOARDED_DASHBOARD} viewer="unsubscribed" />)
     expect(hrefs()).not.toContain("/auth/sign-up")
@@ -181,8 +181,8 @@ describe("where a locked card sends each viewer", () => {
 
   it("a subscriber's cards open the modules themselves", () => {
     render(<DashboardContent profileData={null} viewer="subscribed" />)
-    expect(screen.getByTestId("dashboard-qa-link")).toHaveAttribute("href", "/dashboard/qa")
-    expect(screen.getByTestId("dashboard-tracking-link")).toHaveAttribute("href", "/dashboard/tracking")
+    expect(screen.getByTestId("dashboard-qa-link")).toHaveAttribute("href", ROUTES.coach)
+    expect(screen.getByTestId("dashboard-tracking-link")).toHaveAttribute("href", ROUTES.tracking)
     expect(hrefs()).not.toContain("/auth/sign-up")
     expect(hrefs()).not.toContain("/#pricing")
   })

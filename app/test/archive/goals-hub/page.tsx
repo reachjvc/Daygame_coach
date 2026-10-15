@@ -46,7 +46,7 @@ export default async function ArchivedGoalsHubPage() {
 
   return (
     <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader currentPage="other" isLoggedIn={true} hasPurchased={true} />
+      <AppHeader isLoggedIn={true} hasPurchased={true} />
       <GoalsHubPage />
       <MobileTabBar />
     </div>

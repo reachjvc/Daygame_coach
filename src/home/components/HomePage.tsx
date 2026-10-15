@@ -1,8 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { ROUTES } from "@/src/shared/routes"
-import { CheckCircle2, MessageCircle, BarChart3, Zap, LayoutDashboard, Swords } from "lucide-react"
+import { CheckCircle2, MessageCircle, BarChart3, Zap, Swords } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,7 +18,7 @@ interface HomePageProps {
 export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageProps) {
   return (
     <div className={`min-h-dvh bg-background ${hasPurchased ? "pb-tab-bar" : ""}`}>
-      <AppHeader currentPage="home" isLoggedIn={isLoggedIn} hasPurchased={hasPurchased} />
+      <AppHeader isLoggedIn={isLoggedIn} hasPurchased={hasPurchased} />
 
       {/* Hero Section */}
       <section className="w-full py-24 lg:py-32">
@@ -85,34 +83,6 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
               </p>
             </Card>
           </div>
-
-          {/* Preview Dashboard CTA */}
-          <Card className="mt-8 p-4 sm:p-6 bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-accent/40">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="size-12 rounded-full bg-accent/30 flex items-center justify-center shrink-0">
-                  <LayoutDashboard className="size-6 text-foreground" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-1">
-                    Curious what's inside?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Explore our scenarios and see how AI coaching works — no account needed.
-                  </p>
-                </div>
-              </div>
-              {/* `asChild`, so the link IS the button — a <button> inside an
-                  <a> is invalid HTML and two nested controls to a reader. */}
-              <Button
-                size="lg"
-                className="bg-accent text-accent-foreground hover:bg-accent/80 whitespace-nowrap"
-                asChild
-              >
-                <Link href={ROUTES.dashboard}>Preview Dashboard</Link>
-              </Button>
-            </div>
-          </Card>
         </div>
       </section>
 

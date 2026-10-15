@@ -21,8 +21,6 @@
 import { lazy, Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { ProgramsApp } from "./ProgramsApp"
-import { BackLink } from "@/components/BackLink"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
 import { TRAINING_COLUMN } from "./trainingStyles"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -204,12 +202,9 @@ export function TrainingScreen({
         this screen and the live workout used to declare it separately, and
         the column narrowed on the way from here into the session.
       */}
-      <div data-testid="training-screen" className={`${TRAINING_COLUMN} pb-tab-bar pt-4`}>
-        <BackLink
-          fallback={ROUTES.dashboard}
-          fallbackLabel="Dashboard"
-          className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        />
+      {/* No "← Dashboard": Training is a tab destination, and the app's frame
+          is the way out (Plans/site-structure.md, D7). */}
+      <div data-testid="training-screen" className={`${TRAINING_COLUMN} pt-4`}>
         {/*
           THE MASTHEAD WAS 22% OF THE PHONE.
           A back link, then "Training" at 24px, then a sentence about the Life
@@ -234,7 +229,7 @@ export function TrainingScreen({
               href={ROUTES.plan}
               className="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-foreground"
             >
-              Life Mastery plan
+              plan
             </Link>
           </span>
         </h1>
@@ -325,7 +320,6 @@ export function TrainingScreen({
           )}
         </Tabs>
       </div>
-      <MobileTabBar />
     </div>
   )
 }

@@ -22,7 +22,7 @@ import * as fs from "fs"
 import * as path from "path"
 import { ROUTES, SUPERSEDED_LIFE_MASTERY_PATHS } from "../../../src/shared/routes"
 import { QUIT_VICE_ARCHIVE } from "../../../app/test/archive/quit-vice/routes"
-import OldPlanPage from "../../../app/dashboard/goals/plan/page"
+import OldPlanPage from "../../../app/(app)/dashboard/goals/plan/page"
 import { code, productRoutes, writesPath } from "../../support/appRoutes"
 
 /** Where `redirect()` was asked to send the request; it throws, as Next's does. */

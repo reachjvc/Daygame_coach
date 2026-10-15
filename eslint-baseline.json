@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 291,
+  "total": 290,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -288,9 +288,6 @@
       "@typescript-eslint/no-explicit-any: Unexpected any. Specify a different type.": 8,
       "@typescript-eslint/no-unused-vars: 'tables' is assigned a value but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'WarningLevel' is defined but never used.": 1
-    },
-    "src/dashboard/components/DashboardPage.tsx": {
-      "@typescript-eslint/no-unused-vars: 'redirect' is defined but never used.": 1
     },
     "src/db/goalRepo.ts": {
       "@typescript-eslint/no-unused-vars: '_tempParentId' is assigned a value but never used.": 1

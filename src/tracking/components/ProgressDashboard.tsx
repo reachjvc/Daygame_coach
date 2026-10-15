@@ -4,7 +4,6 @@ import { useState, useEffect, lazy, Suspense } from "react"
 import { useTrackingStats } from "../hooks/useTrackingStats"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
 import { SeasonBand } from "@/src/goals/components/north-star/SeasonBand"
@@ -78,7 +77,7 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
   }, [state.isLoading])
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 pb-tab-bar" data-testid="tracking-dashboard">
+    <div className="max-w-6xl mx-auto px-4 py-8" data-testid="tracking-dashboard">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
@@ -178,7 +177,6 @@ export function ProgressDashboard({ initialDashboard, seasonPlan = null, oneThin
         onSuccess={refresh}
       />
 
-      <MobileTabBar />
     </div>
   )
 }

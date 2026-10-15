@@ -19,10 +19,11 @@
 import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { TAB_ROUTES } from "@/components/navTabs"
+import { HIDDEN_ROUTE_PREFIXES, TAB_ROUTES } from "@/components/navTabs"
 import {
   coverageProblems,
   gateRoutes,
+  hasAppFrame,
   isRedirectShim,
   productRoutes,
   type CoverageReport,
@@ -97,7 +98,10 @@ describe("every screen has a way back", () => {
       // `<BackLink`, not "BackLink": a leftover import satisfies the word and
       // renders nothing. Caught by deleting a usage and watching this pass.
       const hasBack = /<BackLink[\s/>]/.test(tree)
-      const hasTabBar = /<MobileTabBar[\s/>]/.test(tree)
+      // The app's frame (header and tab bar) is drawn by app/(app)/layout.tsx
+      // since Plans/site-structure.md Phase 3, so a page inside it is never a
+      // dead end; a page outside it still has to mount the bar itself.
+      const hasTabBar = hasAppFrame(route, file, HIDDEN_ROUTE_PREFIXES) || /<MobileTabBar[\s/>]/.test(tree)
       if (!hasBack && !hasTabBar) stuck.push(route)
     }
 
@@ -147,7 +151,6 @@ describe("back links are not hand-rolled", () => {
    * and they are styled as buttons rather than as a back control.
    */
   const ALLOWED = new Set([
-    "src/scenarios/components/ScenariosPage.tsx",
     "src/inner-game/components/SummaryPage.tsx",
   ])
 
