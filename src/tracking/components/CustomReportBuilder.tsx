@@ -219,22 +219,29 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
     }))
 
     try {
-      // Step 1: Save the template
-      const templateResponse = await fetch("/api/tracking/templates/custom", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: templateName || mainFieldTitle || "Custom Template",
-          fields: templateFields,
-        }),
-      })
+      // Step 1: Save the template — when there is one. A report with only the
+      // notes box filled has no fields to make a template of, and the endpoint
+      // refuses an empty one ("Fields required"), so "Write Report Now" showed
+      // an error and saved nothing of what was written (found 2026-10-13). A
+      // report needs no template; this one stands on its own.
+      let templateId: string | undefined
+      if (templateFields.length > 0) {
+        const templateResponse = await fetch("/api/tracking/templates/custom", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: templateName || mainFieldTitle || "Custom Template",
+            fields: templateFields,
+          }),
+        })
 
-      if (!templateResponse.ok) {
-        const data = await templateResponse.json()
-        throw new Error(data.error || "Failed to save template")
+        if (!templateResponse.ok) {
+          const data = await templateResponse.json()
+          throw new Error(data.error || "Failed to save template")
+        }
+
+        templateId = ((await templateResponse.json()) as { id: string }).id
       }
-
-      const template = await templateResponse.json()
 
       // Step 2: Create field report with values
       const reportFields: Record<string, unknown> = {}
@@ -258,7 +265,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          template_id: template.id,
+          template_id: templateId,
           title: mainFieldTitle || "Custom Report",
           report_date: reportDate?.toISOString(),
           fields: reportFields,
