@@ -43,7 +43,7 @@ test.describe("the live screen's menus", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
   })
 

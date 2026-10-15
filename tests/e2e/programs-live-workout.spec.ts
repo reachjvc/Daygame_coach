@@ -109,7 +109,7 @@ test.describe("live workout", () => {
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
 
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
 
     /**
@@ -164,7 +164,7 @@ test.describe("live workout", () => {
     const lift = unlifted("Press")
     await page.reload({ waitUntil: "networkidle" })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
     await addOwnLift(page, lift)
 
@@ -260,7 +260,7 @@ test.describe("live workout", () => {
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId("see-todays-workout")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-loose-workout").first().click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     // The same name again. A lift added on the day lives on the workout, not on
     // the program, so the second session has to add it back — and because the
     // name is the same, the first session's sets are the history it beats.
@@ -321,7 +321,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("add-lift")).toBeVisible({ timeout: 20000 })
     await addOwnLift(page, lift)
 
@@ -347,7 +347,7 @@ test.describe("live workout", () => {
   test("the rest clock is still right after the tab has been in the background @timing @engine @phone", async ({ page }) => {
     await page.reload({ waitUntil: "networkidle" })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
 
     const saved = page.waitForResponse(
@@ -404,7 +404,7 @@ test.describe("live workout", () => {
     await resetAndEnroll(page, "lb")
   await page.reload({ waitUntil: "networkidle" })
   await page.getByTestId("start-workout").click()
-  await page.waitForURL("**/programs/live", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
   await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
 
   const box = page.getByRole("spinbutton", { name: /weight for set 1/i }).first()
@@ -464,7 +464,7 @@ test.describe("live workout", () => {
   // ON TODAY, not on a fourth tab. "Anything else" existed to hold this button
   // and a form that is now deleted; the button belongs beside today's session.
   await page.getByTestId("start-loose-workout").click()
-  await page.waitForURL("**/programs/live", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
 
   // An empty workout: nothing prescribed, but a way to fill it.
   await expect(page.getByTestId("add-lift")).toBeVisible({ timeout: 20000 })
@@ -528,7 +528,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
 
     // The screen opens at all — this is the crash the day-resolution fix closes.
     await expect(page.getByTestId("endurance-plan")).toBeVisible({ timeout: 20000 })
@@ -560,7 +560,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
 
     const saved = page.waitForResponse(
@@ -608,7 +608,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
   })
 
   /**
@@ -625,7 +625,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
 
     // The other device: a second browser context on the same account.
     /**
@@ -662,7 +662,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.locator("body")).not.toContainText("duplicate key")
   })
   /**
@@ -709,7 +709,7 @@ test.describe("live workout", () => {
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await page.getByTestId("start-workout").click()
-    await page.waitForURL("**/programs/live", { timeout: 20000 })
+    await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
     await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
 
     // One set in before the workout goes, so the screen has something to lose.

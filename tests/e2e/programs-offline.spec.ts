@@ -34,7 +34,7 @@ test("sets ticked with no connection are kept and sent when it comes back", { ta
 
   await page.reload({ waitUntil: "networkidle" })
   await page.getByTestId("start-workout").click()
-  await page.waitForURL("**/programs/live", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.liveWorkout}`, { timeout: 20000 })
   await expect(page.getByTestId("set-row-1").first()).toBeVisible({ timeout: 20000 })
 
   // --- the signal dies ---

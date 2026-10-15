@@ -85,7 +85,7 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
     .getByRole("link", { name: /ZZHist/ })
     .first()
     .click()
-  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.training}/workout/**`, { timeout: 20000 })
   await expect(page.getByTestId("receipt-sets")).toBeVisible({ timeout: 20000 })
   const detail = await page.getByTestId("workout-receipt").innerText()
   expect(detail, "a warm-up is marked, so the volume total makes sense").toMatch(/\(W\)/)
@@ -157,7 +157,7 @@ await openTab(page, "history")
  * workout.
  */
 await page.getByTestId("workout-history").getByRole("link", { name: /ZZEdit/ }).first().click()
-await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+await page.waitForURL(`**${ROUTES.training}/workout/**`, { timeout: 20000 })
 await page.getByTestId("workout-correct").click()
 await expect(page.getByTestId("workout-correction")).toBeVisible({ timeout: 20000 })
 
@@ -259,7 +259,7 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
   // By id, not by lift name: an account with a year of training in it has many
   // workouts containing a squat, and the first one is not this one.
   await page.getByTestId(`history-row-${seeded.workoutId}`).click()
-  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.training}/workout/**`, { timeout: 20000 })
   await page.getByTestId("workout-correct").click()
   const editor = page.getByTestId("workout-correction")
   await expect(editor).toBeVisible({ timeout: 20000 })
@@ -388,7 +388,7 @@ test("deleting a program session moves the weights back down", async ({ page }) 
    * A destructive control does not belong beside the one you tap a hundred and
    * forty times to open a session.
    */
-  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.training}/workout/**`, { timeout: 20000 })
   await page.getByTestId("workout-delete").click()
   const deleted = page.waitForResponse((r) => r.url().includes("/api/") && r.request().method() === "DELETE")
   await page.getByTestId("confirm-delete-workout").click()
@@ -566,7 +566,7 @@ test("deleting a session on a program edited after it started moves the weights 
   await openTab(page, "history")
   await page.getByTestId(`history-row-${seeded.lastWorkoutId}`).click()
   // The app's own dialog, on the workout's own page, as above.
-  await page.waitForURL("**/programs/workout/**", { timeout: 20000 })
+  await page.waitForURL(`**${ROUTES.training}/workout/**`, { timeout: 20000 })
   await page.getByTestId("workout-delete").click()
   const deleted = page.waitForResponse((r) => r.url().includes("/api/") && r.request().method() === "DELETE")
   await page.getByTestId("confirm-delete-workout").click()
