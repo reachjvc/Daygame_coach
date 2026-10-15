@@ -124,6 +124,12 @@ async function land(page: Page) {
   await isolated(page)
   await page.goto(ROUTES.quitVice)
   await page.locator('[data-hydrated="true"]').waitFor({ timeout: 40000 })
+  // SETTLED BEFORE THE RECORD GOES IN. The page's first sync merges the
+  // (stubbed, empty) account and saves the result to this same key; landing
+  // after our write, it saved an empty record over it, and the reload showed
+  // no run and no "File a report" (CI run 38728580217, both attempts, on the
+  // production build). blackbox.spec.ts's `seed` waits for the same reason.
+  await page.locator('[data-sync-settled="true"]').waitFor({ timeout: 40000 })
   await page.evaluate((r) => {
     localStorage.setItem("vice-blackbox-v1", JSON.stringify(r))
   }, RECORD)
