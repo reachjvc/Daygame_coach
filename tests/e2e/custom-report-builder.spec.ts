@@ -77,14 +77,8 @@ test.describe('Custom Report Builder', () => {
   })
 
   test('a report written in the builder is stored with what was written', async ({ page }) => {
-    /**
-     * WITH A FIELD, because without one it cannot be saved: the report is
-     * saved as a template plus a report, and the template endpoint refuses a
-     * template with no fields ("Fields required", 400). So "Write Report Now"
-     * with only the notes box filled — the screen's main box — shows an error
-     * and saves nothing. Found by this rewrite on 2026-10-13 (the old test
-     * passed by matching the URL it started on) and reported, not pinned.
-     */
+    // With a field, so the report is saved with a template of its own. The
+    // notes-only case, which has none, is the next test.
     const run = randomUUID().slice(0, 8)
     const notes = `E2E custom report ${run}`
     await openBuilder(page, 'report')
@@ -113,5 +107,36 @@ test.describe('Custom Report Builder', () => {
     expect(body.is_draft).toBe(false)
     expect(body.fields.main_notes).toBe(notes)
     expect(body.fields.quick_note).toBe(`quick note ${run}`)
+  })
+
+  test('a report with only the notes box filled is stored, with no template', async ({ page }) => {
+    /**
+     * The screen's main box on its own. Until 2026-10-15 (f34c603) it could not
+     * be saved: the report went up as a template plus a report, the template
+     * endpoint refuses one with no fields ("Fields required", 400), and the
+     * screen showed an error and kept nothing of what was written. A report
+     * needs no template, and an empty one would only clutter the list.
+     */
+    const notes = `E2E notes only ${randomUUID().slice(0, 8)}`
+    await openBuilder(page, 'report')
+    await page.getByTestId(SELECTORS.customReportBuilder.templateNameInput).fill('E2E notes-only')
+    await page.getByPlaceholder(/Write freely/i).fill(notes)
+
+    const templatePosts: string[] = []
+    page.on('request', (r) => {
+      if (r.url().endsWith('/api/tracking/templates/custom') && r.method() === 'POST') templatePosts.push(r.url())
+    })
+    const report = createdId(page, '/api/tracking/field-report')
+    await page.getByTestId(SELECTORS.customReportBuilder.saveButton).click({ timeout: ACTION_TIMEOUT })
+    const reportId = await report
+    cleanUp.push(`/api/tracking/field-report/${reportId}`)
+
+    const body = (await (await page.request.get(`/api/tracking/field-report/${reportId}`)).json()) as {
+      template_id: string | null
+      fields: Record<string, unknown>
+    }
+    expect(body.fields.main_notes).toBe(notes)
+    expect(body.template_id).toBeNull()
+    expect(templatePosts, 'an empty template was made').toEqual([])
   })
 })

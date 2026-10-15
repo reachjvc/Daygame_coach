@@ -47,9 +47,9 @@ test.describe('Tracking History', () => {
 
     await page.goto(ROUTES.trackingHistory, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.history.card(submitted))).toBeVisible({ timeout: AUTH_TIMEOUT })
-    // NOT asserted: that "All" shows the draft. It does not — the list behind
-    // "All" is read with `is_draft = false` (getUserFieldReports), so "All" and
-    // "Submitted" show the same thing. Reported 2026-10-13 rather than pinned.
+    // "All" is both. It read the submitted list until 2026-10-15 (34c0506),
+    // so a draft appeared nowhere but under "Drafts".
+    await expect(page.getByTestId(SELECTORS.history.card(draft))).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     await page.getByTestId(SELECTORS.history.filterDrafts).click()
     await expect(page.getByTestId(SELECTORS.history.card(draft))).toBeVisible({ timeout: AUTH_TIMEOUT })
