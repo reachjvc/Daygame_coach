@@ -1,8 +1,9 @@
 # Site structure: addresses that say what belongs to what, and one frame around every page
 
-**Status:** Phase 0 done 2026-10-13. **Every decision is taken** (the owner accepted all
-recommendations on 2026-10-13), and Q-ICON was answered yes on 2026-10-15. Phases 1–5 run without
-the owner. Phase 6 is after the STOP line.
+**Status:** Phases 0–5 done 2026-10-15, with the code review and the security review run and
+their findings fixed or recorded (see "Reviews" under Phase 5). **At the STOP line:** what is
+left is the owner's (move `main`, or share a preview; Q-ICON). Production runs `main`, which has
+Phases 1–2 but not 3–5 or the security fix.
 
 **Written 2026-10-13, revised the same day after a review for a smaller executing model** (see
 "What the review changed" at the end of Part 1). For the owner, and for the AI session that carries
@@ -811,6 +812,35 @@ piped through `| grep -v "2026-"` prints nothing (every remaining mention of an 
 on a dated history line).
 
 ---
+
+## Reviews, 2026-10-15
+
+Run on the plan's own commits (`d6b39e20` … `b49cf23c`), not on other sessions' commits in the
+same range.
+
+**Code review** (9 findings). Fixed in `1d4379ff`: the matcher skipped any address with a dot,
+so `/tracking/session/a.b` passed "private by default" (now public files by extension, plus all
+of `/_next/` and `__nextjs`); `AppHeader` kept a second hand-written nav list (the home page,
+signed in, now renders inside `AppFrame`, and `AppHeader` is the signed-out sales header only);
+Scenarios kept a dead "not-signed-in" preview whose default once told a signed-in account to sign
+up; `sw.js` named deleted files. **Kept, on purpose:** Ask Coach shows to unpaid accounts (D18;
+the More sheet already did), the four self-framed pages have no laptop header (D15), each
+prefetched link costs one `getUser()` at the edge (Next's documented fix lets a request skip the
+proxy by sending a header, which would make the guard bypassable; at today's traffic the cost is
+nil), and an unknown address asks a signed-out visitor to sign in instead of 404ing (the price of
+failing closed).
+
+**Security review** (`/security-review` needs an `origin/HEAD` this clone lacks, so the same
+review ran as a subagent on the listed commits). **One real hole, older than this plan:** the
+production seal on `/api/test/*` compared the raw path while the router decodes it, so
+`/api/tes%74/articles` reached the unauthenticated sandbox handlers (read-only ones, including one
+that reads any `.md` file in the deployment). Checked read-only on the live site: Vercel answered
+500, not data; a self-hosted build runs the handler. Fixed in `b49cf23c` (decoded path for every
+API decision, 400 on a malformed encoding, three encoded spellings tested). **It reaches
+production only when `main` moves.** Low: a page address ending in a listed extension still skips
+the proxy; every page checks the user itself, and the matcher comment now says so. Checked and
+fine: no signed-out route into signed-in data, no open redirect through the legacy table or
+`next`, the `/api/timetrack` 401 and the `/test` 404 in production intact.
 
 # ████ STOP — the AI returns to you here ████
 
