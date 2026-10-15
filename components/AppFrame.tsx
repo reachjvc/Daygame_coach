@@ -54,25 +54,27 @@ export function AppFrame({ children }: { children: ReactNode }) {
               ~1100px. The nav scrolls inside the header instead of pushing the
               page sideways, which the route sweep checks. */}
           <nav className="flex min-w-0 items-center gap-1 overflow-x-auto" aria-label="Main">
-            {ITEMS.map((item) => (
-              <Button
-                key={item.href}
-                asChild
-                variant="ghost"
-                size="sm"
-                className="shrink-0 text-foreground hover:text-primary"
-                data-testid={TEST_IDS[item.href]}
-              >
-                <Link href={item.href} aria-current={isActive(pathname, item.href, item.exact) ? "page" : undefined}>
-                  {item.label}
-                </Link>
-              </Button>
-            ))}
-            {process.env.NODE_ENV === "development" && (
-              <Button asChild variant="ghost" size="sm" className="shrink-0 text-amber-500 hover:text-amber-400">
-                <Link href="/test">Test Pages</Link>
-              </Button>
-            )}
+            {ITEMS.map((item) => {
+              // Where you are, said in colour as the phone bar says it, and to
+              // a screen reader by aria-current.
+              const active = isActive(pathname, item.href, item.exact)
+              return (
+                <Button
+                  key={item.href}
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className={`shrink-0 hover:text-primary ${active ? "text-primary" : "text-foreground"}`}
+                  data-testid={TEST_IDS[item.href]}
+                >
+                  <Link href={item.href} aria-current={active ? "page" : undefined}>
+                    {item.label}
+                  </Link>
+                </Button>
+              )
+            })}
+            {/* Log Out before the development-only lab link, so the way out is
+                never the item that scrolls out of view. */}
             <form action={signOut}>
               <Button
                 variant="ghost"
@@ -84,6 +86,11 @@ export function AppFrame({ children }: { children: ReactNode }) {
                 Log Out
               </Button>
             </form>
+            {process.env.NODE_ENV === "development" && (
+              <Button asChild variant="ghost" size="sm" className="shrink-0 text-amber-500 hover:text-amber-400">
+                <Link href="/test">Test Pages</Link>
+              </Button>
+            )}
           </nav>
         </div>
       </header>
