@@ -38,7 +38,9 @@ import {
   applyWeightOverrides,
   convertExerciseState,
   convertReplayEvents,
+  sameWeek,
 } from "@/src/programs/customize"
+import { CUSTOM_PROGRAM_ID } from "@/src/programs/data/customProgram"
 import { getUserClock, getUserTimezone } from "./settingsRepo"
 import { getTodayInTimezone, isoWeekdayInTimezone } from "@/src/shared/dateUtils"
 import {
@@ -423,6 +425,33 @@ export async function enrollInProgram(
     },
     p_displace: sameDiscipline.map((e) => e.id),
   })
+  if (error?.code === "23505" && error.message.includes("uq_program_enrollments_active")) {
+    /**
+     * A START THAT LOST A RACE TO THE SAME START — a double tap on Start.
+     *
+     * Both requests read the account before either wrote, so neither saw the
+     * other's program to displace, and the database let only one of them in.
+     * The loser answered 500 "That program could not be started" while the
+     * program it asked for was running: measured, three at once answered
+     * 500, 201, 500 (tests/integration/routes/enrollTwiceAtOnce). What it asked
+     * for is true, so it says so with the running program.
+     *
+     * A self-built week is filed under one program id whatever the week, so a
+     * lost race there only counts as "already running" when the running week
+     * is this week (`sameWeek`, the rule Build Your Week uses).
+     */
+    const running = (await listActiveEnrollments(userId)).find(
+      (e) =>
+        e.program_id === catalogProgram.id &&
+        (catalogProgram.id !== CUSTOM_PROGRAM_ID ||
+          (e.customSchedule != null && input.customSchedule != null && sameWeek(e.customSchedule, input.customSchedule)))
+    )
+    if (running) {
+      const runningProgram = effectiveProgram(catalogProgram, running.customSchedule)
+      return { enrollment: running, prescription: computePrescription(runningProgram, running), displaced: [] }
+    }
+    throw new ProgramRefused("Another program was started at the same moment. Reload to see which one is running.")
+  }
   if (error) throw refusalFrom(error, "That program could not be started. Reload and try again.")
 
   const enrollment = toDomain(data as ProgramEnrollmentRow)
