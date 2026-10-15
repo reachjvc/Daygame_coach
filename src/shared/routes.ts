@@ -33,7 +33,7 @@ export const ROUTES = {
   coach: "/dashboard/qa",
   articles: "/dashboard/articles",
   innerGame: "/dashboard/inner-game",
-  settings: "/dashboard/settings",
+  settings: "/settings",
   training: "/programs",
   liveWorkout: "/programs/live",
   /**
@@ -148,7 +148,9 @@ export function isPublicPage(pathname: string): boolean {
  * redirect that keeps the query string. Filled section by section in
  * `Plans/site-structure.md` Phase 4.
  */
-export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = []
+export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
+  { from: "/dashboard/settings", to: "/settings" },
+]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */
 export function legacyRedirect(pathname: string): string | null {
