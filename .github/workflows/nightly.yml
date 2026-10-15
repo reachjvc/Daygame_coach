@@ -4,20 +4,17 @@ name: Nightly checks
 # cannot sit in `npm test`: a commit cannot make them pass or fail.
 # Plans/tests-worth-their-keep.md, Phase 10.
 #
-# GitHub schedules and dispatches only a workflow the DEFAULT branch has, so
-# until this file is on main those two never fire. A push that changes the
-# ratchet, its baselines or this file runs it on that branch, which is also
-# when a changed baseline most needs checking.
+# GitHub schedules and dispatches only a workflow the DEFAULT branch has; this
+# one reached main on 2026-10-14. It ran on pushes too until then, and that
+# trigger had to go: a push started it at the same second as that push's own
+# CI, so the ratchet looked for green runs that had not finished and failed
+# (run 38626921052). A changed baseline file is checked on commit by
+# tests/unit/ciWorkflows.test.ts.
 on:
   schedule:
     # 04:30 UTC, after e2e.yml's 03:00 nightly run has had time to finish.
     - cron: '30 4 * * *'
   workflow_dispatch:
-  push:
-    paths:
-      - .github/workflows/nightly.yml
-      - scripts/ci/durations.mjs
-      - docs/testing/durations.json
 
 permissions:
   contents: read
