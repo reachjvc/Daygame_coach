@@ -16,6 +16,7 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
+import { startingStrength } from "@/src/programs/data/strength/startingStrength"
 import { seedEnrollment } from "@/src/programs/programsService"
 
 const USER = "u1"
@@ -200,7 +201,9 @@ describe("a program with a workout open on it", () => {
     const { repo, fake } = await repoWith({ active: ["e1", "e2"], busy: ["e2"] })
     await expect(
       repo.enrollInProgram(USER, {
-        programId: strongLifts5x5.id,
+        // a different strength program: starting the one already running is not a
+        // displacement at all, it answers with the running copy
+        programId: startingStrength.id,
         level: "beginner",
         unitSystem: "kg",
       })

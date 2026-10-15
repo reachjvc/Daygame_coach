@@ -119,7 +119,9 @@ describe("starting a program", () => {
   })
 
   it("displaces the program running in the same discipline, by id, in that one call", async () => {
-    tables.program_enrollments = [enrollmentRow("e-old")]
+    // a different strength program: starting the one already running answers
+    // with it instead (see the next test)
+    tables.program_enrollments = [enrollmentRow("e-old", { program_id: "starting-strength" })]
 
     const { displaced } = await enrollInProgram(USER, {
       programId: strongLifts5x5.id,
@@ -130,6 +132,22 @@ describe("starting a program", () => {
     expect(calls).toHaveLength(1)
     expect(calls[0].args.p_displace).toEqual(["e-old"])
     expect(displaced.map((e) => e.id)).toEqual(["e-old"])
+  })
+
+  it("starting the program already running answers with it: nothing displaced, nothing reseeded", async () => {
+    // It used to displace the running copy and seed a fresh one from the
+    // level's defaults, so a second tap on Start threw away the weights.
+    tables.program_enrollments = [enrollmentRow("e-running")]
+
+    const { enrollment, displaced } = await enrollInProgram(USER, {
+      programId: strongLifts5x5.id,
+      level: "beginner",
+      unitSystem: "kg",
+    })
+
+    expect(enrollment.id).toBe("e-running")
+    expect(displaced).toEqual([])
+    expect(calls, "nothing was sent to the database").toHaveLength(0)
   })
 
   it("records the week it started with as the first thing in its history", async () => {

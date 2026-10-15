@@ -56,6 +56,7 @@ import type {
   LoggedExercise,
   ProgressionChange,
   ProgramEnrollment,
+  ProgramDefinition,
   ProgramEnrollmentRow,
   ProgramSchedule,
   ProgramSessionLogRow,
@@ -318,6 +319,30 @@ export async function getEnrollmentById(userId: string, id: string): Promise<Pro
 }
 
 /**
+ * The running copy of this program, if there is one. A self-built week is
+ * filed under one program id whatever the week, so it only counts when the
+ * running week is this week (`sameWeek`, the rule Build Your Week uses).
+ */
+function runningCopyOf(
+  active: ProgramEnrollment[],
+  programId: string,
+  customSchedule: ProgramSchedule | null | undefined
+): ProgramEnrollment | undefined {
+  return active.find(
+    (e) =>
+      e.program_id === programId &&
+      (programId !== CUSTOM_PROGRAM_ID ||
+        (e.customSchedule != null && customSchedule != null && sameWeek(e.customSchedule, customSchedule)))
+  )
+}
+
+/** A start answered with the program already running: nothing displaced, nothing reseeded. */
+function answerWithRunning(catalogProgram: ProgramDefinition, running: ProgramEnrollment) {
+  const runningProgram = effectiveProgram(catalogProgram, running.customSchedule)
+  return { enrollment: running, prescription: computePrescription(runningProgram, running), displaced: [] }
+}
+
+/**
  * Enroll in a program. Follows level routing (Layer-1), seeds initial state via
  * the engine, and enforces one active enrollment per DISCIPLINE (deactivates a
  * prior active program in the same discipline). Returns enrollment + first session.
@@ -370,7 +395,21 @@ export async function enrollInProgram(
    * account made it impossible to start ANY new one. It is left alone and not
    * displaced, because nothing can say what discipline it was.
    */
-  const sameDiscipline = (await listActiveEnrollments(userId)).filter(
+  const active = await listActiveEnrollments(userId)
+  /**
+   * STARTING THE PROGRAM YOU ARE ALREADY RUNNING IS NOT A RESTART.
+   *
+   * It was: the running copy was displaced and a fresh one seeded from the
+   * level's defaults, so a second tap on Start — or one arriving a moment
+   * after the first — threw away the cursor and the weights worked up to. The
+   * catalogue screen refuses this ("the catalogue will not restart the program
+   * you are already running", programs-past-workout.spec); the server did not.
+   * Restarting has its own doors (reset, and /resume for a finished one).
+   */
+  const alreadyRunning = runningCopyOf(active, catalogProgram.id, input.customSchedule)
+  if (alreadyRunning) return answerWithRunning(catalogProgram, alreadyRunning)
+
+  const sameDiscipline = active.filter(
     (e) => getProgram(e.program_id)?.discipline === program.discipline
   )
   /**
@@ -440,16 +479,8 @@ export async function enrollInProgram(
      * lost race there only counts as "already running" when the running week
      * is this week (`sameWeek`, the rule Build Your Week uses).
      */
-    const running = (await listActiveEnrollments(userId)).find(
-      (e) =>
-        e.program_id === catalogProgram.id &&
-        (catalogProgram.id !== CUSTOM_PROGRAM_ID ||
-          (e.customSchedule != null && input.customSchedule != null && sameWeek(e.customSchedule, input.customSchedule)))
-    )
-    if (running) {
-      const runningProgram = effectiveProgram(catalogProgram, running.customSchedule)
-      return { enrollment: running, prescription: computePrescription(runningProgram, running), displaced: [] }
-    }
+    const running = runningCopyOf(await listActiveEnrollments(userId), catalogProgram.id, input.customSchedule)
+    if (running) return answerWithRunning(catalogProgram, running)
     throw new ProgramRefused("Another program was started at the same moment. Reload to see which one is running.")
   }
   if (error) throw refusalFrom(error, "That program could not be started. Reload and try again.")
