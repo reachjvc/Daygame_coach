@@ -138,7 +138,6 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
   [ROUTES.trackingReview]: 1,
   [ROUTES.trackingSession]: 1,
   [ROUTES.scenarioArchetypes]: 1,
-  "/qa": 6,
   "/redirect": 6,
 
   // NOT RAISED, AND FAILING ON PURPOSE.
