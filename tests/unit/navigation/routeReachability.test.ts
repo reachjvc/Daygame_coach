@@ -203,11 +203,12 @@ describe("every page has a way in", () => {
     // to /life-mastery/quit-vice with the flow that links to it, and both lines
     // came off this list the same day. That is what this list is for.
     //
-    // The header's "Test Pages" entry, which is pushed only inside
-    // `if (process.env.NODE_ENV === "development")` — it does not exist in the
-    // build real users get. Listed rather than taught to the detector, because
-    // a detector that tries to evaluate build-time conditions would be guessing.
-    "components/AppHeader.tsx",
+    // The frame's "Test Pages" link, rendered only inside
+    // `process.env.NODE_ENV === "development"` — it does not exist in the build
+    // real users get. Listed rather than taught to the detector, because a
+    // detector that tries to evaluate build-time conditions would be guessing.
+    // (It lived in AppHeader until that became the signed-out sales header.)
+    "components/AppFrame.tsx",
   ])
 
   /**

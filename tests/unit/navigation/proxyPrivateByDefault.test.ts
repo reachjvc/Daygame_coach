@@ -65,13 +65,24 @@ describe("the proxy runs where it must", () => {
       "/api/tracking/stats",
       "/_next/static/chunks/main.js",
       "/_next/image",
+      "/_next/webpack-hmr",
+      "/__nextjs_original-stack-frames",
       "/sw.js",
       "/manifest.webmanifest",
       "/favicon.ico",
       "/icon-192.png",
+      "/archetypes/european-1.jpg",
+      "/default_driver_video.mp4",
     ]) {
       expect(reachesProxy(url), url).toBe(false)
     }
+  })
+
+  it("runs on a page address that happens to contain a dot", () => {
+    // It used to skip anything with a dot, so a dynamic segment like this one
+    // went past the guard on the strength of a comment.
+    expect(reachesProxy("/tracking/session/a.b")).toBe(true)
+    expect(reachesProxy("/training/workout/x.y")).toBe(true)
   })
 })
 

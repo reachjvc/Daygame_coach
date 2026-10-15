@@ -5,20 +5,24 @@ import { CheckCircle2, MessageCircle, BarChart3, Zap, Swords } from "lucide-reac
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { AppFrame } from "@/components/AppFrame"
 import { AppHeader } from "@/components/AppHeader"
-import { MobileTabBar } from "@/components/MobileTabBar"
 import { CheckoutButton } from "@/src/home/components/CheckoutButton"
 import { PRODUCTS } from "@/src/home/products"
 
 interface HomePageProps {
   isLoggedIn?: boolean
-  hasPurchased?: boolean
 }
 
-export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageProps) {
-  return (
-    <div className={`min-h-dvh bg-background ${hasPurchased ? "pb-tab-bar" : ""}`}>
-      <AppHeader isLoggedIn={isLoggedIn} hasPurchased={hasPurchased} />
+/**
+ * The sales page. Signed in, it wears the app's frame like every other page,
+ * so its navigation cannot drift from the tab bar's; signed out, it has the
+ * sales header (sign in, get started) and nothing else.
+ */
+export function HomePage({ isLoggedIn = false }: HomePageProps) {
+  const page = (
+    <div className="min-h-dvh bg-background">
+      {!isLoggedIn && <AppHeader />}
 
       {/* Hero Section */}
       <section className="w-full py-24 lg:py-32">
@@ -182,8 +186,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
           </div>
         </div>
       </footer>
-
-      {hasPurchased && <MobileTabBar />}
     </div>
   )
+  return isLoggedIn ? <AppFrame>{page}</AppFrame> : page
 }

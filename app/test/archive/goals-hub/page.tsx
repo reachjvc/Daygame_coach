@@ -1,7 +1,6 @@
 import { createServerSupabaseClient } from "@/src/db/server"
 import { ROUTES } from "@/src/shared/routes"
-import { AppHeader } from "@/components/AppHeader"
-import { MobileTabBar } from "@/components/MobileTabBar"
+import { AppFrame } from "@/components/AppFrame"
 import { redirect } from "next/navigation"
 import { GoalsHubPage } from "@/src/goals/components/GoalsHubPage"
 
@@ -45,10 +44,10 @@ export default async function ArchivedGoalsHubPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background pb-tab-bar">
-      <AppHeader isLoggedIn={true} hasPurchased={true} />
-      <GoalsHubPage />
-      <MobileTabBar />
-    </div>
+    <AppFrame>
+      <div className="min-h-dvh bg-background">
+        <GoalsHubPage />
+      </div>
+    </AppFrame>
   )
 }

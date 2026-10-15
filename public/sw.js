@@ -66,11 +66,10 @@ const CACHE = "app-shell-" + VERSION
  * The pages this worker may store and answer. Nothing else, ever.
  *
  * WRITTEN OUT BY HAND, because a worker is a classic script served from the
- * site root: it cannot import `src/shared/lifeMasteryRoutes.ts`, the same
- * reason `proxy.ts`'s matcher is a literal. So the address can move out from
- * under this file silently. `tests/unit/navigation/lifeMasteryRoutes.test.ts`
- * is what stops that — it fails when this list no longer names the address the
- * constant claims, exactly as it already does for the proxy.
+ * site root: it cannot import `src/shared/routes.ts`, the same reason
+ * `proxy.ts`'s matcher is a literal. So an address can move out from under this
+ * file silently. `tests/unit/navigation/routeList.test.ts` is what stops that:
+ * it fails unless this list is exactly `[ROUTES.time, ROUTES.quitVice]`.
  */
 const SHELL_PATHS = [
   // Started on a train, in a basement, on the underground.

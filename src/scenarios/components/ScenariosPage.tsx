@@ -92,7 +92,6 @@ export async function ScenariosPage() {
             userLevel={1}
             scenariosCompleted={0}
             isPreviewMode={true}
-            previewReason="not-subscribed"
           />
         </main>
       </div>

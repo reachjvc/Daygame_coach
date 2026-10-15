@@ -35,11 +35,11 @@ interface ScenariosHubProps {
   userLevel: number;
   scenariosCompleted: number;
   isPreviewMode?: boolean;
-  /* Preview covers two different people and they need different words. A
-     visitor is not signed in and should be asked to sign up. Somebody signed in
-     without a subscription has already done that, and was being told to sign up
-     again -- seen on the live site with a real new account, 2026-09-09. */
-  previewReason?: "not-signed-in" | "not-subscribed";
+  /* Preview is for somebody signed in without a subscription. It used to cover
+     a signed-out visitor too, who was asked to sign up; that branch could no
+     longer render once every page asked a visitor to sign in first, and its
+     default was how a signed-in account was once told to sign up again
+     (seen on the live site, 2026-09-09). Removed 2026-10-15. */
   initialLanguage?: "da" | "en";
   onLanguageChange?: (language: string) => Promise<void>;
 }
@@ -76,7 +76,6 @@ export function ScenariosHub({
   userLevel,
   scenariosCompleted,
   isPreviewMode = false,
-  previewReason = "not-signed-in",
   initialLanguage = "da",
   onLanguageChange,
 }: ScenariosHubProps) {
@@ -195,26 +194,15 @@ export function ScenariosHub({
                 Unlock "{selectedScenarioName}"
               </h3>
               <p className="text-muted-foreground mb-6">
-                {previewReason === "not-subscribed"
-                  ? "Subscribe to practise this scenario and track your progress. You keep everything you have already answered."
-                  : "Sign up to start practising this scenario and track your progress. Get personalised feedback and improve your social skills."}
+                Subscribe to practise this scenario and track your progress. You keep everything you have already answered.
               </p>
               <div className="flex flex-col gap-3">
                 {/* `asChild`, so each link IS its button. A <button> inside an
                     <a> is invalid HTML, and `w-full` moves onto the button
                     because that is what renders the anchor now. */}
                 <Button className="w-full" asChild>
-                  <Link href={previewReason === "not-subscribed" ? "/#pricing" : "/auth/sign-up"}>
-                    {previewReason === "not-subscribed" ? "See pricing" : "Get Started Free"}
-                  </Link>
+                  <Link href="/#pricing">See pricing</Link>
                 </Button>
-                {/* Not to somebody already signed in, who is the only person
-                    told "not-subscribed". */}
-                {previewReason !== "not-subscribed" && (
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link href="/auth/login">Already have an account? Login</Link>
-                  </Button>
-                )}
               </div>
             </div>
           </div>
@@ -276,9 +264,7 @@ export function ScenariosHub({
         </h1>
         <p className="text-pretty text-lg text-muted-foreground leading-relaxed">
           {isPreviewMode
-            ? previewReason === "not-subscribed"
-              ? "Browse what is here. Subscribe to start practising."
-              : "Browse available scenarios. Sign up to start practising!"
+            ? "Browse what is here. Subscribe to start practising."
             : "Train each phase of the conversation, from opener to close."
           }
         </p>

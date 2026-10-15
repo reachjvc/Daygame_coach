@@ -113,9 +113,13 @@ export const config = {
     // Every page. A literal, because Next reads this list at build time and
     // cannot evaluate an import. Excluded: the API (its handlers check the
     // user themselves, and a getUser() per call would add a network call to
-    // each), Next's own assets, and anything with a dot, which is every file in
-    // public/ plus /sw.js and /manifest.webmanifest. No page address has a dot.
-    "/((?!api/|_next/static|_next/image|.*\\..*).*)",
+    // each), everything Next serves for itself (`/_next/`, and `__nextjs` in
+    // development), and the files in public/ by their extension, plus /sw.js
+    // and /manifest.webmanifest. By extension and not "anything with a dot":
+    // that rule let `/tracking/session/a.b` past the guard, which is how
+    // "private by default" quietly stops being true. A flat list, because the
+    // matcher's path syntax refuses nested groups.
+    "/((?!api/|_next/|__nextjs|.*\\.jpg$|.*\\.jpeg$|.*\\.png$|.*\\.gif$|.*\\.webp$|.*\\.svg$|.*\\.ico$|.*\\.mp4$|.*\\.pkl$|.*\\.json$|.*\\.js$|.*\\.css$|.*\\.map$|.*\\.txt$|.*\\.xml$|.*\\.webmanifest$).*)",
     "/api/test/:path*",
     "/api/timetrack/:path*",
   ],
