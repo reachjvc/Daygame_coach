@@ -22,6 +22,7 @@ import { ROLLING_PERIODS } from "./goalEnums"
 import { metricFitsPeriod } from "../tracking/metricsService"
 import { shouldAutoFreeze, isPeriodStale } from "../goals/goalsService"
 import { practiceRateInWeek } from "../goals/northStarTrackService"
+import { noSuchRow } from "./rowErrors"
 
 // ============================================
 // Duplicate Prevention
@@ -214,7 +215,7 @@ export async function getGoalById(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") {
+    if (noSuchRow(error)) {
       return null
     }
     throw new Error(`Failed to get goal: ${error.message}`)

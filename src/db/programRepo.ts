@@ -63,6 +63,7 @@ import type {
   SessionPrescription,
   UnitSystem,
 } from "@/src/programs/types"
+import { noSuchRow } from "./rowErrors"
 
 // ---------------------------------------------------------------------------
 // Row mapping
@@ -283,7 +284,7 @@ export async function getEnrollmentById(userId: string, id: string): Promise<Pro
     .eq("user_id", userId)
     .single()
   if (error) {
-    if (error.code === "PGRST116") return null
+    if (noSuchRow(error)) return null
     /**
      * ON THE HOT PATH OF EVERY WORKOUT WRITE, which is why this one is not
      * allowed to say what the database said.

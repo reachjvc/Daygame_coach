@@ -41,6 +41,7 @@ import type {
   StickingPointUpdate,
   DailyStats,
 } from "./trackingTypes"
+import { noSuchRow } from "./rowErrors"
 import type { MilestoneSourceRows } from "@/src/tracking/types"
 
 // ============================================
@@ -57,7 +58,7 @@ export async function getApproachOwner(approachId: string): Promise<string | nul
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") return null
+    if (noSuchRow(error)) return null
     throw new Error(`Failed to get approach: ${error.message}`)
   }
 
@@ -94,7 +95,7 @@ export async function getSession(sessionId: string): Promise<SessionRow | null> 
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") return null
+    if (noSuchRow(error)) return null
     throw new Error(`Failed to get session: ${error.message}`)
   }
 
@@ -211,7 +212,7 @@ export async function getSessionWithApproaches(
     .single()
 
   if (sessionError) {
-    if (sessionError.code === "PGRST116") return null
+    if (noSuchRow(sessionError)) return null
     throw new Error(`Failed to get session: ${sessionError.message}`)
   }
 
@@ -547,7 +548,7 @@ export async function getFieldReportTemplate(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") return null
+    if (noSuchRow(error)) return null
     throw new Error(`Failed to get template: ${error.message}`)
   }
 
@@ -625,7 +626,7 @@ export async function getCustomReportTemplate(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") return null // Not found
+    if (noSuchRow(error)) return null // Not found
     throw new Error(`Failed to get custom report template: ${error.message}`)
   }
 
@@ -656,7 +657,7 @@ export async function updateCustomReportTemplate(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") {
+    if (noSuchRow(error)) {
       throw new Error("Template not found or access denied")
     }
     throw new Error(`Failed to update custom report template: ${error.message}`)
@@ -786,7 +787,7 @@ export async function getFieldReport(reportId: string): Promise<FieldReportRow |
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") return null
+    if (noSuchRow(error)) return null
     throw new Error(`Failed to get field report: ${error.message}`)
   }
 

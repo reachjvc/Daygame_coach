@@ -70,6 +70,7 @@ import type {
 } from "@/src/programs/types"
 import type { WorkoutSetRow } from "@/src/health/types"
 import { libraryByName, libraryExercise } from "@/src/programs/data/exerciseLibrary"
+import { idCannotExist } from "./rowErrors"
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -435,20 +436,9 @@ async function requireLive(userId: string, workoutId: string): Promise<LiveWorko
   throw new Error("That workout is not open any more — reload to see where it got to.")
 }
 
-/**
- * "THAT IS NOT A UUID" IS A NOT-FOUND, NOT A FAULT.
- *
- * Postgres answers 22P02 — invalid input syntax for type uuid — when an id
- * cannot name a row at all. `/programs/workout/not-a-uuid` turned that into a
- * `CouldNotTell`, which the page had no catch for, so a truncated shared link
- * reached the global error screen: "This page could not load. The fault has
- * been reported." A well-formed id that is simply missing correctly gets the
- * 404 page one line later.
- *
- * Nothing is wrong on this side and no retry will help, which is exactly what
- * separates it from every other read failure this file wraps.
- */
-const idCannotExist = (error: { code?: string }): boolean => error.code === "22P02"
+// "That is not a uuid" is a not-found, not a fault: `idCannotExist` in
+// ./rowErrors says why. `/programs/workout/not-a-uuid` reached the global
+// error screen before it.
 
 /**
  * WHICH OF FOUR A WORKOUT IS IN — asked, never inferred from an error code.
