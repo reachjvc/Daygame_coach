@@ -99,7 +99,15 @@ const PLAN = {
 async function goals(
   page: Page
 ): Promise<
-  Array<{ id: string; title: string; template_id: string | null; motivation_note: string | null; current_value: number }>
+  Array<{
+    id: string
+    title: string
+    template_id: string | null
+    motivation_note: string | null
+    current_value: number
+    target_value: number
+    ramp_steps: { frequencyPerWeek: number; durationWeeks: number }[] | null
+  }>
 > {
   const res = await page.request.get('/api/goals')
   expect(res.ok()).toBeTruthy()
@@ -157,6 +165,11 @@ test.describe('Life Mastery — the track step', () => {
     // and wrote none of it, so the reason arrived blank and nothing said so.
     const gym = afterFirst.find((g) => g.title === 'E2E gym sessions')!
     expect(gym.motivation_note).toBe('Because the rest of it runs on energy')
+    // Two a week to start, and the steady four the grid showed carried over as
+    // the ramp's last step. Until 2026-10-15 the goal had no four in it at all
+    // and settled at two once the fortnight was up (`steadyRate`).
+    expect(gym.target_value).toBe(2)
+    expect(gym.ramp_steps?.map((s) => s.frequencyPerWeek)).toEqual([2, 4])
 
     // The rows are ticked as tracked, and the button has nothing left to send.
     await expect(pushList.getByRole('listitem').getByText('tracked', { exact: true })).toHaveCount(3)
@@ -186,10 +199,8 @@ test.describe('Life Mastery — the track step', () => {
     await expect(schedule.getByText('E2E gym sessions')).toBeVisible()
     await expect(schedule.getByText('E2E cold shower')).toBeVisible()
 
-    // The ramp is legible: 2, 2, then the steady 4. (The goal this pushes
-    // settles at 2 after its ramp instead — `rampTargetForPeriod` reads past
-    // the end as the ramp's last step, this grid as `daysPerWeek`. Reported as
-    // a product disagreement on 2026-10-13; this line moves with the fix.)
+    // The ramp is legible: 2, 2, then the steady 4 — and the goal this pushes
+    // counts the same weeks (asserted after the push below).
     const gymRow = schedule.getByRole('row', { name: /E2E gym sessions/ })
     await expect(gymRow.getByRole('cell').nth(0)).toHaveText(/^2$/)
     await expect(gymRow.getByRole('cell').nth(1)).toHaveText(/^2$/)

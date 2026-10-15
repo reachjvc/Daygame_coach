@@ -33,6 +33,7 @@ import {
   trackActivities,
 } from "@/src/goals/northStarTrackService"
 import type { HabitRampStep } from "@/src/goals/types"
+import { rampTargetForPeriod } from "@/src/db/goalRepo"
 
 const RUN = "run-1"
 
@@ -196,6 +197,40 @@ describe("the week grid and the goal beneath it cannot disagree", () => {
         activityPerWeek(activity, 1),
         `week grid and goal disagree for ${JSON.stringify(shape)}`,
       ).toBe(weeklyTotalOf(goalToInsert(plan, RUN, goal)))
+    }
+  })
+
+  /**
+   * AND IN EVERY WEEK AFTER, which is where they parted. Week one was all the
+   * test above asked, so a plan saying "gym four times a week, easing in at two
+   * for a fortnight" showed 2, 2, 4 on the grid while the goal it created
+   * settled at 2 once the ramp ended (found by life-mastery-track.spec,
+   * 2026-10-13). The goal's side of each week is what the weekly roll does with
+   * the row it was given (`rampTargetForPeriod`), not a re-reading of the plan.
+   */
+  it("agree in every week, after the ramp as well as during it", () => {
+    const shapes = [
+      { rampSteps: APPROACHES_RAMP },
+      { rampSteps: BEDTIME_RAMP },
+      { perWeek: 20, rampSteps: APPROACHES_RAMP },
+      // The Life Mastery shape: the ramp is only the ease-in; four is the rate.
+      { perWeek: null, daysPerWeek: 4, rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 2 }] },
+      { perWeek: null, daysPerWeek: 5, rampSteps: [{ frequencyPerWeek: 1, durationWeeks: 3 }, { frequencyPerWeek: 3, durationWeeks: 2 }] },
+      { perWeek: 20, rampSteps: null },
+      { perWeek: null, daysPerWeek: 4, rampSteps: null },
+    ]
+    const created = "2026-01-05T10:00:00Z"
+    const day = (week: number) => new Date(Date.parse(created) + (week - 1) * 7 * 86400000).toISOString().slice(0, 10)
+
+    for (const shape of shapes) {
+      const { plan, goal } = driver(shape)
+      const activity = trackActivities(plan).find((a) => a.id === goal.id)!
+      const insert = goalToInsert(plan, RUN, goal)
+      const row = { period: insert.period, ramp_steps: insert.ramp_steps ?? null, created_at: created, target_value: insert.target_value }
+      for (let week = 1; week <= 70; week++) {
+        const goalSays = rampTargetForPeriod(row, day(week)) ?? weeklyTotalOf(insert)
+        expect(activityPerWeek(activity, week), `week ${week} of ${JSON.stringify(shape)}`).toBe(goalSays)
+      }
     }
   })
 })

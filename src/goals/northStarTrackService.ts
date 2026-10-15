@@ -219,7 +219,20 @@ export function goalToInsert(plan: NsPlan, runId: string, goal: NsGoal): NsTrack
     insert.period = "weekly"
     insert.target_value = clampInt(practiceRateInWeek(goal, 1), 1)
     insert.goal_type = "habit_ramp"
-    if (goal.rampSteps?.length) insert.ramp_steps = goal.rampSteps as unknown as Record<string, unknown>[]
+    if (goal.rampSteps?.length) {
+      /* THE STEADY RATE GOES WITH IT. A goal row has no "per week" of its own:
+         past its ramp the weekly roll asks for the ramp's last step. When the
+         plan's steady rate differs from that — the ramp is only an ease-in,
+         or somebody named a rate — it rides along as the final step, or the
+         goal settles at the ease-in rate for ever while the plan says four.
+         See `steadyRate`. */
+      const steady = steadyRate(goal)
+      const last = goal.rampSteps[goal.rampSteps.length - 1]
+      const ramp = steady !== Math.round(last.frequencyPerWeek)
+        ? [...goal.rampSteps, { frequencyPerWeek: steady, durationWeeks: 1 }]
+        : goal.rampSteps
+      insert.ramp_steps = ramp as unknown as Record<string, unknown>[]
+    }
     return insert
   }
 
@@ -569,10 +582,7 @@ export interface TrackActivity {
  * seven. Two answers to one question, 250 lines apart in this file. Both now
  * come from here.
  *
- * PAST THE END OF THE RAMP the steady rate is the ramp's own last step, not
- * `daysPerWeek`. Approaches ramps to twenty-one a week; falling back to the
- * day count would have the schedule read 5, 10, 15, 20, 21 and then SEVEN.
- * An explicit `perWeek` still wins, because that is somebody saying it.
+ * PAST THE END OF THE RAMP it is `steadyRate`, below.
  */
 export function practiceRateInWeek(
   practice: { perWeek: number | null; daysPerWeek: number; rampSteps: HabitRampStep[] | null },
@@ -585,10 +595,35 @@ export function practiceRateInWeek(
       week += Math.max(1, Math.round(step.durationWeeks))
       if (weekIndex <= week) return Math.max(0, Math.round(step.frequencyPerWeek))
     }
-    // Past the end: what the ramp built up to, unless somebody named a rate.
-    return Math.max(0, Math.round(practice.perWeek ?? ramp[ramp.length - 1].frequencyPerWeek))
+    return steadyRate(practice)
   }
-  return Math.max(0, Math.round(practice.perWeek ?? practice.daysPerWeek))
+  return steadyRate(practice)
+}
+
+/**
+ * THE RATE A PRACTICE SETTLES AT ONCE ITS RAMP IS OVER — one definition, for
+ * the week grid, for the goal a practice becomes, and for every week after.
+ *
+ * An explicit `perWeek` wins, because somebody said it. Otherwise the plan's
+ * "N× a week" (`daysPerWeek`) means two different things, and each surface
+ * used to pick one: for Approaches it is a count of DAYS (7) while the ramp
+ * climbs to twenty-one approaches, and for a Life Mastery driver — "gym four
+ * times a week, easing in at two for a fortnight" — it IS the rate, and the
+ * ramp is only the ease-in. The grid read it as the rate and showed SEVEN
+ * after Approaches' ramp; the goal read the ramp's last step and settled the
+ * gym at TWO. A ramp eases IN, so the steady rate is the larger of what it
+ * built up to and the rate the plan names: 21 for one, 4 for the other.
+ * tests/unit/goals/practiceRate.test.ts compares the two surfaces in every week.
+ */
+export function steadyRate(practice: {
+  perWeek: number | null
+  daysPerWeek: number
+  rampSteps: HabitRampStep[] | null
+}): number {
+  if (practice.perWeek != null) return Math.max(0, Math.round(practice.perWeek))
+  const ramp = practice.rampSteps
+  const builtUpTo = ramp?.length ? Math.round(ramp[ramp.length - 1].frequencyPerWeek) : 0
+  return Math.max(0, builtUpTo, Math.round(practice.daysPerWeek))
 }
 
 /**
@@ -625,7 +660,7 @@ export function trackActivities(plan: NsPlan): TrackActivity[] {
       days: [],
       startMin: null,
       minutes: 0,
-      perWeek: Math.max(1, Math.round(goal.perWeek ?? goal.daysPerWeek)),
+      perWeek: Math.max(1, steadyRate(goal)),
       unit: goal.perWeek != null ? goal.unit.trim() : "",
       ramp: goal.rampSteps?.length ? goal.rampSteps : null,
     })

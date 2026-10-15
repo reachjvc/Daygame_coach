@@ -293,8 +293,15 @@ export function GoalCard({
           {goal.goal_type === "habit_ramp" && goal.ramp_steps && (
             <div className="text-xs text-muted-foreground space-y-0.5">
               <p className="font-medium">Ramp schedule:</p>
-              {(goal.ramp_steps as { frequencyPerWeek: number; durationWeeks: number }[]).map((step, i) => (
-                <p key={i}>{step.frequencyPerWeek}/week for {step.durationWeeks} weeks</p>
+              {/* The last step of a ramp never ends — past it the goal keeps
+                  asking for that rate (`steadyRate`) — so it reads as "then",
+                  not as a step with a length. */}
+              {(goal.ramp_steps as { frequencyPerWeek: number; durationWeeks: number }[]).map((step, i, steps) => (
+                <p key={i}>
+                  {steps.length > 1 && i === steps.length - 1
+                    ? `then ${step.frequencyPerWeek}/week`
+                    : `${step.frequencyPerWeek}/week for ${step.durationWeeks} weeks`}
+                </p>
               ))}
             </div>
           )}
