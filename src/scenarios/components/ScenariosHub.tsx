@@ -208,9 +208,13 @@ export function ScenariosHub({
                     {previewReason === "not-subscribed" ? "See pricing" : "Get Started Free"}
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/auth/login">Already have an account? Login</Link>
-                </Button>
+                {/* Not to somebody already signed in, who is the only person
+                    told "not-subscribed". */}
+                {previewReason !== "not-subscribed" && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href="/auth/login">Already have an account? Login</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

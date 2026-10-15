@@ -116,7 +116,7 @@ export function WelcomeCard({
             </h2>
             {isPreviewMode ? (
               <p className="text-muted-foreground mt-2 text-sm">
-                Sign up to discover your core values and purpose
+                Subscribe to discover your core values and purpose
               </p>
             ) : isReturningUser ? (
               <p className="text-muted-foreground mt-2 text-sm">
@@ -230,26 +230,18 @@ export function WelcomeCard({
 
           {/* Action button */}
           {isPreviewMode ? (
-            <div className="flex flex-col gap-3">
-              <Button
-                asChild
-                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
-                size="lg"
-              >
-                <Link href="/auth/sign-up">
-                  Get Started Free
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="w-full"
-              >
-                <Link href="/auth/login">
-                  Already have an account? Login
-                </Link>
-              </Button>
-            </div>
+            /* THE PREVIEW IS ONLY EVER SHOWN SIGNED IN — the page sends a
+               signed-out visitor to sign in first — so it is an account that
+               has not subscribed. It said "Sign up", "Get Started Free" and
+               "Already have an account? Login" to somebody already logged in.
+               Same offer as the Scenarios hub makes the same person. */
+            <Button
+              asChild
+              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
+              size="lg"
+            >
+              <Link href="/#pricing">See pricing</Link>
+            </Button>
           ) : (
             <Button
               onClick={onDismiss}
@@ -264,7 +256,7 @@ export function WelcomeCard({
           {/* Subtle footer */}
           <p className="text-xs text-muted-foreground text-center">
             {isPreviewMode
-              ? "Sign up to track your progress and unlock all features"
+              ? "Subscribe to track your progress and unlock all features"
               : "Your progress is saved automatically"}
           </p>
         </div>
