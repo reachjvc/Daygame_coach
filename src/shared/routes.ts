@@ -46,7 +46,7 @@ export const ROUTES = {
    * ever clicked. The vice module sits INSIDE it rather than beside it, because
    * the plan links into it and the two are one product. One folder, one move.
    */
-  plan: "/life-mastery",
+  plan: "/plan",
   /**
    * The quit-a-vice module's front door: **the Black Box** since 2026-09-20.
    *
@@ -65,7 +65,7 @@ export const ROUTES = {
    * pages in `app/test/archive/quit-vice/routes.ts`, because nothing in
    * production links into the archive.
    */
-  quitVice: "/life-mastery/quit-vice",
+  quitVice: "/plan/quit-vice",
 } as const
 
 /** One tracking session's own page. */
@@ -105,24 +105,6 @@ export function withFrom(href: string, from: string): string {
  */
 export const TRAINING_DOOR_API = "/api/programs/today"
 
-/**
- * THE ADDRESSES LIFE MASTERY HAS ALREADY LEFT.
- *
- * Writing the CURRENT path by hand is caught by
- * `tests/unit/navigation/routeList.test.ts`. Writing a SUPERSEDED one
- * was not, and on 2026-09-26 that gap let a real regression in: merging `main`
- * brought back `<Link href="/dashboard/goals/plan">` in
- * `src/inner-game/components/GoalsTab.tsx`, and all 6,103 unit tests stayed
- * green, because the guard only ever looked for the current address.
- *
- * Replaced by the table of moved addresses when `Plans/site-structure.md`
- * Phase 4 moves the pages.
- */
-export const SUPERSEDED_LIFE_MASTERY_PATHS = [
-  "/dashboard/goals/plan",
-  "/test/life-mastery",
-] as const
-
 /** Is `pathname` this address or below it? Segment-aware: "/timeline" is not under "/time". */
 export function isUnder(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`)
@@ -159,6 +141,8 @@ export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
   { from: "/dashboard/inner-game", to: "/inner-game" },
   { from: "/dashboard/tracking", to: "/tracking" },
   { from: "/programs", to: "/training" },
+  { from: "/life-mastery", to: "/plan" },
+  { from: "/dashboard/goals/plan", to: "/plan" },
 ]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */

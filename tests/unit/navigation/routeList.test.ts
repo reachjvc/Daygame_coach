@@ -17,22 +17,12 @@
  * address and caught real drift with it (see the last test in this file).
  */
 
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect } from "vitest"
 import * as fs from "fs"
 import * as path from "path"
-import { ROUTES, SUPERSEDED_LIFE_MASTERY_PATHS } from "../../../src/shared/routes"
+import { ROUTES } from "../../../src/shared/routes"
 import { QUIT_VICE_ARCHIVE } from "../../../app/test/archive/quit-vice/routes"
-import OldPlanPage from "../../../app/(app)/dashboard/goals/plan/page"
 import { code, productRoutes, writesPath } from "../../support/appRoutes"
-
-/** Where `redirect()` was asked to send the request; it throws, as Next's does. */
-const redirected = vi.hoisted(() => [] as string[])
-vi.mock("next/navigation", () => ({
-  redirect: (to: string) => {
-    redirected.push(to)
-    throw new Error("NEXT_REDIRECT")
-  },
-}))
 
 const root = path.resolve(__dirname, "../../..")
 const ROUTE_LIST = path.join(root, "src/shared/routes.ts")
@@ -134,43 +124,6 @@ describe("the route list", () => {
     expect(problems).toEqual([])
   })
 
-  it("keeps Life Mastery's old address working: it redirects, step and all", async () => {
-    // Six places in the app linked to /dashboard/goals/plan and people
-    // bookmarked it. Tidying up is not a reason to break somebody's bookmark.
-    // Runs the page, rather than reading it for the word `redirect`.
-    redirected.length = 0
-    await expect(OldPlanPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_REDIRECT")
-    await expect(OldPlanPage({ searchParams: Promise.resolve({ step: "today" }) })).rejects.toThrow("NEXT_REDIRECT")
-    expect(redirected).toEqual([ROUTES.plan, `${ROUTES.plan}?step=today`])
-  })
-
-  /**
-   * AND NOBODY LINKS TO AN ADDRESS LIFE MASTERY HAS ALREADY LEFT.
-   *
-   * On 2026-09-26 merging `main` restored `<Link href="/dashboard/goals/plan">`
-   * in `src/inner-game/components/GoalsTab.tsx`: `main` had no
-   * `app/life-mastery/`, so it hardcoded the old address in order to build, and
-   * the merge brought it back as a clean auto-merge with all 6,103 unit tests
-   * green, because the guard looked only for the current address. The redirect
-   * means it still works, which is exactly why nothing caught it.
-   */
-  it("is not reached through an address it has already left", () => {
-    // The route folder that IS the old path owns it (the framework reads that
-    // one off the filesystem), and so does the list itself.
-    const owners = SUPERSEDED_LIFE_MASTERY_PATHS.map((p) => path.join(root, "app", p.slice(1)))
-    const offenders: string[] = []
-    for (const file of productFiles()) {
-      if (owners.some((dir) => file.startsWith(dir)) || file === ROUTE_LIST) continue
-      const src = code(fs.readFileSync(file, "utf-8"))
-      for (const stale of SUPERSEDED_LIFE_MASTERY_PATHS) {
-        if (writesPath(src, stale)) offenders.push(`${path.relative(root, file)} -> ${stale}`)
-      }
-    }
-    expect(
-      offenders,
-      `These link to an address Life Mastery has already left. It still answers,\n` +
-        `as a redirect kept for old bookmarks, so nothing looks broken. Use\n` +
-        `ROUTES.plan from src/shared/routes instead:\n${offenders.join("\n")}`,
-    ).toEqual([])
-  })
+  // Addresses that moved (Life Mastery's among them) are guarded by
+  // legacyRoutes.test.ts: they redirect, and nothing in the product writes them.
 })

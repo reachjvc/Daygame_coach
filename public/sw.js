@@ -79,7 +79,7 @@ const SHELL_PATHS = [
   // mid-thought, which is not a moment that waits for signal — and until
   // 2026-09-24 opening it without a connection showed the browser's error page
   // while the page itself was perfectly capable of running from localStorage.
-  "/life-mastery/quit-vice",
+  "/plan/quit-vice",
 ]
 
 /** Is this one of them? */

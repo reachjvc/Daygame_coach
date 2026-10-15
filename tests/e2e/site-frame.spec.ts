@@ -44,9 +44,8 @@ for (const item of FRAMED) {
       })
       for (const label of width.labels) expect(seen.navLinks).toContain(label)
       expect(seen.backControls).toEqual([])
-      // One segment: a tab destination is not part of another page. Enabled in Phase 4,
-      // when the addresses move (`/dashboard/settings` has two today).
-      // expect(item.href.split("/").filter(Boolean)).toHaveLength(1)
+      // One segment: a tab destination is not part of another page.
+      expect(item.href.split("/").filter(Boolean)).toHaveLength(1)
     })
   }
 }
