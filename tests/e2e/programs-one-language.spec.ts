@@ -242,7 +242,8 @@ test("no training box is under 16px on a phone", async ({ page }) => {
 
 test("no bordered button flashes the sunset red when you hover it", async ({ page }) => {
   await openTab(page, "today")
-  const outlined = page.locator('[data-slot="button"]').first()
+  // Inside the Training screen: the app's frame draws its own buttons above it.
+  const outlined = page.getByTestId("training-screen").locator('[data-slot="button"]').first()
   await expect(outlined).toBeVisible()
   await outlined.hover()
   // The hover colour arrives by CSS transition. Wait for the transition the
