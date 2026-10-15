@@ -87,7 +87,7 @@ const nav = (page: import('@playwright/test').Page, name: string | RegExp) =>
  * This puts both tabs' entries — running or not — and the account's beside the
  * error, so the next red run says whose copy won.
  */
-async function whatEachTabHolds(first: Page, second: Page): Promise<string> {
+async function whatEachTabHolds(first: Page, second: Page, secondSaid: string[]): Promise<string> {
   const entries = async (tab: Page) => {
     const state = (await readState(tab).catch(() => null)) as { entries?: { description: string; stop: string | null }[] } | null
     return (state?.entries ?? []).map((e) => `${e.description || '(none)'}${e.stop === null ? ' [running]' : ''}`)
@@ -97,10 +97,22 @@ async function whatEachTabHolds(first: Page, second: Page): Promise<string> {
     tab
       .evaluate(() => [...document.querySelectorAll('header button')].map((b) => b.getAttribute('aria-label') ?? b.textContent ?? '').filter(Boolean).slice(0, 3).join(' | '))
       .catch(() => '?')
+  // What the second tab's composer held: a Start that was pressed but disabled,
+  // or a description that never reached the field, each read differently.
+  const composer = await second
+    .evaluate(() => {
+      const field = document.querySelector<HTMLInputElement>('input[placeholder="What are you working on?"]')
+      const start = [...document.querySelectorAll<HTMLButtonElement>('main button')].find((b) => /Start timer|Stop timer/.test(b.getAttribute('aria-label') ?? b.textContent ?? ''))
+      return `field="${field?.value ?? '(none)'}" button="${start?.getAttribute('aria-label') ?? start?.textContent ?? '(none)'}" disabled=${start?.disabled ?? '?'}`
+    })
+    .catch(() => '?')
   return [
     `first tab:  ${JSON.stringify(await entries(first))} · ${await status(first)}`,
-    `second tab: ${JSON.stringify(await entries(second))} · ${await status(second)}`,
+    `second tab: ${JSON.stringify(await entries(second))} · ${await status(second)} · ${composer}`,
     `account:    ${JSON.stringify(await entriesOnAccount(first).catch((e) => [`unreadable: ${e}`]))}`,
+    // An exception in the Start handler would leave every copy untouched, which
+    // is what CI showed three times; only the tab's own errors can say so.
+    `second tab said: ${secondSaid.length ? secondSaid.slice(-8).map((line) => line.slice(0, 240)).join(' ‖ ') : '(no errors or warnings)'}`,
   ].join('\n')
 }
 
@@ -486,12 +498,17 @@ test.describe('Toggl-style time tracker', () => {
     // back on the next change, silently throwing away whatever the first tab
     // had done in the meantime.
     const second = await context.newPage()
+    const secondSaid: string[] = []
+    second.on('pageerror', (error) => secondSaid.push(`uncaught: ${error.message}`))
+    second.on('console', (message) => {
+      if (message.type() === 'error' || message.type() === 'warning') secondSaid.push(`${message.type()}: ${message.text()}`)
+    })
     await second.goto(TRACKER, { waitUntil: 'domcontentloaded' })
     await second.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30_000 })
     await expect(second.locator('main input[value="from tab A"]').first()).toBeVisible({ timeout: 20_000 })
 
     // now track in the second tab and watch the first one follow
-    await explainedBy(() => whatEachTabHolds(page, second), async () => {
+    await explainedBy(() => whatEachTabHolds(page, second, secondSaid), async () => {
       await trackEntry(second, 'from tab B')
       await expect(page.locator('main input[value="from tab B"]').first()).toBeVisible({ timeout: 10_000 })
 
