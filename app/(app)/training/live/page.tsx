@@ -2,7 +2,7 @@
  * The workout you are in the middle of.
  *
  * Resolved on the server so the first paint already has the sets on it — the
- * same reason `/programs` is a server component. Somebody standing at a rack
+ * same reason `/training` is a server component. Somebody standing at a rack
  * should not watch a spinner decide what they are doing.
  */
 

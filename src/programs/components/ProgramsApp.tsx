@@ -661,7 +661,7 @@ function ActiveProgram({
       {/* WHAT TODAY IS, AND THE BUTTON THAT STARTS IT.
           Reading the session and doing it used to be one screen — a form with
           every set pre-filled and one save at the end, which is not how anybody
-          trains. Doing it now lives at /programs/live, one set at a time. */}
+          trains. Doing it now lives at /training/live, one set at a time. */}
       <TodayCard
         enrollmentId={enrollmentId}
         programName={enrollmentName(detail.enrollment)}

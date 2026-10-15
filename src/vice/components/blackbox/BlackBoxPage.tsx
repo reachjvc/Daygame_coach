@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * THE BLACK BOX — what `/life-mastery/quit-vice` shows.
+ * THE BLACK BOX — what `/plan/quit-vice` shows.
  *
  * A flight recorder for quitting: every run you have had, every night you
  * nearly went, and a page that answers you with your own record at the moment

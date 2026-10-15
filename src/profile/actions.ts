@@ -33,7 +33,7 @@ async function requireAuth(): Promise<string> {
 /**
  * Save the dating-preferences gate. Called from the one screen that collects
  * them, whether that screen is standing in front of scenarios or reached from
- * `/preferences` to change an answer later.
+ * `/scenarios/preferences` to change an answer later.
  */
 export async function saveDatingPreferences(formData: FormData) {
   const userId = await requireAuth()

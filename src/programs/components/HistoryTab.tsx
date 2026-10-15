@@ -13,7 +13,7 @@
  * expanded into an editor. That is the read which outgrew the database's
  * 1,000-row response limit: each workout came back missing its later sets, and
  * saving the list you were shown would have deleted them for real. The editor
- * lives on the workout's own page now (`/programs/workout/[id]`), which asks
+ * lives on the workout's own page now (`/training/workout/[id]`), which asks
  * for one workout.
  *
  * THE MONTH IS THE UNIT because the month is what this draws: a header, and

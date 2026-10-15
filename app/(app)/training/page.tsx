@@ -9,7 +9,7 @@
  *
  * Resolving here costs the page the same queries it was making anyway and the
  * numbers arrive already on screen. The same pattern the tracking dashboard
- * already uses (`getDashboardLayout` in `app/dashboard/tracking/page.tsx`), for
+ * already uses (`getDashboardLayout` in `app/(app)/tracking/page.tsx`), for
  * the same reason.
  *
  * A failure to resolve is not a failure to render: the client falls back to

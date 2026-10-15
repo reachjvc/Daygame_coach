@@ -158,7 +158,7 @@ export async function listActiveEnrollments(userId: string): Promise<ProgramEnro
    * WHEN EACH WAS LAST TRAINED — the difference between a program and a ghost.
    *
    * One query for all of them rather than one per enrollment: this list is read
-   * on the tracking dashboard, on /programs and on the Life Mastery templates
+   * on the tracking dashboard, on /training and on the Life Mastery templates
    * tab, and N+1 on a page somebody opens daily is a cost paid forever.
    *
    * Not stored on the enrollment. It is a fact about `workout_logs`,
@@ -799,7 +799,7 @@ export async function updateEnrollmentSchedule(
    * weight here sets it from your next session on, and clears any misses
    * against that lift." That is false for a session already running:
    * `prescriptionForDay` is recomputed from the enrolment on every render of
-   * `/programs/live`, so the open workout's numbers move under the person.
+   * `/training/live`, so the open workout's numbers move under the person.
    *
    * Driven: Squat prescribed at 60, set 1 ticked at 60, weight changed to 100
    * from the same screen that showed "Resume · 0 sets in" —
@@ -1019,7 +1019,7 @@ export async function getTodaySession(userId: string, enrollmentId: string): Pro
  * EVERYTHING ONE PROGRAM SCREEN NEEDS, ANSWERED ONCE.
  *
  * Two callers built this by hand — the GET route and the server-rendered first
- * paint of `/programs` — and neither could include the week, because working
+ * paint of `/training` — and neither could include the week, because working
  * out "which days have I trained this week" needs the account's timezone and
  * that is a database read neither of them was doing. So the strip did it in
  * the browser instead, off the phone's clock, and disagreed with the session

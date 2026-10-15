@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Shell for the time tracker. Mounted twice: at /dashboard/time, which is the
+ * Shell for the time tracker. Mounted twice: at /time, which is the
  * product, and at /test/toggl, which is the signed-out lab the phone suite runs
  * against. Nothing in here may name either address — see `startLinkFor`.
  *

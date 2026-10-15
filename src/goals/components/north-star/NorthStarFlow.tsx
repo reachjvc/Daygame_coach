@@ -119,7 +119,7 @@ function newRunId(): string {
  *
  * It was built as a test page and its way out said so — the default sent people
  * to /test, which does not exist in production. There is no test page any more:
- * the flow lives at /life-mastery and that is its only home, so the default is
+ * the flow lives at /plan and that is its only home, so the default is
  * now the Dashboard, which is where somebody who arrives here without a return
  * address should be able to get back to.
  */

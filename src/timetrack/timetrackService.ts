@@ -2030,7 +2030,7 @@ export function deleteWebhook(state: TimetrackState, id: Id): TimetrackState {
  * Deep link that starts a prefilled entry — Toggl's "Copy start link".
  *
  * `path` is where the tracker is being used from, because these components are
- * mounted twice: at `/dashboard/time`, which is the product, and at
+ * mounted twice: at `/time`, which is the product, and at
  * `/test/toggl`, which is the lab. It was hard-coded to the lab, so every link
  * this ever produced pointed at a page that 404s in production
  * (`app/test/layout.tsx` calls `notFound()` there) — a "copy link" that hands

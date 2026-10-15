@@ -1689,7 +1689,7 @@ export interface NsRoutine {
  *
  * ONE FIELD, DELIBERATELY. It carried `programId`, `label` and `startedAt`
  * beside the id, justified by a signed-out render that no longer exists —
- * `/life-mastery` has been signed-in gated since the route moved. What the
+ * `/plan` has been signed-in gated since the route moved. What the
  * copies bought was two versions of one fact: a program renamed on the Training
  * page still read by its old name in Life Mastery, and a phone and a laptop
  * holding different weeks with nothing able to say which was right.

@@ -68,7 +68,7 @@ export async function proxy(request: NextRequest) {
    * cryptographically signed". Nothing here checked that signature:
    * `getSession()` decodes the cookie and returns what it says. Supabase logs
    * a warning on every request for exactly that reason, and
-   * `app/dashboard/tracking/layout.tsx` went on to cite THIS function as the
+   * `app/(app)/tracking/layout.tsx` went on to cite THIS function as the
    * place the verification had happened.
    *
    * `getUser()` asks the identity provider, so a tampered or expired cookie is

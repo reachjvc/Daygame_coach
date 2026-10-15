@@ -28,7 +28,7 @@ interface DatingPreferencesGateProps {
   initialValues?: OnboardingInitialValues
   /** Where to go once saved. Validated server-side before the redirect. */
   next?: string
-  /** Shown above the questions. The scenario door and /preferences differ here. */
+  /** Shown above the questions. The scenario door and /scenarios/preferences differ here. */
   heading: string
   intro: string
   submitLabel: string
@@ -46,7 +46,7 @@ interface DatingPreferencesGateProps {
  * goal it asked for on step 5 is read by no feature in the codebase.
  *
  * So: signup asks nothing, and this stands at the scenario door instead.
- * `/preferences` renders the same component, which is what keeps there from
+ * `/scenarios/preferences` renders the same component, which is what keeps there from
  * being a second, drifting copy of these questions.
  *
  * The age range is NOT asked. It only ever chose which photo folder the

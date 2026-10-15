@@ -22,7 +22,7 @@
  */
 
 /**
- * The column every training screen sits in. /programs and /programs/live have
+ * The column every training screen sits in. /training and /training/live have
  * to be the same width, or moving between them looks like moving between two
  * different apps.
  */

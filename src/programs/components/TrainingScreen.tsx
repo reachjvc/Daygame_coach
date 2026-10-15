@@ -220,9 +220,7 @@ export function TrainingScreen({
               `/test/life-mastery`, and every page under `/test` answers 404 in
               production by design (`app/test/layout.tsx`) — so on the deployed
               site the one link joining training to the plan it belongs to was a
-              dead end. `/dashboard/goals/plan` is the same flow with the
-              account behind it, and is where the rest of the app already sends
-              people. */}
+              dead end. It is the plan's live address, from the route list. */}
           <span className="text-xs font-normal text-muted-foreground">
             · part of your{" "}
             <Link

@@ -88,11 +88,10 @@ export const HIDDEN_ROUTE_PREFIXES: string[] = [
   // controls, and two bars stacked on a phone is one bar too many. A prefix, so
   // every step of the flow and every vice route is covered by the one entry.
   //
-  // BELT AND BRACES TODAY. This bar is mounted per page rather than in a root
-  // layout, and no page under /life-mastery mounts it — so nothing here is
-  // currently doing any work. It is the answer for the day somebody mounts the
-  // bar app-wide, which is the day this would otherwise sit on top of the
-  // flow's own controls.
+  // THE FRAME READS THIS. Since 2026-10-15 one layout (app/(app)/layout.tsx,
+  // through components/AppFrame.tsx) draws the header and this bar on every
+  // signed-in page, so each prefix here opts a page out of BOTH. Before that
+  // the bar was mounted page by page, and this entry did no work at all.
   ROUTES.plan,
   ROUTES.trackingReview,
   // The live workout screen: `RestBar` owns its bottom edge, and a rest
@@ -124,7 +123,7 @@ export const ROUTE_LABELS: Record<string, string> = {
 /**
  * Is this item the page you are on? One rule for every bar that marks it: the
  * tab bar and the laptop header. Segment-aware, so `/dashboard` marked exactly
- * does not light up under `/dashboard/tracking`, and a future `/timeline`
+ * does not light up on the pages below it, and a future `/timeline`
  * would not light up Time.
  */
 export function isActive(pathname: string, href: string, exact: boolean): boolean {

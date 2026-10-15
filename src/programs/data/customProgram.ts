@@ -3,7 +3,7 @@
  *
  * WHY A SHELL AND NOT A NEW TABLE. Everything downstream of an enrollment —
  * the progression engine, today's prescription, the session log, the
- * `workout_logs` bridge, the whole `/programs` surface — is reached through
+ * `workout_logs` bridge, the whole `/training` surface — is reached through
  * `requireProgram(enrollment.program_id)`. A self-designed program that lived
  * anywhere else would need a parallel path through all of it. Instead it is an
  * ordinary enrollment whose `program_id` is this shell and whose
