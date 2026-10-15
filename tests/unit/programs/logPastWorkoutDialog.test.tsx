@@ -13,6 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { LogPastWorkoutDialog, choicesFor } from "@/src/programs/components/LogPastWorkoutDialog"
@@ -158,7 +159,7 @@ describe("opening one", () => {
      * vitest suites competing for the machine. Proved by making the stub answer
      * 25ms later, which fails the synchronous form every time.
      */
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/programs/live"))
+    await waitFor(() => expect(push).toHaveBeenCalledWith(ROUTES.liveWorkout))
   })
 
   it("goes through the one start helper, so a clientKey is sent", async () => {
@@ -243,7 +244,7 @@ describe("opening one", () => {
       "Finish the workout you have open first"
     )
     expect(screen.queryByTestId("open-past-workout")).toBeNull()
-    expect(screen.getByRole("link", { name: "Open it" }).getAttribute("href")).toBe("/programs/live")
+    expect(screen.getByRole("link", { name: "Open it" }).getAttribute("href")).toBe(ROUTES.liveWorkout)
   })
 
   it("cannot be dated in the future, in the account's zone", async () => {

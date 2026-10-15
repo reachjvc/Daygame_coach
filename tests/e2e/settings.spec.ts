@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -7,7 +8,7 @@ const AUTH_TIMEOUT = 15000 // Increased for external service latency
 test.describe('Settings Management Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Arrange: Navigate to settings
-    await page.goto('/dashboard/settings', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.settings, { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
 

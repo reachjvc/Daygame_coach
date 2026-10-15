@@ -1,4 +1,5 @@
 import { test, SIGNED_OUT } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 
 const AUTH_TIMEOUT = 15000
 
@@ -16,7 +17,7 @@ const AUTH_TIMEOUT = 15000
 test.use({ storageState: SIGNED_OUT })
 
 test('every signed-in page sends a stranger to log in', async ({ page }) => {
-  for (const route of ['/dashboard', '/dashboard/tracking', '/dashboard/settings', '/dashboard/qa']) {
+  for (const route of [ROUTES.dashboard, ROUTES.tracking, ROUTES.settings, ROUTES.coach]) {
     await page.goto(route, { timeout: AUTH_TIMEOUT })
     await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
   }

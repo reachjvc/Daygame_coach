@@ -20,6 +20,8 @@
  */
 
 import type { Page } from "@playwright/test"
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { guardTrainingAccount, resetAndEnroll, resetTraining } from "./helpers/training.helper"
 
@@ -47,14 +49,14 @@ const CARD = "training-card"
  * today", and "names today's session" failed on a missing "Squat".
  */
 async function reset(page: Page, enrol: boolean): Promise<void> {
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   if (enrol) await resetAndEnroll(page)
   else await resetTraining(page)
 }
 
 async function openTracking(page: Page): Promise<void> {
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/dashboard/tracking", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.tracking, { waitUntil: "networkidle" })
 }
 
 test.beforeEach(() => {
@@ -96,7 +98,7 @@ test("pressing Start opens a real workout, and the card then offers Resume", asy
   await page.getByTestId("training-card-start").click()
 
   // It really started one: the live screen, with a workout on the server.
-  await page.waitForURL(/\/programs\/live/, { timeout: 30000 })
+  await page.waitForURL(urlOf(ROUTES.liveWorkout), { timeout: 30000 })
   const live = await page.evaluate(async () => await (await fetch("/api/workouts/live")).json())
   expect(live, "a workout should be open on the server").toBeTruthy()
 
@@ -110,7 +112,7 @@ test("after finishing, it says you trained rather than offering Start again", as
   await reset(page, true)
   await openTracking(page)
   await page.getByTestId("training-card-start").click()
-  await page.waitForURL(/\/programs\/live/, { timeout: 30000 })
+  await page.waitForURL(urlOf(ROUTES.liveWorkout), { timeout: 30000 })
 
   await page.evaluate(async () => {
     const live = await (await fetch("/api/workouts/live")).json()
@@ -188,7 +190,7 @@ test("the two doors name the same session and the same other program", async ({ 
    * this is the assertion that the two surfaces are reading one answer rather
    * than each working it out.
    */
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await expect(page.getByTestId(`running-${chosenId}`)).toBeVisible({ timeout: 30000 })
   await expect(page.getByTestId(`running-${otherId}`)).toBeVisible()
 

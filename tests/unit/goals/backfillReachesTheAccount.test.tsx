@@ -13,6 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import { TrackTab } from "@/src/goals/components/north-star/TrackTab"
 import { addGoal, emptyNsPlan, updateGoal } from "@/src/goals/northStarService"
@@ -22,7 +23,7 @@ import type { NsPlan } from "@/src/goals/types"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/life-mastery",
+  usePathname: () => ROUTES.plan,
   useSearchParams: () => new URLSearchParams(),
 }))
 

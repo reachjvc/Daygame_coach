@@ -21,6 +21,8 @@
  */
 
 import type { Page } from "@playwright/test"
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { PHONE, cleanUp, guardTrainingAccount, resetTraining } from "./helpers/training.helper"
 
@@ -70,7 +72,7 @@ test.describe("a workout left open, with more than one program running", () => {
     test.setTimeout(180000)
     startedAt = new Date(Date.now() - 60_000).toISOString()
     await page.setViewportSize(PHONE)
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await twoProgramsRunning(page)
   })
 
@@ -91,7 +93,7 @@ test.describe("a workout left open, with more than one program running", () => {
     await expect(door).toContainText(/discard/i)
 
     await door.click()
-    await page.waitForURL(/\/programs\/live/, { timeout: 30000 })
+    await page.waitForURL(urlOf(ROUTES.liveWorkout), { timeout: 30000 })
   })
 
   test("and says nothing at all when no workout is open", async ({ page }) => {
@@ -116,7 +118,7 @@ test.describe("a workout left open, with more than one program running", () => {
     await leaveAWorkoutOpen(page)
 
     for (const view of ["programs", "build"]) {
-      await page.goto(`/programs?view=${view}`)
+      await page.goto(`${ROUTES.training}?view=${view}`)
       await expect(
         page.getByTestId("open-workout-door"),
         `?view=${view} offers a Start, so it has to say a workout is already open`

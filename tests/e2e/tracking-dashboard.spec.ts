@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 
@@ -20,11 +22,11 @@ test.describe('Tracking Dashboard', () => {
 
   test('the dashboard links open a session, a field report and the weekly review', async ({ page }) => {
     for (const [testId, destination] of [
-      [SELECTORS.trackingDashboard.newSessionLink, /\/dashboard\/tracking\/session/],
-      [SELECTORS.trackingDashboard.fieldReportLink, /\/dashboard\/tracking\/report/],
-      [SELECTORS.trackingDashboard.weeklyReviewLink, /\/dashboard\/tracking\/review/],
+      [SELECTORS.trackingDashboard.newSessionLink, urlOf(ROUTES.trackingSession)],
+      [SELECTORS.trackingDashboard.fieldReportLink, urlOf(ROUTES.trackingReport)],
+      [SELECTORS.trackingDashboard.weeklyReviewLink, urlOf(ROUTES.trackingReview)],
     ] as const) {
-      await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
+      await page.goto(ROUTES.tracking, { timeout: AUTH_TIMEOUT })
       await expect(page.getByTestId(SELECTORS.trackingDashboard.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
       await page.getByTestId(testId).click({ timeout: ACTION_TIMEOUT })
       await page.waitForURL(destination, { timeout: AUTH_TIMEOUT })
@@ -32,7 +34,7 @@ test.describe('Tracking Dashboard', () => {
   })
 
   test('Quick Add opens a form for a past session, and closes again', async ({ page }) => {
-    await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.tracking, { timeout: AUTH_TIMEOUT })
     await page.getByTestId(SELECTORS.trackingDashboard.quickAddButton).click({ timeout: AUTH_TIMEOUT })
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible({ timeout: AUTH_TIMEOUT })

@@ -16,9 +16,10 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 
 const ORIGIN = "https://app.test"
-const SHELL = "/dashboard/time"
+const SHELL = ROUTES.time
 /**
  * The second shell, added 2026-09-24.
  *
@@ -28,7 +29,7 @@ const SHELL = "/dashboard/time"
  * back the wrong member. These tests exist because the second entry is what
  * makes that fault reachable again.
  */
-const VICE = "/life-mastery/quit-vice"
+const VICE = ROUTES.quitVice
 
 type Listener = (event: unknown) => void
 
@@ -167,10 +168,10 @@ describe("rule 2 — only the tracker page is stored, only at its own address", 
   test("the tracker page is stored after a successful load and answered from the store when the network fails", async () => {
     const h = await installed()
     h.fetchMock.mockResolvedValueOnce(new Response("<html>tracker</html>", { status: 200 }))
-    await dispatch(h, "fetch", { request: page("/dashboard/time") })
+    await dispatch(h, "fetch", { request: page(ROUTES.time) })
 
     h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
-    const { response } = await dispatch(h, "fetch", { request: page("/dashboard/time") })
+    const { response } = await dispatch(h, "fetch", { request: page(ROUTES.time) })
     expect(response).toBeInstanceOf(Response)
     expect(await (response as Response).text()).toBe("<html>tracker</html>")
   })
@@ -178,20 +179,20 @@ describe("rule 2 — only the tracker page is stored, only at its own address", 
   test("any other page is never stored and never answered — the browser is left to it", async () => {
     const h = await installed()
     h.fetchMock.mockResolvedValueOnce(new Response("<html>settings</html>", { status: 200 }))
-    const first = await dispatch(h, "fetch", { request: page("/dashboard/settings") })
+    const first = await dispatch(h, "fetch", { request: page(ROUTES.settings) })
     expect(first.respondedAtAll).toBe(false)
     expect(h.fetchMock).not.toHaveBeenCalled()
 
     const stored = [...h.store.values()].flatMap((m) => [...m.keys()])
-    expect(stored.some((u) => u.includes("/dashboard/settings"))).toBe(false)
+    expect(stored.some((u) => u.includes(ROUTES.settings))).toBe(false)
   })
 
   test("a failed load of another page is NOT answered with the tracker", async () => {
     // The original defect, verbatim: settings failing to load came up as the tracker.
     const h = await installed()
-    h.store.get("app-shell-build1")!.set(ORIGIN + "/dashboard/time", new Response("<html>tracker</html>"))
+    h.store.get("app-shell-build1")!.set(ORIGIN + ROUTES.time, new Response("<html>tracker</html>"))
     h.fetchMock.mockRejectedValueOnce(new TypeError("Failed to fetch"))
-    const { respondedAtAll } = await dispatch(h, "fetch", { request: page("/preferences") })
+    const { respondedAtAll } = await dispatch(h, "fetch", { request: page(ROUTES.scenarioPreferences) })
     expect(respondedAtAll).toBe(false)
   })
 
@@ -199,7 +200,7 @@ describe("rule 2 — only the tracker page is stored, only at its own address", 
     const h = await installed()
     h.store.get("app-shell-build1")!.clear()
     h.fetchMock.mockResolvedValueOnce(new Response("boom", { status: 500 }))
-    const { response } = await dispatch(h, "fetch", { request: page("/dashboard/time") })
+    const { response } = await dispatch(h, "fetch", { request: page(ROUTES.time) })
     expect((response as Response).status).toBe(500)
     expect(h.store.get("app-shell-build1")!.size).toBe(0)
   })
@@ -296,7 +297,7 @@ describe("rule 3 — the shell is stored with its scripts or not at all", () => 
     await dispatch(h, "install", {})
     await dispatch(h, "activate", {})
     const stored = [...(h.store.get("app-shell-build1")?.keys() ?? [])]
-    expect(stored).not.toContain(ORIGIN + "/dashboard/time")
+    expect(stored).not.toContain(ORIGIN + ROUTES.time)
   })
 
   test("the tracker's warm-shell message re-fills a store that was emptied", async () => {
@@ -306,7 +307,7 @@ describe("rule 3 — the shell is stored with its scripts or not at all", () => 
 
     await dispatch(h, "message", { data: { type: "warm-shell" } })
     const stored = [...(h.store.get("app-shell-build1")?.keys() ?? [])]
-    expect(stored).toContain(ORIGIN + "/dashboard/time")
+    expect(stored).toContain(ORIGIN + ROUTES.time)
     expect(stored).toContain(ORIGIN + "/_next/static/chunks/main.js")
   })
 
@@ -325,13 +326,13 @@ describe("rule 4 — nothing signed-in outlives a sign-in", () => {
     const login = new Response("<html>login</html>", { status: 200 })
     Object.defineProperty(login, "redirected", { value: true })
     h.fetchMock.mockResolvedValueOnce(login)
-    await dispatch(h, "fetch", { request: page("/dashboard/time") })
+    await dispatch(h, "fetch", { request: page(ROUTES.time) })
     expect(h.store.get("app-shell-build1")!.size).toBe(0)
   })
 
   test("reaching the login page empties the store", async () => {
     const h = await installed()
-    h.store.get("app-shell-build1")!.set(ORIGIN + "/dashboard/time", new Response("<html>tracker for user A</html>"))
+    h.store.get("app-shell-build1")!.set(ORIGIN + ROUTES.time, new Response("<html>tracker for user A</html>"))
     const { respondedAtAll } = await dispatch(h, "fetch", { request: page("/auth/login") })
     expect(respondedAtAll).toBe(false)
     expect(h.store.has("app-shell-build1")).toBe(false)
@@ -364,7 +365,7 @@ describe("assets and the API", () => {
   test("only GET is ever handled", async () => {
     const h = await installed()
     const { respondedAtAll } = await dispatch(h, "fetch", {
-      request: { url: ORIGIN + "/dashboard/time", method: "POST", mode: "navigate", destination: "document" },
+      request: { url: ORIGIN + ROUTES.time, method: "POST", mode: "navigate", destination: "document" },
     })
     expect(respondedAtAll).toBe(false)
   })

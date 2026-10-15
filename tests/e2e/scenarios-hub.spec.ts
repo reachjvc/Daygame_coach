@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 import { ensureDatingPreferences } from './helpers/datingPreferences'
 
@@ -14,11 +16,11 @@ test('the scenarios hub shows its phases and leads back to the dashboard', async
   // The hub is what an account that has answered the dating questions sees; a
   // fresh one is asked them first (dating-preferences-gate.spec.ts owns that).
   await ensureDatingPreferences(page)
-  await page.goto('/dashboard/scenarios', { timeout: AUTH_TIMEOUT })
+  await page.goto(ROUTES.scenarios, { timeout: AUTH_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.scenarios.hub)).toBeVisible({ timeout: AUTH_TIMEOUT })
   await expect(page.getByRole('heading', { name: /practice scenarios/i })).toBeVisible()
   await expect(page.getByRole('heading', { name: /opening/i }).first()).toBeVisible()
 
   await page.getByRole('link', { name: /back to dashboard/i }).click({ timeout: ACTION_TIMEOUT })
-  await page.waitForURL(/\/dashboard$/, { timeout: AUTH_TIMEOUT })
+  await page.waitForURL(urlOf(ROUTES.dashboard, "$"), { timeout: AUTH_TIMEOUT })
 })

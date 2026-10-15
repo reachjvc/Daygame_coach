@@ -20,6 +20,8 @@
  */
 
 import type { Page } from "@playwright/test"
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { PHONE, resetAndEnroll } from "./helpers/training.helper"
 
@@ -130,7 +132,7 @@ async function oranges(page: Page): Promise<string[]> {
  * that proves it has arrived.
  */
 async function openTab(page: Page, tab: "today" | "history" | "progress") {
-  await page.goto(`/programs?tab=${tab}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`${ROUTES.training}?tab=${tab}`, { waitUntil: "domcontentloaded" })
   /**
    * THE TAB HAS ARRIVED WHEN ITS PLACEHOLDER HAS GONE, not when a particular
    * thing is on it.
@@ -165,7 +167,7 @@ async function openTab(page: Page, tab: "today" | "history" | "progress") {
  * parse URL" on `about:blank`.
  */
 test.beforeEach(async ({ page }) => {
-  await page.goto("/programs", { waitUntil: "domcontentloaded" })
+  await page.goto(ROUTES.training, { waitUntil: "domcontentloaded" })
   await resetAndEnroll(page)
 })
 
@@ -262,7 +264,7 @@ test("the live screen: every control is 44px, and only the caption row is 11px",
 }) => {
   await openTab(page, "today")
   await page.getByTestId("start-workout").click()
-  await page.waitForURL(/\/programs\/live/)
+  await page.waitForURL(urlOf(ROUTES.liveWorkout))
   await expect(page.getByTestId("live-column")).toBeVisible({ timeout: 30000 })
 
   const small = (await controls(page)).filter((c) => c.height < FLOOR)

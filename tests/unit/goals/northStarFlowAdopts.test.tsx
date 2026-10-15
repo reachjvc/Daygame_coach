@@ -29,6 +29,7 @@
  */
 
 import { cleanup, render, act } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { emptyNsPlan, loadNsPlan, setNorthStar } from "@/src/goals/northStarService"
@@ -154,7 +155,7 @@ afterEach(() => {
 describe("the plan adopts the program the account is running", () => {
   it("keeps the adoption after the account's own plan arrives", async () => {
     installFetch({ enrollmentsAnswer: "running" })
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(20_000)
 
     expect(
@@ -165,7 +166,7 @@ describe("the plan adopts the program the account is running", () => {
 
   it("settles: the adoption is sent once, not on a loop", async () => {
     installFetch({ enrollmentsAnswer: "running" })
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     /**
@@ -180,7 +181,7 @@ describe("the plan adopts the program the account is running", () => {
 
   it("adopts nothing when the program list could not be read", async () => {
     installFetch({ enrollmentsAnswer: "failed" })
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(20_000)
 
     // A read that failed is not "you have no programs". Detaching here would

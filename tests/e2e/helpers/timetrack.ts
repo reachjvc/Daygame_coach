@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * The time tracker, as the product serves it: signed in, at /dashboard/time,
@@ -17,7 +18,7 @@ import { expect, type Page } from '@playwright/test'
  * of them count what is on it.
  */
 
-export const TRACKER = '/dashboard/time'
+export const TRACKER = ROUTES.time
 export const STORAGE_KEY = 'toggl-clone:v1'
 export const PENDING_KEY = 'toggl-clone:pending'
 const SCREEN_KEY = 'toggl-clone:screen'

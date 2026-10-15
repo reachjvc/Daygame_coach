@@ -1,4 +1,6 @@
 import type { Page } from '@playwright/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from './fixtures/test'
 import { SELECTORS } from './helpers/selectors'
 
@@ -24,7 +26,7 @@ const AUTH_TIMEOUT = 15000
 const QUICK_LOG = 'quick-log'
 
 async function openTemplate(page: Page, slug: string) {
-  await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
+  await page.goto(ROUTES.trackingReport, { timeout: AUTH_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
   await page.getByTestId(SELECTORS.fieldReport.templateCard(slug)).click({ timeout: ACTION_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -80,7 +82,7 @@ test.describe('Field Report Flow', () => {
 
     const id = await savedReportId(page, SELECTORS.fieldReport.submit)
     made.push(id)
-    await page.waitForURL(/\/dashboard\/tracking$/, { timeout: AUTH_TIMEOUT })
+    await page.waitForURL(urlOf(ROUTES.tracking, "$"), { timeout: AUTH_TIMEOUT })
 
     const report = await storedReport(page, id)
     expect(report.is_draft).toBe(false)
@@ -94,12 +96,12 @@ test.describe('Field Report Flow', () => {
     await page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches')).fill('7')
     const id = await savedReportId(page, SELECTORS.fieldReport.saveDraft)
     made.push(id)
-    await page.waitForURL(/\/dashboard\/tracking$/, { timeout: AUTH_TIMEOUT })
+    await page.waitForURL(urlOf(ROUTES.tracking, "$"), { timeout: AUTH_TIMEOUT })
     expect((await storedReport(page, id)).is_draft).toBe(true)
 
     // By address: history's edit control is an icon button with no name, so
     // there is nothing to find it by except its position in the card.
-    await page.goto(`/dashboard/tracking/report?edit=${id}`, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+    await page.goto(`${ROUTES.trackingReport}?edit=${id}`, { waitUntil: 'domcontentloaded', timeout: 30_000 })
     await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches'))).toHaveValue('7')
     await expect(page.getByTestId(SELECTORS.fieldReport.submit)).toHaveText(/Update Report/)
@@ -110,16 +112,16 @@ test.describe('Field Report Flow', () => {
     await page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches')).fill('3')
     const id = await savedReportId(page, SELECTORS.fieldReport.submit)
     made.push(id)
-    await page.waitForURL(/\/dashboard\/tracking$/, { timeout: AUTH_TIMEOUT })
+    await page.waitForURL(urlOf(ROUTES.tracking, "$"), { timeout: AUTH_TIMEOUT })
 
     // The way a person gets there: the history list, then the report's pencil.
     // The pencil is an icon button with no accessible name, so it is found as
     // the button beside the card's delete control.
-    await page.goto('/dashboard/tracking/history', { waitUntil: 'domcontentloaded', timeout: 30_000 })
+    await page.goto(ROUTES.trackingHistory, { waitUntil: 'domcontentloaded', timeout: 30_000 })
     const remove = page.getByTestId(SELECTORS.history.cardDelete(id))
     await expect(remove).toBeVisible({ timeout: AUTH_TIMEOUT })
     await remove.locator('xpath=preceding-sibling::button[1]').click()
-    await page.waitForURL(new RegExp(`/dashboard/tracking/report\\?edit=${id}$`), { timeout: AUTH_TIMEOUT })
+    await page.waitForURL(new RegExp(`${ROUTES.tracking}/report\\?edit=${id}$`), { timeout: AUTH_TIMEOUT })
 
     const approaches = page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches'))
     await expect(approaches).toHaveValue('3', { timeout: AUTH_TIMEOUT })

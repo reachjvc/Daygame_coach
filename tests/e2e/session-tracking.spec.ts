@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import type { Page } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
 import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
@@ -48,7 +50,7 @@ async function endSession(page: Page) {
   const confirm = page.getByRole('button', { name: /end session/i })
   await expect(confirm).toBeVisible({ timeout: AUTH_TIMEOUT })
   await confirm.click({ timeout: ACTION_TIMEOUT })
-  await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
+  await page.waitForURL(urlOf(ROUTES.tracking, "(?!/)"), { timeout: AUTH_TIMEOUT })
 }
 
 test.describe('Session Tracking Flow', () => {
@@ -146,7 +148,7 @@ test.describe('Session Tracking Flow', () => {
     await expect(page.getByTestId(SELECTORS.session.quickLogModal)).toBeHidden({ timeout: AUTH_TIMEOUT })
     await endSession(page)
 
-    await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.trackingReport, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     await page.goBack({ timeout: AUTH_TIMEOUT })

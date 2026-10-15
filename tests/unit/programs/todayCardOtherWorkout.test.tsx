@@ -16,13 +16,14 @@
  */
 
 import { cleanup, render, screen } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { TodayCard } from "@/src/programs/components/TodayCard"
 import type { SessionPrescription, TrainingCardState } from "@/src/programs/types"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/programs",
+  usePathname: () => ROUTES.training,
   useSearchParams: () => new URLSearchParams(),
 }))
 

@@ -8,10 +8,11 @@
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen } from "@testing-library/react"
 import { MobileTabBar } from "@/components/MobileTabBar"
 
-let path = "/programs"
+let path: string = ROUTES.training
 vi.mock("next/navigation", () => ({ usePathname: () => path }))
 
 afterEach(() => vi.restoreAllMocks())
@@ -26,7 +27,7 @@ function currentTabs(): string[] {
 
 describe("the current tab", () => {
   it("is named on /programs, the route this bar used not to reach at all", () => {
-    path = "/programs"
+    path = ROUTES.training
     render(<MobileTabBar />)
     expect(currentTabs()).toEqual(["Training"])
   })
@@ -34,13 +35,13 @@ describe("the current tab", () => {
   it("is exactly one tab, never several", () => {
     // `/dashboard/tracking` starts with `/dashboard`, so a prefix match on
     // both would mark two tabs at once and say nothing useful.
-    path = "/dashboard/tracking"
+    path = ROUTES.tracking
     render(<MobileTabBar />)
     expect(currentTabs()).toHaveLength(1)
   })
 
   it("marks none when you are somewhere the bar does not name", () => {
-    path = "/preferences"
+    path = ROUTES.scenarioPreferences
     render(<MobileTabBar />)
     expect(currentTabs()).toEqual([])
   })

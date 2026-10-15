@@ -15,6 +15,7 @@
  */
 
 import type { Page } from "@playwright/test"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { PHONE, guardTrainingAccount, resetTraining } from "./helpers/training.helper"
 
@@ -27,7 +28,7 @@ const WEEK = "Push\nBench Press 3x8 @60\n\nPull\nBarbell Row 3x8 @50"
 
 /** Nothing running, nothing open, and no saved weeks left by an earlier test. */
 async function wipe(page: Page): Promise<void> {
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await resetTraining(page)
   await page.evaluate(async () => {
     for (const d of await (await fetch("/api/programs/drafts")).json()) {
@@ -38,7 +39,7 @@ async function wipe(page: Page): Promise<void> {
 
 /** Write the week and give it a name through the dialog. */
 async function writeAndName(page: Page, text: string, name: string, action: "week-save" | "week-start") {
-  await page.goto("/programs?view=build", { waitUntil: "networkidle" })
+  await page.goto(`${ROUTES.training}?view=build`, { waitUntil: "networkidle" })
   await page.getByTestId("week-text").fill(text)
   await expect(page.getByTestId("week-readback")).toBeVisible()
   await page.getByTestId(action).click()
@@ -57,7 +58,7 @@ test("a written week saved for later is listed with the programs, and loads back
 }) => {
   await writeAndName(page, WEEK, "Test week", "week-save")
 
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   const saved = page.getByTestId("saved-weeks")
   await expect(saved).toBeVisible({ timeout: 30000 })
   await expect(saved).toContainText("Test week")
@@ -85,7 +86,7 @@ test("Start this week starts it under its own name, and the card says that name"
    */
   await writeAndName(page, WEEK, "Winter block", "week-save")
 
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await page.locator('[data-testid^="saved-week-menu-"]').first().click()
   await page.getByTestId("saved-week-start").click()
 
@@ -118,7 +119,7 @@ test("a half-built week can be saved, and its Start is refused by name", async (
    */
   await writeAndName(page, "Push\nBench Press 3x8 @60\n\nLegs", "Half a week", "week-save")
 
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await expect(page.getByTestId("saved-weeks")).toContainText("Half a week")
 
   await page.locator('[data-testid^="saved-week-menu-"]').first().click()

@@ -28,6 +28,7 @@
  */
 
 import { cleanup, render, act } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { addCustomStep, emptyNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
@@ -165,7 +166,7 @@ afterEach(() => {
 
 describe("the flow does not write to the account on its own", () => {
   it("makes NO save at all across a minute of an untouched tab", async () => {
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     // Fifteen debounce windows. The loop produced one PUT per window.
@@ -176,7 +177,7 @@ describe("the flow does not write to the account on its own", () => {
   })
 
   it("reads the account exactly once on load", async () => {
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     const gets = calls.filter((c) => c.method === "GET" && c.url === "/api/life-plan").length
@@ -194,7 +195,7 @@ describe("a day-half change never costs a plan save", () => {
   it("a plan differing only by a tick is not sent", async () => {
     window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(planWithARealTick().plan))
 
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     expect(
@@ -206,14 +207,14 @@ describe("a day-half change never costs a plan save", () => {
   it("but it DOES reach the account, by its own route", async () => {
     window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(planWithARealTick().plan))
 
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(30_000)
 
     expect(dayPuts(), "a tick in the browser is sent to the day route").toBeGreaterThan(0)
   })
 
   it("sends the day nothing at all when there is nothing to send", async () => {
-    render(<NorthStarFlow backHref="/dashboard" backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     expect(dayPuts(), "an idle tab must not write days either").toBe(0)

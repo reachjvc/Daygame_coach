@@ -23,6 +23,7 @@
  */
 
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
@@ -32,7 +33,7 @@ import type { SandboxSettings } from "@/src/scenarios/config"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), prefetch: vi.fn() }),
-  usePathname: () => "/dashboard/settings",
+  usePathname: () => ROUTES.settings,
   useSearchParams: () => new URLSearchParams(),
 }))
 

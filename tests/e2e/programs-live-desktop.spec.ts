@@ -29,6 +29,8 @@
  */
 
 import type { Page } from "@playwright/test"
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { cleanUp, resetAndEnroll, guardTrainingAccount } from "./helpers/training.helper"
 
@@ -102,11 +104,11 @@ async function coveredControls(page: Page): Promise<string[]> {
 }
 
 async function startAWorkout(page: Page): Promise<void> {
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   await resetAndEnroll(page)
   await page.reload()
   await page.getByTestId("start-workout").first().click()
-  await page.waitForURL(/\/programs\/live/, { timeout: 30000 })
+  await page.waitForURL(urlOf(ROUTES.liveWorkout), { timeout: 30000 })
   await expect(page.getByTestId("tick-1").first()).toBeVisible({ timeout: 30000 })
 }
 

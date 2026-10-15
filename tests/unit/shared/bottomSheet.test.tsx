@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react'
+import { ROUTES } from "@/src/shared/routes"
 import { describe, test, expect, vi, afterEach } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -28,7 +29,7 @@ describe('One bottom sheet for every menu', () => {
     const onClose = vi.fn()
     render(
       <BottomSheet open onClose={onClose} title="More" testId="more-sheet">
-        <SheetRow href="/dashboard/settings">Settings</SheetRow>
+        <SheetRow href={ROUTES.settings}>Settings</SheetRow>
         <SheetRow destructive testId="delete-row">
           Delete this program
         </SheetRow>

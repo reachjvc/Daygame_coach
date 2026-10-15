@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from "./fixtures/test"
+import { ROUTES } from "@/src/shared/routes"
 import { guardTrainingAccount, resetAndEnroll } from "./helpers/training.helper"
 
 /** Refuses to run as anybody but a throwaway fixture account — see the helper. */
@@ -25,7 +26,7 @@ test("sets ticked with no connection are kept and sent when it comes back", { ta
 }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   // The worker's own account (tests/e2e/fixtures/test.ts), emptied and given
   // one program: whichever training test ran on it before this one left
   // whatever it left.

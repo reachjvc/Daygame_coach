@@ -45,6 +45,8 @@
  * else by definition.
  */
 import { test as base, expect, type Browser, type Page, type WorkerInfo } from '@playwright/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { randomUUID } from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
@@ -242,7 +244,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
  * account has none.
  */
 export async function seedDatingPreferences(page: Page): Promise<void> {
-  await page.goto('/preferences', { timeout: AUTH_TIMEOUT })
+  await page.goto(ROUTES.scenarioPreferences, { timeout: AUTH_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.datingPreferences.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
   // The list, not the map: a country shape is ~9px on a phone.
   await page.getByTestId('region-option-western-europe').click()
@@ -252,5 +254,5 @@ export async function seedDatingPreferences(page: Page): Promise<void> {
   const submit = page.getByTestId(SELECTORS.datingPreferences.submit)
   await expect(submit).toBeEnabled()
   await submit.click()
-  await page.waitForURL(/\/dashboard/, { timeout: AUTH_TIMEOUT })
+  await page.waitForURL(urlOf(ROUTES.dashboard), { timeout: AUTH_TIMEOUT })
 }

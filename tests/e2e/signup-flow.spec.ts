@@ -1,4 +1,6 @@
 import type { Page } from '@playwright/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect, SIGNED_OUT } from './fixtures/test'
 import { emailedAuthLink, freshAddress, openEmailedLink, strongPassword } from './helpers/authEmail'
 import { waitForHydration } from './helpers/hydration'
@@ -78,12 +80,12 @@ test.describe('Signup Flow', { tag: '@phone' }, () => {
 
     const link = await emailedAuthLink(email, 'signup')
     expect(link.redirectTo, 'where the confirmation link sends the browser').toContain('/auth/confirm')
-    expect(link.redirectTo).not.toMatch(/\/dashboard(\?|$)/)
+    expect(link.redirectTo).not.toMatch(urlOf(ROUTES.dashboard, "(\\?|$)"))
 
     expect(await openEmailedLink(page, link), 'where the link left the browser').not.toMatch(/^\/auth\//)
 
     // Signed in, and as the new account rather than anyone else.
-    await page.goto('/dashboard/settings', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.settings, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.settings.userEmail)).toHaveText(email, { timeout: AUTH_TIMEOUT })
   })
 

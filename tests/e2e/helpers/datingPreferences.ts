@@ -12,13 +12,14 @@
  * answered; the questions mean it has not, and they are answered once.
  */
 import { expect, type Page } from '@playwright/test'
+import { ROUTES } from "@/src/shared/routes"
 import { seedDatingPreferences } from '../fixtures/test'
 import { SELECTORS } from './selectors'
 
 const TIMEOUT = 15000
 
 export async function ensureDatingPreferences(page: Page): Promise<void> {
-  await page.goto('/dashboard/scenarios', { timeout: TIMEOUT })
+  await page.goto(ROUTES.scenarios, { timeout: TIMEOUT })
   const hub = page.getByTestId(SELECTORS.scenarios.hub)
   const questions = page.getByTestId(SELECTORS.datingPreferences.form)
   await expect(hub.or(questions)).toBeVisible({ timeout: TIMEOUT })

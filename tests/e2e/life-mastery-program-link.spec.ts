@@ -72,7 +72,7 @@ async function cleanUp(page: Page): Promise<void> {
  * its own fixture. It passed for days and then did not.
  */
 async function startFromCatalogue(page: Page, name: RegExp): Promise<void> {
-  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+  await page.goto(`${ROUTES.training}?view=programs`, { waitUntil: "networkidle" })
   await page.getByRole("button", { name }).first().click()
   await page.getByTestId("start-program").click()
   await page.waitForURL(/[?&]program=/, { timeout: 30000 })
@@ -286,7 +286,7 @@ test.describe("Life Mastery and the training database", () => {
     // THE CASE THIS EXISTS FOR. Follow a link out, press Back, and Life
     // Mastery used to reopen on the north star paragraph whatever step you
     // had been working on.
-    await page.goto("/programs", { waitUntil: "networkidle" })
+    await page.goto(ROUTES.training, { waitUntil: "networkidle" })
     await page.goBack()
 
     await expect(page).toHaveURL(/step=systems/)

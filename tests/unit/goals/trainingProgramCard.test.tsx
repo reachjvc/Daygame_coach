@@ -17,6 +17,7 @@
  */
 
 import { cleanup, render, screen } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { TrainingProgramCard } from "@/src/goals/components/north-star/WorkoutPrograms"
 import { seedEnrollment } from "@/src/programs/programsService"
@@ -238,7 +239,7 @@ describe("every way out", () => {
       for (const name of links) {
         const href = screen.getByRole("link", { name }).getAttribute("href") ?? ""
         expect(decodeURIComponent(href), `${String(name)} has no way back`).toContain(
-          "/life-mastery?step=templates"
+          `${ROUTES.plan}?step=templates`
         )
       }
     })

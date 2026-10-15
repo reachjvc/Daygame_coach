@@ -1,4 +1,5 @@
 import { test, expect } from "../fixtures/test"
+import { ROUTES } from "@/src/shared/routes"
 import type { Page } from "@playwright/test"
 import { planWithSteps, seedLifePlan } from "../helpers/lifePlan"
 
@@ -66,7 +67,7 @@ test.describe("ticking today's routine with a thumb", () => {
   })
 
   test("a tap at phone width ticks it, reaches the account, and survives a reload", async ({ page }) => {
-    await page.goto("/life-mastery?step=today")
+    await page.goto(`${ROUTES.plan}?step=today`)
 
     const box = page.getByRole("checkbox", { name: `Did ${STEP.title}`, exact: true })
     await expect(box, "a step that runs every day is on today's list, with a box").toBeVisible({ timeout: 20_000 })

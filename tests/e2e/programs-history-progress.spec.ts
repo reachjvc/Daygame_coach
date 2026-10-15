@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from "./fixtures/test"
+import { ROUTES } from "@/src/shared/routes"
 import { openTab } from "./helpers/trainingTabs"
 import { seedFinishedWorkout, deleteWorkoutsNamed } from "./helpers/seedWorkout"
 import { guardTrainingAccount, resetTraining } from "./helpers/training.helper"
@@ -30,7 +31,7 @@ guardTrainingAccount()
 test("shows what each workout was, and what the weeks added up to", async ({ page }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   // Seed a couple of real workouts so both tabs have something to show.
   /**
    * RELATIVE TO TODAY, NOT THREE DATES IN SEPTEMBER 2026.
@@ -135,7 +136,7 @@ test("shows what each workout was, and what the weeks added up to", async ({ pag
  * writes is read back from the server and asserted, not assumed.
  */
 test("corrects a set and removes one that never happened", async ({ page }) => {
-await page.goto("/programs")
+await page.goto(ROUTES.training)
 await deleteWorkoutsNamed(page, "ZZEdit")
 const id = await seedFinishedWorkout(page, {
   sets: [
@@ -193,7 +194,7 @@ await page.evaluate(async (logId) => {
 test("correcting a program session moves the weights it prescribed", async ({ page }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   // A clean account: no program, nothing open.
   await resetTraining(page)
 
@@ -321,7 +322,7 @@ test("correcting a program session moves the weights it prescribed", async ({ pa
  */
 test("deleting a program session moves the weights back down", async ({ page }) => {
   test.setTimeout(240000)
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   await resetTraining(page)
 
   const seeded = await page.evaluate(async () => {
@@ -427,7 +428,7 @@ test("deleting a program session moves the weights back down", async ({ page }) 
  */
 test("deleting a session on a program edited after it started moves the weights back", async ({ page }) => {
   test.setTimeout(240000)
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
 
   const lift = (id: string, name: string) => ({
     id,
@@ -615,7 +616,7 @@ test("deleting a session on a program edited after it started moves the weights 
 test("every control on History and Progress is thumb-sized", async ({ page }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
 
   // Relative for the same reason as the seed at the top of this file: a fixed
   // date in September 2026 falls off Progress's eight-week window in November,
@@ -687,7 +688,7 @@ test("every control on History and Progress is thumb-sized", async ({ page }) =>
 test("History pages back past a year and says when it has reached the beginning", async ({ page }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   await deleteWorkoutsNamed(page, "ZZOld")
 
   // Fourteen months back, relative to today so it holds in any month.
@@ -742,7 +743,7 @@ test("History pages back past a year and says when it has reached the beginning"
 test("History filtered to one lift totals only that lift", async ({ page }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   await deleteWorkoutsNamed(page, "ZZFilter")
 
   await seedFinishedWorkout(page, {
@@ -777,7 +778,7 @@ test("History filtered to one lift totals only that lift", async ({ page }) => {
 test("a bodyweight set reads as reps in History", async ({ page }) => {
   test.setTimeout(240000)
   await page.setViewportSize({ width: 390, height: 900 })
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   await deleteWorkoutsNamed(page, "ZZBody")
 
   await seedFinishedWorkout(page, {

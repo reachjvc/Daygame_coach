@@ -1,4 +1,5 @@
 import { test, expect, signIn, SIGNED_OUT } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -36,7 +37,7 @@ test.describe('Authentication Flow', () => {
   test('logging out ends the session: the dashboard turns you away afterwards', async ({ page, throwawayAccount }) => {
     await signIn(page, throwawayAccount)
 
-    await page.goto('/dashboard', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
     const logoutButton = page.getByTestId(SELECTORS.header.logoutButton)
     await expect(logoutButton).toBeVisible({ timeout: AUTH_TIMEOUT })
 
@@ -46,7 +47,7 @@ test.describe('Authentication Flow', () => {
     // The cookies this browser still holds must not open the dashboard again.
     // An earlier copy of this check cleared the cookies by hand first, which
     // tested the proxy and not the logout.
-    await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.tracking, { timeout: AUTH_TIMEOUT })
     await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
   })
 })

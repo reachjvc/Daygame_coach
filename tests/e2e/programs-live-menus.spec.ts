@@ -20,6 +20,7 @@
  */
 
 import { test, expect } from "./fixtures/test"
+import { ROUTES } from "@/src/shared/routes"
 import { PHONE, cleanUp, resetAndEnroll } from "./helpers/training.helper"
 
 /**
@@ -37,7 +38,7 @@ test.describe("the live screen's menus", () => {
     test.setTimeout(180000)
     startedAt = new Date(Date.now() - 60_000).toISOString()
     await page.setViewportSize(PHONE)
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await resetAndEnroll(page)
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })

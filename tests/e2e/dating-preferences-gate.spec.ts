@@ -15,6 +15,8 @@
  */
 
 import { test, expect, signIn, SIGNED_OUT } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 import { ensureDatingPreferences } from './helpers/datingPreferences'
 
@@ -30,12 +32,12 @@ test.describe('a brand-new account', () => {
 
   test('signing in does not send you through a questionnaire it never reads', async ({ page, throwawayAccount }) => {
     await signIn(page, throwawayAccount)
-    await expect(page, 'the login form sent a new account somewhere other than the dashboard').toHaveURL(/\/dashboard$/, {
+    await expect(page, 'the login form sent a new account somewhere other than the dashboard').toHaveURL(urlOf(ROUTES.dashboard, "$"), {
       timeout: T,
     })
     // Inner Game is checked as well as the dashboard: `onboarding_completed`
     // gated both, and neither reads a single dating answer.
-    for (const route of ['/dashboard', '/dashboard/inner-game']) {
+    for (const route of [ROUTES.dashboard, ROUTES.innerGame]) {
       await page.goto(route, { timeout: T })
       await expect(page).toHaveURL(new RegExp(`${route}$`), { timeout: T })
     }
@@ -50,7 +52,7 @@ test('holds the save until every answer is given, and says which is missing', as
      is given every answer first, and the archetype is the ONLY one missing. On
      an empty account the submit would be disabled for every reason at once. */
   await ensureDatingPreferences(page)
-  await page.goto('/preferences', { timeout: T })
+  await page.goto(ROUTES.scenarioPreferences, { timeout: T })
   await expect(page.getByTestId(G.form)).toBeVisible({ timeout: T })
   const submit = page.getByTestId(G.submit)
   await expect(submit, 'an account with every answer can save').toBeEnabled({ timeout: T })

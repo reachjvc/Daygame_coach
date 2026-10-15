@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 import { grantPurchase } from './helpers/purchase'
 
@@ -47,9 +49,9 @@ test.describe('Q&A Chat Flow', () => {
 
   test('a question gets an answer, with the sources it came from', async ({ page, account }) => {
     await grantPurchase(account.id)
-    await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.coach, { timeout: AUTH_TIMEOUT })
     // A paid account can open Q&A; a redirect away is a failure, not a skip
-    await expect(page).toHaveURL(/\/dashboard\/qa/)
+    await expect(page).toHaveURL(urlOf(ROUTES.coach))
 
     await page.route('**/api/qa', (route) =>
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(ANSWER) }),

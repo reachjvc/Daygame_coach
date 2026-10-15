@@ -1,3 +1,4 @@
+import { ROUTES } from "@/src/shared/routes"
 /**
  * WHAT THE ROUTE SWEEP IS STILL ALLOWED TO FIND — ONE LIST, ONE OWNER.
  *
@@ -56,8 +57,8 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
   "/auth/forgot-password": 1,
   "/auth/login": 2,
   "/auth/sign-up": 1,
-  "/dashboard": 6,
-  "/dashboard/articles": 6,
+  [ROUTES.dashboard]: 6,
+  [ROUTES.articles]: 6,
   // 106, NOT the 3 an earlier pass recorded. This page is a multi-step flow and
   // renders wildly different amounts depending on which step it lands on:
   // measured three times on 2026-09-09 it gave 106, <=3, 106. The 3 was one
@@ -69,7 +70,7 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
   // now a redirect with no controls of its own, so the budget moved with the
   // page that actually draws them. Left on the old key it guarded nothing and
   // the real page was measured against zero.
-  "/life-mastery": 106,
+  [ROUTES.plan]: 106,
   /**
    * THE VICE MODULE'S CONTROLS ARE HALF THE SIZE A FINGER NEEDS.
    *
@@ -125,18 +126,18 @@ export const TAP_TARGET_DEBT: Record<string, number> = {
      a free pass waiting for the violation to come back at that address.
      `sweepDebt.test.ts` is what caught them the moment the routes went. */
 
-  "/dashboard/inner-game": 8,
-  "/dashboard/qa": 6,
-  "/dashboard/scenarios": 5,
-  "/dashboard/settings": 11,
-  "/dashboard/time": 2,
-  "/dashboard/tracking": 6,
-  "/dashboard/tracking/daily": 16,
-  "/dashboard/tracking/history": 4,
-  "/dashboard/tracking/report": 8,
-  "/dashboard/tracking/review": 1,
-  "/dashboard/tracking/session": 1,
-  "/preferences/archetypes": 1,
+  [ROUTES.innerGame]: 8,
+  [ROUTES.coach]: 6,
+  [ROUTES.scenarios]: 5,
+  [ROUTES.settings]: 11,
+  [ROUTES.time]: 2,
+  [ROUTES.tracking]: 6,
+  [ROUTES.trackingDaily]: 16,
+  [ROUTES.trackingHistory]: 4,
+  [ROUTES.trackingReport]: 8,
+  [ROUTES.trackingReview]: 1,
+  [ROUTES.trackingSession]: 1,
+  [ROUTES.scenarioArchetypes]: 1,
   "/qa": 6,
   "/redirect": 6,
 

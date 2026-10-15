@@ -1,4 +1,5 @@
 import { test, expect, signIn, SIGNED_OUT } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 import { createUnconfirmedAccount, emailedAuthLink, openEmailedLink, strongPassword } from './helpers/authEmail'
 import { waitForHydration } from './helpers/hydration'
 import { fillSecret } from './helpers/secret'
@@ -133,7 +134,7 @@ test.describe('Confirmation email resend', { tag: '@phone' }, () => {
     const link = await emailedAuthLink(waiting.email, 'signup')
     expect(link.redirectTo, 'where the resent link sends the browser').toContain('/auth/confirm')
     expect(await openEmailedLink(page, link), 'where the resent link left the browser').not.toMatch(/^\/auth\//)
-    await page.goto('/dashboard/settings', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.settings, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.settings.userEmail)).toHaveText(waiting.email, { timeout: AUTH_TIMEOUT })
   })
 

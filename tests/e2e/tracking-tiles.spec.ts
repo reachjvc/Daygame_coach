@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -35,7 +36,7 @@ test.describe('Tracking dashboard tiles', () => {
   // No serial mode: each worker's account holds its own layout, and a worker
   // runs its tests one at a time, so the reset below is all the order needed.
   test.beforeEach(async ({ page }) => {
-    await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.tracking, { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
     await setLayout(page, DEFAULT_LAYOUT)
     await page.reload({ timeout: AUTH_TIMEOUT })

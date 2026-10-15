@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 import {
   STORAGE_KEY,
   entriesOnAccount,
@@ -58,7 +59,7 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
 
     // the way out, which used to be a 20x36px arrow with no label
     const back = page.locator('header a').first()
-    await expect(back).toHaveAttribute('href', '/dashboard')
+    await expect(back).toHaveAttribute('href', ROUTES.dashboard)
     await expect(back).toContainText('Dashboard')
     await expect
       .poll(async () => (await back.boundingBox())?.height ?? 0, { timeout: 10_000 })

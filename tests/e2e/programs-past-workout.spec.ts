@@ -16,6 +16,8 @@
  */
 
 import type { Page } from "@playwright/test"
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { openTab } from "./helpers/trainingTabs"
 import { whenHydrated } from "./helpers/hydration"
@@ -36,7 +38,7 @@ guardTrainingAccount()
  * silently makes the test that depends on it lie about what it found.
  */
 async function reset(page: Page): Promise<void> {
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   // Empties the account (open workout, programs, ended programs, anything
   // finished in the last two days) and enrols, each step checked.
   await resetAndEnroll(page)
@@ -89,7 +91,7 @@ test("History opens the live screen at the time you choose, and it knows it is t
 }) => {
   const { local, day } = twoDaysAgoAt18()
 
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await openTab(page, "history")
 
   const openDialog = page.getByTestId("log-past-workout")
@@ -110,7 +112,7 @@ test("History opens the live screen at the time you choose, and it knows it is t
   await page.getByTestId("open-past-workout").click()
 
   // The live screen, not a form.
-  await page.waitForURL(/\/programs\/live/)
+  await page.waitForURL(urlOf(ROUTES.liveWorkout))
 
   // PAST MODE: "since <day>", never a climbing minute count.
   await expect(page.getByText(/^since /i)).toBeVisible()
@@ -145,7 +147,7 @@ test("a program session from before the program started is refused, in the dialo
 }) => {
   const { local } = twoDaysAgoAt18()
 
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await openTab(page, "history")
   await page.getByTestId("log-past-workout").click()
   await page.getByLabel("When the workout was").fill(local)
@@ -156,7 +158,7 @@ test("a program session from before the program started is refused, in the dialo
   // for work it never prescribed. The refusal is the server's own sentence,
   // shown where the person is looking, and the button comes back.
   await expect(page.getByRole("alert")).toContainText("before you started this program")
-  await expect(page).toHaveURL(/\/programs(?!\/live)/)
+  await expect(page).toHaveURL(urlOf(ROUTES.training, "(?!/live)"))
   await expect(page.getByTestId("open-past-workout")).toBeEnabled()
 })
 
@@ -171,7 +173,7 @@ test("a session dated a minute ago opens LIVE, not in past mode", async ({ page 
    * the one thing that could prove it in a browser. It is unit-tested instead,
    * in tests/unit/programs/liveScreenPastMode.test.tsx, and revert-proved.
    */
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await openTab(page, "history")
   await page.getByTestId("log-past-workout").click()
 
@@ -188,7 +190,7 @@ test("a session dated a minute ago opens LIVE, not in past mode", async ({ page 
   await when.fill(nowThere!)
   await page.getByRole("button", { name: "Empty workout" }).click()
   await page.getByTestId("open-past-workout").click()
-  await page.waitForURL(/\/programs\/live/)
+  await page.waitForURL(urlOf(ROUTES.liveWorkout))
 
   /**
    * A RUNNING CLOCK, and no bulk tick anywhere on the screen.
@@ -206,7 +208,7 @@ test("a session dated a minute ago opens LIVE, not in past mode", async ({ page 
 })
 
 test("a workout already open blocks the dialog and points at it", async ({ page }) => {
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await page.evaluate(async () => {
     const [e] = await (await fetch("/api/programs/enrollments")).json()
     await fetch("/api/workouts", {
@@ -225,7 +227,7 @@ test("a workout already open blocks the dialog and points at it", async ({ page 
 })
 
 test("a finished program session lands in History and moves the program on", async ({ page }) => {
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   const before = await page.evaluate(async () => {
     const [e] = await (await fetch("/api/programs/enrollments")).json()
@@ -242,7 +244,7 @@ test("a finished program session lands in History and moves the program on", asy
   await when.fill((await when.getAttribute("max"))!)
   await page.getByRole("button", { name: /^Workout A/ }).click()
   await page.getByTestId("open-past-workout").click()
-  await page.waitForURL(/\/programs\/live/)
+  await page.waitForURL(urlOf(ROUTES.liveWorkout))
 
   // One real set, then finish it the way a person does.
   await page.getByTestId("tick-1").first().click()
@@ -286,7 +288,7 @@ test("a finished program session lands in History and moves the program on", asy
 })
 
 test("a run is stored as a run, reads as one in History, and counts as one", async ({ page }) => {
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   // Seeded rather than walked: the dialog's run path needs an endurance
   // enrollment, and the subject here is what the FINISH writes and what the
@@ -356,7 +358,7 @@ test("a day row in the editor reads its whole name at 390px, behind one options 
    * Phase 8.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+  await page.goto(`${ROUTES.training}?view=programs`, { waitUntil: "networkidle" })
   /**
    * STARTING STRENGTH, NOT STRONGLIFTS — and the reason is this test's own
    * premise. `reset()` enrols StrongLifts, and since 2026-09-27 the detail
@@ -426,7 +428,7 @@ test("the catalogue will not restart the program you are already running", async
     async () => ((await (await fetch("/api/programs/enrollments")).json()) as { id: string }[])[0].id
   )
 
-  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+  await page.goto(`${ROUTES.training}?view=programs`, { waitUntil: "networkidle" })
   // A click before React owns the card opens nothing (helpers/hydration.ts).
   const strongLifts = page.getByRole("button", { name: /StrongLifts/i }).first()
   await whenHydrated(strongLifts)
@@ -459,7 +461,7 @@ test("the bottom bar is on /programs, and the column does not shrink on the way 
    * `RestBar` owns that bottom edge.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   await expect(page.getByTestId("mobile-tab-bar")).toBeVisible()
   await expect(
@@ -470,16 +472,16 @@ test("the bottom bar is on /programs, and the column does not shrink on the way 
   // THE WIDTH DOES NOT JUMP. Training was max-w-3xl and the workout screen
   // max-w-2xl, so the column narrowed again the moment you pressed Start.
   await page.setViewportSize({ width: 1280, height: 900 })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   const training = await page.getByTestId("training-screen").boundingBox()
 
   await page.evaluate(async () => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
   })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
   await page.getByTestId("start-loose-workout").click()
-  await page.waitForURL(/\/programs\/live/)
+  await page.waitForURL(urlOf(ROUTES.liveWorkout))
 
   const liveCol = await page.getByTestId("live-column").boundingBox()
   expect(training, "premise: both columns must be measurable").toBeTruthy()
@@ -498,7 +500,7 @@ test("'See today's workout' goes to a receipt, not a 404", async ({ page }) => {
    * route had no page at all, so the honest alternative to a second Start
    * button was a dead end — worse than no button.
    */
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   const id = await seedFinishedWorkout(page, {
     startedAt: new Date(Date.now() - 3 * 3600_000).toISOString(),
@@ -509,7 +511,7 @@ test("'See today's workout' goes to a receipt, not a 404", async ({ page }) => {
     ],
   })
 
-  const res = await page.goto(`/programs/workout/${id}`, { waitUntil: "networkidle" })
+  const res = await page.goto(`${ROUTES.training}/workout/${id}`, { waitUntil: "networkidle" })
   expect(res?.status(), "the receipt route must exist").toBeLessThan(400)
   await expect(page.getByTestId("workout-receipt")).toBeVisible()
 
@@ -535,7 +537,7 @@ test("the session card is today's session, drawn from the server's answer", asyn
    * same things on the server. Two doors into training, two answers.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   const card = page.getByTestId("today-card")
   await expect(card).toBeVisible()
@@ -559,8 +561,8 @@ test("the session card is today's session, drawn from the server's answer", asyn
   // Start it, and the card reads Resume on the way back.
   await card.getByTestId("change-day").click()
   await card.getByTestId("start-workout").click()
-  await page.waitForURL(/\/programs\/live/)
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.waitForURL(urlOf(ROUTES.liveWorkout))
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   await expect(card.getByTestId("resume-workout")).toBeVisible()
   await expect(card.getByTestId("start-workout")).toHaveCount(0)
@@ -579,7 +581,7 @@ test("every program control is behind the ⋮, and a refusal stays on the sheet"
    * own confirm() box.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   // Not on the training screen any more.
   await expect(page.getByRole("button", { name: /^End program$/ })).toHaveCount(0)
@@ -643,7 +645,7 @@ test("every program control is behind the ⋮, and a refusal stays on the sheet"
 
   await page.getByTestId("sheet-confirm").click()
   await expect(page.getByTestId("sheet-failed")).toContainText("Finish or throw away")
-  await expect(page).toHaveURL(/\/programs(?!\?view=programs)/)
+  await expect(page).toHaveURL(urlOf(ROUTES.training, "(?!\\?view=programs)"))
   // And the program is still there, still prescribing.
   await page.unroute("**/api/programs/enrollments/*")
   await page.keyboard.press("Escape")
@@ -658,7 +660,7 @@ test("'Change this program' opens the editor in one tap", async ({ page }) => {
    * program" that actually opened it. The first tap looked like it failed.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   await page.getByTestId("program-menu").click()
   await expect(page.getByText("Change this program")).toHaveCount(1)
@@ -682,7 +684,7 @@ test("every program list is rows you can reach with a keyboard", async ({ page }
    * you can do, on the list whose whole purpose is choosing one.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs?view=programs", { waitUntil: "networkidle" })
+  await page.goto(`${ROUTES.training}?view=programs`, { waitUntil: "networkidle" })
 
   // The catalogue is rows, not thirteen "View" buttons.
   await expect(page.getByRole("button", { name: /^view/i })).toHaveCount(0)
@@ -708,7 +710,7 @@ test("today's session survives an action that re-reads it", async ({ page }) => 
    * day picker shut and the page scrolled elsewhere.
    */
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto("/programs", { waitUntil: "networkidle" })
+  await page.goto(ROUTES.training, { waitUntil: "networkidle" })
 
   const card = page.getByTestId("today-card")
   await expect(card).toBeVisible()
@@ -758,7 +760,7 @@ test("the correction screen's weight and reps are wide enough to read, on a phon
       { exercise: "Bulgarian Split Squat", weightKg: 100, reps: 5, setNumber: 2 },
     ],
   })
-  await page.goto(`/programs/workout/${id}`)
+  await page.goto(`${ROUTES.training}/workout/${id}`)
   await page.getByTestId("workout-correct").click()
   await page.getByTestId("workout-correction").waitFor()
 

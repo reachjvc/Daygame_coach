@@ -20,6 +20,7 @@
  */
 
 import { cleanup, render, screen, within } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { RoutineCard } from "@/src/goals/components/north-star/RoutineCard"
@@ -28,7 +29,7 @@ import type { NsRoutine } from "@/src/goals/types"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/life-mastery",
+  usePathname: () => ROUTES.plan,
   useSearchParams: () => new URLSearchParams(),
 }))
 

@@ -18,6 +18,7 @@
  */
 
 import { cleanup, render, screen, within } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ProgramEditor } from "@/src/programs/components/ProgramEditor"
@@ -30,7 +31,7 @@ import type { ProgramDefinition, ProgramSchedule } from "@/src/programs/types"
 // the router is never reached from this screen but Next's hook is imported.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), refresh: vi.fn() }),
-  usePathname: () => "/programs",
+  usePathname: () => ROUTES.training,
   useSearchParams: () => new URLSearchParams(),
 }))
 

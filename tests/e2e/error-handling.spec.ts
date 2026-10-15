@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { grantPurchase } from './helpers/purchase'
 import { SELECTORS } from './helpers/selectors'
@@ -32,11 +34,11 @@ test.describe('Error Handling: API Failures', () => {
     await grantPurchase(account.id)
 
     // Arrange: Navigate to a protected page
-    await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.coach, { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
     // The account can open Q&A; a redirect away is a failure, not a skip
-    await expect(page).toHaveURL(/\/dashboard\/qa/)
+    await expect(page).toHaveURL(urlOf(ROUTES.coach))
 
     await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
 
@@ -138,7 +140,7 @@ test.describe('Error Handling: API Failures', () => {
     })
 
     // Act: Navigate to tracking dashboard
-    await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.tracking, { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
     // Assert: Page should load without crashing

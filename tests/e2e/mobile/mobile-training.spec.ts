@@ -20,6 +20,8 @@
  */
 
 import { test, expect } from "../fixtures/test"
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { openTab } from "../helpers/trainingTabs"
 import { guardTrainingAccount, resetTraining } from "../helpers/training.helper"
 /** Refuses to run as anybody but a throwaway fixture account — see the helper. */
@@ -77,7 +79,7 @@ test.describe("training on a phone", () => {
     // height assertion depend on run order), nothing open, and nothing finished
     // in the last two days (which puts the card in its `done` state, with no
     // Start). The helper says why each one matters.
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await resetTraining(page)
   })
 
@@ -85,7 +87,7 @@ test.describe("training on a phone", () => {
     // WITH A PROGRAM RUNNING. Measuring the empty state proves nothing — the
     // 2264px this replaced was a page with a session, a history and a logger on
     // it, and an assertion that never sees one would pass forever.
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.evaluate(async () => {
       await fetch("/api/programs/enrollments", {
         method: "POST",
@@ -117,7 +119,7 @@ test.describe("training on a phone", () => {
      * now. The two ways to train are today's prescribed session and an empty
      * workout, and both live on Today.
      */
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await expect(page.getByRole("tab", { name: "Today", exact: true })).toBeInViewport()
     await expect(page.getByRole("tab", { name: /Anything else/ })).toHaveCount(0)
     await expect(page.getByTestId("start-loose-workout")).toBeInViewport()
@@ -130,7 +132,7 @@ test.describe("training on a phone", () => {
      * path. Both are gone. The same journey now runs through the dialog on
      * History and the ordinary live screen, on a phone.
      */
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.evaluate(async () => {
       const live = await (await fetch("/api/workouts/live")).json()
       if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
@@ -152,7 +154,7 @@ test.describe("training on a phone", () => {
     await when.fill((await when.getAttribute("max"))!)
     await page.getByRole("button", { name: /^Workout A/ }).click()
     await page.getByTestId("open-past-workout").click()
-    await page.waitForURL(/\/programs\/live/, { timeout: 20000 })
+    await page.waitForURL(urlOf(ROUTES.liveWorkout), { timeout: 20000 })
 
     // Five prescribed sets; record four. What you DID, not what it asked for.
     for (const n of [1, 2, 3, 4]) {
@@ -212,7 +214,7 @@ test.describe("training on a phone", () => {
   })
 
   test("the week is visible and every day is a real touch target", async ({ page }) => {
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.evaluate(async () => {
       await fetch("/api/programs/enrollments", {
         method: "POST",

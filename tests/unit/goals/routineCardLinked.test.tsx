@@ -18,6 +18,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen } from "@testing-library/react"
 import { RoutineCard } from "@/src/goals/components/north-star/RoutineCard"
 import { addRoutine, emptyNsPlan } from "@/src/goals/northStarService"
@@ -25,7 +26,7 @@ import type { LinkedProgram, NsRoutine } from "@/src/goals/types"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/life-mastery",
+  usePathname: () => ROUTES.plan,
   useSearchParams: () => new URLSearchParams(),
 }))
 
@@ -93,7 +94,7 @@ describe("a training week a program owns", () => {
   it("offers the page that can actually change it", () => {
     card({ state: "linked", name: "StrongLifts 5×5", week: "Mon · Thu — Upper / Lower" })
     const link = screen.getByRole("link", { name: /change on the training page/i })
-    expect(link.getAttribute("href")).toContain("/programs")
+    expect(link.getAttribute("href")).toContain(ROUTES.training)
   })
 })
 

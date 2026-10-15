@@ -18,6 +18,7 @@
  */
 
 import { readFileSync } from "node:fs"
+import { ROUTES } from "@/src/shared/routes"
 import { join } from "node:path"
 import { test, expect } from "../fixtures/test"
 import {
@@ -36,7 +37,7 @@ import {
  * parser's own `params.get("…")` calls; only where to look is written down.
  */
 const PARSED_ELSEWHERE: Record<string, { file: string; fn: string }> = {
-  "/programs": { file: "src/programs/programsService.ts", fn: "parseProgramsLocation" },
+  [ROUTES.training]: { file: "src/programs/programsService.ts", fn: "parseProgramsLocation" },
 }
 
 function parserParamNames({ file, fn }: { file: string; fn: string }): string[] {

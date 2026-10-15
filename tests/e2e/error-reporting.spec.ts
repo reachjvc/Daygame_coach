@@ -23,13 +23,14 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { ROUTES } from "@/src/shared/routes"
 import type { Page } from '@playwright/test'
 import { test, expect } from './fixtures/test'
 import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { storedCrashReports } from './helpers/errorReports'
 
 /** A product page every signed-in account can open */
-const PAGE = '/dashboard'
+const PAGE = ROUTES.dashboard
 
 /** Every failure raised here carries this, so a report the page sent of its own accord is not mistaken for ours */
 const MARK = 'Deliberate failure from error-reporting.spec'
@@ -99,7 +100,7 @@ test.describe('crash reporting', () => {
     // a number (an older build's shape, a hand-edited value) is rendered as a
     // React child, and React throws: no boundary on that page, so it falls to
     // global-error. Planted before any of the page's code runs.
-    const route = '/dashboard/tracking/session'
+    const route = ROUTES.trackingSession
     await ensureNoActiveSessionViaAPI(page) // an active session renders the tracker instead
     await page.addInitScript(() => {
       sessionStorage.setItem(

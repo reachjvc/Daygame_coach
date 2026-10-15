@@ -21,13 +21,14 @@
  */
 
 import { cleanup, render, screen } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { HistoryTab } from "@/src/programs/components/HistoryTab"
 
 // The tab mounts the past-workout dialog, which reaches for the router.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), refresh: vi.fn() }),
-  usePathname: () => "/programs",
+  usePathname: () => ROUTES.training,
   useSearchParams: () => new URLSearchParams(),
 }))
 

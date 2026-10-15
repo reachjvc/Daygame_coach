@@ -1,4 +1,6 @@
 import type { Page } from '@playwright/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from './fixtures/test'
 import { randomUUID } from 'node:crypto'
 import { SELECTORS } from './helpers/selectors'
@@ -18,7 +20,7 @@ const AUTH_TIMEOUT = 15000
  */
 
 async function openBuilder(page: Page, mode: 'template-only' | 'report') {
-  await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
+  await page.goto(ROUTES.trackingReport, { timeout: AUTH_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
   await page.getByText('Build Your Own').click({ timeout: ACTION_TIMEOUT })
   await expect(page.getByTestId(SELECTORS.customReportBuilder.modeSelect)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -102,7 +104,7 @@ test.describe('Custom Report Builder', () => {
     const [templateId, reportId] = await Promise.all([template, report])
     cleanUp.push(`/api/tracking/field-report/${reportId}`, `/api/tracking/templates/custom/${templateId}`)
 
-    await page.waitForURL(/\/dashboard\/tracking(#recent-reports)?$/, { timeout: AUTH_TIMEOUT })
+    await page.waitForURL(urlOf(ROUTES.tracking, "(#recent-reports)?$"), { timeout: AUTH_TIMEOUT })
 
     const stored = await page.request.get(`/api/tracking/field-report/${reportId}`)
     expect(stored.status()).toBe(200)

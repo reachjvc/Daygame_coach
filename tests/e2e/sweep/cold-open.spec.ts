@@ -83,6 +83,7 @@
  */
 
 import { test } from "../fixtures/test"
+import { ROUTES as PAGES } from "@/src/shared/routes"
 import { staticRoutes } from "../../support/appRoutes"
 import {
   openCold,
@@ -147,7 +148,7 @@ const NOT_SWEPT: Record<string, string> = {
   "/auth/forgot-password": "signed-out flow, owned by cold-open-signed-out.spec.ts",
   "/auth/reset-password": "signed-out flow, owned by cold-open-signed-out.spec.ts",
   "/admin/ai-usage": "behind an admin key this account does not have",
-  "/programs/live":
+  [PAGES.liveWorkout]:
     "its whole purpose is an open workout, and a sweep that has to start one is not a read. " +
     "route-sweep.spec.ts opens it on an account with none",
   "/redirect": "a redirect shim with no page of its own",
@@ -177,7 +178,7 @@ const ROUTES = ON_DISK.filter((route) => !(route in NOT_SWEPT))
  * them now. This file owns the question no file can answer: does anything nest
  * at runtime, anywhere else.
  */
-const MAY_NEST = new Set(["/dashboard/tracking", "/dashboard/tracking/history"])
+const MAY_NEST = new Set<string>([PAGES.tracking, PAGES.trackingHistory])
 
 for (const route of ROUTES) {
   test(`opens clean: ${route}`, async ({ page }) => {

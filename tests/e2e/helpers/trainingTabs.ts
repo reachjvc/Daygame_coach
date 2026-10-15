@@ -13,6 +13,7 @@
  */
 
 import { expect, type Page } from "@playwright/test"
+import { ROUTES } from "@/src/shared/routes"
 
 export type TrainingTab = "today" | "history" | "progress"
 
@@ -27,7 +28,7 @@ export async function openTab(page: Page, tab: TrainingTab): Promise<void> {
 
 /** Arrive with the tab already chosen, as a link would. */
 export async function gotoTab(page: Page, tab: TrainingTab): Promise<void> {
-  await page.goto(tab === "today" ? "/programs" : `/programs?tab=${tab}`, {
+  await page.goto(tab === "today" ? ROUTES.training : `${ROUTES.training}?tab=${tab}`, {
     waitUntil: "networkidle",
   })
 }

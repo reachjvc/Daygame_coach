@@ -18,6 +18,7 @@
  */
 
 import type { Page } from "@playwright/test"
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from "./fixtures/test"
 import { PHONE, cleanUp, resetAndEnroll, guardTrainingAccount } from "./helpers/training.helper"
 import { networkQuiet } from "./helpers/settle"
@@ -92,7 +93,7 @@ test.describe("live workout", () => {
     test.setTimeout(180000)
     startedAt = new Date(Date.now() - 60_000).toISOString()
     await page.setViewportSize(PHONE)
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await resetAndEnroll(page)
   })
 
@@ -254,7 +255,7 @@ test.describe("live workout", () => {
      * A second session on one day is a loose workout, which is both the door
      * the app offers and what a person doing two sessions actually has.
      */
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.reload({ waitUntil: "networkidle" })
     await expect(page.getByTestId("today-card")).toBeVisible({ timeout: 20000 })
     await expect(page.getByTestId("see-todays-workout")).toBeVisible({ timeout: 20000 })
@@ -454,7 +455,7 @@ test.describe("live workout", () => {
    * taken, you do front squats, and there was nowhere to put them.
    */
   test("starts with no program, takes a lift added on the day, and keeps it", async ({ page }) => {
-  await page.goto("/programs")
+  await page.goto(ROUTES.training)
   await page.evaluate(async () => {
     const live = await (await fetch("/api/workouts/live")).json()
     if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
@@ -505,7 +506,7 @@ test.describe("live workout", () => {
    * second; the `session_type` read back is the proof of the first.
    */
   test("a run started from its program is a run in the database", async ({ page }) => {
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.evaluate(async () => {
       const live = await (await fetch("/api/workouts/live")).json()
       if (live) await fetch(`/api/workouts/${live.id}`, { method: "DELETE" })
@@ -599,7 +600,7 @@ test.describe("live workout", () => {
     )
     expect(Object.keys(keysAfter as Record<string, string>)).toHaveLength(0)
 
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.evaluate(async () => {
       const logs = (await (await fetch("/api/health/workout?days=1")).json()) as { id: string }[]
       for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
@@ -635,7 +636,7 @@ test.describe("live workout", () => {
     */
     const other = await browser.newContext({ storageState: account.storageState })
     const otherPage = await other.newPage()
-    await otherPage.goto("/programs")
+    await otherPage.goto(ROUTES.training)
     await otherPage.evaluate(async () => {
       const live = await (await fetch("/api/workouts/live")).json()
       await fetch(`/api/workouts/${live.id}/finish`, {
@@ -653,7 +654,7 @@ test.describe("live workout", () => {
      * tomorrow does; the point of the test is the KEY, which this browser
      * still holds either way.
      */
-    await page.goto("/programs")
+    await page.goto(ROUTES.training)
     await page.evaluate(async () => {
       const logs = (await (await fetch("/api/health/workout?days=1")).json()) as { id: string }[]
       for (const l of logs) await fetch(`/api/health/workout?id=${l.id}`, { method: "DELETE" })
@@ -725,7 +726,7 @@ test.describe("live workout", () => {
      */
     const other = await browser.newContext({ storageState: account.storageState })
     const otherPage = await other.newPage()
-    await otherPage.goto("/programs")
+    await otherPage.goto(ROUTES.training)
     const thrownAway = await otherPage.evaluate(async () => {
       const live = await (await fetch("/api/workouts/live")).json()
       if (!live) return 0

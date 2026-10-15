@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/test"
+import { ROUTES } from "@/src/shared/routes"
 import type { Browser, Page } from "@playwright/test"
 import { planWithSteps, seedLifePlan } from "./helpers/lifePlan"
 
@@ -88,7 +89,7 @@ test.describe("the day half crosses devices", () => {
   })
 
   test("a line AND a tick written on one device are there on another", async ({ page, browser, account }) => {
-    await page.goto("/life-mastery")
+    await page.goto(ROUTES.plan)
     // The seed is a plan nobody has ticked, so the assertion below can only be
     // satisfied by the write this test sends.
     expect((await readDay(page)).logged[DAY] ?? [], "the day starts clear, or the test below proves nothing").not.toContain(STEP)
@@ -105,7 +106,7 @@ test.describe("the day half crosses devices", () => {
     })
 
     const laptop = await secondDevice(browser, account.storageState)
-    await laptop.goto("/life-mastery")
+    await laptop.goto(ROUTES.plan)
     const seen = await readDay(laptop)
 
     expect(
@@ -128,7 +129,7 @@ test.describe("the day half crosses devices", () => {
    * on a phone — and nothing on either screen would say so.
    */
   test("editing the plan on one device does not destroy a day written on the other", async ({ page, browser, account }) => {
-    await page.goto("/life-mastery")
+    await page.goto(ROUTES.plan)
     await writeDay(page, {
       date: DAY,
       note: "a day I do not want to lose",
@@ -138,7 +139,7 @@ test.describe("the day half crosses devices", () => {
 
     // The other device changes the PLAN — the thing that is replaced wholesale.
     const laptop = await secondDevice(browser, account.storageState)
-    await laptop.goto("/life-mastery")
+    await laptop.goto(ROUTES.plan)
     const before = await laptop.request.get("/api/life-plan")
     expect(before.status()).toBe(200)
     const body = (await before.json()) as { plan: PlanShape | null; revision: number }
@@ -193,14 +194,14 @@ test.describe("the day half crosses devices", () => {
   })
 
   test("clearing a cell on one device clears it on the other, rather than coming back", async ({ page, browser, account }) => {
-    await page.goto("/life-mastery")
+    await page.goto(ROUTES.plan)
     await writeDay(page, { date: DAY, note: "this will be cleared" })
     // Read back before the clear, so the clear below has something to undo.
     expect((await readDay(page)).notes[DAY]).toBe("this will be cleared")
     await writeDay(page, { date: DAY, note: "" })
 
     const laptop = await secondDevice(browser, account.storageState)
-    await laptop.goto("/life-mastery")
+    await laptop.goto(ROUTES.plan)
     const seen = await readDay(laptop)
 
     // "Absent is not null" cuts both ways: an omitted key changes nothing, and

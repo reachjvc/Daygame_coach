@@ -27,6 +27,7 @@
  */
 
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { ROUTES } from "@/src/shared/routes"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BuildYourWeek } from "@/src/programs/components/BuildYourWeek"
@@ -35,7 +36,7 @@ import type { ProgramEnrollment, ProgramSchedule } from "@/src/programs/types"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/programs",
+  usePathname: () => ROUTES.training,
   useSearchParams: () => new URLSearchParams(),
 }))
 
@@ -266,7 +267,7 @@ describe("a week that is already running", () => {
      * already running, which silently pauses the first.
      */
     const link = screen.getByTestId("week-already-running")
-    expect(link.getAttribute("href")).toBe("/programs?program=e-running")
+    expect(link.getAttribute("href")).toBe(`${ROUTES.training}?program=e-running`)
     expect(screen.queryByTestId("week-start")).toBeNull()
   })
 

@@ -1,4 +1,6 @@
 import { test, expect } from './fixtures/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 
 const AUTH_TIMEOUT = 15000
@@ -15,10 +17,10 @@ const AUTH_TIMEOUT = 15000
  */
 test('the module cards on the dashboard open their pages', async ({ page }) => {
   for (const [testId, destination] of [
-    [SELECTORS.dashboard.scenariosLink, /\/dashboard\/scenarios$/],
-    [SELECTORS.dashboard.innerGameLink, /\/dashboard\/inner-game$/],
+    [SELECTORS.dashboard.scenariosLink, urlOf(ROUTES.scenarios, "$")],
+    [SELECTORS.dashboard.innerGameLink, urlOf(ROUTES.innerGame, "$")],
   ] as const) {
-    await page.goto('/dashboard', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.dashboard, { timeout: AUTH_TIMEOUT })
     const link = page.getByTestId(testId)
     await expect(link).toBeVisible({ timeout: AUTH_TIMEOUT })
     await Promise.all([page.waitForURL(destination, { timeout: AUTH_TIMEOUT }), link.click()])

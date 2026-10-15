@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, test, expect, afterEach, vi } from 'vitest'
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react'
 
 import { ProgramRow } from '@/src/programs/components/ProgramRow'
@@ -103,7 +104,7 @@ describe('One row shape for every program list', () => {
       <ProgramRow
         name="StrongLifts 5x5"
         testId="with-link"
-        href="/programs?program=e1"
+        href={`${ROUTES.training}?program=e1`}
         right={<button type="button">Options</button>}
       />
     )

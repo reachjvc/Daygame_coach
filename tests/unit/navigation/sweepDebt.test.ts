@@ -21,6 +21,7 @@
  */
 
 import { describe, test, expect } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { KNOWN_DEBT, TAP_TARGET_DEBT, TRAINING_DEBT_CEILING } from "../../support/sweepDebt"
 import { staticRoutes } from "../../support/appRoutes"
 
@@ -43,7 +44,7 @@ describe("the route sweep's debt lists", () => {
   })
 
   test("training pages never carry more debt than their ceiling, and a ceiling that is gone means no entry", () => {
-    for (const route of ["/programs", "/programs/live"]) {
+    for (const route of [ROUTES.training, ROUTES.liveWorkout]) {
       const ceiling = TRAINING_DEBT_CEILING[route]
       const recorded = TAP_TARGET_DEBT[route]
       if (ceiling === undefined) {
@@ -58,7 +59,7 @@ describe("the route sweep's debt lists", () => {
   })
 
   test("the ceiling only covers training pages, so nothing else can hide behind it", () => {
-    const outsiders = Object.keys(TRAINING_DEBT_CEILING).filter((r) => !r.startsWith("/programs"))
+    const outsiders = Object.keys(TRAINING_DEBT_CEILING).filter((r) => !r.startsWith(ROUTES.training))
     expect(outsiders).toEqual([])
   })
 })

@@ -8,6 +8,7 @@
  */
 
 import { describe, test, expect, vi, beforeEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { resolveLoginDestination } from "@/src/profile/loginDestinationService"
 
 const getUser = vi.fn()
@@ -28,7 +29,7 @@ describe("resolveLoginDestination", () => {
     // destination, so a caller could not tell "signed out" from "go to login".
     getUser.mockResolvedValue({ data: { user: null } })
 
-    expect(await resolveLoginDestination("/dashboard")).toBeNull()
+    expect(await resolveLoginDestination(ROUTES.dashboard)).toBeNull()
   })
 
   test("signing in never diverts to the dating questions", async () => {
@@ -40,15 +41,15 @@ describe("resolveLoginDestination", () => {
        `scenariosService`, so they are asked at the scenario door instead. */
     signedIn()
 
-    expect(await resolveLoginDestination()).toBe("/dashboard")
-    expect(await resolveLoginDestination("/dashboard/settings")).toBe("/dashboard/settings")
+    expect(await resolveLoginDestination()).toBe(ROUTES.dashboard)
+    expect(await resolveLoginDestination(ROUTES.settings)).toBe(ROUTES.settings)
   })
 
   test("an off-site 'next' is refused, so login cannot be used to bounce someone to a phishing page", async () => {
     signedIn()
 
-    expect(await resolveLoginDestination("//evil.example")).toBe("/dashboard")
-    expect(await resolveLoginDestination("https://evil.example")).toBe("/dashboard")
-    expect(await resolveLoginDestination("/\\evil.example")).toBe("/dashboard")
+    expect(await resolveLoginDestination("//evil.example")).toBe(ROUTES.dashboard)
+    expect(await resolveLoginDestination("https://evil.example")).toBe(ROUTES.dashboard)
+    expect(await resolveLoginDestination("/\\evil.example")).toBe(ROUTES.dashboard)
   })
 })

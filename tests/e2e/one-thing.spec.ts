@@ -17,7 +17,7 @@ import { ROUTES } from "@/src/shared/routes"
  * next move does not leave this asserting an address that no longer exists.
  */
 const PLAN = `${ROUTES.plan}?step=one`
-const TRACKING = "/dashboard/tracking"
+const TRACKING = ROUTES.tracking
 
 /**
  * ON THE WORKER'S OWN ACCOUNT (Phase 8). The one thing is singular, so these

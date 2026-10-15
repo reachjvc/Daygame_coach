@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures/test'
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './helpers/selectors'
 import { grantPurchase } from './helpers/purchase'
 
@@ -33,7 +34,7 @@ test.describe('Inner Game Flow', () => {
     expect(read.status(), `could not read inner game progress: ${await read.text()}`).toBe(200)
     const reset = await page.request.post('/api/inner-game/progress', { data: { welcomeDismissed: false } })
     expect(reset.status(), `could not reset the welcome card: ${await reset.text()}`).toBe(200)
-    await page.goto('/dashboard/inner-game', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.innerGame, { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
 
@@ -56,6 +57,6 @@ test.describe('Inner Game Flow', () => {
     // The control is called "Exit"; what matters is that it goes to the dashboard
     const wayOut = page.getByRole('link', { name: /exit|back/i })
     await expect(wayOut).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(wayOut).toHaveAttribute('href', '/dashboard')
+    await expect(wayOut).toHaveAttribute('href', ROUTES.dashboard)
   })
 })

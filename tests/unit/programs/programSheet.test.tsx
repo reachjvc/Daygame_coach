@@ -18,6 +18,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { ProgramSheet } from "@/src/programs/components/ProgramSheet"
@@ -116,7 +117,7 @@ describe("End program", () => {
     await user.click(screen.getByTestId("sheet-end"))
     await user.click(screen.getByTestId("sheet-confirm"))
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/programs?view=programs"))
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(`${ROUTES.training}?view=programs`))
     expect(screen.queryByTestId("sheet-failed")).toBeNull()
   })
 
@@ -187,7 +188,7 @@ describe("Reset to start", () => {
 describe("the sheet itself", () => {
   it("offers the way out and the way to everything else", async () => {
     sheet()
-    expect(screen.getByTestId("sheet-all").getAttribute("href")).toBe("/programs?view=programs")
+    expect(screen.getByTestId("sheet-all").getAttribute("href")).toBe(`${ROUTES.training}?view=programs`)
     expect(screen.getByTestId("sheet-reset")).toBeTruthy()
     expect(screen.getByTestId("sheet-end")).toBeTruthy()
   })

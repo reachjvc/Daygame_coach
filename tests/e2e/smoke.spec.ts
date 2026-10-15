@@ -1,4 +1,5 @@
 import { test, expect, SIGNED_OUT } from "./fixtures/test"
+import { ROUTES } from "@/src/shared/routes"
 
 /**
  * The two signed-out checks that need a real browser and that nothing else
@@ -15,7 +16,7 @@ test.describe("Smoke Tests", { tag: ["@phone", "@engine"] }, () => {
   test.use({ storageState: SIGNED_OUT })
 
   test("unauthenticated dashboard redirects to login", async ({ page }) => {
-    await page.goto("/dashboard/tracking")
+    await page.goto(ROUTES.tracking)
     await expect(page).toHaveURL(/\/auth\/login/)
   })
 

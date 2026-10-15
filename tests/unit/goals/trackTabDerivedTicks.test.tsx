@@ -15,6 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen } from "@testing-library/react"
 import { TrackSchedule } from "@/src/goals/components/north-star/TrackSchedule"
 import { addRoutine, emptyNsPlan, toggleRoutineStep, updateStep } from "@/src/goals/northStarService"
@@ -23,7 +24,7 @@ import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/life-mastery",
+  usePathname: () => ROUTES.plan,
   useSearchParams: () => new URLSearchParams(),
 }))
 

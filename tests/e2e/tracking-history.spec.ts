@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test'
+import { ROUTES } from "@/src/shared/routes"
 import { test, expect } from './fixtures/test'
 import { randomUUID } from 'node:crypto'
 import { SELECTORS } from './helpers/selectors'
@@ -44,7 +45,7 @@ test.describe('Tracking History', () => {
     const draft = await seedReport(page, true, `E2E draft ${run}`)
     seeded.push(submitted, draft)
 
-    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.trackingHistory, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.history.card(submitted))).toBeVisible({ timeout: AUTH_TIMEOUT })
     // NOT asserted: that "All" shows the draft. It does not — the list behind
     // "All" is read with `is_draft = false` (getUserFieldReports), so "All" and
@@ -64,7 +65,7 @@ test.describe('Tracking History', () => {
     const id = await seedReport(page, false, note)
     seeded.push(id)
 
-    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.trackingHistory, { timeout: AUTH_TIMEOUT })
     const card = page.getByTestId(SELECTORS.history.card(id))
     await expect(card).toBeVisible({ timeout: AUTH_TIMEOUT })
 
@@ -80,7 +81,7 @@ test.describe('Tracking History', () => {
     const id = await seedReport(page, false, `E2E deleted ${randomUUID().slice(0, 8)}`)
     seeded.push(id)
 
-    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.trackingHistory, { timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.history.card(id))).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     page.once('dialog', (dialog) => dialog.accept())

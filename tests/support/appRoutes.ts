@@ -383,3 +383,15 @@ export function hasAppFrame(route: string, file: string, hiddenPrefixes: readonl
   const hidden = hiddenPrefixes.some((p) => route === p || route.startsWith(p.endsWith("/") ? p : `${p}/`))
   return inGroup && !hidden
 }
+
+/**
+ * A URL PATTERN FOR A PAGE, BUILT FROM ITS ROUTE-LIST VALUE.
+ *
+ * Browser tests waited for `/\/dashboard\/tracking$/`, an address typed out as
+ * a regex, so moving a page meant hunting regexes as well as strings. This
+ * builds the same pattern from `ROUTES.x`: `urlOf(ROUTES.tracking, "$")`. The
+ * tail is regex source, for what follows the address (`$`, `(?!/live)`).
+ */
+export function urlOf(address: string, tail = ""): RegExp {
+  return new RegExp(address.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&") + tail)
+}

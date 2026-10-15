@@ -21,6 +21,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
@@ -28,7 +29,7 @@ import type { LiveWorkout, SessionPrescription } from "@/src/programs/types"
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/programs/live",
+  usePathname: () => ROUTES.liveWorkout,
   useSearchParams: () => new URLSearchParams(),
 }))
 
@@ -127,7 +128,7 @@ describe("the live screen when the workout went away", () => {
 
     await waitFor(() => expect(screen.getByText(GONE)).toBeTruthy())
     const back = screen.getByRole("link", { name: /back to training/i })
-    expect(back.getAttribute("href")).toBe("/programs")
+    expect(back.getAttribute("href")).toBe(ROUTES.training)
   })
 
   it("a set the server merely refused leaves the workout on screen", async () => {

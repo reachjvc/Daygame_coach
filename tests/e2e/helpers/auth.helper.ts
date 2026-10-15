@@ -1,4 +1,6 @@
 import { Page, expect } from '@playwright/test'
+import { urlOf } from "@/tests/support/appRoutes"
+import { ROUTES } from "@/src/shared/routes"
 import { SELECTORS } from './selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -87,7 +89,7 @@ export async function ensureCleanSessionPage(page: Page): Promise<void> {
     // Clean up via API (may silently fail, that's OK - UI fallback handles it)
     await ensureNoActiveSessionViaAPI(page)
 
-    await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
+    await page.goto(ROUTES.trackingSession, { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
     // Clear ended session from sessionStorage to prevent "Session Ended" banner
@@ -147,7 +149,7 @@ export async function ensureCleanSessionPage(page: Page): Promise<void> {
       const endConfirm = page.getByRole('button', { name: /end session/i })
       if (await endConfirm.isVisible({ timeout: 3000 }).catch(() => false)) {
         await endConfirm.click({ timeout: ACTION_TIMEOUT })
-        await page.waitForURL(/\/dashboard\/tracking(?!\/)/, { timeout: AUTH_TIMEOUT })
+        await page.waitForURL(urlOf(ROUTES.tracking, "(?!/)"), { timeout: AUTH_TIMEOUT })
       }
       continue // Retry from the start
     }
@@ -155,7 +157,7 @@ export async function ensureCleanSessionPage(page: Page): Promise<void> {
 
   // If we get here after all retries, do one final API cleanup + navigate
   await ensureNoActiveSessionViaAPI(page)
-  await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
+  await page.goto(ROUTES.trackingSession, { timeout: AUTH_TIMEOUT })
   await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   // Clear ended session one more time
   await page.evaluate(() => sessionStorage.removeItem('daygame_ended_session')).catch(() => {})

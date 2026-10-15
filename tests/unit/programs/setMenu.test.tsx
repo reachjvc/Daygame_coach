@@ -15,6 +15,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest"
+import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
@@ -23,7 +24,7 @@ import type { LiveWorkout, LiveWorkoutSet, SessionPrescription } from "@/src/pro
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
-  usePathname: () => "/programs/live",
+  usePathname: () => ROUTES.liveWorkout,
   useSearchParams: () => new URLSearchParams(),
 }))
 
