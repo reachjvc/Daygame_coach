@@ -17,7 +17,6 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { ROUTES } from "@/src/shared/routes"
 import { parseProgramsLocation } from "@/src/programs/programsService"
 
 const running = [{ id: "e1" }, { id: "e2" }]
@@ -76,7 +75,7 @@ describe("which program", () => {
 
 describe("where Back goes", () => {
   it("keeps a path on this site", () => {
-    expect(at("from=%2Fdashboard%2Ftracking").from).toBe(ROUTES.tracking)
+    expect(at("from=%2Fdashboard%2Ftracking").from).toBe("/dashboard/tracking")
   })
 
   it("refuses anything that would leave the site", () => {
@@ -100,7 +99,7 @@ describe("where Back goes", () => {
     // Whitespace around a path is not a trick; whitespace INSIDE one is, which
     // is why "/dash board" is refused above and this is not.
     expect(parseProgramsLocation(new URLSearchParams({ from: " /dashboard" }), running).from).toBe(
-      ROUTES.dashboard
+      "/dashboard"
     )
     // And trimming must not turn a hostile value into an accepted one.
     expect(parseProgramsLocation(new URLSearchParams({ from: " //evil.example" }), running).from).toBeNull()

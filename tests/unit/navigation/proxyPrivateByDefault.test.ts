@@ -19,7 +19,7 @@ import { describe, it, expect, afterEach, vi } from "vitest"
 import { NextRequest } from "next/server"
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server"
 import { proxy, config } from "../../../proxy"
-import { ROUTES, isPublicPage, isUnder } from "@/src/shared/routes"
+import { isPublicPage, isUnder } from "@/src/shared/routes"
 import { productRoutes } from "@/tests/support/appRoutes"
 
 /**
@@ -121,7 +121,7 @@ describe("isUnder", () => {
     expect(isUnder("/plan/quit-vice", "/plan")).toBe(true)
     expect(isUnder("/timeline", "/time")).toBe(false)
     expect(isUnder("/time", "/timeline")).toBe(false)
-    expect(isUnder(ROUTES.tracking, ROUTES.dashboard)).toBe(true)
-    expect(isUnder("/dashboards", ROUTES.dashboard)).toBe(false)
+    expect(isUnder("/dashboard/tracking", "/dashboard")).toBe(true)
+    expect(isUnder("/dashboards", "/dashboard")).toBe(false)
   })
 })

@@ -9,12 +9,11 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { ROUTES } from "@/src/shared/routes"
 import { readReturn, withReturn, RETURN_PARAM } from "@/src/shared/returnTo"
 
 describe("readReturn", () => {
   it("accepts an ordinary internal path", () => {
-    expect(readReturn(ROUTES.tracking)).toBe(ROUTES.tracking)
+    expect(readReturn("/dashboard/tracking")).toBe("/dashboard/tracking")
     expect(readReturn("/dashboard/goals/plan?step=today")).toBe("/dashboard/goals/plan?step=today")
   })
 
@@ -52,14 +51,14 @@ describe("readReturn", () => {
 
 describe("withReturn", () => {
   it("adds the address to a plain link", () => {
-    expect(withReturn("/dashboard/goals/plan", ROUTES.tracking)).toBe(
-      `${ROUTES.dashboard}/goals/plan?${RETURN_PARAM}=%2Fdashboard%2Ftracking`
+    expect(withReturn("/dashboard/goals/plan", "/dashboard/tracking")).toBe(
+      `/dashboard/goals/plan?${RETURN_PARAM}=%2Fdashboard%2Ftracking`
     )
   })
 
   it("adds it to a link that already has a query", () => {
-    expect(withReturn("/dashboard/goals/plan?step=today", ROUTES.tracking)).toBe(
-      `${ROUTES.dashboard}/goals/plan?step=today&${RETURN_PARAM}=%2Fdashboard%2Ftracking`
+    expect(withReturn("/dashboard/goals/plan?step=today", "/dashboard/tracking")).toBe(
+      `/dashboard/goals/plan?step=today&${RETURN_PARAM}=%2Fdashboard%2Ftracking`
     )
   })
 
@@ -68,8 +67,8 @@ describe("withReturn", () => {
   })
 
   it("round-trips through readReturn", () => {
-    const link = withReturn("/dashboard/goals/plan", ROUTES.tracking)
+    const link = withReturn("/dashboard/goals/plan", "/dashboard/tracking")
     const from = new URLSearchParams(link.split("?")[1]).get(RETURN_PARAM)
-    expect(readReturn(from)).toBe(ROUTES.tracking)
+    expect(readReturn(from)).toBe("/dashboard/tracking")
   })
 })

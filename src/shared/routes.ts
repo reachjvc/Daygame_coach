@@ -20,19 +20,19 @@
  */
 export const ROUTES = {
   dashboard: "/dashboard",
-  tracking: "/dashboard/tracking",
-  trackingSession: "/dashboard/tracking/session",
-  trackingReport: "/dashboard/tracking/report",
-  trackingReview: "/dashboard/tracking/review",
-  trackingDaily: "/dashboard/tracking/daily",
-  trackingHistory: "/dashboard/tracking/history",
+  tracking: "/tracking",
+  trackingSession: "/tracking/session",
+  trackingReport: "/tracking/report",
+  trackingReview: "/tracking/review",
+  trackingDaily: "/tracking/daily",
+  trackingHistory: "/tracking/history",
   scenarios: "/scenarios",
   scenarioPreferences: "/scenarios/preferences",
   scenarioArchetypes: "/scenarios/preferences/archetypes",
   time: "/time",
   coach: "/coach",
   articles: "/articles",
-  innerGame: "/dashboard/inner-game",
+  innerGame: "/inner-game",
   settings: "/settings",
   training: "/programs",
   liveWorkout: "/programs/live",
@@ -156,6 +156,8 @@ export const LEGACY_ROUTES: ReadonlyArray<{ from: string; to: string }> = [
   { from: "/dashboard/qa", to: "/coach" },
   { from: "/qa", to: "/coach" },
   { from: "/dashboard/articles", to: "/articles" },
+  { from: "/dashboard/inner-game", to: "/inner-game" },
+  { from: "/dashboard/tracking", to: "/tracking" },
 ]
 
 /** Where an old address now lives, or null. The longest matching `from` wins. */
