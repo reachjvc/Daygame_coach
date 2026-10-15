@@ -309,9 +309,10 @@ export async function deleteFieldReport(reportId: string, userId: string): Promi
 export async function getUserFieldReports(
   userId: string,
   limit?: number,
-  offset?: number
+  offset?: number,
+  drafts?: "exclude" | "include"
 ): Promise<FieldReportRow[]> {
-  return repoGetUserFieldReports(userId, limit, offset)
+  return repoGetUserFieldReports(userId, limit, offset, drafts)
 }
 
 export async function getDraftFieldReports(userId: string, limit?: number): Promise<FieldReportRow[]> {

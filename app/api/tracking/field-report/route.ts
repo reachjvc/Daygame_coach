@@ -77,7 +77,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(reports)
     }
 
-    const reports = await getUserFieldReports(auth.userId, limit, offset)
+    // `status=all` is History's "All": drafts too. Without it, submitted only.
+    const all = searchParams.get("status") === "all"
+    const reports = await getUserFieldReports(auth.userId, limit, offset, all ? "include" : "exclude")
     return NextResponse.json(reports)
   } catch (error) {
     console.error("Error getting field reports:", error)

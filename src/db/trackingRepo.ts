@@ -732,19 +732,26 @@ export async function updateFieldReport(
   return data as FieldReportRow
 }
 
+/**
+ * A page of the person's reports, newest first. Submitted ones only unless
+ * `drafts` says otherwise: History's "All" asked for this list and so never
+ * showed a draft — "All" and "Submitted" were the same list (found by the
+ * browser suite, 2026-10-13).
+ */
 export async function getUserFieldReports(
   userId: string,
   limit = 20,
-  offset = 0
+  offset = 0,
+  drafts: "exclude" | "include" = "exclude"
 ): Promise<FieldReportRow[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
-    .from("field_reports")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("is_draft", false)
+  let query = supabase.from("field_reports").select("*").eq("user_id", userId)
+  if (drafts === "exclude") query = query.eq("is_draft", false)
+
+  const { data, error } = await query
     .order("reported_at", { ascending: false })
+    .order("id", { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (error) {

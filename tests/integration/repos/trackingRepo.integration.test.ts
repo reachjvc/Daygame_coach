@@ -200,6 +200,8 @@ describe("field reports", () => {
 
     expect((await getUserFieldReports(user.id)).map((r) => r.id)).toEqual([newer.id, older.id])
     expect((await getDraftFieldReports(user.id)).map((r) => r.id)).toEqual([draft.id])
+    // History's "All": every report, the draft (stamped now) first
+    expect((await getUserFieldReports(user.id, 20, 0, "include")).map((r) => r.id)).toEqual([draft.id, newer.id, older.id])
 
     await updateFieldReport(draft.id, { is_draft: false })
     expect(await getDraftFieldReports(user.id)).toEqual([])

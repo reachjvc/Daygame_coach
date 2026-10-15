@@ -38,10 +38,16 @@ export function useFieldReports(): UseFieldReportsReturn {
         setState((prev) => ({ ...prev, isLoading: true, error: null }))
       }
 
-      const isDrafts = state.filterMode === "drafts"
-      const url = isDrafts
-        ? "/api/tracking/field-report?drafts=true"
-        : `/api/tracking/field-report?limit=${PAGE_SIZE}&offset=${offset}`
+      // Each filter is the server's answer, not a filter applied to a page of
+      // another one: "All" used to read the submitted list, so it never showed
+      // a draft, and "Submitted" re-filtered a page client-side, which broke
+      // the count `hasMore` is worked out from.
+      const url =
+        state.filterMode === "drafts"
+          ? "/api/tracking/field-report?drafts=true"
+          : state.filterMode === "all"
+            ? `/api/tracking/field-report?status=all&limit=${PAGE_SIZE}&offset=${offset}`
+            : `/api/tracking/field-report?limit=${PAGE_SIZE}&offset=${offset}`
 
       const response = await fetch(url)
 
@@ -51,17 +57,11 @@ export function useFieldReports(): UseFieldReportsReturn {
 
       const data: FieldReportRow[] = await response.json()
 
-      // Filter by mode if "submitted" (non-drafts only)
-      let filteredData = data
-      if (state.filterMode === "submitted") {
-        filteredData = data.filter((r) => !r.is_draft)
-      }
-
       setState((prev) => ({
         ...prev,
-        reports: append ? [...prev.reports, ...filteredData] : filteredData,
+        reports: append ? [...prev.reports, ...data] : data,
         isLoading: false,
-        hasMore: filteredData.length >= PAGE_SIZE,
+        hasMore: data.length >= PAGE_SIZE,
       }))
     } catch (error) {
       setState((prev) => ({
