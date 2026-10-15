@@ -834,13 +834,36 @@ production (the test backend applies it on top of the baseline).
   server clients now give every request its own signal, which opts out; 12
   fresh-account loads went from 24 errors to 0, and CI's log from 2 to 0.
 
-**Found by the browser cut, not fixed:** the tracking history's "All" filter
-hides drafts; the custom report builder cannot save a notes-only report (400
-"Fields required"); `life-mastery-track.spec` fails at "pushes the plan into
-real goals" before and after this work.
+**Found by the browser cut — fixed 2026-10-15:** the tracking history's "All"
+filter hid drafts (34c0506); the custom report builder could not save a
+notes-only report (f34c603); both browser specs now assert the fix (9d00f02).
+`life-mastery-track.spec` passes in every full run since Phase 8.
+
+**Also fixed 2026-10-15, each proved by a test that fails without it:**
+- a Black Box change on a device whose clock is behind another's was never
+  sent (0e31b30, released);
+- a malformed id in a URL (`abc`, `-1`) answered 500 and filed a crash report
+  on nine read-by-id routes; it is "not found" now, one rule in
+  `src/db/rowErrors.ts` (fe16988);
+- a double tap on Start answered 500 on a program that had started, and a
+  second tap arriving a moment later RESTARTED the program, throwing away its
+  weights; starting the program already running now answers with it
+  (715f9d0, 3d2ee92);
+- a signed-in account that has not paid was told to "Sign up" on Inner Game,
+  and offered "Login" on Scenarios (52cd764).
+
+**Left for you:**
+- the migration `20260927120000_corrections_keep_set_order` (approved by you
+  on 2026-09-28) is still not in production; it is the only pending one, and
+  this session's permissions refuse `supabase db push`. Run
+  `supabase migration list --linked`, then `supabase db push`.
+- after a ramped practice ends, the Track grid and the counted goal disagree
+  on the weekly target (4× vs 2×): a product question, not a fix.
 
 **Security, found along the way:** `/api/goals/plan` and the four
-`/api/goals/vision-plan/*` routes are deployed and callable by any signed-in
+`/api/goals/vision-plan/*` routes were deployed and callable by any signed-in
 account, though only `/test` lab pages use them (the vision-plan ones run
-Claude on every call); `npm audit` reports 21 advisories (1 critical, 8 high),
-not investigated here.
+Claude on every call). *Fixed and released 2026-10-15 (fc3ec48e):* they live
+under `/api/test/goals/`, which the proxy refuses in production; the live site
+answers 404. `npm audit` reports 21 advisories (1 critical, 8 high), not
+investigated here.
