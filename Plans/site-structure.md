@@ -1,8 +1,8 @@
 # Site structure: addresses that say what belongs to what, and one frame around every page
 
 **Status:** Phase 0 done 2026-10-13. **Every decision is taken** (the owner accepted all
-recommendations on 2026-10-13); one item still needs the owner's word, and it has a safe default
-(Q-ICON). Phases 1–5 run without the owner. Phase 6 is after the STOP line.
+recommendations on 2026-10-13), and Q-ICON was answered yes on 2026-10-15. Phases 1–5 run without
+the owner. Phase 6 is after the STOP line.
 
 **Written 2026-10-13, revised the same day after a review for a smaller executing model** (see
 "What the review changed" at the end of Part 1). For the owner, and for the AI session that carries
@@ -156,6 +156,12 @@ all** (`DashboardPage.tsx:57–66`).
 | # | Question | Recommendation | Default if unanswered |
 |---|---|---|---|
 | Q-ICON | May the laptop header show **the same icons the phone bar already shows for the same destinations** (`LayoutDashboard`, `Dumbbell`, `BarChart3`, `Swords`, `Timer`, `ScrollText`, `HelpCircle`, `BookOpen`, `Settings`)? `.claude/rules/ui.md` says "Ask before reusing an existing icon in a new context", and `src/shared/iconRoles.ts` needs approval by name. The icons are drawn from `navTabs.ts`'s own data, so no file gains a new import and the registry need not change | **Yes**: same destination, same meaning, one list | **Text-only links in the laptop header — final unless the line `Q-ICON: yes` appears in this file, written by the owner.** The executor never infers a yes, does not wait, and does not ask. Adding icons later is one line in `AppFrame.tsx`. |
+
+Q-ICON: yes
+
+*Answered by the owner on 2026-10-15 in session `daygame-coach-ff`, in their words "yes to 1 & 3",
+where 3 was this question: "Should the laptop navigation show icons, the same ones the phone bar
+uses?" Recorded here by that session because the owner gave the answer there, not in this file.*
 
 ## What this plan deliberately does not do
 
