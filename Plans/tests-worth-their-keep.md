@@ -944,3 +944,9 @@ same text the same way every time, and the chat takes its turn count from the
 request, so every request can be a "milestone". Fix when the scenarios get
 their own work: count turns on the server, or save one row per session and
 checkpoint.
+
+Settings also dropped its "Completed" tile, which read a profile counter no
+code writes (9ee1cea5); checked in the browser on the test backend: two saved
+attempts show as 2 and 7/10. **Released 2026-10-16:** `main` at 5735cd95, CI
+and every e2e lane green on it, `/api/healthz` reporting that build. The four
+migrations are not in production.
