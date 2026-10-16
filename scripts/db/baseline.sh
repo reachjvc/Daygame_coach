@@ -22,11 +22,15 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 OUT="tests/db/baseline.sql"
 
-# The newest migration production has applied: the largest version in the
-# REMOTE column of `supabase migration list --linked`.
-stamp=$(supabase migration list --linked 2>/dev/null \
-  | awk -F'|' 'NF >= 3 { r = $2; gsub(/ /, "", r); if (r ~ /^[0-9]+$/) print r }' \
-  | sort -n | tail -1)
+# The newest migration production has applied: the largest `remote` version in
+# `supabase migration list --linked`. Asked for as JSON: the CLI's text output
+# is a table on a terminal but already JSON when piped, so neither is safe to
+# parse without naming it.
+stamp=$(supabase migration list --linked --output-format json 2>/dev/null \
+  | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+      const v=JSON.parse(s.slice(s.indexOf("{"))).migrations.map(m=>m.remote).filter(r=>/^\d+$/.test(r))
+      v.sort((a,b)=>a.padEnd(14,"0").localeCompare(b.padEnd(14,"0"))); console.log(v.pop()??"")})' \
+  || true)
 if [[ -z "$stamp" ]]; then
   echo "Could not read the linked project's applied migrations." >&2
   echo "Run \`supabase migration list --linked\` and fix whatever it says first." >&2

@@ -948,5 +948,15 @@ checkpoint.
 Settings also dropped its "Completed" tile, which read a profile counter no
 code writes (9ee1cea5); checked in the browser on the test backend: two saved
 attempts show as 2 and 7/10. **Released 2026-10-16:** `main` at 5735cd95, CI
-and every e2e lane green on it, `/api/healthz` reporting that build. The four
-migrations are not in production.
+and every e2e lane green on it, `/api/healthz` reporting that build.
+
+**Applied 2026-10-16, on the owner's yes:** the four migrations, plus
+`20261016120400_user_values_orphans_go.sql`, which deletes the three value
+picks of deleted accounts (the owner approved exactly three; it refuses if more
+would go, rehearsed with four planted) and validates the key. `migration list`
+showed nothing else pending. Checked in production afterwards: every column,
+CHECK, default, key and policy as written, one `user_values` row left. The
+baseline is refreshed (stamp 20261016120400) and `baseline.sh --check` says it
+matches; its diff is exactly today's six migrations. `baseline.sh` now asks
+the CLI for JSON: piped, the CLI printed JSON where the script parsed a table,
+so the stamp could not be read.

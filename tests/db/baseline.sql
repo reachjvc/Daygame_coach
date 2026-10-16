@@ -1,4 +1,4 @@
--- baseline-stamp: 20260924100000
+-- baseline-stamp: 20261016120400
 -- Schema only (no rows), dumped from the linked Supabase project by scripts/db/baseline.sh.
 -- Do not edit by hand: write a migration, then re-run the script once production has it.
 
@@ -600,9 +600,6 @@ BEGIN
     END IF;
   END IF;
 
-  -- The workout is locked, so the old sets can go before the new ones arrive:
-  -- if the insert is refused, the delete never happened either. This is what
-  -- replaces the hand-written "put the old rows back" rollback.
   PERFORM 1 FROM workout_logs WHERE id = p_log_id FOR UPDATE;
 
   IF NOT FOUND THEN
@@ -611,13 +608,14 @@ BEGIN
 
   DELETE FROM workout_sets WHERE log_id = p_log_id;
 
+  -- The two added columns are the whole change.
   INSERT INTO workout_sets (
     log_id, exercise, exercise_id, library_id, weight_kg, reps, set_number,
-    set_kind, side, notes, exercise_notes, rpe
+    set_kind, side, notes, exercise_notes, rpe, completed_at, prescribed_index
   )
   SELECT p_log_id, s.exercise, s.exercise_id, s.library_id, s.weight_kg, s.reps,
          s.set_number, COALESCE(s.set_kind, 'working'), s.side, s.notes,
-         s.exercise_notes, s.rpe
+         s.exercise_notes, s.rpe, s.completed_at, s.prescribed_index
   FROM jsonb_populate_recordset(null::workout_sets, COALESCE(p_sets, '[]'::jsonb)) s;
 
   IF p_enrollment_id IS NULL THEN
@@ -2118,13 +2116,14 @@ ALTER TABLE "public"."reviews" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."scenarios" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
-    "difficulty" "text" NOT NULL,
-    "archetype" "text" NOT NULL,
+    "difficulty" "text",
+    "archetype" "text",
     "scenario_type" "text",
     "score" integer,
     "feedback" "text",
     "xp_earned" integer DEFAULT 0,
-    "completed_at" timestamp with time zone DEFAULT "now"()
+    "completed_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "scenarios_score_range" CHECK ((("score" IS NULL) OR (("score" >= 1) AND ("score" <= 10))))
 );
 
 
@@ -2609,7 +2608,7 @@ CREATE TABLE IF NOT EXISTS "public"."user_goals" (
     "life_area_id" "uuid",
     "parent_goal_id" "uuid",
     "horizon" "text" DEFAULT 'weekly'::"text" NOT NULL,
-    "goal_type" "text" DEFAULT 'process'::"text" NOT NULL,
+    "goal_type" "text" DEFAULT 'recurring'::"text" NOT NULL,
     "description" "text",
     "purpose" "text",
     "deadline" "date",
@@ -2631,12 +2630,8 @@ CREATE TABLE IF NOT EXISTS "public"."user_goals" (
     "aligned_values" "text"[] DEFAULT '{}'::"text"[],
     "is_abstinence" boolean DEFAULT false NOT NULL,
     "stages" "text"[],
-    CONSTRAINT "chk_display_category" CHECK ((("display_category" IS NULL) OR ("display_category" = ANY (ARRAY['field_work'::"text", 'results'::"text", 'dirty_dog'::"text", 'texting'::"text", 'dates'::"text", 'relationship'::"text", 'scenarios'::"text", 'mindfulness'::"text", 'resilience'::"text", 'learning'::"text", 'reflection'::"text", 'discipline'::"text", 'strength'::"text", 'training'::"text", 'nutrition'::"text", 'body_comp'::"text", 'flexibility'::"text", 'endurance'::"text", 'income'::"text", 'saving'::"text", 'investing'::"text", 'career_growth'::"text", 'entrepreneurship'::"text", 'porn_freedom'::"text", 'digital_discipline'::"text", 'substance_control'::"text", 'self_control'::"text"])))),
-    CONSTRAINT "chk_goal_nature" CHECK ((("goal_nature" IS NULL) OR ("goal_nature" = ANY (ARRAY['input'::"text", 'outcome'::"text"])))),
-    CONSTRAINT "chk_goal_type" CHECK (("goal_type" = ANY (ARRAY['recurring'::"text", 'milestone'::"text", 'habit_ramp'::"text"]))),
     CONSTRAINT "chk_period" CHECK (("period" = ANY (ARRAY['daily'::"public"."goal_period", 'weekly'::"public"."goal_period", 'monthly'::"public"."goal_period", 'quarterly'::"public"."goal_period", 'yearly'::"public"."goal_period", 'custom'::"public"."goal_period"]))),
-    CONSTRAINT "chk_tracking_type" CHECK (("tracking_type" = ANY (ARRAY['counter'::"public"."goal_tracking_type", 'percentage'::"public"."goal_tracking_type", 'streak'::"public"."goal_tracking_type", 'boolean'::"public"."goal_tracking_type"]))),
-    CONSTRAINT "user_goals_display_category_check" CHECK ((("display_category" IS NULL) OR ("display_category" = ANY (ARRAY['field_work'::"text", 'results'::"text", 'dirty_dog'::"text", 'texting'::"text", 'dates'::"text", 'relationship'::"text", 'mindfulness'::"text", 'resilience'::"text", 'learning'::"text", 'reflection'::"text", 'discipline'::"text", 'strength'::"text", 'training'::"text", 'nutrition'::"text", 'body_comp'::"text", 'flexibility'::"text", 'endurance'::"text", 'income'::"text", 'saving'::"text", 'investing'::"text", 'career_growth'::"text", 'entrepreneurship'::"text", 'porn_freedom'::"text", 'digital_discipline'::"text", 'substance_control'::"text", 'self_control'::"text"])))),
+    CONSTRAINT "user_goals_display_category_check" CHECK ((("display_category" IS NULL) OR ("display_category" = ANY (ARRAY['field_work'::"text", 'results'::"text", 'dirty_dog'::"text", 'texting'::"text", 'dates'::"text", 'relationship'::"text", 'scenarios'::"text", 'mindfulness'::"text", 'resilience'::"text", 'learning'::"text", 'reflection'::"text", 'discipline'::"text", 'strength'::"text", 'training'::"text", 'nutrition'::"text", 'body_comp'::"text", 'flexibility'::"text", 'endurance'::"text", 'income'::"text", 'saving'::"text", 'investing'::"text", 'career_growth'::"text", 'entrepreneurship'::"text", 'porn_freedom'::"text", 'digital_discipline'::"text", 'substance_control'::"text", 'self_control'::"text"])))),
     CONSTRAINT "user_goals_goal_level_check" CHECK ((("goal_level" >= 0) AND ("goal_level" <= 3))),
     CONSTRAINT "user_goals_goal_nature_check" CHECK ((("goal_nature" IS NULL) OR ("goal_nature" = ANY (ARRAY['input'::"text", 'outcome'::"text"])))),
     CONSTRAINT "user_goals_goal_phase_check" CHECK ((("goal_phase" IS NULL) OR ("goal_phase" = ANY (ARRAY['acquisition'::"text", 'consolidation'::"text", 'graduated'::"text"])))),
@@ -4195,12 +4190,12 @@ ALTER TABLE ONLY "public"."life_plan_days"
 
 
 ALTER TABLE ONLY "public"."life_plan_experiences"
-    ADD CONSTRAINT "life_plan_experiences_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE SET NULL;
+    ADD CONSTRAINT "life_plan_experiences_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE SET NULL ("area_id");
 
 
 
 ALTER TABLE ONLY "public"."life_plan_experiences"
-    ADD CONSTRAINT "life_plan_experiences_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE SET NULL;
+    ADD CONSTRAINT "life_plan_experiences_goal_fk" FOREIGN KEY ("goal_id", "user_id") REFERENCES "public"."life_plan_goals"("id", "user_id") ON DELETE SET NULL ("goal_id");
 
 
 
@@ -4225,7 +4220,7 @@ ALTER TABLE ONLY "public"."life_plan_fields"
 
 
 ALTER TABLE ONLY "public"."life_plan_fields"
-    ADD CONSTRAINT "life_plan_fields_target_fk" FOREIGN KEY ("target_id", "user_id") REFERENCES "public"."life_plan_nodes"("id", "user_id") ON DELETE SET NULL;
+    ADD CONSTRAINT "life_plan_fields_target_fk" FOREIGN KEY ("target_id", "user_id") REFERENCES "public"."life_plan_nodes"("id", "user_id") ON DELETE SET NULL ("target_id");
 
 
 
@@ -4290,7 +4285,7 @@ ALTER TABLE ONLY "public"."life_plan_goal_serves"
 
 
 ALTER TABLE ONLY "public"."life_plan_goals"
-    ADD CONSTRAINT "life_plan_goals_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE SET NULL;
+    ADD CONSTRAINT "life_plan_goals_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE SET NULL ("area_id");
 
 
 
@@ -4360,7 +4355,7 @@ ALTER TABLE ONLY "public"."life_plan_routine_steps"
 
 
 ALTER TABLE ONLY "public"."life_plan_routines"
-    ADD CONSTRAINT "life_plan_routines_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE SET NULL;
+    ADD CONSTRAINT "life_plan_routines_area_fk" FOREIGN KEY ("area_id", "user_id") REFERENCES "public"."life_plan_areas"("id", "user_id") ON DELETE SET NULL ("area_id");
 
 
 
@@ -4745,6 +4740,11 @@ ALTER TABLE ONLY "public"."user_tracking_stats"
 
 
 ALTER TABLE ONLY "public"."user_values"
+    ADD CONSTRAINT "user_values_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_values"
     ADD CONSTRAINT "user_values_value_id_fkey" FOREIGN KEY ("value_id") REFERENCES "public"."core_values"("id");
 
 
@@ -4930,10 +4930,6 @@ CREATE POLICY "Users can insert own workout sets" ON "public"."workout_sets" FOR
 
 
 CREATE POLICY "Users can insert their own purchases" ON "public"."purchases" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users can insert their own scenarios" ON "public"."scenarios" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
