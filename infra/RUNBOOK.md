@@ -75,7 +75,7 @@ reach the database. The fault is at Supabase, not on the server.
 
 1. Is the server there? If Tailscale SSH does not answer, use Hetzner's web
    console and reboot. The server comes back by itself. **Rehearsed:** healthy
-   again 17 seconds after a reboot, the agent's first run 34 seconds after boot.
+   again 21 seconds after a reboot, the agent's first run 34 seconds after boot.
 2. On the server:
 
        docker ps --format '{{.Names}} {{.Status}}'
@@ -151,14 +151,14 @@ has run.
    after its `--dry-run` and a look at the price (Phase 6 step 1). For a rebuild,
    delete the old server in the Hetzner console first.
 2. `ssh root@daygame-prod cloud-init status --wait --long` — wait for `done`,
-   `errors: []`. **Rehearsed:** 79 seconds.
+   `errors: []`. **Rehearsed:** 86 seconds.
 3. `infra/server/push-env.sh <domain> <alert email>` (it sends `alerts.env` too).
    If `~/.config/daygame/production.env` still exists, the old Server Actions
    key is kept, so open forms keep working.
 4. `infra/server/sync-infra.sh <commit>` — Caddy starts, then the two timers.
 5. The agent deploys the newest production image about a minute later.
-   **Rehearsed:** 73 seconds from the agent's pickup to healthy, most of it the
-   first image pull.
+   **Rehearsed:** 71 seconds from the agent's pickup to healthy, most of it the
+   first image pull; 166 seconds from first boot to healthy in all.
 6. Check: `curl -sI https://<domain>/api/healthz` shows `HTTP/2 200` and
    `strict-transport-security`, and the JSON reports the commit.
 
@@ -197,6 +197,7 @@ about 5 GB of disk while it runs, 4 GB of memory, the GitHub CLI logged in with
     REHEARSAL_DIR=<scratch dir> infra/rehearsal/run.sh pin sha256:<an older staging digest>
     REHEARSAL_DIR=<scratch dir> infra/rehearsal/run.sh rotate
     REHEARSAL_DIR=<scratch dir> infra/rehearsal/run.sh reissue
+    REHEARSAL_DIR=<scratch dir> infra/rehearsal/run.sh reissue --http-01
     REHEARSAL_DIR=<scratch dir> infra/rehearsal/run.sh alerts
     REHEARSAL_DIR=<scratch dir> infra/rehearsal/run.sh down
 

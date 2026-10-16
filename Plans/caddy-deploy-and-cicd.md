@@ -6,9 +6,13 @@ green push to `training-rebuild`, and this machine's deploy agent puts it on htt
 about a minute of publishing. On 2026-10-14 the owner unblocked the last two steps: `read:packages`
 for the GitHub CLI, and the staging package set private after the first live run found it public.
 `main` was fast-forwarded the same evening (R8). Evidence is quoted under each phase; what is still
-open is in "Blocker state after Phases 1–5" and under the STOP line. **Phase 5b** (added 2026-10-16,
-not started) rehearses the production server on a local VM and does R11 and R7. Phases 6–7 wait for
-the STOP line (a domain and a server).
+open is in "Blocker state after Phase 5b" and under the STOP line. **Phase 5b done 2026-10-16**
+(session daygame-coach-39): the production scripts set up a practice copy of the server on this
+machine, from the real first-boot file, and it served the app over HTTPS, survived a reboot, rolled
+back a broken image and fired its alerts. The rehearsal found five bugs in the real scripts, now fixed.
+The dev server runs Node 24 as a user unit (R11), and `https://localhost/**` is on Supabase's
+redirect list (R7, half). **New for the owner:** Hetzner's US prices quadrupled in June 2026, which
+reopens where the server goes (Q8, Q18). Phases 6–7 wait for the STOP line (a domain and a server).
 
 **Written 2026-10-13** for an outside consultant who does not know this project, and for the AI session
 that executes it. The `/goal` prompts are at the end. Three independent reviewers checked the plan
@@ -289,6 +293,19 @@ what happened, not a guess.
 | B-MAIN | **Closed 2026-10-14**: `main` was fast-forwarded to 4ecc63fc372c085b6fb6a33b91a112a0d6413a52 (from c1680654) at 19:49 UTC by daygame-coach-ff, with the owner's approval as that session reported it. Main's CI on it: success, with `image-production` skipped because `PRODUCTION_PUBLISH` is unset. Vercel redeploys `main`, so production now runs current code (on Node 24 through `engines`). | `git ls-remote`: "4ecc63fc… refs/heads/main"; `git merge-base --is-ancestor origin/main origin/training-rebuild`: true |
 | B-DNS, B-HETZNER, B-TAILSCALE, B-SUPABASE-REDIRECT, B-CA, B-UPTIME | Unchanged: open, the owner's (R1–R10). | — |
 
+## Blocker state after Phase 5b (2026-10-16)
+
+| ID | State now | Evidence |
+|---|---|---|
+| B-DEVSERVER | **Closed** (5b.2): the dev server is the user unit `daygame-dev.service` on Node 24.21.0 and `next` 16.3.8, started at boot. | `http://localhost:3000` 200 before and after; `node -v` in a new login shell: v24.21.0 |
+| B-SUPABASE-REDIRECT | **Half closed** (5b.6): `https://localhost/**` added; the domain's entry waits for R1. Remove the localhost entry once the domain works (security review). | read, union written, read back: all three entries |
+| B-PRICE (new) | **Open, the owner's decision.** CPX21 in Ashburn: €31.99 a month before VAT and IPv4 since 2026-06-15 (was €11.99); comparable EU types €5.49–8.49. Q8 chose Ashburn for database latency before that rise. | Hetzner's price-adjustment notice (Q18) |
+| B-GHCR | Unchanged: R5's two read-only tokens and the production package are still open. The rehearsal used the GitHub CLI's token instead (difference 3) and deleted its copy. | — |
+| B-TAILSCALE | Unchanged, and **unrehearsed**: the practice server had no tailnet (difference 1), so Tailscale SSH, `tag:prod` and the policy are first tried in Phase 6. | — |
+| B-UPTIME | Unchanged, now concrete: three ping checks (`PING_URL`, `DISK_WARN_PING_URL`, `DISK_CRIT_PING_URL`, each in `~/.config/daygame/alerts.env`) and one HTTP monitor with a certificate warning. | `infra/RUNBOOK.md`, "Alerts" |
+| B-PEER-TREE | Not hit. The CI failure on 438c6250 was this plan's own (Phase 5b reviews). | — |
+| B-DNS, B-HETZNER, B-CA | Unchanged: open, the owner's. | — |
+
 # OPEN QUESTIONS — every one decided, with the cost if the decision is wrong
 
 | # | Question | Decision (recommendation) | Alternative | Cost if wrong |
@@ -300,7 +317,7 @@ what happened, not a guess.
 | Q5 | Public or private image, and how many packages? | **Private, two packages:** `daygame-coach-staging` and `daygame-coach-production`, so pruning one environment can never delete the other's rollback image. Built without provenance or SBOM attachments, so every stored version is one tagged image. The newest 10 of each are kept. | One public package | One token per machine to create and renew. GitHub's billing for private container storage is unclear; if a quota bites, pushes fail loudly and pruning keeps usage small. |
 | Q6 | Where do configuration values live? | **Public build values** (Supabase URL, anon key, app URL) as GitHub *environment* variables of `staging` and `production`. **The on/off switches** `STAGING_PUBLISH` and `PRODUCTION_PUBLISH`, and `SITE_DOMAIN`, as *repository* variables: a job's own `if:` cannot read environment variables. | A committed file | Needs B-GH before the first CI image |
 | Q7 | Must production wait for the heavy suite? | **Production needs `ci.yml`'s checks and the image's own smoke test, then the owner's approval click.** `e2e.yml`'s result for the commit is beside the button. It becomes a hard requirement when `tests-worth-their-keep.md` reaches its Phase 9 acceptance (one pull-request run green). This deviates from the master plan's M1.8 ("green once is a precondition"): that suite has not run since 2026-09-26 and was red 63 times in a row, so a hard gate would mean no production until another plan finishes. | A hard gate now | A commit that fails browser tests can reach production if the owner approves without looking. |
-| Q8 | Where is the server? | **Hetzner Ashburn (US East)**, while the database is Supabase in US East. Every page makes several database calls, and an EU server would add about 90 ms to each. Revisit when the database moves (master plan M2). | Falkenstein, Nuremberg or Helsinki | One server rebuild later. It is cheap, because rule 6 makes the server reproducible. |
+| Q8 | Where is the server? | **Hetzner Ashburn (US East)**, while the database is Supabase in US East. Every page makes several database calls, and an EU server would add about 90 ms to each. Revisit when the database moves (master plan M2). **Reopened by price, 2026-10-16 (5b.7), for the owner:** since 2026-06-15 Hetzner's US servers cost about four times its EU ones: the 4 GB type is €31.99 a month in Ashburn, against €5.49–8.49 for the cheapest shared x86 types in Germany or Finland (Q18). Choosing an EU server now would save about €24–27 a month, and every page would wait the ~90 ms per database call until the database moves. | Falkenstein, Nuremberg or Helsinki | One server rebuild later. It is cheap, because rule 6 makes the server reproducible. |
 | Q9 | One server or two? | **One production server; this machine is staging.** There are no users yet. | Two servers (the master plan's default) | About €5 a month and twice the upkeep, deferred until there are users |
 | Q10 | How do you reach the server? | **Tailscale SSH only. OpenSSH is turned off, and port 22 is closed to the internet.** The server carries `tag:prod`: tagged devices do not expire. The Tailscale policy lets the owner reach `tag:prod` port 22 in "check" mode (a browser confirmation every 12 hours), and lets `tag:prod` reach nothing. Deploys need no SSH (Q1). For emergencies there is Hetzner's web console; it needs a root password reset first, which Phase 6 rehearses once. | Key-only OpenSSH on port 22 with fail2ban | During a Tailscale outage you use the web console. |
 | Q11 | Turn on Cloudflare's proxy (orange cloud)? | **Off (DNS only) to start.** Caddy owns TLS end to end, which leaves one less layer to debug. | On: it hides the server's IP and absorbs attacks, but needs `trusted_proxies` so the app sees real visitor IPs | No IP hiding until it is turned on, which is one click |
@@ -308,9 +325,9 @@ what happened, not a guess.
 | Q13 | Infrastructure as code? | **Shell scripts with `--dry-run`**: `hcloud` for the server and firewall, the Cloudflare API for DNS, and `sync-infra.sh` for every file on the server, at a named commit | OpenTofu or Terraform | Fine for one server and five records; revisit at two servers |
 | Q14 | Where do server secrets live? | **One env file per server, mode 640 root:deploy**, outside the repository and the image, copied over Tailscale | A SOPS/age-encrypted file in git | Root-level accounts can read it, as on every single-server setup |
 | Q15 | How does the heavy suite get its nightly run? | **It is `tests-worth-their-keep.md`'s job.** The nightly needs the workflow file on `main`, so R8 (fast-forwarding `main`) is the owner's part. | Make `training-rebuild` the default branch | No nightly until the owner acts |
-| Q16 | Switch this machine's default Node to 24? | **Yes, by the owner (R11)**, so the dev server runs what production runs. The executor never changes it. | Keep 20 for daily work | Another project on this machine that needs 20 runs `nvm use 20`. Revert: `nvm alias default 20.19.6`. |
+| Q16 | Switch this machine's default Node to 24? | **Yes (R11)**, so the dev server runs what production runs. Done by the AI on 2026-10-16 with the owner's go-ahead for Phase 5b (step 5b.2). | Keep 20 for daily work | Another project on this machine that needs 20 runs `nvm use 20`. Revert: `nvm alias default 20.19.6`. |
 | Q17 | Which runner image? | **Pin `ubuntu-24.04`** before 2026-10-19; move to 26.04 deliberately later | Ride `ubuntu-latest` | Missing 26.04's improvements for a while |
-| Q18 | What server size and CPU type? | **The smallest shared x86 server with at least 4 GB RAM**, about €5–10 a month (check current prices). x86, because CI builds x86 images. | ARM: cheaper, but needs ARM images | A few euros a month |
+| Q18 | What server size and CPU type? | **The smallest shared x86 server with at least 4 GB RAM.** x86, because CI builds x86 images. **Prices checked 2026-10-16 (5b.7)**, from Hetzner's own notice of its 2026-06-15 price change (docs.hetzner.com, "Price Adjustment 15 June 2026"), monthly, before VAT and before IPv4: in Ashburn and Hillsboro only CPX types are sold: CPX11 €17.49 / $20.49, **CPX21 (the plan's default: 3 vCPU, 4 GB) €31.99 / $37.49**, up from €11.99, CPX31 €62.49. In Germany and Finland: CX23 €5.49, CX33 €8.49, CPX22 €19.49, and ARM CAX21 €10.49. A public IPv4 address adds €0.50 a month before VAT (docs.hetzner.com, Servers overview); IPv6 is free. Source: Hetzner's public pages, because no read-only token exists (5b.7). The plan's earlier "about €5–10 a month" is wrong for Ashburn. | ARM: cheaper, but needs ARM images | About €32 a month in Ashburn; see Q8 for the EU choice |
 | Q19 | Trust the local certificate? | **Only if you will use https://localhost.** From Phase 6 on, the real domain has a real certificate. | Trust it now | A warning click on localhost |
 | Q20 | Which database does staging talk to? | **The same Supabase project as production.** That is the status quo: the dev server already does. Staging here means "the next build", not separate data; separate data arrives with the database move. Every future migration must therefore work with the previous image and with Vercel's `main` at the same time. | The `CI_daygame` project, which needs its service key on this machine | A staging bug can write to real data, the same exposure the dev server has every day |
 | Q21 | Who keeps pinned versions (action commits, image digests) current? | **Dependabot, but only after `tests-worth-their-keep.md`'s Phase 9 has rebuilt `e2e.yml`.** Its pull requests touch every workflow, and its runs get no repository secrets. Until then, `infra/RUNBOOK.md` lists a monthly check. | Dependabot now | Pins can go stale for a few weeks |
@@ -1057,7 +1074,7 @@ free.
 
 ---
 
-## Phase 5b — Everything that still needs neither a domain nor a server. **Status: not started** (added 2026-10-16)
+## Phase 5b — Everything that still needs neither a domain nor a server. **Status: done 2026-10-16** (added the same day)
 
 **Why it exists.** On 2026-10-16 the owner asked what else an AI can do while the app's name, and so
 the domain, is undecided. A friend advised waiting with Hetzner. The owner has opened the Hetzner
@@ -1207,6 +1224,188 @@ Everything else in Part 2 stands.
      security review through a subagent, as "Reviews" did.
    - The STOP table says what actually happened.
 
+### Phase 5b evidence (2026-10-16, session daygame-coach-39)
+
+Start commit `2e1c50e1`. This phase's code: 438c6250 (the rehearsal and what it found), c9ceccfd
+(review fixes and the type ratchet), then this file and the rehearsal's `reissue --http-01`.
+
+- **5b.1 Inventory, before anything changed.** `https://localhost/api/healthz`:
+  `{"status":"ok","buildId":"5735cd958f324e223ccd816e8609b5112d822a5e","db":"ok","proto":"https"}`;
+  `daygame-deploy.timer` active; `http://localhost:3000/` 200; `df -h /mnt/c`: "1.9T 838G 1.1T 45%";
+  shared `node_modules/next` 16.3.5 against `"next": "16.3.8"` in `package.json`; `ListAgents`:
+  daygame-coach-22 and daygame-coach-7c.
+- **5b.2 R11, done.** Both peers answered "go" to the `SendMessage` before anything started. The old
+  dev server, recorded first: PID 2276972 `npm run dev` (parent: a VS Code terminal), 2276984 `node
+  …/next dev`, 2276995 `next-server (v16.3.5)`, on Node 20.19.6; stopped with SIGTERM ("port 3000 free
+  after 2s"). `nvm alias default 24.21.0`: "default -> 24.21.0 (-> v24.21.0)". `npm ci` on Node 24 in
+  the shared folder: 41 s; `onnxruntime-node` and `sharp` load. `daygame-dev.service`, from
+  `infra/systemd/daygame-dev.service.template`, enabled and started (lingering was already
+  `Linger=yes`): "Next.js 16.3.8 (Turbopack)", "GET / 200". *Acceptance:* `http://localhost:3000` 200
+  before (18:24:51) and after (18:25:56); `systemctl --user is-active daygame-dev`: active; the
+  server's binary `/home/jonaswsl/.nvm/versions/node/v24.21.0/bin/node`; a new login shell
+  (`env -i … bash -lic 'node -v'`): v24.21.0; `next` resolves to 16.3.8; `npm test` in the shared
+  folder on Node 24: "Test Files 368 passed (368)", "Tests 4767 passed | 1 skipped (4768)". The
+  unit's commands are in `infra/README.md`. Peers were told when `npm ci` finished.
+- **5b.3 The practice server.** `infra/rehearsal/run.sh`: QEMU 8.2.2 with KVM in a container (no sudo),
+  3 vCPU, 4 GB, 80 GB, ports on 127.0.0.1:18022/18080/18443/18015 only. The image:
+  `ubuntu-24.04-server-cloudimg-amd64.img` (Ubuntu's release of 2026-09-26), "SHA256SUMS: good
+  signature from D2EB44626FDDC30B513D5BB71A5D6C4C7DB87C81" (UEC Image Automatic Signing Key, fetched
+  from keyserver.ubuntu.com by that fingerprint), "checksum OK". `df -h /mnt/c` stayed above 1 TB free.
+  - **The differences from production, printed by `up` as a diff** (the final run, at c9ceccfd):
+    difference 1 is exactly `-disable_root: true` / `+disable_root: false`, and the removed runcmd lines
+    `[systemctl, disable, --now, ssh.socket, ssh.service]`, `[systemctl, mask, ssh.socket,
+    ssh.service]` and `[tailscale, up, --auth-key=@@TAILSCALE_AUTHKEY@@, …]`; the SSH key reaches root
+    as metadata, the way Hetzner hands it over. Difference 2: `push-env.sh` wrote
+    `ACME_DIRECTORY=https://10.0.2.2:14000/dir`, `ACME_CA_CERT` and `CA_CERT` =
+    `/etc/daygame/practice-ca.pem` (the one file installed by hand: the practice CA plus Pebble's
+    issuing root), allowed only for a `.test` name. Difference 3: `WATCH=…-staging:staging`, with the
+    GitHub CLI's token as the registry token ("no read-only token yet, R5"). Difference 4: no IPv6.
+    Nothing else differed.
+  - **Found by the rehearsal, each fixed in the real file with a test that fails on the old code:**
+    1. *Suspected, confirmed:* `sync-infra.sh` before `push-env.sh` on a fresh VM: "grep:
+       /etc/daygame/deploy.env: No such file or directory", "required variable APP_ENV_FILE is missing
+       a value", exit 1, with `daygame-deploy.timer` already active and failing ("agent: no settings
+       at /etc/daygame/deploy.env"). Now `push-env.sh` runs first (Phase 6 step 2 changed),
+       `sync-infra.sh` refuses before installing anything, and it starts Caddy before the timers.
+    2. The agent exited 2 before its first deploy on a new machine, silently: the deferred-digests
+       lookup failed on a missing file under `pipefail` (`bash -x`: "+ exit 2"). Fixed; a failing run
+       now also logs "run ended with exit status N".
+    3. `deploy.sh` run by a person (`su deploy -c` from root's home) could not start compose: "stat
+       .: permission denied", hidden behind a 90-second wait that looked like a failed health check.
+       It now runs from its own directory and logs compose's error.
+    4. `sync-infra.sh` rewrote unchanged units, so systemd warned "changed on disk. Run 'systemctl
+       daemon-reload'". Units are now written only when they differ.
+    5. No way to apply a rotated secret: `deploy.sh` answered "already running … nothing changed".
+       Added `deploy.sh --restart` (found while writing the runbook, rehearsed below).
+
+    One harness bug, not production's: QEMU shows the VM a forwarded connection's real source
+    address, and on Docker's default bridge (172.17.0.0/16) the VM's own Docker answered it, so SSH
+    hung once Docker was installed (QEMU monitor: four "TCP[SYN_SENT] 172.17.0.3 22"). The VM's
+    container now has its own network, 10.89.0.0/24.
+  - **The final run, on a fresh VM at the pushed commit c9ceccfd** (all steps below come from it unless
+    marked): `cloud-init status --long`: "status: done", "errors: []", "cloud-init finished 86 s after
+    boot". `docker info`: "live-restore=true storage=overlay2". The deploy user: "uid=1000(deploy) …
+    groups=1001(deploy),1000(docker)", `passwd -S`: "deploy L", "User deploy is not allowed to run sudo
+    on daygame-practice." `push-env.sh` then `sync-infra.sh`: "changed at c9ceccfd…: infra/compose.yaml
+    … infra/disk-alert.sh unit:…", "units reloaded; daygame-deploy.timer daygame-disk.timer
+    restarted". **The agent's first deploy:** "17:48:15 agent: new digest:
+    ghcr.io/reachjvc/daygame-coach-staging@sha256:bb0e65e3… (running: nothing)", "17:49:26 deploy:
+    healthy: /api/healthz answers 200 with commit cb21aab5f1651a0c62258d23d6da40cbe3145b36, inside and
+    through Caddy (proto https)". **Through `Caddyfile.production`:** "HTTP/2 200",
+    "strict-transport-security: max-age=31536000",
+    `{"status":"ok","buildId":"cb21aab5f1651a0c62258d23d6da40cbe3145b36","db":"ok","proto":"https"}`;
+    "http://practice.daygame.test/ -> 308 https://practice.daygame.test/"; "https://www.… -> 301
+    https://practice.daygame.test/"; from this machine through the forwarded port: "-> 200". The
+    certificate: "issuer=CN = Pebble Intermediate CA 3f72df".
+  - **`DOCKER-USER`:** before, both DROP rules at "0 0"; from inside `dg-app`, "169.254.169.254 not
+    reachable: TimeoutError", "100.64.0.1 not reachable: TimeoutError"; after, both at "7 420"
+    (packets, bytes).
+  - **`ss -tulpn`:** tcp and udp 443, tcp 80 (`docker-proxy`, IPv4 and IPv6), tcp 22 (`sshd`:
+    difference 1), and nothing on 3000, 5432, 11434 or 2019. Also listening, expected on the real
+    server too: `tailscaled` on udp 41641 (WireGuard; Hetzner's firewall leaves it closed, so Tailscale
+    connects outbound), `systemd-resolved` on 127.0.0.53/54:53 (loopback) and the DHCP client on udp 68.
+  - **Reboot:** "healthz answers 21 s after the reboot command, without anyone logging in", the agent
+    "17:50:34 … watching …", "17:50:35 agent: up to date" (34 s after boot), both DROP rules present.
+  - **`sync-infra.sh` again at c9ceccfd:** "changed at c9ceccfd…: nothing". **A commit changing only
+    `Caddyfile.production`** (ed28a9df, made in the worktree only, never pushed): "changed at ed28a9df…:
+    infra/caddy/Caddyfile.production", "a Caddy file changed: Caddy recreated"; `dg-app`'s container ID
+    939d416acfb0… before and after, `dg-caddy`'s 1a525eec… -> c2c54612…. Synced back to c9ceccfd.
+  - **`push-env.sh` twice keeps the Server Actions key:** by hash, "before the two push-env.sh runs
+    f51937e6d20e0c87, after f51937e6d20e0c87" (two runs in `alerts` below); the key was never printed.
+  - **Rollback on the VM, as the deploy user:** a broken image `FROM` the good one (`CMD exit 3`):
+    "unhealthy after 90s: sha256:bed5fbb9… (it answered with its own commit: no)", "rolling back",
+    "ALERT: … failed its health check and was rolled back …; marked failed", "deploy exit=1";
+    `failed-digests` holds only sha256:bed5fbb9…; healthz back on cb21aab5.
+  - **Rolled back by hand to a named digest (RUNBOOK):** the running digest marked failed, then
+    staging's older `sha256:2171d9d2…` deployed: "healthy … commit
+    d76fcc2d368599a55b320e1a2c2ec78658214648"; the agent's next run: "… is marked failed; not retrying
+    it"; undone by removing the mark: "agent: new digest: …bb0e65e3…", healthy on cb21aab5 again.
+  - **A secret rotated (RUNBOOK):** the Server Actions key removed on the VM and locally,
+    `push-env.sh`: "before 46119dd72b26601e, after f51937e6d20e0c87"; `deploy.sh --restart`: "healthy …
+    (proto https)"; "the key the app now runs with, by hash: f51937e6d20e0c87".
+  - **`unattended-upgrade --dry-run --debug`:** allowed origins include "origin=Docker,label=Docker CE"
+    and "origin=Tailscale,label=Tailscale"; the repositories' release files: "o=Docker,a=noble,l=Docker
+    CE" and "o=Tailscale,n=noble,l=Tailscale".
+  - **The certificate re-issued:** certificates deleted from the Caddy data volume, Caddy restarted:
+    "certificate obtained successfully" for both names, new serial and dates. Which challenge: once
+    TLS-ALPN-01 (the VM saw Pebble's connections on 443 only), and with `run.sh reissue --http-01`
+    (Pebble's TLS-ALPN-01 port closed) Caddy's log: "challenge failed | practice.daygame.test |
+    tls-alpn-01 | Failed to connect to 127.0.0.1:5001", then "trying to solve challenge | … | http-01",
+    "served key authentication", "certificate obtained successfully" for both names. Pebble keeps its
+    ACME accounts in memory; Caddy re-created its account by itself after Pebble restarted.
+  - **Forecast for Phase 6:** from VM boot to healthy **166 s**: cloud-init 86 s; `setup` began 19:48:06,
+    `push-env.sh` and `sync-infra.sh` were done and the agent picked the image up at 19:48:15, and it
+    was healthy 71 s later ("healthy 79 s after setup"), most of it the first 1.2 GB image pull.
+    On Hetzner, add the time a person takes between the steps, and Tailscale's browser check.
+  - **Deleted afterwards:** `run.sh down`: "deleted: the VM, its disk, Pebble, the practice CA, the SSH
+    key and the token file"; then the directory is gone, and there are 0 `dg-rehearsal` containers, 0
+    networks, 0 rehearsal images, 0 key or token files, nothing on ports 18022/18080/18443/18015. VMs #1
+    (which confirmed finding 1) and #2 (which found 2–5 and tried the review fixes) were deleted the
+    same way.
+- **5b.4 Phase 7's alerts without accounts.** `deploy-agent.sh` pings `PING_URL`, or `PING_URL/fail`
+  on a non-zero exit, with a 10-second limit and without changing the run's outcome; unset, every run
+  logs "dead-man's switch off: PING_URL is not set" (seen in every VM run above). **Disk alerts, the
+  design:** `infra/disk-alert.sh` every 15 minutes (`daygame-disk.timer`, installed by
+  `sync-infra.sh`), on the fuller of `/` and Docker's directory; two checks, so each level alerts once
+  when crossed: `DISK_WARN_PING_URL` at 25 % and `DISK_CRIT_PING_URL` at 10 % (`/fail` below the
+  level, the free space in the message). The URLs live in `~/.config/daygame/alerts.env` (mode 600),
+  which `push-env.sh` sends on every run; curl reads them on stdin, so they are never on a command
+  line or in a log. Tests: unset sends no request and logs that it is off; a failing run pings
+  `/fail`; a failing ping keeps a good run's outcome; 60/20/5 % free ping exactly the expected URLs.
+  **Fired once in the VM** at a listener on 127.0.0.1:9999 (final run): "GET /ping/agent", "GET
+  /ping/agent/fail" (registry login removed: "agent: run ended with exit status 1", "dead-man's switch
+  pinged (fail)"), "POST /ping/disk-25/fail daygame-practice: / has 19 % free, below 25 %", "POST
+  /ping/disk-10/fail daygame-practice: / has 4 % free, below 10 %" (filled with `fallocate`), then both
+  OK at 93 % free after the files were removed.
+- **5b.5** `infra/RUNBOOK.md`: deploy; roll back to a named digest; a 503 and other outages; rotating
+  the Supabase keys, the Server Actions key, the registry token, the Cloudflare token and the Tailscale
+  key; alerts; rebuilding the server in the proven order; changing the infrastructure; rerunning the
+  rehearsal; the monthly pin check. Each procedure marked "rehearsed" ran above; the Tailscale key and
+  the console root-password reset are marked as not rehearsed ("rehearsed in Phase 6").
+- **5b.6 R7, done for `https://localhost/**`.** Project `supabase-daygame` (`vcjzbmtcgmjrvvklzqaq`,
+  from `supabase projects list`), Management API with the CLI's login, the token in a header file,
+  never on a command line. Read first: "HTTP 200", `"uri_allow_list":
+  "https://daygame-coach.vercel.app/**,http://localhost:3000/**"`. Wrote the union: "PATCH HTTP 200".
+  Read again: `"https://daygame-coach.vercel.app/**,http://localhost:3000/**,https://localhost/**"`;
+  "kept: https://daygame-coach.vercel.app/**", "kept: http://localhost:3000/**"; every other auth
+  setting byte-identical before and after. The files holding the token and the full auth settings were
+  deleted. The domain's entry waits for R1.
+- **5b.7 Price, read-only.** No read-only token at `~/.config/daygame/hcloud-read.token`, so Hetzner's
+  public pages were the source; no Hetzner token or API was used, and `provision.sh` was not run. The
+  result is in Q18 and Q8: since 2026-06-15 CPX21 in Ashburn costs €31.99 / $37.49 a month before VAT
+  and IPv4 (it was €11.99), and an EU server of the same class costs €5.49–8.49. **This reopens Q8 for
+  the owner** (see the STOP table, R3).
+- **5b.8** The gates, CI and the reviews are below.
+
+### Phase 5b reviews (2026-10-16), on 2e1c50e1..438c6250, this phase's files only
+
+- **`/code-review`**: 15 findings; fixed in c9ceccfd: a rerun of `sync-infra.sh` could not finish a
+  sync that stopped halfway (it now starts Caddy and the timers every run); `--restart` refused a
+  stopped container, pulled from the registry, and returned 0 when another deploy held the lock; a
+  `push-env.sh` run without the alert URLs switched the alerts off (they now come from a file); Caddy
+  could be started with a practice CA by `sync-infra.sh` on a real domain (it refuses now); the ping
+  URL was on curl's command line; `run.sh down` would `rm -rf` any directory as root (it now needs the
+  mark `up` writes); `run.sh start` killed a running VM and left Pebble's new root untrusted; the
+  signature check could fail on SIGPIPE; the tests wrote fake alerts into this machine's journal
+  through the real `logger`; scripts lost the mode reset when installs became conditional.
+  **Recorded, not changed:** the dead-man's switch reports each run on its own, so a registry hiccup
+  sends a "down" then an "up" a minute later, and a failed deploy one "down" (the plan asked for exactly
+  these semantics; written into the runbook); the two-line settings reader is repeated in the agent and
+  the disk alert, and the Let's Encrypt address sits in both `compose.yaml` and the Caddyfile (each file
+  stays safe on its own).
+- **Security review**, by a subagent on the same range and files, as in Phase 5: **no high or medium
+  finding.** Low findings fixed in c9ceccfd: the `.test` rule only in `push-env.sh` and `deploy.sh` (now
+  also `sync-infra.sh`, and the agent refuses a non-production tag on a real domain); the ping URLs in a
+  dry run, in shell history and on curl's command line; the rehearsal using the full GitHub CLI token
+  (R5's read-only token is used once it exists). **Recorded:** the dev server listens on every address,
+  as it did before when started by hand ("by design" in Phase 3); with WSL's default networking that is
+  Windows and this machine's containers, not the home network. And `https://localhost/**` on the live
+  project's redirect list lets a hostile local program on the user's own port 443 receive a sign-in
+  link: remove it once Phase 6 adds the domain.
+- **CI:** 438c6250 failed the type ratchet (run 38939574085, "Type-check ratchet": TS2769 in this
+  phase's two test files, which lacked `NODE_ENV` in `spawnSync`'s env), reported by daygame-coach-7c
+  and fixed in c9ceccfd ("Type errors: 88, none new."). This plan's fault.
+
 ---
 
 # ████ STOP — the AI returns to you here ████
@@ -1230,21 +1429,21 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 | R12 | Change the passwords of the test accounts CI signs in with (`TEST_USER`, and `TEST_USER_B` and `TEST_USER_TRAINING`, whose reports were published by earlier runs). Update them in `.env.local` and in the CI secrets, and delete the live report artifacts (B9 of `tests-worth-their-keep.md`). Also confirm which Supabase project CI's secrets point at. | Supabase dashboard; GitHub → Settings → Secrets; WSL terminal after R4 |
 | R13 | Only if B-ENV was refused: run `infra/write-env-file.sh staging` once | WSL terminal |
 
-**State of each return item at the end of Phases 1–5 (2026-10-13):**
+**State of each return item, updated after Phase 5b (2026-10-16):**
 
 | | State |
 |---|---|
 | R1 domain | Open |
 | R2 Cloudflare token | Open |
-| R3 Hetzner | **Account and credit exist (2026-10-16); no token, nothing rented.** A friend advised no hurry. Optional before then: a read-only token for 5b.7. |
+| R3 Hetzner | **Account and credit exist (2026-10-16); no token, nothing rented.** A friend advised no hurry. **Decide first where the server goes (B-PRICE, Q8):** Ashburn costs about €32 a month since June 2026, an EU server €5.49–8.49, slower by ~90 ms per database call until the database moves. |
 | R4 GitHub CLI | **Done 2026-10-14** (`read:packages` added). Before that: **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
 | R5 read-only registry tokens | **Staging package made private 2026-10-14.** Still open: the production package and the two read-only tokens. Original note: Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
 | R6 Tailscale | Open |
-| R7 Supabase redirect URLs | Open. The `https://localhost/**` half is attempted by the AI in 5b.6. |
+| R7 Supabase redirect URLs | **Half done 2026-10-16** (5b.6): `https://localhost/**` added, the Vercel and `localhost:3000` entries kept. Still open: `https://<domain>/**` after R1. |
 | R8 fast-forward `main` | **Done 2026-10-14** (daygame-coach-ff, owner-approved): `main` = 4ecc63fc. |
 | R9 trust the local certificate | Open (optional) |
-| R10 alert email | Open |
-| R11 Node 24 and `npm ci` for the dev server | Open, and **moved to the AI in 5b.2** (2026-10-16). The dev server came back after the 10-13 restart, but on Node 20 and `next` 16.3.5. |
+| R10 alert email | Open. With it, the B-UPTIME account and its three ping URLs in `~/.config/daygame/alerts.env` (`chmod 600`; `infra/RUNBOOK.md`, "Alerts"). |
+| R11 Node 24 and `npm ci` for the dev server | **Done 2026-10-16 by the AI** (5b.2): default Node 24.21.0, `npm ci`, and the dev server is the user unit `daygame-dev.service`. Starting `npm run dev` by hand as well starts a second server on :3001. |
 | R12 test passwords | **Done** by daygame-coach-bf |
 | R13 env file | **Not needed**: `infra/write-env-file.sh staging` ran in this session |
 | New: B-DISK | **Resolved by 2026-10-16:** `df -h /mnt/c` shows 1.1 TB free (45 %). Was: 30 GB left, 99 %. |
@@ -1266,8 +1465,10 @@ finish), and confirming the emails in steps 6 and 7.
    terminal, which an AI session cannot do (changed 2026-10-16 after the owner pointed out that the
    plan had made the R3 token the go-ahead). Then connect over Tailscale SSH (one browser check by the owner) and run
    `cloud-init status --wait`.
-2. Run `sync-infra.sh <commit>`, then `push-env.sh`. `push-env.sh` sends the runtime values with
-   `NEXT_PUBLIC_APP_URL` set to the domain, and the R5 token. It also sends a
+2. Run `push-env.sh` **first**, then `sync-infra.sh <commit>`: the order Phase 5b's rehearsal proved
+   (the other order fails halfway, and `sync-infra.sh` now refuses it). `push-env.sh` sends the
+   runtime values with `NEXT_PUBLIC_APP_URL` set to the domain, the R5 token, and the alert URLs
+   from `~/.config/daygame/alerts.env` (R10, B-UPTIME). It also sends a
    `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` that is generated once for this server and kept on later runs.
 3. Run `records.sh` for real. `dig @1.1.1.1 <domain>` (A and AAAA) must show the server.
 4. Set up the GitHub `production` environment:
@@ -1381,8 +1582,9 @@ finish), and confirming the emails in steps 6 and 7.
 | hadolint | **2.15.1** | 2026-10-13 | Phase 3 |
 | jq | **1.8.2** | 2026-10-13 | scripts |
 | hcloud | **1.68.0** | 2026-10-13 | Phases 5–6 |
-| Node | 20.19.6 (default) and **24.21.0** | 24.21.0 on 2026-10-13 | Phase 1 (by path) |
-| supabase CLI | 2.75.0 (2.120.0 exists) | — | not used by this plan |
+| Node | **24.21.0 (default since 2026-10-16, R11)** and 20.19.6 | 24.21.0 on 2026-10-13 | Phase 1 (by path); the dev server (5b.2) |
+| supabase CLI | 2.120.0 | — | 5b.6: its login reached the Management API for the redirect list |
+| QEMU 8.2.2 (in the container `daygame-rehearsal-qemu`), Pebble 2.10.1 | built and pulled by `infra/rehearsal/run.sh`; deleted by its `down` | 2026-10-16 | Phase 5b |
 
 ## Files
 
@@ -1411,6 +1613,13 @@ finish), and confirming the emails in steps 6 and 7.
 
 **Deleted:** `infra/compose.local.yaml`, `infra/systemd/daygame-local.service.template`, and the
 installed user unit.
+
+**Phase 5b (2026-10-16):** created `infra/rehearsal/{run.sh,Dockerfile}`, `infra/disk-alert.sh`,
+`infra/systemd/daygame-disk.{service,timer}.template`, `infra/systemd/daygame-dev.service.template`
+and `infra/RUNBOOK.md`; edited `infra/{deploy.sh,deploy-agent.sh,compose.yaml,README.md}`,
+`infra/caddy/Caddyfile.production`, `infra/server/{sync-infra.sh,push-env.sh}` and
+`tests/unit/infra/{deployScripts,production}.test.ts`. Outside the repository: the user unit
+`~/.config/systemd/user/daygame-dev.service` and `nvm alias default 24.21.0`.
 
 **Also created during execution, beyond the list above:** `.github/actions/publish-image/action.yml`
 (the build-prove-publish steps both image jobs share), `src/shared/ollama.ts` (the one owner of the

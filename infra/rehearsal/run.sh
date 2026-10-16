@@ -9,7 +9,8 @@
 #   infra/rehearsal/run.sh rollback         deploy a broken image through deploy.sh, as the deploy user
 #   infra/rehearsal/run.sh pin <digest>     roll back by hand to an older digest, then undo it
 #   infra/rehearsal/run.sh rotate           rotate the Server Actions key; deploy.sh --restart
-#   infra/rehearsal/run.sh reissue          delete Caddy's certificates, restart Caddy, watch it re-issue
+#   infra/rehearsal/run.sh reissue [--http-01]  delete Caddy's certificates, restart Caddy, watch it
+#                                           re-issue; --http-01 leaves Pebble only that challenge
 #   infra/rehearsal/run.sh alerts           fire the dead-man's switch and both disk alerts at a listener
 #   infra/rehearsal/run.sh ssh [command]    a root shell on it
 #   infra/rehearsal/run.sh start            start it again on its disk, e.g. after this machine restarted
@@ -27,8 +28,9 @@
 #      left out, and root SSH stays on, key-only, with a throwaway key, reachable
 #      only through the forwarded port. The scripts run unchanged: SERVER names
 #      the VM, and an `ssh` wrapper first on PATH adds the key and the port.
-#   2. Certificates come from Pebble, a practice ACME CA, over real HTTP-01 and
-#      TLS-ALPN-01 validation, for practice.daygame.test. Caddy trusts Pebble
+#   2. Certificates come from Pebble, a practice ACME CA, over real HTTP-01 or
+#      TLS-ALPN-01 validation (Caddy picks; `reissue --http-01` forces HTTP-01),
+#      for practice.daygame.test. Caddy trusts Pebble
 #      through ACME_DIRECTORY and ACME_CA_CERT, and deploy.sh checks Caddy's
 #      certificate with CA_CERT: settings that infra/server/push-env.sh writes
 #      only for a .test name. The practice CA file is the one file installed by
@@ -180,6 +182,28 @@ JSON
   start_vm
 }
 
+# Pebble, with one of the configurations in $DIR/pebble.
+start_pebble() { # $1 = its configuration file
+  docker rm -f "$PEBBLE" >/dev/null 2>&1 || true
+  docker run -d --name "$PEBBLE" --network "container:$VM" -e PEBBLE_VA_NOSLEEP=1 -e PEBBLE_WFE_NONCEREJECT=0 \
+    -v "$DIR/pebble:/practice:ro" "$PEBBLE_IMAGE" -config "/practice/$1" >/dev/null
+}
+
+# Every Pebble start makes a new issuing root. Add it to the VM's CA file and
+# keep the old ones, so certificates Caddy already holds still verify.
+trust_pebble_root() {
+  [ -f "$DIR/pebble/bundle.pem" ] || return 0
+  local root="" _
+  for _ in $(seq 1 30); do
+    root="$(curl -fsS --cacert "$DIR/pebble/ca.pem" "https://127.0.0.1:$PEBBLE_PORT/roots/0" 2>/dev/null)" && break
+    sleep 1
+  done
+  [ -n "$root" ] || die "Pebble did not answer on :$PEBBLE_PORT"
+  printf '%s\n' "$root" >> "$DIR/pebble/bundle.pem"
+  vm "install -m 644 /dev/stdin $CA_FILE" < "$DIR/pebble/bundle.pem"
+  say "Pebble's new issuing root added to $CA_FILE"
+}
+
 # The VM and Pebble, on the disk as it is, then wait for cloud-init.
 start_vm() {
   docker run -d --name "$VM" --network "$NETWORK" --device /dev/kvm -v "$DIR:/vm" \
@@ -192,8 +216,7 @@ start_vm() {
       -device virtio-net-pci,netdev=n0 -serial file:/vm/console.log -monitor unix:/vm/monitor.sock,server,nowait >/dev/null
   # Pebble shares the VM container's network: it validates practice.daygame.test
   # on 127.0.0.1:80 and :443, which QEMU forwards into the VM.
-  docker run -d --name "$PEBBLE" --network "container:$VM" -e PEBBLE_VA_NOSLEEP=1 -e PEBBLE_WFE_NONCEREJECT=0 \
-    -v "$DIR/pebble:/practice:ro" "$PEBBLE_IMAGE" -config /practice/pebble-config.json >/dev/null
+  start_pebble pebble-config.json
   say "booting (3 vCPU, 4 GB, 80 GB); console in $DIR/console.log"
   wait_for_ssh 900
   say "SSH answers after $(since boot) s; waiting for cloud-init"
@@ -293,15 +316,28 @@ cmd_rollback() {
   say "healthz now: $(healthz_on_vm)"
 }
 
+# Caddy picks HTTP-01 or TLS-ALPN-01 by itself, and logs which it tried. With
+# --http-01, Pebble's TLS-ALPN-01 port points at a closed one for this run, so
+# only HTTP-01 can pass (the plan's Q12).
 cmd_reissue() {
+  if [ "${1:-}" = --http-01 ]; then
+    say "Pebble restarted with its TLS-ALPN-01 port closed, so only HTTP-01 can pass"
+    jq '.pebble.tlsPort = 5001' "$DIR/pebble/pebble-config.json" > "$DIR/pebble/pebble-http01.json"
+    start_pebble pebble-http01.json
+    trust_pebble_root
+  fi
   vm "docker exec dg-caddy sh -c 'find /data/caddy/certificates -name \"*.crt\"'" | sed 's/^/  before: /'
-  local t
+  local t deadline=$((SECONDS + 180))
   t="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   vm "docker exec dg-caddy rm -rf /data/caddy/certificates && docker restart dg-caddy >/dev/null"
-  sleep 20
-  vm "docker logs --since $t dg-caddy 2>&1 | grep -E 'certificate obtained|obtaining certificate|could not get|error' | grep -oE '\"(msg|identifier|error)\":\"[^\"]*\"' | paste -sd' ' | fold -w 240" | sed 's/^/  /'
+  until vm "docker logs --since $t dg-caddy 2>&1 | grep -c 'certificate obtained successfully' | grep -qx 2"; do
+    [ "$SECONDS" -lt "$deadline" ] || { say "no two certificates within 180 s"; break; }
+    sleep 3
+  done
+  say "Caddy's log since the restart: challenges tried, and certificates obtained"
+  vm "docker logs --since $t dg-caddy 2>&1 | grep -E 'challenge|certificate obtained' | jq -rc '[.msg, .identifier, .challenge_type // empty, .problem.detail // empty] | join(\" | \")'" | sed 's/^/  /'
   vm "echo | openssl s_client -connect 127.0.0.1:443 -servername $SITE 2>/dev/null | openssl x509 -noout -serial -dates" | sed 's/^/  after: /'
-  say "challenges Pebble validated since the start: $(docker logs "$PEBBLE" 2>&1 | grep -oE '(http|tls-alpn)-01' | sort | uniq -c | paste -sd' ')"
+  if [ "${1:-}" = --http-01 ]; then start_pebble pebble-config.json; trust_pebble_root; fi
   say "healthz now: $(healthz_on_vm)"
 }
 
@@ -395,13 +431,7 @@ cmd_start() {
   docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create --subnet "$NETWORK_SUBNET" "$NETWORK" >/dev/null
   stamp boot
   start_vm
-  # A new Pebble has a new issuing root: add it, keeping the old ones, so the
-  # certificates Caddy already holds still verify until they are renewed.
-  if [ -f "$DIR/pebble/bundle.pem" ]; then
-    curl -fsS --cacert "$DIR/pebble/ca.pem" "https://127.0.0.1:$PEBBLE_PORT/roots/0" >> "$DIR/pebble/bundle.pem"
-    vm "install -m 644 /dev/stdin $CA_FILE" < "$DIR/pebble/bundle.pem"
-    say "Pebble's new issuing root added to $CA_FILE"
-  fi
+  trust_pebble_root
 }
 
 cmd_down() {
@@ -427,10 +457,10 @@ case "${1:-}" in
   rollback) cmd_rollback ;;
   pin) shift; cmd_pin "$@" ;;
   rotate) cmd_rotate ;;
-  reissue) cmd_reissue ;;
+  reissue) shift; cmd_reissue "$@" ;;
   alerts) cmd_alerts ;;
   ssh) shift; vm "$@" ;;
   start) cmd_start ;;
   down) cmd_down ;;
-  *) die "usage: $0 up | setup <commit> | check | reboot | rollback | pin <digest> | rotate | reissue | alerts | ssh [command] | start | down" ;;
+  *) die "usage: $0 up | setup <commit> | check | reboot | rollback | pin <digest> | rotate | reissue [--http-01] | alerts | ssh [command] | start | down" ;;
 esac
