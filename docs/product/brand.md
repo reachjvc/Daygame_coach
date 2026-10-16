@@ -141,6 +141,17 @@ Nothing is decided. What the owner said:
   because the brief steered toward 3-4 word phrases. A separate judge scored
   each for him: 5 fives, 13 fours, 111 threes. The board shows the 4s and 5s by
   default, and each name now has a note box (stored in `namenotes`).
+- **After round 7 (2026-10-16)** he said it produced fewer good names and that he
+  fears missing the perfect one. His Yes list then: Already Moving, Canvas to
+  Crown, Dawn Roadwork, Feed the Starter, First Say, Then Do, Great Story,
+  Though, Nerve and Sinew, 10K Reps, The Cave You Fear, The High Board, Thousand
+  Reps, Vindahl & Co, Vindahl Social Club. His notes asked about earnestness.com
+  and earnestme.com (both taken, live sites); earnestandme.com was free on .com,
+  .app and YouTube. Next step chosen: test finalists in context rather than
+  generate more. The Name Fitting Room
+  (https://claude.ai/artifact/QohKombDDmEGRavS9tfTmw) shows each finalist on a
+  lock screen, home screen, browser, YouTube channel, book cover and out loud;
+  his top three are stored in its `picks/owner` document.
 - **Domain readability:** the board flags a domain that hides a bad word when
   the words run together (expertsexchange, therapistfinder) or runs past 20
   letters. The rule lives in the board's build script, not in this repo.
