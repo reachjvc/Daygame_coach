@@ -6,8 +6,9 @@ green push to `training-rebuild`, and this machine's deploy agent puts it on htt
 about a minute of publishing. On 2026-10-14 the owner unblocked the last two steps: `read:packages`
 for the GitHub CLI, and the staging package set private after the first live run found it public.
 `main` was fast-forwarded the same evening (R8). Evidence is quoted under each phase; what is still
-open is in "Blocker state after Phases 1–5" and under the STOP line. Phases 6–7 wait for the STOP
-line (a domain and a server).
+open is in "Blocker state after Phases 1–5" and under the STOP line. **Phase 5b** (added 2026-10-16,
+not started) rehearses the production server on a local VM and does R11 and R7. Phases 6–7 wait for
+the STOP line (a domain and a server).
 
 **Written 2026-10-13** for an outside consultant who does not know this project, and for the AI session
 that executes it. The `/goal` prompts are at the end. Three independent reviewers checked the plan
@@ -1056,6 +1057,158 @@ free.
 
 ---
 
+## Phase 5b — Everything that still needs neither a domain nor a server. **Status: not started** (added 2026-10-16)
+
+**Why it exists.** On 2026-10-16 the owner asked what else an AI can do while the app's name, and so
+the domain, is undecided. A friend advised waiting with Hetzner. The owner has opened the Hetzner
+account and added credit, but nothing is rented and there is no token. Phase 5 proved the
+production scripts with `--dry-run` only: none has ever set up a real machine. This phase runs them
+for real against a practice server on this machine. Phase 6 then becomes renting the server,
+pointing DNS at it and running scripts that have already worked once.
+
+**Depends on:** Phases 1–5. **Costs nothing:** no purchase, no rental, no new account.
+**Working state:**
+- A throwaway Ubuntu 24.04 VM on this machine is booted from the real `cloud-init.yaml` and set up
+  only through `sync-infra.sh` and `push-env.sh`. It serves the app through `Caddyfile.production`
+  and survives a reboot without anyone logging in.
+- Phase 7's alerts exist in code and have fired once against a local listener.
+- `infra/RUNBOOK.md` exists.
+- The owner's dev server runs Node 24 and the patched `next`, and starts by itself.
+
+**Two of Part 2's ground rules are overridden here, and only these two.** The owner approves them by
+handing over this phase's prompt:
+- step 5b.2 changes the default Node and restarts the :3000 dev server (R11);
+- step 5b.6 adds one URL to Supabase's redirect allow-list (R7).
+
+Everything else in Part 2 stands.
+
+1. **Inventory.** Record what is true before starting:
+   - `https://localhost/api/healthz`, the agent timer, and `http://localhost:3000`;
+   - `df -h /mnt/c` (stop below 50 GB free; see B-DISK);
+   - the shared `node_modules`' `next` version (16.3.5 on 2026-10-16, while `package.json` pins
+     16.3.8);
+   - `ListAgents` for peers.
+2. **R11, done by the AI, at a quiet moment.** Done here because B-DEVSERVER keeps recurring: the dev
+   server died with the WSL restart on 2026-10-13, and it still runs Node 20 and the unpatched `next`.
+   - Message the peers with `SendMessage` first. Start only when none reports a test or build running.
+   - Run `nvm alias default 24.21.0`, then `npm ci` in the shared folder on Node 24.
+   - Run the dev server as a systemd **user** unit, `daygame-dev.service`, installed from a template in
+     `infra/systemd/`. It runs `npm run dev` on Node 24 by path, with `Restart=on-failure`. Lingering
+     is on (`loginctl`: `Linger=yes`), so it starts at boot and belongs to no session. Stop the old
+     process with SIGTERM only, after recording its PID and command. Write the unit's start, stop
+     and log commands into `infra/README.md`.
+   - *Acceptance:* `http://localhost:3000` answers 200 before and after. The unit is active.
+     `node -v` in a new login shell prints v24.21.0, and `next` resolves to 16.3.8. `npm test`
+     passes in the shared folder, or a peer's failing test is recorded as B-PEER-TREE. The final
+     reply tells the owner that the dev server now starts by itself, and that running
+     `npm run dev` too would start a second one on :3001.
+   - If the permission layer refuses (as with B-SHARED-DEPS), ask the owner once through
+     `AskUserQuestion`, which worked on 2026-10-13. If it is still refused, record it, along with the
+     exact commands for the owner.
+3. **The practice server.** The VM runs under QEMU/KVM inside a Docker container started with
+   `--device /dev/kvm`. This works without sudo: checked 2026-10-16, a container saw `/dev/kvm` and
+   could read and write it. The user is not in the `kvm` group, and `sudo` asks for a password.
+   - **The VM.** The Ubuntu 24.04 cloud image, verified against Ubuntu's `SHA256SUMS` **and** that
+     file's GPG signature. Give it the shape of the default server type (cpx21: 3 vCPU, 4 GB; check
+     with `hcloud` if 5b.7's token exists). Forward its ports to 127.0.0.1 only, and **not to 80 or
+     443**, which staging's Caddy holds. Its files live in the scratchpad. The script that runs the
+     rehearsal is committed as `infra/rehearsal/`, so the rehearsal can be rerun before any later
+     infra change.
+   - **Only these differences from production are allowed.** A script generates each one from the
+     real files and prints it as a diff, which goes into the evidence. Any other difference that
+     turns out to be needed is a finding: fix it in the real file, not the copy.
+     1. *Access.* There is no tailnet key (R6 is the owner's). So `tailscale up` is left out, and root
+        SSH stays on, key-only, with a throwaway key, reachable only through the forwarded port. The
+        scripts stay unchanged: `SERVER` names the VM, and an `ssh` wrapper first on `PATH` adds the
+        key and the port.
+     2. *Certificates.* They come from a practice ACME CA, Pebble (`ghcr.io/letsencrypt/pebble`,
+        pinned by digest), over HTTP-01, for a practice name such as `practice.daygame.test`.
+        Pebble's root goes to `deploy.sh` as `CA_CERT`. Make the smallest change to production files
+        that this needs, for example an ACME directory variable that defaults to Let's Encrypt. Add a
+        line to `production.test.ts` that fails if production can use anything but Let's Encrypt. If
+        Pebble does not work after two attempts, use Caddy's internal issuer instead, and record that
+        ACME issuance stays unproven until Phase 6.
+     3. *Registry.* R5's tokens do not exist and the production package does not either. So the VM
+        pulls the private **staging** package with the GitHub CLI's token, written to a mode-600 file
+        in the scratchpad and deleted together with the VM. If that is refused, use a throwaway
+        local registry, as step 4.2 did.
+     4. *IPv6* is not rehearsed (QEMU's user network); Phase 6 checks it.
+   - **Suspected by reading, to confirm first.** Phase 6 runs `sync-infra.sh` before `push-env.sh`.
+     But sync-infra's Caddy step reads `/etc/daygame/deploy.env`, which only push-env writes. On a
+     fresh server the first sync probably stops at compose's `APP_ENV_FILE:?`, and the agent timer
+     starts before its settings exist. Fix the order, or the script, as the rehearsal shows.
+   - *Acceptance.* Run all of these and quote each result:
+     - `cloud-init status --long` reports done, with no errors.
+     - `docker info` shows `live-restore` and overlay2.
+     - The `deploy` user has neither sudo nor a password.
+     - The **agent's** first deploy, from its journal. Through Caddy:
+       `/api/healthz` answers 200 with the commit, proto `https` and the HSTS header, and `http://`
+       answers 308.
+     - The `DOCKER-USER` drops. From inside the app container, `169.254.169.254` and a `100.64.0.0/10`
+       address cannot be reached, and the rules' packet counters rose.
+     - `ss -tulpn` in the VM shows only 80, 443 and 443/udp, plus the practice SSH (difference 1).
+       Nothing listens on 3000, 5432, 11434 or 2019.
+     - **Reboot the VM.** Healthz answers again without anyone logging in, the agent's journal shows
+       a run after boot, and the `DOCKER-USER` rules are back.
+     - **Running `sync-infra.sh` again** at the same commit prints "changed: nothing". A commit that
+       changes only a Caddy file recreates Caddy only: the app's container ID stays the same.
+     - **Running `push-env.sh` twice** keeps the same `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`. Compare
+       hashes, and never print the key.
+     - **A rollback on the VM.** Deploy a broken image built `FROM` the good one through `deploy.sh`,
+       as the deploy user. It is rolled back and marked failed.
+     - `unattended-upgrade --dry-run --debug` allows the Docker and Tailscale origins.
+     - **The certificate is re-issued once:** remove it from the Caddy data volume, restart Caddy,
+       and watch the log.
+     - The time from VM boot to healthy, as a forecast for Phase 6.
+
+     Afterwards delete the VM, its disk, Pebble and the token file.
+4. **Phase 7's parts that need no account.**
+   - **Dead-man's switch.** `deploy-agent.sh` pings an optional `PING_URL` from the machine's
+     settings after every run. It pings `$PING_URL` on success and `$PING_URL/fail` on a non-zero
+     exit, healthchecks.io's convention. The ping has a short timeout and never holds up or fails a
+     deploy. `deploy.sh` must accept the new key. Leaving `PING_URL` unset turns the switch off, and
+     the run's log says so.
+   - **Disk alerts** at 25 % and 10 % free, through the same kind of ping, on a timer installed by
+     `sync-infra.sh`. Record the design.
+   - Tests cover both cases: an unset URL sends no request, and a failure pings `/fail`. Fire both
+     once in the VM against a local listener that records requests. Fill the disk with `fallocate`
+     to trigger the disk alert.
+   - The accounts stay B-UPTIME, the owner's, at Phase 7: one for the pings and an HTTP monitor
+     for uptime and certificate expiry.
+5. **`infra/RUNBOOK.md`,** written from what the rehearsal actually ran. Plain words first, with the
+   commands underneath. It covers:
+   - deploying, and rolling back to a named digest;
+   - rotating each secret and token: the Supabase keys, the Server Actions key, the registry token,
+     the Cloudflare token and the Tailscale key;
+   - rebuilding the server from nothing, in the order the rehearsal proved;
+   - the monthly check of pinned versions (Q21);
+   - what to do on a 503;
+   - rerunning the rehearsal.
+
+   The console root-password reset is marked "rehearsed in Phase 6".
+6. **R7, attempted once.** Add `https://localhost/**` to Supabase's redirect allow-list, through the
+   Management API or the `supabase` CLI. The domain's entry waits for R1.
+   - Read the current list, write back the union, then read it again. Confirm that every earlier
+     entry is still there.
+   - **Never write without a successful read first.** The setting is replaced as a whole, and losing
+     the Vercel entry would break password reset on the live site.
+   - If this is refused, quote the refusal. The owner does it in the dashboard (R7).
+7. **Optional: price and availability, read-only.** Only if the owner has put a **read-only** Hetzner
+   token at `~/.config/daygame/hcloud-read.token`. A read-only token cannot create anything, so it
+   cannot spend money. Use it to confirm that cpx21, or its current equivalent, and `ubuntu-24.04`
+   exist in Ashburn, and to read the exact monthly price including IPv4. Write the results into Q18
+   and Phase 6. Without the token, read Hetzner's public price page and say that this was the
+   source. Never use a token that can write, and never run `provision.sh` without `--dry-run`.
+8. *Phase acceptance.*
+   - Every step above is marked done with its evidence, or "blocked: <ID>" with the refusal quoted.
+   - The gates of "Final gates" pass on the final commit, run in an isolated worktree, and CI is
+     green on it.
+   - `/code-review` and a security review were run on `<start>..HEAD` for this phase's files. Run the
+     security review through a subagent, as "Reviews" did.
+   - The STOP table says what actually happened.
+
+---
+
 # ████ STOP — the AI returns to you here ████
 
 **Everything above runs without you. Nothing below can start until these are done.** Expect one
@@ -1083,18 +1236,18 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 |---|---|
 | R1 domain | Open |
 | R2 Cloudflare token | Open |
-| R3 Hetzner | Open |
+| R3 Hetzner | **Account and credit exist (2026-10-16); no token, nothing rented.** A friend advised no hurry. Optional before then: a read-only token for 5b.7. |
 | R4 GitHub CLI | **Done 2026-10-14** (`read:packages` added). Before that: **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
 | R5 read-only registry tokens | **Staging package made private 2026-10-14.** Still open: the production package and the two read-only tokens. Original note: Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
 | R6 Tailscale | Open |
-| R7 Supabase redirect URLs | Open |
+| R7 Supabase redirect URLs | Open. The `https://localhost/**` half is attempted by the AI in 5b.6. |
 | R8 fast-forward `main` | **Done 2026-10-14** (daygame-coach-ff, owner-approved): `main` = 4ecc63fc. |
 | R9 trust the local certificate | Open (optional) |
 | R10 alert email | Open |
-| R11 Node 24 and `npm ci` for the dev server | Open. **The dev server is down** since WSL restarted at 17:49; start it after R11. |
+| R11 Node 24 and `npm ci` for the dev server | Open, and **moved to the AI in 5b.2** (2026-10-16). The dev server came back after the 10-13 restart, but on Node 20 and `next` 16.3.5. |
 | R12 test passwords | **Done** by daygame-coach-bf |
 | R13 env file | **Not needed**: `infra/write-env-file.sh staging` ran in this session |
-| New: B-DISK | Free space on C: (30 GB left, 99 %). WSL crash dumps in `C:\Users\jonas\AppData\Local\Temp\wsl-crashes` are a safe first 3.9 GB (per the site-structure plan). |
+| New: B-DISK | **Resolved by 2026-10-16:** `df -h /mnt/c` shows 1.1 TB free (45 %). Was: 30 GB left, 99 %. |
 
 Then start a new session with the Phase 6 prompt at the end of this file.
 
@@ -1102,7 +1255,8 @@ Then start a new session with the Phase 6 prompt at the end of this file.
 
 ## Phase 6 — Production is live on your domain
 
-**Depends on:** R1–R8 and R10, and Phases 1–5. **The owner must be present** for: the Tailscale browser
+**Depends on:** R1–R8 and R10, and Phases 1–5. Phase 5b is not required, but where it changed the
+order of steps 1–2, follow its order. **The owner must be present** for: the Tailscale browser
 check, the production approval click (about 10 minutes after a push to `main`, once `ci.yml`'s checks
 finish), and confirming the emails in steps 6 and 7.
 
@@ -1293,6 +1447,12 @@ run them.
 
 ```
 Execute Plans/caddy-deploy-and-cicd.md, Phases 1 to 5 in order, and stop at its STOP line. Read the whole plan first, including Part 2's ground rules, and follow them. The goal is met only when all of these are true and shown in this session: (1) every step of Phases 1-5 is marked in the plan either done, with its acceptance check actually run (the command and its decisive output line quoted under that phase), or "blocked: <ID>" with the exact refusal, missing credential or failing evidence quoted; nothing after the STOP line has been started. (2) On the final pushed commit, run from the isolated worktree: npm run lint:ratchet, node scripts/typecheck-ratchet.mjs, npm test, npm run audit:ratchet, actionlint, shellcheck on every infra/**/*.sh, and hadolint infra/Dockerfile all pass, and that commit's ci.yml run on training-rebuild is green, read from the GitHub API. (3) https://localhost serves an image built from a named commit: /api/healthz answers 200 with proto "https" and buildId equal to the full SHA run-local.sh printed, and Phase 3's rollback, crash, network, Windows and route-sweep checks were run and quoted. (4) The deploy agent was proven against a throwaway local registry (deploy; broken image rolled back and not retried; fixed image deployed) and, if B-GH is closed, against the private GHCR package from a real CI run. (5) The plan file and every phase's work are committed with git commit --only <paths> and pushed to origin training-rebuild; Status lines and the blocker table say what actually happened; /code-review and /security-review were run on <start SHA>..HEAD for this plan's files, with every finding fixed or recorded; the worktree is removed and git worktree prune has run. (6) The final reply starts with what is now true and what is not, then lists the return checklist R1-R13 with each item's state. Escape clause: if (2), (3) or (4) cannot be met because of a permission refusal, an open blocker, or a CI failure or cancellation caused outside this plan's diff (quote the job, step, annotation and commit author from the API), record it as a blocker in the plan and that condition counts as met; re-push at most twice for the same failure. While working: other sessions share this checkout. Never git stash, git add -A or --no-verify. Edit a shared file only when git diff shows it clean, and commit only your own files. Make dependency, Node, build and deliberate-break changes in the isolated worktree, never in the shared folder. Never kill, start or restart the :3000 dev server, and never change the default Node (owner item R11). Never read or print .env.local values. Never write to the live database, change Supabase settings or repository settings before B-GH, push to main, or restart WSL. Build only through npm run build or infra/build-image.sh. When the permission system refuses something, record it with the exact message, do not route around it, and continue with the next step that does not depend on it. Put doubt in the first line of every report, not the last.
+```
+
+### Before the STOP line, added 2026-10-16: Phase 5b. Paste after `/goal`.
+
+```
+Execute Plans/caddy-deploy-and-cicd.md, Phase 5b, and stop at its STOP line. Read the whole plan first, including Part 2's ground rules, and follow them. Phase 5b names the only two rules it overrides (R11: the default Node and the :3000 dev server; R7: one Supabase redirect URL); by giving you this prompt the owner approves those two and nothing else. Nothing may cost money: never buy, rent or sign up for anything, never run infra/server/provision.sh without --dry-run, and never use a Hetzner token that can write. The goal is met only when all of these are true and shown in this session: (1) every step of Phase 5b is marked in the plan as done, with its acceptance check actually run and the command and its decisive output quoted under the phase, or "blocked: <ID>" with the exact refusal or failing evidence quoted; nothing after the STOP line has been started. (2) A throwaway Ubuntu 24.04 VM on this machine, booted from infra/server/cloud-init.yaml and set up only through infra/server/sync-infra.sh and infra/server/push-env.sh, differing from production only by the differences 5b.3 allows (each printed as a diff and quoted), served /api/healthz through Caddyfile.production with 200, the deployed commit, proto "https" and the HSTS header; it came back by itself after a VM reboot and passed every other 5b.3 check. Every bug the rehearsal found is fixed in the real files, not the practice copy, with a test, and listed in the evidence. The VM, its disk, the practice CA and any token file it used were deleted afterwards. (3) The dead-man's switch and the disk alert each fired once against a local listener inside the VM, and infra/RUNBOOK.md exists and matches what the rehearsal ran. (4) R11: http://localhost:3000 answered 200 before the change and answers 200 after it, from a dev server started by a systemd user unit on Node 24.21.0 with next 16.3.8; or the refusal is recorded with the exact commands for the owner. (5) R7 was attempted once as 5b.6 says, never writing without a successful read first, and the result is quoted. (6) On the final pushed commit, run from an isolated worktree: npm run lint:ratchet, node scripts/typecheck-ratchet.mjs, npm test, npm run audit:ratchet, actionlint, shellcheck on every infra/**/*.sh and hadolint infra/Dockerfile all pass, and that commit's ci.yml run on training-rebuild is green, read from the GitHub API. /code-review and a security review (through a subagent, as the plan's Reviews section did) were run on <start SHA>..HEAD for this phase's files, with every finding fixed or recorded. The plan's Status lines, blocker table and STOP table say what actually happened. Everything is committed with git commit --only <paths> and pushed to origin training-rebuild, and the worktree is removed and git worktree prune has run. (7) The final reply is in plain words for an owner who is not a programmer. It starts with any doubt, then says what is now true, then lists what still needs the owner and says which of those cost money. Escape clause: if (2) to (6) cannot be met because of a permission refusal, an open blocker, or a CI failure caused outside this phase's diff (quote the job, step and commit author from the API), record it as a blocker in the plan and that condition counts as met; re-push at most twice for the same failure. While working: other sessions share this checkout. Never git stash, git add -A or --no-verify. Edit a shared file only when git diff shows it clean, and commit only your own files. Message peers with SendMessage before anything they will feel (npm ci, the dev server restart). Check df -h /mnt/c before downloading images and stop below 50 GB free. Never read or print .env.local values, never write to the live database, never push to main, never restart WSL. When the permission system refuses something, record it with the exact message, do not route around it, and continue with the next step that does not depend on it. Put doubt in the first line of every report, not the last.
 ```
 
 ### After the STOP line: Phases 6–7. Paste after `/goal`.
