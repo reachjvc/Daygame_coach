@@ -395,31 +395,23 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Persist a scenario attempt after evaluation.
- * Normalizes score: always stores `score` at top level of evaluation JSONB.
- * Fire-and-forget — logs errors but doesn't throw.
+ * Persist a scenario attempt after evaluation: what was practised, its score
+ * (1-10; evaluators name it `score`, the opener's `overallScore`), and the
+ * archetype when the scenario had one. A score outside 1-10 is saved as none,
+ * so the attempt still counts. Fire-and-forget — logs errors but doesn't throw.
  */
 export async function persistScenarioAttempt(
   userId: string,
   scenarioType: string,
-  userResponse: string,
-  scenarioData: Record<string, unknown> | null,
-  evaluation: Record<string, unknown> | null
+  evaluation: { score?: unknown; overallScore?: unknown },
+  archetype: string | null = null
 ): Promise<void> {
   try {
-    // Normalize: ensure top-level `score` field exists
-    const normalizedEval = evaluation ? { ...evaluation } : null
-    if (normalizedEval && typeof normalizedEval.score !== "number" && typeof normalizedEval.overallScore === "number") {
-      normalizedEval.score = normalizedEval.overallScore
-    }
+    const raw = typeof evaluation.score === "number" ? evaluation.score : evaluation.overallScore
+    const rounded = typeof raw === "number" ? Math.round(raw) : NaN
+    const score = rounded >= 1 && rounded <= 10 ? rounded : null
 
-    await createScenarioAttempt({
-      user_id: userId,
-      scenario_type: scenarioType,
-      user_response: userResponse,
-      scenario_data: scenarioData,
-      evaluation: normalizedEval,
-    })
+    await createScenarioAttempt({ user_id: userId, scenario_type: scenarioType, score, archetype })
 
     // Sync scenario-linked goals so badge progress updates.
     //

@@ -5,10 +5,10 @@
  * Aggregate queries feed the badge L3s:
  *   l3_scenario_sessions → total rows
  *   l3_scenario_types_tried → distinct scenario_type count
- *   l3_scenario_high_scores → rows where evaluation.score >= 7
+ *   l3_scenario_high_scores → rows where score >= 7
  */
 
-import { createServerSupabaseClient } from "./supabase"
+import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
 import type { ScenarioRow, ScenarioInsert } from "./types"
 
 // ============================================
@@ -17,12 +17,15 @@ import type { ScenarioRow, ScenarioInsert } from "./types"
 
 /**
  * Persist a scenario attempt after evaluation.
- * The evaluation JSONB must always have a top-level `score` field (1-10).
+ *
+ * As the server, not the person: the score feeds badges, so a person must not
+ * be able to write one (`scenarios` has no INSERT policy). Callers pass the id
+ * of the signed-in account.
  */
 export async function createScenarioAttempt(
   insert: ScenarioInsert
 ): Promise<ScenarioRow> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from("scenarios")
@@ -55,21 +58,19 @@ export interface ScenarioStats {
 export async function getScenarioStats(userId: string): Promise<ScenarioStats> {
   const supabase = await createServerSupabaseClient()
 
-  const { data: rows, count } = await supabase
+  const { data: rows, count, error } = await supabase
     .from("scenarios")
-    .select("scenario_type, evaluation", { count: "exact" })
+    .select("scenario_type, score", { count: "exact" })
     .eq("user_id", userId)
+
+  if (error) throw new Error(`Failed to read scenario stats: ${error.message}`)
 
   const types = new Set<string>()
   let highScoreCount = 0
 
-  if (rows) {
-    for (const row of rows) {
-      if (row.scenario_type) types.add(row.scenario_type)
-      const evaluation = row.evaluation as Record<string, unknown> | null
-      const score = typeof evaluation?.score === "number" ? evaluation.score : 0
-      if (score >= 7) highScoreCount++
-    }
+  for (const row of rows ?? []) {
+    if (row.scenario_type) types.add(row.scenario_type)
+    if ((row.score ?? 0) >= 7) highScoreCount++
   }
 
   return {

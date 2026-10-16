@@ -42,8 +42,7 @@ describe("user_goals refusals", () => {
     const parentId = await createTestGoal(userId, { title: "Parent Goal" })
 
     await withClient(async (client) => {
-      // goal_type named, as the repo always names it — see the KNOWN WRONG
-      // test below for what the column's own default does.
+      // goal_type named, as the repo always names it.
       const child = await client.query(
         `INSERT INTO user_goals (user_id, title, category, goal_type, parent_goal_id)
          VALUES ($1, 'Child Goal', 'custom', 'recurring', $2) RETURNING id`,
@@ -68,19 +67,19 @@ describe("user_goals refusals", () => {
   })
 
   /**
-   * KNOWN WRONG IN PRODUCTION, found 2026-10-13 when these first ran on
-   * production's schema: `user_goals.goal_type` DEFAULTs to 'process', which
-   * production's own `chk_goal_type` (and `user_goals_goal_type_check`) refuse.
-   * So any write that leaves the type out fails. The app never does today —
-   * goalRepo always sends one, falling back to "recurring" — so this is a trap,
-   * not live breakage. Fix: `ALTER COLUMN goal_type SET DEFAULT 'recurring'`;
-   * then this passes, `test.fails` turns red, and the pin comes off.
+   * Until 2026-10-16 `goal_type` defaulted to 'process', which the column's own
+   * CHECK refuses, so a write that left the type out failed. The default is
+   * goalRepo's own fallback now (20261016120100_user_goals_one_check_per_column.sql).
    */
-  test.fails("KNOWN WRONG: a goal written without a type gets one the table accepts", async () => {
+  test("a goal written without a type gets the one goalRepo falls back to", async () => {
     const userId = await createTestUser()
-    await withClient((client) =>
-      client.query(`INSERT INTO user_goals (user_id, title, category) VALUES ($1, 'Untyped', 'custom')`, [userId])
+    const { rows } = await withClient((client) =>
+      client.query(
+        `INSERT INTO user_goals (user_id, title, category) VALUES ($1, 'Untyped', 'custom') RETURNING goal_type`,
+        [userId]
+      )
     )
+    expect(rows).toEqual([{ goal_type: "recurring" }])
   })
 
   test("one live goal per template per person — an archived copy, another person and no template do not count", async () => {

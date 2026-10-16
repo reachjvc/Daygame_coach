@@ -28,13 +28,7 @@ export async function POST(req: Request) {
   const result = await evaluateOpenerAttempt(parsed.data, auth.userId)
 
   // Fire-and-forget: persist attempt for badge tracking
-  void persistScenarioAttempt(
-    auth.userId,
-    "practice-openers",
-    parsed.data.opener,
-    parsed.data.encounter as Record<string, unknown> | null,
-    result as unknown as Record<string, unknown>
-  )
+  void persistScenarioAttempt(auth.userId, "practice-openers", result.evaluation)
 
   return NextResponse.json(result, { status: 200 })
 }

@@ -89,8 +89,6 @@ export type InnerGameProgress = {
   // Hurdles step data (reframed - also used by premium model)
   hurdlesResponse: string | null
   hurdlesInferredValues: InferredValue[] | null
-  // Prioritization flow data
-  essentialSelection: string[] | null  // Values marked as essential (before elimination)
   // Final results
   finalCoreValues: CoreValue[] | null
   aspirationalValues: { id: string }[] | null
@@ -142,7 +140,6 @@ export type UpdateProgressRequest = {
   peakExperienceInferredValues?: InferredValue[]
   hurdlesResponse?: string
   hurdlesInferredValues?: InferredValue[]
-  essentialSelection?: string[]
   finalCoreValues?: CoreValue[]
   aspirationalValues?: { id: string }[]
 }

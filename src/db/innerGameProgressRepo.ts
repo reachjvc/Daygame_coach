@@ -24,8 +24,6 @@ export type InnerGameProgressRow = {
   // Hurdles step data
   hurdles_response: string | null
   hurdles_inferred_values: InferredValue[] | null
-  // Prioritization flow data
-  essential_selection: string[] | null  // Values marked as essential (before elimination)
   // Final results
   final_core_values: CoreValue[] | null
   aspirational_values: { id: string }[] | null
@@ -96,7 +94,6 @@ function applyDefaults(row: InnerGameProgressRow): InnerGameProgressRow {
     shadow_inferred_values: row.shadow_inferred_values ?? null,
     peak_experience_response: row.peak_experience_response ?? null,
     peak_experience_inferred_values: row.peak_experience_inferred_values ?? null,
-    essential_selection: row.essential_selection ?? null,
   }
 }
 
@@ -204,7 +201,6 @@ export async function resetProgress(userId: string): Promise<InnerGameProgressRo
       peak_experience_inferred_values: null,
       hurdles_response: null,
       hurdles_inferred_values: null,
-      essential_selection: null,
       final_core_values: null,
       aspirational_values: null,
       // Reset legacy fields too
@@ -269,7 +265,6 @@ export async function resetSection(
   }
   // Cutting is always reset (last in chain)
   updates.cutting_completed = false
-  updates.essential_selection = null
   updates.final_core_values = null
   updates.aspirational_values = null
 

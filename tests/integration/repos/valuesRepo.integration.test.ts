@@ -11,25 +11,11 @@
  * production's foreign key on `user_values.value_id` points there, not at
  * `values` — the catalogue rows are written to both.
  *
- * KNOWN WRONG, PINNED WITH `it.fails` (found 2026-10-13, first run against the
- * real schema):
- *
- * `user_values` has SELECT, INSERT and DELETE policies and NO UPDATE policy.
- * `upsertUserValues` is an upsert (`INSERT … ON CONFLICT (user_id, value_id) DO
- * UPDATE`), and Postgres refuses the conflict path when no UPDATE policy lets
- * the existing row through:
- *
- *   new row violates row-level security policy (USING expression) for table "user_values"
- *
- * The values step re-sends the WHOLE selection on every "Next"
- * (InnerGamePage.saveValues → POST /api/inner-game/values), so from the second
- * category on every save carries a value already stored, the whole statement
- * is refused, and `ValuesStepPage.handleNext` logs the error and advances
- * anyway. Only the first category's choices are ever saved, silently. Two
- * fixes: an UPDATE policy (a migration), or `ignoreDuplicates: true` in the
- * upsert (no migration — checked on this stack 2026-10-13, the same call then
- * succeeds). Choosing is the owner's call, so neither is made here. The
- * `it.fails` goes red the day re-saving works; delete the `.fails` then.
+ * `user_values` has no UPDATE policy, and a plain upsert's conflict path is an
+ * UPDATE, which row security refuses — for the whole statement. The values step
+ * re-sends the whole selection on every "Next", so until 2026-10-16 only the
+ * first category's choices were ever saved. A row is only its two keys, so the
+ * upsert now skips rows that exist (`ignoreDuplicates`).
  */
 import { describe, it, expect, vi } from "vitest"
 import { randomUUID } from "node:crypto"
@@ -120,7 +106,7 @@ describe("a person's chosen values", () => {
     )
   })
 
-  it.fails("keep everything when the whole selection is saved again with new ones added", async () => {
+  it("keep everything when the whole selection is saved again with new ones added", async () => {
     const user = await newUser("values-choice")
     actAs(user)
 

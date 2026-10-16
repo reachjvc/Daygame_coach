@@ -141,22 +141,19 @@ export interface PurchaseUpdate {
 // Scenarios table (practice history)
 // ============================================
 
+/** One evaluated attempt: what was practised, and the score it got (1-10). */
 export interface ScenarioRow {
   id: string
   user_id: string
-  scenario_type?: string | null
-  scenario_data?: Record<string, unknown> | null
-  user_response?: string | null
-  evaluation?: Record<string, unknown> | null
-  xp_earned?: number | null
-  created_at?: string
+  scenario_type: string | null
+  score: number | null
+  archetype: string | null
+  completed_at: string | null
 }
 
 export interface ScenarioInsert {
   user_id: string
-  scenario_type?: string | null
-  scenario_data?: Record<string, unknown> | null
-  user_response?: string | null
-  evaluation?: Record<string, unknown> | null
-  xp_earned?: number | null
+  scenario_type: string
+  score: number | null
+  archetype?: string | null
 }

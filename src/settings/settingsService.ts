@@ -345,7 +345,12 @@ export async function getSettingsPageData(
   const [profile, subscription, scenarioStats] = await Promise.all([
     getSettingsProfile(userId),
     getSubscriptionDetails(userId),
-    getScenarioStats(userId),
+    // Display only: a failed read must not take profile and subscription
+    // editing down with it.
+    getScenarioStats(userId).catch((err) => {
+      console.error("[settings] scenario stats could not be read:", err)
+      return null
+    }),
   ])
 
   const sandboxSettings = mergeSandboxSettings(profile?.sandbox_settings)
@@ -377,8 +382,8 @@ export async function getSettingsPageData(
   }
 
   const stats: UserStats = {
-    totalScenarios: scenarioStats.totalScenarios,
-    averageScore: scenarioStats.averageScore,
+    totalScenarios: scenarioStats?.totalScenarios ?? null,
+    averageScore: scenarioStats?.averageScore ?? null,
     level: profile?.level ?? 1,
     xp: profile?.xp ?? 0,
     scenariosCompleted: profile?.scenarios_completed ?? 0,

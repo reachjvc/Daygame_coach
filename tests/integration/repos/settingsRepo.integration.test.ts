@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi } from "vitest"
 import { actAs, asOwner, newUser } from "@/tests/db/harness"
-import { getUserClock, updateTimezone } from "@/src/db/settingsRepo"
+import { getScenarioStats, getUserClock, updateTimezone } from "@/src/db/settingsRepo"
 
 vi.mock("@/src/db/supabase", async (importOriginal) =>
   (await import("@/tests/db/harness")).stackSupabaseModule(await importOriginal())
@@ -43,5 +43,29 @@ describe("a user's clock", () => {
 
     const [row] = await asOwner((q) => q("select timezone from profiles where id = $1", [owner.id]))
     expect(row.timezone).toBe("UTC")
+  })
+})
+
+describe("the practice stats on the settings page", () => {
+  it("count every attempt and average the latest ten scores, an attempt with no time counting as oldest", async () => {
+    const user = await newUser("settings-scenarios")
+    // Eleven timed attempts: the oldest scores 1, the ten after it 4 each.
+    // One with no time and a 10, which a plain newest-first order puts first
+    // (Postgres sorts NULL first when descending): then the average is 5.
+    await asOwner(async (q) => {
+      for (let i = 0; i < 11; i++) {
+        await q(
+          `insert into scenarios (user_id, scenario_type, score, completed_at)
+           values ($1, 'practice-openers', $2, now() - make_interval(mins => $3))`,
+          [user.id, i === 10 ? 1 : 4, i]
+        )
+      }
+      await q(`insert into scenarios (user_id, scenario_type, score, completed_at) values ($1, 'x', 10, null)`, [
+        user.id,
+      ])
+    })
+    actAs(user)
+
+    expect(await getScenarioStats(user.id)).toEqual({ totalScenarios: 12, averageScore: 4 })
   })
 })

@@ -22,9 +22,6 @@ const ROOT = path.resolve(__dirname, "../../..")
 
 /** Column references that are wrong today, with why. Delete an entry when it is fixed. */
 const KNOWN_WRONG: Record<string, string> = {
-  "src/db/scenarioRepo.ts scenarios.evaluation":
-    "column does not exist in production — tests/integration/repos/scenarioRepo.integration.test.ts",
-  "src/db/settingsRepo.ts scenarios.evaluation": "same defect, the settings page's scenario stats",
   "src/db/valuesRepo.ts values.display_name":
     "deliberate: listValues falls back when the column is missing (it branches on that error)",
 }

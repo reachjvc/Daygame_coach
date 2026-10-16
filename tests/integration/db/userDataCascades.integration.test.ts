@@ -30,9 +30,10 @@
  *      two-column key `(x, user_id)` a bare SET NULL nulls BOTH columns,
  *      `user_id` is NOT NULL, and the delete aborts — the defect
  *      20260923130000_season_focus_is_any_node.sql fixed for one constraint.
- *      Five more carry it; they are listed as KNOWN WRONG and the list must
- *      shrink, never grow. (A key to the person that is SET NULL clears
- *      `user_id` on purpose; those are rule 1's named exceptions.)
+ *      Five `life_plan_*` keys carried it until
+ *      20261016120300_life_plan_set_null_keeps_the_owner.sql; none may come
+ *      back. (A key to the person that is SET NULL clears `user_id` on
+ *      purpose; those are rule 1's named exceptions.)
  *
  * THE PLAN'S EXCEPTION LIST, CHECKED against production's schema:
  * `error_reports` (SET NULL to the user, so a crash report outlives the
@@ -40,7 +41,8 @@
  * `workout_logs.enrollment_id` are not exceptions to rule 1 — both tables
  * cascade from the user — they are SET NULLs to a parent that is not the user,
  * and they are in rule 2's list. Production adds one the plan did not know
- * about: `user_values` has no key on `user_id` at all (KNOWN WRONG, below).
+ * about: `user_values` had no key on `user_id` at all until
+ * 20261016120200_user_values_belong_to_a_person.sql.
  */
 
 import { describe, test, expect, beforeAll, afterAll } from "vitest"
@@ -66,10 +68,6 @@ interface ForeignKey {
 const NOT_DELETED_WITH_THE_PERSON: Record<string, string> = {
   error_reports:
     "a crash report outlives the account it came from; its user_id is SET NULL (20260906100000_error_reports.sql)",
-  user_values:
-    "KNOWN WRONG — user_values.user_id has no foreign key at all in production, so a person's value picks " +
-    "survive their account and a pick can name nobody. Pinned by the test.fails below; fix with " +
-    "`REFERENCES auth.users(id) ON DELETE CASCADE` and delete this line.",
 }
 
 /**
@@ -91,32 +89,13 @@ const OUTLIVES_ITS_PARENT: Record<string, string> = {
   life_plan_routines_enrollment_id_fkey: "ending a program must not delete the routine that ran it",
   life_plan_goals_user_goal_id_fkey: "deleting the counted goal unlinks the plan's goal; the plan keeps its words",
   life_plans_season_focus_fk: "deleting the focused node clears the focus and leaves the plan",
-  // KNOWN WRONG — see KNOWN_TO_NULL_THE_OWNER below. The intent is right (the
-  // item outlives its area, goal or target); the bare SET NULL is not.
-  life_plan_goals_area_fk: "a goal outlives its area — KNOWN WRONG, nulls user_id",
-  life_plan_routines_area_fk: "a routine outlives its area — KNOWN WRONG, nulls user_id",
-  life_plan_experiences_area_fk: "an experience outlives its area — KNOWN WRONG, nulls user_id",
-  life_plan_experiences_goal_fk: "an experience outlives its goal — KNOWN WRONG, nulls user_id",
-  life_plan_fields_target_fk: "a field outlives its target — KNOWN WRONG, nulls user_id",
+  // Each clears only its pointer (SET NULL (<pointer>)), never user_id.
+  life_plan_goals_area_fk: "a goal outlives its area",
+  life_plan_routines_area_fk: "a routine outlives its area",
+  life_plan_experiences_area_fk: "an experience outlives its area",
+  life_plan_experiences_goal_fk: "an experience outlives its goal",
+  life_plan_fields_target_fk: "a field outlives its target",
 }
-
-/**
- * SET NULLs that clear `user_id` as well as the pointer, so deleting the parent
- * aborts with a NOT NULL violation. Production has the same five
- * (20260922100000_life_plan_tables.sql; tests/db/baseline.sql). Verified on the
- * mirror: deleting an area node a goal is filed under raises `null value in
- * column "user_id" of relation "life_plan_goals"`, and `save_life_plan` deletes
- * gone nodes before it upserts goals, so a plan save that removes an area with
- * goals under it fails. Fix each with `ON DELETE SET NULL (<pointer column>)`
- * and delete its line here.
- */
-const KNOWN_TO_NULL_THE_OWNER = [
-  "life_plan_experiences_area_fk",
-  "life_plan_experiences_goal_fk",
-  "life_plan_fields_target_fk",
-  "life_plan_goals_area_fk",
-  "life_plan_routines_area_fk",
-]
 
 async function foreignKeys(db: Client): Promise<ForeignKey[]> {
   const { rows } = await db.query(
@@ -229,22 +208,18 @@ describe("a person's data goes with the person", () => {
           .filter((fk) => fk.parent !== "auth.users" && fk.nulls.includes("user_id"))
           .map((fk) => fk.name)
           .sort(),
-        "a SET NULL that clears user_id aborts the delete it should survive — use SET NULL (<pointer column>). " +
-          "If one was FIXED, remove it from KNOWN_TO_NULL_THE_OWNER."
+        "a SET NULL that clears user_id aborts the delete it should survive — use SET NULL (<pointer column>)"
       )
-      .toEqual([...KNOWN_TO_NULL_THE_OWNER].sort())
+      .toEqual([])
   })
 })
 
 /**
- * KNOWN WRONG IN PRODUCTION, found 2026-10-13 when this first ran on
- * production's schema: `user_values.user_id` references nothing. Deleting an
- * account leaves every value that person picked behind, under an id that no
- * longer names anyone. Proven by doing it, not only by the catalog. When the
- * key is added this passes, `test.fails` turns red, and the pin comes off —
- * together with its line in NOT_DELETED_WITH_THE_PERSON.
+ * `user_values.user_id` referenced nothing until 2026-10-16, so a deleted
+ * account's value picks stayed behind under an id that named nobody. Proven by
+ * doing it, not only by the catalog.
  */
-test.fails("KNOWN WRONG: deleting a person deletes the values they picked", async () => {
+test("deleting a person deletes the values they picked", async () => {
   const userId = await createTestUser("values-owner")
   const valueId = `test-value-${randomUUID()}`
   const db = await getClient()

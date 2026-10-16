@@ -4,23 +4,10 @@
  * One row per account (`inner_game_progress_user_id_key`) holds where the person
  * is in Inner Game and everything they wrote on the way.
  *
- * KNOWN WRONG, PINNED WITH `it.fails` (found 2026-10-13, first run against the
- * real schema):
- *
- * Production's `inner_game_progress` has no `essential_selection` column — not
- * in the baseline, not in any migration. `resetProgress` and `resetSection`
- * both write `essential_selection: null`, and PostgREST refuses the whole
- * update:
- *
- *   Could not find the 'essential_selection' column of 'inner_game_progress' in the schema cache
- *
- * So neither reset can ever succeed. `resetSection` is the live one: it is what
- * POST /api/inner-game/reset-section calls, so "redo this section" answers 500
- * and nothing is reset. (`updateUserProgress` writes the same column when the
- * client sends `essentialSelection`; not tested here.) Which way to fix it —
- * add the column, or stop writing it — is a product decision, so it is not made
- * here. Each `it.fails` goes red the day the reset works; delete the `.fails`
- * then.
+ * Until 2026-10-16 both resets wrote `essential_selection`, a column production
+ * never had, and PostgREST refused the whole update: "redo this section"
+ * answered 500 and reset nothing. Nothing read the column back, so the code
+ * stopped writing it.
  */
 import { describe, it, expect, vi } from "vitest"
 import { actAs, asOwner, newUser } from "@/tests/db/harness"
@@ -72,7 +59,7 @@ describe("a person's Inner Game progress", () => {
     expect(rows[0]).toMatchObject({ current_step: 2, welcome_dismissed: true, shadow_response: "Envy." })
   })
 
-  it.fails("starts again from nothing when reset", async () => {
+  it("starts again from nothing when reset", async () => {
     const user = await newUser("inner-game")
     actAs(user)
     const before = await upsertProgress(user.id, WELL_UNDERWAY)
@@ -99,7 +86,7 @@ describe("a person's Inner Game progress", () => {
     ])
   })
 
-  it.fails("redoing the shadow section clears it and everything after it, and keeps the values step", async () => {
+  it("redoing the shadow section clears it and everything after it, and keeps the values step", async () => {
     const user = await newUser("inner-game")
     actAs(user)
     await upsertProgress(user.id, WELL_UNDERWAY)

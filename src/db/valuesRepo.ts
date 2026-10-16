@@ -65,9 +65,13 @@ export async function upsertUserValues(
     value_id: valueId,
   }))
 
+  // The values step re-sends the whole selection on every "Next", so most rows
+  // already exist. A row is only its two keys, so there is nothing to update:
+  // skip them. A plain upsert takes the UPDATE path, which `user_values` has
+  // no policy for, and row security then refuses the whole statement.
   const { error } = await supabase
     .from("user_values")
-    .upsert(rows, { onConflict: "user_id,value_id" })
+    .upsert(rows, { onConflict: "user_id,value_id", ignoreDuplicates: true })
 
   if (error) {
     throw new Error(`Failed to save user values: ${error.message}`)

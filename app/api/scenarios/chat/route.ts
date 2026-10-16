@@ -25,13 +25,7 @@ export async function POST(req: Request) {
   // Fire-and-forget: persist on milestone evaluations only (every 5th turn).
   // This counts "sessions" not "turns" — one row per meaningful checkpoint.
   if (response.milestoneEvaluation) {
-    void persistScenarioAttempt(
-      auth.userId,
-      parsed.data.scenario_type,
-      parsed.data.message,
-      null,
-      response.milestoneEvaluation as unknown as Record<string, unknown>
-    )
+    void persistScenarioAttempt(auth.userId, parsed.data.scenario_type, response.milestoneEvaluation, response.archetype)
   }
 
   return NextResponse.json(response, { status: 200 })

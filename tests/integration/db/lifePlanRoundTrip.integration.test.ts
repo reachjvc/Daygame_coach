@@ -28,6 +28,7 @@ import type { Client } from "pg"
 import { randomUUID } from "node:crypto"
 import { getClient, createTestUser, asUser } from "../setup"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
+import { removeArea } from "@/src/goals/northStarService"
 import { dayRowsToRecord, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import type { DayRows } from "@/src/db/lifePlanDayTypes"
 import { fullPlan, withoutDays } from "@/tests/support/fullLifePlan"
@@ -238,6 +239,31 @@ describe("a plan that goes through a real Postgres comes back the same plan", ()
 
     expect(first.length, "the fixture has nodes, or this passes on an empty table").toBeGreaterThan(5)
     expect(second, "a re-mint here takes every tick and every journal line with it").toEqual(first)
+  })
+
+  /**
+   * REMOVING AN AREA THAT HAS GOALS UNDER IT.
+   *
+   * `removeArea` moves the area's goals to another area. `save_life_plan`
+   * deletes the gone area before it upserts the moved goals, so at that moment
+   * the goals still point at it. Until 20261016120300 their key was a bare
+   * `SET NULL` on `(area_id, user_id)`, which nulled `user_id` too, and the
+   * whole save aborted.
+   */
+  // Index 0 is also the season focus and has an experience; index 1 is
+  // served by goals and routines. Between them, every way an area is mentioned.
+  test.each([0, 1])("removing area %i, which has goals under it, saves and its goals move", async (index) => {
+    const { userId, planId } = await personWithPlan()
+    const ids = context(planId, userId)
+    const plan = fullPlan()
+    await saveAs(userId, planToRows(plan, ids), 0)
+
+    const area = plan.areas[index].id
+    expect(plan.goals.some((g) => g.areaId === area), "the area has a goal to move, or this proves nothing").toBe(true)
+    const removed = removeArea(plan, area)
+
+    expect(await saveAs(userId, planToRows(removed, ids), 1)).toBe(2)
+    expect(withoutDays(rowsToPlan(await readBack(planId, userId))!)).toEqual(withoutDays(removed))
   })
 })
 

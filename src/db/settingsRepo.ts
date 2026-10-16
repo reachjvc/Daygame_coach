@@ -408,28 +408,22 @@ export async function getScenarioStats(userId: string): Promise<{
 }> {
   const supabase = await createServerSupabaseClient()
 
-  // Get total count
-  const { count: totalScenarios } = await supabase
+  // The last 10 scores, and the count of every attempt, in one read
+  const { data: recentScenarios, count: totalScenarios, error } = await supabase
     .from("scenarios")
-    .select("*", { count: "exact", head: true })
+    .select("score", { count: "exact" })
     .eq("user_id", userId)
-
-  // Get recent scenarios for average score
-  const { data: recentScenarios } = await supabase
-    .from("scenarios")
-    .select("evaluation")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
+    .order("completed_at", { ascending: false, nullsFirst: false })
+    .order("id")
     .limit(10)
 
-  // Calculate average score from evaluation data
+  if (error) throw new Error(`Failed to read scenario stats: ${error.message}`)
+
+  // Calculate average score (1-10) over the attempts that have one
   let averageScore = 0
   if (recentScenarios && recentScenarios.length > 0) {
     const scores = recentScenarios
-      .map((s) => {
-        const evaluation = s.evaluation as Record<string, unknown> | null
-        return typeof evaluation?.score === "number" ? evaluation.score : 0
-      })
+      .map((s) => s.score ?? 0)
       .filter((score) => score > 0)
 
     if (scores.length > 0) {

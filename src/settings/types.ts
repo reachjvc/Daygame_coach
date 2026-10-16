@@ -60,8 +60,9 @@ export interface SubscriptionInfo {
 }
 
 export interface UserStats {
-  totalScenarios: number
-  averageScore: number
+  /** Null when the practice history could not be read: shown as unknown, never as 0. */
+  totalScenarios: number | null
+  averageScore: number | null
   level: number
   xp: number
   scenariosCompleted: number

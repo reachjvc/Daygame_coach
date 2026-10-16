@@ -17,11 +17,9 @@
  * A constraint is matched by the COLUMNS IT CONSTRAINS (pg_constraint.conkey),
  * not by whether its text mentions the column name.
  *
- * KNOWN WRONG IN PRODUCTION (pinned with `test.fails`; delete the pin when fixed):
- *   - GOAL_DISPLAY_CATEGORIES: the code offers 'scenarios'; `chk_display_category`
- *     allows it, but `user_goals_display_category_check` does not (see
- *     20260920100000_goal_abstinence.sql), so production refuses every goal
- *     filed under 'scenarios'.
+ * KNOWN WRONG IN PRODUCTION: an entry's `knownWrong` pins it with `test.fails`.
+ * None today. The last, 'scenarios' refused on display_category, was fixed by
+ * 20261016120100_user_goals_one_check_per_column.sql.
  *
  * Code enums whose values live only inside a `z.enum([...])` literal (program
  * level, session type, set kind, draft source) are not exported, so they cannot
@@ -121,7 +119,6 @@ const ENUMS: Array<{
     table: "user_goals",
     column: "display_category",
     codeValues: GOAL_DISPLAY_CATEGORIES,
-    knownWrong: "user_goals_display_category_check lacks 'scenarios'; drop it or add the value",
   },
   { name: "GOAL_NATURES", table: "user_goals", column: "goal_nature", codeValues: GOAL_NATURES },
   { name: "LINKED_METRICS", table: "user_goals", column: "linked_metric", codeValues: LINKED_METRICS },
