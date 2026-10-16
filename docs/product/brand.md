@@ -31,6 +31,7 @@ Nothing is decided. What the owner said:
 - **Liked:** Reps, and NextRep even more. Ten Thousand Reps "could work"
   (2026-10-16).
 - **Names he admires:** Modern Wisdom, Art of Accomplishment.
+- **His own suggestions:** Perfect Practice, Perfectable (2026-10-16).
 - **Rejected:** Frontfoot ("not appealing at all"), Vindrose ("super bad"), and
   the whole style of Latin mottos, Danish words and nautical metaphors.
 
@@ -64,6 +65,14 @@ Nothing is decided. What the owner said:
   - Free on .app only: Man in Progress, Hard Earned, Going First, Everyday
     Mastery.
   - Web searches found no brand using Winning Slowly or Future Proud.
+- **The owner's two suggestions, checked 2026-10-16:**
+  - Perfect Practice: perfectpractice.com sells golf training equipment, and
+    the App Store has Perfect Practice (music), Perfect Practice Sports and a
+    golf app. perfectpracticeapp.com was free on .com, .app and YouTube.
+  - Perfectable: no App Store app, and perfectable.app was free. But
+    perfectable.com is a company "creating technology that empowers people to
+    improve their lives", the same space, and @perfectable on YouTube was
+    taken. The dictionary spelling is "perfectible".
 - **A product form of the campaign line, not yet asked for:** let a user write
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
