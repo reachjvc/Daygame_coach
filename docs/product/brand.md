@@ -159,6 +159,14 @@ Nothing is decided. What the owner said:
   on YouTube, 10kreps.net, 10kreps.org, and as .com: 10krepsclub.com (also .app
   and YouTube), the10kreps.com, my10kreps.com, 10krepsco.com, get10kreps.com.
   10000reps.com is taken (live site since 2013).
+- **Leaning (2026-10-16): 10K Reps Club on 10krepsclub.com**, possibly also as
+  the app's name. He considered simply launching 10K Reps before the other app.
+  Notes for that decision: their public use is thin (an unreleased login page,
+  nothing in search, no store app), and a quick search found no "10K REPS"
+  trademark (not a full search). Knowing about them is not bad faith by itself;
+  intent is what counts. The name came out of this naming work before
+  10kreps.com was found, which this file records. They still own 10kreps.com,
+  and App Store names are first-come.
 - **Domain readability:** the board flags a domain that hides a bad word when
   the words run together (expertsexchange, therapistfinder) or runs past 20
   letters. The rule lives in the board's build script, not in this repo.
