@@ -39,12 +39,16 @@ degraded. If it stops, the message says what to do.
 | `caddy/Caddyfile.local` | localhost with Caddy's own CA. No HSTS. |
 | `caddy/Caddyfile.production` | The real domain: Let's Encrypt only, HSTS, timeouts. |
 | `deploy.sh` | **The only deploy path.** Digest in, health checked inside and through Caddy, rolled back on failure. |
-| `deploy-agent.sh` + `systemd/daygame-deploy.*` | Every minute: is there a new digest on the watched tag? Then `deploy.sh`. |
+| `deploy-agent.sh` + `systemd/daygame-deploy.*` | Every minute: is there a new digest on the watched tag? Then `deploy.sh`. With `PING_URL` set, it pings a dead-man's switch after every run. |
+| `disk-alert.sh` + `systemd/daygame-disk.*` | On the server, every 15 minutes: pings a check that fails below 25 % free, and another below 10 %. |
+| `systemd/daygame-dev.service.template` | The owner's dev server (`npm run dev` on :3000) as a user unit; see below. |
+| `RUNBOOK.md` | What to do: deploy, roll back to a named digest, rotate secrets, a 503, rebuild the server, the monthly pin check. |
+| `rehearsal/` | The production server rehearsed on this machine, under QEMU, before any server is rented. |
 | `github-config.sh` | Sets the `staging` environment, its public variables and `STAGING_PUBLISH=on`. |
 | `server/cloud-init.yaml` | The production server's first boot: Docker, Tailscale SSH, no OpenSSH, containers kept off the metadata service and the tailnet. |
 | `server/provision.sh` | Creates the Hetzner firewall (80/443 only, IPv4 and IPv6), key and server. `--dry-run` first. |
-| `server/sync-infra.sh` | The only way files reach the server, from `git archive <commit>`; restarts only what changed. |
-| `server/push-env.sh` | Sends the server its secrets file, settings and read-only registry login. |
+| `server/push-env.sh` | Sends the server its secrets file, settings and read-only registry login. **Runs first** on a new server. |
+| `server/sync-infra.sh` | The only way files reach the server, from `git archive <commit>`; restarts only what changed. Refuses until `push-env.sh` has run. |
 | `dns/records.sh` | Cloudflare records: DNS only, CAA for Let's Encrypt, SPF and DMARC that refuse mail. |
 
 ## This is not the dev server
@@ -58,7 +62,26 @@ degraded. If it stops, the message says what to do.
 | Node | the machine's default | 24, inside the image |
 
 Both run at the same time. The dev server on :3000 is the owner's daily driver;
-nothing here stops, restarts or reconfigures it.
+nothing in this directory's scripts stops, restarts or reconfigures it.
+
+## The dev server, as a user unit
+
+Since 2026-10-16 (the plan's R11) the dev server is the systemd user unit
+`daygame-dev.service`: `npm run dev` on Node 24, started at boot (lingering is
+on), owned by no terminal and no session. **Starting `npm run dev` in a terminal
+as well starts a second server, on :3001.**
+
+    systemctl --user status daygame-dev        # is it running
+    systemctl --user restart daygame-dev       # restart it (after `npm ci`, say)
+    systemctl --user stop daygame-dev          # stop it until the next boot
+    systemctl --user disable --now daygame-dev # stop it for good
+    journalctl --user -u daygame-dev -f        # its output, live
+
+Installed from the template, with the checkout and Node 24's bin directory filled in:
+
+    sed -e "s|@@REPO@@|$PWD|g" -e "s|@@NODE_BIN@@|$HOME/.nvm/versions/node/v24.21.0/bin|g" \
+      infra/systemd/daygame-dev.service.template > ~/.config/systemd/user/daygame-dev.service
+    systemctl --user daemon-reload && systemctl --user enable --now daygame-dev
 
 ## The certificate
 
@@ -94,10 +117,11 @@ production files.
 
 ## Things that will bite
 
-- **Sign-up and password reset bounce to Vercel** on the local deployment, because
-  `https://localhost/**` is not on Supabase's redirect allow-list and those two
-  flows build their redirect from `window.location.origin`. Ordinary password
-  login works. See the plan's blocker `B-SUPABASE-REDIRECT`.
+- **Sign-up and password reset** build their redirect from
+  `window.location.origin`, so each address the app is served on must be on
+  Supabase's redirect allow-list. `https://localhost/**` was added on
+  2026-10-16 (the plan's R7); neither flow has been tried end to end there yet.
+  The real domain's entry comes with Phase 6.
 - **Features that shell out to the Claude CLI do not work in the container**, and
   neither does Ollama on this machine's own localhost: inside the container,
   localhost is the container. The master plan's D4 moves the Claude features to

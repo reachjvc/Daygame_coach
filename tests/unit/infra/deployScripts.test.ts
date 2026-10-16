@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { spawnSync } from "node:child_process"
@@ -86,6 +86,66 @@ describe("infra/deploy.sh refuses", () => {
     const r = run("infra/deploy.sh", [DIGEST], { DAYGAME_DEPLOY_ENV: join(dir, "missing.env") })
     expect(r.status).toBe(2)
     expect(r.stderr).toContain("no machine settings")
+  })
+})
+
+describe("infra/deploy.sh starting a container", () => {
+  // A stand-in Docker that behaves like compose about the working directory:
+  // it refuses to run from a directory it cannot read.
+  const docker = `case "$*" in
+  "inspect -f {{.State.Running}} dg-caddy") echo true ;;
+  "image inspect -f"*revision*) echo ${"b".repeat(40)} ;;
+  "image inspect"*) exit 0 ;;
+  "inspect -f"*dg-app) echo "" ;;
+  compose*) ls . >/dev/null 2>&1 || { echo "validating compose.yaml: stat .: permission denied" >&2; exit 1; }
+            case "$*" in *" up "*) echo "compose: up failed for a reason" >&2; exit 1 ;; esac ;;
+esac`
+  const deploy = (cwd: string) =>
+    spawnSync("bash", [join(ROOT, "infra/deploy.sh"), DIGEST], {
+      cwd,
+      encoding: "utf8",
+      env: { ...fakes({ docker, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
+    })
+
+  it("runs compose from its own directory, so a caller's unreadable directory cannot stop it", () => {
+    // 2026-10-16, the rehearsal: `su deploy -c` from root's home made every
+    // compose call fail with "stat .: permission denied".
+    const locked = join(dir, "locked")
+    mkdirSync(locked)
+    chmodSync(locked, 0o111) // enterable, not readable, like root's home to the deploy user
+    try {
+      const r = deploy(locked)
+      expect(r.stderr).not.toContain("permission denied")
+      expect(r.stderr).toContain("compose: up failed for a reason")
+    } finally {
+      chmodSync(locked, 0o755)
+    }
+  })
+
+  it("--restart refuses an image that is not the one running", () => {
+    const r = spawnSync("bash", [join(ROOT, "infra/deploy.sh"), "--restart", DIGEST], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...fakes({ docker, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, DAYGAME_DEPLOY_ENV: settings([]) },
+    })
+    expect(r.status).toBe(2)
+    expect(r.stderr).toContain("--restart starts the running image again")
+  })
+
+  it("--restart recreates the running container, so new settings take effect", () => {
+    const running = `case "$*" in "inspect -f"*dg-app) echo "${DIGEST}"; exit 0 ;; esac\n${docker}`
+    spawnSync("bash", [join(ROOT, "infra/deploy.sh"), "--restart", DIGEST], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...fakes({ docker: running, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
+    })
+    expect(calls("docker").some((c) => /compose .* up -d --no-deps --force-recreate app$/.test(c))).toBe(true)
+  })
+
+  it("says why compose could not start the app, instead of waiting out a health check", () => {
+    const r = deploy(dir)
+    expect(r.stderr).toMatch(/could not start sha256:a{64}: compose: up failed for a reason/)
+    expect(r.status).toBe(1)
   })
 })
 
@@ -229,5 +289,124 @@ describe("infra/write-env-file.sh", () => {
     const r = write({ ENV_SOURCE: path })
     expect(r.status).toBe(1)
     expect(r.stderr).toContain("SUPABASE_SERVICE_ROLE_KEY")
+  })
+})
+
+/** A directory of stand-ins first on PATH: each records its arguments, one call per line. */
+function fakes(scripts: Record<string, string>) {
+  const bin = join(dir, "bin")
+  mkdirSync(bin, { recursive: true })
+  for (const [name, body] of Object.entries(scripts)) {
+    writeFileSync(join(bin, name), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${join(dir, name)}.calls"\n${body}\n`, { mode: 0o755 })
+  }
+  return { PATH: `${bin}:${process.env.PATH}` }
+}
+const calls = (name: string) => {
+  try {
+    return readFileSync(join(dir, `${name}.calls`), "utf8").trim().split("\n").filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+describe("the dead-man's switch (infra/deploy-agent.sh, PING_URL)", () => {
+  const TARGET = `ghcr.io/x/y@${DIGEST}`
+  // The registry says the tag points at TARGET, and TARGET is what runs: "up to date".
+  const upToDate = () =>
+    fakes({
+      docker: `case "$*" in *imagetools*) echo '{"digest":"${DIGEST}"}' ;; inspect*) echo '${TARGET}' ;; esac`,
+      curl: "exit 0",
+    })
+  const agent = (lines: string[], env: Record<string, string>) =>
+    run("infra/deploy-agent.sh", [], { DAYGAME_DEPLOY_ENV: settings(lines), INFRA_VERSION_FILE: join(dir, "missing"), ...env })
+
+  it("is off when PING_URL is unset: no request, and the log says so", () => {
+    const r = agent(["WATCH=ghcr.io/x/y:staging"], upToDate())
+    expect(r.status, r.stderr).toBe(0)
+    expect(r.stderr).toContain("up to date")
+    expect(r.stderr).toContain("dead-man's switch off: PING_URL is not set")
+    expect(calls("curl")).toEqual([])
+  })
+
+  it("pings PING_URL after a good run, and never logs the URL", () => {
+    const r = agent(["WATCH=ghcr.io/x/y:staging", "PING_URL=https://hc-ping.com/secret-uuid"], upToDate())
+    expect(r.status, r.stderr).toBe(0)
+    expect(calls("curl")).toEqual([expect.stringMatching(/ https:\/\/hc-ping\.com\/secret-uuid$/)])
+    expect(r.stderr).toContain("dead-man's switch pinged (ok)")
+    expect(r.stderr).not.toContain("secret-uuid")
+  })
+
+  it("pings PING_URL/fail when the run fails, and keeps the run's exit status", () => {
+    const r = agent([`WATCH=ghcr.io/x/y@${DIGEST}`, "PING_URL=https://hc-ping.com/secret-uuid"], upToDate())
+    expect(r.status).toBe(1)
+    expect(calls("curl")).toEqual([expect.stringMatching(/ https:\/\/hc-ping\.com\/secret-uuid\/fail$/)])
+  })
+
+  it("does not let a failing ping change a good run's outcome", () => {
+    const env = { ...upToDate(), ...fakes({ curl: "exit 7" }) }
+    const r = agent(["WATCH=ghcr.io/x/y:staging", "PING_URL=https://hc-ping.com/secret-uuid"], env)
+    expect(r.status).toBe(0)
+    expect(r.stderr).toContain("could not ping the dead-man's switch (ok)")
+  })
+
+  it("hands a new digest to deploy.sh on a new machine, where nothing was ever deferred or failed", () => {
+    // 2026-10-16, the rehearsal: with no deferred-digests file yet, the lookup
+    // failed under pipefail and the agent exited 2 before its first deploy.
+    const env = fakes({
+      docker: `case "$*" in *imagetools*) echo '{"digest":"${DIGEST}"}' ;; esac`,
+      curl: "exit 0",
+    })
+    const r = agent(["WATCH=ghcr.io/x/y:staging", "PING_URL=https://hc-ping.com/secret-uuid"], env)
+    expect(r.stderr).toContain(`new digest: ${TARGET} (running: nothing)`)
+    // deploy.sh then stops at the stand-in Docker, and the switch reports that.
+    expect(r.status).not.toBe(0)
+    expect(r.stderr).toMatch(/run ended with exit status [1-9]/)
+    expect(calls("curl").at(-1)).toMatch(/\/fail$/)
+  })
+
+  it("deploy.sh accepts the alert settings in the shared file", () => {
+    const ref = `ghcr.io/reachjvc/daygame-coach-staging@${DIGEST}`
+    writeFileSync(join(dir, "failed-digests"), `${ref}\n`)
+    const lines = ["PING_URL=https://a/b", "DISK_WARN_PING_URL=https://a/c", "DISK_CRIT_PING_URL=https://a/d"]
+    const r = run("infra/deploy.sh", [ref], { DAYGAME_DEPLOY_ENV: settings(lines) })
+    expect(r.stderr).not.toContain("unknown setting")
+    expect(r.stderr).toContain("is marked failed")
+  })
+})
+
+describe("the disk alerts (infra/disk-alert.sh, 25 % and 10 % free)", () => {
+  // df -Pk as the filesystem would report it, with `free` percent available.
+  const disk = (free: number) =>
+    fakes({
+      df: `printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\\n/dev/vda1 1000 ${1000 - free * 10} ${free * 10} ${100 - free}%% /\\n'`,
+      curl: "exit 0",
+    })
+  const alert = (free: number, lines: string[]) =>
+    run("infra/disk-alert.sh", [], { DAYGAME_DEPLOY_ENV: settings(lines), DOCKER_DATA: join(dir, "none"), ...disk(free) })
+  const URLS = ["DISK_WARN_PING_URL=https://hc-ping.com/warn", "DISK_CRIT_PING_URL=https://hc-ping.com/crit"]
+  const pinged = () => calls("curl").map((c) => c.split(" ").pop())
+
+  it("sends nothing when no URL is set, and says each level is off", () => {
+    const r = alert(5, [])
+    expect(r.status).toBe(1)
+    expect(calls("curl")).toEqual([])
+    expect(r.stderr).toContain("the 25 % alert is off: DISK_WARN_PING_URL is not set")
+    expect(r.stderr).toContain("the 10 % alert is off: DISK_CRIT_PING_URL is not set")
+  })
+
+  it.each([
+    [60, ["https://hc-ping.com/warn", "https://hc-ping.com/crit"], 0],
+    [20, ["https://hc-ping.com/warn/fail", "https://hc-ping.com/crit"], 1],
+    [5, ["https://hc-ping.com/warn/fail", "https://hc-ping.com/crit/fail"], 1],
+  ])("with %i %% free it pings %j", (free, urls, status) => {
+    const r = alert(free, URLS)
+    expect(r.status, r.stderr).toBe(status)
+    expect(pinged()).toEqual(urls)
+    expect(r.stderr).toContain(`/ has ${free} % free`)
+  })
+
+  it("names the filesystem and the free space in the message it sends", () => {
+    alert(20, URLS)
+    expect(calls("curl")[0]).toMatch(/--data-raw .*: \/ has 20 % free, below 25 %/)
   })
 })

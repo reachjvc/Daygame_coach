@@ -8,7 +8,9 @@
 #
 # CERTIFICATES. Let's Encrypt only, over HTTP-01 (Q12): no DNS token sits on the
 # server, and the domain's CAA record names exactly this one authority
-# (infra/dns/records.sh). Port 80 stays open for the challenge and for the
+# (infra/dns/records.sh). ACME_DIRECTORY exists for the practice server
+# (infra/rehearsal/run.sh), which names a practice CA for a .test name; compose
+# passes Let's Encrypt's directory whenever it is unset. Port 80 stays open for the challenge and for the
 # http-to-https redirect. Let's Encrypt stopped sending expiry emails in June
 # 2025, so expiry warnings come only from the external monitor (Phase 7).
 #
@@ -24,7 +26,7 @@
 
 	email {$ACME_EMAIL}
 	cert_issuer acme {
-		dir https://acme-v02.api.letsencrypt.org/directory
+		dir {$ACME_DIRECTORY:https://acme-v02.api.letsencrypt.org/directory}
 	}
 
 	servers {

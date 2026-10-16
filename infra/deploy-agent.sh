@@ -13,7 +13,14 @@
 # Exit status is what the systemd unit shows: non-zero when the registry could
 # not be asked (a login error included) or when a deploy failed.
 #
-# Plans/caddy-deploy-and-cicd.md, Phase 4 step 1.
+# THE DEAD-MAN'S SWITCH. With PING_URL in the same settings file, every run ends
+# with a ping: PING_URL on success, PING_URL/fail on a non-zero exit
+# (healthchecks.io's convention). The check alerts when the pings stop, so a
+# machine that is down, a timer that stopped and an agent failing every minute
+# all reach the owner. The ping has a short timeout and never changes the run's
+# outcome. Unset, the switch is off, and every run's log says so.
+#
+# Plans/caddy-deploy-and-cicd.md, Phase 4 step 1; the switch, Phase 5b step 4.
 
 set -euo pipefail
 
@@ -28,8 +35,33 @@ log() { printf '%s agent: %s\n' "$(date -Is)" "$*" >&2; }
 # The same KEY=value format infra/deploy.sh reads; a value may be in single quotes.
 setting() { sed -n "s/^$1=//p" "$settings" | tail -1 | sed "s/^'\(.*\)'\$/\1/"; }
 watch="$(setting WATCH)"
+ping_url="$(setting PING_URL)"
 state_dir="$(setting STATE_DIR)"
 state_dir="${state_dir:-$HOME/.local/state/daygame}"
+
+# The URL is a credential of sorts (anyone holding it can ping), so it is never logged.
+ping_switch() { # $1 = the run's exit status
+  if [ -z "$ping_url" ]; then
+    log "dead-man's switch off: PING_URL is not set"
+    return 0
+  fi
+  local url="$ping_url" outcome=ok
+  if [ "$1" != 0 ]; then url="$ping_url/fail" outcome=fail; fi
+  if curl -fsS --max-time 10 -o /dev/null "$url" 2>/dev/null; then
+    log "dead-man's switch pinged ($outcome)"
+  else
+    log "could not ping the dead-man's switch ($outcome); the run's outcome is unchanged"
+  fi
+}
+on_exit() {
+  local status=$?
+  # A command that fails under set -e ends the run without a word; say so.
+  [ "$status" = 0 ] || log "run ended with exit status $status"
+  ping_switch "$status"
+  exit "$status"
+}
+trap on_exit EXIT
+
 [[ "$watch" =~ ^[a-z0-9][a-z0-9._/:-]*:[A-Za-z0-9._-]+$ ]] || { log "WATCH '$watch' in $settings is not <repo>:<tag>"; exit 1; }
 repo="${watch%:*}"
 
@@ -71,11 +103,18 @@ if grep -qxF "$target" "$state_dir/failed-digests" 2>/dev/null; then
 fi
 # A deploy that failed for a reason outside the image is retried, but not
 # every minute: each attempt recreates the app twice.
-last="$(awk -v t="$target" '$1 == t {print $2}' "$state_dir/deferred-digests" 2>/dev/null | tail -1)"
+# On a new machine nothing has been deferred yet and the file does not exist;
+# under pipefail a missing file would end the run before its first deploy
+# (found by the rehearsal, Plans/caddy-deploy-and-cicd.md Phase 5b).
+last=""
+if [ -f "$state_dir/deferred-digests" ]; then
+  last="$(awk -v t="$target" '$1 == t {print $2}' "$state_dir/deferred-digests" | tail -1)"
+fi
 if [ -n "$last" ] && [ "$(( $(date +%s) - last ))" -lt "$DEFER_SECONDS" ]; then
   log "$target was deferred at $(date -d "@$last" -Is); retrying after $(date -d "@$((last + DEFER_SECONDS))" -Is)"
   exit 0
 fi
 
 log "new digest: $target (running: ${running:-nothing})"
-exec "$INFRA_DIR/deploy.sh" "$target"
+# Not exec: the switch pings after the deploy, with its exit status.
+"$INFRA_DIR/deploy.sh" "$target"

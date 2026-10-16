@@ -6,6 +6,9 @@
 #   infra/deploy.sh <repo>@sha256:<64 hex>     an image from a registry, by digest
 #   infra/deploy.sh sha256:<64 hex>            a local image ID (rehearsal only)
 #   infra/deploy.sh --retry-failed <ref>       deploy a digest marked failed, on purpose
+#   infra/deploy.sh --restart <ref>            start the running image again with the
+#                                              machine's current settings, e.g. after a
+#                                              secret was rotated (infra/RUNBOOK.md)
 #
 # What it does, one log line per step:
 #   1. refuses any other kind of reference: a tag can point at different code
@@ -44,13 +47,24 @@
 #                 unset means the system's CAs, as on a real domain)
 #   STATE_DIR     where failed digests are recorded (default ~/.local/state/daygame)
 #   ACME_EMAIL    production only: Caddy's contact for Let's Encrypt
+#   ACME_DIRECTORY, ACME_CA_CERT
+#                 the practice server only (infra/rehearsal/run.sh): a practice
+#                 ACME CA, and the file that makes Caddy trust it. Refused unless
+#                 SITE_HOST ends in .test, a name that can never be real, so a
+#                 real domain always gets Let's Encrypt.
 #   WATCH         the tag infra/deploy-agent.sh watches (not read here)
+#   PING_URL, DISK_WARN_PING_URL, DISK_CRIT_PING_URL
+#                 the checks the agent and infra/disk-alert.sh ping (not read here)
 #
 # Plans/caddy-deploy-and-cicd.md, Phase 3 step 7.
 
 set -euo pipefail
 
 INFRA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# docker compose refuses to run from a directory its user cannot read ("stat .:
+# permission denied"), such as root's home when a person runs this with
+# `su deploy -c` on the server. The rehearsal found it (Phase 5b).
+cd "$INFRA_DIR"
 COMPOSE=(docker compose --project-directory "$INFRA_DIR" -f "$INFRA_DIR/compose.yaml")
 APP_CONTAINER=dg-app
 CADDY_CONTAINER=dg-caddy
@@ -66,9 +80,12 @@ alert() {
 die() { log "refused: $*"; exit 2; }
 
 # --- arguments ------------------------------------------------------------------
-retry_failed=no
-if [ "${1:-}" = "--retry-failed" ]; then retry_failed=yes; shift; fi
-[ $# -eq 1 ] || die "usage: infra/deploy.sh [--retry-failed] <repo>@sha256:<digest> | sha256:<image id>"
+retry_failed=no restart=no
+case "${1:-}" in
+  --retry-failed) retry_failed=yes; shift ;;
+  --restart) restart=yes; shift ;;
+esac
+[ $# -eq 1 ] || die "usage: infra/deploy.sh [--retry-failed | --restart] <repo>@sha256:<digest> | sha256:<image id>"
 ref="$1"
 if [[ "$ref" =~ ^[a-z0-9][a-z0-9._/:-]*@sha256:[0-9a-f]{64}$ ]]; then
   kind=registry
@@ -81,15 +98,15 @@ fi
 # --- machine settings -------------------------------------------------------------
 settings="${DAYGAME_DEPLOY_ENV:-${DAYGAME_CONFIG_DIR:-$HOME/.config/daygame}/deploy.env}"
 [ -f "$settings" ] || die "no machine settings at $settings."
-APP_ENV_FILE="" CADDYFILE="" SITE_HOST="" CA_CERT="" STATE_DIR="" ACME_EMAIL=""
+APP_ENV_FILE="" CADDYFILE="" SITE_HOST="" CA_CERT="" STATE_DIR="" ACME_EMAIL="" ACME_DIRECTORY="" ACME_CA_CERT=""
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in ''|'#'*) continue ;; esac
   key="${line%%=*}" value="${line#*=}"
   if [[ "$value" == \'*\' ]]; then value="${value:1:${#value}-2}"; fi
   case "$key" in
     APP_ENV_FILE|CADDYFILE|SITE_HOST|CA_CERT|STATE_DIR) printf -v "$key" '%s' "$value" ;;
-    ACME_EMAIL) printf -v "$key" '%s' "$value" ;;
-    WATCH) ;; # the deploy agent's setting
+    ACME_EMAIL|ACME_DIRECTORY|ACME_CA_CERT) printf -v "$key" '%s' "$value" ;;
+    WATCH|PING_URL|DISK_WARN_PING_URL|DISK_CRIT_PING_URL) ;; # the agent's and the disk alert's settings
     *) die "unknown setting '$key' in $settings." ;;
   esac
 done < "$settings"
@@ -97,12 +114,16 @@ done < "$settings"
 [ -n "$CADDYFILE" ] && [ -f "$INFRA_DIR/$CADDYFILE" ] || die "CADDYFILE '$CADDYFILE' (from $settings) is not a file under $INFRA_DIR."
 [ -n "$SITE_HOST" ] || die "SITE_HOST is not set in $settings."
 [ -z "$CA_CERT" ] || [ -f "$CA_CERT" ] || die "CA_CERT '$CA_CERT' is not a file."
+if [ -n "$ACME_DIRECTORY$ACME_CA_CERT" ] && [[ "$SITE_HOST" != *.test ]]; then
+  die "ACME_DIRECTORY and ACME_CA_CERT are for the practice server only, and SITE_HOST '$SITE_HOST' is not a .test name. A real domain gets its certificates from Let's Encrypt."
+fi
+[ -z "$ACME_CA_CERT" ] || [ -f "$ACME_CA_CERT" ] || die "ACME_CA_CERT '$ACME_CA_CERT' is not a file."
 STATE_DIR="${STATE_DIR:-$HOME/.local/state/daygame}"
 mkdir -p "$STATE_DIR"
 FAILED="$STATE_DIR/failed-digests"
 DEFERRED="$STATE_DIR/deferred-digests"
 touch "$FAILED" "$DEFERRED"
-export APP_ENV_FILE CADDYFILE SITE_HOST ACME_EMAIL
+export APP_ENV_FILE CADDYFILE SITE_HOST ACME_EMAIL ACME_DIRECTORY ACME_CA_CERT
 
 if [ "$retry_failed" = no ] && grep -qxF "$ref" "$FAILED"; then
   die "$ref is marked failed in $FAILED. Deploy it again only on purpose: infra/deploy.sh --retry-failed $ref"
@@ -156,8 +177,16 @@ healthy_now() { # $1 = expected commit
   [ "$(jq -r '.buildId + " " + .proto' <<<"${outside%$'\n'*}" 2>/dev/null)" = "$1 https" ] || return 1
 }
 
+# --restart recreates the container even though its image is the same: compose
+# would otherwise keep a container whose settings it does not see as changed.
+UP=(up -d --no-deps)
+if [ "$restart" = yes ]; then UP+=(--force-recreate); fi
 start_and_check() { # $1 = ref, $2 = expected commit
-  APP_IMAGE="$1" "${COMPOSE[@]}" up -d --no-deps app >/dev/null 2>&1 || return 1
+  local out
+  if ! out="$(APP_IMAGE="$1" "${COMPOSE[@]}" "${UP[@]}" app 2>&1)"; then
+    log "could not start $1: $(tail -1 <<<"$out")"
+    return 1
+  fi
   local deadline=$((SECONDS + HEALTH_WAIT_SECONDS))
   while [ "$SECONDS" -lt "$deadline" ]; do
     if healthy_now "$2"; then return 0; fi
@@ -166,7 +195,10 @@ start_and_check() { # $1 = ref, $2 = expected commit
   return 1
 }
 
-if [ -n "$previous" ] && [ "$previous" = "$ref" ] && healthy_now "$want"; then
+if [ "$restart" = yes ] && [ "$previous" != "$ref" ]; then
+  die "--restart starts the running image again, and $ref is not what runs (${previous:-nothing}). Deploy it without --restart."
+fi
+if [ "$restart" = no ] && [ -n "$previous" ] && [ "$previous" = "$ref" ] && healthy_now "$want"; then
   log "already running $ref and healthy; nothing changed"
   exit 0
 fi
@@ -185,7 +217,11 @@ else
   log "unhealthy after ${HEALTH_WAIT_SECONDS}s: $ref (it answered with its own commit: $started)"
   if [ "$previous" = "$ref" ]; then
     defer
-    alert "$ref is what was already running, and it is unhealthy: the cause is outside the image; nothing marked, deferred"
+    if [ "$restart" = yes ]; then
+      alert "$ref is unhealthy after --restart with the machine's current settings: check what changed in them; nothing marked, deferred"
+    else
+      alert "$ref is what was already running, and it is unhealthy: the cause is outside the image; nothing marked, deferred"
+    fi
     exit 1
   fi
   if [ -z "$previous" ]; then

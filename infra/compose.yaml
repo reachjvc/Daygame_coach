@@ -67,12 +67,20 @@ services:
       # Persistent: lose it and every certificate changes overnight.
       - caddy_data:/data
       - caddy_config:/config
+      # The practice server's CA (infra/rehearsal/run.sh); /dev/null everywhere else.
+      - ${ACME_CA_CERT:-/dev/null}:/etc/caddy/acme-ca.pem:ro
     # Read by Caddyfile.production only; empty on this machine. Production
     # cannot start without them: an empty site address is invalid, and Caddy
     # refuses it. They come from the server's deploy.env (push-env.sh).
+    # ACME_DIRECTORY is Let's Encrypt unless the practice server names its
+    # practice CA; push-env.sh and deploy.sh allow that only for a .test name.
+    # SSL_CERT_FILE is then the practice CA, so Caddy trusts the practice CA's
+    # HTTPS; unset, Caddy uses the system's roots.
     environment:
       SITE_DOMAIN: ${SITE_HOST:-}
       ACME_EMAIL: ${ACME_EMAIL:-}
+      ACME_DIRECTORY: ${ACME_DIRECTORY:-https://acme-v02.api.letsencrypt.org/directory}
+      SSL_CERT_FILE: ${ACME_CA_CERT:+/etc/caddy/acme-ca.pem}
     networks: [web]
     logging: *capped-logs
 

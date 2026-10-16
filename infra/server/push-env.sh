@@ -21,6 +21,16 @@
 #
 # Reads: ~/.config/daygame/ghcr-read-server.token (R5). SERVER (default
 # daygame-prod, the server's Tailscale name).
+# Optional, written into deploy.env when set:
+#   PING_URL, DISK_WARN_PING_URL, DISK_CRIT_PING_URL
+#                 the checks the deploy agent and the disk alert ping (Phase 7);
+#                 unset, those alerts are off and the machine's log says so.
+#   WATCH, ACME_DIRECTORY, ACME_CA_CERT, CA_CERT
+#                 the practice server only (infra/rehearsal/run.sh): another tag
+#                 to watch, a practice ACME CA and the files that trust it.
+#                 Refused unless the domain ends in .test, a name that can never
+#                 be real, so a real server always watches production and gets
+#                 its certificates from Let's Encrypt.
 # Plans/caddy-deploy-and-cicd.md, Phase 5 step 4; run for real in Phase 6.
 
 set -euo pipefail
@@ -28,7 +38,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CONFIG_DIR="${DAYGAME_CONFIG_DIR:-$HOME/.config/daygame}"
 SERVER="${SERVER:-daygame-prod}"
-WATCH=ghcr.io/reachjvc/daygame-coach-production:production
+PRODUCTION_WATCH=ghcr.io/reachjvc/daygame-coach-production:production
 
 die() { printf 'push-env: ERROR: %s\n' "$*" >&2; exit 1; }
 plan() { printf 'push-env: %s\n' "$*"; }
@@ -40,12 +50,23 @@ if ! [[ "$domain" =~ ^[a-z0-9-]+(\.[a-z0-9-]+)+$ ]] || ! [[ "$email" =~ ^[A-Za-z
   die "usage: infra/server/push-env.sh [--dry-run] <domain> <acme-email>"
 fi
 
+if [ -n "${WATCH:-}${ACME_DIRECTORY:-}${ACME_CA_CERT:-}${CA_CERT:-}" ] && [[ "$domain" != *.test ]]; then
+  die "WATCH, ACME_DIRECTORY, ACME_CA_CERT and CA_CERT are for the practice server only, and '$domain' is not a .test name."
+fi
 settings="APP_ENV_FILE=/etc/daygame/production.env
 CADDYFILE=caddy/Caddyfile.production
 SITE_HOST=$domain
 ACME_EMAIL=$email
 STATE_DIR=/var/lib/daygame
-WATCH=$WATCH"
+WATCH=${WATCH:-$PRODUCTION_WATCH}"
+# Each optional value is plain URL or path characters, so it can never break the
+# file or reach a shell as anything but itself.
+for key in ACME_DIRECTORY ACME_CA_CERT CA_CERT PING_URL DISK_WARN_PING_URL DISK_CRIT_PING_URL; do
+  value="${!key:-}"
+  [ -n "$value" ] || continue
+  [[ "$value" =~ ^[A-Za-z0-9._~:/?#@%+=-]+$ ]] || die "$key holds characters a settings file cannot carry safely."
+  settings+=$'\n'"$key=$value"
+done
 
 if [ "$dry_run" = yes ]; then
   plan "dry run: the server is not contacted and no secret is read."

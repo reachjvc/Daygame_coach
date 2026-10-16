@@ -12,7 +12,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { readFileSync } from "node:fs"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { parse } from "yaml"
 import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from "node:child_process"
@@ -39,7 +40,8 @@ describe("the production Caddyfile", () => {
   })
 
   it("gets certificates from Let's Encrypt only, matching the CAA record", () => {
-    expect(caddy).toMatch(/cert_issuer acme \{\s*dir https:\/\/acme-v02\.api\.letsencrypt\.org\/directory\s*\}/)
+    // ACME_DIRECTORY exists for the practice server; unset, it is Let's Encrypt.
+    expect(caddy).toMatch(/cert_issuer acme \{\s*dir \{\$ACME_DIRECTORY:https:\/\/acme-v02\.api\.letsencrypt\.org\/directory\}\s*\}/)
     expect(caddy).not.toMatch(/zerossl|local_certs/i)
   })
 
@@ -48,9 +50,15 @@ describe("the production Caddyfile", () => {
     expect(caddy).toMatch(/import \/etc\/caddy\/common\.caddy/)
   })
 
-  it("receives its domain and ACME email from the server's settings", () => {
+  it("receives its domain and ACME email from the server's settings, and Let's Encrypt unless told otherwise", () => {
     const compose = parse(read("infra/compose.yaml"))
-    expect(compose.services.caddy.environment).toEqual({ SITE_DOMAIN: "${SITE_HOST:-}", ACME_EMAIL: "${ACME_EMAIL:-}" })
+    expect(compose.services.caddy.environment).toEqual({
+      SITE_DOMAIN: "${SITE_HOST:-}",
+      ACME_EMAIL: "${ACME_EMAIL:-}",
+      ACME_DIRECTORY: "${ACME_DIRECTORY:-https://acme-v02.api.letsencrypt.org/directory}",
+      SSL_CERT_FILE: "${ACME_CA_CERT:+/etc/caddy/acme-ca.pem}",
+    })
+    expect(compose.services.caddy.volumes).toContain("${ACME_CA_CERT:-/dev/null}:/etc/caddy/acme-ca.pem:ro")
     expect(caddy).toMatch(/\{\$SITE_DOMAIN\} \{/)
   })
 })
@@ -131,7 +139,76 @@ describe("secrets stay off command lines, and settings are never executed as roo
   it("sync-infra.sh reads deploy.env instead of sourcing it", () => {
     const script = read("infra/server/sync-infra.sh")
     expect(script).not.toMatch(/\. \/etc\/daygame\/deploy\.env/)
-    expect(script).toMatch(/grep -E '\^\(APP_ENV_FILE\|CADDYFILE\|SITE_HOST\|ACME_EMAIL\)=\[A-Za-z0-9\._@\/:\+-\]\+/)
+    expect(script).toMatch(/grep -E '\^\(APP_ENV_FILE\|CADDYFILE\|SITE_HOST\|ACME_EMAIL\|ACME_DIRECTORY\|ACME_CA_CERT\)=\[A-Za-z0-9\._@\/:\+-\]\+/)
+  })
+})
+
+describe("a real domain can only use Let's Encrypt (the practice CA is for .test names)", () => {
+  const env = { PATH: process.env.PATH, HOME: process.env.HOME }
+
+  it.each(["WATCH", "ACME_DIRECTORY", "ACME_CA_CERT", "CA_CERT"])("push-env.sh refuses %s for a real domain", (key) => {
+    const r = spawnSync("bash", [join(ROOT, "infra/server/push-env.sh"), "--dry-run", "example.com", "ops@example.com"], {
+      encoding: "utf8",
+      env: { ...env, [key]: key === "WATCH" ? "ghcr.io/x/y:z" : "https://10.0.2.2:14000/dir" },
+    })
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain("are for the practice server only, and 'example.com' is not a .test name")
+  })
+
+  it("push-env.sh writes them for a .test name, and production's tag otherwise", () => {
+    const practice = spawnSync("bash", [join(ROOT, "infra/server/push-env.sh"), "--dry-run", "practice.daygame.test", "ops@daygame.test"], {
+      encoding: "utf8",
+      env: { ...env, ACME_DIRECTORY: "https://10.0.2.2:14000/dir" },
+    })
+    expect(practice.stdout).toContain("ACME_DIRECTORY=https://10.0.2.2:14000/dir")
+    const real = spawnSync("bash", [join(ROOT, "infra/server/push-env.sh"), "--dry-run", "example.com", "ops@example.com"], { encoding: "utf8", env })
+    expect(real.stdout).toContain("WATCH=ghcr.io/reachjvc/daygame-coach-production:production")
+    expect(real.stdout).not.toContain("ACME_DIRECTORY")
+  })
+
+  it("deploy.sh refuses a practice CA for a real domain, before touching anything", () => {
+    const dir = mkdtempSync(join(tmpdir(), "production-test-"))
+    try {
+      const settings = join(dir, "deploy.env")
+      writeFileSync(join(dir, "runtime.env"), "X='1'\n")
+      writeFileSync(
+        settings,
+        [`APP_ENV_FILE=${join(dir, "runtime.env")}`, "CADDYFILE=caddy/Caddyfile.production", "SITE_HOST=example.com", `STATE_DIR=${dir}`, "ACME_DIRECTORY=https://10.0.2.2:14000/dir"].join("\n") + "\n",
+      )
+      const r = spawnSync("bash", [join(ROOT, "infra/deploy.sh"), `sha256:${"a".repeat(64)}`], { encoding: "utf8", env: { ...env, DAYGAME_DEPLOY_ENV: settings } })
+      expect(r.status).toBe(2)
+      expect(r.stderr).toContain("is not a .test name. A real domain gets its certificates from Let's Encrypt.")
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("a new server is set up in the order the rehearsal proved (Phase 5b)", () => {
+  const script = withoutComments(read("infra/server/sync-infra.sh"))
+
+  it("sync-infra.sh stops before installing anything until push-env.sh has written deploy.env", () => {
+    const guard = script.indexOf('ssh_root "test -f /etc/daygame/deploy.env"')
+    expect(guard).toBeGreaterThan(-1)
+    expect(guard).toBeLessThan(script.indexOf('tar -C "$stage" -c'))
+  })
+
+  it("starts Caddy before the timers, so the agent's first run finds it up", () => {
+    expect(script.indexOf("up -d --quiet-pull --no-deps caddy")).toBeGreaterThan(-1)
+    expect(script.indexOf("up -d --quiet-pull --no-deps caddy")).toBeLessThan(script.indexOf("systemctl daemon-reload"))
+  })
+
+  it("rewrites only what changed, so systemd never sees an unchanged unit as changed on disk", () => {
+    // 2026-10-16, the rehearsal: every run reinstalled every unit, and systemd
+    // warned "changed on disk. Run 'systemctl daemon-reload'" after each one.
+    expect(script).toContain('cmp -s \\"\\$tmp/units/\\$u\\" /etc/systemd/system/\\$u || install -m 644')
+    expect(script).toContain('cmp -s \\"\\$tmp/infra/\\$f\\" $DEST/\\$f || install')
+  })
+
+  it("installs the disk alert and its timer with the agent", () => {
+    expect(script).toMatch(/FILES=\([^)]*infra\/disk-alert\.sh/)
+    expect(script).toMatch(/UNITS=\([^)]*daygame-disk\.service daygame-disk\.timer/)
+    expect(script).toMatch(/TIMERS=\(daygame-deploy\.timer daygame-disk\.timer\)/)
   })
 })
 

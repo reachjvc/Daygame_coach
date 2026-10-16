@@ -1,0 +1,15 @@
+# Runs daygame-disk.service every 15 minutes, starting 2 minutes after the
+# service manager starts (at boot, for a system unit). Without the "after
+# start" line a monotonic timer has nothing to count from after a reboot.
+# Plans/caddy-deploy-and-cicd.md, Phase 5b step 4.
+
+[Unit]
+Description=daygame-coach disk space alert, every 15 minutes
+
+[Timer]
+OnStartupSec=2min
+OnUnitActiveSec=15min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

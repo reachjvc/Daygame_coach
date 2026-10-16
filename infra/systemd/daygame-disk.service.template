@@ -1,0 +1,16 @@
+# The disk space check, once: ping the 25 % and 10 % checks with how much room
+# is left (infra/disk-alert.sh). Started every 15 minutes by daygame-disk.timer.
+# Installed on a server by infra/server/sync-infra.sh (a system unit run as the
+# deploy user). @@INFRA@@ is the infra/ directory and @@DEPLOY_ENV@@ the
+# machine's settings file.
+# Plans/caddy-deploy-and-cicd.md, Phase 5b step 4.
+
+[Unit]
+Description=daygame-coach disk space alert (25 % and 10 % free)
+Documentation=file://@@INFRA@@/disk-alert.sh
+
+[Service]
+Type=oneshot
+Environment=DAYGAME_DEPLOY_ENV=@@DEPLOY_ENV@@
+ExecStart=@@INFRA@@/disk-alert.sh
+TimeoutStartSec=120

@@ -1,0 +1,27 @@
+# The owner's dev server: `npm run dev` on :3000, from the shared checkout, on
+# Node 24 by path. A systemd user unit, so it starts at boot (lingering is on)
+# and belongs to no terminal and no Claude session: closing an editor or a
+# session no longer takes it down, and a WSL restart brings it back.
+#
+# Installed by hand on this machine (infra/README.md has the commands):
+#   @@REPO@@      the checkout
+#   @@NODE_BIN@@  Node 24's bin directory (nvm, by path: no nvm in systemd)
+#
+# Starting `npm run dev` in a terminal as well starts a second server on :3001.
+# Plans/caddy-deploy-and-cicd.md, Phase 5b step 2 (R11).
+
+[Unit]
+Description=daygame-coach dev server (npm run dev on :3000)
+
+[Service]
+WorkingDirectory=@@REPO@@
+# Node first, so npm and next run on Node 24 whatever the default is. %h is the
+# owner's home: ~/.local/bin holds the command-line tools some features call.
+Environment=PATH=@@NODE_BIN@@:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@@NODE_BIN@@/npm run dev
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target
