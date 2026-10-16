@@ -1270,6 +1270,10 @@ export function updateArea(plan: NsPlan, areaId: string, patch: Partial<Omit<NsA
  * because a wheel segment was tidied away is not a trade anyone would make.
  * Routines pointing at the area go back to serving all of them.
  *
+ * Every other mention of the area goes too — in what goals and routines serve,
+ * on experiences, and in the season — because the save drops them anyway, and
+ * the screen would otherwise show a plan the next load does not.
+ *
  * The last area cannot be removed. With none left there is no wheel, nowhere
  * to file a goal, and nothing to rate.
  */
@@ -1286,11 +1290,20 @@ export function removeArea(plan: NsPlan, areaId: string, now = nowIso()): NsPlan
     delete next[areaId]
     if (Object.keys(next).length > 0) daily[date] = next
   }
+  const others = (ids: string[]) => ids.filter((id) => id !== areaId)
   return touch({
     ...plan,
     areas: remaining,
-    goals: plan.goals.map((g) => (g.areaId === areaId ? { ...g, areaId: fallback } : g)),
-    routines: plan.routines.map((r) => (r.areaId === areaId ? { ...r, areaId: null } : r)),
+    goals: plan.goals.map((g) => {
+      // A goal's `serves` lists areas beyond its own, so a moved goal stops
+      // listing the area it moved into.
+      const filed = g.areaId === areaId ? fallback : g.areaId
+      return { ...g, areaId: filed, serves: others(g.serves).filter((id) => id !== filed) }
+    }),
+    routines: plan.routines.map((r) => ({ ...r, areaId: r.areaId === areaId ? null : r.areaId, serves: others(r.serves) })),
+    experiences: plan.experiences.map((x) => (x.areaId === areaId ? { ...x, areaId: null } : x)),
+    seasonAreaIds: others(plan.seasonAreaIds),
+    seasonFocusId: plan.seasonFocusId === areaId ? null : plan.seasonFocusId,
     review,
     daily,
   }, now)

@@ -290,6 +290,26 @@ describe("areas", () => {
     expect(plan.daily[TODAY]?.["lm_health"]).toBeUndefined()
   })
 
+  it("leaves no mention of the removed area, as the save would not keep one", () => {
+    const { plan: withGoal, areaId } = planWithGoal()
+    const goalId = withGoal.goals[0].id
+    let plan: NsPlan = {
+      ...withGoal,
+      // The goal moves into the first area left, so it cannot still serve it.
+      goals: withGoal.goals.map((g) => ({ ...g, serves: [areaId, DEFAULT_AREAS[1].id, "lm_mindset"] })),
+      routines: withGoal.routines.map((r) => ({ ...r, serves: [areaId] })),
+      seasonAreaIds: [areaId, "lm_mindset"],
+      seasonFocusId: areaId,
+    }
+    plan = addExperiences(plan, "Swim in the sea in winter", areaId, NOW)
+    plan = removeArea(plan, areaId, NOW)
+
+    expect(JSON.stringify(plan)).not.toContain(`"${areaId}"`)
+    expect(plan.goals.find((g) => g.id === goalId)?.serves).toEqual(["lm_mindset"])
+    expect(plan.seasonAreaIds).toEqual(["lm_mindset"])
+    expect(plan.seasonFocusId).toBeNull()
+  })
+
   it("refuses to remove the last area, because a goal would have nowhere to live", () => {
     let plan = emptyNsPlan()
     for (const a of DEFAULT_AREAS.slice(1)) plan = removeArea(plan, a.id, NOW)
