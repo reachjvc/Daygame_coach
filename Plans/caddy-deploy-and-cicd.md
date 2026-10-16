@@ -1375,7 +1375,20 @@ Start commit `2e1c50e1`. This phase's code: 438c6250 (the rehearsal and what it 
   result is in Q18 and Q8: since 2026-06-15 CPX21 in Ashburn costs €31.99 / $37.49 a month before VAT
   and IPv4 (it was €11.99), and an EU server of the same class costs €5.49–8.49. **This reopens Q8 for
   the owner** (see the STOP table, R3).
-- **5b.8** The gates, CI and the reviews are below.
+- **5b.8** The gates and CI are below, then the reviews.
+
+### Phase 5b final gates (2026-10-16), on 33b1ba6b (the commit after it changes only this file)
+
+Run in the isolated worktree on Node 24.21.0: `npm run lint:ratchet` "Lint errors: 290, none new.";
+`node scripts/typecheck-ratchet.mjs` "Type errors: 88, none new."; `npm test` "Test Files 368 passed
+(368)", "Tests 4799 passed | 1 skipped (4800)"; `npm run audit:ratchet` "Dependency audit: 5
+vulnerable package version(s), none new."; `actionlint` exit 0; `shellcheck` over all twelve
+`infra/**/*.sh` exit 0; `hadolint infra/Dockerfile` and `infra/rehearsal/Dockerfile` exit 0. CI run
+38944898540 on 33b1ba6b: "completed success" (`checks` success, `image-staging` success). This
+machine's agent then picked that image up ("20:18:48 agent: new digest: …@sha256:6f71adcc…"), and it
+had already deployed b01a3c64 through the new scripts ("healthy: /api/healthz answers 200 with
+commit b01a3c64…, inside and through Caddy (proto https)"). The worktree was removed and `git
+worktree prune` run afterwards.
 
 ### Phase 5b reviews (2026-10-16), on 2e1c50e1..438c6250, this phase's files only
 
