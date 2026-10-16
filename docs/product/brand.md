@@ -73,6 +73,12 @@ Nothing is decided. What the owner said:
     perfectable.com is a company "creating technology that empowers people to
     improve their lives", the same space, and @perfectable on YouTube was
     taken. The dictionary spelling is "perfectible".
+- **Round 4 (2026-10-16):** 146 names in the zone he reacted to (reps, practice,
+  the ten-year game, the man in progress), each checked on .com with get-/the-/
+  -app variants, .app, YouTube and the App Store, are on the naming board at
+  https://claude.ai/artifact/DSD8J1PJt4533EPytGD9v4. His Yes/Maybe/No marks are
+  kept in its `marks` collection and his notes in `notes/owner`. Read them with
+  the ArtifactData tool before the next round.
 - **A product form of the campaign line, not yet asked for:** let a user write
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
