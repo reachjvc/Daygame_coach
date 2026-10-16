@@ -79,6 +79,12 @@ Nothing is decided. What the owner said:
   https://claude.ai/artifact/DSD8J1PJt4533EPytGD9v4. His Yes/Maybe/No marks are
   kept in its `marks` collection and his notes in `notes/owner`. Read them with
   the ArtifactData tool before the next round.
+- **10kreps.com is someone else's app in the making (checked 2026-10-16).**
+  Registered 2025-12-29 at Namecheap, expires 2026-12-29, behind Cloudflare. It
+  serves an Expo (React Native) web build titled "10K Reps" with Google sign-in
+  and a Supabase backend. It is not on the App Store and web searches found
+  nothing about it. tenkreps.com, tenkreps.app, @tenkreps and the
+  tenthousandreps forms were free.
 - **A product form of the campaign line, not yet asked for:** let a user write
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
