@@ -1,9 +1,10 @@
 # Tests worth their keep — cut first, then make what is left fast
 
-**Status:** executing since 2026-10-13 — Phases 1–3 in progress; Phase 7's backend,
-harness and first repo-level tests built (see "Progress" at the end). Replaces the 2026-10-01 version of this
-file, which was never executed apart from the test-gate fix
-(`git show 5c3554aa:Plans/tests-worth-their-keep.md`).
+**Status:** done 2026-10-16 — all ten phases, and every bug the tests pinned is
+fixed in code. Four migrations wait for the owner's go-ahead before production
+gets them (see "2026-10-16, the pinned bugs" at the end). Replaces the
+2026-10-01 version of this file, which was never executed apart from the
+test-gate fix (`git show 5c3554aa:Plans/tests-worth-their-keep.md`).
 
 **Serves** vision item 13 ("Tests are worth their keep: the useless ones removed,
 the missing ones written") and item 43 (CI). **The file-by-file verdicts** are in
@@ -898,3 +899,48 @@ The 6 moderate are build-time CSS tooling and transformers' Node-only
 `onnxruntime-node`; the 3 low are a resource-consumption issue in `ai`
 (6.0.3 → 6.0.307 fixes it), worth taking in a deliberate dependency pass,
 not in a working tree three sessions are running in.
+
+**2026-10-16, the pinned bugs.** Every `it.fails` / `test.fails` the real
+schema produced is gone; each fix was proved by putting the defect back and
+watching its test go red. Database suite 172 → 177 tests, none pinned.
+
+Fixed in code, live once released:
+- *Inner Game values kept only the first category.* The upsert skips rows that
+  exist (`ignoreDuplicates`): a row is only its two keys, and the conflict path
+  is an UPDATE that `user_values` has no policy for. No migration.
+- *Inner Game reset answered 500.* Nothing read `essential_selection` and no
+  client sent it; the code stopped writing the column production never had.
+  This also cleared 2 type errors (baseline 90 → 88).
+- *Practice stats.* Both stats reads use `score`, the column the table has;
+  the settings read is one query, orders a missing time last and shows "—"
+  rather than taking the page down when it fails; the average reads "/10", not
+  "%". The opener's score was one level deeper than the save looked, so it
+  would have been lost even with the columns right.
+- *Removing an area left it mentioned* in goals' and routines' `serves`, on
+  experiences and in the season, which the save drops: the screen and the next
+  load disagreed. `removeArea` drops every mention, and a moved goal stops
+  serving the area it moved into. Found by the new round-trip test below.
+
+Written, applied to the test backend, **not applied to production** — they
+wait for the owner (`.claude/rules/database.md`: ask before applying):
+- `20261016120000_scenario_attempts_save.sql` — `difficulty` and `archetype`
+  may be empty, a score is 1-10, and the person's own INSERT policy goes: the
+  server saves attempts with its key, since the scores feed badges. Until
+  applied, attempts still fail to save, as before.
+- `20261016120100_user_goals_one_check_per_column.sql` — goals under
+  "scenarios" save; the four duplicate `chk_*` CHECKs go, leaving the one the
+  generator writes; `goal_type` defaults to 'recurring'.
+- `20261016120200_user_values_belong_to_a_person.sql` — value picks are deleted
+  with the account. NOT VALID, because 3 of production's 4 rows already name
+  accounts that no longer exist; deleting those is the owner's call, then
+  `VALIDATE CONSTRAINT`.
+- `20261016120300_life_plan_set_null_keeps_the_owner.sql` — the five
+  `life_plan_*` keys clear only their pointer. Proved by a new test: removing an
+  area with goals under it failed with `null value in column "user_id"`.
+
+Security, from the review of this change (low, not fixed): a paying account
+can farm scenario scores by replaying requests — the opener checker scores the
+same text the same way every time, and the chat takes its turn count from the
+request, so every request can be a "milestone". Fix when the scenarios get
+their own work: count turns on the server, or save one row per session and
+checkpoint.
