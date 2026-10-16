@@ -17,6 +17,9 @@ dist
 .env.test.local
 .env.production.local
 
+# Supabase CLI cache (rewritten on every CLI run)
+supabase/.temp
+
 # Debug logs
 npm-debug.log*
 yarn-debug.log*
