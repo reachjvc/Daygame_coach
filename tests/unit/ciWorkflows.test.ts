@@ -271,8 +271,9 @@ describe("when CI runs at all", () => {
      * The backend's ports sit inside Linux's ephemeral range (32768-60999), so
      * an outbound connection made just before — the image pulls — can hold one
      * when the stack binds it: run 38731303670 lost a shard to "0.0.0.0:55324 …
-     * address already in use". Each job reserves the range first; the range is
-     * read from config.toml, so moving a port moves the check with it.
+     * address already in use". Each job reserves the range as its first step,
+     * before checkout or npm ci can take one; the range is read from
+     * config.toml, so moving a port moves the check with it.
      */
     const toml = readFileSync(join(root, "tests/db/supabase/config.toml"), "utf8")
     const ports = [...toml.matchAll(/^\s*(?:shadow_)?port\s*=\s*(\d+)/gm)].map((m) => Number(m[1]))
@@ -288,8 +289,10 @@ describe("when CI runs at all", () => {
     ]
     for (const [name, body] of starters) {
       expect(body, `${name} does not reserve ${range}`).toContain(`ip_local_reserved_ports=${range}`)
-      expect(body.indexOf("ip_local_reserved_ports"), `${name} reserves the ports after the CLI is set up`).toBeLessThan(
-        body.indexOf("supabase/setup-cli"),
+      // FIRST: a port taken by checkout or npm ci before the reservation stays
+      // taken (run 38858666954 reserved after npm ci and still lost 55322).
+      expect(body.indexOf("ip_local_reserved_ports"), `${name} reserves the ports after something used the network`).toBeLessThan(
+        body.indexOf("actions/checkout"),
       )
     }
   })
