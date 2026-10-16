@@ -36,8 +36,10 @@ on:
   pull_request:
     branches: [main, beta]
   schedule:
-    # 03:00 UTC. Nightly, on the default branch only.
-    - cron: '0 3 * * *'
+    # 03:23 UTC, nightly, on the default branch only. Not on the hour: GitHub
+    # runs schedules best-effort and delays them most at the top of the hour
+    # (the first nightly at '0 3' started at 07:59, 2026-10-15).
+    - cron: '23 3 * * *'
   workflow_dispatch:
 
 permissions:

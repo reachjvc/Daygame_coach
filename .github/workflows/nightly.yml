@@ -12,8 +12,11 @@ name: Nightly checks
 # tests/unit/ciWorkflows.test.ts.
 on:
   schedule:
-    # 04:30 UTC, after e2e.yml's 03:00 nightly run has had time to finish.
-    - cron: '30 4 * * *'
+    # 04:47 UTC, after e2e.yml's nightly run has had time to finish, and off
+    # the hour and half-hour, which GitHub delays most (the first at '30 4'
+    # started at 09:20). The ratchet reads each suite's newest green run, so
+    # an e2e run that arrives late only means yesterday's numbers are read.
+    - cron: '47 4 * * *'
   workflow_dispatch:
 
 permissions:
