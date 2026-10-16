@@ -152,6 +152,13 @@ Nothing is decided. What the owner said:
   (https://claude.ai/artifact/QohKombDDmEGRavS9tfTmw) shows each finalist on a
   lock screen, home screen, browser, YouTube channel, book cover and out loud;
   his top three are stored in its `picks/owner` document.
+- **10K Reps is probably his favourite, and he wants it in digits** (2026-10-16).
+  10kreps.com is still the unreleased "10K Reps" app (registered 2025-12-29,
+  renews 2026-12-29, not on the App Store). Its own code lists
+  support@10kreps.com as the contact. Free on 2026-10-16: 10kreps.app, @10kreps
+  on YouTube, 10kreps.net, 10kreps.org, and as .com: 10krepsclub.com (also .app
+  and YouTube), the10kreps.com, my10kreps.com, 10krepsco.com, get10kreps.com.
+  10000reps.com is taken (live site since 2013).
 - **Domain readability:** the board flags a domain that hides a bad word when
   the words run together (expertsexchange, therapistfinder) or runs past 20
   letters. The rule lives in the board's build script, not in this repo.
