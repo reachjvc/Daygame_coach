@@ -861,6 +861,16 @@ notes-only report (f34c603); both browser specs now assert the fix (9d00f02).
 All of the above is live: `main` at 5a84e0b9, every lane green (run
 38730086048), `/api/healthz` reporting that build.
 
+**2026-10-16.** The scheduled runs work on `main`: GitHub fired the first
+03:00 e2e and 04:30 nightly about five hours late (07:59 and 09:20 UTC), both
+green. The release push's own e2e run then lost a shard before any test: the
+backend's ports (55320-55329) sit inside Linux's ephemeral range, and an
+outbound connection from checkout or `npm ci` can hold one when the stack
+binds it ("0.0.0.0:55324 … address already in use", then 55322). Every job
+that starts a backend now reserves the range as its first step, and
+`ciWorkflows.test.ts` checks the range against `config.toml` and the order
+(586c3fbd, 263ca65a). Two full runs after it: green. Live at 559e4a1b.
+
 **Left for you:**
 - the migration `20260927120000_corrections_keep_set_order` (approved by you
   on 2026-09-28) is still not in production; it is the only pending one, and
