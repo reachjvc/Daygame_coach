@@ -31,7 +31,13 @@ Nothing is decided. What the owner said:
 - **Liked:** Reps, and NextRep even more. Ten Thousand Reps "could work"
   (2026-10-16).
 - **Names he admires:** Modern Wisdom, Art of Accomplishment.
-- **His own suggestions:** Perfect Practice, Perfectable (2026-10-16).
+- **His own suggestions:** Perfect Practice, Perfectable, Better Man (2026-10-16).
+- **The plain .com must be free** (2026-10-16): he does not want to look through
+  names whose .com is taken, and get-/-app forms do not count.
+- **Thinking in buckets** (sorting ideas into families) did not work for him; he
+  asked for more creative methods.
+- **Marked Yes on the board:** 10K Reps, Thousand Reps. **Maybe:** Man in
+  Progress, Ten Year Man.
 - **Rejected:** Frontfoot ("not appealing at all"), Vindrose ("super bad"), and
   the whole style of Latin mottos, Danish words and nautical metaphors.
 
@@ -85,6 +91,23 @@ Nothing is decided. What the owner said:
   and a Supabase backend. It is not on the App Store and web searches found
   nothing about it. tenkreps.com, tenkreps.app, @tenkreps and the
   tenthousandreps forms were free.
+- **Better Man is taken in his exact space** (checked 2026-10-16): betterman.com
+  is a Christian men's ministry running since 1999, betterman.app is taken, the
+  App Store already has "Better Man: Self-Improvement", "A Better Man Plan" and
+  others, and the 2024 Robbie Williams film owns search.
+- **Round 5 (2026-10-16), no buckets:** five writers each worked one way: a
+  brand copywriter from a manifesto, a screenwriter from one man's ten-year
+  story, an internet-native creator from imagined top comments, a podcast host
+  from the sound of Modern Wisdom and Order of Man, and one from his own words in
+  vision.md and the concept docs. Of about 145 names, 18 had a free plain .com.
+  Claude added 15 more built to keep a free .com while reading naturally (Reps
+  Make the Man, Practice Makes Him, A Decade of Reps, The Ten Year Man). The
+  board now shows only these and the 31 round-4 names with a free plain .com,
+  59 in all.
+- **Lessons from round 5:** a free plain .com almost always needs three or more
+  words, a number, or a coined word. One- and two-word English phrases were
+  taken in about 9 cases out of 10. In this niche "a ten" means an attractive
+  woman, so a bare "ten" name can misread; "ten years" and "10K reps" do not.
 - **A product form of the campaign line, not yet asked for:** let a user write
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
