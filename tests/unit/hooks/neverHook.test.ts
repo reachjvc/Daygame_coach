@@ -55,13 +55,6 @@ describe("the never-hook blocks what it exists to block", () => {
     expect(bash("git add .")).toMatch(/share this working tree/)
   })
 
-  it("refuses every git stash that writes, including pop", () => {
-    // One stash in this checkout holds work that must never be popped.
-    expect(bash("git stash")).toMatch(/off in this checkout/)
-    expect(bash("git stash pop")).toMatch(/off in this checkout/)
-    expect(bash("git stash push -m wip")).toMatch(/off in this checkout/)
-  })
-
   it("refuses the exact command that destroyed a user's sentence on 2026-08-27", () => {
     const reason = bash(`supabase db query --linked "update life_answers set body = 'rewritten'"`)
     expect(reason).toMatch(/2026-08-27/)
@@ -80,9 +73,11 @@ describe("and permits the near-misses, so nobody switches it off", () => {
     expect(bash("git add CLAUDE.md docs/product/map.md")).toBeNull()
   })
 
-  it("lets you read the stash", () => {
+  it("leaves git stash alone", () => {
+    // The owner removed the stash rule on 2026-10-16: it refused a stash drop
+    // they had asked for, twice.
     expect(bash("git stash list")).toBeNull()
-    expect(bash("git stash show -p")).toBeNull()
+    expect(bash("git stash drop stash@{0}")).toBeNull()
   })
 
   it("lets a rollback-wrapped probe and a plain read through", () => {
@@ -152,7 +147,7 @@ describe("the hook's full decision table", () => {
     // whole file green while checking nothing, which is the failure mode that
     // hides best.
     const out = execFileSync("python3", [HOOK, "--selftest"], { encoding: "utf8" }).trim()
-    expect(Number(out.split("/")[0])).toBeGreaterThanOrEqual(27)
+    expect(Number(out.split("/")[0])).toBeGreaterThanOrEqual(25)
   })
 })
 

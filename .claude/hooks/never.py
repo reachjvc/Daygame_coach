@@ -6,11 +6,9 @@ Three rules in this repo have an exact moment. Each one was a sentence in
 CLAUDE.md, which is read once at session start and is ancient history by the
 time the moment arrives. This turns them into a refusal from the tool.
 
-  1. Shared checkout      no `git add -A`, no `git stash`. Three Claude
-                          sessions work in this one working tree; a sweep
-                          commits somebody else's half-finished file, and a
-                          stash hides it. One stash here already holds work
-                          that must never be popped.
+  1. Shared checkout      no `git add -A`. Three Claude sessions work in this
+                          one working tree; a sweep commits somebody else's
+                          half-finished file.
   2. Screenshots          no `.png` written outside `.playwright-mcp/`.
   3. Live-data probes     no INSERT/UPDATE/DELETE against the real database
                           outside a begin/rollback. On 2026-08-27 an
@@ -31,8 +29,7 @@ false block is somebody else's session wedged.
 
 PROVE IT, DO NOT TRUST IT. `tests/unit/hooks/neverHook.test.ts` feeds this the
 exact payloads below and asserts deny on each, plus allow on the near misses
-that must keep working (`git add <path>`, `git stash list`, a rollback-wrapped
-probe). Run `python3 .claude/hooks/never.py --selftest` for the same checks
+that must keep working (`git add <path>`, a rollback-wrapped probe). Run `python3 .claude/hooks/never.py --selftest` for the same checks
 without vitest.
 
 Wired as PreToolUse in .claude/settings.json.
@@ -75,9 +72,6 @@ def strip_heredocs(command: str) -> str:
     return "\n".join(out)
 
 GIT_ADD_SWEEP = re.compile(r"\bgit\s+add\b(?=[^\n]*?(?:\s-A\b|\s--all\b|\s+\.\s*$|\s+\.\s+|\s+\*))")
-# Only `list` and `show` are reads. Everything else — bare, push, save, pop,
-# apply, drop, clear — either hides work or destroys it.
-GIT_STASH_WRITE = re.compile(r"\bgit\s+stash\b(?!\s+(?:list|show)\b)")
 
 DB_TOOL = re.compile(r"\bsupabase\s+db\s+(?:query|execute)\b|\bpsql\b")
 # No trailing \b on the alternation: `update\s+\w\b` cannot match "update
@@ -146,14 +140,6 @@ def check_bash(command: str):
                 "Three Claude sessions share this working tree, so a sweeping "
                 "`git add` stages somebody else's half-finished file. Name the "
                 "paths you mean: `git add path/one path/two`."
-            )
-
-        if GIT_STASH_WRITE.search(part):
-            return deny(
-                "`git stash` is off in this checkout — two other sessions are "
-                "editing these same files, and one existing stash holds work "
-                "that must never be popped. Commit to a branch instead. "
-                "(`git stash list` and `git stash show` are allowed.)"
             )
 
         if DB_TOOL.search(part) and DB_WRITE.search(part) and not DB_WRAPPED.search(part):
@@ -243,9 +229,7 @@ CASES = [
     ("Bash", {"command": "git add --all"}, "deny", "long form"),
     ("Bash", {"command": "git add ."}, "deny", "dot form"),
     ("Bash", {"command": "git add CLAUDE.md docs/map.md"}, None, "named paths still work"),
-    ("Bash", {"command": "git stash"}, "deny", "bare stash"),
-    ("Bash", {"command": "git stash pop"}, "deny", "pop — the one that must never run here"),
-    ("Bash", {"command": "git stash list"}, None, "reading the stash is fine"),
+    ("Bash", {"command": "git stash drop stash@{0}"}, None, "stash is not this hook's business (owner, 2026-10-16)"),
     ("Bash", {"command": "supabase db query --linked \"update life_answers set body = 'x'\""}, "deny", "the 2026-08-27 command"),
     ("Bash", {"command": "supabase db query --linked \"begin; update t set a=1; rollback;\""}, None, "wrapped probe is fine"),
     ("Bash", {"command": "supabase db query --linked 'select count(*) from life_answers'"}, None, "a read is fine"),

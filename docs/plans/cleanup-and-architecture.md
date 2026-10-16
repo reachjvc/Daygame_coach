@@ -368,11 +368,11 @@ behaviour has a bug.
 5. **`beta`, and the two stashes.** `beta` is 1 commit ahead and 480 behind; its
    content is a strip of `src/articles`, which still exists on `training-rebuild`,
    so the trunk already rejected it. *Recommendation: delete `beta` local and
-   remote without cherry-picking, and record why in the message.* **The two
-   stashes: leave both alone forever.** `never.py` forbids every stash write,
-   memory says one holds irreplaceable work, and which one is **unverified** —
-   a third state, not a pass. `git stash show -p stash@{1}` is permitted and is
-   yours to read, not an agent's to act on.
+   remote without cherry-picking, and record why in the message.* **Done
+   2026-10-16:** the owner had `beta` and both stashes deleted, and the stash
+   rule taken out of `never.py`. Each stash had mostly landed on main within a
+   day of being made; both are kept as patches in
+   `~/backups/daygame-coach-stashes-2026-10-16/`.
 
 Nothing in this plan touches `app/auth/`.
 
