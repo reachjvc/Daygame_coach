@@ -126,6 +126,21 @@ Nothing is decided. What the owner said:
   60, science 8 of 60, great-brand patterns 3 of 54, arbitrary pairings 2 of
   70, invented short words 0 of about 108 (couragent.com, for example, has been
   registered since 2005).
+- **What he marked in round 6** (the round he called "much much better"):
+  Yes: The High Board, Canvas to Crown, Dawn Roadwork, Feed the Starter,
+  Already Moving, Great Story, Though, The Cave You Fear, Nerve and Sinew,
+  First Say, Then Do. Yes or Maybe rate by source: everyday moments 6 of 16,
+  literature 7 of 21, crafts and sport 4 of 12, clubs and characters 5 of 29,
+  great-brand and arbitrary names 0 of 5. He also wants more Vindahl names
+  (Vindahl & Co) and liked The Earnest Club.
+- **Round 7 (2026-10-16):** writers got his Yes traits as a description, not
+  the names, plus a rule that every name must fit both the dating start and the
+  whole life, with a "how it fits" line. Six sources: Vindahl and Earnest,
+  boxing, everyday courage, old wisdom, stage and performance, craft and skate.
+  About 280 names; 216 had a free plain .com, a much higher rate than before
+  because the brief steered toward 3-4 word phrases. A separate judge scored
+  each for him: 5 fives, 13 fours, 111 threes. The board shows the 4s and 5s by
+  default, and each name now has a note box (stored in `namenotes`).
 - **Domain readability:** the board flags a domain that hides a bad word when
   the words run together (expertsexchange, therapistfinder) or runs past 20
   letters. The rule lives in the board's build script, not in this repo.
