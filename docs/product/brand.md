@@ -36,6 +36,13 @@ Nothing is decided. What the owner said:
   names whose .com is taken, and get-/-app forms do not count.
 - **Thinking in buckets** (sorting ideas into families) did not work for him; he
   asked for more creative methods.
+- **Round 5 over-indexed on a few words** (reps, ten, years, man, practice),
+  because every writer was shown his liked names. He asked for inspiration from
+  further afield (2026-10-16).
+- **He loves Dollar Shave Club as a name**, and wants the domain to look good
+  written out in one string (2026-10-16).
+- **He suggested studying the best names in history** (Apple and the like),
+  noting a name can be somewhat random and still great.
 - **Marked Yes on the board:** 10K Reps, Thousand Reps. **Maybe:** Man in
   Progress, Ten Year Man.
 - **Rejected:** Frontfoot ("not appealing at all"), Vindrose ("super bad"), and
@@ -108,6 +115,20 @@ Nothing is decided. What the owner said:
   words, a number, or a coined word. One- and two-word English phrases were
   taken in about 9 cases out of 10. In this niche "a ten" means an attractive
   woman, so a bare "ten" name can misread; "ten years" and "10K reps" do not.
+- **Round 6 (2026-10-16):** no example names were shown to the writers, and the
+  round-5 words were banned. Nine writers each drew from one source: literature,
+  music and film, science and the body, crafts and sport, everyday moments,
+  invented words, the mechanisms behind history's best brand names, arbitrary
+  Apple-style words, and invented characters and clubs. About 540 names in
+  total; 100 had a free plain .com and went on the board. Free-.com rate by
+  source: invented characters and clubs 29 of 59, literature 21 of 60,
+  everyday moments 16 of 60, crafts and sport 12 of 60, music and film 9 of
+  60, science 8 of 60, great-brand patterns 3 of 54, arbitrary pairings 2 of
+  70, invented short words 0 of about 108 (couragent.com, for example, has been
+  registered since 2005).
+- **Domain readability:** the board flags a domain that hides a bad word when
+  the words run together (expertsexchange, therapistfinder) or runs past 20
+  letters. The rule lives in the board's build script, not in this repo.
 - **A product form of the campaign line, not yet asked for:** let a user write
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
