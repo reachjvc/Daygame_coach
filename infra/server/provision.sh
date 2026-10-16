@@ -5,6 +5,11 @@
 #   infra/server/provision.sh --dry-run    print every action; touch nothing
 #   infra/server/provision.sh              do it (needs R3's token, R6's key)
 #
+# IT SPENDS THE OWNER'S MONEY, SO ONLY THE OWNER RUNS IT FOR REAL. Without
+# --dry-run it stops unless a person at a terminal types "yes" after seeing
+# what will be created. An AI session has no terminal, so it can only run the
+# dry run; handing over a token is not consent to spend.
+#
 # It creates, each only if no resource of that name exists yet:
 #   - the firewall daygame-web: inbound 80/tcp, 443/tcp and 443/udp from
 #     0.0.0.0/0 AND ::/0. No port 22: OpenSSH is off on the server and the
@@ -45,6 +50,17 @@ case "${1:-}" in
   "") ;;
   *) die "usage: infra/server/provision.sh [--dry-run]" ;;
 esac
+
+# The owner's yes, typed at a terminal, before anything is read or created.
+if [ "$dry_run" = no ]; then
+  if ! { true </dev/tty; } 2>/dev/null; then
+    die "this creates a server that costs money every month, so only a person at a terminal can run it. Run it yourself, or use --dry-run to see the plan."
+  fi
+  printf 'This creates the server %s (%s, %s) at Hetzner, billed monthly; check the price of %s at https://www.hetzner.com/cloud before going on.\nType yes to create it: ' \
+    "$NAME" "$SERVER_TYPE" "$LOCATION" "$SERVER_TYPE" >/dev/tty
+  read -r answer </dev/tty
+  [ "$answer" = yes ] || die "not confirmed; nothing was created."
+fi
 
 # The inbound rules, in one place. tests/unit/infra/production.test.ts reads
 # this list: it must never name 22, 3000, 5432, 11434 or 2019, and every port

@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { parse } from "yaml"
+import { spawnSync } from "node:child_process"
 
 const ROOT = resolve(__dirname, "../../..")
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8")
@@ -131,6 +132,15 @@ describe("secrets stay off command lines, and settings are never executed as roo
     const script = read("infra/server/sync-infra.sh")
     expect(script).not.toMatch(/\. \/etc\/daygame\/deploy\.env/)
     expect(script).toMatch(/grep -E '\^\(APP_ENV_FILE\|CADDYFILE\|SITE_HOST\|ACME_EMAIL\)=\[A-Za-z0-9\._@\/:\+-\]\+/)
+  })
+})
+
+describe("spending money is the owner's act", () => {
+  it("provision.sh refuses to create a server without a person at a terminal typing yes", () => {
+    // An AI session has no terminal: it can run the dry run and nothing else.
+    const r = spawnSync("bash", [join(ROOT, "infra/server/provision.sh")], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], detached: true })
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain("only a person at a terminal can run it")
   })
 })
 

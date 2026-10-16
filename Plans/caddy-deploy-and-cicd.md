@@ -1065,7 +1065,7 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 |---|---|---|
 | R1 | Buy the domain on Cloudflare Registrar | Tell the AI the name |
 | R2 | Cloudflare → My Profile → API Tokens → "Edit zone DNS", zone = that domain, expiry 30 days | `~/.config/daygame/cloudflare.token`, then `chmod 600` |
-| R3 | Hetzner Cloud: account, payment method, a project, and an API token (read & write) | `~/.config/daygame/hcloud.token`, `chmod 600` |
+| R3 | Hetzner Cloud: account, payment method, a project, and an API token (read & write). The token lets the scripts read and dry-run; **renting the server is a separate decision**: you run `infra/server/provision.sh` yourself and type "yes" (Phase 6 step 1). Never share the account password. | `~/.config/daygame/hcloud.token`, `chmod 600` |
 | R4 | `gh auth login -s read:packages`, if B-GH is still open. If step 4.4 was refused, also run `infra/github-config.sh`. | WSL terminal |
 | R5 | Two classic GitHub tokens with only `read:packages`, 1-year expiry: one for this machine, one for the server (B-GHCR) | `~/.config/daygame/ghcr-read-wsl.token` and `ghcr-read-server.token`, `chmod 600` |
 | R6 | Tailscale: add `tag:prod` and the policy from Q10 (you → `tag:prod` port 22 in check mode; `tag:prod` → nothing), then a one-off, pre-approved, `tag:prod` auth key with 1-hour expiry | `~/.config/daygame/tailscale.authkey`, `chmod 600` |
@@ -1106,7 +1106,11 @@ Then start a new session with the Phase 6 prompt at the end of this file.
 check, the production approval click (about 10 minutes after a push to `main`, once `ci.yml`'s checks
 finish), and confirming the emails in steps 6 and 7.
 
-1. Run `provision.sh` for real. Then connect over Tailscale SSH (one browser check by the owner) and run
+1. **The owner runs `provision.sh` for real, in their own terminal, after reading its `--dry-run`
+   output and the current price of the server type.** Creating the server costs money every month,
+   and a token is not consent to spend: the script refuses without a person typing "yes" at a
+   terminal, which an AI session cannot do (changed 2026-10-16 after the owner pointed out that the
+   plan had made the R3 token the go-ahead). Then connect over Tailscale SSH (one browser check by the owner) and run
    `cloud-init status --wait`.
 2. Run `sync-infra.sh <commit>`, then `push-env.sh`. `push-env.sh` sends the runtime values with
    `NEXT_PUBLIC_APP_URL` set to the domain, and the R5 token. It also sends a
