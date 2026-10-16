@@ -386,7 +386,6 @@ export async function getSettingsPageData(
     averageScore: scenarioStats?.averageScore ?? null,
     level: profile?.level ?? 1,
     xp: profile?.xp ?? 0,
-    scenariosCompleted: profile?.scenarios_completed ?? 0,
   }
 
   return {

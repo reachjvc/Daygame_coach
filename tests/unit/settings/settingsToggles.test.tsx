@@ -77,7 +77,7 @@ function renderSettings(overrides: Partial<Parameters<typeof SettingsPage>[0]> =
     user: { id: "user-1", email: "test@example.com" },
     profile,
     subscription: null,
-    stats: { totalScenarios: 0, averageScore: 0, level: 1, xp: 0, scenariosCompleted: 0 },
+    stats: { totalScenarios: 0, averageScore: 0, level: 1, xp: 0 },
     onUpdateSandboxSettings: vi.fn(async (_s: Partial<SandboxSettings>) => {}),
     onResetSandboxSettings: vi.fn(async () => {}),
     onUpdateDifficulty: vi.fn(async () => {}),

@@ -65,7 +65,6 @@ export interface UserStats {
   averageScore: number | null
   level: number
   xp: number
-  scenariosCompleted: number
 }
 
 // ============================================

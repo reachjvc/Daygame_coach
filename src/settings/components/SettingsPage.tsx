@@ -311,7 +311,7 @@ export function SettingsPage({
                 />
 
                 {/* Stats Grid */}
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-lg bg-muted/50 p-4 text-center">
                     <TrendingUp className="mx-auto mb-2 h-6 w-6 text-primary" />
                     <p className="text-2xl font-bold">{stats.totalScenarios ?? "—"}</p>
@@ -321,11 +321,6 @@ export function SettingsPage({
                     <CircleDot className="mx-auto mb-2 h-6 w-6 text-primary" />
                     <p className="text-2xl font-bold">{stats.averageScore === null ? "—" : `${stats.averageScore}/10`}</p>
                     <p className="text-sm text-muted-foreground">Avg Score (Last 10)</p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-4 text-center">
-                    <Trophy className="mx-auto mb-2 h-6 w-6 text-primary" />
-                    <p className="text-2xl font-bold">{stats.scenariosCompleted}</p>
-                    <p className="text-sm text-muted-foreground">Completed</p>
                   </div>
                 </div>
               </CardContent>
