@@ -35,6 +35,8 @@ that stage.
 - Commit and push your own work without being asked.
 - No silent fallbacks: scripts fail loudly or ask.
 - Ask before deleting data or anything hard to reverse.
+- Never spend money, directly or through a token, key or account that can,
+  unless the owner approved that exact spend beforehand. This overrides any plan.
 - Flag security risks when you see them, unasked.
 
 <!-- BEGIN:nextjs-agent-rules -->
