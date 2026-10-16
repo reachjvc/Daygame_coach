@@ -28,7 +28,9 @@ Nothing is decided. What the owner said:
 - He wants a name that is very appealing to him, memorable, and says mastery,
   success, progress and fully getting the life you want. Dating first, the whole
   life later.
-- **Liked:** Reps, and NextRep even more.
+- **Liked:** Reps, and NextRep even more. Ten Thousand Reps "could work"
+  (2026-10-16).
+- **Names he admires:** Modern Wisdom, Art of Accomplishment.
 - **Rejected:** Frontfoot ("not appealing at all"), Vindrose ("super bad"), and
   the whole style of Latin mottos, Danish words and nautical metaphors.
 
@@ -48,6 +50,20 @@ Nothing is decided. What the owner said:
 - **"Rep" forms that were free everywhere on 2026-10-16** (.com, .app, YouTube
   handle, no App Store app with the name): IRL Reps (irlreps), Ten Thousand
   Reps (tenthousandreps), 10K Reps (tenkreps; 10kreps.com was taken).
+- **The recipe behind the names he admires:** two everyday words with one
+  tension (Modern Wisdom, Atomic Habits), a familiar frame holding a big subject
+  (The Art of, School of, Order of, a name + Lab), or a plain promise (Better
+  Than Yesterday, Escaping Ordinary).
+- **Names built from that recipe, checked 2026-10-16** (no App Store app with
+  the name for any of them):
+  - Free on .com, .app and the YouTube handle: Winning Slowly, Art of Going
+    First, Ten Year Man, Vindahl Lab.
+  - Free on .com and .app, YouTube handle taken: Future Proud, Your Best Decade.
+  - Free on .app and YouTube, .com taken: Best Decade, Quiet Confidence, School
+    of Courage, Brave Habits, A Life in Full, Ten Good Years.
+  - Free on .app only: Man in Progress, Hard Earned, Going First, Everyday
+    Mastery.
+  - Web searches found no brand using Winning Slowly or Future Proud.
 - **A product form of the campaign line, not yet asked for:** let a user write
   the sentence he wants to be able to say, and bring it back to him after 1, 5
   and 10 years. The audience already does this by hand ("I'll be back in a year
