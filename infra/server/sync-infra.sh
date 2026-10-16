@@ -37,7 +37,8 @@ SERVER="${SERVER:-daygame-prod}"
 DEST=/opt/daygame/infra
 FILES=(infra/compose.yaml infra/caddy/common.caddy infra/caddy/Caddyfile.production infra/deploy.sh infra/deploy-agent.sh infra/disk-alert.sh)
 UNITS=(daygame-deploy.service daygame-deploy.timer daygame-disk.service daygame-disk.timer)
-TIMERS=(daygame-deploy.timer daygame-disk.timer)
+TIMERS=()
+for u in "${UNITS[@]}"; do [[ "$u" != *.timer ]] || TIMERS+=("$u"); done
 
 die() { printf 'sync-infra: ERROR: %s\n' "$*" >&2; exit 1; }
 plan() { printf 'sync-infra: %s\n' "$*"; }
@@ -82,6 +83,11 @@ ssh_root() { ssh -o ConnectTimeout=20 "root@$SERVER" "$@"; }
 # push-env.sh first: Caddy and the agent cannot run without the settings it writes.
 ssh_root "test -f /etc/daygame/deploy.env" ||
   die "root@$SERVER has no /etc/daygame/deploy.env yet (or could not be reached). Run infra/server/push-env.sh first; nothing was installed."
+# This is what starts Caddy, so it checks what deploy.sh checks: a practice CA
+# only for a .test name. A real domain gets its certificates from Let's Encrypt.
+if ssh_root "grep -qE '^(ACME_DIRECTORY|ACME_CA_CERT)=' /etc/daygame/deploy.env && ! grep -qE '^SITE_HOST=[A-Za-z0-9.-]+\.test\$' /etc/daygame/deploy.env"; then
+  die "root@$SERVER's deploy.env names a practice ACME CA, and its SITE_HOST is not a .test name. Run infra/server/push-env.sh again; nothing was installed."
+fi
 
 # What is there now, by checksum, so only changed files count as changes.
 remote_sums="$(ssh_root "cd $DEST 2>/dev/null && sha256sum ${FILES[*]#infra/} 2>/dev/null; cd /etc/systemd/system && sha256sum ${UNITS[*]} 2>/dev/null" || true)"
@@ -100,13 +106,17 @@ tar -C "$stage" -c infra units infra-version | ssh_root "
   set -e
   tmp=\$(mktemp -d); tar -x -m -C \"\$tmp\"
   install -d -m 755 $DEST $DEST/caddy
-  # Only what differs: rewriting an unchanged unit makes systemd report it
-  # changed on disk until the next daemon-reload.
   for f in ${FILES[*]#infra/}; do
     case \"\$f\" in *.sh) mode=755 ;; *) mode=644 ;; esac
-    cmp -s \"\$tmp/infra/\$f\" $DEST/\$f || install -m \"\$mode\" \"\$tmp/infra/\$f\" $DEST/\$f
+    install -o root -g root -m \"\$mode\" \"\$tmp/infra/\$f\" $DEST/\$f
   done
-  for u in ${UNITS[*]}; do cmp -s \"\$tmp/units/\$u\" /etc/systemd/system/\$u || install -m 644 \"\$tmp/units/\$u\" /etc/systemd/system/\$u; done
+  # A unit is rewritten only when it differs: rewriting an unchanged one makes
+  # systemd report it changed on disk until the next daemon-reload. Its owner
+  # and mode are set either way.
+  for u in ${UNITS[*]}; do
+    cmp -s \"\$tmp/units/\$u\" /etc/systemd/system/\$u || install -m 644 \"\$tmp/units/\$u\" /etc/systemd/system/\$u
+    chown root:root /etc/systemd/system/\$u; chmod 644 /etc/systemd/system/\$u
+  done
   install -m 644 \"\$tmp/infra-version\" /etc/daygame/infra-version
   rm -rf \"\$tmp\""
 plan "installed; /etc/daygame/infra-version = $sha"
@@ -115,16 +125,23 @@ plan "installed; /etc/daygame/infra-version = $sha"
 # made of plain characters, reach compose's environment. APP_IMAGE only
 # satisfies compose's interpolation; the app is not started here.
 compose="cd $DEST && env \$(grep -E '^(APP_ENV_FILE|CADDYFILE|SITE_HOST|ACME_EMAIL|ACME_DIRECTORY|ACME_CA_CERT)=[A-Za-z0-9._@/:+-]+\$' /etc/daygame/deploy.env) APP_IMAGE=unused docker compose -f compose.yaml"
-# Caddy first, so the agent's first run finds it up.
-if printf '%s\n' "${changed[@]}" | grep -qx infra/compose.yaml; then
-  ssh_root "$compose up -d --quiet-pull --no-deps caddy"
-  plan "compose.yaml changed: Caddy recreated; the app takes the new file at its next deploy (infra/deploy.sh)"
-elif printf '%s\n' "${changed[@]}" | grep -q '^infra/caddy/'; then
+# Caddy first, so the agent's first run finds it up. Both steps below run on
+# every sync, changed or not: each is a no-op when everything is in place, and
+# a sync that stopped halfway last time (the files installed, Caddy or the
+# timers not started) is finished by the next one.
+if printf '%s\n' "${changed[@]}" | grep -q '^infra/caddy/'; then
+  # Compose cannot see a change inside a mounted file; recreate on purpose.
   ssh_root "$compose up -d --quiet-pull --no-deps --force-recreate caddy"
   plan "a Caddy file changed: Caddy recreated"
+else
+  ssh_root "$compose up -d --quiet-pull --no-deps caddy"
+  plan "Caddy is up (compose recreates it only if compose.yaml changed it; the app takes a new compose.yaml at its next deploy)"
 fi
 if printf '%s\n' "${changed[@]}" | grep -q '^unit:'; then
   ssh_root "systemctl daemon-reload && systemctl enable --now ${TIMERS[*]} && systemctl restart ${TIMERS[*]}"
-  plan "units reloaded; ${TIMERS[*]} running"
+  plan "units reloaded; ${TIMERS[*]} restarted"
+else
+  ssh_root "systemctl enable --now ${TIMERS[*]}"
+  plan "${TIMERS[*]} enabled and running"
 fi
 plan "done"

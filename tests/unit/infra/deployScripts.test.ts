@@ -104,7 +104,7 @@ esac`
     spawnSync("bash", [join(ROOT, "infra/deploy.sh"), DIGEST], {
       cwd,
       encoding: "utf8",
-      env: { ...fakes({ docker, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
+      env: { ...fakes({ docker, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, NODE_ENV: "test", DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
     })
 
   it("runs compose from its own directory, so a caller's unreadable directory cannot stop it", () => {
@@ -126,10 +126,10 @@ esac`
     const r = spawnSync("bash", [join(ROOT, "infra/deploy.sh"), "--restart", DIGEST], {
       cwd: dir,
       encoding: "utf8",
-      env: { ...fakes({ docker, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, DAYGAME_DEPLOY_ENV: settings([]) },
+      env: { ...fakes({ docker, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, NODE_ENV: "test", DAYGAME_DEPLOY_ENV: settings([]) },
     })
     expect(r.status).toBe(2)
-    expect(r.stderr).toContain("--restart starts the running image again")
+    expect(r.stderr).toContain("--restart starts the app's own image again")
   })
 
   it("--restart recreates the running container, so new settings take effect", () => {
@@ -137,9 +137,33 @@ esac`
     spawnSync("bash", [join(ROOT, "infra/deploy.sh"), "--restart", DIGEST], {
       cwd: dir,
       encoding: "utf8",
-      env: { ...fakes({ docker: running, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
+      env: { ...fakes({ docker: running, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, NODE_ENV: "test", DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
     })
     expect(calls("docker").some((c) => /compose .* up -d --no-deps --force-recreate app$/.test(c))).toBe(true)
+  })
+
+  it("--restart starts a stopped app container too, from the image on the machine", () => {
+    const ref = `ghcr.io/x/y@${DIGEST}`
+    const stopped = `case "$*" in *State.Running*dg-app) echo ""; exit 0 ;; *Config.Image*dg-app) echo "${ref}"; exit 0 ;; esac\n${docker}`
+    const r = spawnSync("bash", [join(ROOT, "infra/deploy.sh"), "--restart", ref], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...fakes({ docker: stopped, curl: "echo 308", logger: "exit 0" }), HOME: process.env.HOME, NODE_ENV: "test", DAYGAME_DEPLOY_ENV: settings([]), HEALTH_WAIT_SECONDS: "1" },
+    })
+    expect(r.stderr).not.toContain("is not it")
+    expect(calls("docker").some((c) => /compose .* up -d --no-deps --force-recreate app$/.test(c))).toBe(true)
+    expect(calls("docker").some((c) => c.startsWith("pull"))).toBe(false)
+    expect(r.stderr).toContain("unhealthy after --restart")
+  })
+
+  it("--restart says so when another deploy holds the lock, instead of reporting nothing to do", () => {
+    const lock = join(dir, "deploy.lock")
+    const r = spawnSync("bash", ["-c", 'exec 8>"$1"; flock 8; bash "$2" --restart "$3"', "_", lock, join(ROOT, "infra/deploy.sh"), DIGEST], {
+      encoding: "utf8",
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, NODE_ENV: "test", DAYGAME_DEPLOY_ENV: settings([]) },
+    })
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain("nothing restarted, try again in a minute")
   })
 
   it("says why compose could not start the app, instead of waiting out a health check", () => {
@@ -297,9 +321,19 @@ function fakes(scripts: Record<string, string>) {
   const bin = join(dir, "bin")
   mkdirSync(bin, { recursive: true })
   for (const [name, body] of Object.entries(scripts)) {
-    writeFileSync(join(bin, name), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${join(dir, name)}.calls"\n${body}\n`, { mode: 0o755 })
+    // curl -K - reads its URL from stdin: keep that too.
+    const stdin = name === "curl" ? `case "$*" in *"-K -"*) cat >> "${join(dir, name)}.stdin" ;; esac\n` : ""
+    writeFileSync(join(bin, name), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${join(dir, name)}.calls"\n${stdin}${body}\n`, { mode: 0o755 })
   }
   return { PATH: `${bin}:${process.env.PATH}` }
+}
+/** The URLs curl was handed on stdin (`url = "..."`), in order. */
+const urls = () => {
+  try {
+    return [...readFileSync(join(dir, "curl.stdin"), "utf8").matchAll(/^url = "(.*)"$/gm)].map((m) => m[1])
+  } catch {
+    return []
+  }
 }
 const calls = (name: string) => {
   try {
@@ -316,6 +350,7 @@ describe("the dead-man's switch (infra/deploy-agent.sh, PING_URL)", () => {
     fakes({
       docker: `case "$*" in *imagetools*) echo '{"digest":"${DIGEST}"}' ;; inspect*) echo '${TARGET}' ;; esac`,
       curl: "exit 0",
+      logger: "exit 0",
     })
   const agent = (lines: string[], env: Record<string, string>) =>
     run("infra/deploy-agent.sh", [], { DAYGAME_DEPLOY_ENV: settings(lines), INFRA_VERSION_FILE: join(dir, "missing"), ...env })
@@ -331,15 +366,17 @@ describe("the dead-man's switch (infra/deploy-agent.sh, PING_URL)", () => {
   it("pings PING_URL after a good run, and never logs the URL", () => {
     const r = agent(["WATCH=ghcr.io/x/y:staging", "PING_URL=https://hc-ping.com/secret-uuid"], upToDate())
     expect(r.status, r.stderr).toBe(0)
-    expect(calls("curl")).toEqual([expect.stringMatching(/ https:\/\/hc-ping\.com\/secret-uuid$/)])
+    expect(urls()).toEqual(["https://hc-ping.com/secret-uuid"])
     expect(r.stderr).toContain("dead-man's switch pinged (ok)")
     expect(r.stderr).not.toContain("secret-uuid")
+    // Not on curl's command line either, where `ps` would show it.
+    expect(calls("curl").join("\n")).not.toContain("secret-uuid")
   })
 
   it("pings PING_URL/fail when the run fails, and keeps the run's exit status", () => {
     const r = agent([`WATCH=ghcr.io/x/y@${DIGEST}`, "PING_URL=https://hc-ping.com/secret-uuid"], upToDate())
     expect(r.status).toBe(1)
-    expect(calls("curl")).toEqual([expect.stringMatching(/ https:\/\/hc-ping\.com\/secret-uuid\/fail$/)])
+    expect(urls()).toEqual(["https://hc-ping.com/secret-uuid/fail"])
   })
 
   it("does not let a failing ping change a good run's outcome", () => {
@@ -355,13 +392,20 @@ describe("the dead-man's switch (infra/deploy-agent.sh, PING_URL)", () => {
     const env = fakes({
       docker: `case "$*" in *imagetools*) echo '{"digest":"${DIGEST}"}' ;; esac`,
       curl: "exit 0",
+      logger: "exit 0",
     })
     const r = agent(["WATCH=ghcr.io/x/y:staging", "PING_URL=https://hc-ping.com/secret-uuid"], env)
     expect(r.stderr).toContain(`new digest: ${TARGET} (running: nothing)`)
     // deploy.sh then stops at the stand-in Docker, and the switch reports that.
     expect(r.status).not.toBe(0)
     expect(r.stderr).toMatch(/run ended with exit status [1-9]/)
-    expect(calls("curl").at(-1)).toMatch(/\/fail$/)
+    expect(urls().at(-1)).toMatch(/\/fail$/)
+  })
+
+  it("refuses a tag other than production's on a real domain", () => {
+    const r = agent(["WATCH=ghcr.io/x/daygame-coach-staging:staging", "SITE_HOST=example.com"], upToDate())
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain("is not production's tag, and example.com is a real domain")
   })
 
   it("deploy.sh accepts the alert settings in the shared file", () => {
@@ -380,11 +424,12 @@ describe("the disk alerts (infra/disk-alert.sh, 25 % and 10 % free)", () => {
     fakes({
       df: `printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\\n/dev/vda1 1000 ${1000 - free * 10} ${free * 10} ${100 - free}%% /\\n'`,
       curl: "exit 0",
+      logger: "exit 0",
     })
   const alert = (free: number, lines: string[]) =>
     run("infra/disk-alert.sh", [], { DAYGAME_DEPLOY_ENV: settings(lines), DOCKER_DATA: join(dir, "none"), ...disk(free) })
   const URLS = ["DISK_WARN_PING_URL=https://hc-ping.com/warn", "DISK_CRIT_PING_URL=https://hc-ping.com/crit"]
-  const pinged = () => calls("curl").map((c) => c.split(" ").pop())
+  const pinged = urls
 
   it("sends nothing when no URL is set, and says each level is off", () => {
     const r = alert(5, [])

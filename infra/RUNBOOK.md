@@ -82,7 +82,8 @@ reach the database. The fault is at Supabase, not on the server.
        docker logs --tail 50 dg-app
        journalctl -u daygame-deploy -n 30 --no-pager
 
-3. If the app container stopped or misbehaves, start the same image again:
+3. If the app container stopped or misbehaves, start the same image again (no
+   registry needed; it refuses, and says so, while another deploy is running):
 
        as-deploy "/opt/daygame/infra/deploy.sh --restart $(docker inspect -f '{{.Config.Image}}' dg-app)"
 
@@ -100,9 +101,8 @@ reads it. `push-env.sh` runs on this machine and reads `.env.local`.
     ssh root@daygame-prod
     as-deploy "/opt/daygame/infra/deploy.sh --restart $(docker inspect -f '{{.Config.Image}}' dg-app)"
 
-Set `PING_URL`, `DISK_WARN_PING_URL` and `DISK_CRIT_PING_URL` on that
-`push-env.sh` line every time (see "Alerts"); a run without them turns the
-alerts off.
+`push-env.sh` always sends the alert URLs from `~/.config/daygame/alerts.env`
+too (see "Alerts"), so a rotation never switches the alerts off.
 
 | Secret | Where it lives | How to rotate |
 |---|---|---|
@@ -124,12 +124,22 @@ owner's account), each with its own ping URL:
 - `DISK_WARN_PING_URL`: pinged every 15 minutes, `/fail` below 25 % free.
 - `DISK_CRIT_PING_URL`: the same at 10 %.
 
-Unset, each is off and the machine's log says so every run. Send them with
-`push-env.sh` (environment variables of the same names). **Rehearsed** (`run.sh
-alerts`): a listener on the practice server received `/ping/agent` and
-`/ping/agent/fail`, `/disk-25/fail` at 19 % free and `/disk-10/fail` at 4 %
-free, then both OK again after the space was freed. A separate HTTP monitor on
-`https://<domain>/api/healthz` with a certificate-expiry warning comes in Phase 7.
+Put them in `~/.config/daygame/alerts.env` on this machine, one `KEY=url` line
+each, then `chmod 600` it: anyone with a URL can ping the check. Every
+`push-env.sh` run sends what the file holds; a dry run shows only which are
+set. A URL that is missing is off, and the machine's log says so every run.
+The URLs never appear on a command line or in a log.
+
+What the dead-man's switch reports, plainly: each run on its own. A one-minute
+registry hiccup sends one "down" and, a minute later, one "up". A failed deploy
+sends "down" once; the old version is back by then, so the next run says "up",
+and the failed digest stays marked in `/var/lib/daygame/failed-digests`.
+
+**Rehearsed** (`run.sh alerts`): a listener on the practice server received
+`/ping/agent` and `/ping/agent/fail`, `/disk-25/fail` at 19 % free and
+`/disk-10/fail` at 4 % free, then both OK again after the space was freed. A
+separate HTTP monitor on `https://<domain>/api/healthz` with a
+certificate-expiry warning comes in Phase 7.
 
 ## Rebuilding the server from nothing
 
@@ -142,7 +152,7 @@ has run.
    delete the old server in the Hetzner console first.
 2. `ssh root@daygame-prod cloud-init status --wait --long` — wait for `done`,
    `errors: []`. **Rehearsed:** 79 seconds.
-3. `infra/server/push-env.sh <domain> <alert email>`, with the three alert URLs.
+3. `infra/server/push-env.sh <domain> <alert email>` (it sends `alerts.env` too).
    If `~/.config/daygame/production.env` still exists, the old Server Actions
    key is kept, so open forms keep working.
 4. `infra/server/sync-infra.sh <commit>` — Caddy starts, then the two timers.

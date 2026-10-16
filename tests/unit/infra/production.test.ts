@@ -144,7 +144,7 @@ describe("secrets stay off command lines, and settings are never executed as roo
 })
 
 describe("a real domain can only use Let's Encrypt (the practice CA is for .test names)", () => {
-  const env = { PATH: process.env.PATH, HOME: process.env.HOME }
+  const env = { PATH: process.env.PATH, HOME: process.env.HOME, NODE_ENV: "test" as const }
 
   it.each(["WATCH", "ACME_DIRECTORY", "ACME_CA_CERT", "CA_CERT"])("push-env.sh refuses %s for a real domain", (key) => {
     const r = spawnSync("bash", [join(ROOT, "infra/server/push-env.sh"), "--dry-run", "example.com", "ops@example.com"], {
@@ -153,6 +153,13 @@ describe("a real domain can only use Let's Encrypt (the practice CA is for .test
     })
     expect(r.status).toBe(1)
     expect(r.stderr).toContain("are for the practice server only, and 'example.com' is not a .test name")
+  })
+
+  it("sync-infra.sh, which starts Caddy, refuses a practice CA for a real domain before installing anything", () => {
+    const script = withoutComments(read("infra/server/sync-infra.sh"))
+    const guard = script.indexOf("names a practice ACME CA, and its SITE_HOST is not a .test name")
+    expect(guard).toBeGreaterThan(-1)
+    expect(guard).toBeLessThan(script.indexOf('tar -C "$stage" -c'))
   })
 
   it("push-env.sh writes them for a .test name, and production's tag otherwise", () => {
@@ -184,6 +191,37 @@ describe("a real domain can only use Let's Encrypt (the practice CA is for .test
   })
 })
 
+describe("the alert URLs (push-env.sh, ~/.config/daygame/alerts.env)", () => {
+  const env = { PATH: process.env.PATH, HOME: process.env.HOME, NODE_ENV: "test" as const }
+  const dryRun = (alerts: string, mode = 0o600) => {
+    const dir = mkdtempSync(join(tmpdir(), "alerts-test-"))
+    try {
+      writeFileSync(join(dir, "alerts.env"), alerts, { mode })
+      return spawnSync("bash", [join(ROOT, "infra/server/push-env.sh"), "--dry-run", "example.com", "ops@example.com"], {
+        encoding: "utf8",
+        env: { ...env, DAYGAME_CONFIG_DIR: dir },
+      })
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  }
+
+  it("come from the file, and a dry run shows only that they are set", () => {
+    const r = dryRun("PING_URL=https://hc-ping.com/secret-uuid\nDISK_WARN_PING_URL=https://hc-ping.com/warn-uuid\n")
+    expect(r.status, r.stderr).toBe(0)
+    expect(r.stdout).toContain("PING_URL=<set, from ")
+    expect(r.stdout).toContain("DISK_WARN_PING_URL=<set, from ")
+    expect(r.stdout + r.stderr).not.toMatch(/secret-uuid|warn-uuid/)
+  })
+
+  it("refuse a file others can read, an unknown key, and a URL that /fail cannot be appended to", () => {
+    expect(dryRun("PING_URL=https://a/b\n", 0o644).stderr).toContain("must be mode 600")
+    expect(dryRun("PING_URLS=https://a/b\n").stderr).toContain("unknown key 'PING_URLS'")
+    expect(dryRun("PING_URL=https://a/b/\n").stderr).toContain("not a plain URL without a trailing slash")
+    expect(dryRun("PING_URL=https://a/b?x=1\n").stderr).toContain("not a plain URL without a trailing slash")
+  })
+})
+
 describe("a new server is set up in the order the rehearsal proved (Phase 5b)", () => {
   const script = withoutComments(read("infra/server/sync-infra.sh"))
 
@@ -198,17 +236,23 @@ describe("a new server is set up in the order the rehearsal proved (Phase 5b)", 
     expect(script.indexOf("up -d --quiet-pull --no-deps caddy")).toBeLessThan(script.indexOf("systemctl daemon-reload"))
   })
 
-  it("rewrites only what changed, so systemd never sees an unchanged unit as changed on disk", () => {
+  it("rewrites a unit only when it changed, so systemd never sees an unchanged unit as changed on disk", () => {
     // 2026-10-16, the rehearsal: every run reinstalled every unit, and systemd
     // warned "changed on disk. Run 'systemctl daemon-reload'" after each one.
     expect(script).toContain('cmp -s \\"\\$tmp/units/\\$u\\" /etc/systemd/system/\\$u || install -m 644')
-    expect(script).toContain('cmp -s \\"\\$tmp/infra/\\$f\\" $DEST/\\$f || install')
+    // Scripts are always reinstalled, so a mode changed by hand is put back.
+    expect(script).toContain("install -o root -g root -m")
+  })
+
+  it("starts Caddy and the timers on every run, so a sync that stopped halfway is finished by the next", () => {
+    expect(script).toContain('ssh_root "$compose up -d --quiet-pull --no-deps caddy"')
+    expect(script).toContain('ssh_root "systemctl enable --now ${TIMERS[*]}"')
   })
 
   it("installs the disk alert and its timer with the agent", () => {
     expect(script).toMatch(/FILES=\([^)]*infra\/disk-alert\.sh/)
     expect(script).toMatch(/UNITS=\([^)]*daygame-disk\.service daygame-disk\.timer/)
-    expect(script).toMatch(/TIMERS=\(daygame-deploy\.timer daygame-disk\.timer\)/)
+    expect(script).toMatch(/for u in "\$\{UNITS\[@\]\}"; do \[\[ "\$u" != \*\.timer \]\] \|\| TIMERS\+=\("\$u"\); done/)
   })
 })
 

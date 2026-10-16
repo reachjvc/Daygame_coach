@@ -135,6 +135,9 @@ fi
 lock="$STATE_DIR/deploy.lock"
 exec 9>"$lock"
 if ! flock -n 9; then
+  # The agent tries again next minute; a person asking for --restart must know
+  # it did not happen.
+  if [ "$restart" = yes ]; then log "another deploy holds $lock; nothing restarted, try again in a minute"; exit 1; fi
   log "another deploy holds $lock; nothing to do"
   exit 0
 fi
@@ -149,7 +152,8 @@ redirect="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H "Host: $SITE_
 log "caddy is up (http://$SITE_HOST/ -> 308)"
 
 # --- 4. the image, and what runs now ------------------------------------------------
-if [ "$kind" = registry ]; then
+# --restart needs no registry: the image is the container's own, already here.
+if [ "$kind" = registry ] && [ "$restart" = no ]; then
   docker pull -q "$ref" >/dev/null || { alert "could not pull $ref"; exit 1; }
 fi
 docker image inspect "$ref" >/dev/null 2>&1 || die "$ref is not available locally."
@@ -195,8 +199,11 @@ start_and_check() { # $1 = ref, $2 = expected commit
   return 1
 }
 
-if [ "$restart" = yes ] && [ "$previous" != "$ref" ]; then
-  die "--restart starts the running image again, and $ref is not what runs (${previous:-nothing}). Deploy it without --restart."
+# --restart is for the app's own image, running or stopped (a crash is when it
+# is needed most).
+configured="$(docker inspect -f '{{.Config.Image}}' "$APP_CONTAINER" 2>/dev/null || true)"
+if [ "$restart" = yes ] && [ "$configured" != "$ref" ]; then
+  die "--restart starts the app's own image again, and $ref is not it (${configured:-no app container}). Deploy it without --restart."
 fi
 if [ "$restart" = no ] && [ -n "$previous" ] && [ "$previous" = "$ref" ] && healthy_now "$want"; then
   log "already running $ref and healthy; nothing changed"
@@ -215,13 +222,14 @@ else
   started="$answered_own_commit"
   defer() { printf '%s %s\n' "$ref" "$(date +%s)" >> "$DEFERRED"; }
   log "unhealthy after ${HEALTH_WAIT_SECONDS}s: $ref (it answered with its own commit: $started)"
+  if [ "$restart" = yes ]; then
+    defer
+    alert "$ref is unhealthy after --restart with the machine's current settings: check what changed in them; nothing marked, deferred"
+    exit 1
+  fi
   if [ "$previous" = "$ref" ]; then
     defer
-    if [ "$restart" = yes ]; then
-      alert "$ref is unhealthy after --restart with the machine's current settings: check what changed in them; nothing marked, deferred"
-    else
-      alert "$ref is what was already running, and it is unhealthy: the cause is outside the image; nothing marked, deferred"
-    fi
+    alert "$ref is what was already running, and it is unhealthy: the cause is outside the image; nothing marked, deferred"
     exit 1
   fi
   if [ -z "$previous" ]; then

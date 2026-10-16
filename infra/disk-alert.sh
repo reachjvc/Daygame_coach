@@ -45,7 +45,8 @@ free="${lowest%% *}" mount="${lowest#* }"
 log "$mount has $free % free (the fullest of ${PATHS[*]})"
 
 crossed=0
-# The URL is a credential of sorts (anyone holding it can ping), so it is never logged.
+# The URL is a credential of sorts (anyone holding it can ping), so it is never
+# logged and never on a command line: curl reads it from its config on stdin.
 check() { # $1 = level in percent, $2 = its setting's name
   local url outcome=ok message
   url="$(setting "$2")"
@@ -61,7 +62,7 @@ check() { # $1 = level in percent, $2 = its setting's name
     return 0
   fi
   [ "$outcome" = ok ] || url="$url/fail"
-  if curl -fsS --max-time 10 -o /dev/null --data-raw "$message" "$url" 2>/dev/null; then
+  if printf 'url = "%s"\n' "$url" | curl -fsS --max-time 10 -o /dev/null --data-raw "$message" -K - 2>/dev/null; then
     log "the $1 % check pinged ($outcome)"
   else
     log "could not ping the $1 % check ($outcome)"

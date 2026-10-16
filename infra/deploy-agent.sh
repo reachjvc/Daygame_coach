@@ -35,11 +35,14 @@ log() { printf '%s agent: %s\n' "$(date -Is)" "$*" >&2; }
 # The same KEY=value format infra/deploy.sh reads; a value may be in single quotes.
 setting() { sed -n "s/^$1=//p" "$settings" | tail -1 | sed "s/^'\(.*\)'\$/\1/"; }
 watch="$(setting WATCH)"
+site="$(setting SITE_HOST)"
 ping_url="$(setting PING_URL)"
 state_dir="$(setting STATE_DIR)"
 state_dir="${state_dir:-$HOME/.local/state/daygame}"
 
-# The URL is a credential of sorts (anyone holding it can ping), so it is never logged.
+# The URL is a credential of sorts (anyone holding it can ping), so it is never
+# logged and never on a command line, where `ps` would show it: curl reads it
+# from its config on stdin.
 ping_switch() { # $1 = the run's exit status
   if [ -z "$ping_url" ]; then
     log "dead-man's switch off: PING_URL is not set"
@@ -47,7 +50,7 @@ ping_switch() { # $1 = the run's exit status
   fi
   local url="$ping_url" outcome=ok
   if [ "$1" != 0 ]; then url="$ping_url/fail" outcome=fail; fi
-  if curl -fsS --max-time 10 -o /dev/null "$url" 2>/dev/null; then
+  if printf 'url = "%s"\n' "$url" | curl -fsS --max-time 10 -o /dev/null -K - 2>/dev/null; then
     log "dead-man's switch pinged ($outcome)"
   else
     log "could not ping the dead-man's switch ($outcome); the run's outcome is unchanged"
@@ -64,6 +67,12 @@ trap on_exit EXIT
 
 [[ "$watch" =~ ^[a-z0-9][a-z0-9._/:-]*:[A-Za-z0-9._-]+$ ]] || { log "WATCH '$watch' in $settings is not <repo>:<tag>"; exit 1; }
 repo="${watch%:*}"
+# A real domain runs production's images only; staging (localhost) and the
+# practice server (.test) watch others.
+case "$site" in
+  localhost|*.test) ;;
+  *) [[ "$watch" == *-production:production ]] || { log "WATCH '$watch' is not production's tag, and $site is a real domain"; exit 1; } ;;
+esac
 
 version_file="${INFRA_VERSION_FILE:-/etc/daygame/infra-version}"
 if [ -f "$version_file" ]; then infra_version="$(cat "$version_file")"; else infra_version="checkout $(git -C "$INFRA_DIR" rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"; fi

@@ -21,10 +21,14 @@
 #
 # Reads: ~/.config/daygame/ghcr-read-server.token (R5). SERVER (default
 # daygame-prod, the server's Tailscale name).
-# Optional, written into deploy.env when set:
+# Optional: ~/.config/daygame/alerts.env, mode 600, with any of
 #   PING_URL, DISK_WARN_PING_URL, DISK_CRIT_PING_URL
-#                 the checks the deploy agent and the disk alert ping (Phase 7);
-#                 unset, those alerts are off and the machine's log says so.
+#                 the checks the deploy agent and the disk alert ping (Phase 7).
+#                 Read from a file, never the command line, so every run sends
+#                 them (none is dropped by forgetting it) and they stay out of
+#                 shell history; a dry run shows only which are set. Without the
+#                 file those alerts are off, and the machine's log says so.
+# Optional, from the environment, written into deploy.env when set:
 #   WATCH, ACME_DIRECTORY, ACME_CA_CERT, CA_CERT
 #                 the practice server only (infra/rehearsal/run.sh): another tag
 #                 to watch, a practice ACME CA and the files that trust it.
@@ -61,12 +65,24 @@ STATE_DIR=/var/lib/daygame
 WATCH=${WATCH:-$PRODUCTION_WATCH}"
 # Each optional value is plain URL or path characters, so it can never break the
 # file or reach a shell as anything but itself.
-for key in ACME_DIRECTORY ACME_CA_CERT CA_CERT PING_URL DISK_WARN_PING_URL DISK_CRIT_PING_URL; do
+for key in ACME_DIRECTORY ACME_CA_CERT CA_CERT; do
   value="${!key:-}"
   [ -n "$value" ] || continue
-  [[ "$value" =~ ^[A-Za-z0-9._~:/?#@%+=-]+$ ]] || die "$key holds characters a settings file cannot carry safely."
+  [[ "$value" =~ ^[A-Za-z0-9._~:/@%+=-]+$ ]] || die "$key holds characters a settings file cannot carry safely."
   settings+=$'\n'"$key=$value"
 done
+alerts=""
+if [ -f "$CONFIG_DIR/alerts.env" ]; then
+  [ "$(stat -c %a "$CONFIG_DIR/alerts.env")" = 600 ] || die "$CONFIG_DIR/alerts.env must be mode 600 (chmod 600 it): its URLs let anyone ping the checks."
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in ''|'#'*) continue ;; esac
+    key="${line%%=*}" value="${line#*=}"
+    case "$key" in PING_URL|DISK_WARN_PING_URL|DISK_CRIT_PING_URL) ;; *) die "unknown key '$key' in $CONFIG_DIR/alerts.env." ;; esac
+    # <url>/fail is appended to it, so no query, fragment or trailing slash.
+    [[ "$value" =~ ^https?://[A-Za-z0-9._~:/@%+=-]+[^/]$ ]] || die "$key in $CONFIG_DIR/alerts.env is not a plain URL without a trailing slash."
+    alerts+=$'\n'"$key=$value"
+  done < "$CONFIG_DIR/alerts.env"
+fi
 
 if [ "$dry_run" = yes ]; then
   plan "dry run: the server is not contacted and no secret is read."
@@ -74,6 +90,8 @@ if [ "$dry_run" = yes ]; then
   plan "would install it on root@$SERVER as /etc/daygame/production.env, mode 640 root:deploy, keeping the server's NEXT_SERVER_ACTIONS_ENCRYPTION_KEY if it has one"
   plan "would install /etc/daygame/deploy.env, mode 640 root:deploy:"
   while IFS= read -r line; do plan "    $line"; done <<<"$settings"
+  while IFS= read -r line; do [ -z "$line" ] || plan "    ${line%%=*}=<set, from $CONFIG_DIR/alerts.env>"; done <<<"$alerts"
+  [ -n "$alerts" ] || plan "    (no alert URLs: $CONFIG_DIR/alerts.env does not exist, so the alerts stay off)"
   plan "would log the deploy user into ghcr.io as reachjvc with ~/.config/daygame/ghcr-read-server.token (read:packages only), password on stdin"
   exit 0
 fi
@@ -90,7 +108,7 @@ SERVER_ACTIONS_KEY="$existing_key" "$REPO/infra/write-env-file.sh" production "$
 
 ssh_root "install -m 640 -o root -g deploy /dev/stdin /etc/daygame/production.env" < "$CONFIG_DIR/production.env"
 plan "installed /etc/daygame/production.env (640 root:deploy)"
-printf '%s\n' "$settings" | ssh_root "install -m 640 -o root -g deploy /dev/stdin /etc/daygame/deploy.env"
+printf '%s%s\n' "$settings" "$alerts" | ssh_root "install -m 640 -o root -g deploy /dev/stdin /etc/daygame/deploy.env"
 plan "installed /etc/daygame/deploy.env"
 ssh_root "su -s /bin/sh deploy -c 'docker login ghcr.io -u reachjvc --password-stdin'" < "$CONFIG_DIR/ghcr-read-server.token" >/dev/null
 plan "the deploy user is logged into ghcr.io (read:packages)"

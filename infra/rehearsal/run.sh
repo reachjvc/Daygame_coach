@@ -33,9 +33,10 @@
 #      certificate with CA_CERT: settings that infra/server/push-env.sh writes
 #      only for a .test name. The practice CA file is the one file installed by
 #      hand, at /etc/daygame/practice-ca.pem.
-#   3. The registry. R5's tokens and the production package do not exist yet,
-#      so the VM watches the private staging package with the GitHub CLI's own
-#      token, from a mode-600 file that `down` deletes.
+#   3. The registry. The production package does not exist yet, so the VM
+#      watches the private staging package, with this machine's read-only
+#      token (R5) when it exists and the GitHub CLI's own token until then,
+#      copied to a mode-600 file that `down` deletes.
 #   4. IPv6 is not rehearsed (QEMU's user network has none); Phase 6 checks it.
 #
 # Settings: REHEARSAL_DIR (default ~/.cache/daygame-rehearsal) holds every file:
@@ -72,6 +73,7 @@ SSH_PORT=18022 HTTP_PORT=18080 HTTPS_PORT=18443 PEBBLE_PORT=18015
 ACME_DIRECTORY=https://10.0.2.2:14000/dir
 CA_FILE=/etc/daygame/practice-ca.pem
 LISTENER=http://127.0.0.1:9999
+MARKER=.daygame-rehearsal
 
 say() { printf 'rehearsal: %s\n' "$*"; }
 die() { printf 'rehearsal: ERROR: %s\n' "$*" >&2; exit 1; }
@@ -115,8 +117,12 @@ cmd_up() {
     [ "$free_gb" -ge 50 ] || die "only ${free_gb} GB free on C:, below 50 GB (B-DISK). Not downloading."
   fi
   if docker container inspect "$VM" >/dev/null 2>&1; then die "a practice server already runs; '$0 down' first."; fi
+  [ ! -e "$DIR" ] || [ -f "$DIR/$MARKER" ] || [ -z "$(ls -A "$DIR")" ] ||
+    die "$DIR exists and is not a rehearsal directory; pick an empty or new REHEARSAL_DIR."
   mkdir -p "$DIR"/{img,seed,ssh,pebble,bin,config}
   chmod 700 "$DIR" "$DIR/config" "$DIR/ssh" "$DIR/pebble"
+  # 'down' deletes only a directory that carries this mark.
+  echo "made by infra/rehearsal/run.sh up; 'down' deletes this whole directory" > "$DIR/$MARKER"
 
   say "the image: $IMAGES/$IMAGE_FILE, checked against SHA256SUMS and its signature"
   curl -fsSL -o "$DIR/img/SHA256SUMS" "$IMAGES/SHA256SUMS"
@@ -124,8 +130,9 @@ cmd_up() {
   export GNUPGHOME="$DIR/gnupg"
   mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
   gpg --batch --quiet --keyserver hkps://keyserver.ubuntu.com --recv-keys "$UBUNTU_SIGNER"
-  gpg --batch --status-fd 1 --verify "$DIR/img/SHA256SUMS.gpg" "$DIR/img/SHA256SUMS" 2>/dev/null |
-    grep -q "^\[GNUPG:\] VALIDSIG $UBUNTU_SIGNER " || die "SHA256SUMS is not signed by $UBUNTU_SIGNER."
+  # Captured, not piped into grep -q: an early grep exit would kill gpg with SIGPIPE.
+  status="$(gpg --batch --status-fd 1 --verify "$DIR/img/SHA256SUMS.gpg" "$DIR/img/SHA256SUMS" 2>/dev/null || true)"
+  grep -q "^\[GNUPG:\] VALIDSIG $UBUNTU_SIGNER " <<<"$status" || die "SHA256SUMS is not signed by $UBUNTU_SIGNER."
   say "SHA256SUMS: good signature from $UBUNTU_SIGNER"
   [ -f "$DIR/img/$IMAGE_FILE" ] || curl -fsSL -o "$DIR/img/$IMAGE_FILE" "$IMAGES/$IMAGE_FILE"
   (cd "$DIR/img" && sha256sum -c --ignore-missing --quiet SHA256SUMS) || die "$IMAGE_FILE does not match SHA256SUMS."
@@ -197,8 +204,15 @@ start_vm() {
 cmd_setup() {
   [ $# -eq 1 ] || die "usage: $0 setup <commit>"
   sha="$(git -C "$REPO" rev-parse --verify --quiet "$1^{commit}")" || die "'$1' is not a commit."
-  say "difference 3: the GitHub CLI's token as the registry token, mode 600, deleted by 'down'"
-  (umask 077 && gh auth token > "$DIR/config/ghcr-read-server.token")
+  # R5's read-only token for this machine when it exists; until then the GitHub
+  # CLI's own token, which can do more than read packages: 'down' deletes it.
+  if [ -f "$HOME/.config/daygame/ghcr-read-wsl.token" ]; then
+    say "difference 3: this machine's read-only registry token (R5), copied mode 600, deleted by 'down'"
+    install -m 600 "$HOME/.config/daygame/ghcr-read-wsl.token" "$DIR/config/ghcr-read-server.token"
+  else
+    say "difference 3: the GitHub CLI's token as the registry token (no read-only token yet, R5), mode 600, deleted by 'down'"
+    (umask 077 && gh auth token > "$DIR/config/ghcr-read-server.token")
+  fi
   say "difference 2: Pebble's issuing root and the practice CA -> $CA_FILE"
   curl -fsS --cacert "$DIR/pebble/ca.pem" "https://127.0.0.1:$PEBBLE_PORT/roots/0" > "$DIR/pebble/issuer-root.pem"
   cat "$DIR/pebble/ca.pem" "$DIR/pebble/issuer-root.pem" > "$DIR/pebble/bundle.pem"
@@ -216,7 +230,7 @@ cmd_setup() {
   say "healthy $(since setup) s after setup, $(since boot) s after boot: $h"
 }
 
-# The settings difference 2 and 3 need, plus any PING_URL / DISK_*_PING_URL set by the caller.
+# The settings differences 2 and 3 need; alert URLs come from $DIR/config/alerts.env once 'alerts' wrote it.
 push_env() {
   PATH="$DIR/bin:$PATH" SERVER="$SERVER" DAYGAME_CONFIG_DIR="$DIR/config" \
     WATCH="$WATCH" ACME_DIRECTORY="$ACME_DIRECTORY" ACME_CA_CERT="$CA_FILE" CA_CERT="$CA_FILE" \
@@ -351,8 +365,10 @@ class H(http.server.BaseHTTPRequestHandler):
     do_GET = do_POST = do_HEAD = handle_one
     def log_message(self, *a): pass
 http.server.HTTPServer((\"127.0.0.1\", 9999), H).serve_forever()'; sleep 1"
-  say "push-env.sh again, now with the three check URLs pointed at the listener"
-  PING_URL="$LISTENER/ping/agent" DISK_WARN_PING_URL="$LISTENER/ping/disk-25" DISK_CRIT_PING_URL="$LISTENER/ping/disk-10" push_env
+  say "push-env.sh again, now with alerts.env naming three checks at the listener"
+  (umask 077 && printf 'PING_URL=%s\nDISK_WARN_PING_URL=%s\nDISK_CRIT_PING_URL=%s\n' \
+    "$LISTENER/ping/agent" "$LISTENER/ping/disk-25" "$LISTENER/ping/disk-10" > "$DIR/config/alerts.env")
+  push_env
   say "dead-man's switch, success: the agent's next run"
   vm "systemctl start daygame-deploy.service; journalctl -u daygame-deploy -n 12 --no-pager -o cat | grep 'agent:' | tail -2"
   say "dead-man's switch, failure: the deploy user's registry login removed, so the agent cannot read the tag"
@@ -365,12 +381,33 @@ http.server.HTTPServer((\"127.0.0.1\", 9999), H).serve_forever()'; sleep 1"
   say "what the listener received:"
   vm "cat /root/pings.log" | sed 's/^/  /'
   say "restoring the registry login: push-env.sh once more"
-  PING_URL="$LISTENER/ping/agent" DISK_WARN_PING_URL="$LISTENER/ping/disk-25" DISK_CRIT_PING_URL="$LISTENER/ping/disk-10" push_env
+  push_env
   say "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY by hash: before the two push-env.sh runs $key_before, after $(actions_key_hash)"
   vm "systemctl start daygame-deploy.service; journalctl -u daygame-deploy -n 12 --no-pager -o cat | grep 'agent:' | tail -2" | sed 's/^/  /'
 }
 
+# After this machine restarted: the VM's disk is as it was, but QEMU and Pebble
+# are gone. A running VM is never killed here (that is a power cut); use reboot.
+cmd_start() {
+  [ -f "$DIR/$MARKER" ] || die "no practice server in $DIR; '$0 up' makes one."
+  if [ "$(docker inspect -f '{{.State.Running}}' "$VM" 2>/dev/null)" = true ]; then die "the practice server is running; '$0 reboot' reboots it."; fi
+  docker rm -f "$PEBBLE" "$VM" >/dev/null 2>&1 || true
+  docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create --subnet "$NETWORK_SUBNET" "$NETWORK" >/dev/null
+  stamp boot
+  start_vm
+  # A new Pebble has a new issuing root: add it, keeping the old ones, so the
+  # certificates Caddy already holds still verify until they are renewed.
+  if [ -f "$DIR/pebble/bundle.pem" ]; then
+    curl -fsS --cacert "$DIR/pebble/ca.pem" "https://127.0.0.1:$PEBBLE_PORT/roots/0" >> "$DIR/pebble/bundle.pem"
+    vm "install -m 644 /dev/stdin $CA_FILE" < "$DIR/pebble/bundle.pem"
+    say "Pebble's new issuing root added to $CA_FILE"
+  fi
+}
+
 cmd_down() {
+  if [ -e "$DIR" ] && [ ! -f "$DIR/$MARKER" ]; then
+    die "$DIR has no $MARKER, so 'up' did not make it; not deleting it."
+  fi
   docker rm -f "$PEBBLE" "$VM" >/dev/null 2>&1 || true
   docker network rm "$NETWORK" >/dev/null 2>&1 || true
   # The VM's files were written by root inside the runner; remove them the same way.
@@ -393,9 +430,7 @@ case "${1:-}" in
   reissue) cmd_reissue ;;
   alerts) cmd_alerts ;;
   ssh) shift; vm "$@" ;;
-  start) docker rm -f "$PEBBLE" "$VM" >/dev/null 2>&1 || true
-         docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create --subnet "$NETWORK_SUBNET" "$NETWORK" >/dev/null
-         stamp boot; start_vm ;;
+  start) cmd_start ;;
   down) cmd_down ;;
   *) die "usage: $0 up | setup <commit> | check | reboot | rollback | pin <digest> | rotate | reissue | alerts | ssh [command] | start | down" ;;
 esac
