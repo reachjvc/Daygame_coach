@@ -76,6 +76,15 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      # THE TEST BACKEND'S PORTS (55320-55329, tests/db/supabase/config.toml)
+      # sit inside Linux's ephemeral range, so an outbound connection — the
+      # image pulls just before — can be holding one when the stack binds it.
+      # Run 38731303670's timing shard died on "0.0.0.0:55324 ... address
+      # already in use". Reserved, the kernel never hands them out.
+      # tests/unit/ciWorkflows.test.ts keeps this range in step with config.toml.
+      - name: Keep the test backend's ports out of the ephemeral range
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=55320-55329
+
       # playwright.config.ts starts the test backend with this exact CLI
       # version; scripts/db/test-stack.mjs refuses any other.
       - uses: supabase/setup-cli@v1
@@ -135,6 +144,15 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      # THE TEST BACKEND'S PORTS (55320-55329, tests/db/supabase/config.toml)
+      # sit inside Linux's ephemeral range, so an outbound connection — the
+      # image pulls just before — can be holding one when the stack binds it.
+      # Run 38731303670's timing shard died on "0.0.0.0:55324 ... address
+      # already in use". Reserved, the kernel never hands them out.
+      # tests/unit/ciWorkflows.test.ts keeps this range in step with config.toml.
+      - name: Keep the test backend's ports out of the ephemeral range
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=55320-55329
 
       - uses: supabase/setup-cli@v1
         with:

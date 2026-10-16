@@ -266,6 +266,34 @@ describe("when CI runs at all", () => {
     }
   })
 
+  test("every job that starts the test backend first keeps its ports from being handed out", () => {
+    /**
+     * The backend's ports sit inside Linux's ephemeral range (32768-60999), so
+     * an outbound connection made just before — the image pulls — can hold one
+     * when the stack binds it: run 38731303670 lost a shard to "0.0.0.0:55324 …
+     * address already in use". Each job reserves the range first; the range is
+     * read from config.toml, so moving a port moves the check with it.
+     */
+    const toml = readFileSync(join(root, "tests/db/supabase/config.toml"), "utf8")
+    const ports = [...toml.matchAll(/^\s*(?:shadow_)?port\s*=\s*(\d+)/gm)].map((m) => Number(m[1]))
+    expect(ports.length, "no ports read from config.toml").toBeGreaterThan(3)
+    const range = `${Math.min(...ports)}-${Math.max(...ports)}`
+
+    const starters: [string, string][] = [
+      ["ci.yml checks", jobs(ci)["checks"] ?? ""],
+      ...browserJobs.map((job): [string, string] => [
+        `e2e.yml ${job}`,
+        /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? ""),
+      ]),
+    ]
+    for (const [name, body] of starters) {
+      expect(body, `${name} does not reserve ${range}`).toContain(`ip_local_reserved_ports=${range}`)
+      expect(body.indexOf("ip_local_reserved_ports"), `${name} reserves the ports after the CLI is set up`).toBeLessThan(
+        body.indexOf("supabase/setup-cli"),
+      )
+    }
+  })
+
   test("the database tests are a CI step", () => {
     // They start a real backend in Docker. Until this line existed, every
     // schema rule they check was checked on laptops only.

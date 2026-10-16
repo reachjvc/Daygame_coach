@@ -86,6 +86,15 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # THE TEST BACKEND'S PORTS (55320-55329, tests/db/supabase/config.toml)
+      # sit inside Linux's ephemeral range, so an outbound connection — the
+      # image pulls just before — can be holding one when the stack binds it.
+      # Run 38731303670's timing shard died on "0.0.0.0:55324 ... address
+      # already in use". Reserved, the kernel never hands them out.
+      # tests/unit/ciWorkflows.test.ts keeps this range in step with config.toml.
+      - name: Keep the test backend's ports out of the ephemeral range
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=55320-55329
+
       # The database tests run against a throwaway local Supabase built from
       # production's own schema (scripts/db/test-stack.mjs; tests/db/) — row
       # security, the finish function, the signup trigger, and the app's repos
