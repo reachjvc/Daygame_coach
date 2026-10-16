@@ -814,8 +814,9 @@ policy); inner-game reset always returns 500 (`inner_game_progress` has no
 second production CHECK; `user_goals.goal_type` defaults to a value its own CHECK
 refuses; `user_values` has no foreign key to the person; five `life_plan_*`
 foreign keys abort a plan save that removes an area with goals under it.
-Also: migration `20260927120000_corrections_keep_set_order` is not applied in
-production (the test backend applies it on top of the baseline).
+Also: migration `20260927120000_corrections_keep_set_order` was not applied in
+production (the test backend applied it on top of the baseline). Applied
+2026-10-16.
 
 **Found by Phases 8–10, not fixed (product code):**
 - *The Black Box loses edits made on a device whose clock is behind another's.*
@@ -871,11 +872,11 @@ that starts a backend now reserves the range as its first step, and
 `ciWorkflows.test.ts` checks the range against `config.toml` and the order
 (586c3fbd, 263ca65a). Two full runs after it: green. Live at 559e4a1b.
 
-**Left for you:**
-- the migration `20260927120000_corrections_keep_set_order` (approved by you
-  on 2026-09-28) is still not in production; it is the only pending one, and
-  this session's permissions refuse `supabase db push`. Run
-  `supabase migration list --linked`, then `supabase db push`.
+**Applied 2026-10-16:** the migration `20260927120000_corrections_keep_set_order`
+(approved by the owner on 2026-09-28) is in production, pushed by Claude on the
+owner's word after the owner had the `supabase db push` deny rule removed.
+Checked: nothing pending, and `replace_sets_and_replay` keeps `completed_at`
+and `prescribed_index`, so a corrected workout keeps its order.
 
 **Security, found along the way:** `/api/goals/plan` and the four
 `/api/goals/vision-plan/*` routes were deployed and callable by any signed-in
