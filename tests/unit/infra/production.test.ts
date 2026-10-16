@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { parse } from "yaml"
-import { spawnSync } from "node:child_process"
+import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from "node:child_process"
 
 const ROOT = resolve(__dirname, "../../..")
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8")
@@ -138,7 +138,11 @@ describe("secrets stay off command lines, and settings are never executed as roo
 describe("spending money is the owner's act", () => {
   it("provision.sh refuses to create a server without a person at a terminal typing yes", () => {
     // An AI session has no terminal: it can run the dry run and nothing else.
-    const r = spawnSync("bash", [join(ROOT, "infra/server/provision.sh")], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], detached: true })
+    // `detached` is honoured by spawnSync at runtime (a new session, so no
+    // controlling terminal), but Node's types list it for spawn only; written
+    // inline it failed the type ratchet in CI on 7e16b812.
+    const options = { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], detached: true } as SpawnSyncOptionsWithStringEncoding
+    const r = spawnSync("bash", [join(ROOT, "infra/server/provision.sh")], options)
     expect(r.status).toBe(1)
     expect(r.stderr).toContain("only a person at a terminal can run it")
   })
