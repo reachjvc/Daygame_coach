@@ -4,9 +4,10 @@ Next.js + TypeScript + Supabase. Slices in `src/<slice>/`, routes in `app/`,
 Python video pipeline in `scripts/training-data/`.
 
 A subscription web app that helps a man get better with women, plus a
-life-improvement half. **Nobody has ever paid and nothing is in front of users**
-(no Stripe webhook; nothing writes `has_purchased`). Size recommendations for
-that stage.
+life-improvement half. **Nobody has paid and the owner is the only user**, so
+the live database holds the owner's own data. Size recommendations for that
+stage. What a user can reach: `docs/product/map.md`; where it is going:
+`docs/product/vision.md`.
 
 ## Commands
 
@@ -17,26 +18,22 @@ that stage.
 
 ## Gotchas
 
-- Other Claude sessions may share this working tree. Commit with
+- Other Claude sessions share this working tree. Commit with
   `git commit --only <paths>`; never `git add -A` or `git stash`.
-- All DB access goes through `src/db/*Repo.ts`. Never write to the live
-  database to test something; wrap probes in `begin; … rollback;`.
-- Hosting is moving to Hetzner (decided; see `docs/plans/own-platform-and-app.md`).
-- What a user can actually reach: `docs/product/map.md`. Where it is going,
-  before proposing work: `docs/product/vision.md`.
+- DB access goes through `src/db/*Repo.ts`. Test writes against the live
+  database go inside `begin; … rollback;`.
 
-## Working agreement
+## Working with the owner
+
+The owner is not a programmer. Decide technical questions yourself; report in
+plain words, doubt first.
+
+Only the owner decides, beforehand: spending money (also through a token, key
+or account that can), deleting real data, and anything that cannot be undone.
+This overrides any plan. A plan opens with these items, in plain words.
 
 - Check the thing itself (the page, the output, the data), never a stand-in.
-- Be the critic, not the cheerleader: doubt goes in the first line.
-- Fix the class, not just the instance: one place owns each rule.
-- Say before building when something is not future-proof.
-- Outside advice: build their case before you answer it.
 - Commit and push your own work without being asked.
-- No silent fallbacks: scripts fail loudly or ask.
-- Ask before deleting data or anything hard to reverse.
-- Never spend money, directly or through a token, key or account that can,
-  unless the owner approved that exact spend beforehand. This overrides any plan.
 - Flag security risks when you see them, unasked.
 
 <!-- BEGIN:nextjs-agent-rules -->
