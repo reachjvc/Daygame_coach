@@ -12,7 +12,9 @@ machine, from the real first-boot file, and it served the app over HTTPS, surviv
 back a broken image and fired its alerts. The rehearsal found five bugs in the real scripts, now fixed.
 The dev server runs Node 24 as a user unit (R11), and `https://localhost/**` is on Supabase's
 redirect list (R7, half). **New for the owner:** Hetzner's US prices quadrupled in June 2026, which
-reopens where the server goes (Q8, Q18). Phases 6–7 wait for the STOP line (a domain and a server).
+reopens where the server goes (Q8, Q18). **2026-10-17: the owner defers Hetzner entirely**, on a
+friend's advice. Production stays on Vercel, staging stays on this machine, and Phases 6–7 wait
+until the owner reopens the server question; no AI work in this plan is left before then.
 
 **Written 2026-10-13** for an outside consultant who does not know this project, and for the AI session
 that executes it. The `/goal` prompts are at the end. Three independent reviewers checked the plan
@@ -299,7 +301,7 @@ what happened, not a guess.
 |---|---|---|
 | B-DEVSERVER | **Closed** (5b.2): the dev server is the user unit `daygame-dev.service` on Node 24.21.0 and `next` 16.3.8, started at boot. | `http://localhost:3000` 200 before and after; `node -v` in a new login shell: v24.21.0 |
 | B-SUPABASE-REDIRECT | **Half closed** (5b.6): `https://localhost/**` added; the domain's entry waits for R1. Remove the localhost entry once the domain works (security review). | read, union written, read back: all three entries |
-| B-PRICE (new) | **Open, the owner's decision.** CPX21 in Ashburn: €31.99 a month before VAT and IPv4 since 2026-06-15 (was €11.99); comparable EU types €5.49–8.49. Q8 chose Ashburn for database latency before that rise. | Hetzner's price-adjustment notice (Q18) |
+| B-PRICE (new) | **Deferred 2026-10-17 with Hetzner itself (the owner's decision).** When the server question reopens, check current prices first. CPX21 in Ashburn: €31.99 a month before VAT and IPv4 since 2026-06-15 (was €11.99); comparable EU types €5.49–8.49. Q8 chose Ashburn for database latency before that rise. | Hetzner's price-adjustment notice (Q18) |
 | B-GHCR | Unchanged: R5's two read-only tokens and the production package are still open. The rehearsal used the GitHub CLI's token instead (difference 3) and deleted its copy. | — |
 | B-TAILSCALE | Unchanged, and **unrehearsed**: the practice server had no tailnet (difference 1), so Tailscale SSH, `tag:prod` and the policy are first tried in Phase 6. | — |
 | B-UPTIME | Unchanged, now concrete: three ping checks (`PING_URL`, `DISK_WARN_PING_URL`, `DISK_CRIT_PING_URL`, each in `~/.config/daygame/alerts.env`) and one HTTP monitor with a certificate warning. | `infra/RUNBOOK.md`, "Alerts" |
@@ -1448,7 +1450,7 @@ sitting of about forty minutes, plus Hetzner's verification wait, so do R3 first
 |---|---|
 | R1 domain | Open |
 | R2 Cloudflare token | Open |
-| R3 Hetzner | **Account and credit exist (2026-10-16); no token, nothing rented.** A friend advised no hurry. **Decide first where the server goes (B-PRICE, Q8):** Ashburn costs about €32 a month since June 2026, an EU server €5.49–8.49, slower by ~90 ms per database call until the database moves. |
+| R3 Hetzner | **Deferred entirely by the owner on 2026-10-17** (a friend's advice). The account and its credit exist; no token, nothing rented. When it reopens: decide first where the server goes (B-PRICE, Q8). In 2026-10, Ashburn cost about €32 a month and an EU server €5.49–8.49, and the EU server is slower by ~90 ms per database call until the database moves. |
 | R4 GitHub CLI | **Done 2026-10-14** (`read:packages` added). Before that: **Half done**: logged in, but without `read:packages`. Run `gh auth refresh -s read:packages`. `infra/github-config.sh` has already run (step 4.4). Then log Docker in and enable the agent timer (Phase 4 evidence, 4.6–4.7). |
 | R5 read-only registry tokens | **Staging package made private 2026-10-14.** Still open: the production package and the two read-only tokens. Original note: Open, **and first**: on github.com → your profile → Packages → `daygame-coach-staging` → Package settings, change the visibility to **private** and make sure this repository has **Write** access under "Manage Actions access". Then `gh variable set STAGING_PUBLISH --body on`. The production package does not exist yet: create it the same way before Phase 6 (push any image to it with a token that may write packages, then make it private). Then the two read-only tokens. |
 | R6 Tailscale | Open |
