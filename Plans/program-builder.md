@@ -1,0 +1,479 @@
+# Any program, picked or built: the gym becomes a program builder
+
+**Status:** written 2026-10-18 by session daygame-coach-c2. Not started. Phase 0 is next.
+
+**Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
+phases, Part 2, and the `/goal` prompts at the end).
+
+**Where it sits.** Delivers vision items 28 ("being rebuilt now") and 30 ("more workout templates may be
+needed") in `docs/product/vision.md`, and replaces the gym half of `docs/product/map.md`'s `programs/`
+entry. It builds on `docs/plans/training-three-doors.md` (all eleven phases executed 2026-09-23); it does
+not redo that plan's screens, only the model under them and the editors on top of them.
+
+**Who owns what.** The gym slice (`src/programs/`, `app/(app)/training/`, `app/api/programs/`,
+`app/api/workouts/`, their tests) is this plan's for its whole run. One peer session existed when it was
+written (`daygame-coach-63`, idle). Anything outside the slice that this plan touches is listed in the
+step that touches it.
+
+---
+
+# PART 1 — In plain words
+
+## Words used here
+
+| Word | Meaning |
+|---|---|
+| Program | A training plan: which days, which lifts, how many sets and reps, how heavy, how it changes over weeks. |
+| Top set | One heavy set done first, e.g. "1 set of 2–5 reps". |
+| Backoff sets | Lighter sets after the top set, e.g. "3–5 sets at 70–80% of the top set's weight". |
+| RPE | How hard a set felt, 1–10. RPE 8.5 means "one or two reps left in the tank". RIR ("reps in reserve") says the same thing the other way round. |
+| 1RM / training max | Your one-rep max, and a slightly lower number (often 85–90% of it) that some programs calculate from. |
+| AMRAP, "5+" | As many reps as possible; "5+" means at least 5, then as many as you can. |
+| Rotation | Days done in order regardless of weekday (A, B, A, B…), as opposed to "Monday is bench day". |
+| Progression rule | What the program does with your weights after a workout: add 2.5 kg, hold, drop 10%, and so on. |
+| Built-in program | One of the ready-made programs every user can pick. There are 13 today. |
+| Starscream | The program in your Google Sheet (see the correction below). |
+
+## A correction first: your sheet's program is called Starscream, not Dark Horse
+
+On the earlier page I called your program "Dark Horse", because the sheet has a tab with that name. That was
+wrong, and you were right to ask why we would need it. The program in your sheet is **Starscream**, a free
+12-week, 5-day hypertrophy program by u/BenchPauper on Reddit (Lift Vault lists it as "Starscream: 12 Week
+Hypertrophy Program"). The "Dark Horse" tab in your sheet is empty, and "Dark Horse" is also the name of an
+unrelated program by a different author. Nothing needs installing. The fit check page has been corrected.
+
+## What you are agreeing to
+
+- **Money:** none. Nothing in this plan buys, rents or subscribes to anything.
+- **Your data:**
+  - **Already done today (you said yes):** your Upper/Lower program is stopped. Its two finished workouts
+    (4 and 6 Sep) are kept. One empty, never-finished workout that someone opened on 23 Sep (0 sets) was
+    thrown away, because the site refuses to stop a program while a workout is open on it. Both rows were
+    backed up first.
+  - **Waiting for your yes (Q18):** you said you never used Upper/Lower, but those two finished workouts
+    (38 sets) are on your account and show in your History and your best lifts. They were probably made by
+    an automated test or an earlier Claude session. My recommendation is to delete them, with a backup.
+- **The live database (you said yes today).** These changes are made to the real site's database. None of
+  them deletes anything, and each one comes with a written way back:
+  1. RPE can be saved in half steps (8.5), not only whole numbers.
+  2. A new table for programs people build themselves.
+  3. Each running program keeps its own copy of its rules, so editing a program later does not rewrite
+     the past.
+  4. The numbers the app calculates (your working weights, which week you are in) can only be changed by
+     the app's own calculations, not written straight into the database by a user. Today they can be;
+     see "Security" below.
+- **What becomes public:** Starscream appears in the program list for every user, credited to
+  u/BenchPauper, with the explanations written in our own words. Other free programs may join it (Q2).
+- **What cannot be undone:** nothing in this plan, apart from the deletion in Q18 if you say yes.
+
+## The short answer
+
+Yes, this can be built, and it is the right next step for the gym. Today a user can pick one of 13 programs
+and change its sets, reps and starting weights, or type a simple week into a text box. **Nobody can build a
+program with real rules**: "the backoff is 70–80% of today's top set", "week 12 is heavier", "add weight when
+you hit the top of the range", "5/3/1 percentage waves". So your sheet cannot be made in the app, and neither
+can most popular programs. You are right that this makes the gym not really functional for anyone who
+arrives with their own program.
+
+The fix has two layers:
+
+1. **One general way to write down any program** (the "program format"). Researched against 32 real
+   programs; it covers 29 of them exactly and the other 3 closely (details below).
+2. **A builder people can actually use**: pick a ready program, change anything in it, or start from
+   nothing, using plain-word presets ("top set + backoffs", "add weight when you hit the reps", "percent of
+   your max, changing each week") instead of a programming language.
+
+Your Starscream program is the acceptance test: it must be buildable **by hand in the builder**, on a phone,
+and run exactly like your sheet. It also ships as a ready-made program for every user.
+
+**Size, honestly:** this is the biggest change to the gym since it was built. About ten phases; several
+days of AI work, not hours. Your sheet keeps working in the meantime, so start on it tomorrow as planned.
+
+## What exists today (checked in the code and the live database on 2026-10-18)
+
+- The gym lives at `/training`: Today, History, Progress, a set-by-set live workout screen with a rest clock
+  and plate maths, 13 built-in programs, and a text box (`?view=build`) for typing a simple week.
+- Program rules the engine knows: fixed sets×reps, an all-out last set, 5/3/1-style percentage weeks, and
+  rep ranges. Progression: none, add weight, percentage cycles, double progression.
+- **What nobody can do:** set-count ranges ("3–5 sets"), RPE targets, half-step RPE (8.5 is refused by the
+  database), weight from a set done earlier the same day, different rules in different weeks (except 5/3/1's
+  table), weeks that follow the calendar, a program that ends, choose-on-the-day lifts ("back or front
+  squat"), pyramids, rules on failure other than "drop 10%".
+- **Editors:** the program editor changes only day names and order, and per lift its sets, reps, range,
+  starting weight, swap, move and remove. Progression rules, supersets, notes, weeks and rest cannot be
+  edited anywhere. There is no way to build a program from scratch except the text box.
+- **The text box misreads silently.** "Bench Press 3-5x5-10" is saved as a lift called "Bench Press 3"
+  doing 5×5-10; "Dips 5*10" is saved as a lift called "Dips 5*10" at the default 3×8. No warning.
+- **A real bug:** your bar and smallest-plate settings never reach the weight calculation. Every
+  prescription uses a 20 kg bar and 1.25 kg plates whatever you set. Fixed in Phase 2.
+- **Live data is tiny:** 13 started programs (12 belong to test accounts), 0 edited programs, 2 saved weeks
+  (both yours, named "2" and "12", from July), 146 workouts (144 from test accounts). Moving to a new format
+  is therefore safe.
+
+## What "any program" means: the research
+
+32 widely used programs were broken down rule by rule (StrongLifts, Starting Strength, GZCLP, nSuns, 5/3/1
+in two versions, Texas Method, Madcow, Reddit PPL, PHUL, PHAT, Greyskull, Ivysaur, Candito, Sheiko, Calgary
+Barbell, Juggernaut, RP-style hypertrophy, Lyle GBR, Nippard, Starscream, Bullmastiff, Jacked & Tan,
+Building the Monolith, Smolov Jr, the bodyweight Recommended Routine, Barbell Medicine/RTS, Rippler, wave
+loading, SBS RTF, DC). Of those 32 programs:
+
+- 31 need fixed sets×reps, 16 need "N+" or AMRAP sets, 13 a rep range, 9 different reps or % per set
+  (pyramids), 6 a top set with backoffs, 4 a set-count range.
+- Weight comes from: plate rounding (≈20), an absolute weight (9), % of 1RM (7), % of a training max (7),
+  % of another set or day (7), RPE (6), your own choice (6), bodyweight (5), % of another rep max (3),
+  RIR (2).
+- 14 change something week to week from a table, 7 have a test week, 6 a planned deload, 4 an RPE/RIR ramp.
+- Progression: add weight on success (9), double progression (8), drop after N misses (8), retest and
+  recompute (7), RPE-driven (6), AMRAP reps decide the jump (5), a fixed bump per cycle (4), a change of
+  scheme on failure (2).
+- Supersets (6), giant sets (2), "pick an accessory" (8), either/or lifts (4).
+
+**How other apps handle building:** Liftosaur can express almost anything, but through a programming
+language users call hard to learn. Boostcamp has a form and a spreadsheet-style web creator with RPE and %
+of 1RM, but no training max and paid-only progression. Hevy and Strong have no %, no RPE targets and no
+multi-week programs, so users fall back to Google Sheets, which is exactly what happened to you. The
+patterns worth copying: presets with a few numbers to fill in, a week table that shows only what changes,
+"duplicate this week", a maxes panel with a rounding step, and a preview of what week N will look like.
+What users complain about: rules hidden in free-text notes, unreliable week copying, building being painful
+on a phone, and progression locked behind a paywall.
+
+## How the finished builder works
+
+1. **Pick.** The program list gains filters (goal, days per week, level, equipment, length) and every
+   program can be opened, read week by week, and started as it is.
+2. **Customize.** "Customize" on any program makes it yours: every day, lift, set, rule and week can be
+   changed, before you start or while it runs. Changes apply from the next workout; your history keeps
+   the version you trained on.
+3. **Build from nothing.** Name it, choose "fixed weekdays" or "in order", choose how many weeks and what
+   happens at the end (finish, or start again), add days, add lifts. For each lift you pick a **set
+   pattern** from presets and fill in numbers:
+   - straight sets ("3 × 8"), rep range ("3 × 8–12"), "N+" last set,
+   - top set + backoffs ("1 × 2–5 at RPE 8.5, then 3–5 × 5–10 at 70–80% of the top set"),
+   - percent of a max with a week table (5/3/1, nSuns), pyramids, timed holds,
+   - or "custom" to edit the set groups directly.
+
+   Then a **progression rule** from presets: hold, add weight when the reps are hit, double progression,
+   AMRAP reps decide the jump (a small table), change of scheme on failure (GZCLP), a bump per cycle, RPE
+   decides the weight, add a set per week, or a ladder of harder exercises.
+4. **Weeks that differ** are set in a week table showing only what changes: "Weeks 1–11 top set 1 × 2–5 at
+   RPE 8.5; week 12 1 × 1–5 at RPE 9". Weeks can be duplicated, marked as deload or test weeks.
+5. **Maxes panel:** your 1RMs or training maxes per lift, the plate step, kg or lb, and lifts whose max
+   is derived from another one ("front squat = 70% of back squat").
+6. **Preview** shows any week exactly as the live screen will, with your numbers.
+7. **For power users:** the text box remains, with a clearer notation and no silent misreads. It is a
+   shortcut, never the only way.
+8. **At the gym:** the live screen shows target RPE, "3–5 sets" with an add-set button, and the backoff
+   range filled in the moment you tick your top set. It works on the phone with no signal and sends the
+   sets when signal returns.
+
+## Security, stated plainly and unasked
+
+- **Users can write their program's calculated numbers directly.** Checked on the live database today:
+  any signed-in user may update every column of their own started programs, including the working
+  weights and week counter the app calculates. `docs/plans/training-three-doors.md` says this was locked
+  in September; it is not. The damage is limited to a user's own numbers (the database still refuses
+  writing another user's rows). Phase 3 locks it.
+- **Programs written by users are data from strangers.** Every program is checked against the format on
+  the server, size-limited, and never run as code. There is no scripting language, so there is nothing to
+  inject. Program text is shown as text, never as page markup.
+- **Sharing programs between users is not in this plan** (Q6). It brings moderation and privacy questions
+  of its own.
+- **Copyright:** Starscream's sets and reps are a training method and free to use; the sheet's notes are
+  u/BenchPauper's own writing, so the app uses its own words and credits him. Paid programs (Nippard,
+  Calgary Barbell, Juggernaut, RP, newer Candito) are never shipped as ready-made programs. Liftosaur's code
+  is under a licence (AGPL) that would force this app's code public if copied: ideas only, no code.
+
+---
+
+# BLOCKERS — things only a person can do, or that may stop execution
+
+Each was attempted on 2026-10-18. The result is what happened.
+
+| ID | What | Attempted, and what happened | Blocks | Recommendation |
+|---|---|---|---|---|
+| B-DEADLIFT | Your real deadlift numbers | Read your sheet: deadlift max 70 kg (Master C6), but week 1's heavy deadlift top set is typed as 110 kg (H12), so the sheet prescribes backoffs of 77.5–87.5 kg, above your listed max. One number is wrong. | Your starting values in Phase 9 only. Not the build. | Tell me which. Until then, clear H12 in the sheet and type the top set you actually lift. |
+| B-OLD-WORKOUTS | Delete the two September workouts on your account that you did not do | Read only: 4 Sep (20 sets) and 6 Sep (18 sets), both with the pre-filled "45 min, effort 3", both on Upper/Lower. Backed up the Upper/Lower row today; these two not yet deleted. | Nothing; only your History and bests stay polluted | Q18: delete, with a backup first |
+| B-OWNER-ACCOUNT | Start Starscream on your account without your password | Probe in a rolled-back transaction: the database can act as your account (`auth.uid()` = your id, 1 program row visible), so the app's own `start_enrollment` function can be called as you. | Nothing | Phase 9 does it this way; no password is ever needed or asked for |
+| B-LIVE-DB | Apply schema changes to the live database | `supabase migration list --linked`: all 61 migrations in the repo are applied to production; none pending, so a push applies only this plan's. You authorised schema changes on 2026-10-18. | Phase 3 | Check the list again right before each push; another session may have added one |
+| B-DESIGN | Your eyes on the builder before it is built | Cannot be attempted in advance | The start of Phase 6 | Phase 6 opens with a clickable mock-up page you mark Yes/Maybe/No per screen, like the naming board; building waits for your marks, all other phases continue meanwhile |
+| B-PEER-TREE | Another session's unfinished change turns the pre-commit tests red | ListAgents: one peer, `daygame-coach-63`, idle | Committing, while it lasts | Message that session with the failing test names; continue with work that needs no commit; never edit its files |
+| B-CI | Reading CI results | `gh auth status`: logged in as reachjvc | Nothing | — |
+| B-MAIN | Pushing to the live site | Your standing rule: push without asking. `training-rebuild` is 8 commits ahead of `main` today, 0 behind. | Phase 10 | Fast-forward only, after the `checks` job is green on the same commit and no CI run is in flight |
+| B-LICENCE | Permission from u/BenchPauper | Not attempted: contacting him needs your Reddit account | Nothing (own words + credit are enough) | Optional: send him a message saying the program is credited in the app |
+| B-DISK | Disk space for builds and browser tests | `df -h /mnt/c`: 1017 GB free | Nothing | Check again before Phase 9's browser runs |
+
+---
+
+# OPEN QUESTIONS — each decided, with the cost if the decision is wrong
+
+Q2, Q16, Q18 and Q19 are yours; the rest are technical defaults you do not need to judge.
+
+| # | Question | Decision (recommendation) | Alternative | Cost if wrong |
+|---|---|---|---|---|
+| Q1 | Name in the catalogue | **"Starscream (12-week hypertrophy)"**, credited "by u/BenchPauper", explanations in our words | Leave the name out | None |
+| Q2 | Which other programs join the catalogue | **Starscream now, plus free programs that each prove a different rule:** GZCLP (scheme change on failure), nSuns 5-day (AMRAP table), Reddit PPL (N+ sets + double progression), Greyskull LP (double jump), Texas Method (% of another day), Madcow 5×5 (ramps from the top set), 5/3/1 Boring But Big. Each credited; each one's terms checked in Phase 8. | Starscream only | Each extra program costs a data file and its tests; none can break another |
+| Q3 | Lifting only, or running and mobility too? | **Lifting** (strength, bodybuilding, calisthenics with weights or reps). Running, triathlon and mobility keep their current engine unchanged. | All at once | A running builder later is its own plan; the format leaves room for it |
+| Q4 | A text notation? | **Yes, as a shortcut:** one line per lift, e.g. `Bench Press 1x2-5 @rpe8.5, 3-5x5-10 @70-80% top`. Our own grammar, parsed, never executed. | Forms only | None; forms remain the main path |
+| Q5 | Import a Google Sheet? | **No automatic import of sheets with formulas.** A CSV paste of a week table (Phase 7) covers simple sheets. | Formula import | Formulas are arbitrary programs; reading them reliably is a project of its own |
+| Q6 | Share programs between users? | **Not in this plan.** Programs are private to their owner. | Share links now | Moderation, privacy and copyright arrive with sharing |
+| Q7 | Built-in programs: keep as code files? | **Yes, rewritten in the new format** (one format everywhere), reviewed and tested like code. | Store them in the database | A database copy could drift from its tests |
+| Q8 | How weeks are counted | **By the calendar from the start date for fixed-weekday programs; by completed workouts for "in order" programs.** The user can switch either way. | Always by completed workouts (today) | Skipping a Friday no longer freezes the week |
+| Q9 | What happens after the last week | **The author chooses "finish" or "start again"; at finish the app offers: repeat, retest your maxes, or pick another program.** | Always loop (today) | None |
+| Q10 | How RPE is stored | **Numbers 1–10 in half steps** (`numeric(3,1)`, checked). RIR is shown as 10 − RPE when the program is written in RIR. | Store RIR separately | One conversion to keep correct |
+| Q11 | How a max is estimated from a set | **RTS's reps × RPE table** when RPE was logged; Epley when it was not | One formula | Suggestions off by a few percent; shown as suggestions, never forced |
+| Q12 | Where the backoff range is worked out | **On the phone**, from the sets already on screen, so it works with no signal; the server re-checks it at finish. One shared function does both. | On the server per set | Offline gyms would see no range |
+| Q13 | Monday's bench and Friday's bench: one history or two? | **Two "last time" columns (per slot), one set of personal records (per lift).** | One shared | Mixing a heavy top set with Friday's volume sets made "last time" meaningless |
+| Q14 | Editing a running program | **Applies from the next workout; the history keeps the version you trained on** (each program change is a stored version) | Rewrite the past | — |
+| Q15 | Phone or desktop builder | **Phone first**, wider layout on desktop | Desktop first | Most users build on the phone they train with |
+| Q16 | Your start date on the site | **Monday 19 Oct**, the same as your sheet, so the site's week number matches. At switch-over I copy the top sets you logged in the sheet into the site's History. | Start week 1 the Monday after release | You would be on two different week numbers |
+| Q17 | Locking the calculated numbers | **Yes:** a database rule lets only the app's own program functions change them | Leave it | Low risk either way; it closes the gap the September plan claimed to have closed |
+| Q18 | Delete the two September workouts you did not do | **Delete, after a backup** | Keep them | Your History shows two workouts you never did, and your "bests" start from them |
+| Q19 | Your deadlift: 70 or 110 kg? | You decide (B-DEADLIFT) | — | Wrong starting weights in your first week on the site |
+| Q20 | The old text box | **Kept, with the new notation and errors for anything it cannot read** | Remove it | — |
+| Q21 | Offline opening of the gym | **Yes:** `/training/live` opens with no signal, like `/time` does now | Leave it | Opening the workout in a basement gym shows an error page |
+| Q22 | Units | kg and lb per program as today; rounding step from the maxes panel, defaulting to your plate settings (with the Phase 2 bug fixed) | — | — |
+
+---
+
+# THE PROGRAM FORMAT (design, binding on Phases 1–8)
+
+One format for every lifting program, built-in or user-made. It is data, validated on read and write, with a
+version number.
+
+```ts
+interface ProgramSpec {
+  specVersion: 2
+  name: string; blurb?: string; credit?: string
+  unit: "kg" | "lb"
+  calendar: {
+    days: "weekdays" | "in-order"          // Mon…Sun pinned, or A/B/C rotation
+    weekCounting: "calendar" | "completed" // Q8
+    lengthWeeks: number | null             // null = open-ended
+    atEnd: "finish" | "repeat"             // Q9
+    phases?: { label: string; weeks: WeekSet }[]   // "Base", "Peak"; labels only
+    deloadWeeks?: WeekSet; testWeeks?: WeekSet
+  }
+  maxes?: { lift: LiftRef; kind: "1rm" | "tm" | "rm"; reps?: number;    // 5RM, 2RM
+            tmPct?: number; derivedFrom?: { lift: LiftRef; pct: number } }[]
+  rounding?: { stepKg?: number; stepLb?: number }   // else the account's plates
+  days: DaySpec[]
+}
+interface DaySpec { id: string; label: string; weekday?: 1|2|3|4|5|6|7; slots: SlotSpec[] }
+interface SlotSpec {
+  id: string                      // stable: keys state, logs and "last time"
+  lift: LiftRef                   // library id, or { custom name, loadStyle }
+  choices?: LiftRef[]             // "back OR front squat", "[delt work]": picked on the day
+  group?: string                  // same tag = superset; 3+ = giant set / circuit
+  note?: string; restSec?: number; perSide?: boolean
+  sets: SetGroup[]                // in order, e.g. [top, backoff]
+  weeks?: WeekOverride[]          // "week 12: top = 1x1-5 @9"
+  progression: ProgressionRule
+  stateKey?: string               // share one working weight across slots when wanted
+}
+interface SetGroup {
+  id: string
+  kind: "warmup" | "top" | "working" | "backoff" | "amrap" | "drop" | "restpause"
+  count: number | Range
+  reps: number | Range | { atLeast: number } | { seconds: number | Range } | { total: number }  // "N+", holds, rep totals
+  options?: { count: number; reps: number }[]  // "3x10 up to 10x3"
+  load: LoadSpec
+  effort?: { rpe?: number | Range; rir?: number | Range; lastSetOnly?: boolean; cap?: boolean }
+  perSet?: { reps?: number | Range; pct?: number }[]   // pyramids, ramps, waves
+  restSec?: number; note?: string
+}
+type LoadSpec =
+  | { from: "working" }                                   // the lift's working weight
+  | { from: "max"; max: "1rm" | "tm" | "rm"; pct: number | Range }
+  | { from: "set"; group: string; slot?: string; pct: number | Range }  // earlier set today
+  | { from: "effort" }                                    // pick by feel; app suggests from e1RM
+  | { from: "bodyweight"; plusKg?: number }
+  | { from: "choose" }
+type ProgressionRule =
+  | { kind: "hold" }
+  | { kind: "add-on-success"; inc; failsBeforeDrop; dropPct; afterStallInc? }        // linear
+  | { kind: "double"; inc; dropAfterFails?; dropPct? }                               // rep range
+  | { kind: "amrap-table"; group: string; table: { minReps: number; inc }[]; target: "working" | "max" }
+  | { kind: "per-extra-rep"; group: string; perRep; capReps? }                      // Juggernaut, Bullmastiff
+  | { kind: "stages"; stages: SetGroup[][]; onFailLast: { retest?: boolean; resetPct?: number } } // GZCLP
+  | { kind: "cycle-bump"; inc; onlyIfAllDone?: boolean }                             // 5/3/1
+  | { kind: "by-effort" }                                                            // RPE decides; e1RM kept
+  | { kind: "add-set-per-week"; maxSets: number }
+  | { kind: "ladder"; lifts: LiftRef[]; advanceAt: { reps?: number; seconds?: number } }
+```
+
+**Starscream in this format**, Monday's bench as the example: slot `bench` with
+`sets = [ {id:"top", kind:"top", count:1, reps:{2,5}, load:{from:"effort"}, effort:{rpe:8.5}},
+{id:"back", kind:"backoff", count:{3,5}, reps:{5,10}, load:{from:"set", group:"top", pct:{0.70,0.80}}} ]`,
+`weeks = [{ weeks:"12", set:"top", reps:{1,5}, effort:{rpe:9} }]`, `group:"A"` with the chin-up/row slot,
+`progression: by-effort`. Squat's slot has `choices: [back squat, front squat]` and backoff `pct {0.70,0.90}`,
+`options` 3×10 … 10×3. Friday's bench is `count {4,6} × reps {5,6}` with `effort {rpe 9, lastSetOnly, cap}`.
+Leg press is `load: choose` with the note "pyramid: add weight each set". `[Delt work]` is a slot whose lift is
+chosen from `choices`. Calendar: weekdays, calendar weeks, 12 weeks, finish.
+
+**Coverage test.** Every free program in the research corpus is encoded as a test fixture
+(`tests/fixtures/programs/`). Each fixture asserts week 1 and one later week against the source's own
+numbers. The format is done when all of them pass. Paid programs are fixtures only where their rules are
+public; none ships.
+
+---
+
+# PHASES
+
+Each phase ends green (`npm test`, `node scripts/typecheck-ratchet.mjs`, `npm run lint:ratchet`), committed
+with `git commit --only`, and pushed to `training-rebuild`. Evidence goes under the phase's heading as it is
+done.
+
+## Phase 0 — Ground truth and a safety net
+**Depends on:** nothing.
+1. Re-read every claim in Part 1 against the code; correct this plan where it is wrong.
+2. Golden snapshots: for each of the 13 built-ins, run today's engine through 30 sessions with scripted
+   outcomes (all hit, one miss, three misses, AMRAP high and low) and save every prescription and state
+   change as JSON under `tests/fixtures/programs/golden-v1/`. These are the equivalence target for Phase 2.
+3. Record the live schema of the gym tables (`supabase db query --linked`, read only) into the plan.
+4. Fix the text box's silent misreads now (they mislead users today): anything the parser cannot read
+   becomes an error on that line. Tests for each misread found on 2026-10-18.
+**Acceptance:** golden files committed; text-box tests green; Part 1 corrected where needed.
+
+## Phase 1 — The program format
+**Depends on:** 0.
+1. `src/programs/spec/` holds the types above, a zod schema (strict: unknown keys are errors, not dropped),
+   size limits (≤ 14 days, ≤ 30 slots a day, ≤ 52 weeks, ≤ 64 KB of JSON) and plain-word error messages
+   ("Week 12 changes a set group 'top' that bench does not have").
+2. `specVersion` on every stored spec; a reader that refuses unknown versions loudly.
+3. A converter from today's format to the new one, so old rows and the 13 built-ins load unchanged.
+4. Coverage fixtures: Starscream and every free corpus program, each validating.
+**Acceptance:** all 13 built-ins and all fixtures convert and validate; schema tests cover every field.
+
+## Phase 2 — The engine, rebuilt on the format (pure functions only)
+**Depends on:** 1.
+1. Calendar: weekdays or in order; week number by calendar or by completed workouts; length; finish or
+   repeat; phases, deload and test weeks.
+2. Prescription: set groups, ranges, options, per-set pyramids, week overrides, every load source, effort
+   targets and caps, derived maxes, rounding from the account's plates (**the plate bug fixed here**).
+3. Same-day sets: `deriveFromEarlierSets(prescription, setsDone)` fills ranges from the sets already
+   ticked, so the phone and the server compute the same numbers.
+4. Progression: every rule in the format, and e1RM from reps × RPE (Q11).
+5. Replay over the new engine; **golden equivalence**: every Phase 0 snapshot reproduces exactly, except
+   differences caused by the plate fix, each listed and explained in the evidence.
+6. Simulation: `simulate(spec, weeks, outcomes)` for the builder's preview and for the fixtures.
+**Acceptance:** golden equivalence green; every fixture's week-1 and later-week numbers match its source.
+
+## Phase 3 — Database (live)
+**Depends on:** 1. Can run beside Phase 2.
+1. Migration A (additive): `workout_sets.rpe` and `workout_logs.rpe` to `numeric(3,1)` checked 1–10 in
+   half steps; the same in `finish_program_workout`'s parameter; `workout_sets.slot_id`, `set_group_id`;
+   `program_enrollments.spec jsonb`, `spec_version int`, `started_on date`, `maxes jsonb`;
+   `program_versions` (enrollment_id, version, spec, created_at) for Q14; `user_programs` (id, user_id,
+   name, spec, spec_version, source_program_id, timestamps) with a size `CHECK`, own-row policies, and the
+   existing two saved weeks copied into it (the old `program_drafts` rows stay until Phase 10).
+2. Migration B: calculated columns (`exercise_state`, `cursor`, `replay_events`, `initial_exercise_state`,
+   `user_id`) can change only inside the program functions (Q17), by a trigger the functions switch off for
+   their own statement.
+3. Each migration has a written way back in `supabase/migrations/rollback/`.
+4. `supabase migration list --linked` → nothing pending but these → `supabase db push` → read the live
+   columns back and record them.
+**Acceptance:** integration tests green on the test stack built from the new baseline; the live columns
+match; a direct update of `exercise_state` by an ordinary user is refused (tested on the test stack).
+
+## Phase 4 — Switch the app onto the new engine
+**Depends on:** 2, 3.
+1. Every reader of the old types goes through the new format (the blast-radius list in the Phase 0
+   evidence); the old engine is deleted once nothing calls it.
+2. Logging keeps each set's kind, slot, set group and half-step RPE end to end (sets, finish, replay,
+   History, Progress); "last time" per slot, records per lift (Q13).
+3. Starting a program stores its spec copy and version; editing a running program writes a new version.
+**Acceptance:** all unit, integration and browser tests green; a started built-in program behaves exactly
+as before (golden).
+
+## Phase 5 — The live workout screen
+**Depends on:** 4.
+1. Shows target RPE/RIR, "3–5 sets" with an add-set button, options ("3×10 … 10×3"), choice slots, caps on
+   the last set, the week ("Week 3 of 12", phase name), deload and test weeks, the finish screen (Q9).
+2. The backoff range fills in the moment the top set is ticked, offline included.
+3. RPE slider in half steps.
+4. `/training/live` opens with no signal (Q21), with the same care `/time` takes about whose page is stored.
+**Acceptance:** browser tests for each item on a phone viewport, including offline.
+
+## Phase 6 — The builder
+**Depends on:** 4. **Opens with B-DESIGN.**
+1. A clickable mock-up page of every builder screen, published for the owner to mark; build waits for the
+   marks.
+2. Then build, replacing `ProgramEditor`, `BuildYourWeek` and `EditActiveProgram`'s editing:
+   start from a catalogue program, from blank or from text; days; slots; set-pattern presets with "custom";
+   progression presets; week table (repeating or changing by week, duplicate week, deload and test
+   markers); maxes panel; supersets; choices; calendar settings; live preview of any week; save; start;
+   edit while running.
+3. Every preset shows, in a sentence, what it will do ("Adds 2.5 kg when you hit 5 reps on all 3 sets;
+   drops 10% after 3 misses").
+**Acceptance:** a browser test builds Starscream by hand on a 390-px phone viewport and its preview of
+week 1 Monday and week 12 Monday matches the sheet; the owner's marks are met.
+
+## Phase 7 — Text notation and CSV
+**Depends on:** 6.
+1. One line per slot in the notation of Q4, round-tripping with the builder (anything built can be shown as
+   text, and the text rebuilds it).
+2. Paste a CSV week table into a slot's week overrides.
+**Acceptance:** every coverage fixture round-trips through the text form.
+
+## Phase 8 — The catalogue
+**Depends on:** 4.
+1. The 13 built-ins rewritten natively in the new format (the converter stays only for old rows).
+2. Starscream added (Q1); the Q2 programs added after each one's terms are checked and recorded.
+3. Filters: goal, days per week, level, equipment, length. "Customize" on every program.
+**Acceptance:** catalogue tests; each new program's fixture test; screenshots of the list on a phone.
+
+## Phase 9 — Acceptance on the real thing, and your account
+**Depends on:** 5, 6, 8; Q16, Q18, Q19.
+1. Run the Phase 6 hand-build test against the real site after release candidates deploy to staging.
+2. Your account: start Starscream as you (B-OWNER-ACCOUNT), start date per Q16, starting values from your
+   sheet (Q19); copy the top sets you logged in the sheet into History; delete the two September workouts
+   if Q18 is yes.
+3. Screenshots of your Today, a live workout with the backoff range, and week 12, on a phone.
+**Acceptance:** your Today page shows the right Starscream day for the date.
+
+## Phase 10 — Release
+**Depends on:** all.
+1. `/code-review` of the whole branch range; a security review through a subagent (RLS, the new table, the
+   lock, user-supplied JSON).
+2. CI green; fast-forward `main` (B-MAIN); check the live site.
+3. Drop `program_drafts` only after the copy is verified and no code reads it (its own migration, with the
+   rows backed up first).
+4. Update `docs/product/map.md`'s `programs/` entry and vision items 28 and 30.
+**Acceptance:** live site shows the builder; this plan's status line says done, with evidence.
+
+---
+
+# PART 2 — Ground rules for the executing session
+
+1. Read `CLAUDE.md`, `.claude/rules/database.md`, and this plan's Part 1 first.
+2. Other sessions share the tree: `git commit --only <paths>`, never `git add -A` or `git stash`.
+3. Live database: reads freely; writes only through migrations (Phase 3) or the app's own functions acting
+   as the owner (Phase 9). Back up before any deletion. Never delete without the owner's yes (Q18).
+4. No money, no accounts, no passwords. The owner's account is reached only as in B-OWNER-ACCOUNT.
+5. Run `node scripts/typecheck-ratchet.mjs` and `npm run lint:ratchet` before every push.
+6. Golden equivalence is not optional: a changed built-in prescription is a bug until it is listed and
+   explained in the Phase 2 evidence.
+7. Comments in this codebase are often stale. Check claims in code before relying on them.
+8. Never copy Liftosaur code (AGPL). Never ship a paid program.
+9. Report to the owner in plain words, doubt first; show work on a page he can look at.
+
+---
+
+# `/goal` prompts
+
+### Phases 0–5. Paste after `/goal`.
+
+> Execute Plans/program-builder.md Phases 0 to 5 in order, following its Part 2 ground rules. Record evidence
+> under each phase heading as you go, commit with `git commit --only` and push to training-rebuild at the end
+> of each phase. Stop and report in plain words if a phase's acceptance cannot be met.
+
+### Phases 6–8, after the owner's marks on the builder mock-up. Paste after `/goal`.
+
+> Execute Plans/program-builder.md Phases 6 to 8, starting with the mock-up in 6.1 and waiting for the
+> owner's marks before building 6.2. Same rules and evidence as before.
+
+### Phases 9–10, after Q16, Q18 and Q19 are answered. Paste after `/goal`.
+
+> Execute Plans/program-builder.md Phases 9 and 10: put the owner on Starscream as the plan says, release to
+> main, and report with screenshots.
