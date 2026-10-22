@@ -1,4 +1,4 @@
--- baseline-stamp: 20261016120400
+-- baseline-stamp: 20261022110000
 -- Schema only (no rows), dumped from the linked Supabase project by scripts/db/baseline.sh.
 -- Do not edit by hand: write a migration, then re-run the script once production has it.
 
@@ -204,44 +204,37 @@ COMMENT ON FUNCTION "public"."end_enrollment"("p_id" "uuid") IS 'Stops a program
 
 
 
-CREATE OR REPLACE FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone DEFAULT NULL::timestamp with time zone, "p_session_type" "text" DEFAULT NULL::"text", "p_distance_km" numeric DEFAULT NULL::numeric) RETURNS "uuid"
+CREATE OR REPLACE FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone DEFAULT NULL::timestamp with time zone, "p_session_type" "text" DEFAULT NULL::"text", "p_distance_km" numeric DEFAULT NULL::numeric) RETURNS "uuid"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
     AS $$
 DECLARE
   v_enrollment UUID;
 BEGIN
-  -- Lock the workout and confirm it is still running. Zero rows means somebody
-  -- (or some retry) already finished it.
+  PERFORM set_config('app.program_engine', 'on', true);
   SELECT enrollment_id INTO v_enrollment
   FROM workout_logs
   WHERE id = p_workout_id AND started_at IS NOT NULL AND ended_at IS NULL
   FOR UPDATE;
-
   IF NOT FOUND THEN
     RAISE EXCEPTION 'That workout has already been finished' USING ERRCODE = '55000';
   END IF;
-
   IF v_enrollment IS NOT NULL THEN
-    -- Lock the program and confirm it is where the caller thought it was.
     PERFORM 1
     FROM program_enrollments
     WHERE id = v_enrollment
       AND (cursor ->> 'sessionCount')::int = p_expected_session_count
     FOR UPDATE;
-
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Your program moved on while this workout was open — reload and finish it again'
         USING ERRCODE = '55000';
     END IF;
-
     UPDATE program_enrollments
     SET exercise_state = p_exercise_state,
         cursor = p_cursor,
         replay_events = COALESCE(p_replay_events, replay_events)
     WHERE id = v_enrollment;
   END IF;
-
   UPDATE workout_logs
   SET ended_at = p_ended_at,
       duration_min = p_duration_min,
@@ -250,23 +243,19 @@ BEGIN
       notes = COALESCE(p_notes, notes),
       progression_changes = p_changes,
       personal_records = p_records,
-      -- Together, always: `workout_logs_logged_is_start` requires it, and a
-      -- session filed under the day you wrote it up rather than the day you
-      -- did it is the fault this exists to fix.
       started_at = COALESCE(p_started_at, started_at),
       logged_at = COALESCE(p_started_at, logged_at),
       session_type = COALESCE(p_session_type, session_type),
       distance_km = p_distance_km
   WHERE id = p_workout_id;
-
   RETURN p_workout_id;
 END $$;
 
 
-ALTER FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) OWNER TO "postgres";
+ALTER FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) OWNER TO "postgres";
 
 
-COMMENT ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) IS 'Closes a live workout, moves the program''s weights and writes the receipt the screen showed — all in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice. Also sets, when given: the start instant (started_at and logged_at together, so a session written up later is filed under the day it happened), the session kind, and the distance.';
+COMMENT ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) IS 'Closes a live workout, moves the program''s weights and writes the receipt the screen showed — all in one transaction. Refuses a second call for the same workout, so a retry cannot advance the program twice. Also sets, when given: the start instant (started_at and logged_at together, so a session written up later is filed under the day it happened), the session kind, and the distance. The session RPE moves in half steps.';
 
 
 
@@ -354,8 +343,8 @@ DECLARE
   v_row workout_logs;
   v_id UUID;
 BEGIN
+  PERFORM set_config('app.program_engine', 'on', true);
   SELECT * INTO v_row FROM jsonb_populate_record(null::workout_logs, p_workout);
-
   INSERT INTO workout_logs (
     user_id, session_type, duration_min, intensity, distance_km,
     enrollment_id, program_day_id, program_cycle, program_week,
@@ -369,42 +358,33 @@ BEGIN
   )
   ON CONFLICT (user_id, client_key) WHERE client_key IS NOT NULL DO NOTHING
   RETURNING id INTO v_id;
-
-  -- ALREADY WRITTEN. The same write-up arriving twice — a retry after a reply
-  -- was lost on gym wifi — is the session that is already there, and the
-  -- program must not be advanced a second time for it. Nothing is touched.
   IF v_id IS NULL THEN
     SELECT id INTO v_id FROM workout_logs
     WHERE user_id = v_row.user_id AND client_key = v_row.client_key;
     RETURN jsonb_build_object('workout_id', v_id, 'inserted', false);
   END IF;
-
   INSERT INTO workout_sets (
     log_id, exercise, exercise_id, library_id, weight_kg, reps, set_number,
-    set_kind, side, notes, exercise_notes, rpe
+    set_kind, side, notes, exercise_notes, rpe, slot_id, set_group_id
   )
   SELECT v_id, s.exercise, s.exercise_id, s.library_id, s.weight_kg, s.reps,
          s.set_number, COALESCE(s.set_kind, 'working'), s.side, s.notes,
-         s.exercise_notes, s.rpe
+         s.exercise_notes, s.rpe, s.slot_id, s.set_group_id
   FROM jsonb_populate_recordset(null::workout_sets, COALESCE(p_sets, '[]'::jsonb)) s;
-
   IF v_row.enrollment_id IS NOT NULL THEN
     PERFORM 1 FROM program_enrollments
     WHERE id = v_row.enrollment_id
       AND (cursor ->> 'sessionCount')::int = p_expected_session_count
     FOR UPDATE;
-
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Your program moved on while this was being written up — reload and try again'
         USING ERRCODE = '55000';
     END IF;
-
     UPDATE program_enrollments
     SET exercise_state = p_exercise_state,
         cursor = p_cursor
     WHERE id = v_row.enrollment_id;
   END IF;
-
   RETURN jsonb_build_object('workout_id', v_id, 'inserted', true);
 END $$;
 
@@ -472,6 +452,40 @@ $$;
 
 
 ALTER FUNCTION "public"."program_drafts_touch_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."program_numbers_only_by_the_app"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF current_user NOT IN ('authenticated', 'anon') THEN
+    RETURN NEW;
+  END IF;
+  IF coalesce(current_setting('app.program_engine', true), '') = 'on' THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'INSERT' THEN
+    RAISE EXCEPTION 'A program is started through the app, not written into the table.'
+      USING ERRCODE = '42501';
+  END IF;
+  IF NEW.exercise_state IS DISTINCT FROM OLD.exercise_state
+     OR NEW.cursor IS DISTINCT FROM OLD.cursor
+     OR NEW.replay_events IS DISTINCT FROM OLD.replay_events
+     OR NEW.initial_exercise_state IS DISTINCT FROM OLD.initial_exercise_state
+     OR NEW.user_id IS DISTINCT FROM OLD.user_id THEN
+    RAISE EXCEPTION 'A program''s numbers are worked out by the app and cannot be written directly.'
+      USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
+
+
+ALTER FUNCTION "public"."program_numbers_only_by_the_app"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."program_numbers_only_by_the_app"() IS 'Refuses a client write of a program''s calculated columns (exercise_state, cursor, replay_events, initial_exercise_state, user_id) and a client insert, unless one of the app''s program functions is doing it.';
+
 
 
 CREATE OR REPLACE FUNCTION "public"."prune_error_reports"() RETURNS integer
@@ -542,34 +556,28 @@ DECLARE
   v_row program_enrollments;
   v_gone UUID;
 BEGIN
+  PERFORM set_config('app.program_engine', 'on', true);
   PERFORM 1 FROM program_enrollments
   WHERE id = p_enrollment_id
     AND (cursor ->> 'sessionCount')::int = p_expected_session_count
   FOR UPDATE;
-
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Your program moved on while this was being recalculated — reload and try again'
       USING ERRCODE = '55000';
   END IF;
-
-  -- The sets go with the workout (ON DELETE CASCADE), and so does its place in
-  -- every count, chart and export — there is one record of a session now.
   DELETE FROM workout_logs
   WHERE id = p_log_id AND enrollment_id = p_enrollment_id
   RETURNING id INTO v_gone;
-
   IF v_gone IS NULL THEN
     RAISE EXCEPTION 'That session was not found, so nothing was deleted'
       USING ERRCODE = '55000';
   END IF;
-
   UPDATE program_enrollments
   SET exercise_state = p_exercise_state,
       cursor = p_cursor,
       replay_events = COALESCE(p_replay_events, replay_events)
   WHERE id = p_enrollment_id
   RETURNING * INTO v_row;
-
   RETURN to_jsonb(v_row);
 END $$;
 
@@ -588,47 +596,41 @@ CREATE OR REPLACE FUNCTION "public"."replace_sets_and_replay"("p_log_id" "uuid",
 DECLARE
   v_row program_enrollments;
 BEGIN
+  PERFORM set_config('app.program_engine', 'on', true);
   IF p_enrollment_id IS NOT NULL THEN
     PERFORM 1 FROM program_enrollments
     WHERE id = p_enrollment_id
       AND (cursor ->> 'sessionCount')::int = p_expected_session_count
     FOR UPDATE;
-
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Your program moved on while this was being recalculated — reload and try again'
         USING ERRCODE = '55000';
     END IF;
   END IF;
-
   PERFORM 1 FROM workout_logs WHERE id = p_log_id FOR UPDATE;
-
   IF NOT FOUND THEN
     RAISE EXCEPTION 'That workout no longer exists' USING ERRCODE = '55000';
   END IF;
-
   DELETE FROM workout_sets WHERE log_id = p_log_id;
-
-  -- The two added columns are the whole change.
   INSERT INTO workout_sets (
     log_id, exercise, exercise_id, library_id, weight_kg, reps, set_number,
-    set_kind, side, notes, exercise_notes, rpe, completed_at, prescribed_index
+    set_kind, side, notes, exercise_notes, rpe, completed_at, prescribed_index,
+    slot_id, set_group_id
   )
   SELECT p_log_id, s.exercise, s.exercise_id, s.library_id, s.weight_kg, s.reps,
          s.set_number, COALESCE(s.set_kind, 'working'), s.side, s.notes,
-         s.exercise_notes, s.rpe, s.completed_at, s.prescribed_index
+         s.exercise_notes, s.rpe, s.completed_at, s.prescribed_index,
+         s.slot_id, s.set_group_id
   FROM jsonb_populate_recordset(null::workout_sets, COALESCE(p_sets, '[]'::jsonb)) s;
-
   IF p_enrollment_id IS NULL THEN
     RETURN NULL;
   END IF;
-
   UPDATE program_enrollments
   SET exercise_state = p_exercise_state,
       cursor = p_cursor,
       replay_events = COALESCE(p_replay_events, replay_events)
   WHERE id = p_enrollment_id
   RETURNING * INTO v_row;
-
   RETURN to_jsonb(v_row);
 END $$;
 
@@ -895,6 +897,68 @@ $$;
 ALTER FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb" DEFAULT NULL::"jsonb") RETURNS "jsonb"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  v_old program_enrollments;
+  v_row program_enrollments;
+  v_has_spec BOOLEAN := p_fields ? 'spec' AND jsonb_typeof(p_fields -> 'spec') = 'object';
+BEGIN
+  PERFORM set_config('app.program_engine', 'on', true);
+  SELECT * INTO v_old FROM program_enrollments WHERE id = p_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+  -- "Only if it is still in kilograms": a second conversion of the same switch
+  -- matches nothing and says so, rather than converting twice.
+  IF p_expect ? 'unit_system' AND v_old.unit_system IS DISTINCT FROM (p_expect ->> 'unit_system') THEN
+    RETURN NULL;
+  END IF;
+  IF p_expect ? 'sessionCount'
+     AND (v_old.cursor ->> 'sessionCount')::int IS DISTINCT FROM (p_expect ->> 'sessionCount')::int THEN
+    RAISE EXCEPTION 'Your program moved on while this was being worked out — reload and try again'
+      USING ERRCODE = '55000';
+  END IF;
+
+  UPDATE program_enrollments SET
+    exercise_state = CASE WHEN p_fields ? 'exercise_state' THEN p_fields -> 'exercise_state' ELSE exercise_state END,
+    cursor = CASE WHEN p_fields ? 'cursor' THEN p_fields -> 'cursor' ELSE cursor END,
+    replay_events = CASE WHEN p_fields ? 'replay_events' THEN p_fields -> 'replay_events' ELSE replay_events END,
+    initial_exercise_state = CASE WHEN p_fields ? 'initial_exercise_state'
+      THEN NULLIF(p_fields -> 'initial_exercise_state', 'null'::jsonb) ELSE initial_exercise_state END,
+    custom_schedule = CASE WHEN p_fields ? 'custom_schedule'
+      THEN NULLIF(p_fields -> 'custom_schedule', 'null'::jsonb) ELSE custom_schedule END,
+    unit_system = CASE WHEN p_fields ? 'unit_system' THEN p_fields ->> 'unit_system' ELSE unit_system END,
+    spec = CASE WHEN p_fields ? 'spec' THEN NULLIF(p_fields -> 'spec', 'null'::jsonb) ELSE spec END,
+    spec_version = CASE WHEN p_fields ? 'spec_version' THEN (p_fields ->> 'spec_version')::int ELSE spec_version END,
+    maxes = CASE WHEN p_fields ? 'maxes' THEN NULLIF(p_fields -> 'maxes', 'null'::jsonb) ELSE maxes END,
+    started_on = CASE WHEN p_fields ? 'started_on' THEN (p_fields ->> 'started_on')::date ELSE started_on END
+  WHERE id = p_id
+  RETURNING * INTO v_row;
+
+  IF v_has_spec THEN
+    INSERT INTO program_versions (enrollment_id, user_id, version, spec, spec_version)
+    VALUES (
+      p_id,
+      v_row.user_id,
+      COALESCE((SELECT max(version) FROM program_versions WHERE enrollment_id = p_id), 0) + 1,
+      v_row.spec,
+      v_row.spec_version
+    );
+  END IF;
+  RETURN to_jsonb(v_row);
+END $$;
+
+
+ALTER FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb") IS 'Writes the given columns of one program (the app''s calculated numbers, its schedule or spec, its unit) in one statement. p_expect: {"unit_system": ...} answers null when it no longer holds; {"sessionCount": n} refuses a calculation made against a different history. A new spec is recorded as the next version.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."start_enrollment"("p_row" "jsonb", "p_displace" "uuid"[]) RETURNS "jsonb"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'public'
@@ -903,34 +967,28 @@ DECLARE
   v_row program_enrollments;
   v_new program_enrollments;
 BEGIN
-  -- WHY THE PAUSE COMES FIRST. Both statements are inside one function, so they
-  -- are inside one transaction: if the insert is refused, the pause is undone
-  -- with it and the program you were on is still running — which is the rule
-  -- this function exists for. Ordering it the other way would additionally
-  -- break starting the same program again from scratch, because
-  -- `uq_program_enrollments_active` allows only one live row per program and
-  -- the old one would still be live when the new one went in.
+  PERFORM set_config('app.program_engine', 'on', true);
   IF p_displace IS NOT NULL AND array_length(p_displace, 1) > 0 THEN
     UPDATE program_enrollments SET is_active = false WHERE id = ANY (p_displace);
   END IF;
-
-  -- The row the app built, field by field. `jsonb_populate_record` against a
-  -- NULL row gives NULL for anything the app did not send, so every column that
-  -- has a default is written explicitly rather than nulled out.
   SELECT * INTO v_row FROM jsonb_populate_record(null::program_enrollments, p_row);
-
   INSERT INTO program_enrollments (
     user_id, program_id, level, unit_system,
     exercise_state, initial_exercise_state, cursor,
-    custom_schedule, replay_events, bar_weight_kg, label, is_active
+    custom_schedule, replay_events, bar_weight_kg, label, is_active,
+    spec, spec_version, started_on, maxes
   ) VALUES (
     v_row.user_id, v_row.program_id, v_row.level, v_row.unit_system,
     v_row.exercise_state, v_row.initial_exercise_state, v_row.cursor,
     v_row.custom_schedule, COALESCE(v_row.replay_events, '[]'::jsonb),
-    v_row.bar_weight_kg, v_row.label, true
+    v_row.bar_weight_kg, v_row.label, true,
+    v_row.spec, v_row.spec_version, v_row.started_on, v_row.maxes
   )
   RETURNING * INTO v_new;
-
+  IF v_new.spec IS NOT NULL THEN
+    INSERT INTO program_versions (enrollment_id, user_id, version, spec, spec_version)
+    VALUES (v_new.id, v_new.user_id, 1, v_new.spec, v_new.spec_version);
+  END IF;
   RETURN to_jsonb(v_new);
 END $$;
 
@@ -1005,6 +1063,20 @@ $$;
 
 
 ALTER FUNCTION "public"."update_user_lair_config_updated_at"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."user_programs_touch_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."user_programs_touch_updated_at"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."workout_logs_enrollment_is_own"() RETURNS "trigger"
@@ -2029,9 +2101,16 @@ CREATE TABLE IF NOT EXISTS "public"."program_enrollments" (
     "replay_events" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
     "bar_weight_kg" numeric(5,2),
     "label" "text",
+    "spec" "jsonb",
+    "spec_version" integer,
+    "started_on" "date",
+    "maxes" "jsonb",
     CONSTRAINT "program_enrollments_bar_weight_sane" CHECK ((("bar_weight_kg" IS NULL) OR (("bar_weight_kg" >= (0)::numeric) AND ("bar_weight_kg" <= (50)::numeric)))),
     CONSTRAINT "program_enrollments_label_length" CHECK ((("label" IS NULL) OR (("char_length"("label") >= 1) AND ("char_length"("label") <= 60)))),
     CONSTRAINT "program_enrollments_level_check" CHECK (("level" = ANY (ARRAY['beginner'::"text", 'intermediate'::"text", 'advanced'::"text"]))),
+    CONSTRAINT "program_enrollments_maxes_shape" CHECK ((("maxes" IS NULL) OR (("jsonb_typeof"("maxes") = 'object'::"text") AND ("octet_length"(("maxes")::"text") <= 8192)))),
+    CONSTRAINT "program_enrollments_spec_shape" CHECK ((("spec" IS NULL) OR (("jsonb_typeof"("spec") = 'object'::"text") AND ("octet_length"(("spec")::"text") <= 65536)))),
+    CONSTRAINT "program_enrollments_spec_version" CHECK (((("spec" IS NULL) = ("spec_version" IS NULL)) AND (("spec_version" IS NULL) OR (("spec_version" >= 2) AND ("spec_version" <= 999))))),
     CONSTRAINT "program_enrollments_unit_system_check" CHECK (("unit_system" = ANY (ARRAY['kg'::"text", 'lb'::"text"])))
 );
 
@@ -2052,6 +2131,39 @@ COMMENT ON COLUMN "public"."program_enrollments"."replay_events" IS 'Everything 
 
 
 COMMENT ON COLUMN "public"."program_enrollments"."bar_weight_kg" IS 'The bar this program is trained on, in kg. NULL follows the account default. A 15 kg or 10 kg bar is a real bar.';
+
+
+
+COMMENT ON COLUMN "public"."program_enrollments"."spec" IS 'The program this enrollment runs, in the program format, copied at start. Null on rows started before the format: those run the catalogue program converted on read.';
+
+
+
+COMMENT ON COLUMN "public"."program_enrollments"."started_on" IS 'The first day of the program on the account''s calendar. Programs whose weeks run by the calendar count from the Monday of this date''s week.';
+
+
+
+COMMENT ON COLUMN "public"."program_enrollments"."maxes" IS 'The maxes the program was started with, by lift, as typed. The numbers the program moves are in exercise_state.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."program_versions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "enrollment_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "version" integer NOT NULL,
+    "spec" "jsonb" NOT NULL,
+    "spec_version" integer NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "program_versions_spec_shape" CHECK ((("jsonb_typeof"("spec") = 'object'::"text") AND ("octet_length"(("spec")::"text") <= 65536))),
+    CONSTRAINT "program_versions_spec_version_check" CHECK ((("spec_version" >= 2) AND ("spec_version" <= 999))),
+    CONSTRAINT "program_versions_version_check" CHECK ((("version" >= 1) AND ("version" <= 10000)))
+);
+
+
+ALTER TABLE "public"."program_versions" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."program_versions" IS 'Every version of a running program''s spec, numbered from 1 at start. A replay judges each session against the version in force when it was logged (Q14).';
 
 
 
@@ -2659,6 +2771,31 @@ COMMENT ON COLUMN "public"."user_goals"."stages" IS 'Ordered names of the steps 
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."user_programs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "name" "text" NOT NULL,
+    "spec" "jsonb" NOT NULL,
+    "spec_version" integer NOT NULL,
+    "starting_weights" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "source_program_id" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "user_programs_name_check" CHECK ((("char_length"("btrim"("name")) >= 1) AND ("char_length"("btrim"("name")) <= 80))),
+    CONSTRAINT "user_programs_source_program_id_check" CHECK ((("source_program_id" IS NULL) OR (("char_length"("source_program_id") >= 1) AND ("char_length"("source_program_id") <= 80)))),
+    CONSTRAINT "user_programs_spec_shape" CHECK ((("jsonb_typeof"("spec") = 'object'::"text") AND ("octet_length"(("spec")::"text") <= 65536))),
+    CONSTRAINT "user_programs_spec_version_check" CHECK ((("spec_version" >= 2) AND ("spec_version" <= 999))),
+    CONSTRAINT "user_programs_weights_shape" CHECK ((("jsonb_typeof"("starting_weights") = 'object'::"text") AND ("octet_length"(("starting_weights")::"text") <= 8192)))
+);
+
+
+ALTER TABLE "public"."user_programs" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."user_programs" IS 'Programs people build themselves, in the program format. Private to their owner (Q6).';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."user_tracking_stats" (
     "user_id" "uuid" NOT NULL,
     "total_approaches" integer DEFAULT 0,
@@ -2818,7 +2955,7 @@ CREATE TABLE IF NOT EXISTS "public"."workout_logs" (
     "program_cycle" integer,
     "program_week" integer,
     "adjustments" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
-    "rpe" smallint,
+    "rpe" numeric(3,1),
     "notes" "text",
     "client_key" "text",
     "progression_changes" "jsonb",
@@ -2832,7 +2969,7 @@ CREATE TABLE IF NOT EXISTS "public"."workout_logs" (
     CONSTRAINT "workout_logs_logged_is_start" CHECK ((("started_at" IS NULL) OR ("logged_at" = "started_at"))),
     CONSTRAINT "workout_logs_notes_length" CHECK ((("notes" IS NULL) OR ("char_length"("notes") <= 1000))),
     CONSTRAINT "workout_logs_program_context" CHECK ((("enrollment_id" IS NULL) OR (("program_day_id" IS NOT NULL) AND ("program_cycle" IS NOT NULL) AND ("program_week" IS NOT NULL)))),
-    CONSTRAINT "workout_logs_rpe_range" CHECK ((("rpe" IS NULL) OR (("rpe" >= 1) AND ("rpe" <= 10)))),
+    CONSTRAINT "workout_logs_rpe_range" CHECK ((("rpe" IS NULL) OR (("rpe" >= (1)::numeric) AND ("rpe" <= (10)::numeric) AND (("rpe" * (2)::numeric) = "trunc"(("rpe" * (2)::numeric)))))),
     CONSTRAINT "workout_logs_session_type_check" CHECK (("session_type" = ANY (ARRAY['weights'::"text", 'cardio'::"text", 'mobility'::"text", 'yoga'::"text", 'running'::"text"]))),
     CONSTRAINT "workout_logs_week_range" CHECK ((("program_week" IS NULL) OR (("program_week" >= 1) AND ("program_week" <= 52))))
 );
@@ -2871,15 +3008,19 @@ CREATE TABLE IF NOT EXISTS "public"."workout_sets" (
     "set_kind" "text" DEFAULT 'working'::"text" NOT NULL,
     "prescribed_index" smallint,
     "completed_at" timestamp with time zone,
-    "rpe" smallint,
+    "rpe" numeric(3,1),
     "side" "text",
+    "slot_id" "text",
+    "set_group_id" "text",
     CONSTRAINT "workout_sets_exercise_notes_check" CHECK ((("exercise_notes" IS NULL) OR ("char_length"("exercise_notes") <= 500))),
-    CONSTRAINT "workout_sets_kind" CHECK (("set_kind" = ANY (ARRAY['warmup'::"text", 'working'::"text", 'amrap'::"text", 'backoff'::"text", 'drop'::"text"]))),
+    CONSTRAINT "workout_sets_kind" CHECK (("set_kind" = ANY (ARRAY['warmup'::"text", 'working'::"text", 'amrap'::"text", 'backoff'::"text", 'drop'::"text", 'top'::"text", 'restpause'::"text"]))),
     CONSTRAINT "workout_sets_notes_check" CHECK ((("notes" IS NULL) OR ("char_length"("notes") <= 500))),
     CONSTRAINT "workout_sets_reps_check" CHECK ((("reps" >= 0) AND ("reps" <= 1000))),
-    CONSTRAINT "workout_sets_rpe_range" CHECK ((("rpe" IS NULL) OR (("rpe" >= 1) AND ("rpe" <= 10)))),
+    CONSTRAINT "workout_sets_rpe_range" CHECK ((("rpe" IS NULL) OR (("rpe" >= (1)::numeric) AND ("rpe" <= (10)::numeric) AND (("rpe" * (2)::numeric) = "trunc"(("rpe" * (2)::numeric)))))),
+    CONSTRAINT "workout_sets_set_group_id_length" CHECK ((("set_group_id" IS NULL) OR (("char_length"("set_group_id") >= 1) AND ("char_length"("set_group_id") <= 100)))),
     CONSTRAINT "workout_sets_set_number_check" CHECK (("set_number" > 0)),
     CONSTRAINT "workout_sets_side" CHECK ((("side" IS NULL) OR ("side" = ANY (ARRAY['left'::"text", 'right'::"text"])))),
+    CONSTRAINT "workout_sets_slot_id_length" CHECK ((("slot_id" IS NULL) OR (("char_length"("slot_id") >= 1) AND ("char_length"("slot_id") <= 100)))),
     CONSTRAINT "workout_sets_weight_kg_check" CHECK (("weight_kg" >= (0)::numeric)),
     CONSTRAINT "workout_sets_weight_max" CHECK (("weight_kg" <= 999.99))
 );
@@ -2893,6 +3034,14 @@ COMMENT ON COLUMN "public"."workout_sets"."set_kind" IS 'warmup | working | amra
 
 
 COMMENT ON COLUMN "public"."workout_sets"."prescribed_index" IS 'Which prescribed set this answers, or NULL if it was added. Lets the engine find the AMRAP set by its flag rather than by being logged last.';
+
+
+
+COMMENT ON COLUMN "public"."workout_sets"."slot_id" IS 'The slot of the program this set answered (program format). "Last time" is per slot: Monday''s heavy bench and Friday''s volume bench are two histories of one lift.';
+
+
+
+COMMENT ON COLUMN "public"."workout_sets"."set_group_id" IS 'The set group within the slot (a top set, its back-offs). A back-off range is worked out from the group it names.';
 
 
 
@@ -3339,6 +3488,16 @@ ALTER TABLE ONLY "public"."program_enrollments"
 
 
 
+ALTER TABLE ONLY "public"."program_versions"
+    ADD CONSTRAINT "program_versions_enrollment_id_version_key" UNIQUE ("enrollment_id", "version");
+
+
+
+ALTER TABLE ONLY "public"."program_versions"
+    ADD CONSTRAINT "program_versions_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."purchases"
     ADD CONSTRAINT "purchases_pkey" PRIMARY KEY ("id");
 
@@ -3491,6 +3650,16 @@ ALTER TABLE ONLY "public"."timetrack_workspaces"
 
 ALTER TABLE ONLY "public"."user_goals"
     ADD CONSTRAINT "user_goals_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_user_id_name_key" UNIQUE ("user_id", "name");
 
 
 
@@ -3683,6 +3852,10 @@ CREATE INDEX "idx_program_enrollments_user_active" ON "public"."program_enrollme
 
 
 
+CREATE INDEX "idx_program_versions_user" ON "public"."program_versions" USING "btree" ("user_id");
+
+
+
 CREATE INDEX "idx_purchases_subscription_id" ON "public"."purchases" USING "btree" ("stripe_subscription_id");
 
 
@@ -3760,6 +3933,10 @@ CREATE INDEX "idx_user_goals_user_horizon" ON "public"."user_goals" USING "btree
 
 
 CREATE INDEX "idx_user_goals_user_id" ON "public"."user_goals" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_user_programs_user" ON "public"."user_programs" USING "btree" ("user_id", "updated_at" DESC);
 
 
 
@@ -3931,6 +4108,10 @@ CREATE OR REPLACE TRIGGER "program_busy_while_workout_open" BEFORE UPDATE OF "is
 
 
 
+CREATE OR REPLACE TRIGGER "program_numbers_only_by_the_app" BEFORE INSERT OR UPDATE ON "public"."program_enrollments" FOR EACH ROW EXECUTE FUNCTION "public"."program_numbers_only_by_the_app"();
+
+
+
 CREATE OR REPLACE TRIGGER "review_templates_updated_at" BEFORE UPDATE ON "public"."review_templates" FOR EACH ROW EXECUTE FUNCTION "public"."update_tracking_updated_at"();
 
 
@@ -4024,6 +4205,10 @@ CREATE OR REPLACE TRIGGER "trg_life_plans_updated_at" BEFORE UPDATE ON "public".
 
 
 CREATE OR REPLACE TRIGGER "trg_program_drafts_updated_at" BEFORE UPDATE ON "public"."program_drafts" FOR EACH ROW EXECUTE FUNCTION "public"."program_drafts_touch_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_user_programs_updated_at" BEFORE UPDATE ON "public"."user_programs" FOR EACH ROW EXECUTE FUNCTION "public"."user_programs_touch_updated_at"();
 
 
 
@@ -4454,6 +4639,16 @@ ALTER TABLE ONLY "public"."program_enrollments"
 
 
 
+ALTER TABLE ONLY "public"."program_versions"
+    ADD CONSTRAINT "program_versions_enrollment_id_fkey" FOREIGN KEY ("enrollment_id") REFERENCES "public"."program_enrollments"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."program_versions"
+    ADD CONSTRAINT "program_versions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."purchases"
     ADD CONSTRAINT "purchases_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -4734,6 +4929,11 @@ ALTER TABLE ONLY "public"."user_goals"
 
 
 
+ALTER TABLE ONLY "public"."user_programs"
+    ADD CONSTRAINT "user_programs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."user_tracking_stats"
     ADD CONSTRAINT "user_tracking_stats_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -4797,6 +4997,12 @@ CREATE POLICY "Public read access" ON "public"."values" FOR SELECT USING (true);
 
 
 
+CREATE POLICY "Users can add versions to own programs" ON "public"."program_versions" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") AND (EXISTS ( SELECT 1
+   FROM "public"."program_enrollments" "e"
+  WHERE (("e"."id" = "program_versions"."enrollment_id") AND ("e"."user_id" = "auth"."uid"()))))));
+
+
+
 CREATE POLICY "Users can delete own approaches" ON "public"."approaches" FOR DELETE USING (("auth"."uid"() = "user_id"));
 
 
@@ -4814,6 +5020,10 @@ CREATE POLICY "Users can delete own nutrition logs" ON "public"."nutrition_logs"
 
 
 CREATE POLICY "Users can delete own program drafts" ON "public"."program_drafts" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can delete own programs" ON "public"."user_programs" FOR DELETE USING (("auth"."uid"() = "user_id"));
 
 
 
@@ -4880,6 +5090,10 @@ CREATE POLICY "Users can insert own nutrition logs" ON "public"."nutrition_logs"
 
 
 CREATE POLICY "Users can insert own program drafts" ON "public"."program_drafts" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can insert own programs" ON "public"."user_programs" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -4953,6 +5167,14 @@ CREATE POLICY "Users can read own program drafts" ON "public"."program_drafts" F
 
 
 
+CREATE POLICY "Users can read own program versions" ON "public"."program_versions" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can read own programs" ON "public"."user_programs" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
 CREATE POLICY "Users can read own sleep logs" ON "public"."sleep_logs" FOR SELECT USING (("auth"."uid"() = "user_id"));
 
 
@@ -4988,6 +5210,10 @@ CREATE POLICY "Users can update own nutrition logs" ON "public"."nutrition_logs"
 
 
 CREATE POLICY "Users can update own program drafts" ON "public"."program_drafts" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can update own programs" ON "public"."user_programs" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -5746,6 +5972,9 @@ ALTER TABLE "public"."program_drafts" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."program_enrollments" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."program_versions" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."purchases" ENABLE ROW LEVEL SECURITY;
 
 
@@ -6225,6 +6454,9 @@ CREATE POLICY "user_goals_select_own" ON "public"."user_goals" FOR SELECT USING 
 
 CREATE POLICY "user_goals_update_own" ON "public"."user_goals" FOR UPDATE USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
 
+
+
+ALTER TABLE "public"."user_programs" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."user_tracking_stats" ENABLE ROW LEVEL SECURITY;
@@ -6831,10 +7063,10 @@ GRANT ALL ON FUNCTION "public"."end_enrollment"("p_id" "uuid") TO "service_role"
 
 
 
-REVOKE ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" smallint, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) TO "service_role";
+REVOKE ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) TO "anon";
+GRANT ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."finish_program_workout"("p_workout_id" "uuid", "p_ended_at" timestamp with time zone, "p_duration_min" integer, "p_intensity" smallint, "p_rpe" numeric, "p_notes" "text", "p_exercise_state" "jsonb", "p_cursor" "jsonb", "p_replay_events" "jsonb", "p_expected_session_count" integer, "p_changes" "jsonb", "p_records" "jsonb", "p_started_at" timestamp with time zone, "p_session_type" "text", "p_distance_km" numeric) TO "service_role";
 
 
 
@@ -7167,6 +7399,12 @@ GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "service_r
 
 
 
+GRANT ALL ON FUNCTION "public"."program_numbers_only_by_the_app"() TO "anon";
+GRANT ALL ON FUNCTION "public"."program_numbers_only_by_the_app"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."program_numbers_only_by_the_app"() TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."prune_error_reports"() TO "anon";
 GRANT ALL ON FUNCTION "public"."prune_error_reports"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."prune_error_reports"() TO "service_role";
@@ -7204,6 +7442,13 @@ REVOKE ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_r
 GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."save_life_plan"("p_rows" "jsonb", "p_expected_rev" integer) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_program_state"("p_id" "uuid", "p_fields" "jsonb", "p_expect" "jsonb") TO "service_role";
 
 
 
@@ -7318,6 +7563,12 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."update_user_lair_config_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_user_lair_config_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_user_lair_config_updated_at"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."user_programs_touch_updated_at"() TO "anon";
+GRANT ALL ON FUNCTION "public"."user_programs_touch_updated_at"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."user_programs_touch_updated_at"() TO "service_role";
 
 
 
@@ -7920,6 +8171,12 @@ GRANT ALL ON TABLE "public"."program_enrollments" TO "service_role";
 
 
 
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."program_versions" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."program_versions" TO "authenticated";
+GRANT ALL ON TABLE "public"."program_versions" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."purchases" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."purchases" TO "authenticated";
 GRANT ALL ON TABLE "public"."purchases" TO "service_role";
@@ -8079,6 +8336,12 @@ GRANT ALL ON TABLE "public"."timetrack_workspaces" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_goals" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_goals" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_goals" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_programs" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."user_programs" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_programs" TO "service_role";
 
 
 

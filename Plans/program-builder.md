@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–2 done 2026-10-22 (session daygame-coach-fc); Phase 3 is next.
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–3 done 2026-10-22 (session daygame-coach-fc); Phase 4 is next.
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -594,6 +594,63 @@ groups), seeding refusals, replay across a change of program, and a 12-week Star
    columns back and record them.
 **Acceptance:** integration tests green on the test stack built from the new baseline; the live columns
 match; a direct update of `exercise_state` by an ordinary user is refused (tested on the test stack).
+
+### Phase 3 evidence (2026-10-22, session daygame-coach-fc)
+
+**Doubt first.** (1) The lock shuts the direct route only; the program functions still take the numbers
+the app worked out as arguments, so a signed-in user who calls them by hand can still put made-up numbers
+into their OWN program (see "Security"; for Phase 10's review). (2) The lock went live minutes before the
+code that uses `save_program_state` reached the site: `supabase db push` at about 06:50 UTC, `main`
+fast-forwarded to `9d1f2591` right after (its CI `checks` green first, no run in flight), and the live
+site deployed it at 06:55 UTC (Vercel production deployment 7245824937). For those minutes a reset,
+skip, program edit or unit change on the live site would have been refused; nobody was on a program
+(the owner's Upper/Lower was stopped on 2026-10-18, the one active program is a test account's).
+(3) `program_drafts` is not dropped (Phase 10); `user_programs` holds copies.
+
+**3.1 Migration A** — `supabase/migrations/20261022100000_program_format_columns.sql`, additive:
+`workout_sets.rpe` and `workout_logs.rpe` NUMERIC(3,1), 1–10 in half steps (0 rows held an RPE, so only
+the type changed); `workout_sets.slot_id`, `set_group_id`, and set kinds `top`, `restpause`;
+`program_enrollments.spec`, `spec_version`, `started_on`, `maxes` with shape and 64 KB checks;
+`program_versions` (append-only: read and insert own rows, no update or delete policy, cascades with its
+enrollment); `user_programs` (own-row CRUD, unique name per person, 64 KB check, `starting_weights`,
+`updated_at` trigger) with the two saved weeks copied in as converted specs, keyed by draft id so any
+other database inserts nothing.
+
+**3.2 Migration B** — `20261022110000_program_numbers_only_by_the_app.sql`: trigger
+`program_numbers_only_by_the_app` refuses (SQLSTATE 42501) a client INSERT, or an UPDATE of
+`exercise_state`, `cursor`, `replay_events`, `initial_exercise_state` or `user_id`, unless a program
+function set `app.program_engine` for its own transaction; the owner role (scripts, migrations, the test
+harness) is not guarded. Every program function sets it; `finish_program_workout` takes `p_rpe NUMERIC`;
+the set-writing functions keep `slot_id`/`set_group_id`; `start_enrollment` writes the new columns and
+version 1 of a spec; new `save_program_state(p_id, p_fields, p_expect)` replaces the four direct writes
+the app made (reset, schedule edit, unit change, skip — `src/db/programRepo.ts`), records the next
+version when the spec changes, answers null when `p_expect.unit_system` no longer holds (the double-tap
+guard) and refuses a stale `sessionCount` (55000).
+
+**3.3 The way back** — `supabase/migrations/rollback/*.down.sql` (B first, then A; run by hand; A's
+refuses to turn a stored 8.5 into a 9 and says what to back up before it drops anything).
+
+**3.4 Live.** `supabase migration list --linked`: 64 local, pending exactly `20261022100000` and
+`20261022110000`, nothing remote-only → `supabase db push`. Read back: `workout_sets.rpe`,
+`workout_logs.rpe` numeric(3,1) with the half-step checks; `workout_sets.slot_id`, `set_group_id` text and
+the seven kinds; `program_enrollments.spec` jsonb, `spec_version` integer, `started_on` date, `maxes` jsonb;
+`program_versions` (7 columns, 2 policies), `user_programs` (9 columns, 4 policies, trigger), trigger
+`program_numbers_only_by_the_app`, `save_program_state(p_id uuid, p_fields jsonb, p_expect jsonb)`,
+`finish_program_workout(…, p_rpe numeric, …)`; `user_programs` holds "12" (1 lift, incline 12 kg) and "2"
+(empty day). **Lock on live**, as the most recent program's owner with role `authenticated`, inside
+`begin … rollback`: `LOCK HOLDS (42501): A program's numbers are worked out by the app and cannot be
+written directly.`
+
+**Tests.** `tests/integration/db/programFormat.integration.test.ts` (14, real Postgres): direct writes of
+each guarded column refused, a hand-made insert refused, label and ending still allowed; skip, reset and a
+double-tapped unit change through the app's own repo functions land under the lock; stale session count
+refused; somebody else's program unreachable; version 1 at start and version 2 on a new spec; versions
+append-only and private; 64 KB refused by the database; user programs private and uniquely named; RPE 8.5
+kept, 8.3 and 11 refused by name; slot and group kept; a top set kind; a half-step session RPE through
+`finish_program_workout`. Unit fakes play `save_program_state` against their tables
+(`tests/helpers/fakeSupabase.ts`). Baseline refreshed from production (`scripts/db/baseline.sh`, stamp
+20261022110000, `--check` matches). **Integration suite on the new baseline: 35 files, 191 passed.**
+CI `checks` on `9d1f2591`: success.
 
 ## Phase 4 — Switch the app onto the new engine
 **Depends on:** 2, 3.
