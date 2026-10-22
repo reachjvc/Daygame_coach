@@ -557,6 +557,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               nowSec={nowSec}
               onStart={() => startTracking()}
               onStop={actions.stop}
+              onEditEntry={setDetailEntry}
               pushToast={pushToast}
             />
             <FavoritesBar
@@ -729,6 +730,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
             state={state}
             setState={setState}
             pushToast={pushToast}
+            nowSec={nowSec}
           />
         </Modal>
       )}
@@ -804,7 +806,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
                   dismissToast(toast.id)
                 }}
               >
-                <IconUndo className="size-3.5" /> Undo
+                <IconUndo className="size-3.5" /> {toast.undoLabel ?? "Undo"}
               </Button>
             )}
             <button

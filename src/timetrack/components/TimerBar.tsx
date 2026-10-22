@@ -15,6 +15,8 @@ import { IconAuto, IconFavorite, IconStart, IconStop, IconTimer, IconEdit } from
 import {
   dateKey,
   formatClock,
+  formatIdleSpan,
+  formatWhen,
   parseDurationInput,
   parseTimeInput,
 } from "../timetrackFormatService"
@@ -26,15 +28,53 @@ import {
   createProject,
   entrySeconds,
   findFavorite,
+  forgottenTimer,
   matchAutotracker,
+  resumeWithElapsed,
   runningEntry,
   setRunningElapsed,
   toggleFavorite,
 } from "../timetrackService"
-import type { EntryDraft, Id, TimetrackState } from "../types"
+import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
+import type { PushToast } from "../hooks/useTimetrack"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
-import { ColorDot, touchTarget } from "./primitives"
+import { ColorDot, DayPicker, touchTarget } from "./primitives"
+
+/**
+ * Said whenever a duration typed into a running timer ended it, with the other
+ * reading one tap away. A shorter time ending the timer is new, and the person
+ * who meant "I started late" must not have to find out from their week total.
+ *
+ * `getState` is read when the button is pressed, not now: by then another timer
+ * may be running, and the refusal has to be said rather than swallowed.
+ */
+export function announceEndedEarly(
+  stopped: TimeEntry,
+  seconds: number,
+  getState: () => TimetrackState,
+  setState: (updater: (current: TimetrackState) => TimetrackState) => void,
+  pushToast: PushToast,
+) {
+  const what = stopped.description.trim()
+  const when = formatWhen(stopped.stop ?? stopped.start, getState().user.timeFormat, dateKey(new Date()))
+  pushToast(
+    `Ended ${what ? `“${what}”` : "the timer"} ${when}, ${formatIdleSpan(seconds)} after it started`,
+    "info",
+    () => {
+      const refusal = resumeWithElapsed(getState(), stopped.id, seconds, new Date().toISOString()).violations[0]
+      if (refusal) {
+        pushToast(refusal.message, "error")
+        return
+      }
+      setState((current) => {
+        const resumed = resumeWithElapsed(current, stopped.id, seconds, new Date().toISOString())
+        return resumed.violations.length > 0 ? current : resumed.state
+      })
+    },
+    "Keep running",
+  )
+}
 
 export type TimerMode = "timer" | "manual"
 
@@ -50,7 +90,9 @@ interface TimerBarProps {
   nowSec: number
   onStart: () => void
   onStop: () => void
-  pushToast: (text: string, tone?: "info" | "error") => void
+  /** opens the detail sheet, where a running timer's date and end can be set */
+  onEditEntry: (entry: TimeEntry) => void
+  pushToast: PushToast
 }
 
 export function TimerBar({
@@ -62,8 +104,10 @@ export function TimerBar({
   setMode,
   runningSeconds,
   running,
+  nowSec,
   onStart,
   onStop,
+  onEditEntry,
   pushToast,
 }: TimerBarProps) {
   /**
@@ -139,6 +183,8 @@ export function TimerBar({
   const [manualStop, setManualStop] = useState("10:00")
   const [manualDay, setManualDay] = useState(() => dateKey(new Date()))
   const [editingDuration, setEditingDuration] = useState(false)
+  /** what the box read when you started typing — leaving it as it was is not an edit */
+  const durationAtFocus = useRef<string | null>(null)
 
   const suggestion = matchAutotracker(state, draft.description)
   const suggestionProject = suggestion ? state.projects.find((p) => p.id === suggestion.projectId) : null
@@ -153,6 +199,14 @@ export function TimerBar({
   const commitRunningDuration = () => {
     const seconds = parseDurationInput(durationInput)
     setEditingDuration(false)
+    /**
+     * Untouched, it is not committed. A shorter time ends the timer now, and the
+     * box froze at focus while the clock went on: clicking in and out a minute
+     * later would have read as "it ended a minute ago" and stopped it.
+     */
+    const shown = durationAtFocus.current
+    durationAtFocus.current = null
+    if (durationInput === shown) return
     if (seconds === null) {
       pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
       setDurationInput(formatClock(runningSeconds))
@@ -167,16 +221,18 @@ export function TimerBar({
      * locked date or a submitted timesheet made the number snap back with
      * nothing said.
      */
-    const refusal = setRunningElapsed(latestState.current, seconds, new Date().toISOString()).violations[0]
-    if (refusal) {
-      pushToast(refusal.message, "error")
+    const options = { shownSeconds: shown === null ? null : parseDurationInput(shown) }
+    const checked = setRunningElapsed(latestState.current, seconds, new Date().toISOString(), options)
+    if (checked.violations[0]) {
+      pushToast(checked.violations[0].message, "error")
       setDurationInput(formatClock(runningSeconds))
       return
     }
     setState((current) => {
-      const applied = setRunningElapsed(current, seconds, new Date().toISOString())
+      const applied = setRunningElapsed(current, seconds, new Date().toISOString(), options)
       return applied.violations.length > 0 ? current : applied.state
     })
+    if (checked.stopped) announceEndedEarly(checked.stopped, seconds, () => latestState.current, setState, pushToast)
   }
 
   const addManualEntry = () => {
@@ -262,27 +318,26 @@ export function TimerBar({
               <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
               <span className="text-muted-foreground">–</span>
               <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
-              <Input
-                type="date"
-                value={manualDay}
-                // "" makes `parseTimeInput` build an Invalid Date and throw, and the
-                // "pick a start and an end" toast on the next line never gets its turn
-                onChange={(e) => e.target.value && setManualDay(e.target.value)}
-                className="h-11 w-[150px] sm:h-8 sm:w-[140px]"
-                aria-label="Date"
-              />
+              {/* "" makes `parseTimeInput` build an Invalid Date and throw, and the
+                  "pick a start and an end" toast on the next line never gets its turn —
+                  `DayPicker` passes on only a whole date */}
+              <DayPicker value={manualDay} onChange={setManualDay} onStep={setManualDay} />
             </div>
           ) : (
             <Input
               value={durationInput}
-              onFocus={() => setEditingDuration(true)}
+              onFocus={() => {
+                durationAtFocus.current = durationInput
+                setEditingDuration(true)
+              }}
               onChange={(event) => {
                 setEditingDuration(true)
                 setDurationInput(event.target.value)
               }}
               onBlur={() => (running ? commitRunningDuration() : setEditingDuration(false))}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && running) commitRunningDuration()
+                // through the blur, so the edit is written once and not again on the way out
+                if (event.key === "Enter" && running) event.currentTarget.blur()
               }}
               /* With nothing running there is nothing to set: the effect above
                  rewrites the box to 0:00:00 on the next tick, so leaving it
@@ -342,6 +397,25 @@ export function TimerBar({
           )}
         </div>
       </div>
+
+      {/*
+        WHEN IT STARTED, SAID IN WORDS. The box shows 16:02:11 and nothing else, so a
+        timer left running since yesterday looked like a long day. Naming the day
+        is what tells you it was forgotten, and the fix sits beside it.
+      */}
+      {mode === "timer" && running && (
+        <div className="flex flex-wrap items-center gap-x-2 border-t border-border px-3 py-1 text-xs text-muted-foreground">
+          <span>
+            Started {formatWhen(running.start, state.user.timeFormat, dateKey(new Date(nowSec * 1000)))}
+            {forgottenTimer(state, nowSec) && (
+              <span className="text-foreground"> — forgot to stop it? Type how long you really worked into the timer, and it ends then.</span>
+            )}
+          </span>
+          <Button size="sm" variant="ghost" className="ml-auto h-11 px-2 sm:h-6" onClick={() => onEditEntry(running)}>
+            Change times
+          </Button>
+        </div>
+      )}
 
       {showSuggestion && suggestion && (
         <div className="flex items-center gap-2 border-t border-border px-3 py-2 text-xs">

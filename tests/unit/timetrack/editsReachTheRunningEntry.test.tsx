@@ -127,6 +127,7 @@ function TimerBarHarness({ latest }: { latest: { current: TimetrackState } }) {
       nowSec={NOW_SEC}
       onStart={() => {}}
       onStop={() => {}}
+      onEditEntry={() => {}}
       pushToast={() => {}}
     />
   )

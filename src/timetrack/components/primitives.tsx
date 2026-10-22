@@ -9,9 +9,12 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type 
 import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { NO_PROJECT_COLOR } from "../config"
-import { IconCheck, IconClose } from "../icons"
+import { IconCheck, IconClose, IconNext, IconPrev } from "../icons"
+import { addDays, dateKey, formatDayHeader } from "../timetrackFormatService"
+import type { IsoDate } from "../types"
 
 /**
  * Icon-only controls need a 44px target on phones; 32px is fine with a mouse.
@@ -460,6 +463,64 @@ export function Field({ label, hint, children, className }: { label: string; hin
       {children}
       {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
     </label>
+  )
+}
+
+/**
+ * A date with a day back and a day forward beside it, and the day named in words.
+ *
+ * "That was yesterday" was a trip through the browser's calendar, and the box
+ * reads `21/10/2026`, which leaves you to work out whether that is yesterday.
+ * The arrows make it one tap and the caption says which day it is.
+ *
+ * The arrows report through `onStep` at once. The box reports typing through
+ * `onChange` and is finished on `onBlur`: a date box changes value on every
+ * digit of the year, so whoever writes a record from it waits for the blur.
+ */
+export function DayPicker({
+  value,
+  onChange,
+  onStep,
+  onBlur,
+  todayKey = dateKey(new Date()),
+}: {
+  value: IsoDate
+  onChange: (day: IsoDate) => void
+  onStep: (day: IsoDate) => void
+  onBlur?: () => void
+  todayKey?: IsoDate
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      <button
+        type="button"
+        onClick={() => onStep(addDays(value, -1))}
+        aria-label="One day earlier"
+        title="One day earlier"
+        className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60 hover:text-foreground")}
+      >
+        <IconPrev className="size-5 sm:size-4" />
+      </button>
+      <Input
+        type="date"
+        value={value}
+        // "" is a half-typed date, not a date: see `dateKey`
+        onChange={(event) => event.target.value && onChange(event.target.value)}
+        onBlur={onBlur}
+        aria-label="Date"
+        className="w-[150px] sm:h-8 sm:w-[140px]"
+      />
+      <button
+        type="button"
+        onClick={() => onStep(addDays(value, 1))}
+        aria-label="One day later"
+        title="One day later"
+        className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60 hover:text-foreground")}
+      >
+        <IconNext className="size-5 sm:size-4" />
+      </button>
+      <span className="px-1 text-xs text-muted-foreground">{formatDayHeader(value, todayKey)}</span>
+    </div>
   )
 }
 

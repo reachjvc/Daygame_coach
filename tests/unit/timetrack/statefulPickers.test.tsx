@@ -78,6 +78,7 @@ function TimerBarHarness({ initial, latest }: { initial: TimetrackState; latest:
       nowSec={NOW_SEC}
       onStart={() => {}}
       onStop={() => {}}
+      onEditEntry={() => {}}
       pushToast={() => {}}
     />
   )
@@ -263,6 +264,7 @@ describe("the picker itself", () => {
  * The detail sheet showed `entry.start.slice(0, 16)` — the *UTC* wall clock —
  * in a datetime-local input, which reads its value as local time. East of
  * Greenwich a 12:00 entry appeared as 10:00, and "Save times" moved it there.
+ * The boxes are a date and plain times now; they must still read local time.
  */
 describe("entry detail sheet times", () => {
   function DetailHarness({ initial, latest }: { initial: TimetrackState; latest: { current: TimetrackState } }) {
@@ -285,12 +287,13 @@ describe("entry detail sheet times", () => {
       </StrictMode>,
     )
 
-    const startInput = document.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]')[0]
-    expect(startInput.value).toBe("2026-08-10T12:00")
+    const startInput = document.querySelector<HTMLInputElement>('input[aria-label="Start time"]')!
+    expect(startInput.value).toBe("12:00")
+    expect(document.querySelector<HTMLInputElement>('input[aria-label="Date"]')!.value).toBe("2026-08-10")
 
-    // A datetime-local value has no seconds, so a round trip through it never
-    // equals the stored timestamp. Blurring an untouched field must still file
-    // nothing, or every visit to this sheet would rewrite the entry.
+    // The box has no seconds, so a round trip through it never equals the
+    // stored timestamp. Blurring an untouched field must still file nothing,
+    // or every visit to this sheet would rewrite the entry.
     const before = latest.current.entries[0]
     fireEvent.blur(startInput)
     await waitFor(() => {
@@ -307,8 +310,8 @@ describe("entry detail sheet times", () => {
       </StrictMode>,
     )
 
-    const startInput = document.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]')[0]
-    fireEvent.change(startInput, { target: { value: "2026-08-10T09:15" } })
+    const startInput = document.querySelector<HTMLInputElement>('input[aria-label="Start time"]')!
+    fireEvent.change(startInput, { target: { value: "09:15" } })
     fireEvent.blur(startInput)
 
     await waitFor(() => {

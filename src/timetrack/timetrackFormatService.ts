@@ -293,6 +293,19 @@ export function formatDayHeader(key: IsoDate, todayKey: IsoDate): string {
 }
 
 /**
+ * When something happened, to finish a sentence: "at 09:12", "yesterday at
+ * 09:12", "on Mon, 19 Oct at 09:12". A bare "09:12" on a timer started
+ * yesterday reads as this morning, which is how a 16-hour timer hides.
+ */
+export function formatWhen(iso: IsoDateTime, format: TimeFormat, todayKey: IsoDate): string {
+  const day = dateKey(iso)
+  const time = formatTimeOfDay(iso, format)
+  if (day === todayKey) return `at ${time}`
+  if (day === addDays(todayKey, -1)) return `yesterday at ${time}`
+  return `on ${formatDayHeader(day, todayKey)} at ${time}`
+}
+
+/**
  * Compact range for narrow controls: "24–30 Aug", "28 Aug – 3 Sep",
  * "28 Dec 2026 – 3 Jan 2027". The full, format-respecting dates stay on the
  * wider layouts; at 390px two of them truncate to "2026-08-24 – 202…".
@@ -413,6 +426,8 @@ export function parseTimeInput(raw: string, dayKey: IsoDate): IsoDateTime | null
 
   const meridiem = /(am|pm)/.exec(text)?.[1] ?? null
   const digits = text.replace(/[^0-9:]/g, "")
+  // "now", "pm", "x": no digits is no time — `Number("")` is 0, and it read as midnight
+  if (!/\d/.test(digits)) return null
   let h: number
   let m = 0
 
@@ -438,6 +453,45 @@ export function parseTimeInput(raw: string, dayKey: IsoDate): IsoDateTime | null
   const d = dateKeyToDate(dayKey)
   d.setHours(h, m, 0, 0)
   return d.toISOString()
+}
+
+/**
+ * An END typed as a bare time of day, read as the first such moment at or after
+ * the start.
+ *
+ * Read on the start's own day, the way every end field here used to, "01:00" on
+ * an entry begun at 22:00 was twenty-one hours BEFORE it began and was refused —
+ * so a night's work could not be typed in at all. And on a timer forgotten
+ * overnight, the end you remember ("10:30") is on the day it started, not today.
+ *
+ * The same minute as the start is the start itself: a timer started at
+ * 09:00:40 and ended "09:00" is zero minutes long, not a day.
+ */
+export function parseEndTimeInput(raw: string, startIso: IsoDateTime): IsoDateTime | null {
+  const sameDay = parseTimeInput(raw, dateKey(startIso))
+  if (!sameDay) return null
+  const startEpoch = epochSeconds(startIso)
+  const endEpoch = epochSeconds(sameDay)
+  if (endEpoch >= startEpoch) return sameDay
+  if (endEpoch >= Math.floor(startEpoch / 60) * 60) return startIso
+  const nextDay = new Date(sameDay)
+  nextDay.setDate(nextDay.getDate() + 1)
+  return nextDay.toISOString()
+}
+
+/**
+ * A START typed as a bare time of day: on the start's own day, unless the entry
+ * runs past midnight and that time on the END's day is still before the end.
+ *
+ * Read on the start's day alone, "00:30" on a 22:00–02:00 entry was half past
+ * midnight the night BEFORE, and the entry became 25 hours long. `endIso` is
+ * the stop, or now for a running entry.
+ */
+export function parseStartTimeInput(raw: string, startIso: IsoDateTime, endIso: IsoDateTime): IsoDateTime | null {
+  const sameDay = parseTimeInput(raw, dateKey(startIso))
+  if (!sameDay || dateKey(endIso) === dateKey(startIso)) return sameDay
+  const onEndDay = parseTimeInput(raw, dateKey(endIso))
+  return onEndDay && epochSeconds(onEndDay) <= epochSeconds(endIso) ? onEndDay : sameDay
 }
 
 // ---------------------------------------------------------------------------

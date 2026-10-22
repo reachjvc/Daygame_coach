@@ -16,6 +16,7 @@ import { MIN_SPLIT_SECONDS } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import { useStagedEdit } from "../hooks/useStagedEdit"
 import { useIsMobile } from "../hooks/useIsMobile"
+import type { PushToast } from "../hooks/useTimetrack"
 import {
   IconDelete,
   IconDuplicate,
@@ -28,16 +29,16 @@ import {
 } from "../icons"
 import {
   dateKey,
+  daysBetween,
   formatClock,
   formatDate,
   formatDayHeader,
   formatDuration,
   formatTimeOfDay,
-  fromLocalInputValue,
   parseDurationInput,
-  parseTimeInput,
+  parseEndTimeInput,
+  parseStartTimeInput,
   plural,
-  toLocalInputValue,
 } from "../timetrackFormatService"
 import {
   bulkEditEntries,
@@ -53,8 +54,11 @@ import {
   findFavorite,
   isRunning,
   liveEntries,
+  moveEntryToDay,
   restoreEntries,
   setEntryDuration,
+  setEntryStart,
+  setRunningElapsed,
   splitEntry,
   startLinkFor,
   undoDisplacement,
@@ -65,13 +69,14 @@ import {
 } from "../timetrackService"
 import type { EntryRow, Id, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
-import { ColorDot, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
+import { ColorDot, DayPicker, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
+import { announceEndedEarly } from "./TimerBar"
 
 interface EntryListProps {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
-  pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
+  pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
 }
 
@@ -283,7 +288,7 @@ function EntryRowView({
   onToggleExpand: () => void
   onDelete: (ids: Id[]) => void
   isMobile: boolean
-  pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
+  pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
 }) {
   const lead = row.entries[0]
@@ -384,7 +389,7 @@ function EntryFields({
   checked: boolean
   onCheck: () => void
   onDelete: () => void
-  pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
+  pushToast: PushToast
   expanded?: boolean
   onToggleExpand?: () => void
   onEditEntry: (entry: TimeEntry) => void
@@ -401,6 +406,10 @@ function EntryFields({
     setDescription(entry.description)
   }, [entry.description])
   const [durationDraft, setDurationDraft] = useState<string | null>(null)
+  /** a running entry's duration as it read on focus: the box holds still while you type */
+  const [durationFrozen, setDurationFrozen] = useState<string | null>(null)
+  const latestState = useRef(state)
+  latestState.current = state
   const [startDraft, setStartDraft] = useState<string | null>(null)
   const [stopDraft, setStopDraft] = useState<string | null>(null)
 
@@ -451,25 +460,41 @@ function EntryFields({
           nowIso(),
         ),
       )
-      return
+      return true
     }
     const result = updateEntry(state, entry.id, changes, nowIso())
     if (result.violations.length > 0) {
       pushToast(result.violations[0].message, "error")
-      return
+      return false
     }
     setState(() => result.state)
+    return true
   }
 
   const commitTime = (which: "start" | "stop", raw: string) => {
-    const day = dateKey(entry.start)
-    const iso = parseTimeInput(raw, day)
+    // which day a bare time means: see `parseStartTimeInput` and `parseEndTimeInput`
+    const iso =
+      which === "start"
+        ? parseStartTimeInput(raw, entry.start, entry.stop ?? nowIso())
+        : parseEndTimeInput(raw, entry.start)
     if (!iso) {
       pushToast("Could not read that time", "error")
       return
     }
-    if (which === "start") patch({ start: iso })
-    else patch({ stop: iso })
+    if (which === "stop") {
+      if (patch({ stop: iso })) announceNextDay(entry.start, iso, state, pushToast)
+      return
+    }
+    // a start after the end moves the entry: see `setEntryStart`
+    const refusal = setEntryStart(state, entry.id, iso, nowIso()).violations[0]
+    if (refusal) {
+      pushToast(refusal.message, "error")
+      return
+    }
+    setState((current) => {
+      const applied = setEntryStart(current, entry.id, iso, nowIso())
+      return applied.violations.length > 0 ? current : applied.state
+    })
   }
 
   const commitDuration = (raw: string) => {
@@ -478,15 +503,22 @@ function EntryFields({
       pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
       return
     }
-    const refusal = setEntryDuration(state, entry.id, parsed, nowIso()).violations[0]
-    if (refusal) {
-      pushToast(refusal.message, "error")
+    // a running entry takes the timer bar's rule: shorter ends it, longer moves its start
+    const options = { entryId: entry.id, shownSeconds: durationFrozen === null ? null : parseDurationInput(durationFrozen) }
+    const apply = (base: TimetrackState) =>
+      running
+        ? setRunningElapsed(base, parsed, nowIso(), options)
+        : { ...setEntryDuration(base, entry.id, parsed, nowIso()), stopped: null }
+    const checked = apply(state)
+    if (checked.violations[0]) {
+      pushToast(checked.violations[0].message, "error")
       return
     }
     setState((current) => {
-      const applied = setEntryDuration(current, entry.id, parsed, nowIso())
+      const applied = apply(current)
       return applied.violations.length > 0 ? current : applied.state
     })
+    if (checked.stopped) announceEndedEarly(checked.stopped, parsed, () => latestState.current, setState, pushToast)
   }
 
   const continueButton = (
@@ -750,12 +782,15 @@ function EntryFields({
                 value={stopDraft ?? (entry.stop ? formatTimeLabel(entry.stop, state) : "now")}
                 onChange={(event) => setStopDraft(event.target.value)}
                 onKeyDown={timeKeys(() => setStopDraft(null))}
+                // "now" is a word, not a time: typing over it should not mean deleting it first
+                onFocus={(event) => event.currentTarget.select()}
                 onBlur={() => {
                   if (discarding.current) discarding.current = false
-                  else if (stopDraft !== null && !running) commitTime("stop", stopDraft)
+                  // on a running entry this stops it there, so a forgotten timer can end yesterday
+                  else if (stopDraft !== null) commitTime("stop", stopDraft)
                   setStopDraft(null)
                 }}
-                disabled={!editable || running}
+                disabled={!editable}
                 aria-label="End time"
                 className={cn(
                   timeInputWidth(state),
@@ -767,15 +802,18 @@ function EntryFields({
         </div>
 
         <input
-          value={durationDraft ?? (running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat))}
+          value={durationDraft ?? durationFrozen ?? (running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat))}
           onChange={(event) => setDurationDraft(event.target.value)}
           onKeyDown={timeKeys(() => setDurationDraft(null))}
+          // a running clock rewrites the box every second, which threw away the caret and the selection
+          onFocus={(event) => running && setDurationFrozen(event.currentTarget.value)}
           onBlur={() => {
             if (discarding.current) discarding.current = false
-            else if (durationDraft !== null && !running && !row?.grouped) commitDuration(durationDraft)
+            else if (durationDraft !== null && durationDraft !== durationFrozen && !row?.grouped) commitDuration(durationDraft)
             setDurationDraft(null)
+            setDurationFrozen(null)
           }}
-          disabled={!editable || running || row?.grouped}
+          disabled={!editable || row?.grouped}
           aria-label="Duration"
           className="w-full rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
         />
@@ -932,6 +970,17 @@ function formatTimeLabel(iso: string, state: TimetrackState): string {
   return formatTimeOfDay(iso, state.user.timeFormat)
 }
 
+/**
+ * Said when a typed end landed on the day after the start. That reading is what
+ * lets a night's work be typed in, and it is also what a missing "pm" looks
+ * like — "3:30" on a 2:00 PM entry is 3:30 the next morning — so it is never
+ * silent.
+ */
+function announceNextDay(startIso: string, stopIso: string, state: TimetrackState, pushToast: PushToast) {
+  if (dateKey(stopIso) === dateKey(startIso)) return
+  pushToast(`Ends the next day, at ${formatTimeOfDay(stopIso, state.user.timeFormat)}`, "info")
+}
+
 /** "1:30 PM" needs more room than "13:30", and a clipped time is unreadable */
 function timeInputWidth(state: TimetrackState): string {
   return state.user.timeFormat === "h12" ? "w-[72px]" : "w-[52px]"
@@ -1027,16 +1076,19 @@ export function EntryDetailModalBody({
   state,
   setState,
   pushToast,
+  nowSec = Math.floor(Date.now() / 1000),
 }: {
   entry: TimeEntry
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
-  pushToast: (text: string, tone?: "info" | "error") => void
+  pushToast: PushToast
+  /** the running clock, so a running entry's duration counts here too */
+  nowSec?: number
 }) {
   const [description, setDescription] = useState(entry.description)
-  const [start, setStart] = useState(toLocalInputValue(entry.start))
-  const [stop, setStop] = useState(entry.stop ? toLocalInputValue(entry.stop) : "")
   const nowIso = () => new Date().toISOString()
+  const running = isRunning(entry)
+  const timeFormat = state.user.timeFormat
 
   const latestState = useRef(state)
   latestState.current = state
@@ -1055,8 +1107,7 @@ export function EntryDetailModalBody({
    * `useDebouncedCommit`, which also flushes when this sheet unmounts); the
    * times land when you leave the field.
    */
-  const commit = (patch: Parameters<typeof updateEntry>[2]): boolean => {
-    const result = updateEntry(latestState.current, entry.id, patch, nowIso())
+  const land = (result: { state: TimetrackState; violations: { message: string }[] }): boolean => {
     if (result.violations.length > 0) {
       pushToast(result.violations[0].message, "error")
       return false
@@ -1076,44 +1127,103 @@ export function EntryDetailModalBody({
     setState(() => result.state)
     return true
   }
+  const commit = (patch: Parameters<typeof updateEntry>[2]): boolean =>
+    land(updateEntry(latestState.current, entry.id, patch, nowIso()))
 
   const commitDescription = useDebouncedCommit<string>((value) => {
     commit({ description: value })
   })
 
   /**
-   * Compared as the strings in the boxes, not as instants: the datetime-local
-   * value has no seconds, so a round trip through it never equals the stored
-   * timestamp and every blur would file an edit nobody made.
+   * DATE, START, END AND DURATION ARE FOUR BOXES, AND EACH ONE MEANS ONE THING.
+   *
+   * This was two `datetime-local` boxes, a date and a time in each. Moving an
+   * entry to yesterday meant changing the date twice, and changing it once
+   * made a 25-hour entry. A night's work needed the end's date changed by hand.
+   * And a running entry's end was locked, so a timer forgotten overnight could
+   * only be stopped now and then repaired.
+   *
+   * Now: the date moves the whole entry and keeps its length; the start moves
+   * the start (or the entry, when it lands after the end — see
+   * `setEntryStart`); the end is read as the first such time after the start, so
+   * "01:00" after "22:00" is the next morning; the duration moves the end.
+   * On a running entry the end and a shorter duration stop it there.
+   *
+   * One box is edited at a time, so one slot holds the edit. It is a ref as
+   * well as state because the unmount flush runs after the last render.
+   *
+   * A box holds still from the moment it is focused (`hold`): a running
+   * entry's duration is rewritten every second, which threw the selection and
+   * the caret away mid-word. What it read then is also what "unchanged" means —
+   * text retyped as it was is not an edit, and must not drop the seconds the
+   * box cannot show.
    */
-  const commitTimes = () => {
-    const storedStart = toLocalInputValue(entry.start)
-    const storedStop = entry.stop ? toLocalInputValue(entry.stop) : ""
-    if (start === storedStart && stop === storedStop) return
+  type TimeField = "day" | "start" | "stop" | "duration"
+  const [typed, setTyped] = useState<{ field: TimeField; text: string } | null>(null)
+  const pending = useRef<{ field: TimeField; text: string } | null>(null)
+  const heldText = useRef<string | null>(null)
+  const hold = (field: TimeField, text: string) => {
+    heldText.current = text
+    setTyped({ field, text })
+  }
+  const type = (field: TimeField, text: string) => {
+    pending.current = { field, text }
+    setTyped(pending.current)
+  }
+  const shown = (field: TimeField, stored: string) => (typed?.field === field ? typed.text : stored)
 
-    const startIso = fromLocalInputValue(start)
-    if (!startIso) {
-      pushToast("Enter a start date and time", "error")
-      setStart(storedStart)
+  const commitTimes = () => {
+    const edit = pending.current
+    const held = heldText.current
+    pending.current = null
+    heldText.current = null
+    setTyped(null)
+    if (!edit || edit.text === held) return
+    const current = latestState.current.entries.find((e) => e.id === entry.id) ?? entry
+    const text = edit.text.trim()
+
+    if (edit.field === "day") {
+      land(moveEntryToDay(latestState.current, entry.id, text, nowIso()))
       return
     }
-    const stopIso = stop ? fromLocalInputValue(stop) : null
-    if (stop && !stopIso) {
-      pushToast("Enter a valid end date and time", "error")
-      setStop(storedStop)
+    if (edit.field === "duration") {
+      const seconds = parseDurationInput(text)
+      if (seconds === null) {
+        pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
+        return
+      }
+      if (isRunning(current)) {
+        // shorter ends it, longer moves its start: see `setRunningElapsed`
+        const shownSeconds = held === null ? null : parseDurationInput(held)
+        const result = setRunningElapsed(latestState.current, seconds, nowIso(), { entryId: entry.id, shownSeconds })
+        if (land(result) && result.stopped) {
+          announceEndedEarly(result.stopped, seconds, () => latestState.current, setState, pushToast)
+        }
+        return
+      }
+      land(setEntryDuration(latestState.current, entry.id, seconds, nowIso()))
       return
     }
-    /**
-     * No ordering check here any more. It used to live in this function — and
-     * only here, so the inline row and the calendar could write a reversed pair
-     * that the database then refused, which blocked the upload queue for
-     * everything behind it. The rule is in `validateEntry` now, so `commit`
-     * below returns false and says why, wherever the time was typed.
-     */
-    if (!commit({ start: startIso, stop: stopIso })) {
-      setStart(storedStart)
-      setStop(storedStop)
+    if (edit.field === "stop" && !text) {
+      // nothing typed into a running entry's end is no change; on a finished
+      // one it is a restart, which `updateEntry` refuses and says why
+      if (!isRunning(current)) commit({ stop: null })
+      return
     }
+    // which day a bare time means: see `parseStartTimeInput` and `parseEndTimeInput`
+    const iso =
+      edit.field === "start"
+        ? parseStartTimeInput(text, current.start, current.stop ?? nowIso())
+        : parseEndTimeInput(text, current.start)
+    if (!iso) {
+      pushToast("Could not read that time — try 9:30, 930 or 9:30 pm", "error")
+      return
+    }
+    if (edit.field === "stop") {
+      if (commit({ stop: iso })) announceNextDay(current.start, iso, latestState.current, pushToast)
+    }
+    // a start after the end moves the entry: see `setEntryStart`
+    else land(setEntryStart(latestState.current, entry.id, iso, nowIso()))
   }
 
   /**
@@ -1122,6 +1232,33 @@ export function EntryDetailModalBody({
    * description beside it was kept.
    */
   const stagedTimes = useStagedEdit(commitTimes)
+
+  // Enter finishes the box; Escape is the sheet's, and keeps what was typed
+  const enterCommits = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return
+    event.preventDefault()
+    event.currentTarget.blur()
+  }
+  const timeBox = (field: "start" | "stop" | "duration", label: string, stored: string, placeholder?: string) => (
+    <Input
+      value={shown(field, stored)}
+      onChange={(event) => type(field, event.target.value)}
+      onFocus={(event) => {
+        hold(field, event.currentTarget.value)
+        event.currentTarget.select()
+      }}
+      onBlur={stagedTimes.flush}
+      onKeyDown={enterCommits}
+      placeholder={placeholder}
+      aria-label={label}
+      className="text-center tabular-nums sm:h-8"
+    />
+  )
+
+  const endDays = entry.stop ? daysBetween(dateKey(entry.start), dateKey(entry.stop)) : 0
+  const durationShown = running
+    ? formatClock(entrySeconds(entry, nowSec))
+    : formatDuration(entry.duration, state.user.durationFormat)
 
   return (
     <div className="space-y-3">
@@ -1144,15 +1281,41 @@ export function EntryDetailModalBody({
         <TagPicker state={state} tagIds={entry.tagIds} onChange={(tagIds) => commit({ tagIds })} />
         <BillableToggle billable={entry.billable} onChange={(billable) => commit({ billable })} />
       </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <label className="space-y-1 text-xs text-muted-foreground">
-          Start
-          <Input type="datetime-local" value={start} onChange={(event) => setStart(event.target.value)} onBlur={stagedTimes.flush} />
-        </label>
-        <label className="space-y-1 text-xs text-muted-foreground">
-          End
-          <Input type="datetime-local" value={stop} onChange={(event) => setStop(event.target.value)} onBlur={stagedTimes.flush} disabled={isRunning(entry)} />
-        </label>
+      <div className="space-y-2">
+        <DayPicker
+          value={shown("day", dateKey(entry.start))}
+          onChange={(day) => type("day", day)}
+          onBlur={stagedTimes.flush}
+          onStep={(day) => {
+            pending.current = null
+            setTyped(null)
+            land(moveEntryToDay(latestState.current, entry.id, day, nowIso()))
+          }}
+          todayKey={dateKey(new Date(nowSec * 1000))}
+        />
+        {/* each caption in the same block, so the three boxes line up */}
+        <div className="grid grid-cols-3 gap-2">
+          <label className="space-y-1 text-xs text-muted-foreground">
+            <span className="block">Start</span>
+            {timeBox("start", "Start time", formatTimeOfDay(entry.start, timeFormat))}
+          </label>
+          <label className="space-y-1 text-xs text-muted-foreground">
+            <span className="flex items-baseline justify-between gap-1">
+              End
+              {endDays > 0 && <span className="text-[11px] text-primary">{endDays === 1 ? "next day" : `+${endDays} days`}</span>}
+            </span>
+            {timeBox("stop", "End time", entry.stop ? formatTimeOfDay(entry.stop, timeFormat) : "", running ? "running" : undefined)}
+          </label>
+          <label className="space-y-1 text-xs text-muted-foreground">
+            <span className="block">Duration</span>
+            {timeBox("duration", "Duration", durationShown)}
+          </label>
+        </div>
+        {running && (
+          <p className="text-xs text-muted-foreground">
+            Still running. Forgot to stop it? Type when it ended, or how long you worked, and it ends there.
+          </p>
+        )}
       </div>
       {/* the box stays 16px; the label is the target, as everywhere else here */}
       <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground sm:min-h-0">

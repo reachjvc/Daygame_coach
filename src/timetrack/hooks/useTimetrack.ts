@@ -33,11 +33,16 @@ import {
 } from "../timetrackService"
 import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
 
+/** what every screen is handed to say something; `undoLabel` replaces "Undo" on the button */
+export type PushToast = (text: string, tone?: "info" | "error", undo?: () => void, undoLabel?: string) => void
+
 export interface ToastMessage {
   id: number
   text: string
   tone: "info" | "error"
   undo?: () => void
+  /** what the undo button says, when undoing is not quite what it does */
+  undoLabel?: string
 }
 
 export interface IdlePrompt {
@@ -209,9 +214,9 @@ export function useTimetrack() {
     setStateRaw((current) => (current ? updater(current) : current))
   }, [])
 
-  const pushToast = useCallback((text: string, tone: "info" | "error" = "info", undo?: () => void) => {
+  const pushToast = useCallback((text: string, tone: "info" | "error" = "info", undo?: () => void, undoLabel?: string) => {
     const id = toastId.current++
-    setToasts((current) => [...current, { id, text, tone, undo }])
+    setToasts((current) => [...current, { id, text, tone, undo, undoLabel }])
     window.setTimeout(() => setToasts((current) => current.filter((t) => t.id !== id)), 7000)
   }, [])
 
@@ -529,7 +534,7 @@ export function useTimetrack() {
     forgottenWarned.current = true
     const what = forgotten.entry.description.trim()
     pushToast(
-      `${what ? `“${what}”` : "A timer"} has been running for ${plural(Math.round(forgotten.hours), "hour")}. Stop it if you forgot about it.`,
+      `${what ? `“${what}”` : "A timer"} has been running for ${plural(Math.round(forgotten.hours), "hour")}. Forgot to stop it? Type how long you really worked into the timer, and it ends then.`,
       "error",
     )
   }, [state, nowSec, pushToast])

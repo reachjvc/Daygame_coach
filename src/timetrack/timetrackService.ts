@@ -652,6 +652,25 @@ export function updateEntry(
     }
   }
 
+  /**
+   * A RUNNING TIMER CAN BE GIVEN AN END THAT HAS HAPPENED, NOT ONE THAT HAS NOT.
+   *
+   * Its end used to be locked: the only way to finish a timer was Stop, which
+   * ends it NOW. So a timer forgotten overnight could only be ended at 08:00
+   * the next morning and then repaired by hand. It takes a typed end now — and
+   * an end still ahead of the clock would leave a finished entry that claims
+   * work nobody has done yet, so that one is refused. The minute's grace is the
+   * minute you are typing in.
+   */
+  if (current.stop === null && patch.stop && epochSeconds(patch.stop) - epochSeconds(nowIso) >= 60) {
+    return {
+      state,
+      violations: [
+        { field: "time", message: "That end time has not happened yet — press Stop to end the timer now" },
+      ],
+    }
+  }
+
   const merged: TimeEntry = { ...current, ...patch, at: nowIso }
   /**
    * The clamp stays, and it is not the rule — `validateEntry` refuses a
@@ -672,6 +691,12 @@ export function updateEntry(
     start: merged.start,
     stop: merged.stop,
   })
+  /**
+   * LEAVING A CLOSED DAY IS CHANGING IT. `validateEntry` asks only about the day
+   * the entry lands on, so an approved entry could be moved out of its week —
+   * and the detail sheet's day arrows made that one tap.
+   */
+  if (merged.start !== current.start) violations.push(...lockViolations(state, current.start, current.userId))
   if (violations.length > 0) return { state, violations }
 
   let next = { ...state, entries: replaceById(state.entries, entryId, merged) }
@@ -718,16 +743,134 @@ export function applyDraftPatch(
   return { state: result.state, draft: { ...draft, ...patch }, violations: [] }
 }
 
-/** Change a running entry's elapsed time by moving its start (what Toggl does) */
+/**
+ * TYPING A DURATION INTO A RUNNING TIMER.
+ *
+ * LONGER than it has run means it started earlier: you began before you
+ * pressed Start. The start moves back and it keeps running.
+ *
+ * SHORTER means it ended earlier: you forgot to press Stop. The start stays
+ * and the entry ends that long after it. This used to move the start as well,
+ * the way Toggl does — so a timer left running for 16 hours, corrected to the
+ * 1:30 actually worked, became a 1:30 timer that had started 1:30 ago and was
+ * still running, and the work moved from yesterday morning to tonight.
+ *
+ * Under a minute shorter is not a forgotten timer, it is the seconds the box
+ * does not show: retyping "0:45" over 0:45:30 keeps it running, as before.
+ * The other reading of a shorter time — "I started late" — is
+ * `resumeWithElapsed`, which the caller offers after the fact.
+ *
+ * `shownSeconds` is what the box read when you began typing: a box holds
+ * still while you type and the clock does not, so measuring the minute from
+ * the live clock turned ten seconds of typing into a stopped timer.
+ * `entryId` names the entry whose box it was, for the moment two devices have
+ * left two running.
+ */
 export function setRunningElapsed(
   state: TimetrackState,
   seconds: number,
   nowIso: IsoDateTime,
+  options: { entryId?: Id; shownSeconds?: number | null } = {},
+): { state: TimetrackState; violations: SaveViolation[]; stopped: TimeEntry | null } {
+  const running = options.entryId
+    ? state.entries.find((e) => e.id === options.entryId && isRunning(e) && !e.serverDeletedAt)
+    : runningEntry(state)
+  if (!running) return { state, violations: [], stopped: null }
+  const wanted = Math.max(0, seconds)
+  const elapsed = epochSeconds(nowIso) - epochSeconds(running.start)
+
+  if ((options.shownSeconds ?? elapsed) - wanted >= 60) {
+    const stop = new Date((epochSeconds(running.start) + wanted) * 1000).toISOString()
+    const result = updateEntry(state, running.id, { stop }, nowIso)
+    const stopped = result.violations.length > 0 ? null : (result.state.entries.find((e) => e.id === running.id) ?? null)
+    return { ...result, stopped }
+  }
+
+  const newStartIso = new Date((epochSeconds(nowIso) - wanted) * 1000).toISOString()
+  return { ...updateEntry(state, running.id, { start: newStartIso, stop: null }, nowIso), stopped: null }
+}
+
+/**
+ * The "I started late" reading of a shorter time, after `setRunningElapsed`
+ * took it as "I forgot to stop": running again, started that long ago.
+ *
+ * Not while some other timer runs — two running is the state
+ * `reconcileRunningEntries` exists to undo, and it would undo it by stopping
+ * this one again.
+ */
+export function resumeWithElapsed(
+  state: TimetrackState,
+  entryId: Id,
+  seconds: number,
+  nowIso: IsoDateTime,
 ): { state: TimetrackState; violations: SaveViolation[] } {
-  const running = runningEntry(state)
-  if (!running) return { state, violations: [] }
-  const newStartIso = new Date((epochSeconds(nowIso) - Math.max(0, seconds)) * 1000).toISOString()
-  return updateEntry(state, running.id, { start: newStartIso, stop: null }, nowIso)
+  const other = runningEntry(state)
+  if (other && other.id !== entryId) {
+    return { state, violations: [{ field: "time", message: "Another timer is running now — stop it first" }] }
+  }
+  const start = new Date((epochSeconds(nowIso) - Math.max(0, seconds)) * 1000).toISOString()
+  return updateEntry(state, entryId, { start, stop: null }, nowIso, { resuming: true })
+}
+
+/**
+ * A new start for an entry. It keeps the end, so the length changes — unless
+ * the new start is after the end, and then the entry moves and keeps its length.
+ *
+ * Refusing that case made the order you type in matter: a 15:47–17:00 entry
+ * could not be given its real start of 22:00, because 22:00 is after 17:00, and
+ * typing the end first was the only way through. Nobody should have to know
+ * that.
+ */
+export function setEntryStart(
+  state: TimetrackState,
+  entryId: Id,
+  start: IsoDateTime,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[] } {
+  const entry = state.entries.find((e) => e.id === entryId)
+  if (!entry) return { state, violations: [] }
+  if (entry.stop === null || epochSeconds(start) <= epochSeconds(entry.stop)) {
+    return updateEntry(state, entryId, { start }, nowIso)
+  }
+  const length = epochSeconds(entry.stop) - epochSeconds(entry.start)
+  const stop = new Date((epochSeconds(start) + length) * 1000).toISOString()
+  return updateEntry(state, entryId, { start, stop }, nowIso)
+}
+
+/**
+ * Move an entry to another day, keeping its times of day and its length.
+ *
+ * The detail sheet's only way to do this was two `datetime-local` boxes, each
+ * with its own date, so "this was yesterday" meant changing both — and
+ * changing the start's date alone put the start a day before the end, a
+ * 25-hour entry. Whole days are added to the start on the wall clock, so 09:00
+ * stays 09:00 across a clock change, and the end follows by the entry's real
+ * length, so a night that spans one is not stretched or cut by an hour.
+ */
+export function moveEntryToDay(
+  state: TimetrackState,
+  entryId: Id,
+  day: IsoDate,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[] } {
+  const entry = state.entries.find((e) => e.id === entryId)
+  if (!entry) return { state, violations: [] }
+  const shift = daysBetween(dateKey(entry.start), day)
+  if (shift === 0) return { state, violations: [] }
+  const moved = new Date(entry.start)
+  moved.setDate(moved.getDate() + shift)
+  const start = moved.toISOString()
+
+  if (isRunning(entry)) {
+    // a running timer that has not started yet would count down, not up
+    if (epochSeconds(start) > epochSeconds(nowIso)) {
+      return { state, violations: [{ field: "date", message: "A running timer cannot start in the future" }] }
+    }
+    return updateEntry(state, entryId, { start }, nowIso)
+  }
+  const length = epochSeconds(entry.stop!) - epochSeconds(entry.start)
+  const stop = new Date((epochSeconds(start) + length) * 1000).toISOString()
+  return updateEntry(state, entryId, { start, stop }, nowIso)
 }
 
 /** Set an entry's duration by moving its stop time (stopped entries only) */
