@@ -21,7 +21,7 @@
 import { isTimedLift } from "@/src/programs/data/exerciseLibrary"
 import { ROUTES } from "@/src/shared/routes"
 import { DISPLAY_LOCALE } from "@/src/shared/dateUtils"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Check, MoreVertical } from "lucide-react"
@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { BackLink } from "@/components/BackLink"
+import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { DONE, GRID_CAPTION, SET_GRID_WITH_DELETE, TRAINING_COLUMN } from "../trainingStyles"
 import { canBeUnweighted, libraryExercise } from "../../data/exerciseLibrary"
 import { SetRow } from "./SetRow"
@@ -47,7 +48,9 @@ import type { MissRule } from "../../types"
 import { FinishSheet } from "./FinishSheet"
 import { AddLift } from "./AddLift"
 import { useLiveWorkout } from "../../hooks/useLiveWorkout"
-import { addedLiftId, applyLiftOrder, describeEnduranceBlock, describePlates, describeSets, enduranceMinutes, fixedRowsToTick, groupOrdinal, isStaleWorkout, keepableChanges, liftRows, moveLift, platesFor, restTargetFor, setLabel, setSlot, unfinishedLifts } from "../../programsService"
+import { addSetLimit, describeLift, effortText, weekLine, withOption } from "../../liveFormat"
+import { deriveFromEarlierSets, type DoneSet } from "../../engine/sameDay"
+import { addedLiftId, applyLiftOrder, describeEnduranceBlock, describePlates, enduranceMinutes, formatLoad, fixedRowsToTick, groupOrdinal, isStaleWorkout, keepableChanges, liftRows, moveLift, platesFor, restTargetFor, setLabel, setSlot, unfinishedLifts } from "../../programsService"
 import { REST_SECONDS, UNIT_CONFIG } from "../../config"
 import type {
   LiftRow,
@@ -55,6 +58,7 @@ import type {
   LiveWorkoutSet,
   PlateSetup,
   PrescribedExercise,
+  PrescribedSet,
   SessionPrescription,
   UnitSystem,
 } from "../../types"
@@ -69,6 +73,12 @@ interface Props {
   timezone: string
 
   initial: LiveWorkout
+  /**
+   * When the server drew this page (its clock). A page opened with no signal
+   * is an older stored copy, and this is how the screen tells — see
+   * `newerCopyOf` in useLiveWorkout.
+   */
+  renderedAt?: number
   prescription: SessionPrescription | null
   programName: string | null
   unit: UnitSystem
@@ -89,12 +99,16 @@ interface Props {
   previousUnavailable?: boolean
 }
 
+/** Nothing to subscribe to: `useSyncExternalStore` is used only to tell server from client. */
+const noSubscription = () => () => {}
+
 /** "3:30" — the same shape the menu and the rest bar show. */
 const restClock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`
 
 export function LiveWorkoutScreen({
   initial,
+  renderedAt,
   prescription,
   programName,
   unit,
@@ -105,7 +119,13 @@ export function LiveWorkoutScreen({
   missRules,
   timezone,
 }: Props) {
-  const live = useLiveWorkout(initial)
+  const live = useLiveWorkout(initial, { renderedAt })
+  /**
+   * Up once React runs the page, for tests: a page reloaded with no signal is
+   * drawn from stored HTML first, and a box typed into before React takes
+   * over is wiped when it does. False on the server and while hydrating.
+   */
+  const hydrated = useSyncExternalStore(noSubscription, () => true, () => false)
   /**
    * IS THIS A SESSION BEING WRITTEN UP, rather than one happening now?
    *
@@ -201,8 +221,42 @@ export function LiveWorkoutScreen({
    * after the swap and the additions so a moved lift, a swapped lift and a
    * lift added on the day are all in the list being ordered.
    */
-  const exercises: PrescribedExercise[] = applyLiftOrder([
-    ...(prescription?.exercises ?? []).map(swapFor),
+  /**
+   * WHAT THE PROGRAM LEAVES TO THE DAY, as picked on this workout: one of a
+   * set group's options ("10 × 3"), and the lift for a slot that offers a
+   * choice ("front squat"). Both are kept on the workout, so a phone that
+   * locks and reloads comes back with them.
+   */
+  const picks = (live.workout ?? finished)?.adjustments ?? {}
+  const picked = (ex: PrescribedExercise): PrescribedExercise => {
+    let out = ex
+    const optionGroup = ex.groups?.find((g) => g.options)
+    const optionIndex = picks.options?.[ex.exerciseId]
+    if (optionGroup?.options && optionIndex != null && optionGroup.options[optionIndex]) {
+      out = withOption(out, optionGroup.id, optionGroup.options[optionIndex])
+    }
+    const chosen = picks.chosen?.[ex.exerciseId]
+    if (chosen && ex.choices?.includes(chosen)) out = { ...out, name: chosen }
+    return out
+  }
+
+  /**
+   * BACK-OFFS FROM THE TOP SET YOU JUST DID, worked out HERE, on the phone,
+   * from the sets on screen — so the range appears the moment the top set is
+   * ticked, signal or none (Q12). The server runs the same function at finish.
+   */
+  const doneForDerive: DoneSet[] = ((live.workout ?? finished)?.sets ?? [])
+    .filter((s) => s.completedAt)
+    .map((s) => ({
+      slot: s.slotId ?? s.exerciseId ?? s.exercise,
+      groupId: s.setGroupId ?? null,
+      setNumber: s.setNumber,
+      weight: s.weight,
+      reps: s.reps,
+    }))
+
+  const exercises: PrescribedExercise[] = deriveFromEarlierSets(applyLiftOrder([
+    ...(prescription?.exercises ?? []).map(picked).map(swapFor),
     ...added.map((a) => ({
       exerciseId: a.exerciseId,
       name: a.name,
@@ -232,7 +286,11 @@ export function LiveWorkoutScreen({
        */
       ...(isTimedLift({ exercise: a.name, library_id: a.libraryId }) ? { repUnit: "sec" as const } : {}),
     })) as PrescribedExercise[],
-  ], (live.workout ?? finished)?.adjustments.order)
+  ], (live.workout ?? finished)?.adjustments.order), doneForDerive, {
+    unit,
+    plates,
+    ...(prescription?.rounding ? { rounding: prescription.rounding } : {}),
+  })
 
   /**
    * The workout the screen is describing. `live.workout` goes null the moment a
@@ -391,11 +449,14 @@ export function LiveWorkoutScreen({
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-28" data-hydrated={hydrated ? "true" : undefined}>
+      {/* Keeps this page for opening with no signal (`public/sw.js`, Q21). */}
+      <OfflineShell />
       <Elapsed
         startedAt={workout.startedAt}
         programName={programName}
         dayLabel={prescription?.dayLabel}
+        weekLabel={prescription ? weekLine(prescription) : null}
         past={past}
         timezone={timezone}
         onFinish={() => {
@@ -567,7 +628,7 @@ export function LiveWorkoutScreen({
                       {/* A lift nobody prescribed has no prescription to
                           describe. It read "3 × 0 reps @ 0 kg", which is a plan
                           the app invented and then printed back. */}
-                      {addedIds.has(ex.exerciseId) ? "added on the day" : describeSets(ex, unitLabel)}
+                      {addedIds.has(ex.exerciseId) ? "added on the day" : describeLift(ex, unitLabel)}
                       {/*
                         THE REST IS ON THE CARD NOW THAT IT IS EDITABLE. It was
                         a read-only line saying "Rest 3 min (our suggestion)",
@@ -591,6 +652,76 @@ export function LiveWorkoutScreen({
                     <MoreVertical className="size-5" />
                   </button>
                 </div>
+
+                {/*
+                  WHAT THE PROGRAM LEAVES TO THE DAY. A slot that offers a
+                  choice ("back or front squat") and a set group that offers
+                  schemes ("3 × 10 … 10 × 3") each get one row of buttons; the
+                  pick is kept on the workout and the rows below follow it.
+                */}
+                {!isSkipped && ex.choices && ex.choices.length > 1 && (
+                  <div data-testid={`choices-${ex.exerciseId}`} className="flex flex-wrap gap-1.5">
+                    {ex.choices.map((name, ci) => (
+                      <button
+                        key={name}
+                        type="button"
+                        data-testid={`choice-${ex.exerciseId}-${ci}`}
+                        aria-pressed={ex.name === name}
+                        onClick={() =>
+                          void live.adjust({ chosen: { ...(workout.adjustments.chosen ?? {}), [ex.exerciseId]: name } })
+                        }
+                        className={`min-h-11 rounded-md border px-3 text-sm transition-colors ${
+                          ex.name === name ? "border-primary text-foreground" : "border-border text-muted-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!isSkipped &&
+                  (() => {
+                    const group = prescription?.exercises
+                      .find((p) => p.exerciseId === ex.exerciseId)
+                      ?.groups?.find((g) => g.options)
+                    if (!group?.options) return null
+                    const current = workout.adjustments.options?.[ex.exerciseId] ?? 0
+                    /**
+                     * PICKED FOR TODAY ONCE A SET OF THE LIFT IS DONE. A
+                     * different scheme renumbers the rows after it, and a set
+                     * already ticked there would stop matching its row: it
+                     * would show as a stray, and the empty row beside it could
+                     * be ticked again — the same work logged twice.
+                     */
+                    const started = workout.sets.some((s) => s.completedAt && s.exerciseId === ex.exerciseId)
+                    return (
+                      <div data-testid={`options-${ex.exerciseId}`} className="flex flex-wrap items-center gap-1.5">
+                        {group.options.map((o, oi) => (
+                          <button
+                            key={`${o.count}x${o.reps}`}
+                            type="button"
+                            data-testid={`option-${ex.exerciseId}-${oi}`}
+                            aria-pressed={current === oi}
+                            aria-label={`${o.count} sets of ${o.reps}`}
+                            disabled={started}
+                            onClick={() =>
+                              void live.adjust({ options: { ...(workout.adjustments.options ?? {}), [ex.exerciseId]: oi } })
+                            }
+                            className={`min-h-11 rounded-md border px-3 text-sm tabular-nums transition-colors disabled:opacity-60 ${
+                              current === oi ? "border-primary text-foreground" : "border-border text-muted-foreground hover:bg-muted/50"
+                            }`}
+                          >
+                            {o.count} × {o.reps}
+                          </button>
+                        ))}
+                        {started && (
+                          <span data-testid={`options-locked-${ex.exerciseId}`} className="text-xs text-muted-foreground">
+                            Kept for today: sets are done.
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                 {/* EVERY OPTION FOR THIS LIFT, in the app's own sheet.
                     It was one 26px "Skip this one" chip and a read-only rest
@@ -738,6 +869,8 @@ export function LiveWorkoutScreen({
                            */
                           queued={Boolean(ticked) && live.queuedSlots.includes(setSlot(ticked!))}
                           unitLabel={unitLabel}
+                          target={row.prescribed ? effortText(row.prescribed) : null}
+                          rangeHint={rangeHintFor(row.prescribed, unitLabel)}
                           repUnit={ex.repUnit ?? "reps"}
                           bodyweight={ex.bodyweight}
                           unweightedOk={ex.unweightedOk ?? canBeUnweighted(undefined, ex.name)}
@@ -909,21 +1042,39 @@ export function LiveWorkoutScreen({
                   you are actually looking at, which is where somebody reaches
                   for it.
                 */}
-                {!isSkipped && (
-                  <button
-                    type="button"
-                    data-testid={`add-set-${ex.exerciseId}`}
-                    /* One per lift, so the visible words alone are three
-                       controls with one name to a screen reader. */
-                    aria-label={`Add a set to ${ex.name}`}
-                    onClick={() =>
-                      setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
+                {!isSkipped &&
+                  (() => {
+                    /**
+                     * "3–5 SETS": the button adds up to the top of the range
+                     * and then says the range is done. A program that set no
+                     * range — every built-in — adds as many as you like, as
+                     * it always has.
+                     */
+                    const limit = addSetLimit(ex)
+                    const added = extraRows[ex.exerciseId] ?? 0
+                    if (limit && added >= limit.upTo) {
+                      return (
+                        <p data-testid={`add-set-done-${ex.exerciseId}`} className="text-xs text-muted-foreground">
+                          All {limit.group.countMax} sets are on the list.
+                        </p>
+                      )
                     }
-                    className="min-h-11 w-full rounded-md border border-dashed border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-                  >
-                    + Add a set
-                  </button>
-                )}
+                    return (
+                      <button
+                        type="button"
+                        data-testid={`add-set-${ex.exerciseId}`}
+                        /* One per lift, so the visible words alone are three
+                           controls with one name to a screen reader. */
+                        aria-label={`Add a set to ${ex.name}`}
+                        onClick={() =>
+                          setExtraRows((r) => ({ ...r, [ex.exerciseId]: (r[ex.exerciseId] ?? 0) + 1 }))
+                        }
+                        className="min-h-11 w-full rounded-md border border-dashed border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                      >
+                        {limit ? `+ Add a set (up to ${limit.group.countMax})` : "+ Add a set"}
+                      </button>
+                    )
+                  })()}
 
                 {!isSkipped && !ex.bodyweight && !addedIds.has(ex.exerciseId) && ex.sets[0]?.weight ? (
                   <p className="pt-1 text-xs text-muted-foreground">
@@ -1050,6 +1201,7 @@ function Elapsed({
   startedAt,
   programName,
   dayLabel,
+  weekLabel,
   onFinish,
   past,
   timezone,
@@ -1057,6 +1209,8 @@ function Elapsed({
   startedAt: string
   programName: string | null
   dayLabel?: string
+  /** "Week 3 of 12 · Base · deload week", for a program with weeks. */
+  weekLabel?: string | null
   onFinish: () => void
   /** A session being written up: say WHEN, not how long ago. */
   past: boolean
@@ -1131,6 +1285,11 @@ function Elapsed({
             {dayLabel ?? "Workout"}
             {programName ? <span className="text-muted-foreground"> · {programName}</span> : null}
           </p>
+          {weekLabel ? (
+            <p data-testid="live-week" className="truncate text-xs text-muted-foreground">
+              {weekLabel}
+            </p>
+          ) : null}
           {/* A COUNTER IS WRONG FOR A SESSION THAT ALREADY HAPPENED. A
               workout dated yesterday read "1,440 min" and climbing. */}
           {/*
@@ -1176,4 +1335,17 @@ function Elapsed({
       </div>
     </div>
   )
+}
+
+/**
+ * What a row's weight is waiting for, or the range it may fall in: "70–80 kg"
+ * once a back-off's top set is done, "after the top set" before it, and a
+ * suggestion for a set picked by feel.
+ */
+function rangeHintFor(set: PrescribedSet | null | undefined, unitLabel: string): string | null {
+  if (!set) return null
+  if (set.derive && !set.weight) return `after the ${set.derive.group === "top" ? "top set" : "set it follows"}`
+  if (set.weightMax != null) return `${formatLoad(set.weight)}–${formatLoad(set.weightMax)} ${unitLabel}`
+  if (set.pick === "effort") return set.suggested ? `by feel — about ${formatLoad(set.suggested)} ${unitLabel}` : "by feel"
+  return null
 }

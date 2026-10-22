@@ -41,6 +41,12 @@
  *    `redirect: "manual"`, so the login page comes back as an opaque redirect
  *    with `ok === false` and is skipped. `cache.add` was doing the opposite —
  *    following the redirect and filing the login page under the tracker's name.
+ *    Signing out is a server action that lands on the front page, which this
+ *    file never sees, so both Log Out buttons empty the store themselves
+ *    first (`src/shared/offlineCopies.ts`).
+ *    And a stored shell the server now answers with a redirect is DELETED, not
+ *    just left alone: for the live workout that redirect means the workout is
+ *    over, and its page must not come back offline as if it were still open.
  *
  * 5. ONE STORE PER BUILD. The store is named after the build id in this file's
  *    registration URL (`/sw.js?v=<build>`), so a new build installs a new worker
@@ -69,7 +75,7 @@ const CACHE = "app-shell-" + VERSION
  * site root: it cannot import `src/shared/routes.ts`, the same reason
  * `proxy.ts`'s matcher is a literal. So an address can move out from under this
  * file silently. `tests/unit/navigation/routeList.test.ts` is what stops that:
- * it fails unless this list is exactly `[ROUTES.time, ROUTES.quitVice]`.
+ * it fails unless this list is exactly `[ROUTES.time, ROUTES.quitVice, ROUTES.liveWorkout]`.
  */
 const SHELL_PATHS = [
   // Started on a train, in a basement, on the underground.
@@ -79,6 +85,11 @@ const SHELL_PATHS = [
   // 2026-09-24 opening it without a connection showed the browser's error page
   // while the page itself was perfectly capable of running from localStorage.
   "/plan/quit-vice",
+  // The workout you are in the middle of. Gyms are in basements: a phone that
+  // locks between sets and reloads with no signal showed the browser's error
+  // page in place of the sets (Plans/program-builder.md, Q21). Its sets queue
+  // in localStorage and are put back on screen from there; this keeps the page.
+  "/training/live",
 ]
 
 /** Is this one of them? */
@@ -107,7 +118,12 @@ function isAsset(request, url) {
  */
 async function warmShell(cache, path) {
   const response = await fetch(path, { redirect: "manual" })
-  if (!response.ok) return
+  if (!response.ok) {
+    // Sent elsewhere: signed out, or — for the live workout — no workout open
+    // any more. A copy stored earlier is of something that is over, so it goes.
+    if (response.type === "opaqueredirect") await cache.delete(path)
+    return
+  }
 
   const html = await response.clone().text()
   await cache.put(path, response)
@@ -195,6 +211,12 @@ self.addEventListener("fetch", (event) => {
         if (response.ok && !response.redirected && storable) {
           const copy = response.clone()
           event.waitUntil(caches.open(CACHE).then((cache) => cache.put(request, copy)))
+        } else if (isPage && response.type === "opaqueredirect") {
+          // The server sent this page elsewhere: the workout it showed is
+          // finished or thrown away, or nobody is signed in. The stored copy
+          // must not come back the next time there is no signal, offering a
+          // finished workout as if it were still open.
+          event.waitUntil(caches.open(CACHE).then((cache) => cache.delete(request)))
         }
         return response
       })

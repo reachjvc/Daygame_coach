@@ -392,6 +392,7 @@ export function prescribe(
     ...(where.restDay ? { restDay: true } : {}),
     ...(where.scheduledWeekday != null && spec.calendar.days === "weekdays" ? { scheduledWeekday: where.scheduledWeekday } : {}),
     ...(length != null && spec.calendar.atEnd === "finish" ? { weeksTotal: length } : {}),
+    ...(spec.rounding ? { rounding: spec.rounding } : {}),
     ...(where.phase ? { phase: where.phase } : {}),
     ...(where.deload ? { deloadWeek: true } : {}),
     ...(where.test ? { testWeek: true } : {}),

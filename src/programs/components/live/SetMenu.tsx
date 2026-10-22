@@ -112,7 +112,9 @@ export function SetMenu({
           aria-valuetext={rpe === null ? "not said" : `RPE ${rpe}`}
           min={RPE_MIN}
           max={RPE_MAX}
-          step={1}
+          // Half steps: RPE 8.5 is "one or two in the tank", and a program
+          // that asks for it needs a slider that can say it.
+          step={0.5}
           value={[rpe ?? RPE_MIN]}
           onValueChange={([next]) => onRpe(next)}
         />

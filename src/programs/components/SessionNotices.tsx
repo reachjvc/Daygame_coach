@@ -9,7 +9,9 @@
  */
 
 import { useMemo } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ROUTES } from "@/src/shared/routes"
 import { DONE } from "./trainingStyles"
 import { daysSinceLastSession, staleLifts, LAYOFF_DAYS } from "../programsService"
 import type { LoggedExercise, SessionPrescription } from "../types"
@@ -71,6 +73,15 @@ export function SessionNotices({ prescription, logs, onFinish }: Props) {
             Everything you logged is kept either way — ending it moves it to the programs you have
             finished, and starting it again begins from week one.
           </p>
+          {/* Q9: repeat, retest, or move on. Entering new maxes needs the
+              builder's maxes panel (Plans/program-builder.md, Phase 6), so
+              until then this says what running it again starts from rather
+              than offering a retest that has nowhere to put the numbers. */}
+          {prescription.weeksTotal ? (
+            <p data-testid="program-complete-retest" className="mt-0.5">
+              Running it again starts week 1 from the numbers this run finished on.
+            </p>
+          ) : null}
           {/* `Button`, not two hand-rolled ones: these were `min-h-9` — 36 px,
               eight under the floor — and the second hovered `bg-accent`, which
               in this app is the sunset red, so "Run it again" flashed a warning
@@ -81,6 +92,11 @@ export function SessionNotices({ prescription, logs, onFinish }: Props) {
             </Button>
             <Button size="sm" variant="ghost" onClick={() => onFinish("restart")}>
               Run it again
+            </Button>
+            <Button size="sm" variant="ghost" asChild>
+              <Link href={`${ROUTES.training}?view=programs`} data-testid="program-complete-next">
+                Pick another program
+              </Link>
             </Button>
           </div>
         </div>

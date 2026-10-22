@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–4 done 2026-10-22 (session daygame-coach-fc); Phase 5 is next.
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–5 done 2026-10-22 (session daygame-coach-fc); Phase 6 is next (it opens with B-DESIGN).
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -187,6 +187,13 @@ on a phone, and progression locked behind a paywall.
   the user's own program, exactly like today. Closing it means letting only the server call those
   functions, with a key ordinary users never hold — a bigger change than this plan, so it is recorded for
   the Phase 10 security review rather than done here.
+- **The workout kept for opening with no signal, on a shared phone (found 2026-10-22, Phase 5).** The
+  phone keeps the open workout's page and its last saved state so it opens in a basement. Log Out clears
+  both, and so does finishing or throwing the workout away. A session that ends any OTHER way — it
+  expires, or is signed out from another device, or cookies are cleared — leaves them until the next
+  sign-in page, so someone else opening that page on that phone with no signal would see that workout.
+  The time tracker and the Black Box already work this way. Recorded for the Phase 10 security review
+  (the fix: clear them whenever the server answers "not signed in").
 - **Programs written by users are data from strangers.** Every program is checked against the format on
   the server, size-limited, and never run as code. There is no scripting language, so there is nothing to
   inject. Program text is shown as text, never as page markup.
@@ -723,6 +730,7 @@ with kind `top`, slot and set group, and moves the bench's estimated max to 117.
 (`auth.spec.ts:26`, `password-reset.spec.ts:123` — neither touches the gym); `typecheck-ratchet` 88,
 none new; `lint:ratchet` 290, none new.
 
+## Phase 5 — The live workout screen
 **Depends on:** 4.
 1. Shows target RPE/RIR, "3–5 sets" with an add-set button, options ("3×10 … 10×3"), choice slots, caps on
    the last set, the week ("Week 3 of 12", phase name), deload and test weeks, the finish screen (Q9).
@@ -730,6 +738,97 @@ none new; `lint:ratchet` 290, none new.
 3. RPE slider in half steps.
 4. `/training/live` opens with no signal (Q21), with the same care `/time` takes about whose page is stored.
 **Acceptance:** browser tests for each item on a phone viewport, including offline.
+
+### Phase 5 evidence (2026-10-22, session daygame-coach-fc)
+
+**Doubt first.** (1) **"Retest your maxes" (Q9) is a sentence, not a door.** Entering new maxes needs
+the builder's maxes panel (Phase 6); the finish screen offers Run it again and Pick another program, and
+says what running again starts from ("week 1, from the numbers this run finished on"). For a program
+that reads its maxes from effort (Starscream's top sets) the numbers follow the lifter anyway; for one
+on fixed maxes they stay where they were until Phase 6. (2) **Opening offline is proven on Chromium, not
+on an iPhone.** Playwright's WebKit fails every navigation made while offline is emulated, service
+worker or not — the Black Box's shipped offline test fails the same way there (checked today) — so the
+two offline-open tests skip on the iPhone lane with that reason (listed in `e2eSkipsAreListed`) and run
+on Chromium: the desktop lane at a phone's size and the Pixel 7 lane. A real iPhone is Phase 9's job.
+Under `next dev` they skip too (no worker in development, by design); they were run for real against a
+production build on the test backend, and CI runs them on the desktop lane (a production build) for
+pull requests into and pushes to main. (3) **A choice of lift changes the name, not the numbers.** "Back
+or Front Squat" done as Front Squat is logged as Front Squat on the slot's own weights and history; a
+program that wants different numbers per choice needs two slots. (4) Once a set of a lift is ticked its
+scheme option is kept for the day (the buttons lock and say so): switching would renumber the rows under
+the sets already done. (5) My Phase 4 evidence edit had swallowed this phase's heading; it is restored.
+
+**5.1 What the screen says.** `src/programs/liveFormat.ts` (pure, 7 unit tests): `effortText` ("RPE
+8.5", "RPE 8–9", "RIR 2", "≤ RPE 9"), `weekLine` ("Week 3 of 12 · Base · deload week", "… · test
+week"), `describeLift` ("1 × 2–5 by feel, RPE 8.5 · 3–5 × 5–10 at 70–80% of the top set"; a lift with
+plain groups — every converted built-in — is described by the old `describeSets`, word for word),
+`withOption` and `addSetLimit`. On the live screen: the week line under the header; each set row's hint
+("by feel · RPE 8.5", "after the top set", "70–80 kg", the cap "≤ RPE 9" on the last set only); a row of
+buttons for a slot's choices and one for a set group's options, each pick kept on the workout
+(`adjustments.chosen`, `adjustments.options`), so a reload comes back with it; "+ Add a set (up to 5)"
+until the range is full, then "All 5 sets are on the list." Built-ins show none of these (no ranges, no
+options, no choices, no targets) and add sets without limit, as before. Today's card and the program
+preview use `describeLift` and the program's own weekdays. **The finish screen** (Q9): Run it again,
+Pick another program (to the program list), and the line in doubt (1). Two bugs found on the way: Run
+it again on a calendar program rewound the counter but not the calendar, so a finished twelve-week
+program stayed finished (`resetEnrollment` now restarts its first day today); and the card stayed on
+"finished" with no Start button until a reload (`router.refresh()` after the restart).
+
+**5.2 Back-offs from the top set, on the phone.** The screen runs `deriveFromEarlierSets` (the engine's
+same-day function, the one the server runs at finish) over the sets on screen, so ticking a 105 kg top
+set fills the back-offs with 72.5–85 kg at once, with or without signal, rounded on the program's step
+and the account's plates.
+
+**5.3 RPE in half steps.** The set menu's slider moves by 0.5; 8.5 is stored as 8.5 (Phase 3's column).
+
+**5.4 Opening with no signal (Q21).** `/training/live` joins the worker's short list of stored pages
+(`public/sw.js`, with `routeList.test.ts` holding the list), under the same rules as `/time`: network
+first; stored with its scripts; emptied on any sign-in page; never stored when signed out. Three things
+the live page needed that `/time` does not, because it holds one workout rather than a browser-side
+workspace: (a) sets ticked with no signal are put back on screen from the queue (`withQueuedSets`);
+(b) sets saved WITH signal after the page was stored are not lost — the phone keeps the server's last
+answer (`live-workout-copy-v1`) and a stored page older than it gives way to it (`newerCopyOf`); (c) a
+workout that is over is not kept: finishing or throwing it away clears the kept answer and the stored
+page on that phone, and the worker deletes a stored page whenever the server answers it with a redirect
+(finished elsewhere, or signed out); (d) signing out forgets them — Log Out is a server action that lands
+on the front page, which the worker never sees, so both Log Out buttons first empty the worker's store
+and the kept answer and rest clock (`src/shared/offlineCopies.ts`); the queue of unsent sets stays,
+because deleting it would lose sets. The kept answer is stamped with the SERVER's clock (the reply's
+`Date` header, end of that second) and compared with the server's time of drawing the page — not the
+phone's clock, which can be minutes out; the first build of this used the phone's and a review caught
+it, and the production-build test caught the second-sized tie. The screen sends and counts only its own
+workout's waiting sets: one left by a workout thrown away elsewhere, or by the last person signed in on
+the phone, used to come back "workout gone", clear the screen and hold Finish (security review, fixed). Also fixed: with no signal the retry loop
+threw an unhandled error every twenty seconds; it now waits quietly for the next pass. The live screen
+marks itself `data-hydrated` once React runs it, so tests stop typing into stored HTML that React then
+replaces.
+
+**Tests.** Browser, `tests/e2e/programs-live-format.spec.ts`, a seven-day program in the format started
+through the app's route, phone viewport (iPhone 14): week, phase and deload line; test week; back-offs
+filled offline the moment the top set is ticked, then sent once with slot and set group; add-set up to
+the range, then "All 5 sets"; options (10 × 3 replaces 3 × 10, kept over a reload); a choice logged as
+Front Squat; the cap on the last set only; RPE 8.5 in half steps, stored as 8.5; the finish screen, Run
+it again to week 1 today. Offline open (Chromium, phone size, production build): reopens with no signal
+showing the top set saved with signal, its back-offs worked out, and the back-off ticked with no signal,
+which then lands exactly once; a workout thrown away elsewhere has its stored page dropped. The options
+test also checks the scheme locks once a set of the lift is done. Production
+build run: `programs-live-format`, `programs-offline`, `vice-offline` on phone, desktop and Pixel 7 —
+35 passed, 2 skipped (the WebKit pair). Unit: `liveFormat.test.ts` (7), `liveOffline.test.tsx` (15);
+integration: a finished calendar program run again starts week 1 today.
+
+**Review.** A code review found three risks (the phone's clock deciding which copy wins; sign-out
+leaving the stored workout; a scheme switch after sets were ticked renumbering their rows) and a security
+review two low ones on a shared phone (another workout's waiting sets clearing the screen; a session
+ending other than by Log Out). All fixed above except the last, which is recorded under Security for
+Phase 10.
+
+**Gates (2026-10-22):** `npm test` 378 files, 5327 passed, 1 skipped; integration 36 files, 199 passed;
+browser, desktop and phone projects, all specs: 295 passed, 5 skipped, and three that failed under load
+and passed when re-run alone (`auth.spec.ts:26`, `session-tracking.spec.ts:87`, `settings.spec.ts:21` —
+none touches the gym); after the last change, every `programs-*` spec on desktop and phone: 83 passed,
+4 skipped (the offline-open pair, no worker under `next dev`); production build on the test backend,
+`programs-live-format` + `programs-offline` + `vice-offline` on phone, desktop and Pixel 7: 35 passed,
+2 skipped (the WebKit pair); `typecheck-ratchet` 88, none new; `lint:ratchet` 290, none new.
 
 ## Phase 6 — The builder
 **Depends on:** 4. **Opens with B-DESIGN.**

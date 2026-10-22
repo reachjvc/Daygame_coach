@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
 import { signOut } from "@/app/actions/auth"
+import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { AppLogo } from "@/components/AppLogo"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
@@ -75,7 +76,14 @@ export function AppFrame({ children }: { children: ReactNode }) {
             })}
             {/* Log Out before the development-only lab link, so the way out is
                 never the item that scrolls out of view. */}
-            <form action={signOut}>
+            {/* What this phone kept for opening pages with no signal goes
+                first: the server action alone never reaches it. */}
+            <form
+              action={async () => {
+                await forgetOfflineCopies()
+                await signOut()
+              }}
+            >
               <Button
                 variant="ghost"
                 type="submit"

@@ -62,6 +62,10 @@ export interface SetRowProps {
   pendingSince?: number | null
   /** Its write failed and is waiting for signal. */
   queued?: boolean
+  /** The effort the program asks for on this set: "RPE 8.5", "≤ RPE 9" (program format). */
+  target?: string | null
+  /** The weight range, or what it waits for: "70–80 kg", "after the top set" (program format). */
+  rangeHint?: string | null
   onTick: (weight: number, reps: number) => void
   onUndo?: () => void
   /**
@@ -94,6 +98,8 @@ export function SetRow({
   kind = "working",
   pendingSince = null,
   queued = false,
+  target = null,
+  rangeHint = null,
   onTick,
   onUndo,
   onOpenMenu,
@@ -146,6 +152,16 @@ export function SetRow({
       setReps(String(done.reps))
     }
   }, [done])
+
+  /**
+   * A BACK-OFF'S WEIGHT ARRIVES AFTER THE ROW IS DRAWN. It is worked out from
+   * the top set the moment that set is ticked — on this phone, with or without
+   * signal — so the box fills in then, unless you have already typed in it.
+   */
+  const [typedWeight, setTypedWeight] = useState(false)
+  useEffect(() => {
+    if (!done && !typedWeight && prescribed.weight) setWeight(String(prescribed.weight))
+  }, [prescribed.weight, done, typedWeight])
 
   const ticked = Boolean(done)
   const label = setLabel(kind, setNumber)
@@ -369,7 +385,10 @@ export function SetRow({
           }
           className="h-11 w-full sm:h-9"
           value={weight}
-          onChange={(e) => setWeight(e.target.value)}
+          onChange={(e) => {
+            setTypedWeight(true)
+            setWeight(e.target.value)
+          }}
         />
       )}
 
@@ -407,6 +426,15 @@ export function SetRow({
       >
         <Check className="size-5" />
       </button>
+
+      {(target || rangeHint) && !ticked && (
+        <span
+          data-testid={`set-hint-${label}`}
+          className={`col-span-5 ${onDelete ? "sm:col-span-6" : ""} -mt-1 pl-12 text-xs text-muted-foreground`}
+        >
+          {[rangeHint, target].filter(Boolean).join(" · ")}
+        </span>
+      )}
 
       {boundsMessage && !ticked && (
         <span className={`col-span-5 ${onDelete ? "sm:col-span-6" : ""} text-xs text-amber-500`}>{boundsMessage}</span>

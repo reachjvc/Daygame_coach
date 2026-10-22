@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { Menu, LogOut } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
+import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES, isActive } from "@/components/navTabs"
 import { isUnder } from "@/src/shared/routes"
@@ -94,8 +95,15 @@ export function MobileTabBar() {
         {/* NO onClick HERE. Closing the sheet unmounts this form before the
             browser submits it, so Log Out did nothing at all — you tapped it,
             the menu slid away, and you were still signed in. Signing out
-            redirects to the front page, which takes the sheet with it. */}
-        <form action={signOut}>
+            redirects to the front page, which takes the sheet with it.
+            What this phone kept for opening pages with no signal goes first:
+            the server action alone never reaches it (offlineCopies.ts). */}
+        <form
+          action={async () => {
+            await forgetOfflineCopies()
+            await signOut()
+          }}
+        >
           <SheetRow type="submit" icon={LogOut} testId="more-logout-button">
             Log Out
           </SheetRow>

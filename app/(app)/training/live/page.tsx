@@ -142,6 +142,7 @@ export default async function LiveWorkoutPage() {
   return (
     <LiveWorkoutScreen
       initial={live}
+      renderedAt={Date.now()}
       prescription={prescription}
       programName={programName}
       unit={unit}

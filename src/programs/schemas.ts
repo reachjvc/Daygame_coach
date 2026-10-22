@@ -408,6 +408,10 @@ export const AdjustWorkoutSchema = z.object({
     .max(40)
     .optional(),
   order: z.array(z.string().min(1).max(80)).max(60).optional(),
+  /** The lift picked for a slot that offers a choice, by lift id. */
+  chosen: z.record(z.string().min(1).max(100), z.string().trim().min(1).max(120)).optional(),
+  /** The option picked for a set group, by lift id. */
+  options: z.record(z.string().min(1).max(100), z.number().int().min(0).max(9)).optional(),
   notes: z.string().max(1000).nullable().optional(),
   rpe: RpeSchema.nullable().optional(),
 })

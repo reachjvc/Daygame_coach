@@ -846,7 +846,15 @@ export async function resetEnrollment(userId: string, id: string): Promise<Progr
   const supabase = await createServerSupabaseClient()
   const enr = await getEnrollmentById(userId, id)
   if (!enr) throw new Error("Enrollment not found")
+  /**
+   * A PROGRAM WHOSE WEEKS RUN BY THE CALENDAR starts again from today: its
+   * week is worked out from its first day, so rewinding the cursor alone
+   * would leave a finished twelve-week program finished.
+   */
+  const byCalendar = enr.spec ? readSpec(enr.spec).calendar.weekCounting === "calendar" : false
+  const restartOn = byCalendar ? getTodayInTimezone(await getUserTimezone(userId)) : null
   const { data, error } = await saveProgramState(supabase, id, {
+    ...(restartOn ? { started_on: restartOn } : {}),
     cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
     // RECORDED, so a later correction does not undo it. Replay folds history
     // over the seed, and a reset that leaves no trace is simply forgotten the

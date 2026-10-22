@@ -767,6 +767,11 @@ export interface SessionPrescription {
   todayWeekday?: number
   /** The program's length in weeks, when it has one ("Week 3 of 12"). */
   weeksTotal?: number
+  /**
+   * The program's own rounding step, when it states one — so the phone rounds a
+   * back-off range exactly as the server would (`deriveFromEarlierSets`).
+   */
+  rounding?: { stepKg?: number; stepLb?: number; mode?: "nearest" | "down" }
   /** The phase this week is in ("Base", "Peak"), when the program names phases. */
   phase?: string
   deloadWeek?: boolean
@@ -950,6 +955,14 @@ export interface WorkoutAdjustments {
    * another.
    */
   blocksDone?: number[]
+  /**
+   * THE LIFT PICKED FOR A SLOT THAT OFFERS A CHOICE — "back or front squat" —
+   * by the lift's id. Its sets stay the slot's own (same id, same numbers);
+   * only the name they are logged under is the one picked.
+   */
+  chosen?: Record<string, string>
+  /** Which of a set group's options was picked ("10 × 3" of "3 × 10 … 10 × 3"), by lift id. */
+  options?: Record<string, number>
 }
 
 /** A stored set, as the one workouts table holds it. */

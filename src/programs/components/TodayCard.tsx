@@ -22,7 +22,8 @@ import { useRouter } from "next/navigation"
 import { Loader2, MoreVertical, Play } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { describeEnduranceBlock, describeSets, openWorkoutInvitation } from "../programsService"
+import { describeEnduranceBlock, openWorkoutInvitation } from "../programsService"
+import { describeLift } from "../liveFormat"
 import { TRAINING_CARD, TRAINING_CARD_BODY, CHIP_ON } from "./trainingStyles"
 import { UNIT_CONFIG, WEEKDAY_SHORT } from "../config"
 import { startWorkoutRequest } from "../hooks/useLiveWorkout"
@@ -343,7 +344,7 @@ export function TodayCard({
             <li key={ex.exerciseId} className="flex items-baseline justify-between gap-3">
               <span className="min-w-0 truncate">{ex.name}</span>
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                {describeSets(ex, unitLabel)}
+                {describeLift(ex, unitLabel)}
               </span>
             </li>
           ))}

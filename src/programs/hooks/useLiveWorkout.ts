@@ -31,9 +31,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { LiveWorkout, LiveWorkoutSet, WorkoutSummary } from "../types"
 import { toKg } from "@/src/shared/weight"
+import { ROUTES } from "@/src/shared/routes"
+import { LIVE_COPY_KEY, LIVE_REST_KEY } from "@/src/shared/offlineCopies"
 
 const QUEUE_KEY = "live-workout-queue-v1"
-const REST_KEY = "live-workout-rest-v1"
+// Named where signing out forgets them (src/shared/offlineCopies.ts).
+const REST_KEY = LIVE_REST_KEY
+const COPY_KEY = LIVE_COPY_KEY
 
 /** A set the browser has shown but the server has not confirmed. */
 export interface QueuedSet {
@@ -78,6 +82,13 @@ const slotOf = (s: {
   side: string | null
 }) => `${s.exerciseId ?? s.exercise}|${s.kind}|${s.setNumber}|${s.side ?? ""}`
 
+/**
+ * A queued set's identity ACROSS workouts: the slot alone repeats from one
+ * workout to the next ("squat, working, set 1"), so removing by slot alone
+ * would take another workout's waiting set with it.
+ */
+const queueKey = (q: QueuedSet) => `${q.workoutId}|${slotOf(q)}`
+
 function readQueue(): QueuedSet[] {
   if (typeof window === "undefined") return []
   try {
@@ -89,6 +100,142 @@ function readQueue(): QueuedSet[] {
     // screen with it.
     return []
   }
+}
+
+/**
+ * THE LAST COPY OF THE WORKOUT THE SERVER CONFIRMED, kept on this phone, and
+ * when this phone received it.
+ *
+ * A page opened with no connection is the copy the service worker stored
+ * (`public/sw.js`) — the page as it was the last time it was LOADED. Sets
+ * ticked after that, with signal, reached the server and left the queue, so a
+ * reload in a basement showed them undone: tick five sets upstairs, walk down
+ * to the rack, the phone reloads, and the five are gone from the screen (and a
+ * top set among them no longer fills its back-offs). Every server answer is
+ * kept here, and a page older than it gives way to it (`newerCopyOf`).
+ *
+ * Only server answers, never the optimistic screen: a set on the wire when
+ * the page reloaded may not have landed, and must not be shown as saved.
+ */
+export interface KeptCopy {
+  workout: LiveWorkout
+  /**
+   * The SERVER's time of the answer (its `Date` header), so it is compared
+   * with the page's `renderedAt` on one clock. It was the phone's: a phone
+   * running minutes fast then preferred an older copy over a fresh page, with
+   * signal, and showed a set removed on another device as still there.
+   */
+  at: number
+}
+
+/**
+ * The server's clock on an answer, from its `Date` header — null when it has
+ * none. The header names a whole second, so this is the END of that second:
+ * a set ticked within a second of the page being drawn is in the answer and
+ * not in the page, and a tie has to go to the answer. Measured on a
+ * production build: reload, tick at once, and the answer's header named the
+ * same second as the page — which then won, and the set was gone offline.
+ */
+export function serverTimeOf(res: Response): number | null {
+  const header = res.headers?.get?.("date")
+  const at = header ? Date.parse(header) : Number.NaN
+  return Number.isFinite(at) ? at + 999 : null
+}
+
+function readCopy(): KeptCopy | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = window.localStorage.getItem(COPY_KEY)
+    const parsed = raw ? (JSON.parse(raw) as KeptCopy) : null
+    return parsed && typeof parsed.at === "number" && parsed.workout?.id ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeCopy(workout: LiveWorkout | null, at?: number | null): void {
+  // An answer with no server time cannot be placed against a page, so the
+  // copy already kept stands.
+  if (workout && at == null) return
+  try {
+    if (workout) window.localStorage.setItem(COPY_KEY, JSON.stringify({ workout, at }))
+    else window.localStorage.removeItem(COPY_KEY)
+  } catch {
+    // Storage full or blocked: an offline reload shows the stored page as it
+    // was, which is what it did before this copy existed.
+  }
+  if (!workout) forgetStoredPage()
+}
+
+/**
+ * THE STORED PAGE GOES WITH THE WORKOUT.
+ *
+ * The service worker keeps `/training/live` so it opens with no signal. Once
+ * the workout is finished or thrown away, that stored page is of a workout
+ * that is over: opened later in a basement it would offer it as still open,
+ * and every set ticked on it would be lost when the signal came back. The
+ * worker drops it too, the next time the server answers the page with a
+ * redirect; this drops it now, on the phone that ended the workout.
+ */
+function forgetStoredPage(): void {
+  if (typeof caches === "undefined") return
+  void caches
+    .keys()
+    .then((keys) => Promise.all(keys.map((key) => caches.open(key).then((cache) => cache.delete(ROUTES.liveWorkout)))))
+    .catch(() => {
+      // Nothing stored, or storage blocked: nothing to forget.
+    })
+}
+
+/**
+ * Which copy of the workout to start from: the page's, unless this phone
+ * holds a copy of the SAME workout received after the page was drawn.
+ *
+ * Both times are the server's: when it drew the page, and when it sent the
+ * answer that was kept (the end of the second its `Date` header names, see
+ * `serverTimeOf`).
+ */
+export function newerCopyOf(page: LiveWorkout, renderedAt: number | undefined, kept: KeptCopy | null): LiveWorkout {
+  if (!kept || renderedAt == null || kept.workout.id !== page.id) return page
+  return kept.at > renderedAt ? kept.workout : page
+}
+
+/**
+ * THE WORKOUT WITH THE SETS STILL WAITING FOR SIGNAL, put back on screen.
+ *
+ * A page opened with no connection comes from the copy the phone kept
+ * (`public/sw.js`, then `newerCopyOf`), which is the workout as the server
+ * last answered it — without the sets ticked since, which are still in this
+ * phone's queue. Without this
+ * they vanished from the screen on a reload in a basement gym, and a top set
+ * ticked there could not fill its back-offs. Each comes back as the same
+ * pending set a tick draws, so it is replaced by the server's copy once it
+ * lands.
+ */
+export function withQueuedSets(workout: LiveWorkout, queue: readonly QueuedSet[]): LiveWorkout {
+  const mine = queue.filter((q) => q.workoutId === workout.id)
+  if (mine.length === 0) return workout
+  const queuedSlots = new Set(mine.map(slotOf))
+  const kept = workout.sets.filter((s) => !queuedSlots.has(slotOf(s)))
+  const pending: LiveWorkoutSet[] = mine.map((item) => ({
+    id: `pending:${slotOf(item)}`,
+    exerciseId: item.exerciseId,
+    exercise: item.exercise,
+    weight: item.weight,
+    weightKg: toKg(item.weight, workout.unit),
+    reps: item.reps,
+    setNumber: item.setNumber,
+    kind: item.kind,
+    prescribedIndex: null,
+    // A queue written by an older build may lack the instant; the set is
+    // still real, so it is shown rather than taking the screen down with it.
+    completedAt: new Date(Number.isFinite(item.at) ? item.at : Date.now()).toISOString(),
+    rpe: item.rpe ?? null,
+    side: item.side,
+    slotId: item.slotId ?? null,
+    setGroupId: item.setGroupId ?? null,
+  }))
+  return { ...workout, sets: [...kept, ...pending].sort((a, b) => a.setNumber - b.setNumber) }
 }
 
 function writeQueue(items: QueuedSet[]): void {
@@ -206,8 +353,21 @@ function retryableRefusalMessage(status: number): string | null {
   return null
 }
 
-export function useLiveWorkout(initial: LiveWorkout | null) {
+export function useLiveWorkout(initial: LiveWorkout | null, { renderedAt }: { renderedAt?: number } = {}) {
   const [workout, setWorkout] = useState<LiveWorkout | null>(initial)
+  /**
+   * ONLY THIS WORKOUT'S WAITING SETS ARE THIS SCREEN'S BUSINESS.
+   *
+   * The queue is one list per browser. It held, and sent, every workout's
+   * sets: one left from a workout thrown away on another device — or from the
+   * last person signed in on this phone, whose waiting sets are kept at sign-out
+   * (src/shared/offlineCopies.ts) — came back "workout gone", which cleared
+   * THIS workout off the screen, named the other workout's lifts, and kept
+   * Finish locked while it waited. Another workout's sets now stay where they
+   * are, unsent and untouched, for that workout's own screen.
+   */
+  const mineId = initial?.id ?? null
+  const mine = useCallback((q: QueuedSet) => q.workoutId === mineId, [mineId])
   const [queue, setQueue] = useState<QueuedSet[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -327,12 +487,13 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     setVanished(true)
     setError(`${message}${lost}`)
     setWorkout(null)
+    writeCopy(null)
     const left = readQueue().filter((q) => q.workoutId !== workoutId)
     writeQueue(left)
-    setQueue(left)
+    setQueue(left.filter(mine))
     writeRest(null)
     setRestState(null)
-  }, [])
+  }, [mine])
 
   /**
    * Is this refusal "the workout is gone"? The routes send `code`, because
@@ -341,7 +502,17 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
   const goneFrom = (body: { code?: string } | null): boolean => body?.code === "workout_gone"
 
   useEffect(() => {
-    setQueue(readQueue())
+    const queued = readQueue().filter(mine)
+    setQueue(queued)
+    // The page's workout, or this phone's newer copy of it — and the page's
+    // becomes the copy when it is the newer one.
+    const base = initial ? newerCopyOf(initial, renderedAt, readCopy()) : null
+    if (base && base === initial) writeCopy(initial, renderedAt)
+    // After hydration, never in the first render: the server drew the page
+    // without this phone's queue, and the two must match until React is up.
+    setWorkout((prev) => (prev ? withQueuedSets(prev === initial && base ? base : prev, queued) : prev))
+    // Mount only: `initial` is the page's copy and does not change after it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /**
@@ -368,10 +539,11 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
    * workout is older than what the screen already shows. It subsumes the old
    * check, because `applied` can never exceed `issued`.
    */
-  const applyServer = useCallback((seq: number, next: LiveWorkout | null) => {
+  const applyServer = useCallback((seq: number, next: LiveWorkout | null, at?: number | null) => {
     if (seq < issued.current) return
     applied.current = seq
     setWorkout(next)
+    writeCopy(next, at)
   }, [])
 
   /**
@@ -388,7 +560,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
    */
   const flush = useCallback(async () => {
     if (flushing.current) return
-    const pending = readQueue()
+    const pending = readQueue().filter(mine)
     if (pending.length === 0) return
     flushing.current = true
     /** Slots this pass got onto the server; only these are removed. */
@@ -397,11 +569,20 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
       const left = [...pending].sort((a, b) => a.at - b.at)
       while (left.length > 0) {
         const item = left[0]
-        const res = await fetch(`/api/workouts/${item.workoutId}/sets`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item),
-        })
+        let res: Response
+        try {
+          res = await fetch(`/api/workouts/${item.workoutId}/sets`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(item),
+          })
+        } catch {
+          // No signal. What was sent before this is taken off the queue below
+          // and the rest waits for the next pass; the footer already says the
+          // sets are not saved yet. Thrown, this escaped as an unhandled error
+          // every twenty seconds on a page opened with no signal.
+          break
+        }
         if (!res.ok) {
           // A 4xx will never succeed on a retry, so it is dropped and said out
           // loud rather than jamming the queue for ever.
@@ -435,17 +616,17 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         }
         left.shift()
         sent.add(slotOf(item))
-        applyServer(++issued.current, (await res.json()) as LiveWorkout)
+        applyServer(++issued.current, (await res.json()) as LiveWorkout, serverTimeOf(res))
       }
       // Re-read: a tick that failed while this was running has since added
       // itself, and it must survive.
-      const remaining = readQueue().filter((q) => !sent.has(slotOf(q)))
+      const remaining = readQueue().filter((q) => !(mine(q) && sent.has(slotOf(q))))
       writeQueue(remaining)
-      setQueue(remaining)
+      setQueue(remaining.filter(mine))
     } finally {
       flushing.current = false
     }
-  }, [applyServer])
+  }, [applyServer, mine])
 
   useEffect(() => {
     void flush()
@@ -562,19 +743,19 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           if (why) setError(why)
           throw new Error(String(res.status))
         }
-        applyServer(seq, (await res.json()) as LiveWorkout)
+        applyServer(seq, (await res.json()) as LiveWorkout, serverTimeOf(res))
         setError(null)
         return "saved"
       } catch {
-        const next = [...readQueue().filter((q) => slotOf(q) !== slotOf(item)), item]
+        const next = [...readQueue().filter((q) => queueKey(q) !== queueKey(item)), item]
         writeQueue(next)
-        setQueue(next)
+        setQueue(next.filter(mine))
         return "queued"
       } finally {
         bumpInFlight(-1)
       }
     },
-    [workout, bumpInFlight, applyServer]
+    [workout, bumpInFlight, applyServer, mine]
   )
 
   const removeSet = useCallback(
@@ -594,16 +775,16 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         setWorkout((prev) =>
           prev ? { ...prev, sets: prev.sets.filter((s) => s.id !== setId) } : prev
         )
-        const left = readQueue().filter((q) => slotOf(q) !== slot)
+        const left = readQueue().filter((q) => !(mine(q) && slotOf(q) === slot))
         writeQueue(left)
-        setQueue(left)
+        setQueue(left.filter(mine))
         return
       }
       const seq = ++issued.current
       try {
         const res = await fetch(`/api/workouts/${workout.id}/sets/${setId}`, { method: "DELETE" })
         if (res.ok) {
-          applyServer(seq, (await res.json()) as LiveWorkout)
+          applyServer(seq, (await res.json()) as LiveWorkout, serverTimeOf(res))
           return
         }
         const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
@@ -616,7 +797,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         setError("Could not reach the server, so that set is still saved.")
       }
     },
-    [workout, applyServer]
+    [workout, applyServer, mine]
   )
 
   /**
@@ -653,7 +834,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           body: JSON.stringify(patch),
         })
         if (res.ok) {
-          applyServer(seq, (await res.json()) as LiveWorkout)
+          applyServer(seq, (await res.json()) as LiveWorkout, serverTimeOf(res))
           setError(null)
           return
         }
@@ -721,7 +902,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
           body: JSON.stringify(patch),
         })
         if (res.ok) {
-          applyServer(seq, (await res.json()) as LiveWorkout)
+          applyServer(seq, (await res.json()) as LiveWorkout, serverTimeOf(res))
           return
         }
         const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null
@@ -772,6 +953,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
 
       clearStartKey(finished.enrollmentId)
       setWorkout(null)
+      writeCopy(null)
       try {
         const res = await fetch(`/api/workouts/${finished.id}/summary`)
         if (res.ok) return (await res.json()) as WorkoutSummary
@@ -825,7 +1007,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
        * screen happens to call this: finishing early does not just misreport
        * the workout, it feeds the progression engine a lift it never saw.
        */
-      if (inFlight.current > 0 || readQueue().length > 0) {
+      if (inFlight.current > 0 || readQueue().some(mine)) {
         setError("Hold on — the last set is still saving.")
         return null
       }
@@ -864,6 +1046,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         writeRest(null)
         setRestState(null)
         setWorkout(null)
+        writeCopy(null)
         return body as WorkoutSummary
       } catch {
         /**
@@ -882,7 +1065,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
         setBusy(false)
       }
     },
-    [workout, checkWhetherItLanded]
+    [workout, checkWhetherItLanded, mine]
   )
 
   const discard = useCallback(async () => {
@@ -947,7 +1130,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     // the wire and `applyServer` lands afterwards, putting the workout back on
     // a screen that has already cleared it.
     applied.current = ++issued.current
-    writeQueue([])
+    writeQueue(readQueue().filter((q) => q.workoutId !== workout.id))
     setQueue([])
     // The clock goes with the workout. A rest bar counting down over the
     // receipt of a workout you have just finished is a control with nothing
@@ -955,6 +1138,7 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
     writeRest(null)
     setRestState(null)
     setWorkout(null)
+    writeCopy(null)
   }, [workout])
 
   /** Begin resting after a set. Replaces any clock already running. */

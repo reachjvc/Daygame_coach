@@ -478,7 +478,9 @@ export function ProgramsApp({
 function weekdayLabels(enrollment: ProgramEnrollment): Record<number, string | undefined> {
   const program = getProgram(enrollment.program_id)
   if (!program) return {}
-  const schedule = effectiveProgram(program, enrollment.customSchedule).schedule
+  // Through the spec when the program is stored only in the new format, whose
+  // weekdays the catalogue shell knows nothing about.
+  const schedule = definitionOf(effectiveProgram(program, enrollment.customSchedule), enrollment).schedule
   if (schedule.kind !== "linear_rotation" && schedule.kind !== "weekly_waved") return {}
   const out: Record<number, string | undefined> = {}
   for (const d of schedule.days) if (d.weekday != null) out[d.weekday] = d.label
@@ -514,6 +516,7 @@ function ActiveProgram({
   onExit: () => void
 }) {
   const { detail, error, refresh } = useEnrollment(enrollmentId, initialDetail)
+  const router = useRouter()
   /** A session the user picked instead of the one the app offered. */
   const [pickedDayId, setPickedDayId] = useState<string | null>(null)
   /** Which weekday's assignment is open, 1 = Monday. */
@@ -692,7 +695,13 @@ function ActiveProgram({
               return
             }
             if (choice === "archive") onExit()
-            else refresh()
+            else {
+              refresh()
+              // Today's card ("finished", "today", …) is worked out on the
+              // server. Without this it stayed "finished" after Run it again,
+              // with no Start button, until the page was reloaded.
+              router.refresh()
+            }
           }}
         />
         {finishFailed && (

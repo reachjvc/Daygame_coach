@@ -152,7 +152,8 @@ describe("the menu behind the set number", () => {
     await user.click(screen.getByTestId("set-menu-1"))
     await user.click(screen.getByTestId("set-kind-warmup"))
 
-    // The effort, said before the set exists. One step right of 6 is 7.
+    // The effort, said before the set exists. The slider moves in half steps
+    // (Plans/program-builder.md, Phase 5.3): one step right of 6 is 6.5.
     await user.click(screen.getByTestId("set-menu-W1"))
     const slider = screen.getByRole("slider")
     slider.focus()
@@ -178,7 +179,7 @@ describe("the menu behind the set number", () => {
      * signal is written when the signal comes back, and a second request to
      * attach the effort would have nothing to attach it to until then.
      */
-    expect(sent[0]).toMatchObject({ kind: "warmup", setNumber: 1, weight: 60, rpe: 7 })
+    expect(sent[0]).toMatchObject({ kind: "warmup", setNumber: 1, weight: 60, rpe: 6.5 })
 
     // And now the set exists, the working row the program asked for is back.
     await waitFor(() => expect(screen.getByTestId("set-row-1")).toBeTruthy())

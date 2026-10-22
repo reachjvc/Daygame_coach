@@ -16,6 +16,7 @@ import { call } from "./call"
 import * as enrollments from "@/app/api/programs/enrollments/route"
 import * as enrollment from "@/app/api/programs/enrollments/[id]/route"
 import * as schedule from "@/app/api/programs/enrollments/[id]/schedule/route"
+import * as action from "@/app/api/programs/enrollments/[id]/action/route"
 import * as workouts from "@/app/api/workouts/route"
 import * as sets from "@/app/api/workouts/[id]/sets/route"
 import * as finish from "@/app/api/workouts/[id]/finish/route"
@@ -141,6 +142,23 @@ describe("a program written in the format: Starscream", () => {
     const [state] = await asOwner((q) => q(`SELECT exercise_state -> 'mon_bench' ->> 'e1rm' AS e1rm FROM program_enrollments WHERE id = $1`, [id]))
     // 4 reps at RPE 8.5 is 85.0% of a max on the RTS chart: 100 / 0.85.
     expect(Number(state.e1rm)).toBeCloseTo(117.6, 1)
+  })
+
+  it("a finished calendar program run again starts week 1 today, not just the counter", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2027-01-21T10:00:00Z")) // Thursday of week 14 from 19 Oct
+    const user = await newUser("starscream-again")
+    actAs(user)
+    const id = await startProgram({ programId: "custom", level: "intermediate", unitSystem: "kg", spec: starscream.spec, startedOn: "2026-10-19" })
+    expect((await call<{ prescription: { isComplete?: boolean } }>(enrollment.GET, `/api/programs/enrollments/${id}`, { params: { id } })).body.prescription.isComplete).toBe(true)
+
+    const again = await call(action.POST, `/api/programs/enrollments/${id}/action`, { method: "POST", params: { id }, body: { action: "reset" } })
+    expect(again.status, JSON.stringify(again.body)).toBe(200)
+    const after = (await detailOf(id)).prescription as Detail["prescription"] & { isComplete?: boolean }
+    expect(after).toMatchObject({ week: 1, dayId: "thu" })
+    expect(after.isComplete).toBeUndefined()
+    const [row] = await asOwner((q) => q(`SELECT started_on::text AS on FROM program_enrollments WHERE id = $1`, [id]))
+    expect(row.on).toBe("2027-01-21")
   })
 
   it("a program in the format is not handed to the old editor, which would flatten its rules", async () => {
