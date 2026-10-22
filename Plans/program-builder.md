@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Not started. Phase 0 is next.
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phase 0 done 2026-10-22 (session daygame-coach-fc); Phase 1 is next.
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -94,16 +94,22 @@ days of AI work, not hours. Your sheet keeps working in the meantime, so start o
 - The gym lives at `/training`: Today, History, Progress, a set-by-set live workout screen with a rest clock
   and plate maths, 13 built-in programs, and a text box (`?view=build`) for typing a simple week.
 - Program rules the engine knows: fixed sets×reps, an all-out last set, 5/3/1-style percentage weeks, and
-  rep ranges. Progression: none, add weight, percentage cycles, double progression.
+  rep ranges. Progression: none, add weight, percentage cycles, double progression. *(Corrected
+  2026-10-22: it also knows calisthenics ladders — move to a harder variation at 8 reps — and timed holds
+  that grow, used by Bodyweight Foundations and the splits program; running plans have their own engine.)*
 - **What nobody can do:** set-count ranges ("3–5 sets"), RPE targets, half-step RPE (8.5 is refused by the
   database), weight from a set done earlier the same day, different rules in different weeks (except 5/3/1's
   table), weeks that follow the calendar, a program that ends, choose-on-the-day lifts ("back or front
   squat"), pyramids, rules on failure other than "drop 10%".
-- **Editors:** the program editor changes only day names and order, and per lift its sets, reps, range,
+- **Editors:** the program editor changes day names and order, and per lift its sets, reps, range,
   starting weight, swap, move and remove. Progression rules, supersets, notes, weeks and rest cannot be
-  edited anywhere. There is no way to build a program from scratch except the text box.
+  edited anywhere. There is no way to build a program from scratch except the text box. *(Corrected
+  2026-10-22: the editor can also add and remove days and lifts and pin days to weekdays; a rest time
+  changed on the live screen can be kept into the program; supersets can be typed in the text box with
+  "+". Progression rules, notes and weeks still cannot be edited anywhere.)*
 - **The text box misreads silently.** "Bench Press 3-5x5-10" is saved as a lift called "Bench Press 3"
   doing 5×5-10; "Dips 5*10" is saved as a lift called "Dips 5*10" at the default 3×8. No warning.
+  *(Fixed 2026-10-22 in Phase 0: the first is refused with a sentence, the second reads as 5 × 10.)*
 - **A real bug:** your bar and smallest-plate settings never reach the weight calculation. Every
   prescription uses a 20 kg bar and 1.25 kg plates whatever you set. Fixed in Phase 2.
 - **Live data is tiny:** 13 started programs (12 belong to test accounts), 0 edited programs, 2 saved weeks
@@ -174,6 +180,13 @@ on a phone, and progression locked behind a paywall.
   weights and week counter the app calculates. `docs/plans/training-three-doors.md` says this was locked
   in September; it is not. The damage is limited to a user's own numbers (the database still refuses
   writing another user's rows). Phase 3 locks it.
+- **What Phase 3's lock does not close (found 2026-10-22).** The app works out the new numbers on its own
+  server and then hands them to six database functions (finishing a workout, correcting or deleting one,
+  starting or resuming a program). A signed-in user can call those functions directly with numbers they
+  made up. The lock stops the simple route (writing the table); this one stays open. It is limited to
+  the user's own program, exactly like today. Closing it means letting only the server call those
+  functions, with a key ordinary users never hold — a bigger change than this plan, so it is recorded for
+  the Phase 10 security review rather than done here.
 - **Programs written by users are data from strangers.** Every program is checked against the format on
   the server, size-limited, and never run as code. There is no scripting language, so there is nothing to
   inject. Program text is shown as text, never as page markup.
@@ -195,7 +208,7 @@ Each was attempted on 2026-10-18. The result is what happened.
 | B-DEADLIFT | Your real deadlift numbers | Read your sheet: deadlift max 70 kg (Master C6), but week 1's heavy deadlift top set is typed as 110 kg (H12), so the sheet prescribes backoffs of 77.5–87.5 kg, above your listed max. One number is wrong. | Your starting values in Phase 9 only. Not the build. | Tell me which. Until then, clear H12 in the sheet and type the top set you actually lift. |
 | B-OLD-WORKOUTS | Delete the two September workouts on your account that you did not do | Read only: 4 Sep (20 sets) and 6 Sep (18 sets), both with the pre-filled "45 min, effort 3", both on Upper/Lower. Backed up the Upper/Lower row today; these two not yet deleted. | Nothing; only your History and bests stay polluted | Q18: delete, with a backup first |
 | B-OWNER-ACCOUNT | Start Starscream on your account without your password | Probe in a rolled-back transaction: the database can act as your account (`auth.uid()` = your id, 1 program row visible), so the app's own `start_enrollment` function can be called as you. | Nothing | Phase 9 does it this way; no password is ever needed or asked for |
-| B-LIVE-DB | Apply schema changes to the live database | `supabase migration list --linked`: all 61 migrations in the repo are applied to production; none pending, so a push applies only this plan's. You authorised schema changes on 2026-10-18. | Phase 3 | Check the list again right before each push; another session may have added one |
+| B-LIVE-DB | Apply schema changes to the live database | `supabase migration list --linked`: all 61 (62 on 2026-10-22) migrations in the repo are applied to production; none pending, so a push applies only this plan's. You authorised schema changes on 2026-10-18. | Phase 3 | Check the list again right before each push; another session may have added one |
 | B-DESIGN | Your eyes on the builder before it is built | Cannot be attempted in advance | The start of Phase 6 | Phase 6 opens with a clickable mock-up page you mark Yes/Maybe/No per screen, like the naming board; building waits for your marks, all other phases continue meanwhile |
 | B-PEER-TREE | Another session's unfinished change turns the pre-commit tests red | ListAgents: one peer, `daygame-coach-63`, idle | Committing, while it lasts | Message that session with the failing test names; continue with work that needs no commit; never edit its files |
 | B-CI | Reading CI results | `gh auth status`: logged in as reachjvc | Nothing | — |
@@ -334,6 +347,103 @@ done.
 4. Fix the text box's silent misreads now (they mislead users today): anything the parser cannot read
    becomes an error on that line. Tests for each misread found on 2026-10-18.
 **Acceptance:** golden files committed; text-box tests green; Part 1 corrected where needed.
+
+### Phase 0 evidence (2026-10-22, session daygame-coach-fc)
+
+**0.1 Part 1 checked against the code and the live database.** Confirmed: 13 built-ins
+(`ALL_PROGRAMS`, `src/programs/data/catalog.ts`); the engine's rule list; RPE is whole numbers only
+(`workout_sets.rpe` and `workout_logs.rpe` are `smallint` with `CHECK 1–10`; every request schema in
+`src/programs/schemas.ts` is `z.number().int()`); both text-box misreads (reproduced before the fix); the
+plate bug (`toDomain` builds `plates` from the enrollment's own bar override only,
+`src/db/programRepo.ts:93`; the account's bar and plate reach only the plate-maths hint,
+`src/db/workoutRepo.ts:1556`, never `computePrescription`); live counts (13 enrollments, 1 active, 0 with
+a custom schedule, 2 drafts named "12" and "2", 146 workouts; the owner has 2 workouts, 4 Sep 20 sets and
+6 Sep 18 sets, both "45 min, effort 3", on Upper/Lower; owner settings kg, bar 20, plate 1.25,
+Europe/Copenhagen; 0 sets and 0 workouts carry an RPE, so widening the column moves no data); the security
+gap (`authenticated` holds UPDATE on all 15 columns of `program_enrollments`; the update policy is
+`auth.uid() = user_id`). Corrected in Part 1: the engine's calisthenics and hold rules, what the editor
+can do, the migration count, and one new security finding (the six program write functions take the
+calculated numbers as arguments; see "Security").
+
+**Blast radius for Phase 4** — every reader of the old engine or the old program shape:
+- Engine calls: `src/db/programRepo.ts` (computePrescription ×6, applyLog ×2, replayEnrollment ×2,
+  seedEnrollment, repairUneventfulEdit), `src/db/workoutRepo.ts` (computePrescription ×5, applyLog),
+  `src/programs/components/ProgramsApp.tsx` (computePrescription), and `programsService.ts` itself.
+- Old program shape (`ProgramSchedule`, `LoadExercise`, `DayTemplate`, `customSchedule`):
+  `app/(app)/training/live/page.tsx`, `app/api/programs/drafts/route.ts`, `…/drafts/[id]/route.ts`,
+  `…/enrollments/[id]/schedule/route.ts`, `src/db/{programDraftRepo,programRepo,trainingDoorRepo,workoutRepo}.ts`,
+  `src/programs/{builder,customize,programText,programWeekService,programsService,schemas,types}.ts`,
+  `src/programs/hooks/useEnrollment.ts`, the eight program data files and `customProgram.ts`, and the
+  components `BuildYourWeek, DayAssignment, EditActiveProgram, LogPastWorkoutDialog, ProgramDetail,
+  ProgramEditor, ProgramSheet, ProgramsApp, ProgressionView, TrainingScreen`.
+- Prescription shape (`SessionPrescription`, `PrescribedExercise`, `PrescribedSet`):
+  `app/(app)/training/live/page.tsx`, `src/db/programRepo.ts`, `SessionNotices`, `TodayCard`,
+  `live/LiftMenu`, `live/LiveWorkoutScreen`.
+- Outside the gym slice, importing from it: `src/goals/components/{HealthTrackingPanel,
+  new-goals/GoalsConfigStep, new-goals/NewGoalsFlow, north-star/BuildBoard, north-star/NorthStarFlow,
+  north-star/WorkoutPrograms}.tsx`, `src/health/{healthService,schemas}.ts`, `src/db/healthRepo.ts`,
+  `src/settings/components/{SettingsPage,TrainingSettingsCard}.tsx`,
+  `src/tracking/components/ProgressDashboard.tsx`, `app/api/health/workout/route.ts`,
+  `app/test/programs/page.tsx`.
+
+**0.2 Golden snapshots.** `tests/fixtures/programs/golden-v1/` — 13 files, 2.1 MB, written once by
+`GOLDEN_WRITE=1 npx vitest run tests/unit/programs/golden` and never rewritten. The runner
+(`tests/unit/programs/golden/goldenRun.ts`) takes the engine as a parameter (`GoldenEngine`); today's
+engine sits behind it in `legacyEngine.ts`, so Phase 2 plugs the new one in beside it. Eight scripted
+lifters, 30 sessions each: the plan's five (every rep, one miss, three misses in a row, all-out sets high
+and low) plus a session taken 10% lighter, a lift skipped, and every rep in pounds. Running plans have
+nothing to vary and run "every rep" only. Each session keeps the prescription (day, cycle, week, every
+set's reps, range top, all-out flag, weight in the unit and in kg, notes, superset, rest, per side), every
+change with its sentence, and the state it changed; each run keeps its seed and final state and a replay
+of its whole history, which `golden.test.ts` checks rebuilds the same state (27 tests). A lifter whose
+run is identical to "every rep" is stored as `sameAs`. Spot checks: StrongLifts "three misses" deloads the
+squat 25 → 22.5 on its third miss; 5/3/1 "all-out low" cuts every training max at each cycle's end.
+
+**0.3 Live schema of the gym tables** (read only, `npx supabase db query --linked`, 2026-10-22):
+- `program_enrollments`: id uuid pk, user_id uuid → auth.users cascade, program_id text, level text
+  (beginner|intermediate|advanced), unit_system text (kg|lb), exercise_state jsonb `{}`, cursor jsonb,
+  is_active bool `true`, started_at timestamptz `now()`, created_at timestamptz `now()`, custom_schedule
+  jsonb null, initial_exercise_state jsonb null, replay_events jsonb `[]`, bar_weight_kg numeric(5,2) null
+  (0–50), label text null (1–60). Unique `(user_id, program_id) where is_active`. Trigger
+  `program_busy_while_workout_open` (before update → `refuse_to_pause_a_busy_program`). Policies: own row
+  for select, insert (check), update (using only), delete.
+- `workout_logs`: id, user_id, session_type (weights|cardio|mobility|yoga|running), duration_min int
+  (1–599), intensity smallint (1–5), logged_at, created_at, distance_km numeric(6,2) (0–1000), started_at,
+  ended_at, enrollment_id → program_enrollments set null, program_day_id text, program_cycle int (1–1000),
+  program_week int (1–52), adjustments jsonb `{}`, **rpe smallint (1–10)**, notes text (≤1000), client_key
+  text, progression_changes jsonb, personal_records jsonb. Checks `workout_logs_lifecycle`,
+  `logged_is_start`, `ended_after_start`, `program_context`. One live workout per user; unique
+  `(user_id, client_key)`. Trigger `workout_logs_enrollment_is_own_trg`. Policies: own row, all four.
+- `workout_sets`: id, log_id → workout_logs cascade, exercise text, weight_kg numeric(5,2) (0–999.99),
+  reps int (0–1000), set_number int (>0), notes, exercise_notes (≤500 each), exercise_id text, library_id
+  text, set_kind text `working` (warmup|working|amrap|backoff|drop), prescribed_index smallint,
+  completed_at timestamptz, **rpe smallint (1–10)**, side text (left|right). Unique slot `(log_id,
+  coalesce(exercise_id, exercise), set_kind, set_number, coalesce(side,''))`. Policies through the
+  owning log, all four.
+- `program_drafts`: id, user_id → auth.users cascade, name text (1–60, unique per user), discipline,
+  unit_system, schedule jsonb (object with a `days` array and `kind`), working_weights jsonb object,
+  source (built|catalog|saved_workout), source_program_id text (1–80), created_at, updated_at (trigger).
+- `profiles` (training columns): weight_unit text `kg`, bar_weight_kg numeric(5,2) `20`,
+  smallest_plate_kg numeric(5,2) `1.25`, timezone text `UTC`, timezone_source.
+- Grants: `anon` and `authenticated` hold select/insert/update/delete on all four tables (row security
+  decides). Functions, all SECURITY INVOKER and executable by `authenticated`: `start_enrollment(p_row,
+  p_displace)`, `end_enrollment(p_id)`, `resume_enrollment(p_id, p_displace)`,
+  `log_session_and_advance(p_workout, p_sets, p_exercise_state, p_cursor, p_expected_session_count)`,
+  `finish_program_workout(p_workout_id, p_ended_at, p_duration_min, p_intensity, p_rpe smallint, p_notes,
+  p_exercise_state, p_cursor, p_replay_events, p_expected_session_count, p_changes, p_records,
+  p_started_at, p_session_type, p_distance_km)`, `replace_sets_and_replay(p_log_id, p_sets,
+  p_enrollment_id, p_exercise_state, p_cursor, p_replay_events, p_expected_session_count)`,
+  `remove_session_and_replay(p_log_id, p_enrollment_id, p_exercise_state, p_cursor, p_replay_events,
+  p_expected_session_count)`; triggers `refuse_to_pause_a_busy_program`, `workout_logs_enrollment_is_own`.
+  The app also writes `program_enrollments` directly in four places (`src/db/programRepo.ts`: reset, the
+  schedule edit, the unit change, `persistState`), which Migration B has to route through functions.
+- `supabase migration list --linked`: 62 local, 62 remote, none pending.
+
+**0.4 The text box.** `src/programs/programText.ts`: `*` now reads as ×; a set range ("3-5x5-10") is
+refused with "a range of sets (3-5) cannot be written here yet — pick one number, like 5x5-10"; any digit,
+`@` or `%` left in a name after parsing (no library lift has one) is refused with "… could not be read".
+Tests: `tests/unit/programs/programText.test.ts` › "nothing the parser cannot read is saved as a lift"
+(both measured misreads, four stray-notation lines, and hyphenated names that must still read).
 
 ## Phase 1 — The program format
 **Depends on:** 0.

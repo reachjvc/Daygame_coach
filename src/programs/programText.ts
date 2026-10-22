@@ -75,7 +75,22 @@ export interface ParsedProgram {
  * The separator has to be an `x` or a `×` with digits either side, which is
  * what stops "Face Pull" being read as a set count.
  */
-const SETS_REPS = /(\d+)\s*[x×]\s*(\d+)(?:\s*[-–]\s*(\d+))?/i
+const SETS_REPS = /(\d+)\s*[x×*]\s*(\d+)(?:\s*[-–]\s*(\d+))?/i
+
+/**
+ * WHAT IS LEFT OF A NAME AFTER A NOTATION THE PARSER COULD NOT READ.
+ *
+ * Measured on 2026-10-18 (Plans/program-builder.md, Phase 0.4): "Bench Press
+ * 3-5x5-10" was saved as a lift called "Bench Press 3" doing 5×5-10, and
+ * "Dips 5*10" as a lift called "Dips 5*10" on the default 3×8, both with no
+ * problem reported. No lift in the library has a digit, an `@` or a `%` in its
+ * name, so a name still holding one of them is notation that was not read, and
+ * the line is refused rather than guessed at.
+ */
+const LEFTOVER_NOTATION = /\d|@|%/
+
+/** "3-5x…": a range of SETS, which a written week cannot hold yet. */
+const SET_RANGE = /(\d+)\s*[-–]\s*$/
 
 /** `@60`, `@ 60kg`, `@60 lb`, `@bw`. */
 const WEIGHT = /@\s*(bw|bodyweight|\d+(?:\.\d+)?)\s*(kg|lb|lbs)?/i
@@ -172,6 +187,12 @@ function parseLift(
       }
     }
     rest = rest.slice(0, at).trim()
+    const range = rest.match(SET_RANGE)
+    if (range) {
+      return {
+        error: `a range of sets (${range[1]}-${sr[1]}) cannot be written here yet — pick one number, like ${sr[1]}x${sr[2]}${sr[3] ? `-${sr[3]}` : ""}`,
+      }
+    }
     sets = Number(sr[1])
     repMin = Number(sr[2])
     repMax = sr[3] ? Number(sr[3]) : null
@@ -180,6 +201,11 @@ function parseLift(
   // Whatever is left, minus stray punctuation, is the name.
   const name = rest.replace(/[,;:–-]+\s*$/, "").replace(/^[,;:–-]+\s*/, "").trim()
   if (!name) return { error: "there is no exercise name on this line" }
+  if (LEFTOVER_NOTATION.test(name)) {
+    return {
+      error: `"${name}" could not be read — a line is the lift's name, then 3x8, then @60`,
+    }
+  }
   if (sets !== null && (sets < 1 || sets > 20)) return { error: `${sets} sets is not a number of sets` }
   if (repMin !== null && (repMin < 1 || repMin > 100)) return { error: `${repMin} reps is not a number of reps` }
   if (repMax !== null && repMax < (repMin ?? 1)) {

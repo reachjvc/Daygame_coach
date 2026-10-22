@@ -118,6 +118,44 @@ describe("sets and reps", () => {
 })
 
 // ---------------------------------------------------------------------------
+// The misreads measured on 2026-10-18 (Plans/program-builder.md, Phase 0.4).
+// Each one saved a lift nobody wrote, with no problem reported.
+// ---------------------------------------------------------------------------
+
+describe("nothing the parser cannot read is saved as a lift", () => {
+  test('"Bench Press 3-5x5-10" is refused, not saved as a lift called "Bench Press 3"', () => {
+    const { schedule, problems } = parseProgramText("Push\nBench Press 3-5x5-10")
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toMatchObject({ line: 2, text: "Bench Press 3-5x5-10" })
+    expect(problems[0].reason).toMatch(/range of sets \(3-5\)/)
+    expect(lifts(schedule, 0)).toHaveLength(0)
+  })
+
+  test('"Dips 5*10" is five sets of ten Dips, not a lift called "Dips 5*10" on 3×8', () => {
+    const { schedule, problems } = parseProgramText("Push\nDips 5*10")
+    expect(problems).toEqual([])
+    const [dips] = lifts(schedule, 0)
+    expect(dips.name).toBe("Dips")
+    expect(dips.scheme).toEqual({ kind: "linear", sets: 5, reps: 10 })
+  })
+
+  test("a stray number in a name is refused rather than kept as part of it", () => {
+    for (const line of ["Dips 10", "Bench Press 3x", "Squat x5", "Bench Press @rpe8"]) {
+      const { schedule, problems } = parseProgramText(`Push\n${line}`)
+      expect(problems.map((p) => p.text), line).toEqual([line])
+      expect(problems[0].reason, line).toMatch(/could not be read/)
+      expect(lifts(schedule, 0), line).toHaveLength(0)
+    }
+  })
+
+  test("names with a hyphen and no digits still read", () => {
+    const { schedule, problems } = parseProgramText("Pull\nT-Bar Row 3x10\nOne-Arm Dumbbell Row 3x10")
+    expect(problems).toEqual([])
+    expect(lifts(schedule, 0).map((e) => e.name)).toEqual(["T-Bar Row", "One-Arm Dumbbell Row"])
+  })
+})
+
+// ---------------------------------------------------------------------------
 
 describe("weights", () => {
   test("@60 is the starting weight", () => {
