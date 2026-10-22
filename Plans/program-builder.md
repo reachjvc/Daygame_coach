@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Phase 0 done 2026-10-22 (session daygame-coach-fc); Phase 1 is next.
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–1 done 2026-10-22 (session daygame-coach-fc); Phase 2 is next.
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -454,6 +454,66 @@ Tests: `tests/unit/programs/programText.test.ts` › "nothing the parser cannot 
 3. A converter from today's format to the new one, so old rows and the 13 built-ins load unchanged.
 4. Coverage fixtures: Starscream and every free corpus program, each validating.
 **Acceptance:** all 13 built-ins and all fixtures convert and validate; schema tests cover every field.
+
+### Phase 1 evidence (2026-10-22, session daygame-coach-fc)
+
+**Doubt first.** (1) "All 13 built-ins convert": 7 do — the lifting ones (StrongLifts, 5/3/1, Starting
+Strength, PPL, Upper/Lower, PHUL, Bodyweight Foundations). The other 6 (Couch to 5K, 5K to 10K, the three
+triathlons, Splits) are running and mobility programs, which Q3 keeps on their own engine; the converter
+answers `{ kept }` for them rather than a half-made program, and their golden files keep checking them on
+the old engine. (2) Part 1 says the research found the format "covers 29 programs exactly and 3 closely".
+Encoding them for real says otherwise: of 30 fixtures, **2 are exact** (Starscream, Sheiko #29) and **28
+are close** — every number the sources give for week 1 and a later week comes out right (Phase 2), but
+most programs also have a rule the format can only carry as a note (a rep total as a range, a stage that
+fails on total reps, a training-max bump that waits for next week, a ladder rung with its own target…).
+The full list of additions the fixture authors asked for is below, for Phases 6–8 to weigh.
+
+**1.1–1.2 The format.** `src/programs/spec/`: `types.ts` (the plan's sketch, plus what the 13 built-ins
+and the corpus needed: a named `LiftRef`, `Increment {kg, lb}`, `Range {min, max}`, week sets as text
+"1-11,12", `perSet` with any rep target, `of`/`plus` on loads, a `dropSets` modifier, `roundMax`,
+`direction`, rounding `mode`), `schema.ts` (zod, strict — an unknown key is an error; bounds on every
+number; cross-references checked after the shape; every problem as a sentence that names the day and the
+lift, e.g. `Week 12 changes a set group "heavy" that lib_bench_press does not have.`; limits 14 days,
+30 lifts a day, 52 weeks, 64 KB, plus 10 set groups, 30 sets a group, 60 week changes; a draft mode that
+allows an empty day, as the old drafts did), `weeks.ts`, `read.ts` (`readSpec` refuses a missing or
+unknown `specVersion` with `SpecVersionError` — "saved in format 3 by a newer version of the app" — and a
+broken one with `SpecInvalidError` listing every problem).
+
+**1.3 The converter.** `fromLegacy.ts`: ids stay ids; the same lift on a second day becomes its own slot
+sharing the first one's numbers (`stateKey`); "4×5, 1×5+" is two set groups numbered 1–5 straight
+through; a 5/3/1 wave is one set group listed set by set with weeks 2–4 as week changes and a training
+max at 90%; a calisthenics ladder is a `ladder`. Old rows: 0 enrollments on production have an edited
+schedule; both saved weeks on production convert (week "2" as a draft — it has an empty day).
+
+**1.4 Fixtures.** `tests/fixtures/programs/corpus/` — 30 programs, each a valid program
+(`tests/unit/programs/spec/fixtures.test.ts`), each with week 1 and a later week from its source and the
+place in the source each number comes from. Written by six research agents from the authors' own pages,
+sheets and PDFs (reddit.com was unreachable; archived copies were used), Starscream by hand from the
+owner's sheet. 23 free, 7 "paid, rules public" (Starting Strength, Greyskull, 5/3/1 BBB, Building the
+Monolith, Juggernaut 2.0, Bullmastiff, RP-style), and none of those seven ships (Part 2 rule 8). Of the
+research corpus's 32, three are not encoded: Calgary Barbell, Nippard and SBS RTF are paid and their
+rules are not public enough to check.
+
+| Fixture | Terms | Coverage |
+|---|---|---|
+| starscream, sheiko-29-32 | free | exact |
+| corpus-stronglifts-5x5, gzclp, gzcl-rippler, jacked-and-tan-2, nsuns-5day, wendler-531-beginners, texas-method, madcow-5x5, metallicadpa-ppl, phul-source, phat, lyle-gbr, phrak-gslp, ivysaur-4-4-8, candito-6-week, smolov-jr, bwf-recommended-routine, barbell-medicine-bridge, rts-generalized-intermediate, poliquin-wave-loading, dc-training | free | close |
+| corpus-starting-strength, greyskull-lp, wendler-531-bbb, wendler-building-the-monolith, juggernaut-2, bullmastiff, rp-style-hypertrophy | paid, rules public | close |
+
+**Tests.** `tests/unit/programs/spec/schema.test.ts` — one program using every field passes; 40 shape
+rules and 23 reference rules each broken on their own and refused with the right sentence; week sets;
+drafts. `fromLegacy.test.ts` — the 7/6 split, every mapping above, edited weeks (supersets, drops,
+weekdays, timed lifts, assistance, the one-unit stall jump), refusals by name, and the version reader.
+
+**Format additions the fixture authors asked for** (not built; each would turn "close" into "exact"):
+ranges in rep totals and increments; `stages.judge: "total-reps"`; a max bump that applies next week, or
+after named weeks, or from a test week's best single; `amrap-table` reading total reps across sets; a
+per-cycle override (5/3/1 BBB's 50→60→70%); a per-wave reset and a per-wave standard for
+`per-extra-rep`; ladder rungs with their own target, step and starting rung; `SetGroup.until` (sets until
+an RPE or a fatigue %); "only if the previous group was made"; optional lifts and "pick 2 of these";
+days trained only in some weeks; a percentage-growth increment (Madcow); "carry this set's weight
+forward" (Madcow's triple); bigger jumps for the first sessions (Starting Strength); a drop-on-miss for a
+max; `rounding.mode: "up"`; an effort condition on double progression.
 
 ## Phase 2 — The engine, rebuilt on the format (pure functions only)
 **Depends on:** 1.
