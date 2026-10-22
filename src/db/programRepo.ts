@@ -750,27 +750,21 @@ export async function resetEnrollment(userId: string, id: string): Promise<Progr
   const supabase = await createServerSupabaseClient()
   const enr = await getEnrollmentById(userId, id)
   if (!enr) throw new Error("Enrollment not found")
-  const { data, error } = await supabase
-    .from("program_enrollments")
-    .update({
-      cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
-      // RECORDED, so a later correction does not undo it. Replay folds history
-      // over the seed, and a reset that leaves no trace is simply forgotten the
-      // next time somebody edits a session.
-      replay_events: [
-        ...(enr.replayEvents ?? []),
-        // Spelled by RESET_EFFECT, not by hand: the confirm box, this row and
-        // the replay branch that reads it all have to agree about whether a
-        // reset takes the weights back, and they only do if there is one copy.
-        { at: new Date().toISOString(), kind: "reset", ...RESET_EFFECT },
-      ],
-    })
-    .eq("id", id)
-    .eq("user_id", userId)
-    .select()
-    .single()
-  if (error) throw new Error(`Failed to reset enrollment: ${error.message}`)
-  return toDomain(data as ProgramEnrollmentRow)
+  const { data, error } = await saveProgramState(supabase, id, {
+    cursor: { cycle: 1, week: 1, dayIndex: 0, sessionCount: 0 },
+    // RECORDED, so a later correction does not undo it. Replay folds history
+    // over the seed, and a reset that leaves no trace is simply forgotten the
+    // next time somebody edits a session.
+    replay_events: [
+      ...(enr.replayEvents ?? []),
+      // Spelled by RESET_EFFECT, not by hand: the confirm box, this row and
+      // the replay branch that reads it all have to agree about whether a
+      // reset takes the weights back, and they only do if there is one copy.
+      { at: new Date().toISOString(), kind: "reset", ...RESET_EFFECT },
+    ],
+  })
+  if (error || !data) throw new Error(`Failed to reset enrollment: ${error?.message ?? "no such program"}`)
+  return toDomain(data)
 }
 
 /**
@@ -872,23 +866,17 @@ export async function updateEnrollmentSchedule(
   ]
 
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("program_enrollments")
-    .update({
-      custom_schedule: schedule,
-      exercise_state: exerciseState,
-      cursor,
-      // Unconditional now: the schedule event above exists for every save, so
-      // there is no longer a version of this write that records nothing.
-      replay_events: replayEvents,
-    })
-    .eq("id", enrollmentId)
-    .eq("user_id", userId)
-    .select()
-    .single()
-  if (error) throw new Error(`Failed to save program changes: ${error.message}`)
+  const { data, error } = await saveProgramState(supabase, enrollmentId, {
+    custom_schedule: schedule,
+    exercise_state: exerciseState,
+    cursor,
+    // Unconditional now: the schedule event above exists for every save, so
+    // there is no longer a version of this write that records nothing.
+    replay_events: replayEvents,
+  })
+  if (error || !data) throw new Error(`Failed to save program changes: ${error?.message ?? "no such program"}`)
 
-  const enrollment = toDomain(data as ProgramEnrollmentRow)
+  const enrollment = toDomain(data)
   return { enrollment, prescription: computePrescription(programFor(enrollment), enrollment) }
 }
 
@@ -945,9 +933,10 @@ export async function changeEnrollmentUnit(
   const plates = plateSetupFor(enr.barWeightKg ?? null, to)
 
   const supabase = await createServerSupabaseClient()
-  const { data, error } = await supabase
-    .from("program_enrollments")
-    .update({
+  const { data, error } = await saveProgramState(
+    supabase,
+    enrollmentId,
+    {
       unit_system: to,
       exercise_state: convertExerciseState(enr.exerciseState, from, to, schedule, plates),
       /**
@@ -975,12 +964,9 @@ export async function changeEnrollmentUnit(
         catalogProgram.schedule,
         plates
       ),
-    })
-    .eq("id", enrollmentId)
-    .eq("user_id", userId)
-    .eq("unit_system", from)
-    .select()
-    .maybeSingle()
+    },
+    { unit_system: from }
+  )
   if (error) throw refusalFrom(error, "That program's unit could not be changed. Reload and try again.")
   if (!data) {
     // Matched no row: something else switched it first. Read what it says now
@@ -989,7 +975,7 @@ export async function changeEnrollmentUnit(
     if (!now) throw new ProgramRefused("That program was not found.")
     return { enrollment: now, changed: false }
   }
-  return { enrollment: toDomain(data as ProgramEnrollmentRow), changed: true }
+  return { enrollment: toDomain(data), changed: true }
 }
 
 // ---------------------------------------------------------------------------
@@ -1388,16 +1374,39 @@ async function persistState(
   replayEvents?: ReplayEvent[]
 ): Promise<void> {
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
-    .from("program_enrollments")
-    .update({
-      exercise_state: enrollment.exerciseState,
-      cursor: enrollment.cursor,
-      ...(replayEvents ? { replay_events: replayEvents } : {}),
-    })
-    .eq("id", enrollment.id)
-    .eq("user_id", userId)
-  if (error) throw new Error(`Failed to persist enrollment state: ${error.message}`)
+  const { data, error } = await saveProgramState(supabase, enrollment.id, {
+    exercise_state: enrollment.exerciseState,
+    cursor: enrollment.cursor,
+    ...(replayEvents ? { replay_events: replayEvents } : {}),
+  })
+  if (error || !data) throw new Error(`Failed to persist enrollment state: ${error?.message ?? "no such program"}`)
+}
+
+/**
+ * THE ONE DOOR FOR A PROGRAM'S CALCULATED NUMBERS.
+ *
+ * Since 20261022110000 the database refuses a client write of
+ * `exercise_state`, `cursor`, `replay_events` or `initial_exercise_state`
+ * unless one of the program functions makes it (Q17). These four writes —
+ * reset, an edit, a change of unit, a skip — used to be plain UPDATEs; they go
+ * through `save_program_state` now. Row security still decides whose row: the
+ * function runs as the caller.
+ *
+ * `expect.unit_system` answers null (no row) when the program is no longer in
+ * that unit — the double-tap guard the unit switch relies on.
+ */
+async function saveProgramState(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  id: string,
+  fields: Record<string, unknown>,
+  expect?: { unit_system?: UnitSystem; sessionCount?: number }
+): Promise<{ data: ProgramEnrollmentRow | null; error: { code?: string; message: string } | null }> {
+  const { data, error } = await supabase.rpc("save_program_state", {
+    p_id: id,
+    p_fields: fields,
+    ...(expect ? { p_expect: expect } : {}),
+  })
+  return { data: (data as ProgramEnrollmentRow | null) ?? null, error }
 }
 
 

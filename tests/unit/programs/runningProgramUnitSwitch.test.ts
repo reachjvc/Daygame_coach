@@ -35,7 +35,7 @@ import type { ReplayEvent } from "@/src/programs/types"
 
 const tables: Record<string, Row[]> = { program_enrollments: [], workout_logs: [] }
 const calls: RpcCall[] = []
-const fake = createFakeSupabase(tables, { calls, rpcResult: () => ({ data: null, error: null }) })
+const fake = createFakeSupabase(tables, { calls })
 
 vi.mock("@/src/db/supabase", () => ({
   createServerSupabaseClient: vi.fn(async () => fake),
@@ -170,9 +170,10 @@ describe("moving a running program between units", () => {
 
   it("does not touch a single logged set, because those are stored in kilograms", async () => {
     await changeEnrollmentUnit(USER, ENROLLMENT, "lb")
-    // The repo reached for no other table on the way.
+    // The repo reached for no other table on the way, and its one write is
+    // the program-state function — never a direct update of the numbers.
     expect(tables.workout_logs).toEqual([])
-    expect(calls).toEqual([])
+    expect(calls.map((c) => c.name)).toEqual(["save_program_state"])
   })
 
   it("converts once when two requests arrive together and BOTH read kilograms", async () => {

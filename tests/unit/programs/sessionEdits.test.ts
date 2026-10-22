@@ -21,7 +21,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { createFakeSupabase, type Row, type RpcCall } from "../../helpers/fakeSupabase"
+import { createFakeSupabase, saveProgramStateIn, type Row, type RpcCall } from "../../helpers/fakeSupabase"
 // Static imports, not `await import`: vitest hoists `vi.mock` above every import
 // in the file, so the repos already see the fake client — and a top-level await
 // would be a new type error the ratchet counts.
@@ -44,7 +44,7 @@ let rpcAnswer: (call: RpcCall) => { data: unknown; error: unknown } = () => ({
 
 const fake = createFakeSupabase(tables, {
   calls,
-  rpcResult: (call) => rpcAnswer(call),
+  rpcResult: (call) => saveProgramStateIn(tables, call) ?? rpcAnswer(call),
 })
 
 vi.mock("@/src/db/supabase", () => ({

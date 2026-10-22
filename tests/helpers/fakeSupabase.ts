@@ -308,6 +308,30 @@ class FakeQuery {
  * `{ data, error }` the test wants back. An unmapped name answers
  * `{ data: null, error: null }`.
  */
+/**
+ * `save_program_state`, played against the fake tables — the one program
+ * function a unit test can stand in for, because it is only "write these
+ * columns of this row, unless the row no longer looks as expected". Its real
+ * promises (the guard, the version row) are checked against Postgres in
+ * `tests/integration/db/programFormat.integration.test.ts`.
+ */
+export function saveProgramStateIn(tables: Record<string, Row[]>, call: RpcCall): { data: unknown; error: unknown } | null {
+  if (call.name !== "save_program_state") return null
+  const { p_id, p_fields, p_expect } = call.args as {
+    p_id: string
+    p_fields: Record<string, unknown>
+    p_expect?: { unit_system?: string; sessionCount?: number }
+  }
+  const row = (tables.program_enrollments ?? []).find((r) => r.id === p_id)
+  if (!row) return { data: null, error: null }
+  if (p_expect?.unit_system != null && row.unit_system !== p_expect.unit_system) return { data: null, error: null }
+  if (p_expect?.sessionCount != null && (row.cursor as { sessionCount?: number })?.sessionCount !== p_expect.sessionCount) {
+    return { data: null, error: { code: "55000", message: "Your program moved on while this was being worked out — reload and try again" } }
+  }
+  Object.assign(row, p_fields)
+  return { data: { ...row }, error: null }
+}
+
 export function createFakeSupabase(
   tables: Record<string, Row[]>,
   options: FakeSupabaseOptions & {
@@ -320,7 +344,7 @@ export function createFakeSupabase(
     rpc: async (name: string, args: Record<string, unknown>) => {
       const call = { name, args }
       options.calls?.push(call)
-      return options.rpcResult?.(call) ?? { data: null, error: null }
+      return options.rpcResult?.(call) ?? saveProgramStateIn(tables, call) ?? { data: null, error: null }
     },
   }
 }
