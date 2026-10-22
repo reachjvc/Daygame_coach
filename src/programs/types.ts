@@ -421,6 +421,19 @@ export interface ExerciseState {
   tierIndex?: number // current variation (0-based)
   // hold_range:
   currentHoldSec?: number
+  // ---- the program format (src/programs/spec), Phase 2 ----
+  /** A one-rep max the program calculates from (`max: "1rm"`). */
+  oneRepMax?: number
+  /** A rep max (`max: "rm"`, e.g. a 5RM). */
+  repMax?: number
+  /** The stage a `stages` rule is on, from 0. */
+  stage?: number
+  /** The working weight the last time stage 1 was done — where a `resetInc` restarts from. */
+  stageOneWeight?: number
+  /** The last stage failed and the rule asks for a retest before going on. */
+  needsRetest?: boolean
+  /** Estimated one-rep max from the latest set judged by effort. */
+  e1rm?: number
 }
 
 /**
@@ -595,6 +608,51 @@ export interface PrescribedSet {
   amrap: boolean
   weight: number // display unit
   weightKg: number // for the workout_sets bridge
+  // ---- the program format (src/programs/spec), Phase 2. All optional: a
+  // converted built-in prescribes none of them, so old screens see old sets.
+  /** The set group this row belongs to. */
+  groupId?: string
+  /** The set's job, as the program names it. */
+  kind?: "warmup" | "working" | "amrap" | "backoff" | "drop" | "top" | "restpause"
+  /** The top of a weight range ("70–80"); `weight` is the bottom. */
+  weightMax?: number
+  /**
+   * The weight is worked out from a set done earlier today and is not known
+   * until that set is ticked; `deriveFromEarlierSets` fills `weight`/`weightMax`.
+   */
+  derive?: { slot: string; group: string; pct: { min: number; max: number } }
+  /** The weight is picked on the day: by feel against an effort target, or freely. */
+  pick?: "effort" | "choose"
+  /** A suggested weight for a picked set, from the lift's estimated max. */
+  suggested?: number
+  /** Effort target for this set: RPE or RIR, a ceiling when `cap`. */
+  rpe?: number
+  rpeMax?: number
+  rir?: number
+  rirMax?: number
+  cap?: boolean
+  /** Reps are seconds held, or a total spread over any number of sets. */
+  seconds?: boolean
+  total?: boolean
+}
+
+/**
+ * A SET GROUP AS THE SCREEN DESCRIBES IT — "3–5 × 5–10 @ 70–80% of the top set".
+ *
+ * `PrescribedExercise.sets` are the rows to tick (the low end of a range of
+ * sets); this says what the group allows, so the screen can offer "add set"
+ * up to the top of the range and the alternatives in `options`.
+ */
+export interface PrescribedGroup {
+  id: string
+  kind: NonNullable<PrescribedSet["kind"]>
+  countMin: number
+  countMax: number
+  options?: { count: number; reps: number }[]
+  /** The group's effort target, so "last set no harder than RPE 9" can be said once. */
+  effort?: { rpe?: number; rpeMax?: number; rir?: number; rirMax?: number; cap?: boolean; lastSetOnly?: boolean }
+  note?: string
+  restSec?: number
 }
 
 export interface PrescribedExercise {
@@ -616,6 +674,14 @@ export interface PrescribedExercise {
   /** Done one limb at a time — the reps are per side, and so is the volume. */
   perSide?: boolean
   repUnit?: "reps" | "sec" // what the logged number means (default reps)
+  /** The slot in the program this lift is (program format). Absent on old programs. */
+  slotId?: string
+  /** Alternatives picked on the day: "back OR front squat". */
+  choices?: string[]
+  /** The set groups, for the add-set button and the options (program format). */
+  groups?: PrescribedGroup[]
+  /** How the weight is loaded, decided once by the engine. */
+  loadStyle?: "barbell" | "free" | "bodyweight"
   /**
    * The rest the PROGRAM'S AUTHOR asked for, in seconds.
    *
@@ -683,6 +749,12 @@ export interface SessionPrescription {
    * the two could name different days on one screen.
    */
   todayWeekday?: number
+  /** The program's length in weeks, when it has one ("Week 3 of 12"). */
+  weeksTotal?: number
+  /** The phase this week is in ("Base", "Peak"), when the program names phases. */
+  phase?: string
+  deloadWeek?: boolean
+  testWeek?: boolean
   /**
    * Whether anybody has ever told the app what timezone this account is in.
    *
@@ -707,10 +779,16 @@ export interface LoggedSet {
   weight: number // actual weight, display unit
   /** Which limb, for a lift done one side at a time. */
   side?: "left" | "right"
+  /** How hard it was, 1–10 in half steps, when logged. */
+  rpe?: number
+  /** The set group it answered (program format), when known. */
+  groupId?: string
 }
 
 export interface LoggedExercise {
   exerciseId: string
+  /** The slot it answered (program format), when two slots share one lift's numbers. */
+  slotId?: string
   sets: LoggedSet[]
   /**
    * You were there, and you deliberately did not do this one.
@@ -746,8 +824,8 @@ export interface ProgressionChange {
   reason: string
 }
 
-export interface ApplyLogResult {
-  enrollment: ProgramEnrollment
+export interface ApplyLogResult<E = ProgramEnrollment> {
+  enrollment: E
   changes: ProgressionChange[]
 }
 

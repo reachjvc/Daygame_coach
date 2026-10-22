@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–1 done 2026-10-22 (session daygame-coach-fc); Phase 2 is next.
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–2 done 2026-10-22 (session daygame-coach-fc); Phase 3 is next.
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -528,6 +528,55 @@ max; `rounding.mode: "up"`; an effort condition on double progression.
    differences caused by the plate fix, each listed and explained in the evidence.
 6. Simulation: `simulate(spec, weeks, outcomes)` for the builder's preview and for the fixtures.
 **Acceptance:** golden equivalence green; every fixture's week-1 and later-week numbers match its source.
+
+### Phase 2 evidence (2026-10-22, session daygame-coach-fc)
+
+**Doubt first.** The plate fix is only half here. The engine now takes the gym's bar and plates (and a
+program's own rounding step) through one `RoundingContext`, so it CAN round to the account's plates; the
+repo still hands it the old `plates` (the enrollment's bar only). Handing it the account's plates means
+touching every place a prescription is made, and Phase 4 rewrites each of those places anyway — so the
+wiring is done there, with its own test, instead of twice.
+
+**The engine.** `src/programs/engine/` — pure functions, no clock, no database:
+`calendar.ts` (in order or by weekday, rest days naming the next session; weeks by workouts completed or
+by the calendar from the start Monday; finish or repeat; phases, deload and test weeks), `prescribe.ts`
+(set groups, ranges of sets, options, per-set pyramids, week changes, every load source, effort targets on
+the right sets, caps, derived maxes through `of`, rounding), `sameDay.ts` (`deriveFromEarlierSets`: the
+heaviest top set done today fills the back-off range, the one function phone and server both run),
+`progress.ts` (every rule; the four old ones and the ladder ported line for line, sentences included),
+`e1rm.ts` (RTS chart when an RPE was logged, Epley otherwise — Q11), `seed.ts`, `replay.ts`,
+`simulate.ts`, `describe.ts`.
+
+**2.5 Golden equivalence: green, with no differences to list.** `tests/unit/programs/golden/goldenSpec.test.ts`
+runs the 7 lifting built-ins, converted, through the new engine under all 8 scripted lifters for 30
+sessions each, and every prescription, every change with its sentence, every state and every replay
+equals `golden-v1` exactly. A mutated program (StrongLifts' bench deloading after 2 misses instead of 3)
+was checked to fail the comparison, so the test is not passing by comparing nothing. The other 6
+built-ins stay on the old engine and still match their golden files (`golden.test.ts`).
+
+**Fixtures through the engine.** `tests/unit/programs/engine/fixtures.test.ts` simulates each fixture
+from its starting numbers and compares each expected line with what the engine prescribes. All 30
+fixtures, all 222 expected lines, match their sources. Starscream: week 1 Monday
+`1x2-5@? rpe8.5, 3-5x5-10@70-80` for a 100 kg top set, week 12 Monday `1x1-5@? rpe9, …`, Tuesday's speed
+deadlifts `4-10x3@77.5-87.5` from the sheet's own 110 kg (`mround(110×0.7…0.8, 2.5)`).
+
+**Engine bugs the fixture authors found, all fixed, each now covered by a fixture or a test:** a
+once-a-cycle bump fired after every session of the lift in the last week (5/3/1 for Beginners trains squat
+twice a week); it also looked for the lift's last day without skipping days on which the lift had no sets
+that week (Ivysaur); a percentage-per-extra-rep rule took the percentage of the working weight instead of
+the max (Bullmastiff); a repeating program's calendar weeks did not wrap in `simulate`; a rule judged a
+week in which its set group was skipped (Lyle's run-up weeks); and the old 5/3/1 rounded its training
+max at every bump, which Wendler does not — kept for the converted built-in only (`roundMax`).
+
+**Tests.** `tests/unit/programs/engine/engine.test.ts` (29): calendar weeks and weekday rest days,
+Starscream finishing after week 12, ranges of sets, effort on the last set only, week changes and skips,
+pyramids, `of` and `plus`, bodyweight and timed holds, rounding (sheet-style, plate-style, a 15 kg bar),
+back-offs before and after the top set, across lifts, the new rules (AMRAP table, per extra rep, stages
+with both resets and a retest, by effort with the RTS chart, a set per week, all-sets-done bumps, skipped
+groups), seeding refusals, replay across a change of program, and a 12-week Starscream simulation.
+
+**Gates (2026-10-22):** `npm test` 376 files, 5298 passed, 1 skipped; engine + golden 423 passed;
+`typecheck-ratchet` 88, none new; `lint:ratchet` 290, none new.
 
 ## Phase 3 — Database (live)
 **Depends on:** 1. Can run beside Phase 2.
