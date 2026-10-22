@@ -756,6 +756,11 @@ export function LiveWorkoutScreen({
                               side: row.side,
                               // What it cost, if you said so before ticking.
                               rpe: rowEffort[row.slot] ?? null,
+                              // Which slot and set group it answers, so last
+                              // time is per slot and a back-off is matched to
+                              // its group (program format).
+                              slotId: ex.slotId ?? null,
+                              setGroupId: row.prescribed?.groupId ?? null,
                             })
                             /**
                              * THE CLOCK STARTS ON THE TAP, not on the reply.

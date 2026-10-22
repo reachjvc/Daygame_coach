@@ -131,8 +131,9 @@ describe("a running program's own copy of its program, and its versions", () => 
   })
 
   it("versions are append-only and private: no edits, no deletes, nobody else's", async () => {
+    // Starting the program wrote version 1; the owner may add the next.
     const { user, id } = await startedProgram("versions-private")
-    await asUser(user.id, (q) => q(`INSERT INTO program_versions (enrollment_id, user_id, version, spec, spec_version) VALUES ($1, $2, 1, $3, 2)`, [id, user.id, JSON.stringify(SPEC)]))
+    await asUser(user.id, (q) => q(`INSERT INTO program_versions (enrollment_id, user_id, version, spec, spec_version) VALUES ($1, $2, 2, $3, 2)`, [id, user.id, JSON.stringify(SPEC)]))
     const touched = await asUser(user.id, (q) => q(`UPDATE program_versions SET version = 9 WHERE enrollment_id = $1 RETURNING id`, [id]))
     expect(touched).toEqual([])
     const removed = await asUser(user.id, (q) => q(`DELETE FROM program_versions WHERE enrollment_id = $1 RETURNING id`, [id]))
@@ -141,7 +142,7 @@ describe("a running program's own copy of its program, and its versions", () => 
     const intruder = await newUser("versions-intruder")
     expect(await asUser(intruder.id, (q) => q(`SELECT id FROM program_versions WHERE enrollment_id = $1`, [id]))).toEqual([])
     await expect(
-      asUser(intruder.id, (q) => q(`INSERT INTO program_versions (enrollment_id, user_id, version, spec, spec_version) VALUES ($1, $2, 2, $3, 2)`, [id, intruder.id, JSON.stringify(SPEC)]))
+      asUser(intruder.id, (q) => q(`INSERT INTO program_versions (enrollment_id, user_id, version, spec, spec_version) VALUES ($1, $2, 3, $3, 2)`, [id, intruder.id, JSON.stringify(SPEC)]))
     ).rejects.toMatchObject({ code: "42501" })
   })
 

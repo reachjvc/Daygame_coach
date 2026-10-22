@@ -22,7 +22,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { ProgramSheet } from "@/src/programs/components/ProgramSheet"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { ProgramEnrollment, ProgramSchedule } from "@/src/programs/types"
 

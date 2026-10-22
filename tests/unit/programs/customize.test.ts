@@ -32,7 +32,7 @@ import {
   updateExerciseScheme,
   type AnyExercise,
 } from "@/src/programs/customize"
-import { computePrescription, seedEnrollment } from "@/src/programs/programsService"
+import { computePrescription, seedEnrollment } from "@/src/programs/runtime"
 import { ALL_PROGRAMS, requireProgram } from "@/src/programs/data/catalog"
 import { EXERCISE_LIBRARY, libraryExercise, patternForName } from "@/src/programs/data/exerciseLibrary"
 import { CustomScheduleSchema } from "@/src/programs/schemas"
@@ -317,7 +317,7 @@ describe("the engine runs the edited program", () => {
     )
     const program = effectiveProgram(upperLower, schedule)
     // No supplied weight → the engine refuses to seed rather than inventing one.
-    expect(() => seedEnrollment(program, "intermediate", "kg")).toThrow(/missing seed weight/)
+    expect(() => seedEnrollment(program, "intermediate", "kg")).toThrow("Face Pull needs a starting weight.")
 
     const { exerciseState } = seedEnrollment(program, "intermediate", "kg", undefined, {
       [exerciseId]: 30,

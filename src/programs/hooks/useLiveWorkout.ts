@@ -53,6 +53,9 @@ export interface QueuedSet {
    * request to add the effort would have nothing to attach it to until then.
    */
   rpe?: number | null
+  /** The program slot and set group it answers (program format). */
+  slotId?: string | null
+  setGroupId?: string | null
   /** Local time it was ticked, so the flush replays them in order. */
   at: number
 }
@@ -512,6 +515,8 @@ export function useLiveWorkout(initial: LiveWorkout | null) {
               completedAt: new Date(item.at).toISOString(),
               rpe: item.rpe ?? null,
               side: item.side,
+              slotId: item.slotId ?? null,
+              setGroupId: item.setGroupId ?? null,
             },
           ].sort((a, b) => a.setNumber - b.setNumber),
         }

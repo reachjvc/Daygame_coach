@@ -21,7 +21,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { trainingCardState, STALE_WORKOUT_HOURS, seedEnrollment } from "@/src/programs/programsService"
+import { trainingCardState, STALE_WORKOUT_HOURS } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { ProgramEnrollment, SessionPrescription, TrainingDoorFacts } from "@/src/programs/types"
 

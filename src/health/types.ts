@@ -144,12 +144,16 @@ export interface WorkoutSetRow {
   exercise_id: string | null
   /** The lift's identity across programs, so history survives a switch. */
   library_id: string | null
-  set_kind: "warmup" | "working" | "amrap" | "backoff" | "drop"
+  set_kind: "warmup" | "working" | "amrap" | "backoff" | "drop" | "top" | "restpause"
   /** Which prescribed set this answers; null if it was added on the day. */
   prescribed_index: number | null
   completed_at: string | null
+  /** 1–10 in half steps. */
   rpe: number | null
   side: "left" | "right" | null
+  /** The program slot and set group it answered (program format); null on older sets. */
+  slot_id?: string | null
+  set_group_id?: string | null
 }
 
 export interface WorkoutSetInsert {
@@ -163,7 +167,7 @@ export interface WorkoutSetInsert {
   exercise_notes?: string | null
   exercise_id?: string | null
   library_id?: string | null
-  set_kind?: "warmup" | "working" | "amrap" | "backoff" | "drop"
+  set_kind?: "warmup" | "working" | "amrap" | "backoff" | "drop" | "top" | "restpause"
   prescribed_index?: number | null
   completed_at?: string | null
   rpe?: number | null

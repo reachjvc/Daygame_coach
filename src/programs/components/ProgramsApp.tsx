@@ -22,7 +22,8 @@ import { PastPrograms } from "./PastPrograms"
 import { refreshEnrollments, useActiveEnrollments, useEnrollment } from "../hooks/useEnrollment"
 import { enrollmentName, getProgram } from "../data/catalog"
 import { effectiveProgram } from "../customize"
-import { formatDateOnly, computePrescription, openWorkoutInvitation } from "../programsService"
+import { formatDateOnly, openWorkoutInvitation } from "../programsService"
+import { computePrescription, definitionOf } from "../runtime"
 import { ROUTES } from "@/src/shared/routes"
 import { LEVEL_LABELS } from "../config"
 import type {
@@ -590,7 +591,7 @@ function ActiveProgram({
       </div>
     )
   }
-  const program = effectiveProgram(catalogProgram, detail.enrollment.customSchedule)
+  const program = definitionOf(effectiveProgram(catalogProgram, detail.enrollment.customSchedule), detail.enrollment)
   const days =
     program.schedule.kind === "linear_rotation" || program.schedule.kind === "weekly_waved"
       ? program.schedule.days.map((d) => ({ id: d.id, label: d.label, weekday: d.weekday }))
@@ -598,9 +599,11 @@ function ActiveProgram({
   const pickedIndex = days?.findIndex((d) => d.id === pickedDayId) ?? -1
   const prescription =
     pickedIndex >= 0
-      ? computePrescription(program, {
-          ...detail.enrollment,
-          cursor: { ...detail.enrollment.cursor, dayIndex: pickedIndex },
+      ? computePrescription(program, detail.enrollment, {
+          dayIndex: pickedIndex,
+          // Today, on the account's calendar, so a program whose weeks run by
+          // the calendar previews this week's version of the picked day.
+          clock: { today: todayOf(detail.week), todayWeekday: detail.week.todayWeekday },
         })
       : detail.prescription
 
@@ -758,4 +761,10 @@ function ActiveProgram({
       />
     </div>
   )
+}
+
+/** Today's date key from the week the server worked out on the account's calendar. */
+function todayOf(week: { weekStartedOn: string; todayWeekday: number }): string {
+  const [y, m, d] = week.weekStartedOn.split("-").map(Number)
+  return new Date(Date.UTC(y, m - 1, d + week.todayWeekday - 1)).toISOString().slice(0, 10)
 }

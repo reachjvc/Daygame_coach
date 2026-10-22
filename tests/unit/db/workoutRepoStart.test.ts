@@ -19,7 +19,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { pushPullLegs } from "@/src/programs/data/bodybuilding/pushPullLegs"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import type { ProgramSchedule } from "@/src/programs/types"
 
 const USER = "u1"

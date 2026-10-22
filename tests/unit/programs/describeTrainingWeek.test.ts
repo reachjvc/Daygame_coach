@@ -12,7 +12,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { describeTrainingWeek, seedEnrollment } from "@/src/programs/programsService"
+import { describeTrainingWeek } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { ProgramDefinition, ProgramEnrollment, ProgramSchedule } from "@/src/programs/types"
 

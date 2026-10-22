@@ -16,10 +16,9 @@ import {
   withRest,
   MIN_REST_SEC,
   MAX_REST_SEC,
-  computePrescription,
-  seedEnrollment,
   groupOrdinal,
 } from "@/src/programs/programsService"
+import { computePrescription, seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { PrescribedExercise } from "@/src/programs/types"
 

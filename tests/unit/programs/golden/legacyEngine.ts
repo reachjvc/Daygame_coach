@@ -1,11 +1,15 @@
 /**
- * The engine as it stood on 2026-10-18, behind the golden runner's interface.
+ * The app's own entry points (`src/programs/runtime.ts`) behind the golden
+ * runner's interface.
  *
- * Kept separate from the runner so the rebuilt engine can sit beside it behind
- * the same interface, and the two can be run over the same scripted lifters.
+ * On 2026-10-18 these WERE the old engine, and the golden files were written
+ * through them. Since Phase 4 the same names send lifting programs to the
+ * rebuilt engine and running and mobility plans to the old one, so this
+ * adapter now checks the app as it runs: every built-in, through the exact
+ * functions the repos call, against the files the old engine wrote.
  */
 
-import { applyLog, computePrescription, replayEnrollment, seedEnrollment } from "@/src/programs/programsService"
+import { applyLog, computePrescription, replayEnrollment, seedEnrollment } from "@/src/programs/runtime"
 import type { ProgramEnrollment } from "@/src/programs/types"
 import type { GoldenEngine } from "./goldenRun"
 

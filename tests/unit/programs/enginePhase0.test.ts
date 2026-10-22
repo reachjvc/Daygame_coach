@@ -10,19 +10,16 @@
 
 import { describe, test, expect } from "vitest"
 import {
-  applyLog,
-  computePrescription,
   judgeLoadEntry,
   entriesFromSets,
   pickTodaysDay,
-  replayEnrollment,
   repairUneventfulEdit,
   restSecondsFor,
   roundToLoadable,
-  seedEnrollment,
   skipRefusal,
   resetConfirmText,
 } from "@/src/programs/programsService"
+import { applyLog, computePrescription, replayEnrollment, seedEnrollment } from "@/src/programs/runtime"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { upperLower } from "@/src/programs/data/bodybuilding/upperLower"
 import { recommendedRoutine } from "@/src/programs/data/calisthenics/recommendedRoutine"

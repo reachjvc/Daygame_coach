@@ -1,9 +1,5 @@
 import { describe, test, expect } from "vitest"
 import {
-  applyLog,
-  computePrescription,
-  advanceCursor,
-  seedEnrollment,
   roundToLoadable,
   estimateOneRepMax,
   trainingMaxFromOneRepMax,
@@ -20,9 +16,9 @@ import {
   isSessionOf,
   sessionTypeFor,
   platesFor,
-  replayEnrollment,
   describePlates,
 } from "@/src/programs/programsService"
+import { applyLog, computePrescription, advanceCursor, seedEnrollment, replayEnrollment } from "@/src/programs/runtime"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { wendler531 } from "@/src/programs/data/strength/wendler531"
 import { pushPullLegs } from "@/src/programs/data/bodybuilding/pushPullLegs"
@@ -184,7 +180,7 @@ describe("5/3/1 — percentage_tm progression", () => {
   const ONE_RMS = { squat: 140, deadlift: 180, bench: 100, ohp: 70 }
 
   test("requires a 1RM per lift — throws otherwise", () => {
-    expect(() => seedEnrollment(wendler531, "intermediate", "kg")).toThrow(/requires a 1RM/)
+    expect(() => seedEnrollment(wendler531, "intermediate", "kg")).toThrow(/Overhead Press needs a 1RM/)
   })
 
   test("week-1 squat day prescribes 65/75/85 of TM with an AMRAP top set", () => {

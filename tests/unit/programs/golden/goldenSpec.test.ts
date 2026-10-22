@@ -12,8 +12,10 @@ import { describe, expect, test } from "vitest"
 import fs from "node:fs"
 import path from "node:path"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
-import { isLiftingSchedule } from "@/src/programs/spec/fromLegacy"
-import { runGolden, type GoldenFile } from "./goldenRun"
+import { isLiftingSchedule, specFromLegacy } from "@/src/programs/spec/fromLegacy"
+import type { ProgramEnrollment } from "@/src/programs/types"
+import { runGolden, type GoldenEngine, type GoldenFile } from "./goldenRun"
+import { legacyEngine } from "./legacyEngine"
 import { specEngine } from "./specEngine"
 
 const DIR = path.resolve(__dirname, "../../../fixtures/programs/golden-v1")
@@ -30,6 +32,29 @@ describe("golden equivalence of the rebuilt engine", () => {
     test(`${program.id}: the new engine reproduces golden-v1 exactly`, () => {
       const golden = JSON.parse(fs.readFileSync(path.join(DIR, `${program.id}.json`), "utf8")) as GoldenFile
       expect(runGolden(specEngine, program)).toEqual(golden)
+    })
+  }
+})
+
+/**
+ * A STARTED BUILT-IN RUNS FROM ITS OWN COPY (Phase 4.3): `enrollInProgram`
+ * stores the converted program on the enrollment, and every later read runs
+ * that stored spec rather than the catalogue. The same scripted lifters, run
+ * through the app's entry points with the copy in place, still reproduce
+ * golden-v1 exactly.
+ */
+describe("a started built-in, running from its stored copy", () => {
+  const stored: GoldenEngine<ProgramEnrollment> = {
+    ...legacyEngine,
+    start(program, level, unit, oneRepMaxes) {
+      const enr = legacyEngine.start(program, level, unit, oneRepMaxes)
+      return { ...enr, spec: JSON.parse(JSON.stringify(specFromLegacy(program, { unit }))) }
+    },
+  }
+  for (const program of LIFTING) {
+    test(`${program.id}`, () => {
+      const golden = JSON.parse(fs.readFileSync(path.join(DIR, `${program.id}.json`), "utf8")) as GoldenFile
+      expect(runGolden(stored, program)).toEqual(golden)
     })
   }
 })

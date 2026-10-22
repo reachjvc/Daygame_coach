@@ -13,13 +13,9 @@
  * are derived from the stored sets (`entriesFromSets`).
  */
 
-import { getLiveWorkout } from "./workoutRepo"
+import { getLiveWorkout, getTrainingSettings } from "./workoutRepo"
 import { createServerSupabaseClient } from "./supabase"
 import {
-  applyLog,
-  computePrescription,
-  seedEnrollment,
-  replayEnrollment,
   repairUneventfulEdit,
   pickTodaysDay,
   entriesFromSets,
@@ -27,6 +23,11 @@ import {
   skipRefusal,
   RESET_EFFECT,
 } from "@/src/programs/programsService"
+import { applyLog, computePrescription, definitionOf, seedEnrollment, replayEnrollment, specOf } from "@/src/programs/runtime"
+import { checkSpec } from "@/src/programs/spec/schema"
+import { readSpec } from "@/src/programs/spec/read"
+import { SPEC_VERSION, type ProgramSpec } from "@/src/programs/spec/types"
+import { DEFAULT_BAR_KG, DEFAULT_PLATE_KG, type TrainingSettings } from "@/src/programs/trainingSettings"
 import { getProgram, requireProgram, resolveProgramForLevel } from "@/src/programs/data/catalog"
 import { CouldNotTell, ProgramRefused } from "@/src/programs/errors"
 import { isOpenWorkout, OPEN_WORKOUT_REFUSAL } from "./workoutLifecycle"
@@ -40,7 +41,7 @@ import {
   convertReplayEvents,
   sameWeek,
 } from "@/src/programs/customize"
-import { CUSTOM_PROGRAM_ID } from "@/src/programs/data/customProgram"
+import { CUSTOM_PROGRAM_ID, customProgram } from "@/src/programs/data/customProgram"
 import { getUserClock, getUserTimezone } from "./settingsRepo"
 import { getTodayInTimezone, isoWeekdayInTimezone } from "@/src/shared/dateUtils"
 import {
@@ -60,6 +61,7 @@ import type {
   ProgramEnrollmentRow,
   ProgramSchedule,
   ProgramSessionLogRow,
+  PlateSetup,
   ReplayEvent,
   StoredSet,
   WorkoutAdjustments,
@@ -91,6 +93,11 @@ function toDomain(row: ProgramEnrollmentRow): ProgramEnrollment {
     barWeightKg: row.bar_weight_kg ?? null,
     label: row.label ?? null,
     plates: plateSetupFor(row.bar_weight_kg, row.unit_system),
+    spec: row.spec ?? null,
+    maxes: row.maxes ?? null,
+    // The day the program started, as chosen. Rows from before the column
+    // have none, and `withLocalDates` works it out from `started_at`.
+    ...(row.started_on ? { startedOn: row.started_on } : {}),
   }
 }
 
@@ -126,15 +133,67 @@ export function plateSetupFor(
 }
 
 /**
- * The program this enrollment actually runs.
+ * The program this enrollment actually runs, in the old shape the screens read.
  *
- * THE customization boundary. The engine is pure and knows nothing about
- * user edits; it just reads `program.schedule`. Resolving here — once, on the
- * way out of the database — means every prescription, progression and bridge
- * downstream operates on the user's version automatically.
+ * THE customization boundary. Resolving here — once, on the way out of the
+ * database — means every prescription, progression and bridge downstream
+ * operates on the user's version automatically. Which ENGINE runs it is
+ * `src/programs/runtime.ts`'s decision: the stored spec when there is one.
+ * A program stored only as a spec (one somebody built) is described from it.
  */
 export function programFor(enrollment: ProgramEnrollment) {
-  return effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule)
+  return definitionOf(effectiveProgram(requireProgram(enrollment.program_id), enrollment.customSchedule), enrollment)
+}
+
+/**
+ * WHAT THIS PERSON'S GYM CAN LOAD, for a prescription — the plate bug fixed
+ * (Plans/program-builder.md, Phases 2 and 4).
+ *
+ * Every prescription used to round to a 20 kg bar and 1.25 kg plates whatever
+ * the account said: `toDomain` builds `plates` from the enrollment's own bar
+ * override alone, and the account's bar and smallest plate reached only the
+ * plate-maths hint on the live screen. This is the rule that hint already used —
+ * the enrollment's bar first, then the account's, and the account's plate —
+ * and every prescription and progression now gets it too.
+ *
+ * A VALUE STILL AT THE COLUMN DEFAULT IS ONE NOBODY CHOSE, and is passed as
+ * "none": `profiles` stores both in kilograms with kilogram defaults, so a
+ * pounds enrollment would otherwise be handed a 44.09 lb bar.
+ */
+export function gymPlates(
+  barWeightKg: number | null | undefined,
+  unit: UnitSystem,
+  account: Pick<TrainingSettings, "barWeightKg" | "smallestPlateKg">
+): PlateSetup {
+  return plateSetupFor(
+    barWeightKg ?? (account.barWeightKg === DEFAULT_BAR_KG ? null : account.barWeightKg),
+    unit,
+    account.smallestPlateKg === DEFAULT_PLATE_KG ? null : account.smallestPlateKg
+  )
+}
+
+/** The enrollment with the gym's real plates, read from the account once. */
+async function withGymPlates(userId: string, enr: ProgramEnrollment): Promise<ProgramEnrollment> {
+  const account = await getTrainingSettings(userId)
+  return { ...enr, plates: gymPlates(enr.barWeightKg, enr.unitSystem, account) }
+}
+
+/**
+ * Every version of a program kept in the new format, for a replay to walk.
+ * Empty for programs from before it, whose history names the old weeks.
+ */
+async function programVersions(enr: ProgramEnrollment): Promise<Map<number, ProgramSpec>> {
+  const versions = new Map<number, ProgramSpec>()
+  if (!enr.spec) return versions
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("program_versions")
+    .select("version, spec")
+    .eq("enrollment_id", enr.id)
+    .order("version", { ascending: true })
+  if (error) throw new CouldNotTell("this program's history")
+  for (const row of (data ?? []) as { version: number; spec: unknown }[]) versions.set(row.version, readSpec(row.spec))
+  return versions
 }
 
 
@@ -210,7 +269,7 @@ async function withLocalDates<T extends { started_at: string; lastLoggedAt?: str
   const timezone = await getUserTimezone(userId)
   return rows.map((e) => ({
     ...e,
-    startedOn: getTodayInTimezone(timezone, new Date(e.started_at)),
+    startedOn: (e as { startedOn?: string }).startedOn ?? getTodayInTimezone(timezone, new Date(e.started_at)),
     lastLoggedOn: e.lastLoggedAt ? getTodayInTimezone(timezone, new Date(e.lastLoggedAt)) : null,
   }))
 }
@@ -326,13 +385,16 @@ export async function getEnrollmentById(userId: string, id: string): Promise<Pro
 function runningCopyOf(
   active: ProgramEnrollment[],
   programId: string,
-  customSchedule: ProgramSchedule | null | undefined
+  customSchedule: ProgramSchedule | null | undefined,
+  spec?: ProgramSpec | null
 ): ProgramEnrollment | undefined {
   return active.find(
     (e) =>
       e.program_id === programId &&
       (programId !== CUSTOM_PROGRAM_ID ||
-        (e.customSchedule != null && customSchedule != null && sameWeek(e.customSchedule, customSchedule)))
+        (spec != null
+          ? e.spec != null && JSON.stringify(e.spec) === JSON.stringify(spec)
+          : e.customSchedule != null && customSchedule != null && sameWeek(e.customSchedule, customSchedule)))
   )
 }
 
@@ -360,6 +422,13 @@ export async function enrollInProgram(
     barWeightKg?: number | null
     /** What the person calls it — a self-built week's own name. */
     label?: string | null
+    /**
+     * A program written in the new format — one somebody built, or a test's.
+     * Checked in full here; it runs under the custom shell's id.
+     */
+    spec?: unknown
+    /** The program's first day, `YYYY-MM-DD`, when it is not today (Q16). */
+    startedOn?: string | null
   }
 ): Promise<{
   enrollment: ProgramEnrollment
@@ -367,18 +436,41 @@ export async function enrollInProgram(
   /** Programs paused to make room for this one. Reported, never silent. */
   displaced: ProgramEnrollment[]
 }> {
-  const { program: catalogProgram, level } = resolveProgramForLevel(input.programId, input.level)
+  /**
+   * A PROGRAM IN THE NEW FORMAT is checked in full before anything else: it is
+   * data from a stranger, and the engine multiplies its numbers.
+   */
+  let ownSpec: ProgramSpec | null = null
+  if (input.spec != null) {
+    const checked = checkSpec(input.spec)
+    if (!checked.ok) throw new ProgramRefused(`That program cannot be started: ${checked.problems.slice(0, 3).join(" ")}`)
+    ownSpec = checked.spec
+  }
+  const { program: catalogProgram, level } = ownSpec
+    ? { program: customProgram, level: "intermediate" as LevelId }
+    : resolveProgramForLevel(input.programId, input.level)
   // Seed against the schedule the user is actually enrolling in, so a lift they
   // added is seeded and one they removed is not.
   const program = effectiveProgram(catalogProgram, input.customSchedule)
+  const account = await getTrainingSettings(userId)
+  const plates = gymPlates(input.barWeightKg ?? null, input.unitSystem, account)
   const { exerciseState, cursor } = seedEnrollment(
     program,
     level,
     input.unitSystem,
     input.oneRepMaxes,
     input.workingWeights,
-    plateSetupFor(input.barWeightKg ?? null, input.unitSystem)
+    plates,
+    ownSpec
   )
+  /**
+   * THE PROGRAM'S OWN COPY (Q14). A lifting program keeps the version it was
+   * started on, so a later correction to the catalogue does not rewrite what
+   * somebody is halfway through; version 1 is recorded with it.
+   */
+  const spec = ownSpec ?? specOf(program, { unitSystem: input.unitSystem, label: input.label ?? null })
+  const timezone = await getUserTimezone(userId)
+  const startedOn = input.startedOn ?? getTodayInTimezone(timezone)
 
   const supabase = await createServerSupabaseClient()
   /**
@@ -406,7 +498,7 @@ export async function enrollInProgram(
    * you are already running", programs-past-workout.spec); the server did not.
    * Restarting has its own doors (reset, and /resume for a finished one).
    */
-  const alreadyRunning = runningCopyOf(active, catalogProgram.id, input.customSchedule)
+  const alreadyRunning = runningCopyOf(active, catalogProgram.id, input.customSchedule, ownSpec)
   if (alreadyRunning) return answerWithRunning(catalogProgram, alreadyRunning)
 
   const sameDiscipline = active.filter(
@@ -460,7 +552,11 @@ export async function enrollInProgram(
           ]
         : [],
       bar_weight_kg: input.barWeightKg ?? null,
-      label: input.label ?? null,
+      label: input.label ?? ownSpec?.name ?? null,
+      spec,
+      spec_version: spec ? SPEC_VERSION : null,
+      started_on: startedOn,
+      maxes: input.oneRepMaxes ?? null,
     },
     p_displace: sameDiscipline.map((e) => e.id),
   })
@@ -479,14 +575,14 @@ export async function enrollInProgram(
      * lost race there only counts as "already running" when the running week
      * is this week (`sameWeek`, the rule Build Your Week uses).
      */
-    const running = runningCopyOf(await listActiveEnrollments(userId), catalogProgram.id, input.customSchedule)
+    const running = runningCopyOf(await listActiveEnrollments(userId), catalogProgram.id, input.customSchedule, ownSpec)
     if (running) return answerWithRunning(catalogProgram, running)
     throw new ProgramRefused("Another program was started at the same moment. Reload to see which one is running.")
   }
   if (error) throw refusalFrom(error, "That program could not be started. Reload and try again.")
 
   const enrollment = toDomain(data as ProgramEnrollmentRow)
-  return { enrollment, prescription: computePrescription(program, enrollment), displaced: sameDiscipline }
+  return { enrollment, prescription: computePrescription(programFor(enrollment), enrollment, { plates }), displaced: sameDiscipline }
 }
 
 /**
@@ -814,6 +910,16 @@ export async function updateEnrollmentSchedule(
   if (schedule && !isCustomizable(catalogProgram)) {
     throw new Error(`${catalogProgram.name} is a week-by-week plan and cannot be edited`)
   }
+  /**
+   * A PROGRAM BUILT IN THE NEW FORMAT is not edited through the old editor.
+   * That editor sees it as plain sets and reps (`definitionFromSpec`), and
+   * saving that back would quietly drop every rule the old shape cannot hold —
+   * the back-off range, the RPE targets, week 12. Its editor is the program
+   * builder (Plans/program-builder.md, Phase 6).
+   */
+  if (enr.spec && catalogProgram.id === CUSTOM_PROGRAM_ID && !enr.customSchedule) {
+    throw new ProgramRefused("This program was built with rules the old editor cannot show, so it cannot be changed here yet.")
+  }
 
   const program = effectiveProgram(catalogProgram, schedule)
   /**
@@ -866,6 +972,12 @@ export async function updateEnrollmentSchedule(
   ]
 
   const supabase = await createServerSupabaseClient()
+  /**
+   * A program that keeps its own copy gets the edited week as its next
+   * version (Q14), written in the same statement; one from before the format
+   * keeps following its old week, as it did.
+   */
+  const newSpec = enr.spec ? specOf(program, { unitSystem: enr.unitSystem, label: enr.label ?? null }) : null
   const { data, error } = await saveProgramState(supabase, enrollmentId, {
     custom_schedule: schedule,
     exercise_state: exerciseState,
@@ -873,11 +985,12 @@ export async function updateEnrollmentSchedule(
     // Unconditional now: the schedule event above exists for every save, so
     // there is no longer a version of this write that records nothing.
     replay_events: replayEvents,
+    ...(newSpec ? { spec: newSpec, spec_version: SPEC_VERSION } : {}),
   })
   if (error || !data) throw new Error(`Failed to save program changes: ${error?.message ?? "no such program"}`)
 
   const enrollment = toDomain(data)
-  return { enrollment, prescription: computePrescription(programFor(enrollment), enrollment) }
+  return { enrollment, prescription: computePrescription(programFor(enrollment), await withGymPlates(userId, enrollment)) }
 }
 
 /**
@@ -930,7 +1043,7 @@ export async function changeEnrollmentUnit(
    * so rounding with it would snap pounds onto kilogram steps — 220.46 lb to
    * 220.46, because 2.5 divides it evenly enough to look deliberate.
    */
-  const plates = plateSetupFor(enr.barWeightKg ?? null, to)
+  const plates = gymPlates(enr.barWeightKg, to, await getTrainingSettings(userId))
 
   const supabase = await createServerSupabaseClient()
   const { data, error } = await saveProgramState(
@@ -1019,8 +1132,11 @@ export async function getEnrollmentDetail(
   userId: string,
   id: string
 ): Promise<EnrollmentDetail | null> {
-  const enrollment = await getEnrollmentById(userId, id)
-  if (!enrollment) return null
+  const found = await getEnrollmentById(userId, id)
+  if (!found) return null
+  // The gym's own plates, so a day previewed in the browser rounds the way the
+  // server's prescription for today does.
+  const enrollment = await withGymPlates(userId, found)
 
   // ONE CLOCK READ, shared. "Which session is today" and "which days did I
   // train this week" are two answers to the same question, and reading the
@@ -1067,12 +1183,27 @@ export async function todaysSessionFor(
   // know whether "today" is a fact or the UTC default nobody set.
   const { timezone, known } = clock ?? (await getUserClock(userId))
   const todayWeekday = isoWeekdayInTimezone(timezone)
+  const withPlates = await withGymPlates(userId, enr)
+
+  /**
+   * A LIFTING PROGRAM picks its own day and week from the clock: today's
+   * weekday on a weekday program, and the week by the calendar on a program
+   * that counts weeks that way (Q8). A running plan and the splits keep the
+   * rule below.
+   */
+  if (specOf(program, enr)) {
+    const prescription = computePrescription(program, withPlates, {
+      clock: { today: getTodayInTimezone(timezone), todayWeekday },
+    })
+    return { ...prescription, todayWeekday, clockKnown: known }
+  }
+
   const picked = pickTodaysDay(program.schedule, todayWeekday)
-  if (!picked) return { ...computePrescription(program, enr), todayWeekday, clockKnown: known }
+  if (!picked) return { ...computePrescription(program, withPlates), todayWeekday, clockKnown: known }
 
   const prescription = computePrescription(program, {
-    ...enr,
-    cursor: { ...enr.cursor, dayIndex: picked.dayIndex },
+    ...withPlates,
+    cursor: { ...withPlates.cursor, dayIndex: picked.dayIndex },
   })
   return {
     ...prescription,
@@ -1094,7 +1225,8 @@ export async function skipSession(userId: string, enrollmentId: string): Promise
   // this is the same rule on the server, for anyone who posts anyway.
   const refusal = skipRefusal(program.schedule)
   if (refusal) throw new ProgramRefused(refusal)
-  const { enrollment } = applyLog(program, enr, {
+  const { plates } = await withGymPlates(userId, enr)
+  const { enrollment } = applyLog(program, { ...enr, plates }, {
     enrollment_id: enr.id,
     dayId: "",
     cycle: enr.cursor.cycle,
@@ -1108,7 +1240,7 @@ export async function skipSession(userId: string, enrollmentId: string): Promise
     ...(enr.replayEvents ?? []),
     { at: new Date().toISOString(), kind: "skip" },
   ])
-  return computePrescription(program, enrollment)
+  return computePrescription(program, { ...enrollment, plates })
 }
 
 // ---------------------------------------------------------------------------
@@ -1238,6 +1370,8 @@ export async function replayedState(
   // `repairUneventfulEdit` for what can and cannot be recovered.
   const repair = repairUneventfulEdit(enr)
   const events: ReplayEvent[] = [...(repair ? [repair] : []), ...(enr.replayEvents ?? [])]
+  const { plates } = await withGymPlates(userId, enr)
+  const versions = await programVersions(enr)
 
   const replayed = replayEnrollment(
     program,
@@ -1249,7 +1383,8 @@ export async function replayedState(
       cycle: l.cycle,
       week: l.week,
     })),
-    events
+    events,
+    { plates, versions }
   )
 
   let changesForAdded: ProgressionChange[] | undefined
@@ -1269,9 +1404,10 @@ export async function replayedState(
         cycle: l.cycle,
         week: l.week,
       })),
-      events
+      events,
+      { plates, versions }
     )
-    changesForAdded = applyLog(programFor(stateBefore), stateBefore, {
+    changesForAdded = applyLog(programFor(stateBefore), { ...stateBefore, plates }, {
       enrollment_id: enr.id,
       dayId: change.addLog.dayId,
       cycle: change.addLog.cycle,

@@ -182,6 +182,8 @@ async function repoWith(opts: Opts) {
       replayEvents: [],
     }),
     programFor: () => getProgram("stronglifts-5x5"),
+    // The standard Olympic set: these tests are about dates, not plates.
+    gymPlates: () => ({ barWeight: 20, smallestPlate: 1.25 }),
     getSessionLogs: async () =>
       (opts.storedLoggedAt ?? [NEWEST_STORED]).map((logged_at, i) => ({
         id: `l${i}`,

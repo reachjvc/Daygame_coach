@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–3 done 2026-10-22 (session daygame-coach-fc); Phase 4 is next.
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–4 done 2026-10-22 (session daygame-coach-fc); Phase 5 is next.
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -662,7 +662,67 @@ CI `checks` on `9d1f2591`: success.
 **Acceptance:** all unit, integration and browser tests green; a started built-in program behaves exactly
 as before (golden).
 
-## Phase 5 — The live workout screen
+### Phase 4 evidence (2026-10-22, session daygame-coach-fc)
+
+**Doubt first.** (1) "Every reader of the old types goes through the new format" is true of the ENGINE:
+every prescription, progression, seed, advance and replay now runs through `src/programs/runtime.ts`.
+The old program SHAPE is still read for display and by the old editors (day names, weekdays, the
+editor's lifts) — on purpose: Phase 6 replaces the editors and Phase 8 rewrites the catalogue natively.
+A program stored only in the new format is described in that shape by `definitionFromSpec` (lossy,
+display only), and the old editor refuses to save one (it would flatten its rules). (2) The old engine's
+own tests — about 300 — now run against the new engine by changing only their import; three asserted the
+old refusal sentences and were updated to the new ones (they name the lift: "Bench Press needs a starting
+weight."); none asserted a different number.
+
+**4.1 The switch.** `src/programs/runtime.ts` decides once which engine runs a program: the stored spec
+when an enrollment has one, else the lifting catalogue program (with the person's own week in place)
+converted on read, else — running plans and the splits — the old engine. It exports the old engine's
+names (`computePrescription`, `applyLog`, `seedEnrollment`, `replayEnrollment`, `advanceCursor`) so
+`programRepo`, `workoutRepo`, `ProgramsApp` and every test switched by import path. The lifting half of
+the old engine — linear, double progression, the 5/3/1 wave, the ladder, their seeding and cursor walk,
+about 700 lines of `programsService.ts` — is deleted; what remains there runs running plans and hold
+routines only (`isRunOrHold`, `prescribeRunOrHold`, `applyRunOrHoldLog`, `advanceRunOrHold`,
+`seedRunOrHold`, `replayRunOrHold`). Weekday and calendar programs pick their day and week from the
+account's clock inside the engine. **The plate bug is fixed here:** `gymPlates` (the enrollment's bar,
+else the account's, and the account's smallest plate) now feeds every prescription, progression, seed,
+replay and unit change, and the live screen's plate maths uses the same object; before, only the plate
+maths saw the account's settings. The owner's account is on the defaults (20 / 1.25), so nothing of his
+changes.
+
+**4.2 Logging.** A set carries its kind (now also `top`, `restpause`), its slot and set group and a
+half-step RPE from the tick (`CompleteSetSchema`, `RpeSchema`, `SetKindSchema`) through the live
+workout, the offline queue, the stored row, a correction (`ReviseWorkoutSchema`, `WorkoutCorrection`,
+`replace_sets_and_replay`), the finish (`p_rpe` NUMERIC) and every replay (`entriesFromSets` keeps RPE and
+set group; top and rest-pause sets count as work). "Last time" is per slot (Q13): `pickLastSets` takes
+the slot's own sets and older sets with no slot, never another slot's — Monday's heavy bench and
+Friday's volume bench are two histories of one lift; personal records stay per lift (by name). A row
+the program calls a top set or a back-off is written under that kind and has a PREVIOUS value.
+
+**4.3 Copies and versions.** `enrollInProgram` stores a lifting program's spec (the converted catalogue
+program, or a spec handed in — checked in full by `checkSpec`), `spec_version` 2, `started_on` (today on
+the account's calendar, or a chosen first day — Q16) and the maxes; `start_enrollment` records version
+1. `updateEnrollmentSchedule` on a program with its own copy writes the edited week as the next version
+through `save_program_state`. Replays read `program_versions` and start from version 1. A workout may be
+dated back to the program's chosen first day.
+
+**Golden.** `golden.test.ts` now runs all 13 built-ins through the app's own entry points (the runtime)
+against golden-v1: equal. `goldenSpec.test.ts` adds the started case: each lifting built-in with its
+stored copy in place, run through the runtime, equals golden-v1.
+
+**Tests.** `tests/integration/routes/programFormatRoutes.integration.test.ts` (7, real Postgres, real
+handlers): a started built-in keeps its copy as version 1; an edit records version 2; the account's
+2.5 kg plates turn a 22.5 kg squat into 25 (it used to be prescribed as 22.5); Starscream starts as
+written under its own name, prescribes Monday week 1 (top set picked by feel at RPE 8.5, three back-offs
+worked out from it) and Monday week 12 (1–5 @ RPE 9) by the calendar; a top set at RPE 8.5 is stored
+with kind `top`, slot and set group, and moves the bench's estimated max to 117.6 (RTS: 4 @ 8.5 =
+85.0%); the old editor refuses it; a broken program is refused with the format's sentence.
+
+**Gates (2026-10-22):** `npm test` 376 files, 5305 passed, 1 skipped; integration 36 files, 198 passed
+(test stack on the production baseline); browser, desktop and phone projects, all specs: 279 passed,
+1 skipped, and two sign-in/e-mail specs that failed under load and passed when re-run alone
+(`auth.spec.ts:26`, `password-reset.spec.ts:123` — neither touches the gym); `typecheck-ratchet` 88,
+none new; `lint:ratchet` 290, none new.
+
 **Depends on:** 4.
 1. Shows target RPE/RIR, "3–5 sets" with an add-set button, options ("3×10 … 10×3"), choice slots, caps on
    the last set, the week ("Week 3 of 12", phase name), deload and test weeks, the finish screen (Q9).

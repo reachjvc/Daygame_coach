@@ -15,6 +15,7 @@ import { getUserTimezone } from "@/src/db/settingsRepo"
 import { enrollmentName, getProgram } from "@/src/programs/data/catalog"
 import { effectiveProgram, isCustomizable } from "@/src/programs/customize"
 import { addedLiftId, missRulesFor } from "@/src/programs/programsService"
+import { definitionOf } from "@/src/programs/runtime"
 import type { MissRule } from "@/src/programs/types"
 import { LiveWorkoutScreen } from "@/src/programs/components/live/LiveWorkoutScreen"
 import type { PlateSetup, SessionPrescription, UnitSystem } from "@/src/programs/types"
@@ -76,7 +77,7 @@ export default async function LiveWorkoutPage() {
     if (enrollment) {
       const program = getProgram(enrollment.program_id)
       if (program) {
-        missRules = missRulesFor(effectiveProgram(program, enrollment.customSchedule), enrollment)
+        missRules = missRulesFor(definitionOf(effectiveProgram(program, enrollment.customSchedule), enrollment), enrollment)
         /**
          * Whether "keep these changes for next time" is a question this
          * program can answer. A week-by-week plan cannot be edited —
@@ -108,7 +109,7 @@ export default async function LiveWorkoutPage() {
       const to = swapped[ex.exerciseId]
       return to
         ? { key: addedLiftId(to.name), name: to.name, libraryId: to.libraryId ?? null }
-        : { key: ex.exerciseId, name: ex.name }
+        : { key: ex.exerciseId, name: ex.name, slotId: ex.slotId ?? null }
     }),
     ...(live.adjustments.added ?? []).map((a) => ({
       key: a.exerciseId,

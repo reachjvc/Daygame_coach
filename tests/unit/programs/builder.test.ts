@@ -12,14 +12,8 @@ import { describe, test, expect } from "vitest"
 import { buildExercise, hasWeight, numericWeights, progressionOfKind, setWeekday, convertTyped } from "@/src/programs/builder"
 import { fromKg, toKg } from "@/src/shared/weight"
 import { addDay, addExercise, scheduleDays, seedForAddedExercises } from "@/src/programs/customize"
-import {
-  applyLog,
-  computePrescription,
-  dayForWeekday,
-  isWeekdayAnchored,
-  roundToLoadable,
-  seedEnrollment,
-} from "@/src/programs/programsService"
+import { dayForWeekday, isWeekdayAnchored, roundToLoadable } from "@/src/programs/programsService"
+import { applyLog, computePrescription, seedEnrollment } from "@/src/programs/runtime"
 import { getProgram, requireProgram } from "@/src/programs/data/catalog"
 import { ALL_PROGRAMS } from "@/src/programs/data/catalog"
 import { CUSTOM_PROGRAM_ID, customProgram } from "@/src/programs/data/customProgram"
@@ -96,7 +90,7 @@ describe("the custom shell", () => {
     }
     const { schedule } = twoLiftDay()
     const program = effectiveProgram(customProgram, schedule)
-    expect(() => seedEnrollment(program, "intermediate", "kg")).toThrow(/missing seed weight/)
+    expect(() => seedEnrollment(program, "intermediate", "kg")).toThrow("Bench Press needs a starting weight.")
   })
 })
 

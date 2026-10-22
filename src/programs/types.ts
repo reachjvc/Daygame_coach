@@ -8,6 +8,8 @@
  * the engine fails explicitly on them (no silent fallback, CLAUDE.md §3/§15).
  */
 
+import type { ProgramSpec } from "./spec/types"
+
 // ============================================================================
 // Core enums
 // ============================================================================
@@ -488,6 +490,12 @@ export type ReplayEvent =
       kind: "schedule"
       schedule: ProgramSchedule | null
       seeded: Record<string, ExerciseState>
+      /**
+       * The program version in force from this moment, for programs stored in
+       * the program format (`program_versions`). Absent on history written
+       * before it, which names the old week in `schedule` instead.
+       */
+      version?: number
     }
 
 /**
@@ -595,6 +603,14 @@ export interface ProgramEnrollment {
   plates?: PlateSetup
   /** What the person calls it — the draft's name for a self-built week. */
   label?: string | null
+  /**
+   * The program this enrollment runs, in the program format — its own copy,
+   * taken at start (Phase 4). Null on rows started before the format, which
+   * run the catalogue program converted on read (`src/programs/runtime.ts`).
+   */
+  spec?: ProgramSpec | null
+  /** The maxes the program was started with, by lift, as typed. */
+  maxes?: Record<string, number> | null
 }
 
 // ============================================================================
@@ -857,12 +873,16 @@ export interface LiveWorkoutSet {
   weightKg: number
   reps: number
   setNumber: number
-  kind: "warmup" | "working" | "amrap" | "backoff" | "drop"
+  kind: "warmup" | "working" | "amrap" | "backoff" | "drop" | "top" | "restpause"
   /** Which prescribed set this answers; null if it was added on the day. */
   prescribedIndex: number | null
   completedAt: string | null
+  /** 1–10 in half steps. */
   rpe: number | null
   side: "left" | "right" | null
+  /** The program slot and set group it answered (program format); null on older sets. */
+  slotId?: string | null
+  setGroupId?: string | null
 }
 
 export interface LiveWorkout {
@@ -941,6 +961,9 @@ export interface StoredSet {
   set_number: number
   set_kind: string
   side?: string | null
+  rpe?: number | null
+  slot_id?: string | null
+  set_group_id?: string | null
 }
 
 /** What the finish screen says you just did. */
@@ -1074,6 +1097,10 @@ export interface ProgramEnrollmentRow {
   replay_events: ReplayEvent[] | null
   bar_weight_kg: number | null
   label: string | null
+  spec?: ProgramSpec | null
+  spec_version?: number | null
+  started_on?: string | null
+  maxes?: Record<string, number> | null
 }
 
 export interface ProgramSessionLogRow {
@@ -1663,6 +1690,9 @@ export interface EditableSet {
   /** The per-exercise note, carried so a correction does not delete it. */
   exerciseNotes: string | null
   rpe: number | null
+  /** Carried untouched: the program slot and set group it answered. */
+  slotId?: string | null
+  setGroupId?: string | null
 }
 
 /**
@@ -1694,4 +1724,7 @@ export interface CorrectedSet {
   notes: string | null
   exerciseNotes: string | null
   rpe: number | null
+  /** Carried so a correction keeps which slot and set group each set answered. */
+  slotId?: string | null
+  setGroupId?: string | null
 }

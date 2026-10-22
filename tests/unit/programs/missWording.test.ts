@@ -12,7 +12,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { missOutcome, missWording, missRulesFor, seedEnrollment } from "@/src/programs/programsService"
+import { missOutcome, missWording, missRulesFor } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 
 describe("what today's miss does", () => {

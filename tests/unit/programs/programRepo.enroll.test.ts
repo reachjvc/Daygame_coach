@@ -19,7 +19,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { createFakeSupabase, type Row, type RpcCall } from "../../helpers/fakeSupabase"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 
 const tables: Record<string, Row[]> = { program_enrollments: [], workout_logs: [], profiles: [] }
 const calls: RpcCall[] = []

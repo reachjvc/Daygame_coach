@@ -20,7 +20,7 @@ import { cleanup, render, screen } from "@testing-library/react"
 import { ROUTES } from "@/src/shared/routes"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { TrainingProgramCard } from "@/src/goals/components/north-star/WorkoutPrograms"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { ProgramEnrollment } from "@/src/programs/types"
 

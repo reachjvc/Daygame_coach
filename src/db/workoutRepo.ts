@@ -25,8 +25,8 @@ import { DEFAULT_BAR_KG, DEFAULT_PLATE_KG, type TrainingSettings } from "@/src/p
 import { DEFAULT_SESSION_TYPE } from "@/src/programs/config"
 import {
   getEnrollmentById,
+  gymPlates,
   programFor,
-  plateSetupFor,
   replayedState,
   getSessionLogs,
   todaysSessionFor,
@@ -36,11 +36,9 @@ import { CouldNotTell, databaseRefusal, ProgramRefused, WorkoutGone } from "@/sr
 import { isOpenWorkout } from "./workoutLifecycle"
 import { inWorkoutOrder, personalBestBaseline } from "./healthRepo"
 import { getUserTimezone } from "./settingsRepo"
-import { DISPLAY_LOCALE, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
+import { DISPLAY_LOCALE, getTodayInTimezone, isoWeekdayInTimezone, startOfDayInstant, toDateISO, toZonedDate } from "@/src/shared/dateUtils"
 import { detectPersonalRecords, firstTimeLifts, workingVolumeKg } from "@/src/health/healthService"
 import {
-  applyLog,
-  computePrescription,
   entriesFromSets,
   isSessionOf,
   keepableChanges,
@@ -51,6 +49,7 @@ import {
   toKg,
   fromKg,
 } from "@/src/programs/programsService"
+import { applyLog, computePrescription } from "@/src/programs/runtime"
 import {
   applyAdjustmentsToSchedule,
   isCustomizable,
@@ -89,6 +88,7 @@ type WorkoutLogSetsRow = {
         reps: number
         set_number: number
         set_kind: string
+        slot_id?: string | null
       }[]
     | null
 }
@@ -158,8 +158,10 @@ function toLive(row: LiveRow, unit: UnitSystem): LiveWorkout {
           kind: s.set_kind,
           prescribedIndex: s.prescribed_index,
           completedAt: s.completed_at,
-          rpe: s.rpe,
+          rpe: s.rpe == null ? null : Number(s.rpe),
           side: s.side,
+          slotId: s.slot_id ?? null,
+          setGroupId: s.set_group_id ?? null,
         })
       )
       .sort((a, b) => a.setNumber - b.setNumber),
@@ -292,7 +294,9 @@ export async function startWorkout(
       if (!isSessionOf(program, input.dayId)) {
         throw new StartRefused("unknown_day", "That day is not part of this program.", 409)
       }
-      const prescription = computePrescription(program, enr)
+      // The cycle and week are TODAY's — by the calendar on a program that
+      // counts weeks that way — whichever day was picked.
+      const prescription = await todaysSessionFor(userId, enr)
       dayId = input.dayId
       cycle = prescription.cycle
       week = prescription.week
@@ -335,9 +339,17 @@ export async function startWorkout(
    * is to accept it. Rounding down to the minute is not a person claiming to
    * have trained before they enrolled.
    */
+  /**
+   * THE PROGRAM'S FIRST DAY, as chosen (Q16): a program started on Thursday
+   * with Monday as its first day has Monday's sessions to write up. Without a
+   * chosen day, the instant it was created.
+   */
+  const firstDay = enrollment?.startedOn
+    ? new Date(startOfDayInstant(enrollment.startedOn, await getUserTimezone(userId))).getTime()
+    : Number.POSITIVE_INFINITY
   if (
     enrollment &&
-    new Date(startedAt).getTime() < new Date(enrollment.started_at).getTime() - 60_000
+    new Date(startedAt).getTime() < Math.min(new Date(enrollment.started_at).getTime(), firstDay) - 60_000
   ) {
     throw new StartRefused("before_program", "That is before you started this program.", 400)
   }
@@ -620,10 +632,13 @@ export async function completeSet(
     weight: number
     reps: number
     setNumber: number
-    kind?: "warmup" | "working" | "amrap" | "backoff" | "drop"
+    kind?: LiveWorkoutSet["kind"]
     prescribedIndex?: number | null
     side?: "left" | "right" | null
     rpe?: number | null
+    /** The program slot and set group the set answers (program format). */
+    slotId?: string | null
+    setGroupId?: string | null
   }
 ): Promise<LiveWorkout> {
   const live = await requireLive(userId, workoutId)
@@ -650,6 +665,8 @@ export async function completeSet(
     prescribed_index: set.prescribedIndex ?? null,
     side,
     rpe: set.rpe ?? null,
+    slot_id: set.slotId ?? null,
+    set_group_id: set.setGroupId ?? null,
   }
 
   /**
@@ -1108,8 +1125,10 @@ export async function finishWorkout(
   let expectedSessionCount = 0
 
   if (live.enrollmentId) {
-    const enr = await getEnrollmentById(userId, live.enrollmentId)
-    if (!enr) throw new Error("That program was not found")
+    const found = await getEnrollmentById(userId, live.enrollmentId)
+    if (!found) throw new Error("That program was not found")
+    const account = await getTrainingSettings(userId)
+    const enr = { ...found, plates: gymPlates(found.barWeightKg, found.unitSystem, account) }
     const program = programFor(enr)
     const entries = entriesFromSets(live.sets.map(toStored), live.adjustments, enr.unitSystem)
     const session = {
@@ -1393,6 +1412,9 @@ function toStored(set: LiveWorkoutSet): StoredSet {
     set_number: set.setNumber,
     set_kind: set.kind,
     side: set.side,
+    rpe: set.rpe,
+    slot_id: set.slotId ?? null,
+    set_group_id: set.setGroupId ?? null,
   }
 }
 
@@ -1449,8 +1471,12 @@ export async function unitFor(userId: string, enrollmentId: string | null): Prom
  */
 export async function lastSetsForLifts(
   userId: string,
-  /** `key` is the caller's own handle for the lift — an exercise id, or a name. */
-  lifts: readonly { key: string; name: string; libraryId?: string | null }[],
+  /**
+   * `key` is the caller's own handle for the lift — an exercise id, or a name.
+   * `slotId`, when the lift is a slot of a program in the new format, makes
+   * "last time" that slot's own (Q13).
+   */
+  lifts: readonly { key: string; name: string; libraryId?: string | null; slotId?: string | null }[],
   unit: UnitSystem,
   sessions = 1
 ): Promise<Record<string, LiftSessions[]>> {
@@ -1458,7 +1484,7 @@ export async function lastSetsForLifts(
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from("workout_logs")
-    .select("logged_at, workout_sets(exercise, library_id, weight_kg, reps, set_number, set_kind)")
+    .select("logged_at, workout_sets(exercise, library_id, weight_kg, reps, set_number, set_kind, slot_id)")
     .eq("user_id", userId)
     .not("ended_at", "is", null)
     .order("logged_at", { ascending: false })
@@ -1479,6 +1505,7 @@ export async function lastSetsForLifts(
       reps: set.reps,
       setNumber: set.set_number,
       kind: set.set_kind,
+      slotId: set.slot_id ?? null,
     })),
   }))
 
@@ -1489,7 +1516,11 @@ export async function lastSetsForLifts(
       // The library id is derived HERE when the caller has none, so every
       // caller matches the same way — `completeSet` writes the column from the
       // same function.
-      { name: lift.name, libraryId: lift.libraryId ?? libraryByName(lift.name)?.id ?? null },
+      {
+        name: lift.name,
+        libraryId: lift.libraryId ?? libraryByName(lift.name)?.id ?? null,
+        ...(lift.slotId ? { slotId: lift.slotId } : {}),
+      },
       sessions
     )
   }
@@ -1503,6 +1534,15 @@ export async function prescriptionForDay(userId: string, enrollmentId: string, d
   const program = programFor(enr)
   const account = await getTrainingSettings(userId)
   /**
+   * ONE SET OF PLATES for the prescription AND the plate maths beside it
+   * (`gymPlates`): the enrollment's bar over the account's, the account's
+   * smallest plate. They used to be two answers on one row — the hint used
+   * the account's plates while every weight it explained had been rounded to
+   * a 20 kg bar and 1.25 kg plates whatever the account said.
+   */
+  const plates = gymPlates(enr.barWeightKg, enr.unitSystem, account)
+  const timezone = await getUserTimezone(userId)
+  /**
    * A RUNNING PLAN HAS NO DAY LIST, and asking for one THREW — so the live
    * screen could not open at all for a workout started on Couch to 5K. Its
    * session comes from the cursor's week, and there are no load styles to
@@ -1510,58 +1550,30 @@ export async function prescriptionForDay(userId: string, enrollmentId: string, d
    */
   if (program.schedule.kind === "endurance_weeks") {
     return {
-      prescription: computePrescription(program, enr),
+      prescription: computePrescription(program, { ...enr, plates }),
       unit: enr.unitSystem,
-      plates: plateSetupFor(
-        enr.barWeightKg ?? account.barWeightKg,
-        enr.unitSystem,
-        account.smallestPlateKg
-      ),
+      plates,
       loadStyles: {} as Record<string, ReturnType<typeof loadStyleOf>>,
-      timezone: await getUserTimezone(userId),
+      timezone,
     }
   }
   const days = scheduleDays(program.schedule)
   const index = dayId ? days.findIndex((d) => d.id === dayId) : -1
-  const prescription = computePrescription(
-    program,
-    index >= 0 ? { ...enr, cursor: { ...enr.cursor, dayIndex: index } } : enr
-  )
+  const today = getTodayInTimezone(timezone)
+  const prescription = computePrescription(program, { ...enr, plates }, {
+    ...(index >= 0 ? { dayIndex: index } : {}),
+    clock: { today, todayWeekday: isoWeekdayInTimezone(timezone) },
+  })
   return {
     prescription,
     unit: enr.unitSystem,
-    /**
-     * THE ENROLLMENT'S BAR OVERRIDES THE ACCOUNT'S; the plate comes from the
-     * account, which is the only place it is set.
-     *
-     * A VALUE STILL AT THE COLUMN DEFAULT IS ONE NOBODY CHOSE. `profiles`
-     * stores both in KILOGRAMS and both columns are NOT NULL with kg
-     * defaults, so an account that has never touched them arrives here as
-     * 20 / 1.25 — and passing those through converts them. On a pounds
-     * enrolment that is a 44.09 lb bar and a 2.76 lb smallest plate, which
-     * also filters the real 2.5 lb plate out of the set:
-     *
-     *   Overhead Press  75 lb × 5 …
-     *   Bar: 10 + 5 per side (makes 74.09 lb)
-     *
-     * 75 lb is exactly loadable, and the hint flagged it approximate with a
-     * two-decimal number nobody can load. Meanwhile `enrollment.plates`,
-     * built from the same unit through the same function, correctly said 45
-     * and 2.5 — two paths, two bars, on one row. It never showed in kg
-     * because there the account defaults and the unit defaults are the same
-     * numbers.
-     *
-     * A number somebody TYPED is theirs and is converted as before.
-     */
-    plates: plateSetupFor(
-      enr.barWeightKg ?? (account.barWeightKg === DEFAULT_BAR_KG ? null : account.barWeightKg),
-      enr.unitSystem,
-      account.smallestPlateKg === DEFAULT_PLATE_KG ? null : account.smallestPlateKg
-    ),
-    loadStyles: Object.fromEntries(
-      days.flatMap((d) => d.exercises.map((ex) => [ex.id, loadStyleOf(ex)] as const))
-    ),
-    timezone: await getUserTimezone(userId),
+    plates,
+    loadStyles: Object.fromEntries([
+      ...days.flatMap((d) => d.exercises.map((ex) => [ex.id, loadStyleOf(ex)] as const)),
+      // The engine's own answer wins where it has one.
+      ...prescription.exercises.filter((ex) => ex.loadStyle).map((ex) => [ex.exerciseId, ex.loadStyle!] as const),
+    ]),
+    timezone,
   }
 }
 
@@ -1616,6 +1628,9 @@ export async function reviseWorkout(
     /** Which prescribed slot it answered. */
     prescribedIndex?: number | null
     rpe?: number | null
+    /** The program slot and set group (program format), kept through a correction. */
+    slotId?: string | null
+    setGroupId?: string | null
   }>,
   /**
    * The ids the editor LOADED — not the ones it is submitting.
@@ -1712,6 +1727,8 @@ export async function reviseWorkout(
     // lift — which the comment above this function says cannot happen.
     exercise_notes: set.exerciseNotes ?? null,
     rpe: set.rpe ?? null,
+    slot_id: set.slotId ?? null,
+    set_group_id: set.setGroupId ?? null,
     /**
      * WHEN THE SET WAS TICKED, AND WHICH SLOT IT ANSWERED — carried back.
      *

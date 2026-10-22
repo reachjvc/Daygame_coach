@@ -84,7 +84,10 @@ export function WorkoutCorrection({
       side: set.side,
       notes: set.notes,
       exerciseNotes: set.exercise_notes,
-      rpe: set.rpe,
+      rpe: set.rpe == null ? null : Number(set.rpe),
+      // Which slot and set group it answered, carried untouched.
+      slotId: set.slot_id ?? null,
+      setGroupId: set.set_group_id ?? null,
     }))
   )
   const [saving, setSaving] = useState(false)
@@ -140,6 +143,8 @@ export function WorkoutCorrection({
         notes: set.notes,
         exerciseNotes: set.exerciseNotes,
         rpe: set.rpe,
+        slotId: set.slotId ?? null,
+        setGroupId: set.setGroupId ?? null,
       })),
       /**
        * WHAT THIS EDITOR LOADED, so the server can refuse a save built on a

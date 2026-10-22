@@ -312,6 +312,26 @@ export function setLimitSentence(
   return `A set number must be a whole number between 1 and ${SET_LIMITS.setMax}.`
 }
 
+/**
+ * HOW HARD A SET WAS, as the columns hold it since 20261022100000: 1–10 in
+ * half steps. RPE 8.5 is what Starscream asks for on every top set, and the
+ * old whole-number rule refused it.
+ */
+export const RpeSchema = z
+  .number()
+  .min(1, "Effort is from 1 to 10.")
+  .max(10, "Effort is from 1 to 10.")
+  .refine((n) => Number.isInteger(n * 2), { message: "Effort moves in half steps, like 8 or 8.5." })
+
+/** The jobs a set can do — the `workout_sets_kind` check, said once. */
+export const SetKindSchema = z.enum(["warmup", "working", "amrap", "backoff", "drop", "top", "restpause"])
+
+/** Which slot of a program and which set group a set answered (program format). */
+const SlotRef = {
+  slotId: z.string().regex(/^[A-Za-z0-9_.~-]{1,100}$/).nullish(),
+  setGroupId: z.string().regex(/^[A-Za-z0-9_.~-]{1,100}$/).nullish(),
+}
+
 export const CompleteSetSchema = z.object({
   exerciseId: z.string().min(1).max(80).nullable(),
   exercise: z.string().min(1).max(120),
@@ -330,10 +350,11 @@ export const CompleteSetSchema = z.object({
     .int(setLimitSentence("setNumber"))
     .min(1, setLimitSentence("setNumber"))
     .max(SET_LIMITS.setMax, setLimitSentence("setNumber")),
-  kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]).optional(),
+  kind: SetKindSchema.optional(),
   prescribedIndex: z.number().int().min(0).max(50).nullable().optional(),
   side: z.enum(["left", "right"]).nullable().optional(),
-  rpe: z.number().int().min(1).max(10).nullable().optional(),
+  rpe: RpeSchema.nullable().optional(),
+  ...SlotRef,
 })
 
 /**
@@ -343,16 +364,16 @@ export const CompleteSetSchema = z.object({
  * neither is a request that means nothing, and answering it 200 would say
  * something was changed.
  *
- * RPE IS BOUNDED BY THE COLUMN, NOT BY THE SLIDER. `workout_sets.rpe` is a
- * SMALLINT with `CHECK (rpe >= 1 AND rpe <= 10)`, and that is what a request
+ * RPE IS BOUNDED BY THE COLUMN, NOT BY THE SLIDER. `workout_sets.rpe` is
+ * NUMERIC(3,1), 1–10 in half steps (`RpeSchema`), and that is what a request
  * may contain. The slider offers 6–10 because an RPE below 6 on a logged
  * working set is not a distinction anybody makes — that is a choice about what
  * to ask for, and it does not belong in the rule about what can be stored.
  */
 export const UpdateSetSchema = z
   .object({
-    kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]).optional(),
-    rpe: z.number().int("Effort is a whole number from 1 to 10.").min(1).max(10).nullable().optional(),
+    kind: SetKindSchema.optional(),
+    rpe: RpeSchema.nullable().optional(),
   })
   .refine((body) => body.kind !== undefined || body.rpe !== undefined, {
     message: "Nothing to change on that set.",
@@ -388,7 +409,7 @@ export const AdjustWorkoutSchema = z.object({
     .optional(),
   order: z.array(z.string().min(1).max(80)).max(60).optional(),
   notes: z.string().max(1000).nullable().optional(),
-  rpe: z.number().int().min(1).max(10).nullable().optional(),
+  rpe: RpeSchema.nullable().optional(),
 })
 
 export const FinishWorkoutSchema = z
@@ -409,7 +430,7 @@ export const FinishWorkoutSchema = z
      */
     startedAt: z.string().datetime().optional(),
     intensity: z.number().int().min(1).max(5),
-    rpe: z.number().int().min(1).max(10).nullable().optional(),
+    rpe: RpeSchema.nullable().optional(),
     notes: z.string().max(1000).nullable().optional(),
     /**
      * WHAT KIND OF SESSION — for a LOOSE workout only.
@@ -486,9 +507,19 @@ export const EnrollSchema = z
     workingWeights: WorkingWeightsSchema.optional(),
     customSchedule: CustomScheduleSchema.nullish(),
     label: DraftBody.name.optional(),
+    /**
+     * A program written in the program format, started as it is. Checked in
+     * full by `enrollInProgram` (`checkSpec`): it is passed through here as
+     * data, never trusted, and its 64 KB limit is the format's own.
+     */
+    spec: z.unknown().optional(),
+    /** The program's first day, when it is not today (Q16). */
+    startedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   })
   .superRefine((body, ctx) => {
     if (body.programId !== CUSTOM_PROGRAM_ID) return
+    // A program in the format carries its own name.
+    if (body.spec != null) return
     if (body.label && body.label.trim().length > 0) return
     ctx.addIssue({
       code: "custom",
@@ -565,14 +596,15 @@ export const ReviseWorkoutSchema = z
           // 0 = attempted and failed. A set not attempted has no row.
           reps: z.number().int().min(0).max(1000),
           setNumber: z.number().int().positive().max(50),
-          kind: z.enum(["warmup", "working", "amrap", "backoff", "drop"]),
+          kind: SetKindSchema,
+          ...SlotRef,
           // Carried through so a correction does not quietly delete them.
           side: z.enum(["left", "right"]).nullish(),
           notes: z.string().max(500).nullish(),
           // The per-exercise note. It was NOT in this list, so it was the one
           // thing a correction still deleted — silently, and permanently.
           exerciseNotes: z.string().max(1000).nullish(),
-          rpe: z.number().int().min(1).max(10).nullish(),
+          rpe: RpeSchema.nullish(),
         })
       )
       .max(200),

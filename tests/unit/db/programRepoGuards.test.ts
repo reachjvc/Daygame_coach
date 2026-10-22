@@ -17,7 +17,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { strongLifts5x5 } from "@/src/programs/data/strength/stronglifts5x5"
 import { startingStrength } from "@/src/programs/data/strength/startingStrength"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 
 const USER = "u1"
 

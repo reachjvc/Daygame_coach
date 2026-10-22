@@ -15,7 +15,7 @@
 
 import { describe, it, expect } from "vitest"
 import { describeProgramWeek, FORGOTTEN_AFTER_DAYS } from "@/src/programs/programWeekService"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { ProgramDefinition, ProgramEnrollment } from "@/src/programs/types"
 

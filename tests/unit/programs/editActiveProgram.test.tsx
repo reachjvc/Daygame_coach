@@ -12,7 +12,7 @@ import { describe, it, expect, vi, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { EditActiveProgram } from "@/src/programs/components/EditActiveProgram"
-import { seedEnrollment } from "@/src/programs/programsService"
+import { seedEnrollment } from "@/src/programs/runtime"
 import { requireProgram } from "@/src/programs/data/catalog"
 import type { ProgramEnrollment } from "@/src/programs/types"
 
