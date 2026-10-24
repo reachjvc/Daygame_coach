@@ -1,6 +1,6 @@
 # Any program, picked or built: the gym becomes a program builder
 
-**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–5 done 2026-10-22 (session daygame-coach-fc); Phase 6 is next (it opens with B-DESIGN).
+**Status:** written 2026-10-18 by session daygame-coach-c2. Phases 0–5 done 2026-10-22 (session daygame-coach-fc), live since 2026-10-24 when the owner retired `training-rebuild` and all work moved to `main`; Phase 6 is next (it opens with B-DESIGN).
 
 **Written for** the owner first (Part 1), then for the AI session that executes it (blockers, questions,
 phases, Part 2, and the `/goal` prompts at the end).
@@ -219,7 +219,7 @@ Each was attempted on 2026-10-18. The result is what happened.
 | B-DESIGN | Your eyes on the builder before it is built | Cannot be attempted in advance | The start of Phase 6 | Phase 6 opens with a clickable mock-up page you mark Yes/Maybe/No per screen, like the naming board; building waits for your marks, all other phases continue meanwhile |
 | B-PEER-TREE | Another session's unfinished change turns the pre-commit tests red | ListAgents: one peer, `daygame-coach-63`, idle | Committing, while it lasts | Message that session with the failing test names; continue with work that needs no commit; never edit its files |
 | B-CI | Reading CI results | `gh auth status`: logged in as reachjvc | Nothing | — |
-| B-MAIN | Pushing to the live site | Your standing rule: push without asking. `training-rebuild` is 8 commits ahead of `main` today, 0 behind. | Phase 10 | Fast-forward only, after the `checks` job is green on the same commit and no CI run is in flight |
+| B-MAIN | Pushing to the live site | **Closed 2026-10-24**: you asked for one branch. `main` was fast-forwarded to Phase 5 (`7ceb7769`) and `training-rebuild` deleted, so every phase now goes live when it is pushed. | — | Push only with `npm test` and both ratchets green; read the commit's CI run afterwards |
 | B-LICENCE | Permission from u/BenchPauper | Not attempted: contacting him needs your Reddit account | Nothing (own words + credit are enough) | Optional: send him a message saying the program is credited in the app |
 | B-DISK | Disk space for builds and browser tests | `df -h /mnt/c`: 1017 GB free | Nothing | Check again before Phase 9's browser runs |
 
@@ -341,7 +341,8 @@ public; none ships.
 # PHASES
 
 Each phase ends green (`npm test`, `node scripts/typecheck-ratchet.mjs`, `npm run lint:ratchet`), committed
-with `git commit --only`, and pushed to `training-rebuild`. Evidence goes under the phase's heading as it is
+with `git commit --only`, and pushed to `main`, which deploys the live site (`training-rebuild` was retired on
+2026-10-24). Evidence goes under the phase's heading as it is
 done.
 
 ## Phase 0 — Ground truth and a safety net
@@ -871,7 +872,7 @@ week 1 Monday and week 12 Monday matches the sheet; the owner's marks are met.
 **Depends on:** all.
 1. `/code-review` of the whole branch range; a security review through a subagent (RLS, the new table, the
    lock, user-supplied JSON).
-2. CI green; fast-forward `main` (B-MAIN); check the live site.
+2. CI green on `main`; check the live site.
 3. Drop `program_drafts` only after the copy is verified and no code reads it (its own migration, with the
    rows backed up first).
 4. Update `docs/product/map.md`'s `programs/` entry and vision items 28 and 30.
@@ -900,7 +901,7 @@ week 1 Monday and week 12 Monday matches the sheet; the owner's marks are met.
 ### Phases 0–5. Paste after `/goal`.
 
 > Execute Plans/program-builder.md Phases 0 to 5 in order, following its Part 2 ground rules. Record evidence
-> under each phase heading as you go, commit with `git commit --only` and push to training-rebuild at the end
+> under each phase heading as you go, commit with `git commit --only` and push to main at the end
 > of each phase. Stop and report in plain words if a phase's acceptance cannot be met.
 
 ### Phases 6–8, after the owner's marks on the builder mock-up. Paste after `/goal`.

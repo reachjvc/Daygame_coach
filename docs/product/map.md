@@ -270,8 +270,9 @@ the truthful record of what exists.
 
 ## In flight now
 
-- **Branch `training-rebuild`** is where all work lands, named for its first
-  job, a set-by-set rebuild of the gym. `main` is the live site.
+- **One branch, `main`**, and it is the live site: every push deploys.
+  `training-rebuild`, where all work landed until then, was retired on
+  2026-10-24 at `7ceb7769`; an older plan that says to push there means `main`.
 - **Leaving Vercel and Supabase for Hetzner** — decided 2026-09-17, provider
   settled 2026-09-27 on the friend's recommendation and not reopened. Read D1 in
   `docs/plans/own-platform-and-app.md`'s DECISIONS table and the memory note
@@ -287,7 +288,6 @@ the truthful record of what exists.
 - **Deployed since 2026-10-14.** `main` was fast-forwarded from
   `training-rebuild` (c1680654 → 4ecc63fc, 515 commits) and
   `daygame-coach.vercel.app/life-mastery` served it on 2026-10-14, checked signed in. Until
-  then it had never been deployed. `main` moves only when the owner asks
-  (CLAUDE.md), so the live site trails this branch between those pushes:
-  `localhost:3000` is still the newest, and the live site's `/api/healthz`
-  names the commit it serves.
+  then it had never been deployed. Since 2026-10-24 all work lands on `main`,
+  so the live site follows every push; its `/api/healthz` names the commit it
+  serves.

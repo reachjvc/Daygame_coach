@@ -13,7 +13,7 @@ import { awaitWorkflow, decide } from "../../../scripts/ci/await-workflow.mjs"
 
 const SHA = "a".repeat(40)
 const PATH = ".github/workflows/e2e.yml"
-const want = { sha: SHA, path: PATH, branch: "training-rebuild" }
+const want = { sha: SHA, path: PATH, branch: "main" }
 
 const run = (over: Record<string, unknown>) => ({
   path: PATH,
@@ -23,7 +23,7 @@ const run = (over: Record<string, unknown>) => ({
   created_at: "2026-10-13T10:00:00Z",
   html_url: "https://github.com/x/y/actions/runs/1",
   event: "push",
-  head_branch: "training-rebuild",
+  head_branch: "main",
   name: "E2E Tests",
   ...over,
 })
@@ -58,12 +58,13 @@ describe("decide", () => {
     expect(decide(runs, want).state).toBe("pass")
   })
 
-  it("ignores main's run of the same commit, which is newer and runs the multi-hour heavy jobs", () => {
-    // Reported by daygame-coach-ff: once main is fast-forwarded to this commit,
-    // main's run would be the newest and the wait would time out on it.
+  it("ignores another branch's run of the same commit, which may be newer and still running", () => {
+    // Reported by daygame-coach-ff when staging published from training-rebuild:
+    // a second branch at the same commit has a run of its own, and the wait
+    // would time out on it.
     const runs = [
       run({ conclusion: "success", created_at: "2026-10-13T10:00:00Z" }),
-      run({ head_branch: "main", status: "in_progress", conclusion: null, created_at: "2026-10-13T11:00:00Z" }),
+      run({ head_branch: "beta", status: "in_progress", conclusion: null, created_at: "2026-10-13T11:00:00Z" }),
     ]
     expect(decide(runs, want).state).toBe("pass")
   })

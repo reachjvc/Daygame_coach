@@ -20,6 +20,9 @@ stage. What a user can reach: `docs/product/map.md`; where it is going:
 
 - Other Claude sessions share this working tree. Commit with
   `git commit --only <paths>`; never `git add -A` or `git stash`.
+- One branch: `main`, which is the live site, so every push deploys.
+  `training-rebuild` was retired on 2026-10-24; a plan that says to push
+  there means `main`.
 - DB access goes through `src/db/*Repo.ts`. Test writes against the live
   database go inside `begin; … rollback;`.
 

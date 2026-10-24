@@ -175,11 +175,11 @@ describe("the staging image job", () => {
   const publish = loadAction("./.github/actions/publish-image")
   const stepIndex = (pred: (st: Composite["runs"]["steps"][number]) => boolean) => publish.runs.steps.findIndex(pred)
 
-  it("runs only after the checks, only for a push to training-rebuild, only when switched on", () => {
+  it("runs only after the checks, only for a push to main, only when switched on", () => {
     expect(job, "ci.yml has an image-staging job").toBeDefined()
     expect(job.needs).toBe("checks")
     expect(job.if).toContain("github.event_name == 'push'")
-    expect(job.if).toContain("github.ref == 'refs/heads/training-rebuild'")
+    expect(job.if).toContain("github.ref == 'refs/heads/main'")
     expect(job.if).toContain("vars.STAGING_PUBLISH == 'on'")
     expect(job.environment).toBe("staging")
     expect(job.permissions).toEqual({ contents: "read", packages: "write", actions: "read" })

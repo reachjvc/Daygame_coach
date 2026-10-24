@@ -17,8 +17,8 @@
  *
  * The workflow is matched by its file path, not its name, so renaming it does
  * not break this. Only the run started by a push to this same branch counts:
- * when main is fast-forwarded to the same commit, main's run (which includes
- * the multi-hour heavy jobs) is newer, and waiting on it would time out. Exit 0 only for a run that finished with `success`; a
+ * another branch at the same commit, or the nightly run (the other engines),
+ * may be newer, and waiting on it would time out. Exit 0 only for a run that finished with `success`; a
  * failure, a cancellation, no run at all, or the timeout exit 1.
  */
 

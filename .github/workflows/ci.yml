@@ -117,13 +117,13 @@ jobs:
       # Visible, not silent: when staging publishing is switched off, the run
       # says so and says why, instead of the image job simply not appearing.
       - name: Staging publishing is off
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/training-rebuild' && vars.STAGING_PUBLISH != 'on' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_PUBLISH != 'on' }}
         run: |
           echo "Staging publishing is off: see blockers B-GH and B-GHCR in Plans/caddy-deploy-and-cicd.md" >> "$GITHUB_STEP_SUMMARY"
 
   # ===========================================================================
   # THE STAGING IMAGE. After the checks above pass on a push to
-  # training-rebuild, and only when the repository variable STAGING_PUBLISH is
+  # main, and only when the repository variable STAGING_PUBLISH is
   # `on` (a job's own `if:` cannot read environment variables).
   #
   # It first waits for e2e.yml's run on the same commit and stops unless that
@@ -142,7 +142,7 @@ jobs:
   # ===========================================================================
   image-staging:
     needs: checks
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/training-rebuild' && vars.STAGING_PUBLISH == 'on' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.STAGING_PUBLISH == 'on' }}
     runs-on: ubuntu-24.04
     environment: staging
     timeout-minutes: 75

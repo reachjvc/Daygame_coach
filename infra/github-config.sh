@@ -6,7 +6,7 @@
 #   infra/github-config.sh             do it (needs `gh auth login`, blocker B-GH)
 #
 # It sets, on reachjvc/Daygame_coach:
-#   - the environment `staging`, deployable from training-rebuild only;
+#   - the environment `staging`, deployable from main only;
 #   - its variables NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and
 #     NEXT_PUBLIC_APP_URL=https://localhost, read from
 #     ~/.config/daygame/build-public.env (infra/write-env-file.sh). Values go
@@ -26,7 +26,7 @@ REPO_SLUG="${REPO_SLUG:-reachjvc/Daygame_coach}"
 CONFIG_DIR="${DAYGAME_CONFIG_DIR:-$HOME/.config/daygame}"
 PUBLIC_ENV="$CONFIG_DIR/build-public.env"
 ENV_NAME=staging
-BRANCH=training-rebuild
+BRANCH=main
 KEYS=(NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NEXT_PUBLIC_APP_URL)
 
 die() { printf 'github-config: ERROR: %s\n' "$*" >&2; exit 1; }
