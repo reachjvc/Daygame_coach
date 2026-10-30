@@ -53,8 +53,12 @@ export function AppFrame({ children }: { children: ReactNode }) {
           <AppLogo />
           {/* Ten destinations plus Log Out do not fit beside the logo below
               ~1100px. The nav scrolls inside the header instead of pushing the
-              page sideways, which the route sweep checks. */}
-          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto" aria-label="Main">
+              page sideways, which the route sweep checks.
+              TIGHTER SINCE THOUGHTS JOINED (2026-10-30): with the default
+              padding the row was 929px in an 879px nav at 1280px wide, so Log
+              Out sat half out of view on an ordinary laptop. `px-2.5` and no
+              gap bring it to about 845px. */}
+          <nav className="flex min-w-0 items-center overflow-x-auto" aria-label="Main">
             {ITEMS.map((item) => {
               // Where you are, said in colour as the phone bar says it, and to
               // a screen reader by aria-current.
@@ -65,7 +69,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
                   asChild
                   variant="ghost"
                   size="sm"
-                  className={`shrink-0 hover:text-primary ${active ? "text-primary" : "text-foreground"}`}
+                  className={`shrink-0 px-2.5 hover:text-primary ${active ? "text-primary" : "text-foreground"}`}
                   data-testid={TEST_IDS[item.href]}
                 >
                   <Link href={item.href} aria-current={active ? "page" : undefined}>
@@ -88,7 +92,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
                 variant="ghost"
                 type="submit"
                 size="sm"
-                className="shrink-0 text-foreground hover:text-primary"
+                className="shrink-0 px-2.5 text-foreground hover:text-primary"
                 data-testid="header-logout-button"
               >
                 Log Out

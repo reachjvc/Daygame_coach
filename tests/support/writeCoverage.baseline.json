@@ -186,6 +186,7 @@
   "src/scenarios/scenariosService.ts:persistScenarioAttempt": "unasserted",
   "src/settings/settingsService.ts:handleCancelSubscription": "unasserted",
   "src/settings/settingsService.ts:handleReactivateSubscription": "unasserted",
+  "src/thoughts/promptService.ts:reschedulePrompts": "mentioned",
   "src/timetrack/rateLimitService.ts:checkRateLimit": "unasserted",
   "src/timetrack/syncService.ts:mergeIncoming": "mentioned",
   "src/tracking/achievementsSyncService.ts:reconcileUserProgress": "mentioned",

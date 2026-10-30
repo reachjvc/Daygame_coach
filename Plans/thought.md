@@ -310,7 +310,7 @@ Each was attempted on 2026-10-30. The result is what happened.
 | Q11 | Extra details per log (strength, place, mood) | **None** in this plan; one tap is the point. A short optional note can be added from the thought's own sheet. | Optional strength 1–5 after each tap | One optional field, later |
 | Q12 | AI help (suggested reframes, grouping similar thoughts) | **Not in this plan.** It costs money per use and sends your most private text to an AI company. | Opt-in AI suggestions with a budget | Reframing stays fully manual |
 | Q13 | Open `/thoughts` with no signal | **Yes**, added to the worker's short offline list: logging a thought on a train is exactly the case that list exists for | Online only | A browser error page on the train |
-| Q14 | A help card for thoughts about self-harm | **Yes**, shown when such words are typed. No blocking, no AI. **Reuse the Black Box's existing help door** (`src/vice/components/HelpDoor.tsx`, tested in `tests/unit/vice/helpDoorReachable.test.tsx`): it already leads with a crisis service, asks the country before showing a number, and shows the emergency number. | Nothing | A missed moment that matters, once other people use it |
+| Q14 | A help card for thoughts about self-harm | **Yes**, shown when such words are typed. No blocking, no AI. **Reuse the Black Box's existing help door** (`src/vice/components/HelpDoor.tsx`, tested in `tests/unit/vice/helpDoorReachable.test.tsx`): it already leads with a crisis service, asks the country before showing a number, and shows the emergency number. *Built 2026-10-30 as `src/thoughts/components/ThoughtHelpCard.tsx`, reusing the door's crisis numbers (`src/vice/data/help.ts`) and its country memory (`useHelpLocale`), not the dialog itself: the dialog's other sections are about addiction and rehab, the wrong conversation here.* | Nothing | A missed moment that matters, once other people use it |
 | Q15 | What runs the clock | **The database's own clock (`pg_cron`, already in use) calling the website every minute through `pg_net`**, with a secret. Free, no new account. When the app moves to its own server, a server timer calls the same address instead. | Vercel's clock (once a day on the free plan; every minute needs Pro, about $20/month); a free outside service such as cron-job.org (needs an account of yours); GitHub's scheduled runs (often 10+ minutes late, and private-repo minutes are limited) | Swapping clocks is a few lines; the address stays the same |
 | Q16 | Reminders missed while the phone was off | **Not caught up.** The next one comes at the normal time. | Send the missed ones | A burst of stale reminders |
 | Q17 | When the 15 minutes start | **From your last log on any device, or the last reminder**, whichever is later | Fixed clock times (:00, :15, :30, :45) | A reminder right after you answered |
@@ -475,6 +475,16 @@ name and length only.
 **Acceptance:** on the live site, signed in, you can add "I am bad", tap it five times, undo one, and
 see 4. Screenshots in the evidence.
 
+**Evidence (2026-10-30):** `src/thoughts/` (service, schedule, queue, hook, components), `app/(app)/thoughts/page.tsx`,
+`app/api/thoughts/*`, "Thoughts" second in the More sheet (icon `AudioWaveform`, used nowhere else), and a
+"Log a thought" shortcut in `app/manifest.ts`. `tests/e2e/thoughts.spec.ts`: 5 tests × desktop and phone
+lanes, 10 green, including the acceptance itself (add, five taps, undo, reload, 4). Looked at in a browser at
+390 px and 1280 px on a seeded local account. Found and fixed on the way: a count fell back by one for
+~1.5 s after a tap was sent (now settled into the screen at once, `settleLogs`, tested); the laptop
+header's row was 929 px in an 879 px space at 1280 px once Thoughts joined, so Log Out sat half hidden —
+header links now `px-2.5`, 845 px, measured. The page works offline-first from this phase: taps queue on
+the phone and send when there is signal (Phase 9, step 1, done early).
+
 ## Phase 4 — You can reframe a thought
 **Depends on:** Phase 3, and marks for screen 4.
 1. The readiness rule (Q8) as a tested function; the "Ready to reframe" strip on the main page.
@@ -486,6 +496,12 @@ see 4. Screenshots in the evidence.
    edited, and a second one added; the reframe shown on the next tap.
 **Acceptance:** on the live site, a thought logged 3 days ago is offered for reframing, the reframe is
 saved, and the next tap shows it.
+
+**Evidence (2026-10-30):** readiness (`isReadyToReframe`) counts calendar days in the person's zone and
+needs at least two logs; the boundary is tested (Wednesday 23:59 not ready, Thursday 00:10 ready for a
+thought first logged Monday 23:50). `ReframeFlow`: one screen, only the sentence required, both "how
+true" sliders start unanswered (stored as null, never 0). The e2e test saves a reframe and sees it under
+the next tap's "Logged" notice.
 
 ## Phase 5 — A reminder reaches this device (notification plumbing)
 **Depends on:** Phase 3. (B-DEP, B-SW, then B-ENV for the live check)

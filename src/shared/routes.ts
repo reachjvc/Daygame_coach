@@ -66,6 +66,12 @@ export const ROUTES = {
    * production links into the archive.
    */
   quitVice: "/plan/quit-vice",
+  /**
+   * Thought Frequencies (Plans/thought.md): the thoughts that keep coming back,
+   * one tap each, and their reframes. In the More sheet as "Thoughts" (Q2), and
+   * where every reminder notification opens.
+   */
+  thoughts: "/thoughts",
 } as const
 
 /** One tracking session's own page. */

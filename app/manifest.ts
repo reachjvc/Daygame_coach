@@ -50,5 +50,11 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    /**
+     * Long-press the installed app's icon (Android, and laptops) for "Log a
+     * thought", which opens straight onto the quick-log sheet
+     * (Plans/thought.md, Q2). iPhones ignore shortcuts; nothing breaks there.
+     */
+    shortcuts: [{ name: "Log a thought", short_name: "Log a thought", url: `${ROUTES.thoughts}?log=1` }],
   }
 }

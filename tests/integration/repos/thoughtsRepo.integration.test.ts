@@ -41,6 +41,8 @@ import {
   writePromptSchedule,
 } from "@/src/db/notificationsRepo"
 import { DEFAULT_SETTINGS, type LogInput } from "@/src/thoughts/types"
+import { reschedulePrompts } from "@/src/thoughts/promptService"
+import { updateTimezone } from "@/src/db/settingsRepo"
 
 vi.mock("@/src/db/supabase", async (importOriginal) =>
   (await import("@/tests/db/harness")).stackSupabaseModule(await importOriginal())
@@ -376,5 +378,32 @@ describe("the reminder clock's storage", () => {
     await insertLogs(user.id, [tap(id, new Date()), tap(id, new Date())])
 
     expect((await readThoughtsAsServer(user.id, TZ)).map((t) => t.counts.total)).toEqual([2])
+  })
+})
+
+describe("rescheduling the next reminder", () => {
+  it("starts the wait when reminders are switched on, restarts it from a log, and clears it when off", async () => {
+    const user = await newUser("reschedule")
+    actAs(user)
+    // No quiet hours, so the arithmetic does not depend on the hour the suite runs at.
+    await updateTimezone(user.id, "Europe/Copenhagen")
+    const on = { ...DEFAULT_SETTINGS, remindersOn: true, intervalMinutes: 30 as const, quietStart: null, quietEnd: null }
+    await writeSettings(user.id, on)
+    const switchedOn = new Date()
+
+    const first = await reschedulePrompts(user.id, { switchedOn: true }, switchedOn)
+    expect(first?.getTime()).toBe(switchedOn.getTime() + 30 * 60_000)
+    expect((await readPromptSchedule(user.id)).nextDueAt).toBe(first?.toISOString())
+
+    // A log ten minutes later restarts the wait from the log (Q17).
+    const { id } = await createThought(user.id, randomUUID(), "I am bad")
+    const loggedAt = new Date(switchedOn.getTime() + 10 * 60_000)
+    await insertLogs(user.id, [tap(id, loggedAt)])
+    const afterLog = await reschedulePrompts(user.id, {}, loggedAt)
+    expect(afterLog?.getTime()).toBe(loggedAt.getTime() + 30 * 60_000)
+
+    await writeSettings(user.id, { ...on, remindersOn: false })
+    expect(await reschedulePrompts(user.id, {}, loggedAt)).toBeNull()
+    expect((await readPromptSchedule(user.id)).nextDueAt).toBeNull()
   })
 })

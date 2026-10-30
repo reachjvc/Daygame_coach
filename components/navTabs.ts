@@ -1,4 +1,4 @@
-import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText } from "lucide-react"
+import { LayoutDashboard, BarChart3, Dumbbell, Swords, HelpCircle, BookOpen, Settings, Timer, ScrollText, AudioWaveform } from "lucide-react"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /**
@@ -70,6 +70,14 @@ export const MORE_ITEMS = [
    * `HIDDEN_ROUTE_PREFIXES`), so from inside Time nothing changed.
    */
   { label: "Time", icon: Timer, href: ROUTES.time },
+  /**
+   * THOUGHTS, SECOND, beside Time: both are places you go to do something
+   * several times a day, and the other two are reference and settings. Not a
+   * bar tab (Plans/thought.md, Q2): the reminders are its main door, and a
+   * sixth tab does not fit (see Your plan above). `AudioWaveform` is used
+   * nowhere else, for the "frequencies" in its name.
+   */
+  { label: "Thoughts", icon: AudioWaveform, href: ROUTES.thoughts },
   { label: "Ask Coach", icon: HelpCircle, href: ROUTES.coach },
   { label: "Articles", icon: BookOpen, href: ROUTES.articles },
   { label: "Settings", icon: Settings, href: ROUTES.settings },
