@@ -118,8 +118,13 @@ export function RemindersCard({
   if (push.permission === "denied") {
     return (
       <section className="rounded-2xl border border-amber-400/40 bg-card p-4" data-testid="reminders-denied">
-        <p className="font-semibold">Notifications are blocked for this site</p>
-        <p className="mt-1 text-sm text-muted-foreground">Only your phone&apos;s settings can undo that:</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-semibold">Notifications are blocked for this site</p>
+            <p className="mt-1 text-sm text-muted-foreground">Only your phone&apos;s settings can undo that:</p>
+          </div>
+          {settingsButton}
+        </div>
         <DeniedHelp />
       </section>
     )
