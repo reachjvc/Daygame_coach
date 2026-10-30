@@ -47,7 +47,7 @@ assuming anything is in the product.
 The navigation is the honest map, and it lives in `components/navTabs.ts`.
 
 Bottom tab bar: **Dashboard · Training · Tracking · Your plan · Scenarios**,
-plus a "More" sheet holding **Time · Ask Coach · Articles · Settings**.
+plus a "More" sheet holding **Time · Thoughts · Ask Coach · Articles · Settings**.
 
 **"Your plan" is Life Mastery, a tab since 2026-10-15** on the owner's word,
 taking Time's place because a seventh item runs off-screen on every phone up to
@@ -227,6 +227,19 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   worked up to. Before 2026-09-28 there was no such control and no way out at
   all.
 - `api_ai/` — what every AI call cost, per user, against a budget.
+- `thoughts/` — **Thought Frequencies** (`/thoughts`, More → Thoughts, since
+  2026-10-30, `Plans/thought.md`). Recurring thoughts as one-tap buttons, counted
+  in the database (`thought_counts`, `thought_frequency_stats`), reframed after a
+  few days, with a Frequencies tab. Taps queue on the phone with no signal; the
+  page opens offline. Reminders every N minutes (15 by default) with quiet hours
+  in the person's own zone. No AI touches a thought.
+- `notifications/` — **the app's first notifications that reach a closed app**
+  (web push), shared plumbing for any slice: devices per browser (only the real
+  push services accepted), sends that expire after 10 minutes and replace the last,
+  the worker's push block in `public/sw.js`. Keys and the clock's secret live in
+  Supabase Vault. **The clock is a `pg_cron` job, `thoughts-clock`, every minute**,
+  calling `/api/notifications/tick` only when a reminder is due. Stop it with
+  `select cron.unschedule('thoughts-clock');` — `docs/runbooks/notifications.md`.
 
 ## The data
 

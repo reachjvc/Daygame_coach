@@ -1748,6 +1748,13 @@ so every later reviewer has been re-deriving them. They are here to be trusted.
 - **No file uploads, no Supabase Storage, no Realtime, no `pg_cron` anywhere.** That
   removes an entire category migrations normally trip over. Audio is transcribed in the
   browser, so nothing is stored.
+  *Out of date since 2026-10-30:* `pg_cron` runs two jobs from migrations —
+  `thoughts-clock` (every minute, calls `/api/notifications/tick` through `pg_net`,
+  `20261030130000_thoughts_clock.sql`) and `prune-cron-history` — beside the
+  `prune_error_reports` job that already existed outside a migration. On the new
+  platform the thoughts clock becomes a server timer calling the same address with
+  the same secret (`docs/runbooks/notifications.md`), and the push keys and the
+  secret move out of Supabase Vault with the database.
 - **Dropping the policies has no hidden tail of test rewrites** — `asUser` appears in 3
   integration files, 13 times.
 - **Only 3 `SECURITY DEFINER` functions exist** and all three are already named

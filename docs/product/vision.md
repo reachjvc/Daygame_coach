@@ -176,7 +176,11 @@ Re-check before relying on them.
     address redirects (`Plans/site-structure.md`, D1).
 
 48. **Notifications are 0% built, and nothing legal is built** (checked
-    2026-09-26). Two places pop a message — `useTimetrack.ts:289` and
+    2026-09-26). *Update 2026-10-30: notifications that reach a closed app now
+    exist (web push, `src/notifications/`, first used by Thought Frequencies,
+    `Plans/thought.md`); the time tracker and the rest timer do not use them yet.
+    Nothing legal has changed, and Thought Frequencies adds health-adjacent data
+    that will need consent, export and deletion before anyone else uses it.* Two places pop a message — `useTimetrack.ts:289` and
     `RestBar.tsx:91` — and both only fire **while the page is open in front of
     you**. There is no push setup at all: no service-worker push handler, no
     stored device registrations, no `web-push` dependency, no subscriptions
