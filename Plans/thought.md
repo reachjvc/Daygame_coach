@@ -309,7 +309,7 @@ Each was attempted on 2026-10-30. The result is what happened.
 | Q11 | Extra details per log (strength, place, mood) | **None** in this plan; one tap is the point. A short optional note can be added from the thought's own sheet. | Optional strength 1–5 after each tap | One optional field, later |
 | Q12 | AI help (suggested reframes, grouping similar thoughts) | **Not in this plan.** It costs money per use and sends your most private text to an AI company. | Opt-in AI suggestions with a budget | Reframing stays fully manual |
 | Q13 | Open `/thoughts` with no signal | **Yes**, added to the worker's short offline list: logging a thought on a train is exactly the case that list exists for | Online only | A browser error page on the train |
-| Q14 | A help card for thoughts about self-harm | **Yes**, a calm card with a link to find a local helpline (e.g. findahelpline.com), shown when such words are typed. No blocking, no AI. | Nothing | A missed moment that matters, once other people use it |
+| Q14 | A help card for thoughts about self-harm | **Yes**, shown when such words are typed. No blocking, no AI. **Reuse the Black Box's existing help door** (`src/vice/components/HelpDoor.tsx`, tested in `tests/unit/vice/helpDoorReachable.test.tsx`): it already leads with a crisis service, asks the country before showing a number, and shows the emergency number. | Nothing | A missed moment that matters, once other people use it |
 | Q15 | What runs the clock | **The database's own clock (`pg_cron`, already in use) calling the website every minute through `pg_net`**, with a secret. Free, no new account. When the app moves to its own server, a server timer calls the same address instead. | Vercel's clock (once a day on the free plan; every minute needs Pro, about $20/month); a free outside service such as cron-job.org (needs an account of yours); GitHub's scheduled runs (often 10+ minutes late, and private-repo minutes are limited) | Swapping clocks is a few lines; the address stays the same |
 | Q16 | Reminders missed while the phone was off | **Not caught up.** The next one comes at the normal time. | Send the missed ones | A burst of stale reminders |
 | Q17 | When the 15 minutes start | **From your last log on any device, or the last reminder**, whichever is later | Fixed clock times (:00, :15, :30, :45) | A reminder right after you answered |
@@ -525,7 +525,8 @@ database (read only), and look right at 390 px and 1280 px.
    emptied on sign-in changes). Coordinate with the worker's owner (B-SW).
 3. A clear banner when permission was withdrawn, or when no reminder has been delivered to a switched-on
    device for 24 hours, with a "turn back on" button.
-4. The help card (Q14).
+4. The help card (Q14), opening the existing `HelpDoor` rather than a second copy of it. If it needs
+   to move to `src/shared/` to be used from two slices, ask the session that owns `src/vice/` first.
 5. Prove thought text never reaches error reports or server logs (test against `errorScrubService`).
 6. Accessibility: labels on every button, focus order, contrast with the colour tokens, reduced motion
    respected, screen reader reads counts sensibly.
