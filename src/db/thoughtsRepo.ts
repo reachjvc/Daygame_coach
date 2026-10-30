@@ -16,7 +16,7 @@
  */
 
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
-import { readAllRows } from "./paging"
+import { chunkIds, readAllRows } from "./paging"
 import { normalizeThought } from "@/src/thoughts/thoughtsService"
 import {
   DEFAULT_SETTINGS,
@@ -87,6 +87,13 @@ const NO_COUNTS: ThoughtCounts = { today: 0, week: 0, month: 0, total: 0, firstA
 export class ThoughtNotFound extends Error {
   constructor() {
     super("That thought no longer exists")
+  }
+}
+
+/** Wording the database refuses for good (a check constraint): retrying cannot help. */
+export class ThoughtRefused extends Error {
+  constructor() {
+    super("That thought could not be saved as written")
   }
 }
 
@@ -236,6 +243,7 @@ export async function createThought(userId: string, id: string, text: string): P
     const same = await liveIdFor(supabase, userId, { id })
     if (same) return { id: same, created: false }
   }
+  if (error.code === "23514") throw new ThoughtRefused()
   throw new Error(`Failed to add a thought: ${error.message}`)
 }
 
@@ -256,9 +264,14 @@ export async function insertLogs(
   if (logs.length === 0) return { stored: 0, dropped: 0, inserted: [] }
   const supabase = await createServerSupabaseClient()
 
+  // Every thought id in the batch, resolved in one read per 200 ids rather
+  // than one per id: a batch of 500 random ids was 500 round trips.
   const resolved = new Map<string, string | null>()
-  for (const id of new Set(logs.map((l) => l.thoughtId).filter((x): x is string => x !== null))) {
-    resolved.set(id, await liveIdFor(supabase, userId, { id }))
+  const asked = [...new Set(logs.map((l) => l.thoughtId).filter((x): x is string => x !== null))]
+  for (const ids of chunkIds(asked)) {
+    const { data, error } = await supabase.from("thoughts").select("id, merged_into").eq("user_id", userId).in("id", ids)
+    if (error) throw new Error(`Failed to look up thoughts: ${error.message}`)
+    for (const r of (data ?? []) as { id: string; merged_into: string | null }[]) resolved.set(r.id, r.merged_into ?? r.id)
   }
   const promptIds = [...new Set(logs.map((l) => l.promptId).filter((x): x is string => x !== null))]
   const knownPrompts = new Set<string>()
@@ -296,6 +309,18 @@ export async function insertLogs(
     .select("id")
   if (error) throw new Error(`Failed to save what you logged: ${error.message}`)
   const inserted = ((data ?? []) as { id: string }[]).map((r) => r.id)
+
+  // Logging an archived thought brings it back: the person is having it again.
+  const logged = [...new Set(rows.map((r) => r.thought_id).filter((x): x is string => x !== null))]
+  for (const ids of chunkIds(logged)) {
+    const { error: unarchive } = await supabase
+      .from("thoughts")
+      .update({ archived_at: null, updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .in("id", ids)
+      .not("archived_at", "is", null)
+    if (unarchive) throw new Error(`Failed to bring a thought back: ${unarchive.message}`)
+  }
   return { stored: inserted.length, dropped, inserted }
 }
 

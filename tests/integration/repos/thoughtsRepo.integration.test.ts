@@ -80,6 +80,17 @@ describe("thoughts", () => {
     expect((await readThoughts(user.id, TZ))[0].archived).toBe(false)
   })
 
+  it("brings an archived thought back when it is logged again (a tap on its suggestion)", async () => {
+    const user = await newUser("thoughts")
+    actAs(user)
+    const { id } = await createThought(user.id, randomUUID(), "I am bad")
+    await updateThought(user.id, id, { archived: true })
+
+    await insertLogs(user.id, [tap(id, new Date())])
+
+    expect((await readThoughts(user.id, TZ))[0]).toMatchObject({ archived: false, counts: { total: 1 } })
+  })
+
   it("refuses a rewording that another thought already has, naming it", async () => {
     const user = await newUser("thoughts")
     actAs(user)

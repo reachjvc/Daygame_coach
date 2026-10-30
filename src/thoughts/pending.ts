@@ -11,7 +11,7 @@
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import type { QueueState } from "./logQueue"
 import { cleanThoughtText } from "./thoughtsService"
-import type { Thought, ThoughtCounts } from "./types"
+import type { LogInput, Thought, ThoughtCounts } from "./types"
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -56,4 +56,22 @@ export function withPending(server: Thought[], queue: QueueState, now: Date, tim
     if (t) byId.set(t.id, { ...t, archived: false, counts: bumpCounts(t.counts, log.at, now, timezone) })
   }
   return [...byId.values()]
+}
+
+/**
+ * WHAT THE PAGE DRAWS: the last read, plus the taps it cannot include yet —
+ * those confirmed by the server since, and those still queued — minus any the
+ * read already names (`recentLogIds`, read before its counts) and any undone.
+ */
+export function drawnThoughts(
+  read: { thoughts: Thought[]; recentLogIds: string[] },
+  queue: QueueState,
+  confirmed: { thoughts: { id: string; text: string }[]; logs: LogInput[] },
+  now: Date,
+  timezone: string,
+): Thought[] {
+  const counted = new Set([...read.recentLogIds, ...queue.undos])
+  const logs = [...confirmed.logs, ...queue.logs].filter((l) => !counted.has(l.id))
+  const thoughts = [...confirmed.thoughts, ...queue.thoughts]
+  return withPending(read.thoughts, { ...queue, thoughts, logs }, now, timezone)
 }

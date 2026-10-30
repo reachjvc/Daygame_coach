@@ -1,6 +1,7 @@
 # Thought Frequencies: catch the thoughts that keep coming back, then reframe them
 
-**Status:** written 2026-10-30 by session daygame-coach-7d. The owner said "go execute" the same day; being built.
+**Status:** built and live 2026-10-30 (Phases 0–9, Phase 10 except the owner's own phone day). Waiting on
+B-PHONE: the owner turns reminders on on their phone and uses it for a day.
 
 **Written for** the owner first (Part 1), then for the AI session that builds it (design rules, blockers,
 questions, the pieces, phases, Part 2, and the `/goal` prompts at the end). The executing AI should treat
@@ -652,6 +653,28 @@ has a text summary and a table; animations are `motion-safe`. Full unit suite: 5
 5. Mark this plan `**Status:** done <date>`; delete merged branches as `.claude/rules/finished-work.md`
    says.
 **Acceptance:** the owner has used it for a full day and says it works and looks right.
+
+**Evidence (2026-10-30):** two independent reviews of e1e0d770..813a625b (a security review and a correctness
+review, each by a subagent) found 13 problems; all fixed, each with a test that fails on the old code where a
+test can show it:
+- **Security, medium:** the push-address check could be bypassed (`https://169.254.169.254;.notify.windows.com/`
+  passes the WHATWG parser as Windows but `web-push` connects to the first host): the host is now read strictly
+  from the raw text and must agree with the parser. **Medium:** a queue or offline copy left by one account
+  (a session that ended without Log Out) would be sent as the next account's: both now carry their owner and
+  anyone else's is thrown away unread; the password-reset sign-out clears them too. **Low:** one database
+  round trip per thought id in a log batch (now one per 200); the clock's secret cached forever (now 5 min,
+  "none" 1 min). **Low, not fixable from here:** `pg_net`'s default grants to client roles belong to
+  `supabase_admin`; the protection is that the API does not expose the `net` schema (checked live:
+  `PGRST106`), written into `docs/runbooks/notifications.md`.
+- **Correctness:** an archived thought logged again stayed archived (logging now brings it back); Undo after
+  a send that timed out could leave the tap stored (undos now queue until the server answers); zones whose
+  clocks jump at midnight (America/Santiago) could stop reminders (tested, fixed); a tap could show twice
+  when a read and a send overlapped (never drawn on top of a read that names it); a fast phone clock left a
+  tap uncounted for minutes (stored as now); more than 500 queued taps were all dropped (sent in chunks of
+  200); one failing new thought blocked every other tap (it now holds back only its own); a rewording that
+  collided with an archived thought led to an empty merge list.
+Browser tests 66/66 over three repeats; integration 36/36; unit suite green.
+**Left for the owner:** B-PHONE (a day of real use, including an airplane-mode tap and one reframe).
 
 ---
 

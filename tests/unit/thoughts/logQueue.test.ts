@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 import {
   QUEUE_KEY,
   VIEW_KEY,
-  dropLog,
+  emptyQueue,
   enqueueLog,
   enqueueThought,
   logsAnswered,
@@ -14,17 +14,21 @@ import {
   readQueue,
   readViewCopy,
   saveViewCopy,
+  thoughtRefused,
   thoughtStored,
+  undoLog,
+  undosAnswered,
   writeQueue,
   type KeyValueStore,
   type QueueState,
 } from "@/src/thoughts/logQueue"
-import { bumpCounts, localThought, withPending } from "@/src/thoughts/pending"
+import { bumpCounts, drawnThoughts, localThought, withPending } from "@/src/thoughts/pending"
 import type { LogInput } from "@/src/thoughts/types"
 
 const CPH = "Europe/Copenhagen"
 const NOW = new Date("2026-10-30T12:00:00.000Z")
-const empty: QueueState = { thoughts: [], logs: [] }
+const ME = "me-0000"
+const empty: QueueState = emptyQueue(ME)
 
 function memoryStore(): KeyValueStore & { data: Map<string, string> } {
   const data = new Map<string, string>()
@@ -43,7 +47,7 @@ describe("the queue", () => {
     const store = memoryStore()
     const q = enqueueLog(enqueueThought(empty, { id: "t1", text: "I am bad" }), log("l1", "t1"))
     writeQueue(store, q)
-    expect(readQueue(store)).toEqual(q)
+    expect(readQueue(store, ME)).toEqual(q)
 
     writeQueue(store, empty)
     expect(store.data.has(QUEUE_KEY)).toBe(false)
@@ -52,8 +56,8 @@ describe("the queue", () => {
   it("reads garbage or nothing as an empty queue", () => {
     const store = memoryStore()
     store.setItem(QUEUE_KEY, "{not json")
-    expect(readQueue(store)).toEqual(empty)
-    expect(readQueue(null)).toEqual(empty)
+    expect(readQueue(store, ME)).toEqual(empty)
+    expect(readQueue(null, ME)).toEqual(empty)
   })
 
   it("holds each log once, however often it is queued", () => {
@@ -71,20 +75,47 @@ describe("the queue", () => {
   it("lets answered and undone logs go, and counts the rest per thought", () => {
     let q = empty
     for (const [id, t] of [["a", "t1"], ["b", "t1"], ["c", "t2"], ["d", null]] as const) q = enqueueLog(q, log(id, t))
-    q = dropLog(logsAnswered(q, ["a"]), "c")
+    q = undoLog(logsAnswered(q, ["a"]), "c")
     expect(q.logs.map((l) => l.id)).toEqual(["b", "d"])
     expect(pendingByThought(q)).toEqual(new Map([["t1", 1]]))
+  })
+
+  it("keeps an undo until the server has answered it, because a timed-out send may have landed", () => {
+    let q = enqueueLog(empty, log("a", "t1"))
+    q = undoLog(q, "a")
+    expect(q).toMatchObject({ logs: [], undos: ["a"] })
+    expect(undosAnswered(q, ["a"]).undos).toEqual([])
+  })
+
+  it("drops a refused new thought with its taps, and keeps the other taps", () => {
+    let q = enqueueThought(empty, { id: "bad", text: "x" })
+    q = enqueueLog(enqueueLog(q, log("1", "bad")), log("2", "t1"))
+    expect(thoughtRefused(q, "bad")).toMatchObject({ thoughts: [], logs: [{ id: "2" }] })
+  })
+
+  it("never hands one person's queue to another, and removes it", () => {
+    const store = memoryStore()
+    writeQueue(store, enqueueLog(emptyQueue("person-a"), log("a", "t1")))
+    expect(readQueue(store, "person-b")).toEqual(emptyQueue("person-b"))
+    expect(store.data.has(QUEUE_KEY)).toBe(false)
   })
 })
 
 describe("the page's offline copy", () => {
   it("keeps the last read with its time, and reads nothing from garbage", () => {
     const store = memoryStore()
-    saveViewCopy(store, { thoughts: [{ id: "t1" }] }, NOW)
-    expect(readViewCopy(store)).toEqual({ at: NOW.toISOString(), view: { thoughts: [{ id: "t1" }] } })
+    saveViewCopy(store, { thoughts: [{ id: "t1" }] }, NOW, ME)
+    expect(readViewCopy(store, ME)).toEqual({ at: NOW.toISOString(), view: { thoughts: [{ id: "t1" }] } })
     store.setItem(VIEW_KEY, "{broken")
-    expect(readViewCopy(store)).toBeNull()
-    expect(readViewCopy(null)).toBeNull()
+    expect(readViewCopy(store, ME)).toBeNull()
+    expect(readViewCopy(null, ME)).toBeNull()
+  })
+
+  it("is never shown to another account, and is removed", () => {
+    const store = memoryStore()
+    saveViewCopy(store, { thoughts: [{ id: "t1" }] }, NOW, "person-a")
+    expect(readViewCopy(store, "person-b")).toBeNull()
+    expect(store.data.has(VIEW_KEY)).toBe(false)
   })
 })
 
@@ -115,6 +146,17 @@ describe("what the screen shows", () => {
       ["I am bad", 1],
       ["Nobody likes me", 1],
     ])
+  })
+
+  it("never draws a tap on top of a read that already names it, nor an undone one", () => {
+    const read = { thoughts: [{ ...base, counts: { ...base.counts, total: 1, today: 1 } }], recentLogIds: ["l1"] }
+    // l1 is in the read AND still queued (its send's answer has not arrived): once.
+    const q = enqueueLog(enqueueLog(empty, log("l1", "t1")), log("l2", "t1"))
+    expect(drawnThoughts(read, q, { thoughts: [], logs: [] }, NOW, CPH)[0].counts.total).toBe(2)
+    // Confirmed but not yet read: drawn on top.
+    expect(drawnThoughts({ ...read, recentLogIds: [] }, empty, { thoughts: [], logs: [log("l3", "t1")] }, NOW, CPH)[0].counts.total).toBe(2)
+    // Undone while its removal waits: not drawn.
+    expect(drawnThoughts(read, undoLog(q, "l2"), { thoughts: [], logs: [] }, NOW, CPH)[0].counts.total).toBe(1)
   })
 
 

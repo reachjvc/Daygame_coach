@@ -84,9 +84,11 @@ export function firstAllowedAtOrAfter(from: Date, settings: ScheduleSettings, ti
       // of the loop checks against quiet hours and the day again.
       next = new Date(localTimeInstant(nextDateKey(dayKey), "00:00", timezone))
     }
-    // Never stand still: a non-existent local time on a clock-change day can
-    // resolve to an instant at or before `at`.
-    at = next.getTime() > at.getTime() ? next : new Date(at.getTime() + MINUTE)
+    // Never stand still: a local time that does not exist on a clock-change
+    // day (zones that jump at midnight, America/Santiago among them) can
+    // resolve to an instant at or before `at`. A minute at a time could not
+    // cross a one-hour gap within the loop's steps; an hour always does.
+    at = next.getTime() > at.getTime() ? next : new Date(at.getTime() + 60 * MINUTE)
   }
   return null
 }
@@ -104,7 +106,10 @@ export function nextPromptAt(settings: ScheduleSettings, timezone: string, ancho
     const pause = Date.parse(settings.pausedUntil)
     if (pause > at.getTime()) at = new Date(pause)
   }
-  return firstAllowedAtOrAfter(at, settings, timezone)
+  // Null here would switch reminders off without anyone deciding to. Not
+  // reachable with valid settings; if it ever is, keep reminding on the
+  // interval rather than go silent.
+  return firstAllowedAtOrAfter(at, settings, timezone) ?? at
 }
 
 /** The later of the instants given, ignoring nulls; null if all are null. */

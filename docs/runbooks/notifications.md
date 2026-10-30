@@ -67,6 +67,14 @@ machine; never commit or paste them.
   Rotate both keys together, then delete the rows in `push_devices`; each device registers again the next time
   its owner opens `/thoughts` and taps "Turn on". Only do this if the private key leaked.
 
+## Never expose the `net` schema
+
+`pg_net` comes with Supabase's own grants to `anon` and `authenticated`, which this project's `postgres` role
+cannot take back (they were granted by `supabase_admin`). Its queue table briefly holds the clock's bearer
+secret. What keeps clients out is that the Data API exposes only `public` and `graphql_public` (checked
+2026-10-30: asking for `net` answers `PGRST106 Invalid schema: net`). **Do not add `net` (or `extensions`) to
+the exposed schemas in the Supabase dashboard.**
+
 ## When the app leaves Vercel
 
 Run a timer on the new server that does what the job does: once a minute, if anything is due, `POST` the tick

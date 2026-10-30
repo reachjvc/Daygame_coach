@@ -10,7 +10,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { createThought, lastDeliveredAt, readRecentLogIds, readSettings, readThoughts } from "@/src/db/thoughtsRepo"
+import { createThought, lastDeliveredAt, readRecentLogIds, readSettings, readThoughts, ThoughtRefused } from "@/src/db/thoughtsRepo"
 import { readPromptSchedule } from "@/src/db/notificationsRepo"
 import { checkThoughtText, isUuid } from "@/src/thoughts/thoughtsService"
 import type { ThoughtsView } from "@/src/thoughts/types"
@@ -51,6 +51,7 @@ export async function POST(req: Request) {
   try {
     return NextResponse.json(await createThought(auth.userId, body.id, text.value))
   } catch (error) {
+    if (error instanceof ThoughtRefused) return NextResponse.json({ error: error.message }, { status: 400 })
     console.error("[thoughts] add failed", error instanceof Error ? error.message : "unknown")
     return NextResponse.json({ error: "Could not add the thought" }, { status: 500 })
   }

@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { createBrowserSupabaseClient } from "@/src/db"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -58,6 +59,9 @@ export default function ResetPasswordPage() {
       if (error) throw error
       // Sign out on purpose: it makes the user prove the new password works, and
       // it kills the recovery session so a link left in browser history is inert.
+      // What this browser kept of the person goes first, as at Log Out
+      // (src/shared/offlineCopies.ts): this is a sign-out too.
+      await forgetOfflineCopies()
       await supabase.auth.signOut()
       router.push("/auth/login?reset=1")
     } catch (error: unknown) {

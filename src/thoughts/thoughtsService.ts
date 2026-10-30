@@ -203,8 +203,13 @@ type Checked<T> = { ok: true; value: T } | { ok: false; error: string }
 export function checkThoughtText(value: unknown): Checked<string> {
   if (typeof value !== "string") return { ok: false, error: "Write the thought" }
   const text = cleanThoughtText(value)
-  if (normalizeThought(text).length === 0) return { ok: false, error: "Write the thought" }
-  if (text.length > MAX_THOUGHT_LENGTH) return { ok: false, error: `Keep it under ${MAX_THOUGHT_LENGTH} characters` }
+  const norm = normalizeThought(text)
+  if (norm.length === 0) return { ok: false, error: "Write the thought" }
+  // The folded form can be longer than the text (NFKC expands some
+  // characters), and the database caps both.
+  if (text.length > MAX_THOUGHT_LENGTH || norm.length > MAX_THOUGHT_LENGTH) {
+    return { ok: false, error: `Keep it under ${MAX_THOUGHT_LENGTH} characters` }
+  }
   return { ok: true, value: text }
 }
 
@@ -226,9 +231,19 @@ export function checkLogInput(value: unknown, now: Date): Checked<LogInput> {
   const promptId = v.promptId ?? null
   if (promptId !== null && !isUuid(promptId)) return { ok: false, error: "Unknown reminder" }
   if (v.thoughtId === null && promptId === null) return { ok: false, error: "Nothing notable answers a reminder" }
+  // A phone whose clock runs a few minutes fast stamps the future. Stored as
+  // now: a log after the counts' "now" would be named as stored but left out
+  // of every count until the real time caught up, and would push the next
+  // reminder later than it should be.
   return {
     ok: true,
-    value: { id: v.id, thoughtId: v.thoughtId as string | null, at: new Date(at).toISOString(), source: v.source as LogSource, promptId },
+    value: {
+      id: v.id,
+      thoughtId: v.thoughtId as string | null,
+      at: new Date(Math.min(at, now.getTime())).toISOString(),
+      source: v.source as LogSource,
+      promptId,
+    },
   }
 }
 

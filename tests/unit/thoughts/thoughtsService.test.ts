@@ -147,6 +147,16 @@ describe("input checks", () => {
     expect(checkLogInput({ ...log, source: "voice" }, now).ok).toBe(false)
   })
 
+  it("stores a log stamped a few minutes ahead (a fast phone clock) as now", () => {
+    const checked = checkLogInput({ id, thoughtId: id, at: "2026-10-30T10:03:00.000Z", source: "tap", promptId: null }, now)
+    expect(checked.ok && checked.value.at).toBe(now.toISOString())
+  })
+
+  it("refuses a thought whose folded form outgrows the limit", () => {
+    // NFKC turns this one character into eighteen.
+    expect(checkThoughtText("\uFDFA".repeat(20)).ok).toBe(false)
+  })
+
   it("refuses a log from the future or more than a week old", () => {
     const log = { id, thoughtId: id, source: "tap", promptId: null }
     expect(checkLogInput({ ...log, at: "2026-10-30T10:11:00.000Z" }, now).ok).toBe(false)

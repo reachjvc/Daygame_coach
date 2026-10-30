@@ -14,25 +14,35 @@
  * spinner.
  *
  * THE PAGE REFUSES TO ACT ON A FAILED READ (.claude/rules/database.md): with
- * no view there are no buttons, only the error and a retry.
+ * no read there are no buttons, only the error and a retry — except with no
+ * connection at all, when it draws this person's last copy, marked as one.
+ *
+ * WHOSE PHONE. The account is read from the session this browser holds (no
+ * network needed), and the queue and the page copy are only ever this
+ * account's (logQueue.ts). Until it is known, nothing is sent.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createBrowserSupabaseClient } from "@/src/db/supabase-client"
 import {
   browserStore,
-  dropLog,
+  emptyQueue,
   enqueueLog,
   enqueueThought,
+  isEmpty,
   logsAnswered,
   pendingByThought,
   readQueue,
   readViewCopy,
   saveViewCopy,
+  thoughtRefused,
   thoughtStored,
+  undoLog,
+  undosAnswered,
   writeQueue,
   type QueueState,
 } from "../logQueue"
-import { bumpCounts, withPending } from "../pending"
+import { bumpCounts, drawnThoughts } from "../pending"
 import { ThoughtsCallError, thoughtsApi } from "../thoughtsClient"
 import { normalizeThought, type ReframeInput } from "../thoughtsService"
 import type { LogInput, LogSource, Reframe, Thought, ThoughtSettings, ThoughtsView } from "../types"
@@ -51,6 +61,8 @@ export interface LoggedNotice {
 export type SendState = "sent" | "waiting" | "signed-out"
 
 const REFRESH_AFTER_MS = 1500
+/** The log route takes at most 500; smaller sends finish sooner on a weak signal. */
+const SEND_AT_MOST = 200
 
 /**
  * WHAT THE SERVER HAS CONFIRMED BUT THE SCREEN'S LAST READ MAY NOT INCLUDE.
@@ -58,60 +70,71 @@ const REFRESH_AFTER_MS = 1500
  * A tap leaves the queue the moment the server confirms it, and the next read
  * of the page arrives a moment later. In between it is still drawn, from
  * here, so a count never falls back by one under a notice that says it went
- * up.
+ * up. The read says which taps it includes (`recentLogIds`, read before its
+ * counts), and those are never drawn on top (`drawnThoughts`). Only taps the
+ * server NEWLY stored are kept here; a resent one was already counted.
  *
- * THE READ SAYS WHICH TAPS IT INCLUDES (`recentLogIds`, read before its
- * counts), so a confirmed tap is dropped exactly when a read names it. Two
- * earlier versions guessed on this side — adding a confirmed tap straight
- * into the counts, then dropping it at the first read the phone had started
- * after the confirmation — and both drew some taps twice for seconds under
- * load: a read can leave the phone before a confirmation arrives and still
- * reach the database after the write. Only taps the server NEWLY stored are
- * kept here; a resent one was already counted.
- *
- * New thoughts are drawn only if the read lacks them, so they need no ids.
+ * Two earlier versions guessed on this side instead — adding a confirmed tap
+ * straight into the counts, then dropping it at the first read the phone had
+ * started after the confirmation — and both drew some taps twice for seconds
+ * under load: a read can leave the phone before a confirmation arrives and
+ * still reach the database after the write.
  */
 interface Confirmed {
+  /**
+   * `at` is when this phone got the confirmation. Any read that started later
+   * has the thought — or knows it was merged or deleted since — so it goes.
+   */
   thoughts: { id: string; text: string; at: number }[]
-  logs: { log: LogInput; at: number }[]
+  logs: LogInput[]
 }
 
-/** Matches RECENT_LOG_MINUTES on the server: older confirmations are in any read. */
-const RECENT_MS = 15 * 60_000
+const NONE: Confirmed = { thoughts: [], logs: [] }
 
 function newId(): string {
   return crypto.randomUUID()
 }
 
+/** The signed-in account as this browser's session says, without the network. */
+async function localUserId(): Promise<string | null> {
+  try {
+    const { data } = await createBrowserSupabaseClient().auth.getSession()
+    return data.session?.user.id ?? null
+  } catch {
+    return null
+  }
+}
+
 export function useThoughts() {
   const [view, setView] = useState<ThoughtsView | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [queue, setQueue] = useState<QueueState>({ thoughts: [], logs: [] })
+  const [queue, setQueue] = useState<QueueState>(emptyQueue(null))
+  const [confirmed, setConfirmed] = useState<Confirmed>(NONE)
   const [notice, setNotice] = useState<LoggedNotice | null>(null)
   const [sendState, setSendState] = useState<SendState>("sent")
-  const [confirmed, setConfirmed] = useState<Confirmed>({ thoughts: [], logs: [] })
   /** When the page is drawn from this phone's copy (no connection), the copy's time. */
   const [fromCopy, setFromCopy] = useState<string | null>(null)
 
+  const owner = useRef<string | null>(null)
   const queueRef = useRef(queue)
+  const confirmedRef = useRef<Confirmed>(NONE)
   const flushing = useRef(false)
   const flushAgain = useRef(false)
-  const cancelled = useRef(new Set<string>())
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const seq = useRef(0)
   const readsStarted = useRef(0)
   const readApplied = useRef(0)
-  const confirmedRef = useRef<Confirmed>({ thoughts: [], logs: [] })
+
+  const setQ = useCallback((next: QueueState) => {
+    const owned = { ...next, owner: owner.current }
+    queueRef.current = owned
+    setQueue(owned)
+    writeQueue(browserStore(), owned)
+  }, [])
 
   const setC = useCallback((next: Confirmed) => {
     confirmedRef.current = next
     setConfirmed(next)
-  }, [])
-
-  const setQ = useCallback((next: QueueState) => {
-    queueRef.current = next
-    setQueue(next)
-    writeQueue(browserStore(), next)
   }, [])
 
   /**
@@ -128,17 +151,19 @@ export function useThoughts() {
       readApplied.current = mine
       setView(fresh)
       setFromCopy(null)
-      saveViewCopy(browserStore(), fresh, new Date())
+      if (owner.current) saveViewCopy(browserStore(), fresh, new Date(), owner.current)
+      // Confirmed entries this read includes are no longer needed.
+      const named = new Set(fresh.recentLogIds)
       const c = confirmedRef.current
       setC({
-        thoughts: c.thoughts.filter((t) => t.at > started && !fresh.thoughts.some((x) => x.id === t.id)),
-        logs: c.logs.filter((l) => !fresh.recentLogIds.includes(l.log.id) && Date.now() - l.at < RECENT_MS),
+        thoughts: c.thoughts.filter((t) => t.at >= started && !fresh.thoughts.some((x) => x.id === t.id)),
+        logs: c.logs.filter((l) => !named.has(l.id)),
       })
       setLoadError(null)
     } catch (error) {
-      // No connection, and nothing drawn yet: draw the last copy, marked as one.
-      if (error instanceof ThoughtsCallError && error.status === 0 && readApplied.current === 0) {
-        const copy = readViewCopy<ThoughtsView>(browserStore())
+      // No connection, and nothing drawn yet: draw this person's last copy, marked as one.
+      if (error instanceof ThoughtsCallError && error.status === 0 && readApplied.current === 0 && owner.current) {
+        const copy = readViewCopy<ThoughtsView>(browserStore(), owner.current)
         if (copy) {
           setView((v) => v ?? copy.view)
           setFromCopy(copy.at)
@@ -156,76 +181,99 @@ export function useThoughts() {
 
   /**
    * Send the queue: new thoughts first (a log needs its thought's row), then
-   * every log in one call. One flush at a time; a flush asked for while one
-   * runs runs again after it.
+   * the logs in chunks, then queued removals. One flush at a time; a flush
+   * asked for while one runs runs again after it.
    *
-   * WHAT A REFUSAL DOES. No connection or a 5xx: everything stays queued.
-   * Signed out (401): everything stays queued too — it is still this person's
-   * phone until they sign out here, and signing back in sends it. Any other
-   * 4xx can never succeed, so only the item it was about is dropped: one bad
-   * entry must not hold every later tap hostage.
+   * WHAT A REFUSAL DOES. No connection or a 5xx: it stays queued. Signed out
+   * (401): it stays queued too — it is still this person's phone until they
+   * sign out here. Any other 4xx can never succeed, so only what it was about
+   * is dropped. A thought that cannot be sent yet holds back only its own
+   * taps: every other tap still goes.
    */
   const flush = useCallback(async () => {
+    if (!owner.current) return
     if (flushing.current) {
       flushAgain.current = true
       return
     }
     flushing.current = true
+    let stuck: ThoughtsCallError | null = null
+    /** True when the refusal is for good; otherwise remembers why sending stopped. */
+    const refusedForGood = (error: unknown): boolean => {
+      if (error instanceof ThoughtsCallError && !error.retryable && error.status !== 401) return true
+      stuck ??= error instanceof ThoughtsCallError ? error : new ThoughtsCallError("Could not send", 0, true)
+      return false
+    }
     try {
       do {
         flushAgain.current = false
+        const waiting = new Set<string>()
         for (const t of queueRef.current.thoughts) {
           try {
             const { id } = await thoughtsApi.create(t.id, t.text)
             setC({ ...confirmedRef.current, thoughts: [...confirmedRef.current.thoughts, { id, text: t.text, at: Date.now() }] })
             setQ(thoughtStored(queueRef.current, t.id, id))
           } catch (error) {
-            if (!(error instanceof ThoughtsCallError) || error.retryable || error.status === 401) throw error
-            setQ({
-              thoughts: queueRef.current.thoughts.filter((x) => x.id !== t.id),
-              logs: queueRef.current.logs.filter((l) => l.thoughtId !== t.id),
-            })
+            if (refusedForGood(error)) setQ(thoughtRefused(queueRef.current, t.id))
+            else waiting.add(t.id)
           }
         }
-        const batch = queueRef.current.logs
-        if (batch.length > 0) {
-          let answer: { inserted: string[] } | null = null
+
+        const ready = queueRef.current.logs.filter((l) => l.thoughtId === null || !waiting.has(l.thoughtId))
+        for (let i = 0; i < ready.length; i += SEND_AT_MOST) {
+          const batch = ready.slice(i, i + SEND_AT_MOST)
           try {
-            answer = await thoughtsApi.log(batch)
-          } catch (error) {
-            if (!(error instanceof ThoughtsCallError) || error.retryable || error.status === 401) throw error
-          }
-          if (answer) {
+            const answer = await thoughtsApi.log(batch)
             const fresh = new Set(answer.inserted)
-            const at = Date.now()
-            const live = batch.filter((l) => fresh.has(l.id) && !cancelled.current.has(l.id))
-            setC({ ...confirmedRef.current, logs: [...confirmedRef.current.logs, ...live.map((log) => ({ log, at }))] })
-          }
-          setQ(logsAnswered(queueRef.current, batch.map((l) => l.id)))
-          // Undone while it was on its way: it may have landed, so take it back out.
-          for (const l of batch) {
-            if (cancelled.current.delete(l.id)) await thoughtsApi.undo(l.id).catch(() => undefined)
+            const undone = new Set(queueRef.current.undos)
+            const kept = batch.filter((l) => fresh.has(l.id) && !undone.has(l.id))
+            setC({ ...confirmedRef.current, logs: [...confirmedRef.current.logs, ...kept] })
+            setQ(logsAnswered(queueRef.current, batch.map((l) => l.id)))
+          } catch (error) {
+            if (refusedForGood(error)) setQ(logsAnswered(queueRef.current, batch.map((l) => l.id)))
+            else break
           }
         }
-      } while (flushAgain.current)
-      setSendState("sent")
-      scheduleRefresh()
-    } catch (error) {
-      setSendState(error instanceof ThoughtsCallError && error.status === 401 ? "signed-out" : "waiting")
+
+        // Removals go last, after any send of the same tap: a DELETE that
+        // overtook its own insert would leave the tap stored.
+        for (const id of queueRef.current.undos) {
+          try {
+            await thoughtsApi.undo(id)
+            setQ(undosAnswered(queueRef.current, [id]))
+          } catch (error) {
+            if (refusedForGood(error)) setQ(undosAnswered(queueRef.current, [id]))
+            else break
+          }
+        }
+      } while (flushAgain.current && !stuck)
+      const why = stuck as ThoughtsCallError | null
+      if (why) {
+        setSendState(why.status === 401 ? "signed-out" : "waiting")
+      } else {
+        setSendState("sent")
+        scheduleRefresh()
+      }
     } finally {
       flushing.current = false
     }
   }, [scheduleRefresh, setQ, setC])
 
   useEffect(() => {
-    const stored = readQueue(browserStore())
-    queueRef.current = stored
-    setQueue(stored)
-    void load()
-    if (stored.thoughts.length > 0 || stored.logs.length > 0) void flush()
+    let alive = true
+    void (async () => {
+      const me = await localUserId()
+      if (!alive) return
+      owner.current = me
+      const stored = me ? readQueue(browserStore(), me) : emptyQueue(null)
+      queueRef.current = stored
+      setQueue(stored)
+      void load()
+      if (!isEmpty(stored)) void flush()
+    })()
 
     const retry = () => {
-      if (queueRef.current.thoughts.length > 0 || queueRef.current.logs.length > 0) void flush()
+      if (!isEmpty(queueRef.current)) void flush()
     }
     const onVisible = () => {
       if (document.visibilityState !== "visible") return
@@ -235,6 +283,7 @@ export function useThoughts() {
     window.addEventListener("online", retry)
     document.addEventListener("visibilitychange", onVisible)
     return () => {
+      alive = false
       window.removeEventListener("online", retry)
       document.removeEventListener("visibilitychange", onVisible)
       if (refreshTimer.current) clearTimeout(refreshTimer.current)
@@ -243,15 +292,10 @@ export function useThoughts() {
 
   const timezone = view?.timezone ?? "UTC"
 
-  /** What the screen draws: the server's thoughts with the confirmed-but-unread and the queued on top. */
-  const thoughts: Thought[] = useMemo(() => {
-    if (!view) return []
-    const onTop: QueueState = {
-      thoughts: [...confirmed.thoughts.map(({ id, text }) => ({ id, text })), ...queue.thoughts],
-      logs: [...confirmed.logs.map((c) => c.log), ...queue.logs],
-    }
-    return withPending(view.thoughts, onTop, new Date(), timezone)
-  }, [view, queue, confirmed, timezone])
+  const thoughts: Thought[] = useMemo(
+    () => (view ? drawnThoughts(view, queue, confirmed, new Date(), timezone) : []),
+    [view, queue, confirmed, timezone],
+  )
   const pending = useMemo(() => pendingByThought(queue), [queue])
 
   /** Queue one log and show the "logged" notice. `known` is the thought as drawn, if it is drawn yet. */
@@ -299,41 +343,40 @@ export function useThoughts() {
       const existing = thoughts.find((t) => normalizeThought(t.text) === norm)
       if (existing) return record(existing.id, existing.text, existing, source, promptId)
       const id = newId()
-      setQ(enqueueThought(queueRef.current, { id, text: text.replace(/\s+/g, " ").trim() }))
-      return record(id, text.replace(/\s+/g, " ").trim(), null, source, promptId)
+      const clean = text.replace(/\s+/g, " ").trim()
+      setQ(enqueueThought(queueRef.current, { id, text: clean }))
+      return record(id, clean, null, source, promptId)
     },
     [record, setQ, thoughts],
   )
 
+  /**
+   * Undo one tap. It may be only on this phone, already on the server, or —
+   * after a send that timed out — either; so it leaves the queue and its
+   * removal is queued, and a DELETE is idempotent whichever was true.
+   */
   const undo = useCallback(
-    async (target: LoggedNotice) => {
+    (target: LoggedNotice) => {
       setNotice((n) => (n?.logId === target.logId ? null : n))
-      if (queueRef.current.logs.some((l) => l.id === target.logId)) {
-        if (flushing.current) cancelled.current.add(target.logId)
-        setQ(dropLog(queueRef.current, target.logId))
-        return
-      }
-      // Already sent. Still drawn from the confirmed list: take it off that.
-      // Already in the last read: take one off the read's count. Then ask the server.
       const c = confirmedRef.current
-      const wasConfirmed = c.logs.some((l) => l.log.id === target.logId)
-      if (wasConfirmed) setC({ ...c, logs: c.logs.filter((l) => l.log.id !== target.logId) })
-      setView((v) =>
-        v && target.thoughtId && !wasConfirmed
-          ? {
-              ...v,
-              thoughts: v.thoughts.map((t) =>
-                t.id === target.thoughtId
-                  ? { ...t, counts: bumpCounts(t.counts, new Date().toISOString(), new Date(), v.timezone, -1) }
-                  : t,
-              ),
-            }
-          : v,
-      )
-      await thoughtsApi.undo(target.logId).catch(() => undefined)
-      scheduleRefresh()
+      if (c.logs.some((l) => l.id === target.logId)) setC({ ...c, logs: c.logs.filter((l) => l.id !== target.logId) })
+      else if (view?.recentLogIds.includes(target.logId) && target.thoughtId) {
+        // Already in the last read's counts: take one off them until the next read.
+        setView((v) =>
+          v
+            ? {
+                ...v,
+                thoughts: v.thoughts.map((t) =>
+                  t.id === target.thoughtId ? { ...t, counts: bumpCounts(t.counts, new Date().toISOString(), new Date(), v.timezone, -1) } : t,
+                ),
+              }
+            : v,
+        )
+      }
+      setQ(undoLog(queueRef.current, target.logId))
+      void flush()
     },
-    [scheduleRefresh, setQ, setC],
+    [flush, setC, setQ, view],
   )
 
   /** Changes that are decisions: wait for the server, then re-read. */

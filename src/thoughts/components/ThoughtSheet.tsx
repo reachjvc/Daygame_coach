@@ -51,12 +51,15 @@ export function ThoughtSheet({
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useState<Reframe[] | null>(null)
   const [showHistory, setShowHistory] = useState(false)
+  /** The thought a refused rewording collided with: offered for merging even if archived. */
+  const [collided, setCollided] = useState<string | null>(null)
 
   useEffect(() => {
     setMode("main")
     setError(null)
     setHistory(null)
     setShowHistory(false)
+    setCollided(null)
     setDraft(thought?.text ?? "")
   }, [thought?.id, thought?.text])
 
@@ -71,6 +74,7 @@ export function ThoughtSheet({
     } catch (e) {
       if (e instanceof ThoughtsCallError && e.status === 409) {
         setError("You already have a thought with these words. Merge into it instead.")
+        setCollided(typeof e.body.existingId === "string" ? e.body.existingId : null)
         setMode("merge")
       } else {
         setError(e instanceof Error ? e.message : "Something went wrong")
@@ -81,7 +85,7 @@ export function ThoughtSheet({
   }
 
   const c = thought.counts
-  const mergeTargets = others.filter((o) => o.id !== thought.id && !o.archived)
+  const mergeTargets = others.filter((o) => o.id !== thought.id && (!o.archived || o.id === collided))
 
   return (
     <BottomSheet open onClose={onClose} title={mode === "main" ? "Thought" : mode === "edit" ? "Edit wording" : mode === "merge" ? "Merge into" : "Delete"} testId="thought-sheet">

@@ -12,6 +12,16 @@
  * server may answer that these words already exist under another id (typed
  * on another device meanwhile); the queued logs are then moved to that id.
  *
+ * UNDO IS QUEUED TOO. A send can time out after the server stored it, so an
+ * Undo cannot know whether the tap is only here; its id waits in `undos`
+ * until the server has answered a DELETE for it (idempotent either way).
+ *
+ * EVERYTHING HERE IS ONE PERSON'S. `owner` is the account that wrote it; a
+ * queue or page copy belonging to anyone else is thrown away unread, so a
+ * shared phone never sends one person's taps into the next person's account
+ * (the security review, 2026-10-30: a session that ended without Log Out
+ * left them behind).
+ *
  * Storage is injected, so the rules are tested without a browser.
  */
 
@@ -25,8 +35,11 @@ export interface QueuedThought {
 }
 
 export interface QueueState {
+  owner: string | null
   thoughts: QueuedThought[]
   logs: LogInput[]
+  /** Logs undone whose removal the server has not yet confirmed. */
+  undos: string[]
 }
 
 export interface KeyValueStore {
@@ -35,27 +48,40 @@ export interface KeyValueStore {
   removeItem(key: string): void
 }
 
-const EMPTY: QueueState = { thoughts: [], logs: [] }
+export function emptyQueue(owner: string | null): QueueState {
+  return { owner, thoughts: [], logs: [], undos: [] }
+}
 
-export function readQueue(store: KeyValueStore | null): QueueState {
-  if (!store) return { thoughts: [], logs: [] }
+export function isEmpty(q: QueueState): boolean {
+  return q.thoughts.length === 0 && q.logs.length === 0 && q.undos.length === 0
+}
+
+/** This person's queue; anyone else's (or an unowned one) is empty, and removed. */
+export function readQueue(store: KeyValueStore | null, owner: string): QueueState {
+  if (!store) return emptyQueue(owner)
   try {
     const raw = store.getItem(QUEUE_KEY)
-    if (!raw) return { thoughts: [], logs: [] }
+    if (!raw) return emptyQueue(owner)
     const parsed = JSON.parse(raw) as Partial<QueueState>
+    if (parsed.owner !== owner) {
+      store.removeItem(QUEUE_KEY)
+      return emptyQueue(owner)
+    }
     return {
+      owner,
       thoughts: Array.isArray(parsed.thoughts) ? parsed.thoughts : [],
       logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+      undos: Array.isArray(parsed.undos) ? parsed.undos.filter((x): x is string => typeof x === "string") : [],
     }
   } catch {
-    return { ...EMPTY, thoughts: [], logs: [] }
+    return emptyQueue(owner)
   }
 }
 
 export function writeQueue(store: KeyValueStore | null, state: QueueState): void {
   if (!store) return
   try {
-    if (state.thoughts.length === 0 && state.logs.length === 0) store.removeItem(QUEUE_KEY)
+    if (isEmpty(state) || state.owner === null) store.removeItem(QUEUE_KEY)
     else store.setItem(QUEUE_KEY, JSON.stringify(state))
   } catch {
     // Storage full or blocked: the tap still goes now if there is signal.
@@ -72,15 +98,36 @@ export function enqueueThought(state: QueueState, thought: QueuedThought): Queue
   return { ...state, thoughts: [...state.thoughts, thought] }
 }
 
-export function dropLog(state: QueueState, logId: string): QueueState {
-  return { ...state, logs: state.logs.filter((l) => l.id !== logId) }
+/** Undo: out of the queue, and a removal queued in case an earlier send already landed. */
+export function undoLog(state: QueueState, logId: string): QueueState {
+  return {
+    ...state,
+    logs: state.logs.filter((l) => l.id !== logId),
+    undos: state.undos.includes(logId) ? state.undos : [...state.undos, logId],
+  }
+}
+
+/** The server answered these removals. */
+export function undosAnswered(state: QueueState, ids: string[]): QueueState {
+  const done = new Set(ids)
+  return { ...state, undos: state.undos.filter((id) => !done.has(id)) }
 }
 
 /** A queued thought was stored under `storedId` (its own id, or the one these words already had). */
 export function thoughtStored(state: QueueState, queuedId: string, storedId: string): QueueState {
   return {
+    ...state,
     thoughts: state.thoughts.filter((t) => t.id !== queuedId),
     logs: state.logs.map((l) => (l.thoughtId === queuedId ? { ...l, thoughtId: storedId } : l)),
+  }
+}
+
+/** A queued thought the server refused for good: it and its taps go. */
+export function thoughtRefused(state: QueueState, queuedId: string): QueueState {
+  return {
+    ...state,
+    thoughts: state.thoughts.filter((t) => t.id !== queuedId),
+    logs: state.logs.filter((l) => l.thoughtId !== queuedId),
   }
 }
 
@@ -114,21 +161,26 @@ export function browserStore(): KeyValueStore | null {
  */
 export const VIEW_KEY = "thoughts-view-v1"
 
-export function saveViewCopy(store: KeyValueStore | null, view: unknown, at: Date): void {
+export function saveViewCopy(store: KeyValueStore | null, view: unknown, at: Date, owner: string): void {
   if (!store) return
   try {
-    store.setItem(VIEW_KEY, JSON.stringify({ at: at.toISOString(), view }))
+    store.setItem(VIEW_KEY, JSON.stringify({ at: at.toISOString(), owner, view }))
   } catch {
     // Storage full or blocked: the page still works online.
   }
 }
 
-export function readViewCopy<T>(store: KeyValueStore | null): { at: string; view: T } | null {
+/** This person's page copy, or null; anyone else's is removed unread. */
+export function readViewCopy<T>(store: KeyValueStore | null, owner: string): { at: string; view: T } | null {
   if (!store) return null
   try {
     const raw = store.getItem(VIEW_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as { at?: unknown; view?: unknown }
+    const parsed = JSON.parse(raw) as { at?: unknown; owner?: unknown; view?: unknown }
+    if (parsed.owner !== owner) {
+      store.removeItem(VIEW_KEY)
+      return null
+    }
     return typeof parsed.at === "string" && parsed.view && typeof parsed.view === "object" ? { at: parsed.at, view: parsed.view as T } : null
   } catch {
     return null

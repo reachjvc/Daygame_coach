@@ -11,13 +11,23 @@
 import { timingSafeEqual } from "node:crypto"
 import { readNotificationSecret } from "@/src/db/notificationsRepo"
 
-let secret: Promise<string | null> | null = null
+/**
+ * Kept five minutes, so a rotated secret is taken up without a deploy; "none
+ * stored" is kept one minute, so a stream of calls to an unconfigured server
+ * is not a stream of vault reads.
+ */
+const KEEP_MS = 5 * 60_000
+const KEEP_MISSING_MS = 60_000
 
-export async function clockSecret(): Promise<string | null> {
-  secret ??= readNotificationSecret("notifications_clock_secret").catch(() => null)
-  const value = await secret
-  if (value === null) secret = null
-  return value
+let cached: { value: Promise<string | null>; at: number } | null = null
+
+export async function clockSecret(now: number = Date.now()): Promise<string | null> {
+  if (cached) {
+    const value = await cached.value
+    if (now - cached.at < (value === null ? KEEP_MISSING_MS : KEEP_MS)) return value
+  }
+  cached = { value: readNotificationSecret("notifications_clock_secret").catch(() => null), at: now }
+  return cached.value
 }
 
 /** Constant-time comparison of a presented `Authorization: Bearer …` with the stored secret. */

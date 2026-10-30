@@ -121,6 +121,27 @@ describe("nextPromptAt", () => {
   })
 })
 
+describe("zones whose clocks jump at midnight", () => {
+  // America/Santiago: 00:00 on Sunday 6 Sep 2026 does not exist (00:00 -04 -> 01:00 -03).
+  const SCL = "America/Santiago"
+
+  it("still finds the next reminder across the missing midnight (an inactive Saturday)", () => {
+    const noSaturday = { ...on, activeDays: 127 & ~(1 << 5) }
+    // Saturday 5 Sep 10:00 -04 = 14:00Z -> Sunday 08:00 -03 = 11:00Z
+    expect(nextPromptAt(noSaturday, SCL, at("2026-09-05T14:00:00Z"), at("2026-09-05T14:00:00Z"))?.toISOString()).toBe(
+      "2026-09-06T11:00:00.000Z",
+    )
+  })
+
+  it("still finds it when quiet hours end at the missing midnight", () => {
+    const evenings = { ...on, quietStart: 20 * 60, quietEnd: 0 }
+    const next = nextPromptAt(evenings, SCL, at("2026-09-06T00:30:00Z"), at("2026-09-06T00:30:00Z"))
+    expect(next).not.toBeNull()
+    expect(next!.getTime()).toBeGreaterThan(Date.parse("2026-09-06T00:30:00Z"))
+    expect(next!.getTime()).toBeLessThanOrEqual(Date.parse("2026-09-06T04:00:00Z"))
+  })
+})
+
 describe("firstAllowedAtOrAfter", () => {
   it("returns the instant itself when it is allowed", () => {
     const t = at("2026-10-30T10:00:00Z")

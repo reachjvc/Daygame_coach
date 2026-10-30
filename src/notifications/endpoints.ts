@@ -15,16 +15,30 @@
 const EXACT = new Set(["fcm.googleapis.com", "updates.push.services.mozilla.com", "web.push.apple.com"])
 const SUFFIXES = [".notify.windows.com", ".push.apple.com"]
 
+/**
+ * THE HOST IS READ FROM THE RAW TEXT, STRICTLY, before any parser sees it.
+ * `web-push` connects with Node's legacy `url.parse`, which reads some
+ * addresses differently from the WHATWG `URL` this check used: in
+ * `https://169.254.169.254;.notify.windows.com/x` the one sees a Windows host
+ * and the other connects to 169.254.169.254 (found by the security review,
+ * 2026-10-30). So the part between `https://` and the first `/` must be plain
+ * lower-case labels — no `;`, `%`, quotes, braces, `@` or port — and the WHATWG
+ * parse must agree with it exactly.
+ */
+const STRICT = /^https:\/\/([a-z0-9-]+(?:\.[a-z0-9-]+)+)\/[A-Za-z0-9\-._~:/?=&%+]*$/
+
 export function isAllowedPushEndpoint(endpoint: unknown): endpoint is string {
   if (typeof endpoint !== "string" || endpoint.length > 1000) return false
+  const m = STRICT.exec(endpoint)
+  if (!m) return false
   let url: URL
   try {
     url = new URL(endpoint)
   } catch {
     return false
   }
-  if (url.protocol !== "https:" || url.username || url.password || url.port) return false
-  const host = url.hostname.toLowerCase()
+  const host = m[1]
+  if (url.protocol !== "https:" || url.hostname !== host || url.host !== host || url.username || url.password) return false
   return EXACT.has(host) || SUFFIXES.some((s) => host.endsWith(s) && host.length > s.length)
 }
 

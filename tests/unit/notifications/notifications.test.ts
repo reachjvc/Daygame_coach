@@ -30,6 +30,13 @@ describe("which addresses the server will send to", () => {
     ["a port", "https://fcm.googleapis.com:8443/x"],
     ["not a URL", "fcm.googleapis.com"],
     ["too long", `https://fcm.googleapis.com/${"x".repeat(1000)}`],
+    // Read by WHATWG URL as an allowed host, connected to elsewhere by web-push's url.parse.
+    ["a semicolon in the host", "https://169.254.169.254;.notify.windows.com/latest"],
+    ["an escaped dot in the host", "https://localhost%E3%80%82notify.windows.com/x"],
+    ["a quote in the host", "https://127.0.0.1'.notify.windows.com/x"],
+    ["a brace in the host", "https://127.0.0.1{.notify.windows.com/x"],
+    ["a backtick in the host", "https://127.0.0.1`.notify.windows.com/x"],
+    ["upper case in the host", "https://FCM.googleapis.com/fcm/send/x"],
   ])("refuses %s", (_why, url) => {
     expect(isAllowedPushEndpoint(url)).toBe(false)
   })
