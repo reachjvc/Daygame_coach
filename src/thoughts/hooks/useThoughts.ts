@@ -26,6 +26,8 @@ import {
   logsAnswered,
   pendingByThought,
   readQueue,
+  readViewCopy,
+  saveViewCopy,
   thoughtStored,
   writeQueue,
   type QueueState,
@@ -88,6 +90,8 @@ export function useThoughts() {
   const [notice, setNotice] = useState<LoggedNotice | null>(null)
   const [sendState, setSendState] = useState<SendState>("sent")
   const [confirmed, setConfirmed] = useState<Confirmed>({ thoughts: [], logs: [] })
+  /** When the page is drawn from this phone's copy (no connection), the copy's time. */
+  const [fromCopy, setFromCopy] = useState<string | null>(null)
 
   const queueRef = useRef(queue)
   const flushing = useRef(false)
@@ -123,6 +127,8 @@ export function useThoughts() {
       if (mine < readApplied.current) return
       readApplied.current = mine
       setView(fresh)
+      setFromCopy(null)
+      saveViewCopy(browserStore(), fresh, new Date())
       const c = confirmedRef.current
       setC({
         thoughts: c.thoughts.filter((t) => t.at > started && !fresh.thoughts.some((x) => x.id === t.id)),
@@ -130,6 +136,15 @@ export function useThoughts() {
       })
       setLoadError(null)
     } catch (error) {
+      // No connection, and nothing drawn yet: draw the last copy, marked as one.
+      if (error instanceof ThoughtsCallError && error.status === 0 && readApplied.current === 0) {
+        const copy = readViewCopy<ThoughtsView>(browserStore())
+        if (copy) {
+          setView((v) => v ?? copy.view)
+          setFromCopy(copy.at)
+          return
+        }
+      }
       setLoadError(error instanceof ThoughtsCallError ? error.message : "Could not read your thoughts")
     }
   }, [setC])
@@ -334,6 +349,7 @@ export function useThoughts() {
   return {
     view,
     loadError,
+    fromCopy,
     reload: load,
     thoughts,
     timezone,

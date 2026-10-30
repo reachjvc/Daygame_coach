@@ -243,3 +243,39 @@ test.describe("frequencies @phone", () => {
     await expect(page.getByTestId("frequencies-answered")).toContainText("No reminders delivered this week.")
   })
 })
+
+test.describe("rough edges @phone", () => {
+  test("a tap with no signal is kept on the phone, sent when the signal returns, and counted once", async ({ page, context }) => {
+    await open(page)
+    await add(page, "I am bad")
+
+    await context.setOffline(true)
+    await button(page, "I am bad").click()
+    await expect(page.getByTestId("thoughts-queued")).toContainText("1 saved on this phone")
+    await expect(button(page, "I am bad")).toContainText("2")
+
+    const sent = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/logs") && r.ok())
+    await context.setOffline(false)
+    await page.evaluate(() => window.dispatchEvent(new Event("online")))
+    await sent
+    await expect(page.getByTestId("thoughts-queued")).toHaveCount(0)
+
+    await page.reload()
+    await expect(button(page, "I am bad")).toContainText("2")
+  })
+
+  test("signing out forgets this browser as a reminder device", async ({ page }) => {
+    await open(page)
+    const endpoint = `https://fcm.googleapis.com/fcm/send/e2e-forget-${Date.now()}`
+    const registered = await page.request.post("/api/notifications/devices", {
+      data: { intent: "enable", label: "Shared laptop", subscription: { endpoint, keys: { p256dh: "BNcR_e2e", auth: "tBHI_e2e" } } },
+    })
+    expect(registered.ok()).toBe(true)
+
+    // What both Log Out buttons call first (src/notifications/pushClient.ts, forgetThisDevice).
+    expect((await page.request.post("/api/notifications/devices/forget", { data: { endpoint } })).ok()).toBe(true)
+
+    const { devices } = await (await page.request.get("/api/notifications/devices")).json()
+    expect(devices).toEqual([])
+  })
+})

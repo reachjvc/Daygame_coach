@@ -106,10 +106,40 @@ export function browserStore(): KeyValueStore | null {
   }
 }
 
-/** Signing out: whatever thought text is still waiting must not stay on a shared device. */
-export function forgetQueue(): void {
+/**
+ * THE LAST COPY OF THE PAGE, so it opens with no signal (Q13): your thoughts
+ * and their counts as of the last read. Only ever drawn when a read fails for
+ * want of a connection, and marked as such on screen; taps still go to the
+ * queue. Holds thought text, so it goes at sign-out with the queue.
+ */
+export const VIEW_KEY = "thoughts-view-v1"
+
+export function saveViewCopy(store: KeyValueStore | null, view: unknown, at: Date): void {
+  if (!store) return
+  try {
+    store.setItem(VIEW_KEY, JSON.stringify({ at: at.toISOString(), view }))
+  } catch {
+    // Storage full or blocked: the page still works online.
+  }
+}
+
+export function readViewCopy<T>(store: KeyValueStore | null): { at: string; view: T } | null {
+  if (!store) return null
+  try {
+    const raw = store.getItem(VIEW_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { at?: unknown; view?: unknown }
+    return typeof parsed.at === "string" && parsed.view && typeof parsed.view === "object" ? { at: parsed.at, view: parsed.view as T } : null
+  } catch {
+    return null
+  }
+}
+
+/** Signing out: no thought text — waiting taps or the page's copy — stays on a shared device. */
+export function forgetThoughtsOnThisDevice(): void {
   try {
     browserStore()?.removeItem(QUEUE_KEY)
+    browserStore()?.removeItem(VIEW_KEY)
   } catch {
     // Nothing kept, nothing to forget.
   }

@@ -5,12 +5,15 @@
 import { describe, expect, it } from "vitest"
 import {
   QUEUE_KEY,
+  VIEW_KEY,
   dropLog,
   enqueueLog,
   enqueueThought,
   logsAnswered,
   pendingByThought,
   readQueue,
+  readViewCopy,
+  saveViewCopy,
   thoughtStored,
   writeQueue,
   type KeyValueStore,
@@ -71,6 +74,17 @@ describe("the queue", () => {
     q = dropLog(logsAnswered(q, ["a"]), "c")
     expect(q.logs.map((l) => l.id)).toEqual(["b", "d"])
     expect(pendingByThought(q)).toEqual(new Map([["t1", 1]]))
+  })
+})
+
+describe("the page's offline copy", () => {
+  it("keeps the last read with its time, and reads nothing from garbage", () => {
+    const store = memoryStore()
+    saveViewCopy(store, { thoughts: [{ id: "t1" }] }, NOW)
+    expect(readViewCopy(store)).toEqual({ at: NOW.toISOString(), view: { thoughts: [{ id: "t1" }] } })
+    store.setItem(VIEW_KEY, "{broken")
+    expect(readViewCopy(store)).toBeNull()
+    expect(readViewCopy(null)).toBeNull()
   })
 })
 

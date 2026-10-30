@@ -11,13 +11,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { usePushDevice } from "@/src/notifications/hooks/usePushDevice"
+import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { ROUTES } from "@/src/shared/routes"
 import { useThoughts } from "../hooks/useThoughts"
 import { isUuid, readyToReframe, sortForButtons, TOP_BUTTONS } from "../thoughtsService"
 import { ThoughtsCallError, thoughtsApi } from "../thoughtsClient"
 import type { FrequencyStats, Thought } from "../types"
 import { AllThoughtsSheet } from "./AllThoughtsSheet"
-import { frequencyLine } from "./format"
+import { formatTime, frequencyLine } from "./format"
 import { FrequenciesView, ThoughtTrend } from "./FrequenciesView"
 import { LoggedNotice } from "./LoggedNotice"
 import { QuickLogSheet } from "./QuickLogSheet"
@@ -129,6 +130,14 @@ export function ThoughtsScreen() {
         <h1 className="text-2xl font-semibold tracking-tight">Thought Frequencies</h1>
         <p className="mt-1 text-sm text-muted-foreground">Catch the thoughts that keep coming back. Then rewrite them.</p>
       </header>
+      <OfflineShell />
+
+      {s.fromCopy && (
+        <p className="mt-4 rounded-xl border border-amber-400/40 bg-amber-400/[0.06] px-4 py-3 text-sm" role="status" data-testid="thoughts-offline">
+          No connection. Your thoughts as of {formatTime(s.fromCopy, s.timezone)}; taps are kept on this phone and sent when you have
+          signal.
+        </p>
+      )}
 
       <div className="mt-5">
         <RemindersCard

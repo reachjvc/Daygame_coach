@@ -91,7 +91,7 @@ describe("the route list", () => {
       .split("\n")
       .filter((line) => !line.trim().startsWith("//"))
       .flatMap((line) => [...line.matchAll(/"([^"]+)"/g)].map((m) => m[1]))
-    expect(named).toEqual([ROUTES.time, ROUTES.quitVice, ROUTES.liveWorkout])
+    expect(named).toEqual([ROUTES.time, ROUTES.quitVice, ROUTES.liveWorkout, ROUTES.thoughts])
     expect(named).not.toContain(QUIT_VICE_ARCHIVE)
   })
 

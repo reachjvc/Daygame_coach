@@ -622,6 +622,19 @@ stored, so the page knows exactly which taps a read already counts. 54/54 browse
 **Acceptance:** tests green; with the phone in airplane mode, the owner taps a thought, turns signal back
 on, and sees it counted once.
 
+**Evidence (2026-10-30):** offline taps were built in Phase 3; e2e now proves it: offline tap shows "1 saved
+on this phone", returns with the signal, counts once after a reload (desktop and phone lanes). `/thoughts` is
+the worker's fourth offline page (`public/sw.js`, `routeList.test.ts` updated); the page keeps its last read
+on the phone and draws it, marked "No connection. Your thoughts as of 14:05", only when a read fails for want
+of a connection. Both copies (waiting taps, the page copy) go at sign-out with the device registration. New
+warnings: "Reminders stopped on this device" (permission taken back) and "No reminder has reached this device
+for a day" (every-day schedules only, so a weekdays plan is not flagged at the weekend). Help card: Phase 3,
+`ThoughtHelpCard`. `tests/unit/thoughts/thoughtTextStaysPrivate.test.ts`: every log line in the thoughts and
+notifications code is a fixed tag plus an error message or status; a database error's `details`/`hint`
+(which carry the row) are never read; a planted leak is caught. Accessibility: every thought button reads
+its text and today's count; switches, the day buttons and the interval choices are labelled; the heat grid
+has a text summary and a table; animations are `motion-safe`. Full unit suite: 5,414 passed.
+
 ## Phase 10 — Finished: real-phone day, look, review, documents
 **Depends on:** Phase 9.
 1. B-PHONE, a full day: reminders all day, quiet hours overnight, answers from the lock screen, one

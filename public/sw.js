@@ -90,6 +90,10 @@ const SHELL_PATHS = [
   // page in place of the sets (Plans/program-builder.md, Q21). Its sets queue
   // in localStorage and are put back on screen from there; this keeps the page.
   "/training/live",
+  // Thought Frequencies (Plans/thought.md, Q13). A reminder arrives on a
+  // train and the tap that answers it is the whole point: the taps queue on
+  // the phone and the page draws the last copy of your thoughts it kept.
+  "/thoughts",
 ]
 
 /** Is this one of them? */

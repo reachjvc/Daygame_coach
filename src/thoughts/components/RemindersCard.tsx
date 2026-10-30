@@ -126,6 +126,24 @@ export function RemindersCard({
   }
 
   const onHere = push.thisDevice?.enabled === true && push.permission === "granted"
+
+  // Switched on here, but the browser's permission is gone: the phone (or
+  // Chrome, for a site whose notifications go unopened) took it back.
+  if (settings.remindersOn && push.thisDevice?.enabled && push.permission === "default") {
+    return (
+      <section className="rounded-2xl border border-amber-400/40 bg-card p-4" data-testid="reminders-withdrawn">
+        <p className="font-semibold">Reminders stopped on this device</p>
+        <p className="mt-1 text-sm text-muted-foreground">This browser&apos;s permission to show them was taken back.</p>
+        <div className="mt-3 flex items-center gap-2">
+          <Button onClick={onTurnOn} disabled={push.busy} className="flex-1">
+            Turn back on
+          </Button>
+          {settingsButton}
+        </div>
+      </section>
+    )
+  }
+
   if (!settings.remindersOn || !onHere) {
     return (
       <section className="rounded-2xl border border-border bg-card p-4" data-testid="reminders-offer">
@@ -156,6 +174,27 @@ export function RemindersCard({
   }
 
   const paused = settings.pausedUntil !== null && Date.parse(settings.pausedUntil) > Date.now()
+  const here = push.devices.find((d) => d.id === push.thisDevice?.id)
+  const silentSince = here ? (here.lastSuccessAt ?? here.createdAt) : null
+  // Only with every day active: a weekdays-only schedule is silent all weekend on purpose.
+  const silent =
+    !paused && settings.activeDays === 127 && silentSince !== null && Date.now() - Date.parse(silentSince) > 24 * 60 * 60_000
+  if (silent) {
+    return (
+      <section className="rounded-2xl border border-amber-400/40 bg-card p-4" data-testid="reminders-silent">
+        <p className="font-semibold">No reminder has reached this device for a day</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Battery saver or Do Not Disturb can hold them back. Send a test to check.
+        </p>
+        <div className="mt-3 flex items-center gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => void push.sendTest()}>
+            Send a test reminder
+          </Button>
+          {settingsButton}
+        </div>
+      </section>
+    )
+  }
   return (
     <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-2.5" data-testid="reminders-on">
       <div className="min-w-0 text-sm">
