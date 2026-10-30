@@ -34,6 +34,9 @@ const SERVER_ONLY: Record<string, string> = {
   beta_invites: "invite codes; claimed only through the claim_beta_slot function",
   embeddings_test: "pipeline scratch table for embedding experiments",
   error_reports: "crash reports, written by the server's error route",
+  push_devices:
+    "notification addresses the server POSTs to; a client-written row would let anyone make the server call any URL (20261030120000_thought_frequencies.sql)",
+  thought_prompt_schedule: "when the next thoughts reminder is due; computed and claimed only by the server's clock",
   waitlist_emails: "sign-ups for the waitlist, written by the server",
 }
 

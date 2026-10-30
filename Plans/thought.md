@@ -1,6 +1,6 @@
 # Thought Frequencies: catch the thoughts that keep coming back, then reframe them
 
-**Status:** written 2026-10-30 by session daygame-coach-7d. Not started. Phase 0 is next.
+**Status:** written 2026-10-30 by session daygame-coach-7d. The owner said "go execute" the same day; being built.
 
 **Written for** the owner first (Part 1), then for the AI session that builds it (design rules, blockers,
 questions, the pieces, phases, Part 2, and the `/goal` prompts at the end). The executing AI should treat
@@ -45,9 +45,9 @@ A new feature, on the website and on the installed phone app, called **Thought F
   a written way back. One switch is turned on in the database (`pg_net`, which lets the database's clock
   call the website), and one secret is stored in the database's locked vault so that only the clock can
   trigger reminders.
-- **Three values you paste into Vercel's settings** (about five minutes, free): two keys that identify
-  the app to the notification services, and the clock's secret. No AI session can reach Vercel's
-  settings; this is blocker B-ENV. The values are prepared for you in a file on this computer.
+- ~~Three values you paste into Vercel's settings~~ **Nothing to paste (changed 2026-10-30, Phase 2).**
+  The two notification keys and the clock's secret were put in the database's locked vault instead,
+  where the website reads them. B-ENV is gone.
 - **Your phone.** If you use an iPhone, reminders only work after you add the app to your Home Screen
   and open it from there. Apple allows nothing else (Q20).
 - **What becomes public: nothing.** The page is private to each signed-in person. Nobody else can read
@@ -277,7 +277,8 @@ Each was attempted on 2026-10-30. The result is what happened.
 
 | ID | What | Attempted, and what happened | Blocks | Recommendation |
 |---|---|---|---|---|
-| B-ENV | Put the two notification keys and the clock's secret into Vercel's settings | `which vercel`: not installed. No `~/.vercel` login. No AI session can reach the Vercel dashboard. | Phase 5's live check, Phase 6 | **You**, about 5 minutes, free: Vercel dashboard → the project → Settings → Environment Variables, paste three values from a file the AI prepares at `~/dg-secrets/thoughts-push.env` (mode 600, outside the repo). Then redeploy. The AI writes the exact steps with pictures-in-words when it gets there. |
+| ~~B-ENV~~ | **Removed 2026-10-30:** the keys and the secret live in Supabase Vault, read by the server through `notification_secret` (service role only). Nobody pastes anything. Original row kept below for the record. |  |  |  |
+| B-ENV (retired) | Put the two notification keys and the clock's secret into Vercel's settings | `which vercel`: not installed. No `~/.vercel` login. No AI session can reach the Vercel dashboard. | Phase 5's live check, Phase 6 | **You**, about 5 minutes, free: Vercel dashboard → the project → Settings → Environment Variables, paste three values from a file the AI prepares at `~/dg-secrets/thoughts-push.env` (mode 600, outside the repo). Then redeploy. The AI writes the exact steps with pictures-in-words when it gets there. |
 | B-MIGRATE | Apply the new tables, switch on `pg_net`, store the clock's secret in the vault, schedule the clock job on the live database | Read-only probe via `supabase db query --linked` (linked from a scratch folder; this checkout is not linked and answers `ProjectRefNotLinkedError`): `pg_cron` 1.6.4 installed with one job (`20 3 * * *`, `prune_error_reports`), `pg_net` 0.19.5 available, not installed, `supabase_vault` 0.3.1 installed, no thought/push tables. `supabase migration list --linked`: all 64 local migrations applied, none pending. | Phase 2, Phase 6 | Your yes to this plan covers it ("What you are agreeing to"). Check `migration list --linked` again right before each push: another session may have added one. |
 | B-DEP | Add the `web-push` library to `package.json` | `npm view web-push`: version 3.6.7, licence MPL-2.0 (fine to use unmodified), free. Not installed: a past session found the safety check refuses edits to `package.json` in this shared folder until you approve. | Phase 5 | The executing AI prepares the change in an isolated worktree and asks you once with a plain yes/no question. Fallback if refused: write the push encryption by hand with Node's built-in crypto (about 150 lines, more risk, more tests). |
 | B-SW | Edit `public/sw.js`, the one background worker the whole site shares | `ListAgents`: one peer, `daygame-coach-c3`, waiting. The own-platform plan (M7) notes that another session owns sw.js's offline list. | Phase 5, Phase 9 | Message whichever session is active before editing; keep the push code separate from the offline rules inside the file; extend `tests/unit/shared/serviceWorker.test.ts`. |
@@ -401,6 +402,16 @@ layer. Screens wait for B-DESIGN marks; data and plumbing do not.
 5. Ask the owner Q20 (iPhone or Android) if not yet answered.
 **Acceptance:** the plan is corrected where needed; evidence lists what was checked.
 
+**Evidence (2026-10-30, session 7d):** `git status` clean at e1e0d770; `ListAgents`: one peer,
+`daygame-coach-c3`, which answered that it touches no repo code and holds no edits in the shared files
+named above. Read: `.claude/rules/*`, `docs/testing_behavior.md`, `public/sw.js`, `OfflineShell.tsx`,
+`src/shared/offlineCopies.ts` (both Log Out buttons call `forgetOfflineCopies` from
+`components/AppFrame.tsx` and `components/MobileTabBar.tsx`), `proxy.ts` (it never redirects `/api/*`
+except `/api/timetrack/*`, so the clock's address needs no exception), `src/shared/dateUtils.ts`
+(timezone helpers reused by the schedule). `node_modules/next/dist/docs/01-app/02-guides/progressive-web-apps.md`
+covers push the standard way. `df -h /mnt/c`: 1.1 TB free. Q20 not answered (no marks); building for both.
+**Correction:** the keys go in the vault, not Vercel (B-ENV removed).
+
 ## Phase 1 — The look, signed off (B-DESIGN)
 **Depends on:** Phase 0.
 1. Read the owner's marks on https://claude.ai/artifact/KyF2G35P6txWVvu5e8D2Nc (`ArtifactData` `list`,
@@ -413,6 +424,10 @@ layer. Screens wait for B-DESIGN marks; data and plumbing do not.
 3. The owner marks each screen Yes / Maybe / No with a note. Screens marked No are redesigned and marked
    again; Yes screens are the target for the build and for the Phase 10 comparison.
 **Acceptance:** every screen marked Yes, or redesigned and re-marked.
+
+**Evidence (2026-10-30):** the `marks` collection was empty when read. The owner said "go execute"
+without marking, so the recommended answers stand as decisions and the mock-up is the build target. The
+owner can still mark the page; a "No" there is redone as a change, not a blocker.
 
 ## Phase 2 — Storage
 **Depends on:** Phase 0. (B-MIGRATE)
@@ -427,6 +442,21 @@ layer. Screens wait for B-DESIGN marks; data and plumbing do not.
    counts are right with 1,500 logs; deleting a thought removes its logs and reframes and nothing else.
 5. `supabase migration list --linked`; apply; check the tables exist on the live database.
 **Acceptance:** tests green; tables live; nothing else in the database changed.
+
+**Evidence (2026-10-30):** `supabase/migrations/20261030120000_thought_frequencies.sql`, way back in
+`supabase/migrations/rollback/20261030120000_thought_frequencies.down.sql`. Seven tables (thoughts,
+thought_logs, thought_reframes, thought_settings, thought_prompt_schedule, notification_sends,
+push_devices), four functions (`thought_counts`, `merge_thought`, `claim_due_thought_prompts`,
+`notification_secret`). Write policies added: owner-only insert/update/delete on thoughts,
+thought_logs, thought_reframes, thought_settings (the person's own words and choices, not computed
+data). No client policy at all on push_devices and thought_prompt_schedule; select-only on
+notification_sends. `tests/integration/repos/thoughtsRepo.integration.test.ts`: 21 green on the local
+stack, and 15 of them go red with `TEST_SHARED_USER=1`, so they depend on separate accounts. The row
+security and cascade catalog tests name the two server-only tables and the one SET NULL with reasons.
+`supabase migration list --linked`: only this migration pending; `db push --linked` applied it; all seven
+tables exist live with row security on. Vault: `push_vapid_public`, `push_vapid_private`,
+`notifications_clock_secret` stored from `~/dg-secrets/thoughts-vault.sql` (mode 600), checked by
+name and length only.
 
 ## Phase 3 — You can log thoughts by hand (first usable version)
 **Depends on:** Phases 1 (marks for screens 1 and 3) and 2.

@@ -95,6 +95,8 @@ const OUTLIVES_ITS_PARENT: Record<string, string> = {
   life_plan_experiences_area_fk: "an experience outlives its area",
   life_plan_experiences_goal_fk: "an experience outlives its goal",
   life_plan_fields_target_fk: "a field outlives its target",
+  thought_logs_prompt_owner:
+    "a logged thought stays logged when the reminder it answered is deleted; clears only prompt_id (20261030120000_thought_frequencies.sql)",
 }
 
 async function foreignKeys(db: Client): Promise<ForeignKey[]> {

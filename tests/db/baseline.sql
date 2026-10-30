@@ -1,4 +1,4 @@
--- baseline-stamp: 20261022110000
+-- baseline-stamp: 20261030120000
 -- Schema only (no rows), dumped from the linked Supabase project by scripts/db/baseline.sh.
 -- Do not edit by hand: write a migration, then re-run the script once production has it.
 
@@ -176,6 +176,29 @@ end $$;
 
 
 ALTER FUNCTION "public"."claim_beta_slot"("p_code" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) RETURNS TABLE("user_id" "uuid", "due_at" timestamp with time zone)
+    LANGUAGE "sql"
+    SET "search_path" TO 'public'
+    AS $$
+  WITH due AS (
+    SELECT s.user_id, s.next_due_at
+      FROM thought_prompt_schedule s
+     WHERE s.next_due_at IS NOT NULL AND s.next_due_at <= p_now
+     ORDER BY s.next_due_at
+     LIMIT p_limit
+       FOR UPDATE SKIP LOCKED
+  )
+  UPDATE thought_prompt_schedule s
+     SET next_due_at = p_now + p_lease, updated_at = p_now
+    FROM due
+   WHERE s.user_id = due.user_id
+  RETURNING s.user_id, due.next_due_at
+$$;
+
+
+ALTER FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."end_enrollment"("p_id" "uuid") RETURNS "uuid"
@@ -438,6 +461,47 @@ $$;
 
 
 ALTER FUNCTION "public"."match_embeddings_test"("query_embedding" "public"."vector", "match_threshold" double precision, "match_count" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+  me UUID := auth.uid();
+BEGIN
+  IF p_from = p_into THEN
+    RAISE EXCEPTION 'a thought cannot be merged into itself' USING ERRCODE = '22023';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM thoughts WHERE id = p_from AND user_id = me AND merged_into IS NULL)
+     OR NOT EXISTS (SELECT 1 FROM thoughts WHERE id = p_into AND user_id = me AND merged_into IS NULL) THEN
+    RAISE EXCEPTION 'both thoughts must exist and not be merged already' USING ERRCODE = 'P0002';
+  END IF;
+
+  UPDATE thought_logs SET thought_id = p_into WHERE thought_id = p_from AND user_id = me;
+  UPDATE thought_reframes SET thought_id = p_into, updated_at = now() WHERE thought_id = p_from AND user_id = me;
+  UPDATE thoughts SET merged_into = p_into, updated_at = now() WHERE merged_into = p_from AND user_id = me;
+  UPDATE thoughts SET merged_into = p_into, pinned = false, updated_at = now() WHERE id = p_from AND user_id = me;
+  UPDATE thoughts SET updated_at = now() WHERE id = p_into AND user_id = me;
+END
+$$;
+
+
+ALTER FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."notification_secret"("p_name" "text") RETURNS "text"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+  SELECT ds.decrypted_secret
+    FROM vault.decrypted_secrets ds
+   WHERE ds.name = p_name
+     AND p_name IN ('push_vapid_public', 'push_vapid_private', 'notifications_clock_secret')
+$$;
+
+
+ALTER FUNCTION "public"."notification_secret"("p_name" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."program_drafts_touch_updated_at"() RETURNS "trigger"
@@ -998,6 +1062,28 @@ ALTER FUNCTION "public"."start_enrollment"("p_row" "jsonb", "p_displace" "uuid"[
 
 COMMENT ON FUNCTION "public"."start_enrollment"("p_row" "jsonb", "p_displace" "uuid"[]) IS 'Starts a program and pauses the ones it makes room for, in one transaction — so a refused start leaves the program you were on running.';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone DEFAULT "now"(), "p_user" "uuid" DEFAULT NULL::"uuid") RETURNS TABLE("thought_id" "uuid", "today" integer, "week" integer, "month" integer, "total" integer, "first_at" timestamp with time zone, "last_at" timestamp with time zone)
+    LANGUAGE "sql" STABLE
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT
+    l.thought_id,
+    (count(*) FILTER (WHERE l.at >= (date_trunc('day', p_now AT TIME ZONE p_tz) AT TIME ZONE p_tz)))::int,
+    (count(*) FILTER (WHERE l.at >= p_now - interval '7 days'))::int,
+    (count(*) FILTER (WHERE l.at >= p_now - interval '30 days'))::int,
+    count(*)::int,
+    min(l.at),
+    max(l.at)
+  FROM public.thought_logs l
+  WHERE l.user_id = coalesce(p_user, auth.uid()) AND l.thought_id IS NOT NULL AND l.at <= p_now
+  GROUP BY l.thought_id
+  ORDER BY l.thought_id
+$$;
+
+
+ALTER FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."timetrack_touch_updated_at"() RETURNS "trigger"
@@ -1986,6 +2072,24 @@ COMMENT ON TABLE "public"."milestones" IS 'Achievements. System-only writes: awa
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."notification_sends" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "kind" "text" NOT NULL,
+    "sent_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "devices" smallint DEFAULT 0 NOT NULL,
+    "delivered" smallint DEFAULT 0 NOT NULL,
+    "removed" smallint DEFAULT 0 NOT NULL,
+    CONSTRAINT "notification_sends_delivered_check" CHECK (("delivered" >= 0)),
+    CONSTRAINT "notification_sends_devices_check" CHECK (("devices" >= 0)),
+    CONSTRAINT "notification_sends_kind_check" CHECK (("kind" = ANY (ARRAY['thought-prompt'::"text", 'test'::"text"]))),
+    CONSTRAINT "notification_sends_removed_check" CHECK (("removed" >= 0))
+);
+
+
+ALTER TABLE "public"."notification_sends" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."nutrition_logs" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
@@ -2183,6 +2287,29 @@ CREATE TABLE IF NOT EXISTS "public"."purchases" (
 ALTER TABLE "public"."purchases" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."push_devices" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "endpoint" "text" NOT NULL,
+    "p256dh" "text" NOT NULL,
+    "auth" "text" NOT NULL,
+    "label" "text" DEFAULT ''::"text" NOT NULL,
+    "enabled" boolean DEFAULT true NOT NULL,
+    "failures" smallint DEFAULT 0 NOT NULL,
+    "last_success_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "push_devices_auth_check" CHECK ((("length"("auth") >= 1) AND ("length"("auth") <= 100))),
+    CONSTRAINT "push_devices_endpoint_check" CHECK ((("endpoint" ~~ 'https://%'::"text") AND ("length"("endpoint") <= 1000))),
+    CONSTRAINT "push_devices_failures_check" CHECK (("failures" >= 0)),
+    CONSTRAINT "push_devices_label_check" CHECK (("length"("label") <= 80)),
+    CONSTRAINT "push_devices_p256dh_check" CHECK ((("length"("p256dh") >= 1) AND ("length"("p256dh") <= 200)))
+);
+
+
+ALTER TABLE "public"."push_devices" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."review_templates" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid",
@@ -2330,6 +2457,97 @@ CREATE TABLE IF NOT EXISTS "public"."sticking_points" (
 
 
 ALTER TABLE "public"."sticking_points" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."thought_logs" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "thought_id" "uuid",
+    "at" timestamp with time zone NOT NULL,
+    "source" "text" NOT NULL,
+    "prompt_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "thought_logs_source_check" CHECK (("source" = ANY (ARRAY['tap'::"text", 'typed'::"text", 'prompt'::"text", 'prompt-action'::"text"])))
+);
+
+
+ALTER TABLE "public"."thought_logs" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."thought_prompt_schedule" (
+    "user_id" "uuid" NOT NULL,
+    "next_due_at" timestamp with time zone,
+    "last_sent_at" timestamp with time zone,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."thought_prompt_schedule" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."thought_reframes" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "thought_id" "uuid" NOT NULL,
+    "text" "text" NOT NULL,
+    "belief_before" smallint,
+    "belief_after" smallint,
+    "evidence" "text" DEFAULT ''::"text" NOT NULL,
+    "friend" "text" DEFAULT ''::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "thought_reframes_belief_after_check" CHECK ((("belief_after" IS NULL) OR (("belief_after" >= 0) AND ("belief_after" <= 100)))),
+    CONSTRAINT "thought_reframes_belief_before_check" CHECK ((("belief_before" IS NULL) OR (("belief_before" >= 0) AND ("belief_before" <= 100)))),
+    CONSTRAINT "thought_reframes_evidence_check" CHECK (("length"("evidence") <= 2000)),
+    CONSTRAINT "thought_reframes_friend_check" CHECK (("length"("friend") <= 2000)),
+    CONSTRAINT "thought_reframes_text_check" CHECK ((("length"("btrim"("text")) >= 1) AND ("length"("btrim"("text")) <= 500)))
+);
+
+
+ALTER TABLE "public"."thought_reframes" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."thought_settings" (
+    "user_id" "uuid" NOT NULL,
+    "reminders_on" boolean DEFAULT false NOT NULL,
+    "interval_minutes" smallint DEFAULT 15 NOT NULL,
+    "quiet_start" smallint DEFAULT 1320,
+    "quiet_end" smallint DEFAULT 480,
+    "active_days" smallint DEFAULT 127 NOT NULL,
+    "paused_until" timestamp with time zone,
+    "show_thoughts" boolean DEFAULT false NOT NULL,
+    "reframe_after_days" smallint DEFAULT 3 NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "thought_settings_active_days_check" CHECK ((("active_days" >= 1) AND ("active_days" <= 127))),
+    CONSTRAINT "thought_settings_interval_minutes_check" CHECK (("interval_minutes" = ANY (ARRAY[5, 10, 15, 20, 30, 45, 60, 90, 120]))),
+    CONSTRAINT "thought_settings_quiet_both_or_neither" CHECK ((("quiet_start" IS NULL) = ("quiet_end" IS NULL))),
+    CONSTRAINT "thought_settings_quiet_end_check" CHECK ((("quiet_end" IS NULL) OR (("quiet_end" >= 0) AND ("quiet_end" <= 1439)))),
+    CONSTRAINT "thought_settings_quiet_not_empty" CHECK ((("quiet_start" IS DISTINCT FROM "quiet_end") OR ("quiet_start" IS NULL))),
+    CONSTRAINT "thought_settings_quiet_start_check" CHECK ((("quiet_start" IS NULL) OR (("quiet_start" >= 0) AND ("quiet_start" <= 1439)))),
+    CONSTRAINT "thought_settings_reframe_after_days_check" CHECK ((("reframe_after_days" >= 1) AND ("reframe_after_days" <= 14)))
+);
+
+
+ALTER TABLE "public"."thought_settings" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."thoughts" (
+    "id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "text" "text" NOT NULL,
+    "norm" "text" NOT NULL,
+    "pinned" boolean DEFAULT false NOT NULL,
+    "archived_at" timestamp with time zone,
+    "merged_into" "uuid",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "thoughts_norm_check" CHECK ((("length"("norm") >= 1) AND ("length"("norm") <= 280))),
+    CONSTRAINT "thoughts_not_merged_into_itself" CHECK (("merged_into" IS DISTINCT FROM "id")),
+    CONSTRAINT "thoughts_text_check" CHECK ((("length"("btrim"("text")) >= 1) AND ("length"("btrim"("text")) <= 280)))
+);
+
+
+ALTER TABLE "public"."thoughts" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."timetrack_alert_events" (
@@ -3463,6 +3681,16 @@ ALTER TABLE ONLY "public"."milestones"
 
 
 
+ALTER TABLE ONLY "public"."notification_sends"
+    ADD CONSTRAINT "notification_sends_id_owner" UNIQUE ("id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."notification_sends"
+    ADD CONSTRAINT "notification_sends_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."nutrition_logs"
     ADD CONSTRAINT "nutrition_logs_pkey" PRIMARY KEY ("id");
 
@@ -3508,6 +3736,16 @@ ALTER TABLE ONLY "public"."purchases"
 
 
 
+ALTER TABLE ONLY "public"."push_devices"
+    ADD CONSTRAINT "push_devices_endpoint_key" UNIQUE ("endpoint");
+
+
+
+ALTER TABLE ONLY "public"."push_devices"
+    ADD CONSTRAINT "push_devices_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."review_templates"
     ADD CONSTRAINT "review_templates_pkey" PRIMARY KEY ("id");
 
@@ -3535,6 +3773,36 @@ ALTER TABLE ONLY "public"."sleep_logs"
 
 ALTER TABLE ONLY "public"."sticking_points"
     ADD CONSTRAINT "sticking_points_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."thought_logs"
+    ADD CONSTRAINT "thought_logs_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."thought_prompt_schedule"
+    ADD CONSTRAINT "thought_prompt_schedule_pkey" PRIMARY KEY ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."thought_reframes"
+    ADD CONSTRAINT "thought_reframes_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."thought_settings"
+    ADD CONSTRAINT "thought_settings_pkey" PRIMARY KEY ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."thoughts"
+    ADD CONSTRAINT "thoughts_id_owner" UNIQUE ("id", "user_id");
+
+
+
+ALTER TABLE ONLY "public"."thoughts"
+    ADD CONSTRAINT "thoughts_pkey" PRIMARY KEY ("id");
 
 
 
@@ -3973,6 +4241,42 @@ CREATE INDEX "life_answers_current_idx" ON "public"."life_answers" USING "btree"
 
 
 CREATE INDEX "life_chapters_current_idx" ON "public"."life_chapters" USING "btree" ("user_id", "statement_key", "opened_at" DESC);
+
+
+
+CREATE INDEX "notification_sends_owner_sent" ON "public"."notification_sends" USING "btree" ("user_id", "sent_at" DESC);
+
+
+
+CREATE INDEX "push_devices_owner" ON "public"."push_devices" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "thought_logs_owner_at" ON "public"."thought_logs" USING "btree" ("user_id", "at");
+
+
+
+CREATE INDEX "thought_logs_owner_thought_at" ON "public"."thought_logs" USING "btree" ("user_id", "thought_id", "at");
+
+
+
+CREATE INDEX "thought_logs_prompt" ON "public"."thought_logs" USING "btree" ("prompt_id") WHERE ("prompt_id" IS NOT NULL);
+
+
+
+CREATE INDEX "thought_prompt_schedule_due" ON "public"."thought_prompt_schedule" USING "btree" ("next_due_at") WHERE ("next_due_at" IS NOT NULL);
+
+
+
+CREATE INDEX "thought_reframes_thought" ON "public"."thought_reframes" USING "btree" ("user_id", "thought_id", "created_at");
+
+
+
+CREATE INDEX "thoughts_merged_into" ON "public"."thoughts" USING "btree" ("merged_into") WHERE ("merged_into" IS NOT NULL);
+
+
+
+CREATE UNIQUE INDEX "thoughts_one_wording_per_person" ON "public"."thoughts" USING "btree" ("user_id", "norm") WHERE ("merged_into" IS NULL);
 
 
 
@@ -4619,6 +4923,11 @@ ALTER TABLE ONLY "public"."milestones"
 
 
 
+ALTER TABLE ONLY "public"."notification_sends"
+    ADD CONSTRAINT "notification_sends_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."nutrition_logs"
     ADD CONSTRAINT "nutrition_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -4651,6 +4960,11 @@ ALTER TABLE ONLY "public"."program_versions"
 
 ALTER TABLE ONLY "public"."purchases"
     ADD CONSTRAINT "purchases_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."push_devices"
+    ADD CONSTRAINT "push_devices_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -4691,6 +5005,51 @@ ALTER TABLE ONLY "public"."sleep_logs"
 
 ALTER TABLE ONLY "public"."sticking_points"
     ADD CONSTRAINT "sticking_points_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thought_logs"
+    ADD CONSTRAINT "thought_logs_prompt_owner" FOREIGN KEY ("prompt_id", "user_id") REFERENCES "public"."notification_sends"("id", "user_id") ON DELETE SET NULL ("prompt_id");
+
+
+
+ALTER TABLE ONLY "public"."thought_logs"
+    ADD CONSTRAINT "thought_logs_thought_owner" FOREIGN KEY ("thought_id", "user_id") REFERENCES "public"."thoughts"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thought_logs"
+    ADD CONSTRAINT "thought_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thought_prompt_schedule"
+    ADD CONSTRAINT "thought_prompt_schedule_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thought_reframes"
+    ADD CONSTRAINT "thought_reframes_thought_owner" FOREIGN KEY ("thought_id", "user_id") REFERENCES "public"."thoughts"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thought_reframes"
+    ADD CONSTRAINT "thought_reframes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thought_settings"
+    ADD CONSTRAINT "thought_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thoughts"
+    ADD CONSTRAINT "thoughts_merged_into_owner" FOREIGN KEY ("merged_into", "user_id") REFERENCES "public"."thoughts"("id", "user_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."thoughts"
+    ADD CONSTRAINT "thoughts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -5948,6 +6307,13 @@ CREATE POLICY "milestones_select_own" ON "public"."milestones" FOR SELECT USING 
 
 
 
+ALTER TABLE "public"."notification_sends" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "notification_sends_select_own" ON "public"."notification_sends" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
 ALTER TABLE "public"."nutrition_logs" ENABLE ROW LEVEL SECURITY;
 
 
@@ -5980,6 +6346,9 @@ ALTER TABLE "public"."purchases" ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "purchases_select_own" ON "public"."purchases" FOR SELECT USING (("user_id" = "auth"."uid"()));
 
+
+
+ALTER TABLE "public"."push_devices" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "read own chapters" ON "public"."life_chapters" FOR SELECT USING (("auth"."uid"() = "user_id"));
@@ -6073,6 +6442,85 @@ CREATE POLICY "sticking_points_select_own" ON "public"."sticking_points" FOR SEL
 
 
 CREATE POLICY "sticking_points_update_own" ON "public"."sticking_points" FOR UPDATE USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+ALTER TABLE "public"."thought_logs" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "thought_logs_delete_own" ON "public"."thought_logs" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_logs_insert_own" ON "public"."thought_logs" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_logs_select_own" ON "public"."thought_logs" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_logs_update_own" ON "public"."thought_logs" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."thought_prompt_schedule" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."thought_reframes" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "thought_reframes_delete_own" ON "public"."thought_reframes" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_reframes_insert_own" ON "public"."thought_reframes" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_reframes_select_own" ON "public"."thought_reframes" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_reframes_update_own" ON "public"."thought_reframes" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."thought_settings" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "thought_settings_delete_own" ON "public"."thought_settings" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_settings_insert_own" ON "public"."thought_settings" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_settings_select_own" ON "public"."thought_settings" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thought_settings_update_own" ON "public"."thought_settings" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."thoughts" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "thoughts_delete_own" ON "public"."thoughts" FOR DELETE USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thoughts_insert_own" ON "public"."thoughts" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thoughts_select_own" ON "public"."thoughts" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "thoughts_update_own" ON "public"."thoughts" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -7035,6 +7483,11 @@ GRANT ALL ON FUNCTION "public"."claim_beta_slot"("p_code" "text") TO "service_ro
 
 
 
+REVOKE ALL ON FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."claim_due_thought_prompts"("p_now" timestamp with time zone, "p_lease" interval, "p_limit" integer) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."halfvec", "public"."halfvec") TO "postgres";
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."halfvec", "public"."halfvec") TO "anon";
 GRANT ALL ON FUNCTION "public"."cosine_distance"("public"."halfvec", "public"."halfvec") TO "authenticated";
@@ -7393,6 +7846,17 @@ GRANT ALL ON FUNCTION "public"."match_embeddings_test"("query_embedding" "public
 
 
 
+REVOKE ALL ON FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."merge_thought"("p_from" "uuid", "p_into" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."notification_secret"("p_name" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."notification_secret"("p_name" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "service_role";
@@ -7533,6 +7997,12 @@ GRANT ALL ON FUNCTION "public"."subvector"("public"."vector", integer, integer) 
 GRANT ALL ON FUNCTION "public"."subvector"("public"."vector", integer, integer) TO "anon";
 GRANT ALL ON FUNCTION "public"."subvector"("public"."vector", integer, integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."subvector"("public"."vector", integer, integer) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") TO "service_role";
 
 
 
@@ -8027,6 +8497,12 @@ GRANT ALL ON TABLE "public"."milestones" TO "service_role";
 
 
 
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."notification_sends" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."notification_sends" TO "authenticated";
+GRANT ALL ON TABLE "public"."notification_sends" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."nutrition_logs" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."nutrition_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."nutrition_logs" TO "service_role";
@@ -8183,6 +8659,12 @@ GRANT ALL ON TABLE "public"."purchases" TO "service_role";
 
 
 
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."push_devices" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."push_devices" TO "authenticated";
+GRANT ALL ON TABLE "public"."push_devices" TO "service_role";
+
+
+
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."review_templates" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."review_templates" TO "authenticated";
 GRANT ALL ON TABLE "public"."review_templates" TO "service_role";
@@ -8216,6 +8698,36 @@ GRANT ALL ON TABLE "public"."sleep_logs" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."sticking_points" TO "anon";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."sticking_points" TO "authenticated";
 GRANT ALL ON TABLE "public"."sticking_points" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_logs" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."thought_logs" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_prompt_schedule" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_prompt_schedule" TO "authenticated";
+GRANT ALL ON TABLE "public"."thought_prompt_schedule" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_reframes" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_reframes" TO "authenticated";
+GRANT ALL ON TABLE "public"."thought_reframes" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_settings" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thought_settings" TO "authenticated";
+GRANT ALL ON TABLE "public"."thought_settings" TO "service_role";
+
+
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thoughts" TO "anon";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."thoughts" TO "authenticated";
+GRANT ALL ON TABLE "public"."thoughts" TO "service_role";
 
 
 
