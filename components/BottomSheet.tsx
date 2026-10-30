@@ -200,16 +200,20 @@ export function BottomSheet({
       {/* Backdrop. Tapping anywhere off the panel closes. */}
       <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* The panel itself. `pb-safe` keeps the last row clear of the home bar. */}
-      <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl border-t border-border pb-safe animate-slide-up">
-        <div className="flex items-center justify-between px-3 pt-3 pb-1">
+      {/* The panel itself. `pb-safe` keeps the last row clear of the home bar.
+          AT MOST 92% OF THE SCREEN, AND THE INSIDE SCROLLS. It had no limit,
+          so a tall sheet (Thought Frequencies' reminder settings, 2026-10-30)
+          grew past the top of a phone screen, its title and first rows
+          unreachable: nothing scrolls a fixed panel. The title row stays put. */}
+      <div className="absolute bottom-0 left-0 right-0 flex max-h-[92dvh] flex-col bg-card rounded-t-2xl border-t border-border pb-safe animate-slide-up">
+        <div className="flex shrink-0 items-center justify-between px-3 pt-3 pb-1">
           <span className="px-2 text-sm font-semibold text-foreground">{title}</span>
           <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose}>
             <X className="size-5" />
           </Button>
         </div>
 
-        <div className="px-3 pb-4 space-y-1">{children}</div>
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-3 pb-4 space-y-1">{children}</div>
       </div>
     </div>
   )

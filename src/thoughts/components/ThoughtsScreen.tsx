@@ -8,14 +8,19 @@
  * most frequent first. One tap counts it.
  */
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { usePushDevice } from "@/src/notifications/hooks/usePushDevice"
+import { ROUTES } from "@/src/shared/routes"
 import { useThoughts } from "../hooks/useThoughts"
-import { readyToReframe, sortForButtons, TOP_BUTTONS } from "../thoughtsService"
+import { isUuid, readyToReframe, sortForButtons, TOP_BUTTONS } from "../thoughtsService"
 import type { Thought } from "../types"
 import { AllThoughtsSheet } from "./AllThoughtsSheet"
 import { frequencyLine } from "./format"
 import { LoggedNotice } from "./LoggedNotice"
+import { QuickLogSheet } from "./QuickLogSheet"
+import { RemindersCard } from "./RemindersCard"
+import { RemindersSheet } from "./RemindersSheet"
 import { ReframeFlow } from "./ReframeFlow"
 import { ThoughtButtons } from "./ThoughtButtons"
 import { ThoughtInput } from "./ThoughtInput"
@@ -23,9 +28,26 @@ import { ThoughtSheet } from "./ThoughtSheet"
 
 export function ThoughtsScreen() {
   const s = useThoughts()
+  const push = usePushDevice()
   const [openId, setOpenId] = useState<string | null>(null)
   const [reframeId, setReframeId] = useState<string | null>(null)
   const [showAll, setShowAll] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  /** Opened by a reminder (`?log=1&prompt=<id>`) or the install shortcut (`?log=1`). */
+  const [quick, setQuick] = useState<{ promptId: string | null } | null>(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("log") !== "1") return
+    const prompt = params.get("prompt")
+    setQuick({ promptId: isUuid(prompt) ? prompt : null })
+  }, [])
+
+  const closeQuick = useCallback(() => {
+    setQuick(null)
+    // The address goes back to the page itself, so a reload does not reopen the sheet.
+    window.history.replaceState(null, "", ROUTES.thoughts)
+  }, [])
 
   const buttons = useMemo(() => sortForButtons(s.thoughts), [s.thoughts])
   const ready = useMemo(
@@ -35,6 +57,20 @@ export function ThoughtsScreen() {
   const open = s.thoughts.find((t) => t.id === openId) ?? null
   const reframing = s.thoughts.find((t) => t.id === reframeId) ?? null
   const openSheet = useCallback((t: Thought) => setOpenId(t.id), [])
+
+  const quickSheet = (
+    <QuickLogSheet
+      open={quick !== null}
+      promptId={quick?.promptId ?? null}
+      thoughts={s.thoughts}
+      pending={s.pending}
+      loading={!s.view}
+      onLog={(t) => s.log(t, quick?.promptId ? "prompt" : "tap", quick?.promptId ?? null)}
+      onLogNew={(text) => s.logText(text, quick?.promptId ? "prompt" : "typed", quick?.promptId ?? null)}
+      onNothing={() => quick?.promptId && s.nothingNotable(quick.promptId)}
+      onClose={closeQuick}
+    />
+  )
 
   if (!s.view) {
     return (
@@ -58,6 +94,7 @@ export function ThoughtsScreen() {
             </div>
           </div>
         )}
+        {quickSheet}
       </main>
     )
   }
@@ -71,6 +108,21 @@ export function ThoughtsScreen() {
         <h1 className="text-2xl font-semibold tracking-tight">Thought Frequencies</h1>
         <p className="mt-1 text-sm text-muted-foreground">Catch the thoughts that keep coming back. Then rewrite them.</p>
       </header>
+
+      <div className="mt-5">
+        <RemindersCard
+          push={push}
+          settings={s.view.settings}
+          nextDueAt={s.view.nextDueAt}
+          lastDeliveredAt={s.view.lastDeliveredAt}
+          timezone={s.timezone}
+          onOpenSettings={() => setShowSettings(true)}
+          onTurnOn={async () => {
+            const on = await push.turnOn()
+            if (on && !s.view?.settings.remindersOn && s.view) await s.saveSettings({ ...s.view.settings, remindersOn: true })
+          }}
+        />
+      </div>
 
       {ready.length > 0 && (
         <section className="mt-6" aria-labelledby="ready-label">
@@ -159,6 +211,18 @@ export function ThoughtsScreen() {
         remove={s.remove}
         loadReframes={s.reframes}
       />
+
+      <RemindersSheet
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={s.view.settings}
+        timezone={s.timezone}
+        lastDeliveredAt={s.view.lastDeliveredAt}
+        push={push}
+        save={s.saveSettings}
+      />
+
+      {quickSheet}
 
       {reframing && <ReframeFlow thought={reframing} onClose={() => setReframeId(null)} onSave={s.saveReframe} />}
 

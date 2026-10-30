@@ -126,3 +126,70 @@ test.describe("thought frequencies @phone", () => {
     await expect(page.getByTestId("logged-reframe")).toContainText("someone who is learning")
   })
 })
+
+test.describe("reminders @phone", () => {
+  test("settings save and survive a reload; a registered device can be switched off and removed", async ({ page }) => {
+    await open(page)
+    await add(page, "I am bad")
+
+    // A device as a browser would register it. Real push delivery needs a
+    // real phone (Plans/thought.md, B-PHONE); this checks everything around it.
+    const registered = await page.request.post("/api/notifications/devices", {
+      data: {
+        intent: "enable",
+        label: "Test phone · installed app",
+        subscription: { endpoint: `https://fcm.googleapis.com/fcm/send/e2e-${Date.now()}`, keys: { p256dh: "BNcR_e2e", auth: "tBHI_e2e" } },
+      },
+    })
+    expect(registered.ok()).toBe(true)
+
+    await page.getByTestId("reminder-settings-open").click()
+    const sheet = page.getByTestId("reminders-sheet")
+    await expect(sheet).toBeVisible()
+    const saved = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/settings") && r.ok())
+    await sheet.getByRole("radio", { name: "30 min" }).click()
+    await saved
+    await expect(sheet.getByText("Test phone · installed app")).toBeVisible()
+
+    const switched = page.waitForResponse((r) => r.url().includes("/api/notifications/devices/") && r.request().method() === "PATCH")
+    await sheet.getByRole("switch", { name: "Reminders on Test phone · installed app" }).click()
+    await switched
+    const removed = page.waitForResponse((r) => r.url().includes("/api/notifications/devices/") && r.request().method() === "DELETE")
+    await sheet.getByRole("button", { name: "Remove Test phone · installed app" }).click()
+    await removed
+    await expect(sheet.getByText("No device receives reminders yet.")).toBeVisible()
+
+    await page.reload()
+    await page.getByTestId("reminder-settings-open").click()
+    await expect(page.getByTestId("reminders-sheet").getByRole("radio", { name: "30 min" })).toHaveAttribute("aria-checked", "true")
+  })
+
+  test("a reminder opens the quick-log sheet; one tap logs and closes it, and 'nothing notable' is an answer", async ({ page }) => {
+    await open(page)
+    await add(page, "I am bad")
+
+    await page.goto(`${ROUTES.thoughts}?log=1&prompt=${crypto.randomUUID()}`)
+    const quick = page.getByTestId("quick-log")
+    await expect(quick).toBeVisible()
+    const sent = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/logs") && r.ok())
+    await quick.getByTestId("thought-button").filter({ hasText: "I am bad" }).click()
+    await sent
+    await expect(quick).toBeHidden()
+    await expect(page).toHaveURL(new RegExp(`${ROUTES.thoughts}$`))
+    await expect(button(page, "I am bad")).toContainText("2")
+
+    await page.goto(`${ROUTES.thoughts}?log=1&prompt=${crypto.randomUUID()}`)
+    const answered = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/logs") && r.ok())
+    await page.getByTestId("quick-log-nothing").click()
+    await answered
+    await expect(page.getByTestId("logged-notice")).toContainText("nothing notable")
+    await expect(button(page, "I am bad")).toContainText("2")
+  })
+
+  test("the install shortcut opens the sheet without 'nothing notable'", async ({ page }) => {
+    await open(page)
+    await page.goto(`${ROUTES.thoughts}?log=1`)
+    await expect(page.getByTestId("quick-log")).toBeVisible()
+    await expect(page.getByTestId("quick-log-nothing")).toHaveCount(0)
+  })
+})

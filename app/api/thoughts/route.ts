@@ -11,6 +11,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { createThought, lastDeliveredAt, readSettings, readThoughts } from "@/src/db/thoughtsRepo"
+import { readPromptSchedule } from "@/src/db/notificationsRepo"
 import { checkThoughtText, isUuid } from "@/src/thoughts/thoughtsService"
 import type { ThoughtsView } from "@/src/thoughts/types"
 
@@ -20,12 +21,13 @@ export async function GET() {
 
   try {
     const timezone = await getUserTimezone(auth.userId)
-    const [thoughts, settings, delivered] = await Promise.all([
+    const [thoughts, settings, delivered, schedule] = await Promise.all([
       readThoughts(auth.userId, timezone),
       readSettings(auth.userId),
       lastDeliveredAt(auth.userId),
+      readPromptSchedule(auth.userId),
     ])
-    const view: ThoughtsView = { thoughts, settings, timezone, lastDeliveredAt: delivered }
+    const view: ThoughtsView = { thoughts, settings, timezone, lastDeliveredAt: delivered, nextDueAt: schedule.nextDueAt }
     return NextResponse.json(view)
   } catch (error) {
     // Never the thought text: only the database's message reaches the log.

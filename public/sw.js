@@ -227,3 +227,138 @@ self.addEventListener("fetch", (event) => {
       }),
   )
 })
+
+/* ===========================================================================
+ * NOTIFICATIONS — a separate job from everything above, sharing the file only
+ * because a site gets one worker per address range (Plans/thought.md, B-SW).
+ * Nothing below reads or writes the offline store, and nothing above touches
+ * a notification.
+ *
+ * 1. EVERY PUSH SHOWS A NOTIFICATION. Browsers require it, and a push that
+ *    shows nothing gets the site's permission withdrawn.
+ * 2. ONE TAG PER KIND. A new reminder replaces the last on screen, so an
+ *    afternoon of unanswered reminders is one notification, not thirty.
+ * 3. NOTHING PRIVATE UNLESS ASKED. The text comes from the server, which sends
+ *    a generic line unless the person switched "show thoughts" on.
+ * 4. A TAP OPENS THE APP WHERE THE PAYLOAD SAYS — always a page on this site,
+ *    never an address from outside it.
+ * ======================================================================== */
+
+/** A page on this site, or the thoughts page when the payload names anything else. */
+function sameSiteUrl(raw) {
+  try {
+    const url = new URL(raw || "/thoughts?log=1", self.location.origin)
+    if (url.origin === self.location.origin) return url.href
+  } catch {
+    // fall through
+  }
+  return new URL("/thoughts?log=1", self.location.origin).href
+}
+
+self.addEventListener("push", (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = {}
+  }
+  const actions = Array.isArray(data.actions) ? data.actions.slice(0, 2) : []
+  event.waitUntil(
+    self.registration.showNotification(data.title || "What's on your mind?", {
+      body: data.body || "Tap to log your last thought.",
+      tag: data.tag || "thought-prompt",
+      renotify: true,
+      icon: "/icon-192.png",
+      timestamp: Date.now(),
+      data: { url: sameSiteUrl(data.url), promptId: data.promptId || null, labels: Object.fromEntries(actions.map((a) => [a.id, a.title])) },
+      actions: actions.map((a) => ({ action: a.id, title: a.title })),
+    }),
+  )
+})
+
+/** Bring an open window of the app forward and send it to `url`, or open one. */
+async function focusOrOpen(url) {
+  const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true })
+  for (const client of windows) {
+    if (new URL(client.url).origin !== self.location.origin) continue
+    try {
+      const focused = await client.focus()
+      if (focused && "navigate" in focused) {
+        await focused.navigate(url)
+        return
+      }
+    } catch {
+      // A window this worker does not control cannot be navigated: open a new one.
+    }
+  }
+  if (self.clients.openWindow) await self.clients.openWindow(url)
+}
+
+/**
+ * A thought button on the notification: log it from here, without opening the
+ * app. Same route, same rule as a tap in the app: the id is made here, once,
+ * so a retry can never count twice. The browser sends the person's own
+ * session cookie with it; signed out, the route refuses and the notification
+ * says so and offers to open the app.
+ */
+async function logFromNotification(thoughtId, promptId, label) {
+  const body = {
+    logs: [{ id: self.crypto.randomUUID(), thoughtId, at: new Date().toISOString(), source: "prompt-action", promptId }],
+  }
+  let ok = false
+  try {
+    const res = await fetch("/api/thoughts/logs", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    ok = res.ok
+  } catch {
+    ok = false
+  }
+  await self.registration.showNotification(ok ? "Logged" : "Not logged", {
+    body: ok ? label || "Counted." : "Tap to open the app and log it there.",
+    tag: "thought-prompt",
+    silent: true,
+    icon: "/icon-192.png",
+    data: { url: sameSiteUrl(promptId ? `/thoughts?log=1&prompt=${promptId}` : "/thoughts?log=1"), promptId: null, labels: {} },
+  })
+}
+
+self.addEventListener("notificationclick", (event) => {
+  const data = event.notification.data || {}
+  event.notification.close()
+  if (event.action && data.labels && event.action in data.labels) {
+    event.waitUntil(logFromNotification(event.action, data.promptId || null, data.labels[event.action]))
+    return
+  }
+  event.waitUntil(focusOrOpen(sameSiteUrl(data.url)))
+})
+
+/**
+ * The browser replaced this device's address (Firefox does; Chrome rarely).
+ * Tell the server, which keeps the device's on/off as it was. If this cannot
+ * reach the server, the page re-registers the next time it is opened.
+ */
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    (async () => {
+      const subscription =
+        event.newSubscription ||
+        (event.oldSubscription && (await self.registration.pushManager.subscribe(event.oldSubscription.options)))
+      if (!subscription) return
+      await fetch("/api/notifications/devices", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscription: subscription.toJSON(),
+          oldEndpoint: event.oldSubscription ? event.oldSubscription.endpoint : null,
+          intent: "refresh",
+          label: "",
+        }),
+      }).catch(() => undefined)
+    })(),
+  )
+})

@@ -58,23 +58,22 @@ export interface DeviceTarget {
  * signing in on the same browser takes the row over: the first person's
  * reminders must not keep arriving on a screen that is no longer theirs.
  */
-export async function registerDevice(userId: string, device: DeviceRegistration): Promise<string> {
+export async function registerDevice(userId: string, device: DeviceRegistration, enabled = true): Promise<string> {
   const now = new Date().toISOString()
+  const row: Record<string, unknown> = {
+    user_id: userId,
+    endpoint: device.endpoint,
+    p256dh: device.p256dh,
+    auth: device.auth,
+    enabled,
+    failures: 0,
+    updated_at: now,
+  }
+  // An empty label (the worker re-registering knows none) keeps the one stored.
+  if (device.label) row.label = device.label
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .upsert(
-      {
-        user_id: userId,
-        endpoint: device.endpoint,
-        p256dh: device.p256dh,
-        auth: device.auth,
-        label: device.label,
-        enabled: true,
-        failures: 0,
-        updated_at: now,
-      },
-      { onConflict: "endpoint" },
-    )
+    .upsert(row, { onConflict: "endpoint" })
     .select("id")
     .single()
   if (error) throw new Error(`Failed to register this device: ${error.message}`)
@@ -99,16 +98,35 @@ export async function listDevices(userId: string): Promise<DeviceSummary[]> {
   )
 }
 
-/** The id of this person's device with this endpoint, if registered to them. */
-export async function deviceIdForEndpoint(userId: string, endpoint: string): Promise<string | null> {
+/**
+ * Who this browser's address is registered to, if anyone, and whether it is
+ * on. Server-only: the answer names another person's id, and is used only to
+ * decide whether a shared browser moves to whoever is signed in now.
+ */
+export async function deviceByEndpoint(endpoint: string): Promise<{ id: string; userId: string; enabled: boolean } | null> {
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .select("id")
-    .eq("user_id", userId)
+    .select("id, user_id, enabled")
     .eq("endpoint", endpoint)
     .maybeSingle()
   if (error) throw new Error(`Failed to look up this device: ${error.message}`)
-  return (data as { id: string } | null)?.id ?? null
+  const row = data as { id: string; user_id: string; enabled: boolean } | null
+  return row ? { id: row.id, userId: row.user_id, enabled: row.enabled } : null
+}
+
+/**
+ * The browser replaced this device's address: carry the row (and whether it
+ * is on) over to the new one. False when no row of this person had the old one.
+ */
+export async function moveDevice(userId: string, oldEndpoint: string, next: { endpoint: string; p256dh: string; auth: string }): Promise<boolean> {
+  const { data, error } = await createAdminSupabaseClient()
+    .from("push_devices")
+    .update({ endpoint: next.endpoint, p256dh: next.p256dh, auth: next.auth, failures: 0, updated_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("endpoint", oldEndpoint)
+    .select("id")
+  if (error) throw new Error(`Failed to move this device: ${error.message}`)
+  return (data ?? []).length > 0
 }
 
 export async function setDeviceEnabled(userId: string, deviceId: string, enabled: boolean): Promise<boolean> {

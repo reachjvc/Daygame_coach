@@ -97,4 +97,6 @@ export interface ThoughtsView {
   timezone: string
   /** "Last reminder delivered at": the newest send the push service accepted. */
   lastDeliveredAt: string | null
+  /** When the next reminder is due, or null when none is scheduled. */
+  nextDueAt: string | null
 }

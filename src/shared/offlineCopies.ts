@@ -16,6 +16,9 @@
  * accepts from its owner alone.
  */
 
+import { forgetThisDevice } from "@/src/notifications/pushClient"
+import { forgetQueue } from "@/src/thoughts/logQueue"
+
 /** The live workout's kept server answer (`useLiveWorkout`). */
 export const LIVE_COPY_KEY = "live-workout-copy-v1"
 /** The live workout's rest clock (`useLiveWorkout`). */
@@ -23,7 +26,17 @@ export const LIVE_REST_KEY = "live-workout-rest-v1"
 /** The worker's stores are named `app-shell-<build>` (`public/sw.js`, rule 5). */
 const SHELL_STORE_PREFIX = "app-shell-"
 
+/**
+ * TWO MORE THINGS GO AT SIGN-OUT SINCE THOUGHT FREQUENCIES (2026-10-30):
+ * this browser stops receiving the person's reminders (its push address is
+ * removed on the server, which needs the session that is about to end, so it
+ * goes first), and any thought taps still waiting for signal are dropped —
+ * unlike the workout's queued sets, those can hold the text of a thought
+ * somebody typed, and a shared phone must not keep it.
+ */
 export async function forgetOfflineCopies(): Promise<void> {
+  await forgetThisDevice()
+  forgetQueue()
   try {
     window.localStorage.removeItem(LIVE_COPY_KEY)
     window.localStorage.removeItem(LIVE_REST_KEY)

@@ -522,6 +522,20 @@ the next tap's "Logged" notice.
 **Acceptance:** after B-ENV, on the live site, the owner's phone receives the test reminder with the app
 closed, and tapping it opens the Thoughts page.
 
+**Evidence (2026-10-30):** `web-push` 3.6.7 (and `@types/web-push` 3.6.4) added; `npm run audit:ratchet`:
+none new. `src/notifications/`: `endpoints.ts` (only the four push services the browsers use are accepted:
+the server POSTs to the address, so anything else would let a browser make the server call any URL),
+`pushService.ts` (TTL 600 s, urgency high, one topic per kind; no device means no send and no row),
+`clockAuth.ts`, `pushClient.ts`, `hooks/usePushDevice.ts`. `public/sw.js`: push, notificationclick,
+pushsubscriptionchange in their own block; the five offline rules untouched and their 26 tests still green;
+`tests/unit/shared/serviceWorkerPush.test.ts` covers the new block (8 tests, including "an address on
+another site is never opened" and "an action the notification did not offer is a plain tap"). Both Log Out
+buttons remove this browser's device first (`src/shared/offlineCopies.ts`). Permission is asked only from
+the "Turn on" tap; an iPhone outside the Home Screen app gets the install steps. Found on the way: the
+shared `BottomSheet` had no height limit, so a tall sheet ran off the top of a phone screen with its top rows
+unreachable — capped at 92% with the inside scrolling; the More menu and workout-menu specs (33) still pass.
+**Not yet done: the real phone (B-PHONE).** Push delivery cannot be tested from here.
+
 ## Phase 6 — Reminders every X minutes
 **Depends on:** Phase 5. (B-MIGRATE for the clock)
 1. Reminder settings on the page (screen 6): on/off, interval (Q4), quiet hours (Q5), days, pause for an
@@ -540,6 +554,15 @@ closed, and tapping it opens the Thoughts page.
 **Acceptance:** B-PHONE: two hours of reminders roughly every 15 minutes with the phone locked; the next
 morning, the reminder log shows none between 22:00 and 08:00.
 
+**Evidence (2026-10-30):** the schedule rules are `src/thoughts/schedule.ts`, 20 unit tests including both
+clock changes and quiet hours across midnight. The clock is `supabase/migrations/20261030130000_thoughts_clock.sql`:
+a job every minute that calls the site only when a reminder is due (a quiet night makes no calls), reading
+the address and the secret from the vault, and a nightly job that keeps a week of pg_cron's run history.
+**To stop every reminder:** `select cron.unschedule('thoughts-clock');`.
+`tests/integration/repos/thoughtsClock.integration.test.ts` (11 tests, push services faked): one send per
+due reminder, two clocks at once send once, off/paused/quiet hours send nothing, a log restarts the wait, a
+410 device is removed while the other still gets it, no device means no row.
+
 ## Phase 7 — Answer in one tap from the reminder
 **Depends on:** Phase 6, and marks for screen 2.
 1. A reminder opens the quick-log sheet directly, carrying the reminder's id: thought buttons, type box,
@@ -552,6 +575,12 @@ morning, the reminder log shows none between 22:00 and 08:00.
    recorded; a worker-side log uses the same device-made id rule and cannot double count.
 **Acceptance:** B-PHONE: answer five reminders in a row from the lock screen; each takes one tap after
 opening; the reminder log shows them answered.
+
+**Evidence (2026-10-30):** `QuickLogSheet` opens from `?log=1&prompt=<id>` (a reminder) or `?log=1` (the
+install shortcut, which has no "Nothing notable"); a tap logs with the reminder's id and closes it, and the
+address goes back to `/thoughts` so a reload does not reopen it. The sheet shows while the page is still
+loading. e2e: 3 more tests × 2 lanes, 16/16 green. Worker-side logging from a notification button is in
+`public/sw.js` and its unit tests. Time-to-logged on a real phone is part of B-PHONE.
 
 ## Phase 8 — Frequencies (the charts)
 **Depends on:** Phase 4, and marks for screen 5. Read the `dataviz` skill before drawing any chart.

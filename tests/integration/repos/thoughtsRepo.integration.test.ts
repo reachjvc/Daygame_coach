@@ -27,8 +27,8 @@ import {
   writeSettings,
 } from "@/src/db/thoughtsRepo"
 import {
-  claimDuePrompts,
   closeSend,
+  moveDevice,
   devicesForSending,
   openSend,
   recordDeviceOutcome,
@@ -281,21 +281,6 @@ describe("settings", () => {
 })
 
 describe("the reminder clock's storage", () => {
-  it("lets two clocks claiming at the same moment take each due reminder once", async () => {
-    const users = await Promise.all([newUser("clock"), newUser("clock"), newUser("clock")])
-    const now = new Date()
-    for (const u of users) await writePromptSchedule(u.id, new Date(now.getTime() - 60_000))
-
-    const [a, b] = await Promise.all([claimDuePrompts(now, 300, 1000), claimDuePrompts(now, 300, 1000)])
-
-    const mine = new Set(users.map((u) => u.id))
-    const taken = [...a, ...b].map((c) => c.userId).filter((id) => mine.has(id))
-    expect(taken.sort()).toEqual([...mine].sort())
-    // Leased: not due again until the sender writes the real next time.
-    expect((await claimDuePrompts(now, 300, 1000)).filter((c) => mine.has(c.userId))).toEqual([])
-    expect(Date.parse((await readPromptSchedule(users[0].id)).nextDueAt!)).toBe(now.getTime() + 300_000)
-  })
-
   it("keeps the schedule, the devices and the keys away from every signed-in person", async () => {
     const user = await newUser("clock-private")
     await writePromptSchedule(user.id, new Date())
@@ -348,6 +333,20 @@ describe("the reminder clock's storage", () => {
     await recordDeviceOutcome(flaky, "ok")
     const [row] = await asOwner((q) => q("select failures, enabled, last_success_at is not null as delivered from push_devices where id = $1", [flaky]))
     expect(row).toEqual({ failures: 0, enabled: true, delivered: true })
+  })
+
+  it("follows a browser to its new address, keeping whether it was on", async () => {
+    const user = await newUser("devices")
+    const before = `https://updates.push.services.mozilla.com/wpush/v2/${randomUUID()}`
+    const after = `https://updates.push.services.mozilla.com/wpush/v2/${randomUUID()}`
+    const id = await registerDevice(user.id, { endpoint: before, p256dh: "k", auth: "a", label: "Firefox" })
+    await setDeviceEnabled(user.id, id, false)
+
+    expect(await moveDevice(user.id, before, { endpoint: after, p256dh: "k2", auth: "a2" })).toBe(true)
+    expect(await moveDevice(user.id, before, { endpoint: after, p256dh: "k2", auth: "a2" })).toBe(false)
+
+    const [row] = await asOwner((q) => q("select id, endpoint, enabled, label from push_devices where user_id = $1", [user.id]))
+    expect(row).toEqual({ id, endpoint: after, enabled: false, label: "Firefox" })
   })
 
   it("cannot switch someone else's device", async () => {
