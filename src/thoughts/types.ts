@@ -99,4 +99,24 @@ export interface ThoughtsView {
   lastDeliveredAt: string | null
   /** When the next reminder is due, or null when none is scheduled. */
   nextDueAt: string | null
+  /**
+   * Ids of this person's logs stored in the last 15 minutes, read BEFORE the
+   * counts: every log named here is in the counts. The page uses it to stop
+   * drawing a just-sent tap on top once the counts include it.
+   */
+  recentLogIds: string[]
+}
+
+/** The Frequencies tab's numbers, all counted in the database (`thought_frequency_stats`). */
+export interface FrequencyStats {
+  weekTop: { thoughtId: string; n: number }[]
+  monthTop: { thoughtId: string; n: number }[]
+  /** Logs by local weekday (1 = Monday) and hour, last 30 days. Only non-zero cells. */
+  heat: { dow: number; hour: number; n: number }[]
+  /** Logs per thought per local day (YYYY-MM-DD), last 15 days. Only non-zero days. */
+  days: { thoughtId: string; day: string; n: number }[]
+  /** Per reframed thought: logs in up to 14 days before its first reframe and after it. */
+  reframes: { thoughtId: string; reframedAt: string; beforeN: number; beforeDays: number; afterN: number; afterDays: number }[]
+  /** Reminders delivered in the last 7 days, and how many got an answer. */
+  prompts: { delivered: number; answered: number }
 }

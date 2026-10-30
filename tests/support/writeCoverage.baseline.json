@@ -90,6 +90,7 @@
   "src/db/thoughtsRepo.ts:deleteThought": "mentioned",
   "src/db/thoughtsRepo.ts:insertLogs": "mentioned",
   "src/db/thoughtsRepo.ts:mergeThoughts": "mentioned",
+  "src/db/thoughtsRepo.ts:readFrequencyStats": "mentioned",
   "src/db/thoughtsRepo.ts:readThoughts": "mentioned",
   "src/db/thoughtsRepo.ts:readThoughtsAsServer": "mentioned",
   "src/db/thoughtsRepo.ts:saveReframe": "mentioned",

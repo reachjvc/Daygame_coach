@@ -31,6 +31,7 @@ export function ThoughtSheet({
   merge,
   remove,
   loadReframes,
+  trend,
 }: {
   thought: Thought | null
   others: Thought[]
@@ -41,6 +42,8 @@ export function ThoughtSheet({
   merge: (id: string, into: string) => Promise<unknown>
   remove: (id: string) => Promise<unknown>
   loadReframes: (id: string) => Promise<Reframe[]>
+  /** The last 14 days as a line (FrequenciesView's `ThoughtTrend`). */
+  trend?: React.ReactNode
 }) {
   const [mode, setMode] = useState<Mode>("main")
   const [draft, setDraft] = useState("")
@@ -107,6 +110,7 @@ export function ThoughtSheet({
                 </div>
               ))}
             </dl>
+            {trend}
             {c.firstAt && <p className="text-xs text-muted-foreground">First logged {formatDay(c.firstAt, timezone)}.</p>}
 
             {thought.reframe && (

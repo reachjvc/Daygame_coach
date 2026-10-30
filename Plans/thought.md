@@ -592,6 +592,19 @@ loading. e2e: 3 more tests × 2 lanes, 16/16 green. Worker-side logging from a n
 **Acceptance:** with a week of the owner's real use, the charts match a count taken directly in the
 database (read only), and look right at 390 px and 1280 px.
 
+**Evidence (2026-10-30):** `supabase/migrations/20261030140000_thought_stats.sql`: one read-only function,
+`thought_frequency_stats`, returns everything the tab shows as one JSON answer, in the person's own hours
+and days. Applied live; test baseline refreshed (stamp 20261030140000, no drift). Two integration tests
+compare it with hand counts (weekday/hour in Copenhagen, a 12-day-old log only in the month, before/after
+a reframe, 1 of 2 reminders answered). Forms chosen by the dataviz method: ranked bars (one hue), a 7 × 24
+one-hue grid with a "busiest hours" table for screen readers, before/after as two numbers, answered as one
+stat, and a 14-day 2 px line with the reframe marked in each thought's sheet. Looked at on a seeded local
+account at 390 px. The "reminders come too often" hint shows only below half answered.
+Found and fixed on the way: the phone could draw a just-sent tap twice for several seconds under load (a
+re-read could include it while the page still added it on top). The page's read now returns the ids of
+logs stored in the last 15 minutes, read before its counts, and the log route says which taps were newly
+stored, so the page knows exactly which taps a read already counts. 54/54 browser tests over three repeats.
+
 ## Phase 9 — Bad signal, lost permission, and the other rough edges
 **Depends on:** Phases 7 and 8.
 1. Offline taps: kept on the device, shown as "saved on this phone", sent when the signal returns, never

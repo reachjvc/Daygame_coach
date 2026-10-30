@@ -14,9 +14,11 @@ import { usePushDevice } from "@/src/notifications/hooks/usePushDevice"
 import { ROUTES } from "@/src/shared/routes"
 import { useThoughts } from "../hooks/useThoughts"
 import { isUuid, readyToReframe, sortForButtons, TOP_BUTTONS } from "../thoughtsService"
-import type { Thought } from "../types"
+import { ThoughtsCallError, thoughtsApi } from "../thoughtsClient"
+import type { FrequencyStats, Thought } from "../types"
 import { AllThoughtsSheet } from "./AllThoughtsSheet"
 import { frequencyLine } from "./format"
+import { FrequenciesView, ThoughtTrend } from "./FrequenciesView"
 import { LoggedNotice } from "./LoggedNotice"
 import { QuickLogSheet } from "./QuickLogSheet"
 import { RemindersCard } from "./RemindersCard"
@@ -35,6 +37,19 @@ export function ThoughtsScreen() {
   const [showSettings, setShowSettings] = useState(false)
   /** Opened by a reminder (`?log=1&prompt=<id>`) or the install shortcut (`?log=1`). */
   const [quick, setQuick] = useState<{ promptId: string | null } | null>(null)
+  const [tab, setTab] = useState<"thoughts" | "frequencies">("thoughts")
+  const [stats, setStats] = useState<FrequencyStats | null>(null)
+  const [statsError, setStatsError] = useState<string | null>(null)
+
+  /** The Frequencies numbers, read when that tab or a thought's sheet opens, fresh each time. */
+  const loadStats = useCallback(async () => {
+    setStatsError(null)
+    try {
+      setStats(await thoughtsApi.stats())
+    } catch (e) {
+      setStatsError(e instanceof ThoughtsCallError ? e.message : "Could not count your thoughts")
+    }
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -56,7 +71,13 @@ export function ThoughtsScreen() {
   )
   const open = s.thoughts.find((t) => t.id === openId) ?? null
   const reframing = s.thoughts.find((t) => t.id === reframeId) ?? null
-  const openSheet = useCallback((t: Thought) => setOpenId(t.id), [])
+  const openSheet = useCallback(
+    (t: Thought) => {
+      setOpenId(t.id)
+      void loadStats()
+    },
+    [loadStats],
+  )
 
   const quickSheet = (
     <QuickLogSheet
@@ -124,6 +145,32 @@ export function ThoughtsScreen() {
         />
       </div>
 
+      <div className="mt-5 flex gap-1 rounded-xl bg-card p-1" role="tablist" aria-label="Thought Frequencies">
+        {(["thoughts", "frequencies"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            aria-selected={tab === t}
+            data-testid={`tab-${t}`}
+            onClick={() => {
+              setTab(t)
+              if (t === "frequencies") void loadStats()
+            }}
+            className={`min-h-10 flex-1 rounded-lg text-sm font-medium ${tab === t ? "bg-background text-foreground" : "text-muted-foreground"}`}
+          >
+            {t === "thoughts" ? "Thoughts" : "Frequencies"}
+          </button>
+        ))}
+      </div>
+
+      {tab === "frequencies" ? (
+        <div className="mt-6" role="tabpanel">
+          <FrequenciesView stats={stats} error={statsError} thoughts={s.thoughts} timezone={s.timezone} onRetry={() => void loadStats()} />
+        </div>
+      ) : (
+        <div role="tabpanel">
+
       {ready.length > 0 && (
         <section className="mt-6" aria-labelledby="ready-label">
           <h2 id="ready-label" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -187,13 +234,16 @@ export function ThoughtsScreen() {
         </section>
       )}
 
+        </div>
+      )}
+
       <AllThoughtsSheet
         open={showAll}
         thoughts={s.thoughts}
         onClose={() => setShowAll(false)}
         onOpen={(t) => {
           setShowAll(false)
-          setOpenId(t.id)
+          openSheet(t)
         }}
       />
 
@@ -210,6 +260,7 @@ export function ThoughtsScreen() {
         merge={s.merge}
         remove={s.remove}
         loadReframes={s.reframes}
+        trend={open ? <ThoughtTrend stats={stats} thought={open} timezone={s.timezone} /> : null}
       />
 
       <RemindersSheet

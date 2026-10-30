@@ -5,7 +5,7 @@
  * help: offline and 5xx can; a 4xx never will.
  */
 
-import type { Reframe, ThoughtSettings, ThoughtsView, LogInput } from "./types"
+import type { FrequencyStats, Reframe, ThoughtSettings, ThoughtsView, LogInput } from "./types"
 import type { ReframeInput } from "./thoughtsService"
 
 export class ThoughtsCallError extends Error {
@@ -42,6 +42,7 @@ const json = (method: string, body: unknown): RequestInit => ({ method, body: JS
 
 export const thoughtsApi = {
   view: () => call<ThoughtsView>("/api/thoughts"),
+  stats: () => call<FrequencyStats>("/api/thoughts/stats"),
   create: (id: string, text: string) => call<{ id: string; created: boolean }>("/api/thoughts", json("POST", { id, text })),
   update: (id: string, patch: { text?: string; pinned?: boolean; archived?: boolean }) =>
     call<{ ok: true }>(`/api/thoughts/${id}`, json("PATCH", patch)),
@@ -49,7 +50,10 @@ export const thoughtsApi = {
   merge: (id: string, into: string) => call<{ ok: true }>(`/api/thoughts/${id}/merge`, json("POST", { into })),
   reframes: (id: string) => call<{ reframes: Reframe[] }>(`/api/thoughts/${id}/reframes`),
   log: (logs: LogInput[]) =>
-    call<{ stored: number; dropped: number; refused: { id: unknown; error: string }[] }>("/api/thoughts/logs", json("POST", { logs })),
+    call<{ stored: number; dropped: number; inserted: string[]; refused: { id: unknown; error: string }[] }>(
+      "/api/thoughts/logs",
+      json("POST", { logs }),
+    ),
   undo: (logId: string) => call<{ ok: true }>(`/api/thoughts/logs/${logId}`, { method: "DELETE" }),
   saveReframe: (input: ReframeInput) => call<{ reframe: Reframe }>("/api/thoughts/reframes", json("PUT", input)),
   saveSettings: (settings: ThoughtSettings) =>

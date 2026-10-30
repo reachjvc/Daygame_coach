@@ -20,6 +20,7 @@ import { readAllRows } from "./paging"
 import { normalizeThought } from "@/src/thoughts/thoughtsService"
 import {
   DEFAULT_SETTINGS,
+  type FrequencyStats,
   type LogInput,
   type Reframe,
   type Thought,
@@ -248,8 +249,11 @@ export async function createThought(userId: string, id: string, text: string): P
  * deleted that history on purpose. A reminder id that is not theirs is
  * cleared rather than refusing the tap.
  */
-export async function insertLogs(userId: string, logs: LogInput[]): Promise<{ stored: number; dropped: number }> {
-  if (logs.length === 0) return { stored: 0, dropped: 0 }
+export async function insertLogs(
+  userId: string,
+  logs: LogInput[],
+): Promise<{ stored: number; dropped: number; inserted: string[] }> {
+  if (logs.length === 0) return { stored: 0, dropped: 0, inserted: [] }
   const supabase = await createServerSupabaseClient()
 
   const resolved = new Map<string, string | null>()
@@ -281,11 +285,40 @@ export async function insertLogs(userId: string, logs: LogInput[]): Promise<{ st
       prompt_id: log.promptId !== null && knownPrompts.has(log.promptId) ? log.promptId : null,
     })
   }
-  if (rows.length === 0) return { stored: 0, dropped }
+  if (rows.length === 0) return { stored: 0, dropped, inserted: [] }
 
-  const { error } = await supabase.from("thought_logs").upsert(rows, { onConflict: "id", ignoreDuplicates: true })
+  // `select` after an ignoring upsert returns only the rows it actually
+  // inserted: a log that was already here (a retry) is not in the answer, and
+  // the page uses that to know which taps its last read could not include.
+  const { data, error } = await supabase
+    .from("thought_logs")
+    .upsert(rows, { onConflict: "id", ignoreDuplicates: true })
+    .select("id")
   if (error) throw new Error(`Failed to save what you logged: ${error.message}`)
-  return { stored: rows.length, dropped }
+  const inserted = ((data ?? []) as { id: string }[]).map((r) => r.id)
+  return { stored: inserted.length, dropped, inserted }
+}
+
+/** How far back `readRecentLogIds` looks. A tap confirmed longer ago than this is in any read. */
+export const RECENT_LOG_MINUTES = 15
+
+/**
+ * The ids of this person's logs stored in the last few minutes (at most 1,000;
+ * a person does not tap 1,000 thoughts in 15 minutes). The page reads this
+ * before its counts to know which just-sent taps they already include.
+ */
+export async function readRecentLogIds(userId: string): Promise<string[]> {
+  const supabase = await createServerSupabaseClient()
+  const since = new Date(Date.now() - RECENT_LOG_MINUTES * 60_000).toISOString()
+  const { data, error } = await supabase
+    .from("thought_logs")
+    .select("id")
+    .eq("user_id", userId)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(1000)
+  if (error) throw new Error(`Failed to read your recent logs: ${error.message}`)
+  return ((data ?? []) as { id: string }[]).map((r) => r.id)
 }
 
 /** Undo: remove one log. Removing one that is already gone is not an error. */
@@ -457,4 +490,24 @@ export async function lastDeliveredAt(userId: string): Promise<string | null> {
   if (error) throw new Error(`Failed to read your reminders: ${error.message}`)
   const row = (data ?? [])[0] as { sent_at: string } | undefined
   return row ? new Date(row.sent_at).toISOString() : null
+}
+
+/**
+ * The Frequencies tab's numbers (`thought_frequency_stats`): one call, one
+ * JSON answer, every count from the same instant, none capped at 1,000 rows.
+ */
+export async function readFrequencyStats(timezone: string, now: Date = new Date()): Promise<FrequencyStats> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase.rpc("thought_frequency_stats", { p_tz: timezone, p_now: now.toISOString() })
+  if (error) throw new Error(`Failed to count your thoughts: ${error.message}`)
+  const raw = data as FrequencyStats
+  return {
+    ...raw,
+    reframes: raw.reframes.map((r) => ({
+      ...r,
+      reframedAt: new Date(r.reframedAt).toISOString(),
+      beforeDays: Number(r.beforeDays),
+      afterDays: Number(r.afterDays),
+    })),
+  }
 }

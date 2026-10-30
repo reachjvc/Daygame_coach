@@ -18,6 +18,7 @@ import {
   insertLogs,
   lastLogAt,
   mergeThoughts,
+  readFrequencyStats,
   readSettings,
   readThoughts,
   readThoughtsAsServer,
@@ -120,8 +121,9 @@ describe("logs", () => {
     const { id } = await createThought(user.id, randomUUID(), "I am bad")
     const once = tap(id, new Date())
 
-    await insertLogs(user.id, [once])
-    await insertLogs(user.id, [once, once])
+    expect((await insertLogs(user.id, [once])).inserted).toEqual([once.id])
+    // The retry stores nothing new, and says so: the page relies on it.
+    expect((await insertLogs(user.id, [once, once])).inserted).toEqual([])
 
     expect((await readThoughts(user.id, TZ))[0].counts.total).toBe(1)
   })
@@ -173,7 +175,8 @@ describe("logs", () => {
 
     const result = await insertLogs(user.id, [tap(gone.id, new Date()), tap(deleted.id, new Date())])
 
-    expect(result).toEqual({ stored: 1, dropped: 1 })
+    expect(result).toMatchObject({ stored: 1, dropped: 1 })
+    expect(result.inserted).toHaveLength(1)
     expect((await readThoughts(user.id, TZ)).map((t) => [t.text, t.counts.total])).toEqual([["I am bad", 1]])
   })
 
@@ -404,5 +407,81 @@ describe("rescheduling the next reminder", () => {
     await writeSettings(user.id, { ...on, remindersOn: false })
     expect(await reschedulePrompts(user.id, {}, loggedAt)).toBeNull()
     expect((await readPromptSchedule(user.id)).nextDueAt).toBeNull()
+  })
+})
+
+describe("the Frequencies numbers", () => {
+  it("match a count made by hand, in the person's own hours and days", async () => {
+    const user = await newUser("stats")
+    actAs(user)
+    const now = new Date("2026-10-30T12:00:00.000Z") // Friday 13:00 CET
+    const bad = await createThought(user.id, randomUUID(), "I am bad")
+    const late = await createThought(user.id, randomUUID(), "I am late")
+    const at = (iso: string) => new Date(iso)
+    await insertLogs(user.id, [
+      // Thursday 29 Oct, 20:xx CET (19:xxZ): three of "I am bad".
+      tap(bad.id, at("2026-10-29T19:05:00.000Z")),
+      tap(bad.id, at("2026-10-29T19:30:00.000Z")),
+      tap(bad.id, at("2026-10-29T19:55:00.000Z")),
+      // Friday 30 Oct 09:10 CET: one of each.
+      tap(bad.id, at("2026-10-30T08:10:00.000Z")),
+      tap(late.id, at("2026-10-30T08:10:00.000Z")),
+    ])
+    // Twelve days ago: only in the month.
+    await asOwner((q) =>
+      q("insert into thought_logs (id, user_id, thought_id, at, source) values ($1, $2, $3, $4, 'tap')", [
+        randomUUID(), user.id, late.id, "2026-10-18T10:00:00.000Z",
+      ]),
+    )
+
+    const stats = await readFrequencyStats("Europe/Copenhagen", now)
+
+    expect(stats.weekTop).toEqual([
+      { thoughtId: bad.id, n: 4 },
+      { thoughtId: late.id, n: 1 },
+    ])
+    expect(stats.monthTop.find((t) => t.thoughtId === late.id)?.n).toBe(2)
+    expect(stats.heat).toContainEqual({ dow: 4, hour: 20, n: 3 })
+    expect(stats.heat).toContainEqual({ dow: 5, hour: 9, n: 2 })
+    expect(stats.days).toContainEqual({ thoughtId: bad.id, day: "2026-10-29", n: 3 })
+    expect(stats.prompts).toEqual({ delivered: 0, answered: 0 })
+  })
+
+  it("counts before and after a reframe, and answered reminders", async () => {
+    const user = await newUser("stats")
+    actAs(user)
+    const { id } = await createThought(user.id, randomUUID(), "I am bad")
+    const now = new Date()
+    const day = 24 * 60 * 60_000
+    // Four logs in the 4 days before the reframe, one after.
+    const reframedAt = new Date(now.getTime() - 2 * day)
+    await asOwner(async (q) => {
+      for (const ago of [6, 5.5, 4, 3]) {
+        await q("insert into thought_logs (id, user_id, thought_id, at, source) values ($1, $2, $3, $4, 'tap')", [
+          randomUUID(), user.id, id, new Date(now.getTime() - ago * day).toISOString(),
+        ])
+      }
+      await q("insert into thought_logs (id, user_id, thought_id, at, source) values ($1, $2, $3, $4, 'tap')", [
+        randomUUID(), user.id, id, new Date(now.getTime() - 1 * day).toISOString(),
+      ])
+      await q(
+        "insert into thought_reframes (id, user_id, thought_id, text, created_at) values ($1, $2, $3, 'I am learning', $4)",
+        [randomUUID(), user.id, id, reframedAt.toISOString()],
+      )
+    })
+    const answeredId = await openSend(user.id, "thought-prompt", new Date(now.getTime() - 60_000))
+    const ignoredId = await openSend(user.id, "thought-prompt", new Date(now.getTime() - 30 * 60_000))
+    await closeSend(answeredId, { devices: 1, delivered: 1, removed: 0 })
+    await closeSend(ignoredId, { devices: 1, delivered: 1, removed: 0 })
+    await insertLogs(user.id, [tap(null, now, { source: "prompt", promptId: answeredId })])
+
+    const stats = await readFrequencyStats("Europe/Copenhagen", now)
+
+    const r = stats.reframes.find((x) => x.thoughtId === id)!
+    expect(r.beforeN).toBe(4)
+    expect(r.beforeDays).toBeCloseTo(4, 1)
+    expect(r.afterN).toBe(1)
+    expect(r.afterDays).toBeCloseTo(2, 1)
+    expect(stats.prompts).toEqual({ delivered: 2, answered: 1 })
   })
 })

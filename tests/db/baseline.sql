@@ -1,4 +1,4 @@
--- baseline-stamp: 20261030120000
+-- baseline-stamp: 20261030140000
 -- Schema only (no rows), dumped from the linked Supabase project by scripts/db/baseline.sh.
 -- Do not edit by hand: write a migration, then re-run the script once production has it.
 
@@ -17,6 +17,13 @@ SET row_security = off;
 
 
 CREATE EXTENSION IF NOT EXISTS "pg_cron" WITH SCHEMA "pg_catalog";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
 
 
 
@@ -502,6 +509,40 @@ $$;
 
 
 ALTER FUNCTION "public"."notification_secret"("p_name" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."notifications_clock_tick"() RETURNS bigint
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  target TEXT;
+  token TEXT;
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.thought_prompt_schedule
+     WHERE next_due_at IS NOT NULL AND next_due_at <= now()
+  ) THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT decrypted_secret INTO target FROM vault.decrypted_secrets WHERE name = 'notifications_clock_url';
+  SELECT decrypted_secret INTO token FROM vault.decrypted_secrets WHERE name = 'notifications_clock_secret';
+  IF target IS NULL OR token IS NULL OR target NOT LIKE 'https://%' THEN
+    RETURN NULL;
+  END IF;
+
+  RETURN net.http_post(
+    url := target,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || token),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 25000
+  );
+END
+$$;
+
+
+ALTER FUNCTION "public"."notifications_clock_tick"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."program_drafts_touch_updated_at"() RETURNS "trigger"
@@ -1084,6 +1125,87 @@ $$;
 
 
 ALTER FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone DEFAULT "now"()) RETURNS "jsonb"
+    LANGUAGE "sql" STABLE
+    SET "search_path" TO 'public'
+    AS $$
+  WITH me AS (SELECT auth.uid() AS uid),
+  recent AS (
+    SELECT l.thought_id, l.at, l.prompt_id
+      FROM thought_logs l, me
+     WHERE l.user_id = me.uid AND l.at <= p_now AND l.at > p_now - interval '30 days'
+  ),
+  week_top AS (
+    SELECT thought_id, count(*)::int AS n FROM recent
+     WHERE thought_id IS NOT NULL AND at > p_now - interval '7 days'
+     GROUP BY thought_id ORDER BY n DESC, thought_id LIMIT 10
+  ),
+  month_top AS (
+    SELECT thought_id, count(*)::int AS n FROM recent
+     WHERE thought_id IS NOT NULL
+     GROUP BY thought_id ORDER BY n DESC, thought_id LIMIT 10
+  ),
+  heat AS (
+    SELECT extract(isodow FROM at AT TIME ZONE p_tz)::int AS dow,
+           extract(hour FROM at AT TIME ZONE p_tz)::int AS hour,
+           count(*)::int AS n
+      FROM recent WHERE thought_id IS NOT NULL
+     GROUP BY 1, 2
+  ),
+  days AS (
+    SELECT thought_id, (at AT TIME ZONE p_tz)::date AS day, count(*)::int AS n
+      FROM recent
+     WHERE thought_id IS NOT NULL AND at > p_now - interval '15 days'
+     GROUP BY 1, 2
+  ),
+  first_reframe AS (
+    SELECT r.thought_id, min(r.created_at) AS reframed_at
+      FROM thought_reframes r, me WHERE r.user_id = me.uid
+     GROUP BY r.thought_id
+  ),
+  windows AS (
+    SELECT f.thought_id, f.reframed_at,
+           greatest(f.reframed_at - interval '14 days',
+                    coalesce((SELECT min(l.at) FROM thought_logs l, me
+                               WHERE l.user_id = me.uid AND l.thought_id = f.thought_id), f.reframed_at)) AS before_from,
+           least(f.reframed_at + interval '14 days', p_now) AS after_to
+      FROM first_reframe f
+  ),
+  before_after AS (
+    SELECT w.thought_id, w.reframed_at,
+           (SELECT count(*) FROM thought_logs l, me
+             WHERE l.user_id = me.uid AND l.thought_id = w.thought_id
+               AND l.at >= w.before_from AND l.at < w.reframed_at)::int AS before_n,
+           round((extract(epoch FROM (w.reframed_at - w.before_from)) / 86400)::numeric, 2) AS before_days,
+           (SELECT count(*) FROM thought_logs l, me
+             WHERE l.user_id = me.uid AND l.thought_id = w.thought_id
+               AND l.at >= w.reframed_at AND l.at < w.after_to)::int AS after_n,
+           round((extract(epoch FROM greatest(w.after_to - w.reframed_at, interval '0')) / 86400)::numeric, 2) AS after_days
+      FROM windows w
+  ),
+  sends AS (
+    SELECT s.id FROM notification_sends s, me
+     WHERE s.user_id = me.uid AND s.kind = 'thought-prompt' AND s.delivered > 0
+       AND s.sent_at <= p_now AND s.sent_at > p_now - interval '7 days'
+  )
+  SELECT jsonb_build_object(
+    'weekTop', coalesce((SELECT jsonb_agg(jsonb_build_object('thoughtId', thought_id, 'n', n) ORDER BY n DESC, thought_id) FROM week_top), '[]'::jsonb),
+    'monthTop', coalesce((SELECT jsonb_agg(jsonb_build_object('thoughtId', thought_id, 'n', n) ORDER BY n DESC, thought_id) FROM month_top), '[]'::jsonb),
+    'heat', coalesce((SELECT jsonb_agg(jsonb_build_object('dow', dow, 'hour', hour, 'n', n)) FROM heat), '[]'::jsonb),
+    'days', coalesce((SELECT jsonb_agg(jsonb_build_object('thoughtId', thought_id, 'day', day, 'n', n)) FROM days), '[]'::jsonb),
+    'reframes', coalesce((SELECT jsonb_agg(jsonb_build_object(
+        'thoughtId', thought_id, 'reframedAt', reframed_at,
+        'beforeN', before_n, 'beforeDays', before_days, 'afterN', after_n, 'afterDays', after_days)) FROM before_after), '[]'::jsonb),
+    'prompts', jsonb_build_object(
+        'delivered', (SELECT count(*) FROM sends)::int,
+        'answered', (SELECT count(DISTINCT l.prompt_id) FROM thought_logs l JOIN sends s ON s.id = l.prompt_id, me WHERE l.user_id = me.uid)::int)
+  )
+$$;
+
+
+ALTER FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."timetrack_touch_updated_at"() RETURNS "trigger"
@@ -7013,6 +7135,9 @@ ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
 
+
+
+
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
@@ -7857,6 +7982,10 @@ GRANT ALL ON FUNCTION "public"."notification_secret"("p_name" "text") TO "servic
 
 
 
+REVOKE ALL ON FUNCTION "public"."notifications_clock_tick"() FROM PUBLIC;
+
+
+
 GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."program_drafts_touch_updated_at"() TO "service_role";
@@ -8003,6 +8132,12 @@ GRANT ALL ON FUNCTION "public"."subvector"("public"."vector", integer, integer) 
 REVOKE ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."thought_counts"("p_tz" "text", "p_now" timestamp with time zone, "p_user" "uuid") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."thought_frequency_stats"("p_tz" "text", "p_now" timestamp with time zone) TO "service_role";
 
 
 

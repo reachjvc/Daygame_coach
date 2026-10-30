@@ -57,33 +57,3 @@ export function withPending(server: Thought[], queue: QueueState, now: Date, tim
   }
   return [...byId.values()]
 }
-
-/**
- * THE QUEUE EMPTIED INTO THE SCREEN'S OWN COPY.
- *
- * When the server confirms a batch, the logs leave the queue — and `withPending`
- * stops adding them — before the next read arrives. Without this step a count
- * fell back by one for the second or two in between, so the button read 2
- * right under a notice saying "3 today". The read that follows replaces all of
- * it with the server's own numbers.
- */
-export function settleLogs(
-  server: Thought[],
-  logs: QueueState["logs"],
-  now: Date,
-  timezone: string,
-): Thought[] {
-  const byId = new Map(server.map((t) => [t.id, t]))
-  for (const log of logs) {
-    if (log.thoughtId === null) continue
-    const t = byId.get(log.thoughtId)
-    if (t) byId.set(t.id, { ...t, archived: false, counts: bumpCounts(t.counts, log.at, now, timezone) })
-  }
-  return [...byId.values()]
-}
-
-/** A queued thought the server now has, kept on screen under the id the server chose. */
-export function settleThought(server: Thought[], storedId: string, text: string, now: Date): Thought[] {
-  if (server.some((t) => t.id === storedId)) return server
-  return [...server, localThought(storedId, text, now.toISOString())]
-}

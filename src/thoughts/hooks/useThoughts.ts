@@ -30,10 +30,10 @@ import {
   writeQueue,
   type QueueState,
 } from "../logQueue"
-import { bumpCounts, settleLogs, settleThought, withPending } from "../pending"
+import { bumpCounts, withPending } from "../pending"
 import { ThoughtsCallError, thoughtsApi } from "../thoughtsClient"
 import { normalizeThought, type ReframeInput } from "../thoughtsService"
-import type { LogSource, Reframe, Thought, ThoughtSettings, ThoughtsView } from "../types"
+import type { LogInput, LogSource, Reframe, Thought, ThoughtSettings, ThoughtsView } from "../types"
 
 export interface LoggedNotice {
   logId: string
@@ -50,6 +50,33 @@ export type SendState = "sent" | "waiting" | "signed-out"
 
 const REFRESH_AFTER_MS = 1500
 
+/**
+ * WHAT THE SERVER HAS CONFIRMED BUT THE SCREEN'S LAST READ MAY NOT INCLUDE.
+ *
+ * A tap leaves the queue the moment the server confirms it, and the next read
+ * of the page arrives a moment later. In between it is still drawn, from
+ * here, so a count never falls back by one under a notice that says it went
+ * up.
+ *
+ * THE READ SAYS WHICH TAPS IT INCLUDES (`recentLogIds`, read before its
+ * counts), so a confirmed tap is dropped exactly when a read names it. Two
+ * earlier versions guessed on this side — adding a confirmed tap straight
+ * into the counts, then dropping it at the first read the phone had started
+ * after the confirmation — and both drew some taps twice for seconds under
+ * load: a read can leave the phone before a confirmation arrives and still
+ * reach the database after the write. Only taps the server NEWLY stored are
+ * kept here; a resent one was already counted.
+ *
+ * New thoughts are drawn only if the read lacks them, so they need no ids.
+ */
+interface Confirmed {
+  thoughts: { id: string; text: string; at: number }[]
+  logs: { log: LogInput; at: number }[]
+}
+
+/** Matches RECENT_LOG_MINUTES on the server: older confirmations are in any read. */
+const RECENT_MS = 15 * 60_000
+
 function newId(): string {
   return crypto.randomUUID()
 }
@@ -60,6 +87,7 @@ export function useThoughts() {
   const [queue, setQueue] = useState<QueueState>({ thoughts: [], logs: [] })
   const [notice, setNotice] = useState<LoggedNotice | null>(null)
   const [sendState, setSendState] = useState<SendState>("sent")
+  const [confirmed, setConfirmed] = useState<Confirmed>({ thoughts: [], logs: [] })
 
   const queueRef = useRef(queue)
   const flushing = useRef(false)
@@ -67,6 +95,14 @@ export function useThoughts() {
   const cancelled = useRef(new Set<string>())
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const seq = useRef(0)
+  const readsStarted = useRef(0)
+  const readApplied = useRef(0)
+  const confirmedRef = useRef<Confirmed>({ thoughts: [], logs: [] })
+
+  const setC = useCallback((next: Confirmed) => {
+    confirmedRef.current = next
+    setConfirmed(next)
+  }, [])
 
   const setQ = useCallback((next: QueueState) => {
     queueRef.current = next
@@ -74,15 +110,29 @@ export function useThoughts() {
     writeQueue(browserStore(), next)
   }, [])
 
+  /**
+   * Read the page. Reads can overlap (a refresh, the page coming back into
+   * view); an answer older than one already drawn is dropped, never drawn
+   * over a newer one.
+   */
   const load = useCallback(async () => {
+    const mine = ++readsStarted.current
+    const started = Date.now()
     try {
       const fresh = await thoughtsApi.view()
+      if (mine < readApplied.current) return
+      readApplied.current = mine
       setView(fresh)
+      const c = confirmedRef.current
+      setC({
+        thoughts: c.thoughts.filter((t) => t.at > started && !fresh.thoughts.some((x) => x.id === t.id)),
+        logs: c.logs.filter((l) => !fresh.recentLogIds.includes(l.log.id) && Date.now() - l.at < RECENT_MS),
+      })
       setLoadError(null)
     } catch (error) {
       setLoadError(error instanceof ThoughtsCallError ? error.message : "Could not read your thoughts")
     }
-  }, [])
+  }, [setC])
 
   const scheduleRefresh = useCallback(() => {
     if (refreshTimer.current) clearTimeout(refreshTimer.current)
@@ -112,7 +162,7 @@ export function useThoughts() {
         for (const t of queueRef.current.thoughts) {
           try {
             const { id } = await thoughtsApi.create(t.id, t.text)
-            setView((v) => (v ? { ...v, thoughts: settleThought(v.thoughts, id, t.text, new Date()) } : v))
+            setC({ ...confirmedRef.current, thoughts: [...confirmedRef.current.thoughts, { id, text: t.text, at: Date.now() }] })
             setQ(thoughtStored(queueRef.current, t.id, id))
           } catch (error) {
             if (!(error instanceof ThoughtsCallError) || error.retryable || error.status === 401) throw error
@@ -124,12 +174,18 @@ export function useThoughts() {
         }
         const batch = queueRef.current.logs
         if (batch.length > 0) {
+          let answer: { inserted: string[] } | null = null
           try {
-            await thoughtsApi.log(batch)
+            answer = await thoughtsApi.log(batch)
           } catch (error) {
             if (!(error instanceof ThoughtsCallError) || error.retryable || error.status === 401) throw error
           }
-          setView((v) => (v ? { ...v, thoughts: settleLogs(v.thoughts, batch, new Date(), v.timezone) } : v))
+          if (answer) {
+            const fresh = new Set(answer.inserted)
+            const at = Date.now()
+            const live = batch.filter((l) => fresh.has(l.id) && !cancelled.current.has(l.id))
+            setC({ ...confirmedRef.current, logs: [...confirmedRef.current.logs, ...live.map((log) => ({ log, at }))] })
+          }
           setQ(logsAnswered(queueRef.current, batch.map((l) => l.id)))
           // Undone while it was on its way: it may have landed, so take it back out.
           for (const l of batch) {
@@ -144,7 +200,7 @@ export function useThoughts() {
     } finally {
       flushing.current = false
     }
-  }, [scheduleRefresh, setQ])
+  }, [scheduleRefresh, setQ, setC])
 
   useEffect(() => {
     const stored = readQueue(browserStore())
@@ -172,11 +228,15 @@ export function useThoughts() {
 
   const timezone = view?.timezone ?? "UTC"
 
-  /** What the screen draws: the server's thoughts with this phone's queue on top. */
-  const thoughts: Thought[] = useMemo(
-    () => (view ? withPending(view.thoughts, queue, new Date(), timezone) : []),
-    [view, queue, timezone],
-  )
+  /** What the screen draws: the server's thoughts with the confirmed-but-unread and the queued on top. */
+  const thoughts: Thought[] = useMemo(() => {
+    if (!view) return []
+    const onTop: QueueState = {
+      thoughts: [...confirmed.thoughts.map(({ id, text }) => ({ id, text })), ...queue.thoughts],
+      logs: [...confirmed.logs.map((c) => c.log), ...queue.logs],
+    }
+    return withPending(view.thoughts, onTop, new Date(), timezone)
+  }, [view, queue, confirmed, timezone])
   const pending = useMemo(() => pendingByThought(queue), [queue])
 
   /** Queue one log and show the "logged" notice. `known` is the thought as drawn, if it is drawn yet. */
@@ -238,9 +298,13 @@ export function useThoughts() {
         setQ(dropLog(queueRef.current, target.logId))
         return
       }
-      // Already sent: take one off the screen now, then ask the server.
+      // Already sent. Still drawn from the confirmed list: take it off that.
+      // Already in the last read: take one off the read's count. Then ask the server.
+      const c = confirmedRef.current
+      const wasConfirmed = c.logs.some((l) => l.log.id === target.logId)
+      if (wasConfirmed) setC({ ...c, logs: c.logs.filter((l) => l.log.id !== target.logId) })
       setView((v) =>
-        v && target.thoughtId
+        v && target.thoughtId && !wasConfirmed
           ? {
               ...v,
               thoughts: v.thoughts.map((t) =>
@@ -254,7 +318,7 @@ export function useThoughts() {
       await thoughtsApi.undo(target.logId).catch(() => undefined)
       scheduleRefresh()
     },
-    [scheduleRefresh, setQ],
+    [scheduleRefresh, setQ, setC],
   )
 
   /** Changes that are decisions: wait for the server, then re-read. */

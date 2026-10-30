@@ -26,6 +26,32 @@ function button(page: Page, text: string) {
   return page.getByTestId("thought-button").filter({ hasText: text })
 }
 
+/**
+ * A CLEAN SLATE, through the app's own routes: a worker runs its tests one
+ * after another on one account (tests/e2e/fixtures/test.ts), and these tests
+ * count buttons. Deleting a thought takes its logs and reframes with it.
+ */
+async function reset(page: Page): Promise<void> {
+  const view = await (await page.request.get("/api/thoughts")).json()
+  for (const t of view.thoughts as { id: string }[]) {
+    expect((await page.request.delete(`/api/thoughts/${t.id}`)).ok()).toBe(true)
+  }
+  const { devices } = await (await page.request.get("/api/notifications/devices")).json()
+  for (const d of devices as { id: string }[]) {
+    expect((await page.request.delete(`/api/notifications/devices/${d.id}`)).ok()).toBe(true)
+  }
+  const settings = {
+    remindersOn: false, intervalMinutes: 15, quietStart: 1320, quietEnd: 480, activeDays: 127,
+    pausedUntil: null, showThoughts: false, reframeAfterDays: 3,
+  }
+  expect((await page.request.put("/api/thoughts/settings", { data: settings })).ok()).toBe(true)
+}
+
+test.beforeEach(async ({ page }) => {
+  await reset(page)
+})
+
+
 test.describe("thought frequencies @phone", () => {
   test("a new thought becomes a button; taps count, undo takes one back, and it all survives a reload", async ({ page }) => {
     await open(page)
@@ -191,5 +217,29 @@ test.describe("reminders @phone", () => {
     await page.goto(`${ROUTES.thoughts}?log=1`)
     await expect(page.getByTestId("quick-log")).toBeVisible()
     await expect(page.getByTestId("quick-log-nothing")).toHaveCount(0)
+  })
+})
+
+test.describe("frequencies @phone", () => {
+  test("is calm and empty at first, then counts what was logged", async ({ page }) => {
+    await open(page)
+    const empty = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/stats") && r.ok())
+    await page.getByTestId("tab-frequencies").click()
+    await empty
+    await expect(page.getByTestId("frequencies-empty")).toBeVisible()
+
+    await page.getByTestId("tab-thoughts").click()
+    await add(page, "I am bad")
+    const sent = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/logs") && r.ok())
+    await button(page, "I am bad").click()
+    await sent
+
+    const counted = page.waitForResponse((r) => r.url().endsWith("/api/thoughts/stats") && r.ok())
+    await page.getByTestId("tab-frequencies").click()
+    await counted
+    const top = page.getByTestId("frequencies-top")
+    await expect(top).toContainText("I am bad")
+    await expect(top).toContainText("2")
+    await expect(page.getByTestId("frequencies-answered")).toContainText("No reminders delivered this week.")
   })
 })

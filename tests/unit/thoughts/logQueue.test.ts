@@ -16,7 +16,7 @@ import {
   type KeyValueStore,
   type QueueState,
 } from "@/src/thoughts/logQueue"
-import { bumpCounts, localThought, settleLogs, settleThought, withPending } from "@/src/thoughts/pending"
+import { bumpCounts, localThought, withPending } from "@/src/thoughts/pending"
 import type { LogInput } from "@/src/thoughts/types"
 
 const CPH = "Europe/Copenhagen"
@@ -103,10 +103,5 @@ describe("what the screen shows", () => {
     ])
   })
 
-  it("keeps a sent tap on screen until the next read arrives", () => {
-    const sent = [log("l1", "t1"), log("l2", "t1")]
-    expect(settleLogs([base], sent, NOW, CPH)[0].counts.total).toBe(2)
-    expect(settleThought([base], "t1", "I am bad", NOW)).toHaveLength(1)
-    expect(settleThought([base], "t9", "New", NOW).map((t) => t.id)).toEqual(["t1", "t9"])
-  })
+
 })
