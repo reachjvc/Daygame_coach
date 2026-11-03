@@ -1,6 +1,8 @@
 # Time tracker: as easy as Toggl on the phone and the PC, and no more bugs between them
 
-**Status:** plan, not started (written 2026-11-03). Nothing in it has been built.
+**Status:** decided and executing (written 2026-11-03; decisions the same evening, see DECISIONS). Phases
+0–3, the bug fixes, go first on the owner's word: "i am particularly interested in you fixing a bunch
+of the bugs".
 
 **Written for** the owner first (Part 1), then for the AI session that builds it (design rules, blockers,
 questions, phases, Part 2, and the `/goal` prompts at the end). The executing AI treats this plan as the
@@ -69,7 +71,8 @@ There are four separate problems, and each one has a fix:
    **The fix is a "Switched at…" button.** You tell it the time you actually switched, by tapping, typing
    or turning the wheel. The old entry ends there and the new one starts there, in one step, with no gap or
    overlap. Also coming: one-tap buttons (−5 / +5 min, "end now", "start where the last one ended"), the
-   number keypad, and a card that says "you last used the app at 11:55, stop it there?".
+   number keypad, and the drums (Q1) with a day column for anything that crosses midnight or is planned
+   for tomorrow.
 2. **Your phone and PC can undo each other.** The worst case: a phone that was asleep or offline wakes up and
    sends its old copy, so a timer you stopped on the PC starts running again, or an entry you deleted comes
    back. Removing a tag never reaches the other device. The "Saved" badge stays green while the phone hasn't
@@ -210,8 +213,8 @@ are this plan's own choices.
 
 - **09:00.** On the phone you type "Deep work" and press Start.
 - **11:55.** You switch to email but forget the timer.
-- **14:30.** You notice. You type "Email" and tap **Switched at…**. The wheel opens with its end handle
-  where you last used the app, 11:55. You tap ✓. "Deep work" ends at 11:55, and "Email" started at 11:55
+- **14:30.** You notice. You type "Email" and tap **Switched at…**. The drums open at now; you flick the
+  hour to 11 and the minute to 55 (or tap "−15" a few times). You tap ✓. "Deep work" ends at 11:55, and "Email" started at 11:55
   and is still running. No arithmetic, no gap, no overlap.
 - **Same moment, on the PC.** Within a few seconds the PC shows "Email" running. It never shows "Deep work"
   running again.
@@ -220,8 +223,8 @@ are this plan's own choices.
   Stop or Start. Its old copy cannot restart the timer.
 - **Tomorrow's plan.** On the phone calendar you long-press 10:00 tomorrow and drag down to 11:30 for "Gym".
   It shows as planned until 10:00 arrives.
-- **A timer left running 3 hours** (if you say yes to Q4): your phone gets a notification: "Still on Deep
-  work? Running 3 h." Tapping it opens the Switched/Stopped picker.
+- **All day, on the phone:** while anything runs, the notification shade shows "● Email · since 11:55"
+  with a Stop button, wherever the timer was started. A timer past 6 h rings once (never 23:00–07:00).
 
 ---
 
@@ -240,7 +243,7 @@ are this plan's own choices.
 | D9 | **On the PC the app's top bar shows on `/time`.** On the phone it stays hidden, as today, because the tracker has its own bottom bar. The back control returns to the page you came from, with Dashboard as the fallback. | Fixes getting-around #4. | The guard test in `navTabs.ts` changes; covered in Phase 3. |
 | D10 | **A typed time means the nearest sensible time.** A bare hour from 1 to 12 with no am/pm is whichever of h or h+12 comes first after the start (start 10:00, end "3" means 15:00). `4p` means 16:00, and `1h30` means 1 h 30 min. Any typed value that makes an entry longer than 12 h asks first: "That makes it 23 h. Did you mean 21:00?". | Fixes the three misreadings and the 23-hour accidents. | One extra tap for a real 13 h entry. |
 | D11 | **Phones get the number keypad** (`inputMode="numeric"`) for start and end. "1155" means 11:55 and "930" means 9:30. Duration uses `inputMode="decimal"`, with a hint: "90 = 90 min · 1.5 = 1 h 30". | Fixes the letter-keyboard pain. | Typing a colon needs the long-press on Gboard; colons are never needed. |
-| D12 | **"Touching" neighbours move together.** When an entry's end changes and the next entry started within 60 s of the old end, the next entry's start moves too. The toast says "Also moved ‘Email’ to start 11:55" and offers Undo. The same applies to a start and the entry before it. | Your data shows gaps and overlaps after every hand fix. Toggl's calendar behaves the same way. | Your Q3 answer can switch this to "ask each time". |
+| D12 | **"Touching" neighbours move together.** When an entry's end changes and the next entry started within 60 s of the old end, the next entry's start moves too. The toast says "Also moved ‘Email’ to start 11:55 · Keep ‘Email’ as it was". The same applies to a start and the entry before it. Limits: only start/end edits (never dragging a whole block), never across days, never shrinking a neighbour below 1 min (then the overlap is marked with Fix instead). | Your data shows gaps and overlaps after every hand fix. Toggl's calendar behaves the same way. | Your Q3 answer can switch this to "ask each time". |
 | D13 | **The wheel and the calendar use pointer events** (one code path for mouse, touch and pen), snap to 5 min, tick on each step on Android (`navigator.vibrate(5)`), and have ±1 min buttons for fine-tuning. | One way to drag, everywhere. | None. |
 | D14 | **No new npm packages.** The wheel is our own SVG and pointer code. | This checkout's safety layer refuses changes to the dependency list without the owner, and nothing here needs a library. | Somewhat more code to write. |
 
@@ -272,6 +275,156 @@ The board shows these with pictures and working demos. Mark them there; the exec
 | Q4 | **A "still running?" notification on your phone.** | **Yes, after 3 hours, once more at 6 hours, never between 23:00 and 07:00.** Tapping opens the Switched/Stopped picker. | No notification; only the card when you open the app. | Too many pings, or forgotten timers staying forgotten. |
 | Q5 | **On the PC, show the app's top bar on Time** (D9)? | **Yes.** Thoughts, Settings and Log Out are one click away again. | Keep it hidden, as today. | A little less height for the calendar. |
 | Q6 | **The "you last used the app at…" card**: when you open the app and a timer has run longer than usual, should it offer "Stop at 11:55"? | **Yes.** "Longer than usual" means more than twice your typical length for that project, and at least 90 min. | Show it only after 3 hours. | An unneeded card, dismissed with one tap. |
+
+## DECISIONS — made 2026-11-03, after your marks and your message
+
+Your message after marking the board said:
+> "by overlap i meant, i start a timer on pc, then close it on phone once i am done with gym or whatever.
+> U can make the other choices i havent chosen on the artifact, but in doing so, try to think about 10
+> different scenarios for each before u just decide. For example the 'still running' intuitively, i would
+> say that it should always sort of be on my phone that i am actively running something with an icon, is
+> that what toggl does or would that be something i just do? i think the 'you last used the app' seems
+> weird. ... i am particularly interested in you fixing a bunch of the bugs"
+
+| # | Decision | Who decided |
+|---|---|---|
+| Q1 | **(c) Scrolling drums**, with a **day drum** on each side: [day][hour][minute]. | You. The day drum answers your note, "think about multiple days what do u do there". Its design was checked against the scenarios below. |
+| Q2 | **Planned entries are striped and not counted until their time comes.** | You. |
+| Q3 | **Touching neighbours move together automatically**, with a one-tap "Keep ‹B› as it was", within limits. | Claude, after 11 scenarios (below). You wrote "i dunno, what actually makes sense?" |
+| Q4 | **Replaced by a running-timer notification on your phone**: always there while something runs, silent, with a Stop button. One alert with sound if a timer passes 6 h, held until 07:00 at night. | Claude, after 12 scenarios (below), from your instinct. **Toggl's Android app does this**: its help page lists a "Running Timer notification", which "shows your currently running Time Entry" (support.toggl.com/toggl-track-timer-for-android, read 2026-11-03). Toggl's notification opens the app when tapped; ours also has a Stop button. |
+| Q5 | **Yes, the app's top bar shows on the PC**, and the tracker's own duplicate "← Dashboard · Time" row goes away there, so the calendar keeps its height. | Claude, after 10 scenarios (below). |
+| Q6 | **Dropped.** The "you last used the app" card and the matching chip in Switched at… are not built. | You ("seems weird"). The running notification does the same job better: you see the timer every time you look at your phone. |
+| Items | **All Yes.** Checked against your 10 everyday scenarios (below): every item is needed by at least one of them. | Claude. |
+
+**Your "overlap" in plain words, and what fixes it.** You start "Gym" on the PC at home, leave, and stop it on
+the phone afterwards. Today that path meets four of the faults:
+- The phone opens with an old copy that has no timer running, and gives no "checking" sign (sync #2). A
+  tap in that moment acts on the old copy.
+- In a gym basement with no signal, the phone never hears that Gym is running (sync #2).
+- Stop, then lock the phone at once, and the stop may wait (sync #5).
+- If the phone's clock differs from the PC's, the length comes out wrong (sync #6).
+
+Phase 2 fixes all four, and Phase 7's notification removes the need to open the app at all: the phone
+already shows "● Gym · since 17:05 [Stop]", and the Stop goes straight to the server. This exact story
+becomes an e2e test (Phase 2 acceptance) and the first thing on your phone-day list.
+
+### Q1 — the drums across days: 11 scenarios
+
+1. **Today's fix, 09:00 → 11:55.** Both day drums read "Today"; only hour and minute move.
+2. **Overnight timer, 22:30 yesterday → 01:15 today.** The start day drum says "Yesterday", the end says
+   "Today", and the length reads 2:45.
+3. **Planning tomorrow, 10:00 → 11:30.** Both day drums say "Tomorrow", and the entry is saved as planned
+   (striped).
+4. **Fixing last Thursday.** The day drum runs from 14 days back to 14 days ahead, labelled "Thu 30 Oct".
+   Anything older uses the date box that is already in the sheet.
+5. **A timer forgotten over a weekend (over 24 h).** The end day drum is independent, so Friday → Sunday
+   works. The over-12-hours question from D10 still asks first.
+6. **An end set before the start** (both "Today", 14:00 → 13:00). This is not silently turned into
+   tomorrow, because the day drums are explicit. It shows "Ends before it starts", with a one-tap "End
+   tomorrow". ✓ is disabled until it is fixed.
+7. **A running entry.** The end drums are hidden. "Stop at…" shows them, and anything after now is greyed.
+8. **Precision.** The minute drum steps 1 minute (0–59), so 11:57 is reachable without the ± buttons.
+   The ±5 buttons stay for quick nudges.
+9. **12-hour mode** (a setting the app has). The hour drum follows it and adds an AM/PM drum.
+10. **Seconds.** Drums set :00. An exact time like 07:59:47 can still be typed in the box beside them.
+11. **A one-handed flick on a phone.** The drums use the browser's own scroll snapping (no library), and
+    each step ticks the vibration on Android.
+
+### Q3 — touching neighbours: 11 scenarios
+
+"Touching" means the next entry started within 60 s of this one's end (or the previous one ended within
+60 s of this one's start).
+
+1. **Forgot to switch.** A ran 09:00 → 14:30 and B started at 14:30. You set A's end to 11:55, so B's start
+   follows to 11:55. That is right: B is what you were doing from 11:55. Without this, there is a gap you
+   fix by hand.
+2. **A lunch gap.** A ended 12:00, nothing was tracked, and B started 12:30. A's end changes to 12:10, and B
+   does not move, because they were not touching. Right.
+3. **A ran longer than recorded.** You move A's end 10 minutes later, so B's start moves 10 minutes later.
+   Without this they would overlap.
+4. **Moving A's end past B's whole length** (B was a 5-minute slip). B would shrink to nothing. So B is not
+   moved; the overlap is marked with a "Fix" button instead. **Never delete or zero a neighbour.**
+5. **B is running.** It follows the same rule. Its start moves, it keeps running, and its running time
+   changes by the same amount.
+6. **A's start moves earlier**, and Z, before A, ended where A started. Z's end follows, so Z gets
+   shorter. Usually right, for the same reason as 1.
+7. **Dragging a whole block in the calendar.** Neighbours do not follow. Moving a block is a different
+   intent, and Toggl's calendar leaves others alone too. **Only start and end edits move neighbours.**
+8. **Two devices.** The phone stopped A at 17:05:12 and the PC started B at 17:05:40. That is within 60 s,
+   so they count as touching. Right.
+9. **Entries on different days, or duration-only entries.** Never linked.
+10. **You didn't want B moved.** The toast says "Also moved ‘B’ to start 11:55 · Keep ‘B’ as it was". One
+    tap puts B back, and A keeps your change.
+11. **Sync.** Two rows change, and both go through D1 (stale copies refused), so the other device cannot
+    half-apply it.
+
+Verdict: automatic. In 8 of 11 it is what you want with no tap; in the rest, the limits (4, 7, 9) and the
+one-tap undo (10) cover it. "Ask every time" would add a question to the most common fix you make.
+
+### Q4 — the running-timer notification: 12 scenarios
+
+1. **Your gym handoff.** You start on the PC. A push puts "● Gym · since 17:05" on the phone with a
+   **Stop** button. After the gym, you pull down the shade and tap Stop. You never open the app.
+2. **Starting on the phone itself.** The same notification appears.
+3. **Switching 12 times a day** (you track back to back). The notification is **replaced silently**: same
+   tag, no sound, no vibration. Twelve buzzes a day would be unbearable.
+4. **You stop it anywhere.** It is replaced by a quiet "Stopped · Gym 1:12" that you swipe away.
+   Browsers require every push to show something, which rules out deleting it in silence, and Toggl does
+   the same: its "Stopped Timer" notification.
+5. **Forgotten overnight.** The notification sits in the shade all night. Its one alert with sound comes at
+   6 h, and between 23:00 and 07:00 it is held until 07:00. Why 6 h: none of your 105 entries ran past
+   6 h, and 3 ran 3–6 h. A 3-hour alert would ring during real work. Forgotten timers on Nov 2–3 were
+   noticed after about 2–3 h, which an alert could not beat. **The always-there notification does that
+   job.**
+6. **No signal in the gym basement.** You tap Stop, and the worker saves the stop with the time you tapped.
+   The phone's background sync (Chrome on Android has it) sends it when the signal returns, so the stop
+   time is when you tapped, not when the signal came back.
+7. **You stopped it on the PC an hour ago and forgot.** Tapping Stop on the phone does nothing harmful. The
+   server stops only a timer still running, and the notification says "Already stopped at 18:00".
+8. **You swipe it away.** It stays away until the next start or stop. The app does not fight you.
+9. **The PC.** Notifications go only to devices that turned them on. The PC has none, and a setting per
+   device ("Show the running timer on this device") defaults to on for the installed phone app.
+10. **Thought Frequencies reminders.** They use a different tag, so neither replaces the other.
+11. **The lock screen.** It shows the entry's description, as Toggl's does. If that is ever private,
+    Android's own lock-screen setting can hide notification contents. The plan says so in Settings.
+12. **Limits of the web.** A web notification cannot tick like a stopwatch, so it shows "since 17:05", not
+    a live 1:12:33. Android also lets you swipe it away, which a native app could prevent. Most Android
+    launchers still put a dot on the app's icon while it is there.
+
+### Q5 — the app's top bar on the PC: 10 scenarios
+
+1. **At the PC in Time, you want to log a thought.** With the bar it is one click; today it is Dashboard,
+   then More, then Thoughts.
+2. **Log out from Time.** Today there is no way; with the bar it is one click.
+3. **The calendar on a 768-pixel-tall laptop.** The bar costs about 56 px. Removing the tracker's
+   duplicate "← Dashboard · Time" row on the PC gives it back.
+4. **Two bars stacked looking cluttered.** That is the reason the duplicate row goes. The tracker's
+   section tabs (Timer, Calendar, …) stay under the app bar.
+5. **A narrow PC window (under 640 px).** It behaves like a phone: no app bar, the tracker's bottom bar.
+6. **A tablet in portrait.** It gets the bar; plenty of height.
+7. **Keyboard shortcuts.** The bar has links only, no shortcuts, so nothing collides.
+8. **Every other signed-in page has the bar on the PC** (`docs/product/map.md`: "one frame on every
+   signed-in page"). Time was the exception.
+9. **Distraction-free tracking.** The bar is one thin row, so little is lost.
+10. **The guard test** that checks every page either shows the bar or says why not. It changes to "hidden
+    on phones only", in the same commit.
+
+### The items — your 10 everyday scenarios, and which items each needs
+
+| # | Scenario | Items it needs |
+|---|---|---|
+| S1 | Start Gym on the PC, stop it on the phone afterwards | p2-stale, p2-checking, p2-send, p2-live, p2-clock, running notification |
+| S2 | Forgot to switch: working on X, really switched at 11:55, notice at 14:30 | p4-switched, p4-onetap, p1-parse, p1-keypad, drums, Q3 |
+| S3 | Timer ran overnight; fix it on the phone in the morning | p4-stopped, p4-stopat, drums (day), p1-keypad, running notification |
+| S4 | No signal in a basement; open the app, stop the timer | p2-checking, p2-badge, p2-send, running notification (stop offline) |
+| S5 | PC tab open all day; start and stop things on the phone in between | p2-live, p2-stale, p2-badge |
+| S6 | Plan "Gym tomorrow 10:00–11:30" on the phone | p6-drag, drums (day), Q2, p1-manual |
+| S7 | Walked 40 min without a timer; log it afterwards | p1-logdur, p1-manual, p1-parse, p6-drag |
+| S8 | Fix yesterday's 22:30–01:15 entry | drums (day), p1-parse (end before start), p4-onetap |
+| S9 | From Thoughts into Time, Calendar, Back, Reports, Back out | p3-back, p3-return, p3-loading, p3-survive, p1-small, p6-swipe |
+| S10 | At the PC: change an end time, remove a tag | p1-parse, Q3, p4-marks, p2-tags |
+
+Every item appears at least once, so every item stays Yes.
 
 ---
 
@@ -339,6 +492,10 @@ time boxes (checked in the DOM). Then push.
   publication holds `timetrack_entries`.
 - A two-browser check by the AI with a throwaway account (not your account): stop in browser A, see it
   stopped in browser B within 5 s.
+- **The owner's own story as an e2e test:** start "Gym" in a desktop context; open a phone context
+  (`[android]`) that last saw the account before the start, so it holds an old copy. Expect: the phone
+  shows "Checking…" and then Gym running; Stop there; the desktop shows it stopped within 5 s, with the
+  phone's stop time.
 - Your 105 entries are unchanged: a read-only count and checksum before and after.
 - Then push.
 
@@ -367,13 +524,11 @@ time boxes (checked in the DOM). Then push.
 
 1. **Switched at…** on the running timer bar, shown when a description for the next thing is typed (or
    from the ⋮ menu). It opens the time picker. In Phase 4 that is the typed box, the chips and the ±
-   buttons; Phase 5 adds the wheel. The chips are "When I last used the app (11:55)", "15 min ago",
-   "30 min ago" and "1 h ago". Confirming ends the running entry at T and starts the new one at T, as one
+   buttons; Phase 5 adds the drums. The chips are "5 min ago", "15 min ago", "30 min ago", "1 h ago" and
+   "When the last entry ended" (for a gap). (No "last used the app" chip: Q6 was dropped.) Confirming ends the running entry at T and starts the new one at T, as one
    undoable change.
 2. **Stopped at…**: the same picker, with no new entry.
-3. **The "last used the app" card** (Q6): when you open the app with a long-running timer, it offers "Stop
-   at 11:55", "Switched at…" and "Still going". "Last used" is the device's last tap or keypress, saved
-   locally per device. The card says which device ("on this phone").
+3. ~~The "last used the app" card~~ dropped (Q6, the owner: "seems weird").
 4. **One-tap buttons** in the sheet: −5 / +5 on start and end, "End now", "Start where the last one
    ended", "End where the next one starts".
 5. **Touching neighbours** (D12) in the sheet, the list rows and the calendar, with Undo.
@@ -389,30 +544,36 @@ time boxes (checked in the DOM). Then push.
   phase report.
 - Then push.
 
-## Phase 5 — The wheel · L
+## Phase 5 — The drums · L
 
-1. The wheel picked in Q1 (default: the clock face) goes in the sheet above the start, end and duration
-   boxes, and in the Switched at… / Stopped at… picker. Every tool stays: typing, chips and ± buttons sit
-   beside it.
-2. **Two handles.** Start is ▶, end is ■. A running entry's end handle sits at "now" and can only move back.
-3. **Dragging the arc** between the handles moves the whole entry and keeps its length.
-4. **The middle** shows the length; tap it to type a length.
-5. **Snapping:** 5 min while dragging, ±1 min buttons beside it, and a vibration tick on each step on
-   Android (D13).
-6. **Spans past 12 hours or past midnight:** the arc gets a second ring, and the date line under the wheel
-   says "ends tomorrow, 01:30".
-7. **Future entries:** a handle may go past "now" for an entry that is not running. That entry is "planned"
-   (Q2).
-8. **Built to be usable without sight:** each handle is a slider (`role="slider"`, arrow keys move 1 min,
-   PageUp/PageDown 15 min) with its time read aloud.
+The owner picked (c), scrolling drums, and asked what happens across days. The design is the "Q1 — the drums
+across days" scenarios in DECISIONS.
+
+1. **Three drums per side: [day][hour][minute].**
+   - The day drum runs from 14 days back to 14 days ahead: "Yesterday", "Today", "Tomorrow", then "Thu 30
+     Oct".
+   - The hour drum follows the 12/24-hour setting, with an AM/PM drum in 12-hour mode.
+   - The minute drum steps 1 minute.
+   - It sits in the sheet above the start, end and duration boxes, and in the Switched at… / Stopped at…
+     picker. Typing, the chips and the ± buttons stay beside it.
+2. **A running entry** shows only the start drums. "Stop at…" shows the end drums, with times after now
+   greyed and refused.
+3. **End before start** shows "Ends before it starts" with a one-tap "End next day", and ✓ is disabled. It
+   is never rolled to the next day silently, because the day drums are explicit.
+4. **The length** reads live under the drums: "2:45 · ends next day" when it crosses midnight.
+5. **An end after now on a stopped entry** makes it planned (Q2): striped, not counted until it starts.
+6. **Built with the browser's own scroll snapping**, no library (D14). Each step ticks the vibration on
+   Android. Each drum is a listbox with arrow-key support and its value read aloud.
 
 **Acceptance:**
-- Pure geometry is unit tested: angle to time, time to angle, snapping, crossing 12 and midnight, the
-  second ring.
-- A component test drags each handle with pointer events.
-- In the Playwright browser at 390 px with touch emulation: drag the end handle of a running entry back 2 h
-  and see the entry stopped 2 h ago; drag the arc and see the length kept.
-- A screen recording or before-and-after screenshots in the report.
+- Pure functions are unit tested: drum values to a time and back, across midnight, across DST (the last
+  Sunday of October and March), 12-hour mode, and end before start.
+- A component test scrolls each drum.
+- In the Playwright browser at 390 px with touch emulation, these three stories work:
+  - fix a running entry to have ended 2 h ago;
+  - set yesterday 22:30 → today 01:15 and see 2:45;
+  - plan tomorrow 10:00–11:30 and see it striped.
+- Screenshots in the report.
 - Then push.
 
 ## Phase 6 — The calendar on the phone · M
@@ -431,21 +592,47 @@ time boxes (checked in the DOM). Then push.
 - `tests/e2e/toggl-time-tracker.spec.ts` passes.
 - Then push.
 
-## Phase 7 — "Still running?" on your phone · M (only if Q4 is Yes)
+## Phase 7 — The running timer in your phone's notification shade · M
 
-1. A migration adds `nudged_at` to `timetrack_entries`, or a small `timetrack_nudges` table, with rollback.
-2. The existing clock (`thoughts-clock`, every minute) calls `/api/notifications/tick`. The tick also finds
-   running entries over the Q4 threshold that have not been nudged at that step and are outside quiet
-   hours, and sends through `src/notifications/pushService.ts` with kind `timetrack-running`.
-3. Tapping the notification opens `/time?view=timer&stopped-at=1`, which opens the picker from Phase 4.
-4. A stop or a switch on any device clears the nudge state.
+What Toggl's Android app calls its "Running Timer notification", plus a Stop button. The design is the
+"Q4 — the running-timer notification" scenarios in DECISIONS.
+
+1. **When a timer starts or stops on any device, the server pushes to every device that has the running
+   timer switched on.**
+   - The sync route sees a running entry appear or end, and sends through `src/notifications/pushService.ts`
+     with kind `timetrack-running` and tag `timer-running`.
+   - The text: "● Gym · since 17:05", silent, not renotifying, with one action, Stop.
+   - When stopped, the push replaces it with a silent "Stopped · Gym 1:12". Every push must show
+     something (`public/sw.js` rule 1).
+2. **The worker** (`public/sw.js`, the notification half, built by `Plans/thought.md`) learns `silent` and
+   `renotify` from the payload, and a `stop` action.
+   - The action POSTs to a new `/api/timetrack/stop` with `{entryId, at}`, where `at` is the time of the
+     tap.
+   - The server stops that entry only if it is still running (D1), and answers "already stopped at 18:00"
+     otherwise.
+   - Offline, the worker stores the stop and sends it with Background Sync, falling back to the next app
+     open, still with the tap time.
+3. **One alert with sound at 6 h.**
+   - The existing minute clock (`thoughts-clock` calls `/api/notifications/tick`) also finds running entries
+     past 6 h that have not been alerted and re-posts the notification once, with `renotify`.
+   - Between 23:00 and 07:00 in the owner's zone, the alert is held until 07:00.
+   - A migration adds `timetrack_entries.alerted_at` (with rollback).
+4. **A setting per device:** "Show the running timer on this device", on by default for the installed phone
+   app and off for desktop browsers. It lives on the Settings screen beside the existing notification
+   switch, with one line about Android's lock-screen privacy setting.
+5. **Tap the notification body** to open `/time?view=timer`. While the timer runs, that view shows "Stop at…".
 
 **Acceptance:**
-- Unit tests for the selection rule: threshold, quiet hours, once per step.
-- The tick route's tests pass.
-- A read-only check after deploy: `notification_sends` gains a `timetrack-running` row when a throwaway
-  account's timer passes the threshold. Use a 1-minute threshold on that account only, never yours.
-- The notifications runbook gains one section.
+- Unit tests:
+  - which state changes send a push (start, stop, switch; not an edit of the description);
+  - the 6 h rule and the 23:00–07:00 hold;
+  - the stop route's "only if still running" rule;
+  - the payload never carrying a description when the device setting is off.
+- The worker's push and click handling are tested with the existing worker test set-up, or a new one if
+  there is none.
+- After deploy, a throwaway account with a test device (never the owner's) gets a `timetrack-running`
+  row in `notification_sends` on start and on stop.
+- The notifications runbook gains a section; B-PHONE's list starts with the gym handoff.
 - Then push.
 
 ## Phase 8 — Proof, papers, and your phone day · S
@@ -524,13 +711,13 @@ Run them in order; each assumes the previous one is live.
 `/goal Execute Phase 4 of Plans/time-tracker-like-toggl.md (Switched at…, Stopped at…, the last-used card, one-tap buttons, touching neighbours, overlap and gap marks, Stop at… on the timer bar). Include the 2026-11-03 replay test. Browser walk at 390px with screenshots. Push, report.`
 
 **Phase 5**
-`/goal Execute Phase 5 of Plans/time-tracker-like-toggl.md: build the wheel the owner picked on the board (default clock face), no new packages, geometry unit tests, touch-emulated browser check. Push, report with screenshots.`
+`/goal Execute Phase 5 of Plans/time-tracker-like-toggl.md: build the drums ([day][hour][minute], the owner's pick), no new packages, unit tests for the time maths including DST, touch-emulated browser check of the three stories. Push, report with screenshots.`
 
 **Phase 6**
 `/goal Execute Phase 6 of Plans/time-tracker-like-toggl.md: pointer-event calendar on the phone (long-press create, hold to move, both-edge resize, planned entries striped, day swipe). Acceptance as written. Push, report.`
 
-**Phase 7** (only if Q4 is Yes)
-`/goal Execute Phase 7 of Plans/time-tracker-like-toggl.md: the "still running?" notification through the existing notifications clock. Backup, migration with rollback, test on a throwaway account only. Push, report.`
+**Phase 7**
+`/goal Execute Phase 7 of Plans/time-tracker-like-toggl.md: the running-timer notification with a Stop button (push on start/stop, silent, the stop route, the 6 h alert held 23:00–07:00, per-device setting). Ask before editing public/sw.js only if its owner session is active. Backup, migration with rollback, test on a throwaway account only. Push, report.`
 
 **Phase 8**
 `/goal Execute Phase 8 of Plans/time-tracker-like-toggl.md: full verification, /code-review and /security-review on the plan's diff, runbook and map updates, then post the phone-day list for the owner.`
