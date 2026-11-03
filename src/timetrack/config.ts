@@ -15,6 +15,13 @@ export const STATE_VERSION = 3
 /** Changes written locally but not yet accepted by the server */
 export const PENDING_KEY = "toggl-clone:pending"
 /**
+ * Beside the queue: the server version each queued row was based on, and the
+ * whole tag sets waiting to go. A separate key so the queue's own shape — read
+ * by every open tab, some of them running an older build — does not change.
+ * Missing (a queue written before versions existed) reads as "base unknown".
+ */
+export const PENDING_BASES_KEY = "toggl-clone:pending-bases"
+/**
  * THERE IS DELIBERATELY NO PERSISTED CURSOR, AND THIS IS WHERE SOMEBODY WOULD
  * ADD ONE.
  *

@@ -14,8 +14,11 @@
 
 import { test, expect } from './fixtures/test'
 import { ROUTES } from "@/src/shared/routes"
+import type { Page } from '@playwright/test'
 import {
+  PENDING_KEY,
   STORAGE_KEY,
+  blur,
   entriesOnAccount,
   entryInList,
   openFreshTracker,
@@ -23,6 +26,17 @@ import {
   savedToAccount,
   trackEntry,
 } from './helpers/timetrack'
+
+/** The live entry called Gym-something on the ACCOUNT: whether it runs, and what it is called */
+async function gymOnAccount(page: Page): Promise<{ running: boolean; description: string } | null> {
+  const response = await page.request.get('/api/timetrack/sync')
+  expect(response.status()).toBe(200)
+  const body = (await response.json()) as {
+    rows: { timetrack_entries: { description: string; stopped_at: string | null; deleted_at: string | null }[] }
+  }
+  const gym = body.rows.timetrack_entries.find((e) => e.deleted_at === null && e.description.startsWith('Gym'))
+  return gym ? { running: gym.stopped_at === null, description: gym.description } : null
+}
 
 test.describe('time is kept on the server, not just in one browser', { tag: '@phone' }, () => {
   test('the real page saves, and says so', async ({ page }) => {
@@ -97,6 +111,77 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     await reopenFromAccount(other)
     await expect(entryInList(other, 'work that must survive').first()).toBeVisible({ timeout: 25_000 })
     await second.close()
+  })
+
+  /**
+   * THE OWNER'S OWN OVERLAP: "i start a timer on pc, then close it on phone once
+   * i am done with gym" — here with the other device holding an older copy in
+   * between, which is when it went wrong (sync defect #1,
+   * Plans/time-tracker-like-toggl.md).
+   *
+   * The second browser has Gym running and edits it with no signal, so the edit
+   * waits in its queue. The PC stops Gym meanwhile. When the signal comes back,
+   * the queued row used to replace the account's whole row — `stopped_at: null`
+   * included — and Gym ran again on both. Now the account refuses the stale copy,
+   * and the second browser lays only its own edit onto the stopped row.
+   *
+   * The unit tests beside the hook (`aSleepingPhoneCannotRestartAStoppedTimer`)
+   * pin the merge against a fake account; this pins it against the real route
+   * and the real database function.
+   */
+  test('a device that slept with an edit queued does not restart a timer the PC stopped', async ({ browser, page, account }) => {
+    await openFreshTracker(page)
+    await page.getByPlaceholder('What are you working on?').fill('Gym')
+    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
+    await page.locator('main').getByRole('button', { name: 'Stop timer' }).waitFor({ timeout: 15_000 })
+    await savedToAccount(page)
+    await expect.poll(() => gymOnAccount(page), { message: 'Gym never reached the account' }).toMatchObject({ running: true })
+
+    // the other device, same account, sees Gym running
+    const elsewhere = await browser.newContext({ storageState: account.storageState })
+    try {
+      const other = await elsewhere.newPage()
+      await reopenFromAccount(other)
+      await expect(other.locator('main').getByRole('button', { name: 'Stop timer' })).toBeVisible({ timeout: 25_000 })
+
+      // it loses signal, and an edit to the running entry waits in its queue
+      await elsewhere.setOffline(true)
+      await other.getByPlaceholder('What are you working on?').fill('Gym, legs day')
+      await blur(other)
+      await expect
+        .poll(() => other.evaluate((key) => window.localStorage.getItem(key) ?? '', PENDING_KEY), {
+          message: 'the edit was never queued, so this proves nothing',
+        })
+        .toContain('Gym, legs day')
+
+      // the PC stops Gym meanwhile
+      await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
+      await savedToAccount(page)
+      await expect.poll(async () => (await gymOnAccount(page))?.running, { message: 'the PC stop never reached the account' }).toBe(false)
+
+      // the signal comes back
+      await elsewhere.setOffline(false)
+      await other.evaluate(() => {
+        window.dispatchEvent(new Event('online'))
+        document.dispatchEvent(new Event('visibilitychange'))
+      })
+
+      // the account: still stopped, and the other device's edit is on it
+      await expect
+        .poll(() => gymOnAccount(page), {
+          timeout: 30_000,
+          message: 'the old copy started the timer again, or its own edit was lost',
+        })
+        .toEqual({ running: false, description: 'Gym, legs day' })
+
+      // and both screens say so
+      await expect(other.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible({ timeout: 20_000 })
+      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+      await expect(entryInList(page, 'Gym, legs day').first()).toBeVisible({ timeout: 20_000 })
+      await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+    } finally {
+      await elsewhere.close()
+    }
   })
 
   test('clearing this browser does not lose the work', async ({ page }) => {

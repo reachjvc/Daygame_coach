@@ -32,6 +32,27 @@ runs as more than one instance, move the counter into Postgres or Redis. Stated 
 `drop table if exists public.timetrack_* cascade` plus `drop function public.timetrack_touch_updated_at()`.
 Nothing else reads those tables. Do it in a transaction, and take a backup first.
 
+## How a stale copy is refused (`timetrack_push`)
+
+Since `20261103120000_timetrack_versioned_writes.sql`, the app's pushes go through one database function,
+`timetrack_push(p_batch, p_tag_sets)`, security invoker (row security applies). Each row names the server
+`updated_at` it was based on; the function writes it only if that is still the stored version, and otherwise
+returns the stored row under `conflicts`. The browser lays only the fields it changed onto that copy and sends
+again (`src/timetrack/syncVersionService.ts`). An entry's tags travel as a whole set with the entry, and links
+not in the set are deleted. A request with no `bases` (an older app, the e2e helpers) still gets the old
+whole-row upsert, and so does everyone if the function is missing (PostgREST `PGRST202`).
+
+- **Order of release:** migration first, then the code. The code also works before the migration (it falls
+  back), so the order matters only for when the protection starts.
+- **Way back:** `supabase/migrations/rollback/20261103120000_timetrack_versioned_writes.down.sql` drops the
+  function. No data is touched; the app falls back to the upsert by itself.
+- **Checked against Postgres 15 in isolation** (the steps below), as two users: a first upload of every table in
+  the mapper's own shapes; a fresh write applied with its new version returned exactly; a stale write, and a write
+  with no base over an existing row, both refused with the stored row returned; a stale copy unable to restart a
+  stopped timer or bring back a deleted entry; a tag set replacing the links only with its entry and under its
+  check; a refused constraint rolling back the whole call; a second user unable to see or write the first user's
+  rows; no session and the `anon` role refused.
+
 ## Verifying a schema change
 
 The repo's migration history cannot be replayed from scratch — an older migration references `user_goals`,

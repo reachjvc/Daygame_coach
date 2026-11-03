@@ -19,12 +19,21 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { emptyRows, type TimetrackRows } from "@/src/db/timetrackTypes"
+import {
+  emptyRows,
+  rowKeyOf,
+  TIMETRACK_TABLES,
+  type PushBases,
+  type TagSets,
+  type TimetrackRows,
+  type VersionedPushResult,
+} from "@/src/db/timetrackTypes"
 
-import { PENDING_KEY } from "../config"
+import { PENDING_BASES_KEY, PENDING_KEY } from "../config"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
 import {
+  applyTagSets,
   countRows,
   reattachToWorkspace,
   repairPending,
@@ -35,10 +44,15 @@ import {
   rowKey,
   rowsUnknownToServer,
   safeToSend,
+  sameTagSet,
   splitIntoBatches,
+  withServerTagLinks,
   withoutSentRows,
 } from "../syncService"
+import { olderThan, rebase, versionOf, type BaseRecord, type Bases } from "../syncVersionService"
 import type { TimetrackState } from "../types"
+
+type AnyRow = Record<string, unknown>
 
 export type SyncStatus =
   | "starting"
@@ -107,6 +121,80 @@ function readPending(): Partial<TimetrackRows> {
   } catch {
     return {}
   }
+}
+
+/** What the queue was based on, and its tag sets. Absent or unreadable: unknown. */
+function readPendingBases(): { bases: Bases; tagSets: TagSets } {
+  try {
+    const raw = window.localStorage.getItem(PENDING_BASES_KEY)
+    const parsed = raw ? (JSON.parse(raw) as { bases?: Bases; tagSets?: TagSets }) : {}
+    return { bases: parsed.bases ?? {}, tagSets: parsed.tagSets ?? {} }
+  } catch {
+    return { bases: {}, tagSets: {} }
+  }
+}
+
+/** Every row of a change set by `${table}/${key}`, the shape `keysIn` names them in */
+function indexRows(rows: Partial<TimetrackRows> | null): Map<string, AnyRow> {
+  const index = new Map<string, AnyRow>()
+  if (!rows) return index
+  for (const table of TIMETRACK_TABLES) {
+    for (const row of (rows[table] ?? []) as unknown as AnyRow[]) index.set(`${table}/${rowKeyOf(table, row)}`, row)
+  }
+  return index
+}
+
+/** Each entry's tag ids in a set of rows */
+function linksByEntry(rows: Partial<TimetrackRows> | null): Map<string, string[]> {
+  const links = new Map<string, string[]>()
+  for (const link of rows?.timetrack_entry_tags ?? []) {
+    const tags = links.get(link.entry_id) ?? []
+    if (!tags.includes(link.tag_id)) tags.push(link.tag_id)
+    links.set(link.entry_id, tags)
+  }
+  return links
+}
+
+/**
+ * For each row in a batch, the server version it was based on — `null` for a
+ * row this device believes is new, and for one whose base it does not know (a
+ * queue from before this). The server writes a row named `null` only if it does
+ * not exist yet, so not knowing can never overwrite anything.
+ */
+function basesFor(batch: Partial<TimetrackRows>, recorded: Bases): PushBases {
+  const out: PushBases = {}
+  for (const table of TIMETRACK_TABLES) {
+    if (table === "timetrack_entry_tags") continue
+    const list = (batch[table] ?? []) as unknown as AnyRow[]
+    if (list.length === 0) continue
+    const byKey: Record<string, string | null> = {}
+    for (const row of list) {
+      const key = rowKeyOf(table, row)
+      byKey[key] = recorded[`${table}/${key}`]?.v ?? null
+    }
+    out[table] = byKey
+  }
+  return out
+}
+
+/** The queued tag sets of the entries in this batch: a set goes with its entry */
+function setsFor(batch: Partial<TimetrackRows>, sets: TagSets): TagSets {
+  const out: TagSets = {}
+  for (const row of batch.timetrack_entries ?? []) if (row.id in sets) out[row.id] = sets[row.id]
+  return out
+}
+
+/** The change set without these rows, and without the links of these entries */
+function withoutKeys(rows: Partial<TimetrackRows>, keys: Set<string>, entries: Set<string>): Partial<TimetrackRows> {
+  const out: Partial<TimetrackRows> = {}
+  for (const table of TIMETRACK_TABLES) {
+    const list = ((rows[table] ?? []) as unknown as AnyRow[]).filter((row) =>
+      table === "timetrack_entry_tags" ? !entries.has(String(row.entry_id)) : !keys.has(`${table}/${rowKeyOf(table, row)}`),
+    )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (list.length > 0) (out as any)[table] = list
+  }
+  return out
 }
 
 export function useTimetrackSync({ state, setState, replaceState, pushToast }: Options) {
@@ -208,6 +296,30 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   /** Requests still in the air, so unmounting can stop them rather than let a dead
    * instance act on the answer. */
   const inFlight = useRef(new Set<AbortController>())
+  /**
+   * WHAT THIS DEVICE'S COPY IS BASED ON: the server's own row, as last heard,
+   * by `${table}/${key}`. Its `updated_at` is the version a write names.
+   *
+   * Learned from the full read at first contact, from the rows a check actually
+   * applied (never from one it skipped because this device is changing that row:
+   * the change is based on the version from BEFORE, and naming the newer one
+   * would let a stale copy through — the very thing this is for), and from every
+   * write's answer. That last one is not optional: each write makes a new
+   * version, and a device that did not learn it would have its own next edit
+   * refused as stale.
+   */
+  const basis = useRef(new Map<string, AnyRow>())
+  /**
+   * For each queued row, what it was based on (see `BaseRecord`). Recorded when
+   * the row is first queued and kept until it is accepted: further edits pile
+   * onto the same queued row, and all of them were made on top of that copy.
+   * Saved beside the queue, so a reload or another tab still knows.
+   */
+  const bases = useRef<Bases>({})
+  /** Whole tag sets waiting to go, by entry id. Saved beside the queue too. */
+  const tagSets = useRef<TagSets>({})
+  /** Pushes in a row that came back with stale rows; see the end of `flush` */
+  const conflictStreak = useRef(0)
 
   latestState.current = state
 
@@ -263,14 +375,131 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
      */
     if (unmounted.current) return
     setPendingCount(countRows(pending.current))
+    // what the queue was based on, for exactly the rows still in it
+    const queuedKeys = keysIn(pending.current)
+    bases.current = Object.fromEntries(Object.entries(bases.current).filter(([key]) => queuedKeys.has(key)))
+    tagSets.current = Object.fromEntries(
+      Object.entries(tagSets.current).filter(([entryId]) => queuedKeys.has(`timetrack_entries/${entryId}`)),
+    )
     try {
       window.localStorage.setItem(PENDING_KEY, JSON.stringify(pending.current))
+      window.localStorage.setItem(PENDING_BASES_KEY, JSON.stringify({ bases: bases.current, tagSets: tagSets.current }))
     } catch {
       // the workspace itself is already saved; a lost queue re-derives from the
       // next diff, so this is worth reporting but not worth blocking on
       pushToast("Could not remember unsent changes in this browser", "error")
     }
   }, [pushToast])
+
+  /** Remember the server's own copy of these rows. Never moves a row back to an older version. */
+  const learn = useCallback((rows: Partial<TimetrackRows>, skip?: Set<string>) => {
+    for (const [key, row] of indexRows(rows)) {
+      if (skip?.has(key)) continue
+      const version = versionOf(row)
+      if (!version) continue
+      const known = versionOf(basis.current.get(key))
+      if (known && olderThan(version, known)) continue
+      basis.current.set(key, row)
+    }
+  }, [])
+
+  /**
+   * Put changes in the queue, each with what it was based on.
+   *
+   * The base is the copy the change was diffed against — `serverRows`, which
+   * is in this app's own shape, so "which fields did I change" compares like
+   * with like — and the server version of that copy, from `basis`. A row
+   * already queued keeps the base it was first queued with: the edits since
+   * were made on top of that same copy.
+   */
+  const queueChanges = useCallback((changed: Partial<TimetrackRows>, sets: TagSets = {}) => {
+    const believed = indexRows(serverRows.current)
+    const believedLinks = linksByEntry(serverRows.current)
+    const next: Bases = { ...bases.current }
+    for (const key of keysIn(changed)) {
+      if (key in next) continue
+      const record: BaseRecord = { v: versionOf(basis.current.get(key)), row: believed.get(key) ?? null }
+      if (key.startsWith("timetrack_entries/")) {
+        record.tags = believedLinks.get(key.slice("timetrack_entries/".length)) ?? []
+      }
+      next[key] = record
+    }
+    bases.current = next
+    pending.current = mergeChangeSets(pending.current, changed)
+    tagSets.current = { ...tagSets.current, ...sets }
+  }, [])
+
+  /**
+   * THE SERVER KEPT A NEWER COPY OF THESE ROWS: lay this device's changes onto it.
+   *
+   * `stored` is what the server answered with for each refused row, and
+   * `sentBases` what those rows were based on when they went. What this device
+   * holds NOW stands for "mine" — it includes anything typed while the request
+   * was in the air. The merge (see `syncVersionService`) is queued again, now
+   * based on the stored copy, and shown: a timer the other device stopped shows
+   * stopped here, with this device's own edit on it.
+   */
+  const settleConflicts = useCallback(
+    (stored: Partial<TimetrackRows>, storedTags: TagSets, sentBases: Bases, sent: Partial<TimetrackRows>) => {
+      const uid = userId.current
+      const held = latestState.current
+      if (!uid || !held) return
+      const local = stateToRows(held, uid)
+      const localIndex = indexRows(local)
+      const queuedIndex = indexRows(pending.current)
+      const sentIndex = indexRows(sent)
+      const localLinks = linksByEntry(local)
+
+      const refusedKeys = new Set<string>()
+      const refusedEntries = new Set<string>()
+      const mine: Partial<TimetrackRows> = {}
+      const mineTags: TagSets = {}
+      for (const [key, row] of indexRows(stored)) {
+        refusedKeys.add(key)
+        const table = key.slice(0, key.indexOf("/")) as keyof TimetrackRows
+        if (table === "timetrack_entries") refusedEntries.add(String(row.id))
+        const here = localIndex.get(key) ?? queuedIndex.get(key) ?? sentIndex.get(key)
+        if (!here) continue
+        ;((mine as Record<string, AnyRow[]>)[table] ??= []).push(here)
+        if (table === "timetrack_entries" && localIndex.has(key)) mineTags[String(row.id)] = localLinks.get(String(row.id)) ?? []
+      }
+
+      const rebased = rebase(mine, sentBases, mineTags, stored, (entryId) => storedTags[entryId])
+
+      learn(stored)
+      pending.current = mergeChangeSets(withoutKeys(pending.current, refusedKeys, refusedEntries), rebased.send)
+      bases.current = {
+        ...Object.fromEntries(Object.entries(bases.current).filter(([key]) => !refusedKeys.has(key))),
+        ...rebased.bases,
+      }
+      tagSets.current = {
+        ...Object.fromEntries(Object.entries(tagSets.current).filter(([entryId]) => !refusedEntries.has(entryId))),
+        ...rebased.tagSets,
+      }
+
+      // what the server has for those rows is now known exactly
+      const believed = withServerTagLinks(
+        mergeIncoming(serverRows.current ?? emptyRows(), stored, new Set()),
+        [
+          ...(serverRows.current?.timetrack_entry_tags ?? []).filter((link) => !refusedEntries.has(link.entry_id)),
+          ...Object.entries(storedTags).flatMap(([entryId, tags]) => tags.map((tagId) => ({ entry_id: entryId, tag_id: tagId, user_id: uid }))),
+        ],
+        new Set(),
+      )
+      serverRows.current = stateToRows(rowsToState(believed, new Date().toISOString()), uid)
+
+      // and what this device shows for them is the merge
+      const shown = applyTagSets(mergeIncoming(local, rebased.hold, new Set()), rebased.holdTags)
+      const settled = reconcileRunningEntries(rowsToState(shown, new Date().toISOString()))
+      if (diffRows(local, stateToRows(settled.state, uid), new Date().toISOString()).count > 0) {
+        replaceState(settled.state)
+      }
+    },
+    [learn, replaceState],
+  )
+  /** read through a ref, so `flush` does not change identity whenever the workspace does */
+  const settleConflictsRef = useRef(settleConflicts)
+  settleConflictsRef.current = settleConflicts
 
   const flushRef = useRef<(() => Promise<void>) | null>(null)
 
@@ -306,8 +535,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     // separately: the queue is cleared by comparing against the object that was
     // queued, not against this rewritten copy, which is never the same object.
     const queued = pending.current
+    // what each queued row was based on, as it was when it went: an edit during
+    // the request records nothing new for a row already queued, but a settle
+    // must read the bases these rows were SENT with
+    const queuedBases = bases.current
+    const queuedSets = tagSets.current
     const workspaceId = latestState.current?.workspace.id
     const sending = workspaceId ? reattachToWorkspace(queued, workspaceId) : queued
+    const answers: VersionedPushResult = { applied: 0, written: {}, conflicts: {}, conflictTags: {} }
+    const setsSent: TagSets = {}
     try {
       // Sent in batches: a year of tracked time is megabytes, and a single
       // request that large is one the server may simply refuse — leaving the
@@ -317,12 +553,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         // registered so unmounting can stop it — see the unmount block
         inFlight.current.add(abort)
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+        const batchSets = setsFor(batch, queuedSets)
+        Object.assign(setsSent, batchSets)
         let response: Response
         try {
           response = await fetch("/api/timetrack/sync", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ rows: batch }),
+            // each row names the server version it was based on; see `basesFor`
+            body: JSON.stringify({ rows: batch, bases: basesFor(batch, queuedBases), tagSets: batchSets }),
             signal: abort.signal,
           })
         } finally {
@@ -447,9 +686,49 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           }
           throw new Error(message)
         }
+        // what was written, at which version, and what the server kept because it was newer.
+        // A server from before versions (or one without the database function yet) says none of it.
+        const answer = (await response.json().catch(() => ({}))) as Partial<VersionedPushResult>
+        for (const [table, byKey] of Object.entries(answer.written ?? {})) {
+          Object.assign((answers.written[table as keyof TimetrackRows] ??= {}), byKey)
+        }
+        for (const [table, stored] of Object.entries(answer.conflicts ?? {})) {
+          ;((answers.conflicts as Record<string, unknown[]>)[table] ??= []).push(...((stored ?? []) as unknown[]))
+        }
+        Object.assign(answers.conflictTags, answer.conflictTags ?? {})
       }
+
+      /**
+       * ROWS THE SERVER REFUSED AS STALE ARE NOT WHAT IT HAS. Everything else is.
+       * A refused entry's tag set and links were refused with it.
+       */
+      const refusedKeys = keysIn(answers.conflicts)
+      const refusedEntries = new Set([
+        ...Object.keys(answers.conflictTags),
+        ...(answers.conflicts.timetrack_entries ?? []).map((row) => row.id),
+      ])
+      const accepted = withoutKeys(sending, refusedKeys, refusedEntries)
+      const acceptedSets = Object.fromEntries(Object.entries(setsSent).filter(([entryId]) => !refusedEntries.has(entryId)))
+
       // what we just sent is now what the server has
-      serverRows.current = mergeIncoming(serverRows.current ?? emptyRows(), sending, new Set())
+      serverRows.current = applyTagSets(mergeIncoming(serverRows.current ?? emptyRows(), accepted, new Set()), acceptedSets)
+
+      /**
+       * AND EACH WRITE'S NEW VERSION IS WHAT THE NEXT EDIT OF THAT ROW IS BASED ON.
+       *
+       * Every write makes a new version. Forgetting it would leave this device
+       * naming the version before its own write, and its next edit would be
+       * refused as stale — by itself. `aDevicesOwnSecondEditIsNotRefused`.
+       */
+      const sentIndex = indexRows(accepted)
+      const writtenVersions = new Map<string, string>()
+      for (const [table, byKey] of Object.entries(answers.written)) {
+        for (const [key, version] of Object.entries(byKey ?? {})) writtenVersions.set(`${table}/${key}`, version)
+      }
+      for (const [key, version] of writtenVersions) {
+        const row = sentIndex.get(key)
+        if (row) basis.current.set(key, { ...row, updated_at: version })
+      }
       /**
        * TAKE OUT WHAT WAS SENT, NOT "EVERYTHING OR NOTHING".
        *
@@ -464,11 +743,57 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * Removing the sent keys is the same rule stated properly, and it keeps what
        * arrived while the request was in the air.
        */
-      pending.current = pending.current === queued ? {} : withoutSentRows(pending.current, sending)
+      pending.current = pending.current === queued ? {} : withoutSentRows(pending.current, accepted)
+
+      /**
+       * A row edited while its upload was in the air is still queued — and that
+       * edit was made on top of what just landed, so that is now its base.
+       */
+      const nextBases: Bases = {}
+      for (const key of keysIn(pending.current)) {
+        const version = writtenVersions.get(key)
+        const sentRow = sentIndex.get(key)
+        if (version && sentRow) {
+          const record: BaseRecord = { v: version, row: sentRow }
+          if (key.startsWith("timetrack_entries/")) {
+            const entryId = key.slice("timetrack_entries/".length)
+            const tags = acceptedSets[entryId] ?? bases.current[key]?.tags
+            if (tags) record.tags = tags
+          }
+          nextBases[key] = record
+        } else if (bases.current[key]) {
+          nextBases[key] = bases.current[key]
+        }
+      }
+      bases.current = nextBases
+      tagSets.current = Object.fromEntries(
+        Object.entries(tagSets.current).filter(
+          ([entryId, tags]) => !(entryId in acceptedSets && sameTagSet(tags, acceptedSets[entryId])),
+        ),
+      )
+
+      const stale = countRows(answers.conflicts) > 0
+      if (stale) settleConflictsRef.current?.(answers.conflicts, answers.conflictTags, queuedBases, sending)
+
       savePending()
       retryDelay.current = RETRY_START_MS
       clearRetry()
       sent = true
+      /**
+       * THE SAME ROWS COMING BACK NEWER, PUSH AFTER PUSH, IS NOT A REASON TO SPIN.
+       *
+       * One refusal is ordinary — the other device was here first — and the merge
+       * goes straight back up. Three in a row means something is writing those
+       * rows as fast as this device can answer, or that this device cannot name a
+       * version the server accepts. Either way the next try waits for the backoff
+       * rather than following immediately, which is the loop this file has
+       * measured three times over in other shapes.
+       */
+      conflictStreak.current = stale ? conflictStreak.current + 1 : 0
+      if (conflictStreak.current >= 3) {
+        retryAt.current = setTimeout(() => void flushRef.current?.(), retryDelay.current)
+        retryDelay.current = Math.min(retryDelay.current * 2, RETRY_MAX_MS)
+      }
       setStatus(countRows(pending.current) > 0 ? "saving" : "synced")
     } catch (error) {
       // try again by ourselves, sooner at first and then less often
@@ -538,6 +863,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     if (!state || ready.current) return
     ready.current = true
     pending.current = readPending()
+    const stored = readPendingBases()
+    bases.current = stored.bases
+    tagSets.current = stored.tagSets
     setPendingCount(countRows(pending.current))
     // remember what was here before the server said anything
     startingState.current = state
@@ -618,7 +946,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
                 })),
             })
           } else {
-            pending.current = mergeChangeSets(pending.current, diffRows(null, localRows, new Date().toISOString()).changed)
+            const everything = diffRows(null, localRows, new Date().toISOString())
+            queueChanges(everything.changed, everything.tagSets)
             savePending()
             void flush()
           }
@@ -636,11 +965,13 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          * the page opened is laid back on top — and queued for upload, because
          * the server has not heard about it either.
          */
-        const sinceOpening = diffRows(
-          startingState.current ? stateToRows(startingState.current, userId.current) : null,
-          stateToRows(latestState.current ?? state, userId.current),
-          new Date().toISOString(),
-        )
+        const startingRows = startingState.current ? stateToRows(startingState.current, userId.current) : null
+        const latestRows = stateToRows(latestState.current ?? state, userId.current)
+        const sinceOpening = diffRows(startingRows, latestRows, new Date().toISOString())
+
+        // the server's own copy of everything: the versions this device's writes will name
+        basis.current = new Map()
+        learn(body.rows)
         /**
          * THE SERVER WINS EVERY ROW IT KNOWS ABOUT. IT DOES NOT WIN ONE IT HAS
          * NEVER SEEN.
@@ -678,14 +1009,52 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          * holding back one upload, and pinned by
          * tests/unit/timetrack/queuedStopSurvivesFirstContact.test.tsx.
          */
-        const base = mergeIncoming(
+        /**
+         * ...BUT ONLY THE PART OF IT THAT IS THIS BROWSER'S OWN CHANGE.
+         *
+         * Between two tabs the queue is newer than the server. On a phone that
+         * slept through the PC's Stop it is OLDER: laying it on top whole put the
+         * phone's `stopped_at: null` back and started the timer again, and an
+         * entry the PC deleted came back the same way (sync defect #1). So the
+         * queue — what was queued before this page opened, plus what changed
+         * since — is rebased: each row keeps the fields this browser changed
+         * since the copy it was based on, and takes everything else from the
+         * server's current row. For two tabs the server has not moved, so that is
+         * the whole queued row, as before. See `syncVersionService.rebase`.
+         *
+         * A change made since opening was based on what this browser held when
+         * it opened, unless the row was already queued with a base of its own.
+         */
+        const queuedBases: Bases = { ...bases.current }
+        const startingIndex = indexRows(startingRows)
+        const startingLinks = linksByEntry(startingRows)
+        for (const key of keysIn(sinceOpening.changed)) {
+          if (key in queuedBases) continue
+          const record: BaseRecord = { v: null, row: startingIndex.get(key) ?? null }
+          if (key.startsWith("timetrack_entries/")) {
+            record.tags = startingLinks.get(key.slice("timetrack_entries/".length)) ?? []
+          }
+          queuedBases[key] = record
+        }
+        const serverLinks = linksByEntry(body.rows)
+        const rebased = rebase(
+          mergeChangeSets(pending.current, sinceOpening.changed),
+          queuedBases,
+          { ...tagSets.current, ...sinceOpening.tagSets },
+          body.rows,
+          (entryId) => serverLinks.get(entryId) ?? [],
+        )
+        pending.current = rebased.send
+        bases.current = rebased.bases
+        tagSets.current = rebased.tagSets
+
+        const base = applyTagSets(
           mergeIncoming(
-            mergeIncoming(body.rows, rowsUnknownToServer(body.rows, stateToRows(latestState.current ?? state, userId.current)), new Set()),
-            pending.current,
+            mergeIncoming(body.rows, rowsUnknownToServer(body.rows, latestRows), new Set()),
+            rebased.hold,
             new Set(),
           ),
-          sinceOpening.changed,
-          new Set(),
+          rebased.holdTags,
         )
 
         serverRows.current = body.rows
@@ -731,10 +1100,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         }
         adopted.current = true
 
-        if (sinceOpening.count > 0) {
-          pending.current = mergeChangeSets(pending.current, sinceOpening.changed)
-          savePending()
-        }
+        // the rebased queue, which may be smaller than what was read: a row the
+        // server already has as this browser would send it is not sent again
+        savePending()
         setStatus("synced")
         void flush()
       } catch {
@@ -758,7 +1126,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
     firstContactRef.current = attempt
     void attempt()
-  }, [state, replaceState, savePending, flush])
+  }, [state, replaceState, savePending, flush, learn, queueChanges])
 
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
@@ -791,7 +1159,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     }
 
     const rows = stateToRows(state, userId.current)
-    const { changed, count } = diffRows(serverRows.current, rows, new Date().toISOString())
+    const { changed, count, tagSets: setsChanged } = diffRows(serverRows.current, rows, new Date().toISOString())
     if (count === 0) return
 
     const guard = safeToSend(changed, serverRows.current, adopted.current)
@@ -807,7 +1175,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       return
     }
 
-    pending.current = mergeChangeSets(pending.current, changed)
+    queueChanges(changed, setsChanged)
     savePending()
 
     const writtenAt = Date.now()
@@ -840,7 +1208,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
     const timer = setTimeout(() => void flush(), 800)
     return () => clearTimeout(timer)
-  }, [state, syncActive, savePending, flush])
+  }, [state, syncActive, savePending, flush, queueChanges])
 
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {
@@ -920,13 +1288,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * and an answer computed before it cannot speak for it.
        */
       let unsent: Partial<TimetrackRows> = {}
+      let unsentTags: TagSets = {}
       if (latestState.current) {
-        unsent = diffRows(
-          serverRows.current,
-          stateToRows(latestState.current, userId.current),
-          new Date().toISOString(),
-        ).changed
+        const diff = diffRows(serverRows.current, stateToRows(latestState.current, userId.current), new Date().toISOString())
+        unsent = diff.changed
+        unsentTags = diff.tagSets
         for (const key of keysIn(unsent)) dirty.add(key)
+      }
+      /**
+       * AND ANY ROW OLDER THAN ONE THIS DEVICE ALREADY HEARD OF.
+       *
+       * Every write's answer says the version it produced, and a check reads
+       * whatever was stored when it ran — which, for a check that went out before
+       * that write landed, is the version before. The sets above catch most of
+       * those; the version settles it: an older copy never replaces a newer one.
+       */
+      for (const [key, row] of indexRows(body.rows)) {
+        const incoming = versionOf(row)
+        const known = versionOf(basis.current.get(key))
+        if (incoming && known && olderThan(incoming, known)) dirty.add(key)
       }
 
       /**
@@ -962,12 +1342,29 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * them. Recording the second as the first is how a change becomes invisible
        * rather than late — the change-watcher then finds nothing to send, for ever.
        */
-      const merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
+      let merged = mergeIncoming(serverRows.current ?? emptyRows(), body.rows, dirty)
+      /**
+       * THE ANSWER'S LINKS ARE THE ACCOUNT'S WHOLE LINK TABLE, so a link missing
+       * from them is a link that is gone — a tag the other device took off. Merging
+       * only ever added links, so a removal never arrived (sync defect #3). Entries
+       * this device is still changing keep what it believes; their tags travel as
+       * a set of their own.
+       */
+      if (Array.isArray(body.rows.timetrack_entry_tags)) {
+        const keep = new Set<string>(Object.keys(tagSets.current))
+        for (const key of dirty) {
+          if (key.startsWith("timetrack_entries/")) keep.add(key.slice("timetrack_entries/".length))
+          else if (key.startsWith("timetrack_entry_tags/")) keep.add(key.slice("timetrack_entry_tags/".length).split(":")[0])
+        }
+        merged = withServerTagLinks(merged, body.rows.timetrack_entry_tags, keep)
+      }
+      // what was taken from the answer is the server's copy this device is now based on
+      learn(body.rows, dirty)
       // round-tripped, for the reason the baseline below is: a row as the server
       // stores it carries columns the mapper never emits, and those must not read
       // as local changes on the next tick
       serverRows.current = stateToRows(rowsToState(merged, new Date().toISOString()), userId.current)
-      const withLocal = mergeIncoming(merged, unsent, new Set())
+      const withLocal = applyTagSets(mergeIncoming(merged, unsent, new Set()), unsentTags)
       const settled = reconcileRunningEntries(rowsToState(withLocal, new Date().toISOString()))
 
       /**
@@ -1038,7 +1435,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     } catch {
       // a failed pull is not worth interrupting anyone: the next one will run
     }
-  }, [replaceState])
+  }, [replaceState, learn])
 
   /**
    * Signing in again usually happens in this tab, which reloads and starts over.
@@ -1159,14 +1556,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           ? { ...state, entries: state.entries.filter((entry) => only.includes(entry.id)) }
           : state
       const rows = stateToRows(chosen, userId.current)
-      pending.current = mergeChangeSets(pending.current, diffRows(null, rows, new Date().toISOString()).changed)
+      const everything = diffRows(null, rows, new Date().toISOString())
+      queueChanges(everything.changed, everything.tagSets)
       savePending()
       setImportOffer(null)
       const count = chosen.entries.length
       pushToast(`Uploading ${count} ${count === 1 ? "entry" : "entries"} to your account…`)
       void flush()
     },
-    [state, savePending, flush, pushToast],
+    [state, savePending, flush, pushToast, queueChanges],
   )
 
   /**
@@ -1176,11 +1574,12 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const uploadEverything = useCallback(() => {
     if (!state || !userId.current) return
     const rows = stateToRows(state, userId.current)
-    pending.current = mergeChangeSets(pending.current, diffRows(null, rows, new Date().toISOString()).changed)
+    const everything = diffRows(null, rows, new Date().toISOString())
+    queueChanges(everything.changed, everything.tagSets)
     savePending()
     pushToast("Uploading this browser's copy to your account…")
     void flush()
-  }, [state, savePending, flush, pushToast])
+  }, [state, savePending, flush, pushToast, queueChanges])
 
   const declineImport = useCallback(() => {
     /**

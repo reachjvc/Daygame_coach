@@ -2,13 +2,18 @@ import { NextResponse } from "next/server"
 
 import { requireAuth } from "@/src/db/auth"
 import { TimetrackWriteRefused, pullTimetrackRows, pushTimetrackRows, timetrackIsEmpty } from "@/src/db/timetrackRepo"
-import type { TimetrackRows } from "@/src/db/timetrackTypes"
+import type { PushBases, TagSets, TimetrackRows } from "@/src/db/timetrackTypes"
 
 /**
  * The most rows one push may carry, four times what the client batches, so this can
  * only refuse a caller that is not this app. See the POST handler.
  */
 const MAX_ROWS_PER_PUSH = 1_600
+
+function isTagSets(value: unknown): value is TagSets {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false
+  return Object.values(value).every((tags) => Array.isArray(tags) && tags.every((tag) => typeof tag === "string"))
+}
 
 /** What changed since `since` (omit it for a full download). */
 export async function GET(request: Request) {
@@ -35,8 +40,14 @@ export async function POST(request: Request) {
   if (!auth.success) return auth.response
 
   try {
-    const body = (await request.json()) as { rows?: Partial<TimetrackRows> }
+    const body = (await request.json()) as { rows?: Partial<TimetrackRows>; bases?: PushBases; tagSets?: TagSets }
     if (!body.rows) return NextResponse.json({ error: "Missing rows" }, { status: 400 })
+    if (body.bases !== undefined && (typeof body.bases !== "object" || body.bases === null || Array.isArray(body.bases))) {
+      return NextResponse.json({ error: "bases must be an object of table to row key to version" }, { status: 400 })
+    }
+    if (body.tagSets !== undefined && !isTagSets(body.tagSets)) {
+      return NextResponse.json({ error: "tagSets must be an object of entry id to a list of tag ids" }, { status: 400 })
+    }
 
     /**
      * THE BATCH SIZE THE CLIENT PROMISES, ENFORCED WHERE IT MATTERS.
@@ -57,14 +68,26 @@ export async function POST(request: Request) {
      * guessed at.
      */
     const rowCount = Object.values(body.rows).reduce((sum, rows) => sum + (rows?.length ?? 0), 0)
-    if (rowCount > MAX_ROWS_PER_PUSH) {
+    // a tag set is links in all but name, so it counts against the same cap
+    const linkCount = Object.values(body.tagSets ?? {}).reduce((sum, tags) => sum + tags.length, 0)
+    if (rowCount + linkCount > MAX_ROWS_PER_PUSH) {
       return NextResponse.json(
-        { error: `That is ${rowCount} rows in one request; the most this accepts is ${MAX_ROWS_PER_PUSH}.` },
+        { error: `That is ${rowCount + linkCount} rows in one request; the most this accepts is ${MAX_ROWS_PER_PUSH}.` },
         { status: 413 },
       )
     }
 
-    return NextResponse.json(await pushTimetrackRows(auth.userId, body.rows))
+    /**
+     * BASES MEAN THE VERSIONED WRITE; NO BASES MEAN THE OLD ONE.
+     *
+     * The app sends, beside each row, the server version it was based on, and the
+     * answer says which rows were written (with their new versions) and which were
+     * refused as stale (with the stored copy). See `pushTimetrackRows`. A request
+     * without them is an older app or a script, and gets the unchecked upsert it
+     * always got.
+     */
+    const versions = body.bases ? { bases: body.bases, tagSets: body.tagSets ?? {} } : undefined
+    return NextResponse.json(await pushTimetrackRows(auth.userId, body.rows, versions))
   } catch (error) {
     /**
      * A refused row is a 400, not a 500, and it names what was refused.

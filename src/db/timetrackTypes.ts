@@ -326,3 +326,32 @@ export function rowKeyOf(table: keyof TimetrackRows, row: Record<string, unknown
 export function pageOrderColumns(table: keyof TimetrackRows): readonly string[] {
   return rowKeyColumns(table)
 }
+
+/**
+ * WHAT A DEVICE SENDS BESIDE ITS ROWS, so a stale copy cannot replace a newer row.
+ *
+ * For each table, by row key: the server `updated_at` the sent row was based on,
+ * exactly as the server wrote it (microseconds and all), or `null` for a row the
+ * device believes is new. The database function `timetrack_push` writes a row
+ * only if the stored version is that base, and otherwise hands the stored row
+ * back. See supabase/migrations/20261103120000_timetrack_versioned_writes.sql.
+ */
+export type PushBases = Partial<Record<keyof TimetrackRows, Record<string, string | null>>>
+
+/**
+ * An entry's WHOLE tag set, by entry id. A tag link has no `deleted_at`, so a
+ * removal cannot travel as a tombstone; the set says what is left, and the server
+ * deletes the links that are not in it. Applied only together with the entry row.
+ */
+export type TagSets = Record<string, string[]>
+
+/** The answer to a versioned push */
+export interface VersionedPushResult {
+  applied: number
+  /** each written row's new `updated_at`, by table and row key: the base for its next edit */
+  written: Partial<Record<keyof TimetrackRows, Record<string, string>>>
+  /** the stored copy of each row refused as stale, to be merged and sent again */
+  conflicts: Partial<TimetrackRows>
+  /** the stored tag ids of each refused entry */
+  conflictTags: TagSets
+}

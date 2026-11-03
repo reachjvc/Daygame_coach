@@ -16,6 +16,16 @@
  * ("dirty") is never overwritten by what the server sends back. Otherwise a
  * slow upload would lose the edit that caused it.
  *
+ * AND THE OTHER SIDE OF THAT EXCEPTION. "My unsent change beats the server" is
+ * true between two tabs of one browser, where the queue is the newest thing
+ * there is. On a second device that slept through the other's changes, the queue
+ * is the OLDEST thing there is, and sending it whole restarted stopped timers and
+ * resurrected deleted entries. So a queued row also carries the server version it
+ * was based on; the server writes it only if that is still the stored version,
+ * and otherwise hands the stored row back, and `syncVersionService` lays onto it
+ * only the fields this device changed. Both cases come out right: between tabs
+ * the server has not moved, so the queue goes as it is.
+ *
  * A DELETED THING LEAVES A NOTE. When something disappears from the app's
  * state, the change we send is not "nothing" — it is the row with `deleted_at`
  * set. A device that was offline during the deletion would otherwise see a row
@@ -23,7 +33,7 @@
  * again.
  */
 
-import { emptyRows, rowKeyOf, TIMETRACK_TABLES, type TimetrackRows } from "@/src/db/timetrackTypes"
+import { emptyRows, rowKeyOf, TIMETRACK_TABLES, type TagSets, type TimetrackRows } from "@/src/db/timetrackTypes"
 
 type TableName = keyof TimetrackRows
 type AnyRow = Record<string, unknown>
@@ -89,7 +99,7 @@ function indexOf(table: TableName, rows: AnyRow[]): Map<string, AnyRow> {
  * JSON, so every timestamp is already a string; a real `Date` would serialise as
  * `{}` and compare equal to every other Date.
  */
-function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null"
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`
   return `{${Object.entries(value as Record<string, unknown>)
@@ -143,6 +153,31 @@ export interface RowDiff {
   changed: Partial<TimetrackRows>
   /** How many rows are in `changed`, including tombstones */
   count: number
+  /**
+   * The WHOLE tag set of every live entry whose tags changed, by entry id. Each
+   * such entry's row is in `changed` too, even when nothing else about it did:
+   * the set travels with its entry, under the entry's version check.
+   */
+  tagSets: TagSets
+}
+
+/** Each entry's tag ids, sorted, from the link rows */
+function tagSetsOf(rows: Partial<TimetrackRows> | null): Map<string, string[]> {
+  const sets = new Map<string, string[]>()
+  for (const link of rows?.timetrack_entry_tags ?? []) {
+    const tags = sets.get(link.entry_id) ?? []
+    if (!tags.includes(link.tag_id)) tags.push(link.tag_id)
+    sets.set(link.entry_id, tags)
+  }
+  for (const tags of sets.values()) tags.sort()
+  return sets
+}
+
+export function sameTagSet(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false
+  const left = [...a].sort()
+  const right = [...b].sort()
+  return left.every((tag, i) => tag === right[i])
 }
 
 /**
@@ -192,7 +227,81 @@ export function diffRows(previous: TimetrackRows | null, next: TimetrackRows, de
     }
   }
 
-  return { changed, count }
+  /**
+   * A TAG TAKEN OFF IS A CHANGE TOO, AND IT USED TO BE INVISIBLE.
+   *
+   * A link has no `deleted_at`, so the loop above can say a link appeared and
+   * never that one went — `canTombstone` skips it. The removal was not sent, the
+   * account kept the link, and the next check brought the tag back (sync defect
+   * #3). So each entry's tags are compared as a set, and a changed set is sent
+   * whole; the server deletes the links that are not in it.
+   */
+  const tagSets: TagSets = {}
+  const before = tagSetsOf(previous)
+  const after = tagSetsOf(next)
+  const entriesOut = (changed.timetrack_entries ?? []) as unknown as AnyRow[]
+  const entriesSent = new Set(entriesOut.map((row) => String(row.id)))
+  for (const row of (next.timetrack_entries ?? []) as unknown as AnyRow[]) {
+    if (row.deleted_at) continue
+    const id = String(row.id)
+    const now = after.get(id) ?? []
+    if (sameTagSet(before.get(id) ?? [], now)) continue
+    tagSets[id] = now
+    if (!entriesSent.has(id)) {
+      entriesOut.push(row)
+      entriesSent.add(id)
+      count += 1
+    }
+  }
+  if (entriesOut.length > 0) changed.timetrack_entries = entriesOut as unknown as TimetrackRows["timetrack_entries"]
+
+  return { changed, count, tagSets }
+}
+
+/**
+ * Give each entry named here exactly these tags, and leave every other entry's
+ * alone. How a queued tag set is shown, and how what was sent is recorded.
+ */
+export function applyTagSets(rows: TimetrackRows, tagSets: TagSets): TimetrackRows {
+  const ids = Object.keys(tagSets)
+  if (ids.length === 0) return rows
+  const owner = new Map(rows.timetrack_entries.map((entry) => [entry.id, entry.user_id]))
+  const kept = rows.timetrack_entry_tags.filter((link) => !(link.entry_id in tagSets))
+  const added = ids.flatMap((entryId) =>
+    tagSets[entryId].map((tagId) => ({
+      entry_id: entryId,
+      tag_id: tagId,
+      user_id: owner.get(entryId) ?? rows.timetrack_entry_tags.find((link) => link.entry_id === entryId)?.user_id ?? "",
+    })),
+  )
+  return { ...rows, timetrack_entry_tags: [...kept, ...added] }
+}
+
+/**
+ * Take the account's links as the truth, except for the entries this device is
+ * still changing.
+ *
+ * A check's answer carries the WHOLE link table: links have no `updated_at`, so
+ * the repo cannot ask for "changed since". `mergeIncoming` only ever adds from
+ * it, which means a link the account no longer has stayed on this device for
+ * ever — and was then sent back up. A link missing from the answer is a link
+ * that is gone.
+ */
+export function withServerTagLinks(
+  rows: TimetrackRows,
+  serverLinks: TimetrackRows["timetrack_entry_tags"],
+  keep: Set<string>,
+): TimetrackRows {
+  const local = rows.timetrack_entry_tags.filter((link) => keep.has(link.entry_id))
+  const theirs = serverLinks.filter((link) => !keep.has(link.entry_id))
+  const seen = new Set<string>()
+  const links = [...local, ...theirs].filter((link) => {
+    const key = `${link.entry_id}:${link.tag_id}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+  return { ...rows, timetrack_entry_tags: links }
 }
 
 /** Every row key in a change set, so the caller knows what is still in flight */

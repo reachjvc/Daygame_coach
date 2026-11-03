@@ -14,7 +14,17 @@
  */
 
 import { createServerSupabaseClient } from "./server"
-import { emptyRows, pageOrderColumns, rowKeyColumns, rowKeyOf, TIMETRACK_TABLES, type TimetrackRows } from "./timetrackTypes"
+import {
+  emptyRows,
+  pageOrderColumns,
+  rowKeyColumns,
+  rowKeyOf,
+  TIMETRACK_TABLES,
+  type PushBases,
+  type TagSets,
+  type TimetrackRows,
+  type VersionedPushResult,
+} from "./timetrackTypes"
 
 /**
  * The conflict target for an upsert, derived from the one definition of a row's
@@ -38,13 +48,38 @@ export interface PullResult {
 }
 
 /**
- * Everything of this user's that changed after `since`. Omit `since` for a full
- * download — that is what a new device does on its first load.
+ * How far behind its checkpoint every check reaches.
+ *
+ * THE CHECKPOINT IS TAKEN BEFORE THE READ, and that is the right order — taken
+ * after, anything written during the read would be skipped for good. But a write
+ * is stamped with the moment its transaction BEGAN (`now()` in the database), and
+ * it becomes visible only when it commits. A write that began just before the
+ * checkpoint and committed just after this read is invisible to this read and
+ * older than the next checkpoint: missed until a reload (sync defect #7,
+ * Plans/time-tracker-like-toggl.md). The two clocks, this server's and the
+ * database's, can also disagree by a little.
+ *
+ * Five seconds covers both with room to spare. What it costs is a few rows sent
+ * twice, and a row sent twice is harmless: it is the server's current copy of
+ * something the device already holds, and taking it again changes nothing.
+ */
+export const CHECK_OVERLAP_MS = 5_000
+
+function reachBack(since: string): string {
+  const at = Date.parse(since)
+  return Number.isNaN(at) ? since : new Date(at - CHECK_OVERLAP_MS).toISOString()
+}
+
+/**
+ * Everything of this user's that changed after `since` — reaching
+ * `CHECK_OVERLAP_MS` further back, see there. Omit `since` for a full download —
+ * that is what a new device does on its first load.
  */
 export async function pullTimetrackRows(userId: string, since?: string | null): Promise<PullResult> {
   const supabase = await createServerSupabaseClient()
   const rows = emptyRows()
   const cursor = new Date().toISOString()
+  const changedAfter = since ? reachBack(since) : null
 
   for (const table of TIMETRACK_TABLES) {
     /**
@@ -64,7 +99,7 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
         .select("*")
         .eq("user_id", userId)
         .range(from, from + PAGE_SIZE - 1)
-      if (since && !NO_UPDATED_AT.has(table)) query = query.gt("updated_at", since)
+      if (changedAfter && !NO_UPDATED_AT.has(table)) query = query.gt("updated_at", changedAfter)
       // A stable order, or two pages can return the same row and miss another.
       // Not every table is keyed by `id`: settings has one row per person and
       // the tag links are keyed by the pair they join.
@@ -92,8 +127,14 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
  * device wrote during the push window would sort below the cursor and never be
  * asked for again. A cursor only means anything next to the read it came from.
  */
-export interface PushResult {
+export interface PushResult extends Partial<Omit<VersionedPushResult, "applied">> {
   applied: number
+}
+
+/** What a device says beside its rows; see `PushBases` and `TagSets` */
+export interface PushVersions {
+  bases: PushBases
+  tagSets?: TagSets
 }
 
 /**
@@ -155,16 +196,33 @@ export async function isolateRefusedRows<T>(
   return refused
 }
 
+/** One table's rows, made ready to write: owned, re-pointed, and free of duplicate keys */
+interface WritePart {
+  table: keyof TimetrackRows
+  owned: Record<string, unknown>[]
+  onConflict: string
+}
+
 /**
- * Write this user's changed rows. Anything already there with the same id is
- * replaced, so sending the same change twice is harmless — which matters,
- * because a phone that loses signal mid-send will send again.
+ * Write this user's changed rows.
+ *
+ * With `versions` (what the app sends): each row is written only if the stored
+ * row is the version the device was based on, and the answer says what was
+ * written and which stored rows were newer — see `pushVersioned`. Without: the
+ * old upsert, where anything already there with the same id is replaced.
+ * Sending the same change twice is harmless either way — which matters, because
+ * a phone that loses signal mid-send will send again: the second copy is refused
+ * as stale, and the stored row it is handed back is its own first copy.
  *
  * `user_id` is overwritten with the caller's own id on every row. A client
  * cannot smuggle in a row belonging to somebody else even if it tries, and RLS
  * would refuse it a second time if it did.
  */
-export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackRows>): Promise<PushResult> {
+export async function pushTimetrackRows(
+  userId: string,
+  rows: Partial<TimetrackRows>,
+  versions?: PushVersions,
+): Promise<PushResult> {
   const supabase = await createServerSupabaseClient()
   let applied = 0
 
@@ -226,7 +284,11 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
    * The declared order satisfies every foreign key in the schema, checked
    * against the migration itself by `theWriteOrderRespectsTheForeignKeys` — so
    * the fix is to stop rearranging it, not to add one more name to a ternary.
+   *
+   * Every table is checked for duplicate keys before anything is written, so a
+   * batch that cannot be accepted writes nothing at all.
    */
+  const parts: WritePart[] = []
   for (const table of TIMETRACK_TABLES) {
     const incoming = rows[table]
     if (!incoming || incoming.length === 0) continue
@@ -273,7 +335,28 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
         `Could not write ${table}: the same ${onConflict} appears more than once in one batch (${duplicated.slice(0, 5).join("; ")})`,
       )
     }
+    parts.push({ table, owned, onConflict })
+  }
 
+  /**
+   * A DEVICE THAT NAMES ITS BASES GETS THE VERSIONED WRITE.
+   *
+   * The upsert below replaces whatever is stored with whatever arrives, however
+   * old the copy it came from — which is how a phone that slept through the PC's
+   * Stop started the timer again. `timetrack_push` writes a row only if the
+   * stored version is the one the device was based on, in one transaction, and
+   * hands back the stored row otherwise. See `pushVersioned`.
+   *
+   * A caller that names none — an app version from before this, the e2e
+   * helpers — still gets the upsert, unchanged. So does everybody in the window
+   * between deploying this and applying the migration that creates the function.
+   */
+  if (versions) {
+    const versioned = await pushVersioned(supabase, parts, versions)
+    if (versioned) return versioned
+  }
+
+  for (const { table, owned, onConflict } of parts) {
     const { error } = await supabase.from(table).upsert(owned, { onConflict })
     if (error) {
       // Find the offending rows so the message can name them, and let the rest
@@ -296,6 +379,85 @@ export async function pushTimetrackRows(userId: string, rows: Partial<TimetrackR
   }
 
   return { applied }
+}
+
+type Supabase = Awaited<ReturnType<typeof createServerSupabaseClient>>
+
+/** What `timetrack_push` returns, as JSON */
+interface PushAnswer {
+  applied?: number
+  written?: VersionedPushResult["written"]
+  conflicts?: VersionedPushResult["conflicts"]
+  conflict_tags?: TagSets
+}
+
+/**
+ * The function is not in the database yet: PostgREST cannot find it (PGRST202),
+ * or Postgres has no such function (42883). The caller falls back to the upsert,
+ * so the code can go out before the migration without anything stopping saving.
+ */
+function functionMissing(error: { code?: string } | null): boolean {
+  return error?.code === "PGRST202" || error?.code === "42883"
+}
+
+/**
+ * The versioned write: every table, parents first, in ONE call to `timetrack_push`
+ * — one transaction, so the version check and the write cannot be split by
+ * another device's write landing between them.
+ *
+ * Returns null when the function does not exist yet. On any other failure, finds
+ * the refused rows the way the upsert path does — table by table, halving — so a
+ * refusal still names the rows the browser must drop. The calls that succeed on
+ * the way are real writes, as they are on the upsert path.
+ */
+async function pushVersioned(supabase: Supabase, parts: WritePart[], versions: PushVersions): Promise<PushResult | null> {
+  const tagSets = versions.tagSets ?? {}
+  const call = (subset: WritePart[]) =>
+    supabase.rpc("timetrack_push", {
+      p_batch: subset.map(({ table, owned }) => ({ table, rows: owned, bases: versions.bases[table] ?? {} })),
+      p_tag_sets: tagSets,
+    })
+
+  const total: Required<PushResult> = { applied: 0, written: {}, conflicts: {}, conflictTags: {} }
+  const add = (answer: PushAnswer | null) => {
+    total.applied += answer?.applied ?? 0
+    for (const [table, versionsByKey] of Object.entries(answer?.written ?? {})) {
+      const into = (total.written[table as keyof TimetrackRows] ??= {})
+      Object.assign(into, versionsByKey)
+    }
+    for (const [table, stored] of Object.entries(answer?.conflicts ?? {})) {
+      const into = ((total.conflicts as Record<string, unknown[]>)[table] ??= [])
+      into.push(...(stored as unknown[]))
+    }
+    Object.assign(total.conflictTags, answer?.conflict_tags ?? {})
+  }
+
+  const whole = await call(parts)
+  if (!whole.error) {
+    add(whole.data as PushAnswer)
+    return total
+  }
+  if (functionMissing(whole.error)) return null
+
+  for (const part of parts) {
+    const alone = await call([part])
+    if (!alone.error) {
+      add(alone.data as PushAnswer)
+      continue
+    }
+    const refused = await isolateRefusedRows(part.owned, async (batch) => {
+      const attempt = await call([{ ...part, owned: batch }])
+      if (!attempt.error) add(attempt.data as PushAnswer)
+      return !attempt.error
+    })
+    throw new TimetrackWriteRefused(
+      part.table,
+      refused.map((row) => rowKeyOf(part.table, row)).filter((key) => key.replace(/:/g, "") !== ""),
+      `Could not write ${part.table}: ${alone.error.message}`,
+    )
+  }
+  // every table went through on its own: whatever failed the whole did not last
+  return total
 }
 
 /** Does this user have anything stored yet? Decides whether to offer the import. */
