@@ -73,7 +73,7 @@ describe("the app frame", () => {
     expect(button.closest("form")).not.toBeNull()
   })
 
-  it.each([ROUTES.liveWorkout, ROUTES.time, ROUTES.plan])(
+  it.each([ROUTES.liveWorkout, ROUTES.plan])(
     "steps aside on %s, which draws its own frame",
     (route) => {
       path = route
@@ -87,4 +87,29 @@ describe("the app frame", () => {
       expect(screen.queryByTestId("mobile-tab-bar")).toBeNull()
     },
   )
+
+  /**
+   * TIME KEEPS THE LAPTOP HEADER AND DRAWS ITS OWN PHONE BAR (D9 in
+   * Plans/time-tracker-like-toggl.md). The reason it was hidden — two bars
+   * stacked at the bottom of a phone — is a phone's reason. On a laptop the
+   * header is how you reach Thoughts, Settings and Log Out, and the tracker
+   * drops its own duplicate row there instead.
+   */
+  it("on Time, draws the laptop header but not the phone bar", () => {
+    path = ROUTES.time
+    const { container } = render(
+      <AppFrame>
+        <p>the tracker</p>
+      </AppFrame>,
+    )
+    expect(screen.getByText("the tracker")).toBeTruthy()
+    const header = container.querySelector("header")
+    expect(header, "no laptop header on Time").not.toBeNull()
+    // hidden below `sm`, as on every page: on a phone the tracker's own header is the top
+    expect(header!.className.split(/\s+/)).toEqual(expect.arrayContaining(["hidden", "sm:block"]))
+    expect(headerNav(container).getByRole("link", { name: "Time" }).getAttribute("aria-current")).toBe("page")
+    expect(screen.queryByTestId("mobile-tab-bar"), "two bars stacked at the bottom of a phone").toBeNull()
+    // and no room kept at the bottom for a bar that is not there
+    expect(container.querySelector(".pb-tab-bar")).toBeNull()
+  })
 })

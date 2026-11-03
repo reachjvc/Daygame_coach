@@ -20,6 +20,8 @@
 
 import { useCallback, useEffect, useRef } from "react"
 
+import { useLandBeforeHistoryStep } from "./useLandBeforeHistoryStep"
+
 export const COMMIT_DELAY_MS = 400
 
 export function useDebouncedCommit<T>(
@@ -64,6 +66,11 @@ export function useDebouncedCommit<T>(
 
   // The unmount case is the one that used to lose work; see the note above.
   useEffect(() => () => flush(), [flush])
+
+  // And on Back or Forward, while there is still somewhere to land: see
+  // `useLandBeforeHistoryStep`. The unmount above is too late when Back leaves
+  // the whole tracker — the workspace goes in the same moment.
+  useLandBeforeHistoryStep(flush)
 
   return { schedule, flush, cancel }
 }

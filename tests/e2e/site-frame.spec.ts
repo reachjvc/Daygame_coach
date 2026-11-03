@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures/test"
-import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, TABS } from "@/components/navTabs"
+import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, PHONE_BAR_HIDDEN_PREFIXES, TABS } from "@/components/navTabs"
 import { isUnder } from "@/src/shared/routes"
 
 /**
@@ -19,8 +19,12 @@ const WIDTHS = [
   { name: "phone", viewport: { width: 390, height: 844 }, labels: TABS.map((t) => t.label) },
 ]
 
+/** Time keeps the laptop header and draws its own phone bar and back control (D9, Plans/time-tracker-like-toggl.md) */
+const OWN_PHONE_BAR = (href: string) => PHONE_BAR_HIDDEN_PREFIXES.some((p) => isUnder(href, p))
+
 for (const item of FRAMED) {
   for (const width of WIDTHS) {
+    if (width.name === "phone" && OWN_PHONE_BAR(item.href)) continue
     test(`${item.label} on a ${width.name}: the app's navigation, no back control`, async ({ page }) => {
       await page.setViewportSize(width.viewport)
       await page.goto(item.href)

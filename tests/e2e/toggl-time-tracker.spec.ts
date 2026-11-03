@@ -531,4 +531,41 @@ test.describe('Toggl-style time tracker', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(400)
   })
+
+  /**
+   * D8 in Plans/time-tracker-like-toggl.md: the section and the open sheet live
+   * in the address. Android's Back closed nothing and left the tracker; a reload
+   * forgot the section. The browser's own Back is what is pressed here.
+   */
+  test('on a phone, Back closes the sheet, then steps back a section, and a reload keeps the section', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await openFreshTracker(page)
+    await trackEntry(page, 'Back check')
+
+    const sections = page.getByRole('navigation', { name: 'Sections' })
+    const current = () => sections.locator('[aria-current="page"]')
+    await sections.getByRole('button', { name: 'Calendar' }).click()
+    await expect(page).toHaveURL(/\?view=calendar$/)
+
+    // the entry is seconds long, so its block is tiny: open it the way a tap does
+    await page.locator('[data-block][title^="Back check ·"]').first().dispatchEvent('click')
+    const sheet = page.getByRole('dialog', { name: 'Time entry details' })
+    await expect(sheet).toBeVisible()
+    await expect(page).toHaveURL(/[?&]entry=/)
+
+    await page.goBack()
+    await expect(sheet).toBeHidden()
+    await expect(page).toHaveURL(/\?view=calendar$/)
+    await expect(current()).toHaveText('Calendar')
+
+    await page.goBack()
+    await expect(current()).toHaveText('Timer')
+    await expect(page).toHaveURL(new RegExp(`${TRACKER}$`))
+
+    await page.goForward()
+    await expect(current()).toHaveText('Calendar')
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await expect(current()).toHaveText('Calendar', { timeout: 30_000 })
+    await expect(page).toHaveURL(/\?view=calendar$/)
+  })
 })

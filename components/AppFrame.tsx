@@ -8,7 +8,7 @@ import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { AppLogo } from "@/components/AppLogo"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
-import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, TABS, isActive } from "@/components/navTabs"
+import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, PHONE_BAR_HIDDEN_PREFIXES, TABS, isActive } from "@/components/navTabs"
 import { ROUTES, isUnder } from "@/src/shared/routes"
 
 /** The e2e helpers find these (tests/e2e/helpers/selectors.ts). Same IDs AppHeader used. */
@@ -33,7 +33,9 @@ const ITEMS = [...TABS, ...MORE_ITEMS].map((item) => ({ ...item, exact: "exact" 
  *
  * One list feeds both bars (`TABS` and `MORE_ITEMS` in navTabs.ts), so the
  * laptop header and the phone bar cannot disagree. Pages that draw their own
- * top and bottom controls (`HIDDEN_ROUTE_PREFIXES`) get neither bar.
+ * top and bottom controls (`HIDDEN_ROUTE_PREFIXES`) get neither bar; pages
+ * that draw only their own phone bar (`PHONE_BAR_HIDDEN_PREFIXES`, the time
+ * tracker) keep the laptop header and lose the phone bar.
  *
  * NO SERVER DATA, BY DESIGN. The phone app bundles these pages (D8 of
  * docs/plans/own-platform-and-app.md), where server-only code does not run.
@@ -45,6 +47,7 @@ const ITEMS = [...TABS, ...MORE_ITEMS].map((item) => ({ ...item, exact: "exact" 
 export function AppFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   if (HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(pathname, p))) return <>{children}</>
+  const ownPhoneBar = PHONE_BAR_HIDDEN_PREFIXES.some((p) => isUnder(pathname, p))
 
   return (
     <>
@@ -106,8 +109,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <div className="pb-tab-bar">{children}</div>
-      <MobileTabBar />
+      {/* No room kept for a phone bar the page draws for itself */}
+      {ownPhoneBar ? children : <div className="pb-tab-bar">{children}</div>}
+      {!ownPhoneBar && <MobileTabBar />}
     </>
   )
 }

@@ -41,6 +41,24 @@ export const PENDING_KEY = "toggl-clone:pending"
  */
 export const SCREEN_KEY = "toggl-clone:screen"
 /**
+ * What the background helpers already did on this device: Pomodoro's phase and
+ * end time, when the tracking reminder last spoke, and which timer the
+ * forgotten-timer warning has already named. Kept in the browser, for the
+ * reason the section is: it is about this device, not about the workspace that
+ * syncs. Without it every arrival started over — a fresh 25 minutes, the
+ * reminder again, the same warning again (getting-around #9 in
+ * Plans/time-tracker-like-toggl.md). See `hooks/backgroundMemory.ts`.
+ */
+export const BACKGROUND_KEY = "toggl-clone:background"
+/**
+ * What the timer bar holds that is not an entry yet: a typed but unstarted
+ * description and project, timer or manual mode, and a half-filled manual
+ * form. In `sessionStorage`, so it lives as long as this tab: leaving and
+ * coming back keeps it, a new tab starts clean.
+ */
+export const TIMER_BAR_KEY = "toggl-clone:timer-bar"
+export const MANUAL_FORM_KEY = "toggl-clone:manual-form"
+/**
  * Toggl requires a `created_with` on every entry (toggl).
  *
  * It named `/test/toggl` until this was changed, which meant every entry the

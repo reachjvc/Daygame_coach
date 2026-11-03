@@ -59,8 +59,11 @@ of it and of the **quit-a-vice** module inside it for as long as both existed.
 lives under the route group `app/(app)/`, whose layout draws
 `components/AppFrame.tsx`: on a laptop a header with the same items as the bar
 and the More sheet, on a phone the bar. Pages that draw their own top and bottom
-controls (Your plan and the Black Box, Time, the live workout, the weekly
-review) opt out of both through `HIDDEN_ROUTE_PREFIXES` in navTabs.ts. Before
+controls (Your plan and the Black Box, the live workout, the weekly review) opt
+out of both through `HIDDEN_ROUTE_PREFIXES` in navTabs.ts. Time keeps the laptop
+header and draws its own phone bar (`PHONE_BAR_HIDDEN_PREFIXES`, since
+2026-11-03): its section and open entry live in the address (`?view=calendar`,
+`?entry=…`), so Back steps through them. Before
 that each page drew its own header or none, so on a laptop Tracking, Training
 and Preferences had no navigation at all, and Settings, Scenarios and Training
 drew a "Back to Dashboard" as if they were part of it (`Plans/site-structure.md`).

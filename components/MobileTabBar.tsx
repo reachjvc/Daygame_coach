@@ -7,7 +7,7 @@ import { Menu, LogOut } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
 import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
-import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES, isActive } from "@/components/navTabs"
+import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, isActive } from "@/components/navTabs"
 import { isUnder } from "@/src/shared/routes"
 
 /**
@@ -23,7 +23,7 @@ export function MobileTabBar() {
   const [moreOpen, setMoreOpen] = useState(false)
 
   // Hide on routes that have their own bottom bar
-  if (HIDDEN_ROUTE_PREFIXES.some((p) => isUnder(pathname, p))) {
+  if ([...HIDDEN_ROUTE_PREFIXES, ...PHONE_BAR_HIDDEN_PREFIXES].some((p) => isUnder(pathname, p))) {
     return null
   }
 

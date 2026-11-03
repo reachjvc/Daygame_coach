@@ -66,8 +66,8 @@ export const MORE_ITEMS = [
   /**
    * TIME, FIRST IN THE SHEET since it gave its tab to the plan (2026-10-15).
    * First because the other three are reference and settings, and this is a
-   * place you go to work. Its own pages hide the bar anyway (see
-   * `HIDDEN_ROUTE_PREFIXES`), so from inside Time nothing changed.
+   * place you go to work. Its own pages hide the phone bar anyway (see
+   * `PHONE_BAR_HIDDEN_PREFIXES`), so from inside Time nothing changed.
    */
   { label: "Time", icon: Timer, href: ROUTES.time },
   /**
@@ -106,17 +106,30 @@ export const HIDDEN_ROUTE_PREFIXES: string[] = [
   // countdown you cannot see because a nav bar is over it is the one thing
   // that screen exists to show.
   ROUTES.liveWorkout,
-  // The time tracker draws its own six-section bar; two stacked bars would
-  // take 120px of an 844px screen and leave you guessing which moves you
-  // where. Its way out is the back arrow in its header.
-  //
-  // THIS DECISION WAS ONLY A COMMENT until 2026-09-19, inside
-  // `TimetrackScreen.tsx` where nothing could read it — so "Time" was the
-  // second tab sending people somewhere with no bar, and the guard could not
-  // tell that apart from the Training bug. A reason that is not in the data
-  // is a reason no test can check.
-  ROUTES.time,
 ]
+
+/**
+ * Routes that keep the laptop header but hide the phone's tab bar, because on a
+ * phone they draw their own bottom bar.
+ *
+ * The time tracker draws its own section bar at the bottom of a phone; two
+ * stacked bars would take 120px of an 844px screen and leave you guessing which
+ * moves you where. Its way out on a phone is the back arrow in its header.
+ *
+ * THAT IS A PHONE'S REASON, so since 2026-11-03 it hides the phone bar only
+ * (D9 in Plans/time-tracker-like-toggl.md). It sat in `HIDDEN_ROUTE_PREFIXES`
+ * and lost the laptop header too, so on a PC there was no way from Time to
+ * Thoughts, Settings or Log Out but through the Dashboard. On a PC the tracker
+ * now drops its own duplicate "← Dashboard · Time" row instead
+ * (`TogglLab`, `underAppHeader`).
+ *
+ * THIS DECISION WAS ONLY A COMMENT until 2026-09-19, inside
+ * `TimetrackScreen.tsx` where nothing could read it — so "Time" was the second
+ * tab sending people somewhere with no bar, and the guard could not tell that
+ * apart from the Training bug. A reason that is not in the data is a reason no
+ * test can check.
+ */
+export const PHONE_BAR_HIDDEN_PREFIXES: string[] = [ROUTES.time]
 
 export const TAB_ROUTES: string[] = [...TABS, ...MORE_ITEMS].map((t) => t.href)
 

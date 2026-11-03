@@ -9,13 +9,14 @@
  * the alert center, the idle prompt and the entry-detail modal.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react"
 import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 
+import { ROUTE_LABELS } from "@/components/navTabs"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { SCREEN_KEY, SHORTCUTS } from "../config"
+import { SCREEN_KEY, SHORTCUTS, TIMER_BAR_KEY } from "../config"
 import {
   IconAlert,
   IconBell,
@@ -45,7 +46,8 @@ import {
   startTimer,
   toggleFavorite,
 } from "../timetrackService"
-import type { EntryDraft, Id, ReportConfig, TimeEntry } from "../types"
+import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
+import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState } from "../types"
 import { CalendarView } from "./CalendarView"
 import { EntryDetailModalBody, EntryList } from "./EntryList"
 import { ManageView, type ManageTab } from "./ManageView"
@@ -54,8 +56,9 @@ import { ReportsView } from "./ReportsView"
 import { SettingsView, type SettingsTab } from "./SettingsView"
 import { FavoritesBar, RunningPill, TimerBar, type TimerMode } from "./TimerBar"
 import { Dropdown, Modal, touchTarget } from "./primitives"
+import { BACK_LINK_CLASS, TrackerLoading } from "./TrackerLoading"
 
-type Screen = "timer" | "calendar" | "reports" | "projects" | "manage" | "settings"
+type Screen = Section
 
 type NavItem = { id: Screen; label: string; icon: typeof IconTimer }
 
@@ -119,6 +122,78 @@ function rememberedScreen(): Screen {
   }
 }
 
+/** A history step this tracker wrote, so closing the sheet knows whether Back will undo it */
+type TrackerStep = { timetrack: "arrival" | "section" | "sheet" }
+
+function isSheetStep(state: unknown): boolean {
+  return (state as Partial<TrackerStep> | null)?.timetrack === "sheet"
+}
+
+/** The tab's own history, as the browser's Navigation API lists it; null where there is none (Safari, Firefox) */
+function tabHistory(): { entries: { url: string | null }[]; currentIndex: number } | null {
+  const navigation = (window as {
+    navigation?: { entries?: () => { url: string | null }[]; currentEntry?: { index: number } | null }
+  }).navigation
+  if (!navigation?.entries || !navigation.currentEntry) return null
+  return { entries: navigation.entries(), currentIndex: navigation.currentEntry.index }
+}
+
+/**
+ * THE TIMER BAR'S UNSTARTED WORK, KEPT FOR THIS TAB.
+ *
+ * A description typed and not started, and whether the bar was in manual mode,
+ * were wiped by leaving the tracker (getting-around #9 in
+ * Plans/time-tracker-like-toggl.md). `sessionStorage`, so it lasts as long as
+ * the tab does. Only an UNSTARTED draft is kept: a running timer's description
+ * is the entry's, and is saved with it.
+ */
+interface TimerBarSession {
+  mode: TimerMode
+  draft: EntryDraft | null
+}
+
+function savedTimerBar(): TimerBarSession | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = window.sessionStorage.getItem(TIMER_BAR_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<TimerBarSession>
+    const draft = parsed.draft
+    return {
+      mode: parsed.mode === "manual" ? "manual" : "timer",
+      draft:
+        draft && typeof draft.description === "string" && Array.isArray(draft.tagIds)
+          ? {
+              description: draft.description,
+              projectId: typeof draft.projectId === "string" ? draft.projectId : null,
+              taskId: typeof draft.taskId === "string" ? draft.taskId : null,
+              tagIds: draft.tagIds.filter((id): id is string => typeof id === "string"),
+              billable: draft.billable === true,
+            }
+          : null,
+    }
+  } catch {
+    return null
+  }
+}
+
+function keepTimerBar(patch: Partial<TimerBarSession>) {
+  try {
+    const next = { ...(savedTimerBar() ?? { mode: "timer", draft: null }), ...patch }
+    const blank =
+      !next.draft ||
+      (next.draft.description === "" &&
+        next.draft.projectId === null &&
+        next.draft.taskId === null &&
+        next.draft.tagIds.length === 0 &&
+        !next.draft.billable)
+    if (next.mode === "timer" && blank) window.sessionStorage.removeItem(TIMER_BAR_KEY)
+    else window.sessionStorage.setItem(TIMER_BAR_KEY, JSON.stringify({ ...next, draft: blank ? null : next.draft }))
+  } catch {
+    // storage blocked: the bar starts empty next time, as it always did
+  }
+}
+
 /** One idle choice: what happens to the minutes, then what happens to the timer */
 function IdleChoice({
   label,
@@ -148,7 +223,23 @@ function IdleChoice({
   )
 }
 
-export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref?: string; backLabel?: string } = {}) {
+export function TogglLab({
+  backHref = "/test",
+  backLabel = "/test",
+  underAppHeader = false,
+}: {
+  /** where the back control goes when there is no page before the tracker to return to */
+  backHref?: string
+  backLabel?: string
+  /**
+   * The app's own header is drawn above this on a PC (`AppFrame`, D9 in
+   * Plans/time-tracker-like-toggl.md), so the tracker's "← Dashboard · Time"
+   * row would say the same thing twice: on a PC it goes, and the section tabs
+   * share one row with the sync badge. The lab page has no app header, so it
+   * keeps its row everywhere.
+   */
+  underAppHeader?: boolean
+} = {}) {
   const controller = useTimetrack()
   const { state, setState, nowSec, running, runningSeconds, toasts, pushToast, dismissToast, idlePrompt, resolveIdle, pomodoro, actions, requestNotificationPermission } =
     controller
@@ -168,30 +259,39 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
    * instead, so "Delete" on an entry silently did nothing. Measured rather than
    * hard-coded, because the bar grows by the phone's safe area.
    */
-  const bottomBarRef = useRef<HTMLElement | null>(null)
-  useEffect(() => {
-    const bar = bottomBarRef.current
+  /**
+   * MEASURED WHEN THE BAR APPEARS, NOT WHEN THIS SHELL DOES.
+   *
+   * This was an effect with `[]`, run on the shell's first render — which is
+   * the loading state, where the bar does not exist yet. So it found nothing,
+   * published 0px, and never looked again: menus near the bottom of a phone
+   * opened under the bar after all (getting-around #10 in
+   * Plans/time-tracker-like-toggl.md). A callback ref runs when the bar itself
+   * is attached and its clean-up when it goes. Stable (`useCallback` with no
+   * dependencies), so the once-a-second re-render does not rebuild the
+   * observer — that rebuild was measured at eight times in six seconds before
+   * the `[]` was added.
+   */
+  const bottomBarRef = useCallback((bar: HTMLElement | null) => {
+    if (!bar) return
     const root = document.documentElement
-    if (!bar) {
-      root.style.setProperty("--panel-bottom-inset", "0px")
-      return
-    }
     const publish = () => root.style.setProperty("--panel-bottom-inset", `${bar.offsetHeight}px`)
     publish()
-    const observer = new ResizeObserver(publish)
-    observer.observe(bar)
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(publish)
+    observer?.observe(bar)
     return () => {
-      observer.disconnect()
+      observer?.disconnect()
       root.style.setProperty("--panel-bottom-inset", "0px")
     }
-    // [] MATTERS HERE. Without it this ran after EVERY render, and the clock
-    // re-renders this shell once a second — so an idle page tore down and
-    // rebuilt a ResizeObserver eight times in six seconds, measured. The
-    // observer is what keeps the variable current when the bar's height
-    // changes, so the bar does not need to be a dependency: the ref is stable
-    // and the observer reports the rest.
   }, [])
 
+  /**
+   * The section the address names is applied on arrival, not here. Arriving
+   * from another page of the app, the router draws this page BEFORE it writes
+   * the new address, so the first render still sees the page being left: a
+   * link to `?view=timer` from Articles opened the remembered Calendar, found
+   * in the browser. By the time the workspace is read, the address is this one.
+   */
   const [screen, setScreen] = useState<Screen>(rememberedScreen)
 
   useEffect(() => {
@@ -204,18 +304,40 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
   }, [screen])
   const [manageTab, setManageTab] = useState<ManageTab>("clients")
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("profile")
-  const [draft, setDraft] = useState<EntryDraft>(emptyDraft)
-  const [mode, setMode] = useState<TimerMode>("timer")
+  const [draft, setDraftState] = useState<EntryDraft>(() => savedTimerBar()?.draft ?? emptyDraft)
+  const [mode, setModeState] = useState<TimerMode>(() => savedTimerBar()?.mode ?? "timer")
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [detailEntry, setDetailEntry] = useState<TimeEntry | null>(null)
   const [focusProjectId, setFocusProjectId] = useState<Id | null>(null)
   const [reportConfig, setReportConfig] = useState<ReportConfig | null>(null)
 
+  /** the latest of each, for the history listeners, which are attached once */
+  const latestState = useRef<TimetrackState | null>(state)
+  latestState.current = state
+  const screenNow = useRef(screen)
+  screenNow.current = screen
+  const runningNow = useRef(running)
+  runningNow.current = running
+
+  /**
+   * The timer bar's edits, kept for this tab while nothing is running (see
+   * `TimerBarSession`). The bar is the only caller; the mirror below writes the
+   * running entry into the draft directly, and that is not something to keep.
+   */
+  const setDraft = useCallback((next: EntryDraft) => {
+    setDraftState(next)
+    if (!runningNow.current) keepTimerBar({ draft: next })
+  }, [])
+  const setMode = useCallback((next: TimerMode) => {
+    setModeState(next)
+    keepTimerBar({ mode: next })
+  }, [])
+
   // Mirror the running entry into the draft so the bar shows what is tracking
   useEffect(() => {
     if (!running) return
-    setDraft({
+    setDraftState({
       description: running.description,
       projectId: running.projectId,
       taskId: running.taskId,
@@ -224,39 +346,152 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     })
   }, [running?.id]) // deps intentionally narrow: see comment above
 
-  // Report config needs the loaded state for its defaults
+  /**
+   * A timer starting or stopping ends the life of the unstarted draft: it was
+   * started, or what the bar now holds is the stopped entry's words. Only a
+   * CHANGE counts — the first look, as the workspace arrives, keeps the draft.
+   */
+  const runningId = running?.id ?? null
+  const hasState = state !== null
+  const seenRunningId = useRef<Id | null | undefined>(undefined)
   useEffect(() => {
-    if (!state || reportConfig) return
+    if (!hasState) return
+    if (seenRunningId.current !== undefined && seenRunningId.current !== runningId) keepTimerBar({ draft: null })
+    seenRunningId.current = runningId
+  }, [hasState, runningId])
+
+  /** The tracker's own path, `/time` or `/test/toggl`, as it was when it opened */
+  const trackerPath = useRef<string | null>(null)
+
+  /**
+   * ARRIVING: WHAT THE ADDRESS ASKED FOR, ONCE, THEN AN ADDRESS THAT SAYS WHERE YOU ARE.
+   *
+   * Runs when the workspace first exists, because each part needs it: a shared
+   * report's defaults, a start link's project, a linked entry. Whatever the link
+   * carried is used here and then left out of the address, so a reload does
+   * not start the timer twice or force Reports again (getting-around #12). The
+   * ref, not the dependency list, keeps it to once: React runs effects twice
+   * in development.
+   */
+  const arrived = useRef(false)
+  useEffect(() => {
+    if (!state || arrived.current) return
+    arrived.current = true
+    trackerPath.current = window.location.pathname
     const params = new URLSearchParams(window.location.search)
+
+    // A shared report. The link is laid over a complete config, so a partial
+    // one cannot reach a builder.
     const shared = params.get("report")
-    // the link is laid over a complete config, so a partial one cannot reach a builder
     const defaults = defaultReportConfig(dateKey(new Date()), state.user.weekStart, state.workspace.rounding)
     const decoded = shared ? decodeReportConfig(shared, defaults) : null
     setReportConfig(decoded ?? defaults)
-    if (decoded) setScreen("reports")
-  }, [state, reportConfig])
+    // the address's own section, else where you were last time (see `screen`)
+    const section: Screen = decoded ? "reports" : (readTrackerAddress(window.location.search).section ?? screenNow.current)
+    if (section !== screenNow.current) setScreen(section)
 
-  // `?start=1&description=…` start links (Toggl's "Copy start link")
-  useEffect(() => {
-    if (!state) return
-    const params = new URLSearchParams(window.location.search)
-    if (params.get("start") !== "1") return
-    const linkDraft = draftFromStartLink(state, params)
-    setDraft(linkDraft)
-    const started = startTimer(state, linkDraft, new Date().toISOString())
-    if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
-    else {
-      setState(() => started.state)
-      // a link that quietly ends the timer you had running is the worst version
-      // of this, because you did not even press anything in this app
-      if (started.displaced) {
-        pushToast(
-          `This link stopped “${started.displaced.description.trim() || "(no description)"}”, which was running`,
-        )
+    // `?start=1&description=…` start links (Toggl's "Copy start link")
+    if (params.get("start") === "1") {
+      const linkDraft = draftFromStartLink(state, params)
+      setDraftState(linkDraft)
+      const started = startTimer(state, linkDraft, new Date().toISOString())
+      if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
+      else {
+        setState(() => started.state)
+        // a link that quietly ends the timer you had running is the worst version
+        // of this, because you did not even press anything in this app
+        if (started.displaced) {
+          pushToast(
+            `This link stopped “${started.displaced.description.trim() || "(no description)"}”, which was running`,
+          )
+        }
       }
     }
-    window.history.replaceState({}, "", window.location.pathname)
-  }, [state !== null]) // deps intentionally narrow: see comment above
+
+    // `?entry=<id>`: a link to one entry opens its sheet, if it still exists
+    const { entryId } = readTrackerAddress(window.location.search)
+    const linked = entryId ? (state.entries.find((e) => e.id === entryId && !e.serverDeletedAt) ?? null) : null
+    if (linked) setDetailEntry(linked)
+
+    // Replaced, not pushed: arriving is one step, wherever the link pointed.
+    const arrival: TrackerStep = { timetrack: "arrival" }
+    window.history.replaceState(arrival, "", trackerAddressFor(window.location.pathname, { section, entryId: linked?.id ?? null }))
+  }, [state, pushToast, setState])
+
+  /**
+   * GOING SOMEWHERE INSIDE THE TRACKER IS A STEP IN THE BROWSER'S HISTORY (D8).
+   *
+   * So Android's Back button steps back through what you did here — the sheet
+   * first, then the sections — instead of leaving the tracker from wherever you
+   * were. A section is a step; the same section again is not.
+   */
+  const goTo = useCallback((next: Screen) => {
+    if (next === screenNow.current) return
+    const step: TrackerStep = { timetrack: "section" }
+    window.history.pushState(step, "", trackerAddressFor(window.location.pathname, { section: next, entryId: null }))
+    setScreen(next)
+  }, [])
+
+  /** The detail sheet, opened as a step of its own, so Back closes it */
+  const openEntry = useCallback((entry: TimeEntry) => {
+    const address = trackerAddressFor(window.location.pathname, { section: screenNow.current, entryId: entry.id })
+    // another entry from inside an open sheet takes its place rather than stacking
+    if (isSheetStep(window.history.state)) window.history.replaceState({ timetrack: "sheet" } satisfies TrackerStep, "", address)
+    else window.history.pushState({ timetrack: "sheet" } satisfies TrackerStep, "", address)
+    setDetailEntry(entry)
+  }, [])
+
+  /**
+   * Closing the sheet with its own X or Escape undoes the step that opened it,
+   * so the next Back steps a section rather than opening the sheet again. A
+   * sheet that arrived with the page (`?entry=` in a link) has no step of its
+   * own to undo, so the address is rewritten instead.
+   */
+  const closeEntry = useCallback(() => {
+    setDetailEntry(null)
+    if (isSheetStep(window.history.state)) {
+      window.history.back()
+      return
+    }
+    const step: TrackerStep = { timetrack: "section" }
+    window.history.replaceState(step, "", trackerAddressFor(window.location.pathname, { section: screenNow.current, entryId: null }))
+  }, [])
+
+  // Back and Forward: the address says where you are now
+  useEffect(() => {
+    const onPopState = () => {
+      // leaving the tracker: the router is taking this page down
+      if (trackerPath.current === null || window.location.pathname !== trackerPath.current) return
+      const address = readTrackerAddress(window.location.search)
+      setScreen(address.section ?? "timer")
+      const entries = latestState.current?.entries ?? []
+      setDetailEntry(address.entryId ? (entries.find((e) => e.id === address.entryId && !e.serverDeletedAt) ?? null) : null)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
+
+  /**
+   * THE WAY OUT RETURNS TO WHERE YOU CAME FROM (D9).
+   *
+   * "← Dashboard" was written in by hand, so coming from Thoughts it went to the
+   * Dashboard (getting-around #4). Where the browser can list this tab's history
+   * (`pageBeforeTracker`), the control names that page and steps back to it,
+   * past every section visited in between; otherwise it is the fixed link it
+   * always was. Read after mounting: the server cannot know, and the first
+   * render must match what it drew.
+   */
+  const [cameFrom, setCameFrom] = useState<string | null>(null)
+  useEffect(() => {
+    setCameFrom(pageBeforeTracker(window.location.pathname, tabHistory(), window.location.origin)?.path ?? null)
+  }, [])
+  const backText = cameFrom ? (ROUTE_LABELS[cameFrom] ?? "Back") : backLabel
+  const goBack = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+    const before = pageBeforeTracker(trackerPath.current ?? window.location.pathname, tabHistory(), window.location.origin)
+    if (!before) return // the link's own navigation: the fallback page
+    event.preventDefault()
+    window.history.go(-before.steps)
+  }, [])
 
   const startTracking = useCallback(
     (nextDraft?: EntryDraft) => {
@@ -264,7 +499,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
       if (nextDraft) setDraft(nextDraft)
       actions.start(payload)
     },
-    [actions, draft],
+    [actions, draft, setDraft],
   )
 
   // Keyboard shortcuts — Timer screen only, never while typing (Toggl's rule)
@@ -338,39 +573,44 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [actions, screen, state, startTracking])
+  }, [actions, screen, setMode, state, startTracking])
 
   const unreadAlerts = useMemo(() => state?.alerts.filter((a) => !a.read) ?? [], [state?.alerts])
 
   if (!state || !reportConfig) {
-    /**
-     * The app's own chrome, not a bare centred line on an empty page.
-     *
-     * This is the first thing anybody sees on the way in, and for the second
-     * it lasted it looked like a different site: no header, no way back, and
-     * then the whole page arriving at once underneath it. The header here is
-     * the real one, so nothing jumps when the workspace lands.
-     */
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
-            <Link
-              href={backHref}
-              className="-ml-1 flex min-h-11 shrink items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-secondary/60 hover:text-foreground sm:min-h-0 sm:h-9"
-            >
-              <span className="shrink-0">←</span>
-              <span className="max-w-[112px] truncate">{backLabel}</span>
-            </Link>
-            <h1 className="shrink-0 text-sm font-semibold">Time</h1>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-3 pt-6 sm:px-4">
-          <p className="text-sm text-muted-foreground">Loading your time…</p>
-        </main>
-      </div>
-    )
+    // the same header as `app/(app)/time/loading.tsx`: see `TrackerLoading`
+    return <TrackerLoading backHref={backHref} backLabel={backText} underAppHeader={underAppHeader} />
   }
+
+  /** The six sections as tabs, for a pointer device; a phone has the bottom bar */
+  const sectionTabs = (className: string, onAppRow: boolean) => (
+    <nav className={className}>
+      {NAV.map((item) => {
+        const Icon = item.icon
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => {
+              goTo(item.id)
+              if (item.id !== "projects") setFocusProjectId(null)
+            }}
+            aria-current={screen === item.id ? "page" : undefined}
+            className={cn(
+              "-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-sm",
+              onAppRow ? "py-2.5" : "py-2",
+              screen === item.id
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Icon className="size-4" />
+            {item.label}
+          </button>
+        )
+      })}
+    </nav>
+  )
 
   return (
     // The theme's --input equals the card background, which makes bordered
@@ -386,26 +626,32 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
             on a 390px screen and pushed the bell off it. When they do not fit,
             the right-hand group moves to its own line, still right-aligned,
             instead of off the edge. */}
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2">
-          {/* The only way out of the tracker on a phone, and it used to be a
-              bare 20x36px arrow with its label hidden below `sm` — under the
-              44px this slice's own `touchTarget` sets as the floor, on the one
-              control somebody needs when they are trying to leave. */}
-          <Link
-            href={backHref}
-            className="-ml-1 flex min-h-11 shrink items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-secondary/60 hover:text-foreground sm:min-h-0 sm:h-9"
-          >
+        {/* Under the app's header on a PC (`underAppHeader`) this one row
+            holds the section tabs and the sync badge, and the back control and
+            the title are for phones only: the app's header already says both,
+            and the calendar keeps the height (Q5, D9 in
+            Plans/time-tracker-like-toggl.md). */}
+        <div
+          className={cn(
+            "mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2",
+            underAppHeader && "sm:flex-nowrap sm:py-0",
+          )}
+        >
+          {/* The only way out of the tracker on a phone: see `BACK_LINK_CLASS` */}
+          <Link href={backHref} onClick={goBack} className={cn(BACK_LINK_CLASS, underAppHeader && "sm:hidden")}>
             {/* the arrow always survives; the word gives way first, because a
                 header that overflows takes the sync state off the screen with it */}
             <span className="shrink-0">←</span>
-            <span className="max-w-[112px] truncate">{backLabel}</span>
+            <span className="max-w-[112px] truncate">{backText}</span>
           </Link>
           {/* The page you tapped "Time" to reach says so. It used to be headed
               with the workspace's name and a badge reading "Toggl-style time
               tracker" — the name of the thing it was copied from, on the
               product. The workspace name is the subtitle it always was. */}
-          <h1 className="shrink-0 text-sm font-semibold">Time</h1>
-          <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>
+          <h1 className={cn("shrink-0 text-sm font-semibold", underAppHeader && "sm:hidden")}>Time</h1>
+          {underAppHeader
+            ? sectionTabs("hidden min-w-0 self-stretch overflow-x-auto sm:flex", true)
+            : <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>}
 
           {/* min-w-0, because this group holds three things that all want their
               full width: the sync badge with its sentence, the running pill with
@@ -497,30 +743,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
           </div>
         </div>
 
-        <nav className="mx-auto hidden max-w-6xl gap-1 overflow-x-auto px-4 sm:flex">
-          {NAV.map((item) => {
-            const Icon = item.icon
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setScreen(item.id)
-                  if (item.id !== "projects") setFocusProjectId(null)
-                }}
-                className={cn(
-                  "-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm",
-                  screen === item.id
-                    ? "border-primary font-medium text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon className="size-4" />
-                {item.label}
-              </button>
-            )
-          })}
-        </nav>
+        {!underAppHeader && sectionTabs("mx-auto hidden max-w-6xl gap-1 overflow-x-auto px-4 sm:flex", false)}
       </header>
 
       {sync.status === "signed-out" && (
@@ -570,7 +793,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               nowSec={nowSec}
               onStart={() => startTracking()}
               onStop={actions.stop}
-              onEditEntry={setDetailEntry}
+              onEditEntry={openEntry}
               pushToast={pushToast}
             />
             <FavoritesBar
@@ -595,10 +818,10 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               setState={setState}
               nowSec={nowSec}
               pushToast={pushToast}
-              onEditEntry={setDetailEntry}
+              onEditEntry={openEntry}
               onGoToProject={(projectId) => {
                 setFocusProjectId(projectId)
-                setScreen("projects")
+                goTo("projects")
               }}
             />
           </>
@@ -610,9 +833,9 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
             setState={setState}
             nowSec={nowSec}
             pushToast={pushToast}
-            onEditEntry={setDetailEntry}
+            onEditEntry={openEntry}
             onOpenIntegrations={() => {
-              setScreen("settings")
+              goTo("settings")
               setSettingsTab("integrations")
             }}
           />
@@ -676,7 +899,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               key={item.id}
               type="button"
               onClick={() => {
-                setScreen(item.id)
+                goTo(item.id)
                 if (item.id !== "projects") setFocusProjectId(null)
               }}
               aria-current={active ? "page" : undefined}
@@ -710,7 +933,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
             key={item.id}
             icon={item.icon}
             onClick={() => {
-              setScreen(item.id)
+              goTo(item.id)
               setFocusProjectId(null)
               setMoreOpen(false)
             }}
@@ -741,7 +964,7 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
 
       {/* entry details */}
       {detailEntry && (
-        <Modal title="Time entry details" onClose={() => setDetailEntry(null)}>
+        <Modal title="Time entry details" onClose={closeEntry}>
           <EntryDetailModalBody
             entry={state.entries.find((e) => e.id === detailEntry.id) ?? detailEntry}
             state={state}

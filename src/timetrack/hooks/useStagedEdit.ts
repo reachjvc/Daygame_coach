@@ -16,10 +16,12 @@
  * segment is half-typed, and an empty stop means "this entry is running" to
  * everything downstream — so a debounce would fire in the middle of typing and
  * turn a finished entry into a running timer. This commits on blur and on the
- * way out, and at no other moment.
+ * way out — unmount, or Back — and at no other moment.
  */
 
 import { useEffect, useRef } from "react"
+
+import { useLandBeforeHistoryStep } from "./useLandBeforeHistoryStep"
 
 export function useStagedEdit(commit: () => void): { flush: () => void } {
   const latest = useRef(commit)
@@ -27,6 +29,10 @@ export function useStagedEdit(commit: () => void): { flush: () => void } {
 
   // the unmount case is the one that used to lose the edit
   useEffect(() => () => latest.current(), [])
+
+  // and on Back or Forward, before the router can take the whole tracker down
+  // with the field: see `useLandBeforeHistoryStep`
+  useLandBeforeHistoryStep(() => latest.current())
 
   return { flush: () => latest.current() }
 }

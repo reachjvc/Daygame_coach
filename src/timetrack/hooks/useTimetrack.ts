@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { reportError } from "@/src/shared/errorReportService"
 
 import { STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
+import { readBackgroundMemory, rememberBackground } from "./backgroundMemory"
 import { newId } from "../idService"
 import { migrateStateToV3, moveLegacyIdleDefault } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
@@ -161,17 +162,27 @@ export function useTimetrack() {
   const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [idlePrompt, setIdlePrompt] = useState<IdlePrompt | null>(null)
-  const [pomodoroPhase, setPomodoroPhase] = useState<PomodoroPhase>("idle")
-  const [pomodoroEndsAt, setPomodoroEndsAt] = useState<number | null>(null)
-  const [pomodoroCycles, setPomodoroCycles] = useState(0)
+  /**
+   * What Pomodoro, the reminder and the forgotten-timer warning already did on
+   * this device, read once: see `backgroundMemory.ts`. Leaving the tracker used
+   * to reset all three, so every arrival started a fresh 25 minutes and said
+   * both of the others again.
+   */
+  const [memory] = useState(readBackgroundMemory)
+  const [pomodoroPhase, setPomodoroPhase] = useState<PomodoroPhase>(() => memory.pomodoro?.phase ?? "idle")
+  const [pomodoroEndsAt, setPomodoroEndsAt] = useState<number | null>(() => memory.pomodoro?.endsAt ?? null)
+  const [pomodoroCycles, setPomodoroCycles] = useState(() => memory.pomodoro?.cycles ?? 0)
 
   const toastId = useRef(1)
   const lastInteraction = useRef(Date.now())
-  const lastReminder = useRef(0)
+  const lastReminder = useRef(memory.lastReminderAt)
   const timelineStart = useRef<number | null>(null)
-  const pomodoroLastEntry = useRef<Id | null>(null)
+  const pomodoroLastEntry = useRef<Id | null>(memory.pomodoro?.lastEntryId ?? null)
+  /** the timer the running focus period belongs to */
+  const pomodoroWorkEntry = useRef<Id | null>(memory.pomodoro?.workEntryId ?? null)
   const pendingLoadNotice = useRef<{ text: string; tone: "info" | "error" } | null>(null)
-  const forgottenWarned = useRef(false)
+  /** the running entry already warned about, not a yes/no: a second forgotten timer is news */
+  const forgottenWarned = useRef<Id | null>(memory.warnedForgottenId)
   const saveFailed = useRef(false)
 
   // --- load once on the client ---------------------------------------------
@@ -352,6 +363,8 @@ export function useTimetrack() {
   const runningSeconds = running ? entrySeconds(running, nowSec) : 0
 
   // --- document title mirrors the running timer, like Toggl ---------------
+  /** what this hook last wrote into the tab, so leaving can tell whether it is still there */
+  const titleWritten = useRef<string | null>(null)
   useEffect(() => {
     if (typeof document === "undefined") return
     // What the tab says when nothing is tracking. It named a lab page, on a
@@ -359,6 +372,7 @@ export function useTimetrack() {
     const base = "Time"
     if (!running) {
       document.title = base
+      titleWritten.current = base
       return
     }
     const h = Math.floor(runningSeconds / 3600)
@@ -366,10 +380,27 @@ export function useTimetrack() {
     const s = runningSeconds % 60
     const clock = `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
     document.title = `${clock} · ${running.description || "(no description)"}`
-    return () => {
-      document.title = base
-    }
+    titleWritten.current = document.title
   }, [running, runningSeconds])
+
+  /**
+   * LEAVING PUTS THE TRACKER'S NAME BACK ONLY IF NOTHING ELSE HAS WRITTEN THE TAB.
+   *
+   * This used to be the clean-up of the effect above, run on every tick and on
+   * the way out. On the way out it ran too late: React writes the next page's
+   * <title> while it commits the navigation and runs this clean-up afterwards,
+   * so leaving with a timer running left the Dashboard's tab reading "Time"
+   * (getting-around #11 in Plans/time-tracker-like-toggl.md). The clock is
+   * still replaced when the next page's title is the same text as this one —
+   * then React has nothing to write and the clock would stay behind.
+   */
+  useEffect(
+    () => () => {
+      if (typeof document === "undefined") return
+      if (titleWritten.current !== null && document.title === titleWritten.current) document.title = "Time"
+    },
+    [],
+  )
 
   // --- idle detection ------------------------------------------------------
   useEffect(() => {
@@ -477,7 +508,10 @@ export function useTimetrack() {
 
   // --- pomodoro -----------------------------------------------------------
   useEffect(() => {
-    if (!state?.pomodoro.enabled) {
+    // Not before the workspace is read: a focus period carried over from the
+    // last visit must not be reset by the first render, which has no state yet.
+    if (!state) return
+    if (!state.pomodoro.enabled) {
       setPomodoroPhase("idle")
       setPomodoroEndsAt(null)
       return
@@ -485,12 +519,36 @@ export function useTimetrack() {
     if (running && pomodoroPhase === "idle") {
       setPomodoroPhase("work")
       setPomodoroEndsAt(Date.now() + state.pomodoro.workMinutes * 60_000)
+      pomodoroWorkEntry.current = running.id
+    }
+    // A focus period carried over belongs to the timer it was started for. If
+    // another one runs now — stopped and restarted on another device — it gets
+    // its own 25 minutes rather than the end of somebody else's.
+    if (running && pomodoroPhase === "work" && pomodoroWorkEntry.current !== null && pomodoroWorkEntry.current !== running.id) {
+      setPomodoroEndsAt(Date.now() + state.pomodoro.workMinutes * 60_000)
+      pomodoroWorkEntry.current = running.id
     }
     if (!running && pomodoroPhase === "work") {
       setPomodoroPhase("idle")
       setPomodoroEndsAt(null)
     }
   }, [running, state?.pomodoro.enabled, state?.pomodoro.workMinutes, pomodoroPhase, state])
+
+  // Kept for the next visit: see `backgroundMemory.ts`
+  useEffect(() => {
+    rememberBackground({
+      pomodoro:
+        pomodoroPhase === "idle" || pomodoroEndsAt === null
+          ? null
+          : {
+              phase: pomodoroPhase,
+              endsAt: pomodoroEndsAt,
+              cycles: pomodoroCycles,
+              workEntryId: pomodoroWorkEntry.current,
+              lastEntryId: pomodoroLastEntry.current,
+            },
+    })
+  }, [pomodoroPhase, pomodoroEndsAt, pomodoroCycles])
 
   useEffect(() => {
     if (!state?.pomodoro.enabled || pomodoroEndsAt === null) return
@@ -499,18 +557,28 @@ export function useTimetrack() {
     const nowIso = new Date().toISOString()
     if (pomodoroPhase === "work") {
       const lastId = running?.id ?? null
+      // set before the phase changes, so the memory written for the break carries it
+      pomodoroLastEntry.current = lastId
       setState((current) => stopTimer(current, nowIso).state)
       setPomodoroCycles((c) => c + 1)
       setPomodoroPhase("break")
       setPomodoroEndsAt(Date.now() + state.pomodoro.breakMinutes * 60_000)
       if (state.pomodoro.notify) notify("Pomodoro complete", `Timer stopped. Take ${plural(state.pomodoro.breakMinutes, "minute")}.`)
-      pomodoroLastEntry.current = lastId
       return
     }
 
     if (pomodoroPhase === "break") {
       setPomodoroPhase("idle")
       setPomodoroEndsAt(null)
+      /**
+       * A BREAK THAT ENDED WHILE YOU WERE AWAY ENDS QUIETLY.
+       *
+       * Its end is only noticed when you come back, maybe an hour later, and
+       * auto-continue would then start a timer the moment you open the tracker,
+       * for work you are not doing. On the page this is never more than a tick
+       * late, so a minute tells the two apart.
+       */
+      if (Date.now() - pomodoroEndsAt > 60_000) return
       if (state.pomodoro.autoContinue && pomodoroLastEntry.current !== null) {
         // Same failure as the idle prompt one screen away: this used to take
         // `.state` and then announce "Continued your last time entry" whether
@@ -540,15 +608,18 @@ export function useTimetrack() {
     const gap = state.reminders.everyMinutes * 60_000
     if (Date.now() - lastReminder.current < gap) return
     lastReminder.current = Date.now()
+    // and on the next visit: arriving is not a reason to say it again
+    rememberBackground({ lastReminderAt: lastReminder.current })
     notify("Nothing is tracking", "Start a timer to keep your day accurate.")
   }, [nowSec, running, state, notify])
 
   // --- a timer left running for half a day is almost certainly forgotten ---
   useEffect(() => {
-    if (!state || forgottenWarned.current) return
+    if (!state) return
     const forgotten = forgottenTimer(state, nowSec)
-    if (!forgotten) return
-    forgottenWarned.current = true
+    if (!forgotten || forgottenWarned.current === forgotten.entry.id) return
+    forgottenWarned.current = forgotten.entry.id
+    rememberBackground({ warnedForgottenId: forgotten.entry.id })
     const what = forgotten.entry.description.trim()
     pushToast(
       `${what ? `“${what}”` : "A timer"} has been running for ${plural(Math.round(forgotten.hours), "hour")}. Forgot to stop it? Type how long you really worked into the timer, and it ends then.`,

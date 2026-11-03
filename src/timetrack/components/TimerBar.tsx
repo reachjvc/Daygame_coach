@@ -43,6 +43,7 @@ import {
   toggleFavorite,
 } from "../timetrackService"
 import type { EntryDraft, Id, IsoDate, IsoDateTime, TimeEntry, TimetrackState } from "../types"
+import { MANUAL_FORM_KEY } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import type { PushToast } from "../hooks/useTimetrack"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
@@ -172,6 +173,43 @@ function manualRange(state: TimetrackState, now: Date): { start: string; stop: s
 
 export type TimerMode = "timer" | "manual"
 
+/**
+ * A MANUAL ENTRY HALF FILLED IN SURVIVES LEAVING THE SCREEN.
+ *
+ * Its three boxes lived in this bar, which unmounts on every other section and
+ * whenever the tracker is left, so the times somebody had typed were gone when
+ * they came back (getting-around #9 in Plans/time-tracker-like-toggl.md). Kept
+ * for this tab in `sessionStorage`, and only once something was TYPED: an
+ * untouched form opens at the current gap again (`manualRange`), not at the
+ * one from an hour ago.
+ */
+interface ManualForm {
+  start: string
+  stop: string
+  day: IsoDate
+}
+
+function savedManualForm(): ManualForm | null {
+  try {
+    const raw = window.sessionStorage.getItem(MANUAL_FORM_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<ManualForm>
+    if (typeof parsed.start !== "string" || typeof parsed.stop !== "string" || typeof parsed.day !== "string") return null
+    return { start: parsed.start, stop: parsed.stop, day: parsed.day }
+  } catch {
+    return null
+  }
+}
+
+function keepManualForm(form: ManualForm | null) {
+  try {
+    if (form) window.sessionStorage.setItem(MANUAL_FORM_KEY, JSON.stringify(form))
+    else window.sessionStorage.removeItem(MANUAL_FORM_KEY)
+  } catch {
+    // storage blocked: the form opens at the current gap next time, as it always did
+  }
+}
+
 interface TimerBarProps {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
@@ -288,11 +326,35 @@ export function TimerBar({
     setManualStop(range.stop)
     setManualDay(range.day)
     manualStartExact.current = { text: range.start, day: range.day, iso: range.startIso }
+    // a fresh form is nothing typed: see `keepManualForm`
+    keepManualForm(null)
   }, [])
 
-  // Each time manual mode is opened, at the gap you are most likely filling
+  /** A box typed into: shown, and kept for coming back (see `ManualForm`) */
+  const typeManual = (patch: Partial<ManualForm>) => {
+    const form = { start: manualStart, stop: manualStop, day: manualDay, ...patch }
+    if (patch.start !== undefined) setManualStart(patch.start)
+    if (patch.stop !== undefined) setManualStop(patch.stop)
+    if (patch.day !== undefined) setManualDay(patch.day)
+    keepManualForm(form)
+  }
+
+  // Each time manual mode is opened, at the gap you are most likely filling —
+  // or, coming back to a form you had typed into, at what you typed
   useEffect(() => {
-    if (mode === "manual") openManualAt(latestState.current)
+    if (mode !== "manual") {
+      keepManualForm(null)
+      return
+    }
+    const kept = savedManualForm()
+    if (!kept) {
+      openManualAt(latestState.current)
+      return
+    }
+    setManualStart(kept.start)
+    setManualStop(kept.stop)
+    setManualDay(kept.day)
+    manualStartExact.current = null
   }, [mode, openManualAt])
 
   /**
@@ -490,13 +552,13 @@ export function TimerBar({
           {mode === "manual" ? (
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
               {/* the number pad on a phone: "1155" is 11:55 (plan D11) */}
-              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
+              <Input value={manualStart} onChange={(e) => typeManual({ start: e.target.value })} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
               <span className="text-muted-foreground">–</span>
-              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
+              <Input value={manualStop} onChange={(e) => typeManual({ stop: e.target.value })} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
               {/* "" makes `parseTimeInput` build an Invalid Date and throw, and the
                   "pick a start and an end" toast on the next line never gets its turn —
                   `DayPicker` passes on only a whole date */}
-              <DayPicker value={manualDay} onChange={setManualDay} onStep={setManualDay} />
+              <DayPicker value={manualDay} onChange={(day) => typeManual({ day })} onStep={(day) => typeManual({ day })} />
             </div>
           ) : (
             <Input
