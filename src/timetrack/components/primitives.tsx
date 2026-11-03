@@ -423,7 +423,13 @@ export function Modal({
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-[9600] flex items-stretch justify-center overflow-y-auto bg-black/60 sm:items-start sm:p-8">
+    // a dialog to assistive tech, and to the tracker's shortcuts, which pause while one is open
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      className="fixed inset-0 z-[9600] flex items-stretch justify-center overflow-y-auto bg-black/60 sm:items-start sm:p-8"
+    >
       <div
         className={cn(
           // Full-screen sheet on a phone, centred dialog on a pointer device

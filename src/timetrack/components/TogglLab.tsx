@@ -294,6 +294,19 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
        */
       if (typing) return
 
+      /**
+       * NOR WHILE A DIALOG OR A MENU IS OPEN.
+       *
+       * The typing guard looks only at the focused element. With the detail
+       * sheet, the shortcuts list or an entry's ⋮ menu open and focus on one of
+       * its buttons, nothing was being typed, so a stray `s` stopped the timer
+       * behind the sheet and `c` started one behind the menu. Whatever is open
+       * on top is what the keys belong to; Escape still closes it, because that
+       * is the dialog's own listener, not this one.
+       */
+      const overlay = '[role="dialog"], [data-dropdown-panel]'
+      if (target?.closest?.(overlay) || document.querySelector(overlay)) return
+
       if (event.key === "?" && event.shiftKey) {
         event.preventDefault()
         setShortcutsOpen((open) => !open)
@@ -583,6 +596,10 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
               nowSec={nowSec}
               pushToast={pushToast}
               onEditEntry={setDetailEntry}
+              onGoToProject={(projectId) => {
+                setFocusProjectId(projectId)
+                setScreen("projects")
+              }}
             />
           </>
         )}
@@ -793,9 +810,11 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
             className={cn(
               "pointer-events-auto flex items-center gap-3 rounded-lg border px-3 py-2 text-sm shadow-xl",
               toast.tone === "error" ? "border-destructive/50 bg-destructive/15" : "border-border bg-card",
+              // a question's two answers do not fit beside it on a phone: they take their own row
+              toast.second && "flex-wrap gap-y-1",
             )}
           >
-            <span className="flex-1">{toast.text}</span>
+            <span className={cn("flex-1", toast.second && "basis-full")}>{toast.text}</span>
             {toast.undo && (
               <Button
                 size="sm"
@@ -806,7 +825,21 @@ export function TogglLab({ backHref = "/test", backLabel = "/test" }: { backHref
                   dismissToast(toast.id)
                 }}
               >
-                <IconUndo className="size-3.5" /> {toast.undoLabel ?? "Undo"}
+                {/* an answer to a question is not an undo */}
+                {!toast.second && <IconUndo className="size-3.5" />} {toast.undoLabel ?? "Undo"}
+              </Button>
+            )}
+            {toast.second && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-11 sm:h-7"
+                onClick={() => {
+                  toast.second?.run()
+                  dismissToast(toast.id)
+                }}
+              >
+                {toast.second.label}
               </Button>
             )}
             <button

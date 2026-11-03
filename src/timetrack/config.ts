@@ -233,8 +233,11 @@ export const DEFAULT_POMODORO = {
 /**
  * Off by default: a web page can only see activity on its own tab, so it cannot
  * tell "away from the desk" from "working in another app".
+ *
+ * `legacyDefaultMoved` is set from the start: a new workspace holds no old
+ * default to move, and choosing 5 minutes later must not be undone on load.
  */
-export const DEFAULT_IDLE = { enabled: false, minutes: 10 } as const
+export const DEFAULT_IDLE = { enabled: false, minutes: 10, legacyDefaultMoved: true } as const
 
 /** The settings an older build shipped, migrated away from on load */
 export const LEGACY_IDLE_DEFAULT = { enabled: true, minutes: 5 } as const

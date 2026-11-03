@@ -363,6 +363,7 @@ export function formatMoney(amount: number, currency: string): string {
  * Parse a duration the way Toggl's duration field does.
  * "1:30" → 5400 · "1:30:15" → 5415 · "1.5" / "1,5" → 5400 (decimal hours)
  * "90" → 5400 (bare number = minutes) · "1h30m" / "45m" / "30s" → parsed units
+ * "1h30" → 5400 · "5m30" → 330 (a bare number after the last unit is the next unit down)
  * Returns null when nothing sensible can be read.
  */
 export function parseDurationInput(raw: string): number | null {
@@ -383,6 +384,15 @@ export function parseDurationInput(raw: string): number | null {
       const n = Number(value)
       seconds += unit === "h" ? n * 3600 : unit === "m" ? n * 60 : n
     }
+    /**
+     * "1h30" IS AN HOUR AND A HALF. The 30 has no unit of its own, and it was
+     * read past and dropped: 1:00:00. A bare number after the last unit is the
+     * next unit down — minutes after hours, seconds after minutes — which is
+     * how a person writes it and how it is said aloud.
+     */
+    const last = unitMatches[unitMatches.length - 1]
+    const trailing = /^\D*(\d+)$/.exec(text.slice((last.index ?? 0) + last[0].length))
+    if (trailing && last[2] !== "s") seconds += Number(trailing[1]) * (last[2] === "h" ? 60 : 1)
     return Math.round(seconds)
   }
 
@@ -417,59 +427,79 @@ export function fromLocalInputValue(value: string): IsoDateTime | null {
 }
 
 /**
- * Parse a time-of-day and apply it to `dayKey`.
- * Accepts "13:45", "1345", "1:45 pm", "9pm", "9".
+ * A typed clock time, before any day is attached to it.
+ *
+ * `bareHour` marks the one form that does not say which half of the day it
+ * means: an hour from 1 to 12, typed alone, with no leading zero and no am/pm
+ * ("9", "3", "12"). Anything more is taken as written — "09", "0900", "930",
+ * "9:30" and "21:00" are clock times on the 24-hour clock, and "3p" says so.
  */
-export function parseTimeInput(raw: string, dayKey: IsoDate): IsoDateTime | null {
+function readClock(raw: string): { h: number; m: number; bareHour: boolean } | null {
   const text = raw.trim().toLowerCase()
   if (!text) return null
 
-  const meridiem = /(am|pm)/.exec(text)?.[1] ?? null
+  /**
+   * "4p" IS FOUR IN THE AFTERNOON. Only "am" and "pm" were looked for, so a
+   * lone "p" was read past and "4p" became 04:00 — twelve hours out, and on an
+   * end, a different day. One letter is how it is typed in a hurry, and
+   * "p.m." is how some people were taught to write it.
+   */
+  const meridiem = /([ap])\.?\s*(?:m\.?)?$/.exec(text)?.[1] ?? null
   const digits = text.replace(/[^0-9:]/g, "")
   // "now", "pm", "x": no digits is no time — `Number("")` is 0, and it read as midnight
   if (!/\d/.test(digits)) return null
-  let h: number
+  let hourText: string
   let m = 0
 
   if (digits.includes(":")) {
     const [hh, mm = "0"] = digits.split(":")
-    h = Number(hh)
+    hourText = hh
     m = Number(mm)
   } else if (digits.length <= 2) {
-    h = Number(digits)
+    hourText = digits
   } else if (digits.length === 3) {
-    h = Number(digits.slice(0, 1))
+    hourText = digits.slice(0, 1)
     m = Number(digits.slice(1))
   } else {
-    h = Number(digits.slice(0, 2))
+    hourText = digits.slice(0, 2)
     m = Number(digits.slice(2, 4))
   }
 
+  let h = Number(hourText)
   if (!Number.isFinite(h) || !Number.isFinite(m) || m > 59) return null
-  if (meridiem === "pm" && h < 12) h += 12
-  if (meridiem === "am" && h === 12) h = 0
+  const bareHour = meridiem === null && hourText === digits && !hourText.startsWith("0") && h >= 1 && h <= 12
+  if (meridiem === "p" && h < 12) h += 12
+  if (meridiem === "a" && h === 12) h = 0
   if (h > 23) return null
+  return { h, m, bareHour }
+}
 
+/** `h:m` on `dayKey`, in the viewer's own zone */
+function atClock(dayKey: IsoDate, h: number, m: number): IsoDateTime {
   const d = dateKeyToDate(dayKey)
   d.setHours(h, m, 0, 0)
   return d.toISOString()
 }
 
 /**
- * An END typed as a bare time of day, read as the first such moment at or after
- * the start.
+ * Parse a time-of-day and apply it to `dayKey`.
+ * Accepts "13:45", "1345", "1:45 pm", "9pm", "4p", "8a", "9".
  *
- * Read on the start's own day, the way every end field here used to, "01:00" on
- * an entry begun at 22:00 was twenty-one hours BEFORE it began and was refused —
- * so a night's work could not be typed in at all. And on a timer forgotten
- * overnight, the end you remember ("10:30") is on the day it started, not today.
- *
- * The same minute as the start is the start itself: a timer started at
- * 09:00:40 and ended "09:00" is zero minutes long, not a day.
+ * A bare "9" here is 09:00. Only an END has a start to measure "the nearest
+ * sensible time" from — see `parseEndTimeInput`.
  */
-export function parseEndTimeInput(raw: string, startIso: IsoDateTime): IsoDateTime | null {
-  const sameDay = parseTimeInput(raw, dateKey(startIso))
-  if (!sameDay) return null
+export function parseTimeInput(raw: string, dayKey: IsoDate): IsoDateTime | null {
+  const clock = readClock(raw)
+  return clock ? atClock(dayKey, clock.h, clock.m) : null
+}
+
+/**
+ * The first moment at `h:m` that is not before the start: the start's own day,
+ * or the day after. The start's own minute counts as the start itself, so a
+ * timer started at 09:00:40 and ended "09:00" is zero minutes long, not a day.
+ */
+function firstClockFrom(startIso: IsoDateTime, h: number, m: number): IsoDateTime {
+  const sameDay = atClock(dateKey(startIso), h, m)
   const startEpoch = epochSeconds(startIso)
   const endEpoch = epochSeconds(sameDay)
   if (endEpoch >= startEpoch) return sameDay
@@ -477,6 +507,67 @@ export function parseEndTimeInput(raw: string, startIso: IsoDateTime): IsoDateTi
   const nextDay = new Date(sameDay)
   nextDay.setDate(nextDay.getDate() + 1)
   return nextDay.toISOString()
+}
+
+/**
+ * An END typed as a time of day: the nearest sensible time after the start
+ * (plan D10).
+ *
+ * THE RULE, in full:
+ *   1. A bare hour from 1 to 12 ("9", "3", "12": no minutes, no leading zero,
+ *      no am/pm) is whichever of h and h+12 comes first at or after the start.
+ *      Start 10:00: "3" is 15:00, "9" is 21:00, "11" is 11:00, "12" is noon.
+ *      Start 22:00: "1" is 01:00, "11" is 23:00, "12" is midnight.
+ *   2. Anything else is the exact clock time it says — "09:00", "0900", "930",
+ *      "9:30", "21", "3p" — on the first day it is not before the start. So
+ *      "09:00" after a 10:00 start is 09:00 TOMORROW. That reading is never
+ *      written silently: the screens ask before any typed value makes an entry
+ *      longer than 12 hours (`LONG_ENTRY_SECONDS`), and offer the other half of
+ *      the day as the likely meaning.
+ *
+ * Why not apply rule 1 to "9:30" as well: minutes are what a person on the
+ * 24-hour clock types, and for them "9:30" is half past nine in the morning.
+ * A bare "9" on the other hand is said, not read off a clock — and read on the
+ * 24-hour clock it turned a 10:00 start and an end of "9" into 23 hours, and
+ * "3" into 17.
+ *
+ * Read on the start's own day, the way every end field here used to, "01:00" on
+ * an entry begun at 22:00 was twenty-one hours BEFORE it began and was refused —
+ * so a night's work could not be typed in at all. And on a timer forgotten
+ * overnight, the end you remember ("10:30") is on the day it started, not today.
+ */
+export function parseEndTimeInput(raw: string, startIso: IsoDateTime): IsoDateTime | null {
+  const clock = readClock(raw)
+  if (!clock) return null
+  const asTyped = firstClockFrom(startIso, clock.h, clock.m)
+  if (!clock.bareHour) return asTyped
+  const otherHalf = firstClockFrom(startIso, (clock.h + 12) % 24, clock.m)
+  return epochSeconds(otherHalf) < epochSeconds(asTyped) ? otherHalf : asTyped
+}
+
+/** Longer than this, a typed time or length asks before it is written (plan D10) */
+export const LONG_ENTRY_SECONDS = 12 * 3600
+
+/**
+ * The same clock time twelve hours away, for "Did you mean 21:00?".
+ *
+ * For an end, the first such moment not before the start; for a start, the
+ * same calendar day. `null` when that reading is no better: it would make the
+ * entry run backwards, or still be longer than 12 hours.
+ */
+export function otherHalfOfDay(
+  which: "start" | "stop",
+  typedIso: IsoDateTime,
+  startIso: IsoDateTime,
+  endIso: IsoDateTime,
+): IsoDateTime | null {
+  const typed = new Date(typedIso)
+  const h = (typed.getHours() + 12) % 24
+  const m = typed.getMinutes()
+  const alternative = which === "stop" ? firstClockFrom(startIso, h, m) : atClock(dateKey(typedIso), h, m)
+  const seconds =
+    which === "stop" ? epochSeconds(alternative) - epochSeconds(startIso) : epochSeconds(endIso) - epochSeconds(alternative)
+  return seconds >= 0 && seconds <= LONG_ENTRY_SECONDS ? alternative : null
 }
 
 /**

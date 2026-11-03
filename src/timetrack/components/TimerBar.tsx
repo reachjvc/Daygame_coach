@@ -6,18 +6,24 @@
  * favorites strip and the autotracker suggestion.
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { IconAuto, IconFavorite, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
+  LONG_ENTRY_SECONDS,
   dateKey,
+  epochSeconds,
   formatClock,
   formatIdleSpan,
+  formatTimeOfDay,
   formatWhen,
+  isoFromEpochSeconds,
+  otherHalfOfDay,
   parseDurationInput,
+  parseEndTimeInput,
   parseTimeInput,
 } from "../timetrackFormatService"
 import {
@@ -29,13 +35,14 @@ import {
   entrySeconds,
   findFavorite,
   forgottenTimer,
+  liveEntries,
   matchAutotracker,
   resumeWithElapsed,
   runningEntry,
   setRunningElapsed,
   toggleFavorite,
 } from "../timetrackService"
-import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
+import type { EntryDraft, Id, IsoDate, IsoDateTime, TimeEntry, TimetrackState } from "../types"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import type { PushToast } from "../hooks/useTimetrack"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
@@ -74,6 +81,93 @@ export function announceEndedEarly(
     },
     "Keep running",
   )
+}
+
+/**
+ * A TYPED TIME OR LENGTH THAT MAKES AN ENTRY LONGER THAN 12 HOURS ASKS FIRST (plan D10).
+ *
+ * "09:00" typed as the end of a 10:00 start is 09:00 tomorrow — an exact clock
+ * time, read the only way it can be — and it was written without a word: a
+ * 23-hour entry, found later in the week total. Now nothing is written until
+ * an answer is pressed: the other half of the day, when that reading is a
+ * sensible one ("Use 21:00"), or what was typed ("Keep 23 hours"). Dismissing
+ * the question, or letting it time out, writes nothing.
+ *
+ * A toast rather than a dialog, because the detail sheet also commits on its
+ * way out, and by then there is no sheet left to ask in. Each `write` reads the
+ * workspace when it is pressed, not now.
+ */
+export function askBeforeLong(
+  seconds: number,
+  write: () => void,
+  pushToast: PushToast,
+  alternative?: { label: string; write: () => void },
+) {
+  if (seconds <= LONG_ENTRY_SECONDS) {
+    write()
+    return
+  }
+  const span = formatIdleSpan(seconds)
+  if (alternative) {
+    pushToast(`That makes it ${span}. Did you mean ${alternative.label}?`, "info", alternative.write, `Use ${alternative.label}`, {
+      label: `Keep ${span}`,
+      run: write,
+    })
+    return
+  }
+  pushToast(`That makes it ${span}.`, "info", write, `Keep ${span}`)
+}
+
+/** The same question for a typed time: the length it makes, and the other half of the day as the likely meaning */
+export function askAboutTypedTime(
+  which: "start" | "stop",
+  typedIso: IsoDateTime,
+  entry: { start: IsoDateTime; stop: IsoDateTime },
+  write: (iso: IsoDateTime) => void,
+  pushToast: PushToast,
+  timeFormat: TimetrackState["user"]["timeFormat"],
+) {
+  const start = which === "start" ? typedIso : entry.start
+  const stop = which === "stop" ? typedIso : entry.stop
+  // a start typed after the end moves the whole entry and keeps its length (`setEntryStart`)
+  const seconds = epochSeconds(stop) >= epochSeconds(start) ? epochSeconds(stop) - epochSeconds(start) : epochSeconds(entry.stop) - epochSeconds(entry.start)
+  const other = otherHalfOfDay(which, typedIso, entry.start, entry.stop)
+  askBeforeLong(
+    seconds,
+    () => write(typedIso),
+    pushToast,
+    other ? { label: formatTimeOfDay(other, timeFormat), write: () => write(other) } : undefined,
+  )
+}
+
+/**
+ * WHERE MANUAL MODE OPENS: AT THE GAP YOU ARE MOST LIKELY FILLING.
+ *
+ * It opened at 09:00–10:00 whatever the time was, so every hand-added entry
+ * began with two clock times retyped. Now: from where the last entry ended to
+ * now, when that was earlier today — you track whole days back to back, so the
+ * time you forgot is the gap after the last thing you tracked — and otherwise
+ * from half an hour ago. An entry planned for later today is not where you
+ * left off, so only ends already past count.
+ *
+ * `startIso` is the exact end, seconds and all: the box can only show minutes,
+ * and starting at 13:05:00 an entry that ended at 13:05:40 overlapped it by 40
+ * seconds — the size of the overlaps found in the owner's own data after every
+ * hand-added entry.
+ */
+function manualRange(state: TimetrackState, now: Date): { start: string; stop: string; day: IsoDate; startIso: IsoDateTime } {
+  const nowEpoch = Math.floor(now.getTime() / 1000)
+  let lastEnd: IsoDateTime | null = null
+  for (const entry of liveEntries(state)) {
+    if (entry.stop === null || epochSeconds(entry.stop) > nowEpoch) continue
+    if (lastEnd === null || epochSeconds(entry.stop) > epochSeconds(lastEnd)) lastEnd = entry.stop
+  }
+  const usable =
+    lastEnd !== null && dateKey(lastEnd) === dateKey(now) && Math.floor(epochSeconds(lastEnd) / 60) < Math.floor(nowEpoch / 60)
+  const startIso = usable && lastEnd ? lastEnd : isoFromEpochSeconds(nowEpoch - 30 * 60)
+  const format = state.user.timeFormat
+  // the start's own day, so "half an hour ago" just after midnight is yesterday evening
+  return { start: formatTimeOfDay(startIso, format), stop: formatTimeOfDay(now.toISOString(), format), day: dateKey(startIso), startIso }
 }
 
 export type TimerMode = "timer" | "manual"
@@ -182,9 +276,41 @@ export function TimerBar({
   const [manualStart, setManualStart] = useState("09:00")
   const [manualStop, setManualStop] = useState("10:00")
   const [manualDay, setManualDay] = useState(() => dateKey(new Date()))
+  /** the exact start manual mode opened at, used while its box still reads it: see `manualRange` */
+  const manualStartExact = useRef<{ text: string; day: IsoDate; iso: IsoDateTime } | null>(null)
   const [editingDuration, setEditingDuration] = useState(false)
   /** what the box read when you started typing — leaving it as it was is not an edit */
   const durationAtFocus = useRef<string | null>(null)
+
+  const openManualAt = useCallback((base: TimetrackState) => {
+    const range = manualRange(base, new Date())
+    setManualStart(range.start)
+    setManualStop(range.stop)
+    setManualDay(range.day)
+    manualStartExact.current = { text: range.start, day: range.day, iso: range.startIso }
+  }, [])
+
+  // Each time manual mode is opened, at the gap you are most likely filling
+  useEffect(() => {
+    if (mode === "manual") openManualAt(latestState.current)
+  }, [mode, openManualAt])
+
+  /**
+   * A LENGTH TYPED WITH NO TIMER RUNNING WAITS TO BE LOGGED, AS IN TOGGL.
+   *
+   * The box was locked whenever nothing ran, because the clock effect below
+   * rewrote it to 0:00:00 on the next tick and typing into it did nothing. Now
+   * "2h" stays in the box, the Start button becomes Add, and Enter or Add logs
+   * a finished entry that ends now. Leaving the box does not log anything by
+   * itself: a tap elsewhere is not a decision.
+   */
+  const typedLength = !running && editingDuration && durationInput.trim() !== "" && durationInput !== formatClock(0)
+
+  // a timer that starts while a length waits to be logged takes the box back
+  const runningId = running?.id ?? null
+  useEffect(() => {
+    if (runningId !== null) setEditingDuration(false)
+  }, [runningId])
 
   const suggestion = matchAutotracker(state, draft.description)
   const suggestionProject = suggestion ? state.projects.find((p) => p.id === suggestion.projectId) : null
@@ -222,43 +348,90 @@ export function TimerBar({
      * nothing said.
      */
     const options = { shownSeconds: shown === null ? null : parseDurationInput(shown) }
-    const checked = setRunningElapsed(latestState.current, seconds, new Date().toISOString(), options)
-    if (checked.violations[0]) {
+    // a length over 12 hours asks first: see `askBeforeLong`
+    askBeforeLong(
+      seconds,
+      () => {
+        const checked = setRunningElapsed(latestState.current, seconds, new Date().toISOString(), options)
+        if (checked.violations[0]) {
+          pushToast(checked.violations[0].message, "error")
+          setDurationInput(formatClock(runningSeconds))
+          return
+        }
+        setState((current) => {
+          const applied = setRunningElapsed(current, seconds, new Date().toISOString(), options)
+          return applied.violations.length > 0 ? current : applied.state
+        })
+        if (checked.stopped) announceEndedEarly(checked.stopped, seconds, () => latestState.current, setState, pushToast)
+      },
+      pushToast,
+    )
+  }
+
+  /**
+   * A finished entry from manual mode or a typed length, then a cleared
+   * description. Checked on the latest workspace and applied to whatever is
+   * current, because it can be the answer to "That makes it 13 hours", pressed
+   * after other changes — or after this bar has left the screen. Returns the
+   * workspace as checked, or null when it was refused.
+   */
+  const writeNewEntry = (input: { draft: EntryDraft; start: IsoDateTime; stop: IsoDateTime }): TimetrackState | null => {
+    const nowIso = new Date().toISOString()
+    const checked = createManualEntry(latestState.current, input, nowIso)
+    if (checked.violations.length > 0) {
       pushToast(checked.violations[0].message, "error")
-      setDurationInput(formatClock(runningSeconds))
-      return
+      return null
     }
     setState((current) => {
-      const applied = setRunningElapsed(current, seconds, new Date().toISOString(), options)
+      const applied = createManualEntry(current, input, nowIso)
       return applied.violations.length > 0 ? current : applied.state
     })
-    if (checked.stopped) announceEndedEarly(checked.stopped, seconds, () => latestState.current, setState, pushToast)
+    // the draft only: with a timer running by now, clearing it would clear that timer's description
+    if (latestMode.current === "manual" || !runningEntry(latestState.current)) edit({ description: "" })
+    return checked.state
+  }
+
+  /** The typed length, logged as a finished entry that ends now: see `typedLength` */
+  const logTypedLength = () => {
+    const seconds = parseDurationInput(durationInput)
+    if (seconds === null || seconds <= 0) {
+      pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
+      return
+    }
+    askBeforeLong(
+      seconds,
+      () => {
+        const nowIso = new Date().toISOString()
+        const start = isoFromEpochSeconds(epochSeconds(nowIso) - seconds)
+        if (writeNewEntry({ draft: latestDraft.current, start, stop: nowIso })) setEditingDuration(false)
+      },
+      pushToast,
+    )
   }
 
   const addManualEntry = () => {
-    const start = parseTimeInput(manualStart, manualDay)
-    const stop = parseTimeInput(manualStop, manualDay)
+    // the exact end manual mode opened at, while its box still says so: see `manualRange`
+    const exact = manualStartExact.current
+    const start =
+      exact && exact.text === manualStart.trim() && exact.day === manualDay ? exact.iso : parseTimeInput(manualStart, manualDay)
+    /**
+     * The end is read the way every end box reads it (`parseEndTimeInput`): a
+     * bare "5" after a 10:00 start is 17:00, an end before the start is the
+     * next morning, and an end EQUAL to the start is a zero-length entry, which
+     * the save rules allow — turning that into twenty-four hours because of a
+     * `<=` was a silent, enormous edit.
+     */
+    const stop = start ? parseEndTimeInput(manualStop, start) : null
     if (!start || !stop) {
       pushToast("Enter start and end times like 09:00 or 9:00 am", "error")
       return
     }
-    let stopIso = stop
-    if (new Date(stopIso).getTime() < new Date(start).getTime()) {
-      // An end BEFORE the start means the entry crossed midnight. An end EQUAL
-      // to the start is a zero-length entry, which this app makes by other
-      // routes and which the save rules allow — turning it into twenty-four
-      // hours because of a `<=` was a silent, enormous edit.
-      const shifted = new Date(stopIso)
-      shifted.setDate(shifted.getDate() + 1)
-      stopIso = shifted.toISOString()
+    const write = (stopIso: IsoDateTime) => {
+      const written = writeNewEntry({ draft: latestDraft.current, start, stop: stopIso })
+      // the next one opens where this one ended, if that is already past
+      if (written) openManualAt(written)
     }
-    const result = createManualEntry(state, { draft, start, stop: stopIso }, new Date().toISOString())
-    if (result.violations.length > 0) {
-      pushToast(result.violations[0].message, "error")
-      return
-    }
-    setState(() => result.state)
-    edit({ description: "" }, result.state)
+    askAboutTypedTime("stop", stop, { start, stop }, write, pushToast, latestState.current.user.timeFormat)
   }
 
   // The picker hands back a name, not an id, so these create the thing and
@@ -292,8 +465,9 @@ export function TimerBar({
           onSubmit={() => {
             // whatever is half-typed belongs to the entry before it is acted on
             commitDescription.flush()
-            if (mode === "timer") onStart()
-            else addManualEntry()
+            if (mode === "manual") addManualEntry()
+            else if (typedLength) logTypedLength()
+            else onStart()
           }}
         />
 
@@ -315,9 +489,10 @@ export function TimerBar({
 
           {mode === "manual" ? (
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
-              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
+              {/* the number pad on a phone: "1155" is 11:55 (plan D11) */}
+              <Input value={manualStart} onChange={(e) => setManualStart(e.target.value)} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
               <span className="text-muted-foreground">–</span>
-              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
+              <Input value={manualStop} onChange={(e) => setManualStop(e.target.value)} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
               {/* "" makes `parseTimeInput` build an Invalid Date and throw, and the
                   "pick a start and an end" toast on the next line never gets its turn —
                   `DayPicker` passes on only a whole date */}
@@ -334,16 +509,29 @@ export function TimerBar({
                 setEditingDuration(true)
                 setDurationInput(event.target.value)
               }}
-              onBlur={() => (running ? commitRunningDuration() : setEditingDuration(false))}
-              onKeyDown={(event) => {
-                // through the blur, so the edit is written once and not again on the way out
-                if (event.key === "Enter" && running) event.currentTarget.blur()
+              onBlur={() => {
+                if (running) commitRunningDuration()
+                // a typed length stays, waiting for Enter or Add: see `typedLength`
+                else if (!typedLength) setEditingDuration(false)
               }}
-              /* With nothing running there is nothing to set: the effect above
-                 rewrites the box to 0:00:00 on the next tick, so leaving it
-                 editable offered a field whose only behaviour was discarding
-                 what you typed. */
-              disabled={!running}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && running) {
+                  // through the blur, so the edit is written once and not again on the way out
+                  event.currentTarget.blur()
+                } else if (event.key === "Enter" && typedLength) {
+                  event.preventDefault()
+                  logTypedLength()
+                } else if (event.key === "Escape" && !running) {
+                  setEditingDuration(false)
+                }
+              }}
+              /* Open with nothing running too: a length typed here is logged
+                 as a finished entry ending now (`logTypedLength`). It was
+                 locked, because the effect above rewrote it to 0:00:00 on the
+                 next tick and the typing went nowhere. */
+              // the decimal pad on a phone: "1.5" is an hour and a half (plan D11)
+              inputMode="decimal"
+              title="90 = 90 min · 1.5 = 1 h 30"
               aria-label="Duration"
               className="h-11 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
             />
@@ -384,6 +572,10 @@ export function TimerBar({
               aria-label="Stop timer"
             >
               <IconStop className="size-4" /> Stop
+            </Button>
+          ) : typedLength ? (
+            <Button size="sm" className="ml-auto min-w-[104px] flex-1 sm:flex-none" onClick={logTypedLength} aria-label="Add this time">
+              Add
             </Button>
           ) : (
             <Button

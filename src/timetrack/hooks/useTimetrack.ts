@@ -13,9 +13,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { reportError } from "@/src/shared/errorReportService"
 
-import { DEFAULT_IDLE, LEGACY_IDLE_DEFAULT, STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
+import { STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
 import { newId } from "../idService"
-import { migrateStateToV3 } from "../stateMigrationService"
+import { migrateStateToV3, moveLegacyIdleDefault } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
 import { dateKey, epochSeconds, formatIdleSpan, hourIsInWindow, plural } from "../timetrackFormatService"
@@ -33,8 +33,23 @@ import {
 } from "../timetrackService"
 import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
 
-/** what every screen is handed to say something; `undoLabel` replaces "Undo" on the button */
-export type PushToast = (text: string, tone?: "info" | "error", undo?: () => void, undoLabel?: string) => void
+/** A second button on a toast, for a question with two answers */
+export interface ToastChoice {
+  label: string
+  run: () => void
+}
+
+/**
+ * What every screen is handed to say something; `undoLabel` replaces "Undo" on
+ * the button, and `second` adds another one ("Use 21:00" / "Keep 23 hours").
+ */
+export type PushToast = (
+  text: string,
+  tone?: "info" | "error",
+  undo?: () => void,
+  undoLabel?: string,
+  second?: ToastChoice,
+) => void
 
 export interface ToastMessage {
   id: number
@@ -43,7 +58,12 @@ export interface ToastMessage {
   undo?: () => void
   /** what the undo button says, when undoing is not quite what it does */
   undoLabel?: string
+  second?: ToastChoice
 }
+
+/** how long a toast stays; one that asks a question waits longer for the answer */
+const TOAST_MS = 7000
+const QUESTION_MS = 15000
 
 export interface IdlePrompt {
   entryId: Id
@@ -125,20 +145,14 @@ function loadState(nowIso: string): LoadResult {
   // keeping everything the user created.
   const cleaned = removeDemoData(parsed)
 
-  // Idle detection used to be on with a 5-minute threshold, which fired at
-  // anyone running a timer while working in another app. Move that default off.
-  const onLegacyIdleDefault =
-    cleaned.state.idle.enabled === LEGACY_IDLE_DEFAULT.enabled &&
-    cleaned.state.idle.minutes === LEGACY_IDLE_DEFAULT.minutes
-  const state = onLegacyIdleDefault
-    ? { ...cleaned.state, idle: { ...cleaned.state.idle, ...DEFAULT_IDLE } }
-    : cleaned.state
+  // once, and recorded: see `moveLegacyIdleDefault`
+  const idle = moveLegacyIdleDefault(cleaned.state)
 
   return {
-    state,
+    state: idle.state,
     discarded: null,
     cleanedDemoEntries: cleaned.removedEntries,
-    idleDefaultChanged: onLegacyIdleDefault,
+    idleDefaultChanged: idle.moved,
   }
 }
 
@@ -214,11 +228,14 @@ export function useTimetrack() {
     setStateRaw((current) => (current ? updater(current) : current))
   }, [])
 
-  const pushToast = useCallback((text: string, tone: "info" | "error" = "info", undo?: () => void, undoLabel?: string) => {
-    const id = toastId.current++
-    setToasts((current) => [...current, { id, text, tone, undo, undoLabel }])
-    window.setTimeout(() => setToasts((current) => current.filter((t) => t.id !== id)), 7000)
-  }, [])
+  const pushToast = useCallback(
+    (text: string, tone: "info" | "error" = "info", undo?: () => void, undoLabel?: string, second?: ToastChoice) => {
+      const id = toastId.current++
+      setToasts((current) => [...current, { id, text, tone, undo, undoLabel, second }])
+      window.setTimeout(() => setToasts((current) => current.filter((t) => t.id !== id)), second ? QUESTION_MS : TOAST_MS)
+    },
+    [],
+  )
 
   const dismissToast = useCallback((id: number) => {
     setToasts((current) => current.filter((t) => t.id !== id))
@@ -687,7 +704,15 @@ export function useTimetrack() {
         pushToast("Workspace cleared")
       },
       replaceState(next: TimetrackState) {
-        setStateRaw(next)
+        /**
+         * The sync hands over the account's copy here, and the account may
+         * still hold the old idle default this browser moved off when it
+         * loaded. Moving it again here — without a second toast — is what
+         * gets the move sent: the state that arrives differs from the copy
+         * handed over, and the sync queues the difference. Anything that
+         * needs nothing comes back as the same object.
+         */
+        setStateRaw(moveLegacyIdleDefault(next).state)
       },
     }),
     [announceDisplacement, pushToast, setState, state],

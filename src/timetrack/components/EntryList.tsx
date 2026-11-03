@@ -70,7 +70,7 @@ import {
 import type { EntryRow, Id, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
-import { announceEndedEarly } from "./TimerBar"
+import { announceEndedEarly, askAboutTypedTime, askBeforeLong } from "./TimerBar"
 
 interface EntryListProps {
   state: TimetrackState
@@ -78,9 +78,11 @@ interface EntryListProps {
   nowSec: number
   pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
+  /** "Go to ‹project›" in an entry's ⋮ menu; without it the item is not offered */
+  onGoToProject?: (projectId: Id) => void
 }
 
-export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: EntryListProps) {
+export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onGoToProject }: EntryListProps) {
   /**
    * ONE ROW LAYOUT, NOT BOTH.
    *
@@ -240,6 +242,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry }: E
                 onDelete={removeEntries}
                 pushToast={pushToast}
                 onEditEntry={onEditEntry}
+                onGoToProject={onGoToProject}
                 isMobile={isMobile}
               />
             ))}
@@ -275,6 +278,7 @@ function EntryRowView({
   onDelete,
   pushToast,
   onEditEntry,
+  onGoToProject,
   isMobile,
 }: {
   row: EntryRow
@@ -290,6 +294,7 @@ function EntryRowView({
   isMobile: boolean
   pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
+  onGoToProject?: (projectId: Id) => void
 }) {
   const lead = row.entries[0]
   const ids = row.entries.map((e) => e.id)
@@ -311,6 +316,7 @@ function EntryRowView({
         expanded={expanded}
         onToggleExpand={onToggleExpand}
         onEditEntry={onEditEntry}
+        onGoToProject={onGoToProject}
         isMobile={isMobile}
       />
       {row.grouped && expanded && (
@@ -328,6 +334,7 @@ function EntryRowView({
                 onDelete={() => onDelete([entry.id])}
                 pushToast={pushToast}
                 onEditEntry={onEditEntry}
+                onGoToProject={onGoToProject}
                 isMobile={isMobile}
                 nested
               />
@@ -377,6 +384,7 @@ function EntryFields({
   expanded,
   onToggleExpand,
   onEditEntry,
+  onGoToProject,
   isMobile,
   nested,
 }: {
@@ -393,6 +401,7 @@ function EntryFields({
   expanded?: boolean
   onToggleExpand?: () => void
   onEditEntry: (entry: TimeEntry) => void
+  onGoToProject?: (projectId: Id) => void
   /** which of the two layouts to build — see the note in `EntryList` */
   isMobile: boolean
   nested?: boolean
@@ -462,12 +471,21 @@ function EntryFields({
       )
       return true
     }
-    const result = updateEntry(state, entry.id, changes, nowIso())
+    /**
+     * Checked on the latest workspace and applied to whatever is current: an
+     * answer to "That makes it 23 hours" is pressed later, after other changes,
+     * and replacing the workspace with this render's copy would undo them.
+     */
+    const result = updateEntry(latestState.current, entry.id, changes, nowIso())
     if (result.violations.length > 0) {
       pushToast(result.violations[0].message, "error")
       return false
     }
-    setState(() => result.state)
+    latestState.current = result.state
+    setState((current) => {
+      const applied = updateEntry(current, entry.id, changes, nowIso())
+      return applied.violations.length > 0 ? current : applied.state
+    })
     return true
   }
 
@@ -481,20 +499,25 @@ function EntryFields({
       pushToast("Could not read that time", "error")
       return
     }
-    if (which === "stop") {
-      if (patch({ stop: iso })) announceNextDay(entry.start, iso, state, pushToast)
-      return
+    const write = (at: string) => {
+      if (which === "stop") {
+        if (patch({ stop: at })) announceNextDay(entry.start, at, latestState.current, pushToast)
+        return
+      }
+      // a start after the end moves the entry: see `setEntryStart`
+      const refusal = setEntryStart(latestState.current, entry.id, at, nowIso()).violations[0]
+      if (refusal) {
+        pushToast(refusal.message, "error")
+        return
+      }
+      setState((current) => {
+        const applied = setEntryStart(current, entry.id, at, nowIso())
+        return applied.violations.length > 0 ? current : applied.state
+      })
     }
-    // a start after the end moves the entry: see `setEntryStart`
-    const refusal = setEntryStart(state, entry.id, iso, nowIso()).violations[0]
-    if (refusal) {
-      pushToast(refusal.message, "error")
-      return
-    }
-    setState((current) => {
-      const applied = setEntryStart(current, entry.id, iso, nowIso())
-      return applied.violations.length > 0 ? current : applied.state
-    })
+    // longer than 12 hours asks first: see `askBeforeLong`
+    const span = { start: entry.start, stop: entry.stop ?? nowIso() }
+    askAboutTypedTime(which, iso, span, write, pushToast, state.user.timeFormat)
   }
 
   const commitDuration = (raw: string) => {
@@ -509,16 +532,23 @@ function EntryFields({
       running
         ? setRunningElapsed(base, parsed, nowIso(), options)
         : { ...setEntryDuration(base, entry.id, parsed, nowIso()), stopped: null }
-    const checked = apply(state)
-    if (checked.violations[0]) {
-      pushToast(checked.violations[0].message, "error")
-      return
-    }
-    setState((current) => {
-      const applied = apply(current)
-      return applied.violations.length > 0 ? current : applied.state
-    })
-    if (checked.stopped) announceEndedEarly(checked.stopped, parsed, () => latestState.current, setState, pushToast)
+    // longer than 12 hours asks first: see `askBeforeLong`
+    askBeforeLong(
+      parsed,
+      () => {
+        const checked = apply(latestState.current)
+        if (checked.violations[0]) {
+          pushToast(checked.violations[0].message, "error")
+          return
+        }
+        setState((current) => {
+          const applied = apply(current)
+          return applied.violations.length > 0 ? current : applied.state
+        })
+        if (checked.stopped) announceEndedEarly(checked.stopped, parsed, () => latestState.current, setState, pushToast)
+      },
+      pushToast,
+    )
   }
 
   const continueButton = (
@@ -560,6 +590,7 @@ function EntryFields({
       onDelete={onDelete}
       pushToast={pushToast}
       onEditEntry={onEditEntry}
+      onGoToProject={onGoToProject}
       nowIso={nowIso}
     />
   )
@@ -771,6 +802,8 @@ function EntryFields({
                   setStartDraft(null)
                 }}
                 disabled={!editable}
+                // the number pad on a phone: "1155" is 11:55 (plan D11)
+                inputMode="numeric"
                 aria-label="Start time"
                 className={cn(
                   timeInputWidth(state),
@@ -791,6 +824,7 @@ function EntryFields({
                   setStopDraft(null)
                 }}
                 disabled={!editable}
+                inputMode="numeric"
                 aria-label="End time"
                 className={cn(
                   timeInputWidth(state),
@@ -814,6 +848,9 @@ function EntryFields({
             setDurationFrozen(null)
           }}
           disabled={!editable || row?.grouped}
+          // the decimal pad: "1.5" is an hour and a half (plan D11)
+          inputMode="decimal"
+          title="90 = 90 min · 1.5 = 1 h 30"
           aria-label="Duration"
           className="w-full rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
         />
@@ -843,6 +880,7 @@ function EntryMenu({
   onDelete,
   pushToast,
   onEditEntry,
+  onGoToProject,
   nowIso,
 }: {
   entry: TimeEntry
@@ -853,6 +891,7 @@ function EntryMenu({
   onDelete: () => void
   pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
   onEditEntry: (entry: TimeEntry) => void
+  onGoToProject?: (projectId: Id) => void
   nowIso: () => string
 }) {
   return (
@@ -927,13 +966,15 @@ function EntryMenu({
                 close()
               }}
             />
-            {project && (
+            {/* It set `#project-…` in the address, and nothing listened: the menu
+                closed and that was all. It now opens Projects on that project. */}
+            {project && onGoToProject && (
               <MenuItem
                 icon={<ColorDot color={project.color} />}
                 label={`Go to ${project.name}`}
                 onClick={() => {
-                  window.location.hash = `#project-${project.id}`
                   close()
+                  onGoToProject(project.id)
                 }}
               />
             )}
@@ -1130,6 +1171,29 @@ export function EntryDetailModalBody({
   const commit = (patch: Parameters<typeof updateEntry>[2]): boolean =>
     land(updateEntry(latestState.current, entry.id, patch, nowIso()))
 
+  /**
+   * `land` for a write that may happen LATER: the answer to "That makes it 23
+   * hours", pressed after other changes or after this sheet has closed — when
+   * `latestState` is no longer kept current. Checked on the latest copy this
+   * sheet has, and applied to whatever the workspace is by then, so it cannot
+   * replace newer work with an old copy.
+   */
+  const landOnCurrent = <R extends { state: TimetrackState; violations: { message: string }[] }>(
+    apply: (base: TimetrackState) => R,
+  ): R | null => {
+    const checked = apply(latestState.current)
+    if (checked.violations.length > 0) {
+      pushToast(checked.violations[0].message, "error")
+      return null
+    }
+    latestState.current = checked.state
+    setState((current) => {
+      const applied = apply(current)
+      return applied.violations.length > 0 ? current : applied.state
+    })
+    return checked
+  }
+
   const commitDescription = useDebouncedCommit<string>((value) => {
     commit({ description: value })
   })
@@ -1192,16 +1256,22 @@ export function EntryDetailModalBody({
         pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
         return
       }
-      if (isRunning(current)) {
-        // shorter ends it, longer moves its start: see `setRunningElapsed`
-        const shownSeconds = held === null ? null : parseDurationInput(held)
-        const result = setRunningElapsed(latestState.current, seconds, nowIso(), { entryId: entry.id, shownSeconds })
-        if (land(result) && result.stopped) {
-          announceEndedEarly(result.stopped, seconds, () => latestState.current, setState, pushToast)
-        }
-        return
-      }
-      land(setEntryDuration(latestState.current, entry.id, seconds, nowIso()))
+      // longer than 12 hours asks first: see `askBeforeLong`
+      askBeforeLong(
+        seconds,
+        () => {
+          if (isRunning(current)) {
+            // shorter ends it, longer moves its start: see `setRunningElapsed`
+            const shownSeconds = held === null ? null : parseDurationInput(held)
+            const options = { entryId: entry.id, shownSeconds }
+            const result = landOnCurrent((base) => setRunningElapsed(base, seconds, nowIso(), options))
+            if (result?.stopped) announceEndedEarly(result.stopped, seconds, () => latestState.current, setState, pushToast)
+            return
+          }
+          landOnCurrent((base) => setEntryDuration(base, entry.id, seconds, nowIso()))
+        },
+        pushToast,
+      )
       return
     }
     if (edit.field === "stop" && !text) {
@@ -1219,11 +1289,19 @@ export function EntryDetailModalBody({
       pushToast("Could not read that time — try 9:30, 930 or 9:30 pm", "error")
       return
     }
-    if (edit.field === "stop") {
-      if (commit({ stop: iso })) announceNextDay(current.start, iso, latestState.current, pushToast)
+    const field = edit.field
+    const write = (at: string) => {
+      if (field === "stop") {
+        if (landOnCurrent((base) => updateEntry(base, entry.id, { stop: at }, nowIso()))) {
+          announceNextDay(current.start, at, latestState.current, pushToast)
+        }
+      }
+      // a start after the end moves the entry: see `setEntryStart`
+      else landOnCurrent((base) => setEntryStart(base, entry.id, at, nowIso()))
     }
-    // a start after the end moves the entry: see `setEntryStart`
-    else land(setEntryStart(latestState.current, entry.id, iso, nowIso()))
+    // longer than 12 hours asks first: see `askBeforeLong`
+    const span = { start: current.start, stop: current.stop ?? nowIso() }
+    askAboutTypedTime(field, iso, span, write, pushToast, latestState.current.user.timeFormat)
   }
 
   /**
@@ -1241,6 +1319,8 @@ export function EntryDetailModalBody({
   }
   const timeBox = (field: "start" | "stop" | "duration", label: string, stored: string, placeholder?: string) => (
     <Input
+      // the number pad on a phone: "1155" is 11:55, and "1.5" an hour and a half (plan D11)
+      inputMode={field === "duration" ? "decimal" : "numeric"}
       value={shown(field, stored)}
       onChange={(event) => type(field, event.target.value)}
       onFocus={(event) => {
@@ -1311,6 +1391,7 @@ export function EntryDetailModalBody({
             {timeBox("duration", "Duration", durationShown)}
           </label>
         </div>
+        <p className="text-xs text-muted-foreground">Duration: 90 = 90 min · 1.5 = 1 h 30</p>
         {running && (
           <p className="text-xs text-muted-foreground">
             Still running. Forgot to stop it? Type when it ended, or how long you worked, and it ends there.

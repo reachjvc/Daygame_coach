@@ -298,6 +298,13 @@ export interface IdleSettings {
   enabled: boolean
   /** Prompt after this many minutes without interaction while tracking */
   minutes: number
+  /**
+   * Set once the old always-on, 5-minute default has been moved off — or once
+   * these settings are known not to be that old default. Kept inside the idle
+   * settings so it travels with them to the account and back; see
+   * `moveLegacyIdleDefault`.
+   */
+  legacyDefaultMoved?: boolean
 }
 
 export interface ReminderSettings {
