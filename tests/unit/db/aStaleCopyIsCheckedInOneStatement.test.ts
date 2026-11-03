@@ -123,6 +123,24 @@ describe("a push that names the versions it was based on", () => {
     expect(fake.upserts.length).toBeGreaterThan(0)
   })
 
+  test("a base that is not a time goes as 'unknown', so it is merged rather than refused and dropped", async () => {
+    /**
+     * A string the database cannot read as a time fails the whole call, every
+     * retry and every half of the search for the bad row — which then names the
+     * row as refused, and the browser drops the edit from its queue. As null it
+     * is refused as stale, merged, and sent again on the server's own version.
+     */
+    const fake = fakeSupabase(() => ({ data: { applied: 0, written: {}, conflicts: {}, conflict_tags: {} } }))
+    const repo = await repoWith(fake)
+
+    await repo.pushTimetrackRows(USER, { timetrack_entries: [{ id: "e1", workspace_id: WORKSPACE }, { id: "e2", workspace_id: WORKSPACE }] } as never, {
+      bases: { timetrack_entries: { e1: "not a time", e2: "2026-13-45T00:00:00+00:00" } } as never,
+      tagSets: {},
+    })
+
+    expect(fake.rpcs[0].args.p_batch[0].bases).toEqual({ e1: null, e2: null })
+  })
+
   test("a row the database refuses is still named, so the browser can drop it", async () => {
     const fake = fakeSupabase((call) => {
       const poisoned = call.args.p_batch.some((part) => part.rows.some((row) => row.id === "bad"))

@@ -391,6 +391,34 @@ interface PushAnswer {
   conflict_tags?: TagSets
 }
 
+/** What a base looks like when it came from the server: an ISO timestamp with its offset */
+const SERVER_VERSION = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}(:?\d{2})?)$/
+
+/**
+ * A base that is not a timestamp is read as "base unknown" (null), never sent on.
+ *
+ * Every base the app sends came from the server, but the queue lives in the
+ * browser's storage and outlives versions of this code. A string the database
+ * cannot read as a time would fail the WHOLE call, every retry and every half of
+ * the search for the bad row — which then names the row as refused, and the
+ * browser drops it from the queue: the edit lost, for a typo in a bookkeeping
+ * field. As null, the row is refused as stale instead, merged, and sent again
+ * with the server's own version.
+ */
+function readableBases(bases: PushBases): PushBases {
+  const out: PushBases = {}
+  for (const [table, byKey] of Object.entries(bases ?? {})) {
+    if (!byKey || typeof byKey !== "object") continue
+    const clean: Record<string, string | null> = {}
+    for (const [key, version] of Object.entries(byKey)) {
+      const readable = typeof version === "string" && SERVER_VERSION.test(version) && !Number.isNaN(Date.parse(version))
+      clean[key] = readable ? version : null
+    }
+    out[table as keyof TimetrackRows] = clean
+  }
+  return out
+}
+
 /**
  * The function is not in the database yet: PostgREST cannot find it (PGRST202),
  * or Postgres has no such function (42883). The caller falls back to the upsert,
@@ -412,9 +440,10 @@ function functionMissing(error: { code?: string } | null): boolean {
  */
 async function pushVersioned(supabase: Supabase, parts: WritePart[], versions: PushVersions): Promise<PushResult | null> {
   const tagSets = versions.tagSets ?? {}
+  const bases = readableBases(versions.bases)
   const call = (subset: WritePart[]) =>
     supabase.rpc("timetrack_push", {
-      p_batch: subset.map(({ table, owned }) => ({ table, rows: owned, bases: versions.bases[table] ?? {} })),
+      p_batch: subset.map(({ table, owned }) => ({ table, rows: owned, bases: bases[table] ?? {} })),
       p_tag_sets: tagSets,
     })
 
@@ -437,7 +466,15 @@ async function pushVersioned(supabase: Supabase, parts: WritePart[], versions: P
     add(whole.data as PushAnswer)
     return total
   }
-  if (functionMissing(whole.error)) return null
+  if (functionMissing(whole.error)) {
+    // Saving goes on, unchecked — which is the exact defect the function exists
+    // for, so it is said where somebody reading the logs will see it.
+    console.warn(
+      "[timetrack] timetrack_push is not in the database; writing with the old unchecked upsert. " +
+        "Apply supabase/migrations/20261103120000_timetrack_versioned_writes.sql.",
+    )
+    return null
+  }
 
   for (const part of parts) {
     const alone = await call([part])

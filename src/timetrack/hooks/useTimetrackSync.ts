@@ -177,10 +177,18 @@ function basesFor(batch: Partial<TimetrackRows>, recorded: Bases): PushBases {
   return out
 }
 
-/** The queued tag sets of the entries in this batch: a set goes with its entry */
+/**
+ * The queued tag sets of the entries in this batch — and of the entries whose
+ * LINKS are in it. A set goes with its entry, but a big queue can be split with
+ * the entry in one request and its links in the next. Named in that next one
+ * too, the set stops the server adding those links outside the entry's check
+ * (it skips links of any entry whose set it was given, and applies a set only
+ * beside its entry), so a refused entry cannot gain links by the back door.
+ */
 function setsFor(batch: Partial<TimetrackRows>, sets: TagSets): TagSets {
   const out: TagSets = {}
-  for (const row of batch.timetrack_entries ?? []) if (row.id in sets) out[row.id] = sets[row.id]
+  const ids = [...(batch.timetrack_entries ?? []).map((row) => row.id), ...(batch.timetrack_entry_tags ?? []).map((link) => link.entry_id)]
+  for (const id of ids) if (Object.prototype.hasOwnProperty.call(sets, id)) out[id] = sets[id]
   return out
 }
 
@@ -297,8 +305,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * instance act on the answer. */
   const inFlight = useRef(new Set<AbortController>())
   /**
-   * WHAT THIS DEVICE'S COPY IS BASED ON: the server's own row, as last heard,
-   * by `${table}/${key}`. Its `updated_at` is the version a write names.
+   * WHAT THIS DEVICE'S COPY IS BASED ON: the server's `updated_at` for each
+   * row, as last heard, by `${table}/${key}` — the version a write names.
    *
    * Learned from the full read at first contact, from the rows a check actually
    * applied (never from one it skipped because this device is changing that row:
@@ -308,7 +316,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * version, and a device that did not learn it would have its own next edit
    * refused as stale.
    */
-  const basis = useRef(new Map<string, AnyRow>())
+  const basis = useRef(new Map<string, string>())
   /**
    * For each queued row, what it was based on (see `BaseRecord`). Recorded when
    * the row is first queued and kept until it is accepted: further edits pile
@@ -397,9 +405,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       if (skip?.has(key)) continue
       const version = versionOf(row)
       if (!version) continue
-      const known = versionOf(basis.current.get(key))
+      const known = basis.current.get(key)
       if (known && olderThan(version, known)) continue
-      basis.current.set(key, row)
+      basis.current.set(key, version)
     }
   }, [])
 
@@ -413,14 +421,17 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * were made on top of that same copy.
    */
   const queueChanges = useCallback((changed: Partial<TimetrackRows>, sets: TagSets = {}) => {
-    const believed = indexRows(serverRows.current)
-    const believedLinks = linksByEntry(serverRows.current)
+    // built only when a key needs a base: most edits pile onto a row already queued
+    let index: Map<string, AnyRow> | null = null
+    let links: Map<string, string[]> | null = null
+    const believed = () => (index ??= indexRows(serverRows.current))
+    const believedLinks = () => (links ??= linksByEntry(serverRows.current))
     const next: Bases = { ...bases.current }
     for (const key of keysIn(changed)) {
       if (key in next) continue
-      const record: BaseRecord = { v: versionOf(basis.current.get(key)), row: believed.get(key) ?? null }
+      const record: BaseRecord = { v: basis.current.get(key) ?? null, row: believed().get(key) ?? null }
       if (key.startsWith("timetrack_entries/")) {
-        record.tags = believedLinks.get(key.slice("timetrack_entries/".length)) ?? []
+        record.tags = believedLinks().get(key.slice("timetrack_entries/".length)) ?? []
       }
       next[key] = record
     }
@@ -443,7 +454,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     (stored: Partial<TimetrackRows>, storedTags: TagSets, sentBases: Bases, sent: Partial<TimetrackRows>) => {
       const uid = userId.current
       const held = latestState.current
-      if (!uid || !held) return
+      if (!uid || !held) {
+        // Nothing to merge against. The refused rows go back in the queue as they
+        // were sent, with their bases, to be refused and settled next time —
+        // never dropped: the caller has already taken them out.
+        const refused = keysIn(stored)
+        const back = indexRows(sent)
+        const rows: Partial<TimetrackRows> = {}
+        for (const key of refused) {
+          const row = back.get(key)
+          if (!row) continue
+          ;((rows as Record<string, AnyRow[]>)[key.slice(0, key.indexOf("/"))] ??= []).push(row)
+        }
+        pending.current = mergeChangeSets(rows, pending.current)
+        bases.current = {
+          ...Object.fromEntries([...refused].filter((key) => key in sentBases).map((key) => [key, sentBases[key]])),
+          ...bases.current,
+        }
+        return
+      }
       const local = stateToRows(held, uid)
       const localIndex = indexRows(local)
       const queuedIndex = indexRows(pending.current)
@@ -726,8 +755,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         for (const [key, version] of Object.entries(byKey ?? {})) writtenVersions.set(`${table}/${key}`, version)
       }
       for (const [key, version] of writtenVersions) {
-        const row = sentIndex.get(key)
-        if (row) basis.current.set(key, { ...row, updated_at: version })
+        if (sentIndex.has(key)) basis.current.set(key, version)
       }
       /**
        * TAKE OUT WHAT WAS SENT, NOT "EVERYTHING OR NOTHING".
@@ -1305,7 +1333,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        */
       for (const [key, row] of indexRows(body.rows)) {
         const incoming = versionOf(row)
-        const known = versionOf(basis.current.get(key))
+        const known = basis.current.get(key)
         if (incoming && known && olderThan(incoming, known)) dirty.add(key)
       }
 
