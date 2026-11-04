@@ -175,7 +175,9 @@ describe("a phone on a slow line", () => {
  * next day a new tab laid "since then" — yesterday's values — over the phone's
  * newer edit of the same entry. Now only this device's own edits keep a base, a
  * tab that has heard from the account removes one another tab left (it has
- * queued what that tab did), and a base older than twelve hours is not used.
+ * queued what that tab did), and what the base lays over the account is only
+ * the rows this device edited itself — however long ago: an edit made with no
+ * signal is never dropped for its age.
  */
 describe("a kept base", () => {
   const rename = (description: string) => (current: TimetrackState): TimetrackState => ({
@@ -203,28 +205,74 @@ describe("a kept base", () => {
     await wait(1_000)
 
     // a slow tab of this browser kept a base after this one had heard from the account
-    window.localStorage.setItem(OFFLINE_BASE_KEY, JSON.stringify({ owner: USER, state: withGymRunning(), keptAt: Date.now() }))
+    window.localStorage.setItem(OFFLINE_BASE_KEY, JSON.stringify({ owner: USER, state: withGymRunning() }))
     synced.hear(rename("Gym, legs day"))
     await wait(1_500)
     expect(window.localStorage.getItem(OFFLINE_BASE_KEY), "the base outlived a tab that had queued what it covered").toBeNull()
   })
 
-  test("older than twelve hours is not laid over the account's newer copy", async () => {
-    // yesterday: the PC kept a base, then heard the phone's rename through another tab
-    const yesterday = rename("Gym")(withGymRunning())
-    const heardYesterday = rename("Gym, from the phone yesterday")(withGymRunning())
-    // today: the phone renamed it again, and the account has that
-    const account = fakeAccount(stateToRows(rename("Gym, from the phone today")(withGymRunning()), USER))
+  test("is laid over the account only for the rows this device edited itself", async () => {
+    // the PC, offline: it renames Email itself, then hears the phone rename Gym through a tab that has signal
+    const mail = entry("mail", "2026-08-10", "08:00", "08:30", { description: "Email" })
+    const both = (): TimetrackState => baseState({ entries: [mail, gym] })
+    const renameMail = (current: TimetrackState): TimetrackState => ({
+      ...current,
+      entries: current.entries.map((e) => (e.id === "mail" ? { ...e, description: "Email, answered", at: new Date().toISOString() } : e)),
+    })
+    // the account by the time the PC is back: the phone renamed Gym again since
+    const account = fakeAccount(stateToRows(rename("Gym, from the phone today")(both()), USER))
     vi.stubGlobal("fetch", vi.fn(account.fetch))
-    window.localStorage.setItem(
-      OFFLINE_BASE_KEY,
-      JSON.stringify({ owner: USER, state: yesterday, keptAt: Date.now() - 13 * 3600_000 }),
-    )
 
-    const pc = renderDevice(heardYesterday, { account: USER })
+    account.online = false
+    const pc = renderDevice(both(), { account: USER })
+    await wait(4_000)
+    pc.apply(renameMail)
+    pc.hear(rename("Gym, from the phone yesterday"))
+    await wait(1_000)
+    const held = pc.latest()
+    pc.unmount()
+
+    // opened again the next day, with signal
+    account.online = true
+    const next = renderDevice(held, { account: USER })
     await wait(4_000)
 
-    expect(account.entry("gym")?.description, "a day-old copy was laid over the phone's newer edit").toBe("Gym, from the phone today")
-    expect(pc.latest().entries.find((e) => e.id === "gym")?.description).toBe("Gym, from the phone today")
+    expect(account.entry("mail")?.description, "the PC's own edit never reached the account").toBe("Email, answered")
+    expect(account.entry("gym")?.description, "a change the PC only heard was laid over the phone's newer edit").toBe(
+      "Gym, from the phone today",
+    )
+    expect(next.latest().entries.find((e) => e.id === "gym")?.description).toBe("Gym, from the phone today")
+  })
+
+  test("still sends an edit made three days and two offline openings ago", async () => {
+    const account = fakeAccount(stateToRows(withGymRunning(), USER))
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+    const held = await phoneSawTheAccount(withGymRunning())
+
+    // no signal: opened, Gym stopped before the account could answer, closed
+    account.online = false
+    const first = renderDevice(held, { account: USER })
+    await wait(4_000)
+    const pressedAt = new Date().toISOString()
+    first.apply(stopNow)
+    await wait(1_000)
+    let copy = first.latest()
+    first.unmount()
+
+    // a day later, and another, opened again with still no signal
+    for (const day of [1, 2]) {
+      vi.setSystemTime(new Date(NOON.getTime() + day * 24 * 3600_000))
+      const again = renderDevice(copy, { account: USER })
+      await wait(4_000)
+      copy = again.latest()
+      again.unmount()
+    }
+
+    // three days on, the signal returns
+    vi.setSystemTime(new Date(NOON.getTime() + 3 * 24 * 3600_000))
+    account.online = true
+    renderDevice(copy, { account: USER })
+    await wait(4_000)
+    expect(account.entry("gym")?.stopped_at, "the Stop made three days ago was dropped").toBe(pressedAt)
   })
 })

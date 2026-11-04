@@ -37,7 +37,7 @@ import {
 } from "@/src/db/timetrackTypes"
 
 import { isSigningOut, ownerChangedUnderneath, startAgain, whenSigningOut } from "../browserOwner"
-import { OFFLINE_BASE_KEY, PENDING_BASES_KEY, PENDING_KEY, STATE_VERSION, STORAGE_KEY } from "../config"
+import { OFFLINE_BASE_KEY, OFFLINE_OWN_ROWS_KEY, PENDING_BASES_KEY, PENDING_KEY, STATE_VERSION, STORAGE_KEY } from "../config"
 import { noteServerDate, serverNow, serverNowIso } from "../serverClock"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
@@ -409,7 +409,7 @@ export function unsentTrackerChanges(): number {
     if (!now || now.version !== STATE_VERSION || !Array.isArray(now.entries)) return count
     const inQueue = keysIn(queued)
     const since = diffRows(stateToRows(kept.state, kept.owner), stateToRows(now, kept.owner), serverNowIso())
-    for (const key of keysIn(since.changed)) if (!inQueue.has(key)) count += 1
+    for (const key of keysIn(since.changed)) if (!inQueue.has(key) && (!kept.own || kept.own.has(key))) count += 1
   } catch {
     // an unreadable workspace: the queue is all that can be counted
   }
@@ -433,24 +433,21 @@ interface OfflineBase {
   owner: string
   state: TimetrackState
   /**
-   * When it was kept (ms). Missing on a base kept before this existed: treated
-   * as kept now, so a Stop waiting from then is not dropped by the change.
+   * The rows this device edited itself since the base was kept (see
+   * `OFFLINE_OWN_ROWS_KEY`). Null: a base from before this was recorded, when
+   * everything that differs from it counts, as it always did.
    */
-  keptAt?: number
+  own: Set<string> | null
 }
 
 /**
- * HOW LONG A KEPT BASE MAY SPEAK FOR THIS DEVICE. Everything between it and what
- * the device holds now is read as this device's own change, and laid over the
- * account where the account changed too. A day-old base did that to an edit the
- * phone had made that morning (a code review, 2026-11-04). Past this, what the
- * opening started from is used instead, and the account's newer rows stand.
+ * NO AGE LIMIT, ON PURPOSE. A phone can be without signal for days — travel, a
+ * dead zone overnight — and an edit made then is exactly what this exists to
+ * keep. What made an old base dangerous was laying changes it only HEARD from
+ * other tabs over newer rows (a code review, 2026-11-04); it now lays only the
+ * rows this device edited itself (`own`), so for every other row the account's
+ * copy stands, however old the base is.
  */
-const OFFLINE_BASE_GOOD_FOR_MS = 12 * 3600_000
-
-function baseStillGood(base: OfflineBase): boolean {
-  return typeof base.keptAt !== "number" || Date.now() - base.keptAt <= OFFLINE_BASE_GOOD_FOR_MS
-}
 
 function readOfflineBase(): OfflineBase | null {
   try {
@@ -460,17 +457,42 @@ function readOfflineBase(): OfflineBase | null {
     // kept by a build with another state shape: it cannot be compared with this one's
     if (typeof parsed.owner !== "string" || !parsed.state?.workspace || !Array.isArray(parsed.state.entries)) return null
     if (parsed.state.version !== STATE_VERSION) return null
-    return parsed as OfflineBase
+    return { owner: parsed.owner, state: parsed.state, own: readOwnRows() }
   } catch {
     return null
   }
 }
 
 /** Kept once: an earlier opening's base is older, and covers this one's changes too */
-function keepOfflineBase(base: OfflineBase): boolean {
+function keepOfflineBase(base: { owner: string; state: TimetrackState }): boolean {
   try {
     if (window.localStorage.getItem(OFFLINE_BASE_KEY) !== null) return true
-    window.localStorage.setItem(OFFLINE_BASE_KEY, JSON.stringify(base))
+    window.localStorage.setItem(OFFLINE_BASE_KEY, JSON.stringify({ owner: base.owner, state: base.state }))
+    // a new base starts with no rows of its own
+    window.localStorage.setItem(OFFLINE_OWN_ROWS_KEY, "[]")
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** The rows this device edited itself since the base, or null when that was not recorded */
+function readOwnRows(): Set<string> | null {
+  try {
+    const raw = window.localStorage.getItem(OFFLINE_OWN_ROWS_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : null
+    return Array.isArray(parsed) ? new Set(parsed.filter((key): key is string => typeof key === "string")) : null
+  } catch {
+    return null
+  }
+}
+
+/** Add rows this device just edited itself to the ones the base speaks for */
+function noteOwnRows(keys: Iterable<string>): boolean {
+  try {
+    const own = readOwnRows() ?? new Set<string>()
+    for (const key of keys) own.add(key)
+    window.localStorage.setItem(OFFLINE_OWN_ROWS_KEY, JSON.stringify([...own]))
     return true
   } catch {
     return false
@@ -480,6 +502,7 @@ function keepOfflineBase(base: OfflineBase): boolean {
 function forgetOfflineBase(): void {
   try {
     window.localStorage.removeItem(OFFLINE_BASE_KEY)
+    window.localStorage.removeItem(OFFLINE_OWN_ROWS_KEY)
   } catch {
     // nothing more to do: an unreadable base is never used
   }
@@ -674,6 +697,10 @@ export function useTimetrackSync({
   const offlineBaseKept = useRef(false)
   /** This opening has made an edit of its own, not only heard other tabs' */
   const ownEditSeen = useRef(false)
+  /** The rows this opening edited itself before the account answered, by `${table}/${key}` */
+  const ownRows = useRef(new Set<string>())
+  /** The workspace the change-watcher saw last before the account answered: what an edit is measured from */
+  const seenBeforeContact = useRef<TimetrackState | null>(null)
   /**
    * EVERY QUEUED ROW THIS INSTANCE HAS HELD, as it held it, by `${table}/${key}`.
    *
@@ -1478,9 +1505,7 @@ export function useTimetrackSync({
     startingState.current = state
     // and what an earlier opening that never reached the account started from — unless it is too
     // old to speak for this device any more, when this opening's own edits get a base of their own
-    const keptEarlier = readOfflineBase()
-    if (keptEarlier && !baseStillGood(keptEarlier)) forgetOfflineBase()
-    offlineBaseAtOpening.current = keptEarlier && baseStillGood(keptEarlier) ? keptEarlier : null
+    offlineBaseAtOpening.current = readOfflineBase()
 
     /**
      * What this device's own changes are found against: the base an earlier
@@ -1488,16 +1513,21 @@ export function useTimetrackSync({
      * this opening started from. A base kept for anybody else is dropped, so
      * nothing of theirs is sent.
      */
-    const startFor = (signedIn: string | null): TimetrackState | null => {
+    const startFor = (signedIn: string | null): { start: TimetrackState | null; own: Set<string> | null } => {
       const kept = offlineBaseAtOpening.current
-      // gone from disk meanwhile: a tab that had heard from the account took it, and queued what it covered
-      const stillKept = kept !== null && readOfflineBase() !== null
-      if (kept && stillKept && signedIn && kept.owner === signedIn && baseStillGood(kept)) return kept.state
+      /**
+       * Used even when another tab has taken it from disk meanwhile, and however
+       * old: what it lays over the account is only the rows this device edited
+       * itself, so sending one again is harmless, and dropping one would lose it.
+       */
+      if (kept && signedIn && kept.owner === signedIn) {
+        return { start: kept.state, own: kept.own ? new Set([...kept.own, ...ownRows.current]) : null }
+      }
       if (kept) {
         offlineBaseAtOpening.current = null
         forgetOfflineBase()
       }
-      return startingState.current
+      return { start: startingState.current, own: ownEditSeen.current ? new Set(ownRows.current) : null }
     }
     /** The queue now holds this device's changes: the kept base is no longer needed */
     const claimed = () => {
@@ -1546,7 +1576,7 @@ export function useTimetrackSync({
         userId.current = body.userId ?? "self"
         // the change feed listens for this account, once it is known (D4)
         setAccount(body.userId ?? null)
-        const start = startFor(body.userId ?? null)
+        const { start, own } = startFor(body.userId ?? null)
 
         if (body.empty) {
           // nothing stored yet. Offer to upload what this browser holds rather
@@ -1621,7 +1651,16 @@ export function useTimetrackSync({
          */
         const startingRows = start ? stateToRows(start, userId.current) : null
         const latestRows = stateToRows(latestState.current ?? state, userId.current)
-        const sinceOpening = diffRows(startingRows, latestRows, serverNowIso())
+        const everythingSince = diffRows(startingRows, latestRows, serverNowIso())
+        // only what this device edited itself; the rest was heard from a tab that has the account
+        const sinceOpening = own
+          ? {
+              changed: onlyKeys(everythingSince.changed, own),
+              tagSets: Object.fromEntries(
+                Object.entries(everythingSince.tagSets).filter(([entryId]) => own.has(`timetrack_entries/${entryId}`)),
+              ),
+            }
+          : everythingSince
 
         // the server's own copy of everything: the versions this device's writes will name
         basis.current = new Map()
@@ -1815,21 +1854,31 @@ export function useTimetrackSync({
        * code review, 2026-11-04). Until this opening edits something itself, what
        * it started from moves with what it hears.
        */
+      const before = seenBeforeContact.current ?? startingState.current
+      seenBeforeContact.current = state
       if (fromAnotherTab?.(state)) {
         if (!ownEditSeen.current) startingState.current = state
         return
       }
       ownEditSeen.current = true
+      // which rows this edit touched: the ones the base speaks for (any id maps both sides alike)
+      const mapAs = pageAccount ?? "self"
+      const touched = keysIn(diffRows(stateToRows(before, mapAs), stateToRows(state, mapAs), serverNowIso()).changed)
+      for (const key of touched) ownRows.current.add(key)
+      // whose it is is known only on a page that knows who is signed in; elsewhere nothing is kept
+      const base = offlineBaseAtOpening.current ?? (pageAccount ? { owner: pageAccount, state: startingState.current } : null)
+      if (!base) return
       if (!offlineBaseKept.current) {
         offlineBaseKept.current = true
-        // whose it is is known only on a page that knows who is signed in; elsewhere nothing is kept
-        const base =
-          offlineBaseAtOpening.current ??
-          (pageAccount ? { owner: pageAccount, state: startingState.current, keptAt: Date.now() } : null)
-        if (base && !keepOfflineBase(base)) {
+        if (!keepOfflineBase(base)) {
           pushToast("This browser's storage is full: a change made before the account answered is kept only while this page stays open.", "error")
+          return
         }
       }
+      // a base kept before own rows were recorded speaks for everything since it, as it always did:
+      // starting a list now would leave out the edits it already holds
+      if (offlineBaseAtOpening.current && offlineBaseAtOpening.current.own === null) return
+      noteOwnRows(ownRows.current)
       return
     }
     if (statusRef.current === "local-only" || accountGone.current) return

@@ -34,6 +34,12 @@ export const ACCOUNT_KEY = "toggl-clone:account"
  */
 export const OFFLINE_BASE_KEY = "toggl-clone:offline-base"
 /**
+ * Beside it: which rows this device edited itself since then, by
+ * `${table}/${key}`. Only these are laid over the account; whatever else
+ * changed since the base was heard from another tab, which has the account.
+ */
+export const OFFLINE_OWN_ROWS_KEY = "toggl-clone:offline-own-rows"
+/**
  * THERE IS DELIBERATELY NO PERSISTED CURSOR, AND THIS IS WHERE SOMEBODY WOULD
  * ADD ONE.
  *
