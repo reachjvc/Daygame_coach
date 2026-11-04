@@ -1,0 +1,429 @@
+{
+  "id": "binge-eating-and-ultra-processed-food",
+  "hero": {
+    "big": "14%",
+    "basedOn": "A BMJ analysis article pooled two meta-analyses: 281 studies from 36 countries where people filled in the Yale Food Addiction Scale questionnaire. 14% of adults (12% of children) scored at the 'food addiction' level.",
+    "caveat": "A questionnaire score, not a diagnosis, and samples were mostly not national. The adult meta-analysis's own abstract reports 20% across its 272 studies, including clinical groups.",
+    "numberCheck": "14% matches the BMJ text. Its source for adults, Praxedes 2022, gives 20% in its abstract (55% in people with binge eating). The 14% adult split was not visible in that abstract.",
+    "ref": {
+      "cite": "Gearhardt AN, Bueno NB, DiFeliceantonio AG, Roberto CA, Jimenez-Murcia S, Fernandez-Aranda F (2023). Social, clinical, and policy implications of ultra-processed food addiction. BMJ 383:e075354.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10561019/",
+      "pmid": "37813420",
+      "fetched": true,
+      "quote": "A recent analysis of two systematic reviews including 281 studies from 36 different countries found the overall pooled prevalence of food addiction using YFAS was 14% in adults"
+    }
+  },
+  "stats": [
+    {
+      "group": "you",
+      "big": "54%",
+      "line": "For US adults aged 19 to 39, about 54% of daily calories come from ultra-processed food.",
+      "mirror": "Men whose meals come from a wrapper, a box or a drive-through.",
+      "basis": {
+        "design": "national survey (NHANES)",
+        "who": "US youth and adults; this figure is adults aged 19-39",
+        "n": "national sample (exact n not given on the page)",
+        "where": "USA",
+        "when": "August 2021 to August 2023",
+        "measured": "Share of calories from ultra-processed food (NOVA groups), from one day's 24-hour diet recall interview. Men 53.3%, women 52.7% (all adults)."
+      },
+      "caveat": "This is what most people eat; it is not a sign of addiction. One day's recall can miss or misreport foods.",
+      "ref": {
+        "cite": "Williams AM, Couch CA, Emmerich SD, Ogburn DF (2025). Ultra-processed food consumption in youth and adults: United States, August 2021-August 2023. NCHS Data Brief No. 536.",
+        "url": "https://www.cdc.gov/nchs/products/databriefs/db536.htm",
+        "pmid": "41027400",
+        "fetched": true,
+        "quote": "Adults ages 19–39 consumed 54.4% of calories from ultra-processed foods."
+      }
+    },
+    {
+      "group": "you",
+      "big": "2.0%",
+      "line": "About 2 in 100 US men have had binge-eating disorder at some point. Fewer than half ever sought treatment for it.",
+      "mirror": "Men who eat until it hurts, then hide the wrappers.",
+      "basis": {
+        "design": "national survey (face-to-face interviews)",
+        "who": "US adults living in households",
+        "n": "9,282 adults",
+        "where": "USA",
+        "when": "2001-2003",
+        "measured": "Lifetime binge-eating disorder by a structured psychiatric interview (WHO CIDI, DSM-IV rules). 43.6% of people with it sought treatment specifically for it."
+      },
+      "caveat": "Old data and older diagnostic rules. Lifetime means 'ever', so it includes men who have since recovered.",
+      "ref": {
+        "cite": "Hudson JI, Hiripi E, Pope HG, Kessler RC (2007). The prevalence and correlates of eating disorders in the National Comorbidity Survey Replication. Biological Psychiatry 61(3):348-358.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16815322/",
+        "pmid": "16815322",
+        "fetched": true,
+        "quote": "Lifetime prevalence estimates of DSM-IV anorexia nervosa, bulimia nervosa, and binge eating disorder are .9%, 1.5%, and 3.5% among women, and .3% .5%, and 2.0% among men."
+      },
+      "existing": true
+    },
+    {
+      "group": "you",
+      "big": "4 in 100",
+      "line": "Counting milder cases too, about 4 in 100 US men have had a binge-eating pattern at some point.",
+      "mirror": "Men who binge often but think 'it's not a real problem'.",
+      "basis": {
+        "design": "national survey (face-to-face interviews)",
+        "who": "US adults living in households",
+        "n": "9,282 adults",
+        "where": "USA",
+        "when": "2001-2003",
+        "measured": "Lifetime 'any binge eating' (full disorder plus below-threshold cases) among men: 4.0%; below-threshold alone: 1.9%."
+      },
+      "caveat": "Self-reported in an interview, years later. Below-threshold binge eating is not a diagnosis, and the cut-off is the interview's own.",
+      "ref": {
+        "cite": "Hudson JI, Hiripi E, Pope HG, Kessler RC (2007). The prevalence and correlates of eating disorders in the National Comorbidity Survey Replication. Biological Psychiatry 61(3):348-358.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1892232/",
+        "pmid": "16815322",
+        "fetched": true,
+        "quote": "Table 1, Male column: 'Subthreshold binge-eating' 1.9 (se 0.5); 'Any binge-eating behavior' 4.0 (se 0.7)"
+      }
+    },
+    {
+      "group": "you",
+      "big": "38%",
+      "line": "Across 14 countries, only 38% of people who'd had binge-eating disorder ever got treatment for an eating disorder.",
+      "mirror": "Men who have never told anyone about the binges.",
+      "basis": {
+        "design": "cross-national surveys (WHO World Mental Health)",
+        "who": "adults aged 18+",
+        "n": "24,124 adults",
+        "where": "14 countries: Colombia, Brazil (Sao Paulo), Mexico, Romania, Belgium, France, Germany, Italy, Netherlands, New Zealand, Northern Ireland, Portugal, Spain, USA",
+        "when": "published 2013 (survey years not stated in fetched text)",
+        "measured": "Share of people with lifetime binge-eating disorder who ever received treatment specifically for eating disorders. 57.7% got treatment for some emotional problem."
+      },
+      "caveat": "Mostly richer countries. Treatment is self-reported and recalled.",
+      "ref": {
+        "cite": "Kessler RC, Berglund PA, Chiu WT, et al. (2013). The prevalence and correlates of binge eating disorder in the World Health Organization World Mental Health Surveys. Biological Psychiatry 73(9):904-914.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3628997/",
+        "pmid": "23290497",
+        "fetched": true,
+        "quote": "Smaller proportions of lifetime cases (BN 47.4%, BED 38.3%) ever received treatment specifically for eating disorders."
+      }
+    },
+    {
+      "group": "start",
+      "big": "Age 19",
+      "line": "Binge-eating disorder usually starts in the late teens or early 20s; the middle age of onset was about 19.",
+      "mirror": "Men whose bingeing began at uni or the first job.",
+      "basis": {
+        "design": "cross-national surveys (WHO World Mental Health)",
+        "who": "adults aged 18+",
+        "n": "24,124 adults",
+        "where": "14 countries: Colombia, Brazil (Sao Paulo), Mexico, Romania, Belgium, France, Germany, Italy, Netherlands, New Zealand, Northern Ireland, Portugal, Spain, USA",
+        "when": "published 2013 (survey years not stated in fetched text)",
+        "measured": "Age when symptoms first started, recalled in a structured interview. Median 19.3 years for binge-eating disorder (18.0 for bulimia)."
+      },
+      "caveat": "Age is remembered, often years later. The US survey (Hudson 2007) found a median of 21.",
+      "ref": {
+        "cite": "Kessler RC, Berglund PA, Chiu WT, et al. (2013). The prevalence and correlates of binge eating disorder in the World Health Organization World Mental Health Surveys. Biological Psychiatry 73(9):904-914.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3628997/",
+        "pmid": "23290497",
+        "fetched": true,
+        "quote": "Median age of onset is in the late teens to early 20s for both disorders (full text: medians: 18.0 vs. 19.3)"
+      }
+    },
+    {
+      "group": "start",
+      "big": "11%",
+      "line": "Cravings and food cues explain about 11% of later eating and weight gain; food pictures and videos pull as hard as real food.",
+      "mirror": "Men who get hungry watching food videos at midnight.",
+      "basis": {
+        "design": "meta-analysis of 45 reports (69 results)",
+        "who": "children and adults, lean and heavy",
+        "n": "3,292 people",
+        "where": "several countries (not listed in abstract)",
+        "when": "published 2016",
+        "measured": "Link between reacting to food cues or craving, and later eating or weight gain (r = 0.33, medium). Same size across body weight, age and dieting."
+      },
+      "caveat": "A link, not proof that cues cause weight gain. 11% means most of what you eat is explained by other things.",
+      "ref": {
+        "cite": "Boswell RG, Kober H (2016). Food cue reactivity and craving predict eating and weight gain: a meta-analytic review. Obesity Reviews 17(2):159-177.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26644270/",
+        "pmid": "26644270",
+        "fetched": true,
+        "quote": "we found an overall medium effect of food cue reactivity and craving on outcomes (r = 0.33, p < 0.001; approximately 11% of variance)"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "+500 kcal",
+      "line": "On ultra-processed food, people ate about 500 more calories a day and gained about 0.9 kg in two weeks.",
+      "mirror": "Men who 'eat normally' but keep gaining.",
+      "basis": {
+        "design": "randomised crossover trial (inpatient)",
+        "who": "weight-stable adults, mean age 31, average BMI 27; 10 men, 10 women",
+        "n": "20 adults",
+        "where": "USA (NIH Clinical Center, Bethesda)",
+        "when": "published 2019; 2 weeks per diet",
+        "measured": "Food eaten when free to eat as much as wanted, weighed by staff. Meals matched for calories offered, sugar, fat, fibre and salt."
+      },
+      "caveat": "Only 20 people, in hospital, for two weeks. They also ate faster on ultra-processed food (17 kcal a minute more).",
+      "ref": {
+        "cite": "Hall KD, Ayuketah A, Brychta R, et al. (2019). Ultra-processed diets cause excess calorie intake and weight gain: an inpatient randomized controlled trial of ad libitum food intake. Cell Metabolism 30(1):67-77.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/31105044/",
+        "pmid": "31105044",
+        "fetched": true,
+        "quote": "Energy intake was greater during the ultra-processed diet (508 ± 106 kcal/day; p = 0.0001)"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "1.5x odds",
+      "line": "People who eat more ultra-processed food have about 1.5 times the odds of anxiety and about 1.4 times the odds of sleep problems.",
+      "mirror": "Men who feel wired, tired and on edge.",
+      "basis": {
+        "design": "umbrella review of 45 pooled analyses",
+        "who": "adults and children in observational studies",
+        "n": "9,888,373 people (all analyses)",
+        "where": "many countries",
+        "when": "studies from 2009 to June 2023",
+        "measured": "Odds of current anxiety (odds ratio 1.48) and sleep problems (1.41) with higher versus lower ultra-processed food intake."
+      },
+      "caveat": "Observational: anxious or sleepless people may eat more junk, not the other way round. Evidence quality rated low. Odds, not risk.",
+      "ref": {
+        "cite": "Lane MM, Gamage E, Du S, et al. (2024). Ultra-processed food exposure and adverse health outcomes: umbrella review of epidemiological meta-analyses. BMJ 384:e077310.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/38418082/",
+        "pmid": "38418082",
+        "fetched": true,
+        "quote": "higher risks of prevalent anxiety outcomes (odds ratio 1.48, 1.37 to 1.59; low)"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "4 years",
+      "line": "Once it starts, binge-eating disorder lasts about 4 years on average, the middle value across 14 countries.",
+      "mirror": "Men who have been 'starting Monday' for years.",
+      "basis": {
+        "design": "cross-national surveys (WHO World Mental Health)",
+        "who": "adults aged 18+",
+        "n": "24,124 adults",
+        "where": "14 countries: Colombia, Brazil (Sao Paulo), Mexico, Romania, Belgium, France, Germany, Italy, Netherlands, New Zealand, Northern Ireland, Portugal, Spain, USA",
+        "when": "published 2013 (survey years not stated in fetched text)",
+        "measured": "Years with the disorder, from recalled onset to recovery or interview. Middle country 4.3 years; middle half of countries 1.0 to 11.7."
+      },
+      "caveat": "A wide range, from about 1 to 12 years. Recalled, and mixes treated and untreated people.",
+      "ref": {
+        "cite": "Kessler RC, Berglund PA, Chiu WT, et al. (2013). The prevalence and correlates of binge eating disorder in the World Health Organization World Mental Health Surveys. Biological Psychiatry 73(9):904-914.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/23290497/",
+        "pmid": "23290497",
+        "fetched": true,
+        "quote": "Persistence is slightly higher for BN (6.5 years; 2.2-15.4) than BED (4.3 years; 1.0-11.7)."
+      }
+    },
+    {
+      "group": "quit",
+      "big": "About half",
+      "line": "After therapy for binge eating, mostly CBT, about half of people who finish stop bingeing completely, and it held at follow-up.",
+      "mirror": "Men who think nothing will ever stop the binges.",
+      "basis": {
+        "design": "meta-analysis of 39 randomised trials",
+        "who": "adults with binge-eating disorder; 65 treatment groups, 40 of them CBT",
+        "n": "2,349 patients",
+        "where": "many countries",
+        "when": "published 2018",
+        "measured": "Share with zero binges at end of treatment: 50.9% of finishers, 45.1% of all who started; follow-up 50.3% and 42.3%."
+      },
+      "caveat": "A 2026 update of 52 trials found 43%, with no gains in 40 years. Zero binges is a strict bar; many others improve partly.",
+      "ref": {
+        "cite": "Linardon J (2018). Rates of abstinence following psychological or behavioral treatments for binge-eating disorder: meta-analysis. International Journal of Eating Disorders 51(8):785-797.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30058074/",
+        "pmid": "30058074",
+        "fetched": true,
+        "quote": "treatment-completers who achieved abstinence at posttreatment was 50.9% (95% CI = 43.9, 57.8); this estimate was almost identical at follow-up (50.3%"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "Week 4",
+      "line": "In guided CBT self-help, people who cut binges by 70% or more by week 4 were more likely to stay binge-free long term.",
+      "mirror": "Men starting a programme and wondering if it's working.",
+      "basis": {
+        "design": "randomised trial",
+        "who": "adults with binge-eating disorder (DSM-IV)",
+        "n": "205 adults",
+        "where": "USA (US research teams; sites not named in abstract)",
+        "when": "published 2015; follow-up to 24 months",
+        "measured": "Binge-free rates after interpersonal therapy, CBT guided self-help or weight-loss treatment, by whether binges dropped 70% by week 4."
+      },
+      "caveat": "Slow starters are not doomed: in interpersonal therapy, fast and slow responders did equally well.",
+      "ref": {
+        "cite": "Hilbert A, Hildebrandt T, Agras WS, Wilfley DE, Wilson GT (2015). Rapid response in psychological treatments for binge eating disorder. Journal of Consulting and Clinical Psychology 83(3):649-654.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/25867446/",
+        "pmid": "25867446",
+        "fetched": true,
+        "quote": "the predictive value of rapid response, defined as ≥70% reduction in binge eating by Week 4, was determined for remission from binge eating"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "1 in 4",
+      "line": "Slips are common: between one and four years after group CBT, about 1 in 4 people slid back into binge eating.",
+      "mirror": "Men who binged again and think they failed.",
+      "basis": {
+        "design": "4-year follow-up of a randomised trial",
+        "who": "adults with binge eating disorder and overweight, about 80% women, mean age about 45",
+        "n": "90 people",
+        "where": "USA (New Haven, Connecticut)",
+        "when": "published 2012; 4 years after treatment",
+        "measured": "Relapse to binge eating between the 1-year and 4-year check-ups, after 20 weekly group sessions of CBT or interpersonal therapy (IPT: 10%)."
+      },
+      "caveat": "One trial, mostly middle-aged women. Even so, most were binge-free at 4 years.",
+      "ref": {
+        "cite": "Hilbert A, Bishop ME, Stein RI, et al. (2012). Long-term efficacy of psychological treatments for binge eating disorder. British Journal of Psychiatry 200(3):232-237.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3290797/",
+        "pmid": "22282429",
+        "fetched": true,
+        "quote": "6 (24.0%) patients in the CBT and 3 (10.0%) in the IPT group relapsed"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "Day 2-5",
+      "line": "People who cut down on junk food remember days 2 to 5 as the hardest.",
+      "mirror": "Men who quit sugar and feel awful by day three.",
+      "basis": {
+        "design": "online survey (questionnaire development)",
+        "who": "adults aged 19-68 who had cut down on highly processed food in the past year; 51.9% women",
+        "n": "231 adults",
+        "where": "USA (online, Amazon Mechanical Turk)",
+        "when": "published 2018",
+        "measured": "Recalled 'withdrawal' symptoms (mood, cravings, body) during a past attempt to cut down, on a new scale."
+      },
+      "caveat": "Memory of a past attempt, online volunteers. A later trial (107 people) found cutting junk caused no more withdrawal than a normal diet.",
+      "ref": {
+        "cite": "Schulte EM, Smeal JK, Lewis J, Gearhardt AN (2018). Development of the Highly Processed Food Withdrawal Scale. Appetite 131:148-154.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30227182/",
+        "pmid": "30227182",
+        "fetched": true,
+        "quote": "symptoms assessed by the ProWS were reported as most intense between days 2-5 during an attempt to cut down"
+      },
+      "existing": true
+    },
+    {
+      "group": "quit",
+      "big": "107",
+      "line": "In a trial of 107 people, cutting ultra-processed food caused no more withdrawal than a normal calorie-cut diet.",
+      "mirror": "Men afraid cutting junk will feel like detox.",
+      "basis": {
+        "design": "secondary analysis of a randomised trial",
+        "who": "adults with obesity on a weight-loss diet",
+        "n": "107 adults (51 normal diet, 56 diet plus cutting ultra-processed food)",
+        "where": "Brazil (Brazilian trial registry ReBEC)",
+        "when": "published 2026; first 15 days",
+        "measured": "Withdrawal scale scores on days 1, 3, 5 and 15. Difference 4.34 points, not statistically significant."
+      },
+      "caveat": "Small, all dieting, only 16% had 'food addiction'. A small extra effect can't be ruled out. Anxious people reported more withdrawal in both groups.",
+      "ref": {
+        "cite": "Lopes NGDS, Ferreira CS, Silva-Junior AE, et al. (2026). Impact of dietary ultra-processed food restriction on withdrawal symptoms in individuals with obesity undergoing a weight loss diet. Clinical Nutrition ESPEN 76:105105.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/42722153/",
+        "pmid": "42722153",
+        "fetched": true,
+        "quote": "A total of 107 participants were randomized (51 to ER-G and 56 to ER-UPF)."
+      },
+      "existing": true
+    },
+    {
+      "group": "after",
+      "big": "-0.9 kg",
+      "line": "On unprocessed food, the same people ate less without trying and lost about 0.9 kg in two weeks.",
+      "mirror": "Men who think losing weight means fighting hunger all day.",
+      "basis": {
+        "design": "randomised crossover trial (inpatient)",
+        "who": "weight-stable adults, mean age 31, average BMI 27; 10 men, 10 women",
+        "n": "20 adults",
+        "where": "USA (NIH Clinical Center, Bethesda)",
+        "when": "published 2019; 2 weeks per diet",
+        "measured": "Body weight on each diet, free to eat as much as wanted. On unprocessed food the fullness hormone PYY rose and hunger hormone ghrelin fell."
+      },
+      "caveat": "In hospital with meals cooked for them; 20 people; two weeks. Real life with shops and stress is harder.",
+      "ref": {
+        "cite": "Hall KD, Ayuketah A, Brychta R, et al. (2019). Ultra-processed diets cause excess calorie intake and weight gain: an inpatient randomized controlled trial of ad libitum food intake. Cell Metabolism 30(1):67-77.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7946062/",
+        "pmid": "31105044",
+        "fetched": true,
+        "quote": "participants gaining 0.9 ± 0.3 kg (p = 0.009) during the ultra-processed diet and losing 0.9 ± 0.3 kg (p = 0.007) during the unprocessed diet"
+      }
+    },
+    {
+      "group": "after",
+      "big": "64%",
+      "line": "Four years after group therapy for binge eating, about 64% were fully free of binge eating.",
+      "mirror": "Men who want proof that it stays fixed.",
+      "basis": {
+        "design": "4-year follow-up of a randomised trial",
+        "who": "adults with binge eating disorder and overweight, about 80% women, mean age about 45",
+        "n": "90 people",
+        "where": "USA (New Haven, Connecticut)",
+        "when": "published 2012; 4 years after treatment",
+        "measured": "Interview-rated full recovery from binge eating 4 years after 20 weekly group sessions (CBT 52.0%, IPT 76.7%). 80.0% binged below the diagnostic level."
+      },
+      "caveat": "One trial, mostly middle-aged women, and only those who came back. Weight stayed about the same.",
+      "ref": {
+        "cite": "Hilbert A, Bishop ME, Stein RI, et al. (2012). Long-term efficacy of psychological treatments for binge eating disorder. British Journal of Psychiatry 200(3):232-237.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3290797/",
+        "pmid": "22282429",
+        "fetched": true,
+        "quote": "with full recovery from binge eating in 64.4% of patients"
+      }
+    },
+    {
+      "group": "after",
+      "big": "18%",
+      "line": "Over five years, most young women with binge-eating disorder recovered: only 18% still had an eating disorder at the end.",
+      "mirror": "Anyone who thinks bingeing is a life sentence.",
+      "basis": {
+        "design": "community cohort followed 5 years",
+        "who": "women aged 16-35 at the start, found in the community",
+        "n": "48 women with binge-eating disorder",
+        "where": "not stated in fetched abstract (UK research group)",
+        "when": "published 2000",
+        "measured": "Any eating disorder of clinical severity, checked every 15 months for 5 years. Few sought treatment."
+      },
+      "caveat": "Women only, small. Weight still rose: 39% were obese at 5 years.",
+      "ref": {
+        "cite": "Fairburn CG, Cooper Z, Doll HA, Norman P, O'Connor M (2000). The natural course of bulimia nervosa and binge eating disorder in young women. Archives of General Psychiatry 57(7):659-665.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/10891036/",
+        "pmid": "10891036",
+        "fetched": true,
+        "quote": "the proportion with any form of clinical eating disorder declining to 18% (7 of 40) by the 5-year follow-up"
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "claim": "Regular meals (no skipping) reduce binge eating, with a number",
+      "why": "No fetched study gave a number for regular eating on its own; it is one part of CBT. Not used."
+    },
+    {
+      "claim": "Fasting predicts binge-eating onset (Stice 2008, 496 girls)",
+      "why": "Abstract gives no effect size; girls only. Already in the page's whatWorks; no new number."
+    },
+    {
+      "claim": "Fat plus carbohydrate foods are valued more than either alone (DiFeliceantonio 2018)",
+      "why": "Abstract has no sample size or number. Not used."
+    },
+    {
+      "claim": "Hilbert 2019 meta-analysis (81 trials, 7,515 people): CBT remission rate",
+      "why": "Abstract gives effect sizes, not a remission percentage; used Linardon 2018 abstinence rates instead."
+    },
+    {
+      "claim": "Ultra-processed food raises depression odds 1.55x (Menon 2026, NHANES 2021-23)",
+      "why": "Measured ultra-processed food only by added sugar; weak method. Not used."
+    },
+    {
+      "claim": "Lane 2024 umbrella review: deaths from heart disease and all causes",
+      "why": "Death counts left out on the owner's rule; only anxiety and sleep used."
+    },
+    {
+      "claim": "Praxedes 2022: food addiction 20% overall, 55% in people with binge eating",
+      "why": "Checks out but already in the page's numbers; used in the hero numberCheck instead."
+    },
+    {
+      "claim": "Hero line '14% of adults meet the threshold for food addiction'",
+      "why": "Matches the BMJ text, but the cited adult meta-analysis abstract says 20%. Say 'about 1 in 7 to 1 in 5, depending on the study set', or cite both."
+    }
+  ]
+}

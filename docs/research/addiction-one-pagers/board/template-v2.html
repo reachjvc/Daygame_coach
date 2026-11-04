@@ -111,10 +111,6 @@ button { font: inherit; color: inherit; }
 .note { color: var(--muted); font-size: 14px; }
 .ph { background: var(--ph-bg); border: 1px dashed var(--ph-line); padding: 12px 14px; font-size: 14.5px; color: var(--ink-2); display: grid; gap: 6px; }
 .ph .eyebrow { color: var(--watch); }
-.plan ol { margin: 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 8px; }
-.plan li { counter-increment: st; display: grid; grid-template-columns: 1.8em minmax(0, 1fr); gap: 6px; }
-.plan li::before { content: counter(st) "."; font-weight: 800; font-family: var(--f-display); }
-.who { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
 .safety { display: flex; gap: 10px; align-items: baseline; font-size: 15px; }
 .safety b { color: var(--danger); font-family: var(--f-display); font-stretch: 80%; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 details.src summary { cursor: pointer; font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 18px; }
@@ -144,8 +140,6 @@ details.src a { color: var(--lab); word-break: break-word; }
 .A-hero .sub { color: var(--ink-2); }
 .A-title { display: grid; gap: 10px; }
 .A-title h1 { font-size: 48px; font-weight: 800; font-stretch: 80%; line-height: 1; }
-.A-title h3 { color: var(--red); font-size: 17px; font-weight: 800; font-stretch: 85%; letter-spacing: .03em; text-transform: uppercase; }
-.A-title .plan { font-size: 15.5px; }
 .btable { width: 100%; border-collapse: collapse; }
 .btable th { background: var(--pink); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 28px; letter-spacing: .03em; text-transform: uppercase; text-align: center; padding: 10px; border: 2px solid var(--rule); }
 .btable td { vertical-align: top; padding: 12px 14px; border: 1px solid var(--hair); border-left: 2px solid var(--rule); }
@@ -154,11 +148,6 @@ details.src a { color: var(--lab); word-break: break-word; }
 .btable td.new .proof { display: block; font-weight: 400; font-size: 14px; color: var(--ink-2); margin-top: 4px; }
 .btable .rowmks { float: right; margin: 0 0 4px 8px; }
 .btable tr:last-child td { border-bottom: 2px solid var(--rule); }
-.A-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.A-nums > div { padding: 4px 20px 4px 0; display: grid; gap: 4px; align-content: start; }
-.A-nums > div + div { border-left: 1px solid var(--hair); padding-left: 20px; }
-.A-nums .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 40px; line-height: 1; }
-.A-nums p { font-size: 15px; color: var(--ink-2); }
 .A-stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
 .A-stages > div { padding: 8px 0; border-bottom: 1px solid var(--hair); font-size: 15px; }
 .A-stages b { font-family: var(--f-display); font-stretch: 80%; font-size: 16px; margin-right: 6px; }
@@ -175,10 +164,6 @@ details.src a { color: var(--lab); word-break: break-word; }
 .B-head .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 132px; line-height: .85; }
 .B-head .line { font-family: var(--f-display); font-weight: 700; font-stretch: 90%; font-size: 26px; line-height: 1.15; max-width: 22ch; }
 .B-head .sub { color: var(--ink-2); font-size: 17px; max-width: 34ch; }
-.B-plan { border-top: 2px solid var(--rule); padding-top: 18px; display: grid; gap: 12px; }
-.B-plan ol { gap: 14px; }
-.B-plan li { grid-template-columns: 2.1em minmax(0, 1fr); font-size: 17px; }
-.B-plan li::before { content: counter(st); width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--red); color: var(--paper); display: grid; place-items: center; font-size: 15px; }
 .B-cards { display: grid; gap: 12px; }
 .B-card { border: 1.5px solid var(--hair); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; }
 .B-card .was { color: var(--muted); font-size: 16px; font-style: italic; }
@@ -186,9 +171,6 @@ details.src a { color: var(--lab); word-break: break-word; }
 .B-card .lab2.true { color: var(--red); }
 .B-card .now { font-weight: 700; font-size: 19px; line-height: 1.3; }
 .B-card .proof { color: var(--ink-2); font-size: 14.5px; }
-.B-nums { display: grid; gap: 0; }
-.B-nums > div { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 14px; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--hair); }
-.B-nums .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 36px; line-height: 1; color: var(--red); }
 .B-quote { position: relative; padding-left: 34px; }
 .B-quote::before { content: "\201C"; position: absolute; left: -4px; top: -10px; font-family: var(--f-display); font-weight: 900; font-size: 80px; color: var(--red); line-height: 1; }
 .B-quote textarea { border: 0; border-left: 3px solid var(--pink); border-radius: 0; font-size: 18px; font-style: italic; background: transparent; }
@@ -212,23 +194,62 @@ details.src a { color: var(--lab); word-break: break-word; }
 .C-head .lede { font-size: 21px; line-height: 1.4; margin-top: 14px; max-width: 34ch; }
 .C-head .lede b { font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 1.5em; color: var(--red); }
 .C-head .tags { margin-top: 14px; }
-.C-plan { background: var(--panel); padding: 18px 20px; display: grid; gap: 10px; }
-.C-plan h3 { font-size: 15px; font-family: var(--f-mono); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
-.C-plan .plan { font-size: 15px; }
 .C-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 28px; }
 .C-tile { border-top: 2px solid var(--rule); padding-top: 10px; display: grid; gap: 6px; align-content: start; }
 .C-tile .was { color: var(--muted); font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: start; }
 .C-tile .now { font-weight: 700; font-size: 17px; line-height: 1.3; }
 .C-tile .proof { font-size: 14px; color: var(--ink-2); }
-.C-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
-.C-nums > div { border-top: 4px solid var(--red); padding-top: 10px; display: grid; gap: 6px; align-content: start; }
-.C-nums .big { font-family: var(--f-display); font-weight: 900; font-stretch: 72%; font-size: 48px; line-height: 1; }
-.C-nums p { font-size: 15px; color: var(--ink-2); }
 .C-table { width: 100%; border-collapse: collapse; font-size: 15px; }
 .C-table th { text-align: left; font-family: var(--f-mono); font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 6px 0; border-bottom: 2px solid var(--rule); }
 .C-table td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
 .C-table td:first-child { font-weight: 700; white-space: nowrap; }
 .C-table td.n { font-family: var(--f-mono); font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+/* ---------- what a number is based on; stat cards; plan ---------- */
+.basis { font-size: 14px; color: var(--ink-2); display: grid; gap: 4px; }
+.basis b, .sb b { color: var(--ink); font-weight: 700; }
+.basis.missing { color: var(--watch); }
+.A-basis { border: 1.5px solid var(--rule); background: var(--panel); padding: 12px 14px; margin-top: 6px; }
+.B-basis { max-width: 46ch; text-align: left; border-top: 1px solid var(--hair); padding-top: 10px; margin-top: 4px; }
+.C-basis { background: var(--panel); padding: 16px 18px; align-self: end; }
+.mir { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--red); }
+.sl { font-size: 16px; font-weight: 600; line-height: 1.35; }
+.sb { font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
+.A-gh, .B-gh, .C-gh { font-family: var(--f-display); font-weight: 800; font-stretch: 85%; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; color: var(--red); margin-top: 6px; }
+.A-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid var(--rule); }
+.A-stats .st { padding: 12px 16px 14px 0; display: grid; gap: 5px; align-content: start; border-bottom: 1px solid var(--hair); }
+.A-stats .st:not(:nth-child(3n + 1)) { border-left: 1px solid var(--hair); padding-left: 16px; }
+.A-stats .big, .B-stat .big, .C-stat .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; line-height: 1; }
+.A-stats .big { font-size: 40px; }
+.B-stats { display: grid; gap: 12px; }
+.B-stat { border: 1.5px solid var(--hair); border-radius: 12px; padding: 14px 16px; display: grid; gap: 5px; }
+.B-stat .big { font-size: 44px; color: var(--red); }
+.C-stats { display: grid; border-top: 2px solid var(--rule); }
+.C-stat { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 18px; padding: 14px 0; border-bottom: 1px solid var(--hair); }
+.C-stat > div { display: grid; gap: 5px; align-content: start; }
+.C-stat .big { font-size: 38px; color: var(--red); }
+.ptable { width: 100%; border-collapse: collapse; }
+.ptable th { background: var(--pink); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 24px; letter-spacing: .03em; text-transform: uppercase; text-align: left; padding: 8px 14px; border: 2px solid var(--rule); }
+.ptable td { vertical-align: top; padding: 12px 14px; border: 1px solid var(--hair); border-left: 2px solid var(--rule); border-right: 2px solid var(--rule); }
+.ptable tr:last-child td { border-bottom: 2px solid var(--rule); }
+.ptable td.ps { width: 46%; background: var(--panel); }
+.ptable td.ps .pt { display: flex; gap: 8px; font-family: var(--f-display); font-stretch: 85%; font-size: 18px; color: var(--red); margin-bottom: 4px; }
+.ptable td.ps .pt i { font-style: normal; color: var(--ink); }
+.ptable td.ps span { font-size: 15px; }
+.pd ul, .B-step ul, .C-steps ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 15px; }
+.pproof { font-size: 13.5px; color: var(--ink-2); margin-top: 8px; border-left: 3px solid var(--pink); padding-left: 10px; }
+.B-steps { display: grid; gap: 18px; }
+.B-step { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 12px; }
+.B-step .i { width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--red); color: var(--paper); display: grid; place-items: center; font-family: var(--f-display); font-weight: 900; font-size: 18px; }
+.B-step h3 { font-size: 21px; font-weight: 800; font-stretch: 85%; line-height: 1.15; }
+.B-step .t { color: var(--ink-2); font-size: 15px; margin: 4px 0 8px; }
+.C-steps { list-style: none; margin: 0; padding: 0; display: grid; border-top: 2px solid var(--rule); }
+.C-steps > li { padding: 14px 0; border-bottom: 1px solid var(--hair); display: grid; gap: 8px; }
+.C-steps .h { display: flex; gap: 12px; align-items: baseline; }
+.C-steps .i { font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 30px; color: var(--red); line-height: 1; }
+.C-steps h3 { font-size: 21px; font-weight: 800; font-stretch: 85%; }
+.C-steps .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.C-steps .t { font-size: 15px; color: var(--ink-2); }
 
 /* ---------- timeline forms ---------- */
 .tl-line { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
@@ -298,15 +319,19 @@ details.src a { color: var(--lab); word-break: break-word; }
 
 /* ---------- narrow page (a phone, or the Phone button) ---------- */
 @container page (max-width: 760px) {
-  .A-head, .C-head, .C-in, .A-stages, .pinlist { grid-template-columns: minmax(0, 1fr); }
+  .A-head, .C-head, .C-in, .A-stages, .pinlist, .A-stats, .C-steps .two { grid-template-columns: minmax(0, 1fr); }
+  .A-stats .st:not(:nth-child(3n + 1)) { border-left: 0; padding-left: 0; }
+  .C-stat { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .ptable thead { display: none; }
+  .ptable, .ptable tbody, .ptable tr, .ptable td { display: block; width: 100% !important; }
+  .ptable td { border-top: 0; }
+  .ptable tr:first-child td.ps { border-top: 2px solid var(--rule); }
   .C-in { gap: 10px; }
   .A-hero .big { font-size: 84px; }
   .A-title h1 { font-size: 36px; }
   .A-blk, .A-band > .bd { padding: 14px 14px 18px; }
   .A-band { grid-template-columns: 30px minmax(0, 1fr); }
   .A-band > .vl span { font-size: 16px; }
-  .A-nums, .C-nums { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .A-nums > div + div { border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); padding-top: 14px; }
   .btable thead { display: none; }
   .btable, .btable tbody, .btable tr, .btable td { display: block; width: 100%; }
   .btable tr { border: 2px solid var(--rule); border-top: 0; }
@@ -328,7 +353,6 @@ details.src a { color: var(--lab); word-break: break-word; }
   .L-B > .labbar { margin-inline: 8px; }
   .B-head .big { font-size: 96px; }
   .B-head .line { font-size: 22px; }
-  .B-nums > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .L-C { padding: 8px 14px 20px; }
   .C-head h1 { font-size: 44px; }
   .C-head .lede { font-size: 18px; }
@@ -357,15 +381,14 @@ details.src a { color: var(--lab); word-break: break-word; }
 
 <section class="lab"><div class="wrap">
   <div>
-    <div class="eyebrow">Round 3 &middot; 4 Nov 2026</div>
-    <h2>Three layouts of the same page. Lock the sections that work.</h2>
+    <div class="eyebrow">Round 4 &middot; 4 Nov 2026</div>
+    <h2>More numbers, each with what it’s based on. A real plan per addiction.</h2>
     <ul>
-      <li><b>A Poster</b> is your 2025 sheet. <b>B Story</b> is one column, made for a phone. <b>C Guide</b> reads like a field guide and has the new timeline chart.</li>
-      <li>The buttons at the top switch every section. The blue bar on a section switches only that section, so you can mix.</li>
-      <li><b>Lock</b> a section when it works. It stays that way when you switch layouts, and it counts for all eight addictions.</li>
-      <li>Fixed: nothing on the page says craving grows any more. Where a study only measured how people react to a trigger, the line now says triggers can still hit hard.</li>
-      <li>Fixed: the weed forum results are plain sentences, not bars, and say why later stages look worse.</li>
-      <li><b>Phone</b> shows the page at phone width.</li>
+      <li><b>Is this you?</b> and <b>How quitting goes</b>: 14 to 17 numbers per addiction. Each says who was counted, how many, where and when, and what it doesn’t mean.</li>
+      <li>The big number now says what it’s based on. “90.6% get out” was a lifetime projection, and “out” means no longer hooked, not never drinking again. It now says so.</li>
+      <li>The plan has its own section. Your five steps stay; each one gets things to do for that addiction, and the evidence where there is some.</li>
+      <li>Removed: 2.6 million deaths.</li>
+      <li>Layouts: <b>A Poster</b>, <b>B Story</b> (phone first), <b>C Guide</b>. Switch all at the top, or one section from its blue bar. <b>Lock</b> a section when it works.</li>
     </ul>
   </div>
   <div class="labbox">
@@ -386,14 +409,17 @@ const LAYOUTS = { A: "Poster", B: "Story", C: "Guide" };
 const FORMS = { line: "Line", rail: "List", grid: "Grid", chart: "Chart" };
 const FORM_OF = { A: "line", B: "rail", C: "chart" };
 const SECS = [
-  ["head", "Header", "Number and plan"],
-  ["timeline", "Timeline", "What the weeks and months are like"],
-  ["beliefs", "Beliefs", "Current belief, new belief"],
-  ["numbers", "Numbers", "In numbers"],
-  ["story", "Your story", "My experience"],
-  ["others", "Others", "What others report"],
-  ["sources", "Sources", "Sources"],
+  ["head", "Header"],
+  ["you", "Is this you?"],
+  ["timeline", "Timeline"],
+  ["beliefs", "Beliefs"],
+  ["plan", "Plan"],
+  ["outlook", "How quitting goes"],
+  ["story", "Your story"],
+  ["others", "Others"],
+  ["sources", "Sources"],
 ];
+const GROUPS = { you: "People like you", start: "How it starts", cost: "What it costs you", quit: "How quitting goes", after: "What you get back" };
 const KIND = { feel: "What you feel", watch: "Watch out", danger: "Danger", win: "Gets better" };
 const STAGES = [
   { label: "Days 1–3", max: 72 }, { label: "Days 4–14", max: 336 }, { label: "Weeks 3–8", max: 1440 },
@@ -414,7 +440,6 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const refs = ns => ns && ns.length ? `<button type="button" class="ref${ns.some(n => page.unchecked.includes(n)) ? " unc" : ""}" data-refs="${ns.join(",")}">[${ns.join(",")}]</button>` : "";
 const fill = s => s.replace(/\{(\w+)\}/g, (_, k) => page.subs[k] || k);
-const planList = () => `<div class="plan"><ol>${DATA.plan.map(s => `<li><span>${fill(s)}</span></li>`).join("")}</ol></div>`;
 const goal = () => page.mode === "reshape" ? "Goal: cut down, not zero" : "Goal: stop fully";
 const layOf = sec => (LOCKS[sec] && LOCKS[sec].layout) || LOCAL[sec] || G;
 const formOf = lay => (LOCKS.timeline && LOCKS.timeline.form) || LOCAL_FORM.timeline || FORM_OF[lay];
@@ -517,44 +542,86 @@ const R = {
   head: {
     A: () => `<div class="A-blk"><div class="A-head">
       <div class="A-hero"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div></div>
-      <div class="A-title"><h1>${esc(page.title)}</h1><div><span class="tag">${goal()}</span></div><h3>Five-step strategic plan</h3>${planList()}<div class="who">Your 2025 text. Only the substance word changes per page.</div></div>
+      <div class="A-title"><h1>${esc(page.title)}</h1><div><span class="tag">${goal()}</span></div>${heroBasis("A-basis")}</div>
     </div></div>`,
-    B: () => `<div class="B-in"><div class="B-head"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div></div>
-      <div class="B-plan"><div class="B-kick">Your five steps &middot; ${goal()}</div>${planList()}</div></div>`,
+    B: () => `<div class="B-in"><div class="B-head"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div>${heroBasis("B-basis")}</div></div>`,
     C: () => `<div class="C-head"><div><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><p class="lede"><b>${esc(page.hero.big)}</b> ${esc(page.hero.line)} ${esc(page.hero.sub)} ${refs(page.hero.n)}</p><div class="tags"><span class="tag">${goal()}</span></div></div>
-      <div class="C-plan"><h3>The five-step plan</h3>${planList()}</div></div>`,
+      ${heroBasis("C-basis")}</div>`,
   },
   timeline: {
     A: f => `<div class="A-band"><div class="vl"><span>Timeline</span></div><div class="bd"><h2>What the first weeks and months are like</h2><p class="note">${esc(page.timelineNote)}</p>${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div></div>`,
     B: f => `<div class="B-in"><div class="B-kick">The timeline</div><h2>What the first weeks and months are like</h2><p class="note">${esc(page.timelineNote)}</p>${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div>`,
-    C: f => `<div class="C-in"><div class="C-side"><span class="no">02</span><h2>Week by week</h2><p>${esc(page.timelineNote)}</p></div><div class="C-main">${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div></div>`,
+    C: f => `<div class="C-in"><div class="C-side"><span class="no">${no("timeline")}</span><h2>Week by week</h2><p>${esc(page.timelineNote)}</p></div><div class="C-main">${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div></div>`,
   },
   beliefs: {
     A: () => `<div class="A-band"><div class="vl"><span>Beliefs</span></div><div class="bd"><table class="btable"><thead><tr><th>Current beliefs</th><th>New beliefs</th></tr></thead><tbody>${page.beliefs.map((b, i) => `<tr class="${isCut(i) ? "cut" : ""}"><td class="cur">${esc(b.current)}</td><td class="new">${rowMarks(i)}${esc(b.new)}<span class="proof">${esc(b.proof)} ${refs(b.n)}</span></td></tr>`).join("")}</tbody></table></div></div>`,
     B: () => `<div class="B-in"><div class="B-kick">The beliefs</div><h2>What you tell yourself, and what’s true</h2><div class="B-cards">${page.beliefs.map((b, i) => `<div class="B-card${isCut(i) ? " cut" : ""}"><div class="lab2">You tell yourself ${rowMarks(i)}</div><p class="was">“${esc(b.current)}”</p><div class="lab2 true">What’s true</div><p class="now">${esc(b.new)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>`).join("")}</div></div>`,
-    C: () => `<div class="C-in"><div class="C-side"><span class="no">03</span><h2>Old belief, new belief</h2><p>The thoughts that keep you stuck, each with what the evidence says.</p></div><div class="C-main"><div class="C-tiles">${page.beliefs.map((b, i) => `<div class="C-tile${isCut(i) ? " cut" : ""}"><p class="was"><span>“${esc(b.current)}”</span>${rowMarks(i)}</p><p class="now">${esc(b.new)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>`).join("")}</div></div></div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">${no("beliefs")}</span><h2>Old belief, new belief</h2><p>The thoughts that keep you stuck, each with what the evidence says.</p></div><div class="C-main"><div class="C-tiles">${page.beliefs.map((b, i) => `<div class="C-tile${isCut(i) ? " cut" : ""}"><p class="was"><span>“${esc(b.current)}”</span>${rowMarks(i)}</p><p class="now">${esc(b.new)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>`).join("")}</div></div></div>`,
   },
-  numbers: {
-    A: () => `<div class="A-band"><div class="vl"><span>Numbers</span></div><div class="bd"><div class="A-nums">${page.numbers.map(x => `<div><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div></div></div>`,
-    B: () => `<div class="B-in"><div class="B-kick">In numbers</div><div class="B-nums">${page.numbers.map(x => `<div><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div></div>`,
-    C: () => `<div class="C-in"><div class="C-side"><span class="no">04</span><h2>In numbers</h2></div><div class="C-main"><div class="C-nums">${page.numbers.map(x => `<div><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div></div></div>`,
+  you: {
+    A: () => statsA("you", ["you", "start", "cost"]),
+    B: () => statsB(["you", "start", "cost"], "Is this you?", "Numbers you might see yourself in. Each one says what it’s based on."),
+    C: () => statsC("you", ["you", "start", "cost"], "Is this you?", "Numbers you might see yourself in. Each one says what it’s based on."),
+  },
+  plan: {
+    A: () => `<div class="A-band"><div class="vl"><span>Plan</span></div><div class="bd"><h2>Five-step strategic plan</h2><table class="ptable"><thead><tr><th>The step</th><th>For ${esc(page.tab.toLowerCase())}</th></tr></thead><tbody>${planSteps().map(st => `<tr><td class="ps"><b class="pt"><i>${st.i}</i>${esc(st.title)}</b><span>${fill(st.text)}</span></td><td class="pd"><ul>${st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${st.proof}</td></tr>`).join("")}</tbody></table></div></div>`,
+    B: () => `<div class="B-in"><div class="B-kick">The plan &middot; ${goal()}</div><h2>Five steps</h2><div class="B-steps">${planSteps().map(st => `<div class="B-step"><span class="i">${st.i}</span><div><h3>${esc(st.title)}</h3><p class="t">${fill(st.text)}</p><ul>${st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${st.proof}</div></div>`).join("")}</div></div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">${no("plan")}</span><h2>The plan</h2><p>Five steps. Each one with what to do for ${esc(page.tab.toLowerCase())}.</p></div><div class="C-main"><ol class="C-steps">${planSteps().map(st => `<li><div class="h"><span class="i">${st.i}</span><h3>${esc(st.title)}</h3></div><div class="two"><p class="t">${fill(st.text)}</p><div><ul>${st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${st.proof}</div></div></li>`).join("")}</ol></div></div>`,
+  },
+  outlook: {
+    A: () => statsA("outlook", ["quit", "after"]),
+    B: () => statsB(["quit", "after"], "How quitting goes", "What happens to people who stop, and what they get back."),
+    C: () => statsC("outlook", ["quit", "after"], "How quitting goes", "What happens to people who stop, and what they get back."),
   },
   story: {
     A: () => `<div class="A-blk exp"><h2 style="font-size:24px;font-weight:800;font-stretch:80%">My experience</h2>${expBox()}</div>`,
     B: () => `<div class="B-in exp"><div class="B-kick">From me</div><h2>What it was like for me</h2>${expBox(true)}</div>`,
-    C: () => `<div class="C-in"><div class="C-side"><span class="no">05</span><h2>In my words</h2><p>The start, the hardest day, what you told yourself, what finally worked.</p></div><div class="C-main exp">${expBox()}</div></div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">${no("story")}</span><h2>In my words</h2><p>The start, the hardest day, what you told yourself, what finally worked.</p></div><div class="C-main exp">${expBox()}</div></div>`,
   },
   others: {
     A: () => { const f = forum(); return `<div class="A-blk" style="display:grid;gap:10px"><h2 style="font-size:24px;font-weight:800;font-stretch:80%">${esc(f.title)}</h2>${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<p class="note">${esc(f.intro)} ${esc(f.note)}</p><div class="A-stages">${f.stages.map(s => `<div><b>${esc(s.stage)}</b>${esc(s.text)}</div>`).join("")}</div><p><b>When people slipped:</b> ${esc(f.relapse)}</p>`}</div>`; },
     B: () => { const f = forum(); return `<div class="B-in"><div class="B-kick">Others like you</div><h2>${esc(f.title)}</h2>${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<p class="note">${esc(f.intro)}</p><div class="B-stages">${f.stages.map(s => `<div><b>${esc(s.stage)}</b>${esc(s.text)}</div>`).join("")}</div><p class="note">${esc(f.note)}</p><div class="B-card"><div class="lab2 true">When people slipped</div><p>${esc(f.relapse)}</p></div>`}</div>`; },
-    C: () => { const f = forum(); return `<div class="C-in"><div class="C-side"><span class="no">06</span><h2>${esc(f.title)}</h2>${f.ph ? "" : `<p>${esc(f.intro)}</p>`}</div><div class="C-main">${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<table class="C-table"><thead><tr><th>Time off</th><th>What people write about</th><th style="text-align:right">Posts</th></tr></thead><tbody>${f.stages.map(s => `<tr><td>${esc(s.stage)}</td><td>${esc(s.text)}</td><td class="n">${s.n.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table><p class="note">${esc(f.note)}</p><p><b>When people slipped:</b> ${esc(f.relapse)}</p>`}</div></div>`; },
+    C: () => { const f = forum(); return `<div class="C-in"><div class="C-side"><span class="no">${no("others")}</span><h2>${esc(f.title)}</h2>${f.ph ? "" : `<p>${esc(f.intro)}</p>`}</div><div class="C-main">${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<table class="C-table"><thead><tr><th>Time off</th><th>What people write about</th><th style="text-align:right">Posts</th></tr></thead><tbody>${f.stages.map(s => `<tr><td>${esc(s.stage)}</td><td>${esc(s.text)}</td><td class="n">${s.n.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table><p class="note">${esc(f.note)}</p><p><b>When people slipped:</b> ${esc(f.relapse)}</p>`}</div></div>`; },
   },
   sources: {
     A: () => `<div class="A-blk" style="display:grid;gap:14px">${srcBody()}</div>`,
     B: () => `<div class="B-in">${srcBody()}</div>`,
-    C: () => `<div class="C-in"><div class="C-side"><span class="no">07</span><h2>Sources</h2></div><div class="C-main">${srcBody()}</div></div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">${no("sources")}</span><h2>Sources</h2></div><div class="C-main">${srcBody()}</div></div>`,
   },
 };
+const no = sec => String(SECS.findIndex(x => x[0] === sec) + 1).padStart(2, "0");
+function heroBasis(cls) {
+  const h = page.hero;
+  if (!h.basedOn) return `<div class="basis ${cls} missing"><b>Based on:</b> details coming. ${refs(h.n)}</div>`;
+  return `<div class="basis ${cls}"><p><b>Based on:</b> ${esc(h.basedOn)} ${refs(h.n)}</p>${h.caveat ? `<p><b>Keep in mind:</b> ${esc(h.caveat)}</p>` : ""}</div>`;
+}
+function planSteps() {
+  return DATA.plan.map((text, k) => {
+    const st = (page.plan || [])[k] || { do: [] };
+    return { i: k + 1, title: DATA.planTitles[k], text, do: st.do, proof: st.proof ? `<p class="pproof">${esc(st.proof.text)} ${refs(st.proof.n)}</p>` : "" };
+  });
+}
+const statsOf = groups => (page.stats || []).filter(x => groups.includes(x.group));
+function basisText(x) {
+  const b = x.basis || {};
+  return [b.design, [b.n, b.who].filter(Boolean).join(", "), [b.where, b.when].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+}
+function statBody(x) {
+  return `<p class="sl">${esc(x.line)}</p><p class="sb"><b>Based on:</b> ${esc(basisText(x))}. ${refs(x.n)}</p>${x.basis && x.basis.measured ? `<p class="sb"><b>Counted:</b> ${esc(x.basis.measured)}</p>` : ""}${x.caveat ? `<p class="sb"><b>Keep in mind:</b> ${esc(x.caveat)}</p>` : ""}`;
+}
+const noStats = `<div class="ph"><span class="eyebrow">Coming</span>The numbers for this page are still being checked.</div>`;
+function statsA(sec, groups) {
+  const xs = statsOf(groups);
+  return `<div class="A-band"><div class="vl"><span>${sec === "you" ? "Is this you?" : "Quitting"}</span></div><div class="bd">${xs.length ? groups.filter(g => xs.some(x => x.group === g)).map(g => `<h3 class="A-gh">${GROUPS[g]}</h3><div class="A-stats">${xs.filter(x => x.group === g).map(x => `<div class="st">${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="big">${esc(x.big)}</div>${statBody(x)}</div>`).join("")}</div>`).join("") : noStats}</div></div>`;
+}
+function statsB(groups, title, intro) {
+  const xs = statsOf(groups);
+  return `<div class="B-in"><div class="B-kick">In numbers</div><h2>${esc(title)}</h2><p class="note">${esc(intro)}</p>${xs.length ? groups.filter(g => xs.some(x => x.group === g)).map(g => `<h3 class="B-gh">${GROUPS[g]}</h3><div class="B-stats">${xs.filter(x => x.group === g).map(x => `<div class="B-stat">${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="big">${esc(x.big)}</div>${statBody(x)}</div>`).join("")}</div>`).join("") : noStats}</div>`;
+}
+function statsC(sec, groups, title, intro) {
+  const xs = statsOf(groups);
+  return `<div class="C-in"><div class="C-side"><span class="no">${no(sec)}</span><h2>${esc(title)}</h2><p>${esc(intro)}</p></div><div class="C-main">${xs.length ? groups.filter(g => xs.some(x => x.group === g)).map(g => `<h3 class="C-gh">${GROUPS[g]}</h3><div class="C-stats">${xs.filter(x => x.group === g).map(x => `<div class="C-stat"><div class="big">${esc(x.big)}</div><div>${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}${statBody(x)}</div></div>`).join("")}</div>`).join("") : noStats}</div></div>`;
+}
 function expBox(quote) {
   const ta = `<textarea id="expText" placeholder="Write your own experience with ${esc(page.tab.toLowerCase())} here. It saves as you type.">${esc((EXP[page.id] || {}).text || "")}</textarea>`;
   return `<p class="note">In your words: what it was like at the start, the hardest day, what you told yourself, what finally worked.</p>${quote ? `<div class="B-quote">${ta}</div>` : ta}<div class="dbstate" id="expState"></div>`;

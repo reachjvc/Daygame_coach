@@ -1,0 +1,114 @@
+{
+  "ref": {
+    "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+    "pmid": "21077975",
+    "pmcid": "PMC3227547",
+    "doi": "10.1111/j.1360-0443.2010.03194.x",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+    "fetched": true,
+    "fetchedWhat": "PubMed abstract and the full text (PMC author manuscript, incl. Tables 1-4), 2026-11-04"
+  },
+  "abstractQuotes": [
+    "Life-time cumulative probability estimates of dependence remission were 83.7% for nicotine, 90.6% for alcohol, 97.2% for cannabis and 99.2% for cocaine.",
+    "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+  ],
+  "survey": "National Epidemiologic Survey on Alcohol and Related Conditions (NESARC), Wave 1, run by the US National Institute on Alcohol Abuse and Alcoholism (NIAAA); face-to-face computer-assisted interviews by US Census Bureau interviewers using the AUDADIS-IV.",
+  "years": "2001–2002",
+  "adults": "43,093",
+  "who": "US civilian non-institutionalized adults aged 18+, living in households and group quarters (e.g. college quarters, group homes, boarding houses); continental US, Alaska, Hawaii and DC. Blacks, Hispanics and ages 18–24 oversampled, then weighted. Response rate 81%.",
+  "everDependent": {
+    "nicotine": 6937,
+    "alcohol": 4781,
+    "cannabis": 530,
+    "cocaine": 408,
+    "quote": "the subsample of respondents with lifetime history of dependence on nicotine (n=6,937), alcohol (n=4,781), cannabis (n=530) or cocaine (n=408)."
+  },
+  "dependenceDefinition": "DSM-IV dependence: 3 or more of the 7 criteria within a 12-month period, at any time in life.",
+  "remission": {
+    "definition": "No longer having ANY of the dependence criteria, for good as of the interview. It is not the same as abstinence: someone who still drinks or smokes but has none of the 7 dependence signs counts as remitted.",
+    "abstinentRequired": false,
+    "minimumDuration": "None fixed. The person reports the age when the symptoms 'finally stopped' and 'never started happening again' up to the interview; time to remission = that age minus the age dependence began.",
+    "quote": "“about how old were you when you finally stopped having any of these experiences (dependence criteria) with (name of drug)? By finally stopped, I mean they never started happening again.”"
+  },
+  "estimateType": {
+    "answer": "Projected, not observed. The 83.7/90.6/97.2/99.2% are lifetime cumulative probabilities from survival analysis (actuarial life-table method). People not yet remitted at interview are counted up to their current age (censored), and the curve projects what share would remit over a whole life.",
+    "quote": "These projections were obtained by the standard actuarial method"
+  },
+  "byTimeSinceOnset": {
+    "note": "Cumulative probability of remission, % (same survival curves).",
+    "within1Year": {
+      "nicotine": 3.0,
+      "alcohol": 3.0,
+      "cannabis": 4.7,
+      "cocaine": 8.6
+    },
+    "within10Years": {
+      "nicotine": 18.4,
+      "alcohol": 37.4,
+      "cannabis": 66.2,
+      "cocaine": 75.8
+    },
+    "lifetime": {
+      "nicotine": 83.7,
+      "alcohol": 90.6,
+      "cannabis": 97.2,
+      "cocaine": 99.2
+    },
+    "quote": "The cumulative probability of remission a decade after onset of dependence was 18.4% for nicotine, 37.4% for alcohol, 66.2% for cannabis, and 75.8% for cocaine."
+  },
+  "medianYearsToRemission": {
+    "note": "Years from dependence onset (not from first use) until half had remitted; 'approximately' in the paper.",
+    "nicotine": 26,
+    "alcohol": 14,
+    "cannabis": 6,
+    "cocaine": 5
+  },
+  "treatment": "not in fetched text. The paper does not report treatment use or how many remitted without treatment; treatment is not among the predictors in Tables 3–4.",
+  "findingsForMen": {
+    "text": "Men remitted at a lower rate than women for all four substances (adjusted hazard ratios: nicotine 0.81, alcohol 0.80, cannabis 0.64, cocaine 0.65). Ages 18–29 were less likely than 45+ to remit from alcohol (0.78) but more likely from cannabis (2.40) and cocaine (4.61).",
+    "quote": "Males were less likely than females to remit from dependence on all the substances assessed"
+  },
+  "otherPredictors": "Lower remission with a personality disorder (alcohol, cannabis) or dependence on another drug; past alcohol dependence lowered remission from nicotine and cannabis. Each extra year of education raised nicotine remission by 10%. Mood and anxiety disorders showed no link.",
+  "authorsCaveats": [
+    "Self-report: social desirability can lead to over-report of remission; recall bias over long intervals.",
+    "People in institutions, or who died or had severe consequences, were not sampled, which can overestimate remission.",
+    "No data on the number or length of remission episodes; remission and relapse can alternate."
+  ],
+  "authorsCaveatQuote": "these estimates should be interpreted with caution given the irregular course of addictions punctuated by remissions and relapses.",
+  "unclear": "Table 4 headers show 'Nicotine remission (N=1300)' and 'Alcohol remission (N=2008)'; the text does not say what these N count (likely those who remitted).",
+  "perSubstance": {
+    "nicotine": {
+      "everDependent": 6937,
+      "lifetimePct": 83.7,
+      "medianYears": 26,
+      "within10YearsPct": 18.4,
+      "basedOn": "A 2001–02 national US survey interviewed 43,093 adults; 6,937 had ever been dependent on nicotine. From the ages they said they got hooked and finally lost all symptoms, researchers projected 83.7% get there in a lifetime.",
+      "caveat": "A projection, not a headcount. 'Out' means no dependence symptoms, not always nicotine-free. Only 18.4% got there within 10 years; half took about 26."
+    },
+    "alcohol": {
+      "everDependent": 4781,
+      "lifetimePct": 90.6,
+      "medianYears": 14,
+      "within10YearsPct": 37.4,
+      "basedOn": "A 2001–02 national US survey interviewed 43,093 adults; 4,781 had ever been dependent on alcohol. From the ages they said they got hooked and finally lost all symptoms, researchers projected 90.6% get there in a lifetime.",
+      "caveat": "A projection, not a headcount. 'Out' means no dependence symptoms; many still drink. Only 37.4% got there within 10 years; half took about 14."
+    },
+    "cannabis": {
+      "everDependent": 530,
+      "lifetimePct": 97.2,
+      "medianYears": 6,
+      "within10YearsPct": 66.2,
+      "basedOn": "A 2001–02 national US survey interviewed 43,093 adults; 530 had ever been dependent on cannabis. From the ages they said they got hooked and finally lost all symptoms, researchers projected 97.2% get there in a lifetime.",
+      "caveat": "A projection from a small group of 530. 'Out' means no dependence symptoms, not always quitting. Half took about 6 years."
+    },
+    "cocaine": {
+      "everDependent": 408,
+      "lifetimePct": 99.2,
+      "medianYears": 5,
+      "within10YearsPct": 75.8,
+      "basedOn": "A 2001–02 national US survey interviewed 43,093 adults; 408 had ever been dependent on cocaine. From the ages they said they got hooked and finally lost all symptoms, researchers projected 99.2% get there in a lifetime.",
+      "caveat": "Small group, and people in prison, hospital or who died were not surveyed, so the true share is likely lower. Half took about 5 years."
+    }
+  },
+  "pageWording": "The hero line 'of people who were ever hooked … get out' is fair if read as 'are projected to get free of dependence symptoms at some point'. Safer: 'are expected to get free of it at some point in life'."
+}

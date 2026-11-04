@@ -1,0 +1,420 @@
+{
+  "id": "gambling",
+  "hero": {
+    "basedOn": "Cohort study: 101 people with pathological gambling who had recently quit, in Calgary, Canada, were followed for 12 months. Only 8% stayed completely gambling-free; any gambling at all counted. Published 2004.",
+    "caveat": "Older study, one city, 101 people. 'Bet again' includes one small slip; relapses varied widely, so 92% does not mean 92% went back to how it was.",
+    "ref": {
+      "cite": "Hodgins DC, el-Guebaly N (2004). Retrospective and prospective reports of precipitants to relapse in pathological gambling. Journal of Consulting and Clinical Psychology 72:72-80.",
+      "url": "https://europepmc.org/article/MED/14756616",
+      "pmid": "14756616",
+      "fetched": true,
+      "quote": "Relapse rates were high; only 8% were entirely free of gambling during the 12-month follow-up."
+    },
+    "check": "Number matches: 92% is 100% minus the 8% who stayed entirely gambling-free. Where (Calgary, Canada) comes from the authors' address in the record, not the abstract text."
+  },
+  "stats": [
+    {
+      "group": "you",
+      "big": "1 in 10",
+      "line": "In Britain, about 1 in 10 gamblers aged 18 to 24 score as problem gamblers on the standard 9-question test.",
+      "mirror": "Young guys whose betting app sits on the home screen.",
+      "basis": {
+        "design": "national official-statistics survey (push-to-web)",
+        "who": "adults 18+; this figure is 18 to 24-year-olds who gambled in the past 12 months, men and women",
+        "n": "19,714 adults",
+        "where": "Great Britain",
+        "when": "January 2024 to January 2025",
+        "measured": "Problem Gambling Severity Index (9 questions); a score of 8 or more = problem gambling. Another 9.4% of this age group scored 3 to 7 (moderate risk)."
+      },
+      "caveat": "Online self-completion gives higher scores than interview surveys. Counts any gambling, lottery included, and is not split by sex within this age group.",
+      "ref": {
+        "cite": "Gambling Commission (2025). Gambling Survey for Great Britain: annual report 2024. Official statistics. Published 2 October 2025.",
+        "url": "https://www.gamblingcommission.gov.uk/report/gambling-survey-for-great-britain-annual-report-2024-official-statistics/gsgb-annual-report-2024-problem-gambling-severity-index",
+        "pmid": "",
+        "fetched": true,
+        "quote": "10.2 percent of those aged 18 to 24 scored 8 or more on the PGSI"
+      }
+    },
+    {
+      "group": "you",
+      "big": "nearly 6×",
+      "line": "People in Britain who play online slots are nearly 6 times as likely as the average gambler to score as problem gamblers.",
+      "mirror": "Men who play slots or casino games on their phone.",
+      "basis": {
+        "design": "analysis of the national official survey (Gambling Survey for Great Britain, year 1)",
+        "who": "adults in Great Britain who gambled in the past 12 months",
+        "n": "not stated on this page",
+        "where": "Great Britain",
+        "when": "2023 data, published 30 January 2025",
+        "measured": "Share scoring 8+ on the PGSI among people who did each activity, compared with all past-year gamblers. Online slots 5.9 times; online casino games 5.2; online sports betting 2.1."
+      },
+      "caveat": "Heavy gamblers do many activities, so this partly reflects how much people gamble. Online sports betting (2.1 times) stopped being significant once frequency was counted.",
+      "ref": {
+        "cite": "Gambling Commission (2025). Exploring the relationship between gambling activities and Problem Gambling Severity Index (PGSI) scores. Published 30 January 2025.",
+        "url": "https://www.gamblingcommission.gov.uk/print/exploring-the-relationship-between-gambling-activities-and-problem-gambling",
+        "pmid": "",
+        "fetched": true,
+        "quote": "For online slots, rates were nearly 6 times higher than average and for betting on non-sports events in person, they were over 9 times higher than average."
+      }
+    },
+    {
+      "group": "start",
+      "big": "34%",
+      "line": "In Britain, 34% of boys aged 11 to 17 spent their own money on gambling in the past year.",
+      "mirror": "Men who remember their first bets with mates as kids.",
+      "basis": {
+        "design": "official school survey (Young People and Gambling)",
+        "who": "pupils in school years 7 to 12 (ages 11 to 17) in England, Scotland and Wales",
+        "n": "3,666",
+        "where": "Great Britain",
+        "when": "13 January to 13 June 2025",
+        "measured": "Spending their own money (pocket money, birthday money, earnings) on any of 17 gambling activities in the past 12 months."
+      },
+      "caveat": "Most of it was arcade machines (21% of all pupils) and bets with friends or family (14%), not betting apps. School pupils only.",
+      "ref": {
+        "cite": "Gambling Commission (2025). Young People and Gambling 2025: official statistics. Published 13 November 2025.",
+        "url": "https://www.gamblingcommission.gov.uk/print/young-people-and-gambling-2025-official-statistics",
+        "pmid": "",
+        "fetched": true,
+        "quote": "3 in 10 (30 percent) reported doing so in the last 12 months, with boys (34 percent) more likely than girls (27 percent)."
+      }
+    },
+    {
+      "group": "start",
+      "big": "16.7",
+      "line": "Americans who later developed a gambling disorder first gambled at about 17 on average; other gamblers started at about 24.",
+      "mirror": "Men who started betting as teenagers.",
+      "basis": {
+        "design": "national household survey with diagnostic interviews (National Comorbidity Survey Replication)",
+        "who": "US adults; 0.6% had a lifetime gambling disorder",
+        "n": "national sample (size not given in the abstract)",
+        "where": "USA",
+        "when": "published 2008",
+        "measured": "Age at first gambling, as remembered; gambling disorder by DSM-IV interview."
+      },
+      "caveat": "Remembered ages, older data, small group (0.6% of people). Starting early goes with higher risk; it may not cause it.",
+      "ref": {
+        "cite": "Kessler RC, Hwang I, LaBrie R, Petukhova M, Sampson NA, Winters KC, Shaffer HJ (2008). DSM-IV pathological gambling in the National Comorbidity Survey Replication. Psychological Medicine 38:1351-1360.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2293303/",
+        "pmid": "18257941",
+        "fetched": true,
+        "quote": "People with PG reported first gambling significantly earlier than non-problem gamblers (mean age: 16.7 vs. 23.9"
+      }
+    },
+    {
+      "group": "start",
+      "big": "9.4 years",
+      "line": "In the same US survey, gambling problems usually began in the mid-20s and lasted 9.4 years on average.",
+      "mirror": "Men in their 20s whose betting is creeping up.",
+      "basis": {
+        "design": "national household survey with diagnostic interviews (National Comorbidity Survey Replication)",
+        "who": "US adults; 0.6% had a lifetime gambling disorder",
+        "n": "national sample (size not given in the abstract)",
+        "where": "USA",
+        "when": "published 2008",
+        "measured": "Remembered age when problems began and how many years they lasted."
+      },
+      "caveat": "An average, remembered afterwards. Many people recover sooner, often without treatment (see the natural-recovery stat).",
+      "ref": {
+        "cite": "Kessler RC, Hwang I, LaBrie R, Petukhova M, Sampson NA, Winters KC, Shaffer HJ (2008). DSM-IV pathological gambling in the National Comorbidity Survey Replication. Psychological Medicine 38:1351-1360.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2293303/",
+        "pmid": "18257941",
+        "fetched": true,
+        "quote": "with gambling problems typically beginning during the mid-20s and persisting for an average of 9.4 years"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "$4,800",
+      "line": "In their worst year, Americans with a gambling disorder lost $4,800 on average.",
+      "mirror": "Men who have never added up what they lost.",
+      "basis": {
+        "design": "national household survey with diagnostic interviews (National Comorbidity Survey Replication)",
+        "who": "US adults; 0.6% had a lifetime gambling disorder",
+        "n": "national sample (size not given in the abstract)",
+        "where": "USA",
+        "when": "published 2008",
+        "measured": "Largest yearly gambling loss during the years of the problem, as remembered."
+      },
+      "caveat": "Older US data in dollars of that time, not adjusted for inflation. Remembered amounts from a small group.",
+      "ref": {
+        "cite": "Kessler RC, Hwang I, LaBrie R, Petukhova M, Sampson NA, Winters KC, Shaffer HJ (2008). DSM-IV pathological gambling in the National Comorbidity Survey Replication. Psychological Medicine 38:1351-1360.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2293303/",
+        "pmid": "18257941",
+        "fetched": true,
+        "quote": "During this time the largest annual gambling losses averaged $4800."
+      }
+    },
+    {
+      "group": "cost",
+      "big": "5.4%",
+      "line": "Of British gamblers aged 18 to 34, 5.4% had a severe result in one year, such as a breakup or losing something valuable.",
+      "mirror": "Men whose betting already cost them a girlfriend or something big.",
+      "basis": {
+        "design": "national official-statistics survey (push-to-web)",
+        "who": "adults aged 18 to 34 who gambled in the past 12 months",
+        "n": "19,714 adults",
+        "where": "Great Britain",
+        "when": "January 2024 to January 2025",
+        "measured": "Yes or no to severe results of their own gambling: relationship breakdown, losing something of significant financial value, violence or abuse, crime."
+      },
+      "caveat": "Any one of four severe outcomes, self-reported. Includes lottery-only players, so the rate among regular bettors is likely higher but not given.",
+      "ref": {
+        "cite": "Gambling Commission (2025). Gambling Survey for Great Britain: annual report 2024. Official statistics. Published 2 October 2025.",
+        "url": "https://www.gamblingcommission.gov.uk/print/gambling-survey-for-great-britain-annual-report-2024-official-statistics",
+        "pmid": "",
+        "fetched": true,
+        "quote": "5.4 percent for those aged 18 to 34 and 0.8 percent for those aged 55 and over"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "90%",
+      "line": "On one Canadian online casino, the top 20% of players produced 90% of all net losses in a year.",
+      "mirror": "Men who play more than their mates and lose the most.",
+      "basis": {
+        "design": "analysis of one year of betting records",
+        "who": "account holders on the online casino of a government-run gambling website",
+        "n": "30,920 accounts",
+        "where": "British Columbia, Canada",
+        "when": "October 2014 to September 2015",
+        "measured": "Share of all net losses made by the most engaged 20% of players."
+      },
+      "caveat": "One site, one year, older data. Top players were more likely to self-exclude (16% vs 6%), but heavy losing alone is not a diagnosis.",
+      "ref": {
+        "cite": "Deng X, Lesch T, Clark L (2021). Pareto distributions in online casino gambling: sensitivity to timeframe and associations with self exclusion. Addictive Behaviors 120:106968.",
+        "url": "https://europepmc.org/article/MED/34004521",
+        "pmid": "34004521",
+        "fetched": true,
+        "quote": "The top 20% most engaged gamblers accounted for 92% (based on total number of bets) and 90% (based on net losses) of eCasino gambling activity over the year."
+      }
+    },
+    {
+      "group": "cost",
+      "big": "38%",
+      "line": "Across population surveys, about 38% of problem gamblers also had a mood disorder such as depression.",
+      "mirror": "Men whose low mood and betting feed each other.",
+      "basis": {
+        "design": "meta-analysis of 11 population surveys",
+        "who": "problem and pathological gamblers found in random general-population samples",
+        "n": "11 studies",
+        "where": "several countries",
+        "when": "studies from 1998 to 2010; published 2011",
+        "measured": "Share with a mood disorder, using standard diagnostic tools."
+      },
+      "caveat": "Shows overlap, not which came first. Rates varied between studies, so treat 38% as a rough middle.",
+      "ref": {
+        "cite": "Lorains FK, Cowlishaw S, Thomas SA (2011). Prevalence of comorbid disorders in problem and pathological gambling: systematic review and meta-analysis of population surveys. Addiction 106:490-498.",
+        "url": "https://europepmc.org/article/MED/21210880",
+        "pmid": "21210880",
+        "fetched": true,
+        "quote": "followed by a substance use disorder (57.5%), any type of mood disorder (37.9%) and any type of anxiety disorder (37.4%)."
+      }
+    },
+    {
+      "group": "cost",
+      "big": "2 in 3",
+      "line": "About two in three Americans with a gambling disorder reported at least one sleep problem, like trouble falling or staying asleep.",
+      "mirror": "Men lying awake replaying losses or checking scores.",
+      "basis": {
+        "design": "national household survey (National Comorbidity Survey Replication)",
+        "who": "US adults; people with problem or pathological gambling vs people without",
+        "n": "national sample (size not given in the abstract)",
+        "where": "USA",
+        "when": "published 2013",
+        "measured": "Trouble falling asleep, staying asleep, or waking too early."
+      },
+      "caveat": "A link, not proof of cause; older US data. Compared with people without gambling problems, the adjusted odds of any sleep complaint were about 3.4 times higher.",
+      "ref": {
+        "cite": "Parhami I, Siani A, Rosenthal RJ, Fong TW (2013). Pathological gambling, problem gambling and sleep complaints: an analysis of the National Comorbidity Survey: Replication (NCS-R). Journal of Gambling Studies 29:241-253.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3395730/",
+        "pmid": "22396174",
+        "fetched": true,
+        "quote": "Almost half of respondents with problem gambling behavior (45.9%) and two thirds (67.7%) of respondents with pathological gambling behavior reported at least one sleep compliant."
+      }
+    },
+    {
+      "group": "quit",
+      "big": "1 in 4",
+      "line": "When cutting down, 1 in 4 gamblers felt restless or irritable, and 41% had feelings like anger, guilt or disappointment.",
+      "mirror": "Men who feel edgy and angry the week they stop betting.",
+      "basis": {
+        "design": "telephone interview survey",
+        "who": "community-recruited adult gamblers, with and without a gambling problem",
+        "n": "312",
+        "where": "USA (St Louis research team)",
+        "when": "published 2009",
+        "measured": "Withdrawal-like feelings when trying to quit or control gambling."
+      },
+      "caveat": "Small older US sample of all kinds of gamblers. Feelings were remembered, not timed, so nobody knows how long they last.",
+      "ref": {
+        "cite": "Cunningham-Williams RM, Gattis MN, Dore PM, Shi P, Spitznagel EL (2009). Towards DSM-V: considering other withdrawal-like symptoms of pathological gambling disorder. International Journal of Methods in Psychiatric Research 18:13-22.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4459588/",
+        "pmid": "19197945",
+        "fetched": true,
+        "quote": "One-quarter of the sample experienced the DSM-IV PGD criterion of restlessness/irritability. However, 41% experienced additional gambling withdrawal-like symptoms when attempting to quit or control gambling."
+      },
+      "existing": true
+    },
+    {
+      "group": "quit",
+      "big": "3 months",
+      "line": "In 11 trials, CBT cut gambling symptoms and money lost for the first 3 months after therapy. Longer effects are unknown.",
+      "mirror": "Men wondering if therapy is worth the hassle.",
+      "basis": {
+        "design": "Cochrane meta-analysis of 14 randomised trials (11 tested CBT)",
+        "who": "people with problem or pathological gambling",
+        "n": "1,245 people across 14 trials",
+        "where": "several countries",
+        "when": "searches to October 2011; published 2012",
+        "measured": "Gambling symptoms, money lost and how often people gambled, 0 to 3 months after therapy, compared with control groups."
+      },
+      "caveat": "Only one trial checked 9 to 12 months later and found no clear effect. Evidence rated low to very low quality; effects may be overestimated.",
+      "ref": {
+        "cite": "Cowlishaw S, Merkouris S, Dowling N, Anderson C, Jackson A, Thomas S (2012). Psychological therapies for pathological and problem gambling. Cochrane Database of Systematic Reviews CD008937.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11955261/",
+        "pmid": "23152266",
+        "fetched": true,
+        "quote": "Eleven studies compared CBT with control and comparisons at 0 to 3 months post-treatment showed beneficial effects of therapy"
+      },
+      "existing": true
+    },
+    {
+      "group": "quit",
+      "big": "about 1 in 3",
+      "line": "In two US national surveys, 36–39% of people who ever had a gambling disorder were problem-free last year; only 7–12% ever got help.",
+      "mirror": "Men who think nobody beats this without rehab.",
+      "basis": {
+        "design": "two national surveys (Gambling Impact and Behavior Study; NESARC)",
+        "who": "US adults with a lifetime gambling disorder",
+        "n": "21 and 185 people with the disorder (of 2,417 and 43,093 surveyed)",
+        "where": "USA",
+        "when": "published 2006",
+        "measured": "No gambling problems in the past year; ever having had formal treatment or gone to Gamblers Anonymous."
+      },
+      "caveat": "One problem-free year is not a cure, and one survey had only 21 cases. Shows many recover without treatment, not that treatment is useless.",
+      "ref": {
+        "cite": "Slutske WS (2006). Natural recovery and treatment-seeking in pathological gambling: results of two U.S. national surveys. American Journal of Psychiatry 163:297-302.",
+        "url": "https://europepmc.org/article/MED/16449485",
+        "pmid": "16449485",
+        "fetched": true,
+        "quote": "with a lifetime history of DSM-IV pathological gambling, 36%-39% did not experience any gambling-related problems in the past year, even though only 7%-12% had ever sought"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "68%",
+      "line": "At a Swedish clinic, 68% of patients who had used the national self-ban still gambled, mostly on unlicensed sites.",
+      "mirror": "Men who self-excluded and found a way around it.",
+      "basis": {
+        "design": "review of clinic records",
+        "who": "people starting treatment for gambling disorder; 73% men; mostly online casino and sports betting",
+        "n": "85 patients (60 had self-excluded)",
+        "where": "Malmö, Sweden",
+        "when": "January to September 2021",
+        "measured": "Gambling despite being on Spelpaus, Sweden's national self-exclusion covering all licensed operators."
+      },
+      "caveat": "Only people who ended up in treatment, so those for whom the ban worked are missing. Unlicensed foreign sites are the gap.",
+      "ref": {
+        "cite": "Håkansson A, Åkesson G (2022). Multi-operator self-exclusion as a harm reduction measure in problem gambling: retrospective clinical study on gambling relapse despite self-exclusion. JMIR Mental Health 9:e37837.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9440409/",
+        "pmid": "35984678",
+        "fetched": true,
+        "quote": "Among self-excluders, gambling despite self-exclusion was common (41/60, 68%), most commonly on unlicensed gambling websites."
+      }
+    },
+    {
+      "group": "after",
+      "big": "61–95% → 13–26%",
+      "line": "Across 19 studies, the share of self-excluders with a gambling disorder fell from 61–95% before the ban to 13–26% after.",
+      "mirror": "Men who think a ban won't stop them.",
+      "basis": {
+        "design": "systematic review of 19 naturalistic before-and-after studies",
+        "who": "people who banned themselves from casinos and venues; mostly men in their 40s",
+        "n": "19 studies (total people not given in the abstract)",
+        "where": "several countries",
+        "when": "published 2019",
+        "measured": "Share meeting criteria for pathological gambling before and after land-based self-exclusion."
+      },
+      "caveat": "No control groups; venues only, not online. 8 to 59% broke their ban, and 13 to 81% stopped completely. Quality of life also improved.",
+      "ref": {
+        "cite": "Kotter R, Kräplin A, Pittig A, Bühringer G (2019). A systematic review of land-based self-exclusion programs: demographics, gambling behavior, gambling problems, mental symptoms, and mental health. Journal of Gambling Studies 35:367-394.",
+        "url": "https://europepmc.org/article/MED/29721719",
+        "pmid": "29721719",
+        "fetched": true,
+        "quote": "The records consistently demonstrated significant changes in pathological gambling from before exclusion (61-95%) to after exclusion (13-26%)."
+      },
+      "existing": true
+    },
+    {
+      "group": "after",
+      "big": "41.6%",
+      "line": "A year after inpatient treatment, 41.6% had not gambled at all; every group coped better day to day, the abstainers best.",
+      "mirror": "Men wondering if life really gets better after quitting.",
+      "basis": {
+        "design": "follow-up study across several clinics",
+        "who": "patients finishing inpatient treatment for gambling disorder",
+        "n": "270",
+        "where": "Germany",
+        "when": "published 2017",
+        "measured": "Gambling and disorder status 12 months after treatment; daily functioning; mental-health symptoms; personality."
+      },
+      "caveat": "Inpatients, so more severe than most readers; drop-outs may be doing worse. 29.2% still had the disorder and 29.2% gambled without it.",
+      "ref": {
+        "cite": "Müller KW, Wölfling K, Dickenhorst U, Beutel ME, Medenwaldt J, Koch A (2017). Recovery, relapse, or else? Treatment outcomes in gambling disorder from a multicenter follow-up study. European Psychiatry 43:28-34.",
+        "url": "https://europepmc.org/article/MED/28365465",
+        "pmid": "28365465",
+        "fetched": true,
+        "quote": "At follow-up, three groups were identified: subjects maintaining full abstinence (41.6%), patients still meeting criteria for gambling disorder (29.2%), and subjects still participating in gambling without meeting the diagnostic criteria"
+      }
+    },
+    {
+      "group": "after",
+      "big": "9 trials",
+      "line": "Across 9 trials, CBT for gambling also eased anxiety and low mood and lifted quality of life by the end of treatment.",
+      "mirror": "Men whose betting has dragged their mood down.",
+      "basis": {
+        "design": "meta-analysis of 9 randomised trials (CBT vs no or minimal treatment)",
+        "who": "people with gambling problems",
+        "n": "658",
+        "where": "several countries",
+        "when": "published 2023",
+        "measured": "Anxiety, depression and quality of life at the end of treatment. Effect sizes: anxiety g = −0.44, depression g = −0.35, quality of life g = 0.40 (small to medium)."
+      },
+      "caveat": "Measured at the end of treatment only. Results varied a lot between trials, so the real effect could be smaller or larger.",
+      "ref": {
+        "cite": "Pfund RA, King SA, Forman DP, Zech JM, Ginley MK, Peter SC, McAfee NW, Witkiewitz K, Whelan JP (2023). Effects of cognitive behavioral techniques for gambling on recovery defined by gambling, psychological functioning, and quality of life: a systematic review and meta-analysis. Psychology of Addictive Behaviors 37:936-945.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10444908/",
+        "pmid": "36821338",
+        "fetched": true,
+        "quote": "A total of nine studies representing 658 participants were included. Eight studies reported outcomes on depression and anxiety, three on substance use, and six on quality of life."
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "claim": "Up to 1 in 5 young Australian sports bettors has a gambling problem.",
+      "why": "Source is a press release citing a Roy Morgan commercial poll; the government AGRC sports-betting page could not be fetched (403). Used the British official survey instead."
+    },
+    {
+      "claim": "Each problem gambler harms about six other people.",
+      "why": "Not fetched or verified this session (not in PubMed); left out."
+    },
+    {
+      "claim": "About 20% of US sports bettors are high-risk gamblers (Grubbs & Kraus 2022, JAMA Netw Open).",
+      "why": "Fetched, but the 20.1% is for all gamblers in a combined sample that includes an oversample of sports bettors; not a clean rate for sports bettors."
+    },
+    {
+      "claim": "Online sports betting itself raises problem-gambling risk in Britain.",
+      "why": "Gambling Commission analysis (fetched): online sports bettors were 2.1 times the average rate, but this was no longer significant once frequency and number of activities were counted. Kept only as a caveat."
+    },
+    {
+      "claim": "Suicide and suicidal-thought rates among gamblers (GSGB 2024; Norway registry).",
+      "why": "Excluded by the brief: no suicide or crisis numbers."
+    },
+    {
+      "claim": "Self-exclusion improves mood and work (Ladouceur 2007, 161 Quebec self-excluders).",
+      "why": "Fetched, but the abstract gives no size for the improvements, only that they were significant; no number to show."
+    }
+  ]
+}

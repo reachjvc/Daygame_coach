@@ -1,0 +1,406 @@
+{
+  "id": "porn",
+  "hero": {
+    "basedOn": "Randomised trial: 176 psychology students in Malaysia (64% women, average age 21) who watched porn 3+ times a week. 86 tried 7 days off, 90 kept watching; craving, mood and withdrawal checked nightly.",
+    "caveat": "Mostly women, few had a real problem (85% below the clinical cut-off), only 7 days, and 45% of the stop group watched anyway. Daily heavy users showed more craving.",
+    "ref": {
+      "cite": "Fernandez DP, Kuss DJ, Justice LV, Fernandez EF, Griffiths MD (2023). Effects of a 7-day pornography abstinence period on withdrawal-related symptoms in regular pornography users: a randomized controlled study. Archives of Sexual Behavior 52:1819-1840.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9847461/",
+      "pmid": "36652136",
+      "fetched": true,
+      "quote": "A total of 176 undergraduate students (64.2% female) who were regular pornography users (defined as having used pornography ≥ three times a week in the past 4 weeks)"
+    },
+    "check": "Numbers match: 176 regular users, no withdrawal effects. Not stated on the page: 64% were women, in Malaysia, and 84.7% scored below the clinical cut-off for problem use."
+  },
+  "stats": [
+    {
+      "group": "you",
+      "big": "91.5%",
+      "line": "In one large US online sample, 91.5% of men had watched porn in the past month.",
+      "mirror": "Any man who thinks he is the only one watching.",
+      "basis": {
+        "design": "online survey (not a random national sample)",
+        "who": "US adults aged 18 to 73 on Amazon Mechanical Turk, men and women",
+        "n": "1,392",
+        "where": "USA",
+        "when": "published 2020",
+        "measured": "Any porn in the past month, in any form: videos, pictures or written."
+      },
+      "caveat": "Paid online-task workers, not a random sample. A census-matched US survey found 59% of men watched at least monthly in 2019. Counts any use, not problems.",
+      "ref": {
+        "cite": "Solano I, Eaton NR, O'Leary KD (2020). Pornography consumption, modality and function in a large internet sample. Journal of Sex Research 57:92-103.",
+        "url": "https://europepmc.org/article/MED/30358432",
+        "pmid": "30358432",
+        "fetched": true,
+        "quote": "Using all modalities of pornography, 91.5% of men and 60.2% of women herein reported having consumed pornography in the past month."
+      },
+      "existing": true
+    },
+    {
+      "group": "you",
+      "big": "11%",
+      "line": "About 11% of US men agree, at least somewhat, with the sentence 'I am addicted to pornography'.",
+      "mirror": "Men who privately call themselves porn addicts.",
+      "basis": {
+        "design": "national survey, online panel matched to US census norms (Qualtrics)",
+        "who": "US adult internet users, men and women",
+        "n": "2,075 (1,016 men)",
+        "where": "USA",
+        "when": "published 2019",
+        "measured": "Answering 'somewhat agree', 'agree' or 'strongly agree' to 'I am addicted to pornography' (45 + 36 + 30 of 1,016 men in the table)."
+      },
+      "caveat": "Feeling addicted is not a diagnosis. In this study the feeling tracked religiousness and moral disapproval of porn, as well as how much people watched.",
+      "ref": {
+        "cite": "Grubbs JB, Kraus SW, Perry SL (2019). Self-reported addiction to pornography in a nationally representative sample: the roles of use habits, religiousness, and moral incongruence. Journal of Behavioral Addictions 8:88-93.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7044607/",
+        "pmid": "30632378",
+        "fetched": true,
+        "quote": "roughly 11% of men and 3% of women reported some agreement with the statement “I am addicted to pornography.”"
+      },
+      "existing": true
+    },
+    {
+      "group": "you",
+      "big": "78.6%",
+      "line": "About 4 in 5 Swiss men in their mid-20s visit porn sites at least once a month.",
+      "mirror": "Young men who watch most weeks and assume everyone does.",
+      "basis": {
+        "design": "national cohort study (C-SURF); questionnaire",
+        "who": "young Swiss men first enrolled at the compulsory army fitness check; average age 25",
+        "n": "5,332",
+        "where": "Switzerland",
+        "when": "April 2016 to March 2018",
+        "measured": "Visiting porn websites at least once a month in the past 12 months."
+      },
+      "caveat": "Men only, one country. 'Monthly' is a low bar and says nothing about problems; among these users the average was about 10 days a month.",
+      "ref": {
+        "cite": "Studer J, Marmet S, Wicki M, Gmel G (2019). Cybersex use and problematic cybersex use among young Swiss men: associations with sociodemographic, sexual, and psychological factors. Journal of Behavioral Addictions 8:794-803.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7044587/",
+        "pmid": "31868514",
+        "fetched": true,
+        "quote": "At least monthly CU was reported by 78.6% of participants."
+      }
+    },
+    {
+      "group": "you",
+      "big": "8%",
+      "line": "In a US national sample, 8% of men watched porn daily or more, and another 15% a few times a week.",
+      "mirror": "Daily watchers who wonder how many others do the same.",
+      "basis": {
+        "design": "national survey, online panel matched to US census norms (Qualtrics)",
+        "who": "US adult internet users, men and women",
+        "n": "2,075 (1,016 men)",
+        "where": "USA",
+        "when": "published 2019",
+        "measured": "Past-year answer to 'How often have you viewed pornography?'. In the men's table row, the last two cells are 'a few times a week' (151, 15%) and 'once a day or more' (83, 8%)."
+      },
+      "caveat": "Self-report about a shameful habit, so likely an undercount. The quoted table row has print errors in other cells (98 men shown as 1%).",
+      "ref": {
+        "cite": "Grubbs JB, Kraus SW, Perry SL (2019). Self-reported addiction to pornography in a nationally representative sample: the roles of use habits, religiousness, and moral incongruence. Journal of Behavioral Addictions 8:88-93.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7044607/",
+        "pmid": "30632378",
+        "fetched": true,
+        "quote": "Men 312 (30%) 98 (1%) 126 (12%) 51 (5%) 97 (1%) 98 (1%) 151 (15%) 83 (8%)"
+      }
+    },
+    {
+      "group": "you",
+      "big": "43%",
+      "line": "Of Swiss men in their mid-20s who watch monthly, 43% admit at least one of six addiction signs; 9% admit three or more.",
+      "mirror": "Men who notice one or two warning signs in themselves.",
+      "basis": {
+        "design": "national cohort study (C-SURF); questionnaire",
+        "who": "young Swiss men who visit porn sites at least monthly; average age 25",
+        "n": "4,190 users (of 5,332 men)",
+        "where": "Switzerland",
+        "when": "April 2016 to March 2018",
+        "measured": "Six true/false statements (Internet Sex Screening Test): continued use, using it to change mood, loss of control, preoccupation, withdrawal, consequences."
+      },
+      "caveat": "This scale has no agreed cut-off, so this is not a count of addicts. One sign can be mild.",
+      "ref": {
+        "cite": "Studer J, Marmet S, Wicki M, Gmel G (2019). Cybersex use and problematic cybersex use among young Swiss men: associations with sociodemographic, sexual, and psychological factors. Journal of Behavioral Addictions 8:794-803.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7044587/",
+        "pmid": "31868514",
+        "fetched": true,
+        "quote": "One or more PCU statement endorsed ( N , %) 1,793 42.8 Three or more PCU statements endorsed ( N , %) 374 8.9"
+      }
+    },
+    {
+      "group": "start",
+      "big": "13",
+      "line": "Young people in England first saw porn at 13 on average; 1 in 10 had seen it by age 9.",
+      "mirror": "Men who saw porn long before their first kiss.",
+      "basis": {
+        "design": "survey plus focus groups, run for the Children's Commissioner",
+        "who": "young people aged 16 to 21, boys and girls; age figures are for the 64% who had seen online porn",
+        "n": "1,000 surveyed",
+        "where": "England",
+        "when": "published 31 January 2023",
+        "measured": "The age they remember first seeing porn."
+      },
+      "caveat": "Remembered years later; boys and girls together. Says when it starts, not who goes on to have a problem.",
+      "ref": {
+        "cite": "Children's Commissioner for England (2023). 'A lot of it is actually just abuse': young people and pornography.",
+        "url": "https://www.childrenscommissioner.gov.uk/resource/a-lot-of-it-is-actually-just-abuse-young-people-and-pornography/",
+        "pmid": "",
+        "fetched": true,
+        "quote": "The average age at which children first see pornography is 13. By age nine, 10% had seen pornography, 27% had seen it by age 11"
+      }
+    },
+    {
+      "group": "start",
+      "big": "46%",
+      "line": "Among Polish students who watch porn, 46% say they moved on to new genres over time, and 32% to more extreme material.",
+      "mirror": "Men whose taste drifted to things they never searched for at first.",
+      "basis": {
+        "design": "online cross-sectional survey; students chose to take part",
+        "who": "university students aged 18 to 26 who currently watch porn; about 6 in 10 were women",
+        "n": "4,260 current users (of 6,463 surveyed)",
+        "where": "Poland",
+        "when": "February 2017 to August 2018",
+        "measured": "Self-reported changes in what they watched since they first saw porn."
+      },
+      "caveat": "Self-selected students, mostly women, self-report. Shows people's own sense of drift; it does not prove porn causes escalation.",
+      "ref": {
+        "cite": "Dwulit AD, Rzymski P (2019). Prevalence, patterns and self-perceived effects of pornography consumption in Polish university students: a cross-sectional study. International Journal of Environmental Research and Public Health 16:1861.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6571756/",
+        "pmid": "31137778",
+        "fetched": true,
+        "quote": "switching to a novel genre of explicit material (46.0%), use of materials that do not match sexual orientation (60.9%) and need to use more extreme (violent) material (32.0%)"
+      }
+    },
+    {
+      "group": "start",
+      "big": "2.7×",
+      "line": "Young adults with both low mood and anxiety had about 2.7 times the odds of watching porn daily, rather than never, six months later.",
+      "mirror": "Men who reach for porn when they feel low or wound up.",
+      "basis": {
+        "design": "cohort followed for 6 months (Happiness & Health Study)",
+        "who": "young adults first enrolled in 9th grade at 10 Los Angeles-area high schools in 2013; men and women",
+        "n": "1,864",
+        "where": "California, USA",
+        "when": "March to September 2020, then January to June 2021",
+        "measured": "Depression and anxiety symptoms at the start; how often they watched porn six months later."
+      },
+      "caveat": "Odds, not risk. Men and women mixed; measured during the pandemic; depression alone was not significant. Suggests low mood can come first and feed use.",
+      "ref": {
+        "cite": "Singareddy C, Shrestha S, Zheng A, Harlow BL, Barrington-Trimis JL, Harlow AF (2025). Prospective association of symptoms of depression and anxiety with pornography viewing frequency among young adults. Archives of Sexual Behavior 54:749-759.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11835531/",
+        "pmid": "39485607",
+        "fetched": true,
+        "quote": "Participants with comorbid depression and anxiety (vs. no depression or anxiety symptoms) had 2.72 (95% CI: 1.66-4.46) times the odds of frequent pornography viewing (one to several times/day)"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "about 2×",
+      "line": "Married Americans who started watching porn between surveys saw their chance of divorce by the next survey roughly double.",
+      "mirror": "Married men who think porn has nothing to do with the marriage.",
+      "basis": {
+        "design": "national panel survey, 3 waves (General Social Survey)",
+        "who": "married US adults",
+        "n": "2,120",
+        "where": "USA",
+        "when": "2006 to 2014",
+        "measured": "Whether people began using porn between survey waves, and whether they were divorced at the next wave (odds ratio 2.19)."
+      },
+      "caveat": "A link, not proof that porn causes divorce; marriage trouble may come first. Stopping porn went with lower divorce only for women.",
+      "ref": {
+        "cite": "Perry SL, Schleifer C (2018). Till porn do us part? A longitudinal examination of pornography use and divorce. Journal of Sex Research 55:284-296.",
+        "url": "https://europepmc.org/article/MED/28497988",
+        "pmid": "28497988",
+        "fetched": true,
+        "quote": "We found that the probability of divorce roughly doubled for married Americans who began pornography use between survey waves (N = 2,120; odds ratio = 2.19)"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "−0.6 of 10",
+      "line": "Irish men of 20 who watch porn rate their life about 0.6 points lower out of 10, even allowing for how they felt at 17.",
+      "mirror": "Young men who feel flat and wonder if porn is part of it.",
+      "basis": {
+        "design": "national cohort study (Growing Up in Ireland, Cohort '98), report by the ESRI",
+        "who": "young men aged 20 (64% of them ticked porn as an internet use)",
+        "n": "1,949 men in this model (4,585 young adults in the study)",
+        "where": "Ireland",
+        "when": "age-20 survey August 2018 to June 2019",
+        "measured": "Ticking 'pornography' as one of their internet uses, and life satisfaction on a 0 to 10 scale; −0.635 is the gap after allowing for life satisfaction at 17."
+      },
+      "caveat": "Measured at the same time, so the cause is unclear. Porn use was one yes/no tick. Counting internet habits and relationships, the gap shrinks to about 0.4.",
+      "ref": {
+        "cite": "Nolan A, Smyth E (2024). Use of pornography by young adults in Ireland. ESRI Research Series 177. Dublin: Economic and Social Research Institute.",
+        "url": "https://www.esri.ie/system/files/publications/RS177.pdf",
+        "pmid": "",
+        "fetched": true,
+        "quote": "REGRESSION MODEL OF LIFE SATISFACTION AND USE OF PORNOGRAPHY Males Females Model 1 Model 2 Model 3 Model 1 Model 2 Model 3 Pornography use at 20 −0.649*** −0.635***"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "93%",
+      "line": "In a small trial, 12 sessions of ACT therapy cut porn viewing by 93%, against 21% for men on a waiting list.",
+      "mirror": "Men who have tried willpower alone and want a method.",
+      "basis": {
+        "design": "randomised trial (ACT therapy vs waiting list)",
+        "who": "adult men with problematic internet porn use; all but one were Latter-day Saints",
+        "n": "28",
+        "where": "USA",
+        "when": "published 2016",
+        "measured": "Self-reported porn viewing before and after 12 one-to-one sessions."
+      },
+      "caveat": "Only 28 men, almost all from one church, self-reported viewing, no comparison therapy. Promising, not proven.",
+      "ref": {
+        "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+        "url": "https://europepmc.org/article/MED/27157029",
+        "pmid": "27157029",
+        "fetched": true,
+        "quote": "significant between-condition reductions in pornography viewing compared to the waitlist condition (93% reduction ACT vs. 21% waitlist)"
+      },
+      "existing": true
+    },
+    {
+      "group": "quit",
+      "big": "45%",
+      "line": "Even when asked to stop for only 7 days, nearly half of regular users watched porn at least once.",
+      "mirror": "Men who slipped on day two and feel like failures.",
+      "basis": {
+        "design": "randomised controlled trial",
+        "who": "psychology undergraduates who watched porn 3 or more times a week; 64% women, average age 21",
+        "n": "176 (86 asked to stop for 7 days, 90 kept watching)",
+        "where": "Malaysia",
+        "when": "published 2023",
+        "measured": "Each night for 7 days: craving, good and bad mood, withdrawal symptoms, and any porn use."
+      },
+      "caveat": "Mostly women students, most with no wish to quit, and slipping cost them nothing. A real, chosen quit attempt may go differently.",
+      "ref": {
+        "cite": "Fernandez DP, Kuss DJ, Justice LV, Fernandez EF, Griffiths MD (2023). Effects of a 7-day pornography abstinence period on withdrawal-related symptoms in regular pornography users: a randomized controlled study. Archives of Sexual Behavior 52:1819-1840.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9847461/",
+        "pmid": "36652136",
+        "fetched": true,
+        "quote": "nearly half (45.4%) of participants in the abstinence group reported using pornography at least once during the experimental period"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "51%",
+      "line": "About half of Polish students who still watch porn have tried at least once to give it up.",
+      "mirror": "Men who tried to quit and are still watching.",
+      "basis": {
+        "design": "online cross-sectional survey; students chose to take part",
+        "who": "university students aged 18 to 26 who currently watch porn; about 6 in 10 were women",
+        "n": "4,260 current users",
+        "where": "Poland",
+        "when": "February 2017 to August 2018",
+        "measured": "Ever making at least one attempt to stop using porn."
+      },
+      "caveat": "These are people still watching, so their attempts did not stick. It cannot say how many attempts quitting usually takes.",
+      "ref": {
+        "cite": "Dwulit AD, Rzymski P (2019). Prevalence, patterns and self-perceived effects of pornography consumption in Polish university students: a cross-sectional study. International Journal of Environmental Research and Public Health 16:1861.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6571756/",
+        "pmid": "31137778",
+        "fetched": true,
+        "quote": "51.0% admitted to making at least one attempt to give up using it with no difference in the frequency of these attempts between males and females"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "4–10%",
+      "line": "Of people at risk of problem porn use, only 4 to 10% had ever sought treatment; another 21 to 37% wanted to but didn't.",
+      "mirror": "Men who have thought about getting help but never did.",
+      "basis": {
+        "design": "international online survey (International Sex Survey)",
+        "who": "adults of all genders in 42 countries; 3.2% scored at risk of problem porn use",
+        "n": "82,243",
+        "where": "42 countries on five continents",
+        "when": "published 2024",
+        "measured": "Problematic Pornography Consumption Scale score, and ever seeking treatment for porn use."
+      },
+      "caveat": "Online volunteers, not random national samples. 'At risk' is a screening score, not a diagnosis. Cost was one reason people did not seek help.",
+      "ref": {
+        "cite": "Bőthe B, Nagy L, Koós M, Demetrovics Z, Potenza MN, International Sex Survey Consortium, Kraus SW (2024). Problematic pornography use across countries, genders, and sexual orientations: insights from the International Sex Survey and comparison of different assessment tools. Addiction 119:928-950.",
+        "url": "https://europepmc.org/article/MED/38413365",
+        "pmid": "38413365",
+        "fetched": true,
+        "quote": "Only 4-10% of individuals in the PPU+ group had ever sought treatment for PPU, while an additional 21-37% wanted to, but did not do so for specific reasons (e.g. unaffordability)."
+      }
+    },
+    {
+      "group": "after",
+      "big": "74%",
+      "line": "Three months after ACT therapy ended, 35% of men had stopped completely and 74% still watched at least 70% less.",
+      "mirror": "Men who fear any progress will fade once help ends.",
+      "basis": {
+        "design": "randomised trial, 3-month follow-up (both groups combined after the waitlist group was treated)",
+        "who": "adult men with problematic internet porn use; all but one were Latter-day Saints",
+        "n": "26",
+        "where": "USA",
+        "when": "published 2016",
+        "measured": "Self-reported porn viewing at the 3-month follow-up."
+      },
+      "caveat": "26 men from one church, self-report, only 3 months. Nothing was reported on mood, sex life or relationships after stopping.",
+      "ref": {
+        "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+        "url": "https://europepmc.org/article/MED/27157029",
+        "pmid": "27157029",
+        "fetched": true,
+        "quote": "At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% of participants showing at least 70% reduction in viewing."
+      }
+    },
+    {
+      "group": "after",
+      "big": "1 in 6",
+      "line": "Of Polish students who had ever watched porn, 823 of 5,083 (about 1 in 6) said they had successfully stopped.",
+      "mirror": "Men who doubt that anyone really quits.",
+      "basis": {
+        "design": "online cross-sectional survey; students chose to take part",
+        "who": "university students aged 18 to 26 who had ever seen porn; about 6 in 10 were women",
+        "n": "5,083 ever exposed (2,079 men); 823 stopped (339 men)",
+        "where": "Poland",
+        "when": "February 2017 to August 2018",
+        "measured": "Saying they had successfully stopped using porn."
+      },
+      "caveat": "One-time survey; 'stopped' has no time frame, so some may have stopped recently. Says nothing about what improved afterwards.",
+      "ref": {
+        "cite": "Dwulit AD, Rzymski P (2019). Prevalence, patterns and self-perceived effects of pornography consumption in Polish university students: a cross-sectional study. International Journal of Environmental Research and Public Health 16:1861.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6571756/",
+        "pmid": "31137778",
+        "fetched": true,
+        "quote": "while the rest ( n = 823; 484 female and 339 male) reported to successfully cease its use"
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "claim": "Porn causes erectile dysfunction in young men.",
+      "why": "Grubbs & Gola 2019 (3 US samples of men, J Sex Med, PMID 30621919, fetched): simple use was not consistently linked to erection problems, and over a year no porn variable predicted change. Feeling your use is a problem was linked cross-sectionally only."
+    },
+    {
+      "claim": "Quitting porn and masturbation lowers fatigue and boosts energy and self-control (NoFap-style benefit).",
+      "why": "Only source found: Straub & Schmidt 2022, 21 single men, Journal of Addiction Science (not a PubMed-indexed journal); far too small and weak to put a number on the page."
+    },
+    {
+      "claim": "Quitting porn lifts mood (a number for the 'after' group).",
+      "why": "No study measured this. A US study of 4,363 adults over a year (Engelhardt 2025, PMID 40483829, fetched) found problem porn use and distress linked as a stable trait; the over-time (cross-lagged) effects were small and negative."
+    },
+    {
+      "claim": "Hands-off online self-help cut problem porn use strongly (d = 1.32).",
+      "why": "Bőthe 2021 trial (PMID 34727088, fetched): 89.4% of the self-help group dropped out; only 11% gave follow-up data. Too few to trust."
+    },
+    {
+      "claim": "Imaginal retraining reduces problem porn use.",
+      "why": "Baumeister 2024 trial (PMID 38669086, fetched): the effect showed only among those who did the training; the intention-to-treat analysis did not confirm it."
+    },
+    {
+      "claim": "About 20% of US men watched porn daily in 2019 (Porndemic study).",
+      "why": "Grubbs 2022 (PMID 34282505, fetched): the table conflicts with the text (62% 'never' vs 43.4% not in past year) and later waves show about 6 to 7%; used the 2019 national figure of 8% instead."
+    },
+    {
+      "claim": "72% of people who try to quit porn get withdrawal effects (irritability 26%, attention problems 26%).",
+      "why": "Dwulit 2019 (fetched): remembered, self-selected student survey, mostly women; 'erotic dreams' counted as an effect. A randomised trial found no withdrawal over 7 days. Not used as a number."
+    },
+    {
+      "claim": "About 1 in 8 US men agree they have put off things they needed to do so they could watch porn.",
+      "why": "A sum of three table cells, not a number the study states. Left out to keep every number as printed in its source."
+    }
+  ]
+}

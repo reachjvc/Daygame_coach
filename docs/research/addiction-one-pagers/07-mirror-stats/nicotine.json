@@ -1,0 +1,346 @@
+{
+  "id": "nicotine",
+  "stats": [
+    {
+      "group": "you",
+      "big": "11%",
+      "line": "11% of Americans aged 18 to 24 vape, twice as many as smoke cigarettes (5.3%). 17% use some tobacco or nicotine product.",
+      "mirror": "Vapes every day, never smoked, doesn't call himself a smoker",
+      "basis": {
+        "design": "national household survey (NHIS)",
+        "who": "adults 18+, table row for ages 18 to 24",
+        "n": "29,482 adults",
+        "where": "US",
+        "when": "2021",
+        "measured": "Current use = every day or some days. The quote is a table row; its columns: any tobacco 17.0%, combustible 8.5%, cigarettes 5.3%, cigars 3.1%, pipes 1.5%, e-cigarettes 11.0%. Men of all ages: 24.1% any tobacco."
+      },
+      "caveat": "Nicotine pouches were not asked about, so the true share of young nicotine users is likely higher. 2021 data.",
+      "ref": {
+        "cite": "Cornelius ME, Loretan CG, Jamal A, et al. (2023). Tobacco product use among adults - United States, 2021. MMWR Morbidity and Mortality Weekly Report.",
+        "url": "https://www.cdc.gov/mmwr/volumes/72/wr/mm7218a1.htm",
+        "pmid": "37141154",
+        "fetched": true,
+        "quote": "18–24 17.0 (15.1–19.1) 8.5 (7.1–10.0) 5.3 (4.3–6.6) 3.1 (2.2–4.2) 1.5 (1.0–2.3) 11.0 (9.4–12.7)"
+      }
+    },
+    {
+      "group": "you",
+      "big": "68%",
+      "line": "68% of US smokers want to stop, and 55% tried in the past year. Only 7.4% had recently quit.",
+      "mirror": "Tried to quit this year and is back on them",
+      "basis": {
+        "design": "national household survey (NHIS)",
+        "who": "adults who smoke cigarettes",
+        "n": "not in fetched text",
+        "where": "US",
+        "when": "2015",
+        "measured": "Self-reported wish to quit, a quit attempt in the past year, recent quitting, and use of counseling or medication. Only 31.2% used counseling or medication when trying to quit."
+      },
+      "caveat": "Cigarette smokers only; vapers and pouch users were not asked. One year's snapshot, not a lifetime.",
+      "ref": {
+        "cite": "Babb S, Malarcher A, Schauer G, Asman K, Jamal A (2017). Quitting smoking among adults - United States, 2000-2015. MMWR Morbidity and Mortality Weekly Report.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28056007/",
+        "pmid": "28056007",
+        "fetched": true,
+        "quote": "During 2015, 68.0% of adult smokers wanted to stop smoking, 55.4% made a past-year quit attempt, 7.4% recently quit smoking"
+      }
+    },
+    {
+      "group": "start",
+      "big": "2 days",
+      "line": "Some teens lost control over smoking within 2 days of their first inhale. Half lost it while smoking just 7 cigarettes a month.",
+      "mirror": "Started with a few at parties, now can't go a day",
+      "basis": {
+        "design": "cohort followed 4 years, 11 interviews",
+        "who": "sixth-grade students; 217 of them inhaled cigarettes",
+        "n": "1,246 students",
+        "where": "Massachusetts, US",
+        "when": "not in fetched text",
+        "measured": "First sign of lost control on the 10-question Hooked on Nicotine Checklist, and full ICD-10 dependence. 127 of 217 inhalers lost control; half of the 83 who became dependent did so by 46 cigarettes a month."
+      },
+      "caveat": "One sign of lost control is not full addiction. Teens and cigarettes only; vapes were not studied. The abstract doesn't say if 10% means all inhalers.",
+      "ref": {
+        "cite": "DiFranza JR, Savageau JA, Fletcher K, et al. (2007). Symptoms of tobacco dependence after brief intermittent use: the Development and Assessment of Nicotine Dependence in Youth-2 study. Archives of Pediatrics & Adolescent Medicine.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/17606835/",
+        "pmid": "17606835",
+        "fetched": true,
+        "quote": "10% having done so within 2 days … half had lost autonomy by the time they were smoking 7 cigarettes per month"
+      }
+    },
+    {
+      "group": "start",
+      "big": "2 in 3",
+      "line": "About 2 in 3 people who smoke a first full cigarette become dependent on nicotine at some point. For alcohol it's under 1 in 4.",
+      "mirror": "Thought he'd only ever smoke socially",
+      "basis": {
+        "design": "national survey (NESARC, two waves), survival analysis",
+        "who": "adults who had ever smoked a full cigarette",
+        "n": "15,918 adults",
+        "where": "US",
+        "when": "2001–2002 and 2004–2005",
+        "measured": "Age at first full cigarette and age at first meeting DSM-IV nicotine dependence (3 of 7 signs in a year). Within the first year about 2.0% were hooked; within 10 years 15.6%."
+      },
+      "caveat": "A projection from what adults recalled, mostly about cigarettes. 'Dependent' means 3 of 7 signs in a year, not necessarily a pack a day.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Pérez de los Cobos J, Hasin DS, et al. (2011). Probability and predictors of transition from first use to dependence on nicotine, alcohol, cannabis, and cocaine: results of the NESARC. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3069146/",
+        "pmid": "21145178",
+        "fetched": true,
+        "quote": "Lifetime cumulative probability estimates indicated that 67.5% of nicotine users, 22.7% of alcohol users, 20.9% of cocaine users, and 8.9% of cannabis users would become dependent"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "£20 a week",
+      "line": "Smokers in England spend about £20.49 a week on cigarettes, £27.66 if they buy packs. Vapers spend about £6.30.",
+      "mirror": "Buys a pack every couple of days and never counts it",
+      "basis": {
+        "design": "monthly national survey (new sample each month)",
+        "who": "adults who smoked or used other nicotine products",
+        "n": "10,323 adults",
+        "where": "England",
+        "when": "2018–2022",
+        "measured": "Self-reported average weekly spend, adjusted for inflation. The authors put the gap between smokers and people using only vapes or NRT at about £670 a year."
+      },
+      "caveat": "Averages from what people reported in England; your spend depends on how much you use and local prices.",
+      "ref": {
+        "cite": "Jackson SE, Tattan-Birch H, Shahab L, Brown J (2023). How has expenditure on nicotine products changed in a fast-evolving marketplace? A representative population survey in England, 2018-2022. Nicotine & Tobacco Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10439490/",
+        "pmid": "37226851",
+        "fetched": true,
+        "quote": "Smokers spent £20.49 [95% CI = 20.09-20.91] on cigarettes each week (£27.66 [26.84-28.50] … e-cigarette users spent £6.30 [5.99-6.55]"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "14 min",
+      "line": "Smokers got about 14 minutes less sleep a night, fell asleep slower and had less deep sleep. Ex-smokers slept like never-smokers.",
+      "mirror": "Has one before bed and wakes up tired",
+      "basis": {
+        "design": "sleep study within a large cohort (Sleep Heart Health Study)",
+        "who": "adults: 2,916 never, 2,705 former and 779 current smokers",
+        "n": "6,400 adults",
+        "where": "US",
+        "when": "1994–1999",
+        "measured": "One overnight sleep recording (polysomnography) each: time to fall asleep (5.4 minutes longer), total sleep, and time in each sleep stage."
+      },
+      "caveat": "One night per person; it shows a link, not proof that smoking caused it. Vapes were not studied.",
+      "ref": {
+        "cite": "Zhang L, Samet J, Caffo B, Punjabi NM (2006). Cigarette smoking and nocturnal sleep architecture. American Journal of Epidemiology.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16829553/",
+        "pmid": "16829553",
+        "fetched": true,
+        "quote": "Compared with never smokers, current smokers had a longer initial sleep latency (5.4 minutes, 95% confidence interval (CI): 2.9, 7.9) and less total sleep time (14.0 minutes"
+      }
+    },
+    {
+      "group": "cost",
+      "big": "1.5×",
+      "line": "Men who smoke have about 1.5 times the odds of erection problems of non-smokers. Ex-smokers: about 1.3 times.",
+      "mirror": "Smokes and has had trouble in bed, blamed nerves",
+      "basis": {
+        "design": "meta-analysis of 8 observational studies (4 cohort, 4 case-control)",
+        "who": "men; ages not in fetched text",
+        "n": "28,586 participants",
+        "where": "not in fetched text",
+        "when": "studies published up to January 2013",
+        "measured": "Odds of erectile dysfunction in current and former smokers against non-smokers, from the 4 cohort studies."
+      },
+      "caveat": "Shows a link, not proof of cause. These are odds, not a simple 'X% more likely'. Ages and countries are not in the abstract.",
+      "ref": {
+        "cite": "Cao S, Yin X, Wang Y, Zhou H, Song F, Lu Z (2013). Smoking and risk of erectile dysfunction: systematic review of observational studies with meta-analysis. PLoS One.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/23573257/",
+        "pmid": "23573257",
+        "fetched": true,
+        "quote": "Compared with non-smokers, the overall odd ratio of ED in prospective cohort studies was 1.51(95% CI: 1.34 to 1.71) for current smokers"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "About 30",
+      "line": "The best estimate: smokers make about 30 quit attempts, on average, before one sticks. Failing many times is normal.",
+      "mirror": "Has quit a hundred times and thinks he's the exception",
+      "basis": {
+        "design": "cohort followed up to 3 years, surveyed every 6 months",
+        "who": "adult smokers who tried to quit",
+        "n": "1,277 smokers",
+        "where": "Ontario, Canada",
+        "when": "from 2005",
+        "measured": "Quit attempts and lasting quits during follow-up, turned into attempts-per-success with a life table. Other methods gave 6.1, 19.6 and 142."
+      },
+      "caveat": "An average that depends on the method; many people quit in far fewer tries. Cigarette smokers only.",
+      "ref": {
+        "cite": "Chaiton M, Diemert L, Cohen JE, et al. (2016). Estimating the number of quit attempts it takes to quit smoking successfully in a longitudinal cohort of smokers. BMJ Open.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/27288378/",
+        "pmid": "27288378",
+        "fetched": true,
+        "quote": "ranged from 6.1 under the assumptions consistent with prior research … 29.6 using the method with the expected lowest bias"
+      }
+    },
+    {
+      "group": "quit",
+      "existing": true,
+      "big": "3–5%",
+      "line": "Only 3–5% of quit attempts made with no help last 6 to 12 months. Most slips happen in the first 8 days.",
+      "mirror": "Quits cold turkey on Monday, smoking again by the weekend",
+      "basis": {
+        "design": "systematic review (too few, too mixed studies to pool)",
+        "who": "smokers trying to quit without treatment",
+        "n": "a summary of 10 studies plus 2 studies and 3 no-treatment control groups; people not counted in fetched text",
+        "where": "not in fetched text",
+        "when": "studies before 2004",
+        "measured": "Share still not smoking 6 to 12 months after one quit attempt, and when relapse happens."
+      },
+      "caveat": "This is per attempt, not per person: many people try again and succeed later.",
+      "ref": {
+        "cite": "Hughes JR, Keely J, Naud S (2004). Shape of the relapse curve and long-term abstinence among untreated smokers. Addiction.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/14678060/",
+        "pmid": "14678060",
+        "fetched": true,
+        "quote": "3-5% of self-quitters achieve prolonged abstinence for 6-12 month after a given quit attempt."
+      }
+    },
+    {
+      "group": "quit",
+      "existing": true,
+      "big": "×2.3",
+      "line": "With varenicline, people were about 2.3 times as likely to stay off cigarettes for 6+ months as with a dummy pill.",
+      "mirror": "Thinks quit pills are for weak people",
+      "basis": {
+        "design": "Cochrane review, 41 randomised trials for this comparison",
+        "who": "adults who smoke",
+        "n": "17,395 participants",
+        "where": "several countries (not listed in fetched text)",
+        "when": "review published 2023",
+        "measured": "Not smoking at 6 months or longer, checked by breath or blood test where possible; varenicline against placebo."
+      },
+      "caveat": "Prescription only; side effects are possible. Compared with a dummy pill. Mostly tested in cigarette smokers, not vapers.",
+      "ref": {
+        "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, et al. (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
+        "pmid": "37142273",
+        "fetched": true,
+        "quote": "We found high-certainty evidence that varenicline helps more people to quit than placebo (RR 2.32, 95% CI 2.15 to 2.51; I2 = 60%, 41 studies, 17,395 participants)"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "×1.55",
+      "line": "Patches, gum or lozenges make you about 1.5 times as likely to stay off cigarettes as quitting without them.",
+      "mirror": "Tried a patch once, didn't feel magic, gave up on it",
+      "basis": {
+        "design": "Cochrane review, 133 randomised trials",
+        "who": "adults motivated to quit, mostly smoking 15+ cigarettes a day",
+        "n": "64,640 participants",
+        "where": "several countries (not listed in fetched text)",
+        "when": "review published 2018",
+        "measured": "Not smoking after at least 6 months, any form of NRT against placebo or no NRT. Patch 1.64, gum 1.49."
+      },
+      "caveat": "Compared with placebo or no NRT, in people who mostly smoked 15+ a day. Not tested here in vapers or pouch users.",
+      "ref": {
+        "cite": "Hartmann-Boyce J, Chepkin SC, Ye W, Bullen C, Lancaster T (2018). Nicotine replacement therapy versus control for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/29852054/",
+        "pmid": "29852054",
+        "fetched": true,
+        "quote": "The RR of abstinence for any form of NRT relative to control was 1.55 (95% confidence interval (CI) 1.49 to 1.61)."
+      }
+    },
+    {
+      "group": "after",
+      "existing": true,
+      "big": "4–5 kg",
+      "line": "Quitters gain 4–5 kg on average in the first year, most of it in 3 months. About 1 in 6 lose weight.",
+      "mirror": "Afraid quitting will make him fat",
+      "basis": {
+        "design": "meta-analysis of 62 studies",
+        "who": "people who stayed quit in quit-smoking trials, with or without medication",
+        "n": "not in fetched text",
+        "where": "several countries (not listed in fetched text)",
+        "when": "review published 2012",
+        "measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. At 12 months: 16% lost weight, 37% gained under 5 kg, 34% gained 5–10 kg, 13% gained over 10 kg."
+      },
+      "caveat": "An average; it varies a lot between people. Measured in cigarette smokers in trials, not in vapers.",
+      "ref": {
+        "cite": "Aubin HJ, Farley A, Lycett D, Lahmek P, Aveyard P (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/",
+        "pmid": "22782848",
+        "fetched": true,
+        "quote": "Smoking cessation is associated with a mean increase of 4-5 kg in body weight after 12 months of abstinence, and most weight gain occurs within three months of quitting."
+      }
+    },
+    {
+      "group": "after",
+      "big": "1 in 4",
+      "line": "Among men with erection problems who quit smoking, at least 1 in 4 improved within a year. None who kept smoking did.",
+      "mirror": "Has erection trouble and smokes, never linked the two",
+      "basis": {
+        "design": "cohort followed 1 year",
+        "who": "male smokers with erectile dysfunction and no other known cause, who asked for NRT",
+        "n": "281 men (118 quit, 163 kept smoking)",
+        "where": "Tehran, Iran",
+        "when": "not in fetched text",
+        "measured": "Erectile function score (IIEF-5) before and after one year."
+      },
+      "caveat": "Small, not a trial. Older men and men with severe problems improved less.",
+      "ref": {
+        "cite": "Pourmand G, Alidaee MR, Rasuli S, Maleki A, Mehrsai A (2004). Do cigarette smokers with erectile dysfunction benefit from stopping?: a prospective study. BJU International.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15610111/",
+        "pmid": "15610111",
+        "fetched": true,
+        "quote": "After 1 year the ED status improved in > or = 25% of ex-smokers but in none of the current smokers"
+      }
+    },
+    {
+      "group": "after",
+      "big": "Years 1 and 3",
+      "line": "People who quit smoking rated their life and mood better than those who kept smoking, at 1 year and at 3 years.",
+      "mirror": "Worried life will feel empty without cigarettes",
+      "basis": {
+        "design": "cohort within a randomised quit-smoking trial, followed 3 years",
+        "who": "adult smokers (58.2% women)",
+        "n": "1,504 adults",
+        "where": "US (site not named in fetched abstract)",
+        "when": "not in fetched text",
+        "measured": "Quality of life, health-related quality of life, mood, relationship satisfaction and stressful events; smoking checked by a biochemical test. Quitters also had fewer stressors by year 3."
+      },
+      "caveat": "Quitters weren't chosen at random, so they may differ in other ways. Marriage satisfaction did not change.",
+      "ref": {
+        "cite": "Piper ME, Kenford S, Fiore MC, Baker TB (2012). Smoking cessation and quality of life: changes in life satisfaction over 3 years following a quit attempt. Annals of Behavioral Medicine.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22160762/",
+        "pmid": "22160762",
+        "fetched": true,
+        "quote": "Compared with continuing smokers, quitters showed improved global QOL, HR-QOL, and affect at years 1 and 3 and fewer stressors by year 3."
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "claim": "Page number '×2.3 the odds of quitting with varenicline' (existing).",
+      "why": "Number checks out, word does not: 2.32 is a risk ratio, not odds. Correct: 'about 2.3 times as likely to quit' (still off cigarettes at 6+ months)."
+    },
+    {
+      "claim": "Share of young US adults who use nicotine pouches.",
+      "why": "No official adult figure fetched: SAMHSA's NSDUH pages returned 403 and the CDC adult survey did not ask about pouches. Only a preprint (medRxiv) found. CDC youth figure: 2.4% of high school students (2024)."
+    },
+    {
+      "claim": "22.3% of US 18–25-year-olds vaped nicotine in the past month (NSDUH 2025).",
+      "why": "Seen only in a search snippet; the SAMHSA PDF returned 403, so it was not fetched."
+    },
+    {
+      "claim": "Two-thirds to three-quarters of ex-smokers quit unaided.",
+      "why": "Not fetched from a primary source. Used instead: only 31.2% of US smokers used counseling or medication when trying to quit (CDC, 2015)."
+    },
+    {
+      "claim": "Nearly 9 in 10 adults who smoke daily first tried smoking by age 18.",
+      "why": "On a CDC page (fetched), but it names no survey, year or sample, so the basis cannot be filled. Left out."
+    },
+    {
+      "claim": "Quitting lowers anxiety and depression (Cochrane 2021, 102 studies, 169,500 people).",
+      "why": "Verified (Taylor 2021, PMID 33687070), but effects are standardised scores that don't turn into plain numbers; file 02 already has the 2014 version."
+    },
+    {
+      "claim": "A year after quitting, quitters report no significant craving (572 smokers).",
+      "why": "Verified (Schlam 2012, PMID 22865499) but cut to stay at 14; no number to show."
+    }
+  ]
+}
