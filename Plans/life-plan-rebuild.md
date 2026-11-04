@@ -242,7 +242,7 @@ season from one place, and `TAB_ORDER` lists the new steps.
   carry that escaping in their text; the data never had it. `life-plan-2026-11-04-after-phase3.json` is
   made with `json_agg`, one table at a time, and is exact. Your plan's data did not change between the
   backups (revision 919 throughout), so that file also stands for the old tables.
-- **N1, built 2026-11-04**, and placed differently from what N1 said, because the screens showed more
+- **N1, live 2026-11-04** (commit `a131e905`; not yet marked by the owner), and placed differently from what N1 said, because the screens showed more
   than the plan did:
   - **Commit folded into Everything, not into North star.** Commit holds the whole read-back, the "does
     the plan aim at your 10s" check and "what could go wrong", and committing comes after the plan
@@ -266,6 +266,13 @@ season from one place, and `TAB_ORDER` lists the new steps.
     3, because a season counts no rewordings. It now shows on any season begun before today.
   - The browser tests' seed helper stopped clearing the previous plan once saves sent only changes, so
     a second test on the same account was refused. It now diffs against what the account holds.
+- **Review agent, before the push:** one bug (my wait-for-the-account on the Commit link's scroll also
+  held back every other "go to it" jump when the account was unreachable or had no plan row yet; now
+  only that one anchor waits), plus three leftovers fixed: a last "hold their floor" on the catalogue's
+  load meter, "Running since" moved to a rule that takes today instead of bending the `extended` flag,
+  and the Weekly Review goal's link now says where the review is. Checks: 5,700 unit tests, 21 life plan
+  browser tests (`life-mastery-track.spec.ts:219` flaked once under load and passed twice alone), no new
+  type errors. The lint ratchet could not run: other sessions' `.claude/worktrees/` swamp its JSON.
 
 ### Phase 4. Goals: timeframe, subgoals, habits as routine steps, no copy (Q3–Q6)
 
