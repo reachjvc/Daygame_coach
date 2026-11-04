@@ -25,6 +25,7 @@
 import { cleanup } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
+import { OFFLINE_BASE_KEY } from "@/src/timetrack/config"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
 import { startTimer, stopTimer } from "@/src/timetrack/timetrackService"
@@ -162,5 +163,68 @@ describe("a phone on a slow line", () => {
 
     expect(account.entry("gym")?.stopped_at, "the Stop made while the account was slow to answer never reached it").toBe(pressedAt)
     expect(back.latest().entries.find((e) => e.id === "gym")?.stop, "the timer runs again on the next visit").toBe(pressedAt)
+  })
+})
+
+/**
+ * A KEPT BASE NEVER LAYS AN OLD COPY OVER NEWER ROWS (a code review, 2026-11-04).
+ *
+ * The base was kept on any change before the account answered, including one
+ * heard from another tab: a slow PC tab kept yesterday's copy because it heard
+ * a phone edit through a tab that had synced, closed before its answer, and the
+ * next day a new tab laid "since then" — yesterday's values — over the phone's
+ * newer edit of the same entry. Now only this device's own edits keep a base, a
+ * tab that has heard from the account removes one another tab left (it has
+ * queued what that tab did), and a base older than twelve hours is not used.
+ */
+describe("a kept base", () => {
+  const rename = (description: string) => (current: TimetrackState): TimetrackState => ({
+    ...current,
+    entries: current.entries.map((e) => (e.id === "gym" ? { ...e, description, at: new Date().toISOString() } : e)),
+  })
+
+  test("is not kept for a change heard from another tab", async () => {
+    const account = fakeAccount(stateToRows(withGymRunning(), USER))
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+    const held = await phoneSawTheAccount(withGymRunning())
+
+    account.online = false
+    const slow = renderDevice(held, { account: USER })
+    await wait(4_000)
+    slow.hear(rename("Gym, from the phone"))
+    await wait(1_000)
+    expect(window.localStorage.getItem(OFFLINE_BASE_KEY), "a change this tab only heard was kept as its own").toBeNull()
+  })
+
+  test("left by another tab is removed by a tab that has heard from the account", async () => {
+    const account = fakeAccount(stateToRows(withGymRunning(), USER))
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+    const synced = renderDevice(withGymRunning(), { account: USER })
+    await wait(1_000)
+
+    // a slow tab of this browser kept a base after this one had heard from the account
+    window.localStorage.setItem(OFFLINE_BASE_KEY, JSON.stringify({ owner: USER, state: withGymRunning(), keptAt: Date.now() }))
+    synced.hear(rename("Gym, legs day"))
+    await wait(1_500)
+    expect(window.localStorage.getItem(OFFLINE_BASE_KEY), "the base outlived a tab that had queued what it covered").toBeNull()
+  })
+
+  test("older than twelve hours is not laid over the account's newer copy", async () => {
+    // yesterday: the PC kept a base, then heard the phone's rename through another tab
+    const yesterday = rename("Gym")(withGymRunning())
+    const heardYesterday = rename("Gym, from the phone yesterday")(withGymRunning())
+    // today: the phone renamed it again, and the account has that
+    const account = fakeAccount(stateToRows(rename("Gym, from the phone today")(withGymRunning()), USER))
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+    window.localStorage.setItem(
+      OFFLINE_BASE_KEY,
+      JSON.stringify({ owner: USER, state: yesterday, keptAt: Date.now() - 13 * 3600_000 }),
+    )
+
+    const pc = renderDevice(heardYesterday, { account: USER })
+    await wait(4_000)
+
+    expect(account.entry("gym")?.description, "a day-old copy was laid over the phone's newer edit").toBe("Gym, from the phone today")
+    expect(pc.latest().entries.find((e) => e.id === "gym")?.description).toBe("Gym, from the phone today")
   })
 })

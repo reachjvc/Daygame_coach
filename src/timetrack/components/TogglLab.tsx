@@ -207,7 +207,7 @@ export function TogglLab({
   underAppHeader?: boolean
 } = {}) {
   const controller = useTimetrack({ account })
-  const { state, setState, nowSec, running, runningSeconds, toasts, pushToast, dismissToast, idlePrompt, resolveIdle, pomodoro, actions, requestNotificationPermission } =
+  const { state, setState, nowSec, running, runningSeconds, toasts, pushToast, dismissToast, idlePrompt, resolveIdle, pomodoro, actions, requestNotificationPermission, fromAnotherTab } =
     controller
 
   const sync = useTimetrackSync({
@@ -216,6 +216,7 @@ export function TogglLab({
     replaceState: actions.replaceState,
     pushToast,
     account,
+    fromAnotherTab,
   })
 
   /**

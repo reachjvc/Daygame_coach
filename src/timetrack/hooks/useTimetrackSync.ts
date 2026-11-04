@@ -55,6 +55,7 @@ import {
   safeToSend,
   sameTagSet,
   splitIntoBatches,
+  stableStringify,
   withServerTagLinks,
   withoutSentRows,
 } from "../syncService"
@@ -132,6 +133,12 @@ interface Options {
    * notes it, so signing out is not interrupted by a reload.
    */
   onAccountChanged?: () => void
+  /**
+   * Whether a workspace came from another tab of this browser rather than a
+   * tap here (`useTimetrack`). Only this device's own edits keep a base before
+   * the account answers. Absent: every change counts as this device's own.
+   */
+  fromAnotherTab?: (state: TimetrackState) => boolean
 }
 
 const PULL_EVERY_MS = 60_000
@@ -425,6 +432,24 @@ export function sendTrackerChangesNow(): boolean {
 interface OfflineBase {
   owner: string
   state: TimetrackState
+  /**
+   * When it was kept (ms). Missing on a base kept before this existed: treated
+   * as kept now, so a Stop waiting from then is not dropped by the change.
+   */
+  keptAt?: number
+}
+
+/**
+ * HOW LONG A KEPT BASE MAY SPEAK FOR THIS DEVICE. Everything between it and what
+ * the device holds now is read as this device's own change, and laid over the
+ * account where the account changed too. A day-old base did that to an edit the
+ * phone had made that morning (a code review, 2026-11-04). Past this, what the
+ * opening started from is used instead, and the account's newer rows stand.
+ */
+const OFFLINE_BASE_GOOD_FOR_MS = 12 * 3600_000
+
+function baseStillGood(base: OfflineBase): boolean {
+  return typeof base.keptAt !== "number" || Date.now() - base.keptAt <= OFFLINE_BASE_GOOD_FOR_MS
 }
 
 function readOfflineBase(): OfflineBase | null {
@@ -500,7 +525,15 @@ function otherDeviceKept(overruled: Overruled[], nameOf: (entryId: string) => st
   return `Changed on your other device: ${name} keeps ${kept}${more}.`
 }
 
-export function useTimetrackSync({ state, setState, replaceState, pushToast, account: pageAccount, onAccountChanged }: Options) {
+export function useTimetrackSync({
+  state,
+  setState,
+  replaceState,
+  pushToast,
+  account: pageAccount,
+  onAccountChanged,
+  fromAnotherTab,
+}: Options) {
   const [status, setStatus] = useState<SyncStatus>("starting")
   const [pendingCount, setPendingCount] = useState(0)
   const [importOffer, setImportOffer] = useState<ImportOffer | null>(null)
@@ -639,6 +672,18 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
   const offlineBaseAtOpening = useRef<OfflineBase | null>(null)
   /** This opening has made sure that base is kept */
   const offlineBaseKept = useRef(false)
+  /** This opening has made an edit of its own, not only heard other tabs' */
+  const ownEditSeen = useRef(false)
+  /**
+   * EVERY QUEUED ROW THIS INSTANCE HAS HELD, as it held it, by `${table}/${key}`.
+   *
+   * The queue on disk is shared by every tab, and each tab wrote its own memory
+   * over it. A tab of the previous build, whose messages this one dropped, had
+   * its queued Stop overwritten that way and lost (a code review, 2026-11-04).
+   * A row on disk that this instance never held — or that another tab has
+   * changed since — is another page's, and stays.
+   */
+  const heldRows = useRef(new Map<string, string>())
   /**
    * THE ACCOUNT CHANGED UNDERNEATH THIS PAGE: another account answered, or this
    * browser's copy was claimed by one (see `browserOwner`). From then on nothing
@@ -818,9 +863,27 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
     tagSets.current = Object.fromEntries(
       Object.entries(tagSets.current).filter(([entryId]) => queuedKeys.has(`timetrack_entries/${entryId}`)),
     )
+    // what another page queued and this one never held stays in the shared queue, with its bases
+    const others: Partial<TimetrackRows> = {}
+    const onDisk = readPendingBases()
+    for (const [key, row] of indexRows(readPending())) {
+      if (queuedKeys.has(key) || heldRows.current.get(key) === stableStringify(row)) continue
+      ;((others as Record<string, AnyRow[]>)[key.slice(0, key.indexOf("/"))] ??= []).push(row)
+    }
+    for (const [key, row] of indexRows(pending.current)) heldRows.current.set(key, stableStringify(row))
+    const othersKeys = keysIn(others)
+    const toWrite = othersKeys.size > 0 ? mergeChangeSets(others, pending.current) : pending.current
+    const basesToWrite = {
+      ...Object.fromEntries(Object.entries(onDisk.bases).filter(([key]) => othersKeys.has(key))),
+      ...bases.current,
+    }
+    const setsToWrite = {
+      ...Object.fromEntries(Object.entries(onDisk.tagSets).filter(([entryId]) => othersKeys.has(`timetrack_entries/${entryId}`))),
+      ...tagSets.current,
+    }
     try {
-      window.localStorage.setItem(PENDING_KEY, JSON.stringify(pending.current))
-      window.localStorage.setItem(PENDING_BASES_KEY, JSON.stringify({ bases: bases.current, tagSets: tagSets.current }))
+      window.localStorage.setItem(PENDING_KEY, JSON.stringify(toWrite))
+      window.localStorage.setItem(PENDING_BASES_KEY, JSON.stringify({ bases: basesToWrite, tagSets: setsToWrite }))
     } catch {
       // the workspace itself is already saved; a lost queue re-derives from the
       // next diff, so this is worth reporting but not worth blocking on
@@ -1212,6 +1275,18 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
         ...(answers.conflicts.timetrack_entries ?? []).map((row) => row.id),
       ])
       const accepted = withoutKeys(went, refusedKeys, refusedEntries)
+      /**
+       * A TIMER THAT WAS NOT RUNNING IS RUNNING ON THE ACCOUNT NOW. Another device
+       * may have started one meanwhile — a Walk queued offline at noon, sent from
+       * a pocket after the PC started Read at ten past — and nothing looked again
+       * until somebody opened the app, so both ran (a code review, 2026-11-04).
+       * Checking at once lets the usual reconciliation stop the older one.
+       */
+      const startedHere = ((accepted.timetrack_entries ?? []) as unknown as AnyRow[]).some((row) => {
+        if (row.stopped_at != null || row.deleted_at) return false
+        const before = queuedBases[`timetrack_entries/${String(row.id)}`]?.row
+        return !before || before.stopped_at != null
+      })
       const acceptedSets = Object.fromEntries(Object.entries(setsSent).filter(([entryId]) => !refusedEntries.has(entryId)))
 
       // what we just sent is now what the server has
@@ -1306,6 +1381,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
         retryDelay.current = Math.min(retryDelay.current * 2, RETRY_MAX_MS)
       }
       setStatus(countRows(pending.current) > 0 ? "saving" : "synced")
+      if (startedHere && !unmounted.current) setTimeout(() => checkRef.current(), 0)
     } catch (error) {
       // a send from an instance that has gone stays in the queue on disk for the next one
       if (unmounted.current) return
@@ -1393,14 +1469,18 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
     if (!state || ready.current) return
     ready.current = true
     pending.current = readPending()
+    for (const [key, row] of indexRows(pending.current)) heldRows.current.set(key, stableStringify(row))
     const stored = readPendingBases()
     bases.current = stored.bases
     tagSets.current = stored.tagSets
     setPendingCount(countRows(pending.current))
     // remember what was here before the server said anything
     startingState.current = state
-    // and what an earlier opening that never reached the account started from
-    offlineBaseAtOpening.current = readOfflineBase()
+    // and what an earlier opening that never reached the account started from — unless it is too
+    // old to speak for this device any more, when this opening's own edits get a base of their own
+    const keptEarlier = readOfflineBase()
+    if (keptEarlier && !baseStillGood(keptEarlier)) forgetOfflineBase()
+    offlineBaseAtOpening.current = keptEarlier && baseStillGood(keptEarlier) ? keptEarlier : null
 
     /**
      * What this device's own changes are found against: the base an earlier
@@ -1410,7 +1490,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
      */
     const startFor = (signedIn: string | null): TimetrackState | null => {
       const kept = offlineBaseAtOpening.current
-      if (kept && signedIn && kept.owner === signedIn) return kept.state
+      // gone from disk meanwhile: a tab that had heard from the account took it, and queued what it covered
+      const stillKept = kept !== null && readOfflineBase() !== null
+      if (kept && stillKept && signedIn && kept.owner === signedIn && baseStillGood(kept)) return kept.state
       if (kept) {
         offlineBaseAtOpening.current = null
         forgetOfflineBase()
@@ -1725,10 +1807,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
         stopForAnotherAccount()
         return
       }
-      if (!offlineBaseKept.current && ready.current && startingState.current && state !== startingState.current) {
+      if (!ready.current || !startingState.current || state === startingState.current) return
+      /**
+       * A CHANGE HEARD FROM ANOTHER TAB IS NOT THIS DEVICE'S EDIT. That tab has the
+       * account, or will; laying its change over the account later as if made here
+       * is how a slow tab's base carried yesterday's values over a newer edit (a
+       * code review, 2026-11-04). Until this opening edits something itself, what
+       * it started from moves with what it hears.
+       */
+      if (fromAnotherTab?.(state)) {
+        if (!ownEditSeen.current) startingState.current = state
+        return
+      }
+      ownEditSeen.current = true
+      if (!offlineBaseKept.current) {
         offlineBaseKept.current = true
         // whose it is is known only on a page that knows who is signed in; elsewhere nothing is kept
-        const base = offlineBaseAtOpening.current ?? (pageAccount ? { owner: pageAccount, state: startingState.current } : null)
+        const base =
+          offlineBaseAtOpening.current ??
+          (pageAccount ? { owner: pageAccount, state: startingState.current, keptAt: Date.now() } : null)
         if (base && !keepOfflineBase(base)) {
           pushToast("This browser's storage is full: a change made before the account answered is kept only while this page stays open.", "error")
         }
@@ -1736,6 +1833,16 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
       return
     }
     if (statusRef.current === "local-only" || accountGone.current) return
+
+    /**
+     * A BASE ANOTHER TAB KEPT IS NO LONGER NEEDED once a tab that has heard from
+     * the account is running: that tab's edits reached this one as they were
+     * made, and are queued here (just below, or already). Left behind, a base
+     * outlived both tabs and spoke for a day-old copy the next time (a code
+     * review, 2026-11-04).
+     */
+    const strayBase = readOfflineBase()
+    if (strayBase && (!pageAccount || strayBase.owner === pageAccount)) forgetOfflineBase()
 
     /**
      * Nothing may be compared until the state we adopted has actually arrived —
@@ -1813,7 +1920,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
 
     const timer = setTimeout(() => void flush(), 800)
     return () => clearTimeout(timer)
-  }, [state, syncActive, savePending, flush, queueChanges, pageAccount, stopForAnotherAccount])
+  }, [state, syncActive, savePending, flush, queueChanges, pageAccount, stopForAnotherAccount, fromAnotherTab])
 
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {

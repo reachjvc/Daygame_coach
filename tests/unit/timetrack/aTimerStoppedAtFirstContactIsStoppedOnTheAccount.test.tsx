@@ -97,3 +97,42 @@ describe("a phone that started a timer with no signal while the PC's ran", () =>
     expect(running, "a timer the phone had shown stopped still runs on the account").toEqual([])
   })
 })
+
+/**
+ * AND A TIMER SENT LATER, WHILE ANOTHER RUNS ON THE ACCOUNT, IS RECONCILED AT
+ * ONCE (a code review, 2026-11-04). The phone, in step with the account, starts
+ * Walk at noon with no signal; at ten past the PC starts Read. The phone's
+ * signal returns in a pocket and its retry writes Walk, running — and nothing
+ * looked again until someone opened the app, so the account ran both. A send
+ * that writes a timer that was not running before now checks the account.
+ */
+describe("a phone whose queued timer is sent after the PC started another", () => {
+  test("leaves one timer running on the account", async () => {
+    const account = fakeAccount(stateToRows(baseState(), USER))
+    vi.stubGlobal("fetch", vi.fn(account.fetch))
+    const phone = renderDevice(baseState(), { account: USER })
+    await wait(1_000)
+
+    account.online = false
+    phone.apply(startWalk)
+    const walk = phone.latest().entries.find((e) => e.description === "Walk")!
+    await wait(1_000)
+
+    // ten past: the PC starts Read
+    const read = startTimer(
+      baseState(),
+      { description: "Read", projectId: null, taskId: null, tagIds: [], billable: false },
+      new Date(Date.now() + 10 * 60_000).toISOString(),
+    ).state.entries.find((e) => e.description === "Read")!
+    const readRow = stateToRows(baseState({ entries: [read] }), USER).timetrack_entries[0]
+    account.edit("timetrack_entries", read.id, readRow as unknown as Record<string, unknown>)
+
+    // the signal returns in a pocket: no event, only the send's own retry
+    account.online = true
+    // well before the minute's check would look; stepped, so what each answer brings is drawn as it lands
+    for (let second = 0; second < 10; second++) await wait(1_000)
+
+    const running = [walk.id, read.id].filter((id) => account.entry(id)?.stopped_at === null)
+    expect(running.length, "two timers run on the account until somebody opens the app").toBe(1)
+  })
+})

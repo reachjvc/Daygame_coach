@@ -14,7 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { reportError } from "@/src/shared/errorReportService"
 
 import { serverNow, serverNowIso, serverOffset } from "../serverClock"
-import { ownerChangedUnderneath } from "../browserOwner"
+import { browserOwner, ownerChangedUnderneath } from "../browserOwner"
 import { STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
 import { readBackgroundMemory, rememberBackground } from "./backgroundMemory"
 import { newId } from "../idService"
@@ -359,8 +359,13 @@ export function useTimetrack({ account }: { account?: string } = {}) {
       event: MessageEvent<{ kind: string; serialised: string; id?: string; base?: string | null; owner?: string | null }>,
     ) => {
       if (event.data?.kind !== "state") return
-      // another account's tab, or a page that does not know whose it is: not this one's to take
-      if ((event.data.owner ?? null) !== (account ?? null)) return
+      // another account's tab, or a page that does not know whose it is: not this one's to take.
+      // A tab of the build before owners names none at all; it is this account's when this
+      // browser's copy is, because the claim removed anybody else's. Dropping its messages
+      // lost an old tab's Stop at the next deploy (a code review, 2026-11-04).
+      const sent = event.data.owner
+      const notOurs = sent === undefined ? account !== undefined && browserOwner() !== account : sent !== (account ?? null)
+      if (notOurs) return
       try {
         hear(event.data.serialised, event.data.id ?? null, event.data.base ?? null)
       } catch {
@@ -918,6 +923,11 @@ export function useTimetrack({ account }: { account?: string } = {}) {
     return result === "granted"
   }, [])
 
+  const fromAnotherTab = useCallback(
+    (candidate: TimetrackState) => heardAs.current.has(candidate) || mergedOnto.current.has(candidate),
+    [],
+  )
+
   return {
     state,
     setState,
@@ -944,6 +954,12 @@ export function useTimetrack({ account }: { account?: string } = {}) {
     },
     actions,
     requestNotificationPermission,
+    /**
+     * Whether this workspace came from another tab of this browser — heard as it
+     * was, or merged onto what this tab had — rather than from a tap here. The
+     * sync keeps a base only for this device's own edits (`useTimetrackSync`).
+     */
+    fromAnotherTab,
   }
 }
 

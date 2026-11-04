@@ -273,6 +273,41 @@ describe("the gaps a security review found (2026-11-04)", () => {
   })
 })
 
+describe("a second tracker tab while Log Out runs in another (a code review, 2026-11-04)", () => {
+  test("stops and says it is logged out, instead of reloading and claiming the browser again", async () => {
+    const as = fakeAccount(stateToRows(aCopy(), A), { userId: A })
+    leaveACopy({ owner: A, queued: false })
+    serve(as)
+    await open(A)
+
+    // Log Out in the other tab: the copy goes, the mark is left, the session ends seconds later
+    forgetTimeTrackerOnThisDevice()
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: ACCOUNT_KEY, newValue: "" }))
+    })
+    await wait(500)
+
+    expect(restarts.count, "the tab reloaded while the session still held, and claimed the browser again").toBe(0)
+    expect(screen.getByText(/You logged out/)).toBeInTheDocument()
+    expect(shown(SECRET), "the tracker is still drawn after Log Out").toBe(false)
+    expect(window.localStorage.getItem(ACCOUNT_KEY)).toBe("")
+    expect(kept(SECRET), "this tab wrote the copy back after Log Out removed it").toBe(false)
+  })
+
+  test("in the tab that logs out, the tracker says so rather than going on without saving", async () => {
+    const as = fakeAccount(stateToRows(aCopy(), A), { userId: A })
+    leaveACopy({ owner: A, queued: false })
+    serve(as)
+    await open(A)
+
+    // Log Out here, and the sign-out itself does not get through (no signal)
+    forgetTimeTrackerOnThisDevice()
+    await wait(500)
+    expect(screen.getByText(/You logged out/)).toBeInTheDocument()
+    expect(shown(SECRET)).toBe(false)
+  })
+})
+
 describe("A's page, brought back from the back-forward cache after B signed in on that tab", () => {
   test("starts again before anyone reads it", async () => {
     const as = fakeAccount(stateToRows(aCopy(), A), { userId: A })

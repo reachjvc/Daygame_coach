@@ -9,6 +9,9 @@
  * `account` is the page knowing who is signed in, as `/time` does: the browser's
  * copy is claimed for it first (`claimBrowserCopy`, which `TimetrackScreen` runs),
  * and the hook keeps and sends that account's changes only.
+ *
+ * `hear` is a change that arrived from another tab of this browser rather than
+ * a tap here, as `useTimetrack` tells the hook (`fromAnotherTab`).
  */
 
 import { useCallback, useEffect, useState } from "react"
@@ -30,8 +33,10 @@ function Device({
   onSync,
   onToast,
   account,
+  fromAnotherTab,
 }: {
   account?: string
+  fromAnotherTab: (state: TimetrackState) => boolean
   initial: TimetrackState
   onState: (state: TimetrackState) => void
   onApply: (apply: (update: Update) => void) => void
@@ -47,7 +52,7 @@ function Device({
   useEffect(() => onApply(apply), [apply, onApply])
   const replace = useCallback((next: TimetrackState) => setState(next), [])
   const toast = useCallback((text: string) => onToast(text), [onToast])
-  const sync = useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast, account })
+  const sync = useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast, account, fromAnotherTab })
   useEffect(() => {
     onSync(sync)
   })
@@ -61,6 +66,8 @@ export function renderDevice(initial: TimetrackState, { account }: { account?: s
   let syncRef: Sync | null = null
   const toasts: string[] = []
   const onToast = (text: string) => toasts.push(text)
+  const heard = new WeakSet<TimetrackState>()
+  const fromAnotherTab = (state: TimetrackState) => heard.has(state)
   const view = render(
     <Device
       initial={initial}
@@ -69,6 +76,7 @@ export function renderDevice(initial: TimetrackState, { account }: { account?: s
       onSync={(sync) => (syncRef = sync)}
       onToast={onToast}
       account={account}
+      fromAnotherTab={fromAnotherTab}
     />,
   )
   return {
@@ -91,6 +99,18 @@ export function renderDevice(initial: TimetrackState, { account }: { account?: s
     },
     /** every toast the hook has shown on this device, oldest first */
     toasts: () => [...toasts],
+    /** A change another tab of this browser made, heard here: not this device's own edit */
+    hear: (update: Update) => {
+      const apply = applyRef
+      if (!apply) throw new Error("the device has not mounted yet")
+      act(() =>
+        apply((current) => {
+          const next = update(current)
+          heard.add(next)
+          return next
+        }),
+      )
+    },
     unmount: () => view.unmount(),
   }
 }
