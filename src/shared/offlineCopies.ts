@@ -46,6 +46,24 @@ const SHELL_STORE_PREFIX = "app-shell-"
  * thought taps and unlike the workout's sets: an entry's text is somebody's
  * day, and a tracker tab still open is told to stop (`browserOwner`).
  */
+/**
+ * AFTER A SIGN-IN: the pages the worker stored are the previous person's. The
+ * stored /time page names its account, so opened with no signal it served the
+ * previous person's tracker to whoever signed in next (a security review,
+ * 2026-11-04). Signing in is a client-side transition the worker never sees as
+ * a navigation, so the login page empties the stores itself; the tracker
+ * stores its page again, for the right person, the next time it is opened.
+ */
+export async function forgetStoredPages(): Promise<void> {
+  try {
+    if (typeof caches === "undefined") return
+    const stores = await caches.keys()
+    await Promise.all(stores.filter((name) => name.startsWith(SHELL_STORE_PREFIX)).map((name) => caches.delete(name)))
+  } catch {
+    // a store that cannot be opened holds nothing that can be served
+  }
+}
+
 export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnsentTime?: boolean } = {}): Promise<void> {
   // Log Out has sent what it could and asked about the rest (LogOutButton). A
   // sign-out the person did not choose — a password reset — keeps a copy that

@@ -145,6 +145,22 @@ describe("Log Out with changes not saved to the account yet", () => {
   })
 })
 
+describe("Log Out with a copy another account left behind", () => {
+  test("sends none of it, and does not keep the person from logging out", async () => {
+    // kept by a Log Out from before owners were recorded: its queue names user-1, and user-2 is signed in now
+    stopWaitingInTheQueue()
+    window.localStorage.removeItem(ACCOUNT_KEY)
+    const signedIn = fakeAccount(stateToRows(baseState(), "user-2"), { userId: "user-2" })
+    vi.stubGlobal("fetch", vi.fn(signedIn.fetch))
+
+    renderLogOut()
+    await wait(SEND_BEFORE_LOG_OUT_MS)
+
+    expect(signedIn.entry("gym"), "another account's queued Stop went into the account logging out").toBeUndefined()
+    expect(signedOut.count).toBe(1)
+  })
+})
+
 describe("a sign-out the person did not choose (a password reset)", () => {
   test("keeps a copy that still holds unsent changes, for the same account", async () => {
     stopWaitingInTheQueue()

@@ -36,7 +36,7 @@ import {
   type VersionedPushResult,
 } from "@/src/db/timetrackTypes"
 
-import { ownerChangedUnderneath, startAgain } from "../browserOwner"
+import { isSigningOut, ownerChangedUnderneath, startAgain, whenSigningOut } from "../browserOwner"
 import { OFFLINE_BASE_KEY, PENDING_BASES_KEY, PENDING_KEY, STATE_VERSION, STORAGE_KEY } from "../config"
 import { noteServerDate, serverNow, serverNowIso } from "../serverClock"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
@@ -722,10 +722,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
     for (const controller of inFlight.current) controller.abort()
     inFlight.current.clear()
     pending.current = {}
-    ;(onAccountChanged ?? startAgain)()
+    // Log Out removed the copy in this tab and is about to end the session: a reload now would
+    // come back signed in. It leaves the page by itself, and the other tabs start again on their own.
+    if (onAccountChanged) onAccountChanged()
+    else if (!isSigningOut()) startAgain()
   }, [clearRetry, onAccountChanged])
   const stopForAnotherAccountRef = useRef(stopForAnotherAccount)
   stopForAnotherAccountRef.current = stopForAnotherAccount
+
+  // Log Out has begun in this tab: nothing more is sent, retried or checked from here
+  useEffect(
+    () =>
+      whenSigningOut(() => {
+        accountGone.current = true
+        clearRetry()
+        if (firstContactAt.current) clearTimeout(firstContactAt.current)
+        firstContactAt.current = null
+      }),
+    [clearRetry],
+  )
 
   /**
    * "CHECKING…": FROM OPENING OR WAKING UNTIL A CHECK LANDS, THREE SECONDS AT MOST.

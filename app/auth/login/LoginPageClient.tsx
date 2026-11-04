@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { createBrowserSupabaseClient } from "@/src/db"
+import { forgetStoredPages } from "@/src/shared/offlineCopies"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -52,6 +53,8 @@ export default function LoginPageClient() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
+      // the pages kept for opening with no signal were the previous person's (offlineCopies.ts)
+      await forgetStoredPages()
 
       const next = searchParams.get("next")
       const query = next ? `?next=${encodeURIComponent(safeNextPath(next))}` : ""

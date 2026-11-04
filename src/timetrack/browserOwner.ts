@@ -26,13 +26,22 @@
  * know (the lab, a unit test) passes no account, and none of this applies to it.
  */
 
-import { ACCOUNT_KEY } from "./config"
+import { ACCOUNT_KEY, OFFLINE_BASE_KEY, PENDING_KEY } from "./config"
 
 /** Every key of the tracker starts with this, in `localStorage` and in `sessionStorage` */
 const TRACKER_PREFIX = "toggl-clone:"
 
 /** When this tab last started again. Not a tracker key, so claiming the browser does not clear it. */
 const RESTARTED_AT_KEY = "tracker-restarted-at"
+
+/**
+ * Whose this TAB's session keys are — the timer bar's draft, the manual form.
+ * `sessionStorage` belongs to one tab, so a claim made in another tab cannot
+ * clear it: A's draft stayed in A's tab, the tab reloaded as B after B claimed
+ * the browser elsewhere, and B's bar showed A's words (a security review,
+ * 2026-11-04). Each tab now clears its own when this differs from its account.
+ */
+const TAB_ACCOUNT_KEY = "toggl-clone:tab-account"
 
 /** The mark Log Out leaves: no account's copy is here, and nothing found later may be adopted */
 export const SIGNED_OUT_HERE = ""
@@ -83,9 +92,35 @@ export function startAgain(): void {
   window.location.reload()
 }
 
-/** Remove every key of the tracker, from this browser and from this tab */
-function removeTrackerKeys(): void {
-  for (const pick of [() => window.localStorage, () => window.sessionStorage]) {
+/**
+ * LOG OUT HAS BEGUN IN THIS TAB. Between removing the copy and the session
+ * ending there are seconds (the push address is removed over the network
+ * first), and a send retry landing in them saw the copy gone and reloaded the
+ * page — before the sign-out, leaving the person signed in on a shared
+ * computer (a security review, 2026-11-04). Now the tracker stops sending the
+ * moment Log Out begins, and nothing in this tab starts again for it; the other
+ * tabs do, from the storage event. The next claim — somebody signing in and
+ * opening the tracker in this same tab — ends it.
+ */
+let signingOut = false
+const signingOutListeners = new Set<() => void>()
+
+export function isSigningOut(): boolean {
+  return signingOut
+}
+
+/** Told once Log Out begins in this tab. Returns how to stop listening. */
+export function whenSigningOut(listener: () => void): () => void {
+  signingOutListeners.add(listener)
+  return () => {
+    signingOutListeners.delete(listener)
+  }
+}
+
+/** Remove every key of the tracker, from this browser and from this tab, or from this tab only */
+function removeTrackerKeys(only: "tab" | "all" = "all"): void {
+  const stores = only === "tab" ? [() => window.sessionStorage] : [() => window.localStorage, () => window.sessionStorage]
+  for (const pick of stores) {
     try {
       const store = pick()
       const keys: string[] = []
@@ -107,6 +142,8 @@ function removeTrackerKeys(): void {
  */
 export function forgetTimeTrackerOnThisDevice(): void {
   if (typeof window === "undefined") return
+  signingOut = true
+  for (const listener of signingOutListeners) listener()
   removeTrackerKeys()
   try {
     window.localStorage.setItem(ACCOUNT_KEY, SIGNED_OUT_HERE)
@@ -120,7 +157,8 @@ export function forgetTimeTrackerOnThisDevice(): void {
  *
  * Another account's copy, or one left under Log Out's mark, is removed — the
  * workspace, the queue, the drafts, all of it — so nothing of it is shown or
- * sent. A copy with no owner recorded is adopted.
+ * sent. A copy with no owner recorded is adopted — unless its own rows say it
+ * is somebody else's (`namesAnotherAccount`).
  *
  * Removed, recorded, and removed again: a tab of the previous account that
  * checked its ownership just before the first sweep may still write once
@@ -129,9 +167,15 @@ export function forgetTimeTrackerOnThisDevice(): void {
  */
 export function claimBrowserCopy(account: string): void {
   if (typeof window === "undefined") return
+  signingOut = false
+  claimBrowser(account)
+  claimThisTab(account)
+}
+
+function claimBrowser(account: string): void {
   const owner = browserOwner()
   if (owner === undefined || owner === account) return
-  const stranger = owner !== null
+  const stranger = owner !== null || namesAnotherAccount(account)
   if (stranger) removeTrackerKeys()
   try {
     window.localStorage.setItem(ACCOUNT_KEY, account)
@@ -147,4 +191,59 @@ export function claimBrowserCopy(account: string): void {
       // as above
     }
   }
+}
+
+/** This tab's drafts are `account`'s from now on; another account's go first */
+function claimThisTab(account: string): void {
+  try {
+    if (window.sessionStorage.getItem(TAB_ACCOUNT_KEY) === account) return
+    removeTrackerKeys("tab")
+    window.sessionStorage.setItem(TAB_ACCOUNT_KEY, account)
+  } catch {
+    // no session storage: nothing is kept in it
+  }
+}
+
+/**
+ * The accounts this browser's copy names itself: the `user_id` on every queued
+ * row (the mapper stamps it), and the owner of a base kept for the account.
+ * A copy kept before owners were recorded says whose it is this way.
+ */
+function accountsTheCopyNames(): Set<string> {
+  const names = new Set<string>()
+  try {
+    const raw = window.localStorage.getItem(PENDING_KEY)
+    const queue = raw ? (JSON.parse(raw) as Record<string, unknown>) : {}
+    for (const rows of Object.values(queue ?? {})) {
+      for (const row of Array.isArray(rows) ? rows : []) {
+        const id = (row as { user_id?: unknown } | null)?.user_id
+        if (typeof id === "string" && id !== "" && id !== "self") names.add(id)
+      }
+    }
+  } catch {
+    // an unreadable queue names nobody
+  }
+  try {
+    const raw = window.localStorage.getItem(OFFLINE_BASE_KEY)
+    const owner = raw ? (JSON.parse(raw) as { owner?: unknown }).owner : undefined
+    if (typeof owner === "string" && owner !== "") names.add(owner)
+  } catch {
+    // as above
+  }
+  return names
+}
+
+/**
+ * A copy with no owner recorded whose rows name another account: kept by a Log
+ * Out from before this existed, which left the tracker behind. The owner's own
+ * copies from then name the owner, and are adopted with their unsent work.
+ */
+function namesAnotherAccount(account: string): boolean {
+  return [...accountsTheCopyNames()].some((name) => name !== account)
+}
+
+/** The one account an unowned copy names, if it names exactly one: whose its unsent work is */
+export function accountTheCopyNames(): string | null {
+  const names = [...accountsTheCopyNames()]
+  return names.length === 1 ? names[0] : null
 }

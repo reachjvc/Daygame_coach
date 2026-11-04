@@ -81,10 +81,11 @@ function sentInto(account: ReturnType<typeof fakeAccount>, entryId: string): boo
   return account.posts.some((post) => (post.body.rows?.timetrack_entries ?? []).some((row) => row.id === entryId))
 }
 
-function serve(account: ReturnType<typeof fakeAccount> | "signed-out") {
+function serve(account: ReturnType<typeof fakeAccount> | "signed-out" | "offline") {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: { method?: string; body?: string }) => {
+      if (account === "offline") throw new TypeError("Failed to fetch")
       if (account === "signed-out") return { ok: false, status: 401, json: async () => ({}) }
       return account.fetch(url, init)
     }),
@@ -225,6 +226,50 @@ describe("A's tab, still open when B signs in elsewhere on the same browser", ()
 
     expect(kept(SECRET), "A's tab wrote A's work into the copy that is B's now").toBe(false)
     expect(sentInto(as, "therapy")).toBe(false)
+  })
+})
+
+describe("the gaps a security review found (2026-11-04)", () => {
+  test("a tab that held A's draft does not show it to B, though B claimed the browser in another tab", async () => {
+    // B opened Time in another tab, so the browser is B's already; this tab still holds A's draft
+    window.localStorage.setItem(ACCOUNT_KEY, B)
+    window.sessionStorage.setItem("toggl-clone:tab-account", A)
+    window.sessionStorage.setItem(
+      TIMER_BAR_KEY,
+      JSON.stringify({ mode: "timer", draft: { description: DRAFT, projectId: null, taskId: null, tagIds: [], billable: false } }),
+    )
+    serve(fakeAccount(stateToRows(baseState(), B), { userId: B }))
+    await open(B)
+    expect(shown(DRAFT), "B's timer bar shows A's half-typed description").toBe(false)
+  })
+
+  test("a copy kept before owners were recorded, whose own rows name A, is not adopted by B", async () => {
+    leaveACopy({ owner: null, queued: true })
+    const bs = fakeAccount(stateToRows(baseState(), B), { userId: B })
+    serve(bs)
+    await open(B)
+    expect(shown(SECRET), "B is shown A's entry").toBe(false)
+    expect(sentInto(bs, "therapy"), "A's queued entry went into B's account").toBe(false)
+    expect(kept(SECRET)).toBe(false)
+  })
+
+  test("Log Out in a tab still retrying a send is not undone by the tracker starting again", async () => {
+    const as = fakeAccount(stateToRows(baseState(), A), { userId: A })
+    serve(as)
+    await open(A)
+    // a weak signal: the send fails and waits to be retried
+    serve("offline")
+    fireEvent.change(screen.getByPlaceholderText("What are you working on?"), { target: { value: "Gym" } })
+    fireEvent.click(main().getByRole("button", { name: "Start timer" }))
+    await wait(1_500)
+
+    // "Log out anyway": the copy goes, and the session ends a few seconds later
+    forgetTimeTrackerOnThisDevice()
+    const sentBefore = as.posts.length
+    serve(as)
+    await wait(10_000)
+    expect(restarts.count, "the page reloaded before the sign-out, still signed in").toBe(0)
+    expect(as.posts.length, "the tracker kept sending after Log Out began").toBe(sentBefore)
   })
 })
 
