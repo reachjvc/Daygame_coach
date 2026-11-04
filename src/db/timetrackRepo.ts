@@ -13,6 +13,7 @@
  * one object — see `timetrackMapperService`.
  */
 
+import { chunkIds } from "./paging"
 import { createServerSupabaseClient } from "./server"
 import {
   emptyRows,
@@ -495,6 +496,132 @@ async function pushVersioned(supabase: Supabase, parts: WritePart[], versions: P
   }
   // every table went through on its own: whatever failed the whole did not last
   return total
+}
+
+// ---------------------------------------------------------------------------
+// THE RUNNING TIMER, for its notification (Plans/time-tracker-like-toggl.md,
+// Phase 7). Same signed-in client as everything above, so row security decides
+// whose timer is visible: somebody else's entry is simply not there.
+// ---------------------------------------------------------------------------
+
+/** An entry as the running-timer notification needs it. Times are the database's own strings. */
+export interface TimerRow {
+  id: string
+  description: string
+  projectName: string | null
+  startedAt: string
+  stoppedAt: string | null
+  deletedAt: string | null
+  /** The version, exactly as stored, microseconds and all: it is the base of a versioned write. */
+  updatedAt: string
+}
+
+const TIMER_COLUMNS = "id, description, started_at, stopped_at, deleted_at, updated_at, project:timetrack_projects(name)"
+
+type TimerSelectRow = {
+  id: string
+  description: string
+  started_at: string
+  stopped_at: string | null
+  deleted_at: string | null
+  updated_at: string
+  project: { name: string } | null
+}
+
+function toTimerRow(r: TimerSelectRow): TimerRow {
+  return {
+    id: r.id,
+    description: r.description,
+    projectName: r.project?.name ?? null,
+    startedAt: r.started_at,
+    stoppedAt: r.stopped_at,
+    deletedAt: r.deleted_at,
+    updatedAt: r.updated_at,
+  }
+}
+
+/**
+ * This person's running entries, plus the entries named in `alsoIds` whatever
+ * state they are in now — which is how the sync route finds out what became
+ * of the timer that was running before its write: stopped, and when, or
+ * deleted.
+ */
+export async function readTimerState(userId: string, alsoIds: string[] = []): Promise<TimerRow[]> {
+  const supabase = await createServerSupabaseClient()
+  const running = await supabase
+    .from("timetrack_entries")
+    .select(TIMER_COLUMNS)
+    .eq("user_id", userId)
+    .is("stopped_at", null)
+    .is("deleted_at", null)
+    .order("started_at", { ascending: false })
+    .order("id", { ascending: true })
+    .limit(20)
+  if (running.error) throw new Error(`Could not read your running timer: ${running.error.message}`)
+  const rows = new Map<string, TimerRow>()
+  for (const r of (running.data ?? []) as unknown as TimerSelectRow[]) rows.set(r.id, toTimerRow(r))
+
+  const asked = alsoIds.filter((id) => !rows.has(id))
+  for (const ids of chunkIds(asked)) {
+    const { data, error } = await supabase.from("timetrack_entries").select(TIMER_COLUMNS).eq("user_id", userId).in("id", ids)
+    if (error) throw new Error(`Could not read your running timer: ${error.message}`)
+    for (const r of (data ?? []) as unknown as TimerSelectRow[]) rows.set(r.id, toTimerRow(r))
+  }
+  return [...rows.values()]
+}
+
+/** One entry of this person's, or null when there is none they can see. */
+export async function readTimerEntry(userId: string, entryId: string): Promise<TimerRow | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase.from("timetrack_entries").select(TIMER_COLUMNS).eq("user_id", userId).eq("id", entryId).maybeSingle()
+  if (error) throw new Error(`Could not read that timer: ${error.message}`)
+  return data ? toTimerRow(data as unknown as TimerSelectRow) : null
+}
+
+/**
+ * Stop this entry at `at`, if it is still the version `entry` was read at.
+ *
+ * THROUGH `timetrack_push`, THE SAME VERSIONED WRITE AS EVERY DEVICE'S SYNC
+ * (D1): the stop is written only if the stored `updated_at` is exactly
+ * `entry.updatedAt`, in one transaction with a row lock. Writing it moves the
+ * version, so a phone that still holds its running copy is refused as stale
+ * when it next syncs, and its own changes are laid onto the stopped row — a
+ * stale copy can never clear `stopped_at`.
+ *
+ * "conflict": the entry changed since it was read (or vanished). The caller
+ * reads it again and decides afresh.
+ */
+export async function writeTimerStop(entry: TimerRow, at: string): Promise<"written" | "conflict"> {
+  const supabase = await createServerSupabaseClient()
+  const row = {
+    id: entry.id,
+    stopped_at: at,
+    // the same rule the merge uses (syncVersionService.settleEntry): whole seconds, floored
+    duration_seconds: Math.max(0, Math.floor((Date.parse(at) - Date.parse(entry.startedAt)) / 1000)),
+    running_device_id: null,
+  }
+  const { data, error } = await supabase.rpc("timetrack_push", {
+    p_batch: [{ table: "timetrack_entries", rows: [row], bases: { [entry.id]: entry.updatedAt } }],
+    p_tag_sets: {},
+  })
+  if (functionMissing(error)) {
+    // Before the versioned-write migration: the same rule, as one conditional update.
+    const updated = await supabase
+      .from("timetrack_entries")
+      .update(row)
+      .eq("id", entry.id)
+      .eq("updated_at", entry.updatedAt)
+      .is("stopped_at", null)
+      .is("deleted_at", null)
+      .select("id")
+    if (updated.error) throw new Error(`Could not stop that timer: ${updated.error.message}`)
+    return (updated.data ?? []).length > 0 ? "written" : "conflict"
+  }
+  // the entry went between the read and the write: the function tried to insert it, half-empty
+  if (error?.code === "23502") return "conflict"
+  if (error) throw new Error(`Could not stop that timer: ${error.message}`)
+  const written = (data as PushAnswer | null)?.written?.timetrack_entries ?? {}
+  return entry.id in written ? "written" : "conflict"
 }
 
 /** Does this user have anything stored yet? Decides whether to offer the import. */

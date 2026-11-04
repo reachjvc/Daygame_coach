@@ -92,6 +92,28 @@ export async function currentEndpoint(): Promise<string | null> {
 }
 
 /**
+ * SIGNING OUT, THE TIME TRACKER'S PART: the running-timer notification comes
+ * off this screen — it names what the person is doing — and a Stop still
+ * waiting for signal in the worker (`timer-stops`, public/sw.js) is dropped.
+ * That stop holds the timer's name too, and after sign-out it could only ever
+ * be sent with the next person's session, which the server refuses. Never
+ * throws.
+ */
+export async function forgetTimerOnThisDevice(): Promise<void> {
+  try {
+    const registration = await navigator.serviceWorker?.getRegistration()
+    for (const n of (await registration?.getNotifications({ tag: "timer-running" })) ?? []) n.close()
+  } catch {
+    // no worker, or nothing shown
+  }
+  try {
+    if (typeof indexedDB !== "undefined") indexedDB.deleteDatabase("timer-stops")
+  } catch {
+    // storage blocked: nothing was kept there
+  }
+}
+
+/**
  * SIGNING OUT: this browser stops receiving the person's reminders. Run by
  * both Log Out buttons (src/shared/offlineCopies.ts) while the session still
  * exists. Never throws and never waits long: a sign-out must not hang on it.

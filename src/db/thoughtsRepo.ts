@@ -502,13 +502,18 @@ export async function writeSettings(userId: string, s: ThoughtSettings): Promise
   if (error) throw new Error(`Failed to save your reminder settings: ${error.message}`)
 }
 
-/** When a reminder last reached a push service for this person (the page's "last delivered"). */
+/**
+ * When a reminder last reached a push service for this person (the page's "last delivered").
+ * Reminders and tests only: the time tracker's running-timer pushes share the
+ * send log, and are not reminders.
+ */
 export async function lastDeliveredAt(userId: string): Promise<string | null> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from("notification_sends")
     .select("sent_at")
     .eq("user_id", userId)
+    .in("kind", ["thought-prompt", "test"])
     .gt("delivered", 0)
     .order("sent_at", { ascending: false })
     .limit(1)

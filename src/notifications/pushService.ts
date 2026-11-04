@@ -7,7 +7,8 @@
  *
  * EVERY SEND IS SHORT-LIVED, URGENT AND REPLACES THE LAST ONE.
  *   - TTL 10 minutes: a reminder that could not be delivered by then is
- *     dropped by the push service rather than arriving an hour late.
+ *     dropped by the push service rather than arriving an hour late. The
+ *     running timer's pushes keep 12 hours (TIMER_PUSH_TTL_SECONDS, below).
  *   - Urgency high: the best chance a website gets past battery saving.
  *   - Topic: the push service keeps only the newest undelivered message per
  *     topic, and the worker shows each under one tag, so thirty unanswered
@@ -23,6 +24,7 @@ import webpush from "web-push"
 import {
   closeSend,
   devicesForSending,
+  devicesForTimer,
   openSend,
   readNotificationSecret,
   recordDeviceOutcome,
@@ -30,6 +32,15 @@ import {
 } from "@/src/db/notificationsRepo"
 
 export const PUSH_TTL_SECONDS = 600
+
+/**
+ * THE RUNNING TIMER LIVES LONGER. A reminder ten minutes late is noise, but
+ * "● Gym · since 17:05" is the state of things, and the phone that was off
+ * all evening should still show it when it comes back. The topic keeps only
+ * the newest undelivered one, so a stop sent after the start replaces it at
+ * the push service and a stale "running" is never delivered after a "stopped".
+ */
+export const TIMER_PUSH_TTL_SECONDS = 12 * 3600
 
 /** What the worker shows. `actions` are buttons on the notification (Android and laptops only). */
 export interface PushPayload {
@@ -42,6 +53,26 @@ export interface PushPayload {
   /** The send's row id, carried back by whatever the person answers. */
   promptId?: string
   actions?: { id: string; title: string }[]
+  /** No sound and no vibration. Left out: the worker's default, which rings. */
+  silent?: boolean
+  /** Ring again when it replaces one with the same tag. Left out: the worker's default, which does. */
+  renotify?: boolean
+  /** "timetrack-running": the worker's Stop button and tap go to the timer, not to Thoughts. */
+  kind?: "timetrack-running"
+  /** The time entry a timer notification is about, for its Stop button. */
+  entryId?: string
+  /** The timer's name, for the worker's own "Stop saved · Gym" when it has no signal. */
+  name?: string
+}
+
+/** Which devices a kind goes to: reminders to the reminder switch, the timer to the timer switch. */
+function isTimerKind(kind: SendKind): boolean {
+  return kind === "timetrack-running" || kind === "timetrack-alert"
+}
+
+function topicOf(kind: SendKind): string {
+  if (isTimerKind(kind)) return "timer-running"
+  return kind === "test" ? "test" : "thought-prompt"
 }
 
 export class PushNotConfigured extends Error {
@@ -88,21 +119,36 @@ export interface SendResult {
   devices: number
   delivered: number
   removed: number
+  /** The send log already holds this alert for this entry, so nothing was sent again. */
+  alreadySent?: boolean
 }
 
 /**
  * Send one notification to every switched-on device of this person, record
  * the send and each device's outcome, and remove devices that are gone.
  * `build` receives the send's id so the payload can carry it.
+ *
+ * WHICH SWITCH COUNTS DEPENDS ON THE KIND. Reminders and tests go to devices
+ * with reminders on; the running timer and its alert go to devices with "Show
+ * the running timer" on, and to no other — so a payload carrying an entry's
+ * description never reaches a device that did not ask for it.
  */
-export async function sendToPerson(userId: string, kind: SendKind, build: (sendId: string) => PushPayload, now: Date = new Date()): Promise<SendResult> {
+export async function sendToPerson(
+  userId: string,
+  kind: SendKind,
+  build: (sendId: string) => PushPayload,
+  now: Date = new Date(),
+  options: { entryId?: string } = {},
+): Promise<SendResult> {
   const vapid = await pushKeys()
   if (!vapid) throw new PushNotConfigured()
 
-  const devices = await devicesForSending(userId)
+  const timer = isTimerKind(kind)
+  const devices = timer ? await devicesForTimer(userId) : await devicesForSending(userId)
   // No device, no send: a row here would count as a reminder nobody could answer.
   if (devices.length === 0) return { sendId: null, devices: 0, delivered: 0, removed: 0 }
-  const sendId = await openSend(userId, kind, now)
+  const sendId = await openSend(userId, kind, now, options.entryId)
+  if (sendId === null) return { sendId: null, devices: devices.length, delivered: 0, removed: 0, alreadySent: true }
   const payload = JSON.stringify(build(sendId))
 
   let delivered = 0
@@ -112,9 +158,9 @@ export async function sendToPerson(userId: string, kind: SendKind, build: (sendI
       let outcome: DeviceOutcome
       try {
         const res = await webpush.sendNotification({ endpoint: d.endpoint, keys: { p256dh: d.p256dh, auth: d.auth } }, payload, {
-          TTL: PUSH_TTL_SECONDS,
+          TTL: timer ? TIMER_PUSH_TTL_SECONDS : PUSH_TTL_SECONDS,
           urgency: "high",
-          topic: kind === "test" ? "test" : "thought-prompt",
+          topic: topicOf(kind),
           vapidDetails: { subject: subject(), publicKey: vapid.publicKey, privateKey: vapid.privateKey },
           timeout: 10_000,
         })

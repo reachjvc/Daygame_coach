@@ -44,7 +44,11 @@ function productionColumns(): Map<string, Set<string>> {
     const columns = [...m[2].matchAll(/^ {2}"?(\w+)"? /gm)].map((c) => c[1]).filter((c) => !/^(CONSTRAINT|PRIMARY|UNIQUE|CHECK|FOREIGN|EXCLUDE)$/i.test(c))
     tables.set(m[1], new Set(columns))
   }
-  for (const m of newer.matchAll(/alter table (?:"?public"?\.)?"?(\w+)"? add column (?:if not exists )?"?(\w+)"?/gi)) {
+  // \s+, not one space: a migration may break "alter table x" and "add column"
+  // over two lines, as 20261104160000_running_timer_notification.sql does.
+  for (const m of newer.matchAll(
+    /alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(?:"?public"?\.)?"?(\w+)"?\s+add\s+column\s+(?:if\s+not\s+exists\s+)?"?(\w+)"?/gi,
+  )) {
     tables.get(m[1])?.add(m[2])
   }
   return tables
@@ -127,16 +131,21 @@ describe("the code and production's schema agree", () => {
  * migration newer than its stamp (scripts/db/test-stack.mjs does the same).
  */
 function productionSql(): string {
+  return [fs.readFileSync(path.join(ROOT, "tests/db/baseline.sql"), "utf8"), ...newerMigrationSql()].join("\n")
+}
+
+/** The text of every repo migration newer than the baseline's stamp, in order. */
+function newerMigrationSql(): string[] {
   const baseline = fs.readFileSync(path.join(ROOT, "tests/db/baseline.sql"), "utf8")
   const stamp = /^-- baseline-stamp: (\d+)$/m.exec(baseline)?.[1]
   if (!stamp) throw new Error("tests/db/baseline.sql has no baseline-stamp line")
   const version = (file: string) => BigInt((/^(\d+)_/.exec(file)?.[1] ?? "0").padEnd(14, "0"))
   const dir = path.join(ROOT, "supabase/migrations")
-  const newer = fs
+  return fs
     .readdirSync(dir, { withFileTypes: true })
     .filter((e) => e.isFile() && e.name.endsWith(".sql") && version(e.name) > BigInt(stamp))
+    .sort((a, b) => (version(a.name) < version(b.name) ? -1 : 1))
     .map((e) => fs.readFileSync(path.join(dir, e.name), "utf8"))
-  return [baseline, ...newer].join("\n")
 }
 
 describe("the functions the code calls exist in production's schema", () => {

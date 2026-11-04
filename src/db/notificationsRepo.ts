@@ -14,8 +14,14 @@
  * A DEVICE'S ADDRESS NEVER LEAVES THE SERVER. `listDevices` returns labels
  * and states, never the endpoint or its keys: the address works like a
  * password for sending to that device.
+ *
+ * TWO SWITCHES PER DEVICE. `enabled` is Thought Frequencies' "reminders on
+ * this device"; `timer_running` is the time tracker's "Show the running timer
+ * on this device" (Plans/time-tracker-like-toggl.md, Phase 7). They are
+ * separate choices, so a function that writes one never touches the other.
  */
 
+import { chunkIds } from "./paging"
 import { createAdminSupabaseClient } from "./supabase"
 
 export type SecretName = "push_vapid_public" | "push_vapid_private" | "notifications_clock_secret"
@@ -39,6 +45,8 @@ export interface DeviceSummary {
   id: string
   label: string
   enabled: boolean
+  /** "Show the running timer on this device" */
+  timerRunning: boolean
   lastSuccessAt: string | null
   createdAt: string
 }
@@ -57,8 +65,10 @@ export interface DeviceTarget {
  * Keyed on the endpoint, which names one browser profile. A second person
  * signing in on the same browser takes the row over: the first person's
  * reminders must not keep arriving on a screen that is no longer theirs.
+ *
+ * `timerRunning` left out keeps the stored setting (a new row starts off).
  */
-export async function registerDevice(userId: string, device: DeviceRegistration, enabled = true): Promise<string> {
+export async function registerDevice(userId: string, device: DeviceRegistration, enabled = true, timerRunning?: boolean): Promise<string> {
   const now = new Date().toISOString()
   const row: Record<string, unknown> = {
     user_id: userId,
@@ -71,6 +81,7 @@ export async function registerDevice(userId: string, device: DeviceRegistration,
   }
   // An empty label (the worker re-registering knows none) keeps the one stored.
   if (device.label) row.label = device.label
+  if (timerRunning !== undefined) row.timer_running = timerRunning
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
     .upsert(row, { onConflict: "endpoint" })
@@ -83,15 +94,17 @@ export async function registerDevice(userId: string, device: DeviceRegistration,
 export async function listDevices(userId: string): Promise<DeviceSummary[]> {
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .select("id, label, enabled, last_success_at, created_at")
+    .select("id, label, enabled, timer_running, last_success_at, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: true })
   if (error) throw new Error(`Failed to read your devices: ${error.message}`)
-  return ((data ?? []) as { id: string; label: string; enabled: boolean; last_success_at: string | null; created_at: string }[]).map(
+  type Row = { id: string; label: string; enabled: boolean; timer_running: boolean; last_success_at: string | null; created_at: string }
+  return ((data ?? []) as Row[]).map(
     (d) => ({
       id: d.id,
       label: d.label,
       enabled: d.enabled,
+      timerRunning: d.timer_running,
       lastSuccessAt: d.last_success_at === null ? null : new Date(d.last_success_at).toISOString(),
       createdAt: new Date(d.created_at).toISOString(),
     }),
@@ -103,15 +116,17 @@ export async function listDevices(userId: string): Promise<DeviceSummary[]> {
  * on. Server-only: the answer names another person's id, and is used only to
  * decide whether a shared browser moves to whoever is signed in now.
  */
-export async function deviceByEndpoint(endpoint: string): Promise<{ id: string; userId: string; enabled: boolean } | null> {
+export async function deviceByEndpoint(
+  endpoint: string,
+): Promise<{ id: string; userId: string; enabled: boolean; timerRunning: boolean } | null> {
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .select("id, user_id, enabled")
+    .select("id, user_id, enabled, timer_running")
     .eq("endpoint", endpoint)
     .maybeSingle()
   if (error) throw new Error(`Failed to look up this device: ${error.message}`)
-  const row = data as { id: string; user_id: string; enabled: boolean } | null
-  return row ? { id: row.id, userId: row.user_id, enabled: row.enabled } : null
+  const row = data as { id: string; user_id: string; enabled: boolean; timer_running: boolean } | null
+  return row ? { id: row.id, userId: row.user_id, enabled: row.enabled, timerRunning: row.timer_running } : null
 }
 
 /**
@@ -140,6 +155,18 @@ export async function setDeviceEnabled(userId: string, deviceId: string, enabled
   return (data ?? []).length > 0
 }
 
+/** "Show the running timer on this device", on or off. False when no device of this person has that id. */
+export async function setDeviceTimer(userId: string, deviceId: string, timerRunning: boolean): Promise<boolean> {
+  const { data, error } = await createAdminSupabaseClient()
+    .from("push_devices")
+    .update({ timer_running: timerRunning, updated_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("id", deviceId)
+    .select("id")
+  if (error) throw new Error(`Failed to change this device: ${error.message}`)
+  return (data ?? []).length > 0
+}
+
 /** Remove a device by id, or by its endpoint (signing out knows only the endpoint). */
 export async function removeDevice(userId: string, by: { id: string } | { endpoint: string }): Promise<void> {
   const query = createAdminSupabaseClient().from("push_devices").delete().eq("user_id", userId)
@@ -159,13 +186,33 @@ export async function devicesForSending(userId: string): Promise<DeviceTarget[]>
 }
 
 /**
+ * Every device of this person showing the running timer. Only these are ever
+ * handed a timer push, so a device with the setting off never receives the
+ * entry's description.
+ */
+export async function devicesForTimer(userId: string): Promise<DeviceTarget[]> {
+  const { data, error } = await createAdminSupabaseClient()
+    .from("push_devices")
+    .select("id, endpoint, p256dh, auth")
+    .eq("user_id", userId)
+    .eq("timer_running", true)
+  if (error) throw new Error(`Failed to read devices to send to: ${error.message}`)
+  return (data ?? []) as DeviceTarget[]
+}
+
+/**
  * WHAT HAPPENED TO ONE SEND TO ONE DEVICE.
  *
  * `gone`: the push service said this address no longer exists (404/410), so
  * the row is deleted; it can never work again, and the browser registers a
  * new one when the page is next opened. `failed`: anything else; counted, and
  * a device that fails twenty times in a row is switched off rather than tried
- * forever.
+ * forever: both switches, reminders and the running timer.
+ *
+ * A failure below twenty switches NOTHING ON. This used to write
+ * `enabled: failures < 20`, harmless while only switched-on devices were ever
+ * sent to. Once the timer goes to a device with reminders off, that write
+ * would have turned its reminders on with the first failed send.
  */
 export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gone" | "failed"): Promise<void> {
   const db = createAdminSupabaseClient()
@@ -183,24 +230,94 @@ export async function recordDeviceOutcome(deviceId: string, outcome: "ok" | "gon
   const { data, error: readError } = await db.from("push_devices").select("failures").eq("id", deviceId).maybeSingle()
   if (readError) throw new Error(`Failed to record a failed delivery: ${readError.message}`)
   const failures = Math.min(((data as { failures: number } | null)?.failures ?? 0) + 1, 32767)
-  const { error } = await db
-    .from("push_devices")
-    .update({ failures, enabled: failures < 20, updated_at: now })
-    .eq("id", deviceId)
+  const change: Record<string, unknown> = { failures, updated_at: now }
+  if (failures >= 20) {
+    change.enabled = false
+    change.timer_running = false
+  }
+  const { error } = await db.from("push_devices").update(change).eq("id", deviceId)
   if (error) throw new Error(`Failed to record a failed delivery: ${error.message}`)
 }
 
-export type SendKind = "thought-prompt" | "test"
+/**
+ * What a send was. 'timetrack-running' is the silent running/stopped timer
+ * notification, 'timetrack-alert' the one alert with sound at 6 h. Kept in
+ * step with the database's `notification_sends_kind_check`.
+ */
+export type SendKind = "thought-prompt" | "test" | "timetrack-running" | "timetrack-alert"
 
-/** Open a send's row before sending, so its id can travel in the notification. */
-export async function openSend(userId: string, kind: SendKind, at: Date): Promise<string> {
-  const { data, error } = await createAdminSupabaseClient()
-    .from("notification_sends")
-    .insert({ user_id: userId, kind, sent_at: at.toISOString() })
-    .select("id")
-    .single()
+/**
+ * Open a send's row before sending, so its id can travel in the notification.
+ *
+ * `entryId` names the time entry a timer send is about. For an alert the
+ * database takes one row per entry (`notification_sends_one_alert_per_entry`):
+ * a second is refused, and this answers null, "already sent, do not send
+ * again". That is how the 6 h alert rings once even when two clock ticks race.
+ */
+export async function openSend(userId: string, kind: Exclude<SendKind, "timetrack-alert">, at: Date, entryId?: string): Promise<string>
+export async function openSend(userId: string, kind: SendKind, at: Date, entryId?: string): Promise<string | null>
+export async function openSend(userId: string, kind: SendKind, at: Date, entryId?: string): Promise<string | null> {
+  const row: Record<string, unknown> = { user_id: userId, kind, sent_at: at.toISOString() }
+  if (entryId !== undefined) row.entry_id = entryId
+  const { data, error } = await createAdminSupabaseClient().from("notification_sends").insert(row).select("id").single()
+  if (error?.code === "23505" && kind === "timetrack-alert") return null
   if (error) throw new Error(`Failed to record a reminder: ${error.message}`)
   return (data as { id: string }).id
+}
+
+/** Of these entries, the ones the 6 h alert was already sent for. */
+export async function alertedEntryIds(entryIds: string[]): Promise<Set<string>> {
+  const out = new Set<string>()
+  for (const ids of chunkIds(entryIds)) {
+    const { data, error } = await createAdminSupabaseClient()
+      .from("notification_sends")
+      .select("entry_id")
+      .eq("kind", "timetrack-alert")
+      .in("entry_id", ids)
+    if (error) throw new Error(`Failed to read which timers were alerted: ${error.message}`)
+    for (const r of (data ?? []) as { entry_id: string }[]) out.add(r.entry_id)
+  }
+  return out
+}
+
+/** A running entry, as the alert clock needs it. */
+export interface RunningTimerAsServer {
+  id: string
+  userId: string
+  description: string
+  projectName: string | null
+  startedAt: string
+}
+
+/**
+ * Every person's running entries that started at or before `cutoff`, newest
+ * first, for the 6 h alert. AS THE SERVICE ROLE, like everything here: the
+ * clock has no session. It reads across accounts, so its caller sends each
+ * row only to that row's own `userId`.
+ *
+ * `since` bounds how far back it looks, so a timer left running for weeks on
+ * an account with no device stops being asked about every minute.
+ */
+export async function runningTimersPastAsServer(cutoff: Date, since: Date, limit = 200): Promise<RunningTimerAsServer[]> {
+  const { data, error } = await createAdminSupabaseClient()
+    .from("timetrack_entries")
+    .select("id, user_id, description, started_at, project:timetrack_projects(name)")
+    .is("stopped_at", null)
+    .is("deleted_at", null)
+    .lte("started_at", cutoff.toISOString())
+    .gt("started_at", since.toISOString())
+    .order("started_at", { ascending: false })
+    .order("id", { ascending: true })
+    .limit(limit)
+  if (error) throw new Error(`Failed to read running timers: ${error.message}`)
+  type Row = { id: string; user_id: string; description: string; started_at: string; project: { name: string } | null }
+  return ((data ?? []) as unknown as Row[]).map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    description: r.description,
+    projectName: r.project?.name ?? null,
+    startedAt: r.started_at,
+  }))
 }
 
 export async function closeSend(sendId: string, counts: { devices: number; delivered: number; removed: number }): Promise<void> {

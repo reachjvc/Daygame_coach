@@ -72,8 +72,12 @@ const BASELINE_PATH = path.resolve(__dirname, "../support/writeCoverage.baseline
  * of headroom is four new ones that could land unnoticed. Found by checking
  * all three ratchets after the same drift was caught in eslint-baseline.json
  * the same evening. See `.claude/rules/testing.md`: fixing is half of it.
+ *
+ * Lowered 131 -> 128 on 2026-11-04: `pushTimetrackRows` gained a test that
+ * names it (the time tracker's running-timer notification, Phase 7), and the
+ * ceiling had again drifted two above the real count.
  */
-const MAX_UNASSERTED = 131
+const MAX_UNASSERTED = 128
 
 type Baseline = Record<string, string>
 

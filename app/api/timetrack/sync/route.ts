@@ -3,6 +3,8 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { TimetrackWriteRefused, pullTimetrackRows, pushTimetrackRows, timetrackIsEmpty } from "@/src/db/timetrackRepo"
 import type { PushBases, TagSets, TimetrackRows } from "@/src/db/timetrackTypes"
+import { afterResponse } from "@/src/shared/afterResponse"
+import { announceTimerChange, watchTimer } from "@/src/timetrack/runningTimerService"
 
 /**
  * The most rows one push may carry, four times what the client batches, so this can
@@ -120,7 +122,24 @@ export async function POST(request: Request) {
      * always got.
      */
     const versions = body.bases ? { bases: body.bases, tagSets: body.tagSets ?? {} } : undefined
-    return NextResponse.json(await pushTimetrackRows(auth.userId, body.rows, versions))
+
+    /**
+     * THE RUNNING TIMER'S NOTIFICATION (Plans/time-tracker-like-toggl.md, Phase 7).
+     *
+     * Every device's starts and stops arrive here, so this is where a running
+     * entry appears or ends. The running entries are read before the write;
+     * once the answer has gone they are read again, and a start, stop or switch
+     * is pushed to the person's devices that show the timer. In `finally`, so
+     * a write refused part way is still looked at: the halves that went
+     * through may have stopped a timer. Only a push that carries entries can
+     * change one, so nothing else pays for the reads.
+     */
+    const watched = body.rows.timetrack_entries?.length ? await watchTimer(auth.userId) : null
+    try {
+      return NextResponse.json(await pushTimetrackRows(auth.userId, body.rows, versions))
+    } finally {
+      if (watched) afterResponse(() => announceTimerChange(auth.userId, watched))
+    }
   } catch (error) {
     /**
      * A refused row is a 400, not a 500, and it names what was refused.

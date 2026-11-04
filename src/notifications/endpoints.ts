@@ -62,6 +62,17 @@ export function readSubscription(value: unknown): SubscriptionInput | null {
   return { endpoint: v.endpoint, p256dh, auth }
 }
 
+/**
+ * Does a device new to its person start with "Show the running timer on this
+ * device" on? Only the installed app on a phone (Plans/time-tracker-like-
+ * toggl.md, Q4 scenario 9): an installed app on a PC is where the timer is
+ * already in view. Read from the `deviceLabel` the browser registered with —
+ * the same rule migration 20261104160000 applied to the devices that existed.
+ */
+export function timerOnByDefault(label: string): boolean {
+  return /^(Android phone|iPhone) · installed app$/.test(label)
+}
+
 /** A short, readable name for a device, from its browser's own description. Never sent anywhere else. */
 export function deviceLabel(userAgent: string, installed: boolean): string {
   const ua = userAgent

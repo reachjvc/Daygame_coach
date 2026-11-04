@@ -38,6 +38,7 @@ import { AfterCheckContext, type AfterCheck } from "./afterCheck"
 import { SyncBadge } from "./SyncBadge"
 import { ImportOfferBanner } from "./ImportOfferBanner"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
+import { SendWaitingTimerStops } from "./RunningTimerSetting"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig, followWeekStart } from "../reportsService"
@@ -754,6 +755,7 @@ export function TogglLab({
       <Suspense fallback={null}>
         <AddressWatcher onChange={applyAddress} />
       </Suspense>
+      <SendWaitingTimerStops />
 
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         {/* flex-wrap: on a phone, a running timer plus a sync badge that keeps

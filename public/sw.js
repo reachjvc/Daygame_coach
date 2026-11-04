@@ -246,17 +246,32 @@ self.addEventListener("fetch", (event) => {
  *    a generic line unless the person switched "show thoughts" on.
  * 4. A TAP OPENS THE APP WHERE THE PAYLOAD SAYS — always a page on this site,
  *    never an address from outside it.
+ * 5. SOUND IS THE PAYLOAD'S TO DECIDE. `silent` and `renotify` are read from
+ *    it; a payload that says nothing rings, as reminders always have. The
+ *    running timer says silent, not renotifying (Plans/time-tracker-like-
+ *    toggl.md, Q4): twelve switches a day must not be twelve buzzes.
+ *
+ * THE RUNNING TIMER (kind "timetrack-running", tag "timer-running") is the
+ * second user. Its one button, Stop, posts to /api/timetrack/stop with the
+ * time of the TAP; with no signal, the stop waits in IndexedDB and goes by
+ * Background Sync, or when the app next opens, still with the tap time. Its
+ * tag is its own, so it never replaces a reminder, nor a reminder it.
  * ======================================================================== */
 
-/** A page on this site, or the thoughts page when the payload names anything else. */
-function sameSiteUrl(raw) {
+const TIMER_KIND = "timetrack-running"
+const TIMER_TAG = "timer-running"
+const TIMER_URL = "/time?view=timer"
+const STOP_SYNC_TAG = "timetrack-stop"
+
+/** A page on this site, or `fallback` (the thoughts page) when the payload names anything else. */
+function sameSiteUrl(raw, fallback = "/thoughts?log=1") {
   try {
-    const url = new URL(raw || "/thoughts?log=1", self.location.origin)
+    const url = new URL(raw || fallback, self.location.origin)
     if (url.origin === self.location.origin) return url.href
   } catch {
     // fall through
   }
-  return new URL("/thoughts?log=1", self.location.origin).href
+  return new URL(fallback, self.location.origin).href
 }
 
 self.addEventListener("push", (event) => {
@@ -266,18 +281,200 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {}
   }
+  const timer = data.kind === TIMER_KIND
   const actions = Array.isArray(data.actions) ? data.actions.slice(0, 2) : []
+  const shown = self.registration.showNotification(data.title || (timer ? "Timer" : "What's on your mind?"), {
+    body: data.body || (timer ? "Time tracker" : "Tap to log your last thought."),
+    tag: data.tag || (timer ? TIMER_TAG : "thought-prompt"),
+    renotify: data.renotify !== false,
+    silent: data.silent === true,
+    icon: "/icon-192.png",
+    timestamp: Date.now(),
+    data: timer
+      ? {
+          url: sameSiteUrl(data.url, TIMER_URL),
+          kind: TIMER_KIND,
+          entryId: typeof data.entryId === "string" ? data.entryId : null,
+          name: typeof data.name === "string" ? data.name : "",
+          promptId: null,
+          // never a thought: "stop" must not be logged as one
+          labels: {},
+        }
+      : { url: sameSiteUrl(data.url), promptId: data.promptId || null, labels: Object.fromEntries(actions.map((a) => [a.id, a.title])) },
+    actions: actions.map((a) => ({ action: a.id, title: a.title })),
+  })
+  // A timer push arriving means there is signal: a Stop that waited for it goes
+  // now, AFTER this notification is up, so its answer is what stays on screen.
+  // Chrome may refuse Background Sync to a worker with no window open, so for a
+  // stop tapped in the shade with the app closed this is the usual way out.
+  event.waitUntil(timer ? shown.then(() => sendQueuedStops().catch(() => undefined)) : shown)
+})
+
+/* --- The running timer's Stop ------------------------------------------- */
+
+/** One small store: a stop tapped with no signal, by entry, until it is sent. */
+function openStops() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("timer-stops", 1)
+    req.onupgradeneeded = () => req.result.createObjectStore("stops", { keyPath: "entryId" })
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+/** Run `work` in one transaction on the store; resolves with what `work` reported once it commits. */
+async function inStops(mode, work) {
+  const db = await openStops()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("stops", mode)
+    let result
+    work(tx.objectStore("stops"), (value) => (result = value))
+    tx.oncomplete = () => {
+      db.close()
+      resolve(result)
+    }
+    tx.onerror = tx.onabort = () => {
+      db.close()
+      reject(tx.error)
+    }
+  })
+}
+
+/** Keep a stop for later. A second tap on the same timer keeps the FIRST tap's time. */
+function queueStop(stop) {
+  return inStops("readwrite", (store) => {
+    const read = store.get(stop.entryId)
+    read.onsuccess = () => {
+      if (!read.result) store.put(stop)
+    }
+  })
+}
+
+function queuedStops() {
+  return inStops("readonly", (store, report) => {
+    const all = store.getAll()
+    all.onsuccess = () => report(all.result || [])
+  })
+}
+
+function dropStop(entryId) {
+  return inStops("readwrite", (store) => store.delete(entryId))
+}
+
+/**
+ * Send one stop. "offline" when it did not get a real answer — no network, or
+ * the server in trouble (5xx) — so it is kept and tried again. `sentAt` lets
+ * the server correct a phone clock that runs fast or slow.
+ */
+async function postStop(stop) {
+  let res
+  try {
+    res = await fetch("/api/timetrack/stop", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entryId: stop.entryId, at: stop.at, sentAt: new Date().toISOString() }),
+    })
+  } catch {
+    return { offline: true }
+  }
+  if (res.status >= 500) return { offline: true }
+  let body = {}
+  try {
+    body = await res.json()
+  } catch {
+    body = {}
+  }
+  return { offline: false, status: res.status, body }
+}
+
+/** What to show for the server's answer: its own words when it gave them. */
+function answerText(answer, name) {
+  if (answer.status === 401) return ["Not stopped", "You are signed out here. Tap to open the timer."]
+  const b = answer.body || {}
+  if (typeof b.title === "string" && b.title) return [b.title, typeof b.body === "string" && b.body ? b.body : name || "Time tracker"]
+  return answer.status < 300 ? ["Stopped", name || "Time tracker"] : ["Not stopped", "Tap to open the timer."]
+}
+
+/** A quiet note under the timer's tag, so it replaces the running notification. */
+function showTimerNote(title, body) {
+  return self.registration.showNotification(title, {
+    body,
+    tag: TIMER_TAG,
+    silent: true,
+    renotify: false,
+    icon: "/icon-192.png",
+    timestamp: Date.now(),
+    data: { url: sameSiteUrl(TIMER_URL, TIMER_URL), kind: TIMER_KIND, entryId: null, name: "", promptId: null, labels: {} },
+  })
+}
+
+function clockOf(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  } catch {
+    return ""
+  }
+}
+
+/** Ask the browser to wake this worker when there is signal. Not every browser can. */
+async function askForSync() {
+  try {
+    if (self.registration.sync) await self.registration.sync.register(STOP_SYNC_TAG)
+  } catch {
+    // no Background Sync: the app sends it the next time it opens
+  }
+}
+
+/**
+ * Stop pressed on the notification. The time is taken NOW, at the tap,
+ * whatever happens next — unless a stop of this timer is already waiting, in
+ * which case that first tap's time is the one sent.
+ */
+async function stopFromNotification(entryId, name) {
+  const waiting = (await queuedStops().catch(() => [])).find((s) => s.entryId === entryId)
+  const stop = waiting || { entryId, at: new Date().toISOString(), name: name || "" }
+  const answer = await postStop(stop)
+  if (answer.offline) {
+    await queueStop(stop).catch(() => undefined)
+    await askForSync()
+    return showTimerNote("Stop saved", `${name || "The timer"} stops at ${clockOf(stop.at)}. It is sent when the phone is back online.`)
+  }
+  if (waiting) await dropStop(entryId).catch(() => undefined)
+  const [title, body] = answerText(answer, name)
+  return showTimerNote(title, body)
+}
+
+/** Send every stop still waiting. Resolves with how many are still waiting for signal. */
+async function sendQueuedStops() {
+  const stops = await queuedStops().catch(() => [])
+  let waiting = 0
+  for (const stop of stops) {
+    const answer = await postStop(stop)
+    if (answer.offline) {
+      waiting++
+      continue
+    }
+    await dropStop(stop.entryId).catch(() => undefined)
+    const [title, body] = answerText(answer, stop.name)
+    await showTimerNote(title, body)
+  }
+  return waiting
+}
+
+/** Background Sync: signal is back. A stop still unsent fails the sync, so the browser tries again. */
+self.addEventListener("sync", (event) => {
+  if (event.tag !== STOP_SYNC_TAG) return
   event.waitUntil(
-    self.registration.showNotification(data.title || "What's on your mind?", {
-      body: data.body || "Tap to log your last thought.",
-      tag: data.tag || "thought-prompt",
-      renotify: true,
-      icon: "/icon-192.png",
-      timestamp: Date.now(),
-      data: { url: sameSiteUrl(data.url), promptId: data.promptId || null, labels: Object.fromEntries(actions.map((a) => [a.id, a.title])) },
-      actions: actions.map((a) => ({ action: a.id, title: a.title })),
+    sendQueuedStops().then((waiting) => {
+      if (waiting > 0) throw new Error("still no signal")
     }),
   )
+})
+
+/** The tracker, on opening: "send whatever stop is waiting" — for browsers without Background Sync. */
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "send-queued-stops") event.waitUntil(sendQueuedStops())
 })
 
 /** Bring an open window of the app forward and send it to `url`, or open one. */
@@ -333,6 +530,14 @@ async function logFromNotification(thoughtId, promptId, label) {
 self.addEventListener("notificationclick", (event) => {
   const data = event.notification.data || {}
   event.notification.close()
+  if (data.kind === TIMER_KIND) {
+    if (event.action === "stop" && data.entryId) {
+      event.waitUntil(stopFromNotification(data.entryId, data.name))
+      return
+    }
+    event.waitUntil(focusOrOpen(sameSiteUrl(data.url, TIMER_URL)))
+    return
+  }
   if (event.action && data.labels && event.action in data.labels) {
     event.waitUntil(logFromNotification(event.action, data.promptId || null, data.labels[event.action]))
     return

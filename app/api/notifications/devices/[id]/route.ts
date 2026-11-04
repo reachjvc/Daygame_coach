@@ -1,9 +1,14 @@
-/** One of this person's devices: switch reminders on or off for it (PATCH), or remove it (DELETE). */
+/**
+ * One of this person's devices: switch reminders (`enabled`) or the running
+ * timer (`timerRunning`) on or off for it (PATCH), or remove it (DELETE).
+ */
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { removeDevice, setDeviceEnabled } from "@/src/db/notificationsRepo"
+import { removeDevice, setDeviceEnabled, setDeviceTimer } from "@/src/db/notificationsRepo"
+import { afterResponse } from "@/src/shared/afterResponse"
 import { isUuid } from "@/src/thoughts/thoughtsService"
+import { announceCurrentTimer } from "@/src/timetrack/runningTimerService"
 
 type RouteParams = { params: Promise<{ id: string }> }
 
@@ -12,12 +17,22 @@ export async function PATCH(req: Request, { params }: RouteParams) {
   if (!auth.success) return auth.response
   const { id } = await params
   const body = await req.json().catch(() => null)
-  if (!isUuid(id) || typeof body?.enabled !== "boolean") return NextResponse.json({ error: "Send on or off" }, { status: 400 })
+  const enabled = typeof body?.enabled === "boolean" ? (body.enabled as boolean) : undefined
+  const timerRunning = typeof body?.timerRunning === "boolean" ? (body.timerRunning as boolean) : undefined
+  if (!isUuid(id) || (enabled === undefined && timerRunning === undefined)) {
+    return NextResponse.json({ error: "Send on or off" }, { status: 400 })
+  }
 
   try {
-    if (!(await setDeviceEnabled(auth.userId, id, body.enabled))) {
+    const found = await Promise.all([
+      enabled === undefined ? true : setDeviceEnabled(auth.userId, id, enabled),
+      timerRunning === undefined ? true : setDeviceTimer(auth.userId, id, timerRunning),
+    ])
+    if (found.includes(false)) {
       return NextResponse.json({ error: "No such device" }, { status: 404 })
     }
+    // switched on: whatever runs now appears at once, rather than at the next start
+    if (timerRunning === true) afterResponse(() => announceCurrentTimer(auth.userId))
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("[notifications] device change failed", error instanceof Error ? error.message : "unknown")

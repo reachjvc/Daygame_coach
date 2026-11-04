@@ -63,6 +63,7 @@ import type {
   WeekStart,
 } from "../types"
 import { MiniSelect } from "./pickers"
+import { RunningTimerSetting } from "./RunningTimerSetting"
 import { ColorDot, ConfirmButton, EmptyState, Field, SectionCard, Segmented, ToggleRow } from "./primitives"
 
 type SettingsTab = "profile" | "workspace" | "automation" | "integrations" | "data"
@@ -423,6 +424,9 @@ function AutomationPanel({
           }}
         />
       </SectionCard>
+
+      {/* beside the Pomodoro card's notification switch: the other notification this tracker sends */}
+      <RunningTimerSetting />
 
       <SectionCard title="Idle detection" description="Asks what to do with the gap when a timer runs and nothing happens on this page.">
         <ToggleRow

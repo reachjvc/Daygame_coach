@@ -16,7 +16,7 @@
  * accepts from its owner alone.
  */
 
-import { forgetThisDevice } from "@/src/notifications/pushClient"
+import { forgetThisDevice, forgetTimerOnThisDevice } from "@/src/notifications/pushClient"
 import { forgetThoughtsOnThisDevice } from "@/src/thoughts/logQueue"
 import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
 import { unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
@@ -36,6 +36,10 @@ const SHELL_STORE_PREFIX = "app-shell-"
  * the page's offline copy of the thoughts — unlike the workout's queued sets,
  * those hold the text of what somebody thought, and a shared phone must not
  * keep it.
+ *
+ * AND THE RUNNING TIMER (time tracker, Phase 7): its notification names what
+ * the person is doing, and a Stop waiting for signal names it too; both go,
+ * for the same reason as the thought taps.
  */
 /**
  * AND THE TIME TRACKER, WHOLE (2026-11-04). Its workspace, unsent queue, drafts
@@ -71,6 +75,7 @@ export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnse
   // no other account is shown or sent it (`browserOwner`).
   if (!(keepUnsentTime && unsentTrackerChanges() > 0)) forgetTimeTrackerOnThisDevice()
   await forgetThisDevice()
+  await forgetTimerOnThisDevice()
   forgetThoughtsOnThisDevice()
   try {
     window.localStorage.removeItem(LIVE_COPY_KEY)

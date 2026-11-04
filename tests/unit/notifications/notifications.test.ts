@@ -5,7 +5,7 @@
  * device row holds), so its refusals are tested as carefully as its passes.
  */
 import { describe, expect, it } from "vitest"
-import { deviceLabel, isAllowedPushEndpoint, readSubscription } from "@/src/notifications/endpoints"
+import { deviceLabel, isAllowedPushEndpoint, readSubscription, timerOnByDefault } from "@/src/notifications/endpoints"
 import { bearerMatches } from "@/src/notifications/clockAuth"
 import { outcomeOf } from "@/src/notifications/pushService"
 import { promptPayload, promptUrl, PROMPT_BODY, PROMPT_TITLE } from "@/src/thoughts/promptService"
@@ -56,6 +56,14 @@ describe("which addresses the server will send to", () => {
     expect(deviceLabel(pixel, false)).toBe("Android phone · Chrome")
     expect(deviceLabel(iphone, true)).toBe("iPhone · installed app")
     expect(deviceLabel(win, false)).toBe("Windows PC · Edge")
+  })
+
+  it("starts the running timer on only for the installed app on a phone", () => {
+    expect(timerOnByDefault("Android phone · installed app")).toBe(true)
+    expect(timerOnByDefault("iPhone · installed app")).toBe(true)
+    expect(timerOnByDefault("Android phone · Chrome")).toBe(false)
+    expect(timerOnByDefault("Windows PC · installed app")).toBe(false)
+    expect(timerOnByDefault("")).toBe(false)
   })
 })
 
