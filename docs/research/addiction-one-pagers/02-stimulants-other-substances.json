@@ -1,0 +1,1032 @@
+[
+  {
+    "id": "nicotine",
+    "name": "Nicotine: cigarettes, vapes and nicotine pouches (Zyn)",
+    "group": "substance",
+    "oneLiner": "Quitting without help works for only 3–5% of attempts at 6–12 months; varenicline more than doubles the odds of quitting compared with placebo.",
+    "oneLinerRefs": ["r3", "r6"],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: tobacco use disorder; tobacco withdrawal. ICD-11: 6C4A disorders due to use of nicotine (6C4A.2 nicotine dependence; 6C4A.4 nicotine withdrawal). Vapes and pouches are nicotine products and fall under the same codes.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "none",
+      "text": "The valid withdrawal symptoms are anger, anxiety, low mood, poor concentration, impatience, insomnia and restlessness: unpleasant, not physically dangerous. In trials, varenicline showed no clear rise in serious psychiatric side effects, though the estimate was imprecise.",
+      "refs": ["r1", "r6"]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "mood-sleep",
+        "label": "Irritability, anxiety, low mood, poor focus, restlessness, insomnia",
+        "startH": 0, "peakH": 72, "endH": 672, "peakIntensity": 3,
+        "note": "Peak falls within the first week and symptoms last 2–4 weeks. The review gives no start hour or exact peak day; the peak is drawn at day 3. Measured in smokers, not in vape-only or pouch-only users.",
+        "refs": ["r1"]
+      },
+      {
+        "track": "body",
+        "label": "Weight gain",
+        "startH": 0, "peakH": 2160, "endH": 8760, "peakIntensity": 2,
+        "note": "Untreated quitters gained on average 1.12 kg by 1 month, 4.23 kg by 6 months and 4.67 kg by 12 months; most of the gain comes in the first 3 months. 16% lost weight.",
+        "refs": ["r9"]
+      },
+      {
+        "track": "craving",
+        "label": "Craving set off by cues (a break, a drink, a lighter)",
+        "startH": 168, "peakH": 840, "endH": 840, "peakIntensity": 4,
+        "note": "In paid abstainers, cue-induced craving was higher at day 35 than at day 7 and did not fall on any measure. The study stopped at day 35, so the end is unknown.",
+        "refs": ["r2"]
+      }
+    ],
+    "markers": [
+      { "atH": 72, "kind": "peak", "label": "Withdrawal peaks within the first week", "refs": ["r1"] },
+      { "atH": 192, "kind": "danger", "label": "Most relapses happen in the first 8 days", "refs": ["r3"] },
+      { "atH": 336, "kind": "trap", "label": "Smoking at all in week 2: 83–97% of patch users were smoking again at 6 months", "refs": ["r4"] },
+      { "atH": 840, "kind": "trap", "label": "Day 35: cue craving is higher than at day 7, even as withdrawal fades", "refs": ["r2"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "A cigarette is the only thing that calms me down.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Across 26 studies, people who quit had less anxiety, depression and stress afterwards than people who kept smoking. The improvement was as large as antidepressant treatment gives for mood and anxiety disorders.",
+        "refs": ["r10"],
+        "beliefSource": "recovery-testimonials/05-nicotine.md T33 (Dorothy K., American Lung Association): \"Or something stressful happened and I’d need the cigarette to calm my nerves.\""
+      },
+      {
+        "voice": "Patches just feed the addiction. Cold turkey is the only real way.",
+        "kind": "quitting-wont-work",
+        "verdict": "false",
+        "science": "Unaided quitting has the worst odds: 3–5% of attempts last 6–12 months. Patch plus a fast-acting form beats one form (RR 1.25), and varenicline more than doubles quit rates (RR 2.32).",
+        "refs": ["r3", "r5", "r6"],
+        "beliefSource": "recovery-testimonials/05-nicotine.md T4 (u/MenuSpiritual2990): \"I needed to break my nicotine addiction, not feed it.\" The file also records cold turkey as the most-credited method in r/stopsmoking."
+      },
+      {
+        "voice": "Vapes and pouches are basically harmless.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Vaping exposes you to far fewer toxicants than smoking, but it is not benign for never-smokers and long-term risk is unclear. Dependence is real: it rises with liquid strength, and 6–8 mg pouches deliver nicotine like moist snuff.",
+        "refs": ["r11", "r12", "r13"],
+        "beliefSource": "Not sourced. In England the opposite error is common: in 2021, 32.1% of smokers thought vaping as harmful as smoking and 11.9% thought it more harmful (OHID 2022, r11)."
+      },
+      {
+        "voice": "I can have just one and still be quit.",
+        "kind": "can-moderate",
+        "verdict": "mostly-false",
+        "science": "Early slips predict relapse strongly: among patch users who smoked at all in week 2, 83% and 97% (two studies) were smoking at 6 months. Good data on a single slip after months off were not found.",
+        "refs": ["r4"],
+        "beliefSource": "recovery-testimonials/05-nicotine.md T2 (u/Historical-Money5040, 6 months quit): \"I wanted to prove to myself and others that I could smoke just one cigarette without getting hooked again.\""
+      },
+      {
+        "voice": "If I quit I'll balloon.",
+        "kind": "quitting-wont-work",
+        "verdict": "true-but",
+        "science": "Average gain is 4–5 kg after a year, mostly in the first 3 months. The spread is wide: 16% lose weight and 13% gain more than 10 kg.",
+        "refs": ["r9"],
+        "beliefSource": "Aubin 2012 (r9) analysed quitters 'especially concerned about weight gain' as their own group; their gain was similar to everyone else's."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Varenicline (prescription tablet)",
+        "evidence": "strong",
+        "note": "RR 2.32 vs placebo (41 trials, 17,395 people). Beats a single form of NRT (RR 1.25) and bupropion (RR 1.36); about equal to combination NRT. For quitting vapes: RR 2.71 at 6 months, low certainty.",
+        "refs": ["r6", "r8"]
+      },
+      {
+        "what": "Combination NRT: patch plus gum, lozenge or spray",
+        "evidence": "strong",
+        "note": "High certainty: more long-term quitters than a single form (RR 1.25, 14 studies). Starting the patch before quit day also helps (RR 1.25, moderate certainty).",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Switching from cigarettes to a nicotine vape",
+        "evidence": "strong",
+        "note": "High certainty: more people stop smoking than with NRT (RR 1.61, about 4 more per 100). It is a switch, not an exit: vaping can itself cause nicotine dependence.",
+        "refs": ["r7", "r11"]
+      },
+      {
+        "what": "Text-message quit programmes for vaping (ages 13–24)",
+        "evidence": "weak",
+        "note": "Low certainty, RR 1.32 for stopping vaping (2 studies, 4,091 young people).",
+        "refs": ["r8"]
+      },
+      {
+        "what": "Nicotine pouches as a quit aid",
+        "evidence": "weak",
+        "note": "Seven small trials (269 people): fewer cigarettes per day in one pilot, but no trial showed more quitting than control, snus or gum.",
+        "refs": ["r14"]
+      }
+    ],
+    "numbers": [
+      { "stat": "83.7% of US adults with lifetime nicotine dependence eventually remit, but half take about 26 years from onset: the slowest of nicotine, alcohol, cannabis and cocaine (NESARC 2001–02).", "refs": ["r15"] },
+      { "stat": "Only 3–5% of unaided quit attempts last 6–12 months.", "refs": ["r3"] },
+      { "stat": "Varenicline: RR 2.32 for quitting vs placebo across 41 trials and 17,395 people.", "refs": ["r6"] }
+    ],
+    "screener": {
+      "name": "Fagerström Test for Nicotine Dependence (cigarettes). For vapes: Penn State Electronic Cigarette Dependence Index.",
+      "items": 6,
+      "freeToUse": "unclear",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/1932883/",
+      "refs": ["r16", "r12"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "Withdrawal time course measured in vape-only and pouch-only users.", "why": "No fetched study measured it; the cigarette timeline (Hughes 2007) is used for all three products." },
+      { "block": "timeline", "wanted": "Hour of withdrawal onset after the last cigarette.", "why": "The Hughes 2007 abstract gives the peak (week 1) and duration (2–4 weeks) but not the onset hour; full text not fetched." },
+      { "block": "beliefs", "wanted": "Risk that a single cigarette after months of abstinence becomes a full relapse.", "why": "Kenford 1994 covers slips in week 2 only; no study on later single slips was fetched." },
+      { "block": "numbers", "wanted": "Pouch (Zyn) dependence and uptake among young men.", "why": "Not searched to a fetched source in this pass." },
+      { "block": "screener", "wanted": "Licence status of the Fagerström test and the Penn State e-cigarette index.", "why": "No licence statement found." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research.", "kind": "review", "doi": "10.1080/14622200701188919", "pmid": "17365764", "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/", "fetched": true, "supports": "Valid symptoms peak within the first week and last 2–4 weeks; craving excluded from review." },
+      { "id": "r2", "cite": "Bedi G, Preston KL, Epstein DH, et al. (2011). Incubation of cue-induced cigarette craving during abstinence in human smokers. Biological Psychiatry.", "kind": "study", "doi": "10.1016/j.biopsych.2010.07.014", "pmid": "20817135", "url": "https://pubmed.ncbi.nlm.nih.gov/20817135/", "fetched": true, "supports": "86 smokers: cue craving greater at day 35 than day 7; never decreased." },
+      { "id": "r3", "cite": "Hughes JR, Keely J, Naud S (2004). Shape of the relapse curve and long-term abstinence among untreated smokers. Addiction.", "kind": "review", "doi": "10.1111/j.1360-0443.2004.00540.x", "pmid": "14678060", "url": "https://pubmed.ncbi.nlm.nih.gov/14678060/", "fetched": true, "supports": "Most relapse in first 8 days; 3–5% of self-quitters abstinent 6–12 months." },
+      { "id": "r4", "cite": "Kenford SL, Fiore MC, Jorenby DE, et al. (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA.", "kind": "trial", "doi": "10.1001/jama.271.8.589", "pmid": "8301790", "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/", "fetched": true, "supports": "Any smoking in week 2: 83% and 97% smoking at 6 months." },
+      { "id": "r5", "cite": "Lindson N, Chepkin SC, Ye W, et al. (2019). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.", "kind": "review", "doi": "10.1002/14651858.CD013308", "pmid": "30997928", "url": "https://pubmed.ncbi.nlm.nih.gov/30997928/", "fetched": true, "supports": "Combination NRT vs single form RR 1.25, high certainty; preloading RR 1.25." },
+      { "id": "r6", "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, et al. (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews.", "kind": "review", "doi": "10.1002/14651858.CD006103.pub8", "pmid": "37142273", "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/", "fetched": true, "supports": "Varenicline RR 2.32 vs placebo; beats single NRT and bupropion; neuropsychiatric SAEs imprecise." },
+      { "id": "r7", "cite": "Lindson N, et al. (2026). Electronic cigarettes for smoking cessation. Cochrane Database of Systematic Reviews.", "kind": "review", "doi": "10.1002/14651858.CD010216.pub11", "pmid": "42642048", "url": "https://pubmed.ncbi.nlm.nih.gov/42642048/", "fetched": true, "supports": "Nicotine e-cigarettes vs NRT RR 1.61, high certainty, about 4 more quitters per 100." },
+      { "id": "r8", "cite": "Butler AR, et al. (2025). Interventions for quitting vaping. Cochrane Database of Systematic Reviews.", "kind": "review", "doi": "10.1002/14651858.CD016058.pub3", "pmid": "41288132", "url": "https://pubmed.ncbi.nlm.nih.gov/41288132/", "fetched": true, "supports": "Varenicline RR 2.71 for vaping cessation (low certainty); texts RR 1.32 in ages 13–24." },
+      { "id": "r9", "cite": "Aubin HJ, Farley A, Lycett D, et al. (2012). Weight gain in smokers after quitting cigarettes: meta-analysis. BMJ.", "kind": "review", "doi": "10.1136/bmj.e4439", "pmid": "22782848", "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/", "fetched": true, "supports": "Mean 4–5 kg at 12 months, mostly within 3 months; 16% lose weight." },
+      { "id": "r10", "cite": "Taylor G, McNeill A, Girling A, et al. (2014). Change in mental health after smoking cessation: systematic review and meta-analysis. BMJ.", "kind": "review", "doi": "10.1136/bmj.g1151", "pmid": "24524926", "url": "https://pubmed.ncbi.nlm.nih.gov/24524926/", "fetched": true, "supports": "Quitting linked to lower anxiety, depression, stress; effect equal to or larger than antidepressants." },
+      { "id": "r11", "cite": "Office for Health Improvement and Disparities (2022). Nicotine vaping in England: 2022 evidence update summary. GOV.UK.", "kind": "review", "url": "https://www.gov.uk/government/publications/nicotine-vaping-in-england-2022-evidence-update/nicotine-vaping-in-england-2022-evidence-update-summary", "fetched": true, "supports": "Lower toxicant exposure than smoking; not benign for never-smokers; vaping can cause dependence; smoker harm misperceptions." },
+      { "id": "r12", "cite": "Foulds J, Veldheer S, Yingst J, et al. (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research.", "kind": "survey", "doi": "10.1093/ntr/ntu204", "pmid": "25332459", "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/", "fetched": true, "supports": "E-cig dependence rises with liquid nicotine concentration and duration of use." },
+      { "id": "r13", "cite": "Lunell E, Fagerström K, Hughes J, Pendrill R (2020). Pharmacokinetic comparison of a novel non-tobacco-based nicotine pouch (ZYN) with conventional Swedish snus and American moist snuff. Nicotine & Tobacco Research.", "kind": "trial", "doi": "10.1093/ntr/ntaa068", "pmid": "32319528", "url": "https://pubmed.ncbi.nlm.nih.gov/32319528/", "fetched": true, "supports": "ZYN 6 and 8 mg deliver nicotine as quickly and fully as existing smokeless products." },
+      { "id": "r14", "cite": "Heshmati J, Shahen S, Bates EL, et al. (2025). Nicotine pouches and clinical outcomes related to smoking cessation: a systematic review of randomized trials. Addiction.", "kind": "review", "doi": "10.1111/add.70193", "pmid": "41001885", "url": "https://pubmed.ncbi.nlm.nih.gov/41001885/", "fetched": true, "supports": "7 trials, 269 people: no significant increase in smoking cessation with pouches." },
+      { "id": "r15", "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.", "kind": "survey", "doi": "10.1111/j.1360-0443.2010.03194.x", "pmid": "21077975", "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/", "fetched": true, "supports": "Lifetime remission 83.7% nicotine; half remitted about 26 years after onset." },
+      { "id": "r16", "cite": "Heatherton TF, Kozlowski LT, Frecker RC, Fagerström KO (1991). The Fagerström Test for Nicotine Dependence: a revision of the Fagerström Tolerance Questionnaire. British Journal of Addiction.", "kind": "study", "doi": "10.1111/j.1360-0443.1991.tb01879.x", "pmid": "1932883", "url": "https://pubmed.ncbi.nlm.nih.gov/1932883/", "fetched": true, "supports": "Origin of the FTND as a revision of the Fagerström Tolerance Questionnaire." },
+      { "id": "r17", "cite": "Recovery testimonials corpus, file 05 (nicotine), verified quotes from r/stopsmoking and charity quit stories.", "kind": "other", "url": "docs/research/recovery-testimonials/05-nicotine.md", "fetched": true, "supports": "Verified first-person quotes used as belief sources." }
+    ]
+  },
+  {
+    "id": "cannabis",
+    "name": "Cannabis",
+    "group": "substance",
+    "oneLiner": "Almost half of people who use cannabis regularly or dependently get withdrawal when they stop (47% across 47 studies), mostly poor sleep, irritability and loss of appetite.",
+    "oneLinerRefs": ["r3", "r1"],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: cannabis use disorder; cannabis withdrawal. ICD-11: 6C41 disorders due to use of cannabis (6C41.2 cannabis dependence; 6C41.4 cannabis withdrawal).",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Withdrawal is mostly mood and behaviour symptoms of light to moderate intensity and can usually be handled as an outpatient. Other mental or physical illness, severe dependence or low social support may call for inpatient detox.",
+      "refs": ["r4"]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Low appetite, weight loss, stomach pain, shakiness",
+        "startH": 24, "peakH": 96, "endH": 336, "peakIntensity": 3,
+        "note": "Onset usually day 1–3, peak day 2–6, most effects last 4–14 days (18 outpatients, 45 days abstinent).",
+        "refs": ["r1"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Irritability, anger, anxiety, restlessness",
+        "startH": 24, "peakH": 96, "endH": 336, "peakIntensity": 3,
+        "note": "Peak day 2–6 in Budney 2003. In polysubstance inpatients, irritability and anger peaked later, around day 14 (Hesse 2013). The two studies disagree.",
+        "refs": ["r1", "r2"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Trouble sleeping",
+        "startH": 24, "peakH": 24, "endH": 672, "peakIntensity": 4,
+        "note": "Insomnia peaked on day 1 and fell steadily (Hesse 2013). Sleep measured in a lab was worse than in non-users during early abstinence (Bolla 2008). End drawn at 4 weeks, when brain CB1 receptors are back to normal (Bonnet 2017).",
+        "refs": ["r2", "r5", "r4"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Vivid, strange dreams",
+        "startH": 48, "peakH": 264, "endH": 720, "peakIntensity": 3,
+        "note": "Start later and last longer than other symptoms. Peak day 11 (Hesse 2013); Hesse reports day 9 for Budney 2003. Start and end are not stated in the fetched sources and are drawn.",
+        "refs": ["r2"]
+      }
+    ],
+    "markers": [
+      { "atH": 96, "kind": "peak", "label": "Most symptoms peak around days 2–6", "refs": ["r1"] },
+      { "atH": 240, "kind": "trap", "label": "Around day 10: 'now I can finally moderate'", "refs": ["r13", "r12"] },
+      { "atH": 264, "kind": "peak", "label": "Strange dreams peak around days 9–11", "refs": ["r2"] },
+      { "atH": 672, "kind": "milestone", "label": "About 4 weeks: CB1 receptors back to normal", "refs": ["r4"] },
+      { "atH": 1440, "kind": "trap", "label": "Around 2 months: the moderation thought returns", "refs": ["r13"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "Weed isn't addictive, and there's no withdrawal.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Nearly 3 in 10 US past-year users had a cannabis use disorder in 2012–13. Across 47 studies, 47% of regular or dependent users had withdrawal when they stopped.",
+        "refs": ["r9", "r3"],
+        "beliefSource": "recovery-testimonials/02-reddit-leaves-cannabis.md T11 (u/Bob_Eggshell), on the people around him: \"Weed isn't addictive and doesn't have withdrawals; it's probably the flu or covid.\""
+      },
+      {
+        "voice": "Weed is the only thing that gets me to sleep.",
+        "kind": "cant-stop",
+        "verdict": "true-but",
+        "science": "THC may help you fall asleep faster but may harm sleep quality over time. Stopping brings insomnia that peaks on day 1 and eases over the following weeks.",
+        "refs": ["r6", "r2"],
+        "beliefSource": "recovery-testimonials/02-reddit-leaves-cannabis.md T12 (u/Possible_Ad_6684): earlier attempts failed \"specifically insomnia and anxiety\"; T14 names insomnia as the only way they see themselves relapsing."
+      },
+      {
+        "voice": "I feel fine now, so I can finally moderate.",
+        "kind": "can-moderate",
+        "verdict": "half-true",
+        "science": "Feeling fine fits the timeline: withdrawal fades and CB1 receptors recover within about 4 weeks. That shows withdrawal is over, not that control is back; craving may rest on longer-lasting brain changes.",
+        "refs": ["r4"],
+        "beliefSource": "recovery-testimonials/02-reddit-leaves-cannabis.md T24 (u/Apprehensive-Cod-267): \"telling myself that now I can finally moderate use\"; SYNTHESIS.md: arrives at about 10 days and about 2 months."
+      },
+      {
+        "voice": "I've smoked for years. I'm stuck with it.",
+        "kind": "quitting-wont-work",
+        "verdict": "false",
+        "science": "In a US national survey, 97.2% of people with lifetime cannabis dependence eventually remitted, half of them within about 6 years of onset.",
+        "refs": ["r10"],
+        "beliefSource": "Not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "CBT plus motivational enhancement therapy, more than 4 sessions over more than a month",
+        "evidence": "moderate",
+        "note": "Cochrane, 23 trials, 4,045 people: fewer days of use; abstinence RR 2.55 (low quality). About 1 in 4 abstinent at final follow-up, and no type was consistently better at 9 months or later.",
+        "refs": ["r7"]
+      },
+      {
+        "what": "Adding vouchers for clean urine tests (contingency management)",
+        "evidence": "moderate",
+        "note": "5 of 6 studies supported adding abstinence-based vouchers to therapy; one 12-month study favoured CBT alone.",
+        "refs": ["r7"]
+      },
+      {
+        "what": "Medication for withdrawal symptoms",
+        "evidence": "weak",
+        "note": "Small studies: gabapentin and THC-like drugs look promising; mirtazapine may help withdrawal insomnia; venlafaxine may make withdrawal worse.",
+        "refs": ["r4"]
+      }
+    ],
+    "numbers": [
+      { "stat": "47% of regular or dependent users had withdrawal (47 studies, 23,518 people): 17% in population samples, 54% in outpatients, 87% in inpatients.", "refs": ["r3"] },
+      { "stat": "22% of people who use cannabis have a cannabis use disorder; the risk of dependence rises to 33% in young people who use weekly or daily.", "refs": ["r8"] },
+      { "stat": "Daily use of high-potency cannabis: 4.8 times the odds of a first psychotic disorder compared with never-users (11 European sites).", "refs": ["r14"] }
+    ],
+    "screener": {
+      "name": "Cannabis Use Disorders Identification Test – Revised (CUDIT-R)",
+      "items": 8,
+      "freeToUse": "unclear",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/20347232/",
+      "refs": ["r11"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "A craving curve for cannabis over the first months.", "why": "No fetched study tracked cannabis craving over time." },
+      { "block": "timeline", "wanted": "How long sleep problems and strange dreams last beyond 4 weeks (claims of 45+ days).", "why": "Only found in a secondary book chapter and an interview with Budney, neither fetched as primary sources." },
+      { "block": "beliefs", "wanted": "Trial evidence on whether people with cannabis use disorder can return to moderate use.", "why": "Not found in this pass." },
+      { "block": "screener", "wanted": "Licence status of CUDIT-R.", "why": "No licence statement found; one commercial site bundles it with a paid licence." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Budney AJ, Moore BA, Vandrey RG, Hughes JR (2003). The time course and significance of cannabis withdrawal. Journal of Abnormal Psychology.", "kind": "study", "doi": "10.1037/0021-843x.112.3.393", "pmid": "12943018", "url": "https://pubmed.ncbi.nlm.nih.gov/12943018/", "fetched": true, "supports": "Onset day 1–3, peak day 2–6, most effects 4–14 days; 18 users." },
+      { "id": "r2", "cite": "Hesse M, Thylstrup B (2013). Time-course of the DSM-5 cannabis withdrawal symptoms in poly-substance abusers. BMC Psychiatry.", "kind": "study", "doi": "10.1186/1471-244X-13-258", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4015312/", "fetched": true, "supports": "Insomnia peaked day 1; vivid dreams peaked day 11; irritability day 14; 67 inpatients." },
+      { "id": "r3", "cite": "Bahji A, Stephenson C, Tyo R, Hawken ER, Seitz DP (2020). Prevalence of cannabis withdrawal symptoms among people with regular or dependent use of cannabinoids. JAMA Network Open.", "kind": "review", "doi": "10.1001/jamanetworkopen.2020.2370", "pmid": "32271390", "url": "https://pubmed.ncbi.nlm.nih.gov/32271390/", "fetched": true, "supports": "Pooled withdrawal prevalence 47% (95% CI 41–52%) across 47 studies." },
+      { "id": "r4", "cite": "Bonnet U, Preuss UW (2017). The cannabis withdrawal syndrome: current insights. Substance Abuse and Rehabilitation.", "kind": "review", "doi": "10.2147/SAR.S109576", "pmid": "28490916", "url": "https://pubmed.ncbi.nlm.nih.gov/28490916/", "fetched": true, "supports": "Light-to-moderate, usually outpatient; CB1 receptors normal within 4 weeks; medication options." },
+      { "id": "r5", "cite": "Bolla KI, Lesage SR, Gamaldo CE, et al. (2008). Sleep disturbance in heavy marijuana users. Sleep.", "kind": "study", "doi": "10.1093/sleep/31.6.901", "pmid": "18548836", "url": "https://pubmed.ncbi.nlm.nih.gov/18548836/", "fetched": true, "supports": "Polysomnography: less total and slow-wave sleep during early abstinence vs controls." },
+      { "id": "r6", "cite": "Babson KA, Sottile J, Morabito D (2017). Cannabis, cannabinoids, and sleep: a review of the literature. Current Psychiatry Reports.", "kind": "review", "doi": "10.1007/s11920-017-0775-9", "pmid": "28349316", "url": "https://pubmed.ncbi.nlm.nih.gov/28349316/", "fetched": true, "supports": "THC may decrease sleep latency but could impair sleep quality long-term." },
+      { "id": "r7", "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.", "kind": "review", "doi": "10.1002/14651858.CD005336.pub4", "pmid": "27149547", "url": "https://pubmed.ncbi.nlm.nih.gov/27149547/", "fetched": true, "supports": "MET+CBT with incentives best supported; abstinence RR 2.55; about one quarter abstinent." },
+      { "id": "r8", "cite": "Leung J, Chan GCK, Hides L, Hall WD (2020). What is the prevalence and risk of cannabis use disorders among people who use cannabis? Addictive Behaviors.", "kind": "review", "doi": "10.1016/j.addbeh.2020.106479", "pmid": "32485547", "url": "https://pubmed.ncbi.nlm.nih.gov/32485547/", "fetched": true, "supports": "22% of users have CUD; 33% dependence risk in young regular users." },
+      { "id": "r9", "cite": "Hasin DS, Saha TD, Kerridge BT, et al. (2015). Prevalence of marijuana use disorders in the United States between 2001–2002 and 2012–2013. JAMA Psychiatry.", "kind": "survey", "doi": "10.1001/jamapsychiatry.2015.1858", "pmid": "26502112", "url": "https://pubmed.ncbi.nlm.nih.gov/26502112/", "fetched": true, "supports": "30.6% of past-year users had marijuana use disorder in 2012–13." },
+      { "id": "r10", "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.", "kind": "survey", "doi": "10.1111/j.1360-0443.2010.03194.x", "pmid": "21077975", "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/", "fetched": true, "supports": "Lifetime remission 97.2% cannabis; half remitted about 6 years after onset." },
+      { "id": "r11", "cite": "Adamson SJ, Kay-Lambkin FJ, Baker AL, et al. (2010). An improved brief measure of cannabis misuse: the Cannabis Use Disorders Identification Test-Revised (CUDIT-R). Drug and Alcohol Dependence.", "kind": "study", "doi": "10.1016/j.drugalcdep.2010.02.017", "pmid": "20347232", "url": "https://pubmed.ncbi.nlm.nih.gov/20347232/", "fetched": true, "supports": "8 items; sensitivity 91%, specificity 90%." },
+      { "id": "r12", "cite": "Recovery testimonials corpus, file 02 (r/leaves cannabis), verified archived posts.", "kind": "other", "url": "docs/research/recovery-testimonials/02-reddit-leaves-cannabis.md", "fetched": true, "supports": "Verified first-person quotes used as belief sources." },
+      { "id": "r13", "cite": "Recovery testimonials corpus, SYNTHESIS.md (cross-source synthesis of 15 testimonial files).", "kind": "other", "url": "docs/research/recovery-testimonials/SYNTHESIS.md", "fetched": true, "supports": "'Now I can finally moderate' arrives at about 10 days and about 2 months." },
+      { "id": "r14", "cite": "Di Forti M, Quattrone D, Freeman TP, et al. (2019). The contribution of cannabis use to variation in the incidence of psychotic disorder across Europe (EU-GEI). Lancet Psychiatry.", "kind": "study", "doi": "10.1016/S2215-0366(19)30048-3", "pmid": "30902669", "url": "https://pubmed.ncbi.nlm.nih.gov/30902669/", "fetched": true, "supports": "Daily high-potency use: adjusted OR 4.8 for psychotic disorder; case-control, 11 sites." }
+    ]
+  },
+  {
+    "id": "cocaine",
+    "name": "Cocaine",
+    "group": "substance",
+    "oneLiner": "Almost everyone with cocaine dependence eventually gets out: 99.2% over a lifetime in a US national survey, half within about 5 years of onset.",
+    "oneLinerRefs": ["r6"],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: stimulant use disorder (cocaine); stimulant withdrawal. ICD-11: 6C45 disorders due to use of cocaine (6C45.2 cocaine dependence; 6C45.4 cocaine withdrawal).",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Suicidal thinking can rise as the drug wears off and in early withdrawal. Street stimulants can contain fentanyl: guidelines advise carrying naloxone and testing every new batch. Cocaine with alcohol forms cocaethylene, linked to an 18–25 times higher risk of sudden death.",
+      "refs": ["r3", "r7"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "mood-sleep",
+        "label": "Crash: heavy sleepiness and irritability",
+        "startH": 0, "peakH": 12, "endH": 24, "peakIntensity": 4,
+        "note": "Many people have 12–24 hours of sleepiness and irritability; more sleep at first, then sleep problems that can persist. Peak hour is drawn.",
+        "refs": ["r3"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Low mood and distress",
+        "startH": 0, "peakH": 0, "endH": 672, "peakIntensity": 3,
+        "note": "In 12 men in a residential unit, mood distress was highest at admission and fell gradually over 28 days, with no classic withdrawal pattern. Guidelines say depression and anxiety can last weeks to months. The older three-phase model (Gawin and Kleber 1986) came from clinical interviews with 30 users.",
+        "refs": ["r2", "r3", "r1"]
+      },
+      {
+        "track": "craving",
+        "label": "Felt craving",
+        "startH": 0, "peakH": 48, "endH": 8760, "peakIntensity": 4,
+        "note": "Self-rated craving fell steadily from 2 days to 1 year (76 people, cross-sectional) and fell gradually over 28 days in a residential study.",
+        "refs": ["r4", "r2"]
+      },
+      {
+        "track": "craving",
+        "label": "The brain's reaction to cocaine cues",
+        "startH": 48, "peakH": 720, "endH": 8760, "peakIntensity": 4,
+        "note": "EEG reaction to drug cues was higher at 1 and 6 months than at 2 days, 1 week or 1 year, while self-rated craving showed no such rise. High from month 1 to month 6.",
+        "refs": ["r4"]
+      }
+    ],
+    "markers": [
+      { "atH": 12, "kind": "danger", "label": "Suicidal thinking can rise as the drug wears off", "refs": ["r3"] },
+      { "atH": 24, "kind": "peak", "label": "The crash: 12–24 hours of sleepiness and irritability", "refs": ["r3"] },
+      { "atH": 720, "kind": "trap", "label": "Months 1–6: the brain reacts most to cues, while you feel less craving", "refs": ["r4"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "Coke isn't really addictive. There's no proper withdrawal.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "The withdrawal is mainly mood and sleep rather than sickness; one study proposed calling it 'short-term abstinence'. Dependence is still a recognised disorder, and the brain's reaction to cues stays high for months.",
+        "refs": ["r2", "r4"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "The craving is fading, so the danger is over.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Felt craving does fall steadily. But the brain's reaction to cocaine cues was higher at 1 and 6 months than at 1 week. Feeling less pull is not the same as reacting less.",
+        "refs": ["r4"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "It's just a party drug.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Street stimulants can contain fentanyl, so guidelines advise naloxone and testing each batch. Mixed with alcohol, cocaine forms cocaethylene, linked to an 18–25 times higher risk of sudden death.",
+        "refs": ["r3", "r7"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "I'll never get out of this.",
+        "kind": "quitting-wont-work",
+        "verdict": "false",
+        "science": "In a US national survey, 99.2% of people with lifetime cocaine dependence eventually remitted, half within about 5 years of onset: the fastest of nicotine, alcohol, cannabis and cocaine.",
+        "refs": ["r6"],
+        "beliefSource": "Not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Contingency management (vouchers or prizes for clean urine tests) plus the community reinforcement approach",
+        "evidence": "strong",
+        "note": "Network meta-analysis of 50 trials, 6,942 people: the only approach that beat usual care at end of treatment (OR 2.84), at 12 weeks (OR 7.60) and at longest follow-up (OR 3.08).",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Contingency management on its own",
+        "evidence": "strong",
+        "note": "US addiction guideline: the current standard of care for stimulant use disorder; strong recommendation, high certainty.",
+        "refs": ["r3"]
+      },
+      {
+        "what": "CBT alone",
+        "evidence": "weak",
+        "note": "Did not beat usual care at end of treatment in the network meta-analysis; CM plus community reinforcement beat it (OR 2.44).",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Medication",
+        "evidence": "weak",
+        "note": "No approved medicine for stimulant use disorder; the guideline allows some off-label use.",
+        "refs": ["r3"]
+      }
+    ],
+    "numbers": [
+      { "stat": "99.2% of US adults with lifetime cocaine dependence eventually remit; half within about 5 years of onset (NESARC 2001–02, n=408).", "refs": ["r6"] },
+      { "stat": "Contingency management plus community reinforcement: 7.6 times the odds of abstinence at 12 weeks compared with usual care.", "refs": ["r5"] },
+      { "stat": "Cocaine plus alcohol: cocaethylene carries an 18- to 25-fold higher risk of sudden death than cocaine alone.", "refs": ["r7"] }
+    ],
+    "screener": {
+      "name": "Severity of Dependence Scale (SDS); a score of 3 or more suggests cocaine dependence",
+      "items": 5,
+      "freeToUse": "unclear",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/12084142/",
+      "refs": ["r8", "r9"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "Durations of Gawin and Kleber's three phases (crash, withdrawal, extinction) and a modern test of them.", "why": "The 1986 abstract names a three-phase sequence without durations; a controlled residential study (Weddington 1990) found no classic withdrawal pattern; no newer review was fetched." },
+      { "block": "beliefs", "wanted": "Verified first-person quotes from people quitting cocaine.", "why": "The testimonial corpus has no cocaine-specific accounts; file 06's stimulant sample is mostly prescription stimulants." },
+      { "block": "axes", "wanted": "Whether a break raises overdose risk on return (tolerance loss) for cocaine.", "why": "Not found in fetched sources; set to false pending evidence." },
+      { "block": "screener", "wanted": "Licence status of the SDS.", "why": "No licence statement found." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Gawin FH, Kleber HD (1986). Abstinence symptomatology and psychiatric diagnosis in cocaine abusers: clinical observations. Archives of General Psychiatry.", "kind": "study", "doi": "10.1001/archpsyc.1986.01800020013003", "pmid": "3947206", "url": "https://pubmed.ncbi.nlm.nih.gov/3947206/", "fetched": true, "supports": "30 users; proposed a three-phase sequence of abstinence symptoms." },
+      { "id": "r2", "cite": "Weddington WW, Brown BS, Haertzen CA, et al. (1990). Changes in mood, craving, and sleep during short-term abstinence reported by male cocaine addicts. Archives of General Psychiatry.", "kind": "study", "doi": "10.1001/archpsyc.1990.01810210069010", "pmid": "2393345", "url": "https://pubmed.ncbi.nlm.nih.gov/2393345/", "fetched": true, "supports": "Mood distress and craving highest at admission, gradual decline over 28 days; no classic withdrawal." },
+      { "id": "r3", "cite": "ASAM/AAAP Clinical Guideline Committee (2024). The ASAM/AAAP Clinical Practice Guideline on the Management of Stimulant Use Disorder. Journal of Addiction Medicine.", "kind": "guideline", "doi": "10.1097/ADM.0000000000001299", "pmid": "38669101", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11105801/", "fetched": true, "supports": "CM standard of care; 12–24 h somnolence; suicidality in withdrawal; fentanyl, naloxone, test strips." },
+      { "id": "r4", "cite": "Parvaz MA, Moeller SJ, Goldstein RZ (2016). Incubation of cue-induced craving in adults addicted to cocaine measured by electroencephalography. JAMA Psychiatry.", "kind": "study", "doi": "10.1001/jamapsychiatry.2016.2181", "pmid": "27603142", "url": "https://pubmed.ncbi.nlm.nih.gov/27603142/", "fetched": true, "supports": "76 people: EEG cue response peaks at 1–6 months; self-rated craving declines linearly." },
+      { "id": "r5", "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.", "kind": "review", "doi": "10.1371/journal.pmed.1002715", "pmid": "30586362", "url": "https://pubmed.ncbi.nlm.nih.gov/30586362/", "fetched": true, "supports": "50 RCTs: CM plus CRA only intervention beating TAU; ORs 2.84, 7.60, 3.08." },
+      { "id": "r6", "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.", "kind": "survey", "doi": "10.1111/j.1360-0443.2010.03194.x", "pmid": "21077975", "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/", "fetched": true, "supports": "Lifetime remission 99.2% cocaine; half remitted about 5 years after onset." },
+      { "id": "r7", "cite": "van Amsterdam J, Gresnigt F, van den Brink W (2024). Cardiovascular risks of simultaneous use of alcohol and cocaine: a systematic review. Journal of Clinical Medicine.", "kind": "review", "doi": "10.3390/jcm13051475", "pmid": "38592322", "url": "https://europepmc.org/abstract/MED/38592322", "fetched": true, "supports": "Co-use raises mortality; cocaethylene 18- to 25-fold sudden death risk." },
+      { "id": "r8", "cite": "Kaye S, Darke S (2002). Determining a diagnostic cut-off on the Severity of Dependence Scale (SDS) for cocaine dependence. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.2002.00121.x", "pmid": "12084142", "url": "https://pubmed.ncbi.nlm.nih.gov/12084142/", "fetched": true, "supports": "142 cocaine users; SDS cut-off 3 or more for dependence." },
+      { "id": "r9", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS has five items on impaired control and preoccupation; good psychometrics." }
+    ]
+  },
+  {
+    "id": "methamphetamine",
+    "name": "Methamphetamine (meth, crystal, ice)",
+    "group": "substance",
+    "oneLiner": "The acute crash from meth lasts about 7–10 days, but craving set off by cues kept rising until about 3 months of abstinence before it fell.",
+    "oneLinerRefs": ["r1", "r3"],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: stimulant use disorder (amphetamine-type substance); stimulant withdrawal. ICD-11: 6C46 disorders due to use of stimulants including amphetamines, methamphetamine or methcathinone (6C46.2 dependence; 6C46.4 withdrawal).",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Suicidal thinking can rise as the drug wears off and in early withdrawal. Psychotic symptoms are common at the start; in one study they largely cleared within a week. Street stimulants can contain fentanyl: guidelines advise carrying naloxone.",
+      "refs": ["r5", "r2"]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "mood-sleep",
+        "label": "Crash: long sleep, big appetite, low mood",
+        "startH": 0, "peakH": 24, "endH": 240, "peakIntensity": 4,
+        "note": "Severity peaks within 24 hours of last use and is near normal by the end of week 1; acute phase 7–10 days (21 inpatients, Thailand).",
+        "refs": ["r1"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Low-level leftover symptoms",
+        "startH": 240, "peakH": 240, "endH": 576, "peakIntensity": 2,
+        "note": "A subacute phase of at least 2 more weeks at low, stable levels. In another study, depressive and psychotic symptoms largely resolved within a week.",
+        "refs": ["r1", "r2"]
+      },
+      {
+        "track": "craving",
+        "label": "Background craving",
+        "startH": 0, "peakH": 168, "endH": 8760, "peakIntensity": 3,
+        "note": "Did not fall until week 2, then stayed at a lower level to week 5 (Zorick 2010). Self-rated craving kept falling with longer abstinence up to 1 year (Wang 2013).",
+        "refs": ["r2", "r3"]
+      },
+      {
+        "track": "craving",
+        "label": "Craving set off by cues",
+        "startH": 144, "peakH": 2160, "endH": 8760, "peakIntensity": 4,
+        "note": "Rose until 3 months of abstinence, then was lower at 6 months and 1 year (139 people in a rehabilitation centre, cross-sectional: different people at each time point).",
+        "refs": ["r3"]
+      }
+    ],
+    "markers": [
+      { "atH": 24, "kind": "peak", "label": "Withdrawal is worst in the first 24 hours", "refs": ["r1"] },
+      { "atH": 240, "kind": "milestone", "label": "Acute phase over at about day 7–10", "refs": ["r1"] },
+      { "atH": 2160, "kind": "trap", "label": "About 3 months: cue craving at its highest", "refs": ["r3", "r10"] },
+      { "atH": 10200, "kind": "milestone", "label": "12–17 months: dopamine transporters up 16–19% in 5 people; test scores not significantly better", "refs": ["r4"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "My brain is fried. I'll feel flat forever.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "Mood and decision-making were better in people abstinent longer. The famous brain-scan recovery image comes from just 5 people, whose memory and motor scores did not significantly improve: real recovery, but slow and partial.",
+        "refs": ["r3", "r4"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "I made it to 3 months. If the urge is this strong now, I've failed.",
+        "kind": "cant-stop",
+        "verdict": "false",
+        "science": "Cue-triggered craving rose until about 3 months of abstinence and was lower at 6 months and 1 year. A surge around month 3 is the expected course, not proof of failure.",
+        "refs": ["r3"],
+        "beliefSource": "recovery-testimonials/06-opioids-stimulants.md T29 (u/FakeNewsAnchorhaha, r/StopSpeeding, methamphetamine): \"every 90 days this urge to use hits me like a wave.\""
+      },
+      {
+        "voice": "There's no medicine for meth, so treatment is pointless.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "No medicine is approved and the best drug trial was modest: 13.6% responded on naltrexone plus bupropion vs 2.5% on placebo. But contingency management raised abstinence in 20 of 21 trials that measured it.",
+        "refs": ["r8", "r6"],
+        "beliefSource": "Not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Contingency management (rewards for clean urine tests)",
+        "evidence": "strong",
+        "note": "27 studies: 20 of 21 that reported abstinence found an effect; also more use of other treatment and less risky sex. Guideline standard of care.",
+        "refs": ["r6", "r5"]
+      },
+      {
+        "what": "Contingency management plus the community reinforcement approach",
+        "evidence": "strong",
+        "note": "Best-supported psychosocial package across 50 cocaine and amphetamine trials.",
+        "refs": ["r7"]
+      },
+      {
+        "what": "Injectable naltrexone plus bupropion",
+        "evidence": "moderate",
+        "note": "One large trial (403, then 225 people): 13.6% vs 2.5% response over 12 weeks. Low, but higher than placebo.",
+        "refs": ["r8"]
+      }
+    ],
+    "numbers": [
+      { "stat": "Contingency management raised abstinence in 20 of the 21 meth studies that measured it.", "refs": ["r6"] },
+      { "stat": "Naltrexone plus bupropion: 13.6% responded vs 2.5% on placebo.", "refs": ["r8"] },
+      { "stat": "The widely shown brain-recovery scans (Volkow 2001) came from 5 people.", "refs": ["r4"] }
+    ],
+    "screener": {
+      "name": "Severity of Dependence Scale (SDS); a score above 4 suggests problematic amphetamine use",
+      "items": 5,
+      "freeToUse": "unclear",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/9293043/",
+      "refs": ["r9", "r11"]
+    },
+    "placeholders": [
+      { "block": "beliefs", "wanted": "Documented cases of the Volkow 2001 scans being presented as proof of full recovery.", "why": "The misuse is widely mentioned but no example was fetched." },
+      { "block": "timeline", "wanted": "Course of anhedonia (feeling flat) across months 1–12.", "why": "Fetched studies cover depressive symptoms to week 5 and cross-sectional mood to 1 year, not anhedonia as such." },
+      { "block": "timeline", "wanted": "Li 2015 as a second human meth incubation study.", "why": "The Li P 2015 Addiction Biology paper found is about alcohol craving, not meth; Wang 2013 is the meth study." },
+      { "block": "whatWorks", "wanted": "Exercise trials for meth use disorder.", "why": "Not searched in this pass." },
+      { "block": "screener", "wanted": "Licence status of the SDS.", "why": "No licence statement found." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "McGregor C, Srisurapanont M, Jittiwutikarn J, et al. (2005). The nature, time course and severity of methamphetamine withdrawal. Addiction.", "kind": "study", "doi": "10.1111/j.1360-0443.2005.01160.x", "pmid": "16128721", "url": "https://pubmed.ncbi.nlm.nih.gov/16128721/", "fetched": true, "supports": "Peak within 24 h; acute phase 7–10 days; subacute at least 2 more weeks." },
+      { "id": "r2", "cite": "Zorick T, Nestor L, Miotto K, et al. (2010). Withdrawal symptoms in abstinent methamphetamine-dependent subjects. Addiction.", "kind": "study", "doi": "10.1111/j.1360-0443.2010.03066.x", "pmid": "20840201", "url": "https://pubmed.ncbi.nlm.nih.gov/20840201/", "fetched": true, "supports": "Depressive and psychotic symptoms resolve within a week; craving lasts at least 5 weeks." },
+      { "id": "r3", "cite": "Wang G, Shi J, Chen N, et al. (2013). Effects of length of abstinence on decision-making and craving in methamphetamine abusers. PLoS One.", "kind": "study", "doi": "10.1371/journal.pone.0068791", "pmid": "23894345", "url": "https://pubmed.ncbi.nlm.nih.gov/23894345/", "fetched": true, "supports": "Cue-induced craving increased until 3 months, lower at 6 and 12 months." },
+      { "id": "r4", "cite": "Volkow ND, Chang L, Wang GJ, et al. (2001). Loss of dopamine transporters in methamphetamine abusers recovers with protracted abstinence. Journal of Neuroscience.", "kind": "study", "doi": "10.1523/JNEUROSCI.21-23-09414.2001", "pmid": "11717374", "url": "https://pubmed.ncbi.nlm.nih.gov/11717374/", "fetched": true, "supports": "5 users: DAT +16–19% at 12–17 months; function not significantly improved." },
+      { "id": "r5", "cite": "ASAM/AAAP Clinical Guideline Committee (2024). The ASAM/AAAP Clinical Practice Guideline on the Management of Stimulant Use Disorder. Journal of Addiction Medicine.", "kind": "guideline", "doi": "10.1097/ADM.0000000000001299", "pmid": "38669101", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11105801/", "fetched": true, "supports": "CM standard of care; suicidality in withdrawal; fentanyl contamination; naloxone." },
+      { "id": "r6", "cite": "Brown HD, DeFulio A (2020). Contingency management for the treatment of methamphetamine use disorder: a systematic review. Drug and Alcohol Dependence.", "kind": "review", "doi": "10.1016/j.drugalcdep.2020.108307", "pmid": "33007699", "url": "https://europepmc.org/abstract/MED/33007699", "fetched": true, "supports": "27 studies; 20 of 21 reporting abstinence showed a CM effect." },
+      { "id": "r7", "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.", "kind": "review", "doi": "10.1371/journal.pmed.1002715", "pmid": "30586362", "url": "https://pubmed.ncbi.nlm.nih.gov/30586362/", "fetched": true, "supports": "CM plus CRA most effective across cocaine and amphetamine trials." },
+      { "id": "r8", "cite": "Trivedi MH, Walker R, Ling W, et al. (2021). Bupropion and naltrexone in methamphetamine use disorder. New England Journal of Medicine.", "kind": "trial", "doi": "10.1056/NEJMoa2020214", "pmid": "33497547", "url": "https://pubmed.ncbi.nlm.nih.gov/33497547/", "fetched": true, "supports": "Weighted response 13.6% vs 2.5% placebo over 12 weeks." },
+      { "id": "r9", "cite": "Topp L, Mattick RP (1997). Choosing a cut-off on the Severity of Dependence Scale (SDS) for amphetamine users. Addiction.", "kind": "study", "pmid": "9293043", "url": "https://europepmc.org/abstract/MED/9293043", "fetched": true, "supports": "327 amphetamine users; SDS score above 4 indicates problematic use." },
+      { "id": "r10", "cite": "Recovery testimonials corpus, file 06 (opioids and stimulants), verified archived posts from r/StopSpeeding.", "kind": "other", "url": "docs/research/recovery-testimonials/06-opioids-stimulants.md", "fetched": true, "supports": "Meth account of an urge 'every 90 days'." },
+      { "id": "r11", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS: five items on impaired control and preoccupation." }
+    ]
+  },
+  {
+    "id": "prescription-stimulants",
+    "name": "Prescription stimulants used outside a prescription (Adderall, Ritalin)",
+    "group": "substance",
+    "oneLiner": "In a placebo-controlled trial, Adderall improved none of 13 thinking skills in healthy young adults on average, yet they believed it had helped them.",
+    "oneLinerRefs": ["r2"],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "often",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: stimulant use disorder (amphetamine-type substance or other stimulant); stimulant withdrawal. ICD-11: 6C46 disorders due to use of stimulants including amphetamines, methamphetamine or methcathinone.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Suicidal thinking can rise as stimulants wear off and in early withdrawal. Guidelines advise treating depression and anxiety that appear during use or withdrawal.",
+      "refs": ["r4"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "mood-sleep",
+        "label": "Crash: sleepiness and irritability",
+        "startH": 0, "peakH": 12, "endH": 24, "peakIntensity": 3,
+        "note": "Stimulant withdrawal in general: 12–24 hours of sleepiness and irritability. Not measured in prescription-stimulant misuse specifically.",
+        "refs": ["r4"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Low mood, anxiety, poor sleep",
+        "startH": 24, "peakH": 24, "endH": 2160, "peakIntensity": 3,
+        "note": "Guideline: can last weeks to months. Peak timing not measured; end drawn at about 3 months. One Adderall quitter described his mood lifting at day 128.",
+        "refs": ["r4", "r7"]
+      }
+    ],
+    "markers": [
+      { "atH": 3072, "kind": "milestone", "label": "Day 128, one person's account: 'I felt like me again' (a single story, not data)", "refs": ["r7"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "I need it to focus. It makes me sharper.",
+        "kind": "cant-stop",
+        "verdict": "mostly-false",
+        "science": "In healthy young adults, Adderall improved none of 13 thinking skills on average, though users felt enhanced. Students using it without a prescription gained no grade advantage over peers. People with ADHD are a different case.",
+        "refs": ["r2", "r3"],
+        "beliefSource": "Compton 2018 (r1): 56.3% of US adults who misused prescription stimulants did so to be alert or concentrate."
+      },
+      {
+        "voice": "It's a prescription drug, not a real drug.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Most misuse does not turn into a disorder: in the US, 1.9% of adults misused prescription stimulants in a year without a disorder, and 0.2% had a use disorder. More frequent misuse went with a higher chance of disorder.",
+        "refs": ["r1"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "Without it I'll be depressed and useless for good.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "Low mood, anxiety and poor sleep after stopping can last weeks to months, and guidelines say to treat them rather than wait.",
+        "refs": ["r4"],
+        "beliefSource": "recovery-testimonials/06-opioids-stimulants.md T30 (u/License2grill, Adderall for 6 years): \"Quitting adderall really made me look my depression in the face\"; T31, at 128 days: \"I felt like me again!!\""
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Contingency management (rewards for clean urine tests)",
+        "evidence": "moderate",
+        "note": "Guideline standard of care for stimulant use disorder. The trials are mostly in cocaine and meth, not prescription stimulants.",
+        "refs": ["r4"]
+      },
+      {
+        "what": "Contingency management plus the community reinforcement approach",
+        "evidence": "moderate",
+        "note": "Best-supported package in a network meta-analysis that included amphetamine users.",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Treat depression and anxiety that appear after stopping",
+        "evidence": "weak",
+        "note": "Guideline recommendation. A 2009 Cochrane review cited there found no medicine effective for stimulant withdrawal itself.",
+        "refs": ["r4"]
+      }
+    ],
+    "numbers": [
+      { "stat": "US adults in a year: 6.6% used prescription stimulants, 1.9% misused them without a disorder, 0.2% had a use disorder.", "refs": ["r1"] },
+      { "stat": "56.3% misused them to stay alert or concentrate; 56.9% got them free from friends or relatives.", "refs": ["r1"] },
+      { "stat": "Adderall in healthy young adults: no improvement on any of 13 measured thinking skills on average.", "refs": ["r2"] }
+    ],
+    "screener": {
+      "name": "Severity of Dependence Scale (SDS); a score above 4 suggests problematic amphetamine use",
+      "items": 5,
+      "freeToUse": "unclear",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/9293043/",
+      "refs": ["r8", "r9"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "A withdrawal and craving timeline measured in people who misused prescription stimulants.", "why": "None fetched; the timeline borrows general stimulant-withdrawal guidance." },
+      { "block": "safety", "wanted": "Guidance for people with diagnosed ADHD who want to stop or reduce prescribed medication.", "why": "Not searched to a fetched source; a page aimed at misuse must not read as advice to stop prescribed treatment." },
+      { "block": "numbers", "wanted": "Methylphenidate (Ritalin)-specific misuse and dependence data.", "why": "Fetched sources pool prescription stimulants." },
+      { "block": "screener", "wanted": "A screener validated in prescription-stimulant misuse; licence status of SDS.", "why": "SDS was validated in amphetamine users, not prescription users specifically; no licence statement found." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Compton WM, Han B, Blanco C, Johnson K, Jones CM (2018). Prevalence and correlates of prescription stimulant use, misuse, use disorders, and motivations for misuse among adults in the United States. American Journal of Psychiatry.", "kind": "survey", "doi": "10.1176/appi.ajp.2018.17091048", "pmid": "29656665", "url": "https://pubmed.ncbi.nlm.nih.gov/29656665/", "fetched": true, "supports": "6.6% use, 1.9% misuse, 0.2% disorder; 56.3% alertness motive; 56.9% from friends." },
+      { "id": "r2", "cite": "Ilieva I, Boland J, Farah MJ (2013). Objective and subjective cognitive enhancing effects of mixed amphetamine salts in healthy people. Neuropharmacology.", "kind": "trial", "doi": "10.1016/j.neuropharm.2012.07.021", "pmid": "22884611", "url": "https://europepmc.org/abstract/MED/22884611", "fetched": true, "supports": "No enhancement of any cognitive ability overall; participants believed they were enhanced." },
+      { "id": "r3", "cite": "Arria AM, Caldeira KM, Vincent KB, O'Grady KE, Cimini MD, Geisner IM, et al. (2017). Do college students improve their grades by using prescription stimulants nonmedically? Addictive Behaviors.", "kind": "cohort", "doi": "10.1016/j.addbeh.2016.07.016", "pmid": "27469455", "url": "https://pubmed.ncbi.nlm.nih.gov/27469455/", "fetched": true, "supports": "Non-medical users showed no GPA increase and no advantage over peers." },
+      { "id": "r4", "cite": "ASAM/AAAP Clinical Guideline Committee (2024). The ASAM/AAAP Clinical Practice Guideline on the Management of Stimulant Use Disorder. Journal of Addiction Medicine.", "kind": "guideline", "doi": "10.1097/ADM.0000000000001299", "pmid": "38669101", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11105801/", "fetched": true, "supports": "12–24 h somnolence; symptoms weeks to months; suicidality; treat depression; no proven withdrawal drug." },
+      { "id": "r5", "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction. PLoS Medicine.", "kind": "review", "doi": "10.1371/journal.pmed.1002715", "pmid": "30586362", "url": "https://pubmed.ncbi.nlm.nih.gov/30586362/", "fetched": true, "supports": "CM plus CRA most effective across cocaine and amphetamine trials." },
+      { "id": "r7", "cite": "Recovery testimonials corpus, file 06 (opioids and stimulants), verified archived posts from r/StopSpeeding.", "kind": "other", "url": "docs/research/recovery-testimonials/06-opioids-stimulants.md", "fetched": true, "supports": "Adderall quitter's accounts of depression and recovery at 128 days." },
+      { "id": "r8", "cite": "Topp L, Mattick RP (1997). Choosing a cut-off on the Severity of Dependence Scale (SDS) for amphetamine users. Addiction.", "kind": "study", "pmid": "9293043", "url": "https://europepmc.org/abstract/MED/9293043", "fetched": true, "supports": "SDS score above 4 indicates problematic amphetamine use." },
+      { "id": "r9", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS: five items on impaired control and preoccupation." }
+    ]
+  },
+  {
+    "id": "caffeine",
+    "name": "Caffeine (coffee, energy drinks, pre-workout)",
+    "group": "substance",
+    "oneLiner": "For daily users, caffeine gives no net boost: going without lowers alertness, and the next dose only brings it back to baseline.",
+    "oneLinerRefs": ["r2"],
+    "axes": {
+      "withdrawal": "mild",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: caffeine withdrawal is a diagnosis; caffeine use disorder is a condition for further study. ICD-11: 6C48 disorders due to use of caffeine (6C48.3 caffeine withdrawal); the block has no dependence code, although Meredith 2013 says WHO recognises caffeine dependence.",
+      "classificationStatus": "proposed"
+    },
+    "safety": {
+      "level": "none",
+      "text": "Caffeine withdrawal isn't considered dangerous, but it can be unpleasant; cut back gradually. Pure caffeine powder is the real danger: about 1,200 mg, less than half a teaspoon, can cause seizures.",
+      "refs": ["r6"]
+    },
+    "timelineEvidence": "strong",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Headache, flu-like feeling, nausea, stiff muscles",
+        "startH": 12, "peakH": 36, "endH": 216, "peakIntensity": 3,
+        "note": "Onset 12–24 h, peak 20–51 h (drawn at 36 h), duration 2–9 days. Headache in 50% of people in experiments.",
+        "refs": ["r1"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Tiredness, low mood, foggy head, poor focus, irritability",
+        "startH": 12, "peakH": 36, "endH": 216, "peakIntensity": 3,
+        "note": "Same time course. 13% had clinically significant distress or trouble functioning. Symptoms grow with daily dose; even 100 mg a day produced them.",
+        "refs": ["r1"]
+      }
+    ],
+    "markers": [
+      { "atH": 36, "kind": "peak", "label": "Peak between 20 and 51 hours", "refs": ["r1"] },
+      { "atH": 216, "kind": "milestone", "label": "Usually over within 2–9 days", "refs": ["r1"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "Coffee gives me energy.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "In 379 people, daily users who skipped caffeine overnight were less alert, and caffeine only returned them to baseline: no net gain. In non-users, caffeine did not raise alertness at all.",
+        "refs": ["r2"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "Coffee doesn't affect my sleep.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "400 mg of caffeine even 6 hours before bed disrupted sleep on a monitor; total sleep fell by 1.1–1.2 hours across timings. Sleep diaries did not register the 6-hour effect.",
+        "refs": ["r3"],
+        "beliefSource": "Drake 2013 (r3): participants' own diaries missed the 6-hour effect that the monitor recorded."
+      },
+      {
+        "voice": "Caffeine withdrawal is all in your head.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Ten withdrawal symptoms met validity criteria across 57 experiments, and expectations are not the main driver. Doses as low as 100 mg a day produced symptoms.",
+        "refs": ["r1"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "Coffee is good for you anyway.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "3–4 cups a day went with lower all-cause mortality (RR 0.83) in observational data, which cannot prove cause. Exceptions: pregnancy, and fracture risk in women.",
+        "refs": ["r7"],
+        "beliefSource": "Not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Planned gradual reduction",
+        "evidence": "weak",
+        "note": "One RCT: a single manual-based session cut caffeine use, with no rebound up to 1 year. FDA also advises cutting back gradually.",
+        "refs": ["r5", "r6"]
+      },
+      {
+        "what": "No caffeine within 6 hours of bedtime",
+        "evidence": "weak",
+        "note": "Single home-sleep trial; caffeine at 0, 3 and 6 hours before bed all disrupted sleep.",
+        "refs": ["r3"]
+      }
+    ],
+    "numbers": [
+      { "stat": "In experiments, 50% of people stopping caffeine got a headache and 13% had clinically significant distress or impairment.", "refs": ["r1"] },
+      { "stat": "Withdrawal starts 12–24 h after the last dose, peaks at 20–51 h and lasts 2–9 days.", "refs": ["r1"] },
+      { "stat": "About 1,200 mg of pure caffeine, less than half a teaspoon of powder, can cause seizures.", "refs": ["r6"] }
+    ],
+    "screener": null,
+    "placeholders": [
+      { "block": "timeline", "wanted": "A craving curve after stopping caffeine.", "why": "Juliano 2004 covers withdrawal symptoms, not craving over time." },
+      { "block": "screener", "wanted": "A validated, free caffeine use disorder screener.", "why": "None found in this pass." },
+      { "block": "beliefs", "wanted": "Survey evidence that people believe coffee gives net energy or doesn't affect their sleep.", "why": "Not sourced; only Drake 2013's diary result is indirect evidence." },
+      { "block": "numbers", "wanted": "Prevalence of caffeine use disorder.", "why": "Meredith 2013 reviews it, but the abstract gives no figure; full text not fetched." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Juliano LM, Griffiths RR (2004). A critical review of caffeine withdrawal: empirical validation of symptoms and signs, incidence, severity, and associated features. Psychopharmacology.", "kind": "review", "doi": "10.1007/s00213-004-2000-x", "pmid": "15448977", "url": "https://pubmed.ncbi.nlm.nih.gov/15448977/", "fetched": true, "supports": "Onset 12–24 h, peak 20–51 h, 2–9 days; headache 50%; impairment 13%." },
+      { "id": "r2", "cite": "Rogers PJ, Hohoff C, Heatherley SV, et al. (2010). Association of the anxiogenic and alerting effects of caffeine with ADORA2A and ADORA1 polymorphisms and habitual level of caffeine consumption. Neuropsychopharmacology.", "kind": "trial", "doi": "10.1038/npp.2010.71", "pmid": "20520601", "url": "https://europepmc.org/abstract/MED/20520601", "fetched": true, "supports": "No net alertness benefit with frequent use; consumption returns alertness to baseline." },
+      { "id": "r3", "cite": "Drake C, Roehrs T, Shambroom J, Roth T (2013). Caffeine effects on sleep taken 0, 3, or 6 hours before going to bed. Journal of Clinical Sleep Medicine.", "kind": "trial", "doi": "10.5664/jcsm.3170", "pmid": "24235903", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3805807/", "fetched": true, "supports": "400 mg 6 h before bed disrupts sleep; TST down 1.1–1.2 h; diaries missed 6 h effect." },
+      { "id": "r4", "cite": "Meredith SE, Juliano LM, Hughes JR, Griffiths RR (2013). Caffeine use disorder: a comprehensive review and research agenda. Journal of Caffeine Research.", "kind": "review", "doi": "10.1089/jcr.2013.0016", "pmid": "24761279", "url": "https://pubmed.ncbi.nlm.nih.gov/24761279/", "fetched": true, "supports": "Caffeine use disorder is a DSM-5 condition for further study; WHO recognises dependence." },
+      { "id": "r5", "cite": "Evatt DP, Juliano LM, Griffiths RR (2016). A brief manualized treatment for problematic caffeine use: a randomized control trial. Journal of Consulting and Clinical Psychology.", "kind": "trial", "doi": "10.1037/ccp0000064", "pmid": "26501499", "url": "https://pubmed.ncbi.nlm.nih.gov/26501499/", "fetched": true, "supports": "One-session treatment reduced caffeine use; no rebound up to 1 year." },
+      { "id": "r6", "cite": "US Food and Drug Administration (consumer update). Spilling the beans: how much caffeine is too much?", "kind": "guideline", "url": "https://www.fda.gov/consumers/consumer-updates/spilling-beans-how-much-caffeine-too-much", "fetched": true, "supports": "400 mg/day not generally harmful; 1,200 mg powder seizures; withdrawal not dangerous; reduce gradually." },
+      { "id": "r7", "cite": "Poole R, Kennedy OJ, Roderick P, et al. (2017). Coffee consumption and health: umbrella review of meta-analyses of multiple health outcomes. BMJ.", "kind": "review", "doi": "10.1136/bmj.j5024", "pmid": "29167102", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5696634/", "fetched": true, "supports": "3–4 cups/day all-cause mortality RR 0.83 (abstract prints CI 0.83 to 0.88); pregnancy and fracture exceptions." },
+      { "id": "r8", "cite": "World Health Organization. ICD-11 MMS v2026-01, 6C48 Disorders due to use of caffeine (via Find-A-Code mirror).", "kind": "other", "url": "https://www.findacode.com/icd-11/code-31898480.html", "fetched": true, "supports": "Child codes: harmful use, intoxication, withdrawal (6C48.3); no dependence code." }
+    ]
+  },
+  {
+    "id": "ketamine",
+    "name": "Ketamine (K, ket)",
+    "group": "substance",
+    "oneLiner": "More than a quarter of recent ketamine users report bladder symptoms, and half of those who tracked them say they improved after stopping.",
+    "oneLinerRefs": ["r3"],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: assessed under phencyclidine (PCP) use disorder criteria; withdrawal is not a criterion. ICD-11: 6C4D disorders due to use of dissociative drugs including ketamine or PCP (6C4D.2 dependence); no withdrawal code.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Bladder pain, urgency or blood in the urine needs a doctor early: frequent use can cause ulcerative cystitis, and delay risks severe, irreversible damage. For withdrawal itself, medication evidence is case reports only.",
+      "refs": ["r4", "r3", "r6"]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "Ket isn't addictive.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "29.3% of 205 people who used ketamine met criteria for ketamine use disorder, and 17% of 1,285 recent users in a dance-music survey were dependent. Many frequent users report trying and failing to stop.",
+        "refs": ["r1", "r3", "r4"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "There's no withdrawal, so I can stop whenever I want.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Most authorities recognise no ketamine withdrawal syndrome. Yet 30.2% in one study met a withdrawal criterion (tiredness, poor concentration, headache, anxiety), and 18.7% reported craving after stopping in another.",
+        "refs": ["r8", "r1", "r2"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "It's a medicine. It helps my depression.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "The approved form, esketamine, is given with an oral antidepressant in a certified clinic, with at least 2 hours of monitoring. In a 1-year study, depression scores rose in frequent users and in ex-users.",
+        "refs": ["r7", "r5"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "My bladder's wrecked anyway, so why stop.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "Of 251 users who tracked their urinary symptoms, 51% improved after stopping and only 3.8% got worse. Waiting risks severe, irreversible damage.",
+        "refs": ["r3"],
+        "beliefSource": "Not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Stop early, with urology and addiction care working together",
+        "evidence": "weak",
+        "note": "Recommended by the main review and the bladder survey; no trials.",
+        "refs": ["r4", "r3"]
+      },
+      {
+        "what": "Medication",
+        "evidence": "weak",
+        "note": "12 studies, 368 people, all very low quality: benzodiazepines for withdrawal; naltrexone and lamotrigine for craving only in case reports.",
+        "refs": ["r6"]
+      }
+    ],
+    "numbers": [
+      { "stat": "26.6% of recent ketamine users reported urinary symptoms; 51% of those tracking them improved after stopping.", "refs": ["r3"] },
+      { "stat": "29.3% of 205 people who used ketamine met criteria for ketamine use disorder.", "refs": ["r1"] },
+      { "stat": "Under 10% of 1,614 ketamine users in Taiwan wanted treatment, despite high rates of discontinuation symptoms.", "refs": ["r2"] }
+    ],
+    "screener": null,
+    "placeholders": [
+      { "block": "timeline", "wanted": "When ketamine discontinuation symptoms start, peak and end.", "why": "Fetched studies give symptom rates only (Chen 2014; Fitzgerald 2021), no time course. No timeline can be drawn honestly." },
+      { "block": "whatWorks", "wanted": "Trials of psychological treatment for ketamine use disorder.", "why": "None found; the only systematic review covers medication and is all very low quality." },
+      { "block": "screener", "wanted": "A validated, free screener for ketamine use disorder.", "why": "Not found; studies used adapted DSM-5 criteria." },
+      { "block": "beliefs", "wanted": "Verified first-person quotes from people quitting ketamine.", "why": "The testimonial corpus has none." },
+      { "block": "axes", "wanted": "How often ketamine problems start from medical or clinic ketamine.", "why": "Not sourced; prescribedOrigin set to 'never' as the closest option." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Fitzgerald ND, Striley CW, Palamar JJ, Copeland J, Kurtz S, Cottler LB (2021). Test-retest reliability and cross-cultural applicability of DSM-5 adopted diagnostic criteria for ketamine use disorders. Drug and Alcohol Dependence.", "kind": "study", "doi": "10.1016/j.drugalcdep.2021.109056", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8678918/", "fetched": true, "supports": "DSM-5 uses PCP criteria; withdrawal not a criterion; 29.3% met KUD; 30.2% withdrawal criterion." },
+      { "id": "r2", "cite": "Chen WY, Huang MC, Lin SK (2014). Gender differences in subjective discontinuation symptoms associated with ketamine use. Substance Abuse Treatment, Prevention, and Policy.", "kind": "survey", "doi": "10.1186/1747-597X-9-39", "pmid": "25245125", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4183767/", "fetched": true, "supports": "1,614 users: fatigue 26.0%, craving 18.7%; under 10% wanted treatment." },
+      { "id": "r3", "cite": "Winstock AR, Mitcheson L, Gillatt DA, Cottrell AM (2012). The prevalence and natural history of urinary symptoms among recreational ketamine users. BJU International.", "kind": "survey", "doi": "10.1111/j.1464-410X.2012.11028.x", "pmid": "22416998", "url": "https://pubmed.ncbi.nlm.nih.gov/22416998/", "fetched": true, "supports": "26.6% urinary symptoms; 17% dependent; 51% improved after stopping; 3.8% worse." },
+      { "id": "r4", "cite": "Morgan CJ, Curran HV (2012). Ketamine use: a review. Addiction.", "kind": "review", "doi": "10.1111/j.1360-0443.2011.03576.x", "pmid": "21777321", "url": "https://pubmed.ncbi.nlm.nih.gov/21777321/", "fetched": true, "supports": "Ulcerative cystitis with frequent use; users report failing to stop; coordinate urology and addiction care." },
+      { "id": "r5", "cite": "Morgan CJ, Muetzelfeldt L, Curran HV (2010). Consequences of chronic ketamine self-administration upon neurocognitive function and psychological wellbeing: a 1-year longitudinal study. Addiction.", "kind": "cohort", "doi": "10.1111/j.1360-0443.2009.02761.x", "pmid": "19919593", "url": "https://pubmed.ncbi.nlm.nih.gov/19919593/", "fetched": true, "supports": "Frequent and abstinent users' depression scores increased over 12 months." },
+      { "id": "r6", "cite": "Roberts E, Sanderson E, Guerrini I (2024). The pharmacological management of ketamine use disorder: a systematic review. Journal of Addiction Medicine.", "kind": "review", "doi": "10.1097/ADM.0000000000001340", "pmid": "38922637", "url": "https://pubmed.ncbi.nlm.nih.gov/38922637/", "fetched": true, "supports": "12 studies, 368 people, all very low quality evidence." },
+      { "id": "r7", "cite": "US Food and Drug Administration (2019). FDA approves new nasal spray medication for treatment-resistant depression; available only at a certified doctor's office or clinic. Press release, reproduced by BioSpace.", "kind": "guideline", "url": "https://www.biospace.com/fda-approves-new-nasal-spray-medication-for-treatment-resistant-depression-available-only-at-a-certified-doctor-s-office-or-clinic", "fetched": true, "supports": "Esketamine with oral antidepressant; certified office; 2 hours monitoring; boxed warning on abuse." },
+      { "id": "r8", "cite": "World Health Organization. ICD-11 MMS v2026-01, 6C4D Disorders due to use of dissociative drugs including ketamine and PCP (via Find-A-Code mirror).", "kind": "other", "url": "https://www.findacode.com/icd-11/code-470484338.html", "fetched": true, "supports": "Dependence described; most authorities do not recognise a withdrawal syndrome; no withdrawal code." }
+    ]
+  },
+  {
+    "id": "anabolic-steroids",
+    "name": "Anabolic-androgenic steroids",
+    "group": "substance",
+    "oneLiner": "About 30% of steroid users develop dependence, and about 2.5 years after quitting, 27% of former users still had testosterone below the normal range.",
+    "oneLinerRefs": ["r1", "r4"],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: no steroid-specific diagnosis; falls under other (or unknown) substance use disorder. ICD-11: 6C4H disorders due to use of non-psychoactive substances (harmful use only), which states anabolic steroids cause no dependence or withdrawal syndrome.",
+      "classificationStatus": "proposed"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Stopping can bring months of low testosterone and low mood: 29% of long-term users had a major depressive episode during withdrawal. A doctor can test hormones; post-cycle drugs have only observational support.",
+      "refs": ["r3", "r7"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "hormones",
+        "label": "Low natural testosterone",
+        "startH": 0, "peakH": 0, "endH": 4368, "peakIntensity": 5,
+        "note": "Suppression is deepest at the end of a cycle. One retrospective study: hormones normal after a median 13 weeks with post-cycle therapy, 26 weeks without. In another, 27% were still low about 2.5 years later.",
+        "refs": ["r7", "r4"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Low libido, low mood, fatigue",
+        "startH": 0, "peakH": 2160, "endH": 6000, "peakIntensity": 4,
+        "note": "58% reported decreased libido after the cycle; by 1 year after starting, side effects were back to baseline (100 men). The peak is drawn at the 3-month visit, not measured as a peak.",
+        "refs": ["r5", "r3"]
+      },
+      {
+        "track": "body",
+        "label": "Thickened heart wall, weaker pumping",
+        "startH": 0, "peakH": 0, "endH": 5840, "peakIntensity": 3,
+        "note": "In 31 men, heart muscle mass rose 28.3 g over a median 16-week cycle; every measure was back to baseline after a median 8 months off.",
+        "refs": ["r6"]
+      }
+    ],
+    "markers": [
+      { "atH": 2184, "kind": "milestone", "label": "Median 13 weeks to normal hormones with post-cycle therapy (one retrospective study)", "refs": ["r7"] },
+      { "atH": 4368, "kind": "milestone", "label": "Median 26 weeks without post-cycle therapy", "refs": ["r7"] },
+      { "atH": 5840, "kind": "milestone", "label": "About 8 months: heart changes back to baseline (31 men)", "refs": ["r6"] },
+      { "atH": 21900, "kind": "trap", "label": "About 2.5 years: 27% of former users still below normal testosterone", "refs": ["r4"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "Steroids aren't addictive.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "About 30% of users develop dependence, using on despite harm, with a documented withdrawal syndrome. In the US, roughly 1 million of 2.9–4.0 million users may have had it. ICD-11 still says steroids cause no dependence.",
+        "refs": ["r1", "r2", "r10"],
+        "beliefSource": "ICD-11 itself (r10): non-psychoactive substances, including anabolic steroids, 'are not associated with intoxication or with a dependence or withdrawal syndrome'."
+      },
+      {
+        "voice": "If you're smart about it, it's safe.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Danish gym users who tested positive had 3 times the mortality of matched men and more than twice the hospital contacts. In a prospective study of 100 men, every one had at least one negative side effect.",
+        "refs": ["r8", "r5"],
+        "beliefSource": "Endocrine Society scientific statement (r9): \"There is a widespread misperception that PED use is safe or that adverse effects are manageable.\""
+      },
+      {
+        "voice": "PCT will have my natural testosterone back in a few weeks.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Most men recover within months, but post-cycle therapy rests on observational data and long-term benefit is unproven. Two of 24 long-term users did not regain normal libido or erections even on replacement testosterone.",
+        "refs": ["r7", "r3"],
+        "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "The crash after a cycle is just weakness. Push through.",
+        "kind": "identity",
+        "verdict": "false",
+        "science": "It is hormonal: former users had lower testosterone and more depressive symptoms, low libido and erectile problems than controls. 29% of long-term users had major depression during withdrawal.",
+        "refs": ["r4", "r3"],
+        "beliefSource": "Not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Hormone testing with a doctor, and endocrine treatment where needed",
+        "evidence": "weak",
+        "note": "Post-cycle therapy may speed short-term recovery (observational); hCG does not restart the axis; randomised trials are missing.",
+        "refs": ["r7"]
+      },
+      {
+        "what": "Treating withdrawal depression",
+        "evidence": "weak",
+        "note": "The Endocrine Society calls for trials of treatments for the steroid withdrawal syndrome; none were found in this pass.",
+        "refs": ["r9"]
+      }
+    ],
+    "numbers": [
+      { "stat": "Of 2.9–4.0 million Americans aged 13–50 who have used steroids, roughly 1 million may have had dependence.", "refs": ["r2"] },
+      { "stat": "27.2% of former users had testosterone below the normal range about 2.5 years after stopping; none of the controls did.", "refs": ["r4"] },
+      { "stat": "Mortality 3.0 times that of matched non-users (545 men who tested positive in Danish gyms).", "refs": ["r8"] }
+    ],
+    "screener": null,
+    "placeholders": [
+      { "block": "timeline", "wanted": "A craving curve: urge to start another cycle after stopping.", "why": "No fetched study measured it." },
+      { "block": "beliefs", "wanted": "Evidence on the fear 'I'll lose all my gains' (muscle retention after stopping in humans).", "why": "Not found in fetched sources." },
+      { "block": "screener", "wanted": "A validated, free screener for steroid dependence.", "why": "None found; studies adapt DSM criteria." },
+      { "block": "beliefs", "wanted": "Verified first-person quotes from men quitting steroids.", "why": "The testimonial corpus has none." },
+      { "block": "timeline", "wanted": "HAARLEM testosterone and LH values at 3 months after the cycle.", "why": "The abstract gives side-effect rates, not hormone values; full text not fetched." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Kanayama G, Brower KJ, Wood RI, Hudson JI, Pope HG Jr (2009). Anabolic-androgenic steroid dependence: an emerging disorder. Addiction.", "kind": "review", "doi": "10.1111/j.1360-0443.2009.02734.x", "pmid": "19922565", "url": "https://pubmed.ncbi.nlm.nih.gov/19922565/", "fetched": true, "supports": "About 30% of users develop dependence; documented withdrawal syndrome." },
+      { "id": "r2", "cite": "Pope HG Jr, Kanayama G, Athey A, et al. (2014). The lifetime prevalence of anabolic-androgenic steroid use and dependence in Americans: current best estimates. American Journal on Addictions.", "kind": "review", "doi": "10.1111/j.1521-0391.2013.12118.x", "pmid": "24112239", "url": "https://pubmed.ncbi.nlm.nih.gov/24112239/", "fetched": true, "supports": "2.9–4.0 million US users aged 13–50; roughly 1 million dependence." },
+      { "id": "r3", "cite": "Kanayama G, Hudson JI, DeLuca J, et al. (2015). Prolonged hypogonadism in males following withdrawal from anabolic-androgenic steroids: an under-recognized problem. Addiction.", "kind": "study", "doi": "10.1111/add.12850", "pmid": "25598171", "url": "https://pubmed.ncbi.nlm.nih.gov/25598171/", "fetched": true, "supports": "29% major depression in withdrawal; 2 of 24 no recovery on replacement." },
+      { "id": "r4", "cite": "Rasmussen JJ, Selmer C, Østergren PB, et al. (2016). Former abusers of anabolic androgenic steroids exhibit decreased testosterone levels and hypogonadal symptoms years after cessation: a case-control study. PLoS One.", "kind": "study", "doi": "10.1371/journal.pone.0161208", "pmid": "27532478", "url": "https://pubmed.ncbi.nlm.nih.gov/27532478/", "fetched": true, "supports": "27.2% of former users below reference about 2.5 years after; more hypogonadal symptoms." },
+      { "id": "r5", "cite": "Smit DL, Buijs MM, de Hon O, den Heijer M, de Ronde W (2021). Positive and negative side effects of androgen abuse. The HAARLEM study: a one-year prospective cohort study in 100 men. Scandinavian Journal of Medicine & Science in Sports.", "kind": "cohort", "doi": "10.1111/sms.13843", "pmid": "33038020", "url": "https://europepmc.org/abstract/MED/33038020", "fetched": true, "supports": "Every man had a side effect; 58% decreased libido after; baseline by 1 year." },
+      { "id": "r6", "cite": "Smit DL, Voogel AJ, den Heijer M, de Ronde W (2021). Anabolic androgenic steroids induce reversible left ventricular hypertrophy and cardiac dysfunction: echocardiography results of the HAARLEM study. Frontiers in Reproductive Health.", "kind": "cohort", "doi": "10.3389/frph.2021.732318", "pmid": "36304014", "url": "https://europepmc.org/abstract/MED/36304014", "fetched": true, "supports": "31 men: LV mass +28.3 g; all parameters baseline after median 8 months." },
+      { "id": "r7", "cite": "Smit DL, Verdegaal T, Bond P, de Ronde W (2026). Post-cycle therapy after androgen abuse: a narrative review of mechanisms, evidence, and clinical perspectives. Endocrine Connections.", "kind": "review", "doi": "10.1530/EC-26-0319", "pmid": "42644333", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13588284/", "fetched": true, "supports": "Recovery in months; median 13 vs 26 weeks; PCT evidence limited; hCG no axis recovery." },
+      { "id": "r8", "cite": "Horwitz H, Andersen JT, Dalhoff KP (2019). Health consequences of androgenic anabolic steroid use. Journal of Internal Medicine.", "kind": "cohort", "doi": "10.1111/joim.12850", "pmid": "30460728", "url": "https://pubmed.ncbi.nlm.nih.gov/30460728/", "fetched": true, "supports": "545 users vs 5,450 controls: mortality HR 3.0; more hospital contacts." },
+      { "id": "r9", "cite": "Pope HG Jr, Wood RI, Rogol A, et al. (2014). Adverse health consequences of performance-enhancing drugs: an Endocrine Society scientific statement. Endocrine Reviews.", "kind": "guideline", "doi": "10.1210/er.2013-1058", "pmid": "24423981", "url": "https://pubmed.ncbi.nlm.nih.gov/24423981/", "fetched": true, "supports": "Widespread misperception PEDs are safe; trials needed for AAS withdrawal treatment." },
+      { "id": "r10", "cite": "World Health Organization. ICD-11 MMS v2026-01, 6C4H Disorders due to use of non-psychoactive substances (via Find-A-Code mirror).", "kind": "other", "url": "https://www.findacode.com/icd-11/code-247116319.html", "fetched": true, "supports": "Lists anabolic steroids; states no dependence or withdrawal syndrome." }
+    ]
+  }
+]

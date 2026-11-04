@@ -1,0 +1,795 @@
+[
+  {
+    "id": "gambling",
+    "name": "Gambling and sports betting",
+    "group": "behaviour",
+    "oneLiner": "In a year-long study of 101 people who had just quit gambling, only 8% stayed completely gambling-free, and relapses came as often after good moods as bad ones.",
+    "oneLinerRefs": ["r1"],
+    "axes": {
+      "withdrawal": "mild",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: Gambling disorder, moved into the same chapter as alcohol and drug use disorders. ICD-11: 6C50 Gambling disorder, under disorders due to addictive behaviours.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Stopping gambling is not physically dangerous. The danger is suicide: it was the leading cause of death among Norway's gambling-disorder patients, and NICE warns gambling harm can drive suicidal thoughts even without other risk factors. Some Parkinson's and psychosis medicines can set off gambling; tell the prescriber.",
+      "refs": ["r4", "r3"]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "If I keep going, I'll win it back.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Chasing losses is a core symptom of gambling disorder, not a way out of it. After quitting, the reasons people most often gave for major relapses were thoughts about winning and needing money.",
+        "refs": ["r10", "r1"],
+        "beliefSource": "recovery-testimonials/04-gambling.md: u/thegamfallacy ('Even if you win it back you will see gambling as a way out') and u/Such-Lengthiness5422 (a chase interrupted mid-act)"
+      },
+      {
+        "voice": "I know football. This is skill, not luck.",
+        "kind": "identity",
+        "verdict": "false",
+        "science": "A study of 30 expert hockey bettors concluded their so-called 'skills' were cognitive distortions. Believing you can predict or control outcomes is one of five measured gambling distortions.",
+        "refs": ["r9", "r7"],
+        "beliefSource": "Raylu & Oei 2004 (r7): illusion of control and predictive control measured as distinct beliefs in 968 community gamblers"
+      },
+      {
+        "voice": "That was so close. I'm due a win.",
+        "kind": "can-moderate",
+        "verdict": "false",
+        "science": "In a brain-scan study, near-misses felt worse than clear losses, yet raised the urge to keep playing and lit up the same reward areas as real wins. A near-miss is a loss.",
+        "refs": ["r8"],
+        "beliefSource": "Clark et al. 2009 (r8): participants reported more desire to play after near-misses"
+      },
+      {
+        "voice": "I've been clean three months. A hundred for fun won't hurt.",
+        "kind": "can-moderate",
+        "verdict": "mostly-false",
+        "science": "Relapse after quitting is the norm: 8% stayed fully gambling-free over 12 months. Relapses followed good moods as often as bad ones, most often in the evening, alone, while thinking about money.",
+        "refs": ["r1"],
+        "beliefSource": "recovery-testimonials/04-gambling.md: u/VentureCatalyst00 ('I've been clean for 3 months … let's just take $100 to the Casino')"
+      },
+      {
+        "voice": "Self-exclusion is pointless. I'll find a way anyway.",
+        "kind": "quitting-wont-work",
+        "verdict": "true-but",
+        "science": "Breaches are common, 8–59% across studies. But across 19 studies of casino and venue self-exclusion, pathological gambling fell from 61–95% of people before exclusion to 13–26% after.",
+        "refs": ["r6"],
+        "beliefSource": "recovery-testimonials/04-gambling.md: u/Happy_Possession_435 ('I know regardless I'll find a way to gamble')"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Gambling-focused cognitive behavioural therapy (CBT)",
+        "evidence": "moderate",
+        "note": "Cochrane review of 14 trials: CBT cut symptoms and money lost in the first 3 months after therapy. Whether the gains last is unknown, and the evidence was rated low quality. NICE recommends gambling-specific treatment.",
+        "refs": ["r5", "r3"]
+      },
+      {
+        "what": "Block the access and hand over the money: self-exclusion, bank gambling blocks, blocking software, a family member controlling the finances",
+        "evidence": "weak",
+        "note": "Before-and-after studies only, no controlled trials, but NICE says to discuss every one of these. People who quit credit money handed to a trusted person above any software.",
+        "refs": ["r6", "r3", "r14"]
+      },
+      {
+        "what": "Bring in a partner or someone close",
+        "evidence": "weak",
+        "note": "NICE recommends involving a partner or family member in treatment if both agree.",
+        "refs": ["r3"]
+      },
+      {
+        "what": "Peer support such as Gamblers Anonymous",
+        "evidence": "weak",
+        "note": "NICE says to offer peer support as an integral part of treatment for those who want it.",
+        "refs": ["r3"]
+      },
+      {
+        "what": "Naltrexone, if therapy has not worked",
+        "evidence": "weak",
+        "note": "NICE: consider it after a full course of therapy fails or relapses keep happening. Off-label in the UK as of January 2025, and started only by a specialist.",
+        "refs": ["r3"]
+      }
+    ],
+    "numbers": [
+      { "stat": "Suicide was the leading cause of death among Norway's 6,899 gambling-disorder patients, 2008–2021: 37 of 148 deaths (25%).", "refs": ["r4"] },
+      { "stat": "Of 312 community gamblers, 25% felt restless or irritable when trying to cut down, and 41% reported other withdrawal-like feelings such as anger, guilt and disappointment. No study has timed these.", "refs": ["r11"] },
+      { "stat": "After US states legalised online sports betting, betting spread fast and household savings fell; financially stretched households ran up more credit-card debt and overdrafts.", "refs": ["r12"] }
+    ],
+    "screener": {
+      "name": "Problem Gambling Severity Index (PGSI)",
+      "items": 9,
+      "freeToUse": "yes",
+      "url": "https://www.grai.ie/gambling-safety/understand-your-gambling/problem-gambling-severity-index",
+      "refs": ["r13", "r3"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "A day-by-day course of withdrawal-like symptoms after the last bet.", "why": "Only retrospective self-report exists, with no timing (Cunningham-Williams 2009, r11). Rosenthal & Lesieur 1992 (Am J Addict 1:150-154, doi 10.1111/j.1521-0391.1992.tb00020.x) could not be fetched; the figures attributed to it online come from a secondary site and are not used." },
+      { "block": "axes.prescribedOrigin", "wanted": "A value meaning 'rarely'.", "why": "Set to 'never', but NICE names dopamine agonists and aripiprazole as medicines that can affect impulse control. The enum has no 'rarely'." },
+      { "block": "beliefs.kind", "wanted": "A 'distortion' kind.", "why": "Chasing, near-miss and skill beliefs fit none of the five kinds well; the nearest was used." },
+      { "block": "numbers", "wanted": "Share of sports bettors who lose money over a year, and the global problem-gambling rate.", "why": "The Lancet Commission sports-betting figure differs between press releases (8.9% vs 9.8%); not verified against the paper." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Hodgins DC, el-Guebaly N (2004). Retrospective and prospective reports of precipitants to relapse in pathological gambling. Journal of Consulting and Clinical Psychology 72:72-80.", "kind": "cohort", "doi": "10.1037/0022-006x.72.1.72", "pmid": "14756616", "url": "https://europepmc.org/article/MED/14756616", "fetched": true, "supports": "101 recent quitters: 8% gambling-free over 12 months; relapse moods often positive; winning and money thoughts." },
+      { "id": "r2", "cite": "Petry NM, Blanco C, Auriacombe M, et al. (2014). An overview of and rationale for changes proposed for pathological gambling in DSM-5. Journal of Gambling Studies 30:493-502.", "kind": "review", "doi": "10.1007/s10899-013-9370-0", "pmid": "23526033", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3722301/", "fetched": true, "supports": "Backs axes.classification: DSM-5 moved gambling disorder into the chapter with alcohol and drug use disorders." },
+      { "id": "r3", "cite": "NICE (2025). Gambling-related harms: identification, assessment and management. NICE guideline NG248, published 28 January 2025.", "kind": "guideline", "doi": "", "pmid": "", "url": "https://www.nice.org.uk/guidance/ng248/chapter/Recommendations", "fetched": true, "supports": "Suicide risk; self-exclusion, bank blocks, family money control; peer support; involve partner; naltrexone second-line; PGSI." },
+      { "id": "r4", "cite": "Kristensen JH, Baravelli CM, Leino T, Pallesen S, Griffiths MD, Erevik EK (2025). Association between gambling disorder and suicide mortality: a comparative cohort study using Norwegian health registry data. Lancet Regional Health Europe 48:101127.", "kind": "cohort", "doi": "10.1016/j.lanepe.2024.101127", "pmid": "39606747", "url": "https://europepmc.org/article/MED/39606747", "fetched": true, "supports": "6,899 patients 2008–2021: suicide leading cause of death (37/148, 25%); SMR 5.12." },
+      { "id": "r5", "cite": "Cowlishaw S, Merkouris S, Dowling N, Anderson C, Jackson A, Thomas S (2012). Psychological therapies for pathological and problem gambling. Cochrane Database of Systematic Reviews CD008937.", "kind": "review", "doi": "10.1002/14651858.cd008937.pub2", "pmid": "23152266", "url": "https://europepmc.org/article/MED/23152266", "fetched": true, "supports": "14 trials: CBT cuts symptoms and losses 0–3 months post-treatment; durability unknown; low-quality evidence." },
+      { "id": "r6", "cite": "Kotter R, Kräplin A, Pittig A, Bühringer G (2019). A systematic review of land-based self-exclusion programs: demographics, gambling behavior, gambling problems, mental symptoms, and mental health. Journal of Gambling Studies 35:367-394.", "kind": "review", "doi": "10.1007/s10899-018-9777-8", "pmid": "29721719", "url": "https://europepmc.org/article/MED/29721719", "fetched": true, "supports": "19 naturalistic studies: breaches 8–59%; pathological gambling 61–95% before, 13–26% after exclusion." },
+      { "id": "r7", "cite": "Raylu N, Oei TP (2004). The Gambling Related Cognitions Scale (GRCS): development, confirmatory factor validation and psychometric properties. Addiction 99:757-769.", "kind": "study", "doi": "10.1111/j.1360-0443.2004.00753.x", "pmid": "15139874", "url": "https://europepmc.org/article/MED/15139874", "fetched": true, "supports": "968 gamblers: five distortion factors including illusion of control, predictive control, perceived inability to stop." },
+      { "id": "r8", "cite": "Clark L, Lawrence AJ, Astley-Jones F, Gray N (2009). Gambling near-misses enhance motivation to gamble and recruit win-related brain circuitry. Neuron 61:481-490.", "kind": "study", "doi": "10.1016/j.neuron.2008.12.031", "pmid": "19217383", "url": "https://europepmc.org/article/MED/19217383", "fetched": true, "supports": "Near-misses less pleasant than full misses but increased desire to play; recruited win-related circuitry." },
+      { "id": "r9", "cite": "Cantinotti M, Ladouceur R, Jacques C (2004). Sports betting: can gamblers beat randomness? Psychology of Addictive Behaviors 18:143-147.", "kind": "study", "doi": "10.1037/0893-164x.18.2.143", "pmid": "15238056", "url": "https://europepmc.org/article/MED/15238056", "fetched": true, "supports": "30 hockey bettors: authors conclude sports bettors' so-called skills are cognitive distortions." },
+      { "id": "r10", "cite": "Banerjee N, Chen Z, Clark L, Noël X (2023). Behavioural expressions of loss-chasing in gambling: a systematic scoping review. Neuroscience and Biobehavioral Reviews 153:105377.", "kind": "review", "doi": "10.1016/j.neubiorev.2023.105377", "pmid": "37648042", "url": "https://europepmc.org/article/MED/37648042", "fetched": true, "supports": "Loss-chasing is a key clinical symptom in gambling disorder." },
+      { "id": "r11", "cite": "Cunningham-Williams RM, Gattis MN, Dore PM, Shi P, Spitznagel EL (2009). Towards DSM-V: considering other withdrawal-like symptoms of pathological gambling disorder. International Journal of Methods in Psychiatric Research 18:13-22.", "kind": "survey", "doi": "10.1002/mpr.273", "pmid": "19197945", "url": "https://europepmc.org/article/MED/19197945", "fetched": true, "supports": "312 community gamblers: 25% restless/irritable; 41% other withdrawal-like symptoms when quitting or controlling." },
+      { "id": "r12", "cite": "Baker SR, Balthrop J, Johnson MJ, Kotter JD, Pisciotta K (2024). Gambling Away Stability: Sports Betting's Impact on Vulnerable Households. NBER Working Paper 33108.", "kind": "study", "doi": "10.3386/w33108", "pmid": "", "url": "https://www.nber.org/papers/w33108", "fetched": true, "supports": "Legal online sports betting reduced savings; constrained households: more credit-card debt, less credit, more overdrafts." },
+      { "id": "r13", "cite": "Gambling Regulatory Authority of Ireland. Problem Gambling Severity Index (public self-test page; scale by Ferris & Wynne 2001).", "kind": "other", "doi": "", "pmid": "", "url": "https://www.grai.ie/gambling-safety/understand-your-gambling/problem-gambling-severity-index", "fetched": true, "supports": "Regulator offers the 9-item PGSI free to the public; 8 or more = high risk." },
+      { "id": "r14", "cite": "This repo (2026). Recovery testimonials synthesis. docs/research/recovery-testimonials/SYNTHESIS.md, Tier 2 item 8.", "kind": "other", "doi": "", "pmid": "", "url": "docs/research/recovery-testimonials/SYNTHESIS.md", "fetched": true, "supports": "Peer accounts: money separation to a trusted person outranks every piece of blocking software." }
+    ]
+  },
+  {
+    "id": "crypto-day-trading",
+    "name": "Crypto and day trading",
+    "group": "behaviour",
+    "oneLiner": "Of everyone who began day trading Brazilian equity futures in 2013–2015 and kept at it for 300 days or more, 97% lost money.",
+    "oneLinerRefs": ["r1"],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "No diagnosis of its own in DSM-5 or ICD-11. Clinicians assess gambling-like trading by adapting the DSM-5-TR gambling disorder criteria.",
+      "classificationStatus": "not-recognised"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Stopping is not physically dangerous. The risk is money: rapid trading in round-the-clock markets can build debt fast, and debt is linked to suicidal behaviour. If a loss feels unbearable, call a crisis line before placing another trade.",
+      "refs": ["r9", "r7"]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "I'm investing, not gambling.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Frequent trading is not the same as investing: the most active of 66,465 US households earned 11.4% a year while the market returned 17.9%. Among regular gamblers, crypto trading tracked problem-gambling severity (r = 0.53).",
+        "refs": ["r2", "r5", "r6", "r14"],
+        "beliefSource": "Louderback et al. 2025 (r14) on 'financially focused self-concept' among crypto and day traders; Chague et al. (r1) note course providers sell day trading as a living"
+      },
+      {
+        "voice": "The losses are tuition. I'm learning.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Brazilian day traders showed no evidence of learning, and only 0.4% earned more than a bank teller. In Taiwan, under 1% of day traders reliably beat the market after fees.",
+        "refs": ["r1", "r3"],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Everyone's getting rich on crypto. I can't miss this.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Crypto app data from 2015–2022 show that in nearly all economies most retail users lost money on their bitcoin. Fear of missing out is one proposed driver of excessive crypto trading.",
+        "refs": ["r10", "r7"],
+        "beliefSource": "Delfabbro, King & Williams 2021 (r7) name fear of missing out as a risk factor"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Treat it as gambling: gambling-focused CBT",
+        "evidence": "weak",
+        "note": "No treatment trials in traders were found. CBT works short-term for gambling, and clinicians adapt gambling-disorder criteria to trading. Problem traders rarely seek treatment.",
+        "refs": ["r11", "r8"]
+      },
+      {
+        "what": "Put distance between yourself and the money: close margin and derivatives accounts, let someone you trust hold access",
+        "evidence": "weak",
+        "note": "Borrowed from NICE's gambling advice on limiting access to money. Untested in traders. Gambling self-exclusion does not cover brokers or offshore crypto casinos.",
+        "refs": ["r12"]
+      }
+    ],
+    "numbers": [
+      { "stat": "93% of individual traders in India's equity futures and options lost money between FY22 and FY24; aggregate losses exceeded ₹1.8 lakh crore.", "refs": ["r4"] },
+      { "stat": "Less than 1% of Taiwanese day traders (1992–2006) could predictably and reliably earn positive returns after fees.", "refs": ["r3"] }
+    ],
+    "screener": {
+      "name": "Problem Gambling Severity Index (PGSI), not validated for trading",
+      "items": 9,
+      "freeToUse": "yes",
+      "url": "https://www.grai.ie/gambling-safety/understand-your-gambling/problem-gambling-severity-index",
+      "refs": ["r13", "r5"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "Any measured craving, mood or withdrawal course after stopping trading.", "why": "No abstinence study of trading or crypto found. The Fernandez 2020 review of abstinence covers six behaviours; trading is not one of them." },
+      { "block": "whatWorks", "wanted": "Treatment trials in problem traders.", "why": "None found. Roza et al. 2024 (r8) report problem traders rarely seek treatment." },
+      { "block": "screener", "wanted": "A screen validated for trading.", "why": "None found; the PGSI was used with crypto traders by Mills & Nower (r5) but was built for gambling." },
+      { "block": "numbers", "wanted": "An exact share of retail crypto users who lost money.", "why": "The fetched BIS summary says 'a majority' in nearly all economies; the exact figure sits in the PDF, not fetched." },
+      { "block": "beliefs", "wanted": "A chasing belief for traders ('one good trade gets me back to even').", "why": "No trader-specific source found; press coverage says most loss-making Indian F&O traders kept trading, but that line was not in the fetched SEBI page." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Chague F, De-Losso R, Giovannetti B (2019). Day trading for a living? University of São Paulo FEA-USP working paper 2019_47 (also SSRN 3423101).", "kind": "cohort", "doi": "", "pmid": "", "url": "https://econpapers.repec.org/paper/spawpaper/2019wpecon47.htm", "fetched": true, "supports": "All 2013–2015 Brazilian futures day traders persisting 300+ days: 97% lost money; 0.4% beat teller; no learning." },
+      { "id": "r2", "cite": "Barber BM, Odean T (2000). Trading is hazardous to your wealth: the common stock investment performance of individual investors. Journal of Finance 55:773-806.", "kind": "cohort", "doi": "10.1111/0022-1082.00226", "pmid": "", "url": "https://ideas.repec.org/a/bla/jfinan/v55y2000i2p773-806.html", "fetched": true, "supports": "66,465 households 1991–1996: most active traders earned 11.4% a year vs market 17.9%." },
+      { "id": "r3", "cite": "Barber BM, Lee YT, Liu YJ, Odean T (2014). The cross-section of speculator skill: evidence from day trading. Journal of Financial Markets 18:1-24.", "kind": "cohort", "doi": "10.1016/j.finmar.2013.05.006", "pmid": "", "url": "https://econpapers.repec.org/RePEc:eee:finmar:v:18:y:2014:i:c:p:1-24", "fetched": true, "supports": "Taiwan 1992–2006: less than 1% of day traders predictably and reliably earn positive returns net of fees." },
+      { "id": "r4", "cite": "Securities and Exchange Board of India (2024). Updated SEBI study reveals 93% of individual traders incurred losses in equity F&O between FY22 and FY24. Press release 37/2024, 23 September 2024.", "kind": "other", "doi": "", "pmid": "", "url": "https://www.sebi.gov.in/media-and-notifications/press-releases/sep-2024/updated-sebi-study-reveals-93-of-individual-traders-incurred-losses-in-equity-fando-between-fy22-and-fy24-aggregate-losses-exceed-1-8-lakh-crores-over-three-years_86906.html", "fetched": true, "supports": "93% of individual equity F&O traders lost money FY22–FY24; aggregate losses over ₹1.8 lakh crore." },
+      { "id": "r5", "cite": "Mills DJ, Nower L (2019). Preliminary findings on cryptocurrency trading among regular gamblers: a new risk for problem gambling? Addictive Behaviors 92:136-140.", "kind": "survey", "doi": "10.1016/j.addbeh.2019.01.005", "pmid": "30639898", "url": "https://europepmc.org/article/MED/30639898", "fetched": true, "supports": "876 regular gamblers: crypto trading strongly associated with problem gambling severity (r = 0.53), measured with PGSI." },
+      { "id": "r6", "cite": "Johnson B, Co S, Sun T, et al. (2023). Cryptocurrency trading and its associations with gambling and mental health: a scoping review. Addictive Behaviors 136:107504.", "kind": "review", "doi": "10.1016/j.addbeh.2022.107504", "pmid": "36174424", "url": "https://europepmc.org/article/MED/36174424", "fetched": true, "supports": "Eight studies: problem gambling symptoms associated with crypto trading engagement and intensity." },
+      { "id": "r7", "cite": "Delfabbro P, King DL, Williams J (2021). The psychology of cryptocurrency trading: risk and protective factors. Journal of Behavioral Addictions 10:201-207.", "kind": "review", "doi": "10.1556/2006.2021.00037", "pmid": "34152998", "url": "https://europepmc.org/article/MED/34152998", "fetched": true, "supports": "24-hour availability; proposed risks: overestimating skill, fear of missing out, preoccupation, compulsive checking." },
+      { "id": "r8", "cite": "Roza TH, Tavares H, Kessler FHP, Passos IC (2024). Problematic trading: gambling-like behavior in day trading and cryptocurrency investing. Trends in Psychiatry and Psychotherapy 46:e20230623.", "kind": "review", "doi": "10.47626/2237-6089-2023-0623", "pmid": "37068917", "url": "https://europepmc.org/article/MED/37068917", "fetched": true, "supports": "Adapt DSM-5-TR gambling criteria for problem trading; such patients rarely seek treatment." },
+      { "id": "r9", "cite": "Håkansson A, Fernández-Aranda F, Jiménez-Murcia S (2021). Gambling-like day trading during the COVID-19 pandemic: need for research on a pandemic-related risk of indebtedness and mental health impact. Frontiers in Psychiatry 12:715946.", "kind": "other", "doi": "10.3389/fpsyt.2021.715946", "pmid": "34381392", "url": "https://europepmc.org/article/MED/34381392", "fetched": true, "supports": "Day trading may cause over-indebtedness; indebtedness has a link to suicidal behaviour." },
+      { "id": "r10", "cite": "Cornelli G, Doerr S, Frost J, Gambacorta L (2023). Crypto shocks and retail losses. BIS Bulletin 69, Bank for International Settlements.", "kind": "other", "doi": "", "pmid": "", "url": "https://www.bis.org/publ/bisbull69.htm", "fetched": true, "supports": "Aug 2015–Dec 2022 app data: majority of crypto app users in nearly all economies lost on bitcoin." },
+      { "id": "r11", "cite": "Cowlishaw S, Merkouris S, Dowling N, Anderson C, Jackson A, Thomas S (2012). Psychological therapies for pathological and problem gambling. Cochrane Database of Systematic Reviews CD008937.", "kind": "review", "doi": "10.1002/14651858.cd008937.pub2", "pmid": "23152266", "url": "https://europepmc.org/article/MED/23152266", "fetched": true, "supports": "CBT reduces gambling symptoms and losses short-term; durability unknown." },
+      { "id": "r12", "cite": "NICE (2025). Gambling-related harms: identification, assessment and management. NICE guideline NG248.", "kind": "guideline", "doi": "", "pmid": "", "url": "https://www.nice.org.uk/guidance/ng248/chapter/Recommendations", "fetched": true, "supports": "Discuss methods to limit access to money, e.g. a family member taking control of finances." },
+      { "id": "r13", "cite": "Gambling Regulatory Authority of Ireland. Problem Gambling Severity Index (public self-test page; scale by Ferris & Wynne 2001).", "kind": "other", "doi": "", "pmid": "", "url": "https://www.grai.ie/gambling-safety/understand-your-gambling/problem-gambling-severity-index", "fetched": true, "supports": "Regulator offers the 9-item PGSI free to the public." },
+      { "id": "r14", "cite": "Louderback ER, McCullock SP, LaPlante DA (2025). Cryptocurrency trading, day trading, and gambling behavior: examining the moderating effects of financially focused self-concept and gambling motives. Journal of Gambling Studies 41:67-89.", "kind": "survey", "doi": "10.1007/s10899-024-10343-1", "pmid": "39153016", "url": "https://europepmc.org/article/MED/39153016", "fetched": true, "supports": "822 US adults: crypto and day trading moderately to strongly intercorrelated with gambling engagement and risk." }
+    ]
+  },
+  {
+    "id": "gaming",
+    "name": "Gaming",
+    "group": "behaviour",
+    "oneLiner": "When 24 gamers took an 84-hour break, their urges and distress fell instead of rising, and for those with gaming disorder they fell fastest in the first 24 hours.",
+    "oneLinerRefs": ["r4"],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "ICD-11: 6C51 Gaming disorder, under disorders due to addictive behaviours. DSM-5: Internet gaming disorder is in the appendix as a condition needing further study, not an official diagnosis.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "none",
+      "text": "No medical danger from stopping has been found. In the one study that tracked a break as it happened, urges and distress went down, not up.",
+      "refs": ["r4"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      { "track": "craving", "label": "Urges and thoughts about gaming", "startH": 0, "peakH": 0, "endH": 84, "peakIntensity": 2, "note": "Measured in 24 online-game players over an 84-hour break: highest at the start, then falling; the gaming-disorder group's biggest drop came in the first 24 h. Nothing measured after 84 h.", "refs": ["r4"] },
+      { "track": "mood-sleep", "label": "Low mood and distress", "startH": 0, "peakH": 0, "endH": 84, "peakIntensity": 1, "note": "Negative mood, depression, anxiety and stress scores fell during the break, in players with and without gaming disorder. Small pilot, not repeated at scale.", "refs": ["r4"] }
+    ],
+    "markers": [
+      { "atH": 24, "kind": "milestone", "label": "Biggest drop in urges came within the first 24 hours (gaming-disorder group)", "refs": ["r4"] },
+      { "atH": 672, "kind": "milestone", "label": "About 4 weeks on: 75% of the 9 players with gaming disorder had clearly improved after one 84-hour break", "refs": ["r5"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "I'll just play a bit each day. I can control it.",
+        "kind": "can-moderate",
+        "verdict": "half-true",
+        "science": "For most players, yes: pooled studies put gaming disorder at 3.05% of people, 1.96% in the best-sampled studies. For someone who has already lost control, cutting down versus stopping has not been compared in a trial we found.",
+        "refs": ["r6"],
+        "beliefSource": "recovery-testimonials/16-uncovered-vices.md; quote 16-001 in src/vice/data/testimonials.ts (u/ChosenOne_93: 'I thought I could only play a bit everyday and control myself, I could not.')"
+      },
+      {
+        "voice": "If I stop, I'll be irritable and miserable for weeks.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "When it was measured, urges and distress fell during an 84-hour break instead of rising. Irritability and restlessness are the most often reported gaming withdrawal symptoms, but no study has tracked their natural course.",
+        "refs": ["r4", "r3"],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "It's a hobby, not a real disorder.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "For most players it is a hobby. But WHO lists gaming disorder in ICD-11 (6C51): impaired control, gaming taking priority over the rest of life, and carrying on despite harm, normally for at least 12 months.",
+        "refs": ["r1", "r2"],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Psychological treatment, CBT or similar",
+        "evidence": "moderate",
+        "note": "Meta-analysis of 21 controlled trials (1,360 people): large drops in symptoms and gaming time, still there at 90 days. Trials were short and varied a lot.",
+        "refs": ["r7"]
+      },
+      {
+        "what": "A planned break of about 3–4 days as a reset",
+        "evidence": "weak",
+        "note": "Pilot of 24 gamers: an 84-hour break cut gaming hours, gaming-related thinking and symptoms, with gains at 28 days. Tiny sample.",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Remove access: console or PC out of the house, accounts deleted",
+        "evidence": "weak",
+        "note": "The technique people who quit any habit credit most in our testimonial corpus. Not tested in gaming trials.",
+        "refs": ["r10"]
+      },
+      {
+        "what": "Medication, only through a doctor",
+        "evidence": "weak",
+        "note": "Meta-analysis of small studies found bupropion and others reduced symptoms, but risk of bias was high, and no medicine is approved for gaming disorder.",
+        "refs": ["r8"]
+      }
+    ],
+    "numbers": [
+      { "stat": "3.05% of people worldwide meet gaming-disorder criteria (1.96% in the best-sampled studies), about 2.5 men for every woman.", "refs": ["r6"] },
+      { "stat": "Treatment trials: symptoms fell by a large amount (g = 1.38) and gaming time by g = 0.90 across 21 controlled trials.", "refs": ["r7"] }
+    ],
+    "screener": {
+      "name": "Internet Gaming Disorder Scale – Short Form (IGDS9-SF)",
+      "items": 9,
+      "freeToUse": "unclear",
+      "url": "https://irep.ntu.ac.uk/id/eprint/22433/",
+      "refs": ["r9"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "The course of urges and mood over days to weeks after quitting.", "why": "The only prospective data stop at 84 hours (24 people). Kaptsis 2016 review: treatment studies never reported the natural course of withdrawal. Fernandez 2020 review: few prospective abstinence studies outside exercise." },
+      { "block": "timeline.peakIntensity", "wanted": "A study-based intensity scale.", "why": "Intensities 1–2 are our rough rating of a small measured effect, not a study scale." },
+      { "block": "beliefs", "wanted": "A trial comparing cutting down with stopping for people with gaming disorder.", "why": "None found." },
+      { "block": "screener", "wanted": "The IGDS9-SF licence terms.", "why": "Published in an Elsevier journal; no licence statement found. Check with the authors before reproducing items." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "World Health Organization. Frequently asked questions: Gaming disorder.", "kind": "guideline", "doi": "", "pmid": "", "url": "https://www.who.int/standards/classifications/frequently-asked-questions/gaming-disorder", "fetched": true, "supports": "ICD-11 definition: impaired control, priority over other activities, continuation despite harm; usually 12 months; small proportion affected." },
+      { "id": "r2", "cite": "Mader S, Marmet S (2026). The Problematic Behaviour Scale (PBS-5): a brief measure for the population-level screening of non-substance-bound addictive behaviours and Swiss national prevalence rates. Journal of Behavioral Addictions 15:209-229.", "kind": "survey", "doi": "10.1556/2006.2025.00120", "pmid": "41860608", "url": "https://europepmc.org/article/MED/41860608", "fetched": true, "supports": "Gaming disorder (6C51) and gambling disorder (6C50) are the ICD-11 disorders due to addictive behaviours." },
+      { "id": "r3", "cite": "Kaptsis D, King DL, Delfabbro PH, Gradisar M (2016). Withdrawal symptoms in internet gaming disorder: a systematic review. Clinical Psychology Review 43:58-66.", "kind": "review", "doi": "10.1016/j.cpr.2015.11.006", "pmid": "26704173", "url": "https://europepmc.org/article/MED/26704173", "fetched": true, "supports": "34 studies: gaming withdrawal evidence very underdeveloped; irritability, restlessness most cited; natural course never reported." },
+      { "id": "r4", "cite": "Kaptsis D, King DL, Delfabbro PH, Gradisar M (2016). Trajectories of abstinence-induced Internet gaming withdrawal symptoms: a prospective pilot study. Addictive Behaviors Reports 4:24-30.", "kind": "study", "doi": "10.1016/j.abrep.2016.06.002", "pmid": "29511720", "url": "https://europepmc.org/article/MED/29511720", "fetched": true, "supports": "84-h abstinence, n=24: withdrawal, negative affect, distress declined; IGD group's largest decline in first 24 h." },
+      { "id": "r5", "cite": "King DL, Kaptsis D, Delfabbro PH, Gradisar M (2017). Effectiveness of brief abstinence for modifying problematic internet gaming cognitions and behaviors. Journal of Clinical Psychology 73:1573-1585.", "kind": "study", "doi": "10.1002/jclp.22460", "pmid": "28152189", "url": "https://europepmc.org/article/MED/28152189", "fetched": true, "supports": "84-h abstinence pilot (24 adults, 9 IGD): 75% of IGD group clinically improved at 28-day follow-up." },
+      { "id": "r6", "cite": "Stevens MW, Dorstyn D, Delfabbro PH, King DL (2021). Global prevalence of gaming disorder: a systematic review and meta-analysis. Australian and New Zealand Journal of Psychiatry 55:553-568.", "kind": "review", "doi": "10.1177/0004867420962851", "pmid": "33028074", "url": "https://europepmc.org/article/MED/33028074", "fetched": true, "supports": "53 studies, 226,247 people: prevalence 3.05%, 1.96% with stricter sampling; about 2.5:1 male." },
+      { "id": "r7", "cite": "Harpas I, Stevens M, Radunz M, Williamson P, Hamamura T, Svendsen O, King DL (2025). Treatment of gaming disorder: a systematic review and meta-analysis. Psychiatry Research 354:116783.", "kind": "review", "doi": "10.1016/j.psychres.2025.116783", "pmid": "41187384", "url": "https://europepmc.org/article/MED/41187384", "fetched": true, "supports": "21 controlled trials, 1,360 people: symptoms g=1.38, gaming time g=0.90; sustained at 90 days." },
+      { "id": "r8", "cite": "Akbari M, Seydavi M, Sheikhi S, Jamshidi S, Griffiths MD (2026). Off-label medications and non-invasive brain stimulation (NIBS) in the treatment of internet gaming disorder: a systematic review and meta-analysis. Addictive Behaviors Reports 23:100677.", "kind": "review", "doi": "10.1016/j.abrep.2026.100677", "pmid": "41799991", "url": "https://europepmc.org/article/MED/41799991", "fetched": true, "supports": "18 studies: bupropion, SSRIs, methylphenidate, tDCS reduced IGD; high risk of bias; no approved medications." },
+      { "id": "r9", "cite": "Pontes HM, Griffiths MD (2015). Measuring DSM-5 internet gaming disorder: development and validation of a short psychometric scale. Computers in Human Behavior 45:137-143.", "kind": "study", "doi": "", "pmid": "", "url": "https://irep.ntu.ac.uk/id/eprint/22433/", "fetched": false, "supports": "Nine-item IGDS9-SF based on the nine DSM-5 internet gaming disorder criteria." },
+      { "id": "r10", "cite": "This repo (2026). Recovery testimonials synthesis. docs/research/recovery-testimonials/SYNTHESIS.md, Tier 1 item 1.", "kind": "other", "doi": "", "pmid": "", "url": "docs/research/recovery-testimonials/SYNTHESIS.md", "fetched": true, "supports": "Removing supply and adding friction is the technique named by the most independent sources." }
+    ]
+  },
+  {
+    "id": "porn",
+    "name": "Porn (compulsive sexual behaviour)",
+    "group": "behaviour",
+    "oneLiner": "In a randomised trial, regular porn users who stopped for a week showed no withdrawal symptoms compared with people who kept watching.",
+    "oneLinerRefs": ["r1"],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "ICD-11: 6C72 Compulsive sexual behaviour disorder, placed under impulse control disorders, not addictive behaviours; distress from moral disapproval alone does not count. DSM-5: a proposed hypersexual disorder was not included.",
+      "classificationStatus": "recognised-other-disorder"
+    },
+    "safety": {
+      "level": "none",
+      "text": "Stopping porn has no known medical risk. Erection problems have medical causes worth a doctor's check; the key study on porn and ED did not control for them. Feeling at odds with your own porn use is linked to more distress in general; if shame turns to hopelessness, talk to a professional.",
+      "refs": ["r8", "r7"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      { "track": "craving", "label": "Craving, mood and withdrawal scores during a 7-day break", "startH": 0, "peakH": 0, "endH": 168, "peakIntensity": 1, "note": "Randomised trial, 176 regular users rated nightly: no difference from people who kept watching. Exploratory only: craving rose in daily users with high problem scores. Students, 64.2% women.", "refs": ["r1"] }
+    ],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "Everyone watches it. It's normal and harmless.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Common, yes: 91.5% of men in one large US online sample watched in the past month. Harmless for everyone, no: about 11% of US men agree 'I am addicted to pornography'.",
+        "refs": ["r11", "r9"],
+        "beliefSource": "recovery-testimonials/03-porn-compulsive-sexual-behaviour.md §6.3: u/SabrinaRewired ('I told myself it was normal, harmless')"
+      },
+      {
+        "voice": "Porn is what's wrecking my erections.",
+        "kind": "identity",
+        "verdict": "mostly-false",
+        "science": "Across three samples, simply using porn was not consistently linked to erectile problems, and over a year no porn measure predicted changes in erections. Men who felt their use was a problem did report more ED at the time.",
+        "refs": ["r8"],
+        "beliefSource": "Fernandez, Kuss & Griffiths 2021 (r2): sexual difficulties were a main reason forum members gave for 'rebooting'; recovery-testimonials/03 §6.1 and §9.1"
+      },
+      {
+        "voice": "I must be an addict. Look how bad I feel about it.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Feeling addicted tracks moral disapproval more than amount watched. Over a year, disapproval predicted feeling addicted (r = 0.46 and 0.61 in two samples); actual daily use showed no clear link (r = 0.13 and 0.11).",
+        "refs": ["r6", "r7"],
+        "beliefSource": "recovery-testimonials/03-porn-compulsive-sexual-behaviour.md §5: 10 of 32 verified accounts were incongruence-driven"
+      },
+      {
+        "voice": "Quitting means a brutal flatline and weeks of withdrawal.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "In a week-long randomised trial, abstainers had no withdrawal symptoms. Close to a third of 104 'rebooting' journals described a 'flatline' of low desire, but no study has measured when it starts, how long it lasts, or why.",
+        "refs": ["r1", "r2"],
+        "beliefSource": "Fernandez, Kuss & Griffiths 2021 (r2): 'flatline' is the forum members' own term"
+      },
+      {
+        "voice": "Staying off it will give me superpowers.",
+        "kind": "identity",
+        "verdict": "false",
+        "science": "No study we found shows abstinence gives special energy or attractiveness. In a survey of 1,063 Reddit users, wanting to abstain tracked seeing masturbation as unhealthy, religiosity and lower trust in science, not behavioural markers like orgasm frequency.",
+        "refs": ["r13"],
+        "beliefSource": "recovery-testimonials/03-porn-compulsive-sexual-behaviour.md §9 ('Superpowers', quotes from r/pornfree)"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Therapy with CBT components",
+        "evidence": "weak",
+        "note": "Systematic review: 24 treatment studies, only 4 randomised. Treatment seems to help; the evidence is best for CBT, but firm conclusions are not yet possible.",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Acceptance and commitment therapy (ACT)",
+        "evidence": "weak",
+        "note": "One trial of 28 men, all but one Latter-day Saints: viewing fell 93% with 12 sessions vs 21% on the waitlist; 35% had stopped completely at 3 months.",
+        "refs": ["r12"]
+      },
+      {
+        "what": "Work on the values conflict, not only the behaviour",
+        "evidence": "weak",
+        "note": "Distress and 'addiction' feelings track moral incongruence, and ICD-11 says moral distress alone is not the disorder. Where shame drives the problem, values work matters.",
+        "refs": ["r7", "r3"]
+      },
+      {
+        "what": "Blockers, but only with someone else holding the password",
+        "evidence": "weak",
+        "note": "From peer accounts, not trials: porn blockers 'work only when someone else holds the key'.",
+        "refs": ["r15"]
+      },
+      {
+        "what": "A short break as an experiment",
+        "evidence": "weak",
+        "note": "A one-week break caused no withdrawal in a trial, and a review rates short-term abstinence as promising for porn, though downsides like rebound were not tested.",
+        "refs": ["r1", "r16"]
+      }
+    ],
+    "numbers": [
+      { "stat": "10.3% of US men and 7.0% of women aged 18–50 (national sample, 2016) reached the clinical cut-off for distress over controlling sexual urges and behaviour.", "refs": ["r10"] },
+      { "stat": "About 11% of US men and 3% of women agreed 'I am addicted to pornography' (nationally representative, N = 2,075).", "refs": ["r9"] },
+      { "stat": "ACT trial: porn viewing fell 93% with therapy vs 21% on the waitlist (28 men).", "refs": ["r12"] }
+    ],
+    "screener": {
+      "name": "Problematic Pornography Consumption Scale, short form (PPCS-6)",
+      "items": 6,
+      "freeToUse": "unclear",
+      "url": "https://doi.org/10.1080/00224499.2020.1716205",
+      "refs": ["r14"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "A measured course of desire, mood and craving beyond 7 days, and the timing of the 'flatline' and the forum '90-day reboot'.", "why": "None exists that we found. The 'flatline' is documented only as forum members' own reports (r2); the '90-day reboot' and similar day-counts have no study behind them. The one trial stops at 7 days, in students, 64.2% women." },
+      { "block": "timeline", "wanted": "Abstinence data in a clinical, male, high-use sample.", "why": "The trial's exploratory finding (craving rose only in daily users with high problem scores) points there, but nobody has run it." },
+      { "block": "safety", "wanted": "The NoFap relapse-suicidality study cited by Slate (28.9% felt suicidal after a relapse, corrected figure).", "why": "Underlying study at openresearch.lsbu.ac.uk/item/93513 could not be fetched (see recovery-testimonials/03 §9.1)." },
+      { "block": "beliefs.kind", "wanted": "A kind for misattribution beliefs ('porn causes my ED') and ideology beliefs ('superpowers').", "why": "None of the five kinds fits; 'identity' used as nearest." },
+      { "block": "screener", "wanted": "PPCS-6 licence terms.", "why": "No licence statement found; check with Bőthe before reproducing items." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Fernandez DP, Kuss DJ, Justice LV, Fernandez EF, Griffiths MD (2023). Effects of a 7-day pornography abstinence period on withdrawal-related symptoms in regular pornography users: a randomized controlled study. Archives of Sexual Behavior 52:1819-1840.", "kind": "trial", "doi": "10.1007/s10508-022-02519-w", "pmid": "36652136", "url": "https://europepmc.org/article/MED/36652136", "fetched": true, "supports": "176 regular users: no withdrawal-related effects of 7-day abstinence; exploratory craving effect in high-PPU daily users." },
+      { "id": "r2", "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography 'rebooting' experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.", "kind": "study", "doi": "10.1007/s10508-020-01858-w", "pmid": "33403533", "url": "https://europepmc.org/article/MED/33403533", "fetched": true, "supports": "104 journals: close to one-third reported diminished desire they called the 'flatline'; sexual difficulties motivated rebooting." },
+      { "id": "r3", "cite": "Kraus SW, Krueger RB, Briken P, et al. (2018). Compulsive sexual behaviour disorder in the ICD-11. World Psychiatry 17:109-110.", "kind": "guideline", "doi": "10.1002/wps.20499", "pmid": "29352554", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5775124/", "fetched": true, "supports": "CSBD placed under impulse control disorders, not addictive behaviours; moral-disapproval distress alone not diagnostic." },
+      { "id": "r4", "cite": "Jepsen D, Brzank PJ (2022). Hypersexual behaviour among young adults in Germany: characteristics and personality correlates. BMC Psychiatry 22:804.", "kind": "survey", "doi": "10.1186/s12888-022-04370-8", "pmid": "36536318", "url": "https://europepmc.org/article/MED/36536318", "fetched": true, "supports": "Backs axes.classification: compulsive sexual behaviour disorder is ICD-11 code 6C72." },
+      { "id": "r5", "cite": "Antons S, Engel J, Briken P, Krüger THC, Brand M, Stark R (2022). Treatments and interventions for compulsive sexual behavior disorder with a focus on problematic pornography use: a preregistered systematic review. Journal of Behavioral Addictions 11:643-666.", "kind": "review", "doi": "10.1556/2006.2022.00061", "pmid": "36083776", "url": "https://europepmc.org/article/MED/36083776", "fetched": true, "supports": "24 studies, 4 RCTs; evidence for CBT present; hypersexual disorder failed to enter DSM-5." },
+      { "id": "r6", "cite": "Grubbs JB, Wilt JA, Exline JJ, Pargament KI, Kraus SW (2018). Moral disapproval and perceived addiction to internet pornography: a longitudinal examination. Addiction 113:496-506.", "kind": "cohort", "doi": "10.1111/add.14007", "pmid": "28833800", "url": "https://europepmc.org/article/MED/28833800", "fetched": true, "supports": "Moral disapproval predicted perceived addiction a year later (r=0.46, 0.61); use itself inconclusive (r=0.13, 0.11)." },
+      { "id": "r7", "cite": "Grubbs JB, Perry SL (2019). Moral incongruence and pornography use: a critical review and integration. Journal of Sex Research 56:29-37.", "kind": "review", "doi": "10.1080/00224499.2018.1427204", "pmid": "29412013", "url": "https://europepmc.org/article/MED/29412013", "fetched": true, "supports": "Moral incongruence linked to more porn distress, general psychological distress, and perceived addiction." },
+      { "id": "r8", "cite": "Grubbs JB, Gola M (2019). Is pornography use related to erectile functioning? Results from cross-sectional and latent growth curve analyses. Journal of Sexual Medicine 16:111-125.", "kind": "study", "doi": "10.1016/j.jsxm.2018.11.004", "pmid": "30621919", "url": "https://europepmc.org/article/MED/30621919", "fetched": true, "supports": "No consistent link between use and ED; problematic use linked cross-sectionally; no longitudinal effect; no medical covariates." },
+      { "id": "r9", "cite": "Grubbs JB, Kraus SW, Perry SL (2019). Self-reported addiction to pornography in a nationally representative sample: the roles of use habits, religiousness, and moral incongruence. Journal of Behavioral Addictions 8:88-93.", "kind": "survey", "doi": "10.1556/2006.7.2018.134", "pmid": "30632378", "url": "https://europepmc.org/article/MED/30632378", "fetched": true, "supports": "N=2,075 US adults: about 11% of men, 3% of women agreed 'I am addicted to pornography'." },
+      { "id": "r10", "cite": "Dickenson JA, Gleason N, Coleman E, Miner MH (2018). Prevalence of distress associated with difficulty controlling sexual urges, feelings, and behaviors in the United States. JAMA Network Open 1:e184468.", "kind": "survey", "doi": "10.1001/jamanetworkopen.2018.4468", "pmid": "30646355", "url": "https://europepmc.org/article/MED/30646355", "fetched": true, "supports": "National sample, 2,325 adults: 10.3% of men, 7.0% of women above CSBI-13 clinical cut-off." },
+      { "id": "r11", "cite": "Solano I, Eaton NR, O'Leary KD (2020). Pornography consumption, modality and function in a large internet sample. Journal of Sex Research 57:92-103.", "kind": "survey", "doi": "10.1080/00224499.2018.1532488", "pmid": "30358432", "url": "https://europepmc.org/article/MED/30358432", "fetched": true, "supports": "1,392 US Mechanical Turk adults: 91.5% of men, 60.2% of women used porn in past month." },
+      { "id": "r12", "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.", "kind": "trial", "doi": "10.1016/j.beth.2016.02.001", "pmid": "27157029", "url": "https://europepmc.org/article/MED/27157029", "fetched": true, "supports": "28 men (all but one LDS): 93% reduction ACT vs 21% waitlist; 35% complete cessation at 3 months." },
+      { "id": "r13", "cite": "Zimmer F, Imhoff R (2020). Abstinence from masturbation and hypersexuality. Archives of Sexual Behavior 49:1333-1343.", "kind": "survey", "doi": "10.1007/s10508-019-01623-8", "pmid": "32130561", "url": "https://europepmc.org/article/MED/32130561", "fetched": true, "supports": "1,063 Reddit users: abstinence motivation tied to attitudes, religiosity, low trust in science, not behavioural markers." },
+      { "id": "r14", "cite": "Bőthe B, Tóth-Király I, Demetrovics Z, Orosz G (2021). The short version of the Problematic Pornography Consumption Scale (PPCS-6): a reliable and valid measure in general and treatment-seeking populations. Journal of Sex Research 58:342-352.", "kind": "study", "doi": "10.1080/00224499.2020.1716205", "pmid": "31995398", "url": "https://europepmc.org/article/MED/31995398", "fetched": true, "supports": "Six-item PPCS-6 valid in community, porn-site and treatment-seeking samples; cutoff identified." },
+      { "id": "r15", "cite": "This repo (2026). Recovery testimonials synthesis. docs/research/recovery-testimonials/SYNTHESIS.md, Tier 2 item 8.", "kind": "other", "doi": "", "pmid": "", "url": "docs/research/recovery-testimonials/SYNTHESIS.md", "fetched": true, "supports": "Peer accounts: porn blockers 'work only when someone else holds the key'." },
+      { "id": "r16", "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2020). Short-term abstinence effects across potential behavioral addictions: a systematic review. Clinical Psychology Review 76:101828.", "kind": "review", "doi": "10.1016/j.cpr.2020.101828", "pmid": "32062303", "url": "https://europepmc.org/article/MED/32062303", "fetched": true, "supports": "47 studies: abstinence promising for gaming, porn, phone, social media; rebound effects not adequately assessed." }
+    ]
+  },
+  {
+    "id": "shopping",
+    "name": "Shopping (compulsive buying)",
+    "group": "behaviour",
+    "oneLiner": "About 1 in 20 adults (4.9%) show compulsive buying, and it is not only women: in one German clinic about a quarter of patients were men, who leaned towards electronics.",
+    "oneLinerRefs": ["r1", "r2"],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": false,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "ICD-11: compulsive buying-shopping disorder is listed as an example under 6C7Y Other specified impulse control disorders, not as a standalone diagnosis; experts argue it fits addictive behaviours (6C5Y) better. DSM-5: not included.",
+      "classificationStatus": "recognised-other-disorder"
+    },
+    "safety": {
+      "level": "none",
+      "text": "No medical risk from cutting back. The harm is money and home life: buying-shopping disorder comes with financial problems, family conflict and guilt after buying.",
+      "refs": ["r6"]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "This time it'll look good. I need it.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "In buying-shopping disorder, urges to buy feel irresistible, buying is followed by guilt and regret, and efforts to stop keep failing even when the person sees the pattern.",
+        "refs": ["r6"],
+        "beliefSource": "recovery-testimonials/16-uncovered-vices.md; quote 16-011 in src/vice/data/testimonials.ts (u/LaunaStarfall: 'but this time around it'll look cute....right??')"
+      },
+      {
+        "voice": "Waiting a day doesn't work for me.",
+        "kind": "quitting-wont-work",
+        "verdict": "true-but",
+        "science": "In a randomised trial of 60 patients, 12 weekly group CBT sessions, built to interrupt buying and set healthy buying patterns, beat a waitlist, and the gains held at 6 months.",
+        "refs": ["r5"],
+        "beliefSource": "recovery-testimonials/16-uncovered-vices.md; quote 16-013 in src/vice/data/testimonials.ts (u/DiligentStrawberry47: 'waiting a day or two or weeks doesn't matter in my case')"
+      },
+      {
+        "voice": "I can't stop buying. Everyone has to shop.",
+        "kind": "cant-stop",
+        "verdict": "true-but",
+        "science": "True, so the goal is not zero. Treatment aims at healthy buying patterns and control over the urge, not at giving up shopping.",
+        "refs": ["r5"],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Shopping addiction is a women's thing.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Being young and female predicts it, but men get it too: 26.2% of 141 patients at a German clinic were men, and they bought electronics more often than the women did.",
+        "refs": ["r1", "r2"],
+        "beliefSource": "Tetzlaff et al. 2026 (r2): earlier research described the typical patient as female"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Group CBT aimed at buying",
+        "evidence": "weak",
+        "note": "The most researched and most promising option, with one randomised trial holding at 6 months; reviews say study quality is poor overall.",
+        "refs": ["r5", "r4", "r3"]
+      },
+      {
+        "what": "Medication, through a doctor",
+        "evidence": "weak",
+        "note": "Large effects in some studies, undermined by poor study quality and likely publication bias.",
+        "refs": ["r4"]
+      },
+      {
+        "what": "Friction on online buying: saved cards deleted, shop apps removed, marketing unsubscribed",
+        "evidence": "weak",
+        "note": "Untested. Most people with the disorder shop online, yet no treatment study has addressed online shopping.",
+        "refs": ["r3"]
+      }
+    ],
+    "numbers": [
+      { "stat": "Pooled prevalence of compulsive buying: 4.9% in representative adult studies, 8.3% in university students.", "refs": ["r1"] },
+      { "stat": "A 2025 Swiss national survey found 13.6% of regular shoppers screened as problematic, with a new brief screen of limited validity.", "refs": ["r9"] }
+    ],
+    "screener": {
+      "name": "Bergen Shopping Addiction Scale (BSAS)",
+      "items": 7,
+      "freeToUse": "yes",
+      "url": "https://doi.org/10.3389/fpsyg.2015.01374",
+      "refs": ["r7"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "Any measured withdrawal, craving or mood course after cutting back.", "why": "None found. Shopping is not among the six behaviours covered by the Fernandez, Kuss & Griffiths 2020 abstinence review." },
+      { "block": "timeline", "wanted": "A graphic for a behaviour that cannot stop at zero.", "why": "canFullyAbstain is false, so a withdrawal curve is the wrong picture. The page goal is reshaping (planned buying under a set budget); no study gives a timeline for that either." },
+      { "block": "axes.classification", "wanted": "A fetched source for 'DSM-5: not included'.", "why": "Stated from general knowledge; no fetched page says it directly." },
+      { "block": "beliefs", "wanted": "Science on 'small purchases don't count' (quote 16-012).", "why": "No study on how small purchases add up in buying disorder found." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Maraz A, Griffiths MD, Demetrovics Z (2016). The prevalence of compulsive buying: a meta-analysis. Addiction 111:408-419.", "kind": "review", "doi": "10.1111/add.13223", "pmid": "26517309", "url": "https://europepmc.org/article/MED/26517309", "fetched": true, "supports": "Pooled prevalence 4.9% in representative adult studies, 8.3% in students; young and female associated." },
+      { "id": "r2", "cite": "Tetzlaff BO, Bogel T, Thomas TA, Laskowski NM, Müller A (2026). Exploring differences between women and men in treatment-seeking patients with compulsive buying-shopping disorder. Scientific Reports 16:8254.", "kind": "study", "doi": "10.1038/s41598-026-43027-4", "pmid": "41781672", "url": "https://europepmc.org/article/MED/41781672", "fetched": true, "supports": "141 patients, 73.8% women; men preferred electronics; CBSD listed as example in ICD-11 6C7Y." },
+      { "id": "r3", "cite": "Müller A, Trotzke P, Schaar P, Thomas TA, Georgiadou E, Steins-Loeber S (2025). Psychotherapy research for compulsive buying-shopping disorder: quo vadis? Addictive Behaviors Reports 21:100591.", "kind": "review", "doi": "10.1016/j.abrep.2025.100591", "pmid": "40094143", "url": "https://europepmc.org/article/MED/40094143", "fetched": true, "supports": "CBT most researched and helpful; studies flawed; online shopping not addressed in any treatment study." },
+      { "id": "r4", "cite": "Hague B, Hall J, Kellett S (2016). Treatments for compulsive buying: a systematic review of the quality, effectiveness and progression of the outcome evidence. Journal of Behavioral Addictions 5:379-394.", "kind": "review", "doi": "10.1556/2006.5.2016.064", "pmid": "27640529", "url": "https://europepmc.org/article/MED/27640529", "fetched": true, "supports": "29 studies, 5 high quality; group psychotherapy most promising; effects undermined by poor quality." },
+      { "id": "r5", "cite": "Mueller A, Mueller U, Silbermann A, et al. (2008). A randomized, controlled trial of group cognitive-behavioral therapy for compulsive buying disorder: posttreatment and 6-month follow-up results. Journal of Clinical Psychiatry 69:1131-1138.", "kind": "trial", "doi": "10.4088/jcp.v69n0713", "pmid": "18557665", "url": "https://europepmc.org/article/MED/18557665", "fetched": true, "supports": "60 patients: 12-week group CBT beat waitlist; improvement maintained at 6 months; aimed at healthy purchasing." },
+      { "id": "r6", "cite": "Müller A, Brand M, Claes L, et al. (2019). Buying-shopping disorder: is there enough evidence to support its inclusion in ICD-11? CNS Spectrums 24:374-379.", "kind": "review", "doi": "10.1017/s1092852918001323", "pmid": "30604662", "url": "https://europepmc.org/article/MED/30604662", "fetched": true, "supports": "Irresistible urges, failed efforts to stop, post-purchase guilt, financial problems, familial discord." },
+      { "id": "r7", "cite": "Andreassen CS, Griffiths MD, Pallesen S, Bilder RM, Torsheim T, Aboujaoude E (2015). The Bergen Shopping Addiction Scale: reliability and validity of a brief screening test. Frontiers in Psychology 6:1374.", "kind": "study", "doi": "10.3389/fpsyg.2015.01374", "pmid": "26441749", "url": "https://europepmc.org/article/MED/26441749", "fetched": true, "supports": "Seven items; CC BY article; 'may be freely used by researchers'; tentative cutoff 3+ on four items." },
+      { "id": "r8", "cite": "Brand M, Rumpf HJ, Demetrovics Z, et al. (2022). Which conditions should be considered as disorders in the ICD-11 designation of 'other specified disorders due to addictive behaviors'? Journal of Behavioral Addictions 11:150-159.", "kind": "review", "doi": "10.1556/2006.2020.00035", "pmid": "32634114", "url": "https://europepmc.org/article/MED/32634114", "fetched": true, "supports": "Backs axes.classification: buying-shopping, porn, social-network use discussed as possible 6C5Y addictive behaviours." },
+      { "id": "r9", "cite": "Mader S, Marmet S (2026). The Problematic Behaviour Scale (PBS-5): a brief measure for the population-level screening of non-substance-bound addictive behaviours and Swiss national prevalence rates. Journal of Behavioral Addictions 15:209-229.", "kind": "survey", "doi": "10.1556/2006.2025.00120", "pmid": "41860608", "url": "https://europepmc.org/article/MED/41860608", "fetched": true, "supports": "Swiss 2025: problematic shopping 13.6% of regular users; scale's classification quality limited." }
+    ]
+  },
+  {
+    "id": "social-media-phones",
+    "name": "Social media and phones",
+    "group": "behaviour",
+    "oneLiner": "In a randomised experiment, economists estimated that self-control problems drive 31% of social media use.",
+    "oneLinerRefs": ["r5"],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": false,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Not a diagnosis in DSM-5 or ICD-11. Experts name problematic social-network use as a candidate for ICD-11 6C5Y, 'other specified disorders due to addictive behaviours'.",
+      "classificationStatus": "proposed"
+    },
+    "safety": {
+      "level": "none",
+      "text": "No medical danger from cutting back. In a 24-hour phone-free test, only craving rose; mood and anxiety did not change.",
+      "refs": ["r1"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      { "track": "craving", "label": "Craving for the phone", "startH": 0, "peakH": 24, "endH": 24, "peakIntensity": 2, "note": "One 24-hour phone-free study, measured on four occasions: craving rose; mood and anxiety did not. No data past 24 h.", "refs": ["r1"] },
+      { "track": "mood-sleep", "label": "Mood during a social media break", "startH": 0, "peakH": 0, "endH": 168, "peakIntensity": 1, "note": "Pooled trials: breaks under a week left mood slightly worse (d = -0.175); a week or longer, slightly better (d = 0.156). Another meta-analysis of 10 studies found no effect. When in the week it turns is unmeasured.", "refs": ["r2", "r3"] }
+    ],
+    "markers": [
+      { "atH": 168, "kind": "milestone", "label": "1 week: pooled breaks this long or longer show a small mood benefit", "refs": ["r2"] },
+      { "atH": 504, "kind": "milestone", "label": "3 weeks at about 30 minutes a day: less loneliness and depression in one student trial", "refs": ["r6"] },
+      { "atH": 672, "kind": "milestone", "label": "4 weeks off Facebook: higher well-being, and use stayed lower afterwards", "refs": ["r4"] }
+    ],
+    "beliefs": [
+      {
+        "voice": "I'll reinstall it just to check one thing.",
+        "kind": "can-moderate",
+        "verdict": "mostly-false",
+        "science": "In a randomised experiment, people were partly unaware of their own self-control problems, which were estimated to cause 31% of social media use, and short-term cutbacks changed later use, a sign of habit.",
+        "refs": ["r5"],
+        "beliefSource": "recovery-testimonials/16-uncovered-vices.md; quote 16-014 in src/vice/data/testimonials.ts (u/hozajkr: 'a little excuse to catch up w something my friends sent me')"
+      },
+      {
+        "voice": "Without my phone I'll be anxious and miserable.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "A 24-hour phone break raised craving but not anxiety or low mood. Social media breaks under a week can leave mood slightly worse; a week or longer, slightly better on average.",
+        "refs": ["r1", "r2"],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Everyone's on it. This is just normal life now.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Heavy use is common and it is not an official diagnosis. Addiction-level use is a minority: 5% under strict criteria, 25% under loose ones, pooled across 32 nations.",
+        "refs": ["r7", "r9", "r10"],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Limits never work for me.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "In a randomised experiment, letting people set limits on their future screen time substantially reduced use, and temporary incentives to cut back had lasting effects.",
+        "refs": ["r5"],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Set limits in advance: screen-time limits and app timers you commit to",
+        "evidence": "moderate",
+        "note": "One large randomised experiment: self-set limits substantially reduced use.",
+        "refs": ["r5"]
+      },
+      {
+        "what": "Breaks of at least a week, not a weekend",
+        "evidence": "moderate",
+        "note": "Four weeks off Facebook raised well-being in a large trial. But the science disagrees: one pooled analysis finds benefit only from a week up, another finds no mood effect at all.",
+        "refs": ["r4", "r2", "r3", "r11"]
+      },
+      {
+        "what": "Cut to about 30 minutes a day rather than to zero",
+        "evidence": "weak",
+        "note": "One 3-week trial in 143 students: limiting to 10 minutes per platform cut loneliness and depression. Not fetched in this pass.",
+        "refs": ["r6"]
+      }
+    ],
+    "numbers": [
+      { "stat": "Social media addiction across 32 nations: 5% with strict criteria, 13% with severe-level cut-offs, 25% with moderate-level cut-offs.", "refs": ["r7"] },
+      { "stat": "A 2025 Swiss national survey found 27.7% of regular social media users screened as problematic, with a new brief screen of limited validity.", "refs": ["r12"] }
+    ],
+    "screener": {
+      "name": "Smartphone Addiction Scale – Short Version (SAS-SV)",
+      "items": 10,
+      "freeToUse": "yes",
+      "url": "https://doi.org/10.1371/journal.pone.0083558",
+      "refs": ["r8"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "Phone craving and mood beyond 24 hours, and the day within the first week when a social media break turns from worse to better.", "why": "Not measured. The 24-hour study is the only phone-specific one; the one-week split comes from a reanalysis that grouped studies as under or over a week." },
+      { "block": "timeline", "wanted": "A graphic for a behaviour that cannot stop at zero.", "why": "canFullyAbstain is false, so the goal is a set limit; the graph could show use against a chosen limit. No study gives a timeline for that." },
+      { "block": "screener", "wanted": "Bergen Social Media Addiction Scale (BSMAS, 6 items) licence.", "why": "Published by APA in Psychology of Addictive Behaviors; no licence statement found. SAS-SV used instead (CC BY), but it was validated in Korean adolescents (mean age 14.5)." },
+      { "block": "whatWorks", "wanted": "Hunt et al. 2018 checked against its text.", "why": "Abstract not fetched; claim from search summaries only." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Wilcockson TDW, Osborne AM, Ellis DA (2019). Digital detox: the effect of smartphone abstinence on mood, anxiety, and craving. Addictive Behaviors 99:106013.", "kind": "study", "doi": "10.1016/j.addbeh.2019.06.002", "pmid": "31430621", "url": "https://europepmc.org/article/MED/31430621", "fetched": true, "supports": "24-hour smartphone abstinence: only craving affected; mood and anxiety not." },
+      { "id": "r2", "cite": "Thrul J, Devkota J, AlJuboori D, Regan T, Alomairah S, Vidal C (2025). Social media reduction or abstinence interventions are providing mental health benefits: reanalysis of a published meta-analysis. Psychology of Popular Media 14:207-209.", "kind": "review", "doi": "10.1037/ppm0000574", "pmid": "40453192", "url": "https://europepmc.org/article/MED/40453192", "fetched": true, "supports": "Breaks under 1 week: worse mental health (d=-0.175); 1 week or longer: better (d=0.156)." },
+      { "id": "r3", "cite": "Lemahieu L, Vander Zwalmen Y, Mennes M, Koster EHW, Vanden Abeele MMP, Poels K (2025). The effects of social media abstinence on affective well-being and life satisfaction: a systematic review and meta-analysis. Scientific Reports 15:7581.", "kind": "review", "doi": "10.1038/s41598-025-90984-3", "pmid": "40038410", "url": "https://europepmc.org/article/MED/40038410", "fetched": true, "supports": "10 studies, N=4,674: no significant effect of abstinence on positive affect, negative affect, life satisfaction." },
+      { "id": "r4", "cite": "Allcott H, Braghieri L, Eichmeyer S, Gentzkow M (2019). The welfare effects of social media. NBER Working Paper 25514 (published American Economic Review 2020).", "kind": "trial", "doi": "10.3386/w25514", "pmid": "", "url": "https://www.nber.org/papers/w25514", "fetched": true, "supports": "Four weeks' Facebook deactivation raised subjective well-being and caused large persistent reduction in later use." },
+      { "id": "r5", "cite": "Allcott H, Gentzkow M, Song L (2021). Digital addiction. NBER Working Paper 28936 (published American Economic Review 2022).", "kind": "trial", "doi": "10.3386/w28936", "pmid": "", "url": "https://www.nber.org/papers/w28936", "fetched": true, "supports": "Self-set limits substantially reduce use; habit forming; self-control problems cause 31% of social media use." },
+      { "id": "r6", "cite": "Hunt MG, Marx R, Lipson C, Young J (2018). No more FOMO: limiting social media decreases loneliness and depression. Journal of Social and Clinical Psychology 37:751-768.", "kind": "trial", "doi": "10.1521/jscp.2018.37.10.751", "pmid": "", "url": "https://doi.org/10.1521/jscp.2018.37.10.751", "fetched": false, "supports": "143 students, 3 weeks at 10 minutes per platform: loneliness and depression fell vs controls." },
+      { "id": "r7", "cite": "Cheng C, Lau YC, Chan L, Luk JW (2021). Prevalence of social media addiction across 32 nations: meta-analysis with subgroup analysis of classification schemes and cultural values. Addictive Behaviors 117:106845.", "kind": "review", "doi": "10.1016/j.addbeh.2021.106845", "pmid": "33550200", "url": "https://europepmc.org/article/MED/33550200", "fetched": true, "supports": "63 samples, 34,798 people: 5% strict, 13% severe cut-off, 25% moderate cut-off." },
+      { "id": "r8", "cite": "Kwon M, Kim DJ, Cho H, Yang S (2013). The smartphone addiction scale: development and validation of a short version for adolescents. PLoS ONE 8:e83558.", "kind": "study", "doi": "10.1371/journal.pone.0083558", "pmid": "24391787", "url": "https://europepmc.org/article/MED/24391787", "fetched": true, "supports": "10-item SAS-SV, CC BY article; cut-offs 31 boys, 33 girls; 540 Korean adolescents." },
+      { "id": "r9", "cite": "Brand M, Rumpf HJ, Demetrovics Z, et al. (2022). Which conditions should be considered as disorders in the ICD-11 designation of 'other specified disorders due to addictive behaviors'? Journal of Behavioral Addictions 11:150-159.", "kind": "review", "doi": "10.1556/2006.2020.00035", "pmid": "32634114", "url": "https://europepmc.org/article/MED/32634114", "fetched": true, "supports": "Social-network use not a specific ICD-11 disorder; may fit 6C5Y 'other specified'." },
+      { "id": "r10", "cite": "Petry NM, Rehbein F, Gentile DA, et al. (2014). An international consensus for assessing internet gaming disorder using the new DSM-5 approach. Addiction 109:1399-1406.", "kind": "review", "doi": "10.1111/add.12457", "pmid": "24456155", "url": "https://europepmc.org/article/MED/24456155", "fetched": true, "supports": "DSM-5 included internet gaming disorder in the appendix, but not internet addiction more globally." },
+      { "id": "r11", "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2020). Short-term abstinence effects across potential behavioral addictions: a systematic review. Clinical Psychology Review 76:101828.", "kind": "review", "doi": "10.1016/j.cpr.2020.101828", "pmid": "32062303", "url": "https://europepmc.org/article/MED/32062303", "fetched": true, "supports": "Short-term abstinence promising for phone and social media use; rebound effects not adequately assessed." },
+      { "id": "r12", "cite": "Mader S, Marmet S (2026). The Problematic Behaviour Scale (PBS-5): a brief measure for the population-level screening of non-substance-bound addictive behaviours and Swiss national prevalence rates. Journal of Behavioral Addictions 15:209-229.", "kind": "survey", "doi": "10.1556/2006.2025.00120", "pmid": "41860608", "url": "https://europepmc.org/article/MED/41860608", "fetched": true, "supports": "Swiss 2025: problematic social media use 27.7% of regular users; limited classification quality." }
+    ]
+  },
+  {
+    "id": "dating-apps",
+    "name": "Dating apps",
+    "group": "behaviour",
+    "oneLiner": "In a test with planted Tinder profiles, the male profiles matched with 0.6% of the people they liked; the female profiles matched with 10.5%.",
+    "oneLinerRefs": ["r1"],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Not a diagnosis in DSM-5 or ICD-11. 'Dating app addiction' is a debated research idea.",
+      "classificationStatus": "not-recognised"
+    },
+    "safety": {
+      "level": "none",
+      "text": "No withdrawal risk. Users report harassment and scams on dating platforms; never send money to someone you have only met online.",
+      "refs": ["r2"]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "No matches means something is wrong with me.",
+        "kind": "identity",
+        "verdict": "mostly-false",
+        "science": "Low match rates are normal for men on apps: 64% of male users felt insecure about too few messages, against 40% of women. In one test, male profiles matched with 0.6% of their likes.",
+        "refs": ["r2", "r1"],
+        "beliefSource": "Pew Research Center 2023 (r2): 64% of men using apps felt insecure about the lack of messages"
+      },
+      {
+        "voice": "If I delete the apps, I'll never meet anyone.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "Meeting online became the most common way US straight couples met around 2013. Yet only one in ten partnered US adults met their partner on a dating site or app, one in five under 30.",
+        "refs": ["r3", "r2"],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Swiping is harmless fun.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "About half of users (53%) call their experience positive. Users also report more distress and depression than non-users, worse with heavier use, but these are one-off surveys, so cause is unknown.",
+        "refs": ["r2", "r4", "r5"],
+        "beliefSource": "Pew Research Center 2023 (r2): 53% of users say their experience was at least somewhat positive"
+      },
+      {
+        "voice": "If I swipe more, I'll get more dates.",
+        "kind": "can-moderate",
+        "verdict": "true-but",
+        "science": "More likes bring more matches, but men already like far more profiles than women. The study's authors suggest a loop: men match rarely so swipe more freely, and women, flooded with matches, grow pickier.",
+        "refs": ["r1"],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Time limits and notifications off",
+        "evidence": "weak",
+        "note": "Untested for dating apps. Borrowed from social media, where self-set limits cut use in a randomised experiment.",
+        "refs": ["r7"]
+      },
+      {
+        "what": "Meet people offline as well",
+        "evidence": "weak",
+        "note": "No trial. But nine in ten partnered US adults met their partner some way other than a dating site or app.",
+        "refs": ["r2"]
+      }
+    ],
+    "numbers": [
+      { "stat": "55% of recent dating-app users felt insecure about the lack of messages: 64% of men vs 40% of women (US survey of 6,034 adults, July 2022).", "refs": ["r2"] },
+      { "stat": "30% of US adults have ever used a dating site or app; one in ten partnered adults met their partner on one.", "refs": ["r2"] },
+      { "stat": "Swipe-app users had 2.51 times the odds of psychological distress of non-users (cross-sectional survey, 437 people).", "refs": ["r4"] }
+    ],
+    "screener": {
+      "name": "Problematic Tinder Use Scale (PTUS)",
+      "items": 6,
+      "freeToUse": "unclear",
+      "url": "https://doi.org/10.1556/2006.5.2016.016",
+      "refs": ["r6"]
+    },
+    "placeholders": [
+      { "block": "timeline", "wanted": "Anything measured after deleting or pausing dating apps.", "why": "No break or abstinence study found. A 2025 systematic review: of 32 studies, 3 were experiments and every survey was a one-time snapshot." },
+      { "block": "whatWorks", "wanted": "A tested intervention for problematic dating-app use.", "why": "None found." },
+      { "block": "axes.canFullyAbstain", "wanted": "Owner's call on the page goal.", "why": "Set true: the apps can be deleted. Meeting women cannot be given up, so the page is about reshaping how he meets people, not quitting." },
+      { "block": "screener", "wanted": "Permission to reproduce PTUS items.", "why": "The PTUS article is CC BY-NC, non-commercial only; the site is a paid product. Link to it; do not copy the items without the authors' permission." },
+      { "block": "refs", "wanted": "Bonilla-Zorita, Griffiths & Kuss 2021 systematic review (Int J Ment Health Addict 19:2245-2278, doi 10.1007/s11469-020-00318-9).", "why": "Found by search, not fetched; no claim rests on it." }
+    ],
+    "refs": [
+      { "id": "r1", "cite": "Tyson G, Perta VC, Haddadi H, Seto MC (2016). A first look at user activity on Tinder. arXiv:1607.01952.", "kind": "study", "doi": "", "pmid": "", "url": "https://ar5iv.labs.arxiv.org/html/1607.01952", "fetched": true, "supports": "14 planted profiles, London and New York: male profiles matched 0.6% of likes, female 10.5%; feedback-loop hypothesis." },
+      { "id": "r2", "cite": "Pew Research Center (2023). From looking for love to swiping the field: online dating in the U.S. Survey of 6,034 US adults, July 5-17, 2022.", "kind": "survey", "doi": "", "pmid": "", "url": "https://www.pewresearch.org/internet/2023/02/02/from-looking-for-love-to-swiping-the-field-online-dating-in-the-u-s/", "fetched": true, "supports": "30% ever used; 1 in 10 partnered met online (20% under 30); insecure 64% men, 40% women; 53% positive." },
+      { "id": "r3", "cite": "Rosenfeld MJ, Thomas RJ, Hausen S (2019). Disintermediating your friends: how online dating in the United States displaces other ways of meeting. PNAS 116:17753-17758.", "kind": "survey", "doi": "10.1073/pnas.1908630116", "pmid": "31431531", "url": "https://europepmc.org/article/MED/31431531", "fetched": true, "supports": "2017 national survey: meeting online became most popular for heterosexual couples, eclipsing friends around 2013." },
+      { "id": "r4", "cite": "Holtzhausen N, Fitzgerald K, Thakur I, Ashley J, Rolfe M, Pit SW (2020). Swipe-based dating applications use and its association with mental health outcomes: a cross-sectional study. BMC Psychology 8:22.", "kind": "survey", "doi": "10.1186/s40359-020-0373-1", "pmid": "32127048", "url": "https://europepmc.org/article/MED/32127048", "fetched": true, "supports": "437 people: users' distress OR 2.51, depression OR 1.91; more use, more distress; cross-sectional." },
+      { "id": "r5", "cite": "Thomas MF, Dörfler S, Mittmann G, Steiner-Hofbauer V (2025). Problematic online dating: systematic review of definitions, correlates, and study designs. Journal of Medical Internet Research 27:e72850.", "kind": "review", "doi": "10.2196/72850", "pmid": "40608479", "url": "https://europepmc.org/article/MED/40608479", "fetched": true, "supports": "Dating app addiction debated; 32 studies, 3 experiments, all surveys cross-sectional; scales conflate use and harm." },
+      { "id": "r6", "cite": "Orosz G, Tóth-Király I, Bőthe B, Melher D (2016). Too many swipes for today: the development of the Problematic Tinder Use Scale (PTUS). Journal of Behavioral Addictions 5:518-523.", "kind": "study", "doi": "10.1556/2006.5.2016.016", "pmid": "27415602", "url": "https://europepmc.org/article/MED/27415602", "fetched": true, "supports": "Six-item PTUS reliable in 430 Tinder users; article licensed CC BY-NC." },
+      { "id": "r7", "cite": "Allcott H, Gentzkow M, Song L (2021). Digital addiction. NBER Working Paper 28936 (published American Economic Review 2022).", "kind": "trial", "doi": "10.3386/w28936", "pmid": "", "url": "https://www.nber.org/papers/w28936", "fetched": true, "supports": "Allowing people to set limits on future screen time substantially reduced social media use." }
+    ]
+  }
+]

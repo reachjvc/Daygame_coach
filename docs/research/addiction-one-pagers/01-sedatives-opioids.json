@@ -1,0 +1,2099 @@
+[
+  {
+    "id": "heroin-fentanyl",
+    "name": "Heroin and fentanyl (street opioids)",
+    "group": "substance",
+    "oneLiner": "Leaving methadone treatment was linked to about three times the death rate of staying on it: 36.1 versus 11.3 deaths per 1,000 person-years.",
+    "oneLinerRefs": [
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "severe",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": true,
+      "classification": "DSM-5: opioid use disorder. ICD-11: 6C43 disorders due to use of opioids (code not verified against the WHO browser this pass).",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "danger",
+      "text": "Coming back after a break is where death risk concentrates: after prison, rehab or a detox, tolerance is gone, and the first two weeks back carry 3 to 8 times the drug-death risk of the weeks after. Fentanyl makes every dose a gamble. Keep naloxone where others can reach it, and do not use alone.",
+      "refs": [
+        "r3",
+        "r8",
+        "r10"
+      ]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Acute withdrawal: aches, cramps, sweats, runny nose, diarrhoea, vomiting, gooseflesh",
+        "startH": 12,
+        "peakH": 48,
+        "endH": 168,
+        "peakIntensity": 4,
+        "note": "Short-acting opioids (heroin): starts within about 12 h of a missed dose, peaks at 36-72 h (48 h drawn as a midpoint), eases over the next 4-7 days. Overall 5-14 days depending on half-life. Methadone: milder but can last 2 weeks or more; buprenorphine: milder, similar length.",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Anxiety, restlessness, irritability, insomnia",
+        "startH": 12,
+        "peakH": 48,
+        "endH": 168,
+        "peakIntensity": 4,
+        "note": "Listed among acute withdrawal symptoms; the source gives no separate time course for mood and sleep, so the acute window is reused. Months-long low mood and poor sleep: see placeholders.",
+        "refs": [
+          "r4"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 24,
+        "kind": "trap",
+        "label": "Buprenorphine taken within 24 h of fentanyl: 5.2 times the odds of severe (precipitated) withdrawal",
+        "refs": [
+          "r5"
+        ]
+      },
+      {
+        "atH": 48,
+        "kind": "trap",
+        "label": "24-48 h after fentanyl the odds are still 3.4 times higher; methadone showed no such effect",
+        "refs": [
+          "r5"
+        ]
+      },
+      {
+        "atH": 48,
+        "kind": "peak",
+        "label": "Worst of the physical withdrawal: 36-72 h",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "atH": 175,
+        "kind": "milestone",
+        "label": "Fentanyl took a mean 7.3 days to clear urine (one person 19 days) in 12 people in residential treatment",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "atH": 336,
+        "kind": "danger",
+        "label": "After a break (prison, rehab), weeks 1-2 back carry 3-8 times the drug-death risk of weeks 3-12. Counted from release, not from last use.",
+        "refs": [
+          "r3",
+          "r2"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "Methadone is just swapping one drug for another.",
+        "kind": "identity",
+        "verdict": "mostly-false",
+        "science": "It replaces a street drug with a dosed medicine, and that keeps people alive: across 19 cohorts, deaths were 11.3 per 1,000 person-years on methadone and 36.1 off it.",
+        "refs": [
+          "r1"
+        ],
+        "beliefSource": "06-opioids-stimulants.md sections 4-5: verbatim 'I know it's drug replacement but it's the only thing that gives me a sense of normalcy' (r/OpiatesRecovery); findings from PMC13060028 ('replacing one drug for another') and PMC9394166 ('legal heroin')."
+      },
+      {
+        "voice": "I'll do a detox, get clean, and that's it.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "A detox removes tolerance but rarely ends use. In one London follow-up, all three overdose deaths after inpatient detox were in the group that completed it. Mortality rises in the weeks after leaving treatment.",
+        "refs": [
+          "r2",
+          "r1"
+        ],
+        "beliefSource": "06-opioids-stimulants.md section 5.1: family pressure to come off methadone, then relapse (verbatim, r/OpiatesRecovery); PMC11157918: 'It just felt like I'd wasted that time coming off the methadone.'"
+      },
+      {
+        "voice": "I've been clean for months. I know my dose.",
+        "kind": "can-moderate",
+        "verdict": "false",
+        "science": "The old dose no longer matches your tolerance. Across six prison systems, drug-related death risk in the first two weeks after release was 3 to 8 times that of weeks 3 to 12.",
+        "refs": [
+          "r3"
+        ],
+        "beliefSource": "06-opioids-stimulants.md section 3: 'Because obviously I was clean and I didnae realise how clean I was, know what I mean, the high risk.' (PMC11157918, verbatim-attested)."
+      },
+      {
+        "voice": "Suboxone will throw me straight into hell withdrawal.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "It can, if taken too soon after fentanyl: severe withdrawal odds rose about fivefold within 24 hours. But in hospital starts only 11.5% had precipitated withdrawal (16.3% with confirmed fentanyl), and methadone did not cause it.",
+        "refs": [
+          "r5",
+          "r6"
+        ],
+        "beliefSource": "06-opioids-stimulants.md section 3 (findings only, PMC10039575): people refuse to carry naloxone for fear of being revived into withdrawal. A study of the same fear about buprenorphine starts: not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Staying on methadone or buprenorphine long term",
+        "evidence": "strong",
+        "note": "Retention cuts all-cause and overdose deaths. The riskiest stretches are the first 4 weeks on methadone and the weeks after leaving either drug. WHO: agonist maintenance has the strongest evidence of effectiveness.",
+        "refs": [
+          "r1",
+          "r8"
+        ]
+      },
+      {
+        "what": "Naloxone carried by the people around you",
+        "evidence": "strong",
+        "note": "Reverses an opioid overdose if given in time; WHO recommends it for anyone likely to witness one. Being revived can mean instant withdrawal, which puts some people off carrying it.",
+        "refs": [
+          "r8",
+          "r10"
+        ]
+      },
+      {
+        "what": "A plan for the first weeks after any break",
+        "evidence": "moderate",
+        "note": "Prison, rehab and detox all drop tolerance. People leaving jail said starting medication only 2-3 days before release was too late; using alone right after release was named as the fatal combination.",
+        "refs": [
+          "r3",
+          "r10"
+        ]
+      },
+      {
+        "what": "Timing buprenorphine starts around fentanyl with a clinician",
+        "evidence": "moderate",
+        "note": "Severe precipitated withdrawal is more likely within 48 h of fentanyl use; methadone does not carry this effect.",
+        "refs": [
+          "r5",
+          "r6"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "About 125,000 people died of opioid overdose worldwide in 2019 (WHO estimate).",
+        "refs": [
+          "r8"
+        ]
+      },
+      {
+        "stat": "Overdose deaths: 2.6 per 1,000 person-years on methadone versus 12.7 off it (pooled cohorts, searched to 2016).",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "stat": "Drug-related death risk is 3 to 8 times higher in weeks 1-2 after prison release than in weeks 3-12 (6 studies, 69,093 person-years).",
+        "refs": [
+          "r3"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "TAPS Tool (part 1, NIDA Clinical Trials Network)",
+      "items": 4,
+      "freeToUse": "yes",
+      "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+      "refs": [
+        "r9",
+        "r11"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Protracted opioid withdrawal in humans (low mood, poor sleep, anhedonia over months)",
+        "why": "Searches returned only animal studies; the SAMHSA 2010 protracted-withdrawal advisory could not be downloaded (returned an HTML page)."
+      },
+      {
+        "block": "timeline",
+        "wanted": "Craving time course after stopping heroin or fentanyl",
+        "why": "No human study found this pass. Alcohol shows craving rising to day 60 (see alcohol entry); not assumed to transfer."
+      },
+      {
+        "block": "timeline",
+        "wanted": "When fentanyl withdrawal starts and peaks compared with heroin",
+        "why": "Only urine-clearance data (r7) was found; no study of fentanyl withdrawal onset or peak."
+      },
+      {
+        "block": "refs",
+        "wanted": "StatPearls 'Opioid Withdrawal' (Shah and Huecker) full text for a second timeline source",
+        "why": "NCBI Bookshelf, PubMed and PMC returned reCAPTCHA pages to automated fetching; only the abstract (no timings) came through Europe PMC."
+      },
+      {
+        "block": "refs",
+        "wanted": "Strang 2003 exact figures (137 patients; 3 overdose deaths, all in the lost-tolerance group)",
+        "why": "BMJ, PMC and the university repository all blocked fetching. Figures come from a search-engine summary, so r2 stays fetched:false."
+      },
+      {
+        "block": "screener",
+        "wanted": "DAST-10",
+        "why": "NIDA's screening-tool chart marks DAST-10 as a tool with associated fees (contact Dr Harvey Skinner). Not suitable without a licence."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Low-dose ('micro-dosing') buprenorphine starts for people using fentanyl",
+        "why": "Not searched this pass."
+      },
+      {
+        "block": "axes",
+        "wanted": "ICD-11 code confirmed in the WHO ICD-11 browser",
+        "why": "Browser not fetched; code taken from third-party coding sites."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Sordo L, Barrio G, Bravo MJ, et al. (2017). Mortality risk during and after opioid substitution treatment: systematic review and meta-analysis of cohort studies. BMJ.",
+        "kind": "review",
+        "doi": "10.1136/bmj.j1550",
+        "pmid": "28446428",
+        "url": "https://europepmc.org/article/MED/28446428",
+        "fetched": true,
+        "supports": "All-cause deaths 11.3 vs 36.1/1000 py in vs out of methadone; risk peaks at induction and after leaving"
+      },
+      {
+        "id": "r2",
+        "cite": "Strang J, McCambridge J, Best D, et al. (2003). Loss of tolerance and overdose mortality after inpatient opiate detoxification: follow up study. BMJ.",
+        "kind": "cohort",
+        "doi": "10.1136/bmj.326.7396.959",
+        "pmid": "12727768",
+        "url": "https://doi.org/10.1136/bmj.326.7396.959",
+        "fetched": false,
+        "supports": "137 detox inpatients; all 3 overdose deaths within 4 months were among those who lost tolerance"
+      },
+      {
+        "id": "r3",
+        "cite": "Merrall ELC, Kariminia A, Binswanger IA, et al. (2010). Meta-analysis of drug-related deaths soon after release from prison. Addiction.",
+        "kind": "review",
+        "doi": "10.1111/j.1360-0443.2010.02990.x",
+        "pmid": "20579009",
+        "url": "https://europepmc.org/article/MED/20579009",
+        "fetched": true,
+        "supports": "3- to 8-fold drug-death risk in weeks 1-2 vs weeks 3-12 after release; 69,093 person-years"
+      },
+      {
+        "id": "r4",
+        "cite": "Kosten TR, Baxter LE (2019). Review article: Effective management of opioid withdrawal symptoms: a gateway to opioid dependence treatment. American Journal on Addictions.",
+        "kind": "review",
+        "doi": "10.1111/ajad.12862",
+        "pmid": "30701615",
+        "url": "https://europepmc.org/article/PMC/PMC6590307",
+        "fetched": true,
+        "supports": "Short-acting: onset within 12 h, peak 36-72 h, eases over 4-7 days; methadone 2+ weeks"
+      },
+      {
+        "id": "r5",
+        "cite": "Varshneya NB, Thakrar AP, Hobelmann JG, Dunn KE, Huhn AS (2022). Evidence of buprenorphine-precipitated withdrawal in persons who use fentanyl. Journal of Addiction Medicine.",
+        "kind": "survey",
+        "doi": "10.1097/adm.0000000000000922",
+        "pmid": "34816821",
+        "url": "https://europepmc.org/article/MED/34816821",
+        "fetched": true,
+        "supports": "1,679 people, 49 US centres: severe withdrawal OR 5.2 within 24 h, 3.4 at 24-48 h; not with methadone"
+      },
+      {
+        "id": "r6",
+        "cite": "Thakrar AP, Christine PJ, Siaw-Asamoah A, et al. (2024). Buprenorphine-precipitated withdrawal among hospitalized patients using fentanyl. JAMA Network Open.",
+        "kind": "cohort",
+        "doi": "10.1001/jamanetworkopen.2024.35895",
+        "pmid": "39331392",
+        "url": "https://europepmc.org/article/MED/39331392",
+        "fetched": true,
+        "supports": "226 Philadelphia patients 2020-21: 11.5% precipitated withdrawal; 16.3% of those with confirmed fentanyl"
+      },
+      {
+        "id": "r7",
+        "cite": "Huhn AS, Hobelmann JG, Oyler GA, Strain EC (2020). Protracted renal clearance of fentanyl in persons with opioid use disorder. Drug and Alcohol Dependence.",
+        "kind": "study",
+        "doi": "10.1016/j.drugalcdep.2020.108147",
+        "pmid": "32650192",
+        "url": "https://europepmc.org/article/MED/32650192",
+        "fetched": true,
+        "supports": "N=12: fentanyl cleared urine in mean 7.3 days, norfentanyl 13.3; one person 19 days"
+      },
+      {
+        "id": "r8",
+        "cite": "World Health Organization (2023). Opioid overdose. Fact sheet.",
+        "kind": "other",
+        "url": "https://www.who.int/news-room/fact-sheets/detail/opioid-overdose",
+        "fetched": true,
+        "supports": "~125,000 opioid overdose deaths 2019; naloxone reverses overdose; agonist maintenance strongest evidence"
+      },
+      {
+        "id": "r9",
+        "cite": "NIDA Clinical Trials Network (2016-). TAPS Tool: Tobacco, Alcohol, Prescription medication, and other Substance use. CTN Dissemination Library.",
+        "kind": "other",
+        "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+        "fetched": true,
+        "supports": "4-item past-year screen incl. prescription misuse; self- or interviewer-administered; public domain"
+      },
+      {
+        "id": "r10",
+        "cite": "daygame-coach research corpus (2026). 06-opioids-stimulants.md, recovery-testimonials. Secondary: findings from PMC11265078, PMC10039575, PMC11157918.",
+        "kind": "other",
+        "url": "docs/research/recovery-testimonials/06-opioids-stimulants.md",
+        "fetched": false,
+        "supports": "Using alone after release named as fatal combination; fear of naloxone withdrawal; late jail MOUD starts"
+      },
+      {
+        "id": "r11",
+        "cite": "National Institute on Drug Abuse (n.d.). Chart of evidence-based screening tools and assessments for adults and adolescents.",
+        "kind": "other",
+        "url": "https://nida.nih.gov/nidamed-medical-health-professionals/screening-tools-resources/chart-screening-tools",
+        "fetched": true,
+        "supports": "DAST-10 flagged as a tool with associated fees; TAPS listed without fees"
+      }
+    ]
+  },
+  {
+    "id": "prescription-opioids",
+    "name": "Prescription opioid painkillers",
+    "group": "substance",
+    "oneLiner": "Among people on opioids for chronic pain, addiction averaged 8-12%; physical dependence is expected with long-term use and is not the same thing.",
+    "oneLinerRefs": [
+      "r1",
+      "r2"
+    ],
+    "axes": {
+      "withdrawal": "severe",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "often",
+      "overdoseRiskAfterBreak": true,
+      "classification": "DSM-5: opioid use disorder; tolerance and withdrawal do not count toward it when the opioid is taken solely under appropriate medical supervision. ICD-11: 6C43 (code not verified this pass).",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "danger",
+      "text": "Do not stop a long-term prescription suddenly or cut it fast. After tapers, emergency visits for overdose or withdrawal were 1.57 times and mental-health crises 1.52 times as frequent as before. CDC advises cuts of 10% a month or slower after a year or more of use. Keep naloxone at home.",
+      "refs": [
+        "r3",
+        "r4",
+        "r8"
+      ]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Acute withdrawal: aches, cramps, sweats, gut upset, gooseflesh",
+        "startH": 12,
+        "peakH": 48,
+        "endH": 168,
+        "peakIntensity": 4,
+        "note": "Short-acting opioids such as oxycodone and hydrocodone: within about 12 h, peak 36-72 h (48 h drawn), easing over 4-7 days. Methadone can run 2 weeks or more; buprenorphine is milder with similar length. On a slow taper, smaller bouts follow each cut.",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Anxiety, irritability, insomnia",
+        "startH": 12,
+        "peakH": 48,
+        "endH": 168,
+        "peakIntensity": 3,
+        "note": "Part of the acute symptom list; no separate time course in the source.",
+        "refs": [
+          "r2"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 48,
+        "kind": "peak",
+        "label": "Worst of the physical withdrawal: 36-72 h",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "atH": 1344,
+        "kind": "trap",
+        "label": "8 weeks after a buprenorphine taper ended, success fell to 8.6% (49.2% while on it)",
+        "refs": [
+          "r6"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "My doctor prescribed it, so it can't be addiction.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Partly right. Dependence and withdrawal are expected with long-term use and do not count as addiction under DSM-5. But across 38 chronic-pain studies, addiction averaged 8-12% and misuse 21-29%.",
+        "refs": [
+          "r2",
+          "r1"
+        ],
+        "beliefSource": "not sourced: no verified first-person quote or cognition study for this belief was found in this pass."
+      },
+      {
+        "voice": "If I come off, the pain will be unbearable.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "Evidence is very low quality but points one way: in fair-quality studies, pain, function and quality of life improved after dose reduction. CDC notes improvements after slow, voluntary reductions; fast cuts carry their own risks.",
+        "refs": [
+          "r5",
+          "r3"
+        ],
+        "beliefSource": "not sourced."
+      },
+      {
+        "voice": "A two-week taper and I'm done.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "In a 653-patient trial, a 2-week buprenorphine taper worked for 6.6%. During 12 weeks of treatment 49.2% did well; 8 weeks after tapering off, 8.6% still did.",
+        "refs": [
+          "r6"
+        ],
+        "beliefSource": "not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Buprenorphine maintenance once opioid use disorder has developed",
+        "evidence": "strong",
+        "note": "In the POATS trial of prescription-opioid patients, success was 49.2% during extended treatment versus 6.6% after a short taper.",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "what": "Slow, agreed tapers: 10% a month or slower after a year or more",
+        "evidence": "moderate",
+        "note": "CDC 2022. Slow or pause the taper if withdrawal appears. Abrupt stops are unlikely to be worth the risk unless there are warning signs of overdose.",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "what": "Naloxone kept at home",
+        "evidence": "moderate",
+        "note": "WHO recommends naloxone for anyone likely to witness an overdose.",
+        "refs": [
+          "r8"
+        ]
+      },
+      {
+        "what": "Interdisciplinary pain programmes and buprenorphine-assisted reduction",
+        "evidence": "weak",
+        "note": "Several intervention types may help people reduce; overall evidence quality very low.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "Addiction 8-12% and misuse 21-29% among chronic-pain patients prescribed opioids (38 studies).",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "stat": "After tapering from 50+ MME a day, overdose-or-withdrawal visits rose 1.57-fold and mental-health crises 1.52-fold, 12-24 months on (21,515 tapers, US claims 2008-2017).",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "stat": "POATS trial: 49.2% success on buprenorphine at week 12; 8.6% eight weeks after tapering off.",
+        "refs": [
+          "r6"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "TAPS Tool (part 1, NIDA Clinical Trials Network)",
+      "items": 4,
+      "freeToUse": "yes",
+      "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+      "refs": [
+        "r7"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "screener",
+        "wanted": "A screener for people taking opioids as prescribed (e.g. COMM, POMI)",
+        "why": "Licence and validity not checked. TAPS asks only about non-medical use, so a dependent patient taking it as prescribed may screen negative."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "Verified first-person quotes from prescription-opioid patients ('it's prescribed, so it's fine')",
+        "why": "The testimonial corpus (06) is mostly street opioids."
+      },
+      {
+        "block": "timeline",
+        "wanted": "Withdrawal timing for extended-release oxycodone, fentanyl patches and tramadol",
+        "why": "Not sourced this pass."
+      },
+      {
+        "block": "safety",
+        "wanted": "Whether tolerance loss itself explains the overdoses seen after tapers",
+        "why": "The taper cohort (r4) shows an association, not the mechanism; confounding is possible."
+      },
+      {
+        "block": "axes",
+        "wanted": "ICD-11 code confirmed in the WHO browser",
+        "why": "Not fetched."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Vowles KE, McEntee ML, Julnes PS, et al. (2015). Rates of opioid misuse, abuse, and addiction in chronic pain: a systematic review and data synthesis. Pain.",
+        "kind": "review",
+        "doi": "10.1097/01.j.pain.0000460357.01998.f1",
+        "pmid": "25785523",
+        "url": "https://europepmc.org/article/MED/25785523",
+        "fetched": true,
+        "supports": "38 studies: misuse averaged 21-29%, addiction 8-12%"
+      },
+      {
+        "id": "r2",
+        "cite": "Kosten TR, Baxter LE (2019). Review article: Effective management of opioid withdrawal symptoms. American Journal on Addictions.",
+        "kind": "review",
+        "doi": "10.1111/ajad.12862",
+        "pmid": "30701615",
+        "url": "https://europepmc.org/article/PMC/PMC6590307",
+        "fetched": true,
+        "supports": "Withdrawal timing; DSM-5 note; physical dependence without OUD in pain patients"
+      },
+      {
+        "id": "r3",
+        "cite": "Dowell D, Ragan KR, Jones CM, Baldwin GT, Chou R (2022). CDC Clinical Practice Guideline for Prescribing Opioids for Pain - United States, 2022. MMWR Recommendations and Reports.",
+        "kind": "guideline",
+        "doi": "10.15585/mmwr.rr7103a1",
+        "pmid": "36327391",
+        "url": "https://europepmc.org/article/PMC/PMC9639433",
+        "fetched": true,
+        "supports": "Do not stop abruptly; tapers of 10%/month or slower better tolerated after 1+ year"
+      },
+      {
+        "id": "r4",
+        "cite": "Fenton JJ, Magnan E, Tseregounis IE, et al. (2022). Long-term risk of overdose or mental health crisis after opioid dose tapering. JAMA Network Open.",
+        "kind": "cohort",
+        "doi": "10.1001/jamanetworkopen.2022.16726",
+        "pmid": "35696163",
+        "url": "https://europepmc.org/article/MED/35696163",
+        "fetched": true,
+        "supports": "aIRR 1.57 overdose/withdrawal, 1.52 mental-health crisis, 12-24 months after taper start"
+      },
+      {
+        "id": "r5",
+        "cite": "Frank JW, Lovejoy TI, Becker WC, et al. (2017). Patient outcomes in dose reduction or discontinuation of long-term opioid therapy: a systematic review. Annals of Internal Medicine.",
+        "kind": "review",
+        "doi": "10.7326/m17-0598",
+        "pmid": "28715848",
+        "url": "https://europepmc.org/article/MED/28715848",
+        "fetched": true,
+        "supports": "Very low quality: pain, function, quality of life improved after dose reduction"
+      },
+      {
+        "id": "r6",
+        "cite": "Weiss RD, Potter JS, Fiellin DA, et al. (2011). Adjunctive counseling during brief and extended buprenorphine-naloxone treatment for prescription opioid dependence (POATS). Archives of General Psychiatry.",
+        "kind": "trial",
+        "doi": "10.1001/archgenpsychiatry.2011.121",
+        "pmid": "22065255",
+        "url": "https://europepmc.org/article/MED/22065255",
+        "fetched": true,
+        "supports": "653 patients: 6.6% success after brief taper; 49.2% on extended treatment; 8.6% after taper"
+      },
+      {
+        "id": "r7",
+        "cite": "NIDA Clinical Trials Network (2016-). TAPS Tool: Tobacco, Alcohol, Prescription medication, and other Substance use. CTN Dissemination Library.",
+        "kind": "other",
+        "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+        "fetched": true,
+        "supports": "4-item past-year screen incl. prescription misuse; self- or interviewer-administered; public domain"
+      },
+      {
+        "id": "r8",
+        "cite": "World Health Organization (2023). Opioid overdose. Fact sheet.",
+        "kind": "other",
+        "url": "https://www.who.int/news-room/fact-sheets/detail/opioid-overdose",
+        "fetched": true,
+        "supports": "WHO recommends naloxone for people likely to witness an opioid overdose"
+      }
+    ]
+  },
+  {
+    "id": "kratom",
+    "name": "Kratom",
+    "group": "substance",
+    "oneLiner": "Kratom is a plant whose main alkaloid acts on opioid receptors; in a survey of 293 regular users in Malaysia, more than half had severe dependence.",
+    "oneLinerRefs": [
+      "r1",
+      "r3"
+    ],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": null,
+      "classification": "No named diagnosis. Assessed with DSM-5 substance use disorder criteria; 'kratom use disorder' is a proposed label. No specific ICD-11 code found.",
+      "classificationStatus": "proposed"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Leaf kratom withdrawal is usually mild to moderate. The bigger risks are mixing and concentrated 7-OH products: fentanyl was a cause in most kratom-positive overdose deaths, and 7-OH is a potent opioid the DEA moved to schedule in July 2026.",
+      "refs": [
+        "r2",
+        "r3",
+        "r4"
+      ]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "Kratom is natural, so it's safe.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Natural says nothing about dependence. Its main alkaloid is a partial opioid agonist. In 2016-2017, 91 US overdose deaths listed kratom as a cause, nearly all alongside other drugs.",
+        "refs": [
+          "r3",
+          "r2"
+        ],
+        "beliefSource": "Aly and Grundmann 2026 review (r3): in an ecological momentary assessment study, users rated kratom as safer than other substances."
+      },
+      {
+        "voice": "I'm using kratom to get off opioids, so it's treatment.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Many use it that way: in a US survey of 8,049 users, 68% took it for pain and many for opioid withdrawal. But evidence that it treats opioid addiction comes only from small observational studies.",
+        "refs": [
+          "r5",
+          "r7"
+        ],
+        "beliefSource": "Grundmann 2017 survey (r5), recruited partly through American Kratom Association channels, so likely skewed favourable."
+      },
+      {
+        "voice": "Kratom withdrawal is nothing.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "For leaf kratom, studies describe mild to moderate, short withdrawal. But frequent use drives dependence: more than half of regular Malaysian users scored severe. Concentrated extracts carry higher risk.",
+        "refs": [
+          "r3",
+          "r1"
+        ],
+        "beliefSource": "not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Opioid-use-disorder medicines (mostly buprenorphine) for moderate to severe kratom use disorder",
+        "evidence": "weak",
+        "note": "14 case reports plus a survey of addiction specialists, 89.5% of whom had used buprenorphine. No trials.",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "what": "Steer clear of concentrated 7-OH products and tell your doctor what you take",
+        "evidence": "weak",
+        "note": "Clinicians are advised that 7-OH products carry significantly greater risks than traditional kratom.",
+        "refs": [
+          "r4"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "152 of 27,338 US overdose deaths (0.56%) tested positive for kratom, July 2016-Dec 2017; kratom was a cause in 91, and the only substance detected in 7.",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "stat": "Any fentanyl was listed as a cause of death in 65.1% of those kratom-positive deaths.",
+        "refs": [
+          "r2"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "TAPS Tool (part 1, NIDA Clinical Trials Network)",
+      "items": 4,
+      "freeToUse": "yes",
+      "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+      "refs": [
+        "r8"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Hour-by-hour kratom withdrawal (onset, peak, end)",
+        "why": "Only treatment-centre web pages gave hours, and they disagree (onset anywhere from 6 to 48 h). No primary study found; the Stanciu 2019 systematic review abstract has no timings."
+      },
+      {
+        "block": "axes",
+        "wanted": "Whether a break from kratom raises overdose risk on return",
+        "why": "Not studied in anything found; concentrated 7-OH makes it plausible but unsourced."
+      },
+      {
+        "block": "safety",
+        "wanted": "FDA and DEA primary documents on 7-OH scheduling",
+        "why": "Only a 2026 journal article reporting the July 2026 DEA notice (r4) was fetched."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Any controlled trial of kratom use disorder treatment",
+        "why": "None found; evidence is case reports and expert survey."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Singh D, Muller CP, Vicknasingam BK (2014). Kratom (Mitragyna speciosa) dependence, withdrawal symptoms and craving in regular users. Drug and Alcohol Dependence.",
+        "kind": "survey",
+        "doi": "10.1016/j.drugalcdep.2014.03.017",
+        "pmid": "24698080",
+        "url": "https://europepmc.org/article/MED/24698080",
+        "fetched": true,
+        "supports": "293 Malaysian regular users: over half severe dependence, 45% moderate"
+      },
+      {
+        "id": "r2",
+        "cite": "Olsen EO, O'Donnell J, Mattson CL, Schier JG, Wilson N (2019). Notes from the Field: Unintentional drug overdose deaths with kratom detected - 27 states, July 2016-December 2017. MMWR.",
+        "kind": "survey",
+        "doi": "10.15585/mmwr.mm6814a2",
+        "pmid": "30973850",
+        "url": "https://europepmc.org/article/PMC/PMC6459583",
+        "fetched": true,
+        "supports": "152/27,338 kratom-positive; 91 kratom-involved; 7 kratom only; fentanyl cause in 65.1%"
+      },
+      {
+        "id": "r3",
+        "cite": "Aly S, Grundmann O (2026). A review of kratom product evolution and its associated health outcomes. Substance Abuse and Rehabilitation.",
+        "kind": "review",
+        "doi": "10.2147/sar.s606821",
+        "pmid": "42572688",
+        "url": "https://europepmc.org/article/PMC/PMC13453343",
+        "fetched": true,
+        "supports": "Mitragynine partial mu-agonist; leaf withdrawal mild-moderate, short; users rated kratom safer"
+      },
+      {
+        "id": "r4",
+        "cite": "Stogner J (2026). The rise of adulterated 7-hydroxymitragynine kratom products creates challenges for health care and policy. Journal of the American Board of Family Medicine.",
+        "kind": "other",
+        "doi": "10.3122/jabfm.2026.260148r1",
+        "pmid": "42880977",
+        "url": "https://europepmc.org/article/MED/42880977",
+        "fetched": true,
+        "supports": "7-OH potent mu-agonist; July 2026 DEA notice to schedule; greater risk than leaf"
+      },
+      {
+        "id": "r5",
+        "cite": "Grundmann O (2017). Patterns of kratom use and health impact in the US: results from an online survey. Drug and Alcohol Dependence.",
+        "kind": "survey",
+        "doi": "10.1016/j.drugalcdep.2017.03.007",
+        "pmid": "28521200",
+        "url": "https://europepmc.org/article/MED/28521200",
+        "fetched": true,
+        "supports": "8,049 users: 68% self-treating pain, 66% emotional conditions; also opioid withdrawal"
+      },
+      {
+        "id": "r6",
+        "cite": "Stanciu C, Ahmed S, Hybki B, Penders T, Galbis-Reig D (2021). Pharmacotherapy for management of 'kratom use disorder': a systematic literature review with survey of experts. WMJ.",
+        "kind": "review",
+        "pmid": "33974767",
+        "url": "https://europepmc.org/article/MED/33974767",
+        "fetched": true,
+        "supports": "14 reports, mostly buprenorphine; 89.5% of experts used buprenorphine"
+      },
+      {
+        "id": "r7",
+        "cite": "Arenson A, Campbell CI, Remler I (2024). Psychoactive plant derivatives (ayahuasca, ibogaine, kratom) and their application in opioid withdrawal and use disorder - a narrative review. Journal of Addictive Diseases.",
+        "kind": "review",
+        "doi": "10.1080/10550887.2023.2195777",
+        "pmid": "37199191",
+        "url": "https://europepmc.org/article/MED/37199191",
+        "fetched": true,
+        "supports": "Evidence for OUD use is mainly small observational or animal studies"
+      },
+      {
+        "id": "r8",
+        "cite": "NIDA Clinical Trials Network (2016-). TAPS Tool: Tobacco, Alcohol, Prescription medication, and other Substance use. CTN Dissemination Library.",
+        "kind": "other",
+        "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+        "fetched": true,
+        "supports": "4-item past-year screen incl. prescription misuse; self- or interviewer-administered; public domain"
+      }
+    ]
+  },
+  {
+    "id": "alcohol",
+    "name": "Alcohol",
+    "group": "substance",
+    "oneLiner": "Alcohol withdrawal can begin 6-24 hours after the last drink, with seizures most likely around 24 hours: stopping a heavy daily habit is a medical event.",
+    "oneLinerRefs": [
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "dangerous",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: alcohol use disorder. ICD-11: 6C40 disorders due to use of alcohol (code not verified this pass).",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "danger",
+      "text": "If you drink heavily every day, stopping suddenly can kill: withdrawal seizures (8-48 h) and delirium (from day 2 to day 5) are emergencies, and each withdrawal tends to be worse than the last. Get assessed before you stop. Most people can withdraw outside hospital with medication and monitoring; those at high risk of seizures or delirium should be admitted.",
+      "refs": [
+        "r1",
+        "r2",
+        "r3"
+      ]
+    },
+    "timelineEvidence": "strong",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Early withdrawal: anxiety, poor sleep, headache, nausea, sweating, fast pulse",
+        "startH": 6,
+        "peakH": 24,
+        "endH": 36,
+        "peakIntensity": 3,
+        "note": "Signs begin 6-24 h after stopping or cutting down. ASAM ties emergence, peak and resolution of mild withdrawal to a 6-36 h window; 24 h is a drawing midpoint, not a sourced peak. In moderate or severe cases symptoms continue into the rows below.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Seizure window",
+        "startH": 8,
+        "peakH": 24,
+        "endH": 48,
+        "peakIntensity": 5,
+        "note": "Can strike without other obvious withdrawal signs.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Hallucinations",
+        "startH": 12,
+        "peakH": 24,
+        "endH": 48,
+        "peakIntensity": 3,
+        "note": "Develop within 12-24 h; typically resolve within 24-48 h if delirium does not follow.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Withdrawal delirium (DTs): acute confusion",
+        "startH": 48,
+        "peakH": 72,
+        "endH": 168,
+        "peakIntensity": 5,
+        "note": "ASAM gives 72-96 h after the last drink in one passage and 24-48 h (up to 3-5 days) in another; usually lasts 2-3 days. Drawn from 48 h to cover both.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Lingering irritability, anxiety and poor sleep",
+        "startH": 120,
+        "peakH": 120,
+        "endH": 672,
+        "peakIntensity": 2,
+        "note": "ASAM: protracted symptoms 'can persist for weeks'. No upper limit given; 4 weeks is a drawing length, not a sourced end.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "track": "craving",
+        "label": "Cue-triggered craving grows rather than fades",
+        "startH": 168,
+        "peakH": 1440,
+        "endH": 1440,
+        "peakIntensity": 4,
+        "note": "Male inpatients in China tested at 7, 14, 30 and 60 days: cue craving was highest at 60 days, the last point measured, so the true peak may be later.",
+        "refs": [
+          "r7"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 24,
+        "kind": "danger",
+        "label": "Seizure risk peaks (window 8-48 h)",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "atH": 36,
+        "kind": "milestone",
+        "label": "Mild withdrawal, low risk: severe withdrawal is unlikely to develop after 36 h",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "atH": 72,
+        "kind": "danger",
+        "label": "Delirium (DTs) window: 72-96 h in one ASAM passage, from 24-48 h up to day 5 in another",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "atH": 96,
+        "kind": "trap",
+        "label": "Day 4: symptoms lift and 'maybe it wasn't that bad' arrives (one clinician's account, not a study)",
+        "refs": [
+          "r12"
+        ]
+      },
+      {
+        "atH": 1440,
+        "kind": "trap",
+        "label": "Day 60: cue-triggered craving measured at its highest",
+        "refs": [
+          "r7"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "I'll just stop on my own this weekend.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "A weekend is the danger window: seizures cluster at 8-48 hours and delirium can start from day 2 to day 5. Most people can withdraw outside hospital, but with medication and monitoring, not alone.",
+        "refs": [
+          "r1"
+        ],
+        "beliefSource": "14-harm-reduction-moderation.md section 7: two self-managed tapers, one 'because I live alone and I didn't want to risk DTs' (HAMS testimonial)."
+      },
+      {
+        "voice": "I only drink beer and wine, not the hard stuff.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "A 12-ounce beer at 5%, a 5-ounce glass of wine at 12% and a 1.5-ounce shot at 40% each hold about 14 grams of pure alcohol. The body counts ethanol, not the bottle.",
+        "refs": [
+          "r9"
+        ],
+        "beliefSource": "not sourced: no study of beverage-type beliefs was fetched this pass."
+      },
+      {
+        "voice": "Maybe my drinking wasn't that bad.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "Possibly: 90% of US excessive drinkers did not meet dependence criteria. But dependence is not the bar for harm. WHO says no drinking is risk-free; alcohol caused about 2.6 million deaths in 2019.",
+        "refs": [
+          "r10",
+          "r8"
+        ],
+        "beliefSource": "11-youtube-longform.md T15 (Dr Donald Crowe, 'Second Act Recovery', day 4): 'Maybe the drinking wasn't that bad. Maybe I overreacted.'"
+      },
+      {
+        "voice": "If I can't quit forever, there's no point trying.",
+        "kind": "quitting-wont-work",
+        "verdict": "false",
+        "science": "Abstinence is not the only route. A meta-analysis of 22 studies (4,204 patients) found controlled drinking a viable goal, especially with targeted therapy. Unsupported moderation did worse than abstinence.",
+        "refs": [
+          "r5"
+        ],
+        "beliefSource": "11-youtube-longform.md T15 (day 2): '\"How am I supposed to do this forever?\" That thought can break people.'"
+      },
+      {
+        "voice": "Detox will sort me out.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Detox treats withdrawal, not drinking. ASAM states withdrawal management alone is not an effective treatment for alcohol use disorder. Medicines help next: acamprosate prevents one return to drinking per 12 people treated.",
+        "refs": [
+          "r1",
+          "r4"
+        ],
+        "beliefSource": "not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Medically supported withdrawal for anyone physically dependent",
+        "evidence": "strong",
+        "note": "Usually benzodiazepine-based and monitored. UK guidance: consider assisted withdrawal above 15 units a day or AUDIT 20+, inpatient above 30 units a day or after past seizures or DTs.",
+        "refs": [
+          "r1",
+          "r2",
+          "r3"
+        ]
+      },
+      {
+        "what": "Acamprosate or naltrexone",
+        "evidence": "strong",
+        "note": "122 trials: one return to any drinking prevented per 12 treated with acamprosate, per 20 with oral naltrexone; naltrexone also prevents one return to heavy drinking per 12.",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "what": "AA and twelve-step facilitation",
+        "evidence": "strong",
+        "note": "Cochrane 2020: high-quality evidence that manualized AA/TSF beats other established treatments such as CBT for abstinence.",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "what": "Supported moderation when abstinence is not the goal",
+        "evidence": "moderate",
+        "note": "No significant difference from abstinence goals in randomised trials (OR 1.32, CI 0.51-3.39), a wide interval: underpowered, not proof of equivalence.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "About 2.6 million deaths were caused by alcohol in 2019; about 400 million people (7% of those aged 15+) live with alcohol use disorders.",
+        "refs": [
+          "r8"
+        ]
+      },
+      {
+        "stat": "Contact with treatment ranges from under 1% to no more than 14% of people with alcohol use disorders, by country.",
+        "refs": [
+          "r8"
+        ]
+      },
+      {
+        "stat": "90% of US excessive drinkers did not meet criteria for alcohol dependence (NSDUH 2009-2011, 138,100 adults).",
+        "refs": [
+          "r10"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "AUDIT (Alcohol Use Disorders Identification Test, WHO)",
+      "items": 10,
+      "freeToUse": "unclear",
+      "url": "https://www.paho.org/sites/default/files/Auditmanual_ENG.pdf",
+      "refs": [
+        "r11"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "screener",
+        "wanted": "Permission to show the AUDIT on a paid subscription site",
+        "why": "The WHO manual allows free reproduction 'but not for sale or for use in conjunction with commercial purposes'. A paid product needs WHO permission or legal advice."
+      },
+      {
+        "block": "screener",
+        "wanted": "AUDIT-C (3 items) source, cut-offs and licence",
+        "why": "Not fetched this pass."
+      },
+      {
+        "block": "timeline",
+        "wanted": "One agreed hour window for delirium onset",
+        "why": "ASAM 2020 states two different windows (72-96 h; 24-48 h up to day 5). Schuckit 2014 NEJM has no abstract to check."
+      },
+      {
+        "block": "numbers",
+        "wanted": "Death rate of delirium tremens during treatment",
+        "why": "No fetched source gave an acute case-fatality figure. A Norwegian register (Bramness 2023) found 8.0% annual mortality after a DT diagnosis, which is long-term, not acute."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "A study of beliefs that beer or wine is safer than spirits",
+        "why": "Not found this pass."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Warning that naltrexone blocks opioids, for the medication block",
+        "why": "Only the testimonial corpus (file 14) states it; a guideline or label source was not fetched."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "American Society of Addiction Medicine (2020). The ASAM Clinical Practice Guideline on Alcohol Withdrawal Management. Journal of Addiction Medicine.",
+        "kind": "guideline",
+        "doi": "10.1097/adm.0000000000000668",
+        "pmid": "32511109",
+        "url": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
+        "fetched": true,
+        "supports": "Onset 6-24 h; seizures 8-48 h peak 24; delirium timing; kindling; detox alone not treatment"
+      },
+      {
+        "id": "r2",
+        "cite": "NICE (2010, amended 2017). Alcohol-use disorders: diagnosis and management of physical complications (CG100).",
+        "kind": "guideline",
+        "url": "https://www.nice.org.uk/guidance/cg100/chapter/Recommendations",
+        "fetched": true,
+        "supports": "Offer hospital admission for medically assisted withdrawal if at high risk of seizures or DTs"
+      },
+      {
+        "id": "r3",
+        "cite": "NICE (2011). Alcohol-use disorders: diagnosis, assessment and management of harmful drinking and alcohol dependence (CG115).",
+        "kind": "guideline",
+        "url": "https://www.nice.org.uk/guidance/cg115/chapter/Recommendations",
+        "fetched": true,
+        "supports": ">15 units/day or AUDIT 20+: assisted withdrawal; >30 units/day: consider inpatient"
+      },
+      {
+        "id": "r4",
+        "cite": "Jonas DE, Amick HR, Feltner C, et al. (2014). Pharmacotherapy for adults with alcohol use disorders in outpatient settings: a systematic review and meta-analysis. JAMA.",
+        "kind": "review",
+        "doi": "10.1001/jama.2014.3628",
+        "pmid": "24825644",
+        "url": "https://europepmc.org/article/MED/24825644",
+        "fetched": true,
+        "supports": "122 RCTs: NNT 12 acamprosate, 20 naltrexone (any drinking); 12 naltrexone (heavy)"
+      },
+      {
+        "id": "r5",
+        "cite": "Henssler J, Muller M, Carreira H, et al. (2021). Controlled drinking - non-abstinent versus abstinent treatment goals in alcohol use disorder: a systematic review, meta-analysis and meta-regression. Addiction.",
+        "kind": "review",
+        "doi": "10.1111/add.15329",
+        "pmid": "33188563",
+        "url": "https://europepmc.org/article/MED/33188563",
+        "fetched": true,
+        "supports": "22 studies, 4,204 patients: RCT OR 1.32 (0.51-3.39); abstinence not the only approach"
+      },
+      {
+        "id": "r6",
+        "cite": "Kelly JF, Humphreys K, Ferri M (2020). Alcoholics Anonymous and other 12-step programs for alcohol use disorder. Cochrane Database of Systematic Reviews.",
+        "kind": "review",
+        "doi": "10.1002/14651858.cd012880.pub2",
+        "pmid": "32159228",
+        "url": "https://europepmc.org/article/MED/32159228",
+        "fetched": true,
+        "supports": "High-quality evidence manualized AA/TSF more effective than CBT etc. for abstinence"
+      },
+      {
+        "id": "r7",
+        "cite": "Li P, Wu P, Xin X, et al. (2015). Incubation of alcohol craving during abstinence in patients with alcohol dependence. Addiction Biology.",
+        "kind": "study",
+        "doi": "10.1111/adb.12140",
+        "pmid": "24698092",
+        "url": "https://europepmc.org/article/MED/24698092",
+        "fetched": true,
+        "supports": "Cue-induced craving highest at 60 days of abstinence (tested 7, 14, 30, 60)"
+      },
+      {
+        "id": "r8",
+        "cite": "World Health Organization (2024). Alcohol. Fact sheet.",
+        "kind": "other",
+        "url": "https://www.who.int/news-room/fact-sheets/detail/alcohol",
+        "fetched": true,
+        "supports": "2.6 million deaths 2019; 400 million with AUD; treatment contact <1% to 14%; no risk-free level"
+      },
+      {
+        "id": "r9",
+        "cite": "National Institute on Alcohol Abuse and Alcoholism (n.d.). What is a standard drink?",
+        "kind": "other",
+        "url": "https://www.niaaa.nih.gov/alcohols-effects-health/what-standard-drink",
+        "fetched": true,
+        "supports": "Beer 12 oz 5%, wine 5 oz 12%, spirits 1.5 oz 40% each about 14 g alcohol"
+      },
+      {
+        "id": "r10",
+        "cite": "Esser MB, Hedden SL, Kanny D, et al. (2014). Prevalence of alcohol dependence among US adult drinkers, 2009-2011. Preventing Chronic Disease.",
+        "kind": "survey",
+        "doi": "10.5888/pcd11.140329",
+        "pmid": "25412029",
+        "url": "https://europepmc.org/article/MED/25412029",
+        "fetched": true,
+        "supports": "90% of excessive drinkers did not meet dependence criteria"
+      },
+      {
+        "id": "r11",
+        "cite": "Babor TF, Higgins-Biddle JC, Saunders JB, Monteiro MG (2001). AUDIT: The Alcohol Use Disorders Identification Test. Guidelines for use in primary care, 2nd ed. WHO.",
+        "kind": "other",
+        "url": "https://www.paho.org/sites/default/files/Auditmanual_ENG.pdf",
+        "fetched": true,
+        "supports": "10 questions; free to reproduce but not for sale or commercial use"
+      },
+      {
+        "id": "r12",
+        "cite": "Crowe D (2026). 7 Days Sober: What's Actually Happening Inside. Second Act Recovery, YouTube; quoted in 11-youtube-longform.md, recovery-testimonials.",
+        "kind": "other",
+        "url": "https://www.youtube.com/watch?v=64bp946Ya4s",
+        "fetched": false,
+        "supports": "Day 4: 'Maybe the drinking wasn't that bad.' Lived account, not a study"
+      }
+    ]
+  },
+  {
+    "id": "benzodiazepines",
+    "name": "Benzodiazepines (alprazolam, diazepam, clonazepam and others)",
+    "group": "substance",
+    "oneLiner": "Physical dependence on benzodiazepines can develop within weeks, and stopping suddenly can cause seizures and delirium; the safe way off is a slow taper.",
+    "oneLinerRefs": [
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "dangerous",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "often",
+      "overdoseRiskAfterBreak": null,
+      "classification": "DSM-5: sedative, hypnotic, or anxiolytic use disorder. ICD-11: 6C44 (code not verified this pass). Physical dependence is an expected effect of use and is listed separately from use disorder.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "danger",
+      "text": "Never stop a daily benzodiazepine suddenly: rapid cuts can cause life-threatening seizures and delirium, and seizures have come 1-12 days after stopping. Taper with a prescriber, usually starting with 5-10% cuts every 2-4 weeks. Mixing with alcohol or opioids raises overdose risk; deaths involving benzodiazepines rose nearly tenfold since 2000.",
+      "refs": [
+        "r1",
+        "r2"
+      ]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Acute withdrawal (abrupt stop): tremor, palpitations, racing heart, sensory hypersensitivity",
+        "startH": 48,
+        "peakH": null,
+        "endH": 1008,
+        "peakIntensity": 4,
+        "note": "Describes stopping, which guidelines advise against; on a taper, smaller bouts follow each cut. Onset about 2-3 days after a short-acting drug, about 7 days after a long-acting one (uncited UK GP reference). Acute symptoms expected to fade once the drug clears, roughly 4-6 weeks. Peak not sourced.",
+        "refs": [
+          "r3",
+          "r1"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Anxiety, irritability, insomnia",
+        "startH": 48,
+        "peakH": null,
+        "endH": 1008,
+        "peakIntensity": 4,
+        "note": "Hard to tell apart from the condition the drug was prescribed for coming back. Same timing caveats as the row above.",
+        "refs": [
+          "r1",
+          "r3"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Seizure window",
+        "startH": 24,
+        "peakH": null,
+        "endH": 288,
+        "peakIntensity": 5,
+        "note": "Grand mal seizures 1-12 days after discontinuing. In one US hospital series of 82 acute withdrawals, 10% had seizures and none died.",
+        "refs": [
+          "r2",
+          "r6"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Protracted withdrawal in some: anxiety, depression, poor memory, tinnitus, insomnia",
+        "startH": 1008,
+        "peakH": null,
+        "endH": 8760,
+        "peakIntensity": 3,
+        "note": "Some patients have symptoms for months or years; Ashton estimated 10-15% of long-term users. Long-term, high-dose, short-acting use raises the risk; slow tapers may lower it. One year drawn; can be longer.",
+        "refs": [
+          "r1",
+          "r4"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 24,
+        "kind": "danger",
+        "label": "Seizure window opens: reported 1-12 days after stopping",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "atH": 1008,
+        "kind": "milestone",
+        "label": "Around 4-6 weeks the drug should be cleared; symptoms past this count as protracted",
+        "refs": [
+          "r1"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "My doctor prescribed it, so I can stop whenever I want.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "After under a month at low doses, often true. Beyond that, daily use can cause physical dependence within weeks, and guidelines warn against stopping abruptly: rapid cuts can trigger seizures and delirium.",
+        "refs": [
+          "r1"
+        ],
+        "beliefSource": "not sourced."
+      },
+      {
+        "voice": "Cold turkey gets it over with faster.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Faster is riskier, not shorter. Abrupt stops can cause life-threatening seizures and may raise the risk of protracted symptoms. Trials using 25% weekly cuts lost many patients; guidelines cap cuts at 25% per two weeks.",
+        "refs": [
+          "r2",
+          "r7",
+          "r1"
+        ],
+        "beliefSource": "not sourced."
+      },
+      {
+        "voice": "If I come off, I'll be wrecked for years.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "It happens to some: protracted symptoms can last months or years, and Ashton estimated 10-15% of long-term users. Most do not, and a slow taper with CBT improves the chance of getting off.",
+        "refs": [
+          "r1",
+          "r4",
+          "r5"
+        ],
+        "beliefSource": "Joint guideline 2025 (r1): cites a 1,200-person online survey (Reid Finlayson et al.) recruited from benzodiazepine-withdrawal support sites; its patient panel stressed recognising protracted withdrawal."
+      },
+      {
+        "voice": "A pill and a couple of drinks is fine.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Benzodiazepines raise the risk of overdose and death, particularly combined with alcohol or opioids. Fatal overdoses involving them rose nearly tenfold since 2000, often alongside opioids.",
+        "refs": [
+          "r1"
+        ],
+        "beliefSource": "not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "A slow, flexible taper agreed with the prescriber",
+        "evidence": "moderate",
+        "note": "Start with 5-10% cuts every 2-4 weeks and adjust to how it goes. Switching to a longer-acting drug first is optional; guidelines disagree. Strong recommendation, but from clinical consensus with low-certainty evidence.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "what": "CBT alongside the taper",
+        "evidence": "moderate",
+        "note": "Cochrane: CBT plus taper beat taper alone at 4 weeks (RR 1.40) and 3 months (RR 1.51); the edge was not sustained at 6 months and beyond.",
+        "refs": [
+          "r5"
+        ]
+      },
+      {
+        "what": "Inpatient or residential care for high-risk cases",
+        "evidence": "weak",
+        "note": "Consider it after past withdrawal seizures or delirium, with unstable illness, or heavy alcohol use (cross-tolerance).",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "what": "A tailored letter from the GP",
+        "evidence": "weak",
+        "note": "One trial of 322 people: a tailored letter beat a generic one at 12 months (RR 1.70).",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "54% of 1,200 people recruited from withdrawal-support websites reported suicidal thoughts or attempts after stopping (self-selected convenience sample).",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "stat": "82 hospital cases of acute withdrawal at one US centre, 2009-2016: 10% seizures, 3 intubations, no deaths.",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "stat": "9.1% of US adults used a benzodiazepine in the past year (NSDUH 2023), and more than 15% of them reported misuse.",
+        "refs": [
+          "r1"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "TAPS Tool (part 1, NIDA Clinical Trials Network)",
+      "items": 4,
+      "freeToUse": "yes",
+      "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+      "refs": [
+        "r8"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Peer-reviewed onset times for short- versus long-acting benzodiazepines",
+        "why": "Only an uncited UK GP reference gave 2-3 days versus about 7 days; consumer sites say 6-24 h; the Ashton manual pages fetched gave none."
+      },
+      {
+        "block": "timeline",
+        "wanted": "When acute withdrawal peaks",
+        "why": "Not sourced; peakH left null."
+      },
+      {
+        "block": "screener",
+        "wanted": "A screener for dependence on prescribed benzodiazepines (e.g. BDEPQ, Severity of Dependence Scale)",
+        "why": "Not checked. TAPS asks about non-medical use only."
+      },
+      {
+        "block": "axes",
+        "wanted": "Whether a break raises overdose risk on return",
+        "why": "Not studied in anything fetched; left null."
+      },
+      {
+        "block": "refs",
+        "wanted": "Reid Finlayson et al. survey, read directly",
+        "why": "Reached only through the guideline's citation."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Brunner E, Chen CA, Klein T, et al. (2025). Joint Clinical Practice Guideline on Benzodiazepine Tapering: Considerations When Risks Outweigh Benefits (ASAM and nine societies). Journal of General Internal Medicine.",
+        "kind": "guideline",
+        "doi": "10.1007/s11606-025-09499-2",
+        "pmid": "40526204",
+        "url": "https://europepmc.org/article/PMC/PMC12463801",
+        "fetched": true,
+        "supports": "Dependence within weeks; no abrupt stops; 5-10%/2-4 wk; protracted months-years; tenfold deaths"
+      },
+      {
+        "id": "r2",
+        "cite": "Brett J, Murnion B (2015). Management of benzodiazepine misuse and dependence. Australian Prescriber.",
+        "kind": "review",
+        "doi": "10.18773/austprescr.2015.055",
+        "pmid": "26648651",
+        "url": "https://australianprescriber.tg.org.au/articles/management-of-benzodiazepine-misuse-and-dependence.html",
+        "fetched": true,
+        "supports": "Grand mal seizures 1-12 days after stopping; abrupt cessation can cause life-threatening seizures"
+      },
+      {
+        "id": "r3",
+        "cite": "GPnotebook (n.d.). Withdrawal from benzodiazepines.",
+        "kind": "other",
+        "url": "https://gpnotebook.com/pages/psychiatry/withdrawal-from-benzodiazepines",
+        "fetched": true,
+        "supports": "Onset ~2-3 days (short-acting), ~7 days (long-acting); statement uncited"
+      },
+      {
+        "id": "r4",
+        "cite": "Ashton CH (2002). Benzodiazepines: How They Work and How to Withdraw (the Ashton Manual), chapter 3.",
+        "kind": "other",
+        "url": "https://www.benzo.org.uk/manual/bzcha03.htm",
+        "fetched": true,
+        "supports": "Perhaps 10-15% of long-term users develop a post-withdrawal syndrome"
+      },
+      {
+        "id": "r5",
+        "cite": "Darker CD, Sweeney BP, Barry JM, Farrell MF, Donnelly-Swift E (2015). Psychosocial interventions for benzodiazepine harmful use, abuse or dependence. Cochrane Database of Systematic Reviews.",
+        "kind": "review",
+        "doi": "10.1002/14651858.cd009652.pub2",
+        "pmid": "26106751",
+        "url": "https://europepmc.org/article/MED/26106751",
+        "fetched": true,
+        "supports": "CBT+taper vs taper RR 1.40 post, 1.51 at 3 months; tailored GP letter RR 1.70"
+      },
+      {
+        "id": "r6",
+        "cite": "Thornton SL, Whitacre J, Pallo N, Roberts N, Oller L (2021). A retrospective review of morbidity and mortality associated with acute benzodiazepine withdrawal at a Midwestern academic medical center. Kansas Journal of Medicine.",
+        "kind": "study",
+        "doi": "10.17161/kjm.vol1414653",
+        "pmid": "33763183",
+        "url": "https://europepmc.org/article/PMC/PMC7984739",
+        "fetched": true,
+        "supports": "82 cases: seizures 10%, intubation 3.6%, no deaths"
+      },
+      {
+        "id": "r7",
+        "cite": "Ashton CH (2002). The Ashton Manual, chapter 2.",
+        "kind": "other",
+        "url": "https://www.benzo.org.uk/manual/bzcha02.htm",
+        "fetched": true,
+        "supports": "Abrupt withdrawal can cause convulsions and may increase risk of protracted symptoms"
+      },
+      {
+        "id": "r8",
+        "cite": "NIDA Clinical Trials Network (2016-). TAPS Tool: Tobacco, Alcohol, Prescription medication, and other Substance use. CTN Dissemination Library.",
+        "kind": "other",
+        "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+        "fetched": true,
+        "supports": "4-item past-year screen incl. prescription misuse; self- or interviewer-administered; public domain"
+      }
+    ]
+  },
+  {
+    "id": "ghb-gbl",
+    "name": "GHB and GBL",
+    "group": "substance",
+    "oneLiner": "GHB withdrawal can start within hours of the last dose and slide into delirium; Australian hospital guidance says anyone at risk of severe withdrawal should be admitted.",
+    "oneLinerRefs": [
+      "r2",
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "dangerous",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": null,
+      "classification": "Diagnosable under DSM-5 and ICD-11 substance categories; whether GHB sits under the sedative or the 'other substance' code was not verified this pass.",
+      "classificationStatus": "recognised-addiction"
+    },
+    "safety": {
+      "level": "danger",
+      "text": "Do not come off daily GHB or GBL at home. Withdrawal can begin within hours, progress to delirium and seizures, and has killed. Hospital guidance admits anyone at risk of severe withdrawal. Overdose risk climbs when it is mixed with alcohol, benzodiazepines, opioids, stimulants or ketamine.",
+      "refs": [
+        "r1",
+        "r2",
+        "r4",
+        "r7"
+      ]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Withdrawal: tremor, sweating, racing heart",
+        "startH": 1,
+        "peakH": null,
+        "endH": 336,
+        "peakIntensity": 5,
+        "note": "Can begin 30 minutes to a few hours after the last dose. Severe cases can last 2-15 days in intensive care, up to 2-3 weeks overall. Dosing under 4 hours apart, waking at night to dose, or high daily amounts predict severe withdrawal. Severe withdrawal has followed as little as 7-10 days of frequent dosing.",
+        "refs": [
+          "r2",
+          "r3"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Anxiety, agitation, profound insomnia",
+        "startH": 1,
+        "peakH": null,
+        "endH": 336,
+        "peakIntensity": 4,
+        "note": "Insomnia in 58% and tremor in 67% of 57 published withdrawal episodes.",
+        "refs": [
+          "r4",
+          "r3"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Delirium and hallucinations",
+        "startH": 6,
+        "peakH": null,
+        "endH": 336,
+        "peakIntensity": 5,
+        "note": "Delirium in 53% of 38 published cases, typical of heavy users; hallucinations in 63% of 57 episodes. Onset hour not established; 6 h is when one clinical slide deck says severe withdrawal becomes possible.",
+        "refs": [
+          "r1",
+          "r4",
+          "r3"
+        ]
+      },
+      {
+        "track": "craving",
+        "label": "Relapse risk stays high for months",
+        "startH": 336,
+        "peakH": null,
+        "endH": 2160,
+        "peakIntensity": 4,
+        "note": "Relapse after detox has run as high as 60% within 3 months.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 1,
+        "kind": "danger",
+        "label": "Symptoms can appear within 30 minutes to a few hours of the last dose",
+        "refs": [
+          "r3",
+          "r2"
+        ]
+      },
+      {
+        "atH": 6,
+        "kind": "danger",
+        "label": "More than 6 h since the last dose: severe withdrawal possible",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "atH": 48,
+        "kind": "milestone",
+        "label": "Only minor symptoms 24-48 h after last use: hospital guidance says admission is not needed",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "atH": 2160,
+        "kind": "trap",
+        "label": "Up to 60% relapse within 3 months of detox",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "G is clean: no hangover, and I've got my dosing down.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "UK records list 159 GHB/GBL-linked deaths from 1995 to 2013. GHB alone was implicated in 37%; alcohol, other drugs, or both in the rest. The authors urge caution with alcohol, benzodiazepines, opiates, stimulants and ketamine.",
+        "refs": [
+          "r7"
+        ],
+        "beliefSource": "Peterson, Morrison and Lundin 2026 qualitative synthesis (r8): theme 'perceiving GHB as manageable and benign' across 11 studies."
+      },
+      {
+        "voice": "I'll come off at home. It's a few rough days.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "GHB withdrawal can turn to delirium fast: 53% of published heavy-user cases did. Seizures and muscle breakdown each occurred in 7% of 57 episodes. Guidance: admit anyone at risk of severe withdrawal.",
+        "refs": [
+          "r1",
+          "r4",
+          "r2"
+        ],
+        "beliefSource": "not sourced."
+      },
+      {
+        "voice": "Once I'm through detox, I'm done.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Relapse after GHB detox has run as high as 60% within 3 months. In one open-label trial, baclofen after detox cut relapse to 24% from 50% with usual care.",
+        "refs": [
+          "r5"
+        ],
+        "beliefSource": "not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Medically managed detox, in hospital for anyone at risk of severe withdrawal",
+        "evidence": "moderate",
+        "note": "Hospital toxicology guidance; no randomised trials exist. Large, frequent doses of sedating medicines are usually required.",
+        "refs": [
+          "r2",
+          "r3"
+        ]
+      },
+      {
+        "what": "Tapering with pharmaceutical GHB rather than benzodiazepines",
+        "evidence": "weak",
+        "note": "Matched comparison of 84 patients across two countries: less withdrawal and less delirium (2.5% vs 20%) with the GHB taper. Not randomised.",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "what": "Baclofen after detox to prevent relapse",
+        "evidence": "weak",
+        "note": "Open-label, non-randomised, 107 patients: relapse 24% vs 50%; lapses not reduced. Needs randomised trials.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "159 GHB/GBL-associated deaths in UK records, 1995 to September 2013; mean age 32; 82% male.",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "stat": "Delirium in 20% of patients tapered with benzodiazepines versus 2.5% tapered with pharmaceutical GHB (84 matched patients, Belgium and Netherlands).",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "stat": "Relapse as high as 60% within 3 months of detox.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "TAPS Tool (part 1, NIDA Clinical Trials Network)",
+      "items": 4,
+      "freeToUse": "yes",
+      "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+      "refs": [
+        "r9"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Peer-reviewed hour-by-hour course: onset, delirium onset, peak",
+        "why": "Only case-series reviews, hospital guidance and slides were reachable; the McDonough 2004 full text was not."
+      },
+      {
+        "block": "refs",
+        "wanted": "Disagreement on seizures: McDonough 2004 recorded none in 38 cases; Wojtowicz 2008 found 7% of 57 episodes",
+        "why": "Recorded, not resolved; different case sets."
+      },
+      {
+        "block": "safety",
+        "wanted": "EUDA (EMCDDA) GHB drug profile on the narrow dose margin",
+        "why": "Returned HTTP 403."
+      },
+      {
+        "block": "safety",
+        "wanted": "UK NEPTUNE club-drug guidance on GHB withdrawal",
+        "why": "PDF download returned an HTML page."
+      },
+      {
+        "block": "axes",
+        "wanted": "DSM-5 and ICD-11 placement of GHB",
+        "why": "Not verified."
+      },
+      {
+        "block": "axes",
+        "wanted": "Whether a break raises overdose risk on return",
+        "why": "Not sourced; left null."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "McDonough M, Kennedy N, Glasper A, Bearn J (2004). Clinical features and management of gamma-hydroxybutyrate (GHB) withdrawal: a review. Drug and Alcohol Dependence.",
+        "kind": "review",
+        "doi": "10.1016/j.drugalcdep.2004.01.012",
+        "pmid": "15225884",
+        "url": "https://europepmc.org/article/MED/15225884",
+        "fetched": true,
+        "supports": "38 cases: delirium 53%, typical of heavy users; potentially life-threatening; one death"
+      },
+      {
+        "id": "r2",
+        "cite": "Austin Clinical Toxicology Service (2023). Gamma-Hydroxybutyrate (GHB) Withdrawal, version 4. Austin Health, Melbourne.",
+        "kind": "guideline",
+        "url": "https://austin.org.au/Assets/Files/GHB%20Withdrawal.July%202023[1].pdf",
+        "fetched": true,
+        "supports": "Within hours, up to 2-3 weeks; admit all at risk of severe withdrawal; minor at 24-48 h no admission"
+      },
+      {
+        "id": "r3",
+        "cite": "Goulburn Valley Health (2023). GHB withdrawal (clinical education slides).",
+        "kind": "other",
+        "url": "https://www.gvhealth.org.au/wp-content/uploads/2023/08/GHBWIT1.pdf",
+        "fetched": true,
+        "supports": "Symptoms from 30 min; >6 h severe possible; ICU 2-15 days; dependence in 7-10 days; no RCTs"
+      },
+      {
+        "id": "r4",
+        "cite": "Wojtowicz JM, Yarema MC, Wax PM (2008). Withdrawal from gamma-hydroxybutyrate, 1,4-butanediol and gamma-butyrolactone: a case report and systematic review. CJEM.",
+        "kind": "review",
+        "doi": "10.1017/s1481803500010034",
+        "pmid": "18226321",
+        "url": "https://europepmc.org/article/MED/18226321",
+        "fetched": true,
+        "supports": "57 episodes: tremor 67%, hallucinations 63%, insomnia 58%, seizures 7%, rhabdomyolysis 7%"
+      },
+      {
+        "id": "r5",
+        "cite": "Beurmanjer H, Kamal RM, de Jong CAJ, Dijkstra BAG, Schellekens AFA (2018). Baclofen to prevent relapse in GHB-dependent patients: a multicentre, open-label, non-randomized, controlled trial. CNS Drugs.",
+        "kind": "trial",
+        "doi": "10.1007/s40263-018-0516-6",
+        "pmid": "29651711",
+        "url": "https://europepmc.org/article/PMC/PMC5976688",
+        "fetched": true,
+        "supports": "Relapse up to 60% in 3 months; baclofen relapse 24% vs 50%"
+      },
+      {
+        "id": "r6",
+        "cite": "Beurmanjer H, Luykx JJ, De Wilde B, et al. (2020). Tapering with pharmaceutical GHB or benzodiazepines for detoxification in GHB-dependent patients: a matched-subject observational study. CNS Drugs.",
+        "kind": "cohort",
+        "doi": "10.1007/s40263-020-00730-8",
+        "pmid": "32319006",
+        "url": "https://europepmc.org/article/MED/32319006",
+        "fetched": true,
+        "supports": "Delirium 20% (benzo taper) vs 2.5% (GHB taper); less withdrawal with GHB"
+      },
+      {
+        "id": "r7",
+        "cite": "Corkery JM, Loi B, Claridge H, et al. (2015). GHB, GBL and 1,4-BD: a literature review with a focus on UK fatalities related to non-medical use. Neuroscience and Biobehavioral Reviews.",
+        "kind": "review",
+        "doi": "10.1016/j.neubiorev.2015.03.012",
+        "pmid": "25843781",
+        "url": "https://europepmc.org/article/MED/25843781",
+        "fetched": true,
+        "supports": "159 UK deaths 1995-2013; GHB alone 37%; caution with alcohol and other drugs"
+      },
+      {
+        "id": "r8",
+        "cite": "Peterson L, Morrison C, Lundin RM (2026). Perceptions of risk among GHB users: a rapid qualitative evidence synthesis. International Journal on Drug Policy.",
+        "kind": "review",
+        "doi": "10.1016/j.drugpo.2026.105566",
+        "pmid": "42913205",
+        "url": "https://europepmc.org/article/MED/42913205",
+        "fetched": true,
+        "supports": "Theme: perceiving GHB as manageable and benign (11 studies)"
+      },
+      {
+        "id": "r9",
+        "cite": "NIDA Clinical Trials Network (2016-). TAPS Tool: Tobacco, Alcohol, Prescription medication, and other Substance use. CTN Dissemination Library.",
+        "kind": "other",
+        "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+        "fetched": true,
+        "supports": "4-item past-year screen incl. prescription misuse; self- or interviewer-administered; public domain"
+      }
+    ]
+  },
+  {
+    "id": "gabapentin-pregabalin",
+    "name": "Gabapentin and pregabalin",
+    "group": "substance",
+    "oneLiner": "On its own gabapentin rarely causes addiction, but among people taking opioids it was linked to 49% higher odds of dying from an opioid overdose.",
+    "oneLinerRefs": [
+      "r1",
+      "r2"
+    ],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "often",
+      "overdoseRiskAfterBreak": null,
+      "classification": "No named diagnosis; problem use would fall under DSM-5 'other (or unknown) substance use disorder' (not verified this pass). Addiction is rare without a prior substance problem.",
+      "classificationStatus": "dependence-not-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Do not stop suddenly: withdrawal has started 12 hours to 7 days after stopping, and US drug-safety guidance says to taper. The bigger danger is mixing: with opioids or other sedatives these drugs can cause serious breathing problems, and with opioids the odds of opioid death rose 49%.",
+      "refs": [
+        "r3",
+        "r5",
+        "r2"
+      ]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Window in which withdrawal has started (case reports)",
+        "startH": 12,
+        "peakH": null,
+        "endH": 168,
+        "peakIntensity": 3,
+        "note": "From 18 case reports, mostly people taking over 3,000 mg a day with past alcohol, cocaine or opioid problems. Symptoms, peak and duration are not summarised in the abstract.",
+        "refs": [
+          "r3"
+        ]
+      }
+    ],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "It's not addictive. It's for nerve pain.",
+        "kind": "identity",
+        "verdict": "true-but",
+        "science": "Largely true without an addiction history: a 106-study review found few cases. But misuse ran at 15-22% among people who misuse opioids, and pregabalin looked more addictive than gabapentin.",
+        "refs": [
+          "r1",
+          "r4"
+        ],
+        "beliefSource": "Smith, Havens and Walsh 2016 review (r4): gabapentin 'has been presumed to have no abuse potential'."
+      },
+      {
+        "voice": "It's safe with my opioids or methadone.",
+        "kind": "not-that-bad",
+        "verdict": "false",
+        "science": "Among Ontario opioid users, recent gabapentin raised the odds of opioid-related death by 49% (adjusted OR 1.49). FDA warns of serious breathing problems with opioids or other sedatives.",
+        "refs": [
+          "r2",
+          "r5"
+        ],
+        "beliefSource": "Gomes et al. 2017 (r2): 'gabapentin is widely perceived as safe'."
+      },
+      {
+        "voice": "I can just stop taking it.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Withdrawal has been reported 12 hours to 7 days after stopping, and labelling advises tapering before stopping. During alcohol withdrawal, unrecognised gabapentin withdrawal can make standard treatment fail.",
+        "refs": [
+          "r3",
+          "r5",
+          "r6"
+        ],
+        "beliefSource": "not sourced."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Review any combination with opioids or other sedatives",
+        "evidence": "moderate",
+        "note": "Case-control evidence of higher opioid-death odds, plus FDA warning on breathing problems in people with these risk factors.",
+        "refs": [
+          "r2",
+          "r5"
+        ]
+      },
+      {
+        "what": "Taper with the prescriber instead of stopping",
+        "evidence": "weak",
+        "note": "Labelling advice; no trials of taper schedules found.",
+        "refs": [
+          "r5"
+        ]
+      },
+      {
+        "what": "Avoid, or prescribe under strict monitoring, for people with a substance use history",
+        "evidence": "weak",
+        "note": "Recommendation from a systematic review, based on who develops addiction.",
+        "refs": [
+          "r1"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "Gabapentin misuse: about 1% in the general population, 15-22% among people who misuse opioids.",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "stat": "12.3% of opioid-related deaths versus 6.8% of matched opioid users had recent gabapentin (Ontario 1997-2013; adjusted OR 1.49).",
+        "refs": [
+          "r2"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "TAPS Tool (part 1, NIDA Clinical Trials Network)",
+      "items": 4,
+      "freeToUse": "yes",
+      "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+      "refs": [
+        "r7"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Symptoms, peak and duration of withdrawal, pregabalin versus gabapentin",
+        "why": "Only the abstract of a case-report review was fetched; no pregabalin withdrawal timing found."
+      },
+      {
+        "block": "numbers",
+        "wanted": "Pregabalin plus opioids and opioid-death risk (Gomes et al. 2018, Annals of Internal Medicine, PMID 30140853)",
+        "why": "No abstract available via Europe PMC; figure not fetched."
+      },
+      {
+        "block": "numbers",
+        "wanted": "Smith 2016's '40-65% among individuals with prescriptions'",
+        "why": "Reported in the abstract but the population behind it is unclear, so it is not used. ASAM 2020 repeats it as '40-65% of individuals prescribed gabapentin'."
+      },
+      {
+        "block": "safety",
+        "wanted": "FDA December 2019 Drug Safety Communication itself",
+        "why": "fda.gov URL returned 404; the US Indian Health Service summary (r5) was used."
+      },
+      {
+        "block": "axes",
+        "wanted": "Classification and the UK's 2019 move to Class C control",
+        "why": "Not fetched."
+      }
+    ],
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Bonnet U, Scherbaum N (2017). How addictive are gabapentin and pregabalin? A systematic review. European Neuropsychopharmacology.",
+        "kind": "review",
+        "doi": "10.1016/j.euroneuro.2017.08.430",
+        "pmid": "28988943",
+        "url": "https://europepmc.org/article/MED/28988943",
+        "fetched": true,
+        "supports": "106 studies: no convincing vigorous addictive power; risk group is people with SUD; pregabalin > gabapentin"
+      },
+      {
+        "id": "r2",
+        "cite": "Gomes T, Juurlink DN, Antoniou T, et al. (2017). Gabapentin, opioids, and the risk of opioid-related death: a population-based nested case-control study. PLoS Medicine.",
+        "kind": "study",
+        "doi": "10.1371/journal.pmed.1002396",
+        "pmid": "28972983",
+        "url": "https://europepmc.org/article/PMC/PMC5626029",
+        "fetched": true,
+        "supports": "1,256 cases, 4,619 controls: aOR 1.49; 12.3% vs 6.8% exposed"
+      },
+      {
+        "id": "r3",
+        "cite": "Mersfelder TL, Nichols WH (2016). Gabapentin: abuse, dependence, and withdrawal. Annals of Pharmacotherapy.",
+        "kind": "review",
+        "doi": "10.1177/1060028015620800",
+        "pmid": "26721643",
+        "url": "https://europepmc.org/article/MED/26721643",
+        "fetched": true,
+        "supports": "18 case reports; withdrawal 12 h to 7 days after stopping; most >3,000 mg/day"
+      },
+      {
+        "id": "r4",
+        "cite": "Smith RV, Havens JR, Walsh SL (2016). Gabapentin misuse, abuse and diversion: a systematic review. Addiction.",
+        "kind": "review",
+        "doi": "10.1111/add.13324",
+        "pmid": "27265421",
+        "url": "https://europepmc.org/article/MED/27265421",
+        "fetched": true,
+        "supports": "Misuse 1% general population, 15-22% in opioid-misusing populations"
+      },
+      {
+        "id": "r5",
+        "cite": "Indian Health Service National Pharmacy and Therapeutics Committee (2019). Serious breathing difficulty risk with gabapentinoids (summary of FDA Drug Safety Communication, 19 Dec 2019).",
+        "kind": "other",
+        "url": "https://www.ihs.gov/nptc/pharmacovigilance/medication-safety-resources-archive/2019/serious-breathing-difficulty-risk-with-gabapentinoids/",
+        "fetched": true,
+        "supports": "Breathing risk with opioids, CNS depressants, lung disease, elderly; taper before stopping"
+      },
+      {
+        "id": "r6",
+        "cite": "American Society of Addiction Medicine (2020). The ASAM Clinical Practice Guideline on Alcohol Withdrawal Management.",
+        "kind": "guideline",
+        "doi": "10.1097/adm.0000000000000668",
+        "pmid": "32511109",
+        "url": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
+        "fetched": true,
+        "supports": "Failure to respond may be due to withdrawal from another GABAergic agent such as gabapentin"
+      },
+      {
+        "id": "r7",
+        "cite": "NIDA Clinical Trials Network (2016-). TAPS Tool: Tobacco, Alcohol, Prescription medication, and other Substance use. CTN Dissemination Library.",
+        "kind": "other",
+        "url": "https://ctnlibrary.org/instrument/nida-clinical-trials-network-taps-tool",
+        "fetched": true,
+        "supports": "4-item past-year screen incl. prescription misuse; self- or interviewer-administered; public domain"
+      }
+    ]
+  }
+]

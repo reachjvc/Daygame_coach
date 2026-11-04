@@ -1,0 +1,638 @@
+{
+ "base": "yoursite.com/quit/",
+ "shortBase": "yoursite.com/q/",
+ "closing": "Ten years from now, you might be able to say… I DID IT.",
+ "options": [
+  {
+   "key": "A",
+   "name": "The Field Guide",
+   "pitch": "Everything on one scroll: the timeline graphic, the thoughts, what works, every source.",
+   "pros": [
+    "Complete: a reader who arrives once gets the whole picture",
+    "Search engines can read all of it, so the page gets found without the book",
+    "Easiest to build from the research data, and to keep correct",
+    "Every claim sits next to its source, which is what earns trust"
+   ],
+   "cons": [
+    "Long on a phone; someone in a bad moment has to scroll",
+    "Looks closest to the health sites people already know",
+    "The trap ahead (the good stretch) is one block among many"
+   ]
+  },
+  {
+   "key": "B",
+   "name": "Where Are You Now",
+   "pitch": "The reader drags to how long since they stopped. The page answers for that exact moment.",
+   "pros": [
+    "Meets book readers mid-attempt, which is when most will arrive",
+    "Warns about the trap before it comes, not after",
+    "Gives a reason to come back on day 3, week 2, month 3",
+    "The timeline is the page, which is what you asked for"
+   ],
+   "cons": [
+    "Breaks where no withdrawal has been measured (most behaviours)",
+    "A precise day can read as a promise, and expecting symptoms can make them worse",
+    "More to build and to test"
+   ]
+  },
+  {
+   "key": "C",
+   "name": "The Voice and the Facts",
+   "pitch": "Opens with the thought in the reader's head, then answers it with evidence, one thought at a time.",
+   "pros": [
+    "Sounds like a book or a video, not a leaflet",
+    "Works for every addiction, timeline or not",
+    "Each thought is a ready-made short video or quote card"
+   ],
+   "cons": [
+    "The timeline graphic you asked for moves down the page",
+    "Only as strong as the belief research, which is thinner for behaviours",
+    "Harsh verdicts can read as preaching"
+   ]
+  },
+  {
+   "key": "D",
+   "name": "One Screen",
+   "pitch": "The whole thing on one phone screen. The same card is printed in the book's appendix.",
+   "pros": [
+    "The book and the site share one design: the card in print, the full page online",
+    "Made to be screenshotted and shared",
+    "Forces the sharpest version of each page"
+   ],
+   "cons": [
+    "No room for nuance or sources on the card itself",
+    "Danger information gets compressed to one line",
+    "Small text"
+   ]
+  }
+ ],
+ "hardCases": [
+  "antidepressant-discontinuation",
+  "decongestant-nasal-spray",
+  "self-harm",
+  "porn",
+  "gambling",
+  "dating-apps",
+  "anabolic-steroids",
+  "love-and-limerence",
+  "binge-eating-and-ultra-processed-food",
+  "gaming",
+  "cross-addiction",
+  "heroin-fentanyl"
+ ],
+ "aliases": {
+  "nicotine": [
+   "zyn",
+   "snus",
+   "pouches",
+   "vape",
+   "vaping",
+   "cigarettes",
+   "smoking"
+  ],
+  "cannabis": [
+   "weed",
+   "marijuana",
+   "pot",
+   "thc",
+   "hash"
+  ],
+  "heroin-fentanyl": [
+   "heroin",
+   "fentanyl",
+   "dope",
+   "opiates"
+  ],
+  "prescription-opioids": [
+   "oxycodone",
+   "oxy",
+   "painkillers",
+   "tramadol",
+   "codeine",
+   "percocet",
+   "vicodin"
+  ],
+  "prescription-stimulants": [
+   "adderall",
+   "ritalin",
+   "vyvanse",
+   "elvanse",
+   "concerta"
+  ],
+  "benzodiazepines": [
+   "xanax",
+   "valium",
+   "klonopin",
+   "benzos",
+   "alprazolam",
+   "diazepam"
+  ],
+  "gabapentin-pregabalin": [
+   "lyrica",
+   "neurontin",
+   "gabapentin",
+   "pregabalin"
+  ],
+  "gambling": [
+   "betting",
+   "sports betting",
+   "casino",
+   "slots",
+   "poker"
+  ],
+  "crypto-day-trading": [
+   "crypto",
+   "day trading",
+   "trading",
+   "options",
+   "stocks"
+  ],
+  "porn": [
+   "pornography",
+   "nofap",
+   "masturbation"
+  ],
+  "social-media-phones": [
+   "phone",
+   "scrolling",
+   "tiktok",
+   "instagram",
+   "screen time"
+  ],
+  "dating-apps": [
+   "tinder",
+   "hinge",
+   "bumble",
+   "swiping"
+  ],
+  "shopping": [
+   "spending",
+   "buying",
+   "online shopping"
+  ],
+  "alcohol": [
+   "drinking",
+   "beer",
+   "wine",
+   "booze"
+  ],
+  "methamphetamine": [
+   "meth",
+   "crystal",
+   "ice",
+   "tina"
+  ],
+  "cocaine": [
+   "coke",
+   "crack",
+   "blow"
+  ],
+  "anabolic-steroids": [
+   "steroids",
+   "gear",
+   "trt",
+   "juice"
+  ],
+  "binge-eating-and-ultra-processed-food": [
+   "sugar",
+   "junk food",
+   "food",
+   "binge eating",
+   "ultra-processed"
+  ],
+  "decongestant-nasal-spray": [
+   "otrivin",
+   "afrin",
+   "decongestant",
+   "nose spray"
+  ],
+  "antidepressant-discontinuation": [
+   "ssri",
+   "sertraline",
+   "zoloft",
+   "prozac",
+   "citalopram",
+   "venlafaxine"
+  ],
+  "love-and-limerence": [
+   "love",
+   "limerence",
+   "ex",
+   "breakup",
+   "obsession"
+  ],
+  "ghb-gbl": [
+   "ghb",
+   "gbl",
+   "g"
+  ],
+  "caffeine": [
+   "coffee",
+   "energy drinks",
+   "monster",
+   "red bull"
+  ],
+  "gaming": [
+   "video games",
+   "games",
+   "fortnite",
+   "league"
+  ],
+  "work": [
+   "workaholism",
+   "workaholic",
+   "overworking"
+  ],
+  "exercise": [
+   "gym",
+   "training",
+   "running"
+  ],
+  "tanning": [
+   "sunbed",
+   "solarium",
+   "sun"
+  ],
+  "kratom": [
+   "kratom"
+  ],
+  "ketamine": [
+   "ket",
+   "k",
+   "special k"
+  ]
+ },
+ "doubts": [
+  {
+   "kind": "danger",
+   "title": "On four pages, a wrong line can cost a life",
+   "text": "Stopping alcohol, benzodiazepines or GHB suddenly can kill through seizures or delirium. With heroin and fentanyl the danger comes later: after a break, the old amount can stop your breathing, and drug deaths run 3 to 8 times higher in the first two weeks after leaving prison. My recommendation is that a doctor reads these four pages before they go live."
+  },
+  {
+   "kind": "danger",
+   "title": "Some pages need crisis help at the top",
+   "text": "Gambling: suicide was the leading cause of death among Norway's gambling-disorder patients. Breakups: about 1 in 4 people in one study had depressive symptoms. Self-harm should not get a one-pager at all; the research says to replace it with a short page that leads to crisis help. Every page needs help lines, and those are not researched yet."
+  },
+  {
+   "kind": "doubt",
+   "title": "A timeline graphic can make withdrawal worse",
+   "text": "People who expect bad withdrawal get worse withdrawal. Being told what to expect, calmly, makes it easier. So the timeline stays, but it is drawn as a range, says that many people get less, and keeps only the danger signs vivid. The charts on this board follow those rules."
+  },
+  {
+   "kind": "doubt",
+   "title": "Most behaviours have no measured withdrawal",
+   "text": "Nobody has measured a withdrawal timeline for gambling, trading, shopping, dating apps, work or tanning. The porn 'flatline' exists only in forum posts; a 7-day randomised trial found no withdrawal. For gaming and phones, urges were highest at hour 0 and fell fastest in the first day. The graphic you asked for works for drugs and breaks for most behaviours."
+  },
+  {
+   "kind": "doubt",
+   "title": "Some of these are dependence, not addiction",
+   "text": "Antidepressants, nasal spray and gabapentin cause real withdrawal without being addictions. Calling them addiction would be wrong, and could scare someone off a medicine they need. Those pages need their own wording, and a prescriber leads the taper."
+  },
+  {
+   "kind": "doubt",
+   "title": "382 sources, 366 opened, and none of it reviewed by a second person",
+   "text": "Each researcher opened the sources and checked the claim. I re-checked five at random: four matched word for word, one is an editorial with no abstract. Many ICD-11 codes are unchecked. Before anything goes live, a second pass should re-check every number, as the testimonial research did when it caught misquotes."
+  },
+  {
+   "kind": "decide",
+   "title": "The free self-tests are often not free for us",
+   "text": "WHO's alcohol test (AUDIT) forbids commercial use, and the drug test DAST-10 charges fees. Several others have unclear licences. A paid site can link out to them, or use the public-domain TAPS tool, which the research already picked for six drug pages."
+  },
+  {
+   "kind": "decide",
+   "title": "The love page must never coach pursuit",
+   "text": "On a dating site, a page about limerence could slide into 'how to get her back'. The research says it must do the opposite: last use becomes last contact, and the page screens for depression and never coaches a man to keep pursuing someone who said no."
+  }
+ ],
+ "blocks": [
+  {
+   "id": "headline",
+   "name": "Name and one-line truth",
+   "text": "The page opens with one sourced sentence the reader remembers.",
+   "in": "A B C D",
+   "field": "oneLiner"
+  },
+  {
+   "id": "safety",
+   "name": "Safety box",
+   "text": "Leads the page when stopping can kill (alcohol, benzodiazepines, GHB) or when a relapse after a break can overdose (opioids).",
+   "in": "A B C D",
+   "field": "safety"
+  },
+  {
+   "id": "timeline",
+   "name": "Withdrawal timeline graphic",
+   "text": "Curves for body, mood and sleep, and craving on a time scale from hours to a year. Numbered pins for peaks, traps and dangers. The chart states how solid its evidence is, and shows an empty state where nothing was measured.",
+   "in": "A B C D",
+   "field": "timeline"
+  },
+  {
+   "id": "slider",
+   "name": "Where are you now",
+   "text": "The reader picks how long since they stopped. The page shows what is happening, what comes next, and the thought that tends to show up at that point.",
+   "in": "B"
+  },
+  {
+   "id": "beliefs",
+   "name": "Thoughts that keep you stuck",
+   "text": "Each thought in the reader's own words, a verdict (false, half true, true but), and what the research says.",
+   "in": "A B C D",
+   "field": "beliefs"
+  },
+  {
+   "id": "works",
+   "name": "What works, strongest evidence first",
+   "text": "Treatments and techniques with a three-step evidence bar.",
+   "in": "A B C D",
+   "field": "whatWorks"
+  },
+  {
+   "id": "numbers",
+   "name": "In numbers",
+   "text": "One to three exact figures with their source, such as how many people recover without treatment.",
+   "in": "A",
+   "field": "numbers"
+  },
+  {
+   "id": "official",
+   "name": "Is it officially an addiction?",
+   "text": "Says plainly what medicine calls it, including 'your body depends on it, but that is not addiction' for antidepressants and nasal spray.",
+   "in": "A B C"
+  },
+  {
+   "id": "screener",
+   "name": "Check yourself",
+   "text": "Links a validated self-test, only where it is free to use.",
+   "in": "A B",
+   "field": "screener"
+  },
+  {
+   "id": "goodstretch",
+   "name": "The good-stretch warning",
+   "text": "From the earlier research in the repo: the risky moment is often feeling fine, not feeling awful.",
+   "in": "A B"
+  },
+  {
+   "id": "getback",
+   "name": "What you get back",
+   "text": "What returns over time after stopping: sleep, money, lungs, mood, hormones. Not researched yet.",
+   "in": "A",
+   "placeholder": true
+  },
+  {
+   "id": "cross",
+   "name": "Cross-addiction link",
+   "text": "A short box on every page that links to the one full cross-addiction page.",
+   "in": "A"
+  },
+  {
+   "id": "voices",
+   "name": "Voices: people at the same point",
+   "text": "Short verified quotes from people who quit, matched to the reader's stage. The repo already holds 2,186 verified quotes. Needs a privacy and licence pass before a public site uses them.",
+   "in": "none yet",
+   "placeholder": true
+  },
+  {
+   "id": "sources",
+   "name": "Numbered sources, checked or unchecked",
+   "text": "Every claim carries a number that opens its source. Unchecked sources are shown in yellow and stay off the live site.",
+   "in": "A B C (D links out)"
+  },
+  {
+   "id": "crisis",
+   "name": "Help lines per country",
+   "text": "Phone numbers for the reader's country at the bottom of every page, and at the top of the danger pages.",
+   "in": "A B C D",
+   "placeholder": true
+  },
+  {
+   "id": "closing",
+   "name": "Your campaign line as the last line",
+   "text": "Ends each page on 'Ten years from now, you might be able to say… I DID IT.' (from docs/product/brand.md).",
+   "in": "A B C"
+  },
+  {
+   "id": "book",
+   "name": "Book chapter link-back",
+   "text": "'Chapter 7 of the book is about this.' Needs the book's chapter list.",
+   "in": "none yet",
+   "placeholder": true
+  },
+  {
+   "id": "appcta",
+   "name": "One quiet link into the app",
+   "text": "A last line pointing to the quit tool in the app. Your call, see the questions.",
+   "in": "none yet",
+   "placeholder": true
+  }
+ ],
+ "lessons": [
+  {
+   "title": "The timeline needs four states",
+   "text": "Measured (draw it with ranges), weak (draw it faded and say so), nothing measured (an honest empty state plus what is known), and reversed (gaming and phones, where urges are highest at the start and fall within a day)."
+  },
+  {
+   "title": "Craving gets its own honest shape",
+   "text": "Cue craving rose for weeks after quitting alcohol (highest at day 60), nicotine (still rising at day 35) and meth (about 3 months). It is never drawn falling to zero. Twenty opioid studies found no such rise, so opioid pages do not show it."
+  },
+  {
+   "title": "The goal flips from quit to reshape",
+   "text": "Nobody stops eating, working, exercising, spending or using a phone. Those pages talk about limits, budgets and patterns, not a quit date."
+  },
+  {
+   "title": "A 'dependence, not addiction' page type",
+   "text": "Antidepressants, nasal spray and gabapentin get their own status line, a prescriber-led taper, and no beliefs that treat the reader as hooked."
+  },
+  {
+   "title": "Danger can sit at the return, not the quit",
+   "text": "For opioids the deadly moment is using again after a break. The chart pins it inside the good stretch, where it is easy to forget."
+  },
+  {
+   "title": "New tracks: hormones, and last contact",
+   "text": "Steroids need a hormone track (normal again after a median 13 to 26 weeks; 27% still low about 2.5 years later). Love and breakups count from last contact, not last use."
+  },
+  {
+   "title": "Self-harm leaves the framework",
+   "text": "Timelines, counters and belief lists risk harm there. It becomes a short signpost page: crisis numbers first, then the help that works."
+  },
+  {
+   "title": "The good stretch is half-proven",
+   "text": "The earlier testimonial research made it a headline. Studies only partly back it: good-mood days raised urges in young drinkers, and gambling relapses followed good moods as often as bad ones, but smokers mostly slipped in bad moments. Pages warn about both."
+  }
+ ],
+ "links": [
+  {
+   "tag": "Book",
+   "title": "A short link under each chapter",
+   "text": "Printed links last forever, so the book prints short links that forward to the real page. Pages can move or be renamed later without a reprint, and the visit count shows which chapters send readers.",
+   "example": "yoursite.com/q/weed"
+  },
+  {
+   "tag": "Book",
+   "title": "A card per addiction in the appendix",
+   "text": "The appendix prints Option D's card with a QR code. The book holds the summary; the website holds the sources and stays current as the science changes.",
+   "example": "Appendix: 30 cards, one per page"
+  },
+  {
+   "tag": "Video",
+   "title": "One link per video",
+   "text": "The pinned comment and the description link to the matching page, and to the index for everything else.",
+   "example": "yoursite.com/q/porn"
+  },
+  {
+   "tag": "Search",
+   "title": "One index page: Find yours",
+   "text": "Searchable by everyday words (Zyn, Adderall, betting, Tinder), not medical names. Anything not listed points to the cross-addiction page.",
+   "example": "yoursite.com/quit"
+  }
+ ],
+ "questions": [
+  {
+   "id": "option",
+   "q": "Which option should carry the pages?",
+   "why": "",
+   "rec": "A as the base, because it is complete, findable in search and shows every source. Add B's slider only on pages whose timeline evidence is strong or moderate. Use D's card for the book appendix.",
+   "choices": [
+    "A + B slider + D card",
+    "Only A",
+    "B first",
+    "C first",
+    "D first"
+   ]
+  },
+  {
+   "id": "word",
+   "q": "Do the pages use the word 'addiction'?",
+   "why": "The quit tool in the app bans the word. That rule was written by AI, not by you. People search for 'weed addiction', and science only calls some of these addictions.",
+   "rec": "Use it in titles and links, and let each page say plainly what medicine calls it.",
+   "choices": [
+    "Yes, with the honest status block",
+    "Avoid it",
+    "Only for the recognised ones"
+   ]
+  },
+  {
+   "id": "audience",
+   "q": "Who are the pages written for?",
+   "why": "The app is for men. Addiction pages will also be found through search by anyone.",
+   "rec": "Write for anyone, with examples that fit men where the science is male-specific (steroids, erection problems, porn).",
+   "choices": [
+    "Anyone, man-aware examples",
+    "Men specifically",
+    "Decide later"
+   ]
+  },
+  {
+   "id": "medical",
+   "q": "Should a doctor check the danger pages before they go live?",
+   "why": "Alcohol, benzodiazepines, GHB and opioids can kill. A wrong line on those pages could hurt someone. A review costs money, which is your decision.",
+   "rec": "Yes, for those four pages, before launch. The rest can go live on the research alone.",
+   "choices": [
+    "Yes, before launch",
+    "Later",
+    "No"
+   ]
+  },
+  {
+   "id": "edges",
+   "q": "Which edge cases go on the site?",
+   "why": "The research gave each odd case a verdict: nasal spray goes in as it is; antidepressants, food, exercise, work, love and tanning go in with changes; self-harm stays out.",
+   "rec": "Follow those verdicts. Make self-harm a short crisis signpost page instead of a one-pager.",
+   "choices": [
+    "Follow the research verdicts",
+    "All of them",
+    "None of the edge cases"
+   ]
+  },
+  {
+   "id": "voices",
+   "q": "Should pages show short quotes from real people?",
+   "why": "The repo holds 2,186 verified quotes from people who quit. Reading other people's accounts was the most valued feature in the one community with good outcomes. On a public site they need a privacy and licence pass first.",
+   "rec": "Yes, after a privacy pass. Quotes from published books and podcasts first; forum quotes only short and with the handle.",
+   "choices": [
+    "Yes, after a privacy pass",
+    "Only published sources",
+    "No"
+   ]
+  },
+  {
+   "id": "app",
+   "q": "Should each page link into the app's quit tool?",
+   "why": "",
+   "rec": "One quiet line at the end, no pop-ups. A page that sells hard loses the trust the sources earn.",
+   "choices": [
+    "Yes, one quiet line",
+    "No",
+    "Later"
+   ]
+  },
+  {
+   "id": "country",
+   "q": "Which countries' help lines go on the pages?",
+   "why": "",
+   "rec": "US, UK and Denmark first, then wherever the book sells.",
+   "choices": [
+    "US, UK, Denmark",
+    "US only",
+    "Other"
+   ]
+  },
+  {
+   "id": "book",
+   "q": "Can you share the book's chapter list or draft?",
+   "why": "Then each page can say which chapter covers it, and the book can print the matching short link.",
+   "rec": "Yes. A chapter list is enough.",
+   "choices": [
+    "I'll share it",
+    "Not yet"
+   ]
+  },
+  {
+   "id": "cross",
+   "q": "Cross-addiction: its own page, a box on every page, or both?",
+   "why": "",
+   "rec": "Both: a short box on every page that links to one full page.",
+   "choices": [
+    "Both",
+    "Own page only",
+    "Box only"
+   ]
+  }
+ ],
+ "names": {
+  "heroin-fentanyl": "Heroin and fentanyl",
+  "prescription-opioids": "Prescription painkillers (opioids)",
+  "benzodiazepines": "Benzodiazepines (Xanax, Valium)",
+  "nicotine": "Nicotine: cigarettes, vapes, pouches",
+  "cannabis": "Cannabis (weed)",
+  "methamphetamine": "Meth",
+  "prescription-stimulants": "Adderall and Ritalin",
+  "caffeine": "Caffeine",
+  "ketamine": "Ketamine",
+  "anabolic-steroids": "Steroids",
+  "binge-eating-and-ultra-processed-food": "Binge eating and sugar",
+  "tanning": "Tanning",
+  "decongestant-nasal-spray": "Nasal decongestant spray",
+  "porn": "Porn",
+  "cross-addiction": "Swapping one addiction for another"
+ },
+ "slugs": {
+  "heroin-fentanyl": "heroin",
+  "prescription-opioids": "painkillers",
+  "benzodiazepines": "benzos",
+  "ghb-gbl": "ghb",
+  "gabapentin-pregabalin": "gabapentin",
+  "cannabis": "weed",
+  "methamphetamine": "meth",
+  "prescription-stimulants": "adderall",
+  "anabolic-steroids": "steroids",
+  "gambling": "betting",
+  "crypto-day-trading": "trading",
+  "social-media-phones": "phone",
+  "binge-eating-and-ultra-processed-food": "sugar",
+  "love-and-limerence": "limerence",
+  "decongestant-nasal-spray": "nasal-spray",
+  "antidepressant-discontinuation": "antidepressants",
+  "cross-addiction": "swapping"
+ }
+}

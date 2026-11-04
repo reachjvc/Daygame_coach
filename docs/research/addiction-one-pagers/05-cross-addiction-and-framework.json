@@ -1,0 +1,312 @@
+{
+  "crossAddiction": {
+    "id": "cross-addiction",
+    "name": "Swapping one addiction for another",
+    "group": "boundary",
+    "oneLiner": "Getting free of one addiction makes a new one less likely, not more: within three years, 13.1% of people who recovered picked up a new one, against 27.2% of those who did not.",
+    "oneLinerRefs": ["c1"],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": null,
+      "prescribedOrigin": null,
+      "overdoseRiskAfterBreak": null,
+      "classification": "Not a diagnosis. DSM-5 and ICD-11 diagnose each substance or behaviour separately; 'cross-addiction', 'addiction transfer' and 'addiction substitution' are informal or research terms.",
+      "classificationStatus": "not-recognised"
+    },
+    "axesNote": "Boundary page about moving between addictions, so the per-addiction axes do not apply; the nulls are deliberate. Withdrawal and overdose safety come from the page of each substance involved.",
+    "safety": {
+      "level": "caution",
+      "text": "After gastric bypass, alcohol peaks faster and higher in the blood, and new drinking problems start to rise from the second year after surgery. If you have had weight-loss surgery, treat any rise in drinking as a warning sign and tell your care team.",
+      "refs": ["c4", "c5", "c6", "c7"]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "life",
+        "label": "After gastric bypass: new alcohol problems rise from year 2",
+        "startH": 8760,
+        "peakH": 61320,
+        "endH": 61320,
+        "peakIntensity": 2,
+        "note": "Hours since surgery, not since last use. Alcohol-problem symptoms: 7.6% the year before surgery, 7.3% at year 1, 9.6% at year 2. By year 5, 20.8% had new symptoms after bypass vs 11.3% after banding. No peak seen; follow-up ended at 7 years.",
+        "refs": ["c4", "c5"]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 17520,
+        "kind": "trap",
+        "label": "Year 2 after gastric bypass: first measurable rise in alcohol problems",
+        "refs": ["c4"]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "If I quit this, I'll just replace it with something else.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "Of 34,653 US adults, those who recovered from one substance problem picked up a new one half as often as those who did not (13.1% vs 27.2%). Studies find recovery spreading three times as often as swapping.",
+        "refs": ["c1", "c2"],
+        "beliefSource": "Blanco 2014 describes it as what remitters 'are often thought' to face and calls it 'clinical lore'; Kim 2021's title asks 'Clinical lore or empirically-based?'. First person: 'Just feels like I traded one drug for another' (recovery-testimonials/02-reddit-leaves-cannabis.md, B3)."
+      },
+      {
+        "voice": "I can only quit one thing at a time.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "In 35 trials, adding stop-smoking help during alcohol or drug recovery raised quit rates and left other abstinence unchanged (RR 0.97). One 499-person trial found drinking outcomes worse when smoking treatment started during intensive alcohol treatment.",
+        "refs": ["c9", "c10"],
+        "beliefSource": "Documented as a clinicians' worry: 'Fear of jeopardizing drinking outcomes' (Joseph 2004); concern that 'recovery from other addictions could be compromised' (Apollonio 2016). No survey of the public's version was found."
+      },
+      {
+        "voice": "If I stop smoking, I'll drink more.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "In three US quit studies (1,022 smokers), drinkers' drinking fell and stayed lower at 26 weeks. A 2004 meta-analysis linked smoking help during addiction treatment with a 25% higher chance of long-term sobriety.",
+        "refs": ["c13", "c8"],
+        "beliefSource": "Clinicians' concern documented in Joseph 2004 and Apollonio 2016 (see belief above); the public's version was not surveyed in this pass."
+      },
+      {
+        "voice": "It's a different thing, so it doesn't count.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Among people recovered from drug problems, those who kept smoking had twice the odds of relapse (OR 2.02). Recovered drinkers who smoked daily had 54% higher odds of alcohol dependence returning. When swaps happen, outcomes tend to be poorer.",
+        "refs": ["c12", "c11", "c2"],
+        "beliefSource": "First person: 'Quit drinking alcohol 9 years ago and replaced it with weed' (recovery-testimonials/02-reddit-leaves-cannabis.md, line 94); that file notes substitution 'runs both ways and nobody seems to see it coming'."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Get stop-smoking medication during alcohol or drug recovery rather than putting it off",
+        "evidence": "moderate",
+        "note": "Cochrane 2016, 35 trials: medication raised tobacco abstinence (RR 1.60), counselling plus medication RR 1.74, alcohol and drug abstinence unchanged. Graded low quality; one trial favoured waiting until intensive alcohol treatment ends.",
+        "refs": ["c9", "c10"]
+      },
+      {
+        "what": "Watch for a new habit taking over the coping job",
+        "evidence": "weak",
+        "note": "In 185 people recovered from gambling, the usual reason for a swap was coping. Swappers had more childhood adversity, impulsivity and trouble handling emotions. Across studies: male, younger, more severe, mental-health problems.",
+        "refs": ["c3", "c2"]
+      },
+      {
+        "what": "When you deal with one addiction, check for the others",
+        "evidence": "weak",
+        "note": "Gambling problems overlap heavily with nicotine, alcohol and drug problems in national surveys; the authors recommend screening for the other conditions when treatment starts.",
+        "refs": ["c14", "c15"]
+      },
+      {
+        "what": "Before and after weight-loss surgery: alcohol education and regular screening",
+        "evidence": "weak",
+        "note": "Recommended by the authors of the 7-year LABS-2 follow-up, which found one in five bypass patients reported new alcohol-problem symptoms within 5 years.",
+        "refs": ["c5"]
+      }
+    ],
+    "numbers": [
+      { "stat": "US adults with a substance use disorder, 2001-02 to 2004-05: 13.1% of those who recovered developed a new one within about 3 years, vs 27.2% of those who did not recover.", "refs": ["c1"] },
+      { "stat": "73.2% of US adults with lifetime pathological gambling (2001-02 survey) also had an alcohol use disorder; 60.4% had nicotine dependence.", "refs": ["c14"] },
+      { "stat": "20.8% of gastric bypass patients reported new alcohol-problem symptoms within 5 years of surgery (US, LABS-2, surgery 2006-09).", "refs": ["c5"] }
+    ],
+    "screener": null,
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "When, after quitting a substance or behaviour, the risk of a new addiction shows up (weeks, months, years).",
+        "why": "Blanco 2014 measured one 3-year window and no study found here times substitution after quitting; only weight-loss surgery has a measured time course."
+      },
+      {
+        "block": "screener",
+        "wanted": "A validated screener for addiction substitution.",
+        "why": "None found. The page should send readers to the screener on each addiction's own page."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "Behaviour-to-behaviour swaps (porn to gaming, betting to crypto trading) and their rates.",
+        "why": "Kim 2021 found gambling was the starting addiction in only 2.08% of 96 studies; behaviour-to-behaviour swapping is almost unstudied."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "Evidence that ordinary readers (not clinicians) hold 'one thing at a time' and 'quitting smoking will make me drink'.",
+        "why": "Sources document the clinicians' version only; no survey of the public's beliefs was found in this pass."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Cannabis used as a substitute for alcohol or opioids: does it help or hurt recovery?",
+        "why": "Not researched in this pass; opioids and cannabis are the most-studied starting addictions in Kim 2021, so the evidence exists to be read."
+      }
+    ],
+    "refs": [
+      { "id": "c1", "cite": "Blanco C, Okuda M, Wang S, Liu SM, Olfson M (2014). Testing the drug substitution switching-addictions hypothesis: a prospective study in a nationally representative sample. JAMA Psychiatry 71(11):1246-1253.", "kind": "cohort", "doi": "10.1001/jamapsychiatry.2014.1206", "pmid": "25208305", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4797944/", "fetched": true, "supports": "Remitters developed new SUD 13.1% vs 27.2% non-remitters; 'contrary to clinical lore'." },
+      { "id": "c2", "cite": "Kim HS, Hodgins DC, Garcia X, Ritchie EV, Musani I, McGrath DS, von Ranson KM (2021). A systematic review of addiction substitution in recovery: clinical lore or empirically-based? Clinical Psychology Review 89:102083.", "kind": "review", "doi": "10.1016/j.cpr.2021.102083", "pmid": "34536796", "url": "https://europepmc.org/article/MED/34536796", "fetched": true, "supports": "96 studies: 52.94% support concurrent recovery, 17.65% substitution; substitution linked to poorer outcomes." },
+      { "id": "c3", "cite": "Kim HS, McGrath DS, Hodgins DC (2023). Addiction substitution and concurrent recovery in gambling disorder: who substitutes and why? Journal of Behavioral Addictions 12:682-696.", "kind": "study", "doi": "10.1556/2006.2023.00046", "pmid": "37578867", "url": "https://europepmc.org/article/MED/37578867", "fetched": true, "supports": "185 recovered gamblers: substitution mainly for coping; linked to adversity, impulsivity, emotion dysregulation." },
+      { "id": "c4", "cite": "King WC, Chen JY, Mitchell JE, et al. (2012). Prevalence of alcohol use disorders before and after bariatric surgery. JAMA 307(23):2516-2525.", "kind": "cohort", "doi": "10.1001/jama.2012.6147", "pmid": "22710289", "url": "https://europepmc.org/article/MED/22710289", "fetched": true, "supports": "AUD symptoms 7.6% pre-surgery, 7.3% year 1, 9.6% year 2; RYGB AOR 2.07." },
+      { "id": "c5", "cite": "King WC, Chen JY, Courcoulas AP, et al. (2017). Alcohol and other substance use after bariatric surgery: prospective evidence from a U.S. multicenter cohort study. Surgery for Obesity and Related Diseases 13:1392-1402.", "kind": "cohort", "doi": "10.1016/j.soard.2017.03.021", "pmid": "28528115", "url": "https://europepmc.org/article/MED/28528115", "fetched": true, "supports": "5-year incident AUD symptoms 20.8% after RYGB vs 11.3% after banding; recommends screening." },
+      { "id": "c6", "cite": "Molina-Castro M, Rowitz B, Pepino MY (2025). Glucagon-like peptide-1, fibroblast growth factor 21, and other endocrine responses to alcohol ingestion in women before and after metabolic surgery. Frontiers in Pharmacology 16:1575156.", "kind": "study", "doi": "10.3389/fphar.2025.1575156", "pmid": "40474966", "url": "https://europepmc.org/article/MED/40474966", "fetched": true, "supports": "Seven women: after surgery blood alcohol peaked faster and higher; clearance fell about 28%." },
+      { "id": "c7", "cite": "Pepino MY, Okunade AL, Eagon JC, Bartholow BD, Bucholz K, Klein S (2015). Effect of Roux-en-Y gastric bypass surgery: converting 2 alcoholic drinks to 4. JAMA Surgery 150:1096-1098.", "kind": "study", "doi": "10.1001/jamasurg.2015.1884", "pmid": "26244751", "url": "https://europepmc.org/article/MED/26244751", "fetched": false, "supports": "Title only seen (no abstract): after bypass, two drinks act like four. Check full text." },
+      { "id": "c8", "cite": "Prochaska JJ, Delucchi K, Hall SM (2004). A meta-analysis of smoking cessation interventions with individuals in substance abuse treatment or recovery. Journal of Consulting and Clinical Psychology 72(6):1144-1156.", "kind": "review", "doi": "10.1037/0022-006x.72.6.1144", "pmid": "15612860", "url": "https://europepmc.org/article/MED/15612860", "fetched": true, "supports": "19 RCTs: smoking help in addiction treatment linked to 25% higher long-term alcohol/drug abstinence." },
+      { "id": "c9", "cite": "Apollonio D, Philipps R, Bero L (2016). Interventions for tobacco use cessation in people in treatment for or recovery from substance use disorders. Cochrane Database of Systematic Reviews 11:CD010274.", "kind": "review", "doi": "10.1002/14651858.cd010274.pub2", "pmid": "27878808", "url": "https://europepmc.org/article/MED/27878808", "fetched": true, "supports": "35 RCTs: tobacco abstinence up (RR 1.60/1.74); other abstinence unchanged (RR 0.97); low quality." },
+      { "id": "c10", "cite": "Joseph AM, Willenbring ML, Nugent SM, Nelson DB (2004). A randomized trial of concurrent versus delayed smoking intervention for patients in alcohol dependence treatment. Journal of Studies on Alcohol 65:681-691.", "kind": "trial", "doi": "10.15288/jsa.2004.65.681", "pmid": "15700504", "url": "https://europepmc.org/article/MED/15700504", "fetched": true, "supports": "499 smokers: concurrent smoking treatment had worse 6-month alcohol abstinence (41% vs 56%)." },
+      { "id": "c11", "cite": "Weinberger AH, Platt J, Jiang B, Goodwin RD (2015). Cigarette smoking and risk of alcohol use relapse among adults in recovery from alcohol use disorders. Alcoholism: Clinical and Experimental Research 39:1989-1996.", "kind": "cohort", "doi": "10.1111/acer.12840", "pmid": "26365044", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4592419/", "fetched": true, "supports": "Fully adjusted: daily smokers 54% greater odds of relapse to alcohol dependence (full text)." },
+      { "id": "c12", "cite": "Weinberger AH, Platt J, Esan H, Galea S, Erlich D, Goodwin RD (2017). Cigarette smoking is associated with increased risk of substance use disorder relapse. Journal of Clinical Psychiatry 78:e152-e160.", "kind": "cohort", "doi": "10.4088/jcp.15m10062", "pmid": "28234432", "url": "https://europepmc.org/article/MED/28234432", "fetched": true, "supports": "Continued smoking OR 2.02 for SUD relapse; starting smoking OR 4.86." },
+      { "id": "c13", "cite": "Vinci C, Lam CY, Etcheverry PE, et al. (2024). Co-action and changes in alcohol use during a smoking cessation attempt. Addiction 119:1059-1070.", "kind": "cohort", "doi": "10.1111/add.16472", "pmid": "38482972", "url": "https://europepmc.org/article/MED/38482972", "fetched": true, "supports": "Three studies: drinking fell from baseline to 26 weeks post-quit among current drinkers." },
+      { "id": "c14", "cite": "Petry NM, Stinson FS, Grant BF (2005). Comorbidity of DSM-IV pathological gambling and other psychiatric disorders: results from NESARC. Journal of Clinical Psychiatry 66:564-574.", "kind": "survey", "doi": "10.4088/jcp.v66n0504", "pmid": "15889941", "url": "https://europepmc.org/article/MED/15889941", "fetched": true, "supports": "Pathological gamblers: 73.2% alcohol use disorder, 60.4% nicotine dependence, 38.1% drug use disorder." },
+      { "id": "c15", "cite": "Lorains FK, Cowlishaw S, Thomas SA (2011). Prevalence of comorbid disorders in problem and pathological gambling: systematic review and meta-analysis of population surveys. Addiction 106:490-498.", "kind": "review", "doi": "10.1111/j.1360-0443.2010.03300.x", "pmid": "21210880", "url": "https://europepmc.org/article/MED/21210880", "fetched": true, "supports": "11 surveys: nicotine dependence 60.1%, any SUD 57.5%; recommends comorbidity screening." }
+    ]
+  },
+
+  "frameworkFindings": [
+    {
+      "topic": "Most people recover, many without formal treatment",
+      "finding": "US lifetime remission: 83.7% nicotine, 90.6% alcohol, 97.2% cannabis, 99.2% cocaine; half remitted about 26, 14, 6 and 5 years after onset. 77.5% of recovered drinkers had no help or treatment; in a 2017 survey 53.9% used some help, mostly mutual-help groups.",
+      "implication": "Open each page with the base rate: most people get out. Give the median years honestly, since they are long. Do not imply treatment is the only route, nor that help is pointless.",
+      "refs": ["f1", "f2", "f3", "f4", "f5"]
+    },
+    {
+      "topic": "How many attempts it takes",
+      "finding": "US adults who resolved an alcohol or drug problem made a median of 2 serious attempts (mean 5.35, skewed); it did not differ by substance. Smoking estimates run from 6.1 to 142 attempts depending on method; the authors' least-biased figure is 29.6.",
+      "implication": "Say 'most people need more than one go' and quote the median, as the authors advise. For smoking, say the number is uncertain. Frame a failed attempt as the normal route, never as a score.",
+      "refs": ["f6", "f7"]
+    },
+    {
+      "topic": "Relapse risk is front-loaded, then eases",
+      "finding": "Hunt 1971 found nicotine, heroin and alcohol relapse curves almost identical over a year: most relapse early, then the rate slows sharply. A review of 20 alcohol and tobacco studies found the same shape. Relapse rates resemble those in hypertension, asthma and type 2 diabetes.",
+      "implication": "The timeline can honestly show risk highest early and easing with time. Pair it with 'relapse is common, as in other long-term illnesses' so a slip reads as expected, not as proof of failure.",
+      "refs": ["f8", "f9", "f10"]
+    },
+    {
+      "topic": "Cue-craving can grow before it fades (incubation)",
+      "finding": "Paid-abstinent smokers showed more cue-craving at day 35 than day 7; alcohol inpatients peaked at day 60; in cocaine users a brain marker peaked at 1-6 months while self-rated craving fell. Twenty clinical opioid studies found no rise.",
+      "implication": "Never draw cue-craving falling to zero. Show background craving fading while cue-reactivity may hold or rise for weeks to months, labelled 'found for some substances'. Do not apply it to opioids.",
+      "refs": ["f11", "f12", "f13", "f14"]
+    },
+    {
+      "topic": "Craving follows cues and access, not the clock",
+      "finding": "Flight attendants' craving peaked as landing neared, on short and long flights alike. Orthodox Jewish smokers craved less on the Sabbath than on a forced-abstinence workday. People who expect a chance to use report stronger urges. Smokers' first lapses came where cigarettes were available.",
+      "implication": "Draw craving as spikes tied to situations, not a smooth decay by hour. Tell readers that removing access lowers craving itself, which backs the 'remove the supply' advice from the testimonial synthesis.",
+      "refs": ["f15", "f16", "f17", "f18"]
+    },
+    {
+      "topic": "Expecting bad withdrawal predicts worse withdrawal (nocebo)",
+      "finding": "Expected distress predicted opiate withdrawal severity; dose did not. Smokers expecting strong withdrawal reported worse symptoms. 17% of patients stopping a placebo reported discontinuation symptoms. Explicit symptom suggestions and watching others suffer are among the strongest nocebo triggers.",
+      "implication": "A vivid symptom list can add symptoms. Lead with what most people do not get, show ranges rather than dramatic peaks, keep horror stories off the page, and keep only danger signs vivid.",
+      "refs": ["f19", "f20", "f21", "f22", "f23"]
+    },
+    {
+      "topic": "Preparing people helps when it is framed well",
+      "finding": "Across 105 surgery trials, psychological preparation, including what sensations to expect, gave low-quality evidence of less pain and negative affect. Five of six framing studies found positive framing ('70% will not get it') reduced nocebo effects. A 1994 trial reportedly cut withdrawal complaints by telling smokers to expect none (unverified).",
+      "implication": "Do not hide the timeline; frame it. For each phase: what is normal, how many people do not get it, when it eases, what to do. Information framed this way beats silence.",
+      "refs": ["f24", "f25", "f26"]
+    },
+    {
+      "topic": "Withdrawal differs widely between people",
+      "finding": "In 893 smokers, every withdrawal feature (severity, slope, curvature, day-to-day volatility) varied widely between people. Rising or volatile symptoms predicted relapse. Medication lowered severity but did not change the shape over time.",
+      "implication": "Draw each track as a band with a typical line inside, never a single curve. Add 'yours may differ'. Flag symptoms that rise instead of easing as a reason to get support.",
+      "refs": ["f27", "f28", "f29"]
+    },
+    {
+      "topic": "Dependence is not addiction",
+      "finding": "'Dependence' means two things: uncontrolled use, and the body adapting to a drug. DSM-5 does not count opioid tolerance or withdrawal when opioids are taken solely under appropriate medical supervision. Severity: mild 2-3 criteria, moderate 4-5, severe 6 or more.",
+      "implication": "Pages with a prescribed origin (opioids, benzodiazepines, antidepressants, gabapentinoids) say plainly that withdrawal alone does not mean addiction. Keep 'body adapted' and 'cannot control it' apart everywhere.",
+      "refs": ["f30", "f31"]
+    },
+    {
+      "topic": "After a break, the old dose can kill",
+      "finding": "Across six prison systems, drug-related death was 3 to 8 times higher in the first 2 weeks after release than in weeks 3-12, and still raised in weeks 3-4. After inpatient opiate detox, all three overdose deaths within four months were among those who completed it.",
+      "implication": "Pages with overdoseRiskAfterBreak true put a danger marker at the return to use, not at quitting: 'your tolerance is gone; the old amount can kill'. Place it inside the good stretch.",
+      "refs": ["f32", "f33"]
+    },
+    {
+      "topic": "Brain recovery: real, partial, and over-sold",
+      "finding": "Volkow 2001 scanned 5 methamphetamine users: dopamine transporters rose 16-19% after 12-17 months abstinent, but test scores did not improve significantly. A 2022 review of 45 studies found mostly partial recovery. The brain-disease model is disputed. 'Dopamine fasting' does not lower dopamine.",
+      "implication": "Say 'the brain partly recovers over months' and cite the review, not one coloured scan. No 'reset your dopamine' claims, no day-counts for brain healing, no brain images offered as proof.",
+      "refs": ["f34", "f35", "f36", "f37", "f38", "f39"]
+    },
+    {
+      "topic": "Rock bottom and 'you have to want it'",
+      "finding": "Court-mandated patients did as well as or better than others at 1 and 5 years. Compulsory detention showed no clear benefit and possible harm. Family training (CRAFT) got about two-thirds of treatment-refusing people into treatment. 'Hitting bottom' had no formal definition until 2017.",
+      "implication": "Every page rejects 'wait for rock bottom'. Pressure from a court, partner or job can start recovery that works. Add one line for family members pointing to CRAFT; never endorse locked detention.",
+      "refs": ["f40", "f41", "f42", "f43", "f44"]
+    },
+    {
+      "topic": "The good stretch and the bad moment",
+      "finding": "In young heavy drinkers, good-mood days raised urges, which raised intoxication. But smokers' first lapses came with bad mood, cues and easy access, and positive mood did not predict smoking relapse in 450 smokers. Evidence for the good-stretch hazard is mostly from first-person accounts.",
+      "implication": "Warn about both the bad night and the good stretch. Present the good-stretch risk as a pattern people report, with the trial evidence labelled 'young drinkers', not as proven for every addiction.",
+      "refs": ["f45", "f46", "f18", "f47"]
+    },
+    {
+      "topic": "What happens after the first slip",
+      "finding": "Marlatt's abstinence-violation effect says a slip plus self-blame spirals into relapse. Real-time data only partly agree: those measures mostly failed to predict progression, but smokers who felt like giving up after a first lapse lapsed again faster; trying to recover the same day slowed it.",
+      "implication": "Each page gets an 'if you slipped' line: one use is not the end; get back on track that day. Avoid visuals that reset to zero, since they invite the 'I've blown it' reaction.",
+      "refs": ["f48", "f49", "f50"]
+    },
+    {
+      "topic": "Showing uncertainty costs little trust; tables teach, graphics attract",
+      "finding": "In five experiments (n=5,780), stating uncertainty only slightly lowered trust, mostly when phrased in words rather than numbers. A drug facts table raised correct grasp of a statin's benefit from 9% to 72%. An infographic was liked more than plain text but taught no more.",
+      "implication": "Show ranges as numbers ('24-72 hours'), not 'roughly'. Show an evidence grade on each block. Treat the timeline graphic as the hook and the short table or text beneath it as what teaches.",
+      "refs": ["f51", "f52", "f53", "f54"]
+    },
+    {
+      "topic": "Words: 'addict' raises blame",
+      "finding": "516 clinicians who read about 'a substance abuser' judged the person more to blame and deserving punishment than with 'has a substance use disorder'. In 1,288 adults, 'addict', 'alcoholic' and 'substance abuser' carried strong negative bias; 'recurrence of use' scored better than 'relapse'.",
+      "implication": "Use 'addiction' for the topic, since readers search it, but never label the reader: 'people who drink heavily', not 'alcoholics'. Prefer 'slip' or 'return to use' over 'relapse' in reader-facing lines.",
+      "refs": ["f55", "f56"]
+    }
+  ],
+
+  "refs": [
+    { "id": "f1", "cite": "Lopez-Quintero C, Hasin DS, de Los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction 106:657-669.", "kind": "survey", "doi": "10.1111/j.1360-0443.2010.03194.x", "pmid": "21077975", "url": "https://europepmc.org/article/MED/21077975", "fetched": true, "supports": "Lifetime remission 83.7/90.6/97.2/99.2%; half remitted about 26, 14, 6, 5 years after onset." },
+    { "id": "f2", "cite": "Sobell LC, Cunningham JA, Sobell MB (1996). Recovery from alcohol problems with and without treatment: prevalence in two population surveys. American Journal of Public Health 86:966-972.", "kind": "survey", "doi": "10.2105/ajph.86.7.966", "pmid": "8669520", "url": "https://europepmc.org/article/MED/8669520", "fetched": true, "supports": "77.5% and 77.7% of recovered drinkers did so without help or treatment; 38%/63% drank moderately." },
+    { "id": "f3", "cite": "Slutske WS (2006). Natural recovery and treatment-seeking in pathological gambling: results of two U.S. national surveys. American Journal of Psychiatry 163:297-302.", "kind": "survey", "doi": "10.1176/appi.ajp.163.2.297", "pmid": "16449485", "url": "https://europepmc.org/article/MED/16449485", "fetched": true, "supports": "36-39% had no past-year gambling problems; only 7-12% ever sought treatment or GA." },
+    { "id": "f4", "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population. Drug and Alcohol Dependence 181:162-169.", "kind": "survey", "doi": "10.1016/j.drugalcdep.2017.09.028", "pmid": "29055821", "url": "https://europepmc.org/article/MED/29055821", "fetched": true, "supports": "9.1% resolved an AOD problem; 53.9% used assisted pathways; mutual-help 45.1%, treatment 27.6%." },
+    { "id": "f5", "cite": "Konkolÿ Thege B, Woodin EM, Hodgins DC, Williams RJ (2015). Natural course of behavioral addictions: a 5-year longitudinal study. BMC Psychiatry 15:4.", "kind": "cohort", "doi": "10.1186/s12888-015-0383-3", "pmid": "25608605", "url": "https://europepmc.org/article/MED/25608605", "fetched": true, "supports": "4,121 Ontario adults: excessive behaviours mostly transient, one behaviour, one period; help-seeking low." },
+    { "id": "f6", "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Alcoholism: Clinical and Experimental Research 43:1533-1544.", "kind": "survey", "doi": "10.1111/acer.14067", "pmid": "31090945", "url": "https://europepmc.org/article/MED/31090945", "fetched": true, "supports": "Median 2 serious attempts (mean 5.35); no difference by substance; authors advise using the median." },
+    { "id": "f7", "cite": "Chaiton M, Diemert L, Cohen JE, et al. (2016). Estimating the number of quit attempts it takes to quit smoking successfully in a longitudinal cohort of smokers. BMJ Open 6:e011045.", "kind": "cohort", "doi": "10.1136/bmjopen-2016-011045", "pmid": "27288378", "url": "https://europepmc.org/article/MED/27288378", "fetched": true, "supports": "Estimates 6.1, 19.6, 29.6 (least biased) or 142 attempts depending on assumptions." },
+    { "id": "f8", "cite": "Hunt WA, Barnett LW, Branch LG (1971). Relapse rates in addiction programs. Journal of Clinical Psychology 27:455-456.", "kind": "study", "doi": "10.1002/1097-4679(197110)27:4<455::aid-jclp2270270412>3.0.co;2-r", "pmid": "5115648", "url": "https://europepmc.org/article/MED/5115648", "fetched": false, "supports": "Original relapse curve; no abstract available. Its content is confirmed second-hand via f9." },
+    { "id": "f9", "cite": "Kirshenbaum AP, Olsen DM, Bickel WK (2009). A quantitative review of the ubiquitous relapse curve. Journal of Substance Abuse Treatment 36:8-17.", "kind": "review", "doi": "10.1016/j.jsat.2008.04.001", "pmid": "18571890", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3151675/", "fetched": true, "supports": "Hunt: similar one-year relapse for nicotine, heroin, alcohol, mostly early; 20 studies: rate decelerates." },
+    { "id": "f10", "cite": "McLellan AT, Lewis DC, O'Brien CP, Kleber HD (2000). Drug dependence, a chronic medical illness: implications for treatment, insurance, and outcomes evaluation. JAMA 284:1689-1695.", "kind": "review", "doi": "10.1001/jama.284.13.1689", "pmid": "11015800", "url": "https://europepmc.org/article/MED/11015800", "fetched": true, "supports": "Medication adherence and relapse rates similar across drug dependence, type 2 diabetes, hypertension, asthma." },
+    { "id": "f11", "cite": "Bedi G, Preston KL, Epstein DH, et al. (2011). Incubation of cue-induced cigarette craving during abstinence in human smokers. Biological Psychiatry 69:708-711.", "kind": "study", "doi": "10.1016/j.biopsych.2010.07.014", "pmid": "20817135", "url": "https://europepmc.org/article/MED/20817135", "fetched": true, "supports": "86 smokers: cue-craving greater at 35 than 7 days; never decreased with abstinence." },
+    { "id": "f12", "cite": "Li P, Wu P, Xin X, et al. (2015). Incubation of alcohol craving during abstinence in patients with alcohol dependence. Addiction Biology 20:513-522.", "kind": "study", "doi": "10.1111/adb.12140", "pmid": "24698092", "url": "https://europepmc.org/article/MED/24698092", "fetched": true, "supports": "Male inpatients: cue-induced alcohol craving highest at 60 days of abstinence." },
+    { "id": "f13", "cite": "Parvaz MA, Moeller SJ, Goldstein RZ (2016). Incubation of cue-induced craving in adults addicted to cocaine measured by electroencephalography. JAMA Psychiatry 73:1127-1134.", "kind": "study", "doi": "10.1001/jamapsychiatry.2016.2181", "pmid": "27603142", "url": "https://europepmc.org/article/MED/27603142", "fetched": true, "supports": "EEG cue response peaked at 1 and 6 months; self-rated baseline craving fell steadily." },
+    { "id": "f14", "cite": "Bergeria CL, Gipson CD, Smith KE, Stoops WW, Strickland JC (2024). Opioid craving does not incubate over time in inpatient or outpatient treatment studies. Neuroscience and Biobehavioral Reviews 160:105618.", "kind": "review", "doi": "10.1016/j.neubiorev.2024.105618", "pmid": "38492446", "url": "https://europepmc.org/article/MED/38492446", "fetched": true, "supports": "No clinical study (n = 20) found opioid craving rising with longer abstinence." },
+    { "id": "f15", "cite": "Dar R, Rosen-Korakin N, Shapira O, Gottlieb Y, Frenk H (2010). The craving to smoke in flight attendants: relations with smoking deprivation, anticipation of smoking, and actual smoking. Journal of Abnormal Psychology 119:248-253.", "kind": "study", "doi": "10.1037/a0017778", "pmid": "20141262", "url": "https://europepmc.org/article/MED/20141262", "fetched": true, "supports": "Craving peaked as landing approached; end of short-flight leg matched end of long flight." },
+    { "id": "f16", "cite": "Dar R, Stronguin F, Marouani R, Krupsky M, Frenk H (2005). Craving to smoke in orthodox Jewish smokers who abstain on the Sabbath. Psychopharmacology 183:294-299.", "kind": "study", "doi": "10.1007/s00213-005-0192-3", "pmid": "16237578", "url": "https://europepmc.org/article/MED/16237578", "fetched": true, "supports": "Craving lower on Sabbath than forced-abstinence workday; driven by habits, cues, expectations." },
+    { "id": "f17", "cite": "Wertz JM, Sayette MA (2001). A review of the effects of perceived drug use opportunity on self-reported urge. Experimental and Clinical Psychopharmacology 9:3-13.", "kind": "review", "doi": "10.1037/1064-1297.9.1.3", "pmid": "11519632", "url": "https://europepmc.org/article/MED/11519632", "fetched": true, "supports": "Perceived opportunity to use raises urges; may explain treatment-setting urges being about half as strong." },
+    { "id": "f18", "cite": "Shiffman S, Paty JA, Gnys M, Kassel JA, Hickcox M (1996). First lapses to smoking: within-subjects analysis of real-time reports. Journal of Consulting and Clinical Psychology 64:366-379.", "kind": "study", "doi": "10.1037//0022-006x.64.2.366", "pmid": "8871421", "url": "https://europepmc.org/article/MED/8871421", "fetched": true, "supports": "Lapses linked to negative affect, cues, permitted smoking, available cigarettes, other smokers present." },
+    { "id": "f19", "cite": "Phillips GT, Gossop M, Bradley B (1986). The influence of psychological factors on the opiate withdrawal syndrome. British Journal of Psychiatry 149:235-238.", "kind": "study", "doi": "10.1192/bjp.149.2.235", "pmid": "3779283", "url": "https://europepmc.org/article/MED/3779283", "fetched": true, "supports": "Neuroticism and expected distress predicted withdrawal severity; drug dose did not." },
+    { "id": "f20", "cite": "Hendricks PS, Leventhal AM (2013). Abstinence-related expectancies predict smoking withdrawal effects: implications for possible causal mechanisms. Psychopharmacology 230:363-373.", "kind": "study", "doi": "10.1007/s00213-013-3169-7", "pmid": "23812761", "url": "https://europepmc.org/article/MED/23812761", "fetched": true, "supports": "180 smokers: stronger withdrawal expectancies predicted worse withdrawal; optimistic expectancies predicted milder." },
+    { "id": "f21", "cite": "Henssler J, Schmidt Y, Schmidt U, Schwarzer G, Bschor T, Baethge C (2024). Incidence of antidepressant discontinuation symptoms: a systematic review and meta-analysis. Lancet Psychiatry 11:526-535.", "kind": "review", "doi": "10.1016/s2215-0366(24)00133-0", "pmid": "38851198", "url": "https://europepmc.org/article/MED/38851198", "fetched": true, "supports": "Discontinuation symptoms 31% after antidepressants, 17% after placebo; net about 15%." },
+    { "id": "f22", "cite": "Kalfas M, Tsapekos D, Butler M, et al. (2025). Incidence and nature of antidepressant discontinuation symptoms: a systematic review and meta-analysis. JAMA Psychiatry 82:896-904.", "kind": "review", "doi": "10.1001/jamapsychiatry.2025.1362", "pmid": "40632531", "url": "https://europepmc.org/article/MED/40632531", "fetched": true, "supports": "Stopping antidepressants vs placebo: about one more symptom at week 1; dizziness commonest." },
+    { "id": "f23", "cite": "Webster RK, Weinman J, Rubin GJ (2016). A systematic review of factors that contribute to nocebo effects. Health Psychology 35:1334-1355.", "kind": "review", "doi": "10.1037/hea0000416", "pmid": "27657801", "url": "https://europepmc.org/article/MED/27657801", "fetched": true, "supports": "Strongest nocebo predictors: explicit symptom suggestions, observing others with symptoms, higher symptom expectations." },
+    { "id": "f24", "cite": "Powell R, Scott NW, Manyande A, et al. (2016). Psychological preparation and postoperative outcomes for adults undergoing surgery under general anaesthesia. Cochrane Database of Systematic Reviews CD008646.", "kind": "review", "doi": "10.1002/14651858.cd008646.pub2", "pmid": "27228096", "url": "https://europepmc.org/article/MED/27228096", "fetched": true, "supports": "105 trials: preparation (incl. sensory information) linked to less pain, negative affect; low quality." },
+    { "id": "f25", "cite": "Barnes K, Faasse K, Geers AL, et al. (2019). Can positive framing reduce nocebo side effects? Current evidence and recommendation for future research. Frontiers in Pharmacology 10:167.", "kind": "review", "doi": "10.3389/fphar.2019.00167", "pmid": "30894815", "url": "https://europepmc.org/article/MED/30894815", "fetched": true, "supports": "Six studies; all but one found positive framing reduced some aspect of nocebo side effects." },
+    { "id": "f26", "cite": "Tate JC, Stanton AL, Green SB, Schmitz JM, Le T, Marshall B (1994). Experimental analysis of the role of expectancy in nicotine withdrawal. Psychology of Addictive Behaviors 8(3):169-178.", "kind": "trial", "doi": "10.1037/0893-164X.8.3.169", "pmid": "", "url": "https://psycnet.apa.org/doi/10.1037/0893-164X.8.3.169", "fetched": false, "supports": "Search snippet only: 62 smokers told to expect no complaints had fewer symptoms. Verify abstract." },
+    { "id": "f27", "cite": "Piasecki TM, Jorenby DE, Smith SS, Fiore MC, Baker TB (2003). Smoking withdrawal dynamics: I. Abstinence distress in lapsers and abstainers. Journal of Abnormal Psychology 112:3-13.", "kind": "study", "doi": "10.1037/0021-843x.112.1.3", "pmid": "12653409", "url": "https://europepmc.org/article/MED/12653409", "fetched": true, "supports": "893 smokers: all five withdrawal parameters highly variable across persons." },
+    { "id": "f28", "cite": "Piasecki TM, Jorenby DE, Smith SS, Fiore MC, Baker TB (2003). Smoking withdrawal dynamics: II. Improved tests of withdrawal-relapse relations. Journal of Abnormal Psychology 112:14-27.", "kind": "study", "doi": "10.1037/0021-843x.112.1.14", "pmid": "12653410", "url": "https://europepmc.org/article/MED/12653410", "fetched": true, "supports": "Higher intercepts, rising slopes and greater volatility of withdrawal all associated with relapse." },
+    { "id": "f29", "cite": "Piasecki TM, Jorenby DE, Smith SS, Fiore MC, Baker TB (2003). Smoking withdrawal dynamics: III. Correlates of withdrawal heterogeneity. Experimental and Clinical Psychopharmacology 11:276-285.", "kind": "study", "doi": "10.1037/1064-1297.11.4.276", "pmid": "14599261", "url": "https://europepmc.org/article/MED/14599261", "fetched": true, "supports": "Medication reduced withdrawal severity but not slope, volatility or lapse-related changes." },
+    { "id": "f30", "cite": "O'Brien C (2011). Addiction and dependence in DSM-V. Addiction 106:866-867.", "kind": "other", "doi": "10.1111/j.1360-0443.2010.03144.x", "pmid": "21477226", "url": "https://europepmc.org/article/MED/21477226", "fetched": true, "supports": "'Dependence' has two meanings: uncontrolled drug-seeking and physiological adaptation with rebound; confusion harms care." },
+    { "id": "f31", "cite": "American Psychiatric Association (2013). DSM-5, opioid use disorder criteria, p. 541; as reproduced in the IT MATTTRs Colorado checklist hosted by ASAM.", "kind": "guideline", "doi": "", "pmid": "", "url": "https://www.asam.org/docs/default-source/education-docs/dsm-5-dx-oud-8-28-2017.pdf", "fetched": true, "supports": "Tolerance/withdrawal not met for opioids taken solely under appropriate medical supervision; severity 2-3/4-5/6+." },
+    { "id": "f32", "cite": "Merrall EL, Kariminia A, Binswanger IA, et al. (2010). Meta-analysis of drug-related deaths soon after release from prison. Addiction 105:1545-1554.", "kind": "review", "doi": "10.1111/j.1360-0443.2010.02990.x", "pmid": "20579009", "url": "https://europepmc.org/article/MED/20579009", "fetched": true, "supports": "Weeks 1-2 after release: 3- to 8-fold drug-death risk vs weeks 3-12; weeks 3-4 RR 1.7." },
+    { "id": "f33", "cite": "Strang J, McCambridge J, Best D, et al. (2003). Loss of tolerance and overdose mortality after inpatient opiate detoxification: follow up study. BMJ 326:959-960.", "kind": "cohort", "doi": "10.1136/bmj.326.7396.959", "pmid": "12727768", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC153851/", "fetched": false, "supports": "From search snippets: 137 patients; three overdose deaths within four months, all in completers." },
+    { "id": "f34", "cite": "Volkow ND, Chang L, Wang GJ, et al. (2001). Loss of dopamine transporters in methamphetamine abusers recovers with protracted abstinence. Journal of Neuroscience 21:9414-9418.", "kind": "study", "doi": "10.1523/jneurosci.21-23-09414.2001", "pmid": "11717374", "url": "https://europepmc.org/article/MED/11717374", "fetched": true, "supports": "Five users: transporters up 19% caudate, 16% putamen at 12-17 months; test gains not significant." },
+    { "id": "f35", "cite": "Parvaz MA, Rabin RA, Adams F, Goldstein RZ (2022). Structural and functional brain recovery in individuals with substance use disorders during abstinence: a review of longitudinal neuroimaging studies. Drug and Alcohol Dependence 232:109319.", "kind": "review", "doi": "10.1016/j.drugalcdep.2022.109319", "pmid": "35077955", "url": "https://europepmc.org/article/MED/35077955", "fetched": true, "supports": "45 studies: most show at least partial recovery; functional recovery may need longer abstinence." },
+    { "id": "f36", "cite": "Hall W, Carter A, Forlini C (2015). The brain disease model of addiction: is it supported by the evidence and has it delivered on its promises? Lancet Psychiatry 2:105-110.", "kind": "review", "doi": "10.1016/s2215-0366(14)00126-6", "pmid": "26359616", "url": "https://europepmc.org/article/MED/26359616", "fetched": true, "supports": "Argues neuroimaging evidence does not support the brain disease model as far as claimed." },
+    { "id": "f37", "cite": "Heilig M, MacKillop J, Martinez D, et al. (2021). Addiction as a brain disease revised: why it still matters, and the need for consilience. Neuropsychopharmacology 46:1715-1723.", "kind": "review", "doi": "10.1038/s41386-020-00950-y", "pmid": "33619327", "url": "https://europepmc.org/article/MED/33619327", "fetched": true, "supports": "Defends neurobiological basis; concedes some criticisms have merit, including remission heterogeneity." },
+    { "id": "f38", "cite": "Grinspoon P (2020). Dopamine fasting: misunderstanding science spawns a maladaptive fad. Harvard Health Publishing blog, 26 Feb 2020.", "kind": "other", "doi": "", "pmid": "", "url": "https://www.health.harvard.edu/blog/dopamine-fasting-misunderstanding-science-spawns-a-maladaptive-fad-2020022618917", "fetched": true, "supports": "A dopamine 'fast' doesn't lower dopamine; its creator said the title is not literal." },
+    { "id": "f39", "cite": "Väth PA, von Petersdorff J, Neumann C, Mundry R, Fischer J (2024). Replicating the 'seductive allure of neuroscience explanations' effect in a classroom experiment and an online study. Royal Society Open Science 11:241120.", "kind": "study", "doi": "10.1098/rsos.241120", "pmid": "40190720", "url": "https://europepmc.org/article/MED/40190720", "fetched": true, "supports": "Superfluous neuroscience boosted ratings of explanations mostly among people with less expertise." },
+    { "id": "f40", "cite": "Kelly JF, Finney JW, Moos R (2005). Substance use disorder patients who are mandated to treatment: characteristics, treatment process, and 1- and 5-year outcomes. Journal of Substance Abuse Treatment 28:213-223.", "kind": "cohort", "doi": "10.1016/j.jsat.2004.10.014", "pmid": "15857721", "url": "https://europepmc.org/article/MED/15857721", "fetched": true, "supports": "n=2,095: mandated patients had similar or better 1- and 5-year outcomes, similar treatment gains." },
+    { "id": "f41", "cite": "Werb D, Kamarulzaman A, Meacham MC, et al. (2016). The effectiveness of compulsory drug treatment: a systematic review. International Journal of Drug Policy 28:1-9.", "kind": "review", "doi": "10.1016/j.drugpo.2015.12.005", "pmid": "26790691", "url": "https://europepmc.org/article/MED/26790691", "fetched": true, "supports": "Nine studies: compulsory treatment not shown to improve outcomes; some suggest harms." },
+    { "id": "f42", "cite": "Klag S, O'Callaghan F, Creed P (2005). The use of legal coercion in the treatment of substance abusers: an overview and critical analysis of thirty years of research. Substance Use & Misuse 40:1777-1795.", "kind": "review", "doi": "10.1080/10826080500260891", "pmid": "16419556", "url": "https://europepmc.org/article/MED/16419556", "fetched": true, "supports": "Thirty years of coercion research: mixed, inconsistent, inconclusive results." },
+    { "id": "f43", "cite": "Roozen HG, de Waart R, van der Kroft P (2010). Community reinforcement and family training: an effective option to engage treatment-resistant substance-abusing individuals in treatment. Addiction 105:1729-1738.", "kind": "review", "doi": "10.1111/j.1360-0443.2010.03016.x", "pmid": "20626372", "url": "https://europepmc.org/article/MED/20626372", "fetched": true, "supports": "CRAFT engaged about two-thirds of treatment-resistant patients; 3x Al-Anon, 2x Johnson intervention." },
+    { "id": "f44", "cite": "Kirouac M, Witkiewitz K (2017). Identifying 'hitting bottom' among individuals with alcohol problems: development and evaluation of the NADIR. Substance Use & Misuse 52:1602-1615.", "kind": "study", "doi": "10.1080/10826084.2017.1293104", "pmid": "28557550", "url": "https://europepmc.org/article/MED/28557550", "fetched": true, "supports": "'Hitting bottom' widely portrayed as necessary but had never been formally operationalized." },
+    { "id": "f45", "cite": "Bold KW, Fucito LM, Corbin WR, et al. (2016). Daily relations among affect, urge, targeted naltrexone, and alcohol use in young adults. Experimental and Clinical Psychopharmacology 24:367-375.", "kind": "study", "doi": "10.1037/pha0000090", "pmid": "27690505", "url": "https://europepmc.org/article/MED/27690505", "fetched": true, "supports": "127 young heavy drinkers: positive affect raised urge, which raised odds of intoxication." },
+    { "id": "f46", "cite": "Roos CR, Bold KW, Witkiewitz K, et al. (2021). Reward drinking and naltrexone treatment response among young adult heavy drinkers. Addiction 116:2360-2371.", "kind": "study", "doi": "10.1111/add.15453", "pmid": "33620746", "url": "https://europepmc.org/article/MED/33620746", "fetched": true, "supports": "62.2% were 'reward drinkers'; naltrexone weakened the same-day positive affect-urge link." },
+    { "id": "f47", "cite": "Heffner JL, Mull KE, McClure JB, Bricker JB (2018). Positive affect as a predictor of smoking cessation and relapse. Substance Use & Misuse 53:980-988.", "kind": "study", "doi": "10.1080/10826084.2017.1387569", "pmid": "29161212", "url": "https://europepmc.org/article/MED/29161212", "fetched": true, "supports": "450 smokers: no depressive-symptom domain, including positive affect, predicted relapse." },
+    { "id": "f48", "cite": "Curry S, Marlatt GA, Gordon JR (1987). Abstinence violation effect: validation of an attributional construct with smoking cessation. Journal of Consulting and Clinical Psychology 55:145-149.", "kind": "study", "doi": "10.1037//0022-006x.55.2.145", "pmid": "3571666", "url": "https://europepmc.org/article/MED/3571666", "fetched": false, "supports": "Original AVE validation; no abstract retrieved, so findings unverified here." },
+    { "id": "f49", "cite": "Shiffman S, Hickcox M, Paty JA, et al. (1996). Progression from a smoking lapse to relapse: prediction from abstinence violation effects, nicotine dependence, and lapse characteristics. Journal of Consulting and Clinical Psychology 64:993-1002.", "kind": "study", "doi": "10.1037//0022-006x.64.5.993", "pmid": "8916628", "url": "https://europepmc.org/article/MED/8916628", "fetched": true, "supports": "AVE indicators mostly failed; 'felt like giving up' sped second lapse; restorative coping slowed it." },
+    { "id": "f50", "cite": "Kirchner TR, Shiffman S, Wileyto EP (2012). Relapse dynamics during smoking cessation: recurrent abstinence violation effects and lapse-relapse progression. Journal of Abnormal Psychology 121:187-197.", "kind": "study", "doi": "10.1037/a0024451", "pmid": "21787035", "url": "https://europepmc.org/article/MED/21787035", "fetched": true, "supports": "First-lapse AVE responses did not predict relapse; later drops in self-efficacy sped progression." },
+    { "id": "f51", "cite": "van der Bles AM, van der Linden S, Freeman ALJ, Spiegelhalter DJ (2020). The effects of communicating uncertainty on public trust in facts and numbers. PNAS 117:7672-7683.", "kind": "trial", "doi": "10.1073/pnas.1913678117", "pmid": "32205438", "url": "https://europepmc.org/article/MED/32205438", "fetched": true, "supports": "Five experiments, n=5,780: uncertainty only slightly reduced trust, mostly for verbal wording." },
+    { "id": "f52", "cite": "Schwartz LM, Woloshin S, Welch HG (2009). Using a drug facts box to communicate drug benefits and harms: two randomized trials. Annals of Internal Medicine 150:516-527.", "kind": "trial", "doi": "10.7326/0003-4819-150-8-200904210-00106", "pmid": "19221371", "url": "https://europepmc.org/article/MED/19221371", "fetched": true, "supports": "Facts box: 72% vs 9% correctly quantified statin benefit." },
+    { "id": "f53", "cite": "Buljan I, Malički M, Wager E, et al. (2018). No difference in knowledge obtained from infographic or plain language summary of a Cochrane systematic review: three randomized controlled trials. Journal of Clinical Epidemiology 97:86-94.", "kind": "trial", "doi": "10.1016/j.jclinepi.2017.12.003", "pmid": "29269021", "url": "https://europepmc.org/article/MED/29269021", "fetched": true, "supports": "Infographic preferred for reading experience but gave no more knowledge than plain-language text." },
+    { "id": "f54", "cite": "Spiegelhalter D, Pearson M, Short I (2011). Visualizing uncertainty about the future. Science 333:1393-1400.", "kind": "review", "doi": "10.1126/science.1191181", "pmid": "21903802", "url": "https://europepmc.org/article/MED/21903802", "fetched": true, "supports": "Limited experimental evidence on how uncertainty visualisations are understood; depends on numeracy." },
+    { "id": "f55", "cite": "Kelly JF, Westerhoff CM (2010). Does it matter how we refer to individuals with substance-related conditions? A randomized study of two commonly used terms. International Journal of Drug Policy 21:202-207.", "kind": "trial", "doi": "10.1016/j.drugpo.2009.10.010", "pmid": "20005692", "url": "https://europepmc.org/article/MED/20005692", "fetched": true, "supports": "516 clinicians: 'substance abuser' raised culpability and punishment judgments vs 'substance use disorder'." },
+    { "id": "f56", "cite": "Ashford RD, Brown AM, Curtis B (2018). Substance use, recovery, and linguistics: the impact of word choice on explicit and implicit bias. Drug and Alcohol Dependence 189:131-138.", "kind": "study", "doi": "10.1016/j.drugalcdep.2018.05.005", "pmid": "29913324", "url": "https://europepmc.org/article/MED/29913324", "fetched": true, "supports": "1,288 adults: 'addict', 'alcoholic', 'substance abuser' strongly negative; 'recurrence of use' beat 'relapse'." }
+  ]
+}

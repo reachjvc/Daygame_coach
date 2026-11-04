@@ -1,0 +1,2270 @@
+[
+  {
+    "id": "binge-eating-and-ultra-processed-food",
+    "name": "Binge eating, sugar and ultra-processed food",
+    "group": "behaviour",
+    "oneLiner": "Highly processed foods, not sugar on its own, carry the addiction-like signal, and binge-eating disorder is a treatable eating disorder.",
+    "oneLinerRefs": [
+      "r1",
+      "r2",
+      "r10"
+    ],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": false,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Binge-eating disorder: DSM-5 and ICD-11 (6B82), as an eating disorder, not an addiction. 'Food addiction', 'sugar addiction' and 'ultra-processed food addiction': not an official diagnosis.",
+      "classificationStatus": "recognised-other-disorder"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Regular binge eating can be binge-eating disorder, a recognised and treatable eating disorder: see a doctor. In one long study fasting predicted later binge eating, so avoid extreme restriction.",
+      "refs": [
+        "r9",
+        "r10",
+        "r11"
+      ]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "craving",
+        "label": "Cravings, irritability, low mood when cutting down",
+        "startH": 48,
+        "peakH": 72,
+        "endH": 120,
+        "peakIntensity": 2,
+        "note": "Worst on days 2-5 in a one-off online survey where people recalled a past attempt. Start and end were not measured. A trial found no more symptoms than an ordinary calorie diet.",
+        "refs": [
+          "r7",
+          "r8"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 72,
+        "kind": "peak",
+        "label": "People recall days 2-5 as the hardest",
+        "refs": [
+          "r7"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "I'm addicted to sugar. If I have any, I'll overdo it every time.",
+        "kind": "cant-stop",
+        "verdict": "half-true",
+        "science": "There is little human evidence that sugar itself is addictive. The strongest addiction-like signal is for highly processed foods that combine refined carbohydrate and fat.",
+        "refs": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "beliefSource": "docs/research/recovery-testimonials/16-uncovered-vices.md, quote 16-008 in src/vice/data/testimonials.ts (r/sugarfree): 'if I do it at all, I'm going to overdo it. Every. Damn. Time.'"
+      },
+      {
+        "voice": "I've been fine for weeks. A bit at a birthday party won't hurt.",
+        "kind": "can-moderate",
+        "verdict": "true-but",
+        "science": "With food you can't stop eating, so some moderation is unavoidable. But in a 5-year study of 496 girls, fasting predicted later binge eating. Extreme restriction carries its own risk.",
+        "refs": [
+          "r11"
+        ],
+        "beliefSource": "docs/research/recovery-testimonials/16-uncovered-vices.md, quote 16-007 in src/vice/data/testimonials.ts (r/sugarfree): 'I was just thinking that it was fine to consume in moderation… at birthday parties'"
+      },
+      {
+        "voice": "Cutting out junk food will feel like coming off a drug.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "People recalling a past attempt said days 2-5 were worst. But in a trial of 107 people, cutting ultra-processed food caused no more withdrawal symptoms than an ordinary calorie diet.",
+        "refs": [
+          "r7",
+          "r8"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "I binge because I've got no willpower.",
+        "kind": "identity",
+        "verdict": "mostly-false",
+        "science": "Binge-eating disorder is a recognised eating disorder, affecting 2.0% of US men in their lifetime. Talking therapy (mostly CBT) has large effects on binge episodes in trials.",
+        "refs": [
+          "r9",
+          "r10"
+        ],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Cognitive behavioural therapy for binge eating",
+        "evidence": "moderate",
+        "note": "Large effects versus waiting list across 81 trials, but the overall quality of the evidence was rated very low.",
+        "refs": [
+          "r10"
+        ]
+      },
+      {
+        "what": "Structured CBT-based self-help (book or programme)",
+        "evidence": "moderate",
+        "note": "Medium-to-large effects versus waiting list in the same meta-analysis.",
+        "refs": [
+          "r10"
+        ]
+      },
+      {
+        "what": "Medication (for example lisdexamfetamine), from a doctor",
+        "evidence": "moderate",
+        "note": "Beat placebo, with small effects on binge eating. Prescription only.",
+        "refs": [
+          "r10"
+        ]
+      },
+      {
+        "what": "Avoid fasting and all-or-nothing food rules",
+        "evidence": "weak",
+        "note": "Fasting predicted binge-eating onset in adolescent girls; not tested in adult men.",
+        "refs": [
+          "r11"
+        ]
+      },
+      {
+        "what": "Treatments aimed at 'food addiction' itself",
+        "evidence": "weak",
+        "note": "Naltrexone-bupropion and GLP-1 drugs show only preliminary signals; Overeaters Anonymous is rarely studied.",
+        "refs": [
+          "r3"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "14% of adults and 12% of children meet the Yale Food Addiction Scale threshold (pooled from 281 studies, 36 countries).",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "stat": "Lifetime binge-eating disorder: 2.0% of men and 3.5% of women (US national survey, 2001-2003, n = 9,282). Only a minority ever sought treatment.",
+        "refs": [
+          "r9"
+        ]
+      },
+      {
+        "stat": "Another meta-analysis (272 studies) puts 'food addiction' at 20% overall and 55% in people diagnosed with binge eating.",
+        "refs": [
+          "r12"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "Modified Yale Food Addiction Scale 2.0 (mYFAS 2.0)",
+      "items": 13,
+      "freeToUse": "yes",
+      "url": "https://sites.lsa.umich.edu/fastlab/yale-food-addiction-scale/",
+      "refs": [
+        "r4",
+        "r5",
+        "r6"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "screener",
+        "wanted": "Confirmed free-use wording for mYFAS 2.0 and its 13-item count.",
+        "why": "The FASTLab page blocked fetching (Cloudflare); free-use comes from a search snippet only."
+      },
+      {
+        "block": "screener",
+        "wanted": "A screener for binge-eating disorder itself (for example BEDS-7), with licence.",
+        "why": "Not researched in this pass; YFAS measures 'food addiction', not BED."
+      },
+      {
+        "block": "classification",
+        "wanted": "ICD-11 code 6B82 confirmed on the WHO browser.",
+        "why": "WHO ICD-11 browser not fetched; code given from memory."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "The 'regular eating' step of CBT for binge eating, and GLP-1 trial data on bingeing.",
+        "why": "Primary sources not fetched in this pass."
+      },
+      {
+        "block": "timeline",
+        "wanted": "Any prospective, hour-by-hour record of symptoms after cutting ultra-processed food.",
+        "why": "None found; the only peak data are recalled, and the one trial found no extra withdrawal."
+      },
+      {
+        "block": "audience",
+        "wanted": "Data on binge eating and food addiction in men specifically.",
+        "why": "Most samples here are majority female; not gathered."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include-with-changes",
+      "reason": "Nobody can quit eating, so no quit date, streak or abstinence goal. Withdrawal is contested. Binge-eating disorder must be routed to eating-disorder care, with a warning against fasting. The 'sugar addiction' claim is weak; ultra-processed food is the better-supported framing."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Westwater ML, Fletcher PC, Ziauddeen H (2016). Sugar addiction: the state of the science. Eur J Nutr.",
+        "kind": "review",
+        "doi": "10.1007/s00394-016-1229-6",
+        "pmid": "27372453",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/27372453/",
+        "fetched": true,
+        "supports": "Little evidence for human sugar addiction; animal bingeing only with intermittent access to sweet food."
+      },
+      {
+        "id": "r2",
+        "cite": "Schulte EM, Avena NM, Gearhardt AN (2015). Which foods may be addictive? The roles of processing, fat content, and glycemic load. PLoS One.",
+        "kind": "study",
+        "doi": "10.1371/journal.pone.0117959",
+        "pmid": "25692302",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/25692302/",
+        "fetched": true,
+        "supports": "Processed, high-fat, high-glycaemic-load foods most linked to addictive-like eating (n=120 and n=384)."
+      },
+      {
+        "id": "r3",
+        "cite": "Gearhardt AN, Bueno NB, DiFeliceantonio AG, Roberto CA, et al. (2023). Social, clinical, and policy implications of ultra-processed food addiction. BMJ.",
+        "kind": "review",
+        "doi": "10.1136/bmj-2023-075354",
+        "pmid": "37813420",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10561019/",
+        "fetched": true,
+        "supports": "14% adults, 12% children; not an official diagnosis; carb-plus-fat combination; treatments only preliminary."
+      },
+      {
+        "id": "r4",
+        "cite": "Gearhardt AN, Corbin WR, Brownell KD (2016). Development of the Yale Food Addiction Scale Version 2.0. Psychol Addict Behav.",
+        "kind": "study",
+        "doi": "10.1037/adb0000136",
+        "pmid": "26866783",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26866783/",
+        "fetched": true,
+        "supports": "YFAS 2.0 built on DSM-5 criteria; 14.6% of 550 participants met criteria."
+      },
+      {
+        "id": "r5",
+        "cite": "Schulte EM, Gearhardt AN (2017). Development of the Modified Yale Food Addiction Scale Version 2.0. Eur Eat Disord Rev.",
+        "kind": "study",
+        "doi": "10.1002/erv.2515",
+        "pmid": "28370722",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28370722/",
+        "fetched": true,
+        "supports": "Brief mYFAS 2.0 performs similarly to the full YFAS 2.0."
+      },
+      {
+        "id": "r6",
+        "cite": "University of Michigan FASTLab. Yale Food Addiction Scale (web page).",
+        "kind": "other",
+        "url": "https://sites.lsa.umich.edu/fastlab/yale-food-addiction-scale/",
+        "fetched": false,
+        "supports": "Scales offered free to use with citation (search snippet; page blocked fetch)."
+      },
+      {
+        "id": "r7",
+        "cite": "Schulte EM, Smeal JK, Lewis J, Gearhardt AN (2018). Development of the Highly Processed Food Withdrawal Scale. Appetite.",
+        "kind": "study",
+        "doi": "10.1016/j.appet.2018.09.013",
+        "pmid": "30227182",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30227182/",
+        "fetched": true,
+        "supports": "Recalled withdrawal symptoms most intense on days 2-5 of cutting down (n=231, online)."
+      },
+      {
+        "id": "r8",
+        "cite": "Lopes NGDS, Ferreira CS, Silva-Junior AE, Macena ML, et al. (2026). Impact of dietary ultra-processed food restriction on withdrawal symptoms in individuals with obesity undergoing a weight loss diet. Clin Nutr ESPEN.",
+        "kind": "trial",
+        "doi": "10.1016/j.clnesp.2026.105105",
+        "pmid": "42722153",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/42722153/",
+        "fetched": true,
+        "supports": "UPF restriction produced no more withdrawal than generic calorie restriction (n=107, days 1-15)."
+      },
+      {
+        "id": "r9",
+        "cite": "Hudson JI, Hiripi E, Pope HG, Kessler RC (2007). The prevalence and correlates of eating disorders in the National Comorbidity Survey Replication. Biol Psychiatry.",
+        "kind": "survey",
+        "doi": "10.1016/j.biopsych.2006.03.040",
+        "pmid": "16815322",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16815322/",
+        "fetched": true,
+        "supports": "Lifetime BED 3.5% women, 2.0% men; only a minority sought treatment."
+      },
+      {
+        "id": "r10",
+        "cite": "Hilbert A, Petroff D, Herpertz S, Pietrowsky R, et al. (2019). Meta-analysis of the efficacy of psychological and medical treatments for binge-eating disorder. J Consult Clin Psychol.",
+        "kind": "review",
+        "doi": "10.1037/ccp0000358",
+        "pmid": "30570304",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30570304/",
+        "fetched": true,
+        "supports": "81 RCTs (DSM-IV/DSM-5 BED): CBT large, self-help medium-large, drugs small effects; evidence quality very low."
+      },
+      {
+        "id": "r11",
+        "cite": "Stice E, Davis K, Miller NP, Marti CN (2008). Fasting increases risk for onset of binge eating and bulimic pathology: a 5-year prospective study. J Abnorm Psychol.",
+        "kind": "cohort",
+        "doi": "10.1037/a0013644",
+        "pmid": "19025239",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/19025239/",
+        "fetched": true,
+        "supports": "In 496 adolescent girls, fasting predicted onset of recurrent binge eating."
+      },
+      {
+        "id": "r12",
+        "cite": "Praxedes DRS, Silva-Junior AE, Macena ML, Oliveira AD, et al. (2022). Prevalence of food addiction determined by the Yale Food Addiction Scale and associated factors: a systematic review with meta-analysis. Eur Eat Disord Rev.",
+        "kind": "review",
+        "doi": "10.1002/erv.2878",
+        "pmid": "34953001",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/34953001/",
+        "fetched": true,
+        "supports": "272 studies: weighted prevalence 20%; 55% among people diagnosed with binge eating."
+      },
+      {
+        "id": "r13",
+        "cite": "World Health Organization. ICD-11 for Mortality and Morbidity Statistics: 6B82 Binge eating disorder.",
+        "kind": "guideline",
+        "url": "https://icd.who.int/browse/",
+        "fetched": false,
+        "supports": "ICD-11 code for binge eating disorder (from memory; browser not fetched)."
+      }
+    ]
+  },
+  {
+    "id": "exercise",
+    "name": "Exercise",
+    "group": "behaviour",
+    "oneLiner": "Exercise addiction is training you can't control that harms you; risk is estimated at 3-9% of regular exercisers and is far higher alongside eating disorders.",
+    "oneLinerRefs": [
+      "r1",
+      "r2",
+      "r3"
+    ],
+    "axes": {
+      "withdrawal": "mild",
+      "canFullyAbstain": false,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Not recognised. No clinical diagnosis exists; not in DSM-5.",
+      "classificationStatus": "not-recognised"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "If your training is mostly about weight or body shape, that can point to an eating disorder: see a doctor. Exercise addiction is about 3.7 times as common in people with signs of one.",
+      "refs": [
+        "r1",
+        "r3"
+      ]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "mood-sleep",
+        "label": "Low mood, anger, tension, fatigue on forced rest",
+        "startH": 0,
+        "peakH": 336,
+        "endH": 336,
+        "peakIntensity": 2,
+        "note": "Only measured at day 7 (50 footballers) and day 14 (18 runners). When it starts and how long it lasts after training resumes are unknown.",
+        "refs": [
+          "r5",
+          "r1"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 336,
+        "kind": "peak",
+        "label": "After 2 weeks off: more depression, anger and fatigue in runners with addiction symptoms",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "It's a healthy addiction. More is always better.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Exercise is healthy; exercise addiction is defined as uncontrolled training that harms the person. Questionnaires suggest about 3% of exercisers are at risk.",
+        "refs": [
+          "r1",
+          "r6"
+        ],
+        "beliefSource": "Glasser W (1976), Positive Addiction: the book that popularised the idea. No study found of how many people hold it."
+      },
+      {
+        "voice": "I feel awful when I can't train, so my body must need it.",
+        "kind": "cant-stop",
+        "verdict": "true-but",
+        "science": "The low mood is real: over a 2-week break, runners with addiction symptoms grew more depressed, angry and tired than other runners. That is a sign of dependence, not proof the training helps you.",
+        "refs": [
+          "r5"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "I train this hard because I'm disciplined. It's got nothing to do with food.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Sometimes true. But exercise addiction is about 3.7 times as common with signs of an eating disorder, and then the exercise serves weight or shape, and the eating problem needs treating too.",
+        "refs": [
+          "r3",
+          "r1"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Every serious athlete scores high on these tests. It's normal.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Athletes do score higher, partly because they may read the questions differently. A high score means risk, not a diagnosis; it should be followed by an interview.",
+        "refs": [
+          "r6"
+        ],
+        "beliefSource": "Szabo et al. (2015) note athletes may interpret the items differently from leisure exercisers."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Treat the eating disorder when exercise is part of one",
+        "evidence": "weak",
+        "note": "In a review of 11 studies on compulsive exercise in eating disorders, all reported improvement in both (cited via Weinstein and Szabo).",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "what": "Cognitive behavioural approaches",
+        "evidence": "weak",
+        "note": "The main treatment offered, but there is little evidence it works for exercise addiction itself.",
+        "refs": [
+          "r1"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "3-7% of regular exercisers and university students, and 6-9% of athletes, are at risk of exercise dependence (systematic review, 34 studies).",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "stat": "Exercise addiction is 3.71 times more likely in people with signs of an eating disorder (meta-analysis, 9 studies, 2,140 adults).",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "stat": "Prevalence swings by questionnaire: 8.1% of general exercisers in one meta-analysis (95% CI 1.5-34.2%).",
+        "refs": [
+          "r4"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "Exercise Addiction Inventory (EAI)",
+      "items": 6,
+      "freeToUse": "unclear",
+      "url": "https://doi.org/10.1136/bjsm.2004.017020",
+      "refs": [
+        "r7",
+        "r6"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "When deprivation symptoms start and end.",
+        "why": "Studies only measured at day 7 or day 14; no onset or recovery curve exists."
+      },
+      {
+        "block": "screener",
+        "wanted": "EAI response scale, cut-off and licence.",
+        "why": "Full text (PDF) blocked; the review fetched gives only the item count."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Primary papers: Martenstyn 2021, Hallward 2022, Outar 2018.",
+        "why": "Known only through the Weinstein and Szabo review."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "Muscle dysmorphia and steroid overlap in men who over-train.",
+        "why": "Men-specific angle; not researched in this pass."
+      },
+      {
+        "block": "axes",
+        "wanted": "An axis value for 'recommended by doctors'.",
+        "why": "Exercise is advised medically, which prescribedOrigin 'never' hides."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include-with-changes",
+      "reason": "The goal is control, not abstinence, and doctors recommend exercise. Often secondary to an eating disorder, so the page must check for that first. No diagnosis exists, withdrawal data come from 18 runners and 50 footballers, and scores mean risk, not addiction."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Weinstein A, Szabo A (2023). Exercise addiction: a narrative overview of research issues. Dialogues Clin Neurosci.",
+        "kind": "review",
+        "doi": "10.1080/19585969.2023.2164841",
+        "pmid": "36698618",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9869993/",
+        "fetched": true,
+        "supports": "No clinical diagnosis; primary vs secondary (eating-disorder) addiction; little treatment evidence; 7-day deprivation study."
+      },
+      {
+        "id": "r2",
+        "cite": "Marques A, Peralta M, Sarmento H, Loureiro V, et al. (2019). Prevalence of risk for exercise dependence: a systematic review. Sports Med.",
+        "kind": "review",
+        "doi": "10.1007/s40279-018-1011-4",
+        "pmid": "30374944",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30374944/",
+        "fetched": true,
+        "supports": "34 studies: 3-7% of exercisers and students, 6-9% of athletes at risk."
+      },
+      {
+        "id": "r3",
+        "cite": "Trott M, Jackson SE, Firth J, Jacob L, et al. (2021). A comparative meta-analysis of the prevalence of exercise addiction in adults with and without indicated eating disorders. Eat Weight Disord.",
+        "kind": "review",
+        "doi": "10.1007/s40519-019-00842-1",
+        "pmid": "31894540",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/31894540/",
+        "fetched": true,
+        "supports": "Odds ratio 3.71 for exercise addiction with versus without indicated eating disorders."
+      },
+      {
+        "id": "r4",
+        "cite": "Trott M, Jackson SE, Firth J, Fisher A, et al. (2020). Exercise addiction prevalence and correlates in the absence of eating disorder symptomology: a systematic review and meta-analysis. J Addict Med.",
+        "kind": "review",
+        "doi": "10.1097/ADM.0000000000000664",
+        "pmid": "32496431",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/32496431/",
+        "fetched": true,
+        "supports": "8.1% general exercisers, 5.0% amateur athletes, 5.5% students; varies by tool."
+      },
+      {
+        "id": "r5",
+        "cite": "Antunes HK, Leite GS, Lee KS, Barreto AT, et al. (2016). Exercise deprivation increases negative mood in exercise-addicted subjects and modifies their biochemical markers. Physiol Behav.",
+        "kind": "study",
+        "doi": "10.1016/j.physbeh.2016.01.028",
+        "pmid": "26812592",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26812592/",
+        "fetched": true,
+        "supports": "2-week break: addicted runners (n=8) had more depression, anger, fatigue than controls (n=10)."
+      },
+      {
+        "id": "r6",
+        "cite": "Szabo A, Griffiths MD, de La Vega Marcos R, Mervo B, et al. (2015). Methodological and conceptual limitations in exercise addiction research. Yale J Biol Med.",
+        "kind": "review",
+        "pmid": "26339214",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4553651/",
+        "fetched": true,
+        "supports": "Risk about 3% of exercisers; questionnaires give risk, not diagnosis; EAI has six items."
+      },
+      {
+        "id": "r7",
+        "cite": "Griffiths MD, Szabo A, Terry A (2005). The exercise addiction inventory: a quick and easy screening tool for health practitioners. Br J Sports Med.",
+        "kind": "study",
+        "doi": "10.1136/bjsm.2004.017020",
+        "pmid": "15911594",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15911594/",
+        "fetched": true,
+        "supports": "EAI validated in 200 exercisers; test-retest reliability 0.85."
+      },
+      {
+        "id": "r8",
+        "cite": "Glasser W (1976). Positive Addiction. Harper and Row.",
+        "kind": "other",
+        "url": null,
+        "fetched": false,
+        "supports": "Origin of the 'positive addiction' idea."
+      }
+    ]
+  },
+  {
+    "id": "work",
+    "name": "Work",
+    "group": "behaviour",
+    "oneLiner": "Work addiction is about compulsion and harm, not hours: about 8% of Norwegian employees screened positive.",
+    "oneLinerRefs": [
+      "r4",
+      "r2"
+    ],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": false,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Not recognised. Not in DSM-5.",
+      "classificationStatus": "not-recognised"
+    },
+    "safety": {
+      "level": "none",
+      "text": "No dangerous withdrawal. The health risk is long hours: working 55 or more hours a week is linked to heart disease and stroke. Anxiety and ADHD are far more common in workaholics and worth checking.",
+      "refs": [
+        "r5",
+        "r3"
+      ]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "I just work hard. That's not an addiction.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Hours alone don't make an addiction. The test asks about loss of control: stress when you can't work, ignoring people who ask you to cut down, and work harming your health.",
+        "refs": [
+          "r4",
+          "r1",
+          "r3"
+        ],
+        "beliefSource": "Griffiths et al. (2018) list 'work addiction is a function of the time spent working' among ten myths."
+      },
+      {
+        "voice": "It's just a busy phase. Once this project's done, I'll ease off.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Researchers list 'work addiction is a passing, situational pattern' as a myth that the evidence counters.",
+        "refs": [
+          "r4"
+        ],
+        "beliefSource": "Griffiths et al. (2018), myth (h)."
+      },
+      {
+        "voice": "Long days don't hurt me. I'm fine.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "WHO and ILO estimate 745,194 deaths from heart disease and stroke in 2016 were due to working 55+ hours a week. On days workaholism peaked, blood pressure and sleep problems rose.",
+        "refs": [
+          "r5",
+          "r6"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Being driven is the good kind of addiction.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Reviewers class 'some types of work addiction are positive' as a myth. Enjoying work is different: work-enjoyment scores did not track work-addiction scores.",
+        "refs": [
+          "r4",
+          "r1"
+        ],
+        "beliefSource": "Griffiths et al. (2018), myth (g)."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Mindfulness-based training aimed at workaholism",
+        "evidence": "weak",
+        "note": "One controlled trial (n=73, waiting-list control): fewer symptoms and fewer hours, with no drop in job performance at 3 months.",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "what": "Switching off from work in the evening",
+        "evidence": "weak",
+        "note": "Evening detachment softened the link between workaholism and poor sleep (114 workers, 10 days).",
+        "refs": [
+          "r6"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "8.3% of Norwegian employees met the workaholism cut-off (nationally representative, n = 1,124).",
+        "refs": [
+          "r2"
+        ]
+      },
+      {
+        "stat": "32.7% of workaholics screened positive for ADHD versus 12.7% of other workers; anxiety 33.8% versus 11.9% (n = 16,426).",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "stat": "488 million people (8.9% of the world) worked 55+ hours a week in 2016.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "Bergen Work Addiction Scale (BWAS)",
+      "items": 7,
+      "freeToUse": "unclear",
+      "url": "https://doi.org/10.1111/j.1467-9450.2012.00947.x",
+      "refs": [
+        "r1",
+        "r3"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Any withdrawal curve after stepping away from work (holiday, sabbatical, retirement).",
+        "why": "None found; the BWAS withdrawal item is a yes/no, not a time course."
+      },
+      {
+        "block": "screener",
+        "wanted": "BWAS licence and full item wording.",
+        "why": "Original paper is paywalled; the open paper fetched quotes two items and the cut-off only."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Randomised trials of CBT or other therapy for work addiction.",
+        "why": "Only one controlled mindfulness trial found."
+      },
+      {
+        "block": "classification",
+        "wanted": "A source stating plainly that ICD-11 lists no work addiction.",
+        "why": "Not fetched; inferred from the reviews."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include-with-changes",
+      "reason": "No withdrawal timeline exists, and nobody can quit work. The page should be about control, switching off and checking for anxiety or ADHD, not abstinence. Not a recognised disorder; the evidence is mostly surveys plus one small treatment trial."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Andreassen CS, Griffiths MD, Hetland J, Pallesen S (2012). Development of a work addiction scale. Scand J Psychol.",
+        "kind": "study",
+        "doi": "10.1111/j.1467-9450.2012.00947.x",
+        "pmid": "22490005",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22490005/",
+        "fetched": true,
+        "supports": "Seven-item BWAS covering salience to problems; did not converge with work enjoyment."
+      },
+      {
+        "id": "r2",
+        "cite": "Andreassen CS, Griffiths MD, Hetland J, Kravina L, et al. (2014). The prevalence of workaholism: a survey study in a nationally representative sample of Norwegian employees. PLoS One.",
+        "kind": "survey",
+        "doi": "10.1371/journal.pone.0102446",
+        "pmid": "25118877",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/25118877/",
+        "fetched": true,
+        "supports": "Workaholism prevalence 8.3% (95% CI 6.7-9.9%), n=1,124."
+      },
+      {
+        "id": "r3",
+        "cite": "Andreassen CS, Griffiths MD, Sinha R, Hetland J, et al. (2016). The relationships between workaholism and symptoms of psychiatric disorders: a large-scale cross-sectional study. PLoS One.",
+        "kind": "survey",
+        "doi": "10.1371/journal.pone.0152978",
+        "pmid": "27192149",
+        "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0152978",
+        "fetched": true,
+        "supports": "ADHD 32.7% vs 12.7%, anxiety 33.8% vs 11.9%; cut-off 4+ on 4 of 7 items."
+      },
+      {
+        "id": "r4",
+        "cite": "Griffiths MD, Demetrovics Z, Atroszko PA (2018). Ten myths about work addiction. J Behav Addict.",
+        "kind": "review",
+        "doi": "10.1556/2006.7.2018.05",
+        "pmid": "29409339",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/29409339/",
+        "fetched": true,
+        "supports": "Ten myths countered, including 'about hours', 'transient', 'some types positive'."
+      },
+      {
+        "id": "r5",
+        "cite": "Pega F, Nafradi B, Momen NC, Ujita Y, et al. (2021). Global, regional, and national burdens of ischemic heart disease and stroke attributable to exposure to long working hours for 194 countries, 2000-2016. Environ Int.",
+        "kind": "review",
+        "doi": "10.1016/j.envint.2021.106595",
+        "pmid": "34011457",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/34011457/",
+        "fetched": true,
+        "supports": "488 million exposed to 55+ hours; 745,194 heart disease and stroke deaths attributable (2016)."
+      },
+      {
+        "id": "r6",
+        "cite": "Menghini L, Balducci C (2024). The daily costs of workaholism: a within-individual investigation on blood pressure, emotional exhaustion, and sleep disturbances. J Occup Health Psychol.",
+        "kind": "study",
+        "doi": "10.1037/ocp0000383",
+        "pmid": "39101886",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/39101886/",
+        "fetched": true,
+        "supports": "High-workaholism days: higher blood pressure, exhaustion, sleep problems; evening detachment buffered sleep effect."
+      },
+      {
+        "id": "r7",
+        "cite": "Van Gordon W, Shonin E, Dunn TJ, Garcia-Campayo J, et al. (2017). Meditation awareness training for the treatment of workaholism: a controlled trial. J Behav Addict.",
+        "kind": "trial",
+        "doi": "10.1556/2006.6.2017.021",
+        "pmid": "28425778",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28425778/",
+        "fetched": true,
+        "supports": "n=73; improved symptoms and fewer hours versus waiting list, sustained at 3 months."
+      }
+    ]
+  },
+  {
+    "id": "love-and-limerence",
+    "name": "Love, breakups and limerence",
+    "group": "behaviour",
+    "oneLiner": "Being rejected while still in love lights up reward and craving areas also seen in cocaine craving, but a brain overlap is not a diagnosis.",
+    "oneLinerRefs": [
+      "r1",
+      "r2"
+    ],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": false,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Not recognised. 'Love addiction' and limerence have no formal diagnostic criteria; limerence researchers call for them.",
+      "classificationStatus": "not-recognised"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "A breakup can tip into depression; about 1 in 4 people in one study had depressive symptoms. In extreme cases rejection leads to suicide or violence. If you think about either, get help today.",
+      "refs": [
+        "r7",
+        "r1"
+      ]
+    },
+    "timelineEvidence": "weak",
+    "timeline": [
+      {
+        "track": "mood-sleep",
+        "label": "Sadness, anger, intrusive thoughts, poor sleep",
+        "startH": 0,
+        "peakH": 0,
+        "endH": 672,
+        "peakIntensity": 4,
+        "note": "Worst closest to the breakup. Diary studies only ran 4 weeks; recovery time varied with attachment, acceptance and how much love remained. The 672 h end is the study window, not a recovery date.",
+        "refs": [
+          "r5",
+          "r6"
+        ]
+      },
+      {
+        "track": "craving",
+        "label": "Longing for the ex",
+        "startH": 0,
+        "peakH": 0,
+        "endH": 672,
+        "peakIntensity": 4,
+        "note": "Tracked daily as a separate state from sadness and anger; stronger love made sadness recovery less likely within 4 weeks.",
+        "refs": [
+          "r5",
+          "r8"
+        ]
+      }
+    ],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "Science says love is literally an addiction. I can't help it.",
+        "kind": "cant-stop",
+        "verdict": "half-true",
+        "science": "In 15 rejected people, a photo of the ex activated reward and craving regions. Ethicists argue whether to treat it should depend on harm, not on calling it addiction.",
+        "refs": [
+          "r1",
+          "r2"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Checking her profile helps me get closure.",
+        "kind": "can-moderate",
+        "verdict": "false",
+        "science": "In 464 people, checking an ex's Facebook went with more distress, longing and desire for them, and less personal growth, even after accounting for offline contact.",
+        "refs": [
+          "r8"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "I just need to stop loving her and I'll feel fine.",
+        "kind": "quitting-wont-work",
+        "verdict": "true-but",
+        "science": "Thinking about the ex's flaws lowered love feelings but made people feel worse. Distraction lifted mood without changing love. Use each for its own job.",
+        "refs": [
+          "r3"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Science says it takes 11 weeks. I just have to wait it out.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "The '11 weeks' traces to a 2007 survey of 155 people. In the summary we found, 11 weeks was the recruitment window since the breakup, not a measured recovery time.",
+        "refs": [
+          "r13",
+          "r12"
+        ],
+        "beliefSource": "Press headlines 'It takes 11 weeks to get over a break up' (search results, not fetched)."
+      },
+      {
+        "voice": "This feeling is so strong, she must be the one.",
+        "kind": "identity",
+        "verdict": "mostly-false",
+        "science": "In 1,647 people with limerence, episodes lasted about 2 years and recurred about 5 times across adulthood. The intensity is a repeating pattern, not proof about one person.",
+        "refs": [
+          "r9"
+        ],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Distraction to lift mood; deliberate 'negative reappraisal' of the ex to lower love",
+        "evidence": "weak",
+        "note": "Lab studies of people upset after a breakup; short-term effects only.",
+        "refs": [
+          "r3",
+          "r4"
+        ]
+      },
+      {
+        "what": "Stop watching the ex online",
+        "evidence": "weak",
+        "note": "Cross-sectional link between surveillance and worse recovery; not a trial.",
+        "refs": [
+          "r8"
+        ]
+      },
+      {
+        "what": "For impairing limerence: CBT with exposure and response prevention, as for OCD",
+        "evidence": "weak",
+        "note": "A single case study; rituals reduced at 9-month follow-up.",
+        "refs": [
+          "r11"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "26.8% of people within six months of a breakup reported mild, moderate or severe depression symptoms (n = 71).",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "stat": "People in an impairing limerence episode spent 50% of waking thought on the person (7-day sampling, n = 51).",
+        "refs": [
+          "r9"
+        ]
+      },
+      {
+        "stat": "42% of people with limerence met criteria for anxiety, depression, dissociation and maladaptive daydreaming at once (n = 1,647).",
+        "refs": [
+          "r9"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "Limerence Questionnaire (LQ-11)",
+      "items": 11,
+      "freeToUse": "unclear",
+      "url": "https://doi.org/10.1177/00332941251394980",
+      "refs": [
+        "r10"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Recovery curves beyond four weeks after a breakup.",
+        "why": "Sbarra and Emery (2005) not fetchable; the studies fetched stop at 4 weeks."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "The original Lewandowski and Bizzoco (2007) paper, to confirm what '11 weeks' was.",
+        "why": "Paywalled; only the BPS summary and Crossref metadata were fetched."
+      },
+      {
+        "block": "screener",
+        "wanted": "LQ-11 licence and items; a love-addiction scale for comparison.",
+        "why": "Only the LQ-11 abstract was fetched."
+      },
+      {
+        "block": "numbers",
+        "wanted": "Population prevalence of love addiction or limerence.",
+        "why": "Not found in a fetched source; Wyant (2021) calls prevalence unknown."
+      },
+      {
+        "block": "safety",
+        "wanted": "Guidance on stalking and unwanted contact after rejection.",
+        "why": "Not researched; relevant to a site about approaching women."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include-with-changes",
+      "reason": "Here 'addiction' is a metaphor backed by brain overlap, not a diagnosis. Last use becomes last contact, and the timeline shows breakup distress, not withdrawal. The page must screen for depression and suicide risk, and must never coach a man to keep pursuing someone who said no."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Fisher HE, Brown LL, Aron A, Strong G, et al. (2010). Reward, addiction, and emotion regulation systems associated with rejection in love. J Neurophysiol.",
+        "kind": "study",
+        "doi": "10.1152/jn.00784.2009",
+        "pmid": "20445032",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/20445032/",
+        "fetched": true,
+        "supports": "fMRI, 15 rejected people: VTA, striatum, regions tied to cocaine craving; rejection can lead to depression, suicide."
+      },
+      {
+        "id": "r2",
+        "cite": "Earp BD, Wudarczyk OA, Foddy B, Savulescu J (2017). Addicted to love: what is love addiction and when should it be treated? Philos Psychiatr Psychol.",
+        "kind": "review",
+        "doi": "10.1353/ppp.2017.0011",
+        "pmid": "28381923",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28381923/",
+        "fetched": true,
+        "supports": "Narrow and broad views of love addiction; treat by harm and well-being, not disease labels."
+      },
+      {
+        "id": "r3",
+        "cite": "Langeslag SJE, Sanchez ME (2018). Down-regulation of love feelings after a romantic break-up: self-report and electrophysiological data. J Exp Psychol Gen.",
+        "kind": "study",
+        "doi": "10.1037/xge0000360",
+        "pmid": "28857575",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28857575/",
+        "fetched": true,
+        "supports": "Negative reappraisal lowered love but worsened mood; distraction improved mood without changing love."
+      },
+      {
+        "id": "r4",
+        "cite": "Langeslag SJ, van Strien JW (2016). Regulation of romantic love feelings: preconceptions, strategies, and feasibility. PLoS One.",
+        "kind": "study",
+        "doi": "10.1371/journal.pone.0161087",
+        "pmid": "27529751",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/27529751/",
+        "fetched": true,
+        "supports": "People see love as uncontrollable, yet instructed down-regulation reduced infatuation and attachment."
+      },
+      {
+        "id": "r5",
+        "cite": "Sbarra DA (2006). Predicting the onset of emotional recovery following nonmarital relationship dissolution: survival analyses of sadness and anger. Pers Soc Psychol Bull.",
+        "kind": "study",
+        "doi": "10.1177/0146167205280913",
+        "pmid": "16455858",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16455858/",
+        "fetched": true,
+        "supports": "4-week diaries, n=58; more love and anger lowered chance of sadness recovery."
+      },
+      {
+        "id": "r6",
+        "cite": "Field T, Diego M, Pelaez M, Deeds O, et al. (2009). Breakup distress in university students. Adolescence.",
+        "kind": "study",
+        "pmid": "20432597",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/20432597/",
+        "fetched": true,
+        "supports": "n=192: higher distress with less time since breakup; intrusive thoughts, poor sleep, depression."
+      },
+      {
+        "id": "r7",
+        "cite": "Verhallen AM, Renken RJ, Marsman JC, Ter Horst GJ (2019). Romantic relationship breakup: an experimental model to study effects of stress on depression (-like) symptoms. PLoS One.",
+        "kind": "study",
+        "doi": "10.1371/journal.pone.0217320",
+        "pmid": "31150432",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/31150432/",
+        "fetched": true,
+        "supports": "26.8% of 71 recently heartbroken people had mild-to-severe depression symptoms."
+      },
+      {
+        "id": "r8",
+        "cite": "Marshall TC (2012). Facebook surveillance of former romantic partners: associations with postbreakup recovery and personal growth. Cyberpsychol Behav Soc Netw.",
+        "kind": "survey",
+        "doi": "10.1089/cyber.2012.0125",
+        "pmid": "22946958",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22946958/",
+        "fetched": true,
+        "supports": "n=464: surveillance linked to more distress, longing, desire, less growth."
+      },
+      {
+        "id": "r9",
+        "cite": "Evans C, Panton SO, Strawson WH, Floyd E, et al. (2026). Love, longing and obsession: features, correlates, comorbidities, and real-time cognitive-affective dynamics of limerence. Acta Psychol (Amst).",
+        "kind": "study",
+        "doi": "10.1016/j.actpsy.2026.107043",
+        "pmid": "42127691",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/42127691/",
+        "fetched": true,
+        "supports": "n=1,647: ~2-year episodes, ~5 recurrences; 42% multimorbidity; 50% of waking thought."
+      },
+      {
+        "id": "r10",
+        "cite": "Marshall L, Waldeck D, Pancani L, Churchill S, et al. (2025). Development and validation of the Limerence Questionnaire (LQ-11). Psychol Rep.",
+        "kind": "study",
+        "doi": "10.1177/00332941251394980",
+        "pmid": "41178753",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/41178753/",
+        "fetched": true,
+        "supports": "First published limerence measure; two factors; validated in n=269 and n=401."
+      },
+      {
+        "id": "r11",
+        "cite": "Wyant BE (2021). Treatment of limerence using a cognitive behavioral approach: a case study. J Patient Exp.",
+        "kind": "study",
+        "doi": "10.1177/23743735211060812",
+        "pmid": "34869848",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/34869848/",
+        "fetched": true,
+        "supports": "One patient; exposure and response prevention reduced rituals at 9 months; prevalence unknown."
+      },
+      {
+        "id": "r12",
+        "cite": "Lewandowski GW, Bizzoco NM (2007). Addition through subtraction: growth following the dissolution of a low quality relationship. J Posit Psychol.",
+        "kind": "study",
+        "doi": "10.1080/17439760601069234",
+        "url": "https://doi.org/10.1080/17439760601069234",
+        "fetched": false,
+        "supports": "Source of the '11 weeks' headlines; paper itself not fetched."
+      },
+      {
+        "id": "r13",
+        "cite": "British Psychological Society Research Digest. Valentine's special: good news for those who've recently ended a relationship.",
+        "kind": "other",
+        "url": "https://bps.org.uk/research-digest/valentines-special-good-news-those-whove-recently-ended-relationship",
+        "fetched": true,
+        "supports": "155 people with break-up 'in the last 11 weeks'; no change-over-time findings reported."
+      }
+    ]
+  },
+  {
+    "id": "tanning",
+    "name": "Tanning (sunbeds and UV)",
+    "group": "behaviour",
+    "oneLiner": "In blinded tests, frequent tanners chose real UV over fake UV 39 times out of 41, so something beyond looks keeps them coming back.",
+    "oneLinerRefs": [
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "contested",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Not recognised. Researchers propose indoor tanning as a behavioural addiction and say more evidence is needed.",
+      "classificationStatus": "proposed"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "The danger is skin cancer, not withdrawal. Ever using sunbeds raises melanoma risk by about 20%; starting before 35 raises it by about 87%, and risk climbs with each session.",
+      "refs": [
+        "r5"
+      ]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "I'm not hooked. I just like how I look with a tan.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Looks are the usual reason given. But when beds were disguised, frequent tanners still picked real UV 39 of 41 times and felt more relaxed after it.",
+        "refs": [
+          "r1"
+        ],
+        "beliefSource": "Feldman et al. (2004): research on tanners' reasons has focused mainly on improved appearance."
+      },
+      {
+        "voice": "It's my way to relax. It's harmless.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "The relaxing effect is real, and in mice UV raises skin endorphins. The price is melanoma: 20% higher risk with any sunbed use, 87% higher if you started before 35.",
+        "refs": [
+          "r1",
+          "r3",
+          "r5"
+        ],
+        "beliefSource": "Feldman et al. (2004): tanners report relaxing effects."
+      },
+      {
+        "voice": "I could stop whenever I wanted.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "When an opioid blocker was given, 4 of 8 frequent tanners, and none of 8 infrequent ones, showed withdrawal-like symptoms. Tanners who screen positive for addiction report more quit attempts.",
+        "refs": [
+          "r2",
+          "r9"
+        ],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Appearance-focused booklet",
+        "evidence": "moderate",
+        "note": "Randomised trial, 430 young women: springtime increase in tanning over 35% lower at 6 months.",
+        "refs": [
+          "r8"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "39.3% of student indoor tanners met adapted DSM-IV-TR addiction criteria; 30.6% met adapted CAGE criteria (n = 229, US, 2006).",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "stat": "19.7% of current sunbed users screened positive on BAITS in a representative German survey (n = 3,000, 2015).",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "stat": "First sunbed use before age 35: relative risk of melanoma 1.87 (13 studies).",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "screener": {
+      "name": "Behavioral Addiction Indoor Tanning Screener (BAITS)",
+      "items": 7,
+      "freeToUse": "unclear",
+      "url": "https://doi.org/10.2340/00015555-2290",
+      "refs": [
+        "r6",
+        "r7"
+      ]
+    },
+    "placeholders": [
+      {
+        "block": "timeline",
+        "wanted": "Any record of how tanners feel day by day after stopping.",
+        "why": "None found; the only withdrawal data are drug-induced (naltrexone) or in mice."
+      },
+      {
+        "block": "screener",
+        "wanted": "BAITS item wording and licence; the 'mTAN' screener named in the brief.",
+        "why": "BAITS abstract was empty on PubMed; no screener called mTAN was found."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Interventions tested on tanners who screen as addicted, not tanners in general.",
+        "why": "Not found; Hillhouse et al. 2010 on 'pathological tanning motives' not fetched."
+      },
+      {
+        "block": "audience",
+        "wanted": "Data on men who tan.",
+        "why": "Most studies here are of young women."
+      },
+      {
+        "block": "safety",
+        "wanted": "IARC Group 1 classification of UV tanning devices.",
+        "why": "Not fetched in this pass."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include-with-changes",
+      "reason": "Real addictive signals exist (blinded choice, naltrexone withdrawal in 4 of 8), but no human abstinence timeline does. The harm is cancer, not withdrawal, so the page should lead with melanoma risk and drop the timeline graphic. Studies are mostly of women."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Feldman SR, Liguori A, Kucenic M, Rapp SR, et al. (2004). Ultraviolet exposure is a reinforcing stimulus in frequent indoor tanners. J Am Acad Dermatol.",
+        "kind": "trial",
+        "doi": "10.1016/j.jaad.2004.01.053",
+        "pmid": "15243523",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15243523/",
+        "fetched": true,
+        "supports": "Blinded: 39 of 41 Friday sessions chose UV bed; more relaxed after UV (n=14)."
+      },
+      {
+        "id": "r2",
+        "cite": "Kaur M, Liguori A, Lang W, Rapp SR, et al. (2006). Induction of withdrawal-like symptoms in a small randomized, controlled trial of opioid blockade in frequent tanners. J Am Acad Dermatol.",
+        "kind": "trial",
+        "doi": "10.1016/j.jaad.2005.11.1059",
+        "pmid": "16546596",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16546596/",
+        "fetched": true,
+        "supports": "Naltrexone: withdrawal-like symptoms in 4 of 8 frequent tanners, 0 of 8 controls."
+      },
+      {
+        "id": "r3",
+        "cite": "Fell GL, Robinson KC, Mao J, Woolf CJ, et al. (2014). Skin beta-endorphin mediates addiction to UV light. Cell.",
+        "kind": "study",
+        "doi": "10.1016/j.cell.2014.04.032",
+        "pmid": "24949966",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24949966/",
+        "fetched": true,
+        "supports": "Mice: UV raises skin beta-endorphin; opioid blockade causes withdrawal signs."
+      },
+      {
+        "id": "r4",
+        "cite": "Mosher CE, Danoff-Burg S (2010). Addiction to indoor tanning: relation to anxiety, depression, and substance use. Arch Dermatol.",
+        "kind": "survey",
+        "doi": "10.1001/archdermatol.2009.385",
+        "pmid": "20404230",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/20404230/",
+        "fetched": true,
+        "supports": "39.3% (DSM-IV-TR) and 30.6% (CAGE) of 229 student tanners met adapted criteria."
+      },
+      {
+        "id": "r5",
+        "cite": "Boniol M, Autier P, Boyle P, Gandini S (2012). Cutaneous melanoma attributable to sunbed use: systematic review and meta-analysis. BMJ.",
+        "kind": "review",
+        "doi": "10.1136/bmj.e4757",
+        "pmid": "22833605",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22833605/",
+        "fetched": true,
+        "supports": "Ever use RR 1.20; first use before 35 RR 1.87; +1.8% per yearly session."
+      },
+      {
+        "id": "r6",
+        "cite": "Stapleton JL, Hillhouse JJ, Turrisi R, Baker K, et al. (2016). The Behavioral Addiction Indoor Tanning Screener (BAITS): an evaluation of a brief measure of behavioral addictive symptoms. Acta Derm Venereol.",
+        "kind": "study",
+        "doi": "10.2340/00015555-2290",
+        "pmid": "26568436",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26568436/",
+        "fetched": false,
+        "supports": "Introduces BAITS (abstract not available on PubMed)."
+      },
+      {
+        "id": "r7",
+        "cite": "Diehl K, Gorig T, Breitbart EW, Greinert R, et al. (2018). First evaluation of the Behavioral Addiction Indoor Tanning Screener (BAITS) in a nationwide representative sample. Br J Dermatol.",
+        "kind": "survey",
+        "doi": "10.1111/bjd.15888",
+        "pmid": "28804871",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28804871/",
+        "fetched": true,
+        "supports": "BAITS: seven yes/no items; 19.7% of current users positive; good reliability."
+      },
+      {
+        "id": "r8",
+        "cite": "Hillhouse J, Turrisi R, Stapleton J, Robinson J (2008). A randomized controlled trial of an appearance-focused intervention to prevent skin cancer. Cancer.",
+        "kind": "trial",
+        "doi": "10.1002/cncr.23922",
+        "pmid": "18937268",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/18937268/",
+        "fetched": true,
+        "supports": "430 women: springtime tanning increase over 35% lower at 6 months."
+      },
+      {
+        "id": "r9",
+        "cite": "Leip A, Heckman CJ, Stapleton JL (2025). Building evidence for indoor tanning as a behavioral addiction. BMC Psychol.",
+        "kind": "survey",
+        "doi": "10.1186/s40359-025-02430-8",
+        "pmid": "39915802",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/39915802/",
+        "fetched": true,
+        "supports": "280 frequent tanners: BAITS-positive had more problems, quit barriers, quit attempts."
+      }
+    ]
+  },
+  {
+    "id": "decongestant-nasal-spray",
+    "name": "Decongestant nasal spray (oxymetazoline, xylometazoline)",
+    "group": "boundary",
+    "oneLiner": "The blocked nose is often the spray itself; stopping, helped by a steroid spray, brings the swelling down within one to two weeks.",
+    "oneLinerRefs": [
+      "r2",
+      "r6"
+    ],
+    "axes": {
+      "withdrawal": "mild",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "Rhinitis medicamentosa (rebound or drug-induced rhinitis), a nose condition. It is not a substance use disorder.",
+      "classificationStatus": "dependence-not-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Stopping is the treatment, not a danger; it is uncomfortable. If you have high blood pressure or heart disease, ask a pharmacist before using any decongestant again. A blocked nose underneath may need its own treatment.",
+      "refs": [
+        "r1",
+        "r11",
+        "r2"
+      ]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Rebound blockage",
+        "startH": 0,
+        "peakH": 24,
+        "endH": 336,
+        "peakIntensity": 3,
+        "note": "Starts as the last dose wears off; badly swollen on day 1. Swelling was down by days 7 and 14 on placebo too, faster with a steroid spray (small trials).",
+        "refs": [
+          "r2",
+          "r7",
+          "r6"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Over-sensitive nose lining",
+        "startH": 0,
+        "peakH": 0,
+        "endH": 8760,
+        "peakIntensity": 1,
+        "note": "Still raised at 6 months, gone at 1 year in 10 patients. Measured only at those two points.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 24,
+        "kind": "peak",
+        "label": "Day 1: nose at its most swollen",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "atH": 168,
+        "kind": "milestone",
+        "label": "Day 7: swelling measurably down",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "atH": 336,
+        "kind": "trap",
+        "label": "Later on: even a few days' use can bring rebound back fast (placed here for display; no set time)",
+        "refs": [
+          "r4"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "My nose is just like this. I need the spray to breathe.",
+        "kind": "identity",
+        "verdict": "mostly-false",
+        "science": "Often the blockage is the spray. In 8 healthy volunteers using oxymetazoline daily, every one had rebound swelling by day 30. Stopping the spray is the first-line treatment.",
+        "refs": [
+          "r3",
+          "r1"
+        ],
+        "beliefSource": "Graf (2005): 'In many cases, the patient is unaware of the condition.'"
+      },
+      {
+        "voice": "I know you're only meant to use it a few days. I'm careful.",
+        "kind": "not-that-bad",
+        "verdict": "mostly-false",
+        "science": "Knowing didn't protect people. Half of 895 pharmacy customers with long-term nose problems used decongestant spray daily for a year or more, though 80% had been told the limit.",
+        "refs": [
+          "r10"
+        ],
+        "beliefSource": "Mehuys et al. (2014): 80% of overusers had been educated about the limit on duration of use."
+      },
+      {
+        "voice": "If I stop, I won't be able to breathe for weeks.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "In a trial of 20 patients, swelling fell by day 7, faster with a steroid spray. In a 1-year follow-up, all 10 patients stopped and none went back to daily use.",
+        "refs": [
+          "r6",
+          "r5"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "Just a few nights won't matter.",
+        "kind": "can-moderate",
+        "verdict": "mostly-false",
+        "science": "After a spell of overuse, rebound blockage comes back quickly on repeated use, even for a few days, which restarts the cycle.",
+        "refs": [
+          "r4"
+        ],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Stop the decongestant spray",
+        "evidence": "moderate",
+        "note": "First-line treatment in reviews; few prospective studies.",
+        "refs": [
+          "r1",
+          "r2"
+        ]
+      },
+      {
+        "what": "Use a steroid nasal spray (fluticasone or budesonide) while stopping",
+        "evidence": "moderate",
+        "note": "Small randomised trials: faster relief than placebo; reversed rebound in healthy volunteers. A systematic review still found too little evidence for a standard protocol.",
+        "refs": [
+          "r6",
+          "r8",
+          "r9"
+        ]
+      },
+      {
+        "what": "Treat the underlying nose problem (allergy, sinus disease)",
+        "evidence": "weak",
+        "note": "Recommended in reviews; steroid spray users were less likely to overuse decongestants.",
+        "refs": [
+          "r2",
+          "r10"
+        ]
+      },
+      {
+        "what": "Stop one nostril at a time",
+        "evidence": "weak",
+        "note": "Clinical advice only: stop one side for a week, then the other. No trial found.",
+        "refs": [
+          "r12",
+          "r9"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "49% of 895 people self-treating persistent rhinitis in pharmacies overused decongestant spray (daily for 1 year or more).",
+        "refs": [
+          "r10"
+        ]
+      },
+      {
+        "stat": "Rebound swelling in all 8 healthy volunteers after 30 days of oxymetazoline; none at 10 days.",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "stat": "NHS advice: do not use decongestant sprays or drops for more than 5 days.",
+        "refs": [
+          "r11"
+        ]
+      }
+    ],
+    "screener": null,
+    "placeholders": [
+      {
+        "block": "screener",
+        "wanted": "None needed; a 'how long have you used it daily?' question would do.",
+        "why": "No validated screener exists for rhinitis medicamentosa (Ramey 2006 calls for validated criteria)."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "A primary source for the one-nostril taper.",
+        "why": "Found only in Wikipedia, citing Medscape (paywalled); no trial exists."
+      },
+      {
+        "block": "timeline",
+        "wanted": "How many days of use start rebound.",
+        "why": "Sources disagree: 5-7 days (Ramey via Wikipedia), 14 days (Vaidyanathan), none at 10 but all at 30 (Graf)."
+      },
+      {
+        "block": "numbers",
+        "wanted": "Share of ENT patients with rhinitis medicamentosa; US label's 3-day limit.",
+        "why": "Not fetched in this pass."
+      },
+      {
+        "block": "safety",
+        "wanted": "Whether swapping to oral decongestants is safe, with blood-pressure caveats.",
+        "why": "Not sourced; left out of the page text."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include",
+      "reason": "The best fit for the timeline graphic: a pure physical rebound with measured recovery and a tested aid. It must be labelled rebound dependence, not addiction. 'Prescribed origin' needs an over-the-counter value; 'never' hides that it starts as medicine."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "Ramey JT, Bailen E, Lockey RF (2006). Rhinitis medicamentosa. J Investig Allergol Clin Immunol.",
+        "kind": "review",
+        "pmid": "16784007",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16784007/",
+        "fetched": true,
+        "supports": "Few prospective studies; stopping is first-line; steroid sprays to speed recovery."
+      },
+      {
+        "id": "r2",
+        "cite": "Graf P (2005). Rhinitis medicamentosa: a review of causes and treatment. Treat Respir Med.",
+        "kind": "review",
+        "doi": "10.2165/00151829-200504010-00003",
+        "pmid": "15725047",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15725047/",
+        "fetched": true,
+        "supports": "Rebound as effect wears off; patients often unaware; withdraw, add topical steroid, treat underlying disease."
+      },
+      {
+        "id": "r3",
+        "cite": "Graf P, Juto JE (1994). Decongestion effect and rebound swelling of the nasal mucosa during 4-week use of oxymetazoline. ORL J Otorhinolaryngol Relat Spec.",
+        "kind": "study",
+        "doi": "10.1159/000276633",
+        "pmid": "7515487",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/7515487/",
+        "fetched": true,
+        "supports": "8 healthy volunteers: no rebound at 10 days, rebound in all at 30 days."
+      },
+      {
+        "id": "r4",
+        "cite": "Graf P (1997). Rhinitis medicamentosa: aspects of pathophysiology and treatment. Allergy.",
+        "kind": "review",
+        "doi": "10.1111/j.1398-9995.1997.tb04881.x",
+        "pmid": "9353558",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/9353558/",
+        "fetched": true,
+        "supports": "Warns of rapid rebound on repeated use, even for a few days, after overuse."
+      },
+      {
+        "id": "r5",
+        "cite": "Graf PM, Hallen H (1997). One year follow-up of patients with rhinitis medicamentosa after vasoconstrictor withdrawal. Am J Rhinol.",
+        "kind": "study",
+        "doi": "10.2500/105065897781446865",
+        "pmid": "9065350",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/9065350/",
+        "fetched": true,
+        "supports": "10 patients: hyperreactivity raised at 6 months, not 1 year; none relapsed to daily use."
+      },
+      {
+        "id": "r6",
+        "cite": "Hallen H, Enerdal J, Graf P (1997). Fluticasone propionate nasal spray is more effective and has a faster onset of action than placebo in treatment of rhinitis medicamentosa. Clin Exp Allergy.",
+        "kind": "trial",
+        "pmid": "9179430",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/9179430/",
+        "fetched": true,
+        "supports": "20 patients stopped abruptly: swelling down at days 7 and 14; fluticasone faster."
+      },
+      {
+        "id": "r7",
+        "cite": "Graf PM, Hallen H (1998). Changes in nasal reactivity in patients with rhinitis medicamentosa after treatment with fluticasone propionate and placebo nasal spray. ORL J Otorhinolaryngol Relat Spec.",
+        "kind": "trial",
+        "doi": "10.1159/000027620",
+        "pmid": "9742282",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/9742282/",
+        "fetched": true,
+        "supports": "On day 1 of withdrawal the nasal lining was congested and oedematous."
+      },
+      {
+        "id": "r8",
+        "cite": "Vaidyanathan S, Williamson P, Clearie K, Khan F, et al. (2010). Fluticasone reverses oxymetazoline-induced tachyphylaxis of response and rebound congestion. Am J Respir Crit Care Med.",
+        "kind": "trial",
+        "doi": "10.1164/rccm.200911-1701OC",
+        "pmid": "20203244",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/20203244/",
+        "fetched": true,
+        "supports": "19 healthy people, 14 days oxymetazoline: rebound; 3 days fluticasone reversed it."
+      },
+      {
+        "id": "r9",
+        "cite": "Zucker SM, Barton BM, McCoul ED (2019). Management of rhinitis medicamentosa: a systematic review. Otolaryngol Head Neck Surg.",
+        "kind": "review",
+        "doi": "10.1177/0194599818807891",
+        "pmid": "30325708",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30325708/",
+        "fetched": true,
+        "supports": "9 studies; steroid sprays most used; evidence too thin for a standard protocol."
+      },
+      {
+        "id": "r10",
+        "cite": "Mehuys E, Gevaert P, Brusselle G, Van Hees T, et al. (2014). Self-medication in persistent rhinitis: overuse of decongestants in half of the patients. J Allergy Clin Immunol Pract.",
+        "kind": "survey",
+        "doi": "10.1016/j.jaip.2014.01.009",
+        "pmid": "24811023",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24811023/",
+        "fetched": true,
+        "supports": "n=895: 49% overused despite 80% educated; steroid spray users OR 0.24."
+      },
+      {
+        "id": "r11",
+        "cite": "NHS. Decongestants (medicines information page).",
+        "kind": "guideline",
+        "url": "https://www.nhs.uk/medicines/decongestants/",
+        "fetched": true,
+        "supports": "No more than 5 days; check with GP or pharmacist for high blood pressure and others."
+      },
+      {
+        "id": "r12",
+        "cite": "Wikipedia. Rhinitis medicamentosa.",
+        "kind": "other",
+        "url": "https://en.wikipedia.org/wiki/Rhinitis_medicamentosa",
+        "fetched": true,
+        "supports": "Describes one-nostril taper (citing Medscape) and 5-7 days onset (citing Ramey 2006)."
+      }
+    ]
+  },
+  {
+    "id": "antidepressant-discontinuation",
+    "name": "Stopping antidepressants",
+    "group": "boundary",
+    "oneLiner": "Stopping antidepressants can cause real withdrawal, but that is physical dependence, not addiction, and it is handled by tapering with your prescriber.",
+    "oneLinerRefs": [
+      "r2",
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "moderate",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "always",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: antidepressant discontinuation syndrome, listed among adverse effects of medication, not as a substance use disorder. No addiction diagnosis applies.",
+      "classificationStatus": "dependence-not-addiction"
+    },
+    "safety": {
+      "level": "caution",
+      "text": "Do not stop or cut down on your own. Talk to your prescriber and taper. Stopping suddenly makes severe withdrawal more likely, and depression can return. Suicidal thoughts are a rare withdrawal symptom: get urgent help.",
+      "refs": [
+        "r1",
+        "r8"
+      ]
+    },
+    "timelineEvidence": "moderate",
+    "timeline": [
+      {
+        "track": "body",
+        "label": "Dizziness, nausea, electric-shock sensations, aches",
+        "startH": 24,
+        "peakH": 168,
+        "endH": 336,
+        "peakIntensity": 2,
+        "note": "Usually begins within a few days and is gone in 1-2 weeks. Trials measured week 1; the true peak is unknown. Applies after each dose cut, not only the last.",
+        "refs": [
+          "r1",
+          "r5",
+          "r9"
+        ]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Irritability, anxiety, low mood, sleep problems",
+        "startH": 24,
+        "peakH": 168,
+        "endH": 336,
+        "peakIntensity": 2,
+        "note": "Same time course as the body symptoms. In trials, mood did not worsen at week 1, so later low mood points to relapse.",
+        "refs": [
+          "r1",
+          "r5"
+        ]
+      },
+      {
+        "track": "body",
+        "label": "Long tail in some people",
+        "startH": 336,
+        "peakH": 336,
+        "endH": 2190,
+        "peakIntensity": 1,
+        "note": "NICE: sometimes several weeks, occasionally several months. One study in Davies and Read found a mean of 79 weeks. How often this happens is disputed.",
+        "refs": [
+          "r1",
+          "r3"
+        ]
+      }
+    ],
+    "markers": [
+      {
+        "atH": 0,
+        "kind": "danger",
+        "label": "Stopping suddenly makes severe symptoms more likely",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "atH": 72,
+        "kind": "trap",
+        "label": "Feels like the depression is back, but relapse rarely comes this fast",
+        "refs": [
+          "r1",
+          "r2"
+        ]
+      },
+      {
+        "atH": 336,
+        "kind": "milestone",
+        "label": "Mild withdrawal has usually passed by 2 weeks",
+        "refs": [
+          "r1"
+        ]
+      }
+    ],
+    "beliefs": [
+      {
+        "voice": "I can't come off them, so I must be addicted.",
+        "kind": "identity",
+        "verdict": "false",
+        "science": "Addiction means craving, losing control and getting a high. Psychiatrists describe antidepressant withdrawal instead as physical dependence: your body has adjusted to the drug.",
+        "refs": [
+          "r2"
+        ],
+        "beliefSource": "Royal College of Psychiatrists answers this question directly: 'Does this mean that antidepressants are addictive?'"
+      },
+      {
+        "voice": "I felt terrible when I stopped, so I obviously still need them.",
+        "kind": "quitting-wont-work",
+        "verdict": "half-true",
+        "science": "Maybe, maybe not. Withdrawal starts within days and eases within hours to days of restarting. Relapse usually comes later. In trials, mood did not drop in week 1.",
+        "refs": [
+          "r1",
+          "r2",
+          "r5"
+        ],
+        "beliefSource": "NICE NG222 (1.4.19) tells clinicians to reassure people that withdrawal is not relapse, implying patients read it that way."
+      },
+      {
+        "voice": "Withdrawal is rare and mild. I'll just stop.",
+        "kind": "not-that-bad",
+        "verdict": "half-true",
+        "science": "Estimates disagree. One meta-analysis: 31% get symptoms (17% on placebo), 2.8% severe. A reanalysis of studies that measured it properly: 55%. Either way, taper.",
+        "refs": [
+          "r4",
+          "r6"
+        ],
+        "beliefSource": "Davies and Read (2019): UK and US guidelines called withdrawal 'self-limiting', typically 1-2 weeks."
+      },
+      {
+        "voice": "I did the 2-4 week taper and still struggled. Something's wrong with me.",
+        "kind": "quitting-wont-work",
+        "verdict": "false",
+        "science": "Short 2-4 week tapers showed little benefit over stopping abruptly. Tapers over months, down to very small doses, worked better. NICE now says withdrawal may take weeks or months.",
+        "refs": [
+          "r7",
+          "r1"
+        ],
+        "beliefSource": "not sourced"
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "Taper with your prescriber, cutting by a proportion of the current dose",
+        "evidence": "moderate",
+        "note": "NICE: steps of about 50%, smaller (about 25%) at low doses, liquid forms if needed, at the person's pace.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "what": "Slow, hyperbolic tapering over months to very low doses",
+        "evidence": "weak",
+        "note": "Based on brain-imaging data and observational studies; not yet tested in large trials.",
+        "refs": [
+          "r7"
+        ]
+      },
+      {
+        "what": "If withdrawal is severe: go back to the last dose, then cut more slowly",
+        "evidence": "moderate",
+        "note": "NICE recommendation.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "what": "Psychological therapy (preventive CBT or MBCT) while tapering",
+        "evidence": "weak",
+        "note": "40-75% came off successfully in 3 studies; very low certainty.",
+        "refs": [
+          "r8"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "31% have at least one discontinuation symptom after stopping an antidepressant, against 17% stopping placebo; severe in 2.8% (79 studies, 21,002 patients).",
+        "refs": [
+          "r4"
+        ]
+      },
+      {
+        "stat": "A rival review found a weighted 56% (14 studies), and 46% of those affected rated their symptoms at the most severe level.",
+        "refs": [
+          "r3"
+        ]
+      },
+      {
+        "stat": "Stopping raised the odds of dizziness 5.5-fold versus stopping placebo; on average about one extra symptom at week 1.",
+        "refs": [
+          "r5"
+        ]
+      }
+    ],
+    "screener": null,
+    "placeholders": [
+      {
+        "block": "screener",
+        "wanted": "None: this is not an addiction to screen for. The DESS checklist is a research tool.",
+        "why": "Licence and item count of DESS not checked; a screener would wrongly imply addiction."
+      },
+      {
+        "block": "classification",
+        "wanted": "DSM-5-TR wording and code for antidepressant discontinuation syndrome.",
+        "why": "DSM text not fetchable; from memory."
+      },
+      {
+        "block": "timeline",
+        "wanted": "How often withdrawal lasts months.",
+        "why": "Disputed: Henssler vs Moncrieff reanalysis; no agreed figure."
+      },
+      {
+        "block": "whatWorks",
+        "wanted": "Trials of hyperbolic tapering and tapering strips; availability and cost.",
+        "why": "Not researched; cost would need the owner's decision before any product link."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "Persistent sexual side effects after stopping (PSSD), relevant to men.",
+        "why": "Not researched in this pass."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "include-with-changes",
+      "reason": "Must never be called addiction. The prescriber leads, so the page cannot invite a self-chosen quit date, and must not push anyone off medication. The timeline must separate early withdrawal from later relapse. Incidence is genuinely disputed (15% versus 55%); show both."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "NICE (2022). Depression in adults: treatment and management (NG222), recommendations 1.4.12-1.4.21.",
+        "kind": "guideline",
+        "url": "https://www.nice.org.uk/guidance/ng222/chapter/Recommendations",
+        "fetched": true,
+        "supports": "Symptoms within days, usually gone in 1-2 weeks, sometimes months; proportional tapering; not relapse."
+      },
+      {
+        "id": "r2",
+        "cite": "Royal College of Psychiatrists. Stopping antidepressants (patient information).",
+        "kind": "other",
+        "url": "https://www.rcpsych.ac.uk/mental-health/treatments-and-wellbeing/stopping-antidepressants",
+        "fetched": true,
+        "supports": "Not addiction (no craving, loss of control, high); physical dependence; symptoms resolve fast on restarting."
+      },
+      {
+        "id": "r3",
+        "cite": "Davies J, Read J (2019). A systematic review into the incidence, severity and duration of antidepressant withdrawal effects: are guidelines evidence-based? Addict Behav.",
+        "kind": "review",
+        "doi": "10.1016/j.addbeh.2018.08.027",
+        "pmid": "30292574",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30292574/",
+        "fetched": true,
+        "supports": "Weighted incidence 56%; 46% most severe rating; mean durations 5 days to 79 weeks."
+      },
+      {
+        "id": "r4",
+        "cite": "Henssler J, Schmidt Y, Schmidt U, Schwarzer G, et al. (2024). Incidence of antidepressant discontinuation symptoms: a systematic review and meta-analysis. Lancet Psychiatry.",
+        "kind": "review",
+        "doi": "10.1016/S2215-0366(24)00133-0",
+        "pmid": "38851198",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/38851198/",
+        "fetched": true,
+        "supports": "31% vs 17% placebo; severe 2.8%; net incidence about 15%."
+      },
+      {
+        "id": "r5",
+        "cite": "Kalfas M, Tsapekos D, Butler M, McCutcheon RA, et al. (2025). Incidence and nature of antidepressant discontinuation symptoms: a systematic review and meta-analysis. JAMA Psychiatry.",
+        "kind": "review",
+        "doi": "10.1001/jamapsychiatry.2025.1362",
+        "pmid": "40632531",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/40632531/",
+        "fetched": true,
+        "supports": "About 1 extra DESS symptom at week 1; dizziness OR 5.52; no mood worsening."
+      },
+      {
+        "id": "r6",
+        "cite": "Moncrieff J, Hobday H, Sorensen A, Read J, et al. (2025). Evidence on antidepressant withdrawal: an appraisal and reanalysis of a recent systematic review. Psychol Med.",
+        "kind": "review",
+        "doi": "10.1017/S0033291725100652",
+        "pmid": "40692314",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/40692314/",
+        "fetched": true,
+        "supports": "Reanalysis of 5 systematic studies: 55% incidence; criticises Henssler's data."
+      },
+      {
+        "id": "r7",
+        "cite": "Horowitz MA, Taylor D (2019). Tapering of SSRI treatment to mitigate withdrawal symptoms. Lancet Psychiatry.",
+        "kind": "review",
+        "doi": "10.1016/S2215-0366(19)30032-X",
+        "pmid": "30850328",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30850328/",
+        "fetched": true,
+        "supports": "2-4 week tapers barely beat abrupt stopping; slow hyperbolic tapers to tiny doses proposed."
+      },
+      {
+        "id": "r8",
+        "cite": "Van Leeuwen E, van Driel ML, Horowitz MA, Kendrick T, et al. (2021). Approaches for discontinuation versus continuation of long-term antidepressant use for depressive and anxiety disorders in adults. Cochrane Database Syst Rev.",
+        "kind": "review",
+        "doi": "10.1002/14651858.CD013495.pub2",
+        "pmid": "33886130",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/33886130/",
+        "fetched": true,
+        "supports": "Abrupt stop: relapse HR 2.09 (very low certainty); with therapy 40-75% success."
+      },
+      {
+        "id": "r9",
+        "cite": "Fava GA, Gatti A, Belaise C, Guidi J, et al. (2015). Withdrawal symptoms after selective serotonin reuptake inhibitor discontinuation: a systematic review. Psychother Psychosom.",
+        "kind": "review",
+        "doi": "10.1159/000370338",
+        "pmid": "25721705",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/25721705/",
+        "fetched": true,
+        "supports": "Onset within a few days, lasts a few weeks; late onset and longer persistence possible."
+      },
+      {
+        "id": "r10",
+        "cite": "American Psychiatric Association (2013/2022). DSM-5 / DSM-5-TR: Medication-induced movement disorders and other adverse effects of medication.",
+        "kind": "other",
+        "url": null,
+        "fetched": false,
+        "supports": "Lists antidepressant discontinuation syndrome as a medication adverse effect."
+      }
+    ]
+  },
+  {
+    "id": "self-harm",
+    "name": "Self-harm",
+    "group": "boundary",
+    "oneLiner": "Self-harm is a sign of serious emotional distress and a strong risk factor for suicide; therapy designed for it is the recommended route.",
+    "oneLinerRefs": [
+      "r2",
+      "r1"
+    ],
+    "axes": {
+      "withdrawal": "none-established",
+      "canFullyAbstain": true,
+      "prescribedOrigin": "never",
+      "overdoseRiskAfterBreak": false,
+      "classification": "DSM-5: non-suicidal self-injury disorder is listed only as a condition needing further study. Not classed as an addiction.",
+      "classificationStatus": "proposed"
+    },
+    "safety": {
+      "level": "danger",
+      "text": "If you have hurt yourself badly, or might act on thoughts of suicide, call your emergency number now. In Ireland, Samaritans answer free on 116 123, day or night. This page is not treatment.",
+      "refs": [
+        "r2",
+        "r7"
+      ]
+    },
+    "timelineEvidence": "none",
+    "timeline": [],
+    "markers": [],
+    "beliefs": [
+      {
+        "voice": "It's not serious. I'm not trying to die.",
+        "kind": "not-that-bad",
+        "verdict": "true-but",
+        "science": "Most people who self-harm will not take their own life. But it is a sign of serious distress: after a hospital visit for self-harm, 1 in 25 die by suicide within five years.",
+        "refs": [
+          "r2",
+          "r7"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "I can't stop on my own, so there's no point trying.",
+        "kind": "quitting-wont-work",
+        "verdict": "true-but",
+        "science": "You don't have to do it alone. NICE recommends CBT-informed therapy built for self-harm, usually 4 to 10 sessions, starting as soon as possible.",
+        "refs": [
+          "r1"
+        ],
+        "beliefSource": "not sourced"
+      },
+      {
+        "voice": "It's an addiction, like drinking.",
+        "kind": "identity",
+        "verdict": "half-true",
+        "science": "Most self-harming teens in hospital reported addiction-like features. But urges were weaker than drug cravings and came almost only with painful feelings, which fits emotion regulation better than addiction.",
+        "refs": [
+          "r3",
+          "r4",
+          "r5"
+        ],
+        "beliefSource": "Blasco-Fontecilla et al. (2016) argue self-harm can be conceptualised as an addiction."
+      }
+    ],
+    "whatWorks": [
+      {
+        "what": "CBT-informed psychological therapy tailored to self-harm",
+        "evidence": "moderate",
+        "note": "NICE recommendation, typically 4-10 sessions. Cochrane rates the trial evidence low certainty, with fewer repeats at 6-12 months.",
+        "refs": [
+          "r1",
+          "r8"
+        ]
+      },
+      {
+        "what": "A safety plan written with a professional",
+        "evidence": "weak",
+        "note": "NICE says consider it: triggers, warning signs, coping steps, people to call, crisis contacts.",
+        "refs": [
+          "r1"
+        ]
+      },
+      {
+        "what": "Mentalisation-based therapy or group emotion-regulation therapy",
+        "evidence": "moderate",
+        "note": "Each reduced repeat self-harm, but each rests on one trial or one research group.",
+        "refs": [
+          "r8"
+        ]
+      },
+      {
+        "what": "Medication as a treatment for self-harm itself",
+        "evidence": "weak",
+        "note": "NICE says do not offer drug treatment specifically to reduce self-harm.",
+        "refs": [
+          "r1"
+        ]
+      }
+    ],
+    "numbers": [
+      {
+        "stat": "Pooled lifetime prevalence of non-suicidal self-injury: 17.2% of adolescents, 13.4% of young adults, 5.5% of adults.",
+        "refs": [
+          "r6"
+        ]
+      },
+      {
+        "stat": "16.3% repeat self-harm within a year of a hospital visit; 1.6% die by suicide within a year, 3.9% within five years.",
+        "refs": [
+          "r7"
+        ]
+      }
+    ],
+    "screener": null,
+    "placeholders": [
+      {
+        "block": "screener",
+        "wanted": "None, deliberately.",
+        "why": "NICE (1.6.1) says not to use risk tools or scales to predict suicide or repeat self-harm."
+      },
+      {
+        "block": "timeline",
+        "wanted": "None, deliberately.",
+        "why": "No withdrawal syndrome is established, and a day counter would act as the shame machine described in docs/research/recovery-testimonials/SYNTHESIS.md (Tier 1, item 3)."
+      },
+      {
+        "block": "safety",
+        "wanted": "Verified crisis numbers for the UK, US (988), and every country the site serves.",
+        "why": "Only the Irish Samaritans document was fetched; other numbers must be checked before publishing."
+      },
+      {
+        "block": "page-format",
+        "wanted": "A different template: crisis block first; no images; no method detail; no comments; no 'coping mechanism' framing; no testimonials from people self-harming recently.",
+        "why": "Samaritans guidance (2020) warns these can trigger, normalise or glamourise self-harm."
+      },
+      {
+        "block": "review",
+        "wanted": "Review by a clinician and safeguarding check before publishing; decide whether under-18s are in the audience.",
+        "why": "Owner is not a clinician; adolescents have the highest prevalence."
+      },
+      {
+        "block": "beliefs",
+        "wanted": "Whether first-person self-harm thoughts should appear at all.",
+        "why": "Not tested; voicing them may echo the thought for a reader in crisis."
+      },
+      {
+        "block": "classification",
+        "wanted": "How ICD-11 codes self-harm (no NSSI disorder expected).",
+        "why": "WHO ICD-11 browser not fetched."
+      },
+      {
+        "block": "audience",
+        "wanted": "How men self-harm (for example hitting walls, picking fights) and how they seek help.",
+        "why": "Men-specific data not gathered."
+      }
+    ],
+    "frameworkVerdict": {
+      "verdict": "exclude",
+      "reason": "Do not run it through the addiction template. There is no withdrawal, emotion-regulation models fit better, and timelines, counters and belief lists risk harm. Replace it with a short signpost page: crisis numbers first, then 'talk to a GP, therapy built for self-harm works', following Samaritans guidance."
+    },
+    "refs": [
+      {
+        "id": "r1",
+        "cite": "NICE (2022). Self-harm: assessment, management and preventing recurrence (NG225), recommendations.",
+        "kind": "guideline",
+        "url": "https://www.nice.org.uk/guidance/ng225/chapter/Recommendations",
+        "fetched": true,
+        "supports": "CBT-informed therapy 4-10 sessions; safety plans; no risk scales; no drugs to reduce self-harm."
+      },
+      {
+        "id": "r2",
+        "cite": "Samaritans (2020). Guidance for covering self-harm in the media (Republic of Ireland).",
+        "kind": "guideline",
+        "url": "https://www.samaritans.org/documents/1079/ROI_Guidance_for_covering_self-harm_in_the_media_FINAL.pdf",
+        "fetched": true,
+        "supports": "Serious distress, suicide risk factor; no images, no 'coping mechanism'; signpost 116 123."
+      },
+      {
+        "id": "r3",
+        "cite": "Nixon MK, Cloutier PF, Aggarwal S (2002). Affect regulation and addictive aspects of repetitive self-injury in hospitalized adolescents. J Am Acad Child Adolesc Psychiatry.",
+        "kind": "study",
+        "doi": "10.1097/00004583-200211000-00015",
+        "pmid": "12410076",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/12410076/",
+        "fetched": true,
+        "supports": "42 inpatients: 97.6% endorsed 3+ addictive symptoms; urges almost daily in 78.6%."
+      },
+      {
+        "id": "r4",
+        "cite": "Victor SE, Glenn CR, Klonsky ED (2012). Is non-suicidal self-injury an 'addiction'? A comparison of craving in substance use and non-suicidal self-injury. Psychiatry Res.",
+        "kind": "study",
+        "doi": "10.1016/j.psychres.2011.12.011",
+        "pmid": "22401975",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22401975/",
+        "fetched": true,
+        "supports": "n=58: NSSI craving lower than substance craving, mostly with negative emotions; favours emotion regulation."
+      },
+      {
+        "id": "r5",
+        "cite": "Blasco-Fontecilla H, Fernandez-Fernandez R, Colino L, Fajardo L, et al. (2016). The addictive model of self-harming (non-suicidal and suicidal) behavior. Front Psychiatry.",
+        "kind": "review",
+        "doi": "10.3389/fpsyt.2016.00008",
+        "pmid": "26869941",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26869941/",
+        "fetched": true,
+        "supports": "Narrative mini-review arguing self-harm can be conceptualised as addiction; scarce literature."
+      },
+      {
+        "id": "r6",
+        "cite": "Swannell SV, Martin GE, Page A, Hasking P, et al. (2014). Prevalence of nonsuicidal self-injury in nonclinical samples: systematic review, meta-analysis and meta-regression. Suicide Life Threat Behav.",
+        "kind": "review",
+        "doi": "10.1111/sltb.12070",
+        "pmid": "24422986",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24422986/",
+        "fetched": true,
+        "supports": "Pooled NSSI: 17.2% adolescents, 13.4% young adults, 5.5% adults."
+      },
+      {
+        "id": "r7",
+        "cite": "Carroll R, Metcalfe C, Gunnell D (2014). Hospital presenting self-harm and risk of fatal and non-fatal repetition: systematic review and meta-analysis. PLoS One.",
+        "kind": "review",
+        "doi": "10.1371/journal.pone.0089944",
+        "pmid": "24587141",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24587141/",
+        "fetched": true,
+        "supports": "1-year repeat 16.3%; suicide 1.6% at 1 year, 3.9% at 5 years."
+      },
+      {
+        "id": "r8",
+        "cite": "Witt KG, Hetrick SE, Rajaram G, Hazell P, et al. (2021). Psychosocial interventions for self-harm in adults. Cochrane Database Syst Rev.",
+        "kind": "review",
+        "doi": "10.1002/14651858.CD013668.pub2",
+        "pmid": "33884617",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/33884617/",
+        "fetched": true,
+        "supports": "76 trials: CBT-based therapy low certainty; MBT and group emotion-regulation single-group evidence."
+      },
+      {
+        "id": "r9",
+        "cite": "Zetterqvist M (2015). The DSM-5 diagnosis of nonsuicidal self-injury disorder: a review of the empirical literature. Child Adolesc Psychiatry Ment Health.",
+        "kind": "review",
+        "doi": "10.1186/s13034-015-0062-7",
+        "pmid": "26417387",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26417387/",
+        "fetched": true,
+        "supports": "DSM-5 lists NSSI disorder as a condition in need of further study."
+      }
+    ]
+  }
+]
