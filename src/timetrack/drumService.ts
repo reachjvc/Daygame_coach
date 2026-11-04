@@ -24,7 +24,7 @@
  * (scenario 10); a time to the second is still typed in the box beside them.
  */
 
-import { addDays, dateKey, dateKeyToDate, daysBetween, epochSeconds, formatDuration, isoFromEpochSeconds, pad2, parseDurationInput, parseEndTimeInput, parseStartTimeInput } from "./timetrackFormatService"
+import { addDays, dateKey, dateKeyToDate, daysBetween, formatDuration, pad2, parseDurationInput, parseEndTimeInput, parseStartTimeInput } from "./timetrackFormatService"
 import { LONG_ENTRY_SECONDS } from "./timetrackFormatService"
 import type { DurationFormat, IsoDate, IsoDateTime, TimeFormat } from "./types"
 
@@ -45,6 +45,15 @@ export interface DrumBounds {
 export const DAYS_EACH_WAY = 14
 
 const HOUR_MS = 3_600_000
+
+/**
+ * MILLISECONDS, NOT SECONDS, for every comparison here. A timer started by a
+ * tap carries milliseconds and the drums set whole minutes, so a comparison
+ * that floors to the second calls 09:00:00.000 "not before" a start at
+ * 09:00:00.500 — and that end is stored before its start.
+ */
+const ms = (iso: IsoDateTime) => Date.parse(iso)
+const isoAt = (at: number) => new Date(at).toISOString()
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -86,15 +95,15 @@ export function instantsAt(parts: DrumParts): IsoDateTime[] {
 export function momentOf(parts: DrumParts, near: IsoDateTime | null = null): IsoDateTime | null {
   const all = instantsAt(parts)
   if (all.length <= 1 || near === null) return all[0] ?? null
-  const from = epochSeconds(near)
-  return all.reduce((best, at) => (Math.abs(epochSeconds(at) - from) < Math.abs(epochSeconds(best) - from) ? at : best))
+  const from = ms(near)
+  return all.reduce((best, at) => (Math.abs(ms(at) - from) < Math.abs(ms(best) - from) ? at : best))
 }
 
 /** In the hour the clocks repeat, which time round this is; null on any other hour */
 export function repeatedHour(iso: IsoDateTime): "first" | "second" | null {
   const all = instantsAt(partsOf(iso))
   if (all.length < 2) return null
-  const minuteOf = (at: IsoDateTime) => Math.floor(epochSeconds(at) / 60)
+  const minuteOf = (at: IsoDateTime) => Math.floor(ms(at) / 60_000)
   return minuteOf(iso) === minuteOf(all[0]) ? "first" : "second"
 }
 
@@ -103,29 +112,29 @@ export function hourExists(day: IsoDate, hour: number): boolean {
   return instantsAt({ day, hour, minute: 0 }).length > 0 || instantsAt({ day, hour, minute: 59 }).length > 0
 }
 
-/** The ends of a stretch of wall clock, as moments: the first instant it begins, the last it ends */
+/** The ends of a stretch of wall clock, in epoch ms: the first instant it begins, the last it ends */
 function stretch(day: IsoDate, fromHour: number, toHour: number): { first: number; last: number } | null {
   let first: number | null = null
   let last: number | null = null
   for (let hour = fromHour; hour <= toHour; hour++) {
     const starts = instantsAt({ day, hour, minute: 0 })
     const ends = instantsAt({ day, hour, minute: 59 })
-    if (first === null && starts.length > 0) first = epochSeconds(starts[0])
-    if (ends.length > 0) last = epochSeconds(ends[ends.length - 1]) + 59
+    if (first === null && starts.length > 0) first = ms(starts[0])
+    if (ends.length > 0) last = ms(ends[ends.length - 1]) + 59_999
   }
   return first === null || last === null ? null : { first, last }
 }
 
-/** True when nothing in [first, last] (epoch seconds) is inside the bounds */
+/** True when nothing in [first, last] (epoch ms) is inside the bounds */
 function outside(first: number, last: number, bounds: DrumBounds): boolean {
-  if (bounds.latest !== null && first > epochSeconds(bounds.latest)) return true
-  if (bounds.earliest !== null && last < epochSeconds(bounds.earliest)) return true
+  if (bounds.latest !== null && first > ms(bounds.latest)) return true
+  if (bounds.earliest !== null && last < ms(bounds.earliest)) return true
   return false
 }
 
 export function clampToBounds(iso: IsoDateTime, bounds: DrumBounds): IsoDateTime {
-  if (bounds.latest !== null && epochSeconds(iso) > epochSeconds(bounds.latest)) return bounds.latest
-  if (bounds.earliest !== null && epochSeconds(iso) < epochSeconds(bounds.earliest)) return bounds.earliest
+  if (bounds.latest !== null && ms(iso) > ms(bounds.latest)) return bounds.latest
+  if (bounds.earliest !== null && ms(iso) < ms(bounds.earliest)) return bounds.earliest
   return iso
 }
 
@@ -140,6 +149,26 @@ export function clampToBounds(iso: IsoDateTime, bounds: DrumBounds): IsoDateTime
 export function moveDrum(value: IsoDateTime, change: Partial<DrumParts>, bounds: DrumBounds): IsoDateTime | null {
   const at = momentOf({ ...partsOf(value), ...change }, value)
   return at === null ? null : clampToBounds(at, bounds)
+}
+
+/** Why a turn was refused or held at a limit, for the words beside the drums */
+export type DrumRefusal = "after" | "before" | "skipped"
+
+/**
+ * Why turning a drum this way is refused — after the latest moment, before
+ * the earliest, or a time the clocks skip — or null when it is not. A time
+ * inside the limit's own minute is no refusal: 09:00 on a timer begun at
+ * 09:00:40 is that start, to the millisecond, not a mistake to point at.
+ * `moveDrum` still lands an allowed drum on the limit; this is what the screen
+ * says when it does, or when a greyed item is refused outright.
+ */
+export function refusalOf(value: IsoDateTime, change: Partial<DrumParts>, bounds: DrumBounds): DrumRefusal | null {
+  const at = momentOf({ ...partsOf(value), ...change }, value)
+  if (at === null) return "skipped"
+  const minute = (iso: IsoDateTime) => Math.floor(ms(iso) / 60_000)
+  if (bounds.latest !== null && minute(at) > minute(bounds.latest)) return "after"
+  if (bounds.earliest !== null && minute(at) < minute(bounds.earliest)) return "before"
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -206,7 +235,7 @@ export function halfRefused(day: IsoDate, pm: boolean, bounds: DrumBounds): bool
 export function minuteRefused(parts: DrumParts, bounds: DrumBounds): boolean {
   const all = instantsAt(parts)
   if (all.length === 0) return true
-  return outside(epochSeconds(all[0]), epochSeconds(all[all.length - 1]) + 59, bounds)
+  return outside(ms(all[0]), ms(all[all.length - 1]) + 59_999, bounds)
 }
 
 // ---------------------------------------------------------------------------
@@ -226,12 +255,13 @@ export interface PairReading {
 }
 
 export function readPair(start: IsoDateTime, stop: IsoDateTime, nowIso: IsoDateTime): PairReading {
-  const seconds = epochSeconds(stop) - epochSeconds(start)
+  const length = ms(stop) - ms(start)
+  const seconds = Math.trunc(length / 1000)
   return {
     seconds,
     laterDays: daysBetween(dateKey(start), dateKey(stop)),
-    endsBeforeStart: seconds < 0,
-    planned: epochSeconds(start) > epochSeconds(nowIso),
+    endsBeforeStart: length < 0,
+    planned: ms(start) > ms(nowIso),
     long: seconds > LONG_ENTRY_SECONDS,
   }
 }
@@ -257,12 +287,12 @@ export function lengthLine(reading: PairReading, format: DurationFormat): string
  * time mends to the start's own day, and the button says which.
  */
 export function mendEnd(start: IsoDateTime, stop: IsoDateTime): { stop: IsoDateTime; label: string } | null {
-  if (epochSeconds(stop) >= epochSeconds(start)) return null
+  if (ms(stop) >= ms(start)) return null
   const { hour, minute } = partsOf(stop)
   const startDay = dateKey(start)
   for (const day of [startDay, addDays(startDay, 1), addDays(startDay, 2)]) {
     const at = momentOf({ day, hour, minute }, start)
-    if (at !== null && epochSeconds(at) >= epochSeconds(start)) {
+    if (at !== null && ms(at) >= ms(start)) {
       return { stop: at, label: day === startDay ? "End same day" : "End next day" }
     }
   }
@@ -307,8 +337,8 @@ export function typedIntoPair(
   if (field === "duration") {
     const seconds = parseDurationInput(text)
     if (seconds === null) return null
-    if (pair.stop === null) return { ...pair, start: isoFromEpochSeconds(epochSeconds(nowIso) - seconds) }
-    return { ...pair, stop: isoFromEpochSeconds(epochSeconds(pair.start) + seconds) }
+    if (pair.stop === null) return { ...pair, start: isoAt(ms(nowIso) - seconds * 1000) }
+    return { ...pair, stop: isoAt(ms(pair.start) + seconds * 1000) }
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null
   // whole days on the wall clock, like `moveEntryToDay`: 09:00 stays 09:00 across a clock change
@@ -316,12 +346,12 @@ export function typedIntoPair(
   moved.setDate(moved.getDate() + daysBetween(dateKey(pair.start), text))
   const start = moved.toISOString()
   if (pair.stop === null) return { start, stop: null }
-  return { start, stop: isoFromEpochSeconds(epochSeconds(start) + epochSeconds(pair.stop) - epochSeconds(pair.start)) }
+  return { start, stop: isoAt(ms(start) + ms(pair.stop) - ms(pair.start)) }
 }
 
 /** ±5 on one end of the unsaved pair */
 export function nudgePair(pair: TimePair, edge: "start" | "stop", seconds: number): TimePair {
-  if (edge === "start") return { ...pair, start: isoFromEpochSeconds(epochSeconds(pair.start) + seconds) }
+  if (edge === "start") return { ...pair, start: isoAt(ms(pair.start) + seconds * 1000) }
   if (pair.stop === null) return pair
-  return { ...pair, stop: isoFromEpochSeconds(epochSeconds(pair.stop) + seconds) }
+  return { ...pair, stop: isoAt(ms(pair.stop) + seconds * 1000) }
 }

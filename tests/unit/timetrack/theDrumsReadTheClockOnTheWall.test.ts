@@ -33,6 +33,7 @@ import {
   nudgePair,
   partsOf,
   readPair,
+  refusalOf,
   repeatedHour,
   toTwelve,
   typedIntoPair,
@@ -196,6 +197,42 @@ describe("a running timer's drums: after now is greyed and refused (scenario 7)"
   test("an hour that would carry the minute past now lands on now, and one before the start on the start", () => {
     expect(moveDrum(local(11, 4, 13, 45), { hour: 14 }, bounds)).toBe(latest)
     expect(moveDrum(local(11, 4, 10, 0), { hour: 9 }, bounds)).toBe(local(11, 4, 9, 0, 40))
+  })
+})
+
+describe("never an end before its start, down to the millisecond", () => {
+  /** a timer started by a tap carries milliseconds; the drums set whole minutes */
+  const started = "2026-11-04T08:00:40.300Z"
+  const bounds = { earliest: started, latest: local(11, 4, 14, 30, 25) }
+
+  test("half a second before the start is before the start", () => {
+    expect(readPair("2026-11-04T08:00:00.500Z", "2026-11-04T08:00:00.000Z", NOW).endsBeforeStart).toBe(true)
+    expect(lengthLine(readPair("2026-11-04T08:00:00.500Z", "2026-11-04T08:00:00.000Z", NOW), "improved")).toBe("Ends before it starts")
+    expect(mendEnd("2026-11-04T08:00:00.500Z", "2026-11-04T08:00:00.000Z")?.label).toBe("End next day")
+  })
+
+  test("the start's own minute lands on the start itself, milliseconds and all", () => {
+    expect(moveDrum(local(11, 4, 10, 0), { hour: 9, minute: 0 }, bounds)).toBe(started)
+    expect(moveDrum(local(11, 4, 10, 0), { hour: 9 }, bounds)).toBe(started)
+    expect(minuteRefused({ day: "2026-11-04", hour: 9, minute: 0 }, bounds)).toBe(false)
+  })
+})
+
+describe("why a drum was refused, in a word the screen can say", () => {
+  const bounds = { earliest: local(11, 4, 9, 0, 40), latest: local(11, 4, 14, 30, 25) }
+
+  test("after now, before the start, or a time the clocks skip", () => {
+    expect(refusalOf(local(11, 4, 14, 0), { hour: 15 }, bounds)).toBe("after")
+    expect(refusalOf(local(11, 4, 14, 0), { day: "2026-11-05" }, bounds)).toBe("after")
+    expect(refusalOf(local(11, 4, 13, 45), { hour: 14 }, bounds)).toBe("after")
+    expect(refusalOf(local(11, 4, 14, 0), { hour: 8 }, bounds)).toBe("before")
+    expect(refusalOf(local(3, 29, 1, 30), { hour: 2 }, OPEN)).toBe("skipped")
+  })
+
+  test("a time inside the bounds, or inside the bound's own minute, is no refusal", () => {
+    expect(refusalOf(local(11, 4, 14, 0), { hour: 13 }, bounds)).toBeNull()
+    expect(refusalOf(local(11, 4, 10, 0), { hour: 9 }, bounds)).toBeNull()
+    expect(refusalOf(local(11, 4, 14, 0), { minute: 30 }, bounds)).toBeNull()
   })
 })
 

@@ -98,6 +98,23 @@ describe("the running timer bar", () => {
     expect(runningEntry(latest.current)?.start).toBe(at(4, 9, 0))
   })
 
+  test("Stop at… has the drums (Phase 5): two hours back on the hour drum is 12:30, and after now is refused in words", () => {
+    const { latest } = open()
+    fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
+    const picker = within(screen.getByRole("dialog", { name: "Stopped at…" }))
+    const hour = picker.getByRole("listbox", { name: "Hour" })
+
+    fireEvent.keyDown(hour, { key: "ArrowDown" })
+    expect(picker.getByRole("status")).toHaveTextContent("That has not happened yet")
+
+    fireEvent.keyDown(hour, { key: "ArrowUp" })
+    fireEvent.keyDown(hour, { key: "ArrowUp" })
+    expect(picker.queryByRole("status")).toBeNull()
+    fireEvent.click(picker.getByRole("button", { name: "Stop at 12:30" }))
+
+    expect(latest.current.entries[0].stop).toBe(at(4, 12, 30))
+  })
+
   test("Stopped at… is in the ⋮ menu as well", () => {
     open()
     fireEvent.click(screen.getByRole("button", { name: "More timer actions" }))

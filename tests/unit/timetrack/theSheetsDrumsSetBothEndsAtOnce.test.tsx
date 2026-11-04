@@ -217,12 +217,50 @@ describe("a running entry (scenario 7)", () => {
     expect(stored(id).stop).toBe(at(4, 14, 0))
   })
 
-  test("its start cannot be turned past now", () => {
+  test("its start cannot be turned past now, and says so in the day picker's words", () => {
     const state = running()
     const id = runningEntry(state)!.id
     open(state, id)
     press("Start day", "ArrowDown")
+
     expect(chosen("Start day")).toBe("Today")
+    expect(screen.getByRole("status")).toHaveTextContent("A running timer cannot start in the future")
+  })
+
+  test("an end after now is refused in words too", () => {
+    const state = running()
+    const id = runningEntry(state)!.id
+    open(state, id)
+    fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
+    press("End hour", "ArrowDown")
+
+    expect(screen.getByRole("status")).toHaveTextContent("That has not happened yet")
+  })
+
+  test("Stop at… on a timer started a moment ago is not an end before its start", () => {
+    // the sheet's clock is whole seconds; a tapped start is not: 16:00:00.500 against 16:00:00
+    const state = startTimer(baseState(), { ...emptyDraft, description: "Just now" }, "2026-11-04T15:00:00.500Z").state
+    const id = runningEntry(state)!.id
+    open(state, id)
+    fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
+
+    expect(readout()).toBe("0:00")
+    expect(screen.getByRole("button", { name: "✓ Stop at 16:00" })).toBeEnabled()
+  })
+
+  test("Stop at… turned to the start's own minute ends it at its start, to the millisecond, never before", () => {
+    // started by a tap: 09:00:00.500
+    const state = startTimer(baseState(), { ...emptyDraft, description: "Deep work" }, "2026-11-04T08:00:00.500Z").state
+    const id = runningEntry(state)!.id
+    open(state, id)
+    fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
+    press("End hour", "Home")
+    press("End minute", "Home")
+
+    expect(readout()).toBe("0:00")
+    fireEvent.click(screen.getByRole("button", { name: "✓ Stop at 09:00" }))
+    expect(stored(id).stop).toBe("2026-11-04T08:00:00.500Z")
+    expect(Date.parse(stored(id).stop!)).toBeGreaterThanOrEqual(Date.parse(stored(id).start))
   })
 })
 

@@ -18,7 +18,7 @@ import { useState } from "react"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-import { MomentDrums } from "@/src/timetrack/components/Drums"
+import { DRUM_ITEM_PX, MomentDrums } from "@/src/timetrack/components/Drums"
 import { MomentPicker } from "@/src/timetrack/components/MomentPicker"
 import type { DrumBounds } from "@/src/timetrack/drumService"
 import type { TimeFormat } from "@/src/timetrack/types"
@@ -27,7 +27,7 @@ const at = (day: number, h: number, m = 0, s = 0) => new Date(2026, 10, day, h, 
 /** a timer started at 09:00:40, and now is 14:30:25: what Stopped at… is opened on */
 const STARTED = at(4, 9, 0, 40)
 const NOW = at(4, 14, 30, 25)
-const ITEM = 40
+const ITEM = DRUM_ITEM_PX
 
 let shown = NOW
 

@@ -21,7 +21,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { DrumBounds, DrumParts, TimePair } from "../drumService"
+import type { DrumBounds, DrumParts, DrumRefusal, TimePair } from "../drumService"
 import {
   MINUTE_LABELS,
   dayChoices,
@@ -35,8 +35,10 @@ import {
   mendEnd,
   minuteRefused,
   moveDrum,
+  momentOf,
   partsOf,
   readPair,
+  refusalOf,
   repeatedHour,
   toTwelve,
 } from "../drumService"
@@ -44,11 +46,12 @@ import { dateKey, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatServ
 import type { DurationFormat, IsoDate, IsoDateTime, TimeFormat } from "../types"
 
 /**
- * One item's height. 40px: a thumb can land on it, and three of them — the
- * value and one either side — keep two sets of drums and the boxes under them
- * on a 390px phone's first screen.
+ * One item's height: 44px, this slice's floor for anything a thumb taps (an
+ * item off the band is tapped to choose it). Three show — the value and one
+ * either side — so two sets, Start and End, take 264px of a 390px-wide phone's
+ * sheet; the boxes under them are one short scroll away.
  */
-export const DRUM_ITEM_PX = 40
+export const DRUM_ITEM_PX = 44
 const VISIBLE = 3
 /** a drum left between two items with no `scrollend` (older Safari) settles after this */
 const SETTLE_MS = 150
@@ -87,6 +90,7 @@ export function Drum({
   items,
   selected,
   onPick,
+  onRefuse,
   pageStep = 5,
   className,
 }: {
@@ -95,6 +99,8 @@ export function Drum({
   items: DrumItem[]
   selected: number
   onPick: (index: number) => void
+  /** a greyed item was asked for — by a flick that came to rest on it, a key or a tap — and refused */
+  onRefuse?: (index: number) => void
   pageStep?: number
   className?: string
 }) {
@@ -109,8 +115,8 @@ export function Drum({
   const drag = useRef<{ y: number; top: number; dragging: boolean; pointerId: number } | null>(null)
   const swallowClick = useRef(false)
   // the latest of these, for a settle that runs after the render that changed them
-  const latest = useRef({ selected, items, onPick })
-  latest.current = { selected, items, onPick }
+  const latest = useRef({ selected, items, onPick, onRefuse })
+  latest.current = { selected, items, onPick, onRefuse }
 
   const indexAt = (top: number) => Math.min(items.length - 1, Math.max(0, Math.round(top / DRUM_ITEM_PX)))
 
@@ -138,6 +144,7 @@ export function Drum({
     if (index === current || now[index].refused) {
       el.scrollTop = current * DRUM_ITEM_PX
       live.current = current
+      if (index !== current) latest.current.onRefuse?.(index)
       return
     }
     pick(index)
@@ -238,8 +245,12 @@ export function Drum({
   }
 
   const step = (target: number, direction: 1 | -1) => {
-    const index = reachable(items, Math.min(items.length - 1, Math.max(0, target)), direction, selected)
-    if (index === selected) return
+    const wanted = Math.min(items.length - 1, Math.max(0, target))
+    const index = reachable(items, wanted, direction, selected)
+    if (index === selected) {
+      if (wanted !== selected && items[wanted].refused) onRefuse?.(wanted)
+      return
+    }
     tick()
     onPick(index)
   }
@@ -314,7 +325,8 @@ export function Drum({
               swallowClick.current = false
               return
             }
-            if (!item.refused && index !== selected) {
+            if (item.refused) onRefuse?.(index)
+            else if (index !== selected) {
               tick()
               onPick(index)
             }
@@ -358,6 +370,7 @@ export function MomentDrums({
   todayKey,
   label,
   caption,
+  onRefused,
 }: {
   value: IsoDateTime
   onChange: (iso: IsoDateTime) => void
@@ -367,16 +380,28 @@ export function MomentDrums({
   label?: string
   /** shown at the left of the row: "Start", "End" */
   caption?: string
+  /**
+   * A turn was refused, or held at a limit: why, and the moment that was asked
+   * for (null for a time the clocks skip), so the screen can say it in words.
+   */
+  onRefused?: (why: DrumRefusal, asked: IsoDateTime | null) => void
 }) {
   const parts = partsOf(value)
   const twelve = timeFormat === "h12"
   const half = toTwelve(parts.hour)
   const named = (part: string) => (label ? `${label} ${part.toLowerCase()}` : part)
+  const say = (change: Partial<DrumParts>, why: DrumRefusal | null) => {
+    if (why) onRefused?.(why, momentOf({ ...parts, ...change }, value))
+  }
   const turn = (change: Partial<DrumParts>) => {
     const next = moveDrum(value, change, bounds)
     // null is a time the clocks skip that night: refused, and the drum goes back
     if (next !== null && next !== value) onChange(next)
+    // past a limit, it lands on the limit — and says why it did not go where it was turned
+    say(change, refusalOf(value, change, bounds))
   }
+  /** a greyed item asked for: refused outright, and said */
+  const refuse = (change: Partial<DrumParts>) => say(change, refusalOf(value, change, bounds) ?? "after")
 
   const days = dayChoices(todayKey, parts.day)
   const dayItems = days.map((day) => ({ key: day, text: dayLabel(day, todayKey), refused: dayRefused(day, bounds) }))
@@ -407,6 +432,7 @@ export function MomentDrums({
             items={dayItems}
             selected={days.indexOf(parts.day)}
             onPick={(index) => turn({ day: days[index] })}
+            onRefuse={(index) => refuse({ day: days[index] })}
             pageStep={7}
             className="w-[108px]"
           />
@@ -415,6 +441,7 @@ export function MomentDrums({
             items={hourItems}
             selected={twelve ? half.index : parts.hour}
             onPick={(index) => turn({ hour: twelve ? fromTwelve(index, half.pm) : index })}
+            onRefuse={(index) => refuse({ hour: twelve ? fromTwelve(index, half.pm) : index })}
             pageStep={twelve ? 3 : 5}
             className="w-14"
           />
@@ -423,6 +450,7 @@ export function MomentDrums({
             items={minuteItems}
             selected={parts.minute}
             onPick={(minute) => turn({ minute })}
+            onRefuse={(minute) => refuse({ minute })}
             className="w-14"
           />
           {twelve && (
@@ -431,6 +459,7 @@ export function MomentDrums({
               items={halfItems}
               selected={half.pm ? 1 : 0}
               onPick={(index) => turn({ hour: fromTwelve(half.index, index === 1) })}
+              onRefuse={(index) => refuse({ hour: fromTwelve(half.index, index === 1) })}
               pageStep={1}
               className="w-14"
             />
@@ -448,6 +477,25 @@ export function MomentDrums({
 }
 
 const NO_LIMITS: DrumBounds = { earliest: null, latest: null }
+
+/** The clocks go forward that night, and the drum asked for the hour that never happens */
+export const SKIPPED_HOUR = "That time does not happen: the clocks go forward an hour that night"
+
+/**
+ * What a refused drum says, in the words the rest of the sheet uses for the
+ * same refusal: the day picker's for a running timer's start
+ * (`moveEntryToDay`), and the picker's for an end that has not happened.
+ */
+const START_WORDS: Record<DrumRefusal, string> = {
+  after: "A running timer cannot start in the future",
+  before: "That is before the earliest it can start",
+  skipped: SKIPPED_HOUR,
+}
+const END_WORDS: Record<DrumRefusal, string> = {
+  after: "That has not happened yet",
+  before: "That is before it started",
+  skipped: SKIPPED_HOUR,
+}
 
 /**
  * THE SHEET'S DRUMS: Start and End, the length under them, and ✓.
@@ -486,10 +534,24 @@ export function EntryDrums({
   onCancel: () => void
 }) {
   const todayKey = dateKey(nowIso)
+  /** the last drum refused, in words; cleared by the next turn that lands */
+  const [refusal, setRefusal] = useState<string | null>(null)
+  const turned = (next: TimePair) => {
+    setRefusal(null)
+    onTurn(next)
+  }
+  /**
+   * Now, but never before the start. The sheet's clock ticks in whole seconds
+   * and a tapped start does not: a timer started at 16:00:00.500 read against
+   * 16:00:00 put Stop at… half a second before its own start, said "Ends before
+   * it starts", and greyed every minute there was. Found at 390px in the browser.
+   */
+  const latest = Date.parse(nowIso) < Date.parse(pair.start) ? pair.start : nowIso
   // a running timer started in the future would count down; it ends between its start and now
-  const startBounds: DrumBounds = running ? { earliest: null, latest: nowIso } : NO_LIMITS
-  const endBounds: DrumBounds = running ? { earliest: pair.start, latest: nowIso } : NO_LIMITS
-  const reading = pair.stop === null ? null : readPair(pair.start, pair.stop, nowIso)
+  const startBounds: DrumBounds = running ? { earliest: null, latest } : NO_LIMITS
+  const endBounds: DrumBounds = running ? { earliest: pair.start, latest } : NO_LIMITS
+  // a running timer has begun, whatever the second hand says: never "planned"
+  const reading = pair.stop === null ? null : readPair(pair.start, pair.stop, running ? latest : nowIso)
   const mend = pair.stop === null ? null : mendEnd(pair.start, pair.stop)
   const confirm =
     running && pair.stop !== null ? `✓ Stop at ${formatTimeOfDay(pair.stop, timeFormat)}` : running ? "✓ Set start" : "✓ Set times"
@@ -500,7 +562,8 @@ export function EntryDrums({
         label="Start"
         caption="Start"
         value={pair.start}
-        onChange={(start) => onTurn({ ...pair, start })}
+        onChange={(start) => turned({ ...pair, start })}
+        onRefused={(why) => setRefusal(START_WORDS[why])}
         bounds={startBounds}
         timeFormat={timeFormat}
         todayKey={todayKey}
@@ -510,7 +573,8 @@ export function EntryDrums({
           label="End"
           caption="End"
           value={pair.stop}
-          onChange={(stop) => onTurn({ ...pair, stop })}
+          onChange={(stop) => turned({ ...pair, stop })}
+          onRefused={(why) => setRefusal(END_WORDS[why])}
           bounds={endBounds}
           timeFormat={timeFormat}
           todayKey={todayKey}
@@ -519,11 +583,16 @@ export function EntryDrums({
         <div className="flex items-center gap-2">
           <span className="w-9 shrink-0 text-xs text-muted-foreground">End</span>
           <span className="flex-1 text-sm text-muted-foreground">Still running</span>
-          <Button type="button" variant="outline" size="sm" className="h-11 sm:h-8" onClick={() => onTurn({ ...pair, stop: nowIso })}>
+          <Button type="button" variant="outline" size="sm" className="h-11 sm:h-8" onClick={() => turned({ ...pair, stop: latest })}>
             Stop at…
           </Button>
         </div>
       )}
+
+      {/* what a refused drum asked for, and why it went back */}
+      <p role="status" className={cn("text-center text-xs text-destructive", !refusal && "sr-only")}>
+        {refusal ?? ""}
+      </p>
 
       {reading && (
         <div aria-live="polite" className="text-center">
@@ -534,32 +603,32 @@ export function EntryDrums({
           {reading.long && !reading.endsBeforeStart && (
             <p className="text-xs text-muted-foreground">That makes it {formatIdleSpan(reading.seconds)}.</p>
           )}
-        </div>
-      )}
-
-      {(mend || held) && (
-        <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* the mend sits under what it mends, so the row below keeps room for Cancel and ✓ */}
           {mend && (
-            <Button type="button" variant="outline" size="sm" className="mr-auto h-11 sm:h-8" onClick={() => onTurn({ ...pair, stop: mend.stop })}>
+            <Button type="button" variant="outline" size="sm" className="mt-1 h-11 sm:h-8" onClick={() => turned({ ...pair, stop: mend.stop })}>
               {mend.label}
             </Button>
           )}
-          {held && (
-            <>
-              <Button type="button" variant="ghost" size="sm" className="h-11 sm:h-8" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="h-11 min-w-[112px] sm:h-8"
-                disabled={reading?.endsBeforeStart ?? false}
-                onClick={onSet}
-              >
-                {confirm}
-              </Button>
-            </>
-          )}
+        </div>
+      )}
+
+      {held && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-11 sm:h-8"
+            onClick={() => {
+              setRefusal(null)
+              onCancel()
+            }}
+          >
+            Cancel
+          </Button>
+          <Button type="button" size="sm" className="h-11 min-w-[112px] sm:h-8" disabled={reading?.endsBeforeStart ?? false} onClick={onSet}>
+            {confirm}
+          </Button>
         </div>
       )}
     </div>

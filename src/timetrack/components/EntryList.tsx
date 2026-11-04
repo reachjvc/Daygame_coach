@@ -1559,7 +1559,8 @@ export function EntryDetailModalBody({
     const target = drumPairRef.current
     if (!target) return
     drumPairRef.current = null
-    if (target.stop !== null && epochSeconds(target.stop) < epochSeconds(target.start)) {
+    // to the millisecond, as `updateEntry` counts it
+    if (target.stop !== null && Date.parse(target.stop) < Date.parse(target.start)) {
       pushToast("Times not changed: the end was before the start", "error")
       return
     }
@@ -1661,10 +1662,14 @@ export function EntryDetailModalBody({
   const endDays = pair.stop ? daysBetween(dateKey(pair.start), dateKey(pair.stop)) : 0
   const typedLength = typed?.field === "duration" && typed.edited ? parseDurationInput(typed.text) : null
   const durationReading = typedLength === null ? null : `${typed!.text.trim()} = ${formatIdleSpan(typedLength)}`
+  // an end the drums set before the start has no length to show: "Ends before it starts" says why
+  const backwards = pair.stop !== null && Date.parse(pair.stop) < Date.parse(pair.start)
   const durationShown =
     pair.stop === null
       ? formatClock(drumPair ? Math.max(0, nowSec - epochSeconds(pair.start)) : entrySeconds(entry, nowSec))
-      : formatDuration(epochSeconds(pair.stop) - epochSeconds(pair.start), state.user.durationFormat)
+      : backwards
+        ? ""
+        : formatDuration(epochSeconds(pair.stop) - epochSeconds(pair.start), state.user.durationFormat)
 
   return (
     <div className="space-y-3">
@@ -1736,7 +1741,7 @@ export function EntryDetailModalBody({
           </label>
           <label className="space-y-1 text-xs text-muted-foreground">
             <span className="block">Duration</span>
-            {timeBox("duration", "Duration", durationShown)}
+            {timeBox("duration", "Duration", durationShown, backwards ? "—" : undefined)}
           </label>
         </div>
         {/* under the box each one moves, so a thumb finds them where it just was */}

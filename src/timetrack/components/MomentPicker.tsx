@@ -32,7 +32,7 @@ import {
   parseMomentInput,
 } from "../timetrackFormatService"
 import type { EntryDraft, IsoDateTime, TimeFormat, TimetrackState } from "../types"
-import { MomentDrums } from "./Drums"
+import { MomentDrums, SKIPPED_HOUR } from "./Drums"
 import { Modal } from "./primitives"
 
 /** What the drums are handed: the moment, a way to set it, and where it may fall */
@@ -213,6 +213,12 @@ export function MomentDialog({
   onClose: () => void
 }) {
   const [value, setValue] = useState(openedAt)
+  /** a drum refused, in the picker's own words; cleared by the next moment that lands */
+  const [drumNote, setDrumNote] = useState<string | null>(null)
+  const land = (iso: IsoDateTime) => {
+    setDrumNote(null)
+    setValue(iso)
+  }
   const [description, setDescription] = useState(draft.description)
   const { running, earliest, latest } = momentBounds(state, openedAt)
   const refusal = momentRefusal(state, value, openedAt)
@@ -257,7 +263,7 @@ export function MomentDialog({
 
         <MomentPicker
           value={value}
-          onChange={setValue}
+          onChange={land}
           earliest={earliest}
           latest={latest}
           chips={momentChips(state, openedAt)}
@@ -269,9 +275,21 @@ export function MomentDialog({
               bounds={{ earliest: control.earliest, latest: control.latest }}
               timeFormat={format}
               todayKey={dateKey(openedAt)}
+              onRefused={(why, asked) =>
+                setDrumNote(
+                  why === "skipped"
+                    ? SKIPPED_HOUR
+                    : ((asked && momentRefusal(state, asked, openedAt)) ?? (why === "after" ? "That has not happened yet" : "That is before the timer started")),
+                )
+              }
             />
           )}
         />
+        {drumNote && (
+          <p role="status" className="text-center text-xs text-destructive">
+            {drumNote}
+          </p>
+        )}
 
         <div className="space-y-1 rounded-md bg-secondary/40 px-3 py-2 text-sm" aria-live="polite">
           {refusal ? (
