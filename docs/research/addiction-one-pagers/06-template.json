@@ -8,15 +8,7 @@
     "Get help (optional): friends, family, therapy, rehab, 12-step groups, or 1-on-1 help from me."
   ],
   "globalRefs": [
-    {
-      "id": "lq",
-      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.",
-      "kind": "survey",
-      "pmid": "21077975",
-      "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/",
-      "fetched": true,
-      "supports": "Lifetime remission 83.7% nicotine, 90.6% alcohol, 97.2% cannabis, 99.2% cocaine; half remitted about 26, 14, 6 and 5 years after onset. Abstract re-fetched 2026-11-04."
-    }
+    { "id": "lq", "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.", "kind": "survey", "pmid": "21077975", "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/", "fetched": true, "supports": "Lifetime remission 83.7% nicotine, 90.6% alcohol, 97.2% cannabis, 99.2% cocaine; half remitted about 26, 14, 6 and 5 years after onset. Abstract re-fetched 2026-11-04." }
   ],
   "pages": [
     {
@@ -33,7 +25,7 @@
         { "atH": 72, "when": "Day 2–5", "kind": "danger", "text": "Confusion or seeing things is an emergency (the DTs). Call for help.", "refs": ["r1"] },
         { "atH": 96, "when": "Day 4", "kind": "watch", "text": "You feel better, and the thought comes: “maybe it wasn’t that bad.”", "refs": ["r12"] },
         { "atH": 672, "when": "Week 4", "kind": "win", "text": "The low mood lifts for most. In 191 men, depression fell from 42% to 6%.", "refs": ["r15"] },
-        { "atH": 1440, "when": "Day 60", "kind": "watch", "text": "Cravings set off by Fridays, bars and old friends are at their strongest. Expected, not failure.", "refs": ["r7"] },
+        { "atH": 1440, "when": "Up to day 60 and on", "kind": "watch", "text": "A Friday, a bar or old friends can still set off a strong pull, even at day 60. Expected. It doesn’t mean you’re sliding back.", "refs": ["r7"] },
         { "atH": 5000, "when": "Months 5–9", "kind": "win", "text": "Falling asleep is back to normal. Deep sleep keeps improving for 1–2 years.", "refs": ["r13"] }
       ],
       "beliefs": [
@@ -41,7 +33,7 @@
         { "current": "I only drink beer and wine, not the hard stuff.", "new": "A beer, a glass of wine and a shot are the same drink to my body.", "proof": "Each holds about 14 grams of pure alcohol. The body counts the alcohol, not the bottle.", "refs": ["r9"] },
         { "current": "I’m not an alcoholic. It’s not that bad.", "new": "I don’t need a label to decide I want more from life than this.", "proof": "90% of US heavy drinkers did not meet the criteria for dependence. Harm doesn’t wait for a diagnosis: WHO says no amount is risk-free.", "refs": ["r10", "r8"] },
         { "current": "I’ve been drinking for years. I’m stuck with it.", "new": "Most people who get hooked on alcohol get out. I’m doing it now.", "proof": "90.6% of Americans ever dependent on alcohol eventually got out; half within about 14 years.", "refs": ["lq"] },
-        { "current": "Day 4, I feel fine. Maybe it wasn’t that bad.", "new": "Feeling better is the quitting working, not proof I never had to.", "proof": "Cravings set off by cues measured highest at day 60, long after the body feels fine.", "refs": ["r7"] },
+        { "current": "Day 4, I feel fine. Maybe it wasn’t that bad.", "new": "Feeling better is the quitting working, not proof I never had to.", "proof": "A Friday or a bar can still set off a strong pull at day 60, long after the body feels fine.", "refs": ["r7"] },
         { "current": "If I can’t quit forever, why bother?", "new": "Every day I keep my promise is a complete win in itself.", "proof": "Total abstinence isn’t the only road: across 22 studies, cutting down worked as a goal for many, especially with support.", "refs": ["r5"] },
         { "current": "I’ll just stop on my own this weekend.", "new": "If I drink heavily every day, I stop with a doctor, not alone on a Saturday.", "proof": "Withdrawal seizures cluster 8–48 hours after the last drink. Most people can withdraw at home, with medication and someone checking in.", "refs": ["r1"] }
       ],
@@ -51,7 +43,16 @@
         { "big": "2.6 million", "text": "deaths worldwide were caused by alcohol in 2019.", "refs": ["r8"] }
       ],
       "footer": { "text": "Drinking heavily every day? Talk to a doctor before you stop: seizures can come 8–48 hours after the last drink.", "refs": ["r1"] },
-      "community": { "forum": "r/stopdrinking", "status": "todo" }
+      "community": { "forum": "r/stopdrinking", "status": "todo" },
+      "windows": [
+        { "label": "Shaky, sweaty, anxious, bad sleep", "when": "6–36 hours", "s": 6, "pk": 24, "e": 36, "kind": "feel", "refs": ["r1"] },
+        { "label": "Seizure risk, if you drank heavily every day", "when": "8–48 hours, highest around hour 24", "s": 8, "pk": 24, "e": 48, "kind": "danger", "refs": ["r1"] },
+        { "label": "Confusion, seeing things (the DTs)", "when": "Day 2–7, rare", "s": 48, "pk": 72, "e": 168, "kind": "danger", "refs": ["r1"] },
+        { "label": "Irritable, anxious, poor sleep", "when": "Day 5 to several weeks", "s": 120, "e": 672, "open": true, "kind": "feel", "refs": ["r1"] },
+        { "label": "Fridays, bars, old friends still pull", "when": "Week 1 to day 60, the last check", "s": 168, "e": 1440, "open": true, "kind": "trigger", "refs": ["r7"] },
+        { "label": "Less pleasure in things", "when": "Seen in some people up to a year", "s": 360, "e": 8640, "open": true, "kind": "feel", "refs": ["r17"] },
+        { "label": "Light, broken sleep, slowly mending", "when": "Falling asleep normal by month 5–9; full repair 1–2 years", "s": 672, "e": 17520, "fall": true, "kind": "feel", "refs": ["r13"] }
+      ]
     },
     {
       "id": "nicotine",
@@ -66,7 +67,7 @@
         { "atH": 192, "when": "First 8 days", "kind": "watch", "text": "Most relapses happen here.", "refs": ["r3"] },
         { "atH": 336, "when": "Week 2", "kind": "watch", "text": "One puff matters: 83–97% of patch users who smoked at all in week 2 were smoking again at 6 months.", "refs": ["r4"] },
         { "atH": 600, "when": "Weeks 2–4", "kind": "win", "text": "The withdrawal fades out.", "refs": ["r1"] },
-        { "atH": 840, "when": "Week 5", "kind": "watch", "text": "Cravings set off by coffee, a drink or a break can be stronger than in week 1. Expected.", "refs": ["r2"] },
+        { "atH": 840, "when": "Week 5", "kind": "watch", "text": "Withdrawal has faded, yet a coffee, a drink or a break can still bring a strong urge. Expected. It doesn’t mean you’re sliding back.", "refs": ["r2", "r1"] },
         { "atH": 2160, "when": "Month 3", "kind": "feel", "text": "Most of any weight gain has happened: 4–5 kg on average by a year; 16% lose weight.", "refs": ["r9"] },
         { "atH": 8760, "when": "Year 1+", "kind": "win", "text": "Less anxiety, depression and stress than people who kept smoking. An urge can still pop up; it’s strong for about 1 in 10.", "refs": ["r10", "r19"] }
       ],
@@ -84,7 +85,13 @@
         { "big": "×2.3", "text": "the odds of quitting with varenicline, across 41 trials and 17,395 people.", "refs": ["r6"] },
         { "big": "4–5 kg", "text": "average weight gain a year after quitting. 16% lose weight.", "refs": ["r9"] }
       ],
-      "community": { "forum": "r/stopsmoking", "status": "todo" }
+      "community": { "forum": "r/stopsmoking", "status": "todo" },
+      "windows": [
+        { "label": "Irritable, restless, can’t focus, poor sleep", "when": "Worst in week 1, gone by week 2–4", "s": 1, "pk": 72, "e": 672, "kind": "feel", "refs": ["r1"] },
+        { "label": "Coffee, a drink, a break still pull", "when": "Week 1 to day 35, the last check", "s": 168, "e": 840, "open": true, "kind": "trigger", "refs": ["r2"] },
+        { "label": "Weight goes up, most of it by month 3", "when": "4–5 kg by a year on average; 16% lose weight", "s": 168, "e": 8760, "kind": "feel", "refs": ["r9"] },
+        { "label": "An odd urge, years later", "when": "Years 1–10; strong for about 1 in 10", "s": 8760, "e": 26280, "open": true, "kind": "trigger", "refs": ["r19"] }
+      ]
     },
     {
       "id": "cannabis",
@@ -118,7 +125,27 @@
         { "big": "Day 2–6", "text": "is when most symptoms peak. Most are gone by day 14.", "refs": ["r1"] },
         { "big": "4.8×", "text": "the odds of psychosis with daily high-potency weed.", "refs": ["r14"] }
       ],
-      "community": { "forum": "r/leaves", "status": "done" }
+      "community": {
+        "forum": "r/leaves",
+        "status": "done",
+        "stages": [
+          { "stage": "Days 1–3", "n": 1104, "text": "Cravings, then no appetite and an upset stomach. Many say they are starting over after earlier tries." },
+          { "stage": "Days 4–7", "n": 999, "text": "Cravings, stomach trouble, no sleep and anxiety. Vivid dreams start to show up." },
+          { "stage": "Days 8–14", "n": 709, "text": "Cravings, anxiety and low mood lead. Stomach trouble starts to fade." },
+          { "stage": "Days 15–30", "n": 800, "text": "Cravings, anxiety, low mood, a short temper. Tiredness shows up." },
+          { "stage": "Days 31–90", "n": 670, "text": "Cravings and low mood lead. Sleep complaints drop. New: feeling flat, nothing is fun." },
+          { "stage": "Days 91–364", "n": 377, "text": "Cravings and low mood. New: missing weed and making it sound better than it was, and brain fog." },
+          { "stage": "1 year +", "n": 206, "text": "Cravings and low mood still lead. New: boredom and empty time, and the “one won’t hurt” thought." }
+        ],
+        "note": "Cravings are the top topic at every stage. That doesn’t mean they grow: people who are doing fine mostly stop posting, so the later stages are written mostly by people who still struggle.",
+        "relapse": "103 of the 221 relapse posts with a day count (47%) came after more than a month off. The reasons named most: “just a little won’t hurt” or “I can moderate now”; withdrawal got too hard; friends, a party, or a partner who smokes."
+      },
+      "windows": [
+        { "label": "No appetite, upset stomach, shaky", "when": "Day 1–14, worst on day 2–6", "s": 24, "pk": 96, "e": 336, "kind": "feel", "refs": ["r1"] },
+        { "label": "Irritable, angry, anxious, restless", "when": "Day 1–14, worst on day 2–6", "s": 24, "pk": 96, "e": 336, "kind": "feel", "refs": ["r1"] },
+        { "label": "Can’t sleep", "when": "Worst on day 1; can last past day 45", "s": 24, "pk": 24, "e": 1080, "open": true, "fall": true, "kind": "feel", "refs": ["r2", "r15"] },
+        { "label": "Vivid, strange dreams", "when": "Worst around day 9–11; can last past day 45", "s": 48, "pk": 264, "e": 1080, "open": true, "kind": "feel", "refs": ["r2", "r15"] }
+      ]
     },
     {
       "id": "cocaine",
@@ -133,11 +160,11 @@
         { "atH": 18, "when": "As it wears off", "kind": "danger", "text": "Dark thoughts can spike. If they do, tell someone tonight.", "refs": ["r3"] },
         { "atH": 336, "when": "Weeks 1–4", "kind": "feel", "text": "Low mood and craving ease bit by bit.", "refs": ["r2"] },
         { "atH": 372, "when": "Days 14–17", "kind": "watch", "text": "You feel rested, but measured sleep is at its worst.", "refs": ["r10"] },
-        { "atH": 2000, "when": "Months 1–6", "kind": "watch", "text": "Craving feels weaker, yet your brain reacts to cues most strongly now.", "refs": ["r4"] }
+        { "atH": 2000, "when": "Months 1–6", "kind": "watch", "text": "The craving you feel keeps getting weaker. The people, places and things around coke can still hit hard.", "refs": ["r4"] }
       ],
       "beliefs": [
         { "current": "Coke isn’t really addictive. There’s no real withdrawal.", "new": "No shakes doesn’t mean no hook. The pull lives in my head, for months.", "proof": "Coke withdrawal is mostly mood and sleep, not sickness. But the brain’s reaction to coke cues stays high for months.", "refs": ["r2", "r4"] },
-        { "current": "The craving’s gone, so I’m safe.", "new": "Feeling less pull isn’t the same as being safe. Months 1–6 are when cues hit hardest.", "proof": "In 76 users, the brain’s response to cocaine cues was higher at 1 and 6 months than at 1 week, while felt craving fell.", "refs": ["r4"] },
+        { "current": "The craving’s gone, so I’m safe.", "new": "Feeling less pull isn’t the same as being safe. People, places and things can still hit hard in months 1–6.", "proof": "In 76 users, the brain’s response to cocaine cues was higher at 1 and 6 months than at 1 week, while felt craving fell.", "refs": ["r4"] },
         { "current": "It’s just a party drug.", "new": "Coke plus drink is a heart risk, not a party.", "proof": "Together they form cocaethylene, linked to an 18–25 times higher risk of sudden death. Street stimulants can also contain fentanyl.", "refs": ["r7", "r3"] },
         { "current": "I’ll never get out of this.", "new": "99% of people hooked on coke get out. Mine starts now.", "proof": "99.2% of Americans ever dependent on cocaine eventually got out; half within about 5 years.", "refs": ["r6"] },
         { "current": "I’m sleeping great now. I’m fine.", "new": "Feeling rested isn’t proof. My sleep is still healing.", "proof": "In a sleep-lab study of 12 users, measured sleep was worst at days 14–17, while they rated it at its best.", "refs": ["r10"] }
@@ -148,7 +175,14 @@
         { "big": "Day 14–17", "text": "sleep is at its worst while it feels best.", "refs": ["r10"] }
       ],
       "footer": { "text": "Dark thoughts in the crash are common and they pass. If they don’t, talk to someone tonight.", "refs": ["r3"] },
-      "community": { "forum": "a cocaine-quitting forum (to find)", "status": "todo" }
+      "community": { "forum": "a cocaine-quitting forum (to find)", "status": "todo" },
+      "windows": [
+        { "label": "The crash: heavy sleep, irritable", "when": "First 12–24 hours", "s": 1, "pk": 12, "e": 24, "kind": "feel", "refs": ["r3"] },
+        { "label": "Low mood", "when": "Worst at the start, eases over 4 weeks", "s": 1, "pk": 1, "e": 672, "open": true, "fall": true, "kind": "feel", "refs": ["r2", "r3"] },
+        { "label": "The craving you feel", "when": "Worst in the first days, keeps falling to a year", "s": 1, "pk": 48, "e": 8760, "fall": true, "kind": "feel", "refs": ["r4", "r2"] },
+        { "label": "Sleep worse, though it feels better", "when": "Weeks 1–7, worst on day 14–17", "s": 168, "pk": 360, "e": 1296, "open": true, "kind": "feel", "refs": ["r10"] },
+        { "label": "People, places, things still pull", "when": "Can hit hard from month 1 to 6; lower by a year", "s": 720, "e": 8760, "fall": true, "kind": "trigger", "refs": ["r4"] }
+      ]
     },
     {
       "id": "porn",

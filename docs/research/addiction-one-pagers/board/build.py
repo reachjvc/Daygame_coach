@@ -33,6 +33,17 @@ else:
 
 board = json.loads((HERE / "board.json").read_text())
 aliases = board.get("aliases", {})
+# Phases that are not felt symptoms (lab cue tests, relapse rates) stay in the data but are not drawn as curves.
+skip = {(x["id"], x["label"]): x["why"] for x in board.get("notCharted", [])}
+for it in items:
+    keep, out = [], []
+    for ph in it.get("timeline", []) or []:
+        why = skip.pop((it["id"], ph.get("label")), None)
+        (out.append({**ph, "why": why}) if why else keep.append(ph))
+    if out:
+        it["timeline"], it["notCharted"] = keep, out
+for (iid, label) in skip:
+    problems.append(f"notCharted: no phase {iid} / {label}")
 for it in items:
     it["aliases"] = aliases.get(it["id"], [])
     it["fullName"] = it["name"]

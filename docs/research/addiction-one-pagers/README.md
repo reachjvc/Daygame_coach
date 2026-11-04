@@ -24,26 +24,43 @@ id>`. His free notes are also in `marks`, keyed by where he wrote them:
 `general`, `doubt-<id>`, `item-<addiction id>`, `row-<addiction id>`,
 `lesson-<id>`, `find-<topic slug>`, `link-<id>`. Read them with the ArtifactData tool before the next round.
 
+On 2026-11-04 the owner found the board's craving curves wrong: lab tests of
+how strongly cues pull had been drawn as craving that rises to the top and stays
+there. `board.json` `notCharted` now lists those phases (and a relapse rate);
+`build.py` keeps them out of the curves and the phase table says why. A phase
+whose study stopped at its peak now ends there with "study stopped here".
+
 Source for the board is in `board/`: `template.html` (the page),
 `board.json` (the board's own copy: options, doubts, blocks, questions, display
 names, short URL slugs, search aliases) and `build.py`, which merges the JSON
 files here into the page. Rebuild with `python3 board/build.py <out.html>` and
 publish the output to the same URL.
 
-## Round 2: the template (2026-11-04)
+## Round 2 and 3: the template (2026-11-04)
 
 https://claude.ai/artifact/8D5nSxoACGvVn7PBRHbCus rebuilds the owner's 2025
 nicotine one-pager as one template for eight addictions (alcohol, nicotine,
 weed, cocaine, porn, betting, phone, sugar), switched by tabs: a big hopeful
-number, his five-step plan in his own words, a timeline in two simpler styles
-(Line, Grid), a Current belief / New belief table, three numbers, a box for his
-own experience, forum themes, sources. Content is `06-template.json`; every
-ref key points at a ref in files 01-04 (or `globalRefs`). Build with
-`python3 board/build_template.py <out.html>` (template `board/template-v2.html`;
-it also reads `community/leaves-stages.json` when present) and publish to the
-same URL. His marks are in its db: `marks/blk-<block>`, `marks/tl-line`,
-`marks/tl-grid`, `marks/row-<addiction id>-<row>` (Keep = yes, Cut = no),
-`marks/general`, and his own text in `experience/<addiction id>`.
+number, his five-step plan in his own words, a timeline, a Current belief / New
+belief table, three numbers, a box for his own experience, forum findings,
+sources. Content is `06-template.json`; every ref key points at a ref in files
+01-04 (or `globalRefs`). Build with `python3 board/build_template.py <out.html>`
+(template `board/template-v2.html`; it also reads
+`community/leaves-stages.json` for the post count) and publish to the same URL.
+
+Round 3 shows each section in three layouts (A Poster, his 2025 sheet; B Story,
+one column for phones; C Guide, editorial) and four timeline forms (Line, List,
+Grid, Chart). The Chart draws the hand-picked `windows` rows of a page: when a
+thing tends to show up, not how strong it is, on a log time axis. A row whose
+end was never measured fades out; a trigger row (a lab test of how strongly cues
+pull) is drawn as an outline, never as craving. The owner locks a section once
+it works, and a locked section keeps its layout on every addiction.
+
+His marks are in its db: `locks/<section>` (`{layout, form}`; sections are
+head, timeline, beliefs, numbers, story, others, sources), `marks/sec-<section>`
+(his note on a section), `marks/row-<addiction id>-<row>` (Keep = yes, Cut =
+no), `marks/general`, and his own text in `experience/<addiction id>`. Round 2
+keys (`marks/blk-*`, `marks/tl-*`) were never written.
 
 The owner's general note on the first board (marks/general there) sets the
 tone: the pages carry his brand's edge and are written for the 98% who can help

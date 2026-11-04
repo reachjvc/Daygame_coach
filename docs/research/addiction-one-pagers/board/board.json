@@ -659,5 +659,37 @@
   "heroin-fentanyl",
   "prescription-opioids",
   "kratom"
+ ],
+ "notCharted": [
+  {
+   "id": "alcohol",
+   "label": "Cue-triggered craving grows rather than fades",
+   "why": "A lab test of the pull of cues, not everyday craving. Drawn as a curve it read as craving rising to the top and staying there."
+  },
+  {
+   "id": "nicotine",
+   "label": "Craving set off by cues (a break, a drink, a lighter)",
+   "why": "A lab test of the pull of cues, not everyday craving. Drawn as a curve it read as craving rising to the top and staying there."
+  },
+  {
+   "id": "nicotine",
+   "label": "An urge that can return years later; strong for about 1 in 10",
+   "why": "A survey of people 1–10 years off, not a measured course. Drawn alone it made craving look as if it starts at week 5."
+  },
+  {
+   "id": "cocaine",
+   "label": "The brain's reaction to cocaine cues",
+   "why": "Brain waves in response to pictures, not craving people feel. Felt craving fell over the same months."
+  },
+  {
+   "id": "methamphetamine",
+   "label": "Craving set off by cues",
+   "why": "A lab test of the pull of cues, not everyday craving. Drawn as a curve it read as craving rising to the top and staying there."
+  },
+  {
+   "id": "ghb-gbl",
+   "label": "Relapse risk stays high for months",
+   "why": "A relapse rate, not craving."
+  }
  ]
 }

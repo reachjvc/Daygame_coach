@@ -523,10 +523,17 @@ function inten(p, t) {
   if (pk <= st && st > 6) st = pk * 0.6; /* a phase that starts at full strength still eases in on the chart, no cliff */
   const v = +p.peakIntensity || 3;
   const open = (+p.endH || 0) <= (+p.peakH || 0) && pk > st;
-  if (open && t > pk) return v;
+  if (open && t > pk) return 0;
   if (t <= st || t >= en) return 0;
   if (t <= pk) return pk === st ? v : v * smooth((L(t) - L(st)) / (L(pk) - L(st)));
   return v * smooth((L(en) - L(t)) / (L(en) - L(pk)));
+}
+/* where the measurements for a phase stop: its end, or its peak when the study stopped at the peak */
+function lastMeasured(p) {
+  let st = Math.max(0.5, +p.startH || 0.5); const pk = Math.max(st, +p.peakH || st);
+  if (pk <= st && st > 6) st = pk * 0.6;
+  const open = (+p.endH || 0) <= (+p.peakH || 0) && pk > st;
+  return open ? pk : Math.max(pk * 1.05, +p.endH || pk * 2);
 }
 function trackKeys(item) { const ks = []; (item.timeline || []).forEach(p => { const k = TRACKS[p.track] ? p.track : "body"; if (!ks.includes(k)) ks.push(k); }); return ks; }
 function levelAt(item, k, t) { return Math.max(0, ...(item.timeline || []).filter(p => (TRACKS[p.track] ? p.track : "body") === k).map(p => inten(p, t))); }
@@ -560,8 +567,11 @@ function timeline(item, o) {
     const N = 140; let pts = [], band = []; let best = [0, 0], firstPeak = 0;
     const ps = (item.timeline || []).filter(p => (TRACKS[p.track] ? p.track : "body") === k);
     const wide = ps.map(p => Object.assign({}, p, { startH: (+p.startH || 1) * 0.6, endH: (+p.endH || 2) * 1.6 }));
+    const stop = Math.max(...ps.map(lastMeasured)), cut = ps.some(p => lastMeasured(p) === stop && lastMeasured(p) < (+p.endH || 0) + 1 && (+p.endH || 0) <= (+p.peakH || 0));
     for (let i = 0; i <= N; i++) {
-      const t = Math.exp(L(d0) + (L(d1) - L(d0)) * i / N); const v = levelAt(item, k, t);
+      const t = Math.exp(L(d0) + (L(d1) - L(d0)) * i / N);
+      if (t > stop * 1.001) break;
+      const v = levelAt(item, k, t);
       const bw = Math.max(v, ...wide.map(p => inten(p, t)));
       pts.push([x(t), y(v)]); band.push([x(t), y(Math.min(5, bw))]);
       if (v > best[1]) best = [t, v];
@@ -569,6 +579,11 @@ function timeline(item, o) {
     const path = a => "M" + a.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L");
     g += `<path d="${path(band)}L${band[band.length - 1][0].toFixed(1)},${y(0)}L${band[0][0].toFixed(1)},${y(0)}Z" fill="${css(k)}" fill-opacity="0.14"/>`;
     g += `<path d="${path(pts)}" fill="none" stroke="${css(k)}" stroke-width="2" stroke-linejoin="round"/>`;
+    if (cut && pts.length) {
+      const [ex, ey] = pts[pts.length - 1];
+      g += `<circle cx="${ex}" cy="${ey}" r="4" fill="var(--surface)" stroke="${css(k)}" stroke-width="2"/>`;
+      g += `<text x="${ex + 7}" y="${ey + 4}" font-family="var(--f-mono)" font-size="10" fill="var(--ink-2)" paint-order="stroke" stroke="var(--surface)" stroke-width="3">study stopped here</text>`;
+    }
     if (k === "craving" && best[1] > 0 && item.group === "substance" && !(B.noCueFloor || []).includes(item.id)) {
       firstPeak = Math.min(...ps.map(p => +p.peakH || 1));
       const fx = x(Math.max(d0, firstPeak)), fy = y(0.7);
@@ -603,8 +618,8 @@ function pinsList(item) {
   return `<ol class="pins">${ms.map((m, i) => `<li><span class="pin ${m.kind === "danger" ? "danger" : m.kind === "trap" ? "trap" : ""}">${i + 1}</span><span><span class="when">${h(fmtH(+m.atH || 1))}</span>${h(m.label)}${cite(item, m.refs)}</span></li>`).join("")}</ol>`;
 }
 function phaseTable(item) {
-  const ps = item.timeline || []; if (!ps.length) return "";
-  return `<details class="tbl"><summary>Show the timeline as a table</summary><div class="tblwrap"><table><thead><tr><th>Track</th><th>Phase</th><th>Starts</th><th>Peaks</th><th>Ends</th><th>Strength</th><th>What happens</th></tr></thead><tbody>${ps.map(p => `<tr><td>${h((TRACKS[p.track] || TRACKS.body)[0])}</td><td>${h(p.label)}</td><td>${h(fmtH(+p.startH || 1))}</td><td>${h(fmtH(+p.peakH || 1))}</td><td>${h(fmtH(+p.endH || 1))}</td><td>${h(p.peakIntensity)}/5</td><td>${h(p.note)}${cite(item, p.refs)}</td></tr>`).join("")}</tbody></table></div></details>`;
+  const ps = item.timeline || [], nc = item.notCharted || []; if (!ps.length && !nc.length) return "";
+  return `<details class="tbl"><summary>Show the timeline as a table</summary><div class="tblwrap"><table><thead><tr><th>Track</th><th>Phase</th><th>Starts</th><th>Peaks</th><th>Ends</th><th>Strength</th><th>What happens</th></tr></thead><tbody>${ps.map(p => `<tr><td>${h((TRACKS[p.track] || TRACKS.body)[0])}</td><td>${h(p.label)}</td><td>${h(fmtH(+p.startH || 1))}</td><td>${h(fmtH(+p.peakH || 1))}</td><td>${h(fmtH(+p.endH || 1))}</td><td>${h(p.peakIntensity)}/5</td><td>${h(p.note)}${cite(item, p.refs)}</td></tr>`).join("")}${nc.map(p => `<tr><td>Not drawn</td><td>${h(p.label)}</td><td>${h(fmtH(+p.startH || 1))}</td><td>${h(fmtH(+p.peakH || +p.startH || 1))}</td><td>${h(fmtH(+p.endH || 1))}</td><td>&ndash;</td><td><b>Why not drawn:</b> ${h(p.why)} ${h(p.note)}${cite(item, p.refs)}</td></tr>`).join("")}</tbody></table></div></details>`;
 }
 document.addEventListener("pointermove", e => {
   const box = e.target.closest && e.target.closest(".tl");

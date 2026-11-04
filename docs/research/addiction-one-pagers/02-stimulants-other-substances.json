@@ -53,7 +53,7 @@
       { "atH": 72, "kind": "peak", "label": "Withdrawal peaks within the first week", "refs": ["r1"] },
       { "atH": 192, "kind": "danger", "label": "Most relapses happen in the first 8 days", "refs": ["r3"] },
       { "atH": 336, "kind": "trap", "label": "Smoking at all in week 2: 83–97% of patch users were smoking again at 6 months", "refs": ["r4"] },
-      { "atH": 840, "kind": "trap", "label": "Day 35: cue craving is higher than at day 7, even as withdrawal fades", "refs": ["r2"] },
+      { "atH": 840, "kind": "trap", "label": "Day 35: withdrawal has faded, yet a coffee, a drink or a break can still bring a strong urge (a lab test of the pull of smoking cues, not everyday craving)", "refs": ["r2"] },
       { "atH": 1176, "kind": "milestone", "label": "Measured 7 weeks to 9 years on: people who quit had less anxiety, depression and stress than those who kept smoking (26 studies)", "refs": ["r10"] }
     ],
     "beliefs": [
@@ -396,7 +396,7 @@
     "markers": [
       { "atH": 12, "kind": "danger", "label": "Suicidal thinking can rise as the drug wears off", "refs": ["r3"] },
       { "atH": 24, "kind": "peak", "label": "The crash: 12–24 hours of sleepiness and irritability", "refs": ["r3"] },
-      { "atH": 720, "kind": "trap", "label": "Months 1–6: the brain reacts most to cues, while you feel less craving", "refs": ["r4"] },
+      { "atH": 720, "kind": "trap", "label": "Months 1–6: the craving you feel keeps falling, but people, places and things around coke can still hit hard (brain reaction to cues is highest then)", "refs": ["r4"] },
       { "atH": 360, "kind": "trap", "label": "Days 14–17: measured sleep at its worst while people rate it at its best (12 users)", "refs": ["r10"] }
     ],
     "beliefs": [
@@ -561,7 +561,7 @@
     "markers": [
       { "atH": 24, "kind": "peak", "label": "Withdrawal is worst in the first 24 hours", "refs": ["r1"] },
       { "atH": 240, "kind": "milestone", "label": "Acute phase over at about day 7–10", "refs": ["r1"] },
-      { "atH": 2160, "kind": "trap", "label": "About 3 months: cue craving at its highest", "refs": ["r3", "r10"] },
+      { "atH": 2160, "kind": "trap", "label": "About 3 months: triggers can still hit hard (reaction to cues was highest here, lower at 6 months and a year)", "refs": ["r3", "r10"] },
       { "atH": 10200, "kind": "milestone", "label": "12–17 months: dopamine transporters up 16–19% in 5 people; test scores not significantly better", "refs": ["r4"] }
     ],
     "beliefs": [

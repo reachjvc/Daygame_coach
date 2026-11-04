@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Source+Sans+3:ital,wght@0,400..700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: the owner's 2025 nicotine poster grown into a template. Sticky addiction tabs; a lab strip; then one printed-looking sheet (hero number + plan, timeline band with a rotated label, the belief table with pink headers, numbers, own experience, forum themes, sources). Lab controls sit in dashed bars so they never read as page content. */
+/* Round 3. One page per addiction in three layouts: A Poster (the owner's 2025 sheet), B Story (phone first, cards), C Guide (editorial, with the window chart). Every section can show any layout on its own and be locked; a locked section keeps its layout when the page layout changes. Lab controls sit in dashed blue bars so they never read as page content. Responsive rules use container queries on .page so the Phone button can preview the narrow page on a wide screen. */
 :root {
   --bg: #ecebe8;
   --paper: #ffffff;
@@ -13,7 +13,7 @@
   --muted: #7a7372;
   --rule: #1d1a1a;
   --hair: #d9d4d2;
-  --panel: #e8e5e3;
+  --panel: #f0eeec;
   --pink: #f7d4d5;
   --red: #d2202a;
   --feel: #6b6463;
@@ -43,7 +43,7 @@
   --lab: #8fbbe6; --lab-bg: #1a232d; --ph-bg: #2e2714; --ph-line: #6b5a24; color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
 .wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 h1, h2, h3 { margin: 0; font-family: var(--f-display); text-wrap: balance; }
@@ -51,127 +51,70 @@ p { margin: 0; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--lab); outline-offset: 2px; }
 
-/* top bar with the eight tabs */
+/* top bar: tabs, then the page-wide controls */
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--paper); border-bottom: 2px solid var(--rule); }
-.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-block: 8px; }
 .top .name { font-family: var(--f-display); font-weight: 800; font-stretch: 75%; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1 1 420px; }
 .tabs::-webkit-scrollbar { display: none; }
-.tab { border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
+.tab { border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 5px 13px; font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
 .tab:hover { border-color: var(--ink-2); }
 .tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.ctrls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.ctrls .eyebrow { margin-right: -6px; }
+.seg { display: inline-flex; border: 1.5px solid var(--lab); border-radius: 8px; overflow: hidden; flex: none; }
+.seg button { border: 0; background: transparent; padding: 4px 11px; cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--lab); white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--lab); }
+.seg button[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
+.seg button:disabled { cursor: default; opacity: .45; }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lab); }
 
 /* lab strip */
-.lab { padding-block: 22px 18px; }
-.lab .wrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; }
-.lab h2 { font-size: 22px; font-weight: 800; font-stretch: 80%; }
+.lab { padding-block: 20px 16px; }
+.lab .wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; }
+.lab h2 { font-size: 22px; font-weight: 800; font-stretch: 80%; margin-top: 6px; }
 .lab ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 3px; font-size: 15px; }
-.labbox { border: 1.5px dashed var(--lab); background: var(--lab-bg); border-radius: 10px; padding: 14px; display: grid; gap: 10px; align-content: start; }
-.labbox label, .eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lab); }
+.labbox { border: 1.5px dashed var(--lab); background: var(--lab-bg); border-radius: 10px; padding: 14px; display: grid; gap: 8px; align-content: start; }
 .labbox textarea, .exp textarea { width: 100%; font: inherit; font-size: 15px; padding: 9px 11px; border: 1px solid var(--hair); border-radius: 8px; background: var(--paper); color: var(--ink); resize: vertical; }
-.seg { justify-self: start; display: inline-flex; border: 1.5px solid var(--lab); border-radius: 8px; overflow: hidden; }
-.seg button { border: 0; background: transparent; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--lab); }
-.seg button[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
+.lockedlist { font-size: 14px; color: var(--ink-2); }
 .dbstate { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
 
-/* lab bars on each block */
-.labbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 1px dashed var(--lab); background: var(--lab-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; font-size: 13px; }
-.labbar .lbl { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--lab); margin-right: 4px; }
-.mk { border: 1px solid var(--hair); background: var(--paper); border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+/* the blue lab bar at the top of each section */
+.labbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px dashed var(--lab); background: var(--lab-bg); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--ink); }
+.labbar .lbl { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--lab); font-weight: 600; }
+.labbar .seg button { padding: 2px 9px; font-size: 13px; }
+.lockbtn { border: 1.5px solid var(--lab); background: var(--paper); color: var(--lab); border-radius: 6px; padding: 2px 10px; cursor: pointer; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.lockbtn svg { width: 13px; height: 13px; }
+.locked .labbar { border-style: solid; border-color: var(--win); background: color-mix(in srgb, var(--win) 10%, var(--paper)); }
+.locked .labbar .lbl { color: var(--win); }
+.lockstate { font-weight: 700; color: var(--win); display: inline-flex; align-items: center; gap: 5px; }
+.lockstate svg { width: 13px; height: 13px; }
+.labbar input { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 13.5px; padding: 3px 8px; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.mk { border: 1px solid var(--hair); background: var(--paper); border-radius: 6px; padding: 1px 9px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
 .mk[aria-pressed="true"][data-v="yes"] { background: var(--win); border-color: var(--win); color: var(--paper); }
-.mk[aria-pressed="true"][data-v="maybe"] { background: var(--watch); border-color: var(--watch); color: var(--paper); }
 .mk[aria-pressed="true"][data-v="no"] { background: var(--danger); border-color: var(--danger); color: var(--paper); }
-.labbar input { flex: 1 1 200px; min-width: 0; font: inherit; font-size: 13.5px; padding: 4px 8px; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.rowmks { display: inline-flex; gap: 4px; }
+.cut .was, .cut .now, .cut .proof, tr.cut td.new, tr.cut td.cur { opacity: .4; }
 
-/* the sheet */
-.sheet { background: var(--paper); border: 2px solid var(--rule); margin-bottom: 48px; }
-.blk { padding: 22px 26px; border-top: 2px solid var(--rule); }
-.blk:first-child { border-top: 0; }
-.urlchip { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
-.head { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 32px; align-items: start; }
-.hero { border-left: 6px solid var(--red); padding-left: 18px; display: grid; gap: 6px; }
-.hero .big { font-family: var(--f-display); font-weight: 900; font-stretch: 68%; font-size: clamp(64px, 11vw, 120px); line-height: .9; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-.hero .line { font-family: var(--f-display); font-weight: 700; font-stretch: 85%; font-size: 22px; line-height: 1.2; }
-.hero .sub { color: var(--ink-2); font-size: 16px; }
-.titlebox { display: grid; gap: 10px; }
-.titlebox h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; font-stretch: 80%; line-height: 1; }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.tag { font-family: var(--f-mono); font-size: 12px; padding: 2px 8px; background: var(--panel); }
-.plan h3 { color: var(--red); font-size: 17px; font-weight: 800; font-stretch: 85%; letter-spacing: .03em; text-transform: uppercase; }
-.plan ol { margin: 8px 0 0; padding-left: 26px; display: grid; gap: 6px; font-size: 15.5px; }
-.plan li::marker { font-weight: 700; }
-.plan .who { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); margin-top: 6px; }
-
-/* banded sections with a rotated label, like the 2025 poster */
-.band { display: grid; grid-template-columns: 46px minmax(0, 1fr); border-top: 2px solid var(--rule); }
-.band > .vlabel { background: var(--pink); border-right: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; }
-.band > .vlabel span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 22px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
-.band > .body { padding: 20px 24px 22px; min-width: 0; }
-.tlnote { color: var(--muted); font-size: 14px; margin-top: 4px; }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
-.k-feel { --k: var(--feel); } .k-watch { --k: var(--watch); } .k-danger { --k: var(--danger); } .k-win { --k: var(--win); }
-
-/* timeline form A: one line of milestones */
-.tl-line { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; }
-.tl-line li { position: relative; padding: 26px 12px 0 0; }
-.tl-line li::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 3px; background: var(--ink); }
-.tl-line li:last-child::before { right: 50%; }
-.tl-line .dot { position: absolute; top: 0; left: 0; width: 19px; height: 19px; border-radius: 50%; background: var(--paper); border: 4px solid var(--k); }
-.tl-line .k-danger .dot, .tl-line li.k-danger .dot { background: var(--k); }
-.tl-line .when { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 18px; line-height: 1.1; color: var(--k); }
-.tl-line .k-feel .when { color: var(--ink); }
-.tl-line .txt { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
-
-/* timeline form B: stages by what you feel / watch for / gain */
-.tl-gridwrap { overflow-x: auto; margin-top: 16px; }
-.tl-grid { display: grid; min-width: 640px; border: 1.5px solid var(--rule); }
-.tl-grid > div { padding: 10px 12px; border-right: 1px solid var(--hair); border-bottom: 1px solid var(--hair); font-size: 14px; min-width: 0; }
-.tl-grid .sh { background: var(--panel); font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 17px; border-bottom: 1.5px solid var(--rule); }
-.tl-grid .rh { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--k); background: var(--paper); }
-.tl-grid .cell { display: grid; gap: 8px; align-content: start; }
-.tl-grid .it b { font-family: var(--f-mono); font-size: 12px; font-weight: 600; display: block; color: var(--k); }
-.tl-grid .it.k-feel b { color: var(--muted); }
-.tl-grid .it.k-danger { border-left: 3px solid var(--danger); padding-left: 7px; }
-
-/* beliefs table */
-.btable { width: 100%; border-collapse: collapse; }
-.btable th { background: var(--pink); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: clamp(20px, 3vw, 30px); letter-spacing: .03em; text-transform: uppercase; text-align: center; padding: 10px; border: 2px solid var(--rule); border-top: 0; }
-.btable td { vertical-align: top; padding: 12px 14px; border: 1px solid var(--hair); border-left: 2px solid var(--rule); }
-.btable td.cur { background: var(--panel); width: 40%; font-size: 15.5px; }
-.btable td.new { font-weight: 700; font-size: 16.5px; }
-.btable td.new .proof { display: block; font-weight: 400; font-size: 14px; color: var(--ink-2); margin-top: 4px; }
-.btable td.rowmk { width: 1%; white-space: nowrap; border-right: 2px solid var(--rule); background: var(--lab-bg); }
-.btable td.rowmk .mk { display: block; margin: 0 0 4px; width: 100%; }
-.btable th.rowmk { background: var(--lab-bg); font-family: var(--f-mono); font-size: 11px; color: var(--lab); font-weight: 400; letter-spacing: .06em; }
-.btable tr.cut td.new, .btable tr.cut td.cur { opacity: .45; }
-
+/* the page and its sections */
+.page { container: page / inline-size; margin: 0 auto 56px; }
+.page.phone { max-width: 400px; border: 10px solid var(--rule); border-radius: 28px; overflow: hidden; background: var(--bg); }
+.sec { position: relative; }
 .ref { font-family: var(--f-mono); font-size: 11px; color: var(--muted); cursor: pointer; border: 0; background: none; padding: 0 1px; vertical-align: super; line-height: 0; }
 .ref:hover { color: var(--red); }
 .ref.unc { color: var(--watch); }
-
-/* numbers */
-.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
-.num { padding: 4px 20px 4px 0; display: grid; gap: 4px; align-content: start; }
-.num + .num { border-left: 1px solid var(--hair); padding-left: 20px; }
-.num .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
-.num p { font-size: 15px; color: var(--ink-2); }
-
-/* experience + forum */
-.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
-.two h3 { font-size: 22px; font-weight: 800; font-stretch: 80%; }
-.exp { display: grid; gap: 8px; align-content: start; }
-.exp .prompts { color: var(--muted); font-size: 14px; }
-.exp textarea { min-height: 150px; }
+.urlchip { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.tag { font-family: var(--f-mono); font-size: 12px; padding: 2px 8px; background: var(--panel); display: inline-block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.k-feel { --k: var(--feel); } .k-watch { --k: var(--watch); } .k-danger { --k: var(--danger); } .k-win { --k: var(--win); } .k-trigger { --k: var(--watch); }
+.note { color: var(--muted); font-size: 14px; }
 .ph { background: var(--ph-bg); border: 1px dashed var(--ph-line); padding: 12px 14px; font-size: 14.5px; color: var(--ink-2); display: grid; gap: 6px; }
-.stage { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--hair); }
-.stage b { font-family: var(--f-display); font-stretch: 80%; font-size: 16px; }
-.bar { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; align-items: center; font-size: 14px; }
-.bar .meter { height: 6px; background: var(--panel); position: relative; grid-column: 1 / -1; }
-.bar .meter i { position: absolute; inset: 0 auto 0 0; background: var(--ink-2); }
-.bar span:last-of-type { text-align: right; font-family: var(--f-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
-
-/* footer */
+.ph .eyebrow { color: var(--watch); }
+.plan ol { margin: 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 8px; }
+.plan li { counter-increment: st; display: grid; grid-template-columns: 1.8em minmax(0, 1fr); gap: 6px; }
+.plan li::before { content: counter(st) "."; font-weight: 800; font-family: var(--f-display); }
+.who { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
 .safety { display: flex; gap: 10px; align-items: baseline; font-size: 15px; }
 .safety b { color: var(--danger); font-family: var(--f-display); font-stretch: 80%; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 details.src summary { cursor: pointer; font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 18px; }
@@ -179,95 +122,331 @@ details.src ol { margin: 10px 0 0; padding-left: 26px; display: grid; gap: 6px; 
 details.src li.flash { background: var(--ph-bg); }
 details.src .u { font-family: var(--f-mono); font-size: 11px; color: var(--watch); margin-left: 6px; }
 details.src a { color: var(--lab); word-break: break-word; }
+.exp { display: grid; gap: 8px; align-content: start; }
+.exp textarea { min-height: 140px; }
 
-@media (max-width: 860px) {
-  .lab .wrap, .head, .two { grid-template-columns: minmax(0, 1fr); }
-  .nums { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .num + .num { border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); padding-top: 14px; }
-  .tl-line { grid-auto-flow: row; grid-auto-columns: auto; gap: 0; }
-  .tl-line li { padding: 0 0 18px 32px; }
-  .tl-line li::before { left: 8px; right: auto; top: 0; bottom: 0; width: 3px; height: auto; }
-  .tl-line li:last-child::before { bottom: auto; height: 10px; right: auto; }
+/* ---------- A: Poster (the 2025 sheet) ---------- */
+.L-A { background: var(--paper); border: 2px solid var(--rule); }
+.L-A + .L-A { border-top: 0; }
+.sec:not(.L-A) + .L-A { margin-top: 18px; }
+.L-A + .sec:not(.L-A) { margin-top: 18px; }
+.L-A > .labbar { margin: 10px 12px 0; }
+.A-blk { padding: 18px 26px 22px; }
+.A-band { display: grid; grid-template-columns: 46px minmax(0, 1fr); margin-top: 10px; border-top: 2px solid var(--rule); }
+.A-band > .vl { background: var(--pink); border-right: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; }
+.A-band > .vl span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 22px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.A-band > .bd { padding: 18px 24px 22px; min-width: 0; display: grid; gap: 10px; align-content: start; }
+.A-band h2 { font-size: 24px; font-weight: 800; font-stretch: 80%; }
+.A-head { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 32px; align-items: start; }
+.A-hero { border-left: 6px solid var(--red); padding-left: 18px; display: grid; gap: 6px; }
+.A-hero .big { font-family: var(--f-display); font-weight: 900; font-stretch: 68%; font-size: 112px; line-height: .9; }
+.A-hero .line { font-family: var(--f-display); font-weight: 700; font-stretch: 85%; font-size: 22px; line-height: 1.2; }
+.A-hero .sub { color: var(--ink-2); }
+.A-title { display: grid; gap: 10px; }
+.A-title h1 { font-size: 48px; font-weight: 800; font-stretch: 80%; line-height: 1; }
+.A-title h3 { color: var(--red); font-size: 17px; font-weight: 800; font-stretch: 85%; letter-spacing: .03em; text-transform: uppercase; }
+.A-title .plan { font-size: 15.5px; }
+.btable { width: 100%; border-collapse: collapse; }
+.btable th { background: var(--pink); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 28px; letter-spacing: .03em; text-transform: uppercase; text-align: center; padding: 10px; border: 2px solid var(--rule); }
+.btable td { vertical-align: top; padding: 12px 14px; border: 1px solid var(--hair); border-left: 2px solid var(--rule); }
+.btable td.cur { background: var(--panel); width: 40%; font-size: 15.5px; }
+.btable td.new { font-weight: 700; font-size: 16.5px; border-right: 2px solid var(--rule); }
+.btable td.new .proof { display: block; font-weight: 400; font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.btable .rowmks { float: right; margin: 0 0 4px 8px; }
+.btable tr:last-child td { border-bottom: 2px solid var(--rule); }
+.A-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.A-nums > div { padding: 4px 20px 4px 0; display: grid; gap: 4px; align-content: start; }
+.A-nums > div + div { border-left: 1px solid var(--hair); padding-left: 20px; }
+.A-nums .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 40px; line-height: 1; }
+.A-nums p { font-size: 15px; color: var(--ink-2); }
+.A-stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.A-stages > div { padding: 8px 0; border-bottom: 1px solid var(--hair); font-size: 15px; }
+.A-stages b { font-family: var(--f-display); font-stretch: 80%; font-size: 16px; margin-right: 6px; }
+
+/* ---------- B: Story (phone first, cards) ---------- */
+.L-B { margin-top: 18px; }
+.L-B > .labbar, .L-B > .B-in { max-width: 680px; margin-inline: auto; }
+.L-B > .labbar { margin-bottom: 8px; }
+.B-in { background: var(--paper); border-radius: 16px; padding: 28px 28px 30px; display: grid; gap: 16px; }
+.B-in h2 { font-size: 30px; font-weight: 800; font-stretch: 85%; line-height: 1.1; }
+.B-kick { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
+.B-head { text-align: center; display: grid; gap: 8px; justify-items: center; }
+.B-head h1 { font-size: 20px; font-weight: 800; font-stretch: 85%; text-transform: uppercase; letter-spacing: .06em; color: var(--red); }
+.B-head .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 132px; line-height: .85; }
+.B-head .line { font-family: var(--f-display); font-weight: 700; font-stretch: 90%; font-size: 26px; line-height: 1.15; max-width: 22ch; }
+.B-head .sub { color: var(--ink-2); font-size: 17px; max-width: 34ch; }
+.B-plan { border-top: 2px solid var(--rule); padding-top: 18px; display: grid; gap: 12px; }
+.B-plan ol { gap: 14px; }
+.B-plan li { grid-template-columns: 2.1em minmax(0, 1fr); font-size: 17px; }
+.B-plan li::before { content: counter(st); width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--red); color: var(--paper); display: grid; place-items: center; font-size: 15px; }
+.B-cards { display: grid; gap: 12px; }
+.B-card { border: 1.5px solid var(--hair); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; }
+.B-card .was { color: var(--muted); font-size: 16px; font-style: italic; }
+.B-card .lab2 { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.B-card .lab2.true { color: var(--red); }
+.B-card .now { font-weight: 700; font-size: 19px; line-height: 1.3; }
+.B-card .proof { color: var(--ink-2); font-size: 14.5px; }
+.B-nums { display: grid; gap: 0; }
+.B-nums > div { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); gap: 14px; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--hair); }
+.B-nums .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 36px; line-height: 1; color: var(--red); }
+.B-quote { position: relative; padding-left: 34px; }
+.B-quote::before { content: "\201C"; position: absolute; left: -4px; top: -10px; font-family: var(--f-display); font-weight: 900; font-size: 80px; color: var(--red); line-height: 1; }
+.B-quote textarea { border: 0; border-left: 3px solid var(--pink); border-radius: 0; font-size: 18px; font-style: italic; background: transparent; }
+.B-stages { display: grid; gap: 10px; }
+.B-stages > div { border-left: 3px solid var(--hair); padding: 2px 0 2px 14px; }
+.B-stages b { display: block; font-family: var(--f-display); font-stretch: 85%; font-size: 17px; }
+
+/* ---------- C: Guide (editorial, numbered sections) ---------- */
+.L-C { background: var(--paper); border-top: 4px solid var(--rule); padding: 10px 28px 28px; }
+.L-C + .L-C { border-top-width: 1px; border-top-color: var(--hair); }
+.sec:not(.L-C) + .L-C { margin-top: 18px; }
+.L-C > .labbar { margin-bottom: 14px; }
+.C-in { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; }
+.C-side { display: grid; gap: 4px; align-content: start; }
+.C-side .no { font-family: var(--f-mono); font-size: 12px; color: var(--red); letter-spacing: .08em; }
+.C-side h2 { font-size: 26px; font-weight: 800; font-stretch: 80%; line-height: 1.05; }
+.C-side p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.C-main { min-width: 0; display: grid; gap: 14px; align-content: start; }
+.C-head { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 36px; align-items: start; padding-top: 6px; }
+.C-head h1 { font-size: 64px; font-weight: 900; font-stretch: 75%; line-height: .95; letter-spacing: -.01em; }
+.C-head .lede { font-size: 21px; line-height: 1.4; margin-top: 14px; max-width: 34ch; }
+.C-head .lede b { font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 1.5em; color: var(--red); }
+.C-head .tags { margin-top: 14px; }
+.C-plan { background: var(--panel); padding: 18px 20px; display: grid; gap: 10px; }
+.C-plan h3 { font-size: 15px; font-family: var(--f-mono); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
+.C-plan .plan { font-size: 15px; }
+.C-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 28px; }
+.C-tile { border-top: 2px solid var(--rule); padding-top: 10px; display: grid; gap: 6px; align-content: start; }
+.C-tile .was { color: var(--muted); font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.C-tile .now { font-weight: 700; font-size: 17px; line-height: 1.3; }
+.C-tile .proof { font-size: 14px; color: var(--ink-2); }
+.C-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.C-nums > div { border-top: 4px solid var(--red); padding-top: 10px; display: grid; gap: 6px; align-content: start; }
+.C-nums .big { font-family: var(--f-display); font-weight: 900; font-stretch: 72%; font-size: 48px; line-height: 1; }
+.C-nums p { font-size: 15px; color: var(--ink-2); }
+.C-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.C-table th { text-align: left; font-family: var(--f-mono); font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 6px 0; border-bottom: 2px solid var(--rule); }
+.C-table td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+.C-table td:first-child { font-weight: 700; white-space: nowrap; }
+.C-table td.n { font-family: var(--f-mono); font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; }
+
+/* ---------- timeline forms ---------- */
+.tl-line { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+.tl-line li { position: relative; padding: 26px 12px 0 0; }
+.tl-line li::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 3px; background: var(--ink); }
+.tl-line li:last-child::before { right: 50%; }
+.tl-line .dot { position: absolute; top: 0; left: 0; width: 19px; height: 19px; border-radius: 50%; background: var(--paper); border: 4px solid var(--k); }
+.tl-line .k-danger .dot { background: var(--k); }
+.tl-line .when { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 18px; line-height: 1.1; color: var(--k); }
+.tl-line .k-feel .when { color: var(--ink); }
+.tl-line .txt { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.tl-rail { list-style: none; margin: 0; padding: 0; display: grid; }
+.tl-rail li { display: grid; grid-template-columns: 7.5rem 22px minmax(0, 1fr); gap: 0 10px; position: relative; padding-bottom: 16px; }
+.tl-rail li::before { content: ""; position: absolute; left: calc(7.5rem + 20px); top: 6px; bottom: -6px; width: 2px; background: var(--hair); }
+.tl-rail li:last-child::before { display: none; }
+.tl-rail .when { font-family: var(--f-display); font-weight: 800; font-stretch: 82%; font-size: 17px; line-height: 1.2; text-align: right; color: var(--k); }
+.tl-rail .k-feel .when, .tl-rail li.k-feel .when { color: var(--ink); }
+.tl-rail .dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--k); background: var(--paper); margin: 3px 0 0 4px; position: relative; z-index: 1; }
+.tl-rail .k-danger .dot, .tl-rail li.k-danger .dot { background: var(--k); }
+.tl-rail .txt { font-size: 15.5px; }
+.tl-gridwrap { overflow-x: auto; }
+.tl-grid { display: grid; min-width: 640px; border: 1.5px solid var(--rule); }
+.tl-grid > div { padding: 10px 12px; border-right: 1px solid var(--hair); border-bottom: 1px solid var(--hair); font-size: 14px; min-width: 0; }
+.tl-grid .sh { background: var(--panel); font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 17px; border-bottom: 1.5px solid var(--rule); }
+.tl-grid .rh { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--k); }
+.tl-grid .cell { display: grid; gap: 8px; align-content: start; }
+.tl-grid .it b { font-family: var(--f-mono); font-size: 12px; font-weight: 600; display: block; color: var(--k); }
+.tl-grid .it.k-feel b { color: var(--muted); }
+.tl-grid .it.k-danger { border-left: 3px solid var(--danger); padding-left: 7px; }
+
+/* the window chart: when each thing shows up, on a log time axis. Bars show when, not how strong. */
+.wc { display: grid; gap: 4px; }
+.wc-row { display: grid; grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr); gap: 2px 16px; align-items: center; padding: 5px 0; }
+.wc-row + .wc-row { border-top: 1px solid var(--hair); }
+.wc-lbl { font-size: 14.5px; line-height: 1.25; }
+.wc-lbl b { font-weight: 700; display: block; }
+.wc-lbl span { color: var(--muted); font-size: 13px; }
+.wc-tr { position: relative; height: 22px; }
+.wc-tr .g { position: absolute; top: -5px; bottom: -6px; width: 1px; background: var(--hair); }
+.wc-bar { position: absolute; top: 6px; height: 10px; border-radius: 5px; background: var(--ink-2); min-width: 6px; }
+.wc-bar.danger { background: var(--danger); }
+.wc-bar.trigger { background: transparent; border: 2px solid var(--watch); }
+.wc-bar.fall { background: linear-gradient(to right, var(--ink-2) var(--pk, 0%), color-mix(in srgb, var(--ink-2) 22%, transparent)); }
+.wc-bar.trigger.fall { background: transparent; border-image: none; }
+.wc-bar.open { -webkit-mask-image: linear-gradient(to right, #000 72%, transparent); mask-image: linear-gradient(to right, #000 72%, transparent); }
+.wc-pk { position: absolute; top: 3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--paper); border: 4px solid var(--ink); }
+.wc-pk.danger { border-color: var(--danger); }
+.wc-axis .wc-tr { height: 18px; }
+.wc-axis .t { position: absolute; transform: translateX(-50%); font-family: var(--f-mono); font-size: 11px; color: var(--muted); white-space: nowrap; top: 0; }
+.wc-axis .t:first-child { transform: none; }
+.wc-axis .t.end { transform: translateX(-100%); }
+.wc-pins .wc-tr { height: var(--h, 22px); }
+.wc-pin { position: absolute; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: var(--k); color: var(--paper); font-family: var(--f-mono); font-size: 11px; font-weight: 600; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--paper); }
+.wc-pin.k-feel { background: var(--ink); }
+.wc-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); align-items: center; }
+.wc-key .sw { display: inline-block; width: 26px; height: 10px; border-radius: 5px; background: var(--ink-2); margin-right: 6px; vertical-align: -1px; }
+.wc-key .sw.danger { background: var(--danger); }
+.wc-key .sw.trigger { background: transparent; border: 2px solid var(--watch); }
+.wc-key .sw.open { -webkit-mask-image: linear-gradient(to right, #000 30%, transparent); mask-image: linear-gradient(to right, #000 30%, transparent); }
+.wc-key .pkd { display: inline-block; width: 13px; height: 13px; border-radius: 50%; border: 3px solid var(--ink); margin-right: 6px; vertical-align: -2px; }
+.pinlist { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
+.pinlist li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; font-size: 14.5px; }
+.pinlist .n { width: 20px; height: 20px; border-radius: 50%; background: var(--k); color: var(--paper); font-family: var(--f-mono); font-size: 11px; font-weight: 600; display: grid; place-items: center; margin-top: 1px; }
+.pinlist .k-feel .n, .pinlist li.k-feel .n { background: var(--ink); }
+.pinlist li.untimed .n { background: var(--paper); color: var(--k); border: 2px solid var(--k); }
+.pinlist b { font-weight: 700; }
+
+/* ---------- narrow page (a phone, or the Phone button) ---------- */
+@container page (max-width: 760px) {
+  .A-head, .C-head, .C-in, .A-stages, .pinlist { grid-template-columns: minmax(0, 1fr); }
+  .C-in { gap: 10px; }
+  .A-hero .big { font-size: 84px; }
+  .A-title h1 { font-size: 36px; }
+  .A-blk, .A-band > .bd { padding: 14px 14px 18px; }
+  .A-band { grid-template-columns: 30px minmax(0, 1fr); }
+  .A-band > .vl span { font-size: 16px; }
+  .A-nums, .C-nums { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .A-nums > div + div { border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); padding-top: 14px; }
   .btable thead { display: none; }
   .btable, .btable tbody, .btable tr, .btable td { display: block; width: 100%; }
   .btable tr { border: 2px solid var(--rule); border-top: 0; }
   .btable tr:first-child { border-top: 2px solid var(--rule); }
-  .btable td { border: 0; }
+  .btable td { border: 0 !important; }
   .btable td.cur::before { content: "Current belief"; }
   .btable td.new::before { content: "New belief"; }
   .btable td.cur::before, .btable td.new::before { display: block; font-family: var(--f-mono); font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
-  .btable td.rowmk { width: 100%; display: flex; gap: 8px; border: 0; }
-  .btable td.rowmk .mk { display: inline-block; width: auto; margin: 0; }
-  .band { grid-template-columns: 30px minmax(0, 1fr); }
-  .band > .vlabel span { font-size: 16px; }
-  .band > .body, .blk { padding: 16px 14px; }
+  .tl-line { grid-auto-flow: row; grid-auto-columns: auto; }
+  .tl-line li { padding: 0 0 18px 32px; }
+  .tl-line li::before { left: 8px; right: auto; top: 0; bottom: 0; width: 3px; height: auto; }
+  .tl-line li:last-child::before { bottom: auto; height: 10px; }
+  .tl-rail li { grid-template-columns: 22px minmax(0, 1fr); }
+  .tl-rail li::before { left: 10px; }
+  .tl-rail .when { grid-column: 2; grid-row: 1; text-align: left; }
+  .tl-rail .dot { grid-column: 1; grid-row: 1; margin-left: 4px; }
+  .tl-rail .txt { grid-column: 2; }
+  .B-in { padding: 20px 16px 22px; border-radius: 0; }
+  .L-B > .labbar { margin-inline: 8px; }
+  .B-head .big { font-size: 96px; }
+  .B-head .line { font-size: 22px; }
+  .B-nums > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .L-C { padding: 8px 14px 20px; }
+  .C-head h1 { font-size: 44px; }
+  .C-head .lede { font-size: 18px; }
+  .C-tiles { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .wc-row { grid-template-columns: minmax(0, 1fr); padding: 6px 0 4px; }
+  .wc-axis .wc-lbl, .wc-pins .wc-lbl { display: none; }
+  .wc-axis .t.minor { display: none; }
 }
-@media (prefers-reduced-motion: no-preference) { .tab, .mk { transition: background .15s, color .15s, border-color .15s; } }
+@media (max-width: 860px) {
+  .lab .wrap { grid-template-columns: minmax(0, 1fr); }
+  .top .name { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .tab, .mk, .seg button { transition: background .15s, color .15s, border-color .15s; } }
 </style>
 
 <header class="top"><div class="wrap">
-  <div class="name">One-pager template</div>
+  <div class="name">One-pager lab</div>
   <nav class="tabs" role="tablist" aria-label="Addiction" id="tabs"></nav>
+  <div class="ctrls">
+    <span class="eyebrow">Layout</span>
+    <div class="seg" id="laySeg"><button type="button" data-l="A">A Poster</button><button type="button" data-l="B">B Story</button><button type="button" data-l="C">C Guide</button></div>
+    <span class="eyebrow">View</span>
+    <div class="seg" id="viewSeg"><button type="button" data-v="wide">Wide</button><button type="button" data-v="phone">Phone</button></div>
+  </div>
 </div></header>
 
 <section class="lab"><div class="wrap">
   <div>
-    <div class="eyebrow">Round 2 &middot; 4 Nov 2026 &middot; built from your 2025 nicotine one-pager</div>
-    <h2 style="margin-top:6px">One template, eight addictions. Switch with the tabs above.</h2>
+    <div class="eyebrow">Round 3 &middot; 4 Nov 2026</div>
+    <h2>Three layouts of the same page. Lock the sections that work.</h2>
     <ul>
-      <li>New: a <b>Current belief / New belief</b> table for each addiction. Every new belief has a one-line proof and a source.</li>
-      <li>The timeline comes in two simpler styles. Switch on the right and mark the one that reads better. The curves chart is still on the old lab board.</li>
-      <li>Your five-step plan is in, in your words. Only the substance word changes per page.</li>
-      <li>Danger lines are small and sit where they matter (alcohol day 1&ndash;2, coke crash, betting losses), as your note asked.</li>
-      <li>Write your own experience in the box near the bottom. It saves as you type.</li>
-      <li>Mark any block Yes / Maybe / No, and keep or cut each belief row.</li>
+      <li><b>A Poster</b> is your 2025 sheet. <b>B Story</b> is one column, made for a phone. <b>C Guide</b> reads like a field guide and has the new timeline chart.</li>
+      <li>The buttons at the top switch every section. The blue bar on a section switches only that section, so you can mix.</li>
+      <li><b>Lock</b> a section when it works. It stays that way when you switch layouts, and it counts for all eight addictions.</li>
+      <li>Fixed: nothing on the page says craving grows any more. Where a study only measured how people react to a trigger, the line now says triggers can still hit hard.</li>
+      <li>Fixed: the weed forum results are plain sentences, not bars, and say why later stages look worse.</li>
+      <li><b>Phone</b> shows the page at phone width.</li>
     </ul>
   </div>
   <div class="labbox">
-    <span class="eyebrow">Timeline style</span>
-    <div class="seg" id="tlSeg"><button type="button" data-f="line" aria-pressed="true">Line</button><button type="button" data-f="grid" aria-pressed="false">Grid</button></div>
-    <label for="genNote">Your note on this round</label>
-    <textarea id="genNote" rows="3" placeholder="Anything about the template as a whole"></textarea>
+    <span class="eyebrow">Locked so far</span>
+    <div class="lockedlist" id="lockedList">Nothing locked yet.</div>
+    <label class="eyebrow" for="genNote">Your note on this round</label>
+    <textarea id="genNote" rows="3" placeholder="Anything about the page as a whole"></textarea>
     <div class="dbstate" id="dbstate">Connecting&hellip;</div>
   </div>
 </div></section>
 
-<main class="wrap"><article class="sheet" id="sheet"></article></main>
+<main class="wrap"><div class="page" id="page"></div></main>
 
 <script>
 const DATA = /*DATA*/;
 const SLUG = { alcohol: "alcohol", nicotine: "nicotine", cannabis: "weed", cocaine: "cocaine", porn: "porn", gambling: "betting", "social-media-phones": "phone", "binge-eating-and-ultra-processed-food": "sugar" };
+const LAYOUTS = { A: "Poster", B: "Story", C: "Guide" };
+const FORMS = { line: "Line", rail: "List", grid: "Grid", chart: "Chart" };
+const FORM_OF = { A: "line", B: "rail", C: "chart" };
+const SECS = [
+  ["head", "Header", "Number and plan"],
+  ["timeline", "Timeline", "What the weeks and months are like"],
+  ["beliefs", "Beliefs", "Current belief, new belief"],
+  ["numbers", "Numbers", "In numbers"],
+  ["story", "Your story", "My experience"],
+  ["others", "Others", "What others report"],
+  ["sources", "Sources", "Sources"],
+];
 const KIND = { feel: "What you feel", watch: "Watch out", danger: "Danger", win: "Gets better" };
 const STAGES = [
-  { k: "d3", label: "Days 1–3", max: 72 },
-  { k: "w2", label: "Days 4–14", max: 336 },
-  { k: "w8", label: "Weeks 3–8", max: 1440 },
-  { k: "m6", label: "Months 2–6", max: 4380 },
-  { k: "later", label: "6 months +", max: Infinity },
+  { label: "Days 1–3", max: 72 }, { label: "Days 4–14", max: 336 }, { label: "Weeks 3–8", max: 1440 },
+  { label: "Months 2–6", max: 4380 }, { label: "6 months +", max: Infinity },
 ];
-const MARKS = {}, EXP = {};
-let db = null, dbReady = false, page = DATA.pages[0];
-let tlForm = "line";
-try { tlForm = localStorage.getItem("tlForm") || "line"; } catch (e) {}
+const TICKS = [[1, "1 h", 1], [6, "6 h", 1], [24, "day 1", 0], [72, "day 3", 1], [168, "week 1", 0], [336, "week 2", 1], [720, "month 1", 0], [2160, "month 3", 1], [4380, "month 6", 1], [8760, "year 1", 0], [17520, "year 2", 1], [26280, "year 3", 1]];
+const LOCK_SVG = `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
+
+let MARKS = {}, EXP = {}, LOCKS = {};
+const LOCAL = {}, LOCAL_FORM = {};
+let db = null, page = DATA.pages[0];
+const store = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+let G = store("opLayout", "A"), VIEW = store("opView", "wide");
+if (!LAYOUTS[G]) G = "A";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const refs = ns => ns && ns.length ? `<button type="button" class="ref${ns.some(n => page.unchecked.includes(n)) ? " unc" : ""}" data-refs="${ns.join(",")}">[${ns.join(",")}]</button>` : "";
 const fill = s => s.replace(/\{(\w+)\}/g, (_, k) => page.subs[k] || k);
+const planList = () => `<div class="plan"><ol>${DATA.plan.map(s => `<li><span>${fill(s)}</span></li>`).join("")}</ol></div>`;
+const goal = () => page.mode === "reshape" ? "Goal: cut down, not zero" : "Goal: stop fully";
+const layOf = sec => (LOCKS[sec] && LOCKS[sec].layout) || LOCAL[sec] || G;
+const formOf = lay => (LOCKS.timeline && LOCKS.timeline.form) || LOCAL_FORM.timeline || FORM_OF[lay];
 
-function markBar(key, label) {
-  const m = MARKS[key] || {};
-  return `<div class="labbar" data-key="${key}"><span class="lbl">${esc(label)}</span>${["yes", "maybe", "no"].map(v => `<button type="button" class="mk" data-v="${v}" aria-pressed="${m.v === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join("")}<input type="text" id="note-${key}" placeholder="Note" value="${esc(m.note || "")}" aria-label="Note on ${esc(label)}"></div>`;
+/* ---------- section lab bar ---------- */
+function labBar(sec, lay) {
+  const [, name] = SECS.find(s => s[0] === sec);
+  const L = LOCKS[sec], note = (MARKS["sec-" + sec] || {}).note || "";
+  const noteIn = `<input type="text" id="note-sec-${sec}" placeholder="Note on this section" value="${esc(note)}" aria-label="Note on ${esc(name)}">`;
+  if (L) {
+    const what = `${L.layout} ${LAYOUTS[L.layout]}${sec === "timeline" && L.form ? ", " + FORMS[L.form] : ""}`;
+    return `<div class="labbar"><span class="lbl">${esc(name)}</span><span class="lockstate">${LOCK_SVG}Locked: ${esc(what)}</span><button type="button" class="lockbtn" data-unlock="${sec}">Unlock</button>${noteIn}</div>`;
+  }
+  const seg = `<div class="seg" role="group" aria-label="${esc(name)} layout">${Object.keys(LAYOUTS).map(l => `<button type="button" data-sl="${l}" data-sec="${sec}" aria-pressed="${l === lay}">${l}</button>`).join("")}</div>`;
+  const fseg = sec === "timeline" ? `<div class="seg" role="group" aria-label="Timeline form">${Object.keys(FORMS).map(f => `<button type="button" data-sf="${f}" aria-pressed="${f === formOf(lay)}">${FORMS[f]}</button>`).join("")}</div>` : "";
+  return `<div class="labbar"><span class="lbl">${esc(name)}</span>${seg}${fseg}<button type="button" class="lockbtn" data-lock="${sec}">${LOCK_SVG}Lock this</button>${noteIn}</div>`;
 }
-
-function timelineLine() {
-  const ms = page.milestones;
-  return `<ol class="tl-line">${ms.map(m => `<li class="k-${m.kind}"><span class="dot"></span><div class="when">${esc(m.when)}</div><div class="txt">${esc(m.text)} ${refs(m.n)}</div></li>`).join("")}</ol>`;
+function rowMarks(i) {
+  const key = `row-${page.id}-${i}`, v = (MARKS[key] || {}).v;
+  return `<span class="rowmks" data-key="${key}"><button type="button" class="mk" data-v="yes" aria-pressed="${v === "yes"}">Keep</button><button type="button" class="mk" data-v="no" aria-pressed="${v === "no"}">Cut</button></span>`;
 }
+const isCut = i => (MARKS[`row-${page.id}-${i}`] || {}).v === "no";
 
-function timelineGrid() {
-  const cols = [];
-  const untimed = page.milestones.filter(m => m.atH == null);
+/* ---------- timeline forms ---------- */
+function tlLine() {
+  return `<ol class="tl-line">${page.milestones.map(m => `<li class="k-${m.kind}"><span class="dot"></span><div class="when">${esc(m.when)}</div><div class="txt">${esc(m.text)} ${refs(m.n)}</div></li>`).join("")}</ol>`;
+}
+function tlRail() {
+  return `<ol class="tl-rail">${page.milestones.map(m => `<li class="k-${m.kind}"><div class="when">${esc(m.when)}</div><span class="dot"></span><div class="txt">${esc(m.text)} ${refs(m.n)}</div></li>`).join("")}</ol>`;
+}
+function tlGrid() {
+  const cols = [], untimed = page.milestones.filter(m => m.atH == null);
   STAGES.forEach((s, i) => {
     const lo = i ? STAGES[i - 1].max : -1;
     const items = page.milestones.filter(m => m.atH != null && m.atH > lo && m.atH <= s.max);
@@ -283,75 +462,122 @@ function timelineGrid() {
   });
   return h + `</div></div>`;
 }
+function tlChart() {
+  const W = page.windows || [];
+  if (W.length < 3) return `<div class="ph"><span class="eyebrow">No chart for this one</span>Too little has been measured about when things happen to draw a chart that tells the truth. The list shows what is known.</div>${tlRail()}`;
+  const timed = page.milestones.filter(m => m.atH != null), L = Math.log;
+  const d0 = 1, d1 = Math.min(26280, Math.max(720, ...W.map(w => w.e), ...timed.map(m => m.atH)) * 1.25);
+  const x = t => Math.max(0, Math.min(100, (L(Math.max(t, d0)) - L(d0)) / (L(d1) - L(d0)) * 100));
+  const ticks = [];
+  TICKS.filter(([t]) => t <= d1).forEach(tk => {
+    const last = ticks[ticks.length - 1];
+    if (!last || x(tk[0]) - x(last[0]) >= (x(tk[0]) > 90 ? 12 : 8)) ticks.push(tk);
+    else if (!tk[2] && last[2]) ticks[ticks.length - 1] = tk;
+  });
+  const grid = ticks.map(([t]) => `<span class="g" style="left:${x(t)}%"></span>`).join("");
+  const num = new Map(); page.milestones.forEach((m, i) => num.set(m, i + 1));
+  const lanes = [], pins = timed.map(m => {
+    const px = x(m.atH); let lane = 0;
+    while ((lanes[lane] || []).some(o => Math.abs(o - px) < 7)) lane++;
+    (lanes[lane] = lanes[lane] || []).push(px);
+    return `<span class="wc-pin k-${m.kind}" style="left:${px}%;top:${lane * 24}px" title="${esc(m.when)}">${num.get(m)}</span>`;
+  });
+  const rows = W.map(w => {
+    const l = x(w.s), r = x(w.e), cls = [w.kind === "danger" ? "danger" : w.kind === "trigger" ? "trigger" : "", w.open ? "open" : "", w.fall && w.kind !== "trigger" ? "fall" : ""].join(" ");
+    const pkp = w.pk != null && r > l ? ((x(w.pk) - l) / (r - l) * 100).toFixed(1) + "%" : "0%";
+    const pk = w.pk != null && w.kind !== "trigger" ? `<span class="wc-pk ${w.kind === "danger" ? "danger" : ""}" style="left:${x(w.pk)}%"></span>` : "";
+    return `<div class="wc-row"><div class="wc-lbl"><b>${esc(w.label)}</b><span>${esc(w.when)} ${refs(w.n)}</span></div><div class="wc-tr" title="${esc(w.label + ": " + w.when)}">${grid}<span class="wc-bar ${cls}" style="left:${l}%;width:${Math.max(0.8, r - l)}%;--pk:${pkp}"></span>${pk}</div></div>`;
+  }).join("");
+  const axis = `<div class="wc-row wc-axis"><div class="wc-lbl"></div><div class="wc-tr">${ticks.map(([t, lab, minor]) => `<span class="t${minor ? " minor" : ""}${x(t) > 90 ? " end" : ""}" style="left:${x(t)}%">${lab}</span>`).join("")}</div></div>`;
+  const pinRow = `<div class="wc-row wc-pins"><div class="wc-lbl"><span>Moments, numbered below</span></div><div class="wc-tr" style="--h:${lanes.length * 24}px">${pins.join("")}</div></div>`;
+  const key = `<div class="wc-key"><span><i class="sw"></i>When you may feel it</span><span><i class="pkd"></i>Worst around here</span><span><i class="sw open"></i>Fades out: end not measured</span><span><i class="sw trigger"></i>Triggers can still pull</span>${W.some(w => w.kind === "danger") ? `<span><i class="sw danger"></i>Danger</span>` : ""}</div>`;
+  const list = `<ol class="pinlist">${page.milestones.map(m => `<li class="k-${m.kind}${m.atH == null ? " untimed" : ""}"><span class="n">${num.get(m)}</span><span><b>${esc(m.when)}.</b> ${esc(m.text)} ${refs(m.n)}</span></li>`).join("")}</ol>`;
+  return `${key}<div class="wc" role="group" aria-label="When each thing tends to happen">${pinRow}${rows}${axis}</div><p class="note">Bars show when a thing tends to show up, not how strong it is. Time runs faster to the right: day 1 to week 1 takes as much room as month 1 to month 6.</p>${list}`;
+}
+function timelineBody(form) {
+  return form === "line" ? tlLine() : form === "grid" ? tlGrid() : form === "chart" ? tlChart() : tlRail();
+}
+function tlLegend() {
+  return `<div class="legend">${["feel", "watch", "danger", "win"].filter(k => page.milestones.some(m => m.kind === k)).map(k => `<span class="k-${k}"><i style="background:var(--k)"></i>${KIND[k]}</span>`).join("")}</div>`;
+}
 
-function community() {
+/* ---------- community ---------- */
+function forum() {
   const c = page.community;
-  const L = DATA.leaves;
-  if (page.id === "cannabis" && L && Array.isArray(L.stages)) {
-    const st = L.stages.map(s => `<div class="stage"><b>${esc(s.stage)}</b> <span class="urlchip">${s.n} posts</span>${(s.themes || []).slice(0, 3).map(t => `<div class="bar"><span>${esc(t.theme)}</span><span>${Math.round((t.share || 0) * 100)}%</span><div class="meter"><i style="width:${Math.round((t.share || 0) * 100)}%"></i></div></div>`).join("")}</div>`).join("");
-    const R = L.relapse || {}, bs = R.byStage || {};
-    const tot = Object.values(bs).reduce((a, b) => a + b, 0);
-    const late = ["days 31-90", "days 91-364", "1 year and over"].reduce((a, k) => a + (bs[k] || 0), 0);
-    const when = tot ? `<p style="margin-top:12px"><b>When people slipped:</b> ${Math.round(100 * late / tot)}% of ${tot} relapses with a day count came after more than a month clean.</p>` : "";
-    const why = R.reasons ? `<p style="margin-top:6px"><b>Why, most often:</b> ${R.reasons.slice(0, 3).map(r => esc(r.reason.replace(/\s*\(.*\)\s*$/, ""))).join("; ")}.</p>` : "";
-    const n = L.method && L.method.nWithDuration;
-    return `<h3>What ${n ? n.toLocaleString("en-US") + " " : ""}r/leaves posts say</h3><p class="tlnote">Share of posts at each stage that mention it, 2021\u20132025. People post more when it is hard, so read the order, not the exact numbers.</p>${st}${when}${why}`;
+  if (c.stages) {
+    const n = DATA.leaves && DATA.leaves.method && DATA.leaves.method.nWithDuration;
+    return { title: `What ${n ? n.toLocaleString("en-US") + " " : ""}${c.forum} posts talk about`, stages: c.stages, note: c.note, relapse: c.relapse, intro: `Posts from 2021 to 2025 that say how long the writer had been off, grouped by that time.` };
   }
-  const msg = c.status === "running"
-    ? `A pilot is reading 1,000+ posts on ${esc(c.forum)}, sorted by how long each writer had been off. What people report at each stage, and when they slip, lands here.`
-    : `Not harvested yet. Source to use: ${esc(c.forum)}. Same method as the weed pilot: sort posts by day count, count what people report at each stage.`;
-  return `<h3>What others report</h3><div class="ph"><span class="eyebrow" style="color:var(--watch)">Placeholder</span>${msg}</div>`;
+  const msg = `Not harvested yet. Source to use: ${esc(c.forum)}. Same method as the weed pilot: sort posts by how long the writer had been off, then read what people talk about at each stage.`;
+  return { title: "What others report", ph: msg };
+}
+
+/* ---------- sections, one renderer per layout ---------- */
+const R = {
+  head: {
+    A: () => `<div class="A-blk"><div class="A-head">
+      <div class="A-hero"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div></div>
+      <div class="A-title"><h1>${esc(page.title)}</h1><div><span class="tag">${goal()}</span></div><h3>Five-step strategic plan</h3>${planList()}<div class="who">Your 2025 text. Only the substance word changes per page.</div></div>
+    </div></div>`,
+    B: () => `<div class="B-in"><div class="B-head"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div></div>
+      <div class="B-plan"><div class="B-kick">Your five steps &middot; ${goal()}</div>${planList()}</div></div>`,
+    C: () => `<div class="C-head"><div><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><p class="lede"><b>${esc(page.hero.big)}</b> ${esc(page.hero.line)} ${esc(page.hero.sub)} ${refs(page.hero.n)}</p><div class="tags"><span class="tag">${goal()}</span></div></div>
+      <div class="C-plan"><h3>The five-step plan</h3>${planList()}</div></div>`,
+  },
+  timeline: {
+    A: f => `<div class="A-band"><div class="vl"><span>Timeline</span></div><div class="bd"><h2>What the first weeks and months are like</h2><p class="note">${esc(page.timelineNote)}</p>${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div></div>`,
+    B: f => `<div class="B-in"><div class="B-kick">The timeline</div><h2>What the first weeks and months are like</h2><p class="note">${esc(page.timelineNote)}</p>${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div>`,
+    C: f => `<div class="C-in"><div class="C-side"><span class="no">02</span><h2>Week by week</h2><p>${esc(page.timelineNote)}</p></div><div class="C-main">${f === "chart" ? "" : tlLegend()}${timelineBody(f)}</div></div>`,
+  },
+  beliefs: {
+    A: () => `<div class="A-band"><div class="vl"><span>Beliefs</span></div><div class="bd"><table class="btable"><thead><tr><th>Current beliefs</th><th>New beliefs</th></tr></thead><tbody>${page.beliefs.map((b, i) => `<tr class="${isCut(i) ? "cut" : ""}"><td class="cur">${esc(b.current)}</td><td class="new">${rowMarks(i)}${esc(b.new)}<span class="proof">${esc(b.proof)} ${refs(b.n)}</span></td></tr>`).join("")}</tbody></table></div></div>`,
+    B: () => `<div class="B-in"><div class="B-kick">The beliefs</div><h2>What you tell yourself, and what’s true</h2><div class="B-cards">${page.beliefs.map((b, i) => `<div class="B-card${isCut(i) ? " cut" : ""}"><div class="lab2">You tell yourself ${rowMarks(i)}</div><p class="was">“${esc(b.current)}”</p><div class="lab2 true">What’s true</div><p class="now">${esc(b.new)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>`).join("")}</div></div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">03</span><h2>Old belief, new belief</h2><p>The thoughts that keep you stuck, each with what the evidence says.</p></div><div class="C-main"><div class="C-tiles">${page.beliefs.map((b, i) => `<div class="C-tile${isCut(i) ? " cut" : ""}"><p class="was"><span>“${esc(b.current)}”</span>${rowMarks(i)}</p><p class="now">${esc(b.new)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>`).join("")}</div></div></div>`,
+  },
+  numbers: {
+    A: () => `<div class="A-band"><div class="vl"><span>Numbers</span></div><div class="bd"><div class="A-nums">${page.numbers.map(x => `<div><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div></div></div>`,
+    B: () => `<div class="B-in"><div class="B-kick">In numbers</div><div class="B-nums">${page.numbers.map(x => `<div><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div></div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">04</span><h2>In numbers</h2></div><div class="C-main"><div class="C-nums">${page.numbers.map(x => `<div><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div></div></div>`,
+  },
+  story: {
+    A: () => `<div class="A-blk exp"><h2 style="font-size:24px;font-weight:800;font-stretch:80%">My experience</h2>${expBox()}</div>`,
+    B: () => `<div class="B-in exp"><div class="B-kick">From me</div><h2>What it was like for me</h2>${expBox(true)}</div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">05</span><h2>In my words</h2><p>The start, the hardest day, what you told yourself, what finally worked.</p></div><div class="C-main exp">${expBox()}</div></div>`,
+  },
+  others: {
+    A: () => { const f = forum(); return `<div class="A-blk" style="display:grid;gap:10px"><h2 style="font-size:24px;font-weight:800;font-stretch:80%">${esc(f.title)}</h2>${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<p class="note">${esc(f.intro)} ${esc(f.note)}</p><div class="A-stages">${f.stages.map(s => `<div><b>${esc(s.stage)}</b>${esc(s.text)}</div>`).join("")}</div><p><b>When people slipped:</b> ${esc(f.relapse)}</p>`}</div>`; },
+    B: () => { const f = forum(); return `<div class="B-in"><div class="B-kick">Others like you</div><h2>${esc(f.title)}</h2>${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<p class="note">${esc(f.intro)}</p><div class="B-stages">${f.stages.map(s => `<div><b>${esc(s.stage)}</b>${esc(s.text)}</div>`).join("")}</div><p class="note">${esc(f.note)}</p><div class="B-card"><div class="lab2 true">When people slipped</div><p>${esc(f.relapse)}</p></div>`}</div>`; },
+    C: () => { const f = forum(); return `<div class="C-in"><div class="C-side"><span class="no">06</span><h2>${esc(f.title)}</h2>${f.ph ? "" : `<p>${esc(f.intro)}</p>`}</div><div class="C-main">${f.ph ? `<div class="ph"><span class="eyebrow">Placeholder</span>${f.ph}</div>` : `<table class="C-table"><thead><tr><th>Time off</th><th>What people write about</th><th style="text-align:right">Posts</th></tr></thead><tbody>${f.stages.map(s => `<tr><td>${esc(s.stage)}</td><td>${esc(s.text)}</td><td class="n">${s.n.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table><p class="note">${esc(f.note)}</p><p><b>When people slipped:</b> ${esc(f.relapse)}</p>`}</div></div>`; },
+  },
+  sources: {
+    A: () => `<div class="A-blk" style="display:grid;gap:14px">${srcBody()}</div>`,
+    B: () => `<div class="B-in">${srcBody()}</div>`,
+    C: () => `<div class="C-in"><div class="C-side"><span class="no">07</span><h2>Sources</h2></div><div class="C-main">${srcBody()}</div></div>`,
+  },
+};
+function expBox(quote) {
+  const ta = `<textarea id="expText" placeholder="Write your own experience with ${esc(page.tab.toLowerCase())} here. It saves as you type.">${esc((EXP[page.id] || {}).text || "")}</textarea>`;
+  return `<p class="note">In your words: what it was like at the start, the hardest day, what you told yourself, what finally worked.</p>${quote ? `<div class="B-quote">${ta}</div>` : ta}<div class="dbstate" id="expState"></div>`;
+}
+function srcBody() {
+  const p = page;
+  return `${p.footer ? `<p class="safety"><b>If it gets bad</b><span>${esc(p.footer.text)} ${refs(p.footer.n)}</span></p>` : ""}<details class="src" id="srcBox"><summary>Sources (${p.sources.length})</summary><ol>${p.sources.map(s => `<li id="src-${s.n}">${esc(s.cite)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">link</a>` : ""}${s.fetched ? "" : `<span class="u">unchecked</span>`}</li>`).join("")}</ol></details>`;
 }
 
 function render() {
-  const p = page;
-  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.id === p.id));
-  const goal = p.mode === "reshape" ? "Goal: cut down, not zero" : "Goal: stop fully";
-  const rowsHtml = p.beliefs.map((b, i) => {
-    const key = `row-${p.id}-${i}`, v = (MARKS[key] || {}).v;
-    return `<tr class="${v === "no" ? "cut" : ""}" data-key="${key}"><td class="cur">${esc(b.current)}</td><td class="new">${esc(b.new)}<span class="proof">${esc(b.proof)} ${refs(b.n)}</span></td><td class="rowmk"><button type="button" class="mk" data-v="yes" aria-pressed="${v === "yes"}">Keep</button><button type="button" class="mk" data-v="no" aria-pressed="${v === "no"}">Cut</button></td></tr>`;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.id === page.id));
+  document.querySelectorAll("#laySeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === G));
+  document.querySelectorAll("#viewSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === VIEW));
+  const pg = $("#page");
+  pg.classList.toggle("phone", VIEW === "phone");
+  const srcOpen = $("#srcBox") && $("#srcBox").open;
+  pg.innerHTML = SECS.map(([sec]) => {
+    const lay = layOf(sec);
+    return `<section class="sec L-${lay}${LOCKS[sec] ? " locked" : ""}" data-sec="${sec}">${labBar(sec, lay)}${R[sec][lay](formOf(lay))}</section>`;
   }).join("");
-  $("#sheet").innerHTML = `
-  <section class="blk">
-    ${markBar("blk-head", "Header: big number + your plan")}
-    <div class="head">
-      <div class="hero"><div class="urlchip">yoursite.com/quit/${SLUG[p.id]}</div><div class="big">${esc(p.hero.big)}</div><div class="line">${esc(p.hero.line)} ${refs(p.hero.n)}</div><div class="sub">${esc(p.hero.sub)}</div></div>
-      <div class="titlebox">
-        <h1>${esc(p.title)}</h1>
-        <div class="tags"><span class="tag">${goal}</span></div>
-        <div class="plan"><h3>Five-step strategic plan</h3><ol>${DATA.plan.map(s => `<li>${fill(s)}</li>`).join("")}</ol><div class="who">Your 2025 text, lightly edited. Only the substance word changes per page.</div></div>
-      </div>
-    </div>
-  </section>
-  <section class="band"><div class="vlabel"><span>Timeline</span></div><div class="body">
-    ${markBar("tl-" + tlForm, tlForm === "line" ? "Timeline style: Line" : "Timeline style: Grid")}
-    <h2 style="font-size:24px;font-weight:800;font-stretch:80%">What the first weeks and months are like</h2>
-    <p class="tlnote">${esc(p.timelineNote)}</p>
-    <div class="legend">${["feel", "watch", "danger", "win"].map(k => `<span class="k-${k}"><i style="background:var(--k)"></i>${KIND[k]}</span>`).join("")}</div>
-    ${tlForm === "line" ? timelineLine() : timelineGrid()}
-  </div></section>
-  <section class="band"><div class="vlabel"><span>Beliefs</span></div><div class="body">
-    ${markBar("blk-beliefs", "Belief table")}
-    <table class="btable"><thead><tr><th>Current beliefs</th><th>New beliefs</th><th class="rowmk">Lab</th></tr></thead><tbody>${rowsHtml}</tbody></table>
-  </div></section>
-  <section class="band"><div class="vlabel"><span>Numbers</span></div><div class="body">
-    ${markBar("blk-numbers", "In numbers")}
-    <div class="nums">${p.numbers.map(x => `<div class="num"><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div>
-  </div></section>
-  <section class="blk"><div class="two">
-    <div class="exp">
-      ${markBar("blk-experience", "Your experience")}
-      <h3>My experience</h3>
-      <p class="prompts">In your words: what it was like at the start, the hardest day, what you told yourself, what finally worked.</p>
-      <textarea id="expText" placeholder="Write your own experience with ${esc(p.tab.toLowerCase())} here. It saves as you type.">${esc((EXP[p.id] || {}).text || "")}</textarea>
-      <div class="dbstate" id="expState"></div>
-    </div>
-    <div>${markBar("blk-community", "What others report")}${community()}</div>
-  </div></section>
-  <section class="blk" style="display:grid;gap:14px">
-    ${p.footer ? `<p class="safety"><b>If it gets bad</b><span>${esc(p.footer.text)} ${refs(p.footer.n)}</span></p>` : ""}
-    <details class="src" id="srcBox"><summary>Sources (${p.sources.length})</summary><ol>${p.sources.map(s => `<li id="src-${s.n}">${esc(s.cite)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">link</a>` : ""}${s.fetched ? "" : `<span class="u">unchecked</span>`}</li>`).join("")}</ol></details>
-  </section>`;
+  if (srcOpen) $("#srcBox").open = true;
+  const ls = SECS.filter(([s]) => LOCKS[s]).map(([s, name]) => `<b>${esc(name)}</b> (${LOCKS[s].layout}${s === "timeline" && LOCKS[s].form ? ", " + FORMS[LOCKS[s].form] : ""})`);
+  $("#lockedList").innerHTML = ls.length ? ls.join(" &middot; ") : "Nothing locked yet.";
 }
 
 function show(id) {
@@ -360,35 +586,47 @@ function show(id) {
 }
 
 function save(coll, key, body) {
-  if (!db) { $("#dbstate").textContent = "Not saved: marks save only when this page is opened on claude.ai."; return; }
-  db.doc(`${coll}/${key}`).set({ ...body, t: new Date().toISOString() }).catch(() => { $("#dbstate").textContent = "Could not save. Check your connection and try again."; });
+  if (!db) { $("#dbstate").textContent = "Not saved: marks and locks save only when this page is opened on claude.ai."; return Promise.resolve(); }
+  return db.doc(`${coll}/${key}`).set({ ...body, t: new Date().toISOString() }).catch(() => { $("#dbstate").textContent = "Could not save. Check your connection and try again."; });
 }
 
 document.addEventListener("click", e => {
   const tab = e.target.closest(".tab");
   if (tab) { location.hash = SLUG[tab.dataset.id]; return; }
-  const seg = e.target.closest("#tlSeg button");
-  if (seg) {
-    tlForm = seg.dataset.f;
-    try { localStorage.setItem("tlForm", tlForm); } catch (err) {}
-    document.querySelectorAll("#tlSeg button").forEach(b => b.setAttribute("aria-pressed", b === seg));
+  const gl = e.target.closest("#laySeg button");
+  if (gl) { G = gl.dataset.l; keep("opLayout", G); Object.keys(LOCAL).forEach(k => delete LOCAL[k]); delete LOCAL_FORM.timeline; render(); return; }
+  const vw = e.target.closest("#viewSeg button");
+  if (vw) { VIEW = vw.dataset.v; keep("opView", VIEW); render(); return; }
+  const sl = e.target.closest("[data-sl]");
+  if (sl) { LOCAL[sl.dataset.sec] = sl.dataset.sl; if (sl.dataset.sec === "timeline") delete LOCAL_FORM.timeline; render(); return; }
+  const sf = e.target.closest("[data-sf]");
+  if (sf) { LOCAL_FORM.timeline = sf.dataset.sf; render(); return; }
+  const lk = e.target.closest("[data-lock]");
+  if (lk) {
+    const sec = lk.dataset.lock, lay = layOf(sec);
+    LOCKS[sec] = sec === "timeline" ? { layout: lay, form: formOf(lay) } : { layout: lay };
+    save("locks", sec, LOCKS[sec]); render(); return;
+  }
+  const ul = e.target.closest("[data-unlock]");
+  if (ul) {
+    const sec = ul.dataset.unlock, was = LOCKS[sec];
+    LOCAL[sec] = was.layout; if (sec === "timeline" && was.form) LOCAL_FORM.timeline = was.form;
+    delete LOCKS[sec];
+    if (db) db.doc(`locks/${sec}`).delete().catch(() => { $("#dbstate").textContent = "Could not unlock. Check your connection and try again."; });
     render(); return;
   }
   const mk = e.target.closest(".mk");
   if (mk) {
-    const host = mk.closest("[data-key]"), key = host.dataset.key;
-    const cur = MARKS[key] || {};
-    const v = cur.v === mk.dataset.v ? null : mk.dataset.v;
-    MARKS[key] = { ...cur, v };
-    save("marks", key, MARKS[key]);
-    render(); return;
+    const key = mk.closest("[data-key]").dataset.key, cur = MARKS[key] || {};
+    MARKS[key] = { ...cur, v: cur.v === mk.dataset.v ? null : mk.dataset.v };
+    save("marks", key, MARKS[key]); render(); return;
   }
   const r = e.target.closest(".ref");
   if (r) {
     const box = $("#srcBox"); box.open = true;
-    const first = $(`#src-${r.dataset.refs.split(",")[0]}`);
     document.querySelectorAll("details.src li.flash").forEach(x => x.classList.remove("flash"));
     r.dataset.refs.split(",").forEach(n => { const li = $(`#src-${n}`); if (li) li.classList.add("flash"); });
+    const first = $(`#src-${r.dataset.refs.split(",")[0]}`);
     if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 });
@@ -400,7 +638,7 @@ document.addEventListener("input", e => {
     EXP[page.id] = { text: t.value };
     clearTimeout(tmr); $("#expState").textContent = "Saving…";
     const pid = page.id, val = t.value;
-    tmr = setTimeout(() => { save("experience", pid, { text: val }); $("#expState").textContent = db ? "Saved." : ""; }, 800);
+    tmr = setTimeout(() => { save("experience", pid, { text: val }).then(() => { const s = $("#expState"); if (s) s.textContent = db ? "Saved." : ""; }); }, 800);
   }
 });
 document.addEventListener("change", e => {
@@ -414,27 +652,31 @@ document.addEventListener("change", e => {
 });
 
 $("#tabs").innerHTML = DATA.pages.map(p => `<button type="button" role="tab" class="tab" data-id="${p.id}">${esc(p.tab)}</button>`).join("");
-document.querySelectorAll("#tlSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === tlForm));
 show(location.hash.slice(1));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 
 (async () => {
   const st = $("#dbstate");
-  if (!window.claude || !window.claude.use) { st.textContent = "Marks save only when this page is opened on claude.ai."; return; }
-  const timer = setTimeout(() => { if (!dbReady) st.textContent = "Still connecting. Marks may not save yet."; }, 10000);
+  if (!window.claude || !window.claude.use) { st.textContent = "Marks and locks save only when this page is opened on claude.ai."; return; }
+  let ready = false;
+  const timer = setTimeout(() => { if (!ready) st.textContent = "Still connecting. Marks may not save yet."; }, 10000);
   db = await window.claude.use("db");
-  if (!db) { clearTimeout(timer); st.textContent = "Marks save only for you, signed in on claude.ai."; return; }
+  if (!db) { clearTimeout(timer); st.textContent = "Marks and locks save only for you, signed in on claude.ai."; return; }
   const onErr = () => { clearTimeout(timer); st.textContent = "Could not load saved marks. Reload the page to try again."; };
-  const active = () => document.activeElement && (document.activeElement.id === "expText" || document.activeElement.id.startsWith("note-"));
+  const typing = () => { const a = document.activeElement; return a && (a.id === "expText" || a.id === "genNote" || (a.id || "").startsWith("note-")); };
+  const done = () => { ready = true; clearTimeout(timer); st.textContent = "Marks, locks and notes save automatically."; };
   db.collection("marks").onSnapshot(s => {
-    s.docs.forEach(x => { MARKS[x.id] = x.data() || {}; });
-    dbReady = true; clearTimeout(timer); st.textContent = "Marks and notes save automatically.";
+    const next = {}; s.docs.forEach(x => { next[x.id] = x.data() || {}; }); MARKS = next; done();
     if (MARKS.general && document.activeElement.id !== "genNote") $("#genNote").value = MARKS.general.note || "";
-    if (!active()) render();
+    if (!typing()) render();
+  }, onErr);
+  db.collection("locks").onSnapshot(s => {
+    const next = {}; s.docs.forEach(x => { const d = x.data() || {}; if (LAYOUTS[d.layout]) next[x.id] = d; }); LOCKS = next; done();
+    if (!typing()) render();
   }, onErr);
   db.collection("experience").onSnapshot(s => {
-    s.docs.forEach(x => { EXP[x.id] = x.data() || {}; });
-    if (!active()) render();
+    const next = {}; s.docs.forEach(x => { next[x.id] = x.data() || {}; }); EXP = next;
+    if (!typing()) render();
   }, onErr);
 })();
 </script>

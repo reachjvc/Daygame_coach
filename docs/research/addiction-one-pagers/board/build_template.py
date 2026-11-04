@@ -44,6 +44,8 @@ for page in tpl["pages"]:
         b["n"] = num(b["refs"], f"belief {i}")
     for i, x in enumerate(page["numbers"]):
         x["n"] = num(x["refs"], f"number {i}")
+    for i, w in enumerate(page.get("windows", [])):
+        w["n"] = num(w["refs"], f"window {i}")
     page["sources"] = out
     page["unchecked"] = [o["n"] for o in out if not o["fetched"]]
 
@@ -51,14 +53,7 @@ community = REPO / "community" / "leaves-stages.json"
 tpl["leaves"] = None
 if community.exists():
     lv = json.loads(community.read_text())
-    tpl["leaves"] = {
-        "method": {"nWithDuration": lv["method"]["nWithDuration"]},
-        "stages": [{"stage": s["stage"], "n": s["n"],
-                    "themes": [{"theme": t["theme"], "share": t["share"]} for t in s["themes"][:5]]}
-                   for s in lv["stages"]],
-        "relapse": {"byStage": lv["relapse"]["byStage"],
-                    "reasons": [{"reason": r["reason"], "count": r["count"]} for r in lv["relapse"]["reasons"]]},
-    }
+    tpl["leaves"] = {"method": {"nWithDuration": lv["method"]["nWithDuration"]}}
 
 emb = json.dumps(tpl, ensure_ascii=False).replace("</", "<\\/")
 html = (HERE / "template-v2.html").read_text().replace("/*DATA*/", emb)
