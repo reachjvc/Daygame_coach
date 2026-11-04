@@ -71,6 +71,7 @@ import {
   routineMinutes,
   routineSummary,
   serializeNsPlan,
+  readTimeframe,
   setAnswer,
   setAreaReview,
   setDailyRating,
@@ -3970,5 +3971,28 @@ describe("the plan loader's allow-list", () => {
     for (const key of ["vision", "why", "cost"]) {
       expect(answerOf(normalizeNsPlan({ ...emptyNsPlan(), answers: { [key]: "x" } })!, key)).toBe("")
     }
+  })
+})
+
+describe("a goal's timeframe (Plans/life-plan-rebuild.md, Phase 4)", () => {
+  it("is null until picked, is set and cleared, and refuses anything that is not one", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_health", "Run a marathon", "achievement", NOW)
+    const id = plan.goals[0].id
+    expect(plan.goals[0].timeframe).toBeNull()
+    // The card picks and clears it through the goal's own update.
+    plan = updateGoal(plan, id, { timeframe: "1y" }, NOW)
+    expect(plan.goals[0].timeframe).toBe("1y")
+    expect(updateGoal(plan, id, { timeframe: null }, NOW).goals[0].timeframe).toBeNull()
+    expect(readTimeframe("2y")).toBeNull()
+    expect(readTimeframe("20y")).toBe("20y")
+  })
+
+  it("survives the browser's own copy, and a stored value that is not a timeframe reads as none", () => {
+    const added = addGoal(emptyNsPlan(), "lm_health", "Run", "achievement", NOW)
+    const plan = updateGoal(added, added.goals[0].id, { timeframe: "5y" }, NOW)
+    expect(loadNsPlan(serializeNsPlan(plan))!.goals[0].timeframe).toBe("5y")
+    const broken = JSON.parse(serializeNsPlan(plan))
+    broken.goals[0].timeframe = "someday"
+    expect(loadNsPlan(JSON.stringify(broken))!.goals[0].timeframe).toBeNull()
   })
 })

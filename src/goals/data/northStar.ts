@@ -1596,6 +1596,25 @@ export const GOALS_INTRO = {
  */
 export const DEFAULT_GOAL_MONTHS = 12
 
+/**
+ * A goal's timeframe, as Stefan cuts goals: twenty, ten, five, three and one
+ * years, then ninety days and a month (Plans/life-plan-rebuild.md, Phase 4).
+ * Separate from the date: the date is when, the timeframe is which list of
+ * goals it belongs on.
+ */
+export const TIMEFRAME_COPY = {
+  label: "Timeframe",
+  help: "Which of your goal lists this belongs on. Pick again to clear it.",
+  none: "No timeframe yet",
+  /** The goals list's switch: its usual order, or one list per timeframe. */
+  showBy: "Show by",
+  byPriority: "Priority",
+  byTimeframe: "Timeframe",
+  /** Under the timeframe lists: routine steps have no timeframe, and are listed by priority. */
+  routinesNote: "Routine steps are not goals, so they have no timeframe. They are listed under Priority.",
+  labels: { "1m": "1 month", "90d": "90 days", "1y": "1 year", "3y": "3 years", "5y": "5 years", "10y": "10 years", "20y": "20 years" },
+} as const
+
 /** The dates people actually pick, so the calendar is the fallback not the tool. */
 export const GOAL_DATE_PRESETS: Array<{ id: string; label: string; months: number | null; note: string }> = [
   { id: "m3", label: "3 months", months: 3, note: "A sprint. Close enough that this week counts." },

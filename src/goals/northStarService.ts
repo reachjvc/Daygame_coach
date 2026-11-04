@@ -95,6 +95,7 @@ import type {
   NsSubStep,
   NsExperience,
   NsGoal,
+  NsGoalTimeframe,
   NsObstacle,
   NsPastNorthStar,
   NsPastSeason,
@@ -1104,6 +1105,14 @@ function readPastSeasons(value: unknown): NsPastSeason[] {
     .sort((a, b) => a.startedOn.localeCompare(b.startedOn))
 }
 
+/** A goal's horizon, shortest first, as Stefan cuts them (Plans/life-plan-rebuild.md, Phase 4). */
+export const GOAL_TIMEFRAMES: readonly NsGoalTimeframe[] = ["1m", "90d", "1y", "3y", "5y", "10y", "20y"]
+
+/** A stored or typed timeframe, or null for anything that is not one. */
+export function readTimeframe(value: unknown): NsGoalTimeframe | null {
+  return GOAL_TIMEFRAMES.includes(value as NsGoalTimeframe) ? (value as NsGoalTimeframe) : null
+}
+
 function readStringList(value: unknown): string[] {
   return Array.isArray(value) ? (value as unknown[]).filter((v): v is string => typeof v === "string") : []
 }
@@ -1176,6 +1185,7 @@ function readGoal(g: Record<string, unknown>): NsGoal {
     reasonsList: readStringList(g.reasonsList),
     feeling: stringOr(g.feeling, ""),
     feedsGoalIds: readStringList(g.feedsGoalIds),
+    timeframe: readTimeframe(g.timeframe),
     servesOneThing: g.servesOneThing === true,
     reward: stringOr(g.reward, ""),
     stake: stringOr(g.stake, ""),
@@ -1939,6 +1949,7 @@ export function addGoal(plan: NsPlan, areaId: string, title: string, type: Visio
     reasonsList: [],
     feeling: "",
     feedsGoalIds: [],
+    timeframe: null,
     servesOneThing: false,
     reward: "",
     stake: "",

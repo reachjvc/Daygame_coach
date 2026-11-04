@@ -32,11 +32,13 @@ import {
   OBSTACLE_PRESETS,
   SEASON_FOCUS_COPY,
   SERVES_COPY,
+  TIMEFRAME_COPY,
   VALUE_COLOR,
 } from "@/src/goals/data/northStar"
 import { BUILDER_COPY } from "@/src/goals/data/northStarStart"
 import {
   areaGoalExample,
+  GOAL_TIMEFRAMES,
   goalAlreadyInRoutine,
   goalCanUseDailyMetric,
   goalGaps,
@@ -136,6 +138,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
   const countdown = goal.targetDate ? formatCountdown(goal.targetDate, new Date(`${today}T00:00:00`)) : null
   const showHorizon = goal.type === "habit_ramp" || !!goal.targetDate
   const datePreset = matchingDatePreset(goal.targetDate, today)
+  const parents = goal.feedsGoalIds.map((id) => allGoals.find((g) => g.id === id)?.title ?? "").filter(Boolean)
   const metricValue = goalMetricValue(plan, goal, today)
   const metricProgress = goalMetricProgress(plan, goal, today)
   const toolLink = goalToolLink(goal)
@@ -172,7 +175,10 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           <span className="flex items-center gap-1.5 text-[10px] text-zinc-600 mt-0.5">
             <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
             {area?.label ?? ""}
-            {goal.feedsGoalIds.length > 0 && <span>· feeds {goal.feedsGoalIds.length}</span>}
+            {goal.timeframe && <span>· {TIMEFRAME_COPY.labels[goal.timeframe]}</span>}
+            {/* "hvordan ser man så hvad overmålet er?" (the owner, 23 Oct): the
+                bigger goal by name, on the closed row, not a count. */}
+            {parents.length > 0 && <span className="truncate">· feeds {parents.join(", ")}</span>}
             {subGoals.length > 0 && <span>· {subGoals.length} feed it</span>}
           </span>
         </span>
@@ -325,7 +331,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
       {subGoals.length > 0 && (
         <div className="mx-3 mb-2 pl-2.5 border-l" style={{ borderColor: `${color}55` }}>
           <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-1">
-            {subGoals.length} {subGoals.length === 1 ? "goal feeds" : "goals feed"} this one
+            {subGoals.length === 1 ? "1 subgoal feeds" : `${subGoals.length} subgoals feed`} this one
           </p>
           {subGoals.map((c) => (
             <p key={c.id} className="text-[11px] text-zinc-400 py-0.5">
@@ -413,6 +419,26 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             {goal.targetDate && datePreset == null && (
               <span className="text-[10.5px] text-zinc-500">your own date, set above</span>
             )}
+          </div>
+
+          {/* The timeframe: which list of goals this one belongs on. */}
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={TIMEFRAME_COPY.label}>
+            <span className="text-[11px] text-zinc-500 shrink-0" title={TIMEFRAME_COPY.help}>{TIMEFRAME_COPY.label}</span>
+            {GOAL_TIMEFRAMES.map((tf) => {
+              const active = goal.timeframe === tf
+              return (
+                <button
+                  key={tf}
+                  onClick={() => handlers.onUpdate(goal.id, { timeframe: active ? null : tf })}
+                  aria-pressed={active}
+                  className={`text-[10.5px] px-2 py-0.5 rounded-full border transition-colors ${
+                    active ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-500 hover:text-zinc-200 hover:border-white/25"
+                  }`}
+                >
+                  {TIMEFRAME_COPY.labels[tf]}
+                </button>
+              )
+            })}
           </div>
 
           {/* The shape's own controls. */}

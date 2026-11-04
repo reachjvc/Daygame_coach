@@ -92,8 +92,9 @@ export function fullPlan(): NsPlan {
         beliefs: [{ id: "b1", old: "I am not a runner", useful: false, evidence: "I ran in school", replacement: "I am becoming one" }],
         habits: [{ id: "h1", title: "Morning run", daysPerWeek: 4, placeholder: false }],
         feedsGoalIds: [g2.id],
+        timeframe: "90d",
       },
-      { ...g2, why: "So I can leave a job I hate.", values: ["Discipline"] },
+      { ...g2, why: "So I can leave a job I hate.", values: ["Discipline"], timeframe: "3y" },
     ],
     experiences: [
       { id: "x1", title: "See the northern lights", areaId: health, done: false, doneOn: null, goalId: null },

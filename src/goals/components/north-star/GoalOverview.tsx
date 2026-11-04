@@ -18,8 +18,8 @@ import { useState } from "react"
 import { ChevronRight, X } from "lucide-react"
 import type { NsArea, NsGoal, NsPlan } from "@/src/goals/types"
 import { HORIZON_META, formatCountdown } from "@/src/goals/horizonService"
-import { OVERVIEW_COPY } from "@/src/goals/data/northStar"
-import { goalHorizon, goalIsQualified, goalNeedsAction, goalRank, goalRateLabel, goalsByPriority, isMilestone, milestoneHasSystem } from "@/src/goals/northStarService"
+import { OVERVIEW_COPY, TIMEFRAME_COPY } from "@/src/goals/data/northStar"
+import { GOAL_TIMEFRAMES, goalHorizon, goalIsQualified, goalNeedsAction, goalRank, goalRateLabel, goalsByPriority, isMilestone, milestoneHasSystem } from "@/src/goals/northStarService"
 import { PriorityBadge } from "./GoalCard"
 
 const TYPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
@@ -116,6 +116,18 @@ export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePri
    * number that would make somebody open it.
    */
   const [wantedOpen, setWantedOpen] = useState(false)
+  /**
+   * ONE LIST PER TIMEFRAME, on request (Plans/life-plan-rebuild.md, Phase 4).
+   * Stefan writes goals by horizon: twenty years down to a month. Off by
+   * default, so the list reads as it always has until somebody asks.
+   */
+  const [byTimeframe, setByTimeframe] = useState(false)
+  // With no goals the switch is hidden, so the view falls back to Priority
+  // rather than leaving an empty list with no way back.
+  const showTimeframes = byTimeframe && goals.length > 0
+  const timeframes = [...GOAL_TIMEFRAMES, null]
+    .map((tf) => ({ tf, rows: goals.filter((g) => g.timeframe === tf) }))
+    .filter((group) => group.rows.length > 0)
 
   /**
    * Empty means NOTHING RUNS AND NOTHING IS WANTED, not "no goals".
@@ -136,6 +148,38 @@ export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePri
 
   return (
     <div className="border-t border-white/10">
+      {goals.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 px-5 pt-3" role="group" aria-label={TIMEFRAME_COPY.showBy}>
+          <span className="text-[11px] text-zinc-500">{TIMEFRAME_COPY.showBy}</span>
+          {[false, true].map((on) => (
+            <button
+              key={String(on)}
+              onClick={() => setByTimeframe(on)}
+              aria-pressed={showTimeframes === on}
+              className={`text-[10.5px] px-2 py-0.5 rounded-full border transition-colors ${
+                showTimeframes === on ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-500 hover:text-zinc-200 hover:border-white/25"
+              }`}
+            >
+              {on ? TIMEFRAME_COPY.byTimeframe : TIMEFRAME_COPY.byPriority}
+            </button>
+          ))}
+        </div>
+      )}
+      {showTimeframes ? (
+        <>
+          {timeframes.map(({ tf, rows }) => (
+            <div key={tf ?? "none"}>
+              <div className="flex items-baseline gap-2 px-5 py-3">
+                <h3 className="text-[13px] font-semibold text-zinc-200">{tf ? TIMEFRAME_COPY.labels[tf] : TIMEFRAME_COPY.none}</h3>
+                <span className="ml-auto text-[11px] text-zinc-500 tabular-nums shrink-0">{rows.length}</span>
+              </div>
+              {list(rows)}
+            </div>
+          ))}
+          {steps.length > 0 && <p className="px-5 py-3 text-[11px] text-zinc-500">{TIMEFRAME_COPY.routinesNote}</p>}
+        </>
+      ) : (
+      <>
       {(driving.length > 0 || steps.length > 0) && (
         <>
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 px-5 py-3">
@@ -197,6 +241,8 @@ export function GoalOverview({ plan, today, onOpenGoal, onSetPriority, onMovePri
           </button>
           {wantedOpen && list(wanted)}
         </>
+      )}
+      </>
       )}
     </div>
   )

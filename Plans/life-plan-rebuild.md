@@ -289,6 +289,33 @@ season from one place, and `TAB_ORDER` lists the new steps.
 **Done when:** each of the four shows on a test account, your 13 habits show as routine steps, and a
 Track run adds no `user_goals` rows.
 
+**Part 1 built 2026-11-04: steps 1 and 2.**
+- **Timeframe (Q6).** Migration `20261104160000` adds `life_plan_goals.timeframe` (null, or `1m`, `90d`,
+  `1y`, `3y`, `5y`, `10y`, `20y`). It adds only; every goal starts with none. The open goal card has a
+  "Timeframe" row under the "By" dates (picking the chosen one again clears it). The closed row shows
+  it. The goals list on Everything has "Show by: Priority / Timeframe"; Priority stays the default, so
+  nothing you see moves until you ask. The timeframe is separate from the date: the date is when, the
+  timeframe is which list the goal belongs on. Browser test:
+  `tests/e2e/life-mastery-goal-timeframe.spec.ts`.
+- **Subgoals (Q3).** Most of it was already there: the bigger goal lists the goals that feed it by
+  name, and the open card says which bigger goal it feeds. Missing was your 23 Oct question, "hvordan
+  ser man så hvad overmålet er?": the closed row said "feeds 1". It now names the bigger goal. The
+  bigger goal's list is headed "subgoals".
+- Backup before it: `~/dg-backups/life-plan-2026-11-04-before-phase4.json` (879 rows, 30 tables, made
+  with `json_agg`; revision 919, unchanged since Phase 3).
+- **Live 2026-11-04**: the migration first (checked after: 50 goals, none with a timeframe, revision
+  919), then the code. Order matters: the change-only save drops a key with no column and still reports
+  success, so code before the column would lose picked timeframes silently (the review agent's catch).
+  Its other two finds were fixed: an unused setter that broke the write-coverage test, and the goals
+  list going blank after deleting every goal in the Timeframe view.
+- Found: the browser tests' database is one Docker stack shared by every checkout, but each checkout
+  keeps its own "built from" stamp (`tests/db/supabase/.temp/assembled.sha256`). Another session's
+  rebuild left this checkout's stamp saying "current" over a schema without the new column. Deleting
+  the stamp makes the next run rebuild.
+- **Part 2, not started:** step 3 (habits become routine steps, Q5) and step 4 (Track stops copying into
+  `user_goals`, Q4). Both change what Track and Today read, so each gets its own design pass from the
+  code first.
+
 ### Phase 5. Reviews: week, month, quarter, year (Q7)
 
 1. `life_plan_reviews`: how often, the period, magic moments, lessons, next outcomes. Plus

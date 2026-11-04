@@ -114,6 +114,8 @@ export interface GoalRow {
   days_per_week: number
   per_week: number | null
   is_abstinence: boolean
+  /** `NsGoalTimeframe`, or null until picked. */
+  timeframe: string | null
   serves_one_thing: boolean
   metric: "daily_area" | null
   ladder: unknown | null

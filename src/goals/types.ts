@@ -1373,6 +1373,9 @@ export interface LifeMasteryProgress {
  * of the same page now — the areas and the routines are the same twelve and
  * four either way, and paging between them lost that.
  */
+/** A goal's horizon, shortest first. The stored values of `life_plan_goals.timeframe`. */
+export type NsGoalTimeframe = "1m" | "90d" | "1y" | "3y" | "5y" | "10y" | "20y"
+
 export type NorthStarTabId = "star" | "now" | "one" | "pick" | "templates" | "systems" | "milestones" | "focus" | "values" | "commit" | "track" | "today" | "journal" | "recap"
 
 /**
@@ -1842,6 +1845,12 @@ export interface NsGoal {
   checkpoints: NsCheckpoint[]
   /** Bigger goals this one feeds. Acyclic by construction. */
   feedsGoalIds: string[]
+  /**
+   * How far out it is: a month, ninety days, or 1, 3, 5, 10 or 20 years, the
+   * horizons Stefan cuts goals by. Null until somebody picks one
+   * (Plans/life-plan-rebuild.md, Phase 4).
+   */
+  timeframe: NsGoalTimeframe | null
   /**
    * Written as an answer to "what needs to happen for the one thing to work".
    *

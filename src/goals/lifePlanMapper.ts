@@ -67,7 +67,7 @@ import type {
   SeasonGoalRow,
   ValueRow,
 } from "@/src/db/lifePlanTypes"
-import { normalizeNsPlan } from "./northStarService"
+import { normalizeNsPlan, readTimeframe } from "./northStarService"
 import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, ONE_ANSWERS } from "./data/northStarStart"
 import type { NsPastNorthStar, NsPastSeason } from "./types"
 import { SEASON_ANSWER_KEYS } from "./seasonAnswers"
@@ -219,6 +219,7 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
       days_per_week: clamp(goal.daysPerWeek ?? 0, 0, 7),
       per_week: goal.perWeek ?? null,
       is_abstinence: Boolean(goal.isAbstinence),
+      timeframe: goal.timeframe ?? null,
       serves_one_thing: Boolean(goal.servesOneThing),
       metric: goal.metric ?? null,
       ladder: goal.ladder ?? null,
@@ -671,6 +672,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
       .map((s) => id(s.area_id)),
     asked: g.asked,
     isAbstinence: g.is_abstinence,
+    timeframe: readTimeframe(g.timeframe),
   }))
 
   const routines: NsRoutine[] = routineRows.map((r) => ({
