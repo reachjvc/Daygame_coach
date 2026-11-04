@@ -30,6 +30,25 @@ names, short URL slugs, search aliases) and `build.py`, which merges the JSON
 files here into the page. Rebuild with `python3 board/build.py <out.html>` and
 publish the output to the same URL.
 
+## Round 2: the template (2026-11-04)
+
+https://claude.ai/artifact/8D5nSxoACGvVn7PBRHbCus rebuilds the owner's 2025
+nicotine one-pager as one template for eight addictions (alcohol, nicotine,
+weed, cocaine, porn, betting, phone, sugar), switched by tabs: a big hopeful
+number, his five-step plan in his own words, a timeline in two simpler styles
+(Line, Grid), a Current belief / New belief table, three numbers, a box for his
+own experience, forum themes, sources. Content is `06-template.json`; every
+ref key points at a ref in files 01-04 (or `globalRefs`). Build with
+`python3 board/build_template.py <out.html>` (template `board/template-v2.html`;
+it also reads `community/leaves-stages.json` when present) and publish to the
+same URL. His marks are in its db: `marks/blk-<block>`, `marks/tl-line`,
+`marks/tl-grid`, `marks/row-<addiction id>-<row>` (Keep = yes, Cut = no),
+`marks/general`, and his own text in `experience/<addiction id>`.
+
+The owner's general note on the first board (marks/general there) sets the
+tone: the pages carry his brand's edge and are written for the 98% who can help
+themselves; danger lines stay where they are relevant, small, not up front.
+
 ## The integrity rule
 
 Same rule as `docs/research/recovery-testimonials/README.md`, applied to science:

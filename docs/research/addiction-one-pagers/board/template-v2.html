@@ -1,0 +1,436 @@
+<title>Addiction One-Pager Template</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Source+Sans+3:ital,wght@0,400..700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: the owner's 2025 nicotine poster grown into a template. Sticky addiction tabs; a lab strip; then one printed-looking sheet (hero number + plan, timeline band with a rotated label, the belief table with pink headers, numbers, own experience, forum themes, sources). Lab controls sit in dashed bars so they never read as page content. */
+:root {
+  --bg: #ecebe8;
+  --paper: #ffffff;
+  --ink: #161414;
+  --ink-2: #4b4646;
+  --muted: #7a7372;
+  --rule: #1d1a1a;
+  --hair: #d9d4d2;
+  --panel: #e8e5e3;
+  --pink: #f7d4d5;
+  --red: #d2202a;
+  --feel: #6b6463;
+  --watch: #a65c00;
+  --danger: #c41d2a;
+  --win: #1c7a3c;
+  --lab: #2f5f8f;
+  --lab-bg: #eef3f8;
+  --ph-bg: #fbf1d4;
+  --ph-line: #e1cd8c;
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121010; --paper: #1c1919; --ink: #f2eeed; --ink-2: #c8c1c0; --muted: #958d8c;
+    --rule: #d8d2d1; --hair: #3a3434; --panel: #272323; --pink: #4a2629; --red: #ff5c63;
+    --feel: #b0a8a7; --watch: #e3a33c; --danger: #ff6b72; --win: #5cc681;
+    --lab: #8fbbe6; --lab-bg: #1a232d; --ph-bg: #2e2714; --ph-line: #6b5a24; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121010; --paper: #1c1919; --ink: #f2eeed; --ink-2: #c8c1c0; --muted: #958d8c;
+  --rule: #d8d2d1; --hair: #3a3434; --panel: #272323; --pink: #4a2629; --red: #ff5c63;
+  --feel: #b0a8a7; --watch: #e3a33c; --danger: #ff6b72; --win: #5cc681;
+  --lab: #8fbbe6; --lab-bg: #1a232d; --ph-bg: #2e2714; --ph-line: #6b5a24; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; font-family: var(--f-display); text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--lab); outline-offset: 2px; }
+
+/* top bar with the eight tabs */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--paper); border-bottom: 2px solid var(--rule); }
+.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; }
+.top .name { font-family: var(--f-display); font-weight: 800; font-stretch: 75%; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
+.tab:hover { border-color: var(--ink-2); }
+.tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+/* lab strip */
+.lab { padding-block: 22px 18px; }
+.lab .wrap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; }
+.lab h2 { font-size: 22px; font-weight: 800; font-stretch: 80%; }
+.lab ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); display: grid; gap: 3px; font-size: 15px; }
+.labbox { border: 1.5px dashed var(--lab); background: var(--lab-bg); border-radius: 10px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.labbox label, .eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lab); }
+.labbox textarea, .exp textarea { width: 100%; font: inherit; font-size: 15px; padding: 9px 11px; border: 1px solid var(--hair); border-radius: 8px; background: var(--paper); color: var(--ink); resize: vertical; }
+.seg { justify-self: start; display: inline-flex; border: 1.5px solid var(--lab); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--lab); }
+.seg button[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
+.dbstate { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+
+/* lab bars on each block */
+.labbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 1px dashed var(--lab); background: var(--lab-bg); border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; font-size: 13px; }
+.labbar .lbl { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--lab); margin-right: 4px; }
+.mk { border: 1px solid var(--hair); background: var(--paper); border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.mk[aria-pressed="true"][data-v="yes"] { background: var(--win); border-color: var(--win); color: var(--paper); }
+.mk[aria-pressed="true"][data-v="maybe"] { background: var(--watch); border-color: var(--watch); color: var(--paper); }
+.mk[aria-pressed="true"][data-v="no"] { background: var(--danger); border-color: var(--danger); color: var(--paper); }
+.labbar input { flex: 1 1 200px; min-width: 0; font: inherit; font-size: 13.5px; padding: 4px 8px; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); color: var(--ink); }
+
+/* the sheet */
+.sheet { background: var(--paper); border: 2px solid var(--rule); margin-bottom: 48px; }
+.blk { padding: 22px 26px; border-top: 2px solid var(--rule); }
+.blk:first-child { border-top: 0; }
+.urlchip { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.head { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 32px; align-items: start; }
+.hero { border-left: 6px solid var(--red); padding-left: 18px; display: grid; gap: 6px; }
+.hero .big { font-family: var(--f-display); font-weight: 900; font-stretch: 68%; font-size: clamp(64px, 11vw, 120px); line-height: .9; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.hero .line { font-family: var(--f-display); font-weight: 700; font-stretch: 85%; font-size: 22px; line-height: 1.2; }
+.hero .sub { color: var(--ink-2); font-size: 16px; }
+.titlebox { display: grid; gap: 10px; }
+.titlebox h1 { font-size: clamp(34px, 5vw, 52px); font-weight: 800; font-stretch: 80%; line-height: 1; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--f-mono); font-size: 12px; padding: 2px 8px; background: var(--panel); }
+.plan h3 { color: var(--red); font-size: 17px; font-weight: 800; font-stretch: 85%; letter-spacing: .03em; text-transform: uppercase; }
+.plan ol { margin: 8px 0 0; padding-left: 26px; display: grid; gap: 6px; font-size: 15.5px; }
+.plan li::marker { font-weight: 700; }
+.plan .who { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+
+/* banded sections with a rotated label, like the 2025 poster */
+.band { display: grid; grid-template-columns: 46px minmax(0, 1fr); border-top: 2px solid var(--rule); }
+.band > .vlabel { background: var(--pink); border-right: 2px solid var(--rule); display: flex; align-items: center; justify-content: center; }
+.band > .vlabel span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: 22px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.band > .body { padding: 20px 24px 22px; min-width: 0; }
+.tlnote { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-2); margin-top: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.k-feel { --k: var(--feel); } .k-watch { --k: var(--watch); } .k-danger { --k: var(--danger); } .k-win { --k: var(--win); }
+
+/* timeline form A: one line of milestones */
+.tl-line { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; }
+.tl-line li { position: relative; padding: 26px 12px 0 0; }
+.tl-line li::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 3px; background: var(--ink); }
+.tl-line li:last-child::before { right: 50%; }
+.tl-line .dot { position: absolute; top: 0; left: 0; width: 19px; height: 19px; border-radius: 50%; background: var(--paper); border: 4px solid var(--k); }
+.tl-line .k-danger .dot, .tl-line li.k-danger .dot { background: var(--k); }
+.tl-line .when { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 18px; line-height: 1.1; color: var(--k); }
+.tl-line .k-feel .when { color: var(--ink); }
+.tl-line .txt { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+
+/* timeline form B: stages by what you feel / watch for / gain */
+.tl-gridwrap { overflow-x: auto; margin-top: 16px; }
+.tl-grid { display: grid; min-width: 640px; border: 1.5px solid var(--rule); }
+.tl-grid > div { padding: 10px 12px; border-right: 1px solid var(--hair); border-bottom: 1px solid var(--hair); font-size: 14px; min-width: 0; }
+.tl-grid .sh { background: var(--panel); font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 17px; border-bottom: 1.5px solid var(--rule); }
+.tl-grid .rh { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--k); background: var(--paper); }
+.tl-grid .cell { display: grid; gap: 8px; align-content: start; }
+.tl-grid .it b { font-family: var(--f-mono); font-size: 12px; font-weight: 600; display: block; color: var(--k); }
+.tl-grid .it.k-feel b { color: var(--muted); }
+.tl-grid .it.k-danger { border-left: 3px solid var(--danger); padding-left: 7px; }
+
+/* beliefs table */
+.btable { width: 100%; border-collapse: collapse; }
+.btable th { background: var(--pink); font-family: var(--f-display); font-weight: 900; font-stretch: 75%; font-size: clamp(20px, 3vw, 30px); letter-spacing: .03em; text-transform: uppercase; text-align: center; padding: 10px; border: 2px solid var(--rule); border-top: 0; }
+.btable td { vertical-align: top; padding: 12px 14px; border: 1px solid var(--hair); border-left: 2px solid var(--rule); }
+.btable td.cur { background: var(--panel); width: 40%; font-size: 15.5px; }
+.btable td.new { font-weight: 700; font-size: 16.5px; }
+.btable td.new .proof { display: block; font-weight: 400; font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.btable td.rowmk { width: 1%; white-space: nowrap; border-right: 2px solid var(--rule); background: var(--lab-bg); }
+.btable td.rowmk .mk { display: block; margin: 0 0 4px; width: 100%; }
+.btable th.rowmk { background: var(--lab-bg); font-family: var(--f-mono); font-size: 11px; color: var(--lab); font-weight: 400; letter-spacing: .06em; }
+.btable tr.cut td.new, .btable tr.cut td.cur { opacity: .45; }
+
+.ref { font-family: var(--f-mono); font-size: 11px; color: var(--muted); cursor: pointer; border: 0; background: none; padding: 0 1px; vertical-align: super; line-height: 0; }
+.ref:hover { color: var(--red); }
+.ref.unc { color: var(--watch); }
+
+/* numbers */
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+.num { padding: 4px 20px 4px 0; display: grid; gap: 4px; align-content: start; }
+.num + .num { border-left: 1px solid var(--hair); padding-left: 20px; }
+.num .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.num p { font-size: 15px; color: var(--ink-2); }
+
+/* experience + forum */
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+.two h3 { font-size: 22px; font-weight: 800; font-stretch: 80%; }
+.exp { display: grid; gap: 8px; align-content: start; }
+.exp .prompts { color: var(--muted); font-size: 14px; }
+.exp textarea { min-height: 150px; }
+.ph { background: var(--ph-bg); border: 1px dashed var(--ph-line); padding: 12px 14px; font-size: 14.5px; color: var(--ink-2); display: grid; gap: 6px; }
+.stage { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--hair); }
+.stage b { font-family: var(--f-display); font-stretch: 80%; font-size: 16px; }
+.bar { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; align-items: center; font-size: 14px; }
+.bar .meter { height: 6px; background: var(--panel); position: relative; grid-column: 1 / -1; }
+.bar .meter i { position: absolute; inset: 0 auto 0 0; background: var(--ink-2); }
+.bar span:last-of-type { text-align: right; font-family: var(--f-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+/* footer */
+.safety { display: flex; gap: 10px; align-items: baseline; font-size: 15px; }
+.safety b { color: var(--danger); font-family: var(--f-display); font-stretch: 80%; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+details.src summary { cursor: pointer; font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 18px; }
+details.src ol { margin: 10px 0 0; padding-left: 26px; display: grid; gap: 6px; font-size: 13.5px; color: var(--ink-2); }
+details.src li.flash { background: var(--ph-bg); }
+details.src .u { font-family: var(--f-mono); font-size: 11px; color: var(--watch); margin-left: 6px; }
+details.src a { color: var(--lab); word-break: break-word; }
+
+@media (max-width: 860px) {
+  .lab .wrap, .head, .two { grid-template-columns: minmax(0, 1fr); }
+  .nums { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .num + .num { border-left: 0; padding-left: 0; border-top: 1px solid var(--hair); padding-top: 14px; }
+  .tl-line { grid-auto-flow: row; grid-auto-columns: auto; gap: 0; }
+  .tl-line li { padding: 0 0 18px 32px; }
+  .tl-line li::before { left: 8px; right: auto; top: 0; bottom: 0; width: 3px; height: auto; }
+  .tl-line li:last-child::before { bottom: auto; height: 10px; right: auto; }
+  .btable thead { display: none; }
+  .btable, .btable tbody, .btable tr, .btable td { display: block; width: 100%; }
+  .btable tr { border: 2px solid var(--rule); border-top: 0; }
+  .btable tr:first-child { border-top: 2px solid var(--rule); }
+  .btable td { border: 0; }
+  .btable td.cur::before { content: "Current belief"; }
+  .btable td.new::before { content: "New belief"; }
+  .btable td.cur::before, .btable td.new::before { display: block; font-family: var(--f-mono); font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
+  .btable td.rowmk { width: 100%; display: flex; gap: 8px; border: 0; }
+  .btable td.rowmk .mk { display: inline-block; width: auto; margin: 0; }
+  .band { grid-template-columns: 30px minmax(0, 1fr); }
+  .band > .vlabel span { font-size: 16px; }
+  .band > .body, .blk { padding: 16px 14px; }
+}
+@media (prefers-reduced-motion: no-preference) { .tab, .mk { transition: background .15s, color .15s, border-color .15s; } }
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="name">One-pager template</div>
+  <nav class="tabs" role="tablist" aria-label="Addiction" id="tabs"></nav>
+</div></header>
+
+<section class="lab"><div class="wrap">
+  <div>
+    <div class="eyebrow">Round 2 &middot; 4 Nov 2026 &middot; built from your 2025 nicotine one-pager</div>
+    <h2 style="margin-top:6px">One template, eight addictions. Switch with the tabs above.</h2>
+    <ul>
+      <li>New: a <b>Current belief / New belief</b> table for each addiction. Every new belief has a one-line proof and a source.</li>
+      <li>The timeline comes in two simpler styles. Switch on the right and mark the one that reads better. The curves chart is still on the old lab board.</li>
+      <li>Your five-step plan is in, in your words. Only the substance word changes per page.</li>
+      <li>Danger lines are small and sit where they matter (alcohol day 1&ndash;2, coke crash, betting losses), as your note asked.</li>
+      <li>Write your own experience in the box near the bottom. It saves as you type.</li>
+      <li>Mark any block Yes / Maybe / No, and keep or cut each belief row.</li>
+    </ul>
+  </div>
+  <div class="labbox">
+    <span class="eyebrow">Timeline style</span>
+    <div class="seg" id="tlSeg"><button type="button" data-f="line" aria-pressed="true">Line</button><button type="button" data-f="grid" aria-pressed="false">Grid</button></div>
+    <label for="genNote">Your note on this round</label>
+    <textarea id="genNote" rows="3" placeholder="Anything about the template as a whole"></textarea>
+    <div class="dbstate" id="dbstate">Connecting&hellip;</div>
+  </div>
+</div></section>
+
+<main class="wrap"><article class="sheet" id="sheet"></article></main>
+
+<script>
+const DATA = /*DATA*/;
+const SLUG = { alcohol: "alcohol", nicotine: "nicotine", cannabis: "weed", cocaine: "cocaine", porn: "porn", gambling: "betting", "social-media-phones": "phone", "binge-eating-and-ultra-processed-food": "sugar" };
+const KIND = { feel: "What you feel", watch: "Watch out", danger: "Danger", win: "Gets better" };
+const STAGES = [
+  { k: "d3", label: "Days 1–3", max: 72 },
+  { k: "w2", label: "Days 4–14", max: 336 },
+  { k: "w8", label: "Weeks 3–8", max: 1440 },
+  { k: "m6", label: "Months 2–6", max: 4380 },
+  { k: "later", label: "6 months +", max: Infinity },
+];
+const MARKS = {}, EXP = {};
+let db = null, dbReady = false, page = DATA.pages[0];
+let tlForm = "line";
+try { tlForm = localStorage.getItem("tlForm") || "line"; } catch (e) {}
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const refs = ns => ns && ns.length ? `<button type="button" class="ref${ns.some(n => page.unchecked.includes(n)) ? " unc" : ""}" data-refs="${ns.join(",")}">[${ns.join(",")}]</button>` : "";
+const fill = s => s.replace(/\{(\w+)\}/g, (_, k) => page.subs[k] || k);
+
+function markBar(key, label) {
+  const m = MARKS[key] || {};
+  return `<div class="labbar" data-key="${key}"><span class="lbl">${esc(label)}</span>${["yes", "maybe", "no"].map(v => `<button type="button" class="mk" data-v="${v}" aria-pressed="${m.v === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join("")}<input type="text" id="note-${key}" placeholder="Note" value="${esc(m.note || "")}" aria-label="Note on ${esc(label)}"></div>`;
+}
+
+function timelineLine() {
+  const ms = page.milestones;
+  return `<ol class="tl-line">${ms.map(m => `<li class="k-${m.kind}"><span class="dot"></span><div class="when">${esc(m.when)}</div><div class="txt">${esc(m.text)} ${refs(m.n)}</div></li>`).join("")}</ol>`;
+}
+
+function timelineGrid() {
+  const cols = [];
+  const untimed = page.milestones.filter(m => m.atH == null);
+  STAGES.forEach((s, i) => {
+    const lo = i ? STAGES[i - 1].max : -1;
+    const items = page.milestones.filter(m => m.atH != null && m.atH > lo && m.atH <= s.max);
+    if (items.length) cols.push({ label: s.label, items });
+  });
+  if (untimed.length) cols.push({ label: "No set time", items: untimed });
+  const rows = [["feel", ["feel"]], ["watch", ["watch", "danger"]], ["win", ["win"]]];
+  let h = `<div class="tl-gridwrap"><div class="tl-grid" style="grid-template-columns: 8.5rem repeat(${cols.length}, minmax(0, 1fr))"><div class="sh"></div>`;
+  h += cols.map(c => `<div class="sh">${esc(c.label)}</div>`).join("");
+  rows.forEach(([rk, kinds]) => {
+    h += `<div class="rh k-${rk}">${KIND[rk]}</div>`;
+    h += cols.map(c => `<div class="cell">${c.items.filter(m => kinds.includes(m.kind)).map(m => `<div class="it k-${m.kind}"><b>${esc(m.when)}</b>${esc(m.text)} ${refs(m.n)}</div>`).join("")}</div>`).join("");
+  });
+  return h + `</div></div>`;
+}
+
+function community() {
+  const c = page.community;
+  const L = DATA.leaves;
+  if (page.id === "cannabis" && L && Array.isArray(L.stages)) {
+    const st = L.stages.map(s => `<div class="stage"><b>${esc(s.stage)}</b> <span class="urlchip">${s.n} posts</span>${(s.themes || []).slice(0, 3).map(t => `<div class="bar"><span>${esc(t.theme)}</span><span>${Math.round((t.share || 0) * 100)}%</span><div class="meter"><i style="width:${Math.round((t.share || 0) * 100)}%"></i></div></div>`).join("")}</div>`).join("");
+    const rel = L.relapse && L.relapse.reasons ? `<p style="margin-top:10px"><b>Why people slipped:</b> ${L.relapse.reasons.slice(0, 3).map(r => esc(r.reason)).join("; ")}.</p>` : "";
+    const n = L.method && (L.method.nWithDuration || L.method.n_with_duration || L.method.n);
+    return `<h3>What ${n ? esc(n) + " " : ""}r/leaves posters report</h3><p class="tlnote">Share of posts at each stage that mention it. People post more when it is hard.</p>${st}${rel}`;
+  }
+  const msg = c.status === "running"
+    ? `A pilot is reading 1,000+ posts on ${esc(c.forum)}, sorted by how long each writer had been off. What people report at each stage, and when they slip, lands here.`
+    : `Not harvested yet. Source to use: ${esc(c.forum)}. Same method as the weed pilot: sort posts by day count, count what people report at each stage.`;
+  return `<h3>What others report</h3><div class="ph"><span class="eyebrow" style="color:var(--watch)">Placeholder</span>${msg}</div>`;
+}
+
+function render() {
+  const p = page;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.id === p.id));
+  const goal = p.mode === "reshape" ? "Goal: cut down, not zero" : "Goal: stop fully";
+  const rowsHtml = p.beliefs.map((b, i) => {
+    const key = `row-${p.id}-${i}`, v = (MARKS[key] || {}).v;
+    return `<tr class="${v === "no" ? "cut" : ""}" data-key="${key}"><td class="cur">${esc(b.current)}</td><td class="new">${esc(b.new)}<span class="proof">${esc(b.proof)} ${refs(b.n)}</span></td><td class="rowmk"><button type="button" class="mk" data-v="yes" aria-pressed="${v === "yes"}">Keep</button><button type="button" class="mk" data-v="no" aria-pressed="${v === "no"}">Cut</button></td></tr>`;
+  }).join("");
+  $("#sheet").innerHTML = `
+  <section class="blk">
+    ${markBar("blk-head", "Header: big number + your plan")}
+    <div class="head">
+      <div class="hero"><div class="urlchip">yoursite.com/quit/${SLUG[p.id]}</div><div class="big">${esc(p.hero.big)}</div><div class="line">${esc(p.hero.line)} ${refs(p.hero.n)}</div><div class="sub">${esc(p.hero.sub)}</div></div>
+      <div class="titlebox">
+        <h1>${esc(p.title)}</h1>
+        <div class="tags"><span class="tag">${goal}</span></div>
+        <div class="plan"><h3>Five-step strategic plan</h3><ol>${DATA.plan.map(s => `<li>${fill(s)}</li>`).join("")}</ol><div class="who">Your 2025 text, lightly edited. Only the substance word changes per page.</div></div>
+      </div>
+    </div>
+  </section>
+  <section class="band"><div class="vlabel"><span>Timeline</span></div><div class="body">
+    ${markBar("tl-" + tlForm, tlForm === "line" ? "Timeline style: Line" : "Timeline style: Grid")}
+    <h2 style="font-size:24px;font-weight:800;font-stretch:80%">What the first weeks and months are like</h2>
+    <p class="tlnote">${esc(p.timelineNote)}</p>
+    <div class="legend">${["feel", "watch", "danger", "win"].map(k => `<span class="k-${k}"><i style="background:var(--k)"></i>${KIND[k]}</span>`).join("")}</div>
+    ${tlForm === "line" ? timelineLine() : timelineGrid()}
+  </div></section>
+  <section class="band"><div class="vlabel"><span>Beliefs</span></div><div class="body">
+    ${markBar("blk-beliefs", "Belief table")}
+    <table class="btable"><thead><tr><th>Current beliefs</th><th>New beliefs</th><th class="rowmk">Lab</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+  </div></section>
+  <section class="band"><div class="vlabel"><span>Numbers</span></div><div class="body">
+    ${markBar("blk-numbers", "In numbers")}
+    <div class="nums">${p.numbers.map(x => `<div class="num"><div class="big">${esc(x.big)}</div><p>${esc(x.text)} ${refs(x.n)}</p></div>`).join("")}</div>
+  </div></section>
+  <section class="blk"><div class="two">
+    <div class="exp">
+      ${markBar("blk-experience", "Your experience")}
+      <h3>My experience</h3>
+      <p class="prompts">In your words: what it was like at the start, the hardest day, what you told yourself, what finally worked.</p>
+      <textarea id="expText" placeholder="Write your own experience with ${esc(p.tab.toLowerCase())} here. It saves as you type.">${esc((EXP[p.id] || {}).text || "")}</textarea>
+      <div class="dbstate" id="expState"></div>
+    </div>
+    <div>${markBar("blk-community", "What others report")}${community()}</div>
+  </div></section>
+  <section class="blk" style="display:grid;gap:14px">
+    ${p.footer ? `<p class="safety"><b>If it gets bad</b><span>${esc(p.footer.text)} ${refs(p.footer.n)}</span></p>` : ""}
+    <details class="src" id="srcBox"><summary>Sources (${p.sources.length})</summary><ol>${p.sources.map(s => `<li id="src-${s.n}">${esc(s.cite)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">link</a>` : ""}${s.fetched ? "" : `<span class="u">unchecked</span>`}</li>`).join("")}</ol></details>
+  </section>`;
+}
+
+function show(id) {
+  page = DATA.pages.find(p => p.id === id || SLUG[p.id] === id) || DATA.pages[0];
+  render();
+}
+
+function save(coll, key, body) {
+  if (!db) { $("#dbstate").textContent = "Not saved: marks save only when this page is opened on claude.ai."; return; }
+  db.doc(`${coll}/${key}`).set({ ...body, t: new Date().toISOString() }).catch(() => { $("#dbstate").textContent = "Could not save. Check your connection and try again."; });
+}
+
+document.addEventListener("click", e => {
+  const tab = e.target.closest(".tab");
+  if (tab) { location.hash = SLUG[tab.dataset.id]; return; }
+  const seg = e.target.closest("#tlSeg button");
+  if (seg) {
+    tlForm = seg.dataset.f;
+    try { localStorage.setItem("tlForm", tlForm); } catch (err) {}
+    document.querySelectorAll("#tlSeg button").forEach(b => b.setAttribute("aria-pressed", b === seg));
+    render(); return;
+  }
+  const mk = e.target.closest(".mk");
+  if (mk) {
+    const host = mk.closest("[data-key]"), key = host.dataset.key;
+    const cur = MARKS[key] || {};
+    const v = cur.v === mk.dataset.v ? null : mk.dataset.v;
+    MARKS[key] = { ...cur, v };
+    save("marks", key, MARKS[key]);
+    render(); return;
+  }
+  const r = e.target.closest(".ref");
+  if (r) {
+    const box = $("#srcBox"); box.open = true;
+    const first = $(`#src-${r.dataset.refs.split(",")[0]}`);
+    document.querySelectorAll("details.src li.flash").forEach(x => x.classList.remove("flash"));
+    r.dataset.refs.split(",").forEach(n => { const li = $(`#src-${n}`); if (li) li.classList.add("flash"); });
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+let tmr = null;
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.id === "expText") {
+    EXP[page.id] = { text: t.value };
+    clearTimeout(tmr); $("#expState").textContent = "Saving…";
+    const pid = page.id, val = t.value;
+    tmr = setTimeout(() => { save("experience", pid, { text: val }); $("#expState").textContent = db ? "Saved." : ""; }, 800);
+  }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.id === "genNote") { MARKS.general = { note: t.value }; save("marks", "general", MARKS.general); }
+  else if (t.id && t.id.startsWith("note-")) {
+    const key = t.id.slice(5);
+    MARKS[key] = { ...(MARKS[key] || {}), note: t.value };
+    save("marks", key, MARKS[key]);
+  }
+});
+
+$("#tabs").innerHTML = DATA.pages.map(p => `<button type="button" role="tab" class="tab" data-id="${p.id}">${esc(p.tab)}</button>`).join("");
+document.querySelectorAll("#tlSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === tlForm));
+show(location.hash.slice(1));
+window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+
+(async () => {
+  const st = $("#dbstate");
+  if (!window.claude || !window.claude.use) { st.textContent = "Marks save only when this page is opened on claude.ai."; return; }
+  const timer = setTimeout(() => { if (!dbReady) st.textContent = "Still connecting. Marks may not save yet."; }, 10000);
+  db = await window.claude.use("db");
+  if (!db) { clearTimeout(timer); st.textContent = "Marks save only for you, signed in on claude.ai."; return; }
+  const onErr = () => { clearTimeout(timer); st.textContent = "Could not load saved marks. Reload the page to try again."; };
+  const active = () => document.activeElement && (document.activeElement.id === "expText" || document.activeElement.id.startsWith("note-"));
+  db.collection("marks").onSnapshot(s => {
+    s.docs.forEach(x => { MARKS[x.id] = x.data() || {}; });
+    dbReady = true; clearTimeout(timer); st.textContent = "Marks and notes save automatically.";
+    if (MARKS.general && document.activeElement.id !== "genNote") $("#genNote").value = MARKS.general.note || "";
+    if (!active()) render();
+  }, onErr);
+  db.collection("experience").onSnapshot(s => {
+    s.docs.forEach(x => { EXP[x.id] = x.data() || {}; });
+    if (!active()) render();
+  }, onErr);
+})();
+</script>

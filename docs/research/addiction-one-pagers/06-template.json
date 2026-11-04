@@ -1,0 +1,266 @@
+{
+  "about": "Round 2 of the one-pager: the owner's 2025 nicotine one-pager rebuilt as a template for eight addictions. Ref keys are the research item's own ids (r1, r2...) or ids in globalRefs. Every belief, milestone and number points at a ref already fetched in files 01-04, except where a ref there says fetched: false (shown as unchecked).",
+  "plan": [
+    "Identify what <b>beliefs</b> are driving your {thing}. Find a positive reframe (the table below).",
+    "Find “80%” alternatives: if you think {thing} relaxes you, find something that meets 80% of that need, like reading, a show, or talking to a friend.",
+    "Set a date (some days or weeks ahead) and make this <i>the one thing</i> for the next three months. Every day you keep that promise to yourself is a complete success. If you slip, go back through steps 1–3.",
+    "From that day on, <b>act, think and feel as if you have already quit</b>. Ask yourself: “why would I {verb}, when I’ve been {free} for a year already and I enjoy my life so much more now?”",
+    "Get help (optional): friends, family, therapy, rehab, 12-step groups, or 1-on-1 help from me."
+  ],
+  "globalRefs": [
+    {
+      "id": "lq",
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.",
+      "kind": "survey",
+      "pmid": "21077975",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/",
+      "fetched": true,
+      "supports": "Lifetime remission 83.7% nicotine, 90.6% alcohol, 97.2% cannabis, 99.2% cocaine; half remitted about 26, 14, 6 and 5 years after onset. Abstract re-fetched 2026-11-04."
+    }
+  ],
+  "pages": [
+    {
+      "id": "alcohol",
+      "tab": "Alcohol",
+      "title": "Quitting alcohol",
+      "mode": "quit",
+      "subs": { "thing": "drinking", "verb": "drink", "free": "sober" },
+      "hero": { "big": "90.6%", "line": "of people who were ever hooked on alcohol get out.", "sub": "Half took about 14 years. You don’t have to wait that long.", "refs": ["lq"] },
+      "timelineNote": "Withdrawal is well measured for alcohol. Many people get less than this.",
+      "milestones": [
+        { "atH": 12, "when": "6–24 hours", "kind": "feel", "text": "Shaky, sweaty, anxious, can’t sleep. Withdrawal starts.", "refs": ["r1"] },
+        { "atH": 24, "when": "Day 1–2", "kind": "danger", "text": "If you drank heavily every day, seizure risk peaks here (8–48 hours). Don’t do these days alone.", "refs": ["r1"] },
+        { "atH": 72, "when": "Day 2–5", "kind": "danger", "text": "Confusion or seeing things is an emergency (the DTs). Call for help.", "refs": ["r1"] },
+        { "atH": 96, "when": "Day 4", "kind": "watch", "text": "You feel better, and the thought comes: “maybe it wasn’t that bad.”", "refs": ["r12"] },
+        { "atH": 672, "when": "Week 4", "kind": "win", "text": "The low mood lifts for most. In 191 men, depression fell from 42% to 6%.", "refs": ["r15"] },
+        { "atH": 1440, "when": "Day 60", "kind": "watch", "text": "Cravings set off by Fridays, bars and old friends are at their strongest. Expected, not failure.", "refs": ["r7"] },
+        { "atH": 5000, "when": "Months 5–9", "kind": "win", "text": "Falling asleep is back to normal. Deep sleep keeps improving for 1–2 years.", "refs": ["r13"] }
+      ],
+      "beliefs": [
+        { "current": "I need a drink to unwind after work.", "new": "Drinking doesn’t take my stress away. It takes my sleep, and sleep is what would.", "proof": "In sleep-lab studies, heavy drinkers who stopped needed 5–9 months before they fell asleep normally again.", "refs": ["r13"] },
+        { "current": "I only drink beer and wine, not the hard stuff.", "new": "A beer, a glass of wine and a shot are the same drink to my body.", "proof": "Each holds about 14 grams of pure alcohol. The body counts the alcohol, not the bottle.", "refs": ["r9"] },
+        { "current": "I’m not an alcoholic. It’s not that bad.", "new": "I don’t need a label to decide I want more from life than this.", "proof": "90% of US heavy drinkers did not meet the criteria for dependence. Harm doesn’t wait for a diagnosis: WHO says no amount is risk-free.", "refs": ["r10", "r8"] },
+        { "current": "I’ve been drinking for years. I’m stuck with it.", "new": "Most people who get hooked on alcohol get out. I’m doing it now.", "proof": "90.6% of Americans ever dependent on alcohol eventually got out; half within about 14 years.", "refs": ["lq"] },
+        { "current": "Day 4, I feel fine. Maybe it wasn’t that bad.", "new": "Feeling better is the quitting working, not proof I never had to.", "proof": "Cravings set off by cues measured highest at day 60, long after the body feels fine.", "refs": ["r7"] },
+        { "current": "If I can’t quit forever, why bother?", "new": "Every day I keep my promise is a complete win in itself.", "proof": "Total abstinence isn’t the only road: across 22 studies, cutting down worked as a goal for many, especially with support.", "refs": ["r5"] },
+        { "current": "I’ll just stop on my own this weekend.", "new": "If I drink heavily every day, I stop with a doctor, not alone on a Saturday.", "proof": "Withdrawal seizures cluster 8–48 hours after the last drink. Most people can withdraw at home, with medication and someone checking in.", "refs": ["r1"] }
+      ],
+      "numbers": [
+        { "big": "90%", "text": "of US heavy drinkers don’t meet the criteria for dependence.", "refs": ["r10"] },
+        { "big": "1 in 12", "text": "For every 12 people who take acamprosate, one is kept from drinking again.", "refs": ["r4"] },
+        { "big": "2.6 million", "text": "deaths worldwide were caused by alcohol in 2019.", "refs": ["r8"] }
+      ],
+      "footer": { "text": "Drinking heavily every day? Talk to a doctor before you stop: seizures can come 8–48 hours after the last drink.", "refs": ["r1"] },
+      "community": { "forum": "r/stopdrinking", "status": "todo" }
+    },
+    {
+      "id": "nicotine",
+      "tab": "Nicotine",
+      "title": "Quitting nicotine",
+      "mode": "quit",
+      "subs": { "thing": "smoking", "verb": "smoke", "free": "nicotine-free" },
+      "hero": { "big": "83.7%", "line": "of people who were ever hooked on nicotine get out.", "sub": "Half took about 26 years. You don’t have to wait that long.", "refs": ["lq"] },
+      "timelineNote": "Measured in smokers. Vape-only and pouch-only quitters have not been timed.",
+      "milestones": [
+        { "atH": 48, "when": "Day 1–3", "kind": "feel", "text": "Irritable, restless, can’t focus. The first week is the worst of it.", "refs": ["r1"] },
+        { "atH": 192, "when": "First 8 days", "kind": "watch", "text": "Most relapses happen here.", "refs": ["r3"] },
+        { "atH": 336, "when": "Week 2", "kind": "watch", "text": "One puff matters: 83–97% of patch users who smoked at all in week 2 were smoking again at 6 months.", "refs": ["r4"] },
+        { "atH": 600, "when": "Weeks 2–4", "kind": "win", "text": "The withdrawal fades out.", "refs": ["r1"] },
+        { "atH": 840, "when": "Week 5", "kind": "watch", "text": "Cravings set off by coffee, a drink or a break can be stronger than in week 1. Expected.", "refs": ["r2"] },
+        { "atH": 2160, "when": "Month 3", "kind": "feel", "text": "Most of any weight gain has happened: 4–5 kg on average by a year; 16% lose weight.", "refs": ["r9"] },
+        { "atH": 8760, "when": "Year 1+", "kind": "win", "text": "Less anxiety, depression and stress than people who kept smoking. An urge can still pop up; it’s strong for about 1 in 10.", "refs": ["r10", "r19"] }
+      ],
+      "beliefs": [
+        { "current": "A cigarette is the only thing that calms me down.", "new": "Smoking creates the stress it seems to relieve. Quitting is what calms me down.", "proof": "Across 26 studies, people who quit had less anxiety, depression and stress than people who kept smoking: as big a change as antidepressants give.", "refs": ["r10"] },
+        { "current": "I enjoy it. I don’t want to give it up.", "new": "Much of the enjoyment is relief from an itch nicotine gave me. The itch is gone within a month.", "proof": "The irritability, anxiety and restlessness between doses peak in the first week off and fade over 2–4 weeks.", "refs": ["r1"] },
+        { "current": "Smoking keeps my weight down.", "new": "A few kilos is a fair trade, and I can handle them.", "proof": "Average gain is 4–5 kg after a year, mostly in the first 3 months. 16% of quitters lose weight.", "refs": ["r9"] },
+        { "current": "I’ve smoked too long. It’s too late.", "new": "Most smokers get out eventually. I’m just not waiting 26 years.", "proof": "83.7% of Americans ever dependent on nicotine got out; half took about 26 years from getting hooked.", "refs": ["r15"] },
+        { "current": "Just one won’t hurt. I’m still quit.", "new": "There’s no “just one”. One is how quit turns into smoking again.", "proof": "Among patch users who smoked at all in week 2, 83–97% were smoking again at 6 months.", "refs": ["r4"] },
+        { "current": "Vapes and pouches are basically harmless.", "new": "Switching is a step down, not a way out.", "proof": "Vaping exposes you to far fewer toxicants than smoking, but it hooks you too, more at higher strengths. 6–8 mg pouches deliver nicotine like snuff.", "refs": ["r11", "r12", "r13"] },
+        { "current": "Patches are cheating. Cold turkey or nothing.", "new": "I’ll take whatever doubles my odds. Pride doesn’t quit for me.", "proof": "Only 3–5% of unaided attempts last 6–12 months. Varenicline more than doubles the odds of quitting (41 trials).", "refs": ["r3", "r6"] }
+      ],
+      "numbers": [
+        { "big": "3–5%", "text": "of quit attempts made without any help last 6–12 months.", "refs": ["r3"] },
+        { "big": "×2.3", "text": "the odds of quitting with varenicline, across 41 trials and 17,395 people.", "refs": ["r6"] },
+        { "big": "4–5 kg", "text": "average weight gain a year after quitting. 16% lose weight.", "refs": ["r9"] }
+      ],
+      "community": { "forum": "r/stopsmoking", "status": "todo" }
+    },
+    {
+      "id": "cannabis",
+      "tab": "Weed",
+      "title": "Quitting weed",
+      "mode": "quit",
+      "subs": { "thing": "weed", "verb": "smoke", "free": "weed-free" },
+      "hero": { "big": "97.2%", "line": "of people who were ever hooked on weed get out.", "sub": "Half within about 6 years. You don’t have to wait that long.", "refs": ["r10"] },
+      "timelineNote": "From small studies (18 and 67 people). Many people get less than this.",
+      "milestones": [
+        { "atH": 24, "when": "Day 1", "kind": "feel", "text": "Sleep goes first: insomnia is at its worst on day 1.", "refs": ["r2"] },
+        { "atH": 96, "when": "Days 2–6", "kind": "feel", "text": "Most symptoms peak: irritable, anxious, restless, no appetite.", "refs": ["r1"] },
+        { "atH": 240, "when": "Day 10", "kind": "watch", "text": "“Now I can finally handle it.” The moderation thought shows up.", "refs": ["r13"] },
+        { "atH": 264, "when": "Days 9–11", "kind": "feel", "text": "Vivid, strange dreams peak. Normal.", "refs": ["r2"] },
+        { "atH": 336, "when": "Day 14", "kind": "win", "text": "Most of the withdrawal is behind you.", "refs": ["r1"] },
+        { "atH": 672, "when": "Week 4", "kind": "win", "text": "Your brain’s cannabis receptors are back to normal.", "refs": ["r4"] },
+        { "atH": 1080, "when": "Day 45+", "kind": "feel", "text": "Sleep and dreams can still be off. It passes.", "refs": ["r15"] },
+        { "atH": 1440, "when": "Month 2", "kind": "watch", "text": "The moderation thought comes back.", "refs": ["r13"] }
+      ],
+      "beliefs": [
+        { "current": "Weed isn’t addictive.", "new": "If it weren’t, I wouldn’t be reading this.", "proof": "About 3 in 10 US users had a cannabis use disorder in 2012–13, and 47% of regular users get withdrawal when they stop.", "refs": ["r9", "r3"] },
+        { "current": "Weed is the only thing that gets me to sleep.", "new": "Weed knocks me out. It doesn’t give me good sleep. A few rough nights buy my real sleep back.", "proof": "THC may help you fall asleep faster but harm sleep quality over time. Quitting insomnia is worst on day 1 and eases over weeks.", "refs": ["r6", "r2"] },
+        { "current": "It’s natural, so it’s harmless.", "new": "Natural isn’t the same as safe. Daily strong weed messes with my head.", "proof": "Daily use of high-potency cannabis: 4.8 times the odds of a first psychotic disorder (11 European sites).", "refs": ["r14"] },
+        { "current": "Day 10, I feel fine. Now I can handle it.", "new": "Feeling fine means the withdrawal is over, not that I’m in control again.", "proof": "Brain receptors recover in about 4 weeks, but the moderation thought shows up around day 10 and month 2 in quitters’ own accounts.", "refs": ["r4", "r13"] },
+        { "current": "I’ve smoked for years. I’m stuck.", "new": "97% of people hooked on weed get out. I’m next.", "proof": "97.2% of Americans ever dependent on cannabis eventually got out; half within about 6 years.", "refs": ["r10"] },
+        { "current": "Nothing’s fun without it. This flatness is forever.", "new": "The flatness is temporary. It fades the longer I stay off.", "proof": "Across 32 studies, loss of pleasure followed heavy use and faded with abstinence. No study has tracked it month by month for weed.", "refs": ["r17"] },
+        { "current": "These crazy dreams mean something’s wrong.", "new": "The wild dreams are part of coming off. They pass.", "proof": "Vivid, strange dreams peak around days 9–11 and can last past day 45.", "refs": ["r2", "r15"] }
+      ],
+      "numbers": [
+        { "big": "47%", "text": "of regular users get withdrawal when they stop (47 studies).", "refs": ["r3"] },
+        { "big": "Day 2–6", "text": "is when most symptoms peak. Most are gone by day 14.", "refs": ["r1"] },
+        { "big": "4.8×", "text": "the odds of psychosis with daily high-potency weed.", "refs": ["r14"] }
+      ],
+      "community": { "forum": "r/leaves", "status": "running" }
+    },
+    {
+      "id": "cocaine",
+      "tab": "Cocaine",
+      "title": "Quitting cocaine",
+      "mode": "quit",
+      "subs": { "thing": "coke", "verb": "do coke", "free": "clean" },
+      "hero": { "big": "99.2%", "line": "of people who were ever hooked on cocaine get out.", "sub": "Half within about 5 years. You don’t have to wait that long.", "refs": ["r6"] },
+      "timelineNote": "Coke has no classic withdrawal. Timed in small studies only.",
+      "milestones": [
+        { "atH": 12, "when": "Hours 0–24", "kind": "feel", "text": "The crash: heavy sleep and irritability.", "refs": ["r3"] },
+        { "atH": 18, "when": "As it wears off", "kind": "danger", "text": "Dark thoughts can spike. If they do, tell someone tonight.", "refs": ["r3"] },
+        { "atH": 336, "when": "Weeks 1–4", "kind": "feel", "text": "Low mood and craving ease bit by bit.", "refs": ["r2"] },
+        { "atH": 372, "when": "Days 14–17", "kind": "watch", "text": "You feel rested, but measured sleep is at its worst.", "refs": ["r10"] },
+        { "atH": 2000, "when": "Months 1–6", "kind": "watch", "text": "Craving feels weaker, yet your brain reacts to cues most strongly now.", "refs": ["r4"] }
+      ],
+      "beliefs": [
+        { "current": "Coke isn’t really addictive. There’s no real withdrawal.", "new": "No shakes doesn’t mean no hook. The pull lives in my head, for months.", "proof": "Coke withdrawal is mostly mood and sleep, not sickness. But the brain’s reaction to coke cues stays high for months.", "refs": ["r2", "r4"] },
+        { "current": "The craving’s gone, so I’m safe.", "new": "Feeling less pull isn’t the same as being safe. Months 1–6 are when cues hit hardest.", "proof": "In 76 users, the brain’s response to cocaine cues was higher at 1 and 6 months than at 1 week, while felt craving fell.", "refs": ["r4"] },
+        { "current": "It’s just a party drug.", "new": "Coke plus drink is a heart risk, not a party.", "proof": "Together they form cocaethylene, linked to an 18–25 times higher risk of sudden death. Street stimulants can also contain fentanyl.", "refs": ["r7", "r3"] },
+        { "current": "I’ll never get out of this.", "new": "99% of people hooked on coke get out. Mine starts now.", "proof": "99.2% of Americans ever dependent on cocaine eventually got out; half within about 5 years.", "refs": ["r6"] },
+        { "current": "I’m sleeping great now. I’m fine.", "new": "Feeling rested isn’t proof. My sleep is still healing.", "proof": "In a sleep-lab study of 12 users, measured sleep was worst at days 14–17, while they rated it at its best.", "refs": ["r10"] }
+      ],
+      "numbers": [
+        { "big": "7.6×", "text": "the odds of staying off at 12 weeks with rewards for clean tests plus community support.", "refs": ["r5"] },
+        { "big": "18–25×", "text": "higher risk of sudden death when coke is mixed with alcohol.", "refs": ["r7"] },
+        { "big": "Day 14–17", "text": "sleep is at its worst while it feels best.", "refs": ["r10"] }
+      ],
+      "footer": { "text": "Dark thoughts in the crash are common and they pass. If they don’t, talk to someone tonight.", "refs": ["r3"] },
+      "community": { "forum": "a cocaine-quitting forum (to find)", "status": "todo" }
+    },
+    {
+      "id": "porn",
+      "tab": "Porn",
+      "title": "Quitting porn",
+      "mode": "quit",
+      "subs": { "thing": "porn", "verb": "watch porn", "free": "porn-free" },
+      "hero": { "big": "7 days", "line": "off porn: no withdrawal symptoms.", "sub": "A randomised trial of 176 regular users. Stopping is safe to try.", "refs": ["r1"] },
+      "timelineNote": "Science has measured only the first week. Forum data could fill in the rest.",
+      "milestones": [
+        { "atH": 84, "when": "Days 1–7", "kind": "win", "text": "No withdrawal: regular users who stopped for a week had none, compared with people who kept watching.", "refs": ["r1"] },
+        { "atH": 120, "when": "Days 1–7", "kind": "feel", "text": "If you watched daily and felt hooked, craving may rise a little (an early finding).", "refs": ["r1"] },
+        { "atH": null, "when": "No set time", "kind": "watch", "text": "About 1 in 3 reboot journals describe a low-desire “flatline”. Nobody has measured when it starts or how long it lasts.", "refs": ["r2"] }
+      ],
+      "beliefs": [
+        { "current": "Everyone watches it. It’s harmless.", "new": "Normal isn’t the bar. I decide what it costs me.", "proof": "91.5% of men in one US online sample watched in the past month; about 11% of US men agree “I am addicted to pornography”.", "refs": ["r11", "r9"] },
+        { "current": "Quitting means a brutal flatline and weeks of withdrawal.", "new": "A week off costs me nothing. There’s no measured withdrawal.", "proof": "In a randomised trial of 176 regular users, those who stopped for 7 days had no withdrawal symptoms compared with those who kept watching.", "refs": ["r1"] },
+        { "current": "Staying off it will give me superpowers.", "new": "Quitting won’t make me magnetic. Going out and talking to women will.", "proof": "No study shows abstinence gives special energy or pull. Wanting to abstain tracked attitudes and religiosity, not anything people actually did.", "refs": ["r13"] },
+        { "current": "Porn wrecked my erections.", "new": "If my erections are off, I get checked, and I don’t blame porn alone.", "proof": "Across three samples, simply using porn wasn’t consistently linked to erection problems, and over a year it predicted no change.", "refs": ["r8"] },
+        { "current": "I must be an addict. Look how bad I feel about it.", "new": "Guilt isn’t a measure. I judge porn by what it costs me, not by how ashamed I feel.", "proof": "Over a year, moral disapproval predicted feeling addicted (r = 0.46 and 0.61); how much people watched barely did (r = 0.13 and 0.11).", "refs": ["r6"] },
+        { "current": "Blockers never work for me.", "new": "Blockers work when someone else holds the password.", "proof": "From quitters’ accounts, not trials: blockers “work only when someone else holds the key”.", "refs": ["r15"] }
+      ],
+      "numbers": [
+        { "big": "91.5%", "text": "of men in one US sample watched porn in the past month.", "refs": ["r11"] },
+        { "big": "11%", "text": "of US men say “I am addicted to pornography”.", "refs": ["r9"] },
+        { "big": "93%", "text": "drop in viewing with 12 sessions of ACT therapy, against 21% on the waitlist (28 men).", "refs": ["r12"] }
+      ],
+      "community": { "forum": "r/pornfree", "status": "todo" }
+    },
+    {
+      "id": "gambling",
+      "tab": "Betting",
+      "title": "Quitting betting",
+      "mode": "quit",
+      "subs": { "thing": "betting", "verb": "bet", "free": "bet-free" },
+      "hero": { "big": "92%", "line": "of people who quit gambling bet again at least once in their first year.", "sub": "A slip is normal. What you do the next day counts.", "refs": ["r1"] },
+      "timelineNote": "No withdrawal clock has been measured for gambling. These are the moments that matter.",
+      "milestones": [
+        { "atH": null, "when": "When cutting down", "kind": "feel", "text": "1 in 4 felt restless or irritable; 41% felt anger, guilt or disappointment. Nobody has timed it.", "refs": ["r11"] },
+        { "atH": null, "when": "Any evening", "kind": "watch", "text": "The classic slip: a good mood, an evening, alone, thinking about money.", "refs": ["r1"] },
+        { "atH": 8760, "when": "Year 1", "kind": "watch", "text": "Only 8% had no gambling at all in their first year. Expect a slip; plan the next day.", "refs": ["r1"] }
+      ],
+      "beliefs": [
+        { "current": "If I keep going, I’ll win it back.", "new": "The money is gone. Chasing it is the problem talking.", "proof": "Chasing losses is a core symptom of gambling disorder. Thoughts of winning and needing money were the top reasons for major relapses.", "refs": ["r10", "r1"] },
+        { "current": "I know football. It’s skill, not luck.", "new": "Feeling skilled is part of the trap, not a way out of it.", "proof": "Researchers who studied 30 expert hockey bettors concluded their “skills” were thinking errors. Believing you can predict outcomes is a measured gambling distortion.", "refs": ["r9", "r7"] },
+        { "current": "So close. I’m due a win.", "new": "A near miss is a loss. My brain just lights it up like a win.", "proof": "In a brain-scan study, near-misses felt worse than losses but raised the urge to play and lit up the same reward areas as real wins.", "refs": ["r8"] },
+        { "current": "Three months clean. A hundred for fun won’t hurt.", "new": "A good mood is exactly when I’m most likely to slip.", "proof": "Relapses followed good moods as often as bad ones, most often in the evening, alone, thinking about money.", "refs": ["r1"] },
+        { "current": "Self-exclusion is pointless. I’ll find a way anyway.", "new": "Every block I set up is a wall between me and my worst night.", "proof": "People do break exclusions (8–59%). Still, across 19 studies, problem gambling fell from 61–95% of people before exclusion to 13–26% after.", "refs": ["r6"] },
+        { "current": "I can handle my own money.", "new": "Someone I trust holds my money for a while. That’s a strategy, not a weakness.", "proof": "UK guidance lists a family member controlling the finances; people who quit rank handing money over above any blocking app.", "refs": ["r3", "r14"] }
+      ],
+      "numbers": [
+        { "big": "61–95% → 13–26%", "text": "problem gambling before and after self-exclusion (19 studies).", "refs": ["r6"] },
+        { "big": "1 in 4", "text": "felt restless or irritable when cutting down.", "refs": ["r11"] },
+        { "big": "3 months", "text": "CBT cut symptoms and money lost for the first 3 months after therapy. Longer is unknown.", "refs": ["r5"] }
+      ],
+      "footer": { "text": "Losses can bring dark thoughts, even if you’ve never had them before. If they come, talk to someone tonight.", "refs": ["r3", "r4"] },
+      "community": { "forum": "r/problemgambling", "status": "todo" }
+    },
+    {
+      "id": "social-media-phones",
+      "tab": "Phone",
+      "title": "Cutting down: phone and social media",
+      "mode": "reshape",
+      "subs": { "thing": "scrolling", "verb": "scroll for hours", "free": "off the feeds" },
+      "hero": { "big": "31%", "line": "of social media use is driven by self-control problems, economists estimate.", "sub": "That’s the part you never chose. Take it back.", "refs": ["r5"] },
+      "timelineNote": "Studies of breaks, not of quitting. The science disagrees on mood.",
+      "milestones": [
+        { "atH": 24, "when": "Day 1", "kind": "feel", "text": "You’ll want it. Craving rises; mood and anxiety don’t.", "refs": ["r1"] },
+        { "atH": 96, "when": "Days 1–6", "kind": "watch", "text": "Breaks shorter than a week can leave mood slightly worse. Don’t judge it on day 3.", "refs": ["r2"] },
+        { "atH": 168, "when": "Week 1", "kind": "win", "text": "A week or longer: mood slightly better on average (one pooled review; another found no effect).", "refs": ["r2", "r3"] },
+        { "atH": 672, "when": "Week 4", "kind": "win", "text": "Four weeks off Facebook: people were happier, and used it less afterwards.", "refs": ["r4"] }
+      ],
+      "beliefs": [
+        { "current": "I’ll just check one thing.", "new": "“One thing” is how I lose an hour. I plan my checks; I don’t trust the moment.", "proof": "Economists estimated self-control problems drive 31% of social media use, and people partly underestimate their own.", "refs": ["r5"] },
+        { "current": "Without my phone I’ll be anxious and miserable.", "new": "A day off makes me want it. A week off makes me feel better.", "proof": "A 24-hour break raised craving but not anxiety or low mood. Breaks of a week or more left mood slightly better on average.", "refs": ["r1", "r2"] },
+        { "current": "Everyone’s on it. It’s just normal life now.", "new": "Being on it is normal. Being run by it isn’t.", "proof": "Addiction-level use is a minority: 5% under strict criteria, 25% under loose ones, across 32 nations.", "refs": ["r7"] },
+        { "current": "Limits never work for me.", "new": "Limits I set in advance work. Willpower in the moment doesn’t.", "proof": "In a randomised experiment, letting people set their own future screen-time limits substantially cut use.", "refs": ["r5"] },
+        { "current": "If I log off, I’ll miss out.", "new": "What I miss on the feed, I get back in my life.", "proof": "Four weeks off Facebook raised well-being, and people used it less afterwards.", "refs": ["r4"] }
+      ],
+      "numbers": [
+        { "big": "5–25%", "text": "of people show addiction-level social media use, depending on the cut-off (32 nations).", "refs": ["r7"] },
+        { "big": "24 hours", "text": "phone-free: craving rose, mood and anxiety didn’t.", "refs": ["r1"] },
+        { "big": "4 weeks", "text": "off Facebook raised well-being in a large trial.", "refs": ["r4"] }
+      ],
+      "community": { "forum": "r/nosurf", "status": "todo" }
+    },
+    {
+      "id": "binge-eating-and-ultra-processed-food",
+      "tab": "Sugar",
+      "title": "Cutting down: binge eating and sugar",
+      "mode": "reshape",
+      "subs": { "thing": "bingeing", "verb": "binge", "free": "binge-free" },
+      "hero": { "big": "14%", "line": "of adults meet the threshold for food addiction.", "sub": "The pull is mostly junk that mixes sugar and fat, not sugar alone.", "refs": ["r3", "r2"] },
+      "timelineNote": "Only the first two weeks have been studied, and the two studies disagree.",
+      "milestones": [
+        { "atH": 84, "when": "Days 2–5", "kind": "feel", "text": "People remember days 2–5 as the hardest: cravings, irritability, low mood.", "refs": ["r7"] },
+        { "atH": 240, "when": "Days 1–15", "kind": "win", "text": "In a trial of 107 people, cutting ultra-processed food caused no more withdrawal than an ordinary diet.", "refs": ["r8"] },
+        { "atH": null, "when": "After a binge", "kind": "watch", "text": "Skipping meals to make up for it sets up the next binge.", "refs": ["r11"] }
+      ],
+      "beliefs": [
+        { "current": "I’m addicted to sugar. One bite and I’m gone.", "new": "Sugar isn’t a drug. Junk that mixes sugar and fat is the one to watch.", "proof": "There’s little human evidence that sugar itself is addictive. The strongest signal is for processed foods that combine refined carbs and fat.", "refs": ["r1", "r2", "r3"] },
+        { "current": "Cutting junk food will feel like coming off drugs.", "new": "A couple of rough days, not a detox.", "proof": "People recall days 2–5 as hardest, but in a trial of 107 people, cutting ultra-processed food caused no more withdrawal than an ordinary diet.", "refs": ["r7", "r8"] },
+        { "current": "I binge because I’ve got no willpower.", "new": "Bingeing is a known, treatable pattern, not a character flaw.", "proof": "Binge-eating disorder affects 2.0% of US men in their lifetime. Talking therapy, mostly CBT, has large effects on binges in trials.", "refs": ["r9", "r10"] },
+        { "current": "I’ll make up for it by not eating tomorrow.", "new": "Skipping meals sets up the next binge. I eat regular meals.", "proof": "In a 5-year study of 496 girls, fasting predicted later binge eating. Not yet tested in adult men.", "refs": ["r11"] },
+        { "current": "I’ve been good for weeks. One slice will ruin it.", "new": "Food isn’t all or nothing. A slice at a party is fine; the strict rule is what breaks.", "proof": "You can’t stop eating, so some moderation is unavoidable, and extreme restriction predicted later bingeing.", "refs": ["r11"] }
+      ],
+      "numbers": [
+        { "big": "2.0%", "text": "of US men have had binge-eating disorder. Only a minority ever sought treatment.", "refs": ["r9"] },
+        { "big": "Day 2–5", "text": "are the hardest days, as people remember them.", "refs": ["r7"] },
+        { "big": "107", "text": "people in a trial: cutting junk caused no more withdrawal than a normal diet.", "refs": ["r8"] }
+      ],
+      "community": { "forum": "r/BingeEatingDisorder", "status": "todo" }
+    }
+  ]
+}
