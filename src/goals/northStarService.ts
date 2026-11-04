@@ -120,6 +120,7 @@ import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
    this file and `northStarTrackService` can reach it without closing a cycle. */
 import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { isEmptyReview, readReviews } from "@/src/goals/reviewService"
+import { DAY_LIMITS } from "@/src/goals/lifePlanDayService"
 
 // ------------------------------------------------------------------ helpers
 
@@ -493,6 +494,7 @@ export function emptyNsPlan(): NsPlan {
     notes: {},
     fields: [],
     journal: {},
+    numbers: {},
     subSteps: [],
     seq,
     updatedAt: null,
@@ -939,6 +941,20 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     }
   }
 
+  // The number boxes' days (Plans/life-plan-rebuild.md, Phase 6): only real
+  // numbers inside the column's range, so a damaged copy cannot stop the save.
+  const numbers: Record<string, Record<string, number>> = {}
+  if (obj.numbers && typeof obj.numbers === "object") {
+    for (const [date, v] of Object.entries(obj.numbers as Record<string, unknown>)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !v || typeof v !== "object") continue
+      const row: Record<string, number> = {}
+      for (const [id, value] of Object.entries(v as Record<string, unknown>)) {
+        if (typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= DAY_NUMBER_LIMIT) row[id] = value
+      }
+      if (Object.keys(row).length > 0) numbers[date] = row
+    }
+  }
+
   const rungIds = new Set(VISION_RUNGS.map((r) => r.id))
   const rungs: Record<string, string> = {}
   if (obj.rungs && typeof obj.rungs === "object") {
@@ -1020,6 +1036,10 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     notes,
     fields,
     journal,
+    // Only for a part that can hold one: a number box (Phase 6), or a goal,
+    // which counts here since Q4. Anything else would be a number the account
+    // has no part for, and its save could never land.
+    numbers: numbersFor(numbers, new Set([...fields.filter((f) => f.kind === "number").map((f) => f.id), ...linkedGoals.map((g) => g.id)])),
     subSteps,
     // A save written before the counter existed, or edited by hand, still must
     // never hand out an id that is already in use.
@@ -3581,7 +3601,15 @@ export function moveDailyField(plan: NsPlan, id: string, targetId: string | null
  */
 export function removeDailyField(plan: NsPlan, id: string, now = nowIso()): NsPlan {
   if (!plan.fields.some((f) => f.id === id)) return plan
-  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id) }, now)
+  // A NUMBER BOX'S NUMBERS GO WITH IT, as the database's cascade takes them
+  // (Phase 6): a number is not writing, and the button says it goes.
+  const numbers: Record<string, Record<string, number>> = {}
+  for (const [date, row] of Object.entries(plan.numbers)) {
+    const rest = { ...row }
+    delete rest[id]
+    if (Object.keys(rest).length > 0) numbers[date] = rest
+  }
+  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id), numbers }, now)
 }
 
 /**
@@ -3616,6 +3644,48 @@ export function setJournalEntry(plan: NsPlan, date: string, fieldId: string, tex
   if (Object.keys(row).length > 0) journal[date] = row
   else delete journal[date]
   return touch({ ...plan, journal }, now)
+}
+
+function numbersFor(numbers: Record<string, Record<string, number>>, ids: Set<string>): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {}
+  for (const [date, row] of Object.entries(numbers)) {
+    const kept = Object.fromEntries(Object.entries(row).filter(([id]) => ids.has(id)))
+    if (Object.keys(kept).length > 0) out[date] = kept
+  }
+  return out
+}
+
+/** The largest number a box takes, either way: `life_plan_day_numbers.value`'s range, as the day route checks it. */
+export const DAY_NUMBER_LIMIT = DAY_LIMITS.number
+
+/**
+ * A NUMBER BOX'S VALUE ON ONE DAY (Plans/life-plan-rebuild.md, Phase 6).
+ *
+ * `null` clears it, and an emptied day is deleted. Only a box of the number
+ * kind takes one, so a stale id (a box removed in another tab) writes nothing.
+ */
+export function setDayNumber(plan: NsPlan, date: string, fieldId: string, value: number | null, now = nowIso()): NsPlan {
+  if (!plan.fields.some((f) => f.id === fieldId && f.kind === "number")) return plan
+  if (value !== null && (!Number.isFinite(value) || Math.abs(value) > DAY_NUMBER_LIMIT)) return plan
+  const row = { ...(plan.numbers[date] ?? {}) }
+  if (value === null) delete row[fieldId]
+  else row[fieldId] = value
+  const numbers = { ...plan.numbers }
+  if (Object.keys(row).length > 0) numbers[date] = row
+  else delete numbers[date]
+  return touch({ ...plan, numbers }, now)
+}
+
+export function dayNumber(plan: NsPlan, date: string, fieldId: string): number | null {
+  return plan.numbers[date]?.[fieldId] ?? null
+}
+
+/** Every other day this box held a number, newest first. */
+export function numberHistory(plan: NsPlan, fieldId: string, except?: string): { date: string; value: number }[] {
+  return Object.entries(plan.numbers)
+    .filter(([date, row]) => date !== except && typeof row[fieldId] === "number")
+    .map(([date, row]) => ({ date, value: row[fieldId] }))
+    .sort((a, b) => b.date.localeCompare(a.date))
 }
 
 export function journalEntry(plan: NsPlan, date: string, fieldId: string): string {
@@ -4148,6 +4218,7 @@ export function planIsUntouched(plan: NsPlan): boolean {
     Object.keys(plan.review).length === 0 &&
     Object.keys(plan.answers).length === 0 &&
     Object.keys(plan.daily).length === 0 &&
+    Object.keys(plan.numbers ?? {}).length === 0 &&
     Object.values(plan.rungs).every((v) => !v.trim()) &&
     plan.values.length === 0 &&
     plan.currentValues.length === 0 &&

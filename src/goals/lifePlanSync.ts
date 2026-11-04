@@ -136,6 +136,10 @@ export function planHasNothingWritten(plan: Plan): boolean {
     !(plan.season?.sentence ?? "").trim() &&
     (plan.pastSeasons ?? []).length === 0 &&
     (plan.reviews ?? []).length === 0 &&
+    // A box somebody made is something written, and a number box's days hang
+    // off it: a plan holding only boxes must not be replaced by an import
+    // (Phase 6 code review).
+    (plan.fields ?? []).length === 0 &&
     Object.keys(plan.review).length === 0 &&
     Object.values(plan.answers).every((v) => !v.trim()) &&
     Object.values(plan.rungs).every((v) => !v.trim())
@@ -145,7 +149,7 @@ export function planHasNothingWritten(plan: Plan): boolean {
 /**
  * THE FIELDS THE WHOLE-PLAN SAVE ACTUALLY SENDS.
  *
- * `NsPlan` minus the five the mapper never emits: the four day maps, which have
+ * `NsPlan` minus the six the mapper never emits: the five day maps, which have
  * their own tables and their own route, and `updatedAt`, which the server
  * stamps. Listed rather than derived by omission so that a new field on `NsPlan`
  * has to be put in one list or the other deliberately — the last test in
@@ -157,8 +161,8 @@ export const SENT_PLAN_FIELDS = [
   "seasonAreaIds", "experiences", "fields", "subSteps", "seq",
 ] as const
 
-/** The four day maps plus the server's own stamp: present on the plan, never sent. */
-export const UNSENT_PLAN_FIELDS = ["daily", "logged", "notes", "journal", "updatedAt"] as const
+/** The five day maps plus the server's own stamp: present on the plan, never sent. */
+export const UNSENT_PLAN_FIELDS = ["daily", "logged", "notes", "journal", "numbers", "updatedAt"] as const
 
 /**
  * What the save would send, as text, so a caller can tell "nothing changed".

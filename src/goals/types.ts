@@ -2168,6 +2168,13 @@ export interface NsPlan {
    */
   journal: Record<string, Record<string, string>>
   /**
+   * WHAT YOUR NUMBER BOXES HELD, by date, by box id (Plans/life-plan-rebuild.md,
+   * Phase 6). Same shape as `daily`: the number belongs to a day, the box to the
+   * plan. An emptied box is deleted rather than stored as zero, because zero is
+   * an answer ("no approaches today") and empty is not.
+   */
+  numbers: Record<string, Record<string, number>>
+  /**
    * The to-do lists under the bigger weekly things. See `NsSubStep`.
    *
    * Held on the plan rather than on the routine step, because the things that
@@ -2220,10 +2227,10 @@ export interface NsDailyField {
   readSourceId: string | null
 }
 
-export type NsFieldKind = "write" | "read" | "go"
+export type NsFieldKind = "write" | "read" | "go" | "number"
 
 /** Every kind, for the loader and the picker. One list, so they cannot drift. */
-export const NS_FIELD_KINDS: readonly NsFieldKind[] = ["write", "read", "go"]
+export const NS_FIELD_KINDS: readonly NsFieldKind[] = ["write", "read", "go", "number"]
 
 /**
  * ONE ACTION ON THE WAY TO A BIGGER ONE.

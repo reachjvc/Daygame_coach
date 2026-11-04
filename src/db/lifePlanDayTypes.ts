@@ -53,12 +53,25 @@ export interface DayJournalRow {
   body: string
 }
 
+/**
+ * A number written on that day: what a number box held, and since Q4 a
+ * goal's count (Plans/life-plan-rebuild.md, Phase 6).
+ */
+export interface DayNumberRow {
+  user_id: string
+  day_id: string
+  node_id: string
+  value: number
+}
+
 /** Everything the day half holds for one plan, as it comes off the database. */
 export interface DayRows {
   days: DayRow[]
   ratings: DayRatingRow[]
   ticks: DayTickRow[]
   journal: DayJournalRow[]
+  /** Optional: rows read before Phase 6 have none. */
+  numbers?: DayNumberRow[]
 }
 
 /**
@@ -83,4 +96,6 @@ export interface DayPatch {
   journal?: Record<string, string>
   /** The words of each question being answered, for the ones in `journal`. */
   asked?: Record<string, string>
+  /** Plan-local id to the day's number, or `null` to clear it. */
+  numbers?: Record<string, number | null>
 }

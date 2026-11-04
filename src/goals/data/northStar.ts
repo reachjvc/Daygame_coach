@@ -151,13 +151,13 @@ export const TODAY_COPY = {
      that holds "one key learning of today", and that line is the one most
      people already keep by hand — usually against the thing that taught it
      rather than against the day. */
-  fieldsTitle: "Your own text fields",
+  fieldsTitle: "Your own fields",
   fieldsHelp:
-    "A question you answer in words, day after day. Attach one to anything in the plan and it appears on that row; attach one to the day and it sits under the note.",
+    "A question you answer in words, day after day, or a number you keep (set its kind to A number: approaches, minutes, kilos). Attach one to anything in the plan and it appears on that row; attach one to the day and it sits under the note.",
   fieldsEmpty: "None yet. Add one and it shows up wherever you attach it.",
-  fieldAdd: "Add a text field",
-  fieldAddHere: "add a text field",
-  fieldAddedTo: (title: string) => `Add a text field to ${title}`,
+  fieldAdd: "Add a field",
+  fieldAddHere: "add a field",
+  fieldAddedTo: (title: string) => `Add a field to ${title}`,
   fieldLabelAria: "What this field asks",
   /* The placeholder SUGGESTS. It is never written into the label: a question
      the user did not ask reads back a month later as one they did. */
@@ -176,6 +176,12 @@ export const TODAY_COPY = {
   /* THE THIRD DIRECTION. Read quotes the thing here; this one takes you to
      where it lives, which is the only version that also lets you change it. */
   fieldKindGo: "Go to it",
+  /* A NUMBER ON THE DAY (Plans/life-plan-rebuild.md, Phase 6): approaches,
+     minutes, kilos. The box's name says what it counts. */
+  fieldKindNumber: "A number",
+  fieldNumberPlaceholder: "0",
+  fieldNumberRefused: "Use digits and at most one decimal mark, without a thousands mark: 1500, or 2,5.",
+  fieldNumberRecent: (days: string) => `Before: ${days}`,
   fieldShows: "Shows",
   fieldShowsNothing: "Pick something to read",
   fieldGoes: "Goes to",

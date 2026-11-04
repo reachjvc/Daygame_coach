@@ -70,7 +70,7 @@ const noop = vi.fn()
 const HANDLERS = {
   onToggleStep: noop, onToggleExperience: noop, onRate: noop, onNote: noop,
   onAddField: noop, onRenameField: noop, onMoveField: noop, onRemoveField: noop,
-  onWriteField: noop, onFieldKind: noop, onFieldSource: noop,
+  onWriteField: noop, onNumberField: noop, onFieldKind: noop, onFieldSource: noop,
   onAddSubStep: noop, onRenameSubStep: noop, onMoveSubStep: noop, onRemoveSubStep: noop,
   onGoToTrack: noop, onOpenRoutine: noop, onOpenField: noop, onOpenGoal: noop,
   onOpenStep: noop, onStepGoesTo: noop, onStepAsks: noop, onGoToTab: noop,

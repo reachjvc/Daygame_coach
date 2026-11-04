@@ -70,7 +70,7 @@ import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
 import type { SessionType } from "@/src/health/types"
-import { keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
+import { emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { StarTab } from "./StarTab"
 import { NowTab } from "./NowTab"
@@ -716,7 +716,7 @@ export function NorthStarFlow({
         // fingerprint, so the merge above cannot affect it.
         lastSent.current = sendableFingerprint(decision.plan)
         lastSentRows.current = server?.rows ?? null
-        if (days) accountDays.current = known ? days : { daily: {}, logged: {}, notes: {}, journal: {} }
+        if (days) accountDays.current = known ? days : emptyDayRecord()
         setServerState("saved")
         void importDaysOnce(days, recordOf(decision.plan))
         return
@@ -750,6 +750,28 @@ export function NorthStarFlow({
       }
       setPlanId(started.id)
       setRevision(started.revision)
+
+      /**
+       * THE DAY HALF COMES ALONG, as on a plan read from the account. Nothing
+       * set the account's days on this path, so the day save refused every
+       * tick, rating and number for the rest of the visit, and the next visit
+       * took the account's days over this browser's: they were lost. Found in
+       * Phase 6 of Plans/life-plan-rebuild.md, where a number box on a new
+       * account never reached it. The account's days, when it has any, are
+       * the base with this visit's edits on top. When it has none, the base is
+       * empty and the day save sends this browser's days: that is the import,
+       * and it saves the plan first when the account lacks a part a day names,
+       * which an import run before the plan's first save could not.
+       */
+      if (days) {
+        if (!recordIsEmpty(days)) {
+          const atLoad = recordOf(decision.plan)
+          setPlan((current) => ({ ...current, ...keepEditsMadeWhileLoading(days, atLoad, recordOf(current)) }))
+          accountDays.current = days
+        } else {
+          accountDays.current = emptyDayRecord()
+        }
+      }
 
       // NOTHING IS RECORDED HERE. The import is finished when the save lands
       // and the row's revision moves off 0, which is a fact on the account
@@ -1806,6 +1828,7 @@ export function NorthStarFlow({
               onMoveField={(id, targetId) => setPlan((p) => ns.moveDailyField(p, id, targetId))}
               onRemoveField={(id) => setPlan((p) => ns.removeDailyField(p, id))}
               onWriteField={(fieldId, text) => setPlan((p) => ns.setJournalEntry(p, today ?? ns.todayISO(), fieldId, text))}
+              onNumberField={(fieldId, value) => setPlan((p) => ns.setDayNumber(p, today ?? ns.todayISO(), fieldId, value))}
               onFieldKind={(id, kind) => setPlan((p) => ns.setDailyFieldKind(p, id, kind))}
               onFieldSource={(id, sourceId) => setPlan((p) => ns.setDailyFieldSource(p, id, sourceId))}
               /* The to-do list under a bigger weekly thing. Its ticks go

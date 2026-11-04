@@ -27,7 +27,7 @@
 import { describe, it, expect } from "vitest"
 import { keepEditsMadeWhileLoading, patchesBetween, type DayRecord } from "@/src/goals/lifePlanDayService"
 
-const EMPTY: DayRecord = { daily: {}, logged: {}, notes: {}, journal: {} }
+const EMPTY: DayRecord = { daily: {}, logged: {}, notes: {}, journal: {}, numbers: {} }
 const DAY = "2026-09-25"
 const OTHER = "2026-09-24"
 

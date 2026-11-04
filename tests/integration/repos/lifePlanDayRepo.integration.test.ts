@@ -177,7 +177,7 @@ describe("a day in Life Mastery", () => {
 
     actAs(intruder)
     expect(await readNodeIds(owner.id, planId)).toEqual(new Map())
-    expect(await readDayRows(owner.id, planId)).toEqual({ days: [], ratings: [], ticks: [], journal: [] })
+    expect(await readDayRows(owner.id, planId)).toEqual({ days: [], ratings: [], ticks: [], journal: [], numbers: [] })
     await expect(saveDay(intruder.id, planId, { date: DATE, note: "Overwritten." }, new Map())).rejects.toThrow(/row-level security/)
     await expect(saveDay(owner.id, planId, { date: DATE, note: "Overwritten." }, new Map())).rejects.toThrow(/row-level security/)
     // Filed under their own id against somebody else's plan: the (plan, user)

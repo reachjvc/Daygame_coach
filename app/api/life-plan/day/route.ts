@@ -1,8 +1,8 @@
 /**
  * Your day, on your account: what you rated, ticked, noted and wrote.
  *
- * Its own route because the whole-plan save may never reach these four tables —
- * a plan is replaced, a day is appended to. GET hands back the four maps the
+ * Its own route because the whole-plan save may never reach the day tables —
+ * a plan is replaced, a day is appended to. GET hands back the five maps the
  * flow works in. PUT changes ONE day, and only the keys it carries.
  *
  * An id the plan has not saved yet is answered 409 with the list, so the
@@ -19,7 +19,7 @@ import { findLifePlanId, ensureLifePlan } from "@/src/db/lifePlanRepo"
 import { readDayRows, readNodeIds, saveDay } from "@/src/db/lifePlanDayRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
-import { dayRowsToRecord, fitAsked, unknownIds, whyNotWritable } from "@/src/goals/lifePlanDayService"
+import { dayRowsToRecord, emptyDayRecord, fitAsked, unknownIds, whyNotWritable } from "@/src/goals/lifePlanDayService"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 
 export async function GET() {
@@ -29,7 +29,7 @@ export async function GET() {
     const planId = await findLifePlanId(auth.userId)
     // No plan is a real answer, and it is not an empty one: a GET must never
     // create the row a PUT would.
-    if (!planId) return NextResponse.json({ daily: {}, logged: {}, notes: {}, journal: {} })
+    if (!planId) return NextResponse.json(emptyDayRecord())
     const [rows, ids] = await Promise.all([readDayRows(auth.userId, planId), readNodeIds(auth.userId, planId)])
     const localIdFor = new Map([...ids].map(([local, id]) => [id, local]))
     return NextResponse.json(dayRowsToRecord(rows, localIdFor))

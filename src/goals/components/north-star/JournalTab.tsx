@@ -152,7 +152,7 @@ export function JournalTab({
   /** What is already being asked, so the library can say so rather than add a second copy. */
   const asked = new Set(questions.map((q) => q.question.trim().toLowerCase()))
 
-  const shown = only ? archive.map((day) => ({ ...day, note: "", entries: day.entries.filter((e) => e.id === only) })).filter((d) => d.entries.length > 0) : archive
+  const shown = only ? archive.map((day) => ({ ...day, note: "", numbers: [], entries: day.entries.filter((e) => e.id === only) })).filter((d) => d.entries.length > 0) : archive
 
   return (
     <div className="space-y-6">
@@ -341,6 +341,12 @@ export function JournalTab({
                 </p>
                 {day.note && (
                   <p className="mt-2 text-[12.5px] text-zinc-200 whitespace-pre-wrap leading-relaxed">{day.note}</p>
+                )}
+                {/* THE DAY'S NUMBERS, one line: "Approaches 5 · Minutes walked 40". */}
+                {day.numbers.length > 0 && (
+                  <p className="mt-2 text-[12px] text-zinc-300 tabular-nums" data-testid="journal-day-numbers">
+                    {day.numbers.map((n) => `${n.label} ${n.value}`).join(" · ")}
+                  </p>
                 )}
                 <ul className="mt-2 space-y-2">
                   {day.entries.map((entry) => (

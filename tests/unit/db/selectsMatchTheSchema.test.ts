@@ -35,6 +35,18 @@ function productionColumns(): Map<string, Set<string>> {
   for (const m of sql.matchAll(/ALTER TABLE "public"\."(\w+)" ADD COLUMN (?:IF NOT EXISTS )?"(\w+)"/g)) {
     tables.get(m[1])?.add(m[2])
   }
+  // THE MIGRATIONS NEWER THAN THE DUMP, as the test database applies them on
+  // top of it (scripts/db/test-stack.mjs): a table a migration adds is a table
+  // the code may select from before the next dump is taken. Read through
+  // `productionSql`, the same lookup the functions check below uses.
+  const newer = productionSql().slice(sql.length)
+  for (const m of newer.matchAll(/create table if not exists (?:"?public"?\.)?"?(\w+)"? \(([\s\S]*?)\n\);/gi)) {
+    const columns = [...m[2].matchAll(/^ {2}"?(\w+)"? /gm)].map((c) => c[1]).filter((c) => !/^(CONSTRAINT|PRIMARY|UNIQUE|CHECK|FOREIGN|EXCLUDE)$/i.test(c))
+    tables.set(m[1], new Set(columns))
+  }
+  for (const m of newer.matchAll(/alter table (?:"?public"?\.)?"?(\w+)"? add column (?:if not exists )?"?(\w+)"?/gi)) {
+    tables.get(m[1])?.add(m[2])
+  }
   return tables
 }
 

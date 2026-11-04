@@ -1522,11 +1522,17 @@ export interface JournalDay {
   /** The day's own note, when there is one. */
   note: string
   entries: Array<{ id: string; question: string; text: string; missing: boolean }>
+  /**
+   * The day's number boxes, in the boxes' own order (Plans/life-plan-rebuild.md,
+   * Phase 6). Only boxes that still exist: a removed box takes its numbers with it.
+   */
+  numbers: Array<{ id: string; label: string; value: number }>
 }
 
 export function journalArchive(plan: NsPlan, date: string): JournalDay[] {
   const asked = new Map(journalQuestions(plan, date).map((q) => [q.id, q.question]))
-  const dates = new Set([...Object.keys(plan.journal), ...Object.keys(plan.notes)])
+  const numberBoxes = plan.fields.filter((f) => f.kind === "number")
+  const dates = new Set([...Object.keys(plan.journal), ...Object.keys(plan.notes), ...Object.keys(plan.numbers ?? {})])
   return [...dates]
     .map((day) => ({
       date: day,
@@ -1540,14 +1546,17 @@ export function journalArchive(plan: NsPlan, date: string): JournalDay[] {
           missing: !asked.has(id),
         }))
         .sort((a, b) => a.question.localeCompare(b.question)),
+      numbers: numberBoxes
+        .filter((f) => typeof plan.numbers?.[day]?.[f.id] === "number")
+        .map((f) => ({ id: f.id, label: f.label.trim() || TODAY_COPY.fieldUnnamed, value: plan.numbers[day][f.id] })),
     }))
-    .filter((day) => day.note || day.entries.length > 0)
+    .filter((day) => day.note || day.entries.length > 0 || day.numbers.length > 0)
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
 /** "12 entries across 5 days", for the archive heading. */
 export function journalTotals(days: JournalDay[]): { entries: number; days: number } {
-  return { entries: days.reduce((n, day) => n + day.entries.length + (day.note ? 1 : 0), 0), days: days.length }
+  return { entries: days.reduce((n, day) => n + day.entries.length + (day.note ? 1 : 0) + (day.numbers?.length ?? 0), 0), days: days.length }
 }
 
 export function fieldTargets(plan: NsPlan): FieldTarget[] {

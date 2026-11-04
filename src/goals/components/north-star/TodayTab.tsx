@@ -37,9 +37,13 @@ import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } fro
 import { DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
 import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, pushedGoalIds, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
-import { dailyFieldsFor, dailyRating, formatTargetDate, journalEntry, journalHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
+import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
+import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { ScoreRow } from "./ScoreRow"
 import { SENTENCE_HINT } from "./SentenceBox"
+
+/** "3 Nov": a day key, in the app's own locale and never the reader's zone. */
+const formatShortDay = (key: string) => dateKeyLabel(key, { day: "numeric", month: "short" })
 
 /**
  * The slice of a hub goal this screen reads. Exported so the flow above can
@@ -168,6 +172,98 @@ function WriteField({
         focused && <p className="mt-1 text-[10px] text-zinc-600">{TODAY_COPY.fieldPastNone}</p>
       )}
       {footer}
+    </div>
+  )
+}
+
+/**
+ * WHAT A TYPED NUMBER MEANS: `null` for an empty box, `undefined` when it
+ * cannot be read as one number for sure.
+ *
+ * Digits, an optional minus, and one decimal mark, a point or a comma (a
+ * Danish keyboard types a comma). A thousands mark is refused rather than
+ * guessed at: "1.500" is fifteen hundred in Danish and one and a half in
+ * English, and a wrong guess would sit in the history looking like a real
+ * count. So is anything else `Number()` would quietly accept, "0x10" or "1e3".
+ */
+export function readTypedNumber(typed: string): number | null | undefined {
+  const text = typed.trim()
+  if (text === "") return null
+  if (!/^-?\d+([.,]\d+)?$/.test(text)) return undefined
+  if (/^-?\d{1,3}[.,]\d{3}$/.test(text)) return undefined
+  const n = Number(text.replace(",", "."))
+  return Number.isFinite(n) && Math.abs(n) <= DAY_NUMBER_LIMIT ? n : undefined
+}
+
+/**
+ * A BOX THAT HOLDS A NUMBER (Plans/life-plan-rebuild.md, Phase 6; concept
+ * items 21 and 34): approaches, minutes, kilos, how much you wanted to get up.
+ *
+ * Kept on the day, like a rating. Empty means "not written", which is not
+ * zero: clearing the box removes the number. A comma is read as a decimal
+ * point, as a Danish keyboard types one. The last few days sit under it, as
+ * the run of answers does under a write box, because a number on its own says
+ * little and a week of them says something.
+ */
+function NumberField({
+  id,
+  label,
+  value,
+  history,
+  onSet,
+}: {
+  id: string
+  label: string
+  value: number | null
+  /** Every other day this box held a number, newest first. */
+  history: { date: string; value: number }[]
+  onSet: (value: number | null) => void
+}) {
+  const [draft, setDraft] = useState<string | null>(null)
+  const [refused, setRefused] = useState(false)
+  const shown = draft ?? (value == null ? "" : String(value))
+  const commit = () => {
+    if (draft === null) return
+    const n = readTypedNumber(draft)
+    // Refused: what was typed stays in the box to be corrected, not thrown away.
+    if (n === undefined) {
+      setRefused(true)
+      return
+    }
+    setDraft(null)
+    setRefused(false)
+    if (n !== value) onSet(n)
+  }
+  const recent = history.slice(0, 7)
+
+  return (
+    <div className="px-5 py-2.5 scroll-mt-24">
+      <label htmlFor={`field-${id}`} className="block text-[10.5px] text-zinc-500 mb-1">
+        {label.trim() || TODAY_COPY.fieldUnnamed}
+      </label>
+      <input
+        id={`field-${id}`}
+        inputMode="decimal"
+        value={shown}
+        onChange={(e) => {
+          setDraft(e.target.value)
+          setRefused(false)
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter") return
+          e.preventDefault()
+          e.currentTarget.blur()
+        }}
+        onBlur={commit}
+        placeholder={TODAY_COPY.fieldNumberPlaceholder}
+        className="w-32 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-[12.5px] text-zinc-200 tabular-nums placeholder:text-zinc-600 focus:border-white/30 focus:outline-none"
+      />
+      {refused && <p className="mt-1 text-[10.5px] text-amber-300/80">{TODAY_COPY.fieldNumberRefused}</p>}
+      {recent.length > 0 && (
+        <p className="mt-1 text-[10.5px] text-zinc-500 tabular-nums">
+          {TODAY_COPY.fieldNumberRecent(recent.map((h) => `${formatShortDay(h.date)}: ${h.value}`).join(" · "))}
+        </p>
+      )}
     </div>
   )
 }
@@ -650,6 +746,7 @@ export function TodayTab({
   onMoveField,
   onRemoveField,
   onWriteField,
+  onNumberField,
   onFieldKind,
   onFieldSource,
   onAddSubStep,
@@ -708,6 +805,8 @@ export function TodayTab({
   onMoveField: (id: string, targetId: string | null) => void
   onRemoveField: (id: string) => void
   onWriteField: (fieldId: string, text: string) => void
+  /** A number box's value for today; `null` clears it. */
+  onNumberField: (fieldId: string, value: number | null) => void
   /** Whether the field asks you something or shows you something. */
   onFieldKind: (id: string, kind: NsFieldKind) => void
   onFieldSource: (id: string, sourceId: string | null) => void
@@ -917,6 +1016,15 @@ export function TodayTab({
       />
     ) : field.kind === "read" ? (
       <ReadField key={field.id} field={field} source={readSource(plan, field.readSourceId)} />
+    ) : field.kind === "number" ? (
+      <NumberField
+        key={`${today}:${field.id}`}
+        id={field.id}
+        label={field.label}
+        value={dayNumber(plan, today, field.id)}
+        history={numberHistory(plan, field.id, today)}
+        onSet={(value) => onNumberField(field.id, value)}
+      />
     ) : (
       <WriteField
         key={`${today}:${field.id}`}
@@ -1497,6 +1605,7 @@ export function TodayTab({
                     <option value="write">{TODAY_COPY.fieldKindWrite}</option>
                     <option value="read">{TODAY_COPY.fieldKindRead}</option>
                     <option value="go">{TODAY_COPY.fieldKindGo}</option>
+                    <option value="number">{TODAY_COPY.fieldKindNumber}</option>
                   </select>
                 </label>
                 {/* ONE PICKER FOR BOTH DIRECTIONS THAT NAME SOMETHING.

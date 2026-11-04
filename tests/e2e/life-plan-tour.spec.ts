@@ -15,6 +15,9 @@ import { seedLifePlan } from "./helpers/lifePlan"
  *
  *   TOUR_PLAN=<plan.json> TOUR_DIR=<folder> npx playwright test life-plan-tour --project=desktop
  *
+ * Optional: TOUR_STEPS=today,journal for some steps only; TOUR_DAYS=<patches.json>
+ * for days written after the seed (see below).
+ *
  * TOUR_PLAN is an `NsPlan` as the flow keeps it (a backup turned into one with
  * `rowsToPlan`, or a made-up one). Without both variables it is skipped, so CI
  * and an ordinary run never take it.
@@ -29,6 +32,20 @@ test.describe("life plan tour", () => {
 
   test("one picture per step", async ({ page, account }) => {
     await seedLifePlan(page, account.id, JSON.parse(readFileSync(PLAN!, "utf8")))
+    // TOUR_DAYS=<patches.json>: days written through the app's own day route
+    // after the seed (the seed carries the plan only), so a picture can show a
+    // number box or a rating with something in it. `date: "today-N"` is N days
+    // before today.
+    if (process.env.TOUR_DAYS) {
+      for (const patch of JSON.parse(readFileSync(process.env.TOUR_DAYS, "utf8")) as Array<{ date: string }>) {
+        const back = /^today-(\d+)$/.exec(patch.date)
+        const at = new Date()
+        if (back) at.setDate(at.getDate() - Number(back[1]))
+        const date = back ? `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, "0")}-${String(at.getDate()).padStart(2, "0")}` : patch.date
+        const res = await page.request.put("/api/life-plan/day", { data: { ...patch, date } })
+        expect(res.status(), `the day route refused ${date}: ${await res.text()}`).toBe(200)
+      }
+    }
     mkdirSync(DIR!, { recursive: true })
     await page.setViewportSize({ width: 1280, height: 900 })
 

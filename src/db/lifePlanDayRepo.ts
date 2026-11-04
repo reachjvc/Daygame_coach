@@ -2,15 +2,17 @@
  * THE DAY HALF OF LIFE MASTERY, ON THE ACCOUNT.
  *
  * Every read and write of `life_plan_days`, `life_plan_day_ratings`,
- * `life_plan_day_ticks` and `life_plan_day_journal`. Nothing outside this file
- * touches them.
+ * `life_plan_day_ticks`, `life_plan_day_journal` and (since Phase 6 of
+ * Plans/life-plan-rebuild.md) `life_plan_day_numbers`. Nothing outside this
+ * file touches them.
  *
  * ----------------------------------------------------------------------------
  * WHY THIS IS NOT PART OF `lifePlanRepo.ts`, which owns the other 21 tables.
  *
  * A plan is REPLACED on every save. A day is APPENDED TO. `save_life_plan`
  * deletes any row whose id is absent from the payload, and carries a guard
- * naming these four tables as ones it may never reach — because the browser
+ * naming the first four day tables as ones it may never reach (the fifth's
+ * migration checks it too) — because the browser
  * sends the whole plan on a debounce and a browser that has not opened the
  * Today step has no ticks to send. One shared write path and a year of
  * journalling goes on the floor the first time somebody edits a goal on a
@@ -34,6 +36,7 @@ import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
 import type {
   DayJournalRow,
+  DayNumberRow,
   DayPatch,
   DayRatingRow,
   DayRow,
@@ -81,7 +84,7 @@ export async function readDayRows(userId: string, planId: string): Promise<DayRo
   // and narrowed to this plan's days below. One account has one plan today, so
   // this reads nothing extra; it is written this way so a second plan per
   // account stays a migration rather than a rewrite.
-  const [ratings, ticks, journal] = await Promise.all([
+  const [ratings, ticks, journal, numbers] = await Promise.all([
     readAllRows<DayRatingRow>("your ratings", (from, to) =>
       supabase
         .from("life_plan_day_ratings")
@@ -108,6 +111,15 @@ export async function readDayRows(userId: string, planId: string): Promise<DayRo
         .order("id")
         .range(from, to),
     ),
+    readAllRows<DayNumberRow>("your numbers", (from, to) =>
+      supabase
+        .from("life_plan_day_numbers")
+        .select("user_id, day_id, node_id, value")
+        .eq("user_id", userId)
+        .order("day_id")
+        .order("node_id")
+        .range(from, to),
+    ),
   ])
 
   const mine = new Set(days.map((d) => d.id))
@@ -116,6 +128,7 @@ export async function readDayRows(userId: string, planId: string): Promise<DayRo
     ratings: ratings.filter((r) => mine.has(r.day_id)),
     ticks: ticks.filter((r) => mine.has(r.day_id)),
     journal: journal.filter((r) => mine.has(r.day_id)),
+    numbers: numbers.filter((r) => mine.has(r.day_id)),
   }
 }
 
@@ -154,30 +167,44 @@ export async function saveDay(
   if (day.error) throw new Error(`Failed to open that day: ${day.error.message}`)
   const dayId = (day.data as { id: string }).id
 
-  if (patch.ratings) {
-    const set = Object.entries(patch.ratings).filter(([, v]) => v !== null)
-    const clear = Object.entries(patch.ratings).filter(([, v]) => v === null).map(([k]) => ids.get(k)!)
+  /**
+   * ONE NUMBER PER PART, set or cleared: a day's ratings, and its number boxes.
+   * A clear for a part the plan no longer has is skipped: its row went with
+   * the part.
+   */
+  const cells = async (
+    table: "life_plan_day_ratings" | "life_plan_day_numbers",
+    keyColumn: "area_id" | "node_id",
+    valueColumn: "rating" | "value",
+    entries: Record<string, number | null>,
+    what: string,
+  ) => {
+    const set = Object.entries(entries).filter((e): e is [string, number] => e[1] !== null)
+    const clear = Object.entries(entries)
+      .filter(([, v]) => v === null)
+      .map(([k]) => ids.get(k))
+      .filter((id): id is string => Boolean(id))
     if (set.length > 0) {
-      const { error } = await supabase.from("life_plan_day_ratings").upsert(
-        set.map(([local, rating]) => ({ user_id: userId, day_id: dayId, area_id: ids.get(local)!, rating })),
-        { onConflict: "day_id,area_id" },
+      const { error } = await supabase.from(table).upsert(
+        set.map(([local, v]) => ({ user_id: userId, day_id: dayId, [keyColumn]: ids.get(local)!, [valueColumn]: v })),
+        { onConflict: `day_id,${keyColumn}` },
       )
-      if (error) throw new Error(`Failed to save that rating: ${error.message}`)
+      if (error) throw new Error(`Failed to save that ${what}: ${error.message}`)
     }
     if (clear.length > 0) {
-      const { error } = await supabase
-        .from("life_plan_day_ratings")
-        .delete()
-        .eq("day_id", dayId)
-        .eq("user_id", userId)
-        .in("area_id", clear)
-      if (error) throw new Error(`Failed to clear that rating: ${error.message}`)
+      const { error } = await supabase.from(table).delete().eq("day_id", dayId).eq("user_id", userId).in(keyColumn, clear)
+      if (error) throw new Error(`Failed to clear that ${what}: ${error.message}`)
     }
   }
 
+  if (patch.ratings) await cells("life_plan_day_ratings", "area_id", "rating", patch.ratings, "rating")
+
   if (patch.ticks) {
     const on = Object.entries(patch.ticks).filter(([, v]) => v).map(([k]) => ids.get(k)!)
-    const off = Object.entries(patch.ticks).filter(([, v]) => !v).map(([k]) => ids.get(k)!)
+    const off = Object.entries(patch.ticks)
+      .filter(([, v]) => !v)
+      .map(([k]) => ids.get(k))
+      .filter((id): id is string => Boolean(id))
     if (on.length > 0) {
       const { error } = await supabase.from("life_plan_day_ticks").upsert(
         on.map((node_id) => ({ user_id: userId, day_id: dayId, node_id })),
@@ -195,6 +222,8 @@ export async function saveDay(
       if (error) throw new Error(`Failed to take that tick back: ${error.message}`)
     }
   }
+
+  if (patch.numbers) await cells("life_plan_day_numbers", "node_id", "value", patch.numbers, "number")
 
   if (patch.journal) {
     // The plan's own id, stored verbatim and never resolved. An answer whose

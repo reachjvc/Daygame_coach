@@ -863,6 +863,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     logged: {},
     notes: {},
     journal: {},
+    numbers: {},
   }
 
   return normalizeNsPlan(draft)
@@ -884,6 +885,7 @@ export function mergeDayRecord(server: NsPlan, browser: NsPlan | null): NsPlan {
     logged: nonEmpty(server.logged) ? server.logged : browser.logged ?? {},
     notes: nonEmpty(server.notes) ? server.notes : browser.notes ?? {},
     journal: nonEmpty(server.journal) ? server.journal : browser.journal ?? {},
+    numbers: nonEmpty(server.numbers) ? server.numbers : browser.numbers ?? {},
   }
 }
 

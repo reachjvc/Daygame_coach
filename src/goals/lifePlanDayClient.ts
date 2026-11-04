@@ -27,6 +27,7 @@ export async function fetchDayRecord(): Promise<DayRecord | undefined> {
       logged: body.logged ?? {},
       notes: body.notes ?? {},
       journal: body.journal ?? {},
+      numbers: body.numbers ?? {},
     }
   } catch {
     return undefined

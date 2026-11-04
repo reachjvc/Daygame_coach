@@ -414,6 +414,15 @@ fortnight scores appear as your first review.
   neither read a review nor hang a score on one), `life-mastery-reviews.spec.ts` (a week across a
   reload with the browser copy thrown away, the copied review as "last time" and in the table; a month,
   quarter and year). The rail test now counts 12 steps.
+- Security review (a separate agent, as `/security-review` cannot run here): nothing exploitable; one
+  account can neither read nor hang a score on another's review. Its one cheap suggestion was taken: the
+  dates must lie between 1900 and 2200.
+- **Live 2026-11-04 night**: backup first (`~/dg-backups/life-plan-2026-11-04-before-phase5.json`, 910
+  rows, revision 920), then the two migrations (nothing else was pending), then commit `44553187`
+  straight after. Checked on your account: one review, kind "two weeks", 10–23 Sep 2026, 12 scores equal
+  to the Your 10s numbers, revision still 920; clients cannot TRUNCATE either table. After-backup:
+  `~/dg-backups/life-plan-2026-11-04-after-phase5.json` (924 rows). Sign-off cards `p5-review`,
+  `p5-first-review`, `p5-wheel-question` (a question) and `p5-first-second`.
 
 ### Phase 6. Your own Today boxes can hold a number (Q10)
 
@@ -421,6 +430,35 @@ A Today box gets a "number" kind (e.g. approaches, minutes, kilos). The value is
 and shown on the day's summary. Concept items 21 and 34.
 
 **Done when:** a test account can add a number box, type a number, reload, and see it.
+
+**Built 2026-11-04 night.**
+- **On Today:** "Your own fields" (was "Your own text fields") gets a fourth kind, **A number**. The box
+  sits where its field is attached, takes digits with one decimal mark (a comma works), and lists the
+  last days under it ("Before: 3 Nov: 0 · 2 Nov: 4"). Emptying it removes the number; zero is kept as
+  zero. A thousands mark is refused, not guessed ("1.500" is 1500 in Danish and 1.5 in English).
+- **The day's summary:** the journal's "Everything you have written" shows a day's numbers on one line
+  ("Approaches 6").
+- **Table:** migration `20261104190000_day_numbers.sql`: `life_plan_day_numbers` (day, plan part,
+  value), in the day half like ratings and ticks, locked to its owner; `life_plan_fields.kind` takes
+  `number`. Keyed on any plan part, not only a box, so Q4's goal counts land here too. Removing a box
+  removes its numbers (the button already says "and everything written under it").
+- **Found and fixed on the way:**
+  - The journal-style rule "a clear must name a known part" meant that removing an area, step or box
+    that had a saved rating, tick or number left a clear the account could never accept, and every day
+    save after it failed for the rest of the visit. A clear now needs no known part.
+  - When this browser's copy is imported into an account (a new account, or one holding nothing
+    written), nothing written on Today in that visit was ever sent, and the next visit took the
+    account's days over it. The import now brings the day half along.
+  - A plan holding only your own boxes counted as empty, so another device could import over it and
+    take the boxes' numbers with them. A box now counts as written.
+- Code review: 14 finds, all fixed (the three above among them; also the number parsing, a refused
+  entry no longer wiping what was typed, the journal count, one empty-day helper instead of four copies,
+  one limit instead of two). Security review: nothing exploitable.
+- Tests: `dayNumbers.test.ts` (12), `dayNumbersAreSaved.integration.test.ts` (written, changed,
+  cleared, cascaded; another account can neither read nor write one), `life-mastery-number-box.spec.ts`
+  (add a box, type 5,5, reload with the browser copy thrown away, see 5.5 on Today and in the journal,
+  empty it and it is gone from the account). The schema test now also knows tables from migrations newer
+  than its production dump, as the test database does.
 
 ### Phase 7. Clear out the old homes (deletes: your yes first)
 

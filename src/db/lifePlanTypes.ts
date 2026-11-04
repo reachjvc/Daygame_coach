@@ -242,7 +242,7 @@ export interface FieldRow {
   node_kind: "field"
   position: number
   label: string
-  kind: "write" | "read" | "go"
+  kind: "write" | "read" | "go" | "number"
   target_id: string | null
   /** Names a code registry entry, not a node. No foreign key, and none possible. */
   read_source_id: string | null

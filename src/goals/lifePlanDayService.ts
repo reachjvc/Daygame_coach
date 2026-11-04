@@ -13,7 +13,7 @@
 import type { DayPatch, DayRows } from "@/src/db/lifePlanDayTypes"
 import { daysBetweenDateKeys } from "@/src/shared/dateUtils"
 
-/** The four maps the flow keeps, as `NsPlan` holds them. */
+/** The five maps the flow keeps, as `NsPlan` holds them. */
 export interface DayRecord {
   /** Date to area id to 0-10. */
   daily: Record<string, Record<string, number>>
@@ -23,6 +23,11 @@ export interface DayRecord {
   notes: Record<string, string>
   /** Date to question id to what was written. */
   journal: Record<string, Record<string, string>>
+  /**
+   * Date to box (or goal) id to the number written (Plans/life-plan-rebuild.md,
+   * Phase 6). Optional: a record made before Phase 6 has none.
+   */
+  numbers?: Record<string, Record<string, number>>
 }
 
 export const DAY_LIMITS = {
@@ -32,6 +37,8 @@ export const DAY_LIMITS = {
   asked: 500,
   /** Matches `life_plan_nodes.local_id` and the journal's own shape check. */
   localId: 80,
+  /** Matches `life_plan_day_numbers.value`. */
+  number: 1_000_000_000,
 } as const
 
 const LOCAL_ID = /^[A-Za-z0-9_:.-]+$/
@@ -79,7 +86,15 @@ export function dayIsWritable(date: string, accountToday: string): boolean {
  * if it is told which ids were missing.
  */
 export function unknownIds(patch: DayPatch, ids: Map<string, string>): string[] {
-  const named = [...Object.keys(patch.ratings ?? {}), ...Object.keys(patch.ticks ?? {})]
+  // A CLEAR NAMES NOTHING THAT HAS TO EXIST. Its row went with its part when
+  // the part was removed (the database cascades), so a part taken out with a
+  // rating, tick or number on it left a clear the account could never accept,
+  // and every day save after it failed (found in the Phase 6 code review).
+  const named = [
+    ...Object.entries(patch.ratings ?? {}).filter(([, v]) => v !== null).map(([k]) => k),
+    ...Object.entries(patch.ticks ?? {}).filter(([, v]) => v).map(([k]) => k),
+    ...Object.entries(patch.numbers ?? {}).filter(([, v]) => v !== null).map(([k]) => k),
+  ]
   return [...new Set(named.filter((id) => !ids.has(id)))]
 }
 
@@ -99,6 +114,12 @@ export function whyNotWritable(patch: DayPatch, accountToday: string): string {
     if (value === null) continue
     if (!Number.isInteger(value) || value < 0 || value > 10) return "A rating is a whole number from 0 to 10."
   }
+  for (const value of Object.values(patch.numbers ?? {})) {
+    if (value === null) continue
+    if (typeof value !== "number" || !Number.isFinite(value) || Math.abs(value) > DAY_LIMITS.number) {
+      return "That number cannot be saved. Use digits, up to a billion."
+    }
+  }
   return ""
 }
 
@@ -117,7 +138,7 @@ export function fitAsked(asked: Record<string, string> | undefined): Record<stri
 }
 
 /**
- * The rows, as the four maps the flow works in.
+ * The rows, as the five maps the flow works in.
  *
  * A tick or a rating whose node has since been deleted is dropped here: the
  * database has already cascaded those away, and one that survives is a row
@@ -127,7 +148,8 @@ export function fitAsked(asked: Record<string, string> | undefined): Record<stri
  */
 export function dayRowsToRecord(rows: DayRows, localIdFor: Map<string, string>): DayRecord {
   const dateOf = new Map(rows.days.map((d) => [d.id, d.on_date]))
-  const record: DayRecord = { daily: {}, logged: {}, notes: {}, journal: {} }
+  const record = emptyDayRecord()
+  const numbers = record.numbers
 
   for (const day of rows.days) if (day.note.trim()) record.notes[day.on_date] = day.note
 
@@ -151,7 +173,22 @@ export function dayRowsToRecord(rows: DayRows, localIdFor: Map<string, string>):
     record.journal[date] = { ...(record.journal[date] ?? {}), [j.local_id]: j.body }
   }
 
+  for (const n of rows.numbers ?? []) {
+    const date = dateOf.get(n.day_id)
+    const local = localIdFor.get(n.node_id)
+    if (!date || !local) continue
+    // NUMERIC comes back from PostgREST as a number, but a string is not ruled out.
+    const value = Number(n.value)
+    if (!Number.isFinite(value)) continue
+    numbers[date] = { ...(numbers[date] ?? {}), [local]: value }
+  }
+
   return record
+}
+
+/** A day record holding nothing: the one shape every "no days" starts from. */
+export function emptyDayRecord(): Required<DayRecord> {
+  return { daily: {}, logged: {}, notes: {}, journal: {}, numbers: {} }
 }
 
 /** Whether a day record holds anything at all — the import's whole question. */
@@ -160,7 +197,8 @@ export function recordIsEmpty(record: DayRecord): boolean {
     Object.keys(record.daily).length === 0 &&
     Object.keys(record.logged).length === 0 &&
     Object.keys(record.notes).length === 0 &&
-    Object.keys(record.journal).length === 0
+    Object.keys(record.journal).length === 0 &&
+    Object.keys(record.numbers ?? {}).length === 0
   )
 }
 
@@ -177,6 +215,7 @@ export function recordToPatches(record: DayRecord): DayPatch[] {
     ...Object.keys(record.logged),
     ...Object.keys(record.notes),
     ...Object.keys(record.journal),
+    ...Object.keys(record.numbers ?? {}),
   ])
   return [...dates].sort().map((date) => {
     const patch: DayPatch = { date }
@@ -184,6 +223,7 @@ export function recordToPatches(record: DayRecord): DayPatch[] {
     if (record.daily[date]) patch.ratings = { ...record.daily[date] }
     if (record.logged[date]) patch.ticks = Object.fromEntries(record.logged[date].map((id) => [id, true]))
     if (record.journal[date]) patch.journal = { ...record.journal[date] }
+    if (record.numbers?.[date]) patch.numbers = { ...record.numbers[date] }
     return patch
   })
 }
@@ -234,11 +274,12 @@ export function keepEditsMadeWhileLoading(
   atLoad: DayRecord,
   now: DayRecord,
 ): DayRecord {
-  const merged: DayRecord = {
+  const merged: Required<DayRecord> = {
     daily: { ...account.daily },
     logged: { ...account.logged },
     notes: { ...account.notes },
     journal: { ...account.journal },
+    numbers: { ...(account.numbers ?? {}) },
   }
 
   const dates = new Set([
@@ -246,6 +287,7 @@ export function keepEditsMadeWhileLoading(
     ...Object.keys(atLoad.logged), ...Object.keys(now.logged),
     ...Object.keys(atLoad.notes), ...Object.keys(now.notes),
     ...Object.keys(atLoad.journal), ...Object.keys(now.journal),
+    ...Object.keys(atLoad.numbers ?? {}), ...Object.keys(now.numbers ?? {}),
   ])
 
   for (const date of dates) {
@@ -261,6 +303,7 @@ export function keepEditsMadeWhileLoading(
     for (const [map, from, to] of [
       ["daily", atLoad.daily[date] ?? {}, now.daily[date] ?? {}],
       ["journal", atLoad.journal[date] ?? {}, now.journal[date] ?? {}],
+      ["numbers", atLoad.numbers?.[date] ?? {}, now.numbers?.[date] ?? {}],
     ] as const) {
       const ids = new Set([...Object.keys(from), ...Object.keys(to)])
       for (const id of ids) {
@@ -298,6 +341,7 @@ export function patchesBetween(before: DayRecord, after: DayRecord): DayPatch[] 
     ...Object.keys(before.logged), ...Object.keys(after.logged),
     ...Object.keys(before.notes), ...Object.keys(after.notes),
     ...Object.keys(before.journal), ...Object.keys(after.journal),
+    ...Object.keys(before.numbers ?? {}), ...Object.keys(after.numbers ?? {}),
   ])
 
   const patches: DayPatch[] = []
@@ -350,6 +394,19 @@ export function patchesBetween(before: DayRecord, after: DayRecord): DayPatch[] 
       moved = true
     }
 
+    const numbersWas = before.numbers?.[date] ?? {}
+    const numbersNow = after.numbers?.[date] ?? {}
+    const numbers: Record<string, number | null> = {}
+    for (const id of new Set([...Object.keys(numbersWas), ...Object.keys(numbersNow)])) {
+      const now = numbersNow[id]
+      if (numbersWas[id] === now) continue
+      numbers[id] = now === undefined ? null : now
+    }
+    if (Object.keys(numbers).length > 0) {
+      patch.numbers = numbers
+      moved = true
+    }
+
     if (moved) patches.push(patch)
   }
   return patches
@@ -361,7 +418,8 @@ export function recordOf(plan: {
   logged: DayRecord["logged"]
   notes: DayRecord["notes"]
   journal: DayRecord["journal"]
+  numbers?: DayRecord["numbers"]
 }): DayRecord {
-  return { daily: plan.daily, logged: plan.logged, notes: plan.notes, journal: plan.journal }
+  return { daily: plan.daily, logged: plan.logged, notes: plan.notes, journal: plan.journal, numbers: plan.numbers ?? {} }
 }
 
