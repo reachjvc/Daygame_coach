@@ -16,7 +16,6 @@
   "stats": [
     {
       "group": "you",
-      "top": true,
       "big": "54%",
       "line": "US adults aged 19 to 39 get about 54% of their daily calories from ultra-processed food.",
       "mirror": "You get half your food from packets, boxes and drive-throughs.",
@@ -39,7 +38,6 @@
     },
     {
       "group": "you",
-      "top": true,
       "big": "43%",
       "line": "In 23 US states, 43% of adults aged 18 to 24 had a sugary drink at least once a day, more than any other age group.",
       "mirror": "You drink soda, sweet tea or energy drinks every single day.",
@@ -109,7 +107,6 @@
     },
     {
       "group": "start",
-      "top": true,
       "big": "67%",
       "line": "By 2018, US kids and teens got 67% of their calories from ultra-processed food, up from 61% in 1999.",
       "mirror": "You grew up on cereal, chips and soda, like most kids did.",
@@ -177,7 +174,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "+500 kcal",
       "line": "On ultra-processed food, people ate about 500 more calories a day and gained about 0.9 kg in two weeks.",
       "mirror": "You eat until you're full, yet still take in far too much.",
@@ -294,29 +290,6 @@
     {
       "group": "quit",
       "fold": "binges",
-      "big": "45%",
-      "line": "In therapy for binge eating, mostly CBT, about 45% of everyone who started stopped bingeing completely; 42% were still binge-free at follow-up.",
-      "mirror": "You think nothing will ever stop the binges.",
-      "basis": {
-        "design": "meta-analysis of 39 randomised trials",
-        "who": "adults with binge-eating disorder; 65 treatment groups, 40 of them CBT",
-        "n": "2,349 patients in 39 trials",
-        "where": "39 published trials",
-        "when": "published 2018",
-        "measured": "Share with zero binges at the end of treatment: 45.1% of all who started, 50.9% of those who finished. At follow-up: 42.3% and 50.3%."
-      },
-      "caveat": "Zero binges is a strict bar; many others improve partly. Interpersonal therapy had the highest rates.",
-      "ref": {
-        "cite": "Linardon J (2018). Rates of abstinence following psychological or behavioral treatments for binge-eating disorder: meta-analysis. International Journal of Eating Disorders 51(8):785-797.",
-        "url": "https://europepmc.org/article/MED/30058074",
-        "pmid": "30058074",
-        "fetched": true,
-        "quote": "The total weighted percentage of patients who achieved abstinence at posttreatment in the intention-to-treat analysis (all randomized patients) was 45.1% (95% CI =40.7, 49.5)"
-      }
-    },
-    {
-      "group": "quit",
-      "fold": "binges",
       "big": "7 in 10",
       "line": "In a trial of three treatments for binge eating, 7 in 10 people cut their binges by at least 70% within the first 4 weeks.",
       "mirror": "You're starting treatment and wonder how soon the binges ease.",
@@ -428,6 +401,230 @@
         "fetched": true,
         "quote": "with full recovery from binge eating in 64.4% of patients"
       }
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "1 in 6",
+      "line": "Of US adults who had ever been overweight, about 1 in 6 had lost at least a tenth of their weight and kept it off for a year or more. For men it was 15.6%.",
+      "mirror": "You've lost weight before and think nobody keeps it off.",
+      "basis": {
+        "design": "national health survey (NHANES), one interview per person",
+        "who": "US adults aged 20 to 84 who had ever been overweight; 52% men",
+        "n": "14,306 adults",
+        "where": "USA",
+        "when": "1999 to 2006; published 2010",
+        "measured": "Highest-ever weight, weight a year ago and weight now, all as people reported them. Counted: at least 10% below the highest weight, both now and a year ago."
+      },
+      "caveat": "Some of the loss may not have been on purpose, such as from illness. Weights were remembered, and one year off is not forever. Women did a little better than men (19.2% vs 15.6%).",
+      "ref": {
+        "cite": "Kraschnewski JL, Boan J, Esposito J, Sherwood NE, Lehman EB, Kephart DK, Sciamanna CN (2010). Long-term weight loss maintenance in the United States. International Journal of Obesity 34:1644-1654.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3671378/",
+        "pmid": "20479763",
+        "fetched": true,
+        "quote": "Among US adults who had ever been overweight or obese, 36.6, 17.3, 8.5 and 4.4% reported LTWLM of at least 5, 10, 15 and 20%, respectively."
+      }
+    },
+    {
+      "group": "who",
+      "big": "Almost half",
+      "line": "Of 784 people who lost a lot of weight and kept it off for years, a little over half used a program. The rest did it on their own.",
+      "mirror": "You think you need a program or a coach to change.",
+      "basis": {
+        "design": "survey of a registry that successful people chose to join (National Weight Control Registry)",
+        "who": "adults who lost an average of 30 kg and kept at least 13.6 kg off for 5 years; 155 men, 629 women",
+        "n": "784 people",
+        "where": "USA",
+        "when": "published 1997",
+        "measured": "How they lost the weight (a formal program or on their own), what they eat and how active they are, all self-reported."
+      },
+      "caveat": "Only success stories who signed up, mostly women, so it can't say which way fails more often. Both groups changed food and exercise, and 3 in 4 said a trigger event came first.",
+      "ref": {
+        "cite": "Klem ML, Wing RR, McGuire MT, Seagle HM, Hill JO (1997). A descriptive study of individuals successful at long-term maintenance of substantial weight loss. American Journal of Clinical Nutrition 66:239-246.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/9250100/",
+        "pmid": "9250100",
+        "fetched": true,
+        "quote": "A little over one-half of the sample lost weight through formal programs; the remainder lost weight on their own."
+      }
+    },
+    {
+      "group": "who",
+      "big": "23 of 31 kg",
+      "line": "People who had already kept off 13.6 kg or more for a year still had, on average, 23 of their 31 kg off ten years later.",
+      "mirror": "You've lost it before and wonder if you can ever relax.",
+      "basis": {
+        "design": "10-year follow-up of a registry that successful people chose to join (National Weight Control Registry)",
+        "who": "adults who had lost at least 13.6 kg and kept it off for at least a year; 78% women, average age 48",
+        "n": "2,886 people",
+        "where": "USA",
+        "when": "1993 to 2010; published 2014",
+        "measured": "Self-reported weight each year for 10 years, plus exercise, eating habits and how often they weighed themselves."
+      },
+      "caveat": "Only people already doing well when they joined, and weights were self-reported. Those who moved less, ate more freely or stopped weighing themselves regained more. The study estimates 87% were still at least 10% lighter.",
+      "ref": {
+        "cite": "Thomas JG, Bond DS, Phelan S, Hill JO, Wing RR (2014). Weight-loss maintenance for 10 years in the National Weight Control Registry. American Journal of Preventive Medicine 46:17-23.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24355667/",
+        "pmid": "24355667",
+        "fetched": true,
+        "quote": "Mean weight loss was 31.3 kg (95% CI=30.8, 31.9) at baseline, 23.8 kg (95% CI=23.2, 24.4) at 5 years and 23.1±0.4 kg (95% CI=22.3, 23.9) at 10 years."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "71% vs 71%",
+      "line": "Fast dieters (12 weeks) and slow dieters (36 weeks) regained the same share of their weight within three years, about 71%. More of the fast group hit their goal: 81% vs 50%.",
+      "mirror": "You want to go all in, but everyone says go slow.",
+      "basis": {
+        "design": "randomised trial (fast vs slow weight loss, then a 3-year keep-it-off phase)",
+        "who": "adults with obesity aged 18 to 70; 51 men, 153 women enrolled",
+        "n": "200 started; 104 who reached their goal finished the 3 years (61 fast, 43 slow)",
+        "where": "Australia (a hospital in Melbourne)",
+        "when": "started 2008 to 2010; published 2014",
+        "measured": "Share of lost weight regained 144 weeks after the weight-loss phase, and how many lost at least 12.5% in the time given."
+      },
+      "caveat": "Most people regained most of their weight either way. This is about the pace of a diet, not about dropping junk food. Mostly women, and only those who hit their goal went on.",
+      "ref": {
+        "cite": "Purcell K, Sumithran P, Prendergast LA, Bouniu CJ, Delbridge E, Proietto J (2014). The effect of rate of weight loss on long-term weight management: a randomised controlled trial. Lancet Diabetes & Endocrinology 2:954-962.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/25459211/",
+        "pmid": "25459211",
+        "fetched": true,
+        "quote": "The rate of weight loss does not affect the proportion of weight regained within 144 weeks."
+      }
+    },
+    {
+      "group": "how",
+      "big": "42%",
+      "line": "Of US adults trying to lose weight, 63% ate less and 63% exercised. Only 42% cut down on junk food or fast food.",
+      "mirror": "You've cut portions but kept the junk food.",
+      "basis": {
+        "design": "national health survey (NHANES), official statistics brief",
+        "who": "US adults aged 20 and over who tried to lose weight in the past 12 months; 42% of men had tried",
+        "n": "a national sample; the report doesn't say how many people",
+        "where": "USA",
+        "when": "2013 to 2016; published 2018",
+        "measured": "Every way people said they used to lose weight; most named two or more."
+      },
+      "caveat": "Shows what people try, not what works. The ways are not split by men and women.",
+      "ref": {
+        "cite": "Martin CB, Herrick KA, Sarafrazi N, Ogden CL (2018). Attempts to lose weight among adults in the United States, 2013-2016. NCHS Data Brief No. 313. National Center for Health Statistics.",
+        "url": "https://www.cdc.gov/nchs/products/databriefs/db313.htm",
+        "fetched": true,
+        "quote": "drinking a lot of water (44.7%); and eating less junk food or fast food (42.4%)."
+      }
+    },
+    {
+      "group": "how",
+      "big": "Less often",
+      "line": "Over two years of dieting, people who ate their craved foods less often came to crave them less. Overall, eating smaller amounts of them did not cut cravings.",
+      "mirror": "You've tried eating smaller bits of sweets and still crave them.",
+      "basis": {
+        "design": "analysis of a 2-year randomised diet trial (POUNDS Lost)",
+        "who": "adults with overweight or obesity on one of four calorie-cut diets; 44% men",
+        "n": "367 adults",
+        "where": "USA (Boston and Baton Rouge)",
+        "when": "published 2017; checked at the start, 6 months and 2 years",
+        "measured": "A craving questionnaire, and how often and how much of those foods people ate, from food records."
+      },
+      "caveat": "A link, not proof, and a small one. For sweets alone, eating smaller amounts also went with less craving, so cutting down is not useless.",
+      "ref": {
+        "cite": "Apolzan JW, Myers CA, Champagne CM, Beyl RA, Raynor HA, Anton SA, Williamson DA, Sacks FM, Bray GA, Martin CK (2017). Frequency of consuming foods predicts changes in cravings for those foods during weight loss: the POUNDS Lost Study. Obesity 25:1343-1348.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/28618170/",
+        "pmid": "28618170",
+        "fetched": true,
+        "quote": "Altering frequency of consuming craved foods is positively associated with cravings; however, changing the amount of foods consumed does not appear to alter cravings."
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "big": "4.9 kg",
+      "line": "Men who did a 12-week weight program at their football club were about 5 kg lighter a year later than men on the waiting list.",
+      "mirror": "You think diet programs are for women, not for men like you.",
+      "basis": {
+        "design": "randomised trial (12 weekly group sessions at the club vs a waiting list)",
+        "who": "male football fans aged 35 to 65 with overweight (BMI 28 or more)",
+        "n": "747 men (374 in the program)",
+        "where": "Scotland (13 professional football clubs)",
+        "when": "2011 to 2012; published 2014",
+        "measured": "Weight 12 months after starting, measured by staff who did not know each man's group."
+      },
+      "caveat": "Men who chose to sign up. 3.5 years later the first group was still 2.9 kg lighter than at the start, and about 1 in 3 had kept off 5%.",
+      "ref": {
+        "cite": "Hunt K, Wyke S, Gray CM, Anderson AS, Brady A, Bunn C, Donnan PT, Fenwick E, Grieve E, Leishman J, Miller E, Mutrie N, Rauchhaus P, White A, Treweek S (2014). A gender-sensitised weight loss and healthy living programme for overweight and obese men delivered by Scottish Premier League football clubs (FFIT): a pragmatic randomised controlled trial. Lancet 383:1211-1221.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24457205/",
+        "pmid": "24457205",
+        "fetched": true,
+        "quote": "At 12 months the mean difference in weight loss between groups, adjusted for baseline weight and club, was 4·94 kg (95% CI 3·95-5·94)"
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "big": "−1.9 kg",
+      "line": "Teens who got water and diet drinks delivered home for a year nearly stopped sugary drinks and gained 1.9 kg less. A year after the help stopped, the gap had faded.",
+      "mirror": "You drink soda every day and wonder if cutting it would matter.",
+      "basis": {
+        "design": "randomised trial (1 year of help, then 1 year without)",
+        "who": "high-school students in grades 9 and 10 with overweight who drank sugary drinks or juice daily; 124 boys, 100 girls",
+        "n": "224 teens",
+        "where": "USA (Boston area)",
+        "when": "published 2012",
+        "measured": "Weight and BMI at 1 and 2 years; sugary drinks fell from 1.7 servings a day to nearly none. Help was home deliveries every 2 weeks, plus phone calls with parents."
+      },
+      "caveat": "Teens, not grown men. At 2 years, the main test, the difference was too small to be sure of, except among Hispanic teens.",
+      "ref": {
+        "cite": "Ebbeling CB, Feldman HA, Chomitz VR, Antonelli TA, Gortmaker SL, Osganian SK, Ludwig DS (2012). A randomized trial of sugar-sweetened beverages and adolescent body weight. New England Journal of Medicine 367:1407-1416.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22998339/",
+        "pmid": "22998339",
+        "fetched": true,
+        "quote": "At 1 year, however, there were significant between-group differences for changes in BMI (-0.57, P=0.045) and weight (-1.9 kg, P=0.04)."
+      }
+    },
+    {
+      "group": "works",
+      "big": "6 months",
+      "line": "Six months of eating very little sweet food did not change how much people liked sweet taste, what they chose, or their weight. Afterwards they drifted back to their old sweet intake.",
+      "mirror": "You hope your sweet tooth fades if you cut sugar long enough.",
+      "basis": {
+        "design": "randomised trial, three groups (low, regular or high sweet diet)",
+        "who": "healthy adults, mostly normal weight, average age 35; 57 men, 123 women",
+        "n": "180 adults (61 on the low-sweet diet)",
+        "where": "Netherlands (Wageningen)",
+        "when": "2020 to 2024; published 2026",
+        "measured": "Liking and sweetness of sweet foods and drinks, food choice, calories and weight, at the start, 6 months and 4 months later. About half of each day's food was supplied."
+      },
+      "caveat": "Healthy volunteers, mostly women; fruit and sweeteners counted as sweet. A smaller earlier trial (13 people, 3 months low sugar) found sweet food tasted about 40% sweeter, but was not liked any less.",
+      "ref": {
+        "cite": "Čad EM, Mars M, Pretorius L, van der Kruijssen M, Tang CS, de Jong HB, Balvers M, Appleton KM, de Graaf K (2026). The Sweet Tooth Trial: a parallel randomized controlled trial investigating the effects of a 6-month low, regular, or high dietary sweet taste exposure on sweet taste liking, and various outcomes related to food intake and weight status. American Journal of Clinical Nutrition 123:101073.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/41485871/",
+        "pmid": "41485871",
+        "fetched": true,
+        "quote": "In the current trial, altering exposure to sweet-tasting foods did not change sweet taste liking, nor other outcomes."
+      }
+    },
+    {
+      "group": "works",
+      "fold": "binges",
+      "big": "45%",
+      "line": "In therapy for binge eating, mostly CBT, about 45% of everyone who started stopped bingeing completely; 42% were still binge-free at follow-up.",
+      "mirror": "You think nothing will ever stop the binges.",
+      "basis": {
+        "design": "meta-analysis of 39 randomised trials",
+        "who": "adults with binge-eating disorder; 65 treatment groups, 40 of them CBT",
+        "n": "2,349 patients in 39 trials",
+        "where": "39 published trials",
+        "when": "published 2018",
+        "measured": "Share with zero binges at the end of treatment: 45.1% of all who started, 50.9% of those who finished. At follow-up: 42.3% and 50.3%."
+      },
+      "caveat": "Zero binges is a strict bar; many others improve partly. Interpersonal therapy had the highest rates.",
+      "ref": {
+        "cite": "Linardon J (2018). Rates of abstinence following psychological or behavioral treatments for binge-eating disorder: meta-analysis. International Journal of Eating Disorders 51(8):785-797.",
+        "url": "https://europepmc.org/article/MED/30058074",
+        "pmid": "30058074",
+        "fetched": true,
+        "quote": "The total weighted percentage of patients who achieved abstinence at posttreatment in the intention-to-treat analysis (all randomized patients) was 45.1% (95% CI =40.7, 49.5)"
+      }
     }
   ],
   "rejected": [
@@ -478,6 +675,30 @@
     {
       "claim": "US men aged 20 to 39 get 249 kcal and 9.3% of their daily calories from sugary drinks (NCHS Data Brief 270, 2011-2014)",
       "why": "Fetched brief and data tables: neither gives how many men aged 20 to 39 were surveyed, so the number behind the figure is unknown. Left out; a good sugar stat if a source with the sample size turns up."
+    },
+    {
+      "claim": "Swapping sugary drinks for water or diet drinks for 6 months gave 2 to 2.5% weight loss (Tate 2012, CHOICE trial, 318 adults).",
+      "why": "PMID 22301929, abstract checked: 84% women, and weight loss did not differ from a control group making changes of their choosing. Used the Ebbeling 2012 trial (224 teens, about half boys) for sugary drinks instead."
+    },
+    {
+      "claim": "Smaller portions and packages could cut 144 to 228 kcal a day (Hollands 2015 Cochrane review, 72 studies).",
+      "why": "PMID 26368271, abstract checked: mostly single-meal lab studies at unclear or high risk of bias; the daily kcal figure is the authors' projection if smaller sizes were kept across the whole diet. Too indirect for a number on the page."
+    },
+    {
+      "claim": "Obese adults who ate less fat, exercised more, used prescription drugs or joined commercial programs were likelier to lose 5 to 10% (Nicklas 2012, NHANES, 2,523 who tried).",
+      "why": "PMID 22516488, abstract checked: one-time survey of self-reported strategies, so the links may run either way; overlaps the NCHS 2018 'ways people try' stat."
+    },
+    {
+      "claim": "After 3 months on a low-sugar diet, sweet food tastes about 40% sweeter (Wise 2016).",
+      "why": "PMID 26607941, abstract checked: only 13 people finished the low-sugar arm, and liking did not change. Kept as a caveat on the larger Sweet Tooth trial."
+    },
+    {
+      "claim": "Five years after a structured weight-loss program, the average person keeps off about 3 kg (Anderson 2001 meta-analysis, 29 US studies).",
+      "why": "PMID 11684524, abstract checked: older programs (many very-low-calorie diets) and no head count in the summary. The Purcell 2014 trial shows regain more directly."
+    },
+    {
+      "claim": "Weight-loss drugs (GLP-1) cut food cravings.",
+      "why": "Not checked this round. A drug trial number would read like an advert on a habits page, and the brief asked for method shares only."
     }
   ]
 }

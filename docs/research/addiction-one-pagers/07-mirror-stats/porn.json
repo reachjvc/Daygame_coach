@@ -15,7 +15,6 @@
   "stats": [
     {
       "group": "you",
-      "top": true,
       "big": "11%",
       "line": "About 11% of US men agree, at least somewhat, with the sentence 'I am addicted to pornography'.",
       "mirror": "You've quietly called yourself a porn addict.",
@@ -39,7 +38,6 @@
     },
     {
       "group": "you",
-      "top": true,
       "big": "43%",
       "line": "Of Swiss men in their mid-20s who watch monthly, 43% admit at least one of six addiction signs; 9% admit three or more.",
       "mirror": "You've noticed a warning sign or two in how you watch.",
@@ -129,7 +127,6 @@
     },
     {
       "group": "start",
-      "top": true,
       "big": "13",
       "line": "Young people in England first saw porn at 13 on average; 1 in 10 had seen it by age 9.",
       "mirror": "You were 13 or younger the first time you saw porn.",
@@ -196,7 +193,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "−0.4 of 10",
       "line": "Irish men of 20 who watch porn rate their life about 0.4 points lower out of 10, even allowing for how they felt at 17, their internet habits and whether they have a partner.",
       "mirror": "You feel flat about life and wonder if porn plays a part.",
@@ -264,52 +260,6 @@
     },
     {
       "group": "quit",
-      "top": true,
-      "big": "93%",
-      "line": "In a small trial, 12 sessions of ACT therapy cut porn viewing by 93%, against 21% for men on a waiting list.",
-      "mirror": "You've tried willpower alone and want a method that works.",
-      "basis": {
-        "design": "randomised trial (ACT therapy vs waiting list)",
-        "who": "adult men with problematic internet porn use; all but one were Latter-day Saints",
-        "n": "28 men, split between therapy and a waiting list",
-        "where": "USA",
-        "when": "published 2016",
-        "measured": "Self-reported porn viewing before and after 12 one-to-one sessions."
-      },
-      "caveat": "Only 28 men, almost all from one church, self-reported viewing, no comparison therapy. Promising, not proven.",
-      "ref": {
-        "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
-        "url": "https://europepmc.org/article/MED/27157029",
-        "pmid": "27157029",
-        "fetched": true,
-        "quote": "significant between-condition reductions in pornography viewing compared to the waitlist condition (93% reduction ACT vs. 21% waitlist)"
-      },
-      "existing": true
-    },
-    {
-      "group": "quit",
-      "big": "1 in 10",
-      "line": "Of people who screened at risk on the strictest problem-porn test, only about 1 in 10 had ever sought help; 1 in 4 said they would have felt too embarrassed.",
-      "mirror": "You've thought about getting help but felt too embarrassed to ask.",
-      "basis": {
-        "design": "international online survey (International Sex Survey)",
-        "who": "adults of all genders in 42 countries; 3.2% scored at risk on the full Problematic Pornography Consumption Scale",
-        "n": "about 2,370 people at risk (of 82,243 surveyed)",
-        "where": "42 countries on five continents",
-        "when": "published 2024",
-        "measured": "Ever seeking treatment for porn use (10.2% yes), and the reason for not seeking it ('would have felt uncomfortable or embarrassed': 24.6%). On two looser tests, 4 to 6% had sought treatment."
-      },
-      "caveat": "Online volunteers, not random national samples. 'At risk' is a screening score, not a diagnosis. Cost and not knowing where to go also held people back.",
-      "ref": {
-        "cite": "Bőthe B, Nagy L, Koós M, Demetrovics Z, Potenza MN, International Sex Survey Consortium, Kraus SW (2024). Problematic pornography use across countries, genders, and sexual orientations: insights from the International Sex Survey and comparison of different assessment tools. Addiction 119:928-950.",
-        "url": "https://researchonline.ljmu.ac.uk/id/eprint/22192/",
-        "pmid": "38413365",
-        "fetched": true,
-        "quote": "A total of 4.3–10.2% of the PPU+ group had ever sought treatment for PPU, with an additional 21.0–37.1% wanting to, but not doing so for various reasons (e.g. unaffordability)."
-      }
-    },
-    {
-      "group": "quit",
       "big": "51%",
       "line": "About half of Polish students who still watch porn have tried at least once to give it up.",
       "mirror": "You've tried to quit before and you're still watching.",
@@ -328,7 +278,8 @@
         "pmid": "31137778",
         "fetched": true,
         "quote": "51.0% admitted to making at least one attempt to give up using it with no difference in the frequency of these attempts between males and females"
-      }
+      },
+      "top": true
     },
     {
       "group": "after",
@@ -375,6 +326,209 @@
         "fetched": true,
         "quote": "while the rest ( n = 823; 484 female and 339 male) reported to successfully cease its use"
       }
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "21 of 42",
+      "line": "On a quit-porn forum, half of the men who started out with erection trouble wrote that their erections got at least somewhat better after a while without porn.",
+      "mirror": "You hope quitting porn will fix your erections.",
+      "basis": {
+        "design": "study of online quitting journals, with no comparison group",
+        "who": "men aged 18 to 63 keeping a journal of a quit-porn attempt on the Reboot Nation forum",
+        "n": "42 men who wrote about erection trouble at the start (of 104 journals)",
+        "where": "English-language online forum",
+        "when": "journals from 2016 to 2018; published 2021",
+        "measured": "What the men wrote about their erections during attempts lasting 7 days to 12 months."
+      },
+      "caveat": "Their own words, not a doctor's check, and nobody was compared with men who kept watching. Some trouble may have had other causes; large surveys have not found a clear link between porn and erection problems.",
+      "ref": {
+        "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+        "pmid": "33403533",
+        "fetched": true,
+        "quote": "Of the 42 members who reported erectile difficulties at the outset of the abstinence attempt, half (n = 21) reported at least some improvements in erectile function"
+      }
+    },
+    {
+      "group": "who",
+      "big": "up to 31%",
+      "line": "Over 3 years, young adults' scores for out-of-control sex fell on average. At most 31% of a score was fixed; the rest moved with what was going on in life.",
+      "mirror": "You think you'll be stuck like this for the rest of your life.",
+      "basis": {
+        "design": "study that followed a random city sample through 4 rounds over 3 years",
+        "who": "young adults, average age 27 at the start, who had sex in every round; 60% men",
+        "n": "782 young adults",
+        "where": "Budapest, Hungary",
+        "when": "4 rounds over 3 years; published 2026",
+        "measured": "An 8-question test of out-of-control sexual behaviour (porn included) at each round, split into a lasting part and a passing part."
+      },
+      "caveat": "Most of these people had no serious problem, and the test covers sex in general, not porn alone. It shows that scores move, not who quit or how. A high score did tend to carry over into the next round.",
+      "ref": {
+        "cite": "Horváth Z, Bőthe B, Potenza MN, Stein DJ, Demirgül SA, Paksi B, Czakó A, Demetrovics Z (2026). Compulsive sexual behavior may be more state-like than trait-like: findings from a three-year longitudinal representative survey. Journal of Behavioral Addictions 15:622-635.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13371728/",
+        "pmid": "41984541",
+        "fetched": true,
+        "quote": "High proportions of CSB score variance were attributable to state-like/occasion-specific factors (69–93%), while lower proportions of CSB scores were attributable to the trait-like/stable factor (7–31%)."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "4 in 10",
+      "line": "Of men who wanted help for their porn use, 4 in 10 had already tried to quit four or more times, and nearly half had tried to cut back four or more times.",
+      "mirror": "You've tried to quit four times and think a fifth is pointless.",
+      "basis": {
+        "design": "online survey",
+        "who": "men who watch porn, found mostly through Craigslist ads; average age 34",
+        "n": "186 men who wanted help for their porn use (of 1,298 surveyed)",
+        "where": "USA, Canada and other English-speaking countries",
+        "when": "June and July 2013; published 2016",
+        "measured": "Past tries to quit porn completely and to cut back: none, 1 to 3, or 4 or more. Among men who did not want help, 6% had tried to quit four or more times."
+      },
+      "caveat": "One survey at one moment, so it cannot say whether these men got free later or how many tries quitting usually takes. Volunteers who answered an ad.",
+      "ref": {
+        "cite": "Kraus SW, Martino S, Potenza MN (2016). Clinical characteristics of men interested in seeking treatment for use of pornography. Journal of Behavioral Addictions 5:169-178.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5387768/",
+        "pmid": "27348557",
+        "fetched": true,
+        "quote": "treatment-interested men used more pornography (both frequency and duration), had more cut-back attempts with pornography, had more quit attempts with pornography"
+      }
+    },
+    {
+      "group": "how",
+      "big": "1 in 10",
+      "line": "Of people who screened at risk on the strictest problem-porn test, only about 1 in 10 had ever sought help; 1 in 4 said they would have felt too embarrassed.",
+      "mirror": "You've thought about getting help but felt too embarrassed to ask.",
+      "basis": {
+        "design": "international online survey (International Sex Survey)",
+        "who": "adults of all genders in 42 countries; 3.2% scored at risk on the full Problematic Pornography Consumption Scale",
+        "n": "about 2,370 people at risk (of 82,243 surveyed)",
+        "where": "42 countries on five continents",
+        "when": "published 2024",
+        "measured": "Ever seeking treatment for porn use (10.2% yes), and the reason for not seeking it ('would have felt uncomfortable or embarrassed': 24.6%). On two looser tests, 4 to 6% had sought treatment."
+      },
+      "caveat": "Online volunteers, not random national samples. 'At risk' is a screening score, not a diagnosis. Cost and not knowing where to go also held people back.",
+      "ref": {
+        "cite": "Bőthe B, Nagy L, Koós M, Demetrovics Z, Potenza MN, International Sex Survey Consortium, Kraus SW (2024). Problematic pornography use across countries, genders, and sexual orientations: insights from the International Sex Survey and comparison of different assessment tools. Addiction 119:928-950.",
+        "url": "https://researchonline.ljmu.ac.uk/id/eprint/22192/",
+        "pmid": "38413365",
+        "fetched": true,
+        "quote": "A total of 4.3–10.2% of the PPU+ group had ever sought treatment for PPU, with an additional 21.0–37.1% wanting to, but not doing so for various reasons (e.g. unaffordability)."
+      },
+      "top": true
+    },
+    {
+      "group": "how",
+      "big": "55 of 104",
+      "line": "Of 104 men keeping an online journal while quitting porn, 55 slipped at least once. Half of the attempts they wrote about lasted less than 37 days.",
+      "mirror": "You broke your streak and think the whole attempt was wasted.",
+      "basis": {
+        "design": "study of online quitting journals, with no comparison group",
+        "who": "men aged 18 to 63 on the Reboot Nation forum; 77% called themselves addicted to porn",
+        "n": "104 men (55 slipped at least once)",
+        "where": "English-language online forum",
+        "when": "journals from 2016 to 2018; published 2021",
+        "measured": "Slips the men wrote about, and how long each attempt lasted (7 days to 12 months). At least 86.5% were also trying to stop masturbating."
+      },
+      "caveat": "Many men just stopped writing, so nobody knows how their attempts ended. Men who journal in public may differ from men who quit quietly.",
+      "ref": {
+        "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+        "pmid": "33403533",
+        "fetched": true,
+        "quote": "More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt."
+      }
+    },
+    {
+      "group": "how",
+      "big": "17.9 million",
+      "line": "Of the common kinds of quit-porn app, blockers had the most installs: at least 17.9 million. None of the 170 apps checked pointed to proof that it works.",
+      "mirror": "You've installed a blocker and wonder whether it's enough on its own.",
+      "basis": {
+        "design": "review of app-store listings",
+        "who": "apps that said they help people cut down or stop porn",
+        "n": "170 apps (46 offered blocking or monitoring)",
+        "where": "Google Play and the Apple App Store",
+        "when": "searched 3 February 2022; published 2022",
+        "measured": "The features in each app's store description, and the lowest install count the store showed, added up per feature."
+      },
+      "caveat": "Installs count Android downloads only, not people, and say nothing about who quit. Men on a quit-porn forum found blockers easy to get around, but useful as one extra hurdle in a weak moment.",
+      "ref": {
+        "cite": "Henry N, Donkin L, Williams M, Pedersen M (2022). mHealth technologies for managing problematic pornography use: content analysis. JMIR Formative Research 6:e39869.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9614626/",
+        "pmid": "36227634",
+        "fetched": true,
+        "quote": "content blocking and monitoring, was only included as a feature on 27.1% (46/170) of the apps but had the highest minimum number of installations at 17,883,000"
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "big": "3 small trials",
+      "line": "People who got talk therapy for porn problems, mostly CBT or ACT, cut their problem use clearly more than people who didn't. Only 3 small trials tested that head to head.",
+      "mirror": "You wonder if therapy really works for porn or just costs money.",
+      "basis": {
+        "design": "meta-analysis of 20 studies, 5 of them randomised trials",
+        "who": "people with problem porn use; 84% men, average age 31",
+        "n": "98 people in the 3 trials behind this comparison (2,021 in all 20 studies)",
+        "where": "several countries, mostly the USA",
+        "when": "published 2025",
+        "measured": "Problem porn use after therapy, compared with control groups (waiting list or other help). The gap was large by research standards; for craving it was small."
+      },
+      "caveat": "Every study was judged at high or some risk of bias, and most had no control group at all. A bigger, careful trial could find a smaller effect.",
+      "ref": {
+        "cite": "López-Pinar C, Esparza-Reig J, Bőthe B (2025). Psychotherapy for problematic pornography use: a comprehensive meta-analysis. Journal of Behavioral Addictions 14:630-643.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12231474/",
+        "pmid": "40126561",
+        "fetched": true,
+        "quote": "Participants receiving psychotherapy improved significantly more than controls on PPU, frequency/duration of pornography use, and sexual compulsivity, with large effect sizes, that were small for craving."
+      }
+    },
+    {
+      "group": "works",
+      "big": "2.7 of 5",
+      "line": "Men who had seen a professional about their porn use rated the help 2.7 on a 5-point scale; the researchers call that only marginally helpful. About half still wanted help.",
+      "mirror": "You saw a therapist about porn and it didn't fix it.",
+      "basis": {
+        "design": "online survey",
+        "who": "men who watch porn, found mostly through Craigslist ads; average age 34",
+        "n": "83 men who had ever seen a professional about porn (of 1,298 surveyed)",
+        "where": "USA, Canada and other English-speaking countries",
+        "when": "June and July 2013; published 2016",
+        "measured": "How helpful their counsellor, therapist, psychologist or psychiatrist was, from 'not at all' to 'extremely' helpful. 40 of the 83 still wanted help."
+      },
+      "caveat": "Men still struggling are more likely to answer a survey like this, so it may undersell therapy. It says nothing about what kind of help they got or for how long.",
+      "ref": {
+        "cite": "Kraus SW, Martino S, Potenza MN (2016). Clinical characteristics of men interested in seeking treatment for use of pornography. Journal of Behavioral Addictions 5:169-178.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5387768/",
+        "pmid": "27348557",
+        "fetched": true,
+        "quote": "Fewer men (6.4%, n = 83) reported having previously sought treatment for use of pornography, and on average, those who had received treatment rated it as only marginally helpful"
+      }
+    },
+    {
+      "group": "works",
+      "big": "93%",
+      "line": "In a small trial, 12 sessions of ACT therapy cut porn viewing by 93%, against 21% for men on a waiting list.",
+      "mirror": "You've tried willpower alone and want a method that works.",
+      "basis": {
+        "design": "randomised trial (ACT therapy vs waiting list)",
+        "who": "adult men with problematic internet porn use; all but one were Latter-day Saints",
+        "n": "28 men, split between therapy and a waiting list",
+        "where": "USA",
+        "when": "published 2016",
+        "measured": "Self-reported porn viewing before and after 12 one-to-one sessions."
+      },
+      "caveat": "Only 28 men, almost all from one church, self-reported viewing, no comparison therapy. Promising, not proven.",
+      "ref": {
+        "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+        "url": "https://europepmc.org/article/MED/27157029",
+        "pmid": "27157029",
+        "fetched": true,
+        "quote": "significant between-condition reductions in pornography viewing compared to the waitlist condition (93% reduction ACT vs. 21% waitlist)"
+      },
+      "existing": true
     }
   ],
   "rejected": [
@@ -417,6 +571,38 @@
     {
       "claim": "Only 4 to 10% of people at risk of problem porn use had ever sought treatment.",
       "why": "Bőthe 2024 (full text fetched): the range spans three screening tests. The page uses the strictest test (10.2% of about 2,370 at-risk people), so the number has one clear group behind it."
+    },
+    {
+      "claim": "Group CBT cut hypersexual symptoms in 137 Swedish men (Hallberg 2019, J Sex Med).",
+      "why": "PMID 30956109 abstract fetched: randomised and all men, but it gives no size for the effect and the full text is paywalled; follow-up response was low. No number to show."
+    },
+    {
+      "claim": "Internet CBT for hypersexual disorder in 36 men brought large drops in symptoms (Hallberg 2020).",
+      "why": "PMID 32900671 abstract fetched: no control group and no figure in the summary."
+    },
+    {
+      "claim": "64% of men in a Reddit survey had tried to stop masturbating (Zimmer & Imhoff 2020, NoFap-style).",
+      "why": "PMC7145784 fetched: about masturbation, not porn; the wish to stop tracked seeing masturbation as unhealthy, not how much sex people had. Off this page's angle."
+    },
+    {
+      "claim": "Feeling addicted to porn a year later tracks moral disapproval more than hours watched (Grubbs 2018, Addiction).",
+      "why": "PMID 28833800 abstract fetched: about who feels hooked, not about how people quit; the page no longer screens."
+    },
+    {
+      "claim": "Aiming to cut down works as well as (or worse than) quitting porn completely.",
+      "why": "Searched PubMed: no study compares the two goals for porn. Forum men saw moderation as unworkable (Fernandez 2021), but that is opinion, not a number."
+    },
+    {
+      "claim": "Medication (naltrexone, SSRIs) helps men quit porn.",
+      "why": "Only case reports so far; the 410-man escitalopram and naltrexone trial (PMID 42919590, fetched) is a protocol with no results yet."
+    },
+    {
+      "claim": "Treatment for problem porn use: 28 studies, 500 people, all evidence rated low or very low (Roza 2024).",
+      "why": "PMID 37880509 abstract fetched: mostly case reports and no pooled size. The 2025 meta-analysis covers the same trials with sizes; its caveat carries the bias warning."
+    },
+    {
+      "claim": "Only 35% of 186 clinicians said porn treatment was somewhat successful, 9.3% very (cited in López-Pinar 2025).",
+      "why": "Second-hand: the original clinician survey was not fetched, so the figure is not used."
     }
   ]
 }

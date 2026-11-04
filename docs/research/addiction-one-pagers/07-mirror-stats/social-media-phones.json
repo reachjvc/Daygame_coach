@@ -16,7 +16,6 @@
   "stats": [
     {
       "group": "you",
-      "top": true,
       "big": "113 pickups",
       "line": "Students' own iPhone logs showed about 6 hours 53 minutes of phone use a day and 113 pickups a day.",
       "mirror": "You pick up your phone over a hundred times a day.",
@@ -39,7 +38,6 @@
     },
     {
       "group": "you",
-      "top": true,
       "big": "84%",
       "line": "84% of male Norwegian students use a screen in bed; people who do spend about 42 minutes a night on it.",
       "mirror": "You use your phone in bed almost every night.",
@@ -151,7 +149,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "24 min",
       "line": "Each extra hour on a screen in bed went with 24 minutes less sleep and 59% higher odds of insomnia symptoms.",
       "mirror": "You wake up tired after one more video in bed.",
@@ -174,7 +171,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "52%",
       "line": "52% of Americans aged 18 to 29 in a relationship say their partner is at least sometimes distracted by their phone.",
       "mirror": "You look at your phone while she is talking to you.",
@@ -220,51 +216,6 @@
     {
       "group": "quit",
       "top": true,
-      "big": "22 min",
-      "line": "App locks people set for themselves cut social media by 22 minutes a day, and 78% were still using them in the final weeks.",
-      "mirror": "You keep promising yourself you'll use it less tomorrow.",
-      "basis": {
-        "design": "randomised trial",
-        "who": "US adults with Android phones, recruited via Facebook and Instagram ads",
-        "n": "1,933 adults who finished the study; about 6 in 10 were offered the locks",
-        "where": "USA",
-        "when": "March to July 2020, 12 weeks of limits",
-        "measured": "App-logged minutes on Facebook, Instagram, Twitter, Snapchat, browsers and YouTube. Limits locked the app and could not be skipped at once."
-      },
-      "caveat": "Phone-maker limits are easier to override, so may work less. The effect faded slightly, and people underestimated their next weeks' use by about 6 minutes a day.",
-      "ref": {
-        "cite": "Allcott H, Gentzkow M, Song L (2022). Digital addiction. American Economic Review 112(7):2424-2463 (NBER Working Paper 28936, revised March 2022).",
-        "url": "https://www.nber.org/system/files/working_papers/w28936/w28936.pdf",
-        "pmid": "",
-        "fetched": true,
-        "quote": "The limit treatment reduced FITSBY screen time by 22 minutes per day (16 percent) over 12 weeks."
-      }
-    },
-    {
-      "group": "quit",
-      "top": true,
-      "big": "30 min",
-      "line": "Students who capped Facebook, Instagram and Snapchat at 10 minutes each a day felt less lonely and less depressed after three weeks.",
-      "mirror": "You want to cut down, not delete everything.",
-      "basis": {
-        "design": "randomised trial",
-        "who": "undergraduate students at the University of Pennsylvania",
-        "n": "143 students",
-        "where": "USA (University of Pennsylvania)",
-        "when": "published 2018; 3 weeks",
-        "measured": "Loneliness and depression questionnaires, limited group versus use as usual. About 30 minutes a day in total across the three apps."
-      },
-      "caveat": "Small, one university, three weeks. Both groups also felt less anxious, maybe just from tracking their own use.",
-      "ref": {
-        "cite": "Hunt MG, Marx R, Lipson C, Young J (2018). No more FOMO: limiting social media decreases loneliness and depression. Journal of Social and Clinical Psychology 37(10):751-768.",
-        "url": "https://doi.org/10.1521/jscp.2018.37.10.751",
-        "pmid": "",
-        "fetched": true,
-        "quote": "Our findings strongly suggest that limiting social media use to approximately 30 minutes per day may lead to significant improvement in well-being."
-      }
-    },
-    {
-      "group": "quit",
       "big": "24 hours",
       "line": "In the first 24 hours without a phone, craving rose, but mood and anxiety did not change.",
       "mirror": "You fear a day without your phone would be unbearable.",
@@ -288,6 +239,7 @@
     },
     {
       "group": "quit",
+      "top": true,
       "big": "28 min",
       "line": "Switching the phone to black-and-white (greyscale) cut screen time by about 28 minutes a day.",
       "mirror": "You open apps without knowing why.",
@@ -398,6 +350,251 @@
         "fetched": true,
         "quote": "People who deactivated Facebook for the six weeks before the election reported a 0.060 standard deviation improvement in an index of happiness, depression, and anxiety"
       }
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "1 in 20",
+      "line": "After four paid weeks off Facebook, only 1 in 20 people still had it switched off nine weeks later. Most came back, but by their own count used the app about 12 minutes a day less.",
+      "mirror": "You quit once, went back, and think the break was wasted.",
+      "basis": {
+        "design": "randomised trial",
+        "who": "US adult Facebook users who used it more than 15 minutes a day, paid to switch it off",
+        "n": "580 people paid to switch Facebook off for four weeks (of 1,661 in the trial)",
+        "where": "USA",
+        "when": "Oct-Nov 2018; checked up to nine weeks after the break",
+        "measured": "Whether each account was still switched off, checked about once a day after the break: 11% a week later and 5% nine weeks later, against 3% and 2.5% of the comparison group. A month on, they also said they used the Facebook app 12 minutes a day less (23%)."
+      },
+      "caveat": "Switched off, not deleted, and paid to do it, so a free choice may stick differently. The 12 minutes are people's own estimates; among iPhone users who read their phone's tracker, the drop was less than half as big and could be chance.",
+      "ref": {
+        "cite": "Allcott H, Braghieri L, Eichmeyer S, Gentzkow M (2020). The welfare effects of social media. American Economic Review 110(3):629-676 (working paper version of 8 Nov 2019).",
+        "url": "https://web.stanford.edu/~gentzkow/research/facebook.pdf",
+        "pmid": "",
+        "fetched": true,
+        "quote": "five percent of the Treatment group still had their accounts deactivated nine weeks after the experiment ended"
+      }
+    },
+    {
+      "group": "who",
+      "big": "7 in 10",
+      "line": "Of 134 German teenagers with problem internet use, 96 (about 7 in 10) were below the problem line a year later, with no treatment at all.",
+      "mirror": "You think a habit this strong never fades without help.",
+      "basis": {
+        "design": "one-year follow-up of the untreated comparison group in a school prevention trial",
+        "who": "school pupils, average age 15, who scored at the problem level on a compulsive internet use questionnaire; none were in treatment",
+        "n": "134 pupils with problem-level scores (96 below the line a year later)",
+        "where": "Germany (34 schools in Baden-Württemberg, Hesse and Rhineland-Palatinate)",
+        "when": "September 2015 to February 2018",
+        "measured": "Compulsive Internet Use Scale score at the start and 12 months later; 24 points or more counted as problem use."
+      },
+      "caveat": "Teenagers, and internet use in general, games included. Scores just over a line often drift back down by chance. Boys got out more often than girls; 3 in 10 were still stuck a year on.",
+      "ref": {
+        "cite": "Wartberg L, Lindenberg K (2020). Predictors of spontaneous remission of problematic internet use in adolescence: a one-year follow-up study. International Journal of Environmental Research and Public Health 17:448.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7014287/",
+        "pmid": "31936677",
+        "fetched": true,
+        "quote": "The subjects who had a CIUS sum value of <24 at t2 (n = 96) were assigned to the group with spontaneous remission of problematic Internet use."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "59%",
+      "line": "Of 152 adults who agreed to stay off social media for a week, 59% slipped at least once.",
+      "mirror": "You slipped back onto the apps within days and think you failed.",
+      "basis": {
+        "design": "one-week study with phone check-ins three times a day; no comparison group",
+        "who": "adults aged 18 to 80 who agreed to a week off social media; about 70% women",
+        "n": "152 adults",
+        "where": "Austria (research team at Karl Landsteiner University)",
+        "when": "published 2018",
+        "measured": "Craving, boredom and mood three times a day; each evening, whether and how long they had used social media. 4 days as usual, 7 days off, 4 days after."
+      },
+      "caveat": "Mostly women who chose to try. The slips were small: on average fewer than two, of about three minutes each, says the university's news release. Craving and boredom rose during the week; use did not shoot up after it.",
+      "ref": {
+        "cite": "Stieger S, Lewetz D (2018). A week without using social media: results from an ecological momentary intervention study using smartphones. Cyberpsychology, Behavior, and Social Networking 21:618-624.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/30334650/",
+        "pmid": "30334650",
+        "fetched": true,
+        "quote": "a substantial number of participants (59 percent) relapsed at least once during the intervention phase"
+      }
+    },
+    {
+      "group": "how",
+      "big": "42%",
+      "line": "In 2018, about 4 in 10 US Facebook users had taken a break of several weeks in the past year, and 1 in 4 had deleted the app from their phone.",
+      "mirror": "You've thought about deleting the app but feel it's an extreme step.",
+      "basis": {
+        "design": "national survey (Pew Research Center's American Trends Panel)",
+        "who": "US adults who use Facebook",
+        "n": "3,413 Facebook users (of 4,594 adults surveyed)",
+        "where": "USA",
+        "when": "May 29 to June 11, 2018",
+        "measured": "In the past 12 months: took a break from checking Facebook for several weeks or more (42%); deleted the app from their phone (26%, and 44% of users aged 18 to 29)."
+      },
+      "caveat": "Asked just after a big privacy scandal, so many breaks were about privacy, not habit. It does not say how many stayed off or put the app back.",
+      "ref": {
+        "cite": "Perrin A (2018). Americans are changing their relationship with Facebook. Pew Research Center, 5 September 2018.",
+        "url": "https://www.pewresearch.org/short-reads/2018/09/05/americans-are-changing-their-relationship-with-facebook/",
+        "fetched": true,
+        "quote": "Around four-in-ten (42%) say they have taken a break from checking the platform for a period of several weeks or more"
+      }
+    },
+    {
+      "group": "how",
+      "big": "4 in 10",
+      "line": "About 4 in 10 young adults (41.7%) used an app such as Screen Time to watch or limit their phone use.",
+      "mirror": "You've set screen-time limits and still wonder if they do anything.",
+      "basis": {
+        "design": "online survey at one point in time",
+        "who": "young adults aged 18 to 35",
+        "n": "500 young adults",
+        "where": "not stated in the study summary; the author was at a university in Munich, Germany",
+        "when": "published 2020",
+        "measured": "Use of apps that track or limit phone time; social media use, problem phone use and well-being."
+      },
+      "caveat": "One snapshot. Among app users, more social media use did not go with more problem phone use, but that does not prove the apps did it. Having an app is not the same as sticking to its limits.",
+      "ref": {
+        "cite": "Schmuck D (2020). Does digital detox work? Exploring the role of digital detox applications for problematic smartphone use and well-being of young adults using multigroup analysis. Cyberpsychology, Behavior, and Social Networking 23:526-532.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/32354288/",
+        "pmid": "32354288",
+        "fetched": true,
+        "quote": "Results revealed that a high proportion of young adults use digital detox apps (41.7 percent)."
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "big": "22 min",
+      "line": "App locks people set for themselves cut social media by 22 minutes a day, and 78% were still using them in the final weeks.",
+      "mirror": "You keep promising yourself you'll use it less tomorrow.",
+      "basis": {
+        "design": "randomised trial",
+        "who": "US adults with Android phones, recruited via Facebook and Instagram ads",
+        "n": "1,933 adults who finished the study; about 6 in 10 were offered the locks",
+        "where": "USA",
+        "when": "March to July 2020, 12 weeks of limits",
+        "measured": "App-logged minutes on Facebook, Instagram, Twitter, Snapchat, browsers and YouTube. Limits locked the app and could not be skipped at once."
+      },
+      "caveat": "Phone-maker limits are easier to override, so may work less. The effect faded slightly, and people underestimated their next weeks' use by about 6 minutes a day.",
+      "ref": {
+        "cite": "Allcott H, Gentzkow M, Song L (2022). Digital addiction. American Economic Review 112(7):2424-2463 (NBER Working Paper 28936, revised March 2022).",
+        "url": "https://www.nber.org/system/files/working_papers/w28936/w28936.pdf",
+        "pmid": "",
+        "fetched": true,
+        "quote": "The limit treatment reduced FITSBY screen time by 22 minutes per day (16 percent) over 12 weeks."
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "big": "1 hour",
+      "line": "Cutting phone use by 1 hour a day for a week helped about as much as a week with no phone at all, and the gains held up better four months later.",
+      "mirror": "You think it's all or nothing: delete everything or change nothing.",
+      "basis": {
+        "design": "randomised experiment with three groups",
+        "who": "adult smartphone users",
+        "n": "619 adults: 200 went a week without the phone, 226 cut 1 hour a day, 193 changed nothing",
+        "where": "Germany (Ruhr University Bochum)",
+        "when": "published 2023 (online 2022); checked 1 and 4 months after",
+        "measured": "Phone time, problem phone use, life satisfaction, low mood, anxiety, exercise and cigarettes, by online survey. Four months on, the cut-down group used the phone about 45 minutes a day less than before, the no-phone group 38 minutes less (university news release)."
+      },
+      "caveat": "Phone time was self-reported, and the study summary doesn't say how many were men. The full week off helped too, just less lastingly; only the cut-down group also smoked fewer cigarettes.",
+      "ref": {
+        "cite": "Brailovskaia J, Delveaux J, John J, Wicker V, Noveski A, Kim S, Schillack H, Margraf J (2023). Finding the \"sweet spot\" of smartphone use: reduction or abstinence to increase well-being and healthy lifestyle?! An experimental intervention study. Journal of Experimental Psychology: Applied 29:149-161.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/35389685/",
+        "pmid": "35389685",
+        "fetched": true,
+        "quote": "Most effects were stronger and remained more stable over 4 months in the reduction group than in the abstinence group."
+      }
+    },
+    {
+      "group": "works",
+      "big": "30 min",
+      "line": "Students who capped Facebook, Instagram and Snapchat at 10 minutes each a day felt less lonely and less depressed after three weeks.",
+      "mirror": "You want to cut down, not delete everything.",
+      "basis": {
+        "design": "randomised trial",
+        "who": "undergraduate students at the University of Pennsylvania",
+        "n": "143 students",
+        "where": "USA (University of Pennsylvania)",
+        "when": "published 2018; 3 weeks",
+        "measured": "Loneliness and depression questionnaires, limited group versus use as usual. About 30 minutes a day in total across the three apps."
+      },
+      "caveat": "Small, one university, three weeks. Both groups also felt less anxious, maybe just from tracking their own use.",
+      "ref": {
+        "cite": "Hunt MG, Marx R, Lipson C, Young J (2018). No more FOMO: limiting social media decreases loneliness and depression. Journal of Social and Clinical Psychology 37(10):751-768.",
+        "url": "https://doi.org/10.1521/jscp.2018.37.10.751",
+        "pmid": "",
+        "fetched": true,
+        "quote": "Our findings strongly suggest that limiting social media use to approximately 30 minutes per day may lead to significant improvement in well-being."
+      }
+    },
+    {
+      "group": "works",
+      "big": "10 trials",
+      "line": "Across 10 trials, using social media less eased low mood a little. Cutting down showed a clear effect; stopping outright (3 trials) did not, but that gap could be chance.",
+      "mirror": "You assume only quitting outright would lift your mood.",
+      "basis": {
+        "design": "meta-analysis of 10 randomised trials",
+        "who": "mostly young adults (average age 24; 75% women)",
+        "n": "1,491 people in 10 trials (7 of cutting down, 3 of stopping outright)",
+        "where": "several countries",
+        "when": "published 2025; no trial lasted longer than 3 weeks",
+        "measured": "Depression symptoms after limiting or stopping social media, against carrying on as usual. Small effect (g = 0.25 after allowing for unpublished studies; 0.33 for cutting down alone)."
+      },
+      "caveat": "Mostly young women, short trials, and only three checked again later. A slight lift, not a cure.",
+      "ref": {
+        "cite": "May W, Malouff JM, Meynadier J (2025). Reducing social media use decreases depression symptoms: a meta-analysis of randomised controlled trials. European Journal of Investigation in Health, Psychology and Education 15:222.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/41294782/",
+        "pmid": "41294782",
+        "fetched": true,
+        "quote": "reducing social media use significantly decreases depressive symptoms, with an effect size of g = 0.25, 95% CI [0.10, 0.41], p < 0.001, after adjusting for publication bias"
+      }
+    },
+    {
+      "group": "works",
+      "big": "4,674",
+      "line": "Ten studies with 4,674 people found that a full break from social media did not, on average, lift mood or life satisfaction.",
+      "mirror": "You're counting on a week off the apps to fix your mood.",
+      "basis": {
+        "design": "meta-analysis of 10 studies",
+        "who": "mostly young adults; about 65% women",
+        "n": "4,674 people in 10 studies",
+        "where": "mostly wealthy countries",
+        "when": "published 2025; breaks of 1 to 28 days, most often 7",
+        "measured": "Good mood, bad mood and life satisfaction after a full break from social media, against carrying on. Break length made no clear difference."
+      },
+      "caveat": "Short breaks and mixed methods. Counting only studies with a separate comparison group, good mood rose slightly. It measured mood, not time won back or sleep.",
+      "ref": {
+        "cite": "Lemahieu L, Vander Zwalmen Y, Mennes M, Koster EHW, Vanden Abeele MMP, Poels K (2025). The effects of social media abstinence on affective well-being and life satisfaction: a systematic review and meta-analysis. Scientific Reports 15:7581.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/40038410/",
+        "pmid": "40038410",
+        "fetched": true,
+        "quote": "The analyses revealed no significant effects of social media abstinence interventions on positive affect, negative affect, or life satisfaction."
+      }
+    },
+    {
+      "group": "works",
+      "big": "1 week+",
+      "line": "In 20 trials, breaks from social media shorter than a week left people feeling slightly worse; breaks of a week or longer helped a little.",
+      "mirror": "You quit for two days, felt worse, and gave up.",
+      "basis": {
+        "design": "reanalysis of a meta-analysis of experiments",
+        "who": "people in trials of cutting down or stopping social media",
+        "n": "20 trials (4 shorter than a week, 16 a week or longer); the reanalysis does not add up how many people",
+        "where": "several countries",
+        "when": "published 2025",
+        "measured": "Mental-health scores after the break, against carrying on. Under a week: d = −0.18 (worse); a week or more: d = 0.16 (better). Around 3 weeks looked best."
+      },
+      "caveat": "Both effects are small. All 20 trials together showed no clear effect, and the 3-week sweet spot still needs testing. A separate pooling of 10 studies found no link with break length.",
+      "ref": {
+        "cite": "Thrul J, Devkota J, AlJuboori D, Regan T, Alomairah S, Vidal C (2025). Social media reduction or abstinence interventions are providing mental health benefits: reanalysis of a published meta-analysis. Psychology of Popular Media 14:207-209.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12125955/",
+        "pmid": "40453192",
+        "fetched": true,
+        "quote": "interventions of <1 week resulted in significantly worse mental health outcomes (d = -0.175), while interventions of 1 week or longer resulted in significant improvements (d = 0.156)"
+      }
     }
   ],
   "rejected": [
@@ -432,6 +629,30 @@
     {
       "claim": "Hero quote 'self-control problems drive 31% of social media use'",
       "why": "Not wrong, but loose: the paper's 31% covers six app types including web browsers and YouTube, and it is a model output, not a count."
+    },
+    {
+      "claim": "Short CBT group therapy freed 69% of men with internet addiction, against 24% on a waiting list (Wölfling 2019, JAMA Psychiatry, 143 men).",
+      "why": "Fetched (PMID 31290948, full text): men only and a strong trial, but the main problems were online games (57%), porn (16%) and general internet use; social media was not counted on its own. Better fit for a gaming or porn page."
+    },
+    {
+      "claim": "99 Days of Freedom: people who felt addicted to Facebook were more likely to go back early (Baumer 2015, Social Media + Society, 5,000+ surveys).",
+      "why": "Full text could not be opened (403 at the repository and journal); only news coverage seen, so no share of who went back."
+    },
+    {
+      "claim": "Cutting phone use by 60 minutes a day for 14 days still showed less problem use and low mood 6 months later (Weingarten 2026, 194 people).",
+      "why": "Abstract fetched (PMID 41921488). 81% women and the same research group as the 1-hour stat already on the page; kept as a backup."
+    },
+    {
+      "claim": "Problem social media use in Dutch 12-year-olds stays high in about 4 in 10 over four years (Boer 2022, Child Development, 1,419 pupils).",
+      "why": "Abstract fetched (PMID 34779513): young teens, and it gives trajectory groups, not a share who got free. Not about quitting."
+    },
+    {
+      "claim": "Young Swiss men's smartphone addiction scores over three years (C-SURF cohort, Wicki 2025, 5,611 men).",
+      "why": "Full text fetched (PMC12486285): the share who moved above or below the cut-off is only in a supplementary table that was not opened; the paper reports correlations of change, not who got free."
+    },
+    {
+      "claim": "Allcott 2022: people would pay $4.20 for three weeks of app locks; 24% chose a cash bonus to push themselves to cut down.",
+      "why": "Fetched (NBER w28936). Overlaps the 22-minute app-lock stat, which already says 78% kept their locks; dollar values mean little to the reader."
     }
   ]
 }
