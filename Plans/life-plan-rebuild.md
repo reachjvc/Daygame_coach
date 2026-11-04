@@ -345,6 +345,13 @@ Track run adds no `user_goals` rows.
   - Migration `20261104170000_goal_habits_become_steps` (copies only; running it twice adds nothing). A
     rolled-back dry run on the live database on 2026-11-04 made exactly the four routines and five steps
     above and the deep-work link; afterwards the live plan was unchanged (revision 919, 13 habits).
+  - **Live 2026-11-04 evening, code first this time** (566297ac), then the migration. The other order was
+    unsafe: code from before this part drops a routine whose blueprint it does not know, so a page on the
+    old code would have saved the new actions routines away. Backup first:
+    `~/dg-backups/life-plan-2026-11-04-before-phase4-part2.json` (879 rows, revision 919). Checked after:
+    the four routines and five steps above, 13 step links, "Ninety minutes of deep work" serving Deep Work
+    Hours, all 13 habit rows still there, revision 920. Sign-off cards `p4-values-question`, `p4-actions`
+    and `p4-track-waits` are on the page; not marked yet.
   - Review: 9 finds, 8 fixed (a placeholder habit in a browser copy became a step; the days box showed
     for a step placed on days; removing an action that did not serve the goal could delete it; the
     rollback left step ids behind and took hand-made links; the copy's order differed from the app's;
