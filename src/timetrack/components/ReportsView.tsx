@@ -42,16 +42,20 @@ import {
   RANGE_MAX,
   RANGE_MIN,
   profitabilityToCsv,
+  projectFilterItems,
   buildSummary,
   buildWorkload,
   detailedToCsv,
   encodeReportConfig,
+  liveReport,
   metricValue,
   presetLabel,
   presetRange,
   summaryToCsv,
   workloadToCsv,
   type DatePreset,
+  type ProfitabilityReport,
+  type ReportKind,
 } from "../reportsService"
 import {
   addDays,
@@ -75,6 +79,7 @@ import type {
   SummaryReport,
   SummaryRow,
   TimetrackState,
+  WorkloadReport,
 } from "../types"
 import { MiniSelect } from "./pickers"
 import { CheckOption, ColorDot, DonutChart, Dropdown, EmptyState, Modal, ProgressBar, SectionCard, StackedBarChart, StatTile } from "./primitives"
@@ -86,6 +91,16 @@ const TABS: { id: ReportTab; label: string }[] = [
   { id: "profitability", label: "Profitability" },
   { id: "saved", label: "My reports" },
 ]
+
+/** What a tab that is not on screen holds: nothing is shown from these */
+const EMPTY_SUMMARY: SummaryReport = {
+  rows: [],
+  buckets: [],
+  pie: [],
+  totals: { seconds: 0, billableSeconds: 0, revenue: 0, cost: 0, fixedFee: 0, activeDays: 0, entryCount: 0 },
+}
+const EMPTY_WORKLOAD: WorkloadReport = { days: [], rows: [], dayTotals: [], grandTotal: 0, mode: "duration" }
+const EMPTY_PROFITABILITY: ProfitabilityReport = { rows: [], fixedFee: 0, feeIsPerRow: true }
 
 export function ReportsView({
   state,
@@ -105,10 +120,26 @@ export function ReportsView({
   const currency = state.workspace.defaultCurrency
   const todayKey = dateKey(new Date(nowSec * 1000))
 
-  const summary = useMemo(() => buildSummary(state, config, nowSec), [state, config, nowSec])
-  const detailed = useMemo(() => buildDetailed(state, config, nowSec), [state, config, nowSec])
-  const workload = useMemo(() => buildWorkload(state, config, nowSec), [state, config, nowSec])
-  const profitability = useMemo(() => buildProfitability(state, config, nowSec), [state, config, nowSec])
+  /**
+   * ONLY THE TAB ON SCREEN IS BUILT, AND A RUNNING TIMER ADDS ONLY ITSELF EACH SECOND.
+   *
+   * All four reports were rebuilt from every entry in the range once a second while a
+   * timer ran — 68 ms a tick at 1,800 entries on "This year", 264 ms at 7,000 (heavy-user
+   * audit of 2026-11-04, D6). `liveReport` tallies the finished entries when the
+   * workspace or the report's settings change, and each tick adds the running entry to
+   * a copy of that tally. The JSON export, which wants all four, builds them when asked.
+   */
+  const shownKind: ReportKind = config.tab === "saved" ? "summary" : config.tab
+  const live = useMemo(() => {
+    if (shownKind === "detailed") return { detailed: liveReport("detailed", state, config) }
+    if (shownKind === "workload") return { workload: liveReport("workload", state, config) }
+    if (shownKind === "profitability") return { profitability: liveReport("profitability", state, config) }
+    return { summary: liveReport("summary", state, config) }
+  }, [shownKind, state, config])
+  const summary = useMemo(() => live.summary?.(nowSec) ?? EMPTY_SUMMARY, [live, nowSec])
+  const detailed = useMemo(() => live.detailed?.(nowSec) ?? [], [live, nowSec])
+  const workload = useMemo(() => live.workload?.(nowSec) ?? EMPTY_WORKLOAD, [live, nowSec])
+  const profitability = useMemo(() => live.profitability?.(nowSec) ?? EMPTY_PROFITABILITY, [live, nowSec])
 
   const update = (patch: Partial<ReportConfig>) => setConfig({ ...config, ...patch })
 
@@ -148,7 +179,14 @@ export function ReportsView({
       return
     }
     if (kind === "json") {
-      const payload = { config, summary, detailed, workload, profitability }
+      // all four, built for this export only: the screen keeps just the tab it shows
+      const payload = {
+        config,
+        summary: buildSummary(state, config, nowSec),
+        detailed: buildDetailed(state, config, nowSec),
+        workload: buildWorkload(state, config, nowSec),
+        profitability: buildProfitability(state, config, nowSec),
+      }
       downloadFile(`report-${stamp}.json`, JSON.stringify(payload, null, 2), "application/json")
       return
     }
@@ -423,7 +461,8 @@ function FilterControls({
       <FilterDropdown
         label="Projects"
         selected={filters.projectIds}
-        items={state.projects.map((p) => ({ id: p.id, label: p.name, color: p.color }))}
+        // two projects with one name carry their client: `projectFilterItems`
+        items={projectFilterItems(state)}
         onChange={(projectIds) => onUpdateFilters({ projectIds })}
       />
       <FilterDropdown
@@ -446,6 +485,7 @@ function FilterControls({
       />
       <MiniSelect
         className="w-full sm:w-[130px]"
+        ariaLabel="Billable filter"
         value={filters.billable}
         onChange={(value) => onUpdateFilters({ billable: value as ReportConfig["filters"]["billable"] })}
         options={[
@@ -494,11 +534,13 @@ function FilterControls({
               </label>
               <MiniSelect
                 className="w-full"
+                ariaLabel="Rounding mode"
                 value={config.rounding.mode}
                 onChange={(mode) => onUpdate({ rounding: { ...config.rounding, mode: mode as "nearest" } })}
                 options={ROUNDING_MODES.map((m) => ({ id: m.id, label: m.label }))}
               />
               <MiniSelect
+                ariaLabel="Round to"
                 value={String(config.rounding.minutes)}
                 onChange={(minutes) => onUpdate({ rounding: { ...config.rounding, minutes: Number(minutes) } })}
                 options={ROUNDING_MINUTES.map((m) => ({ id: String(m), label: `${m} min` }))}
@@ -745,12 +787,14 @@ function SummaryTab({
                 ("No stacking" rendered as "No stackir") at 390px */}
             <MiniSelect
               className="w-full sm:w-[120px]"
+              ariaLabel="Chart shows"
               value={config.chartMetric}
               onChange={(value) => onUpdate({ chartMetric: value as ReportConfig["chartMetric"] })}
               options={CHART_METRICS.map((m) => ({ id: m.id, label: m.label }))}
             />
             <MiniSelect
               className="w-full sm:w-[110px]"
+              ariaLabel="Chart interval"
               value={config.chartInterval}
               onChange={(value) => onUpdate({ chartInterval: value as ReportConfig["chartInterval"] })}
               options={[
@@ -761,6 +805,7 @@ function SummaryTab({
             />
             <MiniSelect
               className="col-span-2 w-full sm:col-span-1 sm:w-[140px]"
+              ariaLabel="Stack the chart by"
               value={config.chartStackBy ?? "none"}
               onChange={(value) => onUpdate({ chartStackBy: value === "none" ? null : (value as GroupingDimension) })}
               options={[{ id: "none", label: "No stacking" }, ...GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Stack by ${d.label.toLowerCase()}` }))]}
@@ -777,6 +822,7 @@ function SummaryTab({
           actions={
             <MiniSelect
               className="w-full sm:w-[140px]"
+              ariaLabel="Breakdown by"
               value={config.pieGroupBy}
               onChange={(value) => onUpdate({ pieGroupBy: value as GroupingDimension })}
               options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: d.label }))}
@@ -795,12 +841,14 @@ function SummaryTab({
             <div className="flex w-full items-center gap-2 sm:w-auto">
               <MiniSelect
                 className="w-full sm:w-[120px]"
+                ariaLabel="Group by"
                 value={config.grouping}
                 onChange={(value) => onUpdate({ grouping: value as GroupingDimension })}
                 options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: d.label }))}
               />
               <MiniSelect
                 className="w-full sm:w-[130px]"
+                ariaLabel="Sub-group by"
                 value={config.subGrouping ?? "none"}
                 onChange={(value) => onUpdate({ subGrouping: value === "none" ? null : (value as GroupingDimension) })}
                 options={[{ id: "none", label: "No sub-group" }, ...GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: d.label }))]}
@@ -1046,12 +1094,14 @@ function WorkloadTab({
       <div className="flex flex-wrap items-center gap-2">
         <MiniSelect
           className="w-full sm:w-[140px]"
+          ariaLabel="Group by"
           value={config.grouping}
           onChange={(value) => onUpdate({ grouping: value as GroupingDimension })}
           options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Group by ${d.label.toLowerCase()}` }))}
         />
         <MiniSelect
           className="w-full sm:w-[130px]"
+          ariaLabel="Show"
           value={config.workloadValueMode}
           onChange={(value) => onUpdate({ workloadValueMode: value as ReportConfig["workloadValueMode"] })}
           options={[
@@ -1243,6 +1293,7 @@ function ProfitabilityTab({
     <div className="space-y-3">
       <MiniSelect
         className="w-full sm:w-[160px]"
+        ariaLabel="Group by"
         value={config.grouping}
         onChange={(value) => onUpdate({ grouping: value as GroupingDimension })}
         options={GROUPING_DIMENSIONS.map((d) => ({ id: d.id, label: `Group by ${d.label.toLowerCase()}` }))}

@@ -137,7 +137,7 @@ describe("bulk edit", () => {
         entry(2, "2026-08-09", "10:00", "11:00", { tagIds: ["51"], taskId: "41" }),
       ],
     })
-    const next = bulkEditEntries(state, ["1", "2"], { projectId: "31", addTagIds: ["51"], removeTagIds: ["50"], billable: false }, NOW_ISO)
+    const next = bulkEditEntries(state, ["1", "2"], { projectId: "31", addTagIds: ["51"], removeTagIds: ["50"], billable: false }, NOW_ISO).state
     for (const e of next.entries) {
       expect(e.projectId).toBe("31")
       expect(e.taskId).toBeNull()
@@ -153,7 +153,7 @@ describe("bulk edit", () => {
         entry(2, "2026-08-09", "10:00", "11:00", { tagIds: ["51"] }),
       ],
     })
-    const next = bulkEditEntries(state, ["1", "2"], { tagIds: ["50", "51"] }, NOW_ISO)
+    const next = bulkEditEntries(state, ["1", "2"], { tagIds: ["50", "51"] }, NOW_ISO).state
     for (const e of next.entries) expect(e.tagIds).toEqual(["50", "51"])
   })
 
@@ -164,7 +164,7 @@ describe("bulk edit", () => {
         entry(2, "2026-08-09", "10:00", "11:00", { description: "bystander" }),
       ],
     })
-    const next = bulkEditEntries(state, ["1"], { description: "edited" }, NOW_ISO)
+    const next = bulkEditEntries(state, ["1"], { description: "edited" }, NOW_ISO).state
     expect(next.entries.find((e) => e.id === "1")!.description).toBe("edited")
     expect(next.entries.find((e) => e.id === "2")!.description).toBe("bystander")
   })

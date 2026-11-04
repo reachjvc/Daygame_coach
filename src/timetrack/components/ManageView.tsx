@@ -36,6 +36,7 @@ import {
   updateTag,
 } from "../timetrackService"
 import type { MemberRole, TimetrackState } from "../types"
+import { NameField } from "./NameField"
 import { MiniSelect } from "./pickers"
 import { ConfirmButton, EmptyState, SectionCard, Segmented } from "./primitives"
 
@@ -140,9 +141,10 @@ function ClientsPanel({
             )
             return (
               <li key={client.id} className="flex flex-wrap items-center gap-2 py-2">
-                <Input
+                <NameField
                   value={client.name}
-                  onChange={(event) => setState((current) => updateClient(current, client.id, { name: event.target.value }))}
+                  ariaLabel="Client name"
+                  onRename={(name) => setState((current) => updateClient(current, client.id, { name }))}
                   className={cn("h-11 w-full sm:h-8 sm:w-[220px]", client.archived && "opacity-60")}
                 />
                 <span className="text-xs text-muted-foreground">
@@ -156,7 +158,7 @@ function ClientsPanel({
                   >
                     <IconArchive className="size-4" /> {client.archived ? "Restore" : "Archive"}
                   </Button>
-                  <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteClient(current, client.id))}>
+                  <ConfirmButton size="icon-sm" ariaLabel={`Delete client ${client.name}`} onConfirm={() => setState((current) => deleteClient(current, client.id))}>
                     <IconDelete className="size-4" />
                   </ConfirmButton>
                 </div>
@@ -203,13 +205,14 @@ function TagsPanel({
         <ul className="divide-y divide-border">
           {state.tags.map((tag) => (
             <li key={tag.id} className="flex items-center gap-2 py-2">
-              <Input
+              <NameField
                 value={tag.name}
-                onChange={(event) => setState((current) => updateTag(current, tag.id, event.target.value))}
+                ariaLabel="Tag name"
+                onRename={(name) => setState((current) => updateTag(current, tag.id, name))}
                 className="h-11 w-full sm:h-8 sm:w-[220px]"
               />
               <span className="text-xs text-muted-foreground">used on {plural(tagUsageCount(state, tag.id), "entry", "entries")}</span>
-              <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteTag(current, tag.id))}>
+              <ConfirmButton size="icon-sm" ariaLabel={`Delete tag ${tag.name}`} onConfirm={() => setState((current) => deleteTag(current, tag.id))}>
                 <IconDelete className="size-4" />
               </ConfirmButton>
             </li>
@@ -315,7 +318,7 @@ function TeamPanel({
                     {formatDuration(tracked, state.user.durationFormat)}
                   </span>
                   {!member.isSelf && (
-                    <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteMember(current, member.id))}>
+                    <ConfirmButton size="icon-sm" ariaLabel={`Remove member ${member.name}`} onConfirm={() => setState((current) => deleteMember(current, member.id))}>
                       <IconDelete className="size-4" />
                     </ConfirmButton>
                   )}
@@ -469,7 +472,7 @@ function TeamPanel({
                     <td className="px-2 py-2 text-right tabular-nums">{formatDuration(tracked, state.user.durationFormat)}</td>
                     <td className="px-2 py-2 text-right">
                       {!member.isSelf && (
-                        <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteMember(current, member.id))}>
+                        <ConfirmButton size="icon-sm" ariaLabel={`Remove member ${member.name}`} onConfirm={() => setState((current) => deleteMember(current, member.id))}>
                           <IconDelete className="size-4" />
                         </ConfirmButton>
                       )}
@@ -515,7 +518,7 @@ function TeamPanel({
                   <span className="text-xs text-muted-foreground">
                     {plural(state.members.filter((m) => m.groupIds.includes(group.id)).length, "member")}
                   </span>
-                  <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteGroup(current, group.id))}>
+                  <ConfirmButton size="icon-sm" ariaLabel={`Delete group ${group.name}`} onConfirm={() => setState((current) => deleteGroup(current, group.id))}>
                     <IconDelete className="size-4" />
                   </ConfirmButton>
                 </li>

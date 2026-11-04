@@ -40,7 +40,7 @@ import { ImportOfferBanner } from "./ImportOfferBanner"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
-import { defaultReportConfig, decodeReportConfig } from "../reportsService"
+import { defaultReportConfig, decodeReportConfig, followWeekStart } from "../reportsService"
 import { dateKey, formatClock } from "../timetrackFormatService"
 import {
   draftFromStartLink,
@@ -52,7 +52,7 @@ import {
 } from "../timetrackService"
 import { serverIsoAt } from "../serverClock"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
-import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState } from "../types"
+import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
 import { CalendarView } from "./CalendarView"
 import { EntryDetailModalBody, EntryList } from "./EntryList"
 import { IdleQuestion } from "./IdleQuestion"
@@ -463,6 +463,8 @@ export function TogglLab({
    * in development.
    */
   const arrived = useRef(false)
+  /** the week start the report's range was made with: see `followWeekStart` below */
+  const reportWeekStart = useRef<WeekStart | null>(null)
   useEffect(() => {
     if (!state || arrived.current) return
     arrived.current = true
@@ -475,6 +477,7 @@ export function TogglLab({
     const defaults = defaultReportConfig(dateKey(new Date()), state.user.weekStart, state.workspace.rounding)
     const decoded = shared ? decodeReportConfig(shared, defaults) : null
     setReportConfig(decoded ?? defaults)
+    reportWeekStart.current = state.user.weekStart
     // the address's own section, else where you were last time (see `screen`)
     const section: Screen = decoded ? "reports" : (readTrackerAddress(window.location.search).section ?? screenNow.current)
     if (section !== screenNow.current) setScreen(section)
@@ -514,6 +517,18 @@ export function TogglLab({
   }, [state, pushToast, setState, afterCheck])
 
   /**
+   * Reports' "this week" follows the week start: when it is changed in Settings, and
+   * when the account's settings arrive after the report was made (see `followWeekStart`).
+   */
+  const weekStart = state?.user.weekStart
+  useEffect(() => {
+    const from = reportWeekStart.current
+    if (weekStart === undefined || from === null || from === weekStart) return
+    reportWeekStart.current = weekStart
+    setReportConfig((config) => (config ? followWeekStart(config, dateKey(new Date()), from, weekStart) : config))
+  }, [weekStart])
+
+  /**
    * GOING SOMEWHERE INSIDE THE TRACKER IS A STEP IN THE BROWSER'S HISTORY (D8).
    *
    * So Android's Back button steps back through what you did here — the sheet
@@ -526,6 +541,15 @@ export function TogglLab({
     window.history.pushState(step, "", trackerAddressFor(window.location.pathname, { section: next, entryId: null }))
     setScreen(next)
   }, [])
+
+  // stable, so a keystroke in the timer bar does not redraw the whole entry list (D6)
+  const goToProject = useCallback(
+    (projectId: Id) => {
+      setFocusProjectId(projectId)
+      goTo("projects")
+    },
+    [goTo],
+  )
 
   /** The detail sheet, opened as a step of its own, so Back closes it */
   const openEntry = useCallback((entry: TimeEntry) => {
@@ -942,10 +966,7 @@ export function TogglLab({
               nowSec={nowSec}
               pushToast={pushToast}
               onEditEntry={openEntry}
-              onGoToProject={(projectId) => {
-                setFocusProjectId(projectId)
-                goTo("projects")
-              }}
+              onGoToProject={goToProject}
             />
           </>
         )}

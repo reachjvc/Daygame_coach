@@ -552,16 +552,20 @@ export function MiniSelect({
   options,
   onChange,
   className,
+  ariaLabel,
 }: {
   value: string
   options: { id: string; label: string }[]
   onChange: (value: string) => void
   className?: string
+  /** what a screen reader calls it where no `<label>` wraps it: "Group by", "Chart shows" */
+  ariaLabel?: string
 }) {
   return (
     <div className={cn("relative", className)}>
       <select
         value={value}
+        aria-label={ariaLabel}
         onChange={(event) => onChange(event.target.value)}
         // Every <select> in this slice is this component — there is exactly one —
         // so 40px here was 40px on the Reports grouping, the Settings formats,

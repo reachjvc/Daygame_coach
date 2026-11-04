@@ -6,7 +6,7 @@
  * split, favorite, copy start link, delete) and multi-select bulk edit.
  */
 
-import { Fragment, useContext, useEffect, useRef, useState } from "react"
+import { Fragment, memo, useContext, useEffect, useMemo, useRef, useState } from "react"
 import type { KeyboardEvent } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -49,7 +49,6 @@ import {
 import { nudgePair, samePair, typedIntoPair, type TimePair } from "../drumService"
 import {
   bulkEditEntries,
-  buildDayGroups,
   canEditEntry,
   continueEntry,
   createProject,
@@ -61,7 +60,6 @@ import {
   findFavorite,
   isPlanned,
   isRunning,
-  liveEntries,
   moveEntryToDay,
   restoreEntries,
   setEntryDuration,
@@ -73,7 +71,6 @@ import {
   tagNames,
   toggleFavorite,
   updateEntry,
-  weekTotalSeconds,
 } from "../timetrackService"
 import {
   endNow,
@@ -88,7 +85,8 @@ import {
   withNeighbours,
   type Joint,
 } from "../timeFixService"
-import type { EntryRow, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
+import { timerList } from "../timerListService"
+import type { DayGroup, EntryRow, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "./primitives"
 import { serverNow, serverNowIso } from "../serverClock"
@@ -107,7 +105,13 @@ interface EntryListProps {
   onGoToProject?: (projectId: Id) => void
 }
 
-export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onGoToProject }: EntryListProps) {
+/**
+ * Memoised: the timer bar's draft lives in the screen above, so every keystroke in "What
+ * are you working on?" redrew every visible row here — the bigger half of a ~215 ms key
+ * on a PC with three months of entries (heavy-user audit of 2026-11-04, D6). Its props
+ * are the workspace, the clock and stable callbacks, so a keystroke now changes none.
+ */
+export const EntryList = memo(function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onGoToProject }: EntryListProps) {
   /**
    * ONE ROW LAYOUT, NOT BOTH.
    *
@@ -126,24 +130,40 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
   const [expanded, setExpanded] = useState<string[]>([])
   const [visibleDays, setVisibleDays] = useState(7)
 
-  const entries = liveEntries(state)
-  const allGroups = buildDayGroups(entries, { groupSimilar: state.user.groupSimilarEntries, nowSec })
+  // the history is worked out when the entries change, not every second: `timerList`
+  const list = useMemo(() => timerList(state.entries, state.user.groupSimilarEntries), [state.entries, state.user.groupSimilarEntries])
+  const entries = list.entries
+  const allGroups = useMemo(() => list.groupsAt(nowSec), [list, nowSec])
   const groups = allGroups.slice(0, visibleDays)
   const todayKey = dateKey(new Date(nowSec * 1000))
-  const weekSeconds = weekTotalSeconds(entries, todayKey, state.user.weekStart, nowSec)
-  /** overlaps and small gaps, by the pair of entries either side: see `jointsOf` */
-  const joints = new Map(jointsOf(entries, new Date(nowSec * 1000).toISOString()).map((joint) => [`${joint.earlierId}>${joint.laterId}`, joint]))
+  const weekSeconds = list.weekSecondsAt(todayKey, state.user.weekStart, nowSec)
+  /**
+   * Overlaps and small gaps, by the pair of entries either side: see `jointsOf`. A
+   * joint is between two entries of one day, so it is worked out per day on screen,
+   * not over the whole history every second (D6), and kept for a day whose group did
+   * not change: only the running entry's days are rebuilt each tick (`timerList`).
+   */
+  const jointCache = useRef(new WeakMap<DayGroup, Map<string, Joint>>())
+  const jointsOfDay = (group: DayGroup): Map<string, Joint> => {
+    let found = jointCache.current.get(group)
+    if (!found) {
+      const dayEntries = group.rows.flatMap((row) => row.entries)
+      found = new Map(jointsOf(dayEntries, new Date(nowSec * 1000).toISOString()).map((joint) => [`${joint.earlierId}>${joint.laterId}`, joint]))
+      jointCache.current.set(group, found)
+    }
+    return found
+  }
   /**
    * The mark between two rows, when they are two single entries next to each
    * other in time. The list runs newest first, so the row below is the
    * earlier one. A collapsed group holds entries from all over the day, so a
    * mark beside one would be about an entry you cannot see.
    */
-  const jointBelow = (rows: EntryRow[], index: number): Joint | null => {
-    const later = rows[index]
-    const earlier = rows[index + 1]
+  const jointBelow = (group: DayGroup, index: number): Joint | null => {
+    const later = group.rows[index]
+    const earlier = group.rows[index + 1]
     if (!earlier || later.grouped || earlier.grouped) return null
-    return joints.get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
+    return jointsOfDay(group).get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
   }
 
   const toggleSelect = (ids: Id[]) => {
@@ -181,7 +201,10 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
         "error",
       )
     }
-    setSelected((current) => current.filter((id) => result.removed.some((e) => e.id === id)))
+    // What was removed leaves the selection; a refused (locked) entry stays ticked.
+    // This kept ONLY the removed ones, so the bar stayed and Undo brought them back
+    // ticked, ready for the next Delete to take them again.
+    setSelected((current) => current.filter((id) => !result.removed.some((e) => e.id === id)))
   }
 
   if (entries.length === 0) {
@@ -220,6 +243,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
           selected={selected}
           onClear={() => setSelected([])}
           onDelete={() => removeEntries(selected)}
+          pushToast={pushToast}
         />
       )}
 
@@ -265,7 +289,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
 
           <ul className="divide-y divide-border">
             {group.rows.map((row, index) => {
-              const joint = jointBelow(group.rows, index)
+              const joint = jointBelow(group, index)
               return (
               <Fragment key={row.key}>
               <EntryRowView
@@ -305,28 +329,13 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
       )}
     </div>
   )
-}
+})
 
 // ---------------------------------------------------------------------------
 // One row (single entry or collapsed group)
 // ---------------------------------------------------------------------------
 
-function EntryRowView({
-  row,
-  state,
-  setState,
-  nowSec,
-  selectionMode,
-  selected,
-  onToggleSelect,
-  expanded,
-  onToggleExpand,
-  onDelete,
-  pushToast,
-  onEditEntry,
-  onGoToProject,
-  isMobile,
-}: {
+interface EntryRowViewProps {
   row: EntryRow
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
@@ -341,7 +350,60 @@ function EntryRowView({
   pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
   onGoToProject?: (projectId: Id) => void
-}) {
+}
+
+/**
+ * A ROW IS REDRAWN WHEN SOMETHING IT SHOWS CHANGED — A SECOND ONLY FOR A RUNNING ONE.
+ *
+ * Every row got `nowSec`, so all of them (seven days of rows, each with its pickers)
+ * were redrawn every second while a timer ran: ~130 ms long tasks a tick in the browser
+ * with three months of entries (heavy-user audit of 2026-11-04, D6). The callbacks are
+ * made fresh by each list render and are not compared: what they close over that can
+ * change is the workspace (`state`), which is, so a row is never left holding a delete
+ * that would act on an old copy of it.
+ */
+const rowTicks = new WeakMap<EntryRow, boolean>()
+function rowIsRunning(row: EntryRow): boolean {
+  let ticks = rowTicks.get(row)
+  if (ticks === undefined) {
+    ticks = row.entries.some(isRunning)
+    rowTicks.set(row, ticks)
+  }
+  return ticks
+}
+
+function rowPropsEqual(prev: EntryRowViewProps, next: EntryRowViewProps): boolean {
+  if (prev.nowSec !== next.nowSec && rowIsRunning(next.row)) return false
+  return (
+    prev.row === next.row &&
+    prev.state === next.state &&
+    prev.setState === next.setState &&
+    prev.selectionMode === next.selectionMode &&
+    prev.selected === next.selected &&
+    prev.expanded === next.expanded &&
+    prev.isMobile === next.isMobile &&
+    prev.pushToast === next.pushToast &&
+    prev.onEditEntry === next.onEditEntry &&
+    prev.onGoToProject === next.onGoToProject
+  )
+}
+
+const EntryRowView = memo(function EntryRowView({
+  row,
+  state,
+  setState,
+  nowSec,
+  selectionMode,
+  selected,
+  onToggleSelect,
+  expanded,
+  onToggleExpand,
+  onDelete,
+  pushToast,
+  onEditEntry,
+  onGoToProject,
+  isMobile,
+}: EntryRowViewProps) {
   const lead = row.entries[0]
   const ids = row.entries.map((e) => e.id)
   const allSelected = ids.every((id) => selected.includes(id))
@@ -390,7 +452,7 @@ function EntryRowView({
       )}
     </li>
   )
-}
+}, rowPropsEqual)
 
 /**
  * One shared column template, so the project, tag, time and duration columns
@@ -506,20 +568,18 @@ function EntryFields({
     // An edit made on a collapsed group applies to every entry in it, like Toggl
     if (row?.grouped) {
       const ids = row.entries.map((e) => e.id)
-      setState((current) =>
-        bulkEditEntries(
-          current,
-          ids,
-          {
-            projectId: changes.projectId,
-            taskId: changes.taskId,
-            billable: changes.billable,
-            description: changes.description,
-            tagIds: changes.tagIds,
-          },
-          nowIso(),
-        ),
-      )
+      const groupPatch = {
+        projectId: changes.projectId,
+        taskId: changes.taskId,
+        billable: changes.billable,
+        description: changes.description,
+        tagIds: changes.tagIds,
+      }
+      // a locked day keeps its entries; the toast says how many and why (see `bulkEditEntries`)
+      const preview = bulkEditEntries(latestState.current, ids, groupPatch, nowIso())
+      if (preview.violations.length > 0) pushToast(keptMessage(preview.violations), "error")
+      if (preview.changed.length === 0) return false
+      setState((current) => bulkEditEntries(current, ids, groupPatch, nowIso()).state)
       return true
     }
     /**
@@ -1244,21 +1304,32 @@ function JointMark({
 // Bulk edit
 // ---------------------------------------------------------------------------
 
+/** "17 entries not changed: Time entries on or before … are locked" */
+function keptMessage(violations: { message: string }[]): string {
+  return `${plural(violations.length, "entry", "entries")} not changed: ${violations[0].message}`
+}
+
 function BulkEditBar({
   state,
   setState,
   selected,
   onClear,
   onDelete,
+  pushToast,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   selected: Id[]
   onClear: () => void
   onDelete: () => void
+  pushToast: PushToast
 }) {
   const apply = (patch: Parameters<typeof bulkEditEntries>[2]) => {
-    setState((current) => bulkEditEntries(current, selected, patch, serverNowIso()))
+    const now = serverNowIso()
+    // the entries on a locked day stay as they were, and the toast says how many
+    const preview = bulkEditEntries(state, selected, patch, now)
+    if (preview.violations.length > 0) pushToast(keptMessage(preview.violations), "error")
+    setState((current) => bulkEditEntries(current, selected, patch, now).state)
   }
 
   return (

@@ -8,6 +8,8 @@
  */
 
 import { STATE_VERSION } from "./config"
+import { restoreCsvText } from "@/src/shared/csvCell"
+import { splitTagNames } from "./csvCellService"
 import { dateKey, epochSeconds, parseDurationInput, parseTimeInput, startOfDayIso } from "./timetrackFormatService"
 import { addClient, createManualEntry, createProject, createTag, createTask } from "./timetrackService"
 import type { Id, IsoDateTime, TimetrackState } from "./types"
@@ -183,7 +185,8 @@ export function importEntriesCsv(
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r]
-    const cell = (index: number) => (index >= 0 ? (row[index] ?? "").trim() : "")
+    // the apostrophe the export put before a formula-like cell comes off: `restoreCsvText`
+    const cell = (index: number) => (index >= 0 ? restoreCsvText((row[index] ?? "").trim()) : "")
 
     // Resolve start / stop from either ISO columns or Toggl's split date+time columns
     let startIso: IsoDateTime | null = null
@@ -264,10 +267,22 @@ export function importEntriesCsv(
       }
     }
 
+    /**
+     * A PROJECT IS ITS NAME AND ITS CLIENT.
+     *
+     * Matched by name alone, two projects called "Website" — one for Client A, one
+     * for Client B, which Toggl allows — came back from the app's own Detailed CSV as
+     * ONE project holding both clients' hours. With a Client column in the file the
+     * client is part of the match, an empty cell meaning "no client". A file with no
+     * Client column at all says nothing about clients, so there the name decides, as
+     * it always did.
+     */
     let projectId: Id | null = null
     const projectName = cell(idx.project)
     if (projectName) {
-      const existing = next.projects.find((p) => p.name.toLowerCase() === projectName.toLowerCase())
+      const existing = next.projects.find(
+        (p) => p.name.toLowerCase() === projectName.toLowerCase() && (idx.client < 0 || p.clientId === clientId),
+      )
       if (existing) projectId = existing.id
       else {
         const created = createProject(next, { name: projectName, clientId }, nowIso)
@@ -297,7 +312,8 @@ export function importEntriesCsv(
      * arrives, because nothing on the way in was checking.
      */
     const tagIds: Id[] = []
-    for (const name of cell(idx.tags).split(/[,;]/).map((t) => t.trim()).filter(Boolean)) {
+    // split on the separators only, never on an escaped comma inside a name: `splitTagNames`
+    for (const name of splitTagNames(cell(idx.tags))) {
       const created = createTag(next, name, nowIso)
       next = created.state
       if (!tagIds.includes(created.id)) tagIds.push(created.id)

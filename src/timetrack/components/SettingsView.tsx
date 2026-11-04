@@ -598,7 +598,7 @@ function AutomationPanel({
                     checked={autotracker.enabled}
                     onChange={(enabled) => setState((current) => updateAutotracker(current, autotracker.id, { enabled }))}
                   />
-                  <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteAutotracker(current, autotracker.id))}>
+                  <ConfirmButton size="icon-sm" ariaLabel="Delete this rule" onConfirm={() => setState((current) => deleteAutotracker(current, autotracker.id))}>
                     <IconDelete className="size-4" />
                   </ConfirmButton>
                 </div>
@@ -925,6 +925,7 @@ export function IntegrationsPanel({
                   )}
                   <ConfirmButton
                     size="icon-sm"
+                    ariaLabel="Remove this calendar"
                     onConfirm={() =>
                       setState((current) => ({
                         ...current,
@@ -1109,7 +1110,7 @@ export function IntegrationsPanel({
               <li key={hook.id} className="flex items-center gap-2 py-2 text-sm">
                 <code className="flex-1 truncate text-xs">{hook.url}</code>
                 <span className="text-xs text-muted-foreground">{plural(hook.events.length, "event")}</span>
-                <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteWebhook(current, hook.id))}>
+                <ConfirmButton size="icon-sm" ariaLabel="Delete this webhook" onConfirm={() => setState((current) => deleteWebhook(current, hook.id))}>
                   <IconDelete className="size-4" />
                 </ConfirmButton>
               </li>

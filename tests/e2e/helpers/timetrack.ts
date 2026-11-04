@@ -41,15 +41,24 @@ export async function clearAccount(page: Page): Promise<void> {
   expect(pulled.status(), 'could not read the account to clear it').toBe(200)
   const body = (await pulled.json()) as { rows: Record<string, Record<string, unknown>[]> }
   const deletedAt = new Date().toISOString()
-  const rows: Record<string, Record<string, unknown>[]> = {}
+  const all: [string, Record<string, unknown>][] = []
   for (const [table, list] of Object.entries(body.rows)) {
     if (NOT_CLEARED.has(table)) continue
-    const live = list.filter((row) => row.deleted_at === null)
-    if (live.length > 0) rows[table] = live.map((row) => ({ ...row, deleted_at: deletedAt }))
+    for (const row of list) if (row.deleted_at === null) all.push([table, { ...row, deleted_at: deletedAt }])
   }
-  if (Object.keys(rows).length === 0) return
-  const pushed = await page.request.post('/api/timetrack/sync', { data: { rows } })
-  expect(pushed.ok(), `could not clear the account: ${pushed.status()}`).toBe(true)
+  /**
+   * In batches: one push may carry at most 1,600 rows (`MAX_ROWS_PER_PUSH` in the sync
+   * route), and an account with three months of entries has more — the single push
+   * this used to send was refused with a 413. The workspace goes last, so nothing is
+   * left pointing at a deleted one between two batches.
+   */
+  all.sort((a, b) => Number(a[0] === 'timetrack_workspaces') - Number(b[0] === 'timetrack_workspaces'))
+  for (let i = 0; i < all.length; i += 1000) {
+    const rows: Record<string, Record<string, unknown>[]> = {}
+    for (const [table, row] of all.slice(i, i + 1000)) (rows[table] ??= []).push(row)
+    const pushed = await page.request.post('/api/timetrack/sync', { data: { rows } })
+    expect(pushed.ok(), `could not clear the account: ${pushed.status()}`).toBe(true)
+  }
 }
 
 /** The sync badge says everything is on the account. Its words are in the label at every width. */

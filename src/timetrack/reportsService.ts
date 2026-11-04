@@ -7,6 +7,9 @@
  */
 
 import { GROUPING_DIMENSIONS, NO_PROJECT_COLOR, PROJECT_COLORS, SUMMARY_METRICS } from "./config"
+import { csvCell } from "@/src/shared/csvCell"
+import { joinTagNames } from "./csvCellService"
+import { startsInOrder, stageAt } from "./plannedStageService"
 import {
   addDays,
   startOfDayIso,
@@ -32,6 +35,7 @@ import {
   entryRevenue,
   entryDaySeconds,
   isPlanned,
+  isRunning,
   liveEntries,
   memberById,
   projectById,
@@ -155,6 +159,24 @@ export function emptyFilters(range: DateRange): ReportFilters {
     billable: "all",
     description: "",
   }
+}
+
+/**
+ * THE PROJECT FILTER'S CHOICES, TWO PROJECTS WITH ONE NAME TOLD APART.
+ *
+ * A "Website" for Client A and a "Website" for Client B were two identical lines in
+ * Reports → Projects (heavy-user audit of 2026-11-04, D11). Where a name is shared
+ * (ignoring case), the line carries its client, as the Timer's pickers already show it;
+ * a name nobody else has stays as it is.
+ */
+export function projectFilterItems(state: TimetrackState): { id: Id; label: string; color: string }[] {
+  const uses = new Map<string, number>()
+  for (const p of state.projects) uses.set(p.name.trim().toLowerCase(), (uses.get(p.name.trim().toLowerCase()) ?? 0) + 1)
+  return state.projects.map((p) => {
+    const shared = (uses.get(p.name.trim().toLowerCase()) ?? 0) > 1
+    const client = shared ? (clientById(state, p.clientId)?.name ?? "No client") : null
+    return { id: p.id, label: client === null ? p.name : `${p.name} · ${client}`, color: p.color }
+  })
 }
 
 export function activeFilterCount(filters: ReportFilters): number {
@@ -354,29 +376,91 @@ function orderRows<T extends { key: string }>(rows: T[], dimension: GroupingDime
   return [...rows].sort(bySize)
 }
 
-export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec: number): SummaryReport {
-  const entries = applyFilters(state, config.filters, nowSec)
-  const groups = new Map<string, Accumulator>()
-  const buckets = new Map<string, { seconds: number; billableSeconds: number; revenue: number; cost: number; segments: Map<string, DimensionValue & { value: number }> }>()
-  const pie = new Map<string, DimensionValue & { seconds: number }>()
+/**
+ * EVERY BUILDER IS THREE STEPS: AN EMPTY TALLY, ENTRIES ADDED TO IT, AND THE REPORT
+ * READ OFF IT — so a running timer costs one entry a second, not the whole history.
+ *
+ * `ReportsView` rebuilt all four reports from every entry in the range once a second
+ * while a timer ran: 68 ms a tick at 1,800 entries on "This year", 264 ms at 7,000
+ * (heavy-user audit of 2026-11-04, D6). Only an entry without an end changes with the
+ * clock. So `liveReport` tallies the finished entries once, and each second copies that
+ * tally, adds the running entry at the current second, and reads the report off the
+ * copy. `buildSummary` and the other three are the same steps done in one go, which is
+ * what keeps the two from ever disagreeing about anything but summation order.
+ */
+interface SummaryBucketAcc {
+  seconds: number
+  billableSeconds: number
+  revenue: number
+  cost: number
+  segments: Map<string, DimensionValue & { value: number }>
+}
 
-  let totalSeconds = 0
-  let totalBillable = 0
-  let totalRevenue = 0
-  let totalCost = 0
-  const activeDays = new Set<IsoDate>()
-  let countedEntries = 0
+interface SummaryAcc {
+  groups: Map<string, Accumulator>
+  buckets: Map<string, SummaryBucketAcc>
+  pie: Map<string, DimensionValue & { seconds: number }>
+  totalSeconds: number
+  totalBillable: number
+  totalRevenue: number
+  totalCost: number
+  activeDays: Set<IsoDate>
+  countedEntries: number
+  /** every project an entry in the report points at, for the fixed fees */
+  projectsInReport: Set<Id>
+}
 
+function newSummaryAcc(state: TimetrackState, config: ReportConfig): SummaryAcc {
+  const buckets = new Map<string, SummaryBucketAcc>()
   // Pre-create every bucket in range so charts show empty days too
-  const interval = config.chartInterval
   for (const day of eachDay(config.filters.range.start, config.filters.range.end)) {
-    const key = bucketKeyFor(day, interval, state.user.weekStart)
+    const key = bucketKeyFor(day, config.chartInterval, state.user.weekStart)
     if (!buckets.has(key)) {
       buckets.set(key, { seconds: 0, billableSeconds: 0, revenue: 0, cost: 0, segments: new Map() })
     }
   }
+  return {
+    groups: new Map(),
+    buckets,
+    pie: new Map(),
+    totalSeconds: 0,
+    totalBillable: 0,
+    totalRevenue: 0,
+    totalCost: 0,
+    activeDays: new Set(),
+    countedEntries: 0,
+    projectsInReport: new Set(),
+  }
+}
+
+function copyAccumulator(acc: Accumulator): Accumulator {
+  return { ...acc, children: new Map([...acc.children].map(([key, child]) => [key, copyAccumulator(child)])) }
+}
+
+function copySummaryAcc(acc: SummaryAcc): SummaryAcc {
+  return {
+    ...acc,
+    groups: new Map([...acc.groups].map(([key, group]) => [key, copyAccumulator(group)])),
+    buckets: new Map([...acc.buckets].map(([key, bucket]) => [key, { ...bucket, segments: new Map(bucket.segments) }])),
+    pie: new Map(acc.pie),
+    activeDays: new Set(acc.activeDays),
+    projectsInReport: new Set(acc.projectsInReport),
+  }
+}
+
+export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec: number): SummaryReport {
+  const acc = newSummaryAcc(state, config)
+  addToSummary(acc, state, config, applyFilters(state, config.filters, nowSec), nowSec)
+  return finishSummary(acc, state, config)
+}
+
+function addToSummary(acc: SummaryAcc, state: TimetrackState, config: ReportConfig, entries: TimeEntry[], nowSec: number): void {
+  const { groups, buckets, pie, activeDays } = acc
+  const interval = config.chartInterval
 
   for (const entry of entries) {
+    // every selected entry's project counts for the fees, whether or not it adds seconds
+    if (entry.projectId !== null) acc.projectsInReport.add(entry.projectId)
     /**
      * THE SECONDS THIS ENTRY CONTRIBUTES TO THIS RANGE, DAY BY DAY.
      *
@@ -416,11 +500,11 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
     const revenue = entryRevenue(state, entry, seconds)
     const cost = entryCost(state, entry, seconds)
 
-    countedEntries += 1
-    totalSeconds += seconds
-    if (entry.billable) totalBillable += seconds
-    totalRevenue += revenue
-    totalCost += cost
+    acc.countedEntries += 1
+    acc.totalSeconds += seconds
+    if (entry.billable) acc.totalBillable += seconds
+    acc.totalRevenue += revenue
+    acc.totalCost += cost
     for (const d of perDay) activeDays.add(d.day)
 
     /**
@@ -486,6 +570,11 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
       pie.set(slice.key, { ...slice, seconds: (existing?.seconds ?? 0) + seconds })
     }
   }
+}
+
+function finishSummary(acc: SummaryAcc, state: TimetrackState, config: ReportConfig): SummaryReport {
+  const { groups, buckets, pie, activeDays, projectsInReport } = acc
+  const interval = config.chartInterval
 
   /**
    * THE FEES OF THE PROJECTS IN THIS REPORT — NOT OF EVERY PROJECT EVER CREATED.
@@ -498,10 +587,9 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
    * beside the day's real total.
    *
    * The projects the entries actually point at are the report's subject, which is
-   * the same rule the rest of this function already follows.
+   * the same rule the rest of this function already follows. (`addToSummary` collects
+   * them, from every selected entry.)
    */
-  const projectsInReport = new Set<Id>()
-  for (const entry of entries) if (entry.projectId !== null) projectsInReport.add(entry.projectId)
   const fixedFee = [...projectsInReport]
     .map((id) => projectById(state, id))
     .filter((p): p is NonNullable<typeof p> => p != null && p.fixedFee != null)
@@ -516,7 +604,11 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
       billableSeconds: value.billableSeconds,
       revenue: value.revenue,
       cost: value.cost,
-      segments: [...value.segments.values()].map((s) => ({ key: s.key, label: s.label, color: s.color, value: s.value })),
+      // in one fixed order, not the order entries arrived in: a running timer is added
+      // last (`liveReport`), and its band must not jump to the other end when it stops
+      segments: [...value.segments.values()]
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .map((s) => ({ key: s.key, label: s.label, color: s.color, value: s.value })),
     }))
 
   return {
@@ -526,10 +618,10 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
       .map((p) => ({ key: p.key, label: p.label, color: p.color, seconds: p.seconds }))
       .sort((a, b) => b.seconds - a.seconds),
     totals: {
-      seconds: totalSeconds,
-      billableSeconds: totalBillable,
-      revenue: totalRevenue,
-      cost: totalCost,
+      seconds: acc.totalSeconds,
+      billableSeconds: acc.totalBillable,
+      revenue: acc.totalRevenue,
+      cost: acc.totalCost,
       fixedFee,
       activeDays: activeDays.size,
       /**
@@ -539,7 +631,7 @@ export function buildSummary(state: TimetrackState, config: ReportConfig, nowSec
        * empty grouping table, and its CSV was a header with no rows. Detailed lists the
        * same entries this counts.
        */
-      entryCount: countedEntries,
+      entryCount: acc.countedEntries,
     },
   }
 }
@@ -576,6 +668,10 @@ function clipToRange(iso: IsoDateTime, rangeStart: number, rangeEnd: number): Is
 }
 
 export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSec: number): DetailedRow[] {
+  return detailedRows(state, config, applyFilters(state, config.filters, nowSec), nowSec).sort(detailedOrder(config))
+}
+
+function detailedRows(state: TimetrackState, config: ReportConfig, entries: TimeEntry[], nowSec: number): DetailedRow[] {
   /**
    * A ROW SHOWS THE SAME PERIOD ITS DURATION MEASURES.
    *
@@ -599,7 +695,7 @@ export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSe
   const rangeStart = epochSeconds(startOfDayIso(config.filters.range.start))
   const rangeEnd = epochSeconds(startOfDayIso(addDays(config.filters.range.end, 1)))
 
-  const rows = applyFilters(state, config.filters, nowSec)
+  return entries
     .filter((entry) => entrySecondsInRange(entry, config.filters.range.start, config.filters.range.end, nowSec) > 0)
     .map((entry) => {
     const seconds = secondsInRange(entry, config, nowSec)
@@ -624,10 +720,13 @@ export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSe
       amount: entryRevenue(state, entry, seconds),
     }
   })
+}
 
+/** The Detailed tab's order. `Array.prototype.sort` is stable, so ties keep the entries' own order. */
+function detailedOrder(config: ReportConfig): (a: DetailedRow, b: DetailedRow) => number {
   const { column, direction } = config.sort
   const factor = direction === "asc" ? 1 : -1
-  return rows.sort((a, b) => {
+  return (a, b) => {
     switch (column) {
       case "duration":
         return (a.seconds - b.seconds) * factor
@@ -640,19 +739,41 @@ export function buildDetailed(state: TimetrackState, config: ReportConfig, nowSe
       default:
         return (epochSeconds(a.start) - epochSeconds(b.start)) * factor
     }
-  })
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Workload report (Toggl's renamed Weekly report)
 // ---------------------------------------------------------------------------
 
-export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSec: number): WorkloadReport {
+interface WorkloadAcc {
+  days: IsoDate[]
+  dayIndex: Map<IsoDate, number>
+  rows: Map<string, { key: string; label: string; color: string | null; values: number[] }>
+  dayTotals: number[]
+}
+
+function newWorkloadAcc(config: ReportConfig): WorkloadAcc {
   const days = eachDay(config.filters.range.start, config.filters.range.end)
-  const dayIndex = new Map(days.map((d, i) => [d, i]))
-  const entries = applyFilters(state, config.filters, nowSec)
-  const rows = new Map<string, { key: string; label: string; color: string | null; values: number[] }>()
-  const dayTotals = days.map(() => 0)
+  return { days, dayIndex: new Map(days.map((d, i) => [d, i])), rows: new Map(), dayTotals: days.map(() => 0) }
+}
+
+function copyWorkloadAcc(acc: WorkloadAcc): WorkloadAcc {
+  return {
+    ...acc,
+    rows: new Map([...acc.rows].map(([key, row]) => [key, { ...row, values: [...row.values] }])),
+    dayTotals: [...acc.dayTotals],
+  }
+}
+
+export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSec: number): WorkloadReport {
+  const acc = newWorkloadAcc(config)
+  addToWorkload(acc, state, config, applyFilters(state, config.filters, nowSec), nowSec)
+  return finishWorkload(acc, config)
+}
+
+function addToWorkload(acc: WorkloadAcc, state: TimetrackState, config: ReportConfig, entries: TimeEntry[], nowSec: number): void {
+  const { days, dayIndex, rows, dayTotals } = acc
 
   for (const entry of entries) {
     const seconds = secondsInRange(entry, config, nowSec)
@@ -696,7 +817,10 @@ export function buildWorkload(state: TimetrackState, config: ReportConfig, nowSe
       dayTotals[index] += share
     }
   }
+}
 
+function finishWorkload(acc: WorkloadAcc, config: ReportConfig): WorkloadReport {
+  const { days, rows, dayTotals } = acc
   const rowList = [...rows.values()]
     .map((row) => ({ ...row, total: row.values.reduce((a, b) => a + b, 0) }))
     .sort((a, b) => b.total - a.total)
@@ -750,10 +874,19 @@ function attributesProjectsUniquely(grouping: ReportConfig["grouping"]): boolean
   return grouping === "project" || grouping === "client"
 }
 
-export function buildProfitability(state: TimetrackState, config: ReportConfig, nowSec: number): ProfitabilityReport {
-  const entries = applyFilters(state, config.filters, nowSec)
-  const rows = new Map<string, ProfitabilityRow & { projectIds: Set<Id> }>()
+type ProfitabilityAcc = Map<string, ProfitabilityRow & { projectIds: Set<Id> }>
 
+function copyProfitabilityAcc(acc: ProfitabilityAcc): ProfitabilityAcc {
+  return new Map([...acc].map(([key, row]) => [key, { ...row, projectIds: new Set(row.projectIds) }]))
+}
+
+export function buildProfitability(state: TimetrackState, config: ReportConfig, nowSec: number): ProfitabilityReport {
+  const acc: ProfitabilityAcc = new Map()
+  addToProfitability(acc, state, config, applyFilters(state, config.filters, nowSec), nowSec)
+  return finishProfitability(acc, state, config)
+}
+
+function addToProfitability(rows: ProfitabilityAcc, state: TimetrackState, config: ReportConfig, entries: TimeEntry[], nowSec: number): void {
   for (const entry of entries) {
     const seconds = secondsInRange(entry, config, nowSec)
     const revenue = entryRevenue(state, entry, seconds)
@@ -783,7 +916,9 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
       rows.set(dim.key, row)
     }
   }
+}
 
+function finishProfitability(rows: ProfitabilityAcc, state: TimetrackState, config: ReportConfig): ProfitabilityReport {
   const feeIsPerRow = attributesProjectsUniquely(config.grouping)
 
   // every project the report touches, once, however many rows it appears in
@@ -818,13 +953,130 @@ export function buildProfitability(state: TimetrackState, config: ReportConfig, 
 }
 
 // ---------------------------------------------------------------------------
-// Export
+// A report that follows a running timer
 // ---------------------------------------------------------------------------
 
-function csvCell(value: string | number | boolean): string {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+export interface ReportOf {
+  summary: SummaryReport
+  detailed: DetailedRow[]
+  workload: WorkloadReport
+  profitability: ProfitabilityReport
 }
+export type ReportKind = keyof ReportOf
+
+/**
+ * ONE REPORT, ITS FINISHED ENTRIES TALLIED ONCE: CALL IT WITH THE SECOND TO READ IT AT.
+ *
+ * The result equals `buildSummary` (or the other three) for the same state, config and
+ * second, with two differences nobody can see: a money sum may differ in its last binary
+ * digit, being added in another order, and two rows with EXACTLY the same total may
+ * stand the other way round for that second, because the running entry is added last
+ * rather than where it sits in the list. A call costs the running entry and the
+ * report's own rows, not the history.
+ *
+ * Two things depend on the clock: a running entry's seconds (and whether it reaches the
+ * range at all), and whether a planned entry's start has passed — a plan is in no
+ * report until it starts (`isPlanned`). So the finished entries are tallied once per
+ * STAGE (`plannedStageService`): on the first call, and again only on the second a
+ * planned entry starts. Every other call copies that tally and adds the running entry.
+ *
+ * Detailed has no tally to copy, only rows to order, so its finished rows are sorted
+ * once a stage and a running row is placed among them where the full sort would put it
+ * — ties broken by the entries' own order, as the stable sort breaks them.
+ */
+export function liveReport<K extends ReportKind>(kind: K, state: TimetrackState, config: ReportConfig): (nowSec: number) => ReportOf[K] {
+  const ticking = state.entries.filter((e) => isRunning(e) && !e.serverDeletedAt)
+  const finished: TimetrackState = ticking.length ? { ...state, entries: state.entries.filter((e) => !isRunning(e)) } : state
+  const starts = startsInOrder(liveEntries(finished))
+  const tickingAt = (nowSec: number) => applyFilters({ ...state, entries: ticking }, config.filters, nowSec)
+
+  /**
+   * The finished entries' part, for the stage `nowSec` is in: built at a second inside
+   * the stage, which is every second's answer for the whole stage.
+   */
+  const perStage = <T,>(make: (nowSec: number, fixedEntries: TimeEntry[]) => T) => {
+    let built: { stage: number; value: T } | null = null
+    return (nowSec: number): T => {
+      const stage = stageAt(starts, nowSec)
+      if (built?.stage !== stage) built = { stage, value: make(nowSec, applyFilters(finished, config.filters, nowSec)) }
+      return built.value
+    }
+  }
+
+  const build = (): ((nowSec: number) => ReportOf[ReportKind]) => {
+    switch (kind) {
+      case "summary": {
+        const base = perStage((nowSec, fixedEntries) => {
+          const acc = newSummaryAcc(state, config)
+          addToSummary(acc, state, config, fixedEntries, nowSec)
+          return { acc, done: ticking.length ? null : finishSummary(acc, state, config) }
+        })
+        return (nowSec) => {
+          const { acc: fixed, done } = base(nowSec)
+          if (done) return done
+          const acc = copySummaryAcc(fixed)
+          addToSummary(acc, state, config, tickingAt(nowSec), nowSec)
+          return finishSummary(acc, state, config)
+        }
+      }
+      case "workload": {
+        const base = perStage((nowSec, fixedEntries) => {
+          const acc = newWorkloadAcc(config)
+          addToWorkload(acc, state, config, fixedEntries, nowSec)
+          return { acc, done: ticking.length ? null : finishWorkload(acc, config) }
+        })
+        return (nowSec) => {
+          const { acc: fixed, done } = base(nowSec)
+          if (done) return done
+          const acc = copyWorkloadAcc(fixed)
+          addToWorkload(acc, state, config, tickingAt(nowSec), nowSec)
+          return finishWorkload(acc, config)
+        }
+      }
+      case "profitability": {
+        const base = perStage((nowSec, fixedEntries) => {
+          const acc: ProfitabilityAcc = new Map()
+          addToProfitability(acc, state, config, fixedEntries, nowSec)
+          return { acc, done: ticking.length ? null : finishProfitability(acc, state, config) }
+        })
+        return (nowSec) => {
+          const { acc: fixed, done } = base(nowSec)
+          if (done) return done
+          const acc = copyProfitabilityAcc(fixed)
+          addToProfitability(acc, state, config, tickingAt(nowSec), nowSec)
+          return finishProfitability(acc, state, config)
+        }
+      }
+      default: {
+        const order = detailedOrder(config)
+        const position = new Map(state.entries.map((e, i) => [e.id, i]))
+        const before = (a: DetailedRow, b: DetailedRow) => order(a, b) || (position.get(a.entryId) ?? 0) - (position.get(b.entryId) ?? 0)
+        const base = perStage((nowSec, fixedEntries) => detailedRows(state, config, fixedEntries, nowSec).sort(before))
+        return (nowSec) => {
+          const sorted = base(nowSec)
+          if (!ticking.length) return sorted
+          const rows = [...sorted]
+          for (const row of detailedRows(state, config, tickingAt(nowSec), nowSec)) {
+            let low = 0
+            let high = rows.length
+            while (low < high) {
+              const mid = (low + high) >> 1
+              if (before(rows[mid], row) <= 0) low = mid + 1
+              else high = mid
+            }
+            rows.splice(low, 0, row)
+          }
+          return rows
+        }
+      }
+    }
+  }
+  return build() as (nowSec: number) => ReportOf[K]
+}
+
+// ---------------------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------------------
 
 export function detailedToCsv(rows: DetailedRow[], currency: string): string {
   const header = [
@@ -850,7 +1102,8 @@ export function detailedToCsv(rows: DetailedRow[], currency: string): string {
       row.projectName ?? "",
       row.clientName ?? "",
       row.taskName ?? "",
-      row.tagNames.join(", "),
+      // a comma inside a tag's name is escaped, so the import reads it as one tag
+      joinTagNames(row.tagNames),
       row.memberName,
       row.billable ? "Yes" : "No",
       // the person's own clock, with its offset — see `localIsoWithOffset`. These
@@ -981,6 +1234,28 @@ export function defaultReportConfig(todayKey: IsoDate, weekStart: WeekStart, rou
     workloadValueMode: "duration",
     sort: { column: "start", direction: "desc" },
   }
+}
+
+/**
+ * A REPORT ON "THIS WEEK" STAYS ON THIS WEEK WHEN THE WEEK START CHANGES.
+ *
+ * The range is two dates, made once when the tracker opens — before the account's
+ * settings have arrived — so a person whose week starts on Sunday saw Reports' "this
+ * week" run Monday to Sunday while the Timer beside it counted Sunday to Saturday
+ * (heavy-user audit of 2026-11-04, D7). A range that is exactly this week or last week
+ * under the old start moves to the new one; any other range was picked by hand and is
+ * returned untouched, the same object.
+ */
+export function followWeekStart(config: ReportConfig, todayKey: IsoDate, from: WeekStart, to: WeekStart): ReportConfig {
+  if (from === to) return config
+  const { start, end } = config.filters.range
+  for (const preset of ["this_week", "last_week"] as const) {
+    const old = presetRange(preset, todayKey, from)
+    if (old.start === start && old.end === end) {
+      return { ...config, filters: { ...config.filters, range: presetRange(preset, todayKey, to) } }
+    }
+  }
+  return config
 }
 
 /** Toggl shares saved reports by link; we encode the whole config in the URL */

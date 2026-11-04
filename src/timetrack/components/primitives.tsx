@@ -5,7 +5,7 @@
  * Styled with the project's theme tokens (card / border / primary / muted).
  */
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from "react"
 import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
@@ -411,6 +411,20 @@ export function Dropdown({
 // Modal
 // ---------------------------------------------------------------------------
 
+const FOCUSABLE =
+  'input:not([disabled]):not([type="hidden"]), button:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+
+/**
+ * The controls Tab can reach inside `root`, in order. A control hidden by layout (the
+ * other breakpoint's copy, a collapsed section) is skipped where the browser can say
+ * so; `checkVisibility` is missing only where nothing is laid out at all.
+ */
+function focusableIn(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (el) => !el.closest("[hidden], [inert]") && (typeof el.checkVisibility !== "function" || el.checkVisibility()),
+  )
+}
+
 export function Modal({
   title,
   onClose,
@@ -432,13 +446,97 @@ export function Modal({
     return () => document.removeEventListener("keydown", escape)
   }, [onClose])
 
+  /**
+   * A DIALOG KEEPS THE KEYBOARD: FOCUS GOES IN, STAYS IN, AND GOES BACK.
+   *
+   * This said `role="dialog" aria-modal="true"` and did none of what that promises. A
+   * browser round with the entry sheet open pressed Tab 40 times and every press landed
+   * on the list rows behind it (heavy-user audit of 2026-11-04, D12); closing it left
+   * focus on nothing. Radix's Dialog in `components/ui` would trap focus, but it also
+   * treats the pickers' panels — portalled to the end of `<body>`, outside the dialog —
+   * as "outside", closes on a click in them and pulls focus back out of their search
+   * boxes. So the four duties are done here, with those panels allowed:
+   *
+   *   open   focus the first control inside, unless something inside already has it
+   *   Tab    wraps at the last control, Shift+Tab at the first
+   *   stray  focus that lands behind the dialog is brought back in
+   *   close  focus returns to whatever had it when the dialog opened
+   *
+   * WHO OPENED IT is read twice. The sheet opens from an item in an entry's ⋮ menu, and
+   * that menu closes in the same render: its item is gone by the time any effect runs,
+   * and the menu then hands focus back to its own ⋮ button — in an effect React runs
+   * AFTER this one (measured: a microtask was still too early). So the opener is read on
+   * the next task, once the menu has done that, and the element focused while this
+   * first rendered stands in when something inside the dialog took focus itself
+   * (an `autoFocus` field).
+   */
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const [focusedAtRender] = useState(() => (typeof document === "undefined" ? null : document.activeElement))
+  useEffect(() => {
+    const dialog = dialogRef.current
+    let opener: HTMLElement | null = null
+    let open = true
+
+    const keepInside = (event: FocusEvent) => {
+      const target = event.target as Node | null
+      if (!dialog || !target || dialog.contains(target)) return
+      // a picker opened from inside the dialog lives at the end of <body>
+      if (target instanceof Element && target.closest("[data-dropdown-panel]")) return
+      // only the dialog on top keeps focus: a second one opened over this one has it
+      const modals = document.querySelectorAll('[role="dialog"][aria-modal="true"]')
+      if (modals[modals.length - 1] !== dialog) return
+      ;(focusableIn(dialog)[0] ?? dialog).focus()
+    }
+
+    const takeFocus = window.setTimeout(() => {
+      if (!open || !dialog) return
+      const outside = (el: Element | null): el is HTMLElement =>
+        el instanceof HTMLElement && el !== document.body && el.isConnected && !dialog.contains(el)
+      const active = document.activeElement
+      opener = outside(active) ? active : outside(focusedAtRender) ? focusedAtRender : null
+      if (!dialog.contains(active)) (focusableIn(dialog)[0] ?? dialog).focus()
+      document.addEventListener("focusin", keepInside)
+    }, 0)
+    return () => {
+      open = false
+      window.clearTimeout(takeFocus)
+      document.removeEventListener("focusin", keepInside)
+      if (opener && opener.isConnected) opener.focus()
+    }
+  }, [focusedAtRender])
+
+  const wrapTab = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    // a field that took the Tab for itself (accepting a suggestion) keeps it
+    if (event.key !== "Tab" || event.defaultPrevented || !dialogRef.current) return
+    // a dialog opened inside this one wraps its own Tab
+    if (event.target instanceof Element && event.target.closest('[role="dialog"]') !== dialogRef.current) return
+    const controls = focusableIn(dialogRef.current)
+    if (controls.length === 0) {
+      event.preventDefault()
+      return
+    }
+    const first = controls[0]
+    const last = controls[controls.length - 1]
+    const active = document.activeElement
+    if (event.shiftKey && (active === first || active === dialogRef.current)) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
     // a dialog to assistive tech, and to the tracker's shortcuts, which pause while one is open
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-[9600] flex items-stretch justify-center overflow-y-auto bg-black/60 sm:items-start sm:p-8"
+      tabIndex={-1}
+      onKeyDown={wrapTab}
+      className="fixed inset-0 z-[9600] flex items-stretch justify-center overflow-y-auto bg-black/60 outline-none sm:items-start sm:p-8"
     >
       <div
         className={cn(
@@ -999,6 +1097,7 @@ export function ConfirmButton({
   variant = "ghost",
   size = "sm",
   children,
+  ariaLabel,
 }: {
   label?: string
   confirmLabel?: string
@@ -1006,6 +1105,11 @@ export function ConfirmButton({
   variant?: "ghost" | "outline" | "destructive"
   size?: "sm" | "icon-sm"
   children?: ReactNode
+  /**
+   * Required when the button is only an icon, so a screen reader can say what it
+   * deletes ("Delete project Website"). Once armed it reads its `confirmLabel`.
+   */
+  ariaLabel?: string
 }) {
   const [armed, setArmed] = useState(false)
   useEffect(() => {
@@ -1018,6 +1122,7 @@ export function ConfirmButton({
     <Button
       variant={armed ? "destructive" : variant}
       size={size}
+      aria-label={armed ? undefined : ariaLabel}
       onClick={() => {
         if (armed) {
           onConfirm()

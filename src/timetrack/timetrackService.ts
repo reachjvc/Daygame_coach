@@ -24,7 +24,6 @@ import {
   dateKey,
   dateKeyToDate,
   daysBetween,
-  eachDay,
   epochMillis,
   epochSeconds,
   monthStartOf,
@@ -249,8 +248,23 @@ export function projectMatches(state: TimetrackState, project: Project, query: s
  */
 export function searchProjects(state: TimetrackState, query: string, limit?: number): Project[] {
   const lastUsed = projectLastUsed(state)
+  /**
+   * AN ARCHIVED CLIENT'S PROJECTS ARE OFFERED NO MORE THAN AN ARCHIVED PROJECT.
+   *
+   * Nothing read a client's `archived` flag, so Manage → Clients → Archive changed the
+   * button's word and nothing else: every picker went on offering its projects
+   * (heavy-user audit of 2026-11-04, D10). Only offering stops here; the time already
+   * on them still names them on the entries and in reports.
+   */
+  const archivedClients = new Set(state.clients.filter((c) => c.archived).map((c) => c.id))
   const found = state.projects
-    .filter((project) => project.active && !project.template && projectMatches(state, project, query))
+    .filter(
+      (project) =>
+        project.active &&
+        !project.template &&
+        !(project.clientId !== null && archivedClients.has(project.clientId)) &&
+        projectMatches(state, project, query),
+    )
     .sort((a, b) => {
       const usedA = lastUsed.get(a.id)
       const usedB = lastUsed.get(b.id)
@@ -1135,15 +1149,37 @@ export interface BulkEditPatch {
   description?: string
 }
 
+/**
+ * A BULK EDIT OBEYS THE LOCKS, ENTRY BY ENTRY, AND SAYS WHAT IT KEPT.
+ *
+ * This had no lock check at all. The heavy-user audit of 2026-11-04 locked everything
+ * up to five days back, ticked a locked day in Select, set a project in the bulk bar,
+ * and all 17 locked entries moved — and reached the account. A collapsed group's
+ * project picker did the same, because a group edit is a bulk edit, while the
+ * description field beside it was correctly disabled.
+ *
+ * The rule is the one `updateEntry`, `splitEntry` and `deleteEntries` already ask:
+ * `lockViolations` on the entry's own day and owner. Like `deleteEntries`, the entries
+ * that may change do, and every one that may not is reported, one violation each, so
+ * the caller can say how many were kept and why.
+ */
 export function bulkEditEntries(
   state: TimetrackState,
   entryIds: Id[],
   patch: BulkEditPatch,
   nowIso: IsoDateTime,
-): TimetrackState {
+): { state: TimetrackState; changed: Id[]; violations: SaveViolation[] } {
   const idSet = new Set(entryIds)
+  const changed: Id[] = []
+  const violations: SaveViolation[] = []
   const entries = state.entries.map((entry) => {
     if (!idSet.has(entry.id)) return entry
+    const locked = lockViolations(state, entry.start, entry.userId)
+    if (locked.length > 0) {
+      violations.push(locked[0])
+      return entry
+    }
+    changed.push(entry.id)
     let tagIds = patch.tagIds ? [...patch.tagIds] : entry.tagIds
     if (patch.removeTagIds?.length) tagIds = tagIds.filter((id) => !patch.removeTagIds!.includes(id))
     if (patch.addTagIds?.length) tagIds = [...new Set([...tagIds, ...patch.addTagIds])]
@@ -1157,7 +1193,7 @@ export function bulkEditEntries(
       at: nowIso,
     }
   })
-  return { ...state, entries }
+  return { state: changed.length > 0 ? { ...state, entries } : state, changed, violations }
 }
 
 // ---------------------------------------------------------------------------
@@ -1280,8 +1316,25 @@ export function weekTotalSeconds(
    * midnight and is the one function with a written argument for why that is what a
    * day's hours means; every other place that bucketed by day had invented its own
    * answer.
+   *
+   * ONE PASS, NOT SEVEN. Seven days' midnights tile the week, so an entry's seconds in
+   * the seven days are its seconds between the first midnight and the eighth — the
+   * clip `entrySecondsInRange` makes, with the two bounds worked out once instead of
+   * twice per entry per day. That was 190 ms at 7,000 entries (heavy-user audit of
+   * 2026-11-04, D6), and it ran on every render of the Timer list.
    */
-  return eachDay(start, end).reduce((total, day) => total + daySeconds(entries, day, nowSec), 0)
+  const from = epochSeconds(startOfDayIso(start))
+  const to = epochSeconds(startOfDayIso(addDays(end, 1)))
+  let total = 0
+  for (const e of entries) {
+    // a plan is not in the week until its start passes, as in `entrySecondsInRange`
+    if (e.serverDeletedAt || isPlanned(e, nowSec)) continue
+    const begins = epochSeconds(e.start)
+    if (begins >= to) continue
+    const ends = e.stop ? epochSeconds(e.stop) : begins + entrySeconds(e, nowSec)
+    total += Math.max(0, Math.min(to, ends) - Math.max(from, begins))
+  }
+  return total
 }
 
 /**

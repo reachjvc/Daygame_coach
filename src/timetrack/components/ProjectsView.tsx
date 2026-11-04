@@ -41,6 +41,7 @@ import {
   validateProject,
 } from "../timetrackService"
 import type { AlertThreshold, Id, Project, RecurringPeriod, TimetrackState } from "../types"
+import { NameField } from "./NameField"
 import { MiniSelect } from "./pickers"
 import {
   BurnUpChart,
@@ -366,7 +367,7 @@ export function ProjectsView({
                             <IconArchive className="size-4" />
                           </Button>
                         )}
-                        <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteProject(current, project.id))}>
+                        <ConfirmButton size="icon-sm" ariaLabel={`Delete project ${project.name}`} onConfirm={() => setState((current) => deleteProject(current, project.id))}>
                           <IconDelete className="size-4" />
                         </ConfirmButton>
                       </div>
@@ -736,9 +737,10 @@ function ProjectDialog({
             {tasks.length === 0 && <p className="text-xs text-muted-foreground">No tasks yet.</p>}
             {tasks.map((task) => (
               <div key={task.id} className="flex flex-wrap items-center gap-2">
-                <Input
+                <NameField
                   value={task.name}
-                  onChange={(event) => setState((current) => updateTask(current, task.id, { name: event.target.value }))}
+                  ariaLabel="Task name"
+                  onRename={(name) => setState((current) => updateTask(current, task.id, { name }))}
                   className="h-11 w-[180px] sm:h-8"
                 />
                 <Input
@@ -766,7 +768,7 @@ function ProjectDialog({
                   checked={task.active}
                   onChange={(active) => setState((current) => updateTask(current, task.id, { active }))}
                 />
-                <ConfirmButton size="icon-sm" onConfirm={() => setState((current) => deleteTask(current, task.id))}>
+                <ConfirmButton size="icon-sm" ariaLabel={`Delete task ${task.name}`} onConfirm={() => setState((current) => deleteTask(current, task.id))}>
                   <IconDelete className="size-4" />
                 </ConfirmButton>
               </div>

@@ -9,6 +9,7 @@ import { periodStartFor, middayInstant, localTimeInstant, getTodayInTimezone, to
 import { estimateOneRepMax } from "@/src/programs/programsService"
 import { isTimedLift, liftDisplayName, liftKey } from "@/src/programs/data/exerciseLibrary"
 import type { LoadPoint } from "@/src/programs/types"
+import { csvCell } from "@/src/shared/csvCell"
 import { fromKg, toKg } from "@/src/shared/weight"
 import type {
   WeightLogRow,
@@ -481,11 +482,9 @@ export function workoutsToCsv(logs: WorkoutLogWithSets[], timezone: string): str
    * program and every loose workout together".
    */
   const header = ["date", "session_type", "duration_min", "distance_km", "notes", "exercise", "set", "reps", "weight_kg", "set_kind"]
-  const cell = (v: string | number | boolean | null): string => {
-    if (v === null) return ""
-    const str = String(v)
-    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str
-  }
+  // the app's one CSV cell: quoted where needed, and never a formula a spreadsheet would
+  // run — a note reading `=HYPERLINK(...)` was written as one (`csvCell`)
+  const cell = (v: string | number | boolean | null): string => (v === null ? "" : csvCell(v))
   const rows: string[] = [header.join(",")]
 
   for (const log of logs) {
