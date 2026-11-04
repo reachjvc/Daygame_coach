@@ -132,6 +132,32 @@ describe("a phone that opens with an old copy", () => {
 })
 
 describe("a phone that wakes with an old copy", () => {
+  test("holds a tap made in the same moment it wakes", async () => {
+    const copy = phoneCopy()
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy))
+    const account = fakeAccount(stateToRows(copy, "user-1"))
+    serve(account)
+
+    render(<TogglLab />)
+    await wait(1_000)
+    setVisibility("hidden")
+    const gymId = gymIn(copy)
+    account.stop(gymId, PC_STOP)
+    holdReads = true
+    // the tap lands before the page has redrawn for waking
+    Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true })
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"))
+      fireEvent.click(main().getByRole("button", { name: "Stop timer" }))
+    })
+    await wait(50)
+    holdReads = false
+    releaseReads?.()
+    await wait(2_000)
+
+    expect(account.entry(gymId)?.stopped_at, "the tap acted on the old copy before the page knew it was checking").toBe(PC_STOP)
+  })
+
   test("checks before it stops", async () => {
     const copy = phoneCopy()
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy))

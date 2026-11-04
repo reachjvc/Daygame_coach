@@ -200,7 +200,7 @@ function firstBatchWithin(
  * 20261104120000) no ping arrives, and the minute's check is all there is —
  * which is what there was before. Returns how to stop listening.
  */
-function listenForChanges(userId: string, onChange: () => void): () => void {
+function listenForChanges(userId: string, onChange: (payload: unknown) => void): () => void {
   try {
     const client = createBrowserSupabaseClient()
     // a fresh topic each time: React mounts effects twice in development, and a
@@ -211,7 +211,7 @@ function listenForChanges(userId: string, onChange: () => void): () => void {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "timetrack_entries", filter: `user_id=eq.${userId}` },
-        () => onChange(),
+        (payload) => onChange(payload),
       )
       .subscribe()
     return () => {
@@ -324,6 +324,17 @@ function setsFor(batch: Partial<TimetrackRows>, sets: TagSets): TagSets {
   const out: TagSets = {}
   const ids = [...(batch.timetrack_entries ?? []).map((row) => row.id), ...(batch.timetrack_entry_tags ?? []).map((link) => link.entry_id)]
   for (const id of ids) if (Object.prototype.hasOwnProperty.call(sets, id)) out[id] = sets[id]
+  return out
+}
+
+/** Only these rows of a change set, by `${table}/${key}` as `keysIn` names them */
+function onlyKeys(rows: Partial<TimetrackRows>, keys: Set<string>): Partial<TimetrackRows> {
+  const out: Partial<TimetrackRows> = {}
+  for (const table of TIMETRACK_TABLES) {
+    const list = ((rows[table] ?? []) as unknown as AnyRow[]).filter((row) => keys.has(`${table}/${rowKey(table, row)}`))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (list.length > 0) (out as any)[table] = list
+  }
   return out
 }
 
@@ -450,6 +461,14 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const inFlight = useRef(new Set<AbortController>())
   /** The 3-second limit on the current "Checking…" (D2) */
   const checkWait = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /**
+   * `check.checking`, readable the moment it changes. A tap handled in the same
+   * tick as waking comes before React has drawn "Checking…", and reading the
+   * state would let it act on the old copy.
+   */
+  const checkingRef = useRef(true)
+  /** Leaving was asked for while an upload was in the air: send the rest when it lands */
+  const leaveAgain = useRef(false)
   /** When a check was last asked for, so `focus` right after `visibilitychange` asks once */
   const lastAsked = useRef(0)
   /** First contact is in the air: asking again now would read the account twice */
@@ -523,10 +542,12 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    */
   const beginChecking = useCallback(() => {
     if (unmounted.current) return
+    checkingRef.current = true
     setCheck((current) => (current.checking ? current : { ...current, checking: true }))
     if (checkWait.current) clearTimeout(checkWait.current)
     checkWait.current = setTimeout(() => {
       checkWait.current = null
+      checkingRef.current = false
       setCheck((current) => (current.checking ? { ...current, checking: false, failed: true } : current))
     }, CHECK_WAIT_MS)
   }, [])
@@ -540,6 +561,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     if (unmounted.current) return
     if (checkWait.current) clearTimeout(checkWait.current)
     checkWait.current = null
+    checkingRef.current = false
     setCheck((current) =>
       outcome === "landed"
         ? { checking: false, lastCheckedAt: serverNow(), failed: false }
@@ -738,6 +760,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       // there with nothing in flight. Seen in the product: 21 rows, sixteen
       // seconds, badge reading "Saving 21…".
       flushAgain.current = true
+      // and leaving now must not wait for an instance that is about to be gone (D3)
+      if (leaving) leaveAgain.current = true
       return
     }
     if (!userId.current) return
@@ -989,9 +1013,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * Removing the sent keys is the same rule stated properly, and it keeps what
        * arrived while the request was in the air.
        */
-      pending.current = pending.current === queued && went === sending ? {} : withoutSentRows(pending.current, accepted)
+      /**
+       * Compared as they were QUEUED, not as they were sent: `sending` carries the
+       * workspace id rewritten to the account's, and a row queued before the
+       * account's workspace was known would never match it and go up again.
+       */
+      const acceptedAsQueued = onlyKeys(queued, keysIn(accepted))
+      pending.current = pending.current === queued && went === sending ? {} : withoutSentRows(pending.current, acceptedAsQueued)
       // gone from the screen already: this instance's queue is no longer the one on disk
-      if (unmounted.current) forgetSentOnDisk(accepted)
+      if (unmounted.current) forgetSentOnDisk(acceptedAsQueued)
 
       /**
        * A row edited while its upload was in the air is still queued — and that
@@ -1071,6 +1101,10 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         // still hidden: the next part goes the way this one did
         const stillAway = leaving && document.visibilityState === "hidden"
         setTimeout(() => void flushRef.current?.({ keepalive: stillAway }), 0)
+      } else if (unmounted.current && leaveAgain.current && countRows(pending.current) > 0) {
+        // the tracker was left while this was in the air: what was queued behind it goes now, once
+        leaveAgain.current = false
+        void flushRef.current?.({ keepalive: true })
       }
     }
   }, [clearRetry, pushToast, savePending])
@@ -1854,6 +1888,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const sendOnLeaveRef = useRef<(() => void) | null>(sendOnLeave)
   sendOnLeaveRef.current = sendOnLeave
 
+  const isChecking = useCallback(() => checkingRef.current, [])
+
   /** The badge, tapped: check now, and send whatever is waiting (D6) */
   const checkNow = useCallback(() => {
     if (statusRef.current !== "local-only") beginChecking()
@@ -1940,7 +1976,17 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   useEffect(() => {
     if (!account) return
     let settle: ReturnType<typeof setTimeout> | null = null
-    const stop = listenForChanges(account, () => {
+    const stop = listenForChanges(account, (payload) => {
+      /**
+       * NOT FOR THE ECHO OF THIS DEVICE'S OWN WRITE. Every upload comes back as a
+       * ping, and a full check per save is twenty reads for nothing. A row at a
+       * version this device already holds is that echo; anything else checks.
+       */
+      const row = (payload as { new?: Record<string, unknown> } | null)?.new
+      if (row && typeof row.id === "string" && typeof row.updated_at === "string") {
+        const known = basis.current.get(`timetrack_entries/${row.id}`)
+        if (known && Date.parse(known) === Date.parse(row.updated_at)) return
+      }
       if (settle) clearTimeout(settle)
       settle = setTimeout(() => {
         settle = null
@@ -2018,6 +2064,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     check,
     /** check the account now, and send what is waiting: the badge's tap */
     checkNow,
+    /** whether Start and Stop should wait, as of this moment rather than the last render (D2) */
+    isChecking,
     importOffer,
     acceptImport,
     declineImport,

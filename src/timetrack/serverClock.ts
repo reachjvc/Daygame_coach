@@ -18,6 +18,16 @@ export function noteServerDate(sentAt: number, receivedAt: number, serverDate: s
   known = learnClock(known, { sentAt, receivedAt, serverDate })
 }
 
+/**
+ * What to add to this device's clock to get the server's, in milliseconds.
+ * For turning a moment measured on the device clock into a stamp. Durations
+ * are measured on the device clock alone: the offset moves when it is learned,
+ * and a duration measured across that move would jump by it.
+ */
+export function serverOffset(): number {
+  return clockOffset(known)
+}
+
 /** The server's time now, in milliseconds */
 export function serverNow(): number {
   return Date.now() + clockOffset(known)

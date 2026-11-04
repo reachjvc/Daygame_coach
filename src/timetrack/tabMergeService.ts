@@ -12,8 +12,8 @@
  *
  * THE RULE. A message says which shared workspace it was built on. What the
  * receiving tab changed since that workspace stays; everything else is taken
- * from the message — for lists of things with an id (entries, projects, tags…)
- * item by item, for everything else field by field. A tab that changed nothing
+ * from the message — lists of things with an id (entries, projects, tags…)
+ * item by item, objects (settings, each entry) field by field, at every level. A tab that changed nothing
  * since takes the message as it is, which is the common case and costs nothing.
  */
 
@@ -37,6 +37,30 @@ function byId(list: WithId[]): Map<string, WithId> {
   return new Map(list.map((item) => [item.id, item]))
 }
 
+function isPlainObject(value: unknown): value is AnyRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+/**
+ * One value, three ways: theirs where this tab left it as it was, this tab's
+ * where it changed it. Objects (settings, an entry) go field by field, lists of
+ * things with an id item by item; anything else changed here is this tab's.
+ */
+function mergeValue(ancestor: unknown, ours: unknown, theirs: unknown): unknown {
+  if (same(ours, ancestor)) return theirs
+  if (isListOfIds(ancestor) && isListOfIds(ours) && isListOfIds(theirs)) return mergeList(ancestor, ours, theirs)
+  if (isPlainObject(ancestor) && isPlainObject(ours) && isPlainObject(theirs)) {
+    const out: AnyRecord = {}
+    // theirs' order first, so a merge that changes nothing reads the same
+    for (const key of new Set([...Object.keys(theirs), ...Object.keys(ours), ...Object.keys(ancestor)])) {
+      const value = mergeValue(ancestor[key], ours[key], theirs[key])
+      if (value !== undefined) out[key] = value
+    }
+    return out
+  }
+  return ours
+}
+
 /**
  * Item by item: theirs, except what this tab added, changed or removed since
  * `ancestor`. An item this tab changed and theirs removed is kept — an edit is
@@ -54,7 +78,7 @@ function mergeList(ancestor: WithId[], ours: WithId[], theirs: WithId[]): WithId
       if (was === undefined) out.push(item) // new over there
       continue // removed here
     }
-    out.push(was !== undefined && same(here, was) ? item : here)
+    out.push(was === undefined ? here : (mergeValue(was, here, item) as WithId))
   }
   for (const item of ours) {
     if (other.has(item.id)) continue
@@ -68,21 +92,14 @@ function mergeList(ancestor: WithId[], ours: WithId[], theirs: WithId[]): WithId
  * The workspace a tab should hold after `theirs` arrives, when this tab holds
  * `ours` and the message was built on `ancestor`. Returns `theirs` itself when
  * nothing of this tab's is left to lay on top, so the caller can tell a plain
- * take (nothing to tell anyone) from a merge (a change of this tab's own).
+ * take (nothing to tell anyone) from a merge (a change of this tab's own); and
+ * `ours` itself when the message brings nothing this tab does not already have
+ * — two messages crossing with the same news — so nothing is said twice.
  */
 export function mergeTabStates(ancestor: TimetrackState, ours: TimetrackState, theirs: TimetrackState): TimetrackState {
   if (ours === ancestor || ours === theirs) return theirs
-  const a = ancestor as unknown as AnyRecord
-  const o = ours as unknown as AnyRecord
-  const t = theirs as unknown as AnyRecord
-  const out: AnyRecord = { ...t }
-  let kept = false
-  for (const key of new Set([...Object.keys(a), ...Object.keys(o), ...Object.keys(t)])) {
-    if (same(o[key], a[key])) continue // not changed here: theirs stands
-    const value = isListOfIds(a[key]) && isListOfIds(o[key]) && isListOfIds(t[key]) ? mergeList(a[key], o[key], t[key]) : o[key]
-    if (same(value, t[key])) continue
-    out[key] = value
-    kept = true
-  }
-  return kept ? (out as unknown as TimetrackState) : theirs
+  const merged = mergeValue(ancestor, ours, theirs)
+  if (same(merged, theirs)) return theirs
+  if (same(merged, ours)) return ours
+  return merged as TimetrackState
 }

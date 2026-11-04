@@ -19,6 +19,10 @@ import { createContext } from "react"
 
 import type { TimetrackState } from "../types"
 
-export type AfterCheck = (run: (latest: TimetrackState) => void) => void
+/**
+ * `always`: run it even if the running timer changed meanwhile — for a start
+ * link, which nobody can "tap again".
+ */
+export type AfterCheck = (run: (latest: TimetrackState) => void, options?: { always?: boolean }) => void
 
 export const AfterCheckContext = createContext<AfterCheck | null>(null)

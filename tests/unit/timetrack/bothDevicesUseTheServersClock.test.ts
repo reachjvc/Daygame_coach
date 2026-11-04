@@ -121,4 +121,26 @@ describe("on the device", () => {
     const stopped = result.current.state!.entries.find((e) => e.id === "gym")!
     expect(Math.abs(Date.parse(stopped.stop!) - (Date.now() - FOUR_MINUTES)), "the stop is four minutes late").toBeLessThanOrEqual(1_000)
   })
+
+  test("learning the offset does not make the idle clock, Pomodoro or reminders jump", () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(SERVER_NOW - 12 * 60_000) // a phone twelve minutes slow
+    vi.spyOn(document, "hasFocus").mockReturnValue(true)
+    const shape = entry("gym", "2026-08-10", "09:00", "10:00", { description: "Gym" })
+    const gym = { ...shape, stop: null, duration: -epochSeconds(shape.start) }
+    const state = baseState({ entries: [gym] })
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, idle: { enabled: true, minutes: 10, legacyDefaultMoved: true } }))
+
+    const { result } = renderHook(() => useTimetrack())
+    act(() => {
+      vi.advanceTimersByTime(1_000)
+    })
+    expect(result.current.state?.idle.enabled, "idle detection is on, or this proves nothing").toBe(true)
+    // the first answer arrives: the phone is twelve minutes slow
+    noteServerDate(Date.now() - 50, Date.now() + 50, dateHeader(Date.now() + 12 * 60_000))
+    act(() => {
+      vi.advanceTimersByTime(2_000)
+    })
+    expect(result.current.idlePrompt, "three seconds of use read as twelve minutes idle").toBeNull()
+  })
 })

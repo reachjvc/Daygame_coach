@@ -101,6 +101,23 @@ describe("two tracker tabs open in one browser", () => {
     expect(account.entry("mail")?.description).toBe("Email, inbox zero")
   })
 
+  test("two settings changed in the two tabs at once are both kept", async () => {
+    const { first, second } = await twoTabs()
+
+    first.apply((current) => ({ ...current, user: { ...current.user, timeFormat: "h12" } }))
+    second.apply((current) => ({ ...current, user: { ...current.user, durationFormat: "decimal" } }))
+    for (let i = 0; i < 4; i++) await wait(1)
+    await wait(5_000)
+
+    for (const [tab, name] of [
+      [first, "first"],
+      [second, "second"],
+    ] as const) {
+      expect(tab.latest().user.timeFormat, `the ${name} tab lost the first tab's setting`).toBe("h12")
+      expect(tab.latest().user.durationFormat, `the ${name} tab lost the second tab's setting`).toBe("decimal")
+    }
+  })
+
   test("a tab that only listens does not send anything back to the tab that changed", async () => {
     const { first, second } = await twoTabs()
     const heard: string[] = []

@@ -121,6 +121,23 @@ describe("a stop made just before the phone is locked, closed or left", () => {
     expect(account.entry("gym")?.stopped_at, "leaving aborted the upload that was in the air").not.toBeNull()
   })
 
+  test("a stop made while an earlier upload is in the air still leaves when the tracker is left", async () => {
+    const { account, phone } = await phoneWithGymRunning()
+    const release = account.holdPosts()
+    phone.apply((current) => ({
+      ...current,
+      entries: current.entries.map((e) => (e.id === "gym" ? { ...e, description: "Gym, legs day", at: new Date().toISOString() } : e)),
+    }))
+    await wait(900) // the rename's upload is in the air now
+    phone.apply(stop)
+    phone.unmount()
+    release()
+    await wait(50)
+
+    expect(account.entry("gym")?.description).toBe("Gym, legs day")
+    expect(account.entry("gym")?.stopped_at, "the stop waited on disk for the tracker to be opened again").not.toBeNull()
+  })
+
   test("a queue bigger than one keepalive request sends what fits, then the rest, each within the limit", async () => {
     const many = baseState({
       entries: Array.from({ length: 300 }, (_, i) =>

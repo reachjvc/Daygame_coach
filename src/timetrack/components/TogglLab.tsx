@@ -324,8 +324,7 @@ export function TogglLab({
   runningNow.current = running
   const actionsNow = useRef(actions)
   actionsNow.current = actions
-  const checkingNow = useRef(sync.check.checking)
-  checkingNow.current = sync.check.checking
+  const isChecking = sync.isChecking
 
   /**
    * A TAP ON START, STOP OR CONTINUE WAITS FOR THE CHECK (D2). See `afterCheck.ts`.
@@ -334,23 +333,26 @@ export function TogglLab({
    * runs when the check lands — in an effect, after React has drawn what the
    * check brought, so it acts on the account's copy and not the old one.
    */
-  const heldTap = useRef<{ run: (latest: TimetrackState) => void; runningId: Id | null } | null>(null)
-  const afterCheck = useCallback<AfterCheck>((run) => {
-    const latest = latestState.current
-    if (!latest) return
-    if (!checkingNow.current) {
-      run(latest)
-      return
-    }
-    heldTap.current = { run, runningId: runningNow.current?.id ?? null }
-  }, [])
+  const heldTap = useRef<{ run: (latest: TimetrackState) => void; runningId: Id | null; always: boolean } | null>(null)
+  const afterCheck = useCallback<AfterCheck>(
+    (run, options) => {
+      const latest = latestState.current
+      if (!latest) return
+      if (!isChecking()) {
+        run(latest)
+        return
+      }
+      heldTap.current = { run, runningId: runningNow.current?.id ?? null, always: options?.always === true }
+    },
+    [isChecking],
+  )
   useEffect(() => {
     if (sync.check.checking) return
     const tap = heldTap.current
     const latest = latestState.current
     heldTap.current = null
     if (!tap || !latest) return
-    if ((runningNow.current?.id ?? null) !== tap.runningId) {
+    if (!tap.always && (runningNow.current?.id ?? null) !== tap.runningId) {
       pushToast(
         runningNow.current
           ? `Your other device changed the timer while this one was checking: “${runningNow.current.description.trim() || "(no description)"}” is running now. Tap again if you still want to.`
@@ -436,18 +438,24 @@ export function TogglLab({
     if (params.get("start") === "1") {
       const linkDraft = draftFromStartLink(state, params)
       setDraftState(linkDraft)
-      const started = startTimer(state, linkDraft, serverNowIso())
-      if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
-      else {
-        setState(() => started.state)
-        // a link that quietly ends the timer you had running is the worst version
-        // of this, because you did not even press anything in this app
-        if (started.displaced) {
-          pushToast(
-            `This link stopped “${started.displaced.description.trim() || "(no description)"}”, which was running`,
-          )
-        }
-      }
+      // on the account's copy, not the one this device opened with (D2)
+      afterCheck(
+        (latest) => {
+          const started = startTimer(latest, linkDraft, serverNowIso())
+          if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
+          else {
+            setState(() => started.state)
+            // a link that quietly ends the timer you had running is the worst version
+            // of this, because you did not even press anything in this app
+            if (started.displaced) {
+              pushToast(
+                `This link stopped “${started.displaced.description.trim() || "(no description)"}”, which was running`,
+              )
+            }
+          }
+        },
+        { always: true },
+      )
     }
 
     // `?entry=<id>`: a link to one entry opens its sheet, if it still exists
@@ -458,7 +466,7 @@ export function TogglLab({
     // Replaced, not pushed: arriving is one step, wherever the link pointed.
     const arrival: TrackerStep = { timetrack: "arrival" }
     window.history.replaceState(arrival, "", trackerAddressFor(window.location.pathname, { section, entryId: linked?.id ?? null }))
-  }, [state, pushToast, setState])
+  }, [state, pushToast, setState, afterCheck])
 
   /**
    * GOING SOMEWHERE INSIDE THE TRACKER IS A STEP IN THE BROWSER'S HISTORY (D8).

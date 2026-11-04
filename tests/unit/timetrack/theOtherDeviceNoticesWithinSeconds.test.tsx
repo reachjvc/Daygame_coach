@@ -53,11 +53,11 @@ const feed = vi.hoisted(() => {
   return {
     channels,
     client,
-    /** a row of the account's entries changed */
-    ping() {
+    /** a row of the account's entries changed; `row` is what the feed says it now holds */
+    ping(row?: Record<string, unknown>) {
       for (const channel of channels) {
         if (channel.removed) continue
-        for (const listener of channel.listeners) listener.callback({ eventType: "UPDATE" })
+        for (const listener of channel.listeners) listener.callback({ eventType: "UPDATE", new: row ?? {} })
       }
     },
   }
@@ -121,6 +121,30 @@ describe("the phone, while the tracker is open", () => {
     for (let i = 0; i < 5; i++) feed.ping()
     await wait(1_000)
     expect(fetch.mock.calls.length - before).toBe(1)
+  })
+
+  test("does not check again for the echo of its own upload", async () => {
+    const account = fakeAccount(stateToRows(withGymRunning(), USER))
+    const fetch = vi.fn(account.fetch)
+    vi.stubGlobal("fetch", fetch)
+    const phone = renderDevice(withGymRunning())
+    await wait(100)
+    phone.apply((current) => ({
+      ...current,
+      entries: current.entries.map((e) => (e.id === "gym" ? { ...e, description: "Gym, legs day", at: new Date().toISOString() } : e)),
+    }))
+    await wait(1_000) // uploaded
+    const reads = () => fetch.mock.calls.filter(([, init]) => !(init as RequestInit | undefined)?.method).length
+    const before = reads()
+    feed.ping({ ...account.entry("gym") })
+    await wait(1_000)
+    expect(reads() - before, "its own write came back as a ping and set off a full check").toBe(0)
+
+    // and another device's write to the same row still does
+    account.stop("gym", PC_STOP)
+    feed.ping({ ...account.entry("gym") })
+    await wait(1_000)
+    expect(stoppedHere(phone.latest())).toBe(PC_STOP)
   })
 
   test("still checks once a minute when no ping ever arrives", async () => {
