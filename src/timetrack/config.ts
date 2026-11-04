@@ -40,14 +40,6 @@ export const PENDING_BASES_KEY = "toggl-clone:pending-bases"
  * So: persist both, or neither.
  */
 /**
- * Which section you were last on.
- *
- * Its own key, not part of the workspace: it is about this device, it must not
- * travel to your other devices through sync, and a section name is not
- * something a workspace diff should ever have to reason about.
- */
-export const SCREEN_KEY = "toggl-clone:screen"
-/**
  * What the background helpers already did on this device: Pomodoro's phase and
  * end time, when the tracking reminder last spoke, and which timer the
  * forgotten-timer warning has already named. Kept in the browser, for the

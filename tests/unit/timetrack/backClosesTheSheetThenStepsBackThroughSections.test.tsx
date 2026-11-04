@@ -19,7 +19,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
-import { SCREEN_KEY, STORAGE_KEY } from "@/src/timetrack/config"
+import { STORAGE_KEY } from "@/src/timetrack/config"
 import { defaultReportConfig, encodeReportConfig } from "@/src/timetrack/reportsService"
 import { runningEntry } from "@/src/timetrack/timetrackService"
 import type { TimetrackState } from "@/src/timetrack/types"
@@ -158,8 +158,7 @@ describe("the address", () => {
     expect(window.location.search).toBe("?view=settings")
   })
 
-  test("a link can open a section, whatever was open last time", async () => {
-    window.localStorage.setItem(SCREEN_KEY, "calendar")
+  test("a link can open a section", async () => {
     await mount(`${LAB}?view=projects`)
     expect(section()).toBe("Projects")
   })
@@ -173,6 +172,20 @@ describe("the address", () => {
   test("an address with no section opens on Timer in a browser that remembers nothing", async () => {
     await mount(LAB)
     expect(section()).toBe("Timer")
+  })
+
+  test("an address with no section opens on Timer, whatever was open last time", async () => {
+    // The tracker used to reopen the section you were last on. With the section
+    // in the address a reload keeps it anyway, so what remained was the app's
+    // own "Time" link landing on yesterday's Calendar instead of the timer.
+    const first = await mount(`${LAB}?view=calendar`)
+    expect(section()).toBe("Calendar")
+    first.unmount()
+    window.history.replaceState(null, "", LAB)
+
+    render(<TogglLab />)
+    await screen.findByRole("navigation", { name: "Sections" })
+    expect(section(), "opening Time landed on the section used last time").toBe("Timer")
   })
 
   test("a shared report opens Reports once, and leaves no ?report= behind to force it again", async () => {

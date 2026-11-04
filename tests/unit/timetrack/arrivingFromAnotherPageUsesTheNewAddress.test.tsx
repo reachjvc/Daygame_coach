@@ -15,7 +15,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
-import { SCREEN_KEY, STORAGE_KEY } from "@/src/timetrack/config"
+import { STORAGE_KEY } from "@/src/timetrack/config"
 
 import { baseState } from "./helpers"
 
@@ -29,7 +29,6 @@ beforeEach(() => {
   // the calendar scrolls to the working day; jsdom has no layout to scroll
   Element.prototype.scrollIntoView = vi.fn()
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(baseState()))
-  window.localStorage.setItem(SCREEN_KEY, "calendar")
 })
 
 afterEach(() => {

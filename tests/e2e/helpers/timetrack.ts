@@ -21,7 +21,6 @@ import { ROUTES } from "@/src/shared/routes"
 export const TRACKER = ROUTES.time
 export const STORAGE_KEY = 'toggl-clone:v1'
 export const PENDING_KEY = 'toggl-clone:pending'
-const SCREEN_KEY = 'toggl-clone:screen'
 
 /**
  * Tables the account-wide clear leaves alone. `timetrack_settings` holds the
@@ -72,7 +71,7 @@ export async function reopenFromAccount(page: Page): Promise<void> {
     (keys) => {
       for (const key of keys) window.localStorage.removeItem(key)
     },
-    [STORAGE_KEY, PENDING_KEY, SCREEN_KEY],
+    [STORAGE_KEY, PENDING_KEY],
   )
   await openTracker(page)
 }
