@@ -9,7 +9,8 @@
  * Here he gives the moment itself, three ways: typed on the number pad
  * ("1155"), one tap on a chip ("15 min ago", "When the last entry ended"), or
  * nudged with ±1 and ±5. Phase 5's drums slot into the same picker (`drums`),
- * above the box, and every control follows whatever any of them set.
+ * above the box, and every control follows whatever any of them set: the drums
+ * are handed the moment and `set`, exactly what the box and the chips use.
  */
 
 import { useState, type ReactNode } from "react"
@@ -31,6 +32,7 @@ import {
   parseMomentInput,
 } from "../timetrackFormatService"
 import type { EntryDraft, IsoDateTime, TimeFormat, TimetrackState } from "../types"
+import { MomentDrums } from "./Drums"
 import { Modal } from "./primitives"
 
 /** What the drums are handed: the moment, a way to set it, and where it may fall */
@@ -188,6 +190,10 @@ const VERBS: Record<MomentKind, string> = { switch: "Switch", stop: "Stop", star
  *
  * A length over twelve hours is said here rather than asked afterwards (D10):
  * the dialog already is the question, and ✓ is the answer.
+ *
+ * The drums (Phase 5) are one set, [day][hour][minute]: a moment that has
+ * happened, so after now is greyed and refused, and so is anything before the
+ * running timer began — the same limits the typed box is held to.
  */
 export function MomentDialog({
   kind,
@@ -196,7 +202,6 @@ export function MomentDialog({
   draft,
   onConfirm,
   onClose,
-  drums,
 }: {
   kind: MomentKind
   state: TimetrackState
@@ -206,7 +211,6 @@ export function MomentDialog({
   draft: EntryDraft
   onConfirm: (atIso: IsoDateTime, draft: EntryDraft) => void
   onClose: () => void
-  drums?: (control: MomentControl) => ReactNode
 }) {
   const [value, setValue] = useState(openedAt)
   const [description, setDescription] = useState(draft.description)
@@ -258,7 +262,15 @@ export function MomentDialog({
           latest={latest}
           chips={momentChips(state, openedAt)}
           timeFormat={format}
-          drums={drums}
+          drums={(control) => (
+            <MomentDrums
+              value={control.value}
+              onChange={control.set}
+              bounds={{ earliest: control.earliest, latest: control.latest }}
+              timeFormat={format}
+              todayKey={dateKey(openedAt)}
+            />
+          )}
         />
 
         <div className="space-y-1 rounded-md bg-secondary/40 px-3 py-2 text-sm" aria-live="polite">

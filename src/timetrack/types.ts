@@ -236,7 +236,10 @@ export interface Favorite {
 /** A day bucket in the timer list */
 export interface DayGroup {
   date: IsoDate
+  /** tracked time: planned entries are not in it until they start */
   totalSeconds: number
+  /** the length of the day's planned entries, said beside the total */
+  plannedSeconds: number
   rows: EntryRow[]
 }
 

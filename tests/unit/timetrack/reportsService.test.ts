@@ -450,7 +450,9 @@ describe("the detailed CSV's timestamps", () => {
      */
     const lateNight = entry(99, "2026-08-11", "00:30", "00:45", { description: "late night" })
     const withLateEntry: TimetrackState = { ...state, entries: [lateNight] }
-    const rows = buildDetailed(withLateEntry, config({ filters: emptyFilters({ start: "2026-08-01", end: "2026-08-31" }) }), NOW_SEC)
+    // looked at once it has happened: before its start it is planned, and in no report (Q2)
+    const afterwards = epochSeconds(new Date(2026, 7, 12, 12, 0, 0).toISOString())
+    const rows = buildDetailed(withLateEntry, config({ filters: emptyFilters({ start: "2026-08-01", end: "2026-08-31" }) }), afterwards)
     expect(rows.length, "the entry was filtered out, so this asserts nothing").toBe(1)
 
     const line = detailedToCsv(rows, "EUR").split("\n")[1]

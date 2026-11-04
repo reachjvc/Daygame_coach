@@ -40,11 +40,13 @@ import {
   formatDuration,
   formatIdleSpan,
   formatTimeOfDay,
+  isoFromEpochSeconds,
   parseDurationInput,
   parseEndTimeInput,
   parseStartTimeInput,
   plural,
 } from "../timetrackFormatService"
+import { nudgePair, samePair, typedIntoPair, type TimePair } from "../drumService"
 import {
   bulkEditEntries,
   buildDayGroups,
@@ -57,6 +59,7 @@ import {
   duplicateEntry,
   entrySeconds,
   findFavorite,
+  isPlanned,
   isRunning,
   liveEntries,
   moveEntryToDay,
@@ -87,9 +90,10 @@ import {
 } from "../timeFixService"
 import type { EntryRow, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
-import { ColorDot, DayPicker, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
+import { ColorDot, DayPicker, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "./primitives"
 import { serverNow, serverNowIso } from "../serverClock"
 import { AfterCheckContext } from "./afterCheck"
+import { EntryDrums } from "./Drums"
 import { announceNeighbours } from "./neighbourNotice"
 import { announceEndedEarly, askAboutTypedTime, askBeforeLong } from "./TimerBar"
 
@@ -241,6 +245,8 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
             <div className="flex items-center gap-3">
               <span className="text-xs tabular-nums text-muted-foreground">
                 {formatDuration(group.totalSeconds, state.user.durationFormat)}
+                {/* planned time is not in the total until it starts (Q2): said beside it instead */}
+                {group.plannedSeconds > 0 && ` · ${formatDuration(group.plannedSeconds, state.user.durationFormat)} planned`}
               </span>
               <button
                 type="button"
@@ -450,6 +456,8 @@ function EntryFields({
   const running = isRunning(entry)
   /** "next day" when the end is on a later day than the start, as the sheet says it */
   const endMark = endDayMark(entry.start, entry.stop)
+  // not begun yet: striped, and in no total until it starts (Q2)
+  const planned = isPlanned(entry, nowSec)
   const editable = canEditEntry(state, entry)
   const [description, setDescription] = useState(entry.description)
   // Keep the field in step when the entry changes elsewhere (bulk edit, undo, group edit)
@@ -657,7 +665,10 @@ function EntryFields({
 
   /** phones: two compact lines; the row itself opens the detail sheet */
   const phoneRow = (
-    <div className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-11", running && "bg-primary/5")}>
+    <div
+      className={cn("flex items-center gap-1 px-3 py-2 sm:hidden", nested && "pl-11", running && "bg-primary/5")}
+      style={planned ? plannedStripes : undefined}
+    >
         {selectionMode && (
           <label className="flex size-11 shrink-0 items-center justify-center">
             <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" className="size-5" />
@@ -703,6 +714,7 @@ function EntryFields({
               {entry.description || "(no description)"}
             </span>
             <span className="shrink-0 text-sm font-medium tabular-nums">
+              {planned && <span className="mr-1.5 text-xs font-normal text-muted-foreground">planned</span>}
               {running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat)}
             </span>
           </div>
@@ -737,6 +749,8 @@ function EntryFields({
         selectionMode ? ROW_GRID.selecting : ROW_GRID.plain,
         running && "bg-primary/5",
       )}
+      style={planned ? plannedStripes : undefined}
+      title={planned ? "Planned: not counted until it starts" : undefined}
     >
         {selectionMode && <input type="checkbox" checked={checked} onChange={onCheck} aria-label="Select time entry" />}
 
@@ -1404,6 +1418,33 @@ export function EntryDetailModalBody({
   }
   const shown = (field: TimeField, stored: string) => (typed?.field === field ? typed.text : stored)
 
+  /**
+   * THE DRUMS HOLD A PAIR UNTIL ✓ (Phase 5; see `EntryDrums`).
+   *
+   * `drumPair` is the start and end the drums have been turned to and not
+   * saved yet; null while they show the entry as it is. While one is held, the
+   * boxes, the ±5 buttons and the one-tap fixes show and change THAT pair —
+   * a typed end is read after the drums' start, not the saved one — so every
+   * control on the sheet agrees with the drums, and ✓ saves both ends as one
+   * change. A ref as well as state, because the way out runs after the last
+   * render.
+   */
+  const savedPair: TimePair = { start: entry.start, stop: entry.stop }
+  const [drumPair, setDrumPair] = useState<TimePair | null>(null)
+  const drumPairRef = useRef<TimePair | null>(null)
+  const holdDrums = (next: TimePair | null) => {
+    const value = next && !samePair(next, savedPair) ? next : null
+    drumPairRef.current = value
+    setDrumPair(value)
+  }
+  const pair = drumPair ?? savedPair
+  /** with the drums holding a pair, a control changes that pair; otherwise it saves, as it always has */
+  const onPairOr = (change: (held: TimePair) => TimePair, save: () => void) => {
+    const held = drumPairRef.current
+    if (held) holdDrums(change(held))
+    else save()
+  }
+
   const commitTimes = () => {
     const edit = pending.current
     const held = heldText.current
@@ -1413,6 +1454,17 @@ export function EntryDetailModalBody({
     if (!edit || edit.text === held) return
     const current = latestState.current.entries.find((e) => e.id === entry.id) ?? entry
     const text = edit.text.trim()
+
+    const drumsHeld = drumPairRef.current
+    if (drumsHeld) {
+      const next = typedIntoPair(drumsHeld, edit.field, text, nowIso())
+      if (!next) {
+        pushToast(edit.field === "duration" ? DURATION_UNREADABLE : "Could not read that time — try 9:30, 930 or 9:30 pm", "error")
+        return
+      }
+      holdDrums(next)
+      return
+    }
 
     if (edit.field === "day") {
       land(moveEntryToDay(latestState.current, entry.id, text, nowIso()))
@@ -1484,6 +1536,37 @@ export function EntryDetailModalBody({
    * description beside it was kept.
    */
   const stagedTimes = useStagedEdit(commitTimes)
+
+  /** ✓: both ends at once. One edge moved takes a touching neighbour along (D12); both moved is a move, and does not. */
+  const landPair = (target: TimePair) => {
+    const now = nowIso()
+    const patch = target.stop === null ? { start: target.start } : { start: target.start, stop: target.stop }
+    const landed = landOnCurrent((base) => withNeighbours(base, entry.id, now, (edited) => updateEntry(edited, entry.id, patch, now)))
+    if (!landed) return
+    drumPairRef.current = null
+    setDrumPair(null)
+    announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
+  }
+
+  /**
+   * Turned and left: the sheet keeps the pair on the way out, like the boxes do
+   * — except what cannot be saved (an end before its start, said instead), and a
+   * running timer's Stop at… left open, which is not a Stop until ✓ says so.
+   * Declared after the boxes' flush, so a time typed into a box while the
+   * drums held a pair reaches the pair before it lands.
+   */
+  useStagedEdit(() => {
+    const target = drumPairRef.current
+    if (!target) return
+    drumPairRef.current = null
+    if (target.stop !== null && epochSeconds(target.stop) < epochSeconds(target.start)) {
+      pushToast("Times not changed: the end was before the start", "error")
+      return
+    }
+    if (isRunning(entry) && target.stop !== null) return
+    const seconds = target.stop === null ? 0 : epochSeconds(target.stop) - epochSeconds(target.start)
+    askBeforeLong(seconds, () => landPair(target), pushToast)
+  })
 
   // Enter finishes the box; Escape is the sheet's, and keeps what was typed
   const enterCommits = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -1562,19 +1645,26 @@ export function EntryDetailModalBody({
       variant="outline"
       size="sm"
       aria-label={label}
-      onClick={() => oneTap((base, now) => shiftEdge(base, entry.id, edge, minutes * 60, now))}
+      onClick={() =>
+        onPairOr(
+          (held) => nudgePair(held, edge, minutes * 60),
+          () => oneTap((base, now) => shiftEdge(base, entry.id, edge, minutes * 60, now)),
+        )
+      }
       className="h-11 min-w-0 flex-1 px-0 tabular-nums sm:h-7"
     >
       {minutes < 0 ? `−${-minutes}` : `+${minutes}`}
     </Button>
   )
 
-  const endDays = entry.stop ? daysBetween(dateKey(entry.start), dateKey(entry.stop)) : 0
+  // what the boxes show: the drums' pair while they hold one, the entry otherwise
+  const endDays = pair.stop ? daysBetween(dateKey(pair.start), dateKey(pair.stop)) : 0
   const typedLength = typed?.field === "duration" && typed.edited ? parseDurationInput(typed.text) : null
   const durationReading = typedLength === null ? null : `${typed!.text.trim()} = ${formatIdleSpan(typedLength)}`
-  const durationShown = running
-    ? formatClock(entrySeconds(entry, nowSec))
-    : formatDuration(entry.duration, state.user.durationFormat)
+  const durationShown =
+    pair.stop === null
+      ? formatClock(drumPair ? Math.max(0, nowSec - epochSeconds(pair.start)) : entrySeconds(entry, nowSec))
+      : formatDuration(epochSeconds(pair.stop) - epochSeconds(pair.start), state.user.durationFormat)
 
   return (
     <div className="space-y-3">
@@ -1598,14 +1688,36 @@ export function EntryDetailModalBody({
         <BillableToggle billable={entry.billable} onChange={(billable) => commit({ billable })} />
       </div>
       <div className="space-y-2">
+        {/* the drums sit above the boxes, and both show the same pair (Phase 5) */}
+        <EntryDrums
+          pair={pair}
+          held={drumPair !== null}
+          running={running}
+          nowIso={isoFromEpochSeconds(nowSec)}
+          timeFormat={timeFormat}
+          durationFormat={state.user.durationFormat}
+          onTurn={holdDrums}
+          onSet={() => {
+            const target = drumPairRef.current
+            if (!target) return
+            // ending a running timer is a Stop: it waits for the check like Stop does (D2)
+            if (running && target.stop !== null) stopsTheTimer(() => landPair(target))
+            else landPair(target)
+          }}
+          onCancel={() => holdDrums(null)}
+        />
+        {/* the date box, for a day further back than the drums go */}
         <DayPicker
-          value={shown("day", dateKey(entry.start))}
+          value={shown("day", dateKey(pair.start))}
           onChange={(day) => type("day", day)}
           onBlur={stagedTimes.flush}
           onStep={(day) => {
             pending.current = null
             setTyped(null)
-            land(moveEntryToDay(latestState.current, entry.id, day, nowIso()))
+            onPairOr(
+              (held) => typedIntoPair(held, "day", day, nowIso()) ?? held,
+              () => land(moveEntryToDay(latestState.current, entry.id, day, nowIso())),
+            )
           }}
           todayKey={dateKey(new Date(nowSec * 1000))}
         />
@@ -1613,14 +1725,14 @@ export function EntryDetailModalBody({
         <div className="grid grid-cols-3 gap-2">
           <label className="space-y-1 text-xs text-muted-foreground">
             <span className="block">Start</span>
-            {timeBox("start", "Start time", formatTimeOfDay(entry.start, timeFormat))}
+            {timeBox("start", "Start time", formatTimeOfDay(pair.start, timeFormat))}
           </label>
           <label className="space-y-1 text-xs text-muted-foreground">
             <span className="flex items-baseline justify-between gap-1">
               End
               {endDays > 0 && <span className="text-[11px] text-primary">{endDays === 1 ? "next day" : `+${endDays} days`}</span>}
             </span>
-            {timeBox("stop", "End time", entry.stop ? formatTimeOfDay(entry.stop, timeFormat) : "", running ? "running" : undefined)}
+            {timeBox("stop", "End time", pair.stop ? formatTimeOfDay(pair.stop, timeFormat) : "", running ? "running" : undefined)}
           </label>
           <label className="space-y-1 text-xs text-muted-foreground">
             <span className="block">Duration</span>
@@ -1640,36 +1752,51 @@ export function EntryDetailModalBody({
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {before?.stop && before.stop !== entry.start && (
+          {before?.stop && before.stop !== pair.start && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="h-11 sm:h-7"
-              onClick={() => oneTap((base, now) => startWhereLastEnded(base, entry.id, now), true)}
+              onClick={() =>
+                onPairOr(
+                  (held) => ({ ...held, start: before.stop! }),
+                  () => oneTap((base, now) => startWhereLastEnded(base, entry.id, now), true),
+                )
+              }
             >
               Start where the last one ended
             </Button>
           )}
-          {after && after.start !== entry.stop && (
+          {after && after.start !== pair.stop && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="h-11 sm:h-7"
-              onClick={() => stopsTheTimer(() => oneTap((base, now) => endWhereNextStarts(base, entry.id, now), true))}
+              onClick={() =>
+                onPairOr(
+                  (held) => ({ ...held, stop: after.start }),
+                  () => stopsTheTimer(() => oneTap((base, now) => endWhereNextStarts(base, entry.id, now), true)),
+                )
+              }
             >
               End where the next one starts
             </Button>
           )}
           {/* not on an entry that has not begun: it would end before it starts */}
-          {epochSeconds(entry.start) <= nowSec && (
+          {epochSeconds(pair.start) <= nowSec && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="h-11 sm:h-7"
-              onClick={() => stopsTheTimer((tappedAt) => oneTap((base) => endNow(base, entry.id, tappedAt), !running))}
+              onClick={() =>
+                onPairOr(
+                  (held) => ({ ...held, stop: nowIso() }),
+                  () => stopsTheTimer((tappedAt) => oneTap((base) => endNow(base, entry.id, tappedAt), !running)),
+                )
+              }
             >
               End now
             </Button>

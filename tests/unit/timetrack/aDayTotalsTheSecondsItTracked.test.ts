@@ -52,6 +52,12 @@ function at(day: string, hm: string, seconds: number, id = hm): TimeEntry {
 
 const DAY = "2026-08-10"
 const NOW_SEC = Math.floor(new Date(2026, 7, 10, 23, 0, 0).getTime() / 1000)
+/**
+ * Looked at from a later day. An entry that has not started yet is planned and
+ * counts in no total (Q2, `isPlanned`), so a test about how a past entry is
+ * split must look at it once it has happened.
+ */
+const AFTERWARDS_SEC = Math.floor(new Date(2026, 10, 1, 12, 0, 0).getTime() / 1000)
 
 describe("a day totals what was tracked in it", () => {
   test("two ten-second entries are twenty seconds, not two minutes", () => {
@@ -85,10 +91,10 @@ describe("a day totals what was tracked in it", () => {
   test("an entry that crosses midnight is split, and the halves sum to the whole", () => {
     const overnight = at("2026-08-10", "23:50", 30 * 60, "night") // 23:50 → 00:20
 
-    const first = dayColumnSeconds([overnight], "2026-08-10", NOW_SEC)
-    const second = dayColumnSeconds([overnight], "2026-08-11", NOW_SEC)
+    const first = dayColumnSeconds([overnight], "2026-08-10", AFTERWARDS_SEC)
+    const second = dayColumnSeconds([overnight], "2026-08-11", AFTERWARDS_SEC)
 
-    expect(first + second).toBe(entrySeconds(overnight, NOW_SEC))
+    expect(first + second).toBe(entrySeconds(overnight, AFTERWARDS_SEC))
     expect(first).toBeGreaterThan(0)
     expect(second).toBeGreaterThan(0)
   })
@@ -112,7 +118,7 @@ describe("a day totals what was tracked in it", () => {
 
     const acrossTheChange = at("2026-10-25", "02:00", 2 * 3600, "dst")
 
-    expect(dayColumnSeconds([acrossTheChange], "2026-10-25", NOW_SEC)).toBe(entrySeconds(acrossTheChange, NOW_SEC))
+    expect(dayColumnSeconds([acrossTheChange], "2026-10-25", AFTERWARDS_SEC)).toBe(entrySeconds(acrossTheChange, AFTERWARDS_SEC))
   })
 
   test("a running entry counts up to now and no further", () => {

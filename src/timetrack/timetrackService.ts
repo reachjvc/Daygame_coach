@@ -95,6 +95,25 @@ export function entrySeconds(entry: TimeEntry, nowSec: number): number {
   return Math.max(0, entry.duration)
 }
 
+/**
+ * PLANNED: AN ENTRY WHOSE START HAS NOT COME YET (Q2 in Plans/time-tracker-like-toggl.md).
+ *
+ * The owner chose that a future entry shows striped and is not counted in any
+ * total until its start passes, so a plan he skips never inflates his day or
+ * his week. Nothing is stored for it: "starts after now" is the whole rule, so
+ * it needs no column, travels through sync as an ordinary row, and turns into
+ * a normal entry by itself the moment its start passes. A running timer is
+ * never planned — it cannot start in the future (`moveEntryToDay`).
+ */
+export function isPlanned(entry: TimeEntry, nowSec: number): boolean {
+  return !isRunning(entry) && epochSeconds(entry.start) > nowSec
+}
+
+/** What an entry adds to a total: its length, or nothing while it is still planned */
+export function countedSeconds(entry: TimeEntry, nowSec: number): number {
+  return isPlanned(entry, nowSec) ? 0 : entrySeconds(entry, nowSec)
+}
+
 export function runningEntry(state: TimetrackState): TimeEntry | null {
   return state.entries.find((e) => isRunning(e) && !e.serverDeletedAt) ?? null
 }
@@ -141,8 +160,9 @@ export function liveEntries(state: TimetrackState): TimeEntry[] {
   return state.entries.filter((e) => !e.serverDeletedAt)
 }
 
+/** A total: planned entries are not in it until they start (`isPlanned`) */
 export function sumSeconds(entries: TimeEntry[], nowSec: number): number {
-  return entries.reduce((total, e) => total + entrySeconds(e, nowSec), 0)
+  return entries.reduce((total, e) => total + countedSeconds(e, nowSec), 0)
 }
 
 /** The negative-duration encoding Toggl uses for a running entry */
@@ -1197,11 +1217,20 @@ export function buildDayGroups(
       (a, b) => epochSeconds(b.start) - epochSeconds(a.start),
     )
 
+    /**
+     * A row shows its own length, planned or not: a planned row's "1:30" is the
+     * plan, read off a striped row, not a total. The DAY's number below is the
+     * total, and a plan is not in it until it starts (`isPlanned`) — it is said
+     * beside it instead, as `plannedSeconds`.
+     */
+    const lengthOf = (rowEntries: TimeEntry[]) => rowEntries.reduce((total, e) => total + entrySeconds(e, options.nowSec), 0)
+
     let rows: EntryRow[]
     if (options.groupSimilar) {
       const grouped = new Map<string, TimeEntry[]>()
       for (const entry of dayEntries) {
-        const key = rowKey(entry)
+        // a plan is never folded into worked time of the same name: one row would be both striped and counted
+        const key = `${rowKey(entry)}|${isPlanned(entry, options.nowSec) ? "planned" : "worked"}`
         const bucket = grouped.get(key)
         if (bucket) bucket.push(entry)
         else grouped.set(key, [entry])
@@ -1209,7 +1238,7 @@ export function buildDayGroups(
       rows = [...grouped.entries()].map(([key, groupEntries]) => ({
         key: `${day}:${key}`,
         entries: groupEntries,
-        totalSeconds: sumSeconds(groupEntries, options.nowSec),
+        totalSeconds: lengthOf(groupEntries),
         grouped: groupEntries.length > 1,
       }))
       rows.sort((a, b) => epochSeconds(b.entries[0].start) - epochSeconds(a.entries[0].start))
@@ -1222,9 +1251,11 @@ export function buildDayGroups(
       }))
     }
 
+    const planned = dayEntries.filter((entry) => isPlanned(entry, options.nowSec))
     return {
       date: day,
       totalSeconds: dayTotals.get(day) ?? 0,
+      plannedSeconds: lengthOf(planned),
       rows,
     }
   })
@@ -1276,6 +1307,13 @@ export function weekTotalSeconds(
  * `entryDaySeconds` is now this with `from === to`.
  */
 export function entrySecondsInRange(entry: TimeEntry, from: IsoDate, to: IsoDate, nowSec: number): number {
+  /**
+   * Nothing while it is planned (Q2). Every "tracked in this period" number —
+   * the week, the calendar's day columns, the four report tabs, the project
+   * dashboard, Manage — comes through here, so this one line is what keeps a
+   * plan out of all of them until its start passes.
+   */
+  if (isPlanned(entry, nowSec)) return 0
   const end = entry.stop ? epochSeconds(entry.stop) : epochSeconds(entry.start) + entrySeconds(entry, nowSec)
   const windowStart = Math.max(epochSeconds(startOfDayIso(from)), epochSeconds(entry.start))
   const windowEnd = Math.min(epochSeconds(startOfDayIso(addDays(to, 1))), end)

@@ -15,7 +15,7 @@ import {
   entrySecondsInRange,
   entryCost,
   entryRevenue,
-  entrySeconds,
+  countedSeconds,
   liveEntries,
   memberById,
   projectEstimateSeconds,
@@ -115,11 +115,11 @@ export function buildProjectDashboard(
 
   const taskTotals = new Map<Id | null, number>()
   for (const entry of entries) {
-    taskTotals.set(entry.taskId, (taskTotals.get(entry.taskId) ?? 0) + entrySeconds(entry, nowSec))
+    taskTotals.set(entry.taskId, (taskTotals.get(entry.taskId) ?? 0) + countedSeconds(entry, nowSec))
   }
   const memberTotals = new Map<Id, number>()
   for (const entry of entries) {
-    memberTotals.set(entry.userId, (memberTotals.get(entry.userId) ?? 0) + entrySeconds(entry, nowSec))
+    memberTotals.set(entry.userId, (memberTotals.get(entry.userId) ?? 0) + countedSeconds(entry, nowSec))
   }
 
   return {

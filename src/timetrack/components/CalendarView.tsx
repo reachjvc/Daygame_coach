@@ -49,6 +49,7 @@ import {
 import {
   createManualEntry,
   entrySeconds,
+  isPlanned,
   isRunning,
   liveEntries,
   startTimer,
@@ -56,7 +57,7 @@ import {
   updateEntry,
 } from "../timetrackService"
 import type { CalendarEvent, EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
-import { ColorDot, Dropdown, Segmented } from "./primitives"
+import { ColorDot, Dropdown, Segmented, plannedStripes } from "./primitives"
 
 type Range = "day" | "week"
 type ZoomId = (typeof CALENDAR_ZOOMS)[number]["id"]
@@ -411,10 +412,13 @@ export function CalendarView({
                     const width = entryLaneWidth / block.columns
                     const project = state.projects.find((p) => p.id === entry.projectId)
                     const drawnHeight = drawnBlockHeight(block.heightMinutes, minuteHeight)
+                    // not begun yet: striped over its colour, and out of the day's total above (Q2)
+                    const planned = isPlanned(entry, nowSec)
                     return (
                       <div
                         key={entry.id}
                         data-block
+                        data-planned={planned || undefined}
                         onMouseDown={(mouseEvent) => {
                           mouseEvent.stopPropagation()
                           if (isMobile) return
@@ -450,8 +454,9 @@ export function CalendarView({
                           width: `${width}%`,
                           backgroundColor: `${project?.color ?? "#525266"}33`,
                           borderColor: project?.color ?? "#525266",
+                          ...(planned ? plannedStripes : {}),
                         }}
-                        title={`${entry.description || "(no description)"} · ${project?.name ?? "No project"} · ${formatCompact(entrySeconds(entry, nowSec))}`}
+                        title={`${entry.description || "(no description)"} · ${project?.name ?? "No project"} · ${formatCompact(entrySeconds(entry, nowSec))}${planned ? " · planned" : ""}`}
                       >
                         {/* Below ~22px there is no room for legible text — the tooltip carries it */}
                         {block.heightMinutes * minuteHeight >= 22 && (

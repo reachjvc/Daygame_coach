@@ -31,6 +31,7 @@ import {
   entryCost,
   entryRevenue,
   entryDaySeconds,
+  isPlanned,
   liveEntries,
   memberById,
   projectById,
@@ -126,6 +127,8 @@ export function applyFilters(state: TimetrackState, filters: ReportFilters, nowS
   const search = filters.description.trim().toLowerCase()
 
   return inRange.filter((entry) => {
+    // a plan is not tracked time until it starts (Q2): no hours, and not one of the entries either
+    if (isPlanned(entry, nowSec)) return false
     if (filters.projectIds.length && (entry.projectId === null || !filters.projectIds.includes(entry.projectId))) return false
     if (filters.taskIds.length && (entry.taskId === null || !filters.taskIds.includes(entry.taskId))) return false
     if (filters.memberIds.length && !filters.memberIds.includes(entry.userId)) return false

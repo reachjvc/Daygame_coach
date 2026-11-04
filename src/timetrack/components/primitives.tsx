@@ -25,6 +25,16 @@ export const touchTarget = "flex size-11 shrink-0 items-center justify-center sm
 /** Menu/option rows: comfortable on a phone, compact on a pointer device */
 export const touchRow = "min-h-11 sm:min-h-0 sm:py-1.5"
 
+/**
+ * A PLANNED ENTRY IS STRIPED (Q2): it has not happened, and is in no total
+ * until it does (`isPlanned`). Grey diagonal stripes over whatever colour the
+ * row or block already has, so it reads the same in the light and dark themes
+ * and keeps its project colour in the calendar.
+ */
+export const plannedStripes = {
+  backgroundImage: "repeating-linear-gradient(135deg, transparent 0 6px, rgba(127, 127, 127, 0.18) 6px 12px)",
+}
+
 // ---------------------------------------------------------------------------
 // Popover / dropdown
 // ---------------------------------------------------------------------------
