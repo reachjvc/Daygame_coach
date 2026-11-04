@@ -22,6 +22,18 @@ export const PENDING_KEY = "toggl-clone:pending"
  */
 export const PENDING_BASES_KEY = "toggl-clone:pending-bases"
 /**
+ * Whose tracker this browser holds: every `toggl-clone:` key here is that
+ * account's, never shown or sent for another (`browserOwner`). Absent: kept
+ * before this existed, adopted by the first account. "": Log Out ran here.
+ */
+export const ACCOUNT_KEY = "toggl-clone:account"
+/**
+ * What this browser held when it was last in step with its account, kept while
+ * a change made since — with no signal, before the account answered — has not
+ * reached it. A later opening diffs against this, not against what it opened with.
+ */
+export const OFFLINE_BASE_KEY = "toggl-clone:offline-base"
+/**
  * THERE IS DELIBERATELY NO PERSISTED CURSOR, AND THIS IS WHERE SOMEBODY WOULD
  * ADD ONE.
  *

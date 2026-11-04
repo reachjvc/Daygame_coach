@@ -11,6 +11,8 @@
  *    there is no such row yet. Otherwise the stored row comes back under
  *    `conflicts`, untouched. An entry's tag set replaces its links, and only when
  *    the entry itself was written in the same request.
+ *  - POST naming an `account` other than this one: refused with a 409 and
+ *    `accountChanged`, untouched — a page opened for somebody else.
  *  - POST without `bases`: the old whole-row upsert, which is what the route still
  *    does for a caller that sends none — and what every client did before Phase 2.
  *    `strict` turns that off, for a test about a server that only versions.
@@ -35,6 +37,7 @@ interface PushBody {
   rows?: Partial<Record<Table, AnyRow[]>>
   bases?: Partial<Record<Table, Record<string, string | null>>>
   tagSets?: Record<string, string[]>
+  account?: string
 }
 
 export interface FakeAccountOptions {
@@ -67,6 +70,8 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
   let conflictCount = 0
   let gate: Promise<void> | null = null
   const posts: { versioned: boolean; body: PushBody }[] = []
+  /** pushes refused because they named another account, which wrote nothing */
+  let refusedForAnotherAccount = 0
 
   const linksOf = (entryId: string) =>
     [...tables.get("timetrack_entry_tags")!.values()]
@@ -146,7 +151,12 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
     if (gate && init?.method === "POST") await gate
     if (!online) throw new TypeError("Failed to fetch")
     if (init?.method === "POST") {
-      const answer = push(JSON.parse(init.body ?? "{}") as PushBody)
+      const body = JSON.parse(init.body ?? "{}") as PushBody
+      if (body.account !== undefined && body.account !== userId) {
+        refusedForAnotherAccount += 1
+        return { ok: false, status: 409, json: async () => ({ error: "another account", accountChanged: true }) }
+      }
+      const answer = push(body)
       return { ok: true, status: 200, json: async () => answer }
     }
     const since = new URL(String(url), "http://localhost").searchParams.get("since")
@@ -169,6 +179,9 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
       return conflictCount
     },
     posts,
+    get refusedForAnotherAccount() {
+      return refusedForAnotherAccount
+    },
     row,
     entry: (id: string) => row("timetrack_entries", id),
     linksOf,

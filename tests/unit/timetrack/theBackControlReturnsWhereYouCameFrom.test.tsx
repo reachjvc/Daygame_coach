@@ -72,7 +72,7 @@ describe("the back control", () => {
   test("coming from Thoughts, it says Thoughts and goes back there", async () => {
     visited([ROUTES.dashboard, ROUTES.thoughts, ROUTES.time])
     const go = vi.spyOn(window.history, "go").mockImplementation(() => {})
-    await mount(<TimetrackScreen />)
+    await mount(<TimetrackScreen account="user-1" />)
 
     await waitFor(() => expect(backControl().textContent).toContain("Thoughts"))
     fireEvent.click(backControl())
@@ -82,7 +82,7 @@ describe("the back control", () => {
   test("after visiting sections inside the tracker, one tap still leaves it", async () => {
     visited([ROUTES.thoughts, ROUTES.time, `${ROUTES.time}?view=calendar`, `${ROUTES.time}?view=reports`])
     const go = vi.spyOn(window.history, "go").mockImplementation(() => {})
-    await mount(<TimetrackScreen />, `${ROUTES.time}?view=reports`)
+    await mount(<TimetrackScreen account="user-1" />, `${ROUTES.time}?view=reports`)
 
     await waitFor(() => expect(backControl().textContent).toContain("Thoughts"))
     fireEvent.click(backControl())
@@ -92,7 +92,7 @@ describe("the back control", () => {
   test("opened with nothing before it, it is the Dashboard link it always was", async () => {
     visited([ROUTES.time])
     const go = vi.spyOn(window.history, "go")
-    await mount(<TimetrackScreen />)
+    await mount(<TimetrackScreen account="user-1" />)
 
     const link = backControl()
     expect(link.textContent).toContain("Dashboard")
@@ -102,12 +102,12 @@ describe("the back control", () => {
 
   test("coming from the sign-in page, it does not send you back to sign in", async () => {
     visited(["/auth/login", ROUTES.time])
-    await mount(<TimetrackScreen />)
+    await mount(<TimetrackScreen account="user-1" />)
     expect(backControl().textContent).toContain("Dashboard")
   })
 
   test("in a browser without the Navigation API, it is the Dashboard link", async () => {
-    await mount(<TimetrackScreen />)
+    await mount(<TimetrackScreen account="user-1" />)
     expect(backControl().textContent).toContain("Dashboard")
     expect(backControl().getAttribute("href")).toBe(ROUTES.dashboard)
   })
@@ -115,7 +115,7 @@ describe("the back control", () => {
 
 describe("on the PC, under the app's header", () => {
   test("the tracker's own back control is for phones only, and its title is only read aloud there", async () => {
-    await mount(<TimetrackScreen />)
+    await mount(<TimetrackScreen account="user-1" />)
     expect(backControl().className.split(/\s+/)).toContain("sm:hidden")
     // still the page's heading: hidden from sight, not removed
     expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).toContain("sm:sr-only")

@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { reportError } from "@/src/shared/errorReportService"
 
 import { serverNow, serverNowIso, serverOffset } from "../serverClock"
+import { ownerChangedUnderneath } from "../browserOwner"
 import { STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
 import { readBackgroundMemory, rememberBackground } from "./backgroundMemory"
 import { newId } from "../idService"
@@ -180,7 +181,14 @@ function loadState(nowIso: string): LoadResult {
   }
 }
 
-export function useTimetrack() {
+/**
+ * `account`: who the page says is signed in (see `browserOwner`). Once this
+ * browser's copy belongs to anyone else — another tab signed in as somebody
+ * else, or Log Out ran — this tab writes nothing more to it and takes nothing
+ * from the other tabs; the page starts again (`TimetrackScreen`). Absent on the
+ * lab page and in tests, where none of that applies.
+ */
+export function useTimetrack({ account }: { account?: string } = {}) {
   const [state, setStateRaw] = useState<TimetrackState | null>(null)
   const [nowSec, setNowSec] = useState(() => Math.floor(serverNow() / 1000))
   const [toasts, setToasts] = useState<ToastMessage[]>([])
@@ -347,8 +355,12 @@ export function useTimetrack() {
     const channel = new BroadcastChannel(STORAGE_KEY)
     channelRef.current = channel
 
-    channel.onmessage = (event: MessageEvent<{ kind: string; serialised: string; id?: string; base?: string | null }>) => {
+    channel.onmessage = (
+      event: MessageEvent<{ kind: string; serialised: string; id?: string; base?: string | null; owner?: string | null }>,
+    ) => {
       if (event.data?.kind !== "state") return
+      // another account's tab, or a page that does not know whose it is: not this one's to take
+      if ((event.data.owner ?? null) !== (account ?? null)) return
       try {
         hear(event.data.serialised, event.data.id ?? null, event.data.base ?? null)
       } catch {
@@ -361,7 +373,7 @@ export function useTimetrack() {
       channel.close()
       channelRef.current = null
     }
-  }, [pushToast, hear])
+  }, [pushToast, hear, account])
 
   useEffect(() => {
     // Safari private mode and older browsers have no BroadcastChannel; the
@@ -370,6 +382,7 @@ export function useTimetrack() {
     const onStorage = (event: StorageEvent) => {
       if (channelRef.current) return
       if (event.key !== STORAGE_KEY || !event.newValue) return
+      if (ownerChangedUnderneath(account)) return
       try {
         hear(event.newValue, null, null)
       } catch {
@@ -378,7 +391,7 @@ export function useTimetrack() {
     }
     window.addEventListener("storage", onStorage)
     return () => window.removeEventListener("storage", onStorage)
-  }, [pushToast, hear])
+  }, [pushToast, hear, account])
 
   /**
    * The size tripwire. Reported once per session, to the error channel rather
@@ -420,6 +433,8 @@ export function useTimetrack() {
         lastShared.current = { id, state }
         return
       }
+      // the copy is somebody else's now, or Log Out removed it: not written back (see `browserOwner`)
+      if (ownerChangedUnderneath(account)) return
       window.localStorage.setItem(STORAGE_KEY, serialised)
       // Tell the other tabs. `localStorage` already fires a `storage` event in
       // other tabs, but not in this one and not reliably before this write is
@@ -431,7 +446,7 @@ export function useTimetrack() {
       rememberShared(id, state)
       lastShared.current = { id, state }
       lastStored.current = serialised
-      channelRef.current?.postMessage({ kind: "state", serialised, id, base })
+      channelRef.current?.postMessage({ kind: "state", serialised, id, base, owner: account ?? null })
       saveFailed.current = false
     } catch {
       // Losing writes silently would look like the page is saving when it is not.
@@ -444,7 +459,7 @@ export function useTimetrack() {
         )
       }
     }
-  }, [state, pushToast, rememberShared])
+  }, [state, pushToast, rememberShared, account])
 
   // Report the demo re-dating once the toast queue is available
   useEffect(() => {

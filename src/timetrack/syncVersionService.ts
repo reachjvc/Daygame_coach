@@ -20,6 +20,11 @@
  *   - a field both changed goes to this device, the later sender. Accepted in D1:
  *     one person is rarely editing the same field in two places at once.
  *
+ * — except an entry's end, when the copy both were based on had it RUNNING. Two
+ * stops of one running timer are one fact pressed twice: it ended when it was
+ * first stopped. The later sender is the device that had not checked yet, and
+ * its press moved the end later than the work did (see `firstStopWins`).
+ *
  * and sends the result again, now based on the stored row. Objects inside a row
  * (`config`, `prefs`) are merged the same way, key by key; arrays are one value.
  *
@@ -33,6 +38,9 @@
  *   - AN ENTRY'S TIMES STAY CONSISTENT. Taking the start from one side and the
  *     stop from the other recomputes the length; a stop that would fall before
  *     the start leaves the server's times standing.
+ *
+ * Where the other device's value is kept over one this device changed, `rebase`
+ * says which (`overruled`), so the person is told (D1).
  */
 
 import { rowKeyOf, TIMETRACK_TABLES, type TagSets, type TimetrackRows } from "@/src/db/timetrackTypes"
@@ -129,8 +137,35 @@ export function mergeRow(table: TableName, base: AnyRow | null | undefined, mine
     if (!clearedHere) out[column] = theirs[column]
   }
 
-  if (table === "timetrack_entries") settleEntry(out, mine, theirs)
+  if (table === "timetrack_entries") {
+    firstStopWins(out, base, mine, theirs)
+    settleEntry(out, mine, theirs)
+  }
   return out
+}
+
+/**
+ * TWO STOPS OF ONE RUNNING TIMER: THE FIRST ONE STANDS.
+ *
+ * The phone stops Gym; the PC tab, not yet checked, still shows it running, and
+ * Stop is pressed there minutes later. Both changed the end, so the rule above
+ * gave it to the later sender — the PC — and Gym ran on for minutes it never ran,
+ * over the Shower the phone had started (a bug audit, 2026-11-04). Both stops
+ * were made on a copy with the timer running, so they mean the same thing, and
+ * the earlier one is when it ended.
+ *
+ * Only for a running base. An entry that had already ended and has its end
+ * moved on both devices is two edits, not two presses, and keeps the rule above.
+ */
+function firstStopWins(out: AnyRow, base: AnyRow | null | undefined, mine: AnyRow, theirs: AnyRow): void {
+  if (!base || base.stopped_at != null || mine.stopped_at == null || theirs.stopped_at == null) return
+  if (!("stopped_at" in out)) return
+  const mineStop = Date.parse(String(mine.stopped_at))
+  const theirStop = Date.parse(String(theirs.stopped_at))
+  if (Number.isNaN(mineStop) || Number.isNaN(theirStop) || theirStop >= mineStop) return
+  out.stopped_at = theirs.stopped_at
+  // the length that goes with that stop; `settleEntry` recomputes it if the start came from this side
+  if ("duration_seconds" in out) out.duration_seconds = theirs.duration_seconds
 }
 
 /**
@@ -219,6 +254,31 @@ export interface Rebased {
   hold: Partial<TimetrackRows>
   /** and for those entries' tags */
   holdTags: TagSets
+  /**
+   * The rows where the other device's value was kept over one this device
+   * changed, and which columns: what the person is told about (D1). Only rows
+   * whose base is known, because without it there is no telling what was changed here.
+   */
+  overruled: Overruled[]
+}
+
+export interface Overruled {
+  table: TableName
+  key: string
+  columns: string[]
+  /** the other device deleted it, so nothing changed here was kept */
+  deleted: boolean
+}
+
+/** Columns that say nothing about what the person did, or follow from one that does (the length from the times) */
+const NOT_A_CHOICE = new Set(["updated_at", "running_device_id", "user_id", "workspace_id", "duration_seconds"])
+
+/** The columns this device changed since `base` whose value in `result` is not this device's */
+export function overruledColumns(base: AnyRow | null | undefined, mine: AnyRow, result: AnyRow): string[] {
+  if (!base) return []
+  return Object.keys(mine).filter(
+    (key) => !NOT_A_CHOICE.has(key) && !sameValue(mine[key], base[key]) && !sameValue(result[key], mine[key]),
+  )
 }
 
 const pushInto = (bucket: Partial<TimetrackRows>, table: TableName, row: AnyRow) => {
@@ -247,7 +307,7 @@ export function rebase(
   stored: Partial<TimetrackRows>,
   storedTags: (entryId: string) => string[] | undefined,
 ): Rebased {
-  const out: Rebased = { send: {}, bases: {}, tagSets: {}, hold: {}, holdTags: {} }
+  const out: Rebased = { send: {}, bases: {}, tagSets: {}, hold: {}, holdTags: {}, overruled: [] }
   const index = new Map<string, AnyRow>()
   for (const table of TIMETRACK_TABLES) {
     for (const row of (stored[table] ?? []) as unknown as AnyRow[]) index.set(`${table}/${rowKeyOf(table, row)}`, row)
@@ -273,7 +333,14 @@ export function rebase(
         continue
       }
       const merged = mergeRow(table, bases[tk]?.row, mine, theirs)
-      if ((theirs.deleted_at && merged.deleted_at) || sameRow(merged, theirs)) {
+      const goneThere = Boolean(theirs.deleted_at && merged.deleted_at)
+      const kept = goneThere || sameRow(merged, theirs) ? theirs : merged
+      // against the merge, which is the server's row on every column of ours when nothing of ours is left;
+      // deleted on both sides, nothing of ours was lost
+      const columns =
+        goneThere && mine.deleted_at ? [] : overruledColumns(bases[tk]?.row, mine, goneThere ? theirs : merged)
+      if (columns.length > 0) out.overruled.push({ table, key, columns, deleted: goneThere })
+      if (kept === theirs) {
         pushInto(out.hold, table, theirs)
         continue
       }

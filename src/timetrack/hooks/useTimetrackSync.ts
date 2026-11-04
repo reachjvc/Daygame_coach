@@ -36,7 +36,8 @@ import {
   type VersionedPushResult,
 } from "@/src/db/timetrackTypes"
 
-import { PENDING_BASES_KEY, PENDING_KEY } from "../config"
+import { ownerChangedUnderneath, startAgain } from "../browserOwner"
+import { OFFLINE_BASE_KEY, PENDING_BASES_KEY, PENDING_KEY, STATE_VERSION } from "../config"
 import { noteServerDate, serverNow, serverNowIso } from "../serverClock"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
@@ -57,7 +58,7 @@ import {
   withServerTagLinks,
   withoutSentRows,
 } from "../syncService"
-import { olderThan, rebase, versionOf, type BaseRecord, type Bases } from "../syncVersionService"
+import { olderThan, rebase, versionOf, type BaseRecord, type Bases, type Overruled } from "../syncVersionService"
 import type { TimetrackState } from "../types"
 
 type AnyRow = Record<string, unknown>
@@ -118,6 +119,13 @@ interface Options {
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   replaceState: (next: TimetrackState) => void
   pushToast: (text: string, tone?: "info" | "error") => void
+  /**
+   * Who the server says is signed in, when the page knows (`/time`). Only that
+   * account's changes are kept and sent from here, and an answer from any other
+   * account stops this page and starts it again (see `browserOwner`). Absent on
+   * the lab page and in tests: the first account to answer is taken, as before.
+   */
+  account?: string
 }
 
 const PULL_EVERY_MS = 60_000
@@ -226,9 +234,11 @@ function listenForChanges(userId: string, onChange: (payload: unknown) => void):
 /**
  * A dead instance's upload landed: take what it sent out of the queue on disk,
  * so the next instance does not send it again. Only rows still exactly as they
- * were sent go; anything changed since stays.
+ * were sent go; anything changed since stays. Not once the copy on disk is
+ * somebody else's: their queue is not this instance's to rewrite.
  */
-function forgetSentOnDisk(accepted: Partial<TimetrackRows>): void {
+function forgetSentOnDisk(accepted: Partial<TimetrackRows>, account: string | undefined): void {
+  if (ownerChangedUnderneath(account)) return
   try {
     const raw = window.localStorage.getItem(PENDING_KEY)
     if (!raw) return
@@ -351,7 +361,104 @@ function withoutKeys(rows: Partial<TimetrackRows>, keys: Set<string>, entries: S
   return out
 }
 
-export function useTimetrackSync({ state, setState, replaceState, pushToast }: Options) {
+/**
+ * A base for each changed row that has none yet: the row as it was in `from`,
+ * at a version this device does not know. A change made before the account
+ * answered was made on top of that copy.
+ */
+function basesFrom(from: TimetrackRows | null, changed: Partial<TimetrackRows>, existing: Bases): Bases {
+  const out: Bases = { ...existing }
+  const index = indexRows(from)
+  const links = linksByEntry(from)
+  for (const key of keysIn(changed)) {
+    if (key in out) continue
+    const record: BaseRecord = { v: null, row: index.get(key) ?? null }
+    if (key.startsWith("timetrack_entries/")) record.tags = links.get(key.slice("timetrack_entries/".length)) ?? []
+    out[key] = record
+  }
+  return out
+}
+
+/** See `OFFLINE_BASE_KEY`: what this browser held when it was last in step, and whose it was */
+interface OfflineBase {
+  owner: string
+  state: TimetrackState
+}
+
+function readOfflineBase(): OfflineBase | null {
+  try {
+    const raw = window.localStorage.getItem(OFFLINE_BASE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<OfflineBase>
+    // kept by a build with another state shape: it cannot be compared with this one's
+    if (typeof parsed.owner !== "string" || !parsed.state?.workspace || !Array.isArray(parsed.state.entries)) return null
+    if (parsed.state.version !== STATE_VERSION) return null
+    return parsed as OfflineBase
+  } catch {
+    return null
+  }
+}
+
+/** Kept once: an earlier opening's base is older, and covers this one's changes too */
+function keepOfflineBase(base: OfflineBase): boolean {
+  try {
+    if (window.localStorage.getItem(OFFLINE_BASE_KEY) !== null) return true
+    window.localStorage.setItem(OFFLINE_BASE_KEY, JSON.stringify(base))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function forgetOfflineBase(): void {
+  try {
+    window.localStorage.removeItem(OFFLINE_BASE_KEY)
+  } catch {
+    // nothing more to do: an unreadable base is never used
+  }
+}
+
+/** An entry's description, as the server has it or else as this device does: for naming it in a notice */
+function entryNamesIn(stored: Partial<TimetrackRows>, held: TimetrackState | null): (entryId: string) => string | null {
+  return (entryId) => {
+    const row = (stored.timetrack_entries ?? []).find((entry) => entry.id === entryId)
+    if (row && typeof row.description === "string") return row.description
+    return held?.entries.find((entry) => entry.id === entryId)?.description ?? null
+  }
+}
+
+/** How each column reads in a sentence, for the notice below */
+const COLUMN_WORDS: Record<string, string> = {
+  started_at: "start",
+  stopped_at: "end",
+  description: "description",
+  project_id: "project",
+  task_id: "task",
+  billable: "billable setting",
+  name: "name",
+}
+
+/**
+ * "CHANGED ON YOUR OTHER DEVICE" (D1): the other device's value was kept over
+ * one this device changed — a Stop pressed on a copy that had not checked yet,
+ * an edit to an entry the other device deleted. Said once per settle, naming the
+ * first such entry. Null: nothing of this device's was overruled.
+ */
+function otherDeviceKept(overruled: Overruled[], nameOf: (entryId: string) => string | null): string | null {
+  const first = overruled.find((item) => item.table === "timetrack_entries") ?? overruled[0]
+  if (!first) return null
+  const more = overruled.length > 1 ? ` (and ${overruled.length - 1} more)` : ""
+  if (first.table !== "timetrack_entries") {
+    return `Your other device changed the same thing, and its version was kept${more}.`
+  }
+  const name = `“${nameOf(first.key)?.trim() || "(no description)"}”`
+  if (first.deleted) return `Deleted on your other device: ${name}${more}. Your change to it was not kept.`
+  const words = first.columns.map((column) => COLUMN_WORDS[column])
+  const kept = words.every(Boolean) ? `the ${[...new Set(words)].join(" and ")} set there` : "the change made there"
+  return `Changed on your other device: ${name} keeps ${kept}${more}.`
+}
+
+export function useTimetrackSync({ state, setState, replaceState, pushToast, account: pageAccount }: Options) {
   const [status, setStatus] = useState<SyncStatus>("starting")
   const [pendingCount, setPendingCount] = useState(0)
   const [importOffer, setImportOffer] = useState<ImportOffer | null>(null)
@@ -474,6 +581,34 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   /** First contact is in the air: asking again now would read the account twice */
   const firstContactBusy = useRef(false)
   /**
+   * WHAT AN EARLIER OPENING HELD WHEN IT WAS LAST IN STEP, read when this one
+   * opened (see `OFFLINE_BASE_KEY`).
+   *
+   * In a basement the tracker opens and the account never answers, so nothing
+   * is queued: the account is not known yet, and a change is only on screen.
+   * First contact used to find it as "what changed since opening". But close
+   * the app before the signal returns — Android does that by itself — and the
+   * next opening started from the screen as it was, Stop included: the change
+   * was in neither the queue nor "since opening", the account's copy won, and
+   * the Stop was gone (a bug audit, 2026-11-04). So the first change made
+   * before the account answers keeps what this opening started from, and every
+   * later opening diffs against that until the account has heard.
+   */
+  const offlineBaseAtOpening = useRef<OfflineBase | null>(null)
+  /** This opening has made sure that base is kept */
+  const offlineBaseKept = useRef(false)
+  /**
+   * THE ACCOUNT CHANGED UNDERNEATH THIS PAGE: another account answered, or this
+   * browser's copy was claimed by one (see `browserOwner`). From then on nothing
+   * is sent, saved or taken from the server, and the page starts again.
+   *
+   * Before this, a tab whose session had ended kept checking every 15 s, and the
+   * moment somebody else signed in on that browser it sent the previous
+   * person's unsent entry into their account, and showed their entries in the
+   * previous person's tracker (a privacy audit, 2026-11-04).
+   */
+  const accountGone = useRef(false)
+  /**
    * WHAT THIS DEVICE'S COPY IS BASED ON: the server's `updated_at` for each
    * row, as last heard, by `${table}/${key}` — the version a write names.
    *
@@ -529,6 +664,26 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     if (retryAt.current) clearTimeout(retryAt.current)
     retryAt.current = null
   }, [])
+
+  /**
+   * Another account answered, or claimed this browser's copy: stop, send and
+   * keep nothing more, and start the page again for whoever is signed in now.
+   * What this page held for the previous account is not carried over: a
+   * stranger's unsent changes cannot be sent anywhere safely.
+   */
+  const stopForAnotherAccount = useCallback(() => {
+    if (accountGone.current) return
+    accountGone.current = true
+    clearRetry()
+    if (firstContactAt.current) clearTimeout(firstContactAt.current)
+    firstContactAt.current = null
+    for (const controller of inFlight.current) controller.abort()
+    inFlight.current.clear()
+    pending.current = {}
+    startAgain()
+  }, [clearRetry])
+  const stopForAnotherAccountRef = useRef(stopForAnotherAccount)
+  stopForAnotherAccountRef.current = stopForAnotherAccount
 
   /**
    * "CHECKING…": FROM OPENING OR WAKING UNTIL A CHECK LANDS, THREE SECONDS AT MOST.
@@ -593,7 +748,12 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
      * success, the 401, the quarantine, the change-watcher and the offer — and
      * this is the one place they all pass through.
      */
-    if (unmounted.current) return
+    if (unmounted.current || accountGone.current) return
+    // the copy on disk is somebody else's now, or Log Out removed it: this queue is not theirs to keep
+    if (ownerChangedUnderneath(pageAccount)) {
+      stopForAnotherAccountRef.current()
+      return
+    }
     setPendingCount(countRows(pending.current))
     // what the queue was based on, for exactly the rows still in it
     const queuedKeys = keysIn(pending.current)
@@ -609,7 +769,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       // next diff, so this is worth reporting but not worth blocking on
       pushToast("Could not remember unsent changes in this browser", "error")
     }
-  }, [pushToast])
+  }, [pushToast, pageAccount])
 
   /** Remember the server's own copy of these rows. Never moves a row back to an older version. */
   const learn = useCallback((rows: Partial<TimetrackRows>, skip?: Set<string>) => {
@@ -706,6 +866,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       }
 
       const rebased = rebase(mine, sentBases, mineTags, stored, (entryId) => storedTags[entryId])
+      const notice = otherDeviceKept(rebased.overruled, entryNamesIn(stored, held))
 
       learn(stored)
       pending.current = mergeChangeSets(withoutKeys(pending.current, refusedKeys, refusedEntries), rebased.send)
@@ -735,8 +896,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       if (diffRows(local, stateToRows(settled.state, uid), serverNowIso()).count > 0) {
         replaceState(settled.state)
       }
+      if (notice) pushToast(notice)
     },
-    [learn, replaceState],
+    [learn, replaceState, pushToast],
   )
   /** read through a ref, so `flush` does not change identity whenever the workspace does */
   const settleConflictsRef = useRef(settleConflicts)
@@ -752,6 +914,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
      * unmounting, which is the one case a dead instance still sends.
      */
     const leaving = options.keepalive === true
+    if (accountGone.current) return
     if (unmounted.current && !leaving) return
     if (flushing.current) {
       // Something was queued while a request was in the air. That used to wait
@@ -795,8 +958,15 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     const answers: VersionedPushResult = { applied: 0, written: {}, conflicts: {}, conflictTags: {} }
     const setsSent: TagSets = {}
     // each row names the server version it was based on; see `basesFor`
+    // and the account they are for: the server refuses them for any other (a browser shared by two people)
+    const forAccount = userId.current !== "self" ? userId.current : undefined
     const bodyOf = (batch: Partial<TimetrackRows>) =>
-      JSON.stringify({ rows: batch, bases: basesFor(batch, queuedBases), tagSets: setsFor(batch, queuedSets) })
+      JSON.stringify({
+        rows: batch,
+        bases: basesFor(batch, queuedBases),
+        tagSets: setsFor(batch, queuedSets),
+        account: forAccount,
+      })
     // Sent in batches: a year of tracked time is megabytes, and a single
     // request that large is one the server may simply refuse — leaving the
     // person with nothing uploaded and no idea why.
@@ -854,6 +1024,12 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
             /** which table the refused rows are in, so they can be taken out of the queue */
             table?: string
             ids?: string[]
+            /** somebody else is signed in now: these rows are not theirs (see the route) */
+            accountChanged?: boolean
+          }
+          if (response.status === 409 && failure.accountChanged) {
+            stopForAnotherAccountRef.current()
+            return
           }
           const message = failure.error ?? response.statusText
           if (response.status >= 400 && response.status < 500) {
@@ -1021,7 +1197,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       const acceptedAsQueued = onlyKeys(queued, keysIn(accepted))
       pending.current = pending.current === queued && went === sending ? {} : withoutSentRows(pending.current, acceptedAsQueued)
       // gone from the screen already: this instance's queue is no longer the one on disk
-      if (unmounted.current) forgetSentOnDisk(acceptedAsQueued)
+      if (unmounted.current) forgetSentOnDisk(acceptedAsQueued, pageAccount)
 
       /**
        * A row edited while its upload was in the air is still queued — and that
@@ -1107,7 +1283,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         void flushRef.current?.({ keepalive: true })
       }
     }
-  }, [clearRetry, pushToast, savePending])
+  }, [clearRetry, pushToast, savePending, pageAccount])
 
   flushRef.current = flush
 
@@ -1166,9 +1342,32 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     setPendingCount(countRows(pending.current))
     // remember what was here before the server said anything
     startingState.current = state
+    // and what an earlier opening that never reached the account started from
+    offlineBaseAtOpening.current = readOfflineBase()
+
+    /**
+     * What this device's own changes are found against: the base an earlier
+     * opening kept, when it was kept for the account that answered, else what
+     * this opening started from. A base kept for anybody else is dropped, so
+     * nothing of theirs is sent.
+     */
+    const startFor = (signedIn: string | null): TimetrackState | null => {
+      const kept = offlineBaseAtOpening.current
+      if (kept && signedIn && kept.owner === signedIn) return kept.state
+      if (kept) {
+        offlineBaseAtOpening.current = null
+        forgetOfflineBase()
+      }
+      return startingState.current
+    }
+    /** The queue now holds this device's changes: the kept base is no longer needed */
+    const claimed = () => {
+      offlineBaseAtOpening.current = null
+      forgetOfflineBase()
+    }
 
     const attempt = async () => {
-      if (unmounted.current || firstContactBusy.current) return
+      if (unmounted.current || firstContactBusy.current || accountGone.current) return
       firstContactBusy.current = true
       try {
         const abort = new AbortController()
@@ -1194,10 +1393,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           empty: boolean
           userId?: string
         }
+        /**
+         * THE PAGE WAS OPENED FOR ONE ACCOUNT, AND ANOTHER ANSWERED: somebody
+         * signed in as someone else in another tab since. Nothing of this page is
+         * that account's — not its copy, not its queue — so none of it is laid
+         * on top or sent, and the page starts again for whoever it is.
+         */
+        if (pageAccount && body.userId && body.userId !== pageAccount) {
+          stopForAnotherAccount()
+          return
+        }
         cursor.current = body.cursor
         userId.current = body.userId ?? "self"
         // the change feed listens for this account, once it is known (D4)
         setAccount(body.userId ?? null)
+        const start = startFor(body.userId ?? null)
 
         if (body.empty) {
           // nothing stored yet. Offer to upload what this browser holds rather
@@ -1253,6 +1463,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
             savePending()
             void flush()
           }
+          savePending()
+          claimed()
           setStatus("synced")
           noteCheck("landed")
           return
@@ -1268,7 +1480,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          * the page opened is laid back on top — and queued for upload, because
          * the server has not heard about it either.
          */
-        const startingRows = startingState.current ? stateToRows(startingState.current, userId.current) : null
+        const startingRows = start ? stateToRows(start, userId.current) : null
         const latestRows = stateToRows(latestState.current ?? state, userId.current)
         const sinceOpening = diffRows(startingRows, latestRows, serverNowIso())
 
@@ -1328,17 +1540,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          * A change made since opening was based on what this browser held when
          * it opened, unless the row was already queued with a base of its own.
          */
-        const queuedBases: Bases = { ...bases.current }
-        const startingIndex = indexRows(startingRows)
-        const startingLinks = linksByEntry(startingRows)
-        for (const key of keysIn(sinceOpening.changed)) {
-          if (key in queuedBases) continue
-          const record: BaseRecord = { v: null, row: startingIndex.get(key) ?? null }
-          if (key.startsWith("timetrack_entries/")) {
-            record.tags = startingLinks.get(key.slice("timetrack_entries/".length)) ?? []
-          }
-          queuedBases[key] = record
-        }
+        const queuedBases = basesFrom(startingRows, sinceOpening.changed, bases.current)
         const serverLinks = linksByEntry(body.rows)
         const rebased = rebase(
           mergeChangeSets(pending.current, sinceOpening.changed),
@@ -1350,6 +1552,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         pending.current = rebased.send
         bases.current = rebased.bases
         tagSets.current = rebased.tagSets
+        const notice = otherDeviceKept(rebased.overruled, entryNamesIn(body.rows, latestState.current))
+        if (notice) pushToast(notice)
 
         const base = applyTagSets(
           mergeIncoming(
@@ -1367,6 +1571,18 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           pushToast(
             `Another device had a timer running too. The older one was stopped where this one started, so the same hour is not counted twice.`,
           )
+          /**
+           * AND THE STOP IS SENT.
+           *
+           * The result is handed over below with `awaitingState`, which makes it
+           * the change-watcher's picture of the account — so a stop made here was
+           * never queued, and the account kept both timers running: the other
+           * device's for hours once it was shut (a bug audit, 2026-11-04). The
+           * check after waking stopped doing that for this reason. Queued here,
+           * on top of the server's copy just read, it goes with the rest.
+           */
+          const stops = diffRows(stateToRows(arrived, userId.current), stateToRows(settled.state, userId.current), serverNowIso())
+          queueChanges(stops.changed, stops.tagSets)
         }
         const adoptedState = settled.state
 
@@ -1406,6 +1622,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         // the rebased queue, which may be smaller than what was read: a row the
         // server already has as this browser would send it is not sent again
         savePending()
+        claimed()
         setStatus("synced")
         noteCheck("landed")
         void flush()
@@ -1434,11 +1651,34 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
     firstContactRef.current = attempt
     void attempt()
-  }, [state, replaceState, savePending, flush, learn, queueChanges, noteCheck])
+  }, [state, replaceState, savePending, flush, learn, queueChanges, noteCheck, pushToast, pageAccount, stopForAnotherAccount])
 
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
-    if (!state || !userId.current || statusRef.current === "local-only") return
+    if (!state) return
+    if (!userId.current) {
+      /**
+       * Not heard from the account in this opening, so there is nothing to diff
+       * against and nothing is queued. The change is kept by keeping what this
+       * opening started from (see `offlineBaseAtOpening`), once, with whose it is.
+       */
+      if (accountGone.current) return
+      // the copy is somebody else's now: nothing of this page's is kept in it
+      if (ownerChangedUnderneath(pageAccount)) {
+        stopForAnotherAccount()
+        return
+      }
+      if (!offlineBaseKept.current && ready.current && startingState.current && state !== startingState.current) {
+        offlineBaseKept.current = true
+        // whose it is is known only on a page that knows who is signed in; elsewhere nothing is kept
+        const base = offlineBaseAtOpening.current ?? (pageAccount ? { owner: pageAccount, state: startingState.current } : null)
+        if (base && !keepOfflineBase(base)) {
+          pushToast("This browser's storage is full: a change made before the account answered is kept only while this page stays open.", "error")
+        }
+      }
+      return
+    }
+    if (statusRef.current === "local-only" || accountGone.current) return
 
     /**
      * Nothing may be compared until the state we adopted has actually arrived —
@@ -1516,11 +1756,11 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
     const timer = setTimeout(() => void flush(), 800)
     return () => clearTimeout(timer)
-  }, [state, syncActive, savePending, flush, queueChanges])
+  }, [state, syncActive, savePending, flush, queueChanges, pageAccount, stopForAnotherAccount])
 
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {
-    if (!userId.current || !cursor.current) return
+    if (!userId.current || !cursor.current || accountGone.current) return
     /**
      * WHAT THIS ANSWER MAY NOT OVERWRITE, decided before it is asked for.
      *
@@ -1578,7 +1818,13 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         if (mine === pullSeq.current) noteCheck("failed")
         return
       }
-      const body = (await response.json()) as { rows: TimetrackRows; cursor: string }
+      const body = (await response.json()) as { rows: TimetrackRows; cursor: string; userId?: string }
+      // another account answered: this page's session ended and somebody else signed in.
+      // Their rows are not shown here, and nothing of this page is sent to them.
+      if (body.userId && userId.current && userId.current !== "self" && body.userId !== userId.current) {
+        stopForAnotherAccountRef.current()
+        return
+      }
       // A newer request has gone out while this one was in the air. Its answer
       // covers everything this one would have said, and applying this one
       // afterwards would undo it.
@@ -1796,10 +2042,20 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           clearTimeout(deadline)
           inFlight.current.delete(abort)
         }
-        if (response.status === 401) return
+        if (response.status === 401 || accountGone.current) return
         if (localOnly) {
           firstContactDelay.current = RETRY_START_MS
           void firstContactRef.current?.()
+          return
+        }
+        /**
+         * SIGNED IN AGAIN — BUT AS WHOM? This flushed for whoever answered, so the
+         * moment somebody else signed in on this browser, the previous person's
+         * unsent entry went into their account. Only the same account gets it.
+         */
+        const answer = (await response.json().catch(() => ({}))) as { userId?: string }
+        if (answer.userId && userId.current && userId.current !== "self" && answer.userId !== userId.current) {
+          stopForAnotherAccountRef.current()
           return
         }
         setStatus("saving")
@@ -1843,7 +2099,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * waiting out a backoff grown to a minute.
    */
   const checkAccount = useCallback(() => {
-    if (unmounted.current) return
+    if (unmounted.current || accountGone.current) return
     lastAsked.current = Date.now()
     if (userId.current && cursor.current) {
       void pullRef.current()
@@ -1879,7 +2135,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
 
   /** On the way out: what is queued goes now, with `keepalive` (D3) */
   const sendOnLeave = useCallback(() => {
-    if (!userId.current) return
+    if (!userId.current || accountGone.current) return
     if (statusRef.current === "local-only" || statusRef.current === "signed-out") return
     if (countRows(pending.current) === 0) return
     clearRetry()

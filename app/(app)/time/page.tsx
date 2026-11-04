@@ -28,5 +28,6 @@ export default async function TimetrackPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/auth/login?next=${ROUTES.time}`)
 
-  return <TimetrackScreen />
+  // whose tracker this browser may show and send: see `claimBrowserCopy`
+  return <TimetrackScreen account={user.id} />
 }

@@ -102,7 +102,8 @@ export function describeBadge(status: SyncStatus, pending: number, check: CheckS
       return {
         label: "Not saved",
         short: "Not saved",
-        title: "Could not reach your account. Your work is saved in this browser. Tap to try again.",
+        // "error" is also a server that answered and refused, so this does not say it was unreachable
+        title: "Not saved to your account. Your work is kept in this browser. Tap to try again.",
         tone: "alarm",
         dot: "bg-destructive",
       }

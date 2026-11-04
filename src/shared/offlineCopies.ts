@@ -18,6 +18,7 @@
 
 import { forgetThisDevice } from "@/src/notifications/pushClient"
 import { forgetThoughtsOnThisDevice } from "@/src/thoughts/logQueue"
+import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
 
 /** The live workout's kept server answer (`useLiveWorkout`). */
 export const LIVE_COPY_KEY = "live-workout-copy-v1"
@@ -35,7 +36,17 @@ const SHELL_STORE_PREFIX = "app-shell-"
  * those hold the text of what somebody thought, and a shared phone must not
  * keep it.
  */
+/**
+ * AND THE TIME TRACKER, WHOLE (2026-11-04). Its workspace, unsent queue, drafts
+ * and background memory were kept at Log Out, tied to nobody: the next person
+ * to sign in was shown the previous person's entries and could have them
+ * uploaded into their own account. All of it goes first, before anything here
+ * waits on the network — including what had not been sent yet, like the
+ * thought taps and unlike the workout's sets: an entry's text is somebody's
+ * day, and a tracker tab still open is told to stop (`browserOwner`).
+ */
 export async function forgetOfflineCopies(): Promise<void> {
+  forgetTimeTrackerOnThisDevice()
   await forgetThisDevice()
   forgetThoughtsOnThisDevice()
   try {

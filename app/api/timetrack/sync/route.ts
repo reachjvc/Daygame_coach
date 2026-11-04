@@ -40,7 +40,40 @@ export async function POST(request: Request) {
   if (!auth.success) return auth.response
 
   try {
-    const body = (await request.json()) as { rows?: Partial<TimetrackRows>; bases?: PushBases; tagSets?: TagSets }
+    const body = (await request.json()) as {
+      rows?: Partial<TimetrackRows>
+      bases?: PushBases
+      tagSets?: TagSets
+      account?: unknown
+    }
+    /**
+     * ROWS NAMED FOR ANOTHER ACCOUNT ARE NOT WRITTEN INTO THIS ONE.
+     *
+     * The session is the browser's, not the page's: a tab opened by one person
+     * keeps running after their session ends, and when somebody else signs in
+     * on that browser its next upload arrived here as them. Their account took
+     * the previous person's entries (a privacy audit, 2026-11-04). The app names
+     * the account its queue belongs to; any other is refused, and the page
+     * starts again for whoever is signed in now.
+     *
+     * A versioned write that names no account is a tracker page loaded before
+     * this existed: it cannot say whose its queue is, so it is not written. That
+     * page says "refused … reload to resync", and after the reload it names its
+     * account and its queue goes up. A caller sending neither bases nor an
+     * account is a script or a pre-versions app, and is treated as before.
+     */
+    if (body.account !== undefined && body.account !== auth.userId) {
+      return NextResponse.json(
+        { error: "These changes belong to another account than the one signed in.", accountChanged: true },
+        { status: 409 },
+      )
+    }
+    if (body.bases !== undefined && body.account === undefined) {
+      return NextResponse.json(
+        { error: "This page is from an older version of the app. Reload it to keep saving; nothing is lost." },
+        { status: 409 },
+      )
+    }
     if (!body.rows) return NextResponse.json({ error: "Missing rows" }, { status: 400 })
     if (body.bases !== undefined && (typeof body.bases !== "object" || body.bases === null || Array.isArray(body.bases))) {
       return NextResponse.json({ error: "bases must be an object of table to row key to version" }, { status: 400 })

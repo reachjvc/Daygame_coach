@@ -183,10 +183,17 @@ function keepTimerBar(patch: Partial<TimerBarSession>) {
 
 /** One idle choice: what happens to the minutes, then what happens to the timer */
 export function TogglLab({
+  account,
   backHref = "/test",
   backLabel = "/test",
   underAppHeader = false,
 }: {
+  /**
+   * Who the server says is signed in, when the page knows (`/time`). This
+   * browser's copy is that account's only, and is never shown or sent for
+   * another (`browserOwner`). Absent on the lab page and in tests.
+   */
+  account?: string
   /** where the back control goes when there is no page before the tracker to return to */
   backHref?: string
   backLabel?: string
@@ -199,7 +206,7 @@ export function TogglLab({
    */
   underAppHeader?: boolean
 } = {}) {
-  const controller = useTimetrack()
+  const controller = useTimetrack({ account })
   const { state, setState, nowSec, running, runningSeconds, toasts, pushToast, dismissToast, idlePrompt, resolveIdle, pomodoro, actions, requestNotificationPermission } =
     controller
 
@@ -208,6 +215,7 @@ export function TogglLab({
     setState,
     replaceState: actions.replaceState,
     pushToast,
+    account,
   })
 
   /**

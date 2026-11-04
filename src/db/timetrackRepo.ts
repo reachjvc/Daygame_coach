@@ -522,25 +522,69 @@ async function resolveWorkspaceId(
   userId: string,
   rows: Partial<TimetrackRows>,
 ): Promise<string> {
-  const { data: existing, error } = await supabase
-    .from("timetrack_workspaces")
-    .select("id")
-    .eq("user_id", userId)
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-  if (error) throw new Error(`Could not read your workspace: ${error.message}`)
-  if (existing && existing.length > 0) return existing[0].id as string
+  const ownLive = async (): Promise<string | null> => {
+    const { data: existing, error } = await supabase
+      .from("timetrack_workspaces")
+      .select("id")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+    if (error) throw new Error(`Could not read your workspace: ${error.message}`)
+    return existing && existing.length > 0 ? (existing[0].id as string) : null
+  }
+  const live = await ownLive()
+  if (live) return live
 
-  // none yet: adopt the id the client is offering, or make one
+  /**
+   * NONE YET: THE ID THE CLIENT OFFERS, ONLY IF IT IS NOT SOMEBODY ELSE'S.
+   *
+   * A browser can hold another person's workspace — a shared computer, a session
+   * that ended without Log Out — and this upserted the offered id as given. When
+   * that id was another account's, the upsert tried to take over their row: row
+   * security refused it, every push from this account failed with a 500, and it
+   * never saved anything (a privacy audit, 2026-11-04). Row security held, but
+   * the id was the client's word. Now: this account's own deleted workspace is
+   * revived as before; a free id is used, so the browser's ids still match; an
+   * id that is anybody else's is not touched, and a new one is made.
+   */
   const offered = rows.timetrack_workspaces?.[0]
-  const created = {
+  const fields = {
     ...(offered ?? { name: "My Workspace", currency: "EUR", config: {} }),
-    id: offered?.id ?? crypto.randomUUID(),
     user_id: userId,
     deleted_at: null,
   }
-  const { error: insertError } = await supabase.from("timetrack_workspaces").upsert(created, { onConflict: "id" })
-  if (insertError) throw new Error(`Could not create your workspace: ${insertError.message}`)
-  return created.id as string
+  const offeredId = typeof offered?.id === "string" ? offered.id : null
+  if (offeredId) {
+    // row security shows this account its own rows only, so a hit is its own
+    const { data: own, error: ownError } = await supabase
+      .from("timetrack_workspaces")
+      .select("id")
+      .eq("id", offeredId)
+      .eq("user_id", userId)
+      .limit(1)
+    if (ownError) throw new Error(`Could not read your workspace: ${ownError.message}`)
+    if (own && own.length > 0) {
+      const { error: reviveError } = await supabase
+        .from("timetrack_workspaces")
+        .upsert({ ...fields, id: offeredId }, { onConflict: "id" })
+      if (reviveError) throw new Error(`Could not create your workspace: ${reviveError.message}`)
+      return offeredId
+    }
+    const { error: offeredError } = await supabase.from("timetrack_workspaces").insert({ ...fields, id: offeredId })
+    if (!offeredError) return offeredId
+    // 23505: the id is taken — by an account this one cannot see — or a push
+    // beside this one made this account's workspace a moment ago
+    if (offeredError.code !== "23505") throw new Error(`Could not create your workspace: ${offeredError.message}`)
+    const madeMeanwhile = await ownLive()
+    if (madeMeanwhile) return madeMeanwhile
+  }
+  const id = crypto.randomUUID()
+  const { error: insertError } = await supabase.from("timetrack_workspaces").insert({ ...fields, id })
+  if (insertError) {
+    const madeMeanwhile = insertError.code === "23505" ? await ownLive() : null
+    if (madeMeanwhile) return madeMeanwhile
+    throw new Error(`Could not create your workspace: ${insertError.message}`)
+  }
+  return id
 }

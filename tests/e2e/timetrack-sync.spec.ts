@@ -12,7 +12,7 @@
  * on purpose. Everything else waits for the account to say something.
  */
 
-import { test, expect } from './fixtures/test'
+import { test, expect, signIn, SIGNED_OUT } from './fixtures/test'
 import { ROUTES } from "@/src/shared/routes"
 import { devices, type Page } from '@playwright/test'
 import {
@@ -23,10 +23,13 @@ import {
   entriesOnAccount,
   entryInList,
   openFreshTracker,
+  openTracker,
+  readState,
   reopenFromAccount,
   savedToAccount,
   trackEntry,
 } from './helpers/timetrack'
+import { whenHydrated } from './helpers/hydration'
 
 /** The live entry called Gym-something on the ACCOUNT: whether it runs, and what it is called */
 async function gymOnAccount(page: Page): Promise<{ running: boolean; description: string } | null> {
@@ -38,6 +41,30 @@ async function gymOnAccount(page: Page): Promise<{ running: boolean; description
   const gym = body.rows.timetrack_entries.find((e) => e.deleted_at === null && e.description.startsWith('Gym'))
   return gym ? { running: gym.stopped_at === null, description: gym.description } : null
 }
+
+/** Every live entry on the ACCOUNT, with its times */
+async function entriesWithTimes(
+  page: Page,
+): Promise<{ description: string; started_at: string; stopped_at: string | null }[]> {
+  const response = await page.request.get('/api/timetrack/sync')
+  expect(response.status()).toBe(200)
+  const body = (await response.json()) as {
+    rows: { timetrack_entries: { description: string; started_at: string; stopped_at: string | null; deleted_at: string | null }[] }
+  }
+  return body.rows.timetrack_entries.filter((e) => e.deleted_at === null)
+}
+
+/** What runs on the ACCOUNT, by description */
+async function runningOnAccount(page: Page): Promise<string[]> {
+  return (await entriesWithTimes(page)).filter((e) => e.stopped_at === null).map((e) => e.description).sort()
+}
+
+const SYNC = /\/api\/timetrack\/sync/
+const startButton = (page: Page) => page.locator('main').getByRole('button', { name: 'Start timer' })
+const stopButton = (page: Page) => page.locator('main').getByRole('button', { name: 'Stop timer' })
+/** The first read of the account failed, so Start and Stop act on this copy now (D2) */
+const couldNotCheck = (page: Page) =>
+  expect(page.locator('header').getByRole('button', { name: /^Not saved/ })).toBeVisible({ timeout: 30_000 })
 
 test.describe('time is kept on the server, not just in one browser', { tag: '@phone' }, () => {
   test('the real page saves, and says so', async ({ page }) => {
@@ -430,6 +457,219 @@ test.describe('the owner\'s overlap: started on the PC, stopped on the phone', (
     } finally {
       await phoneContext.close()
       await pcContext.close()
+    }
+  })
+})
+
+/**
+ * THE BASEMENT, THE STALE PC, AND TWO TIMERS AT FIRST CONTACT (a bug audit,
+ * 2026-11-04). Each was reproduced in a real browser before its fix; the unit
+ * promises are aChangeMadeWithNoSignalSurvivesAReopen,
+ * aTimerStoppedAtFirstContactIsStoppedOnTheAccount and twoStopsOfOneTimerKeepTheFirst.
+ */
+test.describe('the owner\'s overlap, with no signal and with a PC that has not checked', () => {
+  test('a Stop made on a phone that opened with no signal survives the app opening again before the signal returns', async ({
+    browser,
+    account,
+  }) => {
+    test.setTimeout(120_000)
+    const baseURL = test.info().project.use.baseURL
+    const pcContext = await browser.newContext({ storageState: account.storageState, baseURL, viewport: { width: 1366, height: 900 } })
+    const phoneContext = await browser.newContext({ ...devices['Pixel 7'], storageState: account.storageState, baseURL })
+    try {
+      const pc = await pcContext.newPage()
+      await openFreshTracker(pc)
+      await pc.getByPlaceholder('What are you working on?').fill('Gym')
+      await startButton(pc).click()
+      await savedToAccount(pc)
+      await expect.poll(() => runningOnAccount(pc)).toEqual(['Gym'])
+
+      // the phone has seen Gym running; then, in the basement, it opens with no signal
+      const phone = await phoneContext.newPage()
+      await reopenFromAccount(phone)
+      await expect(stopButton(phone)).toBeVisible()
+      await phone.route(SYNC, (route) => route.abort('internetdisconnected'))
+      await phone.reload({ waitUntil: 'domcontentloaded' })
+      await couldNotCheck(phone)
+      const pressedAt = await phone.evaluate(() => Date.now())
+      await stopButton(phone).click()
+      await expect(startButton(phone)).toBeVisible()
+      await expect
+        .poll(async () => ((await readState(phone)) as { entries: { description: string; stop: string | null }[] }).entries.find((e) => e.description === 'Gym')?.stop ?? null)
+        .not.toBeNull()
+
+      // Android closes the app in the background; it is opened again, still with no signal
+      await phone.reload({ waitUntil: 'domcontentloaded' })
+      await couldNotCheck(phone)
+      await expect(startButton(phone), 'the Stop is gone after opening again').toBeVisible()
+
+      // the signal comes back
+      await phone.unroute(SYNC)
+      await phone.evaluate(() => window.dispatchEvent(new Event('online')))
+      await savedToAccount(phone, 30_000)
+      await expect.poll(() => runningOnAccount(pc), { message: 'the account never heard of the Stop' }).toEqual([])
+      const gym = (await entriesWithTimes(pc)).find((e) => e.description === 'Gym')!
+      expect(Math.abs(Date.parse(gym.stopped_at!) - pressedAt), 'the account does not carry the moment of the Stop').toBeLessThan(5_000)
+      await expect(startButton(phone), 'the phone shows Gym running again').toBeVisible()
+    } finally {
+      await phoneContext.close()
+      await pcContext.close()
+    }
+  })
+
+  test('a phone that started a timer with no signal stops the PC\'s timer on the account too, not only on its screen', async ({
+    browser,
+    account,
+  }) => {
+    test.setTimeout(120_000)
+    const baseURL = test.info().project.use.baseURL
+    const pcContext = await browser.newContext({ storageState: account.storageState, baseURL, viewport: { width: 1366, height: 900 } })
+    const phoneContext = await browser.newContext({ ...devices['Pixel 7'], storageState: account.storageState, baseURL })
+    try {
+      const pc = await pcContext.newPage()
+      await openFreshTracker(pc)
+      // the phone's copy is from before Gym
+      const phone = await phoneContext.newPage()
+      await reopenFromAccount(phone)
+      await expect(startButton(phone)).toBeVisible()
+
+      await pc.getByPlaceholder('What are you working on?').fill('Gym')
+      await startButton(pc).click()
+      await savedToAccount(pc)
+      await expect.poll(() => runningOnAccount(pc)).toEqual(['Gym'])
+
+      // the phone opens with no signal, on its old copy, and starts Walk
+      await phone.route(SYNC, (route) => route.abort('internetdisconnected'))
+      await phone.reload({ waitUntil: 'domcontentloaded' })
+      await couldNotCheck(phone)
+      await phone.getByPlaceholder('What are you working on?').fill('Walk')
+      await startButton(phone).click()
+      await expect(stopButton(phone)).toBeVisible()
+
+      await phone.unroute(SYNC)
+      await phone.evaluate(() => window.dispatchEvent(new Event('online')))
+      await expect(phone.getByText(/Another device had a timer running too/).first()).toBeVisible({ timeout: 30_000 })
+      await savedToAccount(phone, 30_000)
+      await expect
+        .poll(() => runningOnAccount(pc), { message: 'the phone showed Gym stopped, and the account still runs it' })
+        .toEqual(['Walk'])
+    } finally {
+      await phoneContext.close()
+      await pcContext.close()
+    }
+  })
+
+  test('a Stop on a PC that has not checked yet keeps the phone\'s earlier Stop, and says the other device changed it', async ({
+    browser,
+    account,
+  }) => {
+    test.setTimeout(120_000)
+    const baseURL = test.info().project.use.baseURL
+    const pcContext = await browser.newContext({ storageState: account.storageState, baseURL, viewport: { width: 1366, height: 900 } })
+    const phoneContext = await browser.newContext({ ...devices['Pixel 7'], storageState: account.storageState, baseURL })
+    try {
+      const pc = await pcContext.newPage()
+      await openFreshTracker(pc)
+      await pc.getByPlaceholder('What are you working on?').fill('Gym')
+      await startButton(pc).click()
+      await savedToAccount(pc)
+      const phone = await phoneContext.newPage()
+      await reopenFromAccount(phone)
+      await expect(stopButton(phone)).toBeVisible()
+
+      // after the gym: Stop on the phone, then Shower
+      await stopButton(phone).click()
+      await expect(startButton(phone)).toBeVisible()
+      await phone.getByPlaceholder('What are you working on?').fill('Shower')
+      await startButton(phone).click()
+      await expect(stopButton(phone)).toBeVisible()
+      await savedToAccount(phone)
+      await expect.poll(() => runningOnAccount(pc)).toEqual(['Shower'])
+      const phoneStop = (await entriesWithTimes(pc)).find((e) => e.description === 'Gym')!.stopped_at!
+
+      // the PC, not checked since, still shows Gym running, and Stop is pressed there
+      await expect(pc.getByPlaceholder('What are you working on?')).toHaveValue('Gym')
+      await stopButton(pc).click()
+      await expect(pc.getByText(/Changed on your other device: “Gym”/).first(), 'the PC did not say the other device changed Gym').toBeVisible({
+        timeout: 15_000,
+      })
+      await savedToAccount(pc)
+
+      const after = await entriesWithTimes(pc)
+      const gym = after.find((e) => e.description === 'Gym')!
+      const shower = after.find((e) => e.description === 'Shower')!
+      expect(Date.parse(gym.stopped_at!), 'Gym ends at the PC\'s later press').toBe(Date.parse(phoneStop))
+      expect(Date.parse(gym.stopped_at!), 'Gym overlaps Shower: that time is counted twice').toBeLessThanOrEqual(Date.parse(shower.started_at))
+    } finally {
+      await phoneContext.close()
+      await pcContext.close()
+    }
+  })
+})
+
+/**
+ * TWO PEOPLE ON ONE BROWSER (a privacy audit, 2026-11-04). The tracker's copy
+ * used to outlive Log Out and a session that ended, tied to nobody; the next
+ * person was shown it and could have it uploaded into their own account. The
+ * unit promises are anotherPersonNeverGetsYourTracker and
+ * thePushRouteWritesOnlyForItsOwnAccount. Each test logs out or ends a session,
+ * so the first person is an account made for that test alone.
+ */
+test.describe('two people on one browser', () => {
+  const SECRET = 'A private therapy session'
+
+  test('after A logs out, B signing in is shown and sent nothing of A\'s tracker', async ({ browser, throwawayAccount, secondUser }) => {
+    test.setTimeout(150_000)
+    const baseURL = test.info().project.use.baseURL
+    const context = await browser.newContext({ storageState: SIGNED_OUT, baseURL, viewport: { width: 1366, height: 900 } })
+    try {
+      const page = await context.newPage()
+      await signIn(page, throwawayAccount)
+      await openTracker(page)
+      await trackEntry(page, SECRET)
+      await savedToAccount(page)
+      await page.getByPlaceholder('What are you working on?').fill('A unsent: call the clinic')
+      await expect.poll(() => page.evaluate(() => window.sessionStorage.getItem('toggl-clone:timer-bar') ?? '')).toContain('call the clinic')
+
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
+      await whenHydrated(page.getByTestId('header-logout-button'), 60_000)
+      await page.getByTestId('header-logout-button').click()
+      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe('/')
+
+      await signIn(page, secondUser)
+      await openTracker(page)
+      await expect(entryInList(page, SECRET), 'B is shown A\'s entry').toHaveCount(0)
+      await expect(page.getByPlaceholder('What are you working on?'), 'B finds A\'s half-typed description').toHaveValue('')
+      expect(await entriesOnAccount(page), 'A\'s entry went into B\'s account').not.toContain(SECRET)
+    } finally {
+      await context.close()
+    }
+  })
+
+  test('when A\'s session ends with an entry unsent, B signing in on that browser is sent none of it', async ({
+    browser,
+    throwawayAccount,
+    secondUser,
+  }) => {
+    test.setTimeout(150_000)
+    const baseURL = test.info().project.use.baseURL
+    const context = await browser.newContext({ storageState: SIGNED_OUT, baseURL, viewport: { width: 1366, height: 900 } })
+    try {
+      const page = await context.newPage()
+      await signIn(page, throwawayAccount)
+      await openTracker(page)
+      // A's session ends while the tracker is open, and A tracks something
+      await context.clearCookies()
+      await trackEntry(page, SECRET)
+      await expect(page.locator('header').getByRole('button', { name: /^Signed out\./ })).toBeVisible({ timeout: 20_000 })
+
+      // A walks away; B signs in on this browser and opens Time
+      await signIn(page, secondUser)
+      await openTracker(page)
+      await expect(entryInList(page, SECRET), 'B is shown A\'s entry').toHaveCount(0)
+      expect(await entriesOnAccount(page), 'A\'s entry went into B\'s account').not.toContain(SECRET)
+    } finally {
+      await context.close()
     }
   })
 })

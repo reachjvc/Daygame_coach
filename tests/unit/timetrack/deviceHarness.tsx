@@ -5,12 +5,17 @@
  * tracker commits one. `latest` is what the screen would show. Rendering a second
  * one after unmounting the first is a phone closing the app and opening it again:
  * the queue it left in this browser's storage is read back, as in the product.
+ *
+ * `account` is the page knowing who is signed in, as `/time` does: the browser's
+ * copy is claimed for it first (`claimBrowserCopy`, which `TimetrackScreen` runs),
+ * and the hook keeps and sends that account's changes only.
  */
 
 import { useCallback, useEffect, useState } from "react"
 import { act, render } from "@testing-library/react"
 import { vi } from "vitest"
 
+import { claimBrowserCopy } from "@/src/timetrack/browserOwner"
 import { useTimetrackSync } from "@/src/timetrack/hooks/useTimetrackSync"
 import type { TimetrackState } from "@/src/timetrack/types"
 
@@ -23,11 +28,15 @@ function Device({
   onState,
   onApply,
   onSync,
+  onToast,
+  account,
 }: {
+  account?: string
   initial: TimetrackState
   onState: (state: TimetrackState) => void
   onApply: (apply: (update: Update) => void) => void
   onSync: (sync: Sync) => void
+  onToast: (text: string) => void
 }) {
   const [state, setState] = useState<TimetrackState | null>(null)
   useEffect(() => setState(initial), [initial])
@@ -37,24 +46,29 @@ function Device({
   const apply = useCallback((update: Update) => setState((current) => (current ? update(current) : current)), [])
   useEffect(() => onApply(apply), [apply, onApply])
   const replace = useCallback((next: TimetrackState) => setState(next), [])
-  const toast = useCallback(() => {}, [])
-  const sync = useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast })
+  const toast = useCallback((text: string) => onToast(text), [onToast])
+  const sync = useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast, account })
   useEffect(() => {
     onSync(sync)
   })
   return null
 }
 
-export function renderDevice(initial: TimetrackState) {
+export function renderDevice(initial: TimetrackState, { account }: { account?: string } = {}) {
+  if (account) claimBrowserCopy(account)
   let latest = initial
   let applyRef: ((update: Update) => void) | null = null
   let syncRef: Sync | null = null
+  const toasts: string[] = []
+  const onToast = (text: string) => toasts.push(text)
   const view = render(
     <Device
       initial={initial}
       onState={(state) => (latest = state)}
       onApply={(apply) => (applyRef = apply)}
       onSync={(sync) => (syncRef = sync)}
+      onToast={onToast}
+      account={account}
     />,
   )
   return {
@@ -75,6 +89,8 @@ export function renderDevice(initial: TimetrackState) {
       if (!apply) throw new Error("the device has not mounted yet")
       act(() => apply(update))
     },
+    /** every toast the hook has shown on this device, oldest first */
+    toasts: () => [...toasts],
     unmount: () => view.unmount(),
   }
 }
