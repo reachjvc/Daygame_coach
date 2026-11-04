@@ -148,7 +148,7 @@ export function planHasNothingWritten(plan: Plan): boolean {
  * `tests/unit/goals/lifePlanSync.test.ts` fails when one is in neither.
  */
 export const SENT_PLAN_FIELDS = [
-  "version", "horizonYears", "northStar", "rungs", "areas", "routines", "goals",
+  "version", "horizonYears", "northStar", "northStarStartedOn", "pastNorthStars", "rungs", "areas", "routines", "goals",
   "review", "answers", "currentValues", "values", "priorityIds", "seasonFocusId",
   "seasonAreaIds", "experiences", "fields", "subSteps", "seq",
 ] as const

@@ -33,6 +33,7 @@ import { dayRowsToRecord, recordToPatches, type DayRecord } from "@/src/goals/li
 import type { DayRows } from "@/src/db/lifePlanDayTypes"
 import { fullPlan, withoutDays } from "@/tests/support/fullLifePlan"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
+import { diffPlanRows } from "@/src/goals/lifePlanDiff"
 
 /**
  * The tables the repo reads, keyed by the field they land in.
@@ -91,10 +92,23 @@ async function personWithPlan(): Promise<{ userId: string; planId: string }> {
  * before the save ran, and the save ran as the table owner, who is exempt from
  * every policy.
  */
-function saveAs(userId: string, rows: unknown, expectedRevision: number) {
-  return asUser(userId, async (q) =>
-    (await q(`SELECT save_life_plan($1::jsonb, $2) AS revision`, [JSON.stringify(rows), expectedRevision]))[0]!
-      .revision as number)
+/*
+ * THE SAVE IS `apply_life_plan_changes` SINCE PLANS/LIFE-PLAN-REBUILD.MD PHASE 1:
+ * what changed since the last save of this plan, as the flow sends it. `before`
+ * defaults to the rows this file last saved for the plan; null sends every row,
+ * as the flow does when nothing is known to be on the account.
+ */
+const lastSaved = new Map<string, PlanRows>()
+
+async function saveAs(userId: string, rows: PlanRows, expectedRevision: number, before?: PlanRows | null) {
+  const from = before === undefined ? lastSaved.get(rows.plan_id) ?? null : before
+  const revision = await asUser(userId, async (q) =>
+    (await q(`SELECT apply_life_plan_changes($1::jsonb, $2) AS revision`, [
+      JSON.stringify(diffPlanRows(from, rows)),
+      expectedRevision,
+    ]))[0]!.revision as number)
+  lastSaved.set(rows.plan_id, rows)
+  return revision
 }
 
 /**
@@ -234,7 +248,9 @@ describe("a plan that goes through a real Postgres comes back the same plan", ()
     await saveAs(userId, rows, 0)
     const first = await nodeIds()
 
-    await saveAs(userId, rows, 1)
+    // Every row again, as from a device that knows nothing: an upsert of all
+    // of them, which must keep every id.
+    await saveAs(userId, rows, 1, null)
     const second = await nodeIds()
 
     expect(first.length, "the fixture has nodes, or this passes on an empty table").toBeGreaterThan(5)

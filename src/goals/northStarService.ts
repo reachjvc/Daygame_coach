@@ -51,6 +51,7 @@ import {
   AREA_KEYWORDS,
   COMMIT_DATE_KEY,
   COMMIT_KEY,
+  NORTH_STAR_ANSWER_KEYS,
   DAY_WINDOWS,
   NEUTRAL_GOAL_EXAMPLE,
   ONE_ANSWERS,
@@ -95,6 +96,7 @@ import type {
   NsExperience,
   NsGoal,
   NsObstacle,
+  NsPastNorthStar,
   NsPlan,
   NsProgress,
   NsRoutine,
@@ -450,6 +452,8 @@ export function emptyNsPlan(): NsPlan {
     version: NS_PLAN_VERSION,
     horizonYears: DEFAULT_HORIZON,
     northStar: "",
+    northStarStartedOn: null,
+    pastNorthStars: [],
     rungs: {},
     areas,
     routines,
@@ -967,6 +971,8 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
       ? (obj.horizonYears as number)
       : DEFAULT_HORIZON,
     northStar: stringOr(obj.northStar, ""),
+    northStarStartedOn: isIsoDate(obj.northStarStartedOn) ? obj.northStarStartedOn : null,
+    pastNorthStars: readPastNorthStars(obj.pastNorthStars),
     rungs,
     areas: resolvedAreas,
     routines,
@@ -995,6 +1001,35 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     seq: Math.max(numberOr(obj.seq, 0), highestSeq(ids)),
     updatedAt: typeof obj.updatedAt === "string" ? obj.updatedAt : null,
   })
+}
+
+function isIsoDate(value: unknown): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
+function readPastNorthStars(value: unknown): NsPastNorthStar[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((p): p is Record<string, unknown> => !!p && typeof p === "object")
+    .filter((p) => typeof p.id === "string" && isIsoDate(p.startedOn) && isIsoDate(p.endedOn))
+    .map((p) => ({
+      id: String(p.id),
+      text: stringOr(p.text, ""),
+      horizonYears: HORIZON_CHOICES.includes(p.horizonYears as (typeof HORIZON_CHOICES)[number])
+        ? (p.horizonYears as number)
+        : DEFAULT_HORIZON,
+      startedOn: String(p.startedOn),
+      endedOn: String(p.endedOn),
+      answers:
+        p.answers && typeof p.answers === "object"
+          ? Object.fromEntries(
+              Object.entries(p.answers as Record<string, unknown>).filter(
+                (e): e is [string, string] => typeof e[1] === "string",
+              ),
+            )
+          : {},
+    }))
+    .sort((a, b) => a.startedOn.localeCompare(b.startedOn))
 }
 
 function readStringList(value: unknown): string[] {
@@ -1193,6 +1228,43 @@ export function clamp(n: number, lo: number, hi: number): number {
 
 export function setNorthStar(plan: NsPlan, text: string, now = nowIso()): NsPlan {
   return touch({ ...plan, northStar: text }, now)
+}
+
+/**
+ * START A NEW NORTH STAR, keeping the current one as history.
+ *
+ * The current paragraph and its answers move to `pastNorthStars`, ended today.
+ * The new one starts today with an empty paragraph and empty ladder, and with
+ * the old answers (purpose, who you are, your code...) carried forward as a
+ * starting point: most of them outlive one picture of the future, and the box
+ * is there to change them. Nothing is kept when there was nothing written.
+ */
+export function startNewNorthStar(plan: NsPlan, today = todayISO(), now = nowIso()): NsPlan {
+  const answers = Object.fromEntries(
+    NORTH_STAR_ANSWER_KEYS.filter((k) => (plan.answers[k] ?? "").trim()).map((k) => [k, plan.answers[k]]),
+  )
+  if (!plan.northStar.trim() && Object.keys(answers).length === 0) return plan
+  const startedOn = plan.northStarStartedOn && plan.northStarStartedOn <= today ? plan.northStarStartedOn : today
+  const past: NsPastNorthStar = {
+    id: `ns-${startedOn}-${plan.pastNorthStars.length + 1}`,
+    text: plan.northStar,
+    horizonYears: plan.horizonYears,
+    startedOn,
+    endedOn: today,
+    answers,
+  }
+  return touch(
+    {
+      ...plan,
+      northStar: "",
+      rungs: {},
+      northStarStartedOn: today,
+      pastNorthStars: [...plan.pastNorthStars, past],
+      // The commitment was to the old picture; it is made again for the new one.
+      answers: { ...plan.answers, [COMMIT_KEY]: "", [COMMIT_DATE_KEY]: "" },
+    },
+    now,
+  )
 }
 
 export function setHorizon(plan: NsPlan, years: number, now = nowIso()): NsPlan {

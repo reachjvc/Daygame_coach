@@ -123,6 +123,24 @@ export function fullPlan(): NsPlan {
     ),
   }
 
+  /* THE NORTH STAR'S HISTORY. One earlier north star with an answer, and the
+     day the current one started, so the round trips carry both
+     (Plans/life-plan-rebuild.md, Phase 2). */
+  plan = {
+    ...plan,
+    northStarStartedOn: "2026-01-05",
+    pastNorthStars: [
+      {
+        id: "ns-2025-01-01-1",
+        text: "I have a steady job and a quiet life.",
+        horizonYears: 5,
+        startedOn: "2025-01-01",
+        endedOn: "2026-01-05",
+        answers: { star_why: "To be safe." },
+      },
+    ],
+  }
+
   return normalizeNsPlan(JSON.parse(serializeNsPlan(plan)))!
 }
 

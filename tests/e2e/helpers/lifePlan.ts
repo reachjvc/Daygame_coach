@@ -1,5 +1,5 @@
 /**
- * A LIFE PLAN ON THE ACCOUNT, PUT THROUGH THE APP'S OWN ROUTE.
+ * A LIFE PLAN ON THE ACCOUNT, SENT THROUGH THE APP'S OWN ROUTE.
  *
  * Phase 8 of Plans/tests-worth-their-keep.md gives every worker a fresh,
  * empty account. The Life Mastery specs used to lean on whatever plan the
@@ -8,8 +8,9 @@
  * spec says which plan it needs and gets exactly that.
  *
  * THE SAME TWO REQUESTS THE BROWSER SENDS. `POST /api/life-plan` starts the
- * plan row (or hands back the one the account has), and `PUT /api/life-plan`
- * saves the whole plan against that row's revision. The rows are built by the
+ * plan row (or hands back the one the account has), and `PATCH /api/life-plan`
+ * sends every row of the plan as changes (`diffPlanRows(null, rows)`) against
+ * that row's revision. The rows are built by the
  * app's own mapper (`planToRows`) from a plan run through the app's own loader
  * (`normalizeNsPlan`), so a seed is a plan the flow could have written, not a
  * set of rows a test made up. Nothing here touches the database directly.
@@ -26,6 +27,7 @@
 import { expect, type Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { planToRows } from '@/src/goals/lifePlanMapper'
+import { diffPlanRows } from '@/src/goals/lifePlanDiff'
 import { normalizeNsPlan } from '@/src/goals/northStarService'
 
 export interface SeededPlan {
@@ -62,7 +64,10 @@ export async function seedLifePlan(page: Page, userId: string, plan: object): Pr
     },
   })
 
-  const saved = await page.request.put('/api/life-plan', { data: { plan: rows, revision: row.revision } })
+  // Every row, as the flow sends a plan to an account it knows nothing about.
+  const saved = await page.request.patch('/api/life-plan', {
+    data: { changes: diffPlanRows(null, rows), revision: row.revision },
+  })
   expect(saved.status(), `the account refused the seeded plan: ${await saved.text()}`).toBe(200)
   const { revision } = (await saved.json()) as { revision: number }
 

@@ -32,7 +32,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { addCustomStep, emptyNsPlan, serializeNsPlan, setNorthStar } from "@/src/goals/northStarService"
-import { NORTH_STAR_STORAGE_KEY } from "@/src/goals/data/northStar"
+import { planCacheKey } from "@/src/goals/data/northStar"
 import { planToRows } from "@/src/goals/lifePlanMapper"
 
 const PLAN_ID = "11111111-1111-4111-8111-111111111111"
@@ -89,7 +89,8 @@ function installFetch(accountDays?: { daily: object; logged: object; notes: obje
       return new Response(JSON.stringify(days), { status: 200 })
     }
     if (url === "/api/life-plan") {
-      if (method === "PUT") {
+      // PATCH is the change-only save; PUT the whole-plan one it replaced.
+      if (method === "PATCH" || method === "PUT") {
         revision += 1
         return new Response(JSON.stringify({ revision }), { status: 200 })
       }
@@ -127,7 +128,7 @@ function planWithARealTick() {
   }
 }
 
-const planPuts = () => calls.filter((c) => c.method === "PUT" && c.url === "/api/life-plan").length
+const planPuts = () => calls.filter((c) => (c.method === "PATCH" || c.method === "PUT") && c.url === "/api/life-plan").length
 /** Day saves, which a tick SHOULD cost exactly one of. */
 const dayPuts = () => calls.filter((c) => c.method === "PUT" && c.url === "/api/life-plan/day").length
 
@@ -166,7 +167,7 @@ afterEach(() => {
 
 describe("the flow does not write to the account on its own", () => {
   it("makes NO save at all across a minute of an untouched tab", async () => {
-    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow userId={USER_ID} backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     // Fifteen debounce windows. The loop produced one PUT per window.
@@ -177,7 +178,7 @@ describe("the flow does not write to the account on its own", () => {
   })
 
   it("reads the account exactly once on load", async () => {
-    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow userId={USER_ID} backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     const gets = calls.filter((c) => c.method === "GET" && c.url === "/api/life-plan").length
@@ -193,9 +194,9 @@ describe("a day-half change never costs a plan save", () => {
    * a plan whose only difference is a tick produces no request.
    */
   it("a plan differing only by a tick is not sent", async () => {
-    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(planWithARealTick().plan))
+    window.localStorage.setItem(planCacheKey(USER_ID), serializeNsPlan(planWithARealTick().plan))
 
-    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow userId={USER_ID} backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     expect(
@@ -205,16 +206,16 @@ describe("a day-half change never costs a plan save", () => {
   })
 
   it("but it DOES reach the account, by its own route", async () => {
-    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(planWithARealTick().plan))
+    window.localStorage.setItem(planCacheKey(USER_ID), serializeNsPlan(planWithARealTick().plan))
 
-    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow userId={USER_ID} backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(30_000)
 
     expect(dayPuts(), "a tick in the browser is sent to the day route").toBeGreaterThan(0)
   })
 
   it("sends the day nothing at all when there is nothing to send", async () => {
-    render(<NorthStarFlow backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
+    render(<NorthStarFlow userId={USER_ID} backHref={ROUTES.dashboard} backLabel="Dashboard" timezone="Europe/Copenhagen" />)
     await passTime(60_000)
 
     expect(dayPuts(), "an idle tab must not write days either").toBe(0)
@@ -239,7 +240,7 @@ describe("a day-half change never costs a plan save", () => {
 describe("when the account already has days", () => {
   it("takes them, and sends nothing at all", async () => {
     const { plan, stepId } = planWithARealTick()
-    window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, serializeNsPlan(plan))
+    window.localStorage.setItem(planCacheKey(USER_ID), serializeNsPlan(plan))
 
     // The account's copy: the SAME step, ticked on a different day, plus a note
     // this browser has never seen.
@@ -252,7 +253,7 @@ describe("when the account already has days", () => {
       journal: {},
     })
 
-    render(<NorthStarFlow />)
+    render(<NorthStarFlow userId={USER_ID} />)
     await passTime(30_000)
 
     expect(dayPuts(), "a cold load must not write the day half back").toBe(0)

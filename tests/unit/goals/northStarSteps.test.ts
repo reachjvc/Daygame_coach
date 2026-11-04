@@ -231,7 +231,7 @@ describe("changing step writes the address", () => {
   })
 
   it("writes ?step= on a step change, and still changes step when history refuses", async () => {
-    render(createElement(NorthStarFlow))
+    render(createElement(NorthStarFlow, { userId: "22222222-2222-4222-8222-222222222222" }))
     const rail = await screen.findByRole("navigation", { name: "Sections" })
     const buttons = within(rail).getAllByRole("button")
     expect(buttons, "premise: one rail button per step, in order").toHaveLength(TAB_ORDER.length)

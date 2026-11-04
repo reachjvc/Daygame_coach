@@ -1,0 +1,5 @@
+-- The way back from 20261104100200_change_save_never_writes_the_goal_link.sql. Deletes no data.
+--
+-- Re-run the function body from 20261104100000_apply_life_plan_changes.sql
+-- (CREATE OR REPLACE FUNCTION apply_life_plan_changes ... through the GRANT),
+-- which writes `user_goal_id` on an insert again. Nothing else changed.

@@ -55,6 +55,17 @@ export interface NorthStarRow {
   node_kind: "north_star"
   text: string
   horizon_years: number
+  /** Optional on the way in: the column's default is the day the row is made. */
+  started_on?: string
+  /** Null for the current north star; the day it was replaced otherwise. */
+  ended_on: string | null
+  purpose: string
+  identity: string
+  conduct: string
+  become: string
+  affirmations: string
+  commitment: string
+  committed_on: string | null
 }
 
 export interface AreaRow {
@@ -367,6 +378,25 @@ export const PLAN_ROW_KEYS = [
   "values",
   "answers",
 ] as const
+
+/** One of the tables a plan save can write. */
+export type RowTable = (typeof PLAN_ROW_KEYS)[number]
+
+/**
+ * What `apply_life_plan_changes` takes: the rows that changed, built by
+ * `diffPlanRows` in `src/goals/lifePlanDiff.ts`, which says what each part means.
+ */
+export interface PlanChanges {
+  plan_id: string
+  /** The plan row's own fields, only those that changed. */
+  plan: Partial<Pick<PlanRows, "version" | "seq" | "season_focus_id">>
+  /** Whole rows to write, per table. */
+  upsert: Partial<Record<RowTable, Record<string, unknown>[]>>
+  /** Rows to remove, per table, each given by its key columns only. */
+  remove: Partial<Record<RowTable, Record<string, unknown>[]>>
+  /** Tables whose rows on the account are all replaced by `upsert`'s. */
+  replace: RowTable[]
+}
 
 /** The four the save must never touch. Named so a test can assert it. */
 export const DAY_TABLES = [

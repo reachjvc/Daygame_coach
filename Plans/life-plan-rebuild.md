@@ -11,8 +11,8 @@ steps". The plan carries out the recommendations to Q1–Q10 in `Plans/life-plan
   into them. **Nothing is deleted until Phase 7.**
 - **Before every database change, a backup of your plan** goes to a file on this PC
   (`~/dg-backups/`), outside the code and readable only by your user.
-- **The database rule says I ask before applying a change.** I ask once, at the first one (Phase 1),
-  whether your yes covers Phases 1–6. Those phases only add and copy.
+- **The database rule says I ask before applying a change.** Asked at Phase 1 on 2026-11-04. **Your
+  answer: "Yes, Phases 1–6".** Those phases only add and copy.
 - **Phase 7 deletes the old copies.** Examples: the old one-thing history, old answer rows, and the
   goal-habit rows once they live as routine steps. **I list exactly what goes and ask you first.**
 - **`/plan` changes as each phase lands**, because every push is live. Two steps merge into one, and new
@@ -79,8 +79,8 @@ The steps go from 14 to 12. **Season** replaces **The one thing** and **Focus**.
 | ID | What | Tried, and the result | Blocks | What happens |
 |---|---|---|---|---|
 | B-LIVE-DB | Apply each change to the live database | Linked from a scratch folder: a read-only query worked (it counted your rows). A write without consent answered `HostedMutationConsentRequiredError: ... ask the user before re-running with --yes. Nothing was changed.` | Phases 1–7 | I ask you once at Phase 1 for Phases 1–6. Phase 7 gets its own ask. |
-| B-BACKUP | Copy your plan to a file before a change | Done in Phase 0, see the result there. | Every phase | None if Phase 0 works. |
-| B-BROWSER | Click through `/plan` as a test account | Tried in Phase 0, see the result there. | The browser check in each phase | If login fails, the e2e test suite's login helper is used instead. |
+| B-BACKUP | Copy your plan to a file before a change | Worked (Phase 0): a read-only query wrote every row of yours to `~/dg-backups/`. | Every phase | Nothing. |
+| B-BROWSER | Click through `/plan` as a test account | The browser test suite starts its own copy of the app on a throwaway local database and signs in its own test accounts: 7 life plan browser tests ran (Phase 0). | The browser check in each phase | Each phase's browser check is a browser test in that suite, never your account. |
 
 ## Open questions, each with a recommendation (taken if you say nothing)
 
@@ -104,7 +104,17 @@ The steps go from 14 to 12. **Season** replaces **The one thing** and **Focus**.
 **Done when:** the backup file exists and its counts match the live counts, and the starting test result
 is written down here.
 
-### Phase 1. Saves send only what changed; the account is the only copy (Q8)
+**Done 2026-11-04.** `~/dg-backups/life-plan-2026-11-04.json` (mode 600) holds 873 rows of yours in
+27 tables. Among them: 1 plan, 155 nodes, 1 north star, 12 areas, 50 goals, 48 checkpoints, 13 goal
+habits, 7 routines, 24 routine steps, 70 routine-area links, 339 values, 7 answers, 13 days, 36
+ratings, 95 ticks, 1 chapter and 1 life answer. The other tables are empty for you. Tests before any
+change:
+- unit (goals and the two life plan repos): 1568 passed, 82 files;
+- database: 25 passed, 4 files;
+- browser: 7 passed. `life-mastery-track.spec.ts:219` failed once on the first request after the app
+  started and passed on the rerun, so it is flaky, not broken.
+
+### Phase 1. Saves send only what changed; the browser copy is per account (Q8)
 
 1. **Save only what changed.** A pure function `diffRows(before, after)` gives, per table, the rows to
    write and the rows to remove. Link tables are compared by their two ids. Tested on its own.
@@ -114,9 +124,13 @@ is written down here.
    see. A whitelist of tables, so each later phase adds its tables in one line.
 3. **The flow sends the diff.** It keeps what the account last accepted, as rows instead of a
    fingerprint. The old whole-plan `save_life_plan` stays in the database, unused, until Phase 7.
-4. **The account is the only copy.** The browser no longer imports its own copy into the account. Your
-   plan has been on the account since September (revision 919), and nobody else has one in a browser.
-   The browser copy stays only so the page can paint before the read lands. It is never sent.
+4. **The browser copy belongs to one account.** *Changed while building:* the browser keeps its copy, because
+   it is the only place a new account's work survives a first save that was cut off halfway (rule 2 in
+   `lifePlanSync.ts`). But it was stored under one name for every account and never cleared on sign-out.
+   So on a shared browser, the next person to sign in saw the last person's plan, and with an empty
+   account had it imported as theirs. It is now stored per account, and the old shared copy is deleted
+   on load. Also removed: the goals screen's write into that shared copy (`northStarStorage.ts`). The
+   flow already re-reads the running program from the account on every load.
 5. Tests: the diff function; the database function on the local test database (writes, removes only what
    is named, refuses a stale revision, refuses another person's plan); the flow's existing save tests
    adapted.
@@ -124,6 +138,26 @@ is written down here.
 **Done when:** a test account's edit sends a small body, and the database shows only that row changed.
 Your plan's row counts are unchanged. (The lock stays per plan: two devices editing at once still get
 "reload". Locking per row would be its own job, not needed for one user.)
+
+**Done 2026-11-04**, shipped in one commit with Phase 2 because both change the same files.
+- Live database: `20261104100000` (the change-only save), `20261104100100` (signed-out visitors can call
+  neither save), `20261104100200` (the review's fix, below).
+- A separate review agent found six problems, all fixed before the push:
+  1. **High.** The save compared with a plan rebuilt from the read. The loader adds what a plan lacks
+     (12 default areas, the north star's node), so on an account whose plan row held nothing every save
+     failed, and reloading did not help. It now compares with the rows exactly as the account returned
+     them.
+  2. Deleting the old shared browser copy could delete work only that browser had. It is moved aside to
+     `north-star-v1:orphan` instead, and is on the Phase 7 list.
+  3. If another device saved between the read and the first save, the page said "could not save" on
+     every edit. It now says "reload".
+  4. **Security.** A signed-in person calling the function directly could point a new goal at another
+     account's counted goal. That blocks that account's Track push. The function no longer writes that
+     column at all, and checks itself on install.
+  5. With nothing known about the account, values and answers were still replaced (wiped and rewritten).
+     They are now only written.
+  6. No test read what the page sends. `flowSendsOnlyTheChange.test.tsx` now does: one edit sends one
+     row, and an empty plan row gets every part.
 
 ### Phase 2. The north star keeps its history and holds its four things (Q2, Q9)
 
@@ -136,6 +170,12 @@ Your plan's row counts are unchanged. (The lock stays per plan: two devices edit
 
 **Done when:** your current north star shows the same text and answers as before, read from the new
 columns, and a test account can start a second one and see the first under "Earlier".
+
+**Built 2026-11-04.** Migration `20261104130000` adds the columns and copies your one north star
+answer (`star_why`, 335 characters) into `purpose`. The new one's start date is the day your plan row
+was made. The answers are written to both places until Phase 7. "Start a new north star" keeps the
+purpose, identity, code, becoming and affirmations as a starting point, but empties the commitment: it
+was made to the old picture. Browser test: `tests/e2e/life-mastery-north-star-history.spec.ts`.
 
 ### Phase 3. One season (Q1), and the step list shortened (N1)
 
@@ -186,7 +226,8 @@ and shown on the day's summary. Concept items 21 and 34.
 
 ### Phase 7. Clear out the old homes (deletes: your yes first)
 
-The list, final once Phases 1–6 are done: `save_life_plan`, `life_plans.season_focus_id`,
+The list, final once Phases 1–6 are done: `save_life_plan` and the PUT on `/api/life-plan`, the old
+shared browser copy kept as `north-star-v1:orphan`, `life_plans.season_focus_id`,
 `life_plan_areas.season_rank` and `review_fortnight`, `life_plan_goals.serves_one_thing` and
 `user_goal_id`, the north-star and commit rows in `life_plan_answers`, `life_plan_goal_habits`,
 `life_chapters`, and the `one_*` rows in `life_answers`, plus the code that reads them. A fresh backup

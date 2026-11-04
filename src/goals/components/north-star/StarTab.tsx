@@ -46,6 +46,7 @@ import {
 } from "@/src/goals/northStarService"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 import { SentenceBox } from "./SentenceBox"
+import { NorthStarHistory } from "./NorthStarHistory"
 
 /**
  * The prompts are laid out by hand rather than mapped, because the values list
@@ -91,11 +92,14 @@ export function StarTab({
   onHorizon,
   onRung,
   onAnswer,
+  onNewNorthStar,
   valuesHandlers,
   onNext,
 }: {
   plan: NsPlan
   onStar: (text: string) => void
+  /** Keep the current north star as history and start an empty one. */
+  onNewNorthStar: () => void
   onHorizon: (years: number) => void
   onRung: (rungId: string, text: string) => void
   onAnswer: (promptId: string, text: string) => void
@@ -177,6 +181,7 @@ export function StarTab({
           </p>
         )}
         {written && <p className="text-[11px] text-zinc-500 mt-3 leading-relaxed">{NORTH_STAR_REREAD}</p>}
+        <NorthStarHistory plan={plan} onNewNorthStar={onNewNorthStar} />
       </div>
 
       {/* The why sits on its own, directly under the paragraph. It is the one

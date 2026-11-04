@@ -219,8 +219,10 @@ describe("the schema's own rules, enforced by the mapper", () => {
 
   it("gives the north star a local id no counter can mint", () => {
     const rows = planToRows(fullPlan(), context())
-    expect(rows.north_stars).toHaveLength(1)
-    expect(rows.nodes.find((n) => n.kind === "north_star")?.local_id).toBe(NORTH_STAR_LOCAL_ID)
+    // One CURRENT north star; the fixture's earlier one is a row of its own.
+    const current = rows.north_stars.filter((s) => s.ended_on === null)
+    expect(current).toHaveLength(1)
+    expect(rows.nodes.find((n) => n.id === current[0].id)?.local_id).toBe(NORTH_STAR_LOCAL_ID)
     expect(NORTH_STAR_LOCAL_ID).not.toMatch(/^[a-z]+\d+$/)
   })
 

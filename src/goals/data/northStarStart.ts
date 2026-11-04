@@ -405,6 +405,24 @@ export const ONE_THING_KEY = `${START_ANSWER_PREFIX}one-thing`
 /** The commitment itself, in the person's own words, and the date they made it. */
 export const COMMIT_KEY = `${START_ANSWER_PREFIX}commit`
 export const COMMIT_DATE_KEY = `${START_ANSWER_PREFIX}commit-date`
+
+/**
+ * THE NORTH STAR'S OWN ANSWERS, and the column each is kept in on
+ * `life_plan_north_stars` (Plans/life-plan-rebuild.md, Phase 2). The keys are
+ * the answer ids the steps already use: the five in `STAR_PROMPTS`, then the
+ * commitment. `COMMIT_DATE_KEY` goes to `committed_on`, a date, so it is not here.
+ */
+export const NORTH_STAR_ANSWER_COLUMNS = {
+  star_why: "purpose",
+  identity_total: "identity",
+  conduct: "conduct",
+  become: "become",
+  affirmations: "affirmations",
+  [COMMIT_KEY]: "commitment",
+} as const
+
+/** Every answer that belongs to one north star and moves with it into the past. */
+export const NORTH_STAR_ANSWER_KEYS: readonly string[] = [...Object.keys(NORTH_STAR_ANSWER_COLUMNS), COMMIT_DATE_KEY]
 export const IDEAL_DAY_KEY = `${START_ANSWER_PREFIX}ideal-day`
 export const STARTER_KEY = (id: string) => `${START_ANSWER_PREFIX}q:${id}`
 

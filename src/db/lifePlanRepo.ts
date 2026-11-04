@@ -24,7 +24,7 @@
 
 import { createServerSupabaseClient } from "./supabase"
 import { readAllRows } from "./paging"
-import { PLAN_ROW_KEYS } from "./lifePlanTypes"
+import { PLAN_ROW_KEYS, type PlanChanges } from "./lifePlanTypes"
 import type {
   AnswerRow,
   AreaRow,
@@ -291,6 +291,45 @@ export async function saveLifePlan(
     if (error.code === STALE) throw new StalePlanError(expectedRevision)
     // Loud, and never "carry on as if it saved". A swallowed error here looks
     // exactly like a successful save until the next reload.
+    throw new Error(`Failed to save the plan: ${error.message}`)
+  }
+  if (typeof data !== "number") {
+    throw new Error("The plan save returned no revision, so it cannot be trusted to have run.")
+  }
+  return data
+}
+
+/**
+ * Save only what changed, quoting the revision it was built on.
+ *
+ * The changes come from `diffPlanRows`; `apply_life_plan_changes` writes the
+ * rows named and removes only the rows named. Every written row carries the
+ * signed-in owner, stamped here from the session as `saveLifePlan` does, and
+ * the link to the counted goal is never sent.
+ */
+export async function applyLifePlanChanges(
+  changes: PlanChanges,
+  expectedRevision: number,
+  userId: string,
+): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  const upsert: Record<string, unknown[]> = {}
+  for (const [table, rows] of Object.entries(changes.upsert)) {
+    upsert[table] = (rows ?? []).map((row) => {
+      const copy: Record<string, unknown> = { ...row, user_id: userId }
+      if (table === "goals") delete copy.user_goal_id
+      return copy
+    })
+  }
+
+  const { data, error } = await supabase.rpc("apply_life_plan_changes", {
+    p_changes: { ...changes, upsert },
+    p_expected_rev: expectedRevision,
+  })
+
+  if (error) {
+    if (error.code === STALE) throw new StalePlanError(expectedRevision)
     throw new Error(`Failed to save the plan: ${error.message}`)
   }
   if (typeof data !== "number") {

@@ -23,7 +23,25 @@ import type {
   RoutineBlueprint,
 } from "../types"
 
+/**
+ * THE OLD, SHARED NAME of the browser's copy of the plan. Read by nothing now:
+ * the flow moves it to `ORPHANED_PLAN_KEY` on load. It was one name for every
+ * account, so on a shared browser the next person to sign in was shown the
+ * last person's plan and, with an empty account, had it imported as theirs.
+ */
 export const NORTH_STAR_STORAGE_KEY = "north-star-v1"
+
+/**
+ * Where the old shared copy is kept, unread, until Phase 7 of
+ * Plans/life-plan-rebuild.md removes it with the owner's yes. It may hold work
+ * only that browser had; it may be another person's, so nothing shows it.
+ */
+export const ORPHANED_PLAN_KEY = "north-star-v1:orphan"
+
+/** Where the browser keeps ITS copy of one account's plan. */
+export function planCacheKey(userId: string): string {
+  return `${NORTH_STAR_STORAGE_KEY}:${userId}`
+}
 
 /**
  * WHICH RULES A SAVED PLAN WAS WRITTEN UNDER.

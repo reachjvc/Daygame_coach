@@ -65,6 +65,8 @@ import type {
   ValueRow,
 } from "@/src/db/lifePlanTypes"
 import { normalizeNsPlan } from "./northStarService"
+import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS } from "./data/northStarStart"
+import type { NsPastNorthStar } from "./types"
 
 /**
  * The north star's local id.
@@ -117,15 +119,32 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
   }
 
   // ---------------------------------------------------------------- the star
+  // Earlier north stars first, each its own node, then the current one. Its
+  // answers are written to its own columns AND, until Phase 7 of
+  // Plans/life-plan-rebuild.md, still to the answer rows below.
+  const north_stars: NorthStarRow[] = (plan.pastNorthStars ?? []).map((past) => {
+    const n = node(`${NORTH_STAR_LOCAL_ID}:${past.id}`, "north_star")
+    return {
+      id: n.id, user_id: userId, plan_id: planId, node_kind: "north_star" as const,
+      text: past.text, horizon_years: horizonOf(past.horizonYears),
+      started_on: past.startedOn, ended_on: past.endedOn,
+      ...starAnswerColumns(past.answers),
+    }
+  })
   const star = node(NORTH_STAR_LOCAL_ID, "north_star")
-  const north_stars: NorthStarRow[] = [{
+  north_stars.push({
     id: star.id,
     user_id: userId,
     plan_id: planId,
     node_kind: "north_star",
     text: plan.northStar ?? "",
     horizon_years: horizonOf(plan.horizonYears),
-  }]
+    // Left out until the account has said when it started: the column's
+    // default is the day the row is made.
+    ...(plan.northStarStartedOn ? { started_on: plan.northStarStartedOn } : {}),
+    ended_on: null,
+    ...starAnswerColumns(plan.answers ?? {}),
+  })
 
   // --------------------------------------------------------------- the areas
   const areaId = new Map<string, string>()
@@ -624,18 +643,34 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     program: r.enrollment_id ? { enrollmentId: r.enrollment_id } : null,
   }))
 
-  const star = rows.north_stars[0]
+  // The current north star is the one not ended. A plan read before Phase 2
+  // has exactly one row and no end, so that is it.
+  const star = rows.north_stars.find((r) => !r.ended_on) ?? rows.north_stars[0]
+  const pastNorthStars = rows.north_stars
+    .filter((r) => r !== star && r.ended_on && r.started_on)
+    .map((r): NsPastNorthStar => ({
+      id: (id(r.id) || r.id).replace(`${NORTH_STAR_LOCAL_ID}:`, ""),
+      text: r.text,
+      horizonYears: r.horizon_years,
+      startedOn: r.started_on!,
+      endedOn: r.ended_on!,
+      answers: starAnswersOf(r),
+    }))
 
   const draft = {
     version: rows.version,
     horizonYears: star?.horizon_years ?? 10,
     northStar: star?.text ?? "",
+    northStarStartedOn: star?.started_on ?? null,
+    pastNorthStars,
     rungs: fromAnswers(rows.answers, "rung"),
     areas,
     routines,
     goals,
     review,
-    answers: fromAnswers(rows.answers, "answer"),
+    // The answer rows, with the north star's own columns over them: those are
+    // the answers' home now, and the rows are the copy kept until Phase 7.
+    answers: { ...fromAnswers(rows.answers, "answer"), ...(star ? starAnswersOf(star) : {}) },
     currentValues: scoped(rows.values, "past"),
     values: scoped(rows.values, "chosen"),
     priorityIds: [...rows.goals]
@@ -718,6 +753,28 @@ function scoped(values: ValueRow[], scope: "past" | "chosen"): string[] {
     .filter((v) => v.scope === scope)
     .sort((a, b) => a.position - b.position)
     .map((v) => v.value)
+}
+
+type StarAnswerColumns = Pick<NorthStarRow, "purpose" | "identity" | "conduct" | "become" | "affirmations" | "commitment" | "committed_on">
+
+/** A north star's answers, as its row's columns. */
+function starAnswerColumns(answers: Record<string, string>): StarAnswerColumns {
+  const out = { committed_on: null } as unknown as Record<string, string | null>
+  for (const [key, column] of Object.entries(NORTH_STAR_ANSWER_COLUMNS)) out[column] = answers[key] ?? ""
+  const date = answers[COMMIT_DATE_KEY] ?? ""
+  out.committed_on = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null
+  return out as unknown as StarAnswerColumns
+}
+
+/** The answers a north star row holds, keyed as the steps ask them. Empty ones are left out. */
+function starAnswersOf(row: NorthStarRow): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const [key, column] of Object.entries(NORTH_STAR_ANSWER_COLUMNS)) {
+    const body = (row as unknown as Record<string, string | null | undefined>)[column]
+    if (body) out[key] = body
+  }
+  if (row.committed_on) out[COMMIT_DATE_KEY] = row.committed_on
+  return out
 }
 
 function fromAnswers(answers: AnswerRow[], kind: "rung" | "answer"): Record<string, string> {

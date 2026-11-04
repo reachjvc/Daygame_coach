@@ -1,9 +1,11 @@
 /**
  * The Life Mastery plan, read and written.
  *
- * GET hands back the plan and the revision it was read at. PUT sends the whole
- * plan quoting that revision, and a save built on a stale one is REFUSED with
- * 409 rather than merged — the page then says so. Merging two devices' plans
+ * GET hands back the plan and the revision it was read at. PATCH sends only
+ * what changed since then (`diffPlanRows`), quoting that revision, and a save
+ * built on a stale one is REFUSED with 409 rather than merged — the page then
+ * says so. PUT, the whole-plan save, stays until Phase 7 of
+ * Plans/life-plan-rebuild.md removes it; the flow no longer calls it. Merging two devices' plans
  * into a third thing neither person wrote is the failure this exists to avoid.
  *
  * The day tables are not reachable from here; they get their own route.
@@ -11,7 +13,7 @@
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { ensureLifePlan, readLifePlan, saveLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
+import { applyLifePlanChanges, ensureLifePlan, readLifePlan, saveLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
 export async function GET() {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
@@ -46,6 +48,32 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: error.message, revision: error.revision }, { status: 409 })
     }
     console.error("[life-plan] save failed", error)
+    return NextResponse.json({ error: "Could not save your plan" }, { status: 500 })
+  }
+}
+
+/** Save only what changed. The database refuses any table outside the plan. */
+export async function PATCH(req: Request) {
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
+  const body = await req.json().catch(() => null)
+  const changes = body?.changes
+  if (
+    !body || typeof body.revision !== "number" || !changes || typeof changes !== "object" ||
+    typeof changes.plan_id !== "string" || !Array.isArray(changes.replace)
+  ) {
+    return NextResponse.json({ error: "Send the changes and the revision you read" }, { status: 400 })
+  }
+
+  try {
+    const revision = await applyLifePlanChanges(changes, body.revision, auth.userId)
+    return NextResponse.json({ revision })
+  } catch (error) {
+    if (error instanceof StalePlanError) {
+      return NextResponse.json({ error: error.message, revision: error.revision }, { status: 409 })
+    }
+    console.error("[life-plan] change save failed", error)
     return NextResponse.json({ error: "Could not save your plan" }, { status: 500 })
   }
 }

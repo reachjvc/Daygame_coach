@@ -1952,6 +1952,21 @@ export interface NsAccount {
 /** What a caller knows when it has not asked the account anything. */
 export const NO_ACCOUNT: NsAccount = { hasOneThing: false }
 
+/**
+ * A north star you lived by and then replaced, with the answers it had then.
+ *
+ * The answers are keyed as on the live plan (`STAR_PROMPTS` ids, `COMMIT_KEY`,
+ * `COMMIT_DATE_KEY`), so the same code can show either.
+ */
+export interface NsPastNorthStar {
+  id: string
+  text: string
+  horizonYears: number
+  startedOn: string
+  endedOn: string
+  answers: Record<string, string>
+}
+
 export interface NsPlan {
   /**
    * Which rules this plan was written under. See `NS_PLAN_VERSION` — a loaded
@@ -1963,6 +1978,14 @@ export interface NsPlan {
   horizonYears: number
   /** The north star itself, one paragraph, present tense. */
   northStar: string
+  /** The day the current north star was started, `YYYY-MM-DD`. Null until the account says. */
+  northStarStartedOn: string | null
+  /**
+   * The north stars you had before this one, oldest first. Starting a new one
+   * moves the current one here with today as its end, so an old picture of
+   * your life is kept rather than typed over (Plans/life-plan-rebuild.md, Phase 2).
+   */
+  pastNorthStars: NsPastNorthStar[]
   /** The optional ladder answers that assemble into the paragraph. */
   rungs: Record<string, string>
   areas: NsArea[]

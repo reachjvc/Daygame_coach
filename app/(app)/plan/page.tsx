@@ -70,6 +70,7 @@ export default async function LifeMasteryPage({
 
   return (
     <NorthStarFlow
+      userId={user.id}
       backHref={ROUTES.dashboard}
       backLabel="Dashboard"
       initialTab={initialTab}

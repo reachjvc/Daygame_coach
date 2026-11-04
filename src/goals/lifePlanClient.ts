@@ -15,11 +15,14 @@
 import type { NsPlan } from "./types"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import { planToRows, rowsToPlan } from "./lifePlanMapper"
+import { diffPlanRows, nothingChanged, type PlanChanges } from "./lifePlanDiff"
 
 export interface LoadedPlan {
   /** The plan row's id, when there is one. Null when the account has none. */
   planId: string | null
   plan: NsPlan | null
+  /** The rows exactly as the account holds them: what the first save is compared with. */
+  rows: PlanRows | null
   revision: number
   /** The counted-goal link per plan-goal UUID, so a push can find it. */
   goalLinks: Record<string, string | null>
@@ -41,11 +44,12 @@ export async function fetchLifePlan(): Promise<LoadedPlan | undefined> {
       revision?: number
       goalLinks?: Record<string, string | null>
     }
-    if (!body.plan) return { planId: null, plan: null, revision: 0, goalLinks: {}, ids: new Map() }
+    if (!body.plan) return { planId: null, plan: null, rows: null, revision: 0, goalLinks: {}, ids: new Map() }
 
     return {
       planId: body.plan.plan_id,
       plan: rowsToPlan(body.plan),
+      rows: body.plan,
       revision: body.revision ?? 0,
       goalLinks: body.goalLinks ?? {},
       // KEPT SO THE NEXT SAVE REUSES THEM. A node that keeps its UUID keeps its
@@ -90,7 +94,8 @@ export function newNodeId(): string {
 }
 
 export type SaveOutcome =
-  | { ok: true; revision: number; ids: Map<string, string> }
+  /** `rows`: what the account now holds, for the next save to compare with. */
+  | { ok: true; revision: number; ids: Map<string, string>; rows?: PlanRows }
   /** Somebody else's device saved first. Never merged, always reported. */
   | { ok: false; stale: true }
   | { ok: false; stale: false; message: string }
@@ -142,6 +147,63 @@ export async function saveLifePlanFromBrowser(
     }
     const body = (await res.json()) as { revision: number }
     return { ok: true, revision: body.revision, ids }
+  } catch {
+    return { ok: false, stale: false, message: "The last change could not be saved." }
+  }
+}
+
+/**
+ * Send only what changed since the account last accepted the plan.
+ *
+ * `before` is the ROWS the account holds (as read, then as last accepted),
+ * null when nothing is known to be there; `lifePlanDiff.ts` says why rows and
+ * not a plan. Nothing changed means nothing is sent and the revision stays: a
+ * tick or a journal line makes a new plan object, and sending it anyway made
+ * every other device stale for nothing.
+ */
+export async function saveLifePlanChanges(
+  before: PlanRows | null,
+  after: NsPlan,
+  planId: string,
+  revision: number,
+  ids: Map<string, string>,
+  newId: () => string,
+): Promise<SaveOutcome> {
+  let changes: PlanChanges
+  let rows: PlanRows
+  try {
+    const context = {
+      planId,
+      userId: "",
+      idFor: (localId: string) => {
+        const had = ids.get(localId)
+        if (had) return had
+        const made = newId()
+        ids.set(localId, made)
+        return made
+      },
+    }
+    rows = planToRows(after, context)
+    changes = diffPlanRows(before, rows)
+  } catch (error) {
+    // The mapper refuses a plan whose parts share an id, naming the id.
+    return { ok: false, stale: false, message: error instanceof Error ? error.message : "This plan could not be saved." }
+  }
+  if (nothingChanged(changes)) return { ok: true, revision, ids, rows: before ?? rows }
+
+  try {
+    const res = await fetch("/api/life-plan", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ changes, revision }),
+    })
+    if (res.status === 409) return { ok: false, stale: true }
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null
+      return { ok: false, stale: false, message: body?.error ?? "The last change could not be saved." }
+    }
+    const body = (await res.json()) as { revision: number }
+    return { ok: true, revision: body.revision, ids, rows }
   } catch {
     return { ok: false, stale: false, message: "The last change could not be saved." }
   }

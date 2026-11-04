@@ -57,13 +57,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
+import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
+import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
-import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanFromBrowser, startLifePlan } from "@/src/goals/lifePlanClient"
+import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
@@ -124,12 +125,15 @@ function newRunId(): string {
  * address should be able to get back to.
  */
 export function NorthStarFlow({
+  userId,
   backHref = ROUTES.dashboard,
   backLabel = "Dashboard",
   initialTab = "star",
   timezone = "UTC",
   goalsPromise,
 }: {
+  /** Whose plan this is. The browser's copy is kept under it, so it is never another account's. */
+  userId: string
   backHref?: string
   backLabel?: string
   /**
@@ -159,7 +163,7 @@ export function NorthStarFlow({
    * on mount.
    */
   goalsPromise?: Promise<TodayHubGoal[] | null> | null
-} = {}) {
+}) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
   const [tab, setTabState] = useState<NorthStarTabId>(initialTab)
@@ -255,6 +259,15 @@ export function NorthStarFlow({
    * made any second device permanently stale.
    */
   const lastSent = useRef<string | null>(null)
+  /**
+   * THE ROWS THE ACCOUNT HOLDS, as far as this page knows: as the read returned
+   * them, then as the last accepted save sent them. A save sends only what
+   * differs from them (`saveLifePlanChanges`), so they move only on success.
+   * Rows, not a plan: `lifePlanDiff.ts` says why. Null when nothing is known to
+   * be on the account, and then nothing is removed there.
+   * Plans/life-plan-rebuild.md, Phase 1.
+   */
+  const lastSentRows = useRef<PlanRows | null>(null)
   /**
    * One empty save is allowed through, because somebody pressed "clear
    * everything" and an empty plan is exactly what they asked the account to
@@ -362,7 +375,20 @@ export function NorthStarFlow({
      * explains why today is not computed during render.
      */
     setToday(getTodayInTimezone(timezone))
-    const saved = ns.loadNsPlan(window.localStorage.getItem(NORTH_STAR_STORAGE_KEY))
+    let saved: NsPlan | null = null
+    try {
+      // The shared copy may be somebody else's plan, so it is never shown or
+      // sent. It may also hold work only this browser has, so it is MOVED
+      // ASIDE, not deleted: removing it is Phase 7's, with the owner's yes.
+      const shared = window.localStorage.getItem(NORTH_STAR_STORAGE_KEY)
+      if (shared !== null) {
+        if (window.localStorage.getItem(ORPHANED_PLAN_KEY) === null) window.localStorage.setItem(ORPHANED_PLAN_KEY, shared)
+        window.localStorage.removeItem(NORTH_STAR_STORAGE_KEY)
+      }
+      saved = ns.loadNsPlan(window.localStorage.getItem(planCacheKey(userId)))
+    } catch {
+      /* Storage refused; the account's copy is read below either way. */
+    }
     browserCopy.current = saved
     if (saved) setPlan(saved)
     /* The run id must never be the reason this page does not open.
@@ -526,14 +552,14 @@ export function NorthStarFlow({
   useEffect(() => {
     if (!loaded) return
     try {
-      window.localStorage.setItem(NORTH_STAR_STORAGE_KEY, ns.serializeNsPlan(plan))
+      window.localStorage.setItem(planCacheKey(userId), ns.serializeNsPlan(plan))
       setStorageRefused(false)
     } catch {
       // Said out loud rather than swallowed: with no storage and no account
       // this plan lives in React state and dies with the tab.
       setStorageRefused(true)
     }
-  }, [plan, loaded])
+  }, [plan, loaded, userId])
 
   /**
    * THE DAY HALF MOVES ONTO THE ACCOUNT, ONCE.
@@ -670,6 +696,7 @@ export function NorthStarFlow({
         // plan is PUT it straight back. The day half is not in this
         // fingerprint, so the merge above cannot affect it.
         lastSent.current = sendableFingerprint(decision.plan)
+        lastSentRows.current = server?.rows ?? null
         if (days) accountDays.current = known ? days : { daily: {}, logged: {}, notes: {}, journal: {} }
         setServerState("saved")
         void importDaysOnce(days, recordOf(decision.plan))
@@ -685,11 +712,21 @@ export function NorthStarFlow({
         return
       }
 
+      // An import may land on a shell the account already has; the save then
+      // removes the shell's parts the browser's plan does not have.
+      lastSentRows.current = server?.rows ?? null
       const started = await startLifePlan()
       if (cancelled) return
       if (!started) {
         setServerState("offline")
         setServerNote(syncNotice("offline"))
+        return
+      }
+      // A plan row that moved since the read: another device saved into it in
+      // between. Its rows are not the ones this page compared with, so stop.
+      if (started.revision !== (server?.revision ?? 0)) {
+        setServerState("stale")
+        setServerNote(syncNotice("stale"))
         return
       }
       setPlanId(started.id)
@@ -752,18 +789,21 @@ export function NorthStarFlow({
             setServerNote(syncNotice("offline"))
             return
           }
+          // No row at the read; one that has been saved into since is another device's.
+          if (started.revision !== 0) return { ok: false, stale: true } as const
           id = started.id
           rev = started.revision
           setPlanId(started.id)
           setRevision(started.revision)
         }
-        return saveLifePlanFromBrowser(plan, id, "", rev, nodeIds, newNodeId)
+        return saveLifePlanChanges(lastSentRows.current, plan, id, rev, nodeIds, newNodeId)
       })().then((out) => {
         if (!out) return
         if (out.ok) {
           // Recorded only on success, so a failed save is retried rather than
           // remembered as sent.
           lastSent.current = fingerprint
+          lastSentRows.current = out.rows ?? null
           clearOnce.current = false
           setRevision(out.revision)
           setServerState("saved")
@@ -808,15 +848,16 @@ export function NorthStarFlow({
     let rev = revision
     if (!id) {
       const started = await startLifePlan()
-      if (!started) return false
+      if (!started || started.revision !== 0) return false
       id = started.id
       rev = started.revision
       setPlanId(started.id)
       setRevision(started.revision)
     }
-    const out = await saveLifePlanFromBrowser(plan, id, "", rev, nodeIds, newNodeId)
+    const out = await saveLifePlanChanges(lastSentRows.current, plan, id, rev, nodeIds, newNodeId)
     if (!out.ok) return false
     lastSent.current = sendableFingerprint(plan)
+    lastSentRows.current = out.rows ?? null
     setRevision(out.revision)
     return true
   }, [plan, planId, revision, nodeIds])
@@ -898,6 +939,8 @@ export function NorthStarFlow({
     onHorizon: useCallback((years: number) => setPlan((p) => ns.setHorizon(p, years)), []),
     onRung: useCallback((rungId: string, text: string) => setPlan((p) => ns.setRung(p, rungId, text)), []),
     onAnswer: useCallback((promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)), []),
+    // The account's today, as everywhere on this page, so the dates match the day rows.
+    onNewNorthStar: useCallback(() => setPlan((p) => ns.startNewNorthStar(p, today || undefined)), [today]),
   }
 
   /** The values exercise: two lists, and the four ways the order can change. */
