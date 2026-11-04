@@ -21,7 +21,6 @@
  * separate choices, so a function that writes one never touches the other.
  */
 
-import { chunkIds } from "./paging"
 import { createAdminSupabaseClient } from "./supabase"
 
 export type SecretName = "push_vapid_public" | "push_vapid_private" | "notifications_clock_secret"
@@ -265,21 +264,6 @@ export async function openSend(userId: string, kind: SendKind, at: Date, entryId
   return (data as { id: string }).id
 }
 
-/** Of these entries, the ones the 6 h alert was already sent for. */
-export async function alertedEntryIds(entryIds: string[]): Promise<Set<string>> {
-  const out = new Set<string>()
-  for (const ids of chunkIds(entryIds)) {
-    const { data, error } = await createAdminSupabaseClient()
-      .from("notification_sends")
-      .select("entry_id")
-      .eq("kind", "timetrack-alert")
-      .in("entry_id", ids)
-    if (error) throw new Error(`Failed to read which timers were alerted: ${error.message}`)
-    for (const r of (data ?? []) as { entry_id: string }[]) out.add(r.entry_id)
-  }
-  return out
-}
-
 /** A running entry, as the alert clock needs it. */
 export interface RunningTimerAsServer {
   id: string
@@ -290,32 +274,24 @@ export interface RunningTimerAsServer {
 }
 
 /**
- * Every person's running entries that started at or before `cutoff`, newest
- * first, for the 6 h alert. AS THE SERVICE ROLE, like everything here: the
- * clock has no session. It reads across accounts, so its caller sends each
- * row only to that row's own `userId`.
- *
- * `since` bounds how far back it looks, so a timer left running for weeks on
- * an account with no device stops being asked about every minute.
+ * The 6 h alerts due now, from `timetrack_alerts_due`: at most one per
+ * person (their oldest unalerted timer), only for people with a device
+ * showing the timer, only inside their 07:00–22:59, oldest first. Every rule
+ * is applied in the database BEFORE the limit, so one account's entries can
+ * never fill the list and keep another's alert from ringing (security
+ * review, 2026-11-04). AS THE SERVICE ROLE, like everything here: the clock
+ * has no session. It reads across accounts, so its caller sends each row only
+ * to that row's own `userId`.
  */
-export async function runningTimersPastAsServer(cutoff: Date, since: Date, limit = 200): Promise<RunningTimerAsServer[]> {
-  const { data, error } = await createAdminSupabaseClient()
-    .from("timetrack_entries")
-    .select("id, user_id, description, started_at, project:timetrack_projects(name)")
-    .is("stopped_at", null)
-    .is("deleted_at", null)
-    .lte("started_at", cutoff.toISOString())
-    .gt("started_at", since.toISOString())
-    .order("started_at", { ascending: false })
-    .order("id", { ascending: true })
-    .limit(limit)
-  if (error) throw new Error(`Failed to read running timers: ${error.message}`)
-  type Row = { id: string; user_id: string; description: string; started_at: string; project: { name: string } | null }
-  return ((data ?? []) as unknown as Row[]).map((r) => ({
+export async function timerAlertsDueAsServer(limit = 200): Promise<RunningTimerAsServer[]> {
+  const { data, error } = await createAdminSupabaseClient().rpc("timetrack_alerts_due", { p_limit: limit })
+  if (error) throw new Error(`Failed to read the timer alerts due: ${error.message}`)
+  type Row = { id: string; user_id: string; description: string; project_name: string | null; started_at: string }
+  return ((data ?? []) as Row[]).map((r) => ({
     id: r.id,
     userId: r.user_id,
     description: r.description,
-    projectName: r.project?.name ?? null,
+    projectName: r.project_name,
     startedAt: r.started_at,
   }))
 }

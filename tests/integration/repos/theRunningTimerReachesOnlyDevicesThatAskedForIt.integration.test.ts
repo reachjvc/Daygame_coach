@@ -224,12 +224,13 @@ describe("the setting, per device", () => {
   })
 })
 
-/** A workspace and one running entry for `userId`, arranged as the owner. */
+/** One running entry for `userId`, in their one workspace (made if missing), arranged as the owner. */
 async function entryOf(userId: string, over: { description?: string; startedAt?: string } = {}): Promise<string> {
-  const ws = randomUUID()
   const id = randomUUID()
   await asOwner(async (q) => {
-    await q("insert into timetrack_workspaces (id, user_id, name) values ($1, $2, 'W')", [ws, userId])
+    const existing = await q("select id from timetrack_workspaces where user_id = $1 and deleted_at is null", [userId])
+    const ws = (existing[0]?.id as string | undefined) ?? randomUUID()
+    if (existing.length === 0) await q("insert into timetrack_workspaces (id, user_id, name) values ($1, $2, 'W')", [ws, userId])
     await q("insert into timetrack_entries (id, user_id, workspace_id, description, started_at) values ($1, $2, $3, $4, $5)", [
       id,
       userId,
@@ -398,6 +399,54 @@ describe("the 6 h alert rings once", () => {
     expect((await sendsOf(user.id)).filter((s) => s.kind === "timetrack-alert")).toEqual([
       { kind: "timetrack-alert", entry_id: entry, devices: 2, delivered: 2 },
     ])
+  })
+
+  /**
+   * NO ACCOUNT CAN CROWD ANOTHER'S ALERT OUT (security review, 2026-11-04).
+   * Start times are the device's to set and one sync takes 1,600 rows, so an
+   * account can hold hundreds of running entries just past 6 h. The clock took
+   * the 200 newest of everyone's and only then dropped the ones it could not
+   * alert: those of an account with no device showing the timer are never
+   * marked alerted, so they stayed in front for ever and an older, real timer
+   * was never reached.
+   */
+  it("an older timer still rings when another account holds 201 newer running entries past 6 h", async () => {
+    const now = new Date()
+    const crowd = await newUser("alert-crowd")
+    const ws = randomUUID()
+    await updateTimezone(crowd.id, middayZone(now))
+    await asOwner(async (q) => {
+      await q("insert into timetrack_workspaces (id, user_id, name) values ($1, $2, 'W')", [ws, crowd.id])
+      await q(
+        `insert into timetrack_entries (id, user_id, workspace_id, description, started_at)
+         select gen_random_uuid()::text, $1, $2, 'Crowd', $3::timestamptz + make_interval(secs => n)
+           from generate_series(1, 201) as n`,
+        [crowd.id, ws, new Date(now.getTime() - 6 * 3_600_000 - 10 * 60_000).toISOString()],
+      )
+    })
+
+    const { user, endpoints } = await personWithDevices("alert-crowded-out")
+    await updateTimezone(user.id, middayZone(now))
+    const entry = await entryOf(user.id, { description: "Forgotten", startedAt: new Date(now.getTime() - 8 * 3_600_000).toISOString() })
+
+    await runTimerAlertClock(now)
+
+    expect(sent.filter((s) => s.payload.entryId === entry).map((s) => s.endpoint).sort()).toEqual([endpoints.phone, endpoints.tablet].sort())
+  })
+
+  it("offers each person one timer at a time, their oldest, so one account cannot take every place", async () => {
+    const now = new Date()
+    const { user } = await personWithDevices("alert-one-each")
+    await updateTimezone(user.id, middayZone(now))
+    const oldest = await entryOf(user.id, { startedAt: new Date(now.getTime() - 9 * 3_600_000).toISOString() })
+    const newer = await entryOf(user.id, { startedAt: new Date(now.getTime() - 7 * 3_600_000).toISOString() })
+
+    await runTimerAlertClock(now)
+    const alerted = async () => (await sendsOf(user.id)).filter((s) => s.kind === "timetrack-alert").map((s) => s.entry_id)
+    expect(await alerted()).toEqual([oldest])
+
+    await runTimerAlertClock(new Date(now.getTime() + 60_000))
+    expect(await alerted()).toEqual([oldest, newer])
   })
 })
 

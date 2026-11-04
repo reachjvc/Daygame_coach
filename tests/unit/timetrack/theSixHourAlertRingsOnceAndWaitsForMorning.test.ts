@@ -84,10 +84,21 @@ afterEach(() => {
   vi.doUnmock("@/src/notifications/pushService")
 })
 
-async function tick(now: Date, candidates: Candidate[], alerted: string[], zones: Record<string, string>, already: string[] = []) {
+const limits: number[] = []
+
+/**
+ * One tick, with `candidates` as the database's list of alerts due
+ * (`timetrack_alerts_due`, which already leaves out what was alerted, people
+ * with no timer device and more than one per person; that is tested against
+ * the real database in theRunningTimerReachesOnlyDevicesThatAskedForIt).
+ */
+async function tick(now: Date, candidates: Candidate[], zones: Record<string, string>, already: string[] = []) {
+  limits.length = 0
   vi.doMock("@/src/db/notificationsRepo", () => ({
-    runningTimersPastAsServer: async (cutoff: Date) => candidates.filter((c) => Date.parse(c.startedAt) <= cutoff.getTime()),
-    alertedEntryIds: async (ids: string[]) => new Set(ids.filter((id) => alerted.includes(id))),
+    timerAlertsDueAsServer: async (limit: number) => {
+      limits.push(limit)
+      return candidates
+    },
     timezoneAsServer: async (userId: string) => zones[userId] ?? "UTC",
   }))
   vi.doMock("@/src/notifications/pushService", () => ({
@@ -108,9 +119,9 @@ describe("one tick of the alert clock", () => {
     const result = await tick(
       now,
       [{ id: "gym", userId: "u1", description: "Gym", projectName: null, startedAt: "2026-11-04T08:00:00Z" }],
-      [],
       { u1: CPH },
     )
+    expect(limits).toEqual([200])
     expect(sends).toHaveLength(1)
     expect(sends[0]).toMatchObject({ userId: "u1", kind: "timetrack-alert", entryId: "gym" })
     expect(sends[0].payload).toMatchObject({
@@ -123,16 +134,8 @@ describe("one tick of the alert clock", () => {
     expect(result).toMatchObject({ sent: 1, held: 0 })
   })
 
-  test("does not ring for a timer already alerted, nor one under 6 h", async () => {
-    await tick(
-      now,
-      [
-        { id: "old", userId: "u1", description: "Old", projectName: null, startedAt: "2026-11-04T07:00:00Z" },
-        { id: "young", userId: "u1", description: "Young", projectName: null, startedAt: "2026-11-04T10:00:00Z" },
-      ],
-      ["old"],
-      { u1: CPH },
-    )
+  test("does not ring for a timer under 6 h, even if the database's clock offered it", async () => {
+    await tick(now, [{ id: "young", userId: "u1", description: "Young", projectName: null, startedAt: "2026-11-04T10:00:00Z" }], { u1: CPH })
     expect(sends).toEqual([])
   })
 
@@ -143,7 +146,6 @@ describe("one tick of the alert clock", () => {
         { id: "cph", userId: "u1", description: "Late work", projectName: null, startedAt: "2026-11-04T18:00:00Z" },
         { id: "syd", userId: "u2", description: "Surf", projectName: null, startedAt: "2026-11-04T20:00:00Z" },
       ],
-      [],
       { u1: CPH, u2: "Australia/Sydney" },
     )
     expect(sends.map((s) => s.entryId)).toEqual(["syd"])
@@ -154,7 +156,6 @@ describe("one tick of the alert clock", () => {
     const result = await tick(
       now,
       [{ id: "gym", userId: "u1", description: "Gym", projectName: null, startedAt: "2026-11-04T08:00:00Z" }],
-      [],
       { u1: CPH },
       ["gym"],
     )

@@ -45,6 +45,7 @@ $$;
 revoke all on function public.notifications_clock_tick() from public, anon, authenticated, service_role;
 
 drop function if exists public.timetrack_alert_due(uuid);
+drop function if exists public.timetrack_alerts_due(integer);
 
 drop index if exists public.notification_sends_one_alert_per_entry;
 

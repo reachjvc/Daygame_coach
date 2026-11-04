@@ -24,7 +24,7 @@
 
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { readTimerEntry, readTimerState, writeTimerStop, type TimerRow } from "@/src/db/timetrackRepo"
-import { alertedEntryIds, runningTimersPastAsServer, timezoneAsServer } from "@/src/db/notificationsRepo"
+import { timerAlertsDueAsServer, timezoneAsServer } from "@/src/db/notificationsRepo"
 import { sendToPerson, type PushPayload } from "@/src/notifications/pushService"
 import { getTodayInTimezone, toZonedDate } from "@/src/shared/dateUtils"
 import { ROUTES } from "@/src/shared/routes"
@@ -308,8 +308,8 @@ export const ALERT_AFTER_MS = 6 * 3_600_000
 /** The night the alert waits through, in the person's zone: 23:00 to 07:00. */
 const NIGHT_START = 23 * 60
 const NIGHT_END = 7 * 60
-/** Timers older than this are not asked about any more (see `runningTimersPastAsServer`). */
-const ALERT_LOOKBACK_MS = 7 * 24 * 3_600_000
+/** The most alerts one tick sends: one per person, so this many people at once. */
+const ALERTS_PER_TICK = 200
 
 /**
  * May the alert ring for a timer started at `startedAt`, at `now`?
@@ -334,15 +334,18 @@ export interface AlertClockResult {
  * timer past 6 h not yet alerted rings once, unless it is night where its
  * person is. The send log records the alert before it goes, one per entry, so
  * a second tick — or two racing — never rings it again.
+ *
+ * Which timers are due is the database's list (`timetrack_alerts_due`, one
+ * per person, eligible ones only, oldest first), so no account's entries can
+ * crowd out another's. The 6 h and night rules are checked here once more, in
+ * the person's zone as the app reads it.
  */
 export async function runTimerAlertClock(now: Date = new Date()): Promise<AlertClockResult> {
-  const candidates = await runningTimersPastAsServer(new Date(now.getTime() - ALERT_AFTER_MS), new Date(now.getTime() - ALERT_LOOKBACK_MS))
-  const alerted = candidates.length > 0 ? await alertedEntryIds(candidates.map((c) => c.id)) : new Set<string>()
+  const candidates = await timerAlertsDueAsServer(ALERTS_PER_TICK)
   const result: AlertClockResult = { candidates: candidates.length, sent: 0, held: 0, failed: 0 }
 
   await Promise.all(
     candidates
-      .filter((c) => !alerted.has(c.id))
       .map(async (c) => {
         try {
           const timezone = await timezoneAsServer(c.userId)

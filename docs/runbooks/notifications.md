@@ -44,8 +44,10 @@ Built by `Plans/time-tracker-like-toggl.md`, Phase 7: `src/timetrack/runningTime
   when the tracker next opens.
 - **The 6 h alert.** `timetrack_alert_due()` makes the database's clock call the tick when a running entry has
   passed 6 h, has no `timetrack-alert` row in `notification_sends`, its person has a device showing the timer,
-  and it is 07:00–22:59 in their zone. The tick (`runTimerAlertClock`) checks again and sends once, with
-  sound; the unique index `notification_sends_one_alert_per_entry` refuses a second record for the entry.
+  and it is 07:00–22:59 in their zone. The tick (`runTimerAlertClock`) reads the list itself from
+  `timetrack_alerts_due(200)`: those rules, applied before the limit, at most one entry per person (their
+  oldest), oldest first, so no account's entries can crowd out another's. It checks again and sends once,
+  with sound; the unique index `notification_sends_one_alert_per_entry` refuses a second record for the entry.
 
 Read-only checks (put the person's id in):
 

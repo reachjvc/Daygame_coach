@@ -38,8 +38,9 @@
 --    `timetrack_alert_due()` says an alert is due: a running entry past 6 h,
 --    not yet alerted, of a person with a device showing the timer, where it
 --    is between 07:00 and 22:59 for them. The night hold is checked here too,
---    so a forgotten timer is not 480 calls a night that each send nothing. The
---    site checks every rule again; this only decides whether to ask it.
+--    so a forgotten timer is not 480 calls a night that each send nothing.
+--    `timetrack_alerts_due(p_limit)` is the list itself, which the site's
+--    clock reads; the check above is "is that list empty", so the two agree.
 --
 -- Row security is unchanged: `push_devices` has no client policy at all, and
 -- `notification_sends` stays read-only to its owner, written by the server.
@@ -67,9 +68,57 @@ create unique index if not exists notification_sends_one_alert_per_entry
   on public.notification_sends (entry_id)
   where kind = 'timetrack-alert';
 
--- Is a 6 h alert due, for anyone (or for `p_user`)? A zone name Postgres does
--- not know is read as UTC rather than raising: an error here would stop the
--- reminders' tick too.
+-- THE 6 H ALERTS DUE NOW, as the site's clock (`runTimerAlertClock`) asks for
+-- them: not yet alerted, of a person with a device showing the timer, started
+-- 6 h to 7 days ago, inside that person's 07:00–22:59, and AT MOST ONE PER
+-- PERSON — their oldest — oldest first, at most `p_limit`.
+--
+-- Every rule is applied BEFORE the limit (security review, 2026-11-04). The
+-- clock used to take the 200 newest running entries of everyone and drop the
+-- ineligible ones after: start times are a device's to set and one sync takes
+-- 1,600 rows, so one account could fill all 200 places with entries just past
+-- 6 h, and those of an account with no timer device are never marked alerted,
+-- so they held the places for good and nobody else's timer ever rang. One per
+-- person means one account takes one place; the next tick offers its next.
+--
+-- A zone name Postgres does not know is read as UTC rather than raising: an
+-- error here would stop the reminders' tick too.
+create or replace function public.timetrack_alerts_due(p_limit integer)
+returns table (id text, user_id uuid, description text, project_name text, started_at timestamptz)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select d.id, d.user_id, d.description, d.project_name, d.started_at
+    from (
+      select distinct on (e.user_id)
+             e.id, e.user_id, e.description, pr.name as project_name, e.started_at
+        from public.timetrack_entries as e
+        left join public.timetrack_projects as pr on pr.id = e.project_id
+        left join public.profiles as p on p.id = e.user_id
+       where e.stopped_at is null
+         and e.deleted_at is null
+         and e.started_at <= now() - interval '6 hours'
+         and e.started_at > now() - interval '7 days'
+         and exists (select 1 from public.push_devices as dv where dv.user_id = e.user_id and dv.timer_running)
+         and not exists (
+           select 1 from public.notification_sends as s where s.kind = 'timetrack-alert' and s.entry_id = e.id
+         )
+         and extract(hour from now() at time zone (
+               case when p.timezone in (select name from pg_catalog.pg_timezone_names) then p.timezone else 'UTC' end
+             )) between 7 and 22
+       order by e.user_id, e.started_at asc, e.id asc
+    ) as d
+   order by d.started_at asc, d.id asc
+   limit greatest(coalesce(p_limit, 0), 0)
+$$;
+
+revoke all on function public.timetrack_alerts_due(integer) from public, anon, authenticated;
+grant execute on function public.timetrack_alerts_due(integer) to service_role;
+
+-- Is a 6 h alert due, for anyone (or for `p_user`)? The same rules as the
+-- site's clock reads, so the database calls exactly when the site would send.
 create or replace function public.timetrack_alert_due(p_user uuid default null)
 returns boolean
 language sql
@@ -78,21 +127,7 @@ security definer
 set search_path = ''
 as $$
   select exists (
-    select 1
-      from public.timetrack_entries as e
-      left join public.profiles as p on p.id = e.user_id
-     where (p_user is null or e.user_id = p_user)
-       and e.stopped_at is null
-       and e.deleted_at is null
-       and e.started_at <= now() - interval '6 hours'
-       and e.started_at > now() - interval '7 days'
-       and exists (select 1 from public.push_devices as d where d.user_id = e.user_id and d.timer_running)
-       and not exists (
-         select 1 from public.notification_sends as s where s.kind = 'timetrack-alert' and s.entry_id = e.id
-       )
-       and extract(hour from now() at time zone (
-             case when p.timezone in (select name from pg_catalog.pg_timezone_names) then p.timezone else 'UTC' end
-           )) between 7 and 22
+    select 1 from public.timetrack_alerts_due(2147483647) as a where p_user is null or a.user_id = p_user
   )
 $$;
 
