@@ -13,8 +13,11 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CALENDAR_ZOOMS } from "../config"
 import { useIsMobile } from "../hooks/useIsMobile"
+import type { PushToast } from "../hooks/useTimetrack"
 import { serverNowIso } from "../serverClock"
+import { withNeighbours } from "../timeFixService"
 import { AfterCheckContext } from "./afterCheck"
+import { announceNeighbours } from "./neighbourNotice"
 import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
 import {
   dayColumnSeconds,
@@ -77,8 +80,8 @@ export function CalendarView({
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   nowSec: number
-  /** the third argument is an Undo; see the displaced-timer toast below */
-  pushToast: (text: string, tone?: "info" | "error", undo?: () => void) => void
+  /** the third argument is an Undo; see the displaced-timer toast below, and "Keep ‘B’ as it was" on a resize */
+  pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
   onOpenIntegrations: () => void
 }) {
@@ -215,16 +218,32 @@ export function CalendarView({
         }
       }
     } else if (mode === "resize" && drag.entryId) {
-      const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)
       suppressClick.current = true
-      const stopAt = { stop: isoAtMinutes(day, end) }
-      const refusal = updateEntry(state, drag.entryId, stopAt, nowIso()).violations[0]
-      if (refusal) pushToast(refusal.message, "error")
-      else
+      /**
+       * A press on the bottom edge that never moved is a click, not a resize.
+       * It used to write the pressed minute, snapped to five, as the end — so
+       * a tap meant to open the entry trimmed it — and now that a resize can
+       * move the entry below as well (D12), a tap would have moved two.
+       */
+      if (drag.currentMinutes === drag.startMinutes + (drag.grabOffset ?? 0)) {
+        setDrag(null)
+        return
+      }
+      const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)
+      const entryId = drag.entryId
+      const now = nowIso()
+      // the bottom edge is the end, so the entry that started where it ended moves with it (D12)
+      const apply = (base: TimetrackState) =>
+        withNeighbours(base, entryId, now, (edited) => updateEntry(edited, entryId, { stop: isoAtMinutes(day, end) }, now))
+      const checked = apply(state)
+      if (checked.violations[0]) pushToast(checked.violations[0].message, "error")
+      else {
         setState((current) => {
-          const applied = updateEntry(current, drag.entryId!, stopAt, nowIso())
+          const applied = apply(current)
           return applied.violations.length > 0 ? current : applied.state
         })
+        announceNeighbours(checked, state.user.timeFormat, setState, pushToast)
+      }
     }
     setDrag(null)
   }
@@ -449,8 +468,9 @@ export function CalendarView({
                           calendarName={calendar?.name ?? "Calendar"}
                           onStart={(draft) =>
                             // held until the check after opening or waking lands (D2)
-                            (afterCheck ?? ((run) => run(state)))((latest) => {
-                              const result = startTimer(latest, draft, nowIso())
+                            (afterCheck ?? ((run) => run(state, nowIso())))((latest, tappedAt) => {
+                              // stamped at the tap, not when the check let it through (bug audit A6)
+                              const result = startTimer(latest, draft, tappedAt)
                               if (result.violations.length > 0) {
                                 pushToast(result.violations[0].message, "error")
                                 return

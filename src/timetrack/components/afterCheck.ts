@@ -17,12 +17,24 @@
 
 import { createContext } from "react"
 
-import type { TimetrackState } from "../types"
+import type { EntryDraft, IsoDateTime, TimetrackState } from "../types"
 
 /**
+ * `run` is handed the workspace as it is now and `tappedAt`, the moment of the
+ * tap on the server's clock — not the moment the check let it through, which
+ * is up to three seconds later (bug audit A6). A stop or a start stamps that.
+ *
  * `always`: run it even if the running timer changed meanwhile — for a start
  * link, which nobody can "tap again".
+ *
+ * `keepAsNext`: a Start's draft. If the check finds a timer the other device
+ * started, the Start is dropped like any other — and these words wait in the
+ * running bar's box for the next thing, one tap from Switch now, instead of
+ * being replaced by the other timer's (bug audit A5).
  */
-export type AfterCheck = (run: (latest: TimetrackState) => void, options?: { always?: boolean }) => void
+export type AfterCheck = (
+  run: (latest: TimetrackState, tappedAt: IsoDateTime) => void,
+  options?: { always?: boolean; keepAsNext?: EntryDraft },
+) => void
 
 export const AfterCheckContext = createContext<AfterCheck | null>(null)

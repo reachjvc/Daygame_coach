@@ -41,3 +41,16 @@ export function serverNowIso(): string {
 export function forgetServerClock(): void {
   known = null
 }
+
+/**
+ * A moment measured on this device's clock, as the server's time.
+ *
+ * For a tap held until the check lands (D2): the moment is taken when the
+ * finger comes down and stamped when the tap is replayed, with the offset as
+ * it is known THEN — the check that held the tap is often the answer that
+ * teaches the offset. Reading the clock at the replay instead stamped every
+ * stop on a phone that had just woken up to three seconds late (bug audit A6).
+ */
+export function serverIsoAt(deviceMs: number): string {
+  return new Date(deviceMs + clockOffset(known)).toISOString()
+}

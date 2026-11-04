@@ -6,7 +6,7 @@
  * split, favorite, copy start link, delete) and multi-select bulk edit.
  */
 
-import { useContext, useEffect, useRef, useState } from "react"
+import { Fragment, useContext, useEffect, useRef, useState } from "react"
 import type { KeyboardEvent } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -30,10 +30,12 @@ import {
 import {
   dateKey,
   daysBetween,
+  epochSeconds,
   formatClock,
   formatDate,
   formatDayHeader,
   formatDuration,
+  formatIdleSpan,
   formatTimeOfDay,
   parseDurationInput,
   parseEndTimeInput,
@@ -67,11 +69,25 @@ import {
   updateEntry,
   weekTotalSeconds,
 } from "../timetrackService"
-import type { EntryRow, Id, TimeEntry, TimetrackState } from "../types"
+import {
+  endNow,
+  endWhereNextStarts,
+  entryAfter,
+  entryBefore,
+  jointsOf,
+  mendJoint,
+  shiftEdge,
+  startWhereLastEnded,
+  undoStopAt,
+  withNeighbours,
+  type Joint,
+} from "../timeFixService"
+import type { EntryRow, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
 import { serverNow, serverNowIso } from "../serverClock"
 import { AfterCheckContext } from "./afterCheck"
+import { announceNeighbours } from "./neighbourNotice"
 import { announceEndedEarly, askAboutTypedTime, askBeforeLong } from "./TimerBar"
 
 interface EntryListProps {
@@ -108,6 +124,20 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
   const groups = allGroups.slice(0, visibleDays)
   const todayKey = dateKey(new Date(nowSec * 1000))
   const weekSeconds = weekTotalSeconds(entries, todayKey, state.user.weekStart, nowSec)
+  /** overlaps and small gaps, by the pair of entries either side: see `jointsOf` */
+  const joints = new Map(jointsOf(entries, new Date(nowSec * 1000).toISOString()).map((joint) => [`${joint.earlierId}>${joint.laterId}`, joint]))
+  /**
+   * The mark between two rows, when they are two single entries next to each
+   * other in time. The list runs newest first, so the row below is the
+   * earlier one. A collapsed group holds entries from all over the day, so a
+   * mark beside one would be about an entry you cannot see.
+   */
+  const jointBelow = (rows: EntryRow[], index: number): Joint | null => {
+    const later = rows[index]
+    const earlier = rows[index + 1]
+    if (!earlier || later.grouped || earlier.grouped) return null
+    return joints.get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
+  }
 
   const toggleSelect = (ids: Id[]) => {
     setSelected((current) => {
@@ -225,9 +255,11 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
           </header>
 
           <ul className="divide-y divide-border">
-            {group.rows.map((row) => (
+            {group.rows.map((row, index) => {
+              const joint = jointBelow(group.rows, index)
+              return (
+              <Fragment key={row.key}>
               <EntryRowView
-                key={row.key}
                 row={row}
                 state={state}
                 setState={setState}
@@ -247,7 +279,10 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
                 onGoToProject={onGoToProject}
                 isMobile={isMobile}
               />
-            ))}
+              {joint && <JointMark joint={joint} state={state} setState={setState} pushToast={pushToast} />}
+              </Fragment>
+              )
+            })}
           </ul>
         </section>
       ))}
@@ -503,20 +538,30 @@ function EntryFields({
       return
     }
     const write = (at: string) => {
-      if (which === "stop") {
-        if (patch({ stop: at })) announceNextDay(entry.start, at, latestState.current, pushToast)
+      /**
+       * A touching neighbour moves with the edge (D12): see `withNeighbours`.
+       * The row's start and end boxes are only drawn for a single entry, never
+       * for a collapsed group, so this edits the one entry and not through
+       * `patch`'s group path. A start after the end moves the entry
+       * (`setEntryStart`), which moves no neighbour.
+       */
+      const now = nowIso()
+      const apply = (base: TimetrackState) =>
+        withNeighbours(base, entry.id, now, (edited) =>
+          which === "stop" ? updateEntry(edited, entry.id, { stop: at }, now) : setEntryStart(edited, entry.id, at, now),
+        )
+      const checked = apply(latestState.current)
+      if (checked.violations[0]) {
+        pushToast(checked.violations[0].message, "error")
         return
       }
-      // a start after the end moves the entry: see `setEntryStart`
-      const refusal = setEntryStart(latestState.current, entry.id, at, nowIso()).violations[0]
-      if (refusal) {
-        pushToast(refusal.message, "error")
-        return
-      }
+      latestState.current = checked.state
       setState((current) => {
-        const applied = setEntryStart(current, entry.id, at, nowIso())
+        const applied = apply(current)
         return applied.violations.length > 0 ? current : applied.state
       })
+      if (which === "stop") announceNextDay(entry.start, at, checked.state, pushToast)
+      announceNeighbours(checked, checked.state.user.timeFormat, setState, pushToast)
     }
     // longer than 12 hours asks first: see `askBeforeLong`
     const span = { start: entry.start, stop: entry.stop ?? nowIso() }
@@ -559,8 +604,9 @@ function EntryFields({
       type="button"
       onClick={() =>
         // held until the check after opening or waking lands, then run on the workspace as it is (D2)
-        (afterCheck ?? ((run) => run(latestState.current)))((latest) => {
-          const result = continueEntry(latest, entry.id, nowIso())
+        // stamped at the tap, not when the check let it through (bug audit A6)
+        (afterCheck ?? ((run) => run(latestState.current, nowIso())))((latest, tappedAt) => {
+          const result = continueEntry(latest, entry.id, tappedAt)
           if (result.violations.length > 0) {
             pushToast(result.violations[0].message, "error")
             return
@@ -1067,6 +1113,95 @@ function MenuItem({
 }
 
 // ---------------------------------------------------------------------------
+// Overlap and gap marks (Phase 4, item 6)
+// ---------------------------------------------------------------------------
+
+/**
+ * THE MARK BETWEEN TWO ENTRIES THAT DO NOT MEET.
+ *
+ * An overlap is time counted twice in the day's total, and in the list it
+ * looked like nothing at all: the owner's records held three, from 33 seconds
+ * to almost 4 minutes, and two small gaps, every one left by a hand fix. Red
+ * for an overlap, with Fix; quiet for a gap, with Close gap. Each says what it
+ * will do in its accessible name and puts it back with Undo.
+ */
+function JointMark({
+  joint,
+  state,
+  setState,
+  pushToast,
+}: {
+  joint: Joint
+  state: TimetrackState
+  setState: (updater: (current: TimetrackState) => TimetrackState) => void
+  pushToast: PushToast
+}) {
+  const afterCheck = useContext(AfterCheckContext)
+  const earlier = state.entries.find((e) => e.id === joint.earlierId)
+  const later = state.entries.find((e) => e.id === joint.laterId)
+  if (!earlier || !later) return null
+  const format = state.user.timeFormat
+  const quoted = (entry: TimeEntry) => `“${entry.description.trim() || "(no description)"}”`
+  const overlap = joint.kind === "overlap"
+  // Fix ends the earlier where the later starts; Close gap starts the later where the earlier ended
+  const moment = overlap ? later.start : (earlier.stop ?? later.start)
+  const time = formatTimeOfDay(moment, format)
+
+  const mend = (latest: TimetrackState) => {
+    const now = serverNowIso()
+    const result = mendJoint(latest, joint, now)
+    if (result.violations[0]) {
+      pushToast(result.violations[0].message, "error")
+      return
+    }
+    setState((current) => {
+      const applied = mendJoint(current, joint, now)
+      return applied.violations.length > 0 ? current : applied.state
+    })
+    const before = latest.entries.find((e) => e.id === (overlap ? earlier.id : later.id))
+    if (!before) return
+    // Undo puts back the one edge the fix moved, on whatever the workspace is by then
+    const undo = (current: TimetrackState): { state: TimetrackState; violations: SaveViolation[] } =>
+      overlap
+        ? before.stop === null
+          ? undoStopAt(current, before.id, serverNowIso())
+          : updateEntry(current, before.id, { stop: before.stop }, serverNowIso())
+        : updateEntry(current, before.id, { start: before.start }, serverNowIso())
+    pushToast(
+      overlap ? `Ended ${quoted(earlier)} at ${time}, where ${quoted(later)} starts` : `Started ${quoted(later)} at ${time}, where ${quoted(earlier)} ended`,
+      "info",
+      () =>
+        setState((current) => {
+          const undone = undo(current)
+          return undone.violations.length > 0 ? current : undone.state
+        }),
+    )
+  }
+
+  return (
+    <li
+      data-joint={joint.kind}
+      className={cn("flex items-center gap-2 px-3 text-[11px]", overlap ? "text-destructive" : "text-muted-foreground")}
+    >
+      <span aria-hidden className={cn("h-px flex-1", overlap ? "bg-destructive/70" : "bg-border")} />
+      <span>{overlap ? `Overlap of ${formatIdleSpan(joint.seconds)}` : `Gap of ${formatIdleSpan(joint.seconds)}`}</span>
+      <button
+        type="button"
+        aria-label={overlap ? `Fix: end ${quoted(earlier)} at ${time}` : `Close gap: start ${quoted(later)} at ${time}`}
+        onClick={() =>
+          // fixing an overlap with a running timer stops it, so it waits for the check like Stop (D2)
+          overlap && earlier.stop === null && afterCheck ? afterCheck(mend) : mend(state)
+        }
+        className="min-h-11 rounded px-2 font-medium underline-offset-2 hover:underline sm:min-h-7"
+      >
+        {overlap ? "Fix" : "Close gap"}
+      </button>
+      <span aria-hidden className={cn("h-px w-6", overlap ? "bg-destructive/70" : "bg-border")} />
+    </li>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Bulk edit
 // ---------------------------------------------------------------------------
 
@@ -1139,6 +1274,7 @@ export function EntryDetailModalBody({
 
   const latestState = useRef(state)
   latestState.current = state
+  const afterCheck = useContext(AfterCheckContext)
 
   /**
    * ON THIS SHEET, AN EDIT IS SAVED WHEN IT IS MADE.
@@ -1297,13 +1433,16 @@ export function EntryDetailModalBody({
     }
     const field = edit.field
     const write = (at: string) => {
-      if (field === "stop") {
-        if (landOnCurrent((base) => updateEntry(base, entry.id, { stop: at }, nowIso()))) {
-          announceNextDay(current.start, at, latestState.current, pushToast)
-        }
-      }
-      // a start after the end moves the entry: see `setEntryStart`
-      else landOnCurrent((base) => setEntryStart(base, entry.id, at, nowIso()))
+      // a touching neighbour moves with the edge (D12); a start after the end moves the entry (`setEntryStart`)
+      const now = nowIso()
+      const landed = landOnCurrent((base) =>
+        withNeighbours(base, entry.id, now, (edited) =>
+          field === "stop" ? updateEntry(edited, entry.id, { stop: at }, now) : setEntryStart(edited, entry.id, at, now),
+        ),
+      )
+      if (!landed) return
+      if (field === "stop") announceNextDay(current.start, at, latestState.current, pushToast)
+      announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
     }
     // longer than 12 hours asks first: see `askBeforeLong`
     const span = { start: current.start, stop: current.stop ?? nowIso() }
@@ -1339,6 +1478,66 @@ export function EntryDetailModalBody({
       aria-label={label}
       className="text-center tabular-nums sm:h-8"
     />
+  )
+
+  /**
+   * THE ONE-TAP FIXES (Phase 4, item 4): −5 / +5 on each end, "Start where the
+   * last one ended", "End where the next one starts" and "End now".
+   *
+   * Every fix here used to be a clock time read off one place and typed into
+   * another — and the seconds of the entry next door are not shown anywhere,
+   * which is how the owner's hand fixes left overlaps of 33 and 41 seconds.
+   * These take the time itself. Each is an end or a start edit, so a touching
+   * neighbour moves with it (D12), and the ones that can reach far — the entry
+   * before may have ended yesterday — ask first when the result is over 12
+   * hours (D10). Ending a running timer is a Stop, so that waits for the check
+   * like Stop does (D2).
+   */
+  const oneTap = (apply: (base: TimetrackState, now: IsoDateTime) => { state: TimetrackState; violations: SaveViolation[] }, askIfLong = false) => {
+    const run = () => {
+      const now = nowIso()
+      const landed = landOnCurrent((base) => withNeighbours(base, entry.id, now, (edited) => apply(edited, now)))
+      if (landed) announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
+    }
+    if (!askIfLong) {
+      run()
+      return
+    }
+    const checked = apply(latestState.current, nowIso())
+    if (checked.violations[0]) {
+      pushToast(checked.violations[0].message, "error")
+      return
+    }
+    const fixed = checked.state.entries.find((e) => e.id === entry.id)
+    askBeforeLong(fixed ? entrySeconds(fixed, Math.floor(serverNow() / 1000)) : 0, run, pushToast)
+  }
+  /**
+   * A fix that ends a running timer goes through the check (D2), on the
+   * workspace as it is when it lands, with the moment of the tap (bug audit A6)
+   */
+  const stopsTheTimer = (fix: (tappedAt: IsoDateTime) => void) => {
+    if (!running || !afterCheck) {
+      fix(nowIso())
+      return
+    }
+    afterCheck((latest, tappedAt) => {
+      latestState.current = latest
+      fix(tappedAt)
+    })
+  }
+  const before = entryBefore(state, entry.id)
+  const after = entryAfter(state, entry.id)
+  const nudge = (edge: "start" | "stop", minutes: number, label: string) => (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      aria-label={label}
+      onClick={() => oneTap((base, now) => shiftEdge(base, entry.id, edge, minutes * 60, now))}
+      className="h-11 min-w-0 flex-1 px-0 tabular-nums sm:h-7"
+    >
+      {minutes < 0 ? `−${-minutes}` : `+${minutes}`}
+    </Button>
   )
 
   const endDays = entry.stop ? daysBetween(dateKey(entry.start), dateKey(entry.stop)) : 0
@@ -1396,6 +1595,54 @@ export function EntryDetailModalBody({
             <span className="block">Duration</span>
             {timeBox("duration", "Duration", durationShown)}
           </label>
+        </div>
+        {/* under the box each one moves, so a thumb finds them where it just was */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="flex gap-1">
+            {nudge("start", -5, "Start 5 minutes earlier")}
+            {nudge("start", 5, "Start 5 minutes later")}
+          </div>
+          {/* a running timer has no end to nudge; End now, below, is its Stop */}
+          <div className="flex gap-1">
+            {!running && nudge("stop", -5, "End 5 minutes earlier")}
+            {!running && nudge("stop", 5, "End 5 minutes later")}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {before?.stop && before.stop !== entry.start && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-11 sm:h-7"
+              onClick={() => oneTap((base, now) => startWhereLastEnded(base, entry.id, now), true)}
+            >
+              Start where the last one ended
+            </Button>
+          )}
+          {after && after.start !== entry.stop && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-11 sm:h-7"
+              onClick={() => stopsTheTimer(() => oneTap((base, now) => endWhereNextStarts(base, entry.id, now), true))}
+            >
+              End where the next one starts
+            </Button>
+          )}
+          {/* not on an entry that has not begun: it would end before it starts */}
+          {epochSeconds(entry.start) <= nowSec && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-11 sm:h-7"
+              onClick={() => stopsTheTimer((tappedAt) => oneTap((base) => endNow(base, entry.id, tappedAt), !running))}
+            >
+              End now
+            </Button>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">Duration: 90 = 90 min · 1.5 = 1 h 30</p>
         {running && (

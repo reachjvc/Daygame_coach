@@ -6,13 +6,13 @@
  * favorites strip and the autotracker suggestion.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useContext, useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { serverNowIso } from "../serverClock"
-import { IconAuto, IconFavorite, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
+import { IconAuto, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
   LONG_ENTRY_SECONDS,
   dateKey,
@@ -33,6 +33,8 @@ import {
   createManualEntry,
   createTag,
   createProject,
+  deleteEntries,
+  emptyDraft,
   entrySeconds,
   findFavorite,
   forgottenTimer,
@@ -42,13 +44,17 @@ import {
   runningEntry,
   setRunningElapsed,
   toggleFavorite,
+  undoDisplacement,
 } from "../timetrackService"
+import { stopAt, switchAt, undoStopAt } from "../timeFixService"
 import type { EntryDraft, Id, IsoDate, IsoDateTime, TimeEntry, TimetrackState } from "../types"
 import { MANUAL_FORM_KEY } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import type { PushToast } from "../hooks/useTimetrack"
+import { AfterCheckContext } from "./afterCheck"
+import { MomentDialog, type MomentKind } from "./MomentPicker"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
-import { ColorDot, DayPicker, touchTarget } from "./primitives"
+import { ColorDot, DayPicker, Dropdown, touchRow, touchTarget } from "./primitives"
 
 /**
  * Said whenever a duration typed into a running timer ended it, with the other
@@ -226,6 +232,13 @@ interface TimerBarProps {
   /** opens the detail sheet, where a running timer's date and end can be set */
   onEditEntry: (entry: TimeEntry) => void
   pushToast: PushToast
+  /**
+   * The next thing, typed under a running timer for Switched at… — held by the
+   * tracker, because a Start the other device beat puts its words here (bug
+   * audit A5). Without them the bar keeps its own.
+   */
+  next?: EntryDraft
+  setNext?: (draft: EntryDraft) => void
 }
 
 export function TimerBar({
@@ -242,6 +255,8 @@ export function TimerBar({
   onStop,
   onEditEntry,
   pushToast,
+  next: nextFromTracker,
+  setNext: setNextInTracker,
 }: TimerBarProps) {
   /**
    * The freshest state and draft, for the description commit that runs on a
@@ -510,6 +525,89 @@ export function TimerBar({
     edit({ tagIds: [...new Set([...latestDraft.current.tagIds, created.id])] }, created.state)
   }
 
+  /**
+   * SWITCHED AT…, STOPPED AT… AND STARTED AT… (Phase 4 in
+   * Plans/time-tracker-like-toggl.md).
+   *
+   * The next thing has a box of its own while a timer runs, because the bar's
+   * description box is the running entry's: typing "Email" there renames Deep
+   * work, which is right for a typo and wrong for a switch. With nothing
+   * running, the bar's description IS the next thing, and the same picker
+   * starts it at a moment that has passed (Started at…).
+   */
+  const [ownNext, setOwnNext] = useState<EntryDraft>(emptyDraft)
+  const nextDraft = nextFromTracker ?? ownNext
+  const setNextDraft = setNextInTracker ?? setOwnNext
+  const nextDescription = nextDraft.description
+  const setNextDescription = (description: string) => setNextDraft({ ...nextDraft, description })
+  const [moment, setMoment] = useState<{ kind: MomentKind; openedAt: IsoDateTime; draft: EntryDraft } | null>(null)
+  const afterCheck = useContext(AfterCheckContext)
+
+  const openMoment = (kind: MomentKind) => {
+    commitDescription.flush()
+    const draftForNext = kind === "start" ? latestDraft.current : { ...nextDraft, description: nextDescription.trim() }
+    setMoment({ kind, openedAt: serverNowIso(), draft: draftForNext })
+  }
+
+  /**
+   * Ends the running timer, so it waits for the check like Stop does (D2): run
+   * on the account's copy when the check lands, or dropped with a word when the
+   * timer it was about is no longer the one running (`TogglLab`'s `afterCheck`).
+   * Without the tracker around it — a test, a component on its own — it runs
+   * at once on the workspace this bar holds.
+   */
+  const confirmMoment = (kind: MomentKind, atIso: IsoDateTime, nextDraft: EntryDraft) => {
+    setMoment(null)
+    const gate = afterCheck ?? ((run: (latest: TimetrackState, tappedAt: IsoDateTime) => void) => run(latestState.current, serverNowIso()))
+    gate((latest) => {
+      const nowIso = serverNowIso()
+      const when = (iso: IsoDateTime) => formatWhen(iso, latest.user.timeFormat, dateKey(nowIso))
+      const quoted = (entry: TimeEntry) => `“${entry.description.trim() || "(no description)"}”`
+
+      if (kind === "stop") {
+        const result = stopAt(latest, atIso, nowIso)
+        if (result.violations[0] || !result.stopped) {
+          pushToast(result.violations[0]?.message ?? "Nothing is running", "error")
+          return
+        }
+        const stopped = result.stopped
+        setState(() => result.state)
+        pushToast(`Stopped ${quoted(stopped)} ${when(stopped.stop ?? atIso)}`, "info", () => {
+          // read when Undo is pressed: another timer may have started by then
+          const refusal = undoStopAt(latestState.current, stopped.id, serverNowIso()).violations[0]
+          if (refusal) {
+            pushToast(refusal.message, "error")
+            return
+          }
+          setState((current) => {
+            const resumed = undoStopAt(current, stopped.id, serverNowIso())
+            return resumed.violations.length > 0 ? current : resumed.state
+          })
+        })
+        return
+      }
+
+      const result = switchAt(latest, nextDraft, atIso, nowIso)
+      if (result.violations[0] || !result.started) {
+        pushToast(result.violations[0]?.message ?? "Could not start the next entry", "error")
+        return
+      }
+      const { stopped, started } = result
+      setState(() => result.state)
+      if (kind === "switch") setNextDraft(emptyDraft)
+      if (stopped) {
+        // one change, one Undo: the next entry goes and the first runs again from its own start
+        pushToast(`${quoted(stopped)} ended ${when(started.start)} and ${quoted(started)} started then`, "info", () =>
+          setState((current) => undoDisplacement(current, started.id, stopped.id, serverNowIso())),
+        )
+        return
+      }
+      pushToast(`Started ${quoted(started)} ${when(started.start)}`, "info", () =>
+        setState((current) => deleteEntries(current, [started.id], serverNowIso()).state),
+      )
+    })
+  }
+
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center">
@@ -658,18 +756,112 @@ export function TimerBar({
         timer left running since yesterday looked like a long day. Naming the day
         is what tells you it was forgotten, and the fix sits beside it.
       */}
+      {/*
+        "STARTED 09:00 · STOP AT…" (Phase 4, item 7). The end of a running timer
+        lived in the detail sheet, behind "Change times", so ending a forgotten
+        one where the work ended was a trip to another screen. Stop at… sits
+        beside the start now; the sheet is in the ⋮ menu.
+      */}
       {mode === "timer" && running && (
-        <div className="flex flex-wrap items-center gap-x-2 border-t border-border px-3 py-1 text-xs text-muted-foreground">
-          <span>
-            Started {formatWhen(running.start, state.user.timeFormat, dateKey(new Date(nowSec * 1000)))}
-            {forgottenTimer(state, nowSec) && (
-              <span className="text-foreground"> — forgot to stop it? Type how long you really worked into the timer, and it ends then.</span>
+        <div className="border-t border-border px-3 pb-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-x-1">
+            <span className="min-w-0 flex-1">
+              Started {formatWhen(running.start, state.user.timeFormat, dateKey(new Date(nowSec * 1000)))}
+              {forgottenTimer(state, nowSec) && (
+                <span className="text-foreground"> — forgot to stop it? Stop at… ends it where the work did.</span>
+              )}
+            </span>
+            <Button size="sm" variant="ghost" className="h-11 shrink-0 px-2 sm:h-7" onClick={() => openMoment("stop")}>
+              Stop at…
+            </Button>
+            <Dropdown
+              align="right"
+              width="w-52"
+              ariaLabel="More timer actions"
+              trigger={() => (
+                <span className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}>
+                  <IconMenu className="size-5 sm:size-4" />
+                </span>
+              )}
+            >
+              {(close) => (
+                <div className="py-1 text-sm">
+                  {(
+                    [
+                      ["Switched at…", () => openMoment("switch")],
+                      ["Stopped at…", () => openMoment("stop")],
+                      ["Change times", () => onEditEntry(running)],
+                    ] as const
+                  ).map(([label, run]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => {
+                        close()
+                        run()
+                      }}
+                      className={cn("flex w-full items-center px-3 py-1.5 text-left hover:bg-secondary/60", touchRow)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Dropdown>
+          </div>
+          {/* the next thing, in a box of its own: see `nextDescription` */}
+          {/* on a phone the box keeps its whole row and the two buttons share the next: beside them it was 90px wide */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={nextDescription}
+              onChange={(event) => setNextDescription(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || !nextDescription.trim()) return
+                event.preventDefault()
+                openMoment("switch")
+              }}
+              placeholder="Switched to something else?"
+              aria-label="Next entry"
+              className="h-11 min-w-0 basis-full text-sm sm:h-8 sm:basis-0 sm:flex-1"
+            />
+            {nextDescription.trim() !== "" && (
+              <>
+                {/* one tap: the running one ends now and this starts now, stamped at the tap (A5, A6) */}
+                <Button
+                  size="sm"
+                  className="h-11 flex-1 px-3 sm:h-8 sm:flex-none"
+                  onClick={() => confirmMoment("switch", serverNowIso(), { ...nextDraft, description: nextDescription.trim() })}
+                >
+                  Switch now
+                </Button>
+                <Button size="sm" variant="outline" className="h-11 flex-1 px-3 sm:h-8 sm:flex-none" onClick={() => openMoment("switch")}>
+                  Switched at…
+                </Button>
+              </>
             )}
-          </span>
-          <Button size="sm" variant="ghost" className="ml-auto h-11 px-2 sm:h-6" onClick={() => onEditEntry(running)}>
-            Change times
+          </div>
+        </div>
+      )}
+
+      {/* Started at…: a typed description, nothing running, and the work began a while ago */}
+      {mode === "timer" && !running && !typedLength && draft.description.trim() !== "" && (
+        <div className="flex items-center justify-end gap-x-1 border-t border-border px-3 text-xs text-muted-foreground">
+          <span>Began a while ago?</span>
+          <Button size="sm" variant="ghost" className="h-11 px-2 sm:h-7" onClick={() => openMoment("start")}>
+            Started at…
           </Button>
         </div>
+      )}
+
+      {moment && (
+        <MomentDialog
+          kind={moment.kind}
+          state={state}
+          openedAt={moment.openedAt}
+          draft={moment.draft}
+          onConfirm={(atIso, nextDraft) => confirmMoment(moment.kind, atIso, nextDraft)}
+          onClose={() => setMoment(null)}
+        />
       )}
 
       {showSuggestion && suggestion && (

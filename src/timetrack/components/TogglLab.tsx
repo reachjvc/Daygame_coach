@@ -43,12 +43,13 @@ import { defaultReportConfig, decodeReportConfig } from "../reportsService"
 import { dateKey, formatClock, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatService"
 import {
   draftFromStartLink,
+  draftOf,
   emptyDraft,
   markAlertsRead,
   startTimer,
   toggleFavorite,
 } from "../timetrackService"
-import { serverNowIso } from "../serverClock"
+import { serverIsoAt } from "../serverClock"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
 import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState } from "../types"
 import { CalendarView } from "./CalendarView"
@@ -295,16 +296,36 @@ export function TogglLab({
    * runs when the check lands — in an effect, after React has drawn what the
    * check brought, so it acts on the account's copy and not the old one.
    */
-  const heldTap = useRef<{ run: (latest: TimetrackState) => void; runningId: Id | null; always: boolean } | null>(null)
+  const heldTap = useRef<{
+    run: (latest: TimetrackState, tappedAt: string) => void
+    runningId: Id | null
+    always: boolean
+    keepAsNext: EntryDraft | null
+    /** when the finger came down, on this device's clock: see `serverIsoAt` */
+    tappedOnDevice: number
+  } | null>(null)
+  /**
+   * The running bar's box for the next thing (`TimerBar`'s Switched at…), kept
+   * here because a dropped Start fills it: see `keepAsNext` in `afterCheck.ts`.
+   */
+  const [nextDraft, setNextDraft] = useState<EntryDraft>(emptyDraft)
   const afterCheck = useCallback<AfterCheck>(
     (run, options) => {
       const latest = latestState.current
       if (!latest) return
+      // the moment of the tap, not of the replay (bug audit A6)
+      const tappedOnDevice = Date.now()
       if (!isChecking()) {
-        run(latest)
+        run(latest, serverIsoAt(tappedOnDevice))
         return
       }
-      heldTap.current = { run, runningId: runningNow.current?.id ?? null, always: options?.always === true }
+      heldTap.current = {
+        run,
+        runningId: runningNow.current?.id ?? null,
+        always: options?.always === true,
+        keepAsNext: options?.keepAsNext ?? null,
+        tappedOnDevice,
+      }
     },
     [isChecking],
   )
@@ -315,16 +336,34 @@ export function TogglLab({
     heldTap.current = null
     if (!tap || !latest) return
     if (!tap.always && (runningNow.current?.id ?? null) !== tap.runningId) {
+      const quoted = (text: string) => `“${text.trim() || "(no description)"}”`
+      /**
+       * A START THE OTHER DEVICE BEAT KEEPS ITS WORDS (bug audit A5).
+       *
+       * "Tap again" was wrong advice here: the box now shows the other
+       * device's timer and the button under the finger is Stop, so tapping
+       * again stopped it, and what was typed was gone. The words wait in the
+       * running bar's box for the next thing instead, beside Switch now.
+       */
+      if (runningNow.current && tap.keepAsNext && tap.keepAsNext.description.trim() !== "") {
+        const kept = tap.keepAsNext
+        setNextDraft(kept)
+        const other = quoted(runningNow.current.description)
+        pushToast(
+          `Your other device changed the timer while this one was checking: ${other} is running now, so ${quoted(kept.description)} did not start. It waits under the timer — Switch now ends ${other} and starts it.`,
+        )
+        return
+      }
       pushToast(
         runningNow.current
-          ? `Your other device changed the timer while this one was checking: “${runningNow.current.description.trim() || "(no description)"}” is running now. Tap again if you still want to.`
+          ? `Your other device changed the timer while this one was checking: ${quoted(runningNow.current.description)} is running now. Tap again if you still want to.`
           : "Your other device stopped the timer while this one was checking. Tap again if you still want to.",
       )
       return
     }
-    tap.run(latest)
+    tap.run(latest, serverIsoAt(tap.tappedOnDevice))
   }, [sync.check.checking, pushToast])
-  const stopTracking = useCallback(() => afterCheck(() => actionsNow.current.stop()), [afterCheck])
+  const stopTracking = useCallback(() => afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt)), [afterCheck])
 
   /**
    * The timer bar's edits, kept for this tab while nothing is running (see
@@ -340,17 +379,42 @@ export function TogglLab({
     keepTimerBar({ mode: next })
   }, [])
 
-  // Mirror the running entry into the draft so the bar shows what is tracking
+  /**
+   * THE BAR SHOWS WHAT IS TRACKING, WHOEVER CHANGED IT (bug audit A4).
+   *
+   * This copied the running entry into the bar only when a different entry
+   * started. A rename or a new project from the other device was stored here
+   * and never shown: the phone's bar said "Gym" over "Gym, legs day", and a
+   * Stop and a Start carried on under the old name. Now every change to the
+   * running entry reaches the bar — except a field the person has changed in
+   * the bar and not yet saved (the description waits for a pause in typing),
+   * because what somebody is typing is never overwritten. "Changed in the bar"
+   * means different from what the bar was last given.
+   */
+  const draftNow = useRef(draft)
+  draftNow.current = draft
+  const mirrored = useRef<{ id: Id; draft: EntryDraft } | null>(null)
+  const runningTags = running?.tagIds.join(",")
   useEffect(() => {
-    if (!running) return
-    setDraftState({
-      description: running.description,
-      projectId: running.projectId,
-      taskId: running.taskId,
-      tagIds: running.tagIds,
-      billable: running.billable,
-    })
-  }, [running?.id]) // deps intentionally narrow: see comment above
+    if (!running) {
+      mirrored.current = null
+      return
+    }
+    const fromEntry = draftOf(running)
+    const last = mirrored.current?.id === running.id ? mirrored.current.draft : null
+    const shown = draftNow.current
+    const keep = <K extends keyof EntryDraft>(key: K, same: (a: EntryDraft[K], b: EntryDraft[K]) => boolean = Object.is) =>
+      last && !same(shown[key], last[key]) ? shown[key] : fromEntry[key]
+    const next: EntryDraft = {
+      description: keep("description"),
+      projectId: keep("projectId"),
+      taskId: keep("taskId"),
+      tagIds: keep("tagIds", (a, b) => a.join(",") === b.join(",")),
+      billable: keep("billable"),
+    }
+    mirrored.current = { id: running.id, draft: fromEntry }
+    setDraftState(next)
+  }, [running?.id, running?.description, running?.projectId, running?.taskId, runningTags, running?.billable]) // deps: the fields the bar shows
 
   /**
    * A timer starting or stopping ends the life of the unstarted draft: it was
@@ -365,6 +429,16 @@ export function TogglLab({
     if (seenRunningId.current !== undefined && seenRunningId.current !== runningId) keepTimerBar({ draft: null })
     seenRunningId.current = runningId
   }, [hasState, runningId])
+
+  /**
+   * The next thing is next after the timer that is running. Once nothing runs
+   * it is about nothing, and left in place it would turn up under whatever
+   * timer starts later. Only on stopping: a timer STARTING is how a Start the
+   * other device beat arrives, and its words are put here on purpose (A5).
+   */
+  useEffect(() => {
+    if (runningId === null) setNextDraft(emptyDraft)
+  }, [runningId])
 
   /** The tracker's own path, `/time` or `/test/toggl`, as it was when it opened */
   const trackerPath = useRef<string | null>(null)
@@ -402,8 +476,8 @@ export function TogglLab({
       setDraftState(linkDraft)
       // on the account's copy, not the one this device opened with (D2)
       afterCheck(
-        (latest) => {
-          const started = startTimer(latest, linkDraft, serverNowIso())
+        (latest, tappedAt) => {
+          const started = startTimer(latest, linkDraft, tappedAt)
           if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
           else {
             setState(() => started.state)
@@ -509,7 +583,8 @@ export function TogglLab({
     (nextDraft?: EntryDraft) => {
       const payload = nextDraft ?? draft
       if (nextDraft) setDraft(nextDraft)
-      afterCheck(() => actionsNow.current.start(payload))
+      // if the other device has a timer running by the time the check lands, these words wait as the next thing (A5)
+      afterCheck((_latest, tappedAt) => actionsNow.current.start(payload, tappedAt), { keepAsNext: payload })
     },
     [afterCheck, draft, setDraft],
   )
@@ -574,7 +649,7 @@ export function TogglLab({
         setMode("manual")
       } else if (key === "c") {
         event.preventDefault()
-        afterCheck(() => actionsNow.current.continueLast())
+        afterCheck((_latest, tappedAt) => actionsNow.current.continueLast(tappedAt))
       } else if (/^[1-9]$/.test(event.key)) {
         const favorite = state.favorites[Number(event.key) - 1]
         if (favorite) {
@@ -817,6 +892,8 @@ export function TogglLab({
               onStop={stopTracking}
               onEditEntry={openEntry}
               pushToast={pushToast}
+              next={nextDraft}
+              setNext={setNextDraft}
             />
             <FavoritesBar
               state={state}
@@ -1050,17 +1127,24 @@ export function TogglLab({
         aria-live="polite"
         className="pointer-events-none fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
       >
-        {toasts.map((toast) => (
+        {toasts.map((toast) => {
+          /**
+           * A question's two answers do not fit beside it on a phone, and nor
+           * does one long answer — "Keep ‘Email’ as it was" squeezed the
+           * sentence beside it into three lines of three words. Either takes
+           * its own row.
+           */
+          const ownRow = Boolean(toast.second) || (toast.undoLabel?.length ?? 0) > 12
+          return (
           <div
             key={toast.id}
             className={cn(
               "pointer-events-auto flex items-center gap-3 rounded-lg border px-3 py-2 text-sm shadow-xl",
               toast.tone === "error" ? "border-destructive/50 bg-destructive/15" : "border-border bg-card",
-              // a question's two answers do not fit beside it on a phone: they take their own row
-              toast.second && "flex-wrap gap-y-1",
+              ownRow && "flex-wrap gap-y-1",
             )}
           >
-            <span className={cn("flex-1", toast.second && "basis-full")}>{toast.text}</span>
+            <span className={cn("flex-1", ownRow && "basis-full")}>{toast.text}</span>
             {toast.undo && (
               <Button
                 size="sm"
@@ -1097,7 +1181,8 @@ export function TogglLab({
               <IconClose className="size-3.5" />
             </button>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

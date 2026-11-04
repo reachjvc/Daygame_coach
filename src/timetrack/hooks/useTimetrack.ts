@@ -807,11 +807,16 @@ export function useTimetrack() {
   )
 
   // --- convenience actions -------------------------------------------------
+  /**
+   * `at` is the moment of the tap, when the tap was held for the check (D2):
+   * stamping the replay instead made a woken phone's stops and starts up to
+   * three seconds late (bug audit A6). Left out, it is now.
+   */
   const actions = useMemo(
     () => ({
-      start(draft: EntryDraft) {
+      start(draft: EntryDraft, at?: string) {
         if (!state) return
-        const result = startTimer(state, draft, serverNowIso())
+        const result = startTimer(state, draft, at ?? serverNowIso())
         if (result.violations.length > 0) {
           pushToast(result.violations[0].message, "error")
           return
@@ -819,13 +824,13 @@ export function useTimetrack() {
         setState(() => result.state)
         announceDisplacement(result.displaced, result.entry)
       },
-      stop() {
-        const nowIso = serverNowIso()
+      stop(at?: string) {
+        const nowIso = at ?? serverNowIso()
         setState((current) => stopTimer(current, nowIso).state)
       },
-      continueLast() {
+      continueLast(at?: string) {
         if (!state) return
-        const nowIso = serverNowIso()
+        const nowIso = at ?? serverNowIso()
         const nowEpoch = epochSeconds(nowIso)
         const stopped = state.entries
           .filter((e) => !isRunning(e) && !e.serverDeletedAt)

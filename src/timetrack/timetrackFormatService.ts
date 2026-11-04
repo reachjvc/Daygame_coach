@@ -545,6 +545,49 @@ export function parseEndTimeInput(raw: string, startIso: IsoDateTime): IsoDateTi
   return epochSeconds(otherHalf) < epochSeconds(asTyped) ? otherHalf : asTyped
 }
 
+/**
+ * A MOMENT TYPED INTO SWITCHED AT…, STOPPED AT… OR STARTED AT…: a time that
+ * has already happened.
+ *
+ * With a timer running, the moment is where that timer ends, so it is read the
+ * way every end is (`parseEndTimeInput`): the first such time at or after the
+ * timer's start. That is what makes "1730" on a timer forgotten since Friday
+ * Friday evening, and "1" on one started at 22:00 one in the morning.
+ *
+ * With nothing running there is no start to measure from, and the moment is
+ * the last time that clock time came round: "2330" just after midnight is last
+ * night, and a bare "3" in the afternoon is three o'clock, the half of the day
+ * that has happened. Whether it is still ahead of the clock is the caller's to
+ * say, because that is a refusal with words, not an unreadable time.
+ */
+export function parseMomentInput(raw: string, earliestIso: IsoDateTime | null, nowIso: IsoDateTime): IsoDateTime | null {
+  const clock = readClock(raw)
+  if (!clock) return null
+  // the minute being typed in counts as passed: 14:30 typed at 14:29:50 is now, not yesterday
+  const latest = epochSeconds(nowIso) + 60
+  if (earliestIso) {
+    const forward = parseEndTimeInput(raw, earliestIso)
+    /**
+     * "0800" on a timer started at 09:00 is 08:00 TOMORROW by the end rule —
+     * which has not happened. What was meant is this morning, before the start,
+     * and saying THAT is the useful refusal; the time that has passed is read
+     * below and the caller says why it cannot be used.
+     */
+    if (forward && epochSeconds(forward) <= latest) return forward
+  }
+  const hours = clock.bareHour ? [clock.h, (clock.h + 12) % 24] : [clock.h]
+  let best: IsoDateTime | null = null
+  const today = dateKey(nowIso)
+  for (const day of [today, addDays(today, -1)]) {
+    for (const h of hours) {
+      const candidate = atClock(day, h, clock.m)
+      if (epochSeconds(candidate) > latest) continue
+      if (best === null || epochSeconds(candidate) > epochSeconds(best)) best = candidate
+    }
+  }
+  return best
+}
+
 /** Longer than this, a typed time or length asks before it is written (plan D10) */
 export const LONG_ENTRY_SECONDS = 12 * 3600
 
