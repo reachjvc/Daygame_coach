@@ -1,14 +1,24 @@
 # Time tracker: as easy as Toggl on the phone and the PC, and no more bugs between them
 
-**Status:** Phases 0–3 (the bug fixes) are live as of 2026-11-04. Phases 4–8 are not started. Written
-2026-11-03, with the decisions the same evening (see DECISIONS). The bug fixes went first on the owner's
-word: "i am particularly interested in you fixing a bunch of the bugs".
+**Status (2026-11-04, evening):** Phases 0–5 are live. Phase 6 is being built. Phase 7 is built and waits
+for the owner's yes to its migration. Phase 8 is not started. A five-agent audit the same day found 36 bugs
+(35 different ones); all are fixed and live. See AUDIT below.
 - Phase 1: 284728a3.
 - Phase 2: d4cd3b1a and 25d2cad2 (versioned writes, migration 20261103120000), then 4cbd7b46, 9e074a3c
   and 108c2ac0 (Checking…, send on leave, server clock, honest badge, live updates, two tabs), with
   migration 20261104120000. The owner said yes to both migrations, a backup was taken before each, and
   both were applied.
-- Phase 3: 5c70dc38.
+- Phase 3: 5c70dc38. Then 6bbd823f: Time opens on Timer (the remembered section is gone; the address
+  keeps the section on reload). 6c316ae7: the app's own "Time" link works from any section.
+- Phase 4: ad5f11a7 (with audit bugs A4–A6).
+- Phase 5: 13aebeca, 4cf421d9, 60e35816. "Planned" is derived (start after now), so no migration.
+- Phase 7: built on a branch, not live. Its migration `20261104160000_running_timer_notification.sql`
+  (with rollback) must reach the live database BEFORE the code, because device registration reads
+  `push_devices.timer_running`. "Alerted" lives in `notification_sends` (one 'timetrack-alert' row per
+  entry), not on `timetrack_entries`, so an alert never moves an entry's version (D1). The security
+  review's low finding about one account crowding out another's alert is fixed inside the same migration.
+  Its other low finding, that the lock screen shows the running entry's description, is kept as Q4
+  scenario 11 decided; Android's own lock-screen setting hides it.
 - Fixes found by CI's browser tests: 4a9e2b9c (the PC heading), 152e2e8c (the badge said Saved while a
   Stop was still queued).
 - Not proven on the live site: the "within seconds" ping. The test database runs without Realtime; only
@@ -662,6 +672,46 @@ What Toggl's Android app calls its "Running Timer notification", plus a Stop but
 5. Read your answers and turn each annoyance into a fix or a line in this plan.
 
 **Acceptance:** all of the above green; your phone day done, and what you found is recorded in this file.
+
+---
+
+# AUDIT — 2026-11-04: five agents, 36 bugs
+
+The owner, after Phases 0–3: "can you run some audit, lets say you spend 5 agents, that run the time app
+in various ways for 24 hours and find bugs? ... i doubt you have fixed the bugs at all".
+
+**How.** A frozen copy of main (599dfb24) ran on its own server against the local test database, with
+throwaway accounts only. Four agents each lived a day in compressed time:
+- a PC and a phone on one account;
+- forgotten timers and every way to type a time;
+- getting around the app, and two people on one browser;
+- a heavy user (1,791 entries over 92 days, 40 projects, 30 tags).
+The fifth built a real-time soak with two to three devices, random actions and invariant checks. Its
+24-hour run started 2026-11-04 14:49 UTC against main 30ef12c0 (seed 978856110; logs in that session's
+scratchpad). A bug counted only when reproduced twice. Each has a browser spec that reproduces it, and a
+unit test that failed before its fix.
+
+| Area | Bugs | The worst | Fixed in |
+|---|---|---|---|
+| Two devices (A1–A6) | 6 | A Stop made on a phone opened with no signal was lost if the app reopened before the signal came back. A reconciliation stop was never sent, so the account kept two timers running. A stale Stop moved the end later. | e0fa5d6b (A1–A3), ad5f11a7 (A4–A6) |
+| Typing and fixing times (B1–B10) | 10 | A zero-length end was stored milliseconds before its start, so the account refused it and the timer kept running there. A plain click on a PC calendar block changed its end. A running start could be set in the future. "1.30" became 1:18. | 1e4ed2af |
+| Getting around and accounts (C1–C6) | 6 | **Privacy:** Log Out left the tracker in the browser. The next person saw the previous person's entries, and could have them uploaded into their own account. A slow open undid a Stop. | e0fa5d6b, 0f55f4da, 8b83d0e9, 6c316ae7 |
+| A heavy user (D1–D13) | 13 (D8 = B8) | Bulk edit changed locked entries. A CSV export and re-import lost data. CSV cells could carry spreadsheet formulas (the workout export too). Typing took 1.7 s per key on a phone, now 25 ms. | ed023648, 1e4ed2af (D4, D8) |
+| The soak (E3) | 1 new | Adding an entry in manual mode emptied the running bar. Its other two findings were A3 and A4. | a25e740c |
+
+Security reviews ran on the sync and privacy fixes (2 medium and 2 low findings, all fixed in 8b83d0e9)
+and on Phase 7 (2 low; see Status).
+
+**Left open, on purpose or out of reach:**
+- Two narrow privacy cases that matter only once a second person uses the same browser:
+  - a copy left by someone who logged out before 2026-11-04, with nothing unsent, is still shown to the
+    next account (it is never uploaded);
+  - signing in through an emailed link does not empty the stored offline pages.
+- Logging out with changes not yet sent now tries to send them, then asks before losing them.
+- Start takes 2–5 s on the development server. The profile puts it in React's development-only code; a
+  production build was not measured.
+- A tag or project created under the same name on two devices before either checks becomes two.
+- Realtime cannot be tested in the test database.
 
 ---
 
