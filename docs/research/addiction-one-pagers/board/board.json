@@ -266,42 +266,50 @@
   {
    "kind": "danger",
    "title": "On four pages, a wrong line can cost a life",
-   "text": "Stopping alcohol, benzodiazepines or GHB suddenly can kill through seizures or delirium. With heroin and fentanyl the danger comes later: after a break, the old amount can stop your breathing, and drug deaths run 3 to 8 times higher in the first two weeks after leaving prison. My recommendation is that a doctor reads these four pages before they go live."
+   "text": "Stopping alcohol, benzodiazepines or GHB suddenly can kill through seizures or delirium. With heroin and fentanyl the danger comes later: after a break, the old amount can stop your breathing, and drug deaths run 3 to 8 times higher in the first two weeks after leaving prison. You decided against a doctor's review (4 Nov). So these four pages keep close to the clinical guidelines' own wording (ASAM, NICE) and tell the reader to get checked by their own doctor before stopping.",
+   "id": "danger-pages"
   },
   {
    "kind": "danger",
    "title": "Some pages need crisis help at the top",
-   "text": "Gambling: suicide was the leading cause of death among Norway's gambling-disorder patients. Breakups: about 1 in 4 people in one study had depressive symptoms. Self-harm should not get a one-pager at all; the research says to replace it with a short page that leads to crisis help. Every page needs help lines, and those are not researched yet."
+   "text": "Gambling: suicide was the leading cause of death among Norway's gambling-disorder patients. Breakups: about 1 in 4 people in one study had depressive symptoms. Self-harm should not get a one-pager at all; the research says to replace it with a short page that leads to crisis help. Every page needs help lines, and those are not researched yet.",
+   "id": "crisis-help"
   },
   {
    "kind": "doubt",
    "title": "A timeline graphic can make withdrawal worse",
-   "text": "People who expect bad withdrawal get worse withdrawal. Being told what to expect, calmly, makes it easier. So the timeline stays, but it is drawn as a range, says that many people get less, and keeps only the danger signs vivid. The charts on this board follow those rules."
+   "text": "People who expect bad withdrawal get worse withdrawal. Being told what to expect, calmly, makes it easier. So the timeline stays, but it is drawn as a range, says that many people get less, and keeps only the danger signs vivid. The charts on this board follow those rules.",
+   "id": "timeline-nocebo"
   },
   {
    "kind": "doubt",
    "title": "Most behaviours have no measured withdrawal",
-   "text": "Nobody has measured a withdrawal timeline for gambling, trading, shopping, dating apps, work or tanning. The porn 'flatline' exists only in forum posts; a 7-day randomised trial found no withdrawal. For gaming and phones, urges were highest at hour 0 and fell fastest in the first day. The graphic you asked for works for drugs and breaks for most behaviours."
+   "text": "Nobody has measured a withdrawal timeline for gambling, trading, shopping, dating apps, work or tanning. The porn 'flatline' exists only in forum posts; a 7-day randomised trial found no withdrawal. For gaming and phones, urges were highest at hour 0 and fell fastest in the first day. The graphic you asked for works for drugs and breaks for most behaviours.",
+   "id": "no-withdrawal"
   },
   {
    "kind": "doubt",
    "title": "Some of these are dependence, not addiction",
-   "text": "Antidepressants, nasal spray and gabapentin cause real withdrawal without being addictions. Calling them addiction would be wrong, and could scare someone off a medicine they need. Those pages need their own wording, and a prescriber leads the taper."
+   "text": "Antidepressants, nasal spray and gabapentin cause real withdrawal without being addictions. Calling them addiction would be wrong, and could scare someone off a medicine they need. Those pages need their own wording, and a prescriber leads the taper.",
+   "id": "dependence"
   },
   {
    "kind": "doubt",
    "title": "382 sources, 366 opened, and none of it reviewed by a second person",
-   "text": "Each researcher opened the sources and checked the claim. I re-checked five at random: four matched word for word, one is an editorial with no abstract. Many ICD-11 codes are unchecked. Before anything goes live, a second pass should re-check every number, as the testimonial research did when it caught misquotes."
+   "text": "Each researcher opened the sources and checked the claim. I re-checked five at random: four matched word for word, one is an editorial with no abstract. Many ICD-11 codes are unchecked. Before anything goes live, a second pass should re-check every number, as the testimonial research did when it caught misquotes.",
+   "id": "sources-check"
   },
   {
    "kind": "decide",
    "title": "The free self-tests are often not free for us",
-   "text": "WHO's alcohol test (AUDIT) forbids commercial use, and the drug test DAST-10 charges fees. Several others have unclear licences. A paid site can link out to them, or use the public-domain TAPS tool, which the research already picked for six drug pages."
+   "text": "WHO's alcohol test (AUDIT) forbids commercial use, and the drug test DAST-10 charges fees. Several others have unclear licences. A paid site can link out to them, or use the public-domain TAPS tool, which the research already picked for six drug pages.",
+   "id": "self-tests"
   },
   {
    "kind": "decide",
    "title": "The love page must never coach pursuit",
-   "text": "On a dating site, a page about limerence could slide into 'how to get her back'. The research says it must do the opposite: last use becomes last contact, and the page screens for depression and never coaches a man to keep pursuing someone who said no."
+   "text": "On a dating site, a page about limerence could slide into 'how to get her back'. The research says it must do the opposite: last use becomes last contact, and the page screens for depression and never coaches a man to keep pursuing someone who said no.",
+   "id": "love-page"
   }
  ],
  "blocks": [
@@ -429,35 +437,43 @@
  "lessons": [
   {
    "title": "The timeline needs four states",
-   "text": "Measured (draw it with ranges), weak (draw it faded and say so), nothing measured (an honest empty state plus what is known), and reversed (gaming and phones, where urges are highest at the start and fall within a day)."
+   "text": "Measured (draw it with ranges), weak (draw it faded and say so), nothing measured (an honest empty state plus what is known), and reversed (gaming and phones, where urges are highest at the start and fall within a day).",
+   "id": "the-timeline-needs-four-states"
   },
   {
    "title": "Craving gets its own honest shape",
-   "text": "Cue craving rose for weeks after quitting alcohol (highest at day 60), nicotine (still rising at day 35) and meth (about 3 months). It is never drawn falling to zero. Twenty opioid studies found no such rise, so opioid pages do not show it."
+   "text": "Cue craving rose for weeks after quitting alcohol (highest at day 60), nicotine (still rising at day 35) and meth (about 3 months). It is never drawn falling to zero. Twenty opioid studies found no such rise, so opioid pages do not show it.",
+   "id": "craving-gets-its-own-honest-shape"
   },
   {
    "title": "The goal flips from quit to reshape",
-   "text": "Nobody stops eating, working, exercising, spending or using a phone. Those pages talk about limits, budgets and patterns, not a quit date."
+   "text": "Nobody stops eating, working, exercising, spending or using a phone. Those pages talk about limits, budgets and patterns, not a quit date.",
+   "id": "the-goal-flips-from-quit-to-reshape"
   },
   {
    "title": "A 'dependence, not addiction' page type",
-   "text": "Antidepressants, nasal spray and gabapentin get their own status line, a prescriber-led taper, and no beliefs that treat the reader as hooked."
+   "text": "Antidepressants, nasal spray and gabapentin get their own status line, a prescriber-led taper, and no beliefs that treat the reader as hooked.",
+   "id": "a-dependence-not-addiction-page-type"
   },
   {
    "title": "Danger can sit at the return, not the quit",
-   "text": "For opioids the deadly moment is using again after a break. The chart pins it inside the good stretch, where it is easy to forget."
+   "text": "For opioids the deadly moment is using again after a break. The chart pins it inside the good stretch, where it is easy to forget.",
+   "id": "danger-can-sit-at-the-return-not-the-qui"
   },
   {
    "title": "New tracks: hormones, and last contact",
-   "text": "Steroids need a hormone track (normal again after a median 13 to 26 weeks; 27% still low about 2.5 years later). Love and breakups count from last contact, not last use."
+   "text": "Steroids need a hormone track (normal again after a median 13 to 26 weeks; 27% still low about 2.5 years later). Love and breakups count from last contact, not last use.",
+   "id": "new-tracks-hormones-and-last-contact"
   },
   {
    "title": "Self-harm leaves the framework",
-   "text": "Timelines, counters and belief lists risk harm there. It becomes a short signpost page: crisis numbers first, then the help that works."
+   "text": "Timelines, counters and belief lists risk harm there. It becomes a short signpost page: crisis numbers first, then the help that works.",
+   "id": "self-harm-leaves-the-framework"
   },
   {
    "title": "The good stretch is half-proven",
-   "text": "The earlier testimonial research made it a headline. Studies only partly back it: good-mood days raised urges in young drinkers, and gambling relapses followed good moods as often as bad ones, but smokers mostly slipped in bad moments. Pages warn about both."
+   "text": "The earlier testimonial research made it a headline. Studies only partly back it: good-mood days raised urges in young drinkers, and gambling relapses followed good moods as often as bad ones, but smokers mostly slipped in bad moments. Pages warn about both.",
+   "id": "the-good-stretch-is-half-proven"
   }
  ],
  "links": [
@@ -465,25 +481,29 @@
    "tag": "Book",
    "title": "A short link under each chapter",
    "text": "Printed links last forever, so the book prints short links that forward to the real page. Pages can move or be renamed later without a reprint, and the visit count shows which chapters send readers.",
-   "example": "yoursite.com/q/weed"
+   "example": "yoursite.com/q/weed",
+   "id": "short-link"
   },
   {
    "tag": "Book",
    "title": "A card per addiction in the appendix",
    "text": "The appendix prints Option D's card with a QR code. The book holds the summary; the website holds the sources and stays current as the science changes.",
-   "example": "Appendix: 30 cards, one per page"
+   "example": "Appendix: 30 cards, one per page",
+   "id": "appendix-card"
   },
   {
    "tag": "Video",
    "title": "One link per video",
    "text": "The pinned comment and the description link to the matching page, and to the index for everything else.",
-   "example": "yoursite.com/q/porn"
+   "example": "yoursite.com/q/porn",
+   "id": "video-link"
   },
   {
    "tag": "Search",
    "title": "One index page: Find yours",
    "text": "Searchable by everyday words (Zyn, Adderall, betting, Tinder), not medical names. Anything not listed points to the cross-addiction page.",
-   "example": "yoursite.com/quit"
+   "example": "yoursite.com/quit",
+   "id": "index-page"
   }
  ],
  "questions": [

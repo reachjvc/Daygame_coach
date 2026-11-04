@@ -20,7 +20,9 @@ https://claude.ai/artifact/9wfvJfSHm3BNTUXmijH7GK shows four framework options
 live from these files for every addiction, plus a stress test, the framework
 findings, and questions for the owner. His marks are stored with the page:
 `marks/opt-A` … `marks/opt-D`, `marks/blk-<block id>`, and `answers/<question
-id>`. Read them with the ArtifactData tool before the next round.
+id>`. His free notes are also in `marks`, keyed by where he wrote them:
+`general`, `doubt-<id>`, `item-<addiction id>`, `row-<addiction id>`,
+`lesson-<id>`, `find-<topic slug>`, `link-<id>`. Read them with the ArtifactData tool before the next round.
 
 Source for the board is in `board/`: `template.html` (the page),
 `board.json` (the board's own copy: options, doubts, blocks, questions, display

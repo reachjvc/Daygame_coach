@@ -104,6 +104,10 @@ section.band { padding-block: 40px 8px; }
 .mk[aria-pressed="true"][data-v="no"] { background: var(--no); border-color: var(--no); color: #fff; }
 .mk:disabled { opacity: .55; cursor: default; }
 .note-in { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 13px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+textarea.note-in { resize: vertical; field-sizing: content; min-height: 34px; max-height: 320px; line-height: 1.4; font-family: var(--f-display); width: 100%; flex-basis: 100%; }
+.notebox { display: grid; gap: 4px; }
+.notebox textarea.note-in { background: var(--bg); }
+.genbox { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 6px; margin-bottom: 14px; }
 .dbstate { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
 
 /* previewer */
@@ -322,14 +326,43 @@ table.stress td.nm button { border: 0; background: none; padding: 0; text-align:
 .srcrow { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 6px; font-size: 14px; }
 .meter { height: 8px; border-radius: 4px; background: var(--ph-bg); overflow: hidden; display: flex; }
 .meter i { display: block; height: 100%; background: var(--accent); }
+@media (max-width: 900px) { .frame .viewport { max-height: none; } }
+.openreader { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 9px 16px; font-weight: 600; font-size: 14px; }
+.openreader:hover { background: var(--accent); color: var(--accent-ink); }
+/* reader view: the page alone, as a visitor sees it */
+#reader { min-height: 100%; background: var(--surface); }
+.site { background: var(--surface); border-bottom: 1px solid var(--line); }
+.site-in { max-width: 800px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.site .logo { font-weight: 800; letter-spacing: -.01em; font-size: 17px; color: var(--ink); text-decoration: none; }
+.site .logo small { font-family: var(--f-mono); font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 6px; }
+.site a.all { font-size: 14px; }
+.reader-main { max-width: 800px; margin: 0 auto; padding-bottom: 90px; }
+.reader-main > .op { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 700px) { .reader-main > .op { padding-left: 40px; padding-right: 40px; } }
+.reader-main .voicehero { margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 700px) { .reader-main .voicehero { margin-left: -40px; margin-right: -40px; padding-left: 40px; padding-right: 40px; } }
+.reader-main > .cardwrap { min-height: 70vh; background: var(--bg); padding-block: 28px; }
+.reader-index { padding: 26px max(16px, env(safe-area-inset-left, 0px)) 30px; display: grid; gap: 16px; }
+.reader-index h1 { font-weight: 800; font-size: clamp(30px, 6vw, 44px); letter-spacing: -.02em; }
+.reader-index p { font-family: var(--f-read); color: var(--ink-2); font-size: 17px; }
+.reader-index input { font: inherit; font-size: 16px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); width: 100%; }
+.reader-index .idxgrid a { display: block; padding: 6px 0; font-size: 16px; text-decoration: none; }
+.rv { position: fixed; right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 30; display: grid; justify-items: end; gap: 8px; }
+.rv-toggle { border: 0; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 10px 16px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,.25); }
+.rv-panel { width: min(360px, calc(100vw - 24px)); max-height: min(78vh, 640px); overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 12px; box-shadow: 0 10px 40px rgba(0,0,0,.22); }
+.rv-panel .rv-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rv-panel select { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); width: 100%; }
+.rv-panel .navbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13.5px; }
+.rv-panel h3 { font-size: 14px; }
 .pagefoot { padding-block: 40px 60px; color: var(--muted); font-family: var(--f-mono); font-size: 12px; }
 </style>
 
+<div id="boardRoot">
 <div class="top">
   <div class="wrap">
     <div class="eyebrow">Book and video link-outs &middot; framework options &middot; 2026-11-04</div>
     <h1>Addiction One-Pager Lab</h1>
-    <p class="lede">Four ways to build one page per addiction, tried live on <span id="nItems">all</span> addictions. Pick an option and an addiction, mark what you like, answer the questions at the bottom. Every claim on the mock pages carries a source number; yellow hatched boxes are placeholders where the science is still missing.</p>
+    <p class="lede">To see a page exactly as a visitor will, use <a href="#view-index">the reader view</a> on your phone or computer. Four ways to build one page per addiction, tried live on <span id="nItems">all</span> addictions. Pick an option and an addiction, mark what you like, and write notes anywhere: every card, row and question has a note box. Every claim on the mock pages carries a source number; yellow hatched boxes are placeholders where the science is still missing.</p>
     <div class="statrow" id="statrow"></div>
   </div>
 </div>
@@ -338,6 +371,7 @@ table.stress td.nm button { border: 0; background: none; padding: 0; text-align:
 </div></nav>
 
 <section class="band" id="first"><div class="wrap">
+  <div class="genbox"><div class="eyebrow">Your general notes</div><div id="genNote"></div><div class="dbstate"></div></div>
   <header><div class="eyebrow">Doubts first</div><h2>Read this before the options</h2></header>
   <div class="doubts" id="doubts"></div>
 </div></section>
@@ -350,7 +384,9 @@ table.stress td.nm button { border: 0; background: none; padding: 0; text-align:
       <div class="opt-tabs" role="tablist" id="optTabs"></div>
       <div class="ctl"><label for="pick">Addiction</label><select id="pick"></select></div>
       <div class="ctl"><label>Hard cases</label><div class="hardcases" id="hard"></div></div>
+      <a class="openreader" id="openReader" href="#view-a-alcohol">Open full screen, as a reader sees it</a>
       <div class="ctl"><label>Screen</label><div class="seg" id="screenSeg"><button type="button" data-w="phone" aria-pressed="true">Phone</button><button type="button" data-w="desk" aria-pressed="false">Desktop</button></div></div>
+      <div class="optinfo" id="itemNote"></div>
       <div class="optinfo" id="optInfo"></div>
     </div>
     <div class="frame phone" id="frame">
@@ -387,7 +423,7 @@ table.stress td.nm button { border: 0; background: none; padding: 0; text-align:
 
 <section class="band" id="questions"><div class="wrap">
   <header><div class="eyebrow">Your call</div><h2>Questions for you</h2>
-  <p class="sub">Each has my recommendation. Tap an answer or write your own; it saves here and I read it next session.</p></header>
+  <p class="sub">Each has my recommendation. Tap an answer or write your own. Every note box on this page saves as you type, and I read them all next session.</p></header>
   <div class="qs" id="qs"></div>
 </div></section>
 
@@ -398,6 +434,12 @@ table.stress td.nm button { border: 0; background: none; padding: 0; text-align:
 </div></section>
 
 <div class="pagefoot"><div class="wrap">Research files: docs/research/addiction-one-pagers/ in the repo. Marks and answers are stored with this page.</div></div>
+</div>
+<div id="reader" hidden>
+  <header class="site"><div class="site-in"><a class="logo" href="#view-index">Your brand<small>placeholder</small></a><a class="all" href="#view-index">All pages</a></div></header>
+  <main class="reader-main" id="readerMain"></main>
+  <div class="rv" id="rv"><div class="rv-panel" id="rvPanel" hidden></div><button type="button" class="rv-toggle" id="rvToggle" aria-expanded="false">Review</button></div>
+</div>
 
 <script id="data" type="application/json">/*DATA*/</script>
 <script id="board" type="application/json">/*BOARD*/</script>
@@ -409,6 +451,7 @@ const B = JSON.parse(document.getElementById("board").textContent);
 const ITEMS = D.items;
 const BY = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const FREFS = Object.fromEntries((D.frefs || []).map(r => [r.id, r]));
+const slug = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 const h = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const GROUPS = [["substance", "Substances"], ["behaviour", "Behaviours"], ["boundary", "Edge cases"]];
 const TRACKS = { body: ["Body", "--t-body"], "mood-sleep": ["Mood & sleep", "--t-mood"], craving: ["Craving", "--t-craving"], hormones: ["Hormones", "--t-hormones"], life: ["Life", "--t-life"] };
@@ -421,6 +464,7 @@ const STATUS = {
   "not-recognised": "Not an official diagnosis. The pattern is real; the label is debated.",
   "dependence-not-addiction": "Your body depends on it. That is not the same as addiction."
 };
+let READER = false;
 const state = { opt: "A", id: (ITEMS.find(i => i.id === "heroin") || ITEMS[0]).id, phone: true, t: 72 };
 try { const s = JSON.parse(localStorage.getItem("op-lab-view") || "{}"); if (s.opt) state.opt = s.opt; if (s.id && BY[s.id]) state.id = s.id; if (typeof s.phone === "boolean") state.phone = s.phone; } catch (e) {}
 const saveView = () => { try { localStorage.setItem("op-lab-view", JSON.stringify({ opt: state.opt, id: state.id, phone: state.phone })); } catch (e) {} };
@@ -476,7 +520,7 @@ function activeAt(item, t) { return (item.timeline || []).filter(p => inten(p, t
 const CHARTS = new Map(); let chartSeq = 0;
 function timeline(item, o) {
   o = o || {};
-  const W = (state.phone || o.card) ? 380 : 640, Hh = o.compact ? 150 : 240, pl = 10, pr = 10, pt = o.compact ? 12 : 22, pb = 30;
+  const W = (o.card || (READER ? innerWidth < 640 : state.phone)) ? 380 : 640, Hh = o.compact ? 150 : 240, pl = 10, pr = 10, pt = o.compact ? 12 : 22, pb = 30;
   const [d0, d1] = domainOf(item); const L = Math.log;
   const x = t => pl + (L(t) - L(d0)) / (L(d1) - L(d0)) * (W - pl - pr);
   const y = v => Hh - pb - v / 5 * (Hh - pt - pb);
@@ -625,7 +669,7 @@ function sourcesBlock(item) {
 function footer(item) {
   return `<footer>${ph("Help lines", "Phone numbers for the reader's country. Needs a list per country we sell in.")}<div class="closing">${h(B.closing)}</div><div>This page explains research. It is not medical advice, and it cannot tell whether stopping is safe for you; a doctor can.</div></footer>`;
 }
-const crossLink = () => BY["cross-addiction"] ? `<p>Stopping one thing and worried another will take its place? <a href="#try" data-go="cross-addiction">Read the cross-addiction page</a>.</p>` : "";
+const crossLink = () => BY["cross-addiction"] ? `<p>Stopping one thing and worried another will take its place? ${READER ? `<a href="${viewHash(state.opt, "cross-addiction")}">Read the page on swapping one addiction for another</a>` : `<a href="#try" data-go="cross-addiction">Read the cross-addiction page</a>`}.</p>` : "";
 const sec = (title, body) => body ? `<section><h2>${h(title)}</h2>${body}</section>` : "";
 
 /* ---------- the four options ---------- */
@@ -728,35 +772,64 @@ const groupName = g => (GROUPS.find(x => x[0] === g) || [, ""])[1].replace(/s$/,
 
 /* ---------- marks (db) ---------- */
 const MARKS = {}; const ANSWERS = {}; let db = null; let dbReady = false;
+function noteBox(key, label) {
+  const m = MARKS[key] || {};
+  return `<div class="notebox" data-mark="${h(key)}"><textarea class="note-in" id="note-${h(key)}" rows="1" placeholder="${h(label || "Your note")}" aria-label="${h(label || "Your note")}" ${db ? "" : "disabled"}>${h(m.note || "")}</textarea></div>`;
+}
 function markBar(key, withNote) {
   const m = MARKS[key] || {};
   const dis = db ? "" : "disabled";
-  return `<div class="marks" data-mark="${h(key)}">${["yes", "maybe", "no"].map(v => `<button type="button" class="mk" data-v="${v}" aria-pressed="${m.v === v}" ${dis}>${v === "yes" ? "Yes" : v === "maybe" ? "Maybe" : "No"}</button>`).join("")}${withNote ? `<input class="note-in" id="note-${h(key)}" placeholder="Note" value="${h(m.note || "")}" ${dis} aria-label="Note">` : ""}</div>`;
+  return `<div class="marks" data-mark="${h(key)}">${["yes", "maybe", "no"].map(v => `<button type="button" class="mk" data-v="${v}" aria-pressed="${m.v === v}" ${dis}>${v === "yes" ? "Yes" : v === "maybe" ? "Maybe" : "No"}</button>`).join("")}${withNote ? `<textarea class="note-in" id="note-${h(key)}" rows="1" placeholder="Note" ${dis} aria-label="Note">${h(m.note || "")}</textarea>` : ""}</div>`;
 }
-document.addEventListener("click", async e => {
+const TIMERS = {}; const CHAIN = {};
+function queueWrite(path, body) {
+  CHAIN[path] = (CHAIN[path] || Promise.resolve()).then(() => db.doc(path).set(body))
+    .then(() => setDbState("Saved."), err => setDbState("Could not save: " + (err && err.code || "error")));
+}
+function saveMark(key) {
+  const el = document.getElementById("note-" + key); const cur = MARKS[key] || {};
+  const note = el ? el.value : (cur.note || "");
+  MARKS[key] = Object.assign({}, cur, { note });
+  queueWrite("marks/" + key, { v: cur.v || null, note, t: new Date().toISOString() });
+}
+function saveAnswer(qid) {
+  const el = document.getElementById("qn-" + qid); const cur = ANSWERS[qid] || {};
+  const note = el ? el.value : (cur.note || "");
+  ANSWERS[qid] = Object.assign({}, cur, { note });
+  queueWrite("answers/" + qid, { choice: cur.choice || null, note, t: new Date().toISOString() });
+}
+function noteTarget(el) {
+  if (el.classList.contains("qnote")) return ["a", el.closest("[data-q]").dataset.q];
+  return ["m", el.closest("[data-mark]").dataset.mark];
+}
+document.addEventListener("input", e => {
+  const el = e.target.closest && e.target.closest(".note-in"); if (!el || !db) return;
+  const [kind, key] = noteTarget(el); const tk = kind + key;
+  setDbState("Saving…"); clearTimeout(TIMERS[tk]);
+  TIMERS[tk] = setTimeout(() => { delete TIMERS[tk]; kind === "a" ? saveAnswer(key) : saveMark(key); }, 700);
+});
+document.addEventListener("change", e => {
+  const el = e.target.closest && e.target.closest(".note-in"); if (!el || !db) return;
+  const [kind, key] = noteTarget(el); const tk = kind + key;
+  if (!TIMERS[tk]) return; clearTimeout(TIMERS[tk]); delete TIMERS[tk];
+  kind === "a" ? saveAnswer(key) : saveMark(key);
+});
+document.addEventListener("click", e => {
   const b = e.target.closest(".mk"); if (!b || !db) return;
   const key = b.closest("[data-mark]").dataset.mark; const v = b.dataset.v;
-  const cur = MARKS[key] || {}; const nv = cur.v === v ? null : v;
-  MARKS[key] = Object.assign({}, cur, { v: nv }); refreshMarks();
-  try { await db.doc("marks/" + key).set({ v: nv, note: cur.note || "", t: new Date().toISOString() }); } catch (err) { setDbState("Could not save: " + (err && err.code || "error")); }
-});
-document.addEventListener("change", async e => {
-  const inp = e.target.closest(".note-in"); if (!inp || !db) return;
-  const key = inp.closest("[data-mark]").dataset.mark; const cur = MARKS[key] || {};
-  MARKS[key] = Object.assign({}, cur, { note: inp.value });
-  try { await db.doc("marks/" + key).set({ v: cur.v || null, note: inp.value, t: new Date().toISOString() }); } catch (err) { setDbState("Could not save: " + (err && err.code || "error")); }
+  const cur = MARKS[key] || {}; MARKS[key] = Object.assign({}, cur, { v: cur.v === v ? null : v }); refreshMarks(); saveMark(key);
 });
 function refreshMarks() {
   document.querySelectorAll("[data-mark]").forEach(el => {
     const m = MARKS[el.dataset.mark] || {};
     el.querySelectorAll(".mk").forEach(b => { b.setAttribute("aria-pressed", String(m.v === b.dataset.v)); b.disabled = !db; });
-    const n = el.querySelector(".note-in"); if (n) { n.disabled = !db; if (document.activeElement !== n) n.value = m.note || ""; }
+    const n = el.querySelector(".note-in"); if (n) { n.disabled = !db; if (document.activeElement !== n && !TIMERS["m" + el.dataset.mark]) n.value = m.note || ""; }
   });
   document.querySelectorAll("[data-optstate]").forEach(el => { const m = MARKS["opt-" + el.dataset.optstate] || {}; el.textContent = m.v ? "Marked: " + m.v : ""; });
   document.querySelectorAll("[data-q]").forEach(el => {
     const a = ANSWERS[el.dataset.q] || {};
     el.querySelectorAll(".choices button").forEach(b => { b.setAttribute("aria-pressed", String(a.choice === b.dataset.c)); b.disabled = !db; });
-    const n = el.querySelector(".qnote"); if (n) { n.disabled = !db; if (document.activeElement !== n) n.value = a.note || ""; }
+    const n = el.querySelector(".qnote"); if (n) { n.disabled = !db; if (document.activeElement !== n && !TIMERS["a" + el.dataset.q]) n.value = a.note || ""; }
   });
 }
 function setDbState(s) { document.querySelectorAll(".dbstate").forEach(el => el.textContent = s); }
@@ -773,31 +846,98 @@ function renderPick() {
   sel.value = state.id;
   document.getElementById("hard").innerHTML = B.hardCases.filter(id => BY[id]).map(id => `<button type="button" data-go="${id}">${h(BY[id].name)}</button>`).join("");
 }
+function bindSlider(item) {
+  const sl = document.getElementById("tslide"); if (!sl) return;
+  sl.addEventListener("input", () => {
+    const [d0, d1] = domainOf(item); state.t = Math.exp(Math.log(d0) + sl.value / 1000 * (Math.log(d1) - Math.log(d0)));
+    clearTimeout(sl._t); document.getElementById("readout").textContent = fmtH(state.t);
+    sl._t = setTimeout(() => { const v = sl.value; renderPage(); refreshMarks(); const ns = document.getElementById("tslide"); if (ns) { ns.value = v; ns.focus(); } }, 60);
+  });
+}
+const viewHash = (opt, id) => "#view-" + opt.toLowerCase() + "-" + id;
 function renderPage() {
   CHARTS.clear();
+  if (READER) return renderReader();
   const item = BY[state.id];
   document.getElementById("url").textContent = (state.opt === "D" ? "Book appendix card · " : "") + B.base + (item.slug || item.id);
   document.getElementById("vp").innerHTML = OPT[state.opt](item);
+  document.getElementById("itemNote").innerHTML = `<h3>Your note on the ${h(item.name)} page</h3>${noteBox("item-" + item.id, "Anything wrong, missing or good on this page")}`;
+  document.getElementById("openReader").href = viewHash(state.opt, item.id);
   document.getElementById("frame").classList.toggle("phone", state.phone);
   document.querySelectorAll("#screenSeg button").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.w === "phone") === state.phone)));
-  const sl = document.getElementById("tslide");
-  if (sl) sl.addEventListener("input", () => {
-    const [d0, d1] = domainOf(item); state.t = Math.exp(Math.log(d0) + sl.value / 1000 * (Math.log(d1) - Math.log(d0)));
-    clearTimeout(sl._t); document.getElementById("readout").textContent = fmtH(state.t);
-    sl._t = setTimeout(() => { const v = sl.value; renderPage(); const ns = document.getElementById("tslide"); if (ns) { ns.value = v; ns.focus(); } }, 60);
-  });
+  bindSlider(item);
 }
-function go(id, scroll) { if (!BY[id]) return; state.id = id; document.getElementById("pick").value = id; saveView(); renderPage(); if (scroll) document.getElementById("try").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }
+let READER_INDEX = false;
+function renderReader() {
+  const main = document.getElementById("readerMain");
+  if (READER_INDEX) {
+    main.innerHTML = `<div class="reader-index"><h1>Find your page</h1><p>One page for each thing people try to stop. What happens when you stop, the thoughts that keep you stuck, and what works, with every source.</p><label for="ridx" class="eyebrow">Search</label><input id="ridx" type="search" placeholder="Weed, betting, Zyn, Adderall…" autocomplete="off"><div class="idxgrid" id="ridxGrid"></div></div>`;
+    const q = document.getElementById("ridx");
+    const draw = () => { const t = q.value.trim().toLowerCase(); const hit = i => !t || (i.name + " " + i.id + " " + (i.aliases || []).join(" ")).toLowerCase().includes(t);
+      document.getElementById("ridxGrid").innerHTML = GROUPS.map(([g, n]) => { const xs = ITEMS.filter(i => i.group === g && hit(i)); return xs.length ? `<div class="g">${n}</div>` + xs.map(i => `<a href="${viewHash(state.opt, i.id)}">${h(i.name)}</a>`).join("") : ""; }).join("") || `<p>Nothing matches. Try the page on <a href="${viewHash(state.opt, "cross-addiction")}">swapping one addiction for another</a>.</p>`; };
+    q.addEventListener("input", draw); draw();
+  } else {
+    main.innerHTML = OPT[state.opt](BY[state.id]);
+    bindSlider(BY[state.id]);
+  }
+  renderPanel();
+}
+function renderPanel() {
+  const panel = document.getElementById("rvPanel");
+  const ids = ITEMS.map(i => i.id); const k = ids.indexOf(state.id);
+  const prev = ids[(k - 1 + ids.length) % ids.length], next = ids[(k + 1) % ids.length];
+  panel.innerHTML = `<div class="rv-row"><a href="#try">Back to the board</a></div>
+    <div><div class="eyebrow">Option</div><div class="seg" role="group" aria-label="Option">${B.options.map(o => `<button type="button" data-ropt="${o.key}" aria-pressed="${state.opt === o.key}" title="${h(o.name)}">${o.key}</button>`).join("")}</div></div>
+    <div><label for="rpick" class="eyebrow">Addiction</label><select id="rpick">${GROUPS.map(([g, n]) => { const xs = ITEMS.filter(i => i.group === g); return xs.length ? `<optgroup label="${n}">${xs.map(i => `<option value="${i.id}" ${i.id === state.id && !READER_INDEX ? "selected" : ""}>${h(i.name)}</option>`).join("")}</optgroup>` : ""; }).join("")}</select></div>
+    <div class="rv-row"><a class="navbtn" href="${viewHash(state.opt, prev)}">Previous</a><a class="navbtn" href="${viewHash(state.opt, next)}">Next</a><a class="navbtn" href="#view-index">Index page</a></div>
+    ${READER_INDEX ? "" : `<div><h3>Your note on this page</h3>${noteBox("item-" + state.id, "Anything wrong, missing or good on this page")}</div>
+    <div><h3>Option ${state.opt}: ${h(B.options.find(o => o.key === state.opt).name)}</h3>${markBar("opt-" + state.opt, false)}</div>`}
+    <div class="dbstate"></div>`;
+  refreshMarks();
+}
+document.getElementById("rvToggle").addEventListener("click", () => {
+  const p = document.getElementById("rvPanel"); p.hidden = !p.hidden;
+  document.getElementById("rvToggle").setAttribute("aria-expanded", String(!p.hidden));
+  document.getElementById("rvToggle").textContent = p.hidden ? "Review" : "Close";
+});
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-opt]"); if (t) { state.opt = t.dataset.opt; saveView(); renderTabs(); refreshMarks(); renderPage(); return; }
+  const b = e.target.closest("[data-ropt]"); if (!b) return;
+  state.opt = b.dataset.ropt; saveView();
+  location.hash = READER_INDEX ? "view-index" : viewHash(state.opt, state.id).slice(1);
+});
+document.addEventListener("change", e => { if (e.target.id === "rpick") location.hash = viewHash(state.opt, e.target.value).slice(1); });
+function route() {
+  const hs = location.hash.slice(1);
+  const m = /^view-([abcd])-(.+)$/.exec(hs);
+  const wasReader = READER;
+  READER = !!m || hs === "view-index";
+  READER_INDEX = hs === "view-index";
+  if (m && BY[m[2]]) { state.opt = m[1].toUpperCase(); state.id = m[2]; saveView(); }
+  document.getElementById("boardRoot").hidden = READER;
+  document.getElementById("reader").hidden = !READER;
+  if (READER) {
+    document.getElementById("vp").innerHTML = "";
+    renderPage(); window.scrollTo(0, 0);
+  } else if (wasReader) {
+    renderTabs(); document.getElementById("pick").value = state.id; renderPage(); refreshMarks();
+    const t = hs && document.getElementById(hs); if (t) t.scrollIntoView();
+  }
+}
+window.addEventListener("hashchange", route);
+let lastNarrow = innerWidth < 640;
+window.addEventListener("resize", () => { const n = innerWidth < 640; if (READER && n !== lastNarrow) { lastNarrow = n; renderPage(); } lastNarrow = n; });
+function go(id, scroll) { if (!BY[id]) return; state.id = id; document.getElementById("pick").value = id; saveView(); renderPage(); refreshMarks(); if (scroll) document.getElementById("try").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-opt]"); if (t) { state.opt = t.dataset.opt; saveView(); renderTabs(); renderPage(); refreshMarks(); return; }
   const g = e.target.closest("[data-go]"); if (g) { e.preventDefault(); go(g.dataset.go, !g.closest("#try")); return; }
-  const w = e.target.closest("#screenSeg button"); if (w) { state.phone = w.dataset.w === "phone"; saveView(); renderPage(); }
+  const w = e.target.closest("#screenSeg button"); if (w) { state.phone = w.dataset.w === "phone"; saveView(); renderPage(); refreshMarks(); }
 });
 document.getElementById("pick").addEventListener("change", e => go(e.target.value));
 
 /* ---------- other sections ---------- */
 function renderDoubts() {
-  document.getElementById("doubts").innerHTML = B.doubts.map(d => `<div class="doubt"><span class="kind k-${d.kind}">${d.kind === "danger" ? "Safety" : d.kind === "doubt" ? "Doubt" : "To decide"}</span><h3>${h(d.title)}</h3><p>${h(d.text)}</p></div>`).join("");
+  document.getElementById("genNote").innerHTML = noteBox("general", "Anything about the whole idea: tone, what to drop, what is missing");
+  document.getElementById("doubts").innerHTML = B.doubts.map(d => `<div class="doubt"><span class="kind k-${d.kind}">${d.kind === "danger" ? "Safety" : d.kind === "doubt" ? "Doubt" : "To decide"}</span><h3>${h(d.title)}</h3><p>${h(d.text)}</p>${noteBox("doubt-" + d.id, "Your note on this")}</div>`).join("");
 }
 function renderBlocks() {
   document.getElementById("blockList").innerHTML = B.blocks.map(b => {
@@ -824,25 +964,25 @@ function stressCells(i) {
   return c;
 }
 function renderStress() {
-  const cols = ["Timeline", "Beliefs", "What works", "Safety", "Goal", "Official status", "Self-test", "Sources", "Placeholders"];
+  const cols = ["Timeline", "Beliefs", "What works", "Safety", "Goal", "Official status", "Self-test", "Sources", "Placeholders", "Your note"];
   let html = `<thead><tr><th>Addiction</th>${cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>`;
   GROUPS.forEach(([g, n]) => {
     const xs = ITEMS.filter(i => i.group === g); if (!xs.length) return;
     html += `<tr class="grp"><td colspan="${cols.length + 1}">${n}</td></tr>`;
     xs.forEach(i => {
       const cells = stressCells(i); const np = (i.placeholders || []).length;
-      html += `<tr><td class="nm"><button type="button" data-go="${i.id}">${h(i.name)}</button>${i.frameworkVerdict ? `<div class="cell ${i.frameworkVerdict.verdict === "exclude" ? "breaks" : i.frameworkVerdict.verdict === "include" ? "fits" : "adapts"}"><span class="w">${h(i.frameworkVerdict.verdict)}: ${h(i.frameworkVerdict.reason)}</span></div>` : ""}</td>${cells.map(([s, w]) => `<td><div class="cell ${s}"><span class="s">${s}</span><span class="w">${h(w)}</span></div></td>`).join("")}<td><div class="cell ${np ? "adapts" : "fits"}"><span class="s">${np}</span><span class="w">${np ? (i.placeholders || []).map(p => p.block).filter((v, k, a) => a.indexOf(v) === k).join(", ") : "none"}</span></div></td></tr>`;
+      html += `<tr><td class="nm"><button type="button" data-go="${i.id}">${h(i.name)}</button>${i.frameworkVerdict ? `<div class="cell ${i.frameworkVerdict.verdict === "exclude" ? "breaks" : i.frameworkVerdict.verdict === "include" ? "fits" : "adapts"}"><span class="w">${h(i.frameworkVerdict.verdict)}: ${h(i.frameworkVerdict.reason)}</span></div>` : ""}</td>${cells.map(([s, w]) => `<td><div class="cell ${s}"><span class="s">${s}</span><span class="w">${h(w)}</span></div></td>`).join("")}<td><div class="cell ${np ? "adapts" : "fits"}"><span class="s">${np}</span><span class="w">${np ? (i.placeholders || []).map(p => p.block).filter((v, k, a) => a.indexOf(v) === k).join(", ") : "none"}</span></div></td><td style="min-width:200px">${noteBox("row-" + i.id, "Note on " + i.name)}</td></tr>`;
     });
   });
   document.getElementById("stressTable").innerHTML = html + "</tbody>";
-  document.getElementById("lessons").innerHTML = B.lessons.map(l => `<div class="doubt"><span class="kind k-decide">Framework change</span><h3>${h(l.title)}</h3><p>${h(l.text)}</p></div>`).join("");
+  document.getElementById("lessons").innerHTML = B.lessons.map(l => `<div class="doubt"><span class="kind k-decide">Framework change</span><h3>${h(l.title)}</h3><p>${h(l.text)}</p>${noteBox("lesson-" + l.id, "Your note on this")}</div>`).join("");
 }
 function renderFinds() {
   const fs = D.findings || [];
-  document.getElementById("finds").innerHTML = fs.length ? fs.map(f => `<div class="find"><h3>${h(f.topic)}</h3><p>${h(f.finding)}${f.refs && f.refs.length ? cite({ refs: D.frefs }, f.refs) : ""}</p><p class="imp">${h(f.implication)}</p></div>`).join("") : ph("Findings", "Framework research not in yet.");
+  document.getElementById("finds").innerHTML = fs.length ? fs.map(f => `<div class="find"><h3>${h(f.topic)}</h3><p>${h(f.finding)}${f.refs && f.refs.length ? cite({ refs: D.frefs }, f.refs) : ""}</p><p class="imp">${h(f.implication)}</p>${noteBox("find-" + slug(f.topic), "Your note on this")}</div>`).join("") : ph("Findings", "Framework research not in yet.");
 }
 function renderLinks() {
-  document.getElementById("links3").innerHTML = B.links.map(l => `<div class="doubt"><span class="kind k-decide">${h(l.tag)}</span><h3>${h(l.title)}</h3><p>${h(l.text)}</p><p class="mono" style="font-size:12.5px;color:var(--ink)">${h(l.example)}</p></div>`).join("");
+  document.getElementById("links3").innerHTML = B.links.map(l => `<div class="doubt"><span class="kind k-decide">${h(l.tag)}</span><h3>${h(l.title)}</h3><p>${h(l.text)}</p><p class="mono" style="font-size:12.5px;color:var(--ink)">${h(l.example)}</p>${noteBox("link-" + l.id, "Your note on this")}</div>`).join("");
   const q = document.getElementById("idxq");
   const draw = () => {
     const s = q.value.trim().toLowerCase();
@@ -852,19 +992,12 @@ function renderLinks() {
   q.addEventListener("input", draw); draw();
 }
 function renderQs() {
-  document.getElementById("qs").innerHTML = B.questions.map(q => `<div class="qq" data-q="${q.id}"><h3>${h(q.q)}</h3>${q.why ? `<p>${h(q.why)}</p>` : ""}<div class="rec"><b>My recommendation</b>${h(q.rec)}</div><div class="choices">${q.choices.map(c => `<button type="button" data-c="${h(c)}" aria-pressed="false">${h(c)}</button>`).join("")}</div><input class="note-in qnote" id="qn-${q.id}" placeholder="Your own answer or note" aria-label="Your answer"></div>`).join("");
+  document.getElementById("qs").innerHTML = B.questions.map(q => `<div class="qq" data-q="${q.id}"><h3>${h(q.q)}</h3>${q.why ? `<p>${h(q.why)}</p>` : ""}<div class="rec"><b>My recommendation</b>${h(q.rec)}</div><div class="choices">${q.choices.map(c => `<button type="button" data-c="${h(c)}" aria-pressed="false">${h(c)}</button>`).join("")}</div><textarea class="note-in qnote" id="qn-${q.id}" rows="1" placeholder="Your own answer or note" aria-label="Your answer"></textarea></div>`).join("");
 }
-document.addEventListener("click", async e => {
+document.addEventListener("click", e => {
   const b = e.target.closest(".choices button"); if (!b || !db) return;
-  const qid = b.closest("[data-q]").dataset.q; const cur = ANSWERS[qid] || {}; const c = cur.choice === b.dataset.c ? null : b.dataset.c;
-  ANSWERS[qid] = Object.assign({}, cur, { choice: c }); refreshMarks();
-  try { await db.doc("answers/" + qid).set({ choice: c, note: cur.note || "", t: new Date().toISOString() }); } catch (err) { setDbState("Could not save: " + (err && err.code || "error")); }
-});
-document.addEventListener("change", async e => {
-  const n = e.target.closest(".qnote"); if (!n || !db) return;
-  const qid = n.closest("[data-q]").dataset.q; const cur = ANSWERS[qid] || {};
-  ANSWERS[qid] = Object.assign({}, cur, { note: n.value });
-  try { await db.doc("answers/" + qid).set({ choice: cur.choice || null, note: n.value, t: new Date().toISOString() }); } catch (err) { setDbState("Could not save: " + (err && err.code || "error")); }
+  const qid = b.closest("[data-q]").dataset.q; const cur = ANSWERS[qid] || {};
+  ANSWERS[qid] = Object.assign({}, cur, { choice: cur.choice === b.dataset.c ? null : b.dataset.c }); refreshMarks(); saveAnswer(qid);
 });
 function renderSources() {
   const all = []; ITEMS.forEach(i => (i.refs || []).forEach(r => all.push(r))); (D.frefs || []).forEach(r => all.push(r));
@@ -876,7 +1009,7 @@ function renderSources() {
   document.getElementById("nItems").textContent = ITEMS.length;
 }
 
-renderDoubts(); renderTabs(); renderPick(); renderPage(); renderBlocks(); renderStress(); renderFinds(); renderLinks(); renderQs(); renderSources(); refreshMarks();
+renderDoubts(); renderTabs(); renderPick(); route(); if (!READER) renderPage(); renderBlocks(); renderStress(); renderFinds(); renderLinks(); renderQs(); renderSources(); refreshMarks();
 setDbState("Connecting so your marks can save…");
 
 /* ---------- connect the store ---------- */
