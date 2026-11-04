@@ -79,11 +79,14 @@ describe("the sheet's one-tap fixes", () => {
 describe("Fix on an overlap", () => {
   test("of two entries that began in the same second ends the earlier where the later starts", () => {
     const first = entry("a", "2026-11-04", "10:00", "10:30", { description: "earlier" })
-    const second = entry("b", "2026-11-04", "10:00", "10:20", { description: "later" })
+    // Changed on 2026-11-04 (code review): this ended at 10:20, inside the earlier one, and Fix
+    // no longer cuts more than the overlap (`aFixNeverCutsMoreThanTheOverlap`). Ending at 10:40,
+    // Fix still has to order the two starts to the millisecond, which is what this is about.
+    const second = entry("b", "2026-11-04", "10:00", "10:40", { description: "later" })
     // listed later-first, so the order has to come from the times themselves
     const state = baseState({
       entries: [
-        { ...second, start: at(10, 0, 0, 900), duration: 20 * 60 },
+        { ...second, start: at(10, 0, 0, 900), duration: 40 * 60 },
         { ...first, start: at(10, 0, 0, 100), duration: 30 * 60 },
       ],
     })

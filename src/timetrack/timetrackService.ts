@@ -1122,13 +1122,29 @@ export function undoDisplacement(
   startedId: Id,
   displacedId: Id,
   nowIso: IsoDateTime,
-): TimetrackState {
-  const withoutStarted = deleteEntries(state, [startedId], nowIso).state
+): { state: TimetrackState; violations: SaveViolation[] } {
+  /**
+   * BOTH HALVES OR NEITHER. With entries locked up to yesterday and a timer
+   * running since 22:00 yesterday, Start stops it (a Stop has no lock check).
+   * This then deleted the new entry, the lock refused the resume, the refusal
+   * was dropped, and nothing was left running (code review, 2026-11-04). Now a
+   * refusal of either half changes nothing, and is handed back to be said.
+   */
+  const unchanged = (violations: SaveViolation[]) => ({ state, violations })
+  // a third timer started since: running this one again would make two
+  const other = runningEntry(state)
+  if (other && other.id !== startedId && other.id !== displacedId) {
+    return unchanged([{ field: "time", message: "Another timer is running now — stop it first" }])
+  }
+  const withoutStarted = deleteEntries(state, [startedId], nowIso)
+  if (withoutStarted.violations.length > 0) return unchanged(withoutStarted.violations)
   // `updateEntry` recomputes duration from a null stop, which is what makes it
   // running again rather than a zero-length entry. `resuming` says so out loud:
   // every other caller is refused this, because for them it is a restart nobody
   // asked for.
-  return updateEntry(withoutStarted, displacedId, { stop: null }, nowIso, { resuming: true }).state
+  const resumed = updateEntry(withoutStarted.state, displacedId, { stop: null }, nowIso, { resuming: true })
+  if (resumed.violations.length > 0) return unchanged(resumed.violations)
+  return resumed
 }
 
 /** Undo support for the delete toast */
@@ -1238,17 +1254,57 @@ export function buildDayGroups(
    * touches, not per day over every entry: this runs every second a timer runs.
    */
   const dayTotals = new Map<IsoDate, number>()
+  /** each day's entries begun on an earlier day: a night's second half, a timer forgotten over the weekend */
+  const carriedIn = new Map<IsoDate, TimeEntry[]>()
   for (const entry of entries) {
     if (entry.serverDeletedAt) continue
     const endIso = entry.stop ?? new Date((epochSeconds(entry.start) + entrySeconds(entry, options.nowSec)) * 1000).toISOString()
+    const firstDay = dateKey(entry.start)
     const lastDay = dateKey(endIso)
-    for (let day = dateKey(entry.start); day <= lastDay; day = addDays(day, 1)) {
+    for (let day = firstDay; day <= lastDay; day = addDays(day, 1)) {
       dayTotals.set(day, (dayTotals.get(day) ?? 0) + entryDaySeconds(entry, day, options.nowSec))
+      if (day === firstDay) continue
+      const carried = carriedIn.get(day)
+      if (carried) carried.push(entry)
+      else carriedIn.set(day, [entry])
     }
   }
 
-  const days = [...byDay.keys()].sort((a, b) => (a < b ? 1 : -1))
-  return days.map((day) => {
+  /**
+   * EVERY DAY WITH TRACKED SECONDS HAS A HEADER, NOT ONLY THE DAYS AN ENTRY STARTS ON.
+   *
+   * The header above splits a night at midnight, so the hours after it belong
+   * to the next day — and a day on which nothing else started had no header to
+   * show them under. A timer started at 23:00 read "Yesterday 1:00" at 01:00,
+   * no "Today", while "This week" said 2:00; a finished 22:00–02:00 lost its two
+   * morning hours the same way (code review, 2026-11-04). Such a day lists the
+   * entry that reaches it, marked as carried on from the day it began
+   * (`continuedDays`), so the header has something under it to count. A day
+   * with entries of its own lists only those, as before: a night is listed once
+   * on its own day, and the morning's header counts its second half.
+   */
+  const reachedOnly = [...carriedIn.keys()].filter((day) => !byDay.has(day) && (dayTotals.get(day) ?? 0) > 0)
+  const days = [...byDay.keys(), ...reachedOnly].sort((a, b) => (a < b ? 1 : -1))
+  return days.map((day): DayGroup => {
+    const carried = carriedIn.get(day) ?? []
+    if (!byDay.has(day)) {
+      const reaching = carried
+        .filter((entry) => entryDaySeconds(entry, day, options.nowSec) > 0)
+        .sort((a, b) => epochSeconds(b.start) - epochSeconds(a.start))
+      return {
+        date: day,
+        totalSeconds: dayTotals.get(day) ?? 0,
+        plannedSeconds: 0,
+        carriedIn: carried,
+        rows: reaching.map((entry) => ({
+          key: `${day}:${entry.id}`,
+          entries: [entry],
+          totalSeconds: entrySeconds(entry, options.nowSec),
+          grouped: false,
+          continuedDays: daysBetween(dateKey(entry.start), day),
+        })),
+      }
+    }
     const dayEntries = [...byDay.get(day)!].sort(
       (a, b) => epochSeconds(b.start) - epochSeconds(a.start),
     )
@@ -1292,6 +1348,7 @@ export function buildDayGroups(
       date: day,
       totalSeconds: dayTotals.get(day) ?? 0,
       plannedSeconds: lengthOf(planned),
+      ...(carried.length > 0 && { carriedIn: carried }),
       rows,
     }
   })

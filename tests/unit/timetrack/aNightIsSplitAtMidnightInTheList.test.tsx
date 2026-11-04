@@ -47,10 +47,19 @@ describe("the list's day headers", () => {
     expect(groups[0].totalSeconds).toBe(daySeconds(entries, "2026-11-01", NOW_SEC))
   })
 
-  test("the row still shows the whole entry, on the day it started", () => {
+  /**
+   * Changed on 2026-11-04 (code review). This said the night was listed on
+   * Sunday ONLY — so with nothing else on Monday, Monday's two hours were on
+   * no header at all, and a timer running since 23:00 had no "Today" at 01:00.
+   * A day reached only by a night now lists it too, carried on from the day
+   * before (`aDayReachedOnlyAfterMidnightHasItsHeader`). The row is the whole
+   * entry on both days.
+   */
+  test("the row shows the whole entry on the day it started, and on a day it alone reaches", () => {
     const groups = buildDayGroups([sundayNight()], { groupSimilar: false, nowSec: NOW_SEC })
-    expect(groups.map((g) => g.date)).toEqual(["2026-11-01"])
-    expect(groups[0].rows[0].totalSeconds).toBe(4 * 3600)
+    expect(groups.map((g) => g.date)).toEqual(["2026-11-02", "2026-11-01"])
+    expect(groups.map((g) => g.rows[0].totalSeconds)).toEqual([4 * 3600, 4 * 3600])
+    expect(groups.map((g) => g.rows[0].continuedDays)).toEqual([1, undefined])
   })
 })
 

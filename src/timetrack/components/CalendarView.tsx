@@ -22,7 +22,7 @@ import type { PushToast } from "../hooks/useTimetrack"
 import { serverNowIso } from "../serverClock"
 import { withNeighbours } from "../timeFixService"
 import { AfterCheckContext } from "./afterCheck"
-import { announceNeighbours } from "./neighbourNotice"
+import { announceNeighbours, undoOrSay } from "./neighbourNotice"
 import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
 import {
   DRAG_THRESHOLD_PX,
@@ -210,6 +210,9 @@ export function CalendarView({
    * press, so a click that never came cannot swallow the one after it.
    */
   const suppressClick = useRef(false)
+  /** the workspace as it is when a toast's Undo is pressed, to say why an Undo cannot be done (`undoOrSay`) */
+  const latestState = useRef(state)
+  latestState.current = state
 
   const hourHeight = CALENDAR_ZOOMS.find((z) => z.id === zoom)!.hourHeight
   const minuteHeight = hourHeight / 60
@@ -429,7 +432,7 @@ export function CalendarView({
       const applied = apply(current)
       return applied.violations.length > 0 ? current : applied.state
     })
-    announceNeighbours(checked, state.user.timeFormat, setState, pushToast)
+    announceNeighbours(checked, state.user.timeFormat, setState, pushToast, () => latestState.current)
   }
 
   const finishDrag = (pressed: Gesture) => {
@@ -805,7 +808,14 @@ export function CalendarView({
                                 pushToast(
                                   `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
                                   "info",
-                                  () => setState((current) => undoDisplacement(current, entry.id, displaced.id, nowIso())),
+                                  // both halves or neither, and a refusal is said (`undoDisplacement`)
+                                  () =>
+                                    undoOrSay(
+                                      () => latestState.current,
+                                      (current) => undoDisplacement(current, entry.id, displaced.id, nowIso()),
+                                      setState,
+                                      pushToast,
+                                    ),
                                 )
                               }
                             })

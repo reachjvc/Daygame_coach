@@ -87,7 +87,7 @@ describe("Switched at…", () => {
     const now = at(4, 14, 30)
     const switched = switchAt(day, draftFor("Email"), at(4, 11, 55), now)
 
-    const undone = undoDisplacement(switched.state, switched.started!.id, switched.stopped!.id, now)
+    const undone = undoDisplacement(switched.state, switched.started!.id, switched.stopped!.id, now).state
 
     expect(liveEntries(undone)).toHaveLength(1)
     const deep = runningEntry(undone)!

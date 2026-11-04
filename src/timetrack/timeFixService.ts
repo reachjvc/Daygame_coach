@@ -23,7 +23,7 @@
  * hold here exactly as they do everywhere else.
  */
 
-import { dateKey, epochMillis, epochSeconds, formatWhen, isoFromEpochSeconds } from "./timetrackFormatService"
+import { dateKey, epochMillis, epochSeconds, formatWhen, isoFromEpochSeconds, startOfDayIso } from "./timetrackFormatService"
 import { liveEntries, reconcileRunningEntries, runningEntry, startTimer, updateEntry } from "./timetrackService"
 import type { EntryDraft, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "./types"
 
@@ -320,6 +320,15 @@ export function withNeighbours<R extends { state: TimetrackState; violations: Sa
   const touching = touchingNeighbour(base, before, edge, oldEdge)
   const neighbour = touching ? byId(result.state, touching.id) : null
   if (!neighbour) return alone
+  /**
+   * ALREADY THERE IS NOT MOVED. "End where the next one starts" lands the edge
+   * exactly on the neighbour — the fix the owner makes most — and Email was
+   * "moved" from 11:55:10 to 11:55:10: its row written and synced, and a toast
+   * offering to keep it as it was (code review, 2026-11-04). Equal to the
+   * millisecond; half a second off still follows.
+   */
+  const neighbourEdge = edge === "stop" ? neighbour.start : neighbour.stop
+  if (neighbourEdge !== null && epochMillis(neighbourEdge) === epochMillis(newEdge)) return alone
 
   const start = edge === "stop" ? newEdge : neighbour.start
   const end = edge === "stop" ? (neighbour.stop ?? nowIso) : newEdge
@@ -455,6 +464,47 @@ export interface Joint {
   laterId: Id
   /** how long the overlap or the gap is */
   seconds: number
+  /**
+   * Why an overlap has no Fix. "inside": the later entry ends before the
+   * earlier one does, so ending the earlier where the later starts would cut
+   * far more than the overlap. "running": the earlier is still running, and
+   * Fix never stops a timer. Absent when Fix removes just the overlap.
+   */
+  noFix?: "inside" | "running"
+}
+
+/**
+ * Whether "end the earlier where the later starts" removes ONLY the overlap.
+ *
+ * It does when the later entry runs on to the earlier one's end or past it —
+ * the 33-second and 4-minute overlaps that hand fixes leave. It does not when
+ * the later one sits inside: a call added for 10:30–10:45 inside a finished
+ * 10:00–12:00 cut the earlier to 10:30, 1:30 gone to remove 15 minutes; inside
+ * a timer running since 10:00 it stopped the timer and threw away everything
+ * from 10:45 to now (code review, 2026-11-04). And a running earlier is never
+ * ended here at all: Stop and Stopped at… are how a timer ends.
+ */
+function noFixFor(earlier: TimeEntry, later: TimeEntry, nowIso: IsoDateTime): Joint["noFix"] {
+  if (epochMillis(later.stop ?? nowIso) < epochMillis(earlier.stop ?? nowIso)) return "inside"
+  if (earlier.stop === null) return "running"
+  return undefined
+}
+
+/** The overlap or small gap between two entries next to each other in time; null where they meet */
+function jointBetween(earlier: TimeEntry, later: TimeEntry, nowIso: IsoDateTime): Joint | null {
+  const earlierEnd = epochSeconds(earlier.stop ?? nowIso)
+  const laterStart = epochSeconds(later.start)
+  if (earlierEnd > laterStart) {
+    // an entry wholly inside the one before overlaps it by its own length
+    const laterEnd = epochSeconds(later.stop ?? nowIso)
+    const joint: Joint = { kind: "overlap", earlierId: earlier.id, laterId: later.id, seconds: Math.min(earlierEnd, laterEnd) - laterStart }
+    const noFix = noFixFor(earlier, later, nowIso)
+    return noFix ? { ...joint, noFix } : joint
+  }
+  if (laterStart - earlierEnd >= TOUCHING_SECONDS && laterStart - earlierEnd < SMALL_GAP_SECONDS) {
+    return { kind: "gap", earlierId: earlier.id, laterId: later.id, seconds: laterStart - earlierEnd }
+  }
+  return null
 }
 
 /**
@@ -466,8 +516,15 @@ export interface Joint {
  * (closer is touching, D12: a Stop and a Start seconds apart is how back-to-
  * back tracking looks) up to five (longer is a break you took).
  *
- * Within a day only, by start, like the list's own day groups; duration-only
- * entries have no times to compare. A running entry ends now.
+ * Within a day, by start, like the list's own day groups — and across the
+ * midnight before it: each day's first entry is also compared with the entry
+ * from an earlier day that reaches furthest into it. Compared within start days
+ * only, sleep from 23:00 to 07:00:40 and an entry from 07:00 counted 40 seconds
+ * twice and were never marked (code review, 2026-11-04). Only when that entry
+ * does reach the day: an evening ended at 23:58 and a start at 00:01 are two
+ * days, and closing that "gap" would move the morning back onto the night.
+ *
+ * Duration-only entries have no times to compare. A running entry ends now.
  */
 export function jointsOf(entries: TimeEntry[], nowIso: IsoDateTime): Joint[] {
   const days = new Map<string, TimeEntry[]>()
@@ -478,22 +535,22 @@ export function jointsOf(entries: TimeEntry[], nowIso: IsoDateTime): Joint[] {
   }
 
   const joints: Joint[] = []
-  for (const day of days.values()) {
+  const endOf = (entry: TimeEntry) => epochMillis(entry.stop ?? nowIso)
+  /** of the days so far, the entry that ends latest: the one that can run on into the next */
+  let reaching: TimeEntry | null = null
+  for (const key of [...days.keys()].sort()) {
+    const day = days.get(key)!
     // to the millisecond: two entries begun in the same second are still in an order, and Fix needs the right one (B1)
     day.sort((a, b) => epochMillis(a.start) - epochMillis(b.start))
-    for (let i = 1; i < day.length; i++) {
-      const earlier = day[i - 1]
-      const later = day[i]
-      const earlierEnd = epochSeconds(earlier.stop ?? nowIso)
-      const laterStart = epochSeconds(later.start)
-      if (earlierEnd > laterStart) {
-        // an entry wholly inside the one before overlaps it by its own length
-        const laterEnd = epochSeconds(later.stop ?? nowIso)
-        joints.push({ kind: "overlap", earlierId: earlier.id, laterId: later.id, seconds: Math.min(earlierEnd, laterEnd) - laterStart })
-      } else if (laterStart - earlierEnd >= TOUCHING_SECONDS && laterStart - earlierEnd < SMALL_GAP_SECONDS) {
-        joints.push({ kind: "gap", earlierId: earlier.id, laterId: later.id, seconds: laterStart - earlierEnd })
-      }
+    if (reaching && endOf(reaching) >= epochMillis(startOfDayIso(key))) {
+      const across = jointBetween(reaching, day[0], nowIso)
+      if (across) joints.push(across)
     }
+    for (let i = 1; i < day.length; i++) {
+      const joint = jointBetween(day[i - 1], day[i], nowIso)
+      if (joint) joints.push(joint)
+    }
+    for (const entry of day) if (!reaching || endOf(entry) > endOf(reaching)) reaching = entry
   }
   return joints
 }
@@ -502,9 +559,10 @@ export function jointsOf(entries: TimeEntry[], nowIso: IsoDateTime): Joint[] {
  * Fix and Close gap.
  *
  * An overlap is fixed by ending the earlier entry where the later one starts —
- * the later one is the thing you moved on to. A gap is closed by starting the
- * later one where the earlier ended: the later is usually the one added by hand
- * afterwards, which is where the gap came from.
+ * the later one is the thing you moved on to — and only where that removes
+ * just the overlap (`noFixFor`); anywhere else it is refused, in words. A gap
+ * is closed by starting the later one where the earlier ended: the later is
+ * usually the one added by hand afterwards, which is where the gap came from.
  */
 export function mendJoint(
   state: TimetrackState,
@@ -514,7 +572,15 @@ export function mendJoint(
   const earlier = byId(state, joint.earlierId)
   const later = byId(state, joint.laterId)
   if (!earlier || !later) return { state, violations: refused("One of those entries is gone") }
-  if (joint.kind === "overlap") return updateEntry(state, earlier.id, { stop: later.start }, nowIso)
+  if (joint.kind === "overlap") {
+    // asked of the entries as they are now, not as the mark was drawn
+    const noFix = noFixFor(earlier, later, nowIso)
+    if (noFix === "inside") {
+      return { state, violations: refused(`“${named(later)}” is inside “${named(earlier)}”: ending “${named(earlier)}” where it starts would cut more than the overlap`) }
+    }
+    if (noFix === "running") return { state, violations: refused(`“${named(earlier)}” is still running: Fix never stops a timer`) }
+    return updateEntry(state, earlier.id, { stop: later.start }, nowIso)
+  }
   if (!earlier.stop) return { state, violations: refused("The entry before it is still running") }
   return updateEntry(state, later.id, { start: earlier.stop }, nowIso)
 }

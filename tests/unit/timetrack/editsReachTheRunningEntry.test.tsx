@@ -281,8 +281,8 @@ describe("a timer that displaces another", () => {
       "2026-08-10T13:00:05.000Z",
     )
 
-    expect(back.entries).toHaveLength(1)
-    expect(runningEntry(back)?.description).toBe("the afternoon")
+    expect(back.state.entries).toHaveLength(1)
+    expect(runningEntry(back.state)?.description).toBe("the afternoon")
   })
 })
 

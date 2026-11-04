@@ -485,7 +485,16 @@ function readClock(raw: string): { h: number; m: number; bareHour: boolean } | n
    * silently (edits audit, 2026-11-04).
    */
   if (/[^0-9:.,\sapmh]/.test(text)) return null
-  const digits = text.replace(/[^0-9:]/g, "")
+  /**
+   * "10.30" AND "10,30" ARE HALF PAST TEN: between digits, a dot or a comma is
+   * the clock's colon. They were stripped instead, so "10.30" came out right by
+   * luck while "10.5" became "105", 01:05, and "12.5" 01:25 — in a start box,
+   * with nothing asked (code review, 2026-11-04). One digit after it is refused
+   * (`unreadableTimeMessage` says why): "10.5" could be 10:05, 10:30 or 10:50.
+   * Durations have their own rules (`parseDurationInput`).
+   */
+  if (/\d[.,]\d(?!\d)/.test(text)) return null
+  const digits = text.replace(/(\d)[.,](?=\d)/g, "$1:").replace(/[^0-9:]/g, "")
   // "now", "pm", "x": no digits is no time — `Number("")` is 0, and it read as midnight
   if (!/\d/.test(digits)) return null
   // "12345" is not a clock time; it read as 12:34 and dropped the 5
@@ -514,6 +523,24 @@ function readClock(raw: string): { h: number; m: number; bareHour: boolean } | n
   if (meridiem === "a" && h === 12) h = 0
   if (h > 23) return null
   return { h, m, bareHour }
+}
+
+/**
+ * What to say when a clock time cannot be read because it says too little: one
+ * digit after a dot or a comma ("10.5"), which could mean any of three times.
+ * Null for anything else, which keeps the box's own "Could not read that time".
+ */
+export function unreadableTimeMessage(raw: string): string | null {
+  const match = /^(\d{1,2})([.,])(\d)$/.exec(raw.trim())
+  if (!match) return null
+  const [typed, hour, , digit] = match
+  const d = Number(digit)
+  const minutes = [...new Set([d, d * 6, d * 10])].filter((m) => m < 60).sort((a, b) => a - b)
+  const list = (separator: string) => {
+    const times = minutes.map((m) => `${hour}${separator}${pad2(m)}`)
+    return times.length > 1 ? `${times.slice(0, -1).join(", ")} or ${times[times.length - 1]}` : times[0]
+  }
+  return `“${typed}” could be ${list(":")} — type ${list(".")}`
 }
 
 /** `h:m` on `dayKey`, in the viewer's own zone */
@@ -714,6 +741,11 @@ export function endDayMark(startIso: IsoDateTime, stopIso: IsoDateTime | null): 
   const days = daysBetween(dateKey(startIso), dateKey(stopIso))
   if (days <= 0) return null
   return days === 1 ? "next day" : `+${days} days`
+}
+
+/** The other way round: on a row listed on a day its entry reached from an earlier one, where it began */
+export function continuedMark(days: number): string {
+  return days === 1 ? "from the day before" : `from ${days} days before`
 }
 
 /**

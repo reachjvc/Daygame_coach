@@ -30,6 +30,8 @@ import {
 import {
   DURATION_HINT,
   DURATION_UNREADABLE,
+  addDays,
+  continuedMark,
   dateKey,
   daysBetween,
   endDayMark,
@@ -45,6 +47,8 @@ import {
   parseEndTimeInput,
   parseStartTimeInput,
   plural,
+  startOfDayIso,
+  unreadableTimeMessage,
 } from "../timetrackFormatService"
 import { nudgePair, samePair, typedIntoPair, type TimePair } from "../drumService"
 import {
@@ -81,7 +85,6 @@ import {
   mendJoint,
   shiftEdge,
   startWhereLastEnded,
-  undoStopAt,
   withNeighbours,
   type Joint,
 } from "../timeFixService"
@@ -92,7 +95,7 @@ import { ColorDot, DayPicker, Dropdown, EmptyState, plannedStripes, touchRow, to
 import { serverNow, serverNowIso } from "../serverClock"
 import { AfterCheckContext } from "./afterCheck"
 import { EntryDrums } from "./Drums"
-import { announceNeighbours } from "./neighbourNotice"
+import { announceNeighbours, undoOrSay } from "./neighbourNotice"
 import { announceEndedEarly, askAboutTypedTime, askBeforeLong } from "./TimerBar"
 
 interface EntryListProps {
@@ -147,8 +150,9 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
   const jointsOfDay = (group: DayGroup): Map<string, Joint> => {
     let found = jointCache.current.get(group)
     if (!found) {
-      const dayEntries = group.rows.flatMap((row) => row.entries)
-      found = new Map(jointsOf(dayEntries, new Date(nowSec * 1000).toISOString()).map((joint) => [`${joint.earlierId}>${joint.laterId}`, joint]))
+      // with what ran into the day from before midnight, so its first entry is compared with that too (`jointsOf`)
+      const dayEntries = new Map([...(group.carriedIn ?? []), ...group.rows.flatMap((row) => row.entries)].map((e) => [e.id, e]))
+      found = new Map(jointsOf([...dayEntries.values()], new Date(nowSec * 1000).toISOString()).map((joint) => [`${joint.earlierId}>${joint.laterId}`, joint]))
       jointCache.current.set(group, found)
     }
     return found
@@ -165,6 +169,23 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
     if (!earlier || later.grouped || earlier.grouped) return null
     return jointsOfDay(group).get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
   }
+  /**
+   * The mark under a day's first entry, against the entry that ran into the
+   * day from before midnight: sleep to 07:00:40 and coffee from 07:00. That
+   * entry is listed under the day before, so the mark names it.
+   */
+  const jointAcrossMidnight = (group: DayGroup): Joint | null => {
+    const first = group.rows[group.rows.length - 1]
+    if (!first || first.grouped || first.continuedDays || !group.carriedIn) return null
+    for (const carried of group.carriedIn) {
+      const joint = jointsOfDay(group).get(`${carried.id}>${first.entries[0].id}`)
+      if (joint) return joint
+    }
+    return null
+  }
+  /** what the workspace is when a toast's Undo is pressed: the list is still on screen, the row that made the toast may not be */
+  const latestState = useRef(state)
+  latestState.current = state
 
   const toggleSelect = (ids: Id[]) => {
     setSelected((current) => {
@@ -289,7 +310,8 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
 
           <ul className="divide-y divide-border">
             {group.rows.map((row, index) => {
-              const joint = jointBelow(group, index)
+              const across = index === group.rows.length - 1 ? jointAcrossMidnight(group) : null
+              const joint = jointBelow(group, index) ?? across
               return (
               <Fragment key={row.key}>
               <EntryRowView
@@ -312,7 +334,16 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
                 onGoToProject={onGoToProject}
                 isMobile={isMobile}
               />
-              {joint && <JointMark joint={joint} state={state} setState={setState} pushToast={pushToast} />}
+              {joint && (
+                <JointMark
+                  joint={joint}
+                  across={joint === across}
+                  state={state}
+                  latest={() => latestState.current}
+                  setState={setState}
+                  pushToast={pushToast}
+                />
+              )}
               </Fragment>
               )
             })}
@@ -516,8 +547,15 @@ function EntryFields({
 }) {
   const seconds = row ? row.totalSeconds : entrySeconds(entry, nowSec)
   const running = isRunning(entry)
+  /**
+   * On a day the entry reached from an earlier one (`continuedDays`): "from the
+   * day before", and its end measured from THIS day — on a night's second
+   * half the end is today, not "next day".
+   */
+  const continued = row?.continuedDays ? continuedMark(row.continuedDays) : null
+  const shownOn = row?.continuedDays ? startOfDayIso(addDays(dateKey(entry.start), row.continuedDays)) : entry.start
   /** "next day" when the end is on a later day than the start, as the sheet says it */
-  const endMark = endDayMark(entry.start, entry.stop)
+  const endMark = endDayMark(shownOn, entry.stop)
   // not begun yet: striped, and in no total until it starts (Q2)
   const planned = isPlanned(entry, nowSec)
   const editable = canEditEntry(state, entry)
@@ -607,7 +645,7 @@ function EntryFields({
         ? parseStartTimeInput(raw, entry.start, entry.stop ?? nowIso())
         : parseEndTimeInput(raw, entry.start)
     if (!iso) {
-      pushToast("Could not read that time", "error")
+      pushToast(unreadableTimeMessage(raw) ?? "Could not read that time", "error")
       return
     }
     const write = (at: string) => {
@@ -634,7 +672,7 @@ function EntryFields({
         return applied.violations.length > 0 ? current : applied.state
       })
       if (which === "stop") announceNextDay(entry.start, at, checked.state, pushToast)
-      announceNeighbours(checked, checked.state.user.timeFormat, setState, pushToast)
+      announceNeighbours(checked, checked.state.user.timeFormat, setState, pushToast, () => latestState.current)
     }
     // longer than 12 hours, or 12 hours cut off a finished entry, asks first: see `askBeforeLong`
     const span = { start: entry.start, stop: entry.stop ?? nowIso(), running }
@@ -695,7 +733,8 @@ function EntryFields({
             pushToast(
               `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
               "info",
-              () => setState((current) => undoDisplacement(current, started.id, displaced.id, nowIso())),
+              // both halves or neither, and a refusal is said (`undoDisplacement`)
+              () => undoOrSay(() => latestState.current, (current) => undoDisplacement(current, started.id, displaced.id, nowIso()), setState, pushToast),
             )
           }
         })
@@ -786,6 +825,11 @@ function EntryFields({
             </span>
             {!row?.grouped && !entry.duronly && (
               <span className="shrink-0 tabular-nums">
+                {continued && (
+                  <span data-continued className="mr-1 text-[11px] text-primary">
+                    {continued}
+                  </span>
+                )}
                 {formatTimeLabel(entry.start, state)}–{entry.stop ? formatTimeLabel(entry.stop, state) : "now"}
                 {endMark && (
                   <span data-end-day className="ml-1 text-[11px] text-primary">
@@ -931,7 +975,16 @@ function EntryFields({
           sideways only, so the "next day" under the end box still shows */}
         <div className="flex items-center justify-end overflow-x-clip">
           {!entry.duronly && !row?.grouped && (
-            <div className="hidden items-center gap-1 text-xs md:flex">
+            <div className="relative hidden items-center gap-1 text-xs md:flex">
+              {/* under the start box, the way "next day" sits under the end box; the one shown when both would be */}
+              {continued && (
+                <span
+                  data-continued
+                  className="pointer-events-none absolute left-0 top-full whitespace-nowrap text-[9px] leading-none text-primary"
+                >
+                  {continued}
+                </span>
+              )}
               <input
                 value={startDraft ?? formatTimeLabel(entry.start, state)}
                 onChange={(event) => setStartDraft(event.target.value)}
@@ -973,7 +1026,7 @@ function EntryFields({
                     "rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground",
                   )}
                 />
-                {endMark && (
+                {endMark && !continued && (
                   <span
                     data-end-day
                     className="pointer-events-none absolute inset-x-0 top-full whitespace-nowrap text-center text-[9px] leading-none text-primary"
@@ -1226,16 +1279,21 @@ function MenuItem({
  */
 function JointMark({
   joint,
+  across,
   state,
+  latest,
   setState,
   pushToast,
 }: {
   joint: Joint
+  /** between a day's first entry and one listed under an earlier day: the mark names that one */
+  across: boolean
   state: TimetrackState
+  /** the workspace when Undo is pressed: after a Fix this mark is gone, and its `state` with it */
+  latest: () => TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
   pushToast: PushToast
 }) {
-  const afterCheck = useContext(AfterCheckContext)
   const earlier = state.entries.find((e) => e.id === joint.earlierId)
   const later = state.entries.find((e) => e.id === joint.laterId)
   if (!earlier || !later) return null
@@ -1246,9 +1304,9 @@ function JointMark({
   const moment = overlap ? later.start : (earlier.stop ?? later.start)
   const time = formatTimeOfDay(moment, format)
 
-  const mend = (latest: TimetrackState) => {
+  const mend = () => {
     const now = serverNowIso()
-    const result = mendJoint(latest, joint, now)
+    const result = mendJoint(state, joint, now)
     if (result.violations[0]) {
       pushToast(result.violations[0].message, "error")
       return
@@ -1257,45 +1315,51 @@ function JointMark({
       const applied = mendJoint(current, joint, now)
       return applied.violations.length > 0 ? current : applied.state
     })
-    const before = latest.entries.find((e) => e.id === (overlap ? earlier.id : later.id))
-    if (!before) return
-    // Undo puts back the one edge the fix moved, on whatever the workspace is by then
+    // Undo puts back the one edge the fix moved — never a running timer's: Fix does not end one (`mendJoint`)
     const undo = (current: TimetrackState): { state: TimetrackState; violations: SaveViolation[] } =>
       overlap
-        ? before.stop === null
-          ? undoStopAt(current, before.id, serverNowIso())
-          : updateEntry(current, before.id, { stop: before.stop }, serverNowIso())
-        : updateEntry(current, before.id, { start: before.start }, serverNowIso())
+        ? updateEntry(current, earlier.id, { stop: earlier.stop }, serverNowIso())
+        : updateEntry(current, later.id, { start: later.start }, serverNowIso())
     pushToast(
       overlap ? `Ended ${quoted(earlier)} at ${time}, where ${quoted(later)} starts` : `Started ${quoted(later)} at ${time}, where ${quoted(earlier)} ended`,
       "info",
-      () =>
-        setState((current) => {
-          const undone = undo(current)
-          return undone.violations.length > 0 ? current : undone.state
-        }),
+      () => undoOrSay(latest, undo, setState, pushToast),
     )
   }
+
+  /**
+   * Said in words where Fix would cut more than the overlap, and no button: a
+   * call inside a 10:00–12:00, or inside a timer still running (`noFixFor`).
+   * Which part was really the call is the owner's to say, in the sheet.
+   */
+  const why =
+    joint.noFix === "inside" ? `${quoted(later)} is inside ${quoted(earlier)}` : joint.noFix === "running" ? `${quoted(earlier)} is still running` : null
+  const span = formatIdleSpan(joint.seconds)
+  const said = [
+    overlap ? `Overlap of ${span}${across ? ` with ${quoted(earlier)}` : ""}` : `Gap of ${span}${across ? ` after ${quoted(earlier)}` : ""}`,
+    why,
+  ]
+    .filter(Boolean)
+    .join(" · ")
 
   return (
     <li
       data-joint={joint.kind}
-      className={cn("flex items-center gap-2 px-3 text-[11px]", overlap ? "text-destructive" : "text-muted-foreground")}
+      className={cn("flex min-h-11 items-center gap-2 px-3 text-[11px] sm:min-h-7", overlap ? "text-destructive" : "text-muted-foreground")}
     >
-      <span aria-hidden className={cn("h-px flex-1", overlap ? "bg-destructive/70" : "bg-border")} />
-      <span>{overlap ? `Overlap of ${formatIdleSpan(joint.seconds)}` : `Gap of ${formatIdleSpan(joint.seconds)}`}</span>
-      <button
-        type="button"
-        aria-label={overlap ? `Fix: end ${quoted(earlier)} at ${time}` : `Close gap: start ${quoted(later)} at ${time}`}
-        onClick={() =>
-          // fixing an overlap with a running timer stops it, so it waits for the check like Stop (D2)
-          overlap && earlier.stop === null && afterCheck ? afterCheck(mend) : mend(state)
-        }
-        className="min-h-11 rounded px-2 font-medium underline-offset-2 hover:underline sm:min-h-7"
-      >
-        {overlap ? "Fix" : "Close gap"}
-      </button>
-      <span aria-hidden className={cn("h-px w-6", overlap ? "bg-destructive/70" : "bg-border")} />
+      <span aria-hidden className={cn("h-px min-w-4 flex-1", overlap ? "bg-destructive/70" : "bg-border")} />
+      <span className="min-w-0 text-center">{said}</span>
+      {!why && (
+        <button
+          type="button"
+          aria-label={overlap ? `Fix: end ${quoted(earlier)} at ${time}` : `Close gap: start ${quoted(later)} at ${time}`}
+          onClick={mend}
+          className="min-h-11 shrink-0 rounded px-2 font-medium underline-offset-2 hover:underline sm:min-h-7"
+        >
+          {overlap ? "Fix" : "Close gap"}
+        </button>
+      )}
+      <span aria-hidden className={cn("h-px w-6 shrink-0", overlap ? "bg-destructive/70" : "bg-border")} />
     </li>
   )
 }
@@ -1530,7 +1594,10 @@ export function EntryDetailModalBody({
     if (drumsHeld) {
       const next = typedIntoPair(drumsHeld, edit.field, text, nowIso())
       if (!next) {
-        pushToast(edit.field === "duration" ? DURATION_UNREADABLE : "Could not read that time — try 9:30, 930 or 9:30 pm", "error")
+        pushToast(
+          edit.field === "duration" ? DURATION_UNREADABLE : (unreadableTimeMessage(text) ?? "Could not read that time — try 9:30, 930 or 9:30 pm"),
+          "error",
+        )
         return
       }
       holdDrums(next)
@@ -1580,7 +1647,7 @@ export function EntryDetailModalBody({
         ? parseStartTimeInput(text, current.start, current.stop ?? nowIso())
         : parseEndTimeInput(text, current.start)
     if (!iso) {
-      pushToast("Could not read that time — try 9:30, 930 or 9:30 pm", "error")
+      pushToast(unreadableTimeMessage(text) ?? "Could not read that time — try 9:30, 930 or 9:30 pm", "error")
       return
     }
     const field = edit.field
@@ -1594,7 +1661,7 @@ export function EntryDetailModalBody({
       )
       if (!landed) return
       if (field === "stop") announceNextDay(current.start, at, latestState.current, pushToast)
-      announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
+      announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast, () => latestState.current)
     }
     // longer than 12 hours, or 12 hours cut off a finished entry, asks first: see `askBeforeLong`
     const span = { start: current.start, stop: current.stop ?? nowIso(), running: isRunning(current) }
@@ -1616,7 +1683,7 @@ export function EntryDetailModalBody({
     if (!landed) return
     drumPairRef.current = null
     setDrumPair(null)
-    announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
+    announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast, () => latestState.current)
   }
 
   /**
@@ -1684,7 +1751,7 @@ export function EntryDetailModalBody({
     const run = () => {
       const now = nowIso()
       const landed = landOnCurrent((base) => withNeighbours(base, entry.id, now, (edited) => apply(edited, now)))
-      if (landed) announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
+      if (landed) announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast, () => latestState.current)
     }
     if (!askIfLong) {
       run()

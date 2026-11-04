@@ -17,6 +17,7 @@ import { serverNow, serverNowIso, serverOffset } from "../serverClock"
 import { browserOwner, ownerChangedUnderneath } from "../browserOwner"
 import { STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
 import { readBackgroundMemory, rememberBackground } from "./backgroundMemory"
+import { undoOrSay } from "../components/neighbourNotice"
 import { newId } from "../idService"
 import { migrateStateToV3, moveLegacyIdleDefault } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
@@ -190,6 +191,9 @@ function loadState(nowIso: string): LoadResult {
  */
 export function useTimetrack({ account }: { account?: string } = {}) {
   const [state, setStateRaw] = useState<TimetrackState | null>(null)
+  /** the workspace as it is when a toast's Undo is pressed, to say why an Undo cannot be done (`undoOrSay`) */
+  const latestState = useRef(state)
+  latestState.current = state
   const [nowSec, setNowSec] = useState(() => Math.floor(serverNow() / 1000))
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [idlePrompt, setIdlePrompt] = useState<IdlePrompt | null>(null)
@@ -820,9 +824,12 @@ export function useTimetrack({ account }: { account?: string } = {}) {
     (displaced: TimeEntry | null, started: TimeEntry | null) => {
       if (!displaced || !started) return
       const name = (entry: TimeEntry) => entry.description.trim() || "(no description)"
-      pushToast(`Stopped “${name(displaced)}” and started “${name(started)}”`, "info", () =>
-        setState((current) => undoDisplacement(current, started.id, displaced.id, serverNowIso())),
-      )
+      // both halves or neither, and a refusal is said: see `undoDisplacement`
+      pushToast(`Stopped “${name(displaced)}” and started “${name(started)}”`, "info", () => {
+        const latest = latestState.current
+        if (!latest) return
+        undoOrSay(() => latestState.current ?? latest, (current) => undoDisplacement(current, started.id, displaced.id, serverNowIso()), setState, pushToast)
+      })
     },
     [pushToast, setState],
   )

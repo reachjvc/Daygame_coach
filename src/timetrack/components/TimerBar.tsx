@@ -28,6 +28,7 @@ import {
   parseDurationInput,
   parseEndTimeInput,
   parseTimeInput,
+  unreadableTimeMessage,
 } from "../timetrackFormatService"
 import {
   applyAutotracker,
@@ -56,6 +57,7 @@ import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import type { PushToast } from "../hooks/useTimetrack"
 import { AfterCheckContext } from "./afterCheck"
 import { MomentDialog, type MomentKind } from "./MomentPicker"
+import { undoOrSay } from "./neighbourNotice"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow, touchTarget } from "./primitives"
 
@@ -541,7 +543,10 @@ export function TimerBar({
      */
     const stop = start ? parseEndTimeInput(manualStop, start) : null
     if (!start || !stop) {
-      pushToast("Enter start and end times like 09:00 or 9:00 am", "error")
+      pushToast(
+        unreadableTimeMessage(manualStart) ?? unreadableTimeMessage(manualStop) ?? "Enter start and end times like 09:00 or 9:00 am",
+        "error",
+      )
       return
     }
     const write = (stopIso: IsoDateTime) => {
@@ -636,14 +641,14 @@ export function TimerBar({
       setState(() => result.state)
       if (kind === "switch") setNextDraft(emptyDraft)
       if (stopped) {
-        // one change, one Undo: the next entry goes and the first runs again from its own start
+        // one change, one Undo: the next entry goes and the first runs again from its own start — both, or neither and why
         pushToast(`${quoted(stopped)} ended ${when(started.start)} and ${quoted(started)} started then`, "info", () =>
-          setState((current) => undoDisplacement(current, started.id, stopped.id, serverNowIso())),
+          undoOrSay(() => latestState.current, (current) => undoDisplacement(current, started.id, stopped.id, serverNowIso()), setState, pushToast),
         )
         return
       }
       pushToast(`Started ${quoted(started)} ${when(started.start)}`, "info", () =>
-        setState((current) => deleteEntries(current, [started.id], serverNowIso()).state),
+        undoOrSay(() => latestState.current, (current) => deleteEntries(current, [started.id], serverNowIso()), setState, pushToast),
       )
     })
   }

@@ -241,6 +241,12 @@ export interface DayGroup {
   /** the length of the day's planned entries, said beside the total */
   plannedSeconds: number
   rows: EntryRow[]
+  /**
+   * Entries begun on an earlier day that run into this one (a night's second
+   * half). Listed as rows only on a day with no entries of its own; kept here
+   * so the day's first entry can be compared with them (`jointsOf`).
+   */
+  carriedIn?: TimeEntry[]
 }
 
 /** One row of the timer list — either a single entry or a collapsed group */
@@ -250,6 +256,11 @@ export interface EntryRow {
   totalSeconds: number
   /** true when several identical entries were collapsed into this row */
   grouped: boolean
+  /**
+   * Set on a row listed on a day its entry reached from an earlier one: how
+   * many days after the day it began. The row says "from the day before".
+   */
+  continuedDays?: number
 }
 
 // ---------------------------------------------------------------------------

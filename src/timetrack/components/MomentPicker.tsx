@@ -30,6 +30,7 @@ import {
   formatTimeOfDay,
   isoFromEpochSeconds,
   parseMomentInput,
+  unreadableTimeMessage,
 } from "../timetrackFormatService"
 import type { EntryDraft, IsoDateTime, TimeFormat, TimetrackState } from "../types"
 import { MomentDrums, SKIPPED_HOUR } from "./Drums"
@@ -75,12 +76,12 @@ export function MomentPicker({
    * moment to eleven o'clock on the way.
    */
   const [typed, setTyped] = useState<string | null>(null)
-  const [unreadable, setUnreadable] = useState(false)
+  const [unreadable, setUnreadable] = useState<string | null>(null)
   const shown = formatTimeOfDay(value, timeFormat)
 
   const set = (iso: IsoDateTime) => {
     setTyped(null)
-    setUnreadable(false)
+    setUnreadable(null)
     onChange(iso)
   }
 
@@ -91,7 +92,7 @@ export function MomentPicker({
     if (!text || text === shown) return
     const parsed = parseMomentInput(text, earliest, latest)
     if (!parsed) {
-      setUnreadable(true)
+      setUnreadable(unreadableTimeMessage(text) ?? "Could not read that time — try 1155 or 11:55")
       return
     }
     set(parsed)
@@ -147,7 +148,7 @@ export function MomentPicker({
         <p className="text-center text-xs text-muted-foreground">{formatDayHeader(dateKey(value), todayKey)}</p>
       )}
       {unreadable && (
-        <p className="text-center text-xs text-destructive">Could not read that time — try 1155 or 11:55</p>
+        <p className="text-center text-xs text-destructive">{unreadable}</p>
       )}
 
       {chips.length > 0 && (

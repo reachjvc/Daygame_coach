@@ -58,9 +58,15 @@ describe("which joints are marked", () => {
     expect(jointsOf(exactTouch, NOW)).toEqual([])
   })
 
-  test("never across days, and never a duration-only entry", () => {
+  /**
+   * Changed on 2026-11-04 (code review): "never across days" left sleep to
+   * 07:00:40 and an entry from 07:00 counting 40 seconds twice, unmarked. A
+   * day's first entry is now compared with what ran into it from before
+   * midnight (`anOverlapAfterMidnightIsMarked`).
+   */
+  test("across midnight too, and never a duration-only entry", () => {
     const night = [exact("a", at(3, 22, 0), at(4, 0, 2), "Reading"), exact("b", at(4, 0, 0), at(4, 1, 0), "Sleep")]
-    expect(jointsOf(night, NOW)).toEqual([])
+    expect(jointsOf(night, NOW)).toEqual([{ kind: "overlap", earlierId: "a", laterId: "b", seconds: 120 }])
     const durationOnly = [exact("a", at(4, 9, 0), at(4, 10, 3), "Deep work", { duronly: true }), exact("b", at(4, 10, 0), at(4, 11, 0), "Email")]
     expect(jointsOf(durationOnly, NOW)).toEqual([])
   })
