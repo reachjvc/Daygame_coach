@@ -59,7 +59,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, SCORED_TABS, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, WORKSHOP_TABS } from "@/src/goals/data/northStar"
+import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY } from "@/src/goals/data/northStar"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
@@ -166,9 +166,12 @@ export function NorthStarFlow({
 }) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
-  // "The one thing" is part of the Season step (id `focus`) since Phase 3 of
-  // Plans/life-plan-rebuild.md; an old link or button naming it lands there.
-  const [tab, setTabState] = useState<NorthStarTabId>(initialTab === "one" ? "focus" : initialTab)
+  // A step that folded into another (Plans/life-plan-rebuild.md: the one thing
+  // into Season, Commit into Everything, Templates into Where to start): an old
+  // link or button naming it lands on its new home, see `stepFor`.
+  const [tab, setTabState] = useState<NorthStarTabId>(stepFor(initialTab))
+  /** The catalogue on Where to start: open when a link asked for Templates. */
+  const [catalogueOpen, setCatalogueOpen] = useState(initialTab === "templates")
 
   /**
    * THE ADDRESS FOLLOWS THE STEP YOU ARE ON.
@@ -186,7 +189,8 @@ export function NorthStarFlow({
    * take the step change down with it.
    */
   const setTab = useCallback((asked: NorthStarTabId) => {
-    const next = asked === "one" ? "focus" : asked
+    const next = stepFor(asked)
+    if (asked === "templates") setCatalogueOpen(true)
     setTabState(next)
     try {
       window.history.replaceState(null, "", `${ROUTES.plan}?step=${next}`)
@@ -320,16 +324,24 @@ export function NorthStarFlow({
    * Held rather than scrolled inline because the element does not exist yet at
    * the moment the tab changes: `setTab` queues a render, and
    * `getElementById` on the step you are leaving finds nothing.
+   *
+   * A link that asked for Commit starts with one: the commit work at the foot
+   * of Everything, where that step folded in. That part is drawn only once the
+   * account has answered (on a new browser the first draw is an empty plan), so
+   * for that anchor alone the effect waits for the read to be decided rather
+   * than clearing it unused. Every other anchor is set by a jump made on a
+   * drawn page and scrolls at once, whatever the account is doing.
    */
-  const [anchor, setAnchor] = useState<string | null>(null)
+  const [anchor, setAnchor] = useState<string | null>(initialTab === "commit" ? RECAP_COMMIT_ANCHOR : null)
   useEffect(() => {
     if (!anchor) return
+    if (anchor === RECAP_COMMIT_ANCHOR && (!loaded || !today || decision === null)) return
     const el = document.getElementById(anchor)
     // Cleared either way. A missing anchor is a destination that moved, and
     // retrying every render would be a scroll that never stops trying.
     setAnchor(null)
     el?.scrollIntoView({ behavior: "smooth", block: "center" })
-  }, [anchor, tab])
+  }, [anchor, tab, loaded, today, decision])
 
   /**
    * ARRIVE ANYWHERE, from one call.
@@ -937,7 +949,7 @@ export function NorthStarFlow({
   const states = ns.stepStates(plan, account)
   const tabIndex = TAB_ORDER.indexOf(tab)
   const readBack = loaded && today ? ns.planAsText(plan, today) : ""
-  const todos = loaded && today ? ns.planTodos(plan, today) : []
+  const todos = loaded && today ? ns.planTodos(plan) : []
 
   const starHandlers = {
     onStar: useCallback((text: string) => setPlan((p) => ns.setNorthStar(p, text)), []),
@@ -1539,31 +1551,18 @@ export function NorthStarFlow({
           {TAB_ORDER.map((id, i) => {
             const active = id === tab
             const state = states[id]
-            const workshop = WORKSHOP_TABS.includes(id)
             return (
               <button
                 key={id}
                 onClick={() => setTab(id)}
                 aria-current={active ? "page" : undefined}
-                /* A WORKSHOP STEP LOOKS DIFFERENT FROM A PLAN STEP.
-                   Templates and Customize are tools, not sections of the plan
-                   the other steps are writing, and the sky accent says so at a
-                   glance rather than in a sentence nobody reads. */
                 className={`rounded-xl border p-3 text-left transition-colors ${
-                  active
-                    ? workshop
-                      ? "border-sky-400/45 bg-sky-500/10"
-                      : "border-violet-400/40 bg-violet-500/10"
-                    : workshop
-                      ? "border-sky-400/20 bg-sky-500/[0.03] hover:border-sky-400/40"
-                      : "border-white/10 bg-white/[0.02] hover:border-white/25"
+                  active ? "border-violet-400/40 bg-violet-500/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
                 }`}
               >
                 <span className="flex items-center gap-2">
                   <span className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
-                    active
-                      ? workshop ? "bg-sky-500/25 text-sky-100" : "bg-violet-500/25 text-violet-100"
-                      : workshop ? "bg-sky-500/10 text-sky-300/70" : "bg-white/5 text-zinc-500"
+                    active ? "bg-violet-500/25 text-violet-100" : "bg-white/5 text-zinc-500"
                   }`}>
                     {i + 1}
                   </span>
@@ -1664,27 +1663,31 @@ export function NorthStarFlow({
               setOpenRoutineId(routineId)
               setTab("systems")
             }}
-          />
-        ) : tab === "templates" ? (
-          /* THE CATALOGUE, AS A STEP.
-             It was a tab on both build steps, which is the wrong place for it
-             twice over: it put somebody else's ready-made list beside the box
-             asking what THIS person wants, and it made the one thing that is
-             not your own work look like part of it. Here it is a place you
-             walk through and leave. Opening an area from it lands on
-             Achievements, where writing your own happens. */
-          <BuildBoard
-            plan={plan}
-            today={today}
-            handlers={{ ...boardHandlers, onOpenArea: (id: string) => { boardHandlers.onOpenArea(id); setTab("milestones") } }}
-            program={{
-              read: programRead,
-              timezone,
-              adopted,
-              ended: endedProgram,
-              onRetry: refreshPrograms,
-            }}
-          />
+            catalogueOpen={catalogueOpen}
+            onCatalogue={() => setCatalogueOpen((open) => !open)}
+          >
+            {/* THE CATALOGUE, BEHIND THE FOURTH DOOR.
+                It was a tab on both build steps, which is the wrong place for
+                it twice over: it put somebody else's ready-made list beside
+                the box asking what THIS person wants, and it made the one
+                thing that is not your own work look like part of it. Then a
+                step of its own; since N1 of Plans/life-plan-rebuild.md a door
+                on the fork, closed until asked for. Still a place you walk
+                through and leave: opening an area from it lands on
+                Experiences, where writing your own happens. */}
+            <BuildBoard
+              plan={plan}
+              today={today}
+              handlers={{ ...boardHandlers, onOpenArea: (id: string) => { boardHandlers.onOpenArea(id); setTab("milestones") } }}
+              program={{
+                read: programRead,
+                timezone,
+                adopted,
+                ended: endedProgram,
+                onRetry: refreshPrograms,
+              }}
+            />
+          </PathPicker>
         ) : tab === "focus" ? (
           /* THE SEASON: the one thing, then the areas, focus and goals it is
              about. Two steps until Plans/life-plan-rebuild.md, Phase 3; one
@@ -1919,6 +1922,31 @@ export function NorthStarFlow({
                 />
               </>
             }
+            /* THE COMMIT STEP, folded in (N1 of Plans/life-plan-rebuild.md).
+               The goals are edited in "My goals" above, so the commit work
+               brings only what this page did not have: what is pointed at
+               what, whether the plan aims at the 10s, and the signature. */
+            commit={
+              <CommitTab
+                plan={plan}
+                today={today}
+                handlers={{ onAnswer: (key, text) => setPlan((p) => ns.setAnswer(p, key, text)) }}
+                tools={
+                  /* WHAT IS POINTED AT WHAT, the same view the systems step
+                     has. Reading the plan back is exactly when "nothing is
+                     running at this" stops being an abstraction. */
+                  <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+                    <SystemLinks
+                      plan={plan}
+                      handlers={systemHandlers}
+                      onOpenArea={(id: string) => { setPlanAreaId(id); setTab("milestones") }}
+                    />
+                  </section>
+                }
+              >
+                <ReviewTab plan={plan} today={today} handlers={reviewHandlers} valuesHandlers={valuesHandlers} values={false} />
+              </CommitTab>
+            }
           />
         ) : tab === "track" ? (
           /* The one step that leaves the browser. Everything else here is a
@@ -1944,42 +1972,7 @@ export function NorthStarFlow({
                and nothing to click. */
             <p className="text-sm text-zinc-500">Opening your goals…</p>
           )
-        ) : (
-          <CommitTab
-            plan={plan}
-            today={today}
-            handlers={{ onAnswer: (key, text) => setPlan((p) => ns.setAnswer(p, key, text)) }}
-            tools={
-              <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
-                <div className="px-5 pt-4">
-                  <h2 className="text-sm font-semibold text-zinc-200">{COMMIT_EDIT_COPY.title}</h2>
-                  <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{COMMIT_EDIT_COPY.help}</p>
-                </div>
-                <QuickAdd plan={plan} onAdd={(areaId, text) => setPlan((p) => ns.addGoalsFromDump(p, areaId, text))} />
-                <GoalOverview
-                  plan={plan}
-                  today={today}
-                  onOpenGoal={(goal) => { setPlanAreaId(goal.areaId); setNowGoalId(goal.id); setTab(ns.isMilestone(goal) ? "milestones" : "systems") }}
-                  onSetPriority={goalHandlers.onSetPriority}
-                  onMovePriority={goalHandlers.onMovePriority}
-                  onRemoveGoal={removePlanGoal}
-                  onOpenRoutine={(routineId) => { setPlanAreaId(null); setOpenRoutineId(routineId); setTab("systems") }}
-                  emptyHint={COMMIT_EDIT_COPY.empty}
-                />
-                {/* WHAT IS POINTED AT WHAT, the same view the systems step has.
-                    Reading the plan back is exactly when "nothing is running at
-                    this" stops being an abstraction. */}
-                <SystemLinks
-                  plan={plan}
-                  handlers={systemHandlers}
-                  onOpenArea={(id: string) => { setPlanAreaId(id); setTab("milestones") }}
-                />
-              </section>
-            }
-          >
-            <ReviewTab plan={plan} today={today} handlers={reviewHandlers} valuesHandlers={valuesHandlers} />
-          </CommitTab>
-        )}
+        ) : null}
 
         {/* What is still missing, in one place, instead of gates on the way
             through. Nothing here blocks anything; a goal with no date still

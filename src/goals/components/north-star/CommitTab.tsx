@@ -1,7 +1,9 @@
 "use client"
 
 /**
- * The last step, and it is an act rather than a form.
+ * The last step, and it is an act rather than a form. Since N1 of
+ * Plans/life-plan-rebuild.md it is not a step of its own: it is the foot of
+ * Everything, which is the plan read back, and committing comes after that.
  *
  * Everything before this is writing: the star, the 10s, the goals, the season,
  * the values. A plan that ends when the last box is filled ends without anybody
@@ -23,7 +25,7 @@
 import { useState } from "react"
 import { Check } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
-import { COMMIT_COPY } from "@/src/goals/data/northStar"
+import { COMMIT_COPY, RECAP_COMMIT_ANCHOR } from "@/src/goals/data/northStar"
 import { COMMIT_DATE_KEY, COMMIT_KEY } from "@/src/goals/data/northStarStart"
 import { answerOf, formatTargetDate, planAsText, planCascade, weeklyLoad } from "@/src/goals/northStarService"
 
@@ -94,8 +96,8 @@ export function CommitTab({
       {/* What could go wrong, and whether the goals aim at the 10. */}
       {children}
 
-      {/* The commitment itself. */}
-      <section className="rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
+      {/* The commitment itself. The anchor an old Commit link scrolls to. */}
+      <section id={RECAP_COMMIT_ANCHOR} className="scroll-mt-24 rounded-2xl border border-violet-400/25 bg-violet-500/[0.05] px-5 py-4">
         <h2 className="text-sm font-semibold text-violet-100">{COMMIT_COPY.commitTitle}</h2>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{COMMIT_COPY.commitHelp}</p>
         <textarea

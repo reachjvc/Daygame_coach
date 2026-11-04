@@ -15,9 +15,13 @@
  * (`normalizeNsPlan`), so a seed is a plan the flow could have written, not a
  * set of rows a test made up. Nothing here touches the database directly.
  *
- * EVERY SEED IS A CLEAN SLATE. Each part gets a new id, so the save deletes
- * the account's previous plan parts and, with them, every tick and rating
- * made against them (the day tables cascade from the plan's nodes). That is
+ * EVERY SEED IS A CLEAN SLATE. Each part gets a new id, and the save is
+ * diffed against what the account holds now (`GET /api/life-plan`), so it
+ * deletes the account's previous plan parts and, with them, every tick and
+ * rating made against them (the day tables cascade from the plan's nodes).
+ * Diffed against nothing, as it was after the change-only save arrived, the
+ * second seed on a worker's account collided with the first one's parts on
+ * their local ids and the account refused it. That is
  * what lets a test that ticks a step assert it was not ticked before, on an
  * account an earlier test in the same worker already used. Day notes and
  * journal lines are rows of the DAY, not of a plan part, and survive a seed;
@@ -28,6 +32,7 @@ import { expect, type Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { planToRows } from '@/src/goals/lifePlanMapper'
 import { diffPlanRows } from '@/src/goals/lifePlanDiff'
+import type { PlanRows } from '@/src/db/lifePlanTypes'
 import { normalizeNsPlan } from '@/src/goals/northStarService'
 
 export interface SeededPlan {
@@ -64,9 +69,12 @@ export async function seedLifePlan(page: Page, userId: string, plan: object): Pr
     },
   })
 
-  // Every row, as the flow sends a plan to an account it knows nothing about.
+  // Every row, and every part the account held before taken out.
+  const read = await page.request.get('/api/life-plan')
+  expect(read.status(), `could not read the account's plan: ${await read.text()}`).toBe(200)
+  const before = ((await read.json()) as { plan: PlanRows | null }).plan
   const saved = await page.request.patch('/api/life-plan', {
-    data: { changes: diffPlanRows(null, rows), revision: row.revision },
+    data: { changes: diffPlanRows(before, rows), revision: row.revision },
   })
   expect(saved.status(), `the account refused the seeded plan: ${await saved.text()}`).toBe(200)
   const { revision } = (await saved.json()) as { revision: number }

@@ -4,6 +4,12 @@
 steps". The plan carries out the recommendations to Q1–Q10 in `Plans/life-plan-tables.md` section 7. Q11
 (achievements) waits until this plan is done, as that answer said.
 
+**Sign-off rule (the owner, 2026-11-04):** "i need to eventually see a visual thing of it before we can
+say anything is done or good." So a phase here is *built* or *live*, never *done*, until the owner has
+looked at it and marked it. The page he marks: https://claude.ai/artifact/K5r4E4ywmrHfasxNPwdXsr
+(pictures of every `/plan` step, taken on a copy of his plan in a test account; marks in its `marks`
+store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the marks before the next phase.
+
 ## What you are agreeing to, in plain words
 
 - **No money.** Nothing is bought, rented or signed up for.
@@ -236,6 +242,30 @@ season from one place, and `TAB_ORDER` lists the new steps.
   carry that escaping in their text; the data never had it. `life-plan-2026-11-04-after-phase3.json` is
   made with `json_agg`, one table at a time, and is exact. Your plan's data did not change between the
   backups (revision 919 throughout), so that file also stands for the old tables.
+- **N1, built 2026-11-04**, and placed differently from what N1 said, because the screens showed more
+  than the plan did:
+  - **Commit folded into Everything, not into North star.** Commit holds the whole read-back, the "does
+    the plan aim at your 10s" check and "what could go wrong", and committing comes after the plan
+    exists, so on step 1 it would make no sense. Everything is the plan read back, so the commit work
+    now ends it, in place of Everything's read-only copy of those same answers. Everything moved to
+    Commit's place (step 8, before Track). Its ring fills on the commitment alone. The commitment is
+    still stored on the north star (Phase 2).
+  - **Templates folded into Where to start, not into a goals step** (there is no goals step: goals live
+    on Systems and Experiences). It is a fourth door, "Start from a ready-made set", closed until asked.
+  - The steps are now 11. `?step=commit` and `?step=templates` still work: they open the new home, on
+    the part they were for (`stepFor` in `src/goals/data/northStar.ts`).
+- **The floor of 7 removed**, at the owner's word the same day: "you can remove the floor of 7 entirely
+  as a push towards directing the user to what they need to do. They can figure that out themselves."
+  Gone: the "Under a seven right now" lines, the floor notes, amber scores under 7, the wheel's dashed
+  ring at 7, the values check built on it, and its "still to fill in" chip. Asked, not removed: the
+  "N more values to reach seven" chip (a different seven: the length of the values list).
+- **Found while taking the pictures:**
+  - `tests/e2e/one-thing.spec.ts` had been red since Phase 3: it still waited for the retired
+    `/api/life-answers` route. Rewritten onto the season.
+  - The "Running since" line (proof that a reword did not restart the clock) never showed since Phase
+    3, because a season counts no rewordings. It now shows on any season begun before today.
+  - The browser tests' seed helper stopped clearing the previous plan once saves sent only changes, so
+    a second test on the same account was refused. It now diffs against what the account holds.
 
 ### Phase 4. Goals: timeframe, subgoals, habits as routine steps, no copy (Q3–Q6)
 
@@ -257,8 +287,10 @@ Track run adds no `user_goals` rows.
 1. `life_plan_reviews`: how often, the period, magic moments, lessons, next outcomes. Plus
    `life_plan_review_scores`: one 0–10 score per area.
 2. The fortnight scores on your areas are copied in as your first review.
-3. **Recap** becomes **Review**: pick week, month, quarter or year; score each area (Stefan's minimum is
-   7); write magic moments and next outcomes; see the earlier reviews of the same kind (N2).
+3. **Review**: pick week, month, quarter or year; score each area (no floor: removed 2026-11-04); write
+   magic moments and next outcomes; see the earlier reviews of the same kind (N2). *Changed since
+   written:* Recap (Everything) now holds the commit work (N1), so it stays; where Review goes is settled
+   when this phase starts.
 
 **Done when:** a test account can do one review of each kind, the scores show over time, and your
 fortnight scores appear as your first review.

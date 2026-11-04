@@ -29,6 +29,8 @@ const KNOWN_SKIPS: Record<string, string> = {
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/programs-live-format.spec.ts › a workout that is over is not kept: its stored page is dropped":
     "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/life-plan-tour.spec.ts › describe: life plan tour":
+    "not a test: photographs every /plan step for the owner to look at, and runs only when given a plan and a folder (TOUR_PLAN, TOUR_DIR)",
 }
 
 const isSkip = (callee: string) => /^test(\.describe)?\.(skip|fixme)$/.test(callee)

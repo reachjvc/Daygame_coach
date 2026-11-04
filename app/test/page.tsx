@@ -164,7 +164,7 @@ const testPages = [
     // look for it, and pointed at its real address.
     name: "Life Mastery (North Star) — CANON, now live at /life-mastery",
     href: ROUTES.plan,
-    description: "The canonical life-planning flow, and the only one not in Archives. Thirteen steps, all reachable at any time: north star and values → your 10 and rating in each of the twelve areas → the one thing → the fork (want / will do / one routine) → templates, custom weeks, systems, experiences → focus, values, commit → track (pushes into real goals) → today",
+    description: "The canonical life-planning flow, and the only one not in Archives. Eleven steps, all reachable at any time: north star → your 10 and rating in each of the twelve areas → where to start (want / will do / one routine / a ready-made set) → systems, experiences → season (the one thing and the focus), values → everything, ending in the commitment → track (pushes into real goals) → today → journal",
     icon: Telescope,
   },
   {

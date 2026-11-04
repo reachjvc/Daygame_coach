@@ -344,6 +344,7 @@ export function RecapTab({
   onGoToTab,
   oneThing,
   goals,
+  commit,
 }: {
   plan: NsPlan
   today: string
@@ -374,6 +375,13 @@ export function RecapTab({
    * in step.
    */
   goals?: React.ReactNode
+  /**
+   * THE COMMIT STEP, FOLDED IN (Plans/life-plan-rebuild.md, N1): the check
+   * that the plan aims at your 10s, what could go wrong, and the commitment.
+   * Given, it takes the place of the read-back block of those same answers, so
+   * each is on the page once, and editable where it stands.
+   */
+  commit?: React.ReactNode
 }) {
   /** Which block is in edit mode. One at a time, so the page stays readable. */
   const [editing, setEditing] = useState<string | null>(null)
@@ -753,7 +761,11 @@ export function RecapTab({
         </div>
       </Block>
 
-      {/* What could stop you, who could help, and what you signed. */}
+      {/* What could stop you, who could help, and what you signed: the
+          commit work when the flow hands it in, read back otherwise. */}
+      {commit ? (
+        commit
+      ) : (
       <Block
         title={RECAP_COPY.closingTitle}
         defaultOpen={false}
@@ -785,6 +797,7 @@ export function RecapTab({
           </div>
         </div>
       </Block>
+      )}
 
       {/* THE WHOLE THING, AT THE END OF THE WHOLE THING.
           Reading the driving force — vision, purpose, identity, standards,

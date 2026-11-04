@@ -68,6 +68,7 @@ const account = (over: Partial<OneThingAccount> = {}): OneThingAccount => ({
     sink?.push({ act, body, ...(dueOn === undefined ? {} : { dueOn }) })
   },
   remove: vi.fn(async () => {}),
+  today: null,
   ...over,
 })
 
@@ -196,6 +197,11 @@ describe("amending, extending and starting are three different acts", () => {
   it("says nothing of the sort on one nobody has touched", () => {
     render(<Box account={account()} />)
     expect(screen.queryByTestId("one-thing-since")).toBeNull()
+  })
+
+  it("says it on a season that has run a day, which counts no rewordings", () => {
+    render(<Box account={account({ current: one({ startedOn: "2026-08-01" }), today: "2026-11-04" })} />)
+    expect(screen.getByTestId("one-thing-since")).toHaveTextContent(/Running since 1 Aug 2026/)
   })
 })
 

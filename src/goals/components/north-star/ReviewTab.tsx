@@ -20,14 +20,12 @@ import type { NsArea, NsPlan } from "@/src/goals/types"
 import {
   AREA_REVIEW_COPY,
   GAP_WARNING,
-  NS_FLOOR,
   REVIEW_INTRO,
   REVIEW_PROMPTS,
 } from "@/src/goals/data/northStar"
 import {
   answerOf,
   areaReview,
-  areasWithoutValueSupport,
   dailyAverage,
   dailyCount,
   goalsInArea,
@@ -44,11 +42,16 @@ export interface ReviewHandlers {
   onGoToNow: () => void
 }
 
-export function ReviewTab({ plan, today, handlers, valuesHandlers }: {
+export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true }: {
   plan: NsPlan
   today: string
   handlers: ReviewHandlers
   valuesHandlers: ValuesHandlers
+  /**
+   * The values ordering. Off on Everything, whose own "My values, in order"
+   * block edits the same list a screen higher up.
+   */
+  values?: boolean
 }) {
   // Nothing open to begin with. Defaulting to the first area meant the wheel's
   // first sector arrived already expanded, so clicking the most obvious thing on
@@ -56,14 +59,12 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers }: {
   const [openId, setOpenId] = useState<string | null>(null)
   const ratings = wheelRatings(plan, today)
   const goalCounts = Object.fromEntries(plan.areas.map((a) => [a.id, goalsInArea(plan, a.id).length]))
-  const underFloor = plan.areas.filter((a) => ratings[a.id] != null && ratings[a.id] < NS_FLOOR)
-  /**
-   * His client wanted to change his health and had never written health on his
-   * values list: "no wonder you're not creating long-term change here". This is
-   * that check, and it is the one thing the values list can tell you that a
-   * rating cannot.
+  /*
+   * NO FLOOR (2026-11-04, the owner's call; Plans/life-plan-rebuild.md). The
+   * "under a seven right now" line, the values check built on it ("nothing in
+   * your values list points at …") and the amber numbers are gone: which area
+   * needs work is the person's to see, not the page's to point at.
    */
-  const unsupported = areasWithoutValueSupport(plan, today)
 
   return (
     <div className="space-y-6">
@@ -71,23 +72,10 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers }: {
         <h2 className="text-sm font-semibold text-zinc-200">{REVIEW_INTRO.title}</h2>
         <p className="text-[12px] text-zinc-500 mt-1 leading-relaxed">{REVIEW_INTRO.help}</p>
         <p className="text-[12px] text-zinc-500 mt-1.5 leading-relaxed">{REVIEW_INTRO.dailyNote}</p>
-        <p className="text-[11.5px] text-zinc-600 mt-1.5 leading-relaxed">{REVIEW_INTRO.floorNote}</p>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <AreaWheel areas={plan.areas} ratings={ratings} goalCounts={goalCounts} activeId={openId} onPick={(id) => setOpenId(id === openId ? null : id)} />
-        {underFloor.length > 0 && (
-          <p className="text-[11.5px] text-amber-300/80 text-center mt-2">
-            Under a seven right now: {underFloor.map((a) => a.label).join(", ")}.
-          </p>
-        )}
-        {unsupported.length > 0 && (
-          <p className="text-[11.5px] text-zinc-500 text-center mt-1.5 leading-relaxed">
-            And nothing in your values list points at{" "}
-            <span className="text-zinc-300">{unsupported.map((a) => a.label).join(", ")}</span>. That is usually the
-            reason an area stays where it is. Somebody who is fit has fitness high on their list.
-          </p>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -109,7 +97,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers }: {
           is guesswork. By now you have rated twelve areas, written what a 10
           looks like in each, said what each one asks of you and set goals, so
           the pool is your whole plan and the order means something. */}
-      <ValuesWork plan={plan} handlers={valuesHandlers} mode="order" />
+      {values && <ValuesWork plan={plan} handlers={valuesHandlers} mode="order" />}
 
       {/* Whole-life. The per-area answers roll up into these. */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -167,7 +155,7 @@ function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
           </span>
         </span>
         <span className="shrink-0 text-right">
-          <span className={`block text-[13px] tabular-nums ${review.fortnight == null ? "text-zinc-600" : review.fortnight < NS_FLOOR ? "text-amber-300" : "text-zinc-200"}`}>
+          <span className={`block text-[13px] tabular-nums ${review.fortnight == null ? "text-zinc-600" : "text-zinc-200"}`}>
             {review.fortnight != null ? `${review.fortnight}/10` : "–/10"}
           </span>
           {avg != null && <span className="block text-[9.5px] text-zinc-600 tabular-nums">daily {avg}</span>}
@@ -183,7 +171,7 @@ function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
           <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
             <div className="flex flex-wrap items-baseline gap-2">
               <span className="text-[11px] text-zinc-400">Your 10 here</span>
-              <span className={`text-[11px] tabular-nums ${review.fortnight == null ? "text-zinc-600" : review.fortnight < NS_FLOOR ? "text-amber-300" : "text-zinc-300"}`}>
+              <span className={`text-[11px] tabular-nums ${review.fortnight == null ? "text-zinc-600" : "text-zinc-300"}`}>
                 {review.fortnight != null ? `you rated it ${review.fortnight}/10` : "not rated yet"}
                 {avg != null && <span className="text-zinc-600"> · daily average {avg} over {days} {days === 1 ? "day" : "days"}</span>}
               </span>

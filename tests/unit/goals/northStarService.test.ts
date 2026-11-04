@@ -99,7 +99,6 @@ import {
   addMonthsISO,
   areaCoverage,
   areaReach,
-  areasWithoutValueSupport,
   cumulativeUnit,
   derivedValueSuggestions,
   goalAlreadyInRoutine,
@@ -171,7 +170,7 @@ import {
   SCORED_TABS,
   TAB_ORDER,
   VALUES_PAST_MENU,
-  WORKSHOP_TABS,
+  stepFor,
 } from "@/src/goals/data/northStar"
 import { TARGETS, TEMPLATES } from "@/src/goals/data/newGoalFramework"
 import type { NsPlan } from "@/src/goals/types"
@@ -638,7 +637,7 @@ describe("progress", () => {
     let plan = emptyNsPlan()
     // `pick` is the fork after the one thing: it holds nothing, so it is never
     // done however finished the rest of the plan is.
-    expect(nsProgress(plan).done).toEqual({ star: false, now: false, pick: false, templates: false, systems: false, milestones: false, focus: false, values: false, commit: false, track: false, today: false, journal: false, recap: false })
+    expect(nsProgress(plan).done).toEqual({ star: false, now: false, pick: false, systems: false, milestones: false, focus: false, values: false, recap: false, track: false, today: false, journal: false })
 
     plan = setNorthStar(plan, "I wake up near the water.", NOW)
     // Routines arrive empty, so adding a step is the edit.
@@ -665,7 +664,8 @@ describe("progress", () => {
     // dated, which is the difference between a document and a decision.
     expect(stepState(plan, "commit")).toBe("started")
     plan = setAnswer(plan, COMMIT_DATE_KEY, "2026-08-17", NOW)
-    expect(nsProgress(plan).done.commit).toBe(true)
+    // On Everything, where Commit folded in.
+    expect(nsProgress(plan).done.recap).toBe(true)
     // And the values step ticks on the ranking, which is its whole job.
     expect(nsProgress(plan).done.values).toBe(false)
     // Two is a pair, not a ranking. Three is the shortest list whose order
@@ -1195,23 +1195,37 @@ describe("the order of the flow", () => {
     // steps it lands in, and a ring on "have you had a look" scores browsing.
     const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_health", "tmpl_strength", 1, NOW)
     expect(stepState(plan, "templates")).toBe("empty")
-    expect(planTodos(plan, NOW).some((t) => t.tab === "templates")).toBe(false)
+    expect(planTodos(plan).some((t) => t.tab === "templates")).toBe(false)
   })
 
-  it("scores nothing on the recap, however full the plan is", () => {
+  it("scores the recap on the commitment alone, however full the plan is", () => {
     /**
      * THE ONE RULE THE RECAP HAS TO KEEP.
      *
-     * Every word on it was written on another step and is scored there. A ring
-     * would fill itself off that work a second time, and "you have not finished
-     * reading your own plan" is not a thing to tell anybody about a page whose
-     * whole job is being somewhere worth coming back to.
+     * Every other word on it was written on another step and is scored there.
+     * A ring on those would fill itself off that work a second time, and "you
+     * have not finished reading your own plan" is not a thing to tell anybody
+     * about a page whose whole job is being somewhere worth coming back to.
+     * Commit folded into it (Plans/life-plan-rebuild.md, N1), so its ring is
+     * the commitment's, which is written there and nowhere else.
      */
-    expect(SCORED_TABS).not.toContain("recap")
-    expect(WORKSHOP_TABS).not.toContain("recap")
-    const plan = setNorthStar(emptyNsPlan(), "I wake up near the water.", NOW)
-    expect(stepState(plan, "recap")).toBe("empty")
-    expect(planTodos(plan, TODAY).some((t) => t.tab === "recap")).toBe(false)
+    expect(SCORED_TABS).toContain("recap")
+    const full = setNorthStar(emptyNsPlan(), "I wake up near the water.", NOW)
+    expect(stepState(full, "recap")).toBe("empty")
+    expect(planTodos(full).some((t) => t.tab === "recap")).toBe(false)
+    const said = setAnswer(full, COMMIT_KEY, "I am in.")
+    expect(stepState(said, "recap")).toBe("started")
+    expect(stepState(setAnswer(said, COMMIT_DATE_KEY, TODAY), "recap")).toBe("done")
+  })
+
+  it("opens a folded step's new home from an old link", () => {
+    expect(stepFor("one")).toBe("focus")
+    expect(stepFor("commit")).toBe("recap")
+    expect(stepFor("templates")).toBe("pick")
+    expect(stepFor("values")).toBe("values")
+    expect(TAB_ORDER).not.toContain("commit")
+    expect(TAB_ORDER).not.toContain("templates")
+    expect(stepFor("toString" as never)).toBe("toString")
   })
 
   it("scores nothing on the fork and reads nothing back from it", () => {
@@ -1220,7 +1234,7 @@ describe("the order of the flow", () => {
     // doors open, so this one stays empty however full the plan is.
     const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_health", "tmpl_strength", 1, NOW)
     expect(stepState(plan, "pick")).toBe("empty")
-    expect(planTodos(plan, NOW).some((t) => t.tab === "pick")).toBe(false)
+    expect(planTodos(plan).some((t) => t.tab === "pick")).toBe(false)
   })
 
   it("keeps the wheel readable at twelve areas", () => {
@@ -1408,19 +1422,13 @@ describe("the values procedure", () => {
     expect(moveValueTo(plan, "nothing", 1, NOW)).toBe(plan)
   })
 
-  it("names an area under the floor that no value points at", () => {
-    // His client wanted to change his health and had never written health down.
+  it("points at no area for scoring low: the floor of 7 is gone", () => {
+    // The owner had the floor taken out on 2026-11-04 (Plans/life-plan-rebuild.md):
+    // which area needs work is the person's to see, not the page's to point at.
     let plan = setValues(emptyNsPlan(), ["Success", "Money"], NOW)
-    plan = setAreaReview(plan, "lm_health", { fortnight: 4 }, NOW)
-    plan = setAreaReview(plan, "lm_money", { fortnight: 3 }, NOW)
-    expect(areasWithoutValueSupport(plan, TODAY).map((a) => a.id)).toEqual(["lm_health"])
-
-    // Adding a value that reaches it clears the finding.
-    plan = setValues(plan, ["Success", "Money", "Vitality"], NOW)
-    expect(areasWithoutValueSupport(plan, TODAY)).toHaveLength(0)
-
-    // With no values written there is nothing to conclude.
-    expect(areasWithoutValueSupport(setValues(plan, [], NOW), TODAY)).toHaveLength(0)
+    plan = setAreaReview(plan, "lm_health", { fortnight: 2 }, NOW)
+    // ("5 more values to reach seven" is the values list's length, not the floor.)
+    expect(planTodos(plan).map((t) => t.text).join(" ")).not.toMatch(/under a seven|floor/i)
   })
 
   it("survives a round trip with both lists and the season focus", () => {
@@ -1563,11 +1571,11 @@ describe("goals the page can score for you", () => {
 
 describe("goals that are really one of our own tools", () => {
   it("points the weekly review at the step that does it", () => {
-    // The review tab became the last step: read it back, name what could go
-    // wrong, commit. A goal called "Weekly Review" still points at the place
-    // that work happens.
+    // The review tab became the commit step, and that folded into Everything:
+    // read it back, name what could go wrong, commit. A goal called "Weekly
+    // Review" still points at the place that work happens.
     const plan = addGoal(emptyNsPlan(), "lm_money", "Weekly Review", "habit_ramp", NOW)
-    expect(goalToolLink(plan.goals[0])?.tab).toBe("commit")
+    expect(goalToolLink(plan.goals[0])?.tab).toBe("recap")
     expect(goalToolLink(addGoal(emptyNsPlan(), "lm_money", "Squat 140kg", "milestone_ladder", NOW).goals[0])).toBeNull()
   })
 
@@ -1583,7 +1591,7 @@ describe("goals that are really one of our own tools", () => {
 
 describe("nothing is gated, so everything outstanding is listed", () => {
   it("lists what is missing, and points each item at the tab that fixes it", () => {
-    const todos = planTodos(emptyNsPlan(), TODAY)
+    const todos = planTodos(emptyNsPlan())
     const ids = todos.map((t) => t.id)
     expect(ids).toContain("star")
     expect(ids).toContain("values")
@@ -1597,9 +1605,9 @@ describe("nothing is gated, so everything outstanding is listed", () => {
 
   it("stops naming a goal's date once every goal has one", () => {
     const plan = addGoal(emptyNsPlan(), "lm_health", "Flat bench 100 kg", "milestone_ladder", NOW)
-    expect(planTodos(plan, TODAY).map((t) => t.id)).not.toContain("goaldate")
+    expect(planTodos(plan).map((t) => t.id)).not.toContain("goaldate")
     const dateless = { ...plan, goals: plan.goals.map((g) => ({ ...g, targetDate: null })) }
-    expect(planTodos(dateless, TODAY).map((t) => t.id)).toContain("goaldate")
+    expect(planTodos(dateless).map((t) => t.id)).toContain("goaldate")
   })
 
   it("reads a line about something you are not doing as a system", () => {
@@ -1644,7 +1652,7 @@ describe("nothing is gated, so everything outstanding is listed", () => {
      */
     let plan = addGoal(emptyNsPlan(), "lm_health", "Run four times a week", "habit_ramp", NOW)
     plan = { ...plan, goals: plan.goals.map((g) => ({ ...g, why: "", targetDate: null })) }
-    const ids = planTodos(plan, TODAY).map((t) => t.id)
+    const ids = planTodos(plan).map((t) => t.id)
     expect(ids).not.toContain("goalwhy")
     expect(ids).not.toContain("goaldate")
     // And nothing else either: a rate is the whole of a practice. It was being
@@ -1658,18 +1666,18 @@ describe("nothing is gated, so everything outstanding is listed", () => {
     // A milestone in the same plan is still asked for both.
     plan = addGoal(plan, "lm_health", "Flat bench 100 kg", "milestone_ladder", NOW)
     plan = { ...plan, goals: plan.goals.map((g) => ({ ...g, why: "", targetDate: null })) }
-    const both = planTodos(plan, TODAY).map((t) => t.id)
+    const both = planTodos(plan).map((t) => t.id)
     expect(both).toContain("goalwhy")
     expect(both).toContain("goaldate")
     // One goal, not two: the practice is not counted into either.
-    expect(planTodos(plan, TODAY).find((t) => t.id === "goalwhy")!.text).toContain("1 goal")
+    expect(planTodos(plan).find((t) => t.id === "goalwhy")!.text).toContain("1 goal")
   })
 
   it("counts down the values short of seven", () => {
     expect(valuesShortBy(emptyNsPlan())).toBe(7)
     const plan = setValues(emptyNsPlan(), ["A", "B", "C", "D", "E", "F", "G", "H"], NOW)
     expect(valuesShortBy(plan)).toBe(0)
-    expect(planTodos(plan, TODAY).map((t) => t.id)).not.toContain("values")
+    expect(planTodos(plan).map((t) => t.id)).not.toContain("values")
   })
 })
 
@@ -2932,7 +2940,7 @@ describe("skipped is not finished", () => {
     expect(guideProgress(plan).ready).toBe(1)
     expect(guideQueue(plan)).toEqual([])
     // And the page still says what is missing.
-    const todos = planTodos(plan, TODAY).map((t) => t.id)
+    const todos = planTodos(plan).map((t) => t.id)
     expect(todos).toContain("goalwhy")
     expect(todos).toContain("goalaction")
   })

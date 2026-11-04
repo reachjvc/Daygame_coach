@@ -298,6 +298,9 @@ export const STAR_ANCHOR = "north-star-paragraph"
  */
 export const RECAP_DRIVING_ANCHOR = "recap-driving-force"
 
+/** Where the commit work sits on Everything, for a link that asked for Commit. */
+export const RECAP_COMMIT_ANCHOR = "recap-commit"
+
 /**
  * THE RIBBON ON THE SCREEN YOU WERE SENT TO.
  *
@@ -686,39 +689,47 @@ export const TRACK_COPY = {
  * THE STEPS, IN ORDER. "The one thing" and "Focus" became one step, Season,
  * on 2026-11-04 (Plans/life-plan-rebuild.md, Phase 3). It keeps the id
  * `focus`, so links and saved positions still land on it; `one` is sent there.
+ *
+ * Two more folds the same day (question N1 of that plan). Commit went into
+ * Everything: committing is to the whole plan, and Everything is the whole plan
+ * read back, so the two were one page in two places. Everything takes Commit's
+ * place, at the end of the writing and before the steps you use daily.
+ * Templates went into Where to start as a fourth door: both are places you pass
+ * through, and neither holds anything you wrote.
  */
-export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "pick", "templates", "systems", "milestones", "focus", "values", "commit", "track", "today", "journal", "recap"]
+export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "pick", "systems", "milestones", "focus", "values", "recap", "track", "today", "journal"]
 
 /**
- * The steps that are a WORKSHOP rather than a part of the plan.
- *
- * Templates hands you ready-made work and a bench to build your own on. It is
- * not a section of the document the other steps are writing, so it is marked
- * differently in the rail — a different accent, and no progress ring — and "I
- * have not filled this in" never reads as "I am behind on my plan".
- *
- * BUILDING YOUR OWN LIVES INSIDE IT rather than beside it. It was its own step
- * for an afternoon, and that was wrong twice over: it asked somebody to decide
- * between "a program" and "my program" before seeing either, and it put two
- * answers to one question in two different places in the rail.
+ * Steps that are no longer in the rail, and the step that holds them now. An
+ * old link, bookmark or button naming one lands on its new home.
  */
-export const WORKSHOP_TABS: NorthStarTabId[] = ["templates"]
+export const MOVED_STEPS: Partial<Record<NorthStarTabId, NorthStarTabId>> = { one: "focus", commit: "recap", templates: "pick" }
+
+/** The step a link to `asked` opens. */
+export function stepFor(asked: NorthStarTabId): NorthStarTabId {
+  // Own keys only: `?step=toString` must not find Object.prototype's.
+  return (Object.hasOwn(MOVED_STEPS, asked) && MOVED_STEPS[asked]) || asked
+}
 
 /**
  * The steps that carry a ring on the rail, which is every step but the fork.
  *
  * A ring says how full a step is, and the fork has nothing in it to fill — its
- * three doors write into the steps they open. Scoring somebody on having chosen
+ * doors write into the steps they open. Scoring somebody on having chosen
  * a door is the sort of tick that made the old green ones meaningless. Kept
  * here rather than as a check in the rail's JSX so that the invariant "every
  * ring can be filled" has one list to run over.
  *
- * The catalogue and the track step are out for the same reason: neither holds
- * anything you wrote. Track is a mirror of the goals the other steps produced,
- * and a ring on it would be scoring the plan twice.
+ * The track step is out for the same reason: it holds nothing you wrote. It is
+ * a mirror of the goals the other steps produced, and a ring on it would be
+ * scoring the plan twice.
+ *
+ * Everything carries one since Commit folded into it, and it scores the
+ * commitment and nothing else: that is the one thing on the page written there
+ * and nowhere else. See `stepState`.
  */
 export const SCORED_TABS: NorthStarTabId[] = TAB_ORDER.filter(
-  (tab) => tab !== "pick" && tab !== "templates" && tab !== "track" && tab !== "today" && tab !== "journal" && tab !== "recap"
+  (tab) => tab !== "pick" && tab !== "track" && tab !== "today" && tab !== "journal"
 )
 
 export const TAB_LABELS: Record<NorthStarTabId, string> = {
@@ -742,7 +753,7 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   star: "The life you are aiming at, why it matters, and who you would have to be.",
   now: "Rate each area on the wheel and picture what a 10 looks like in it.",
   one: "The single change that would make the rest far more likely, and what it needs from you.",
-  pick: "Three ways on from here: what you want, what you will do, or one routine.",
+  pick: "Four ways on from here: what you want, what you will do, one routine, or a ready-made set.",
   templates: "Ready-made sets, goals and practices for every area. Take what is yours, ignore the rest.",
   systems: "What you actually do about it week in week out, and what each one is pointed at.",
   milestones: "Everything you want to experience and have done, area by area. Loose, greedy, nothing final.",
@@ -752,7 +763,7 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   track: "Push the goals into your real goals and tick them off day by day.",
   today: "What you can put in for today, and nothing else. Tick off what you did.",
   journal: "Everything you write: the questions your routines ask, the ones you add, and every answer you have given them.",
-  recap: "The whole plan on one page: your star, your values, who you are, your areas and your goals. Edit any of it here.",
+  recap: "The whole plan on one page, editable. Check it aims at your 10s, say what could go wrong, and commit to it.",
 }
 
 // ---------------------------------------------------------------- tab 1
@@ -1736,26 +1747,6 @@ export const PLAN_INTRO = {
 }
 
 /**
- * Only said once every area has a number.
- *
- * It used to appear the moment a single area was rated, so rating Emotions first
- * produced "Under the floor right now: Emotions. That is where the attention goes
- * this season" off one data point and eleven blanks. You cannot know what is
- * lowest until you have looked at all of them, and telling somebody where their
- * season goes before they have decided anything is the app doing the deciding.
- *
- * So: nothing until all twelve are rated, and then an observation rather than an
- * instruction. What to do about it is the next screen's job.
- */
-export const FLOOR_LINE = {
-  waiting: (rated: number, total: number) =>
-    `${total - rated} ${total - rated === 1 ? "area" : "areas"} still unrated. Once they all have a number this will tell you which are under the floor.`,
-  under: (names: string) => `Under a seven right now: ${names}.`,
-  none: "Nothing under a seven right now.",
-  note: "Seven is the floor. Which of these you work on this season is your call, and two or three areas carry most years.",
-}
-
-/**
  * One person's 10 in each area, offered as a starting point.
  *
  * Every area used to open on an empty box under "What would a 10 look like
@@ -1798,11 +1789,7 @@ export const REVIEW_INTRO = {
   title: "Does the plan point at your 10?",
   help: "You wrote your 10 in each area and rated where you stand. Now read the goals against that picture, and answer the questions that decide whether you keep going in February.",
   dailyNote: "The ratings and the 10s live on the Where you are tab. This tab reads them back beside the goals in that area.",
-  floorNote: "Seven is the floor, and it is not the aim. Anything under a seven is the area asking for attention this season.",
 }
-
-/** The score below which an area is asking for attention. */
-export const NS_FLOOR = 7
 
 /**
  * What the two numbers being apart actually means.
@@ -1893,9 +1880,9 @@ export const SERVES_COPY = {
 export const GOAL_TOOL_LINKS: Array<{ match: string[]; label: string; tab: NorthStarTabId; note: string }> = [
   {
     match: ["weekly review", "weekly reflection"],
-    label: "Run it on the Review tab",
-      tab: "commit",
-    note: "This page has the review built in. The Review tab reads every area's 10 back beside its goals and asks whether they still aim at it.",
+    label: "Run it at the foot of Everything",
+      tab: "recap",
+    note: "This page has the review built in, at the foot of Everything: it reads every area's 10 back beside its goals and asks whether they still aim at it.",
   },
   {
     match: ["morning ritual", "morning routine"],
@@ -2287,7 +2274,7 @@ export const NS_VALUE_SUGGESTIONS = [
 ]
 
 /** Said once, under the wheel, when an area has a 10 and no goals. */
-export const GAP_WARNING = "You have written a 10 here and no goal that aims at it. Either add one, or accept that this area is holding its floor this season."
+export const GAP_WARNING = "You have written a 10 here and no goal that aims at it. Either add one, or accept that this area is not where this season goes."
 
 
 // ---------------------------------------------------------------- tab 3, focus

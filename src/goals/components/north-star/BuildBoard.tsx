@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button"
 import { CHIP_ON } from "@/src/programs/forLifeMastery"
 import { Check, ChevronDown, Plus } from "lucide-react"
 import type { NsArea, NsPlan } from "@/src/goals/types"
-import { NS_FLOOR, ROUTINE_BLUEPRINT_MAP, SEASON_FOCUS_COPY, TEMPLATE_ADDED_COPY } from "@/src/goals/data/northStar"
+import { ROUTINE_BLUEPRINT_MAP, SEASON_FOCUS_COPY, TEMPLATE_ADDED_COPY } from "@/src/goals/data/northStar"
 import { BOARD_COPY, LOAD_CEILING, type RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { Template } from "@/src/goals/data/newGoalFramework"
 import {
@@ -284,7 +284,7 @@ function AreaRow({ area, plan, level, rating, handlers, open, onToggle }: {
             this season
           </span>
         )}
-        <span className={`text-[10.5px] tabular-nums shrink-0 ${rating == null ? "text-zinc-700" : rating < NS_FLOOR ? "text-amber-300/80" : "text-zinc-500"}`}>
+        <span className={`text-[10.5px] tabular-nums shrink-0 ${rating == null ? "text-zinc-700" : "text-zinc-500"}`}>
           {rating != null ? `${rating}/10` : "not rated"}
         </span>
         <span className="ml-auto shrink-0 flex items-center gap-2">

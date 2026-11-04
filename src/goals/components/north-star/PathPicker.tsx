@@ -19,10 +19,16 @@
  * here with whatever the one you took has already put in them. The third door
  * shows its four choices open, unhidden — a door that needs a click to reveal
  * that it is four doors is the reason nobody found the routines.
+ *
+ * THE FOURTH DOOR IS THE CATALOGUE, which was a step of its own until N1 of
+ * Plans/life-plan-rebuild.md. It opens here, under the doors, rather than on
+ * a page of its own: it is a way to start like the other three, and like them
+ * it holds nothing you wrote. Closed until asked for, so the ready-made list is
+ * never the first thing in front of an empty plan.
  */
 
 import Link from "next/link"
-import { ArrowRight, ArrowUpRight } from "lucide-react"
+import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react"
 import type { NsPlan } from "@/src/goals/types"
 import { PATHS_COPY, ROUTINE_DOORS, START_PATHS, type StartPathId } from "@/src/goals/data/northStarStart"
 import { milestoneGoals, systemGoals } from "@/src/goals/northStarService"
@@ -31,11 +37,18 @@ export function PathPicker({
   plan,
   onPick,
   onPickRoutine,
+  catalogueOpen,
+  onCatalogue,
+  children,
 }: {
   plan: NsPlan
   onPick: (id: StartPathId) => void
   /** Opens that routine on the milestones step, already expanded. */
   onPickRoutine: (routineId: string) => void
+  catalogueOpen: boolean
+  onCatalogue: () => void
+  /** The catalogue, shown under the doors while it is open. */
+  children: React.ReactNode
 }) {
   const milestones = milestoneGoals(plan).length
   const systems = systemGoals(plan).length + plan.routines.reduce((sum, r) => sum + r.steps.length, 0)
@@ -135,8 +148,24 @@ export function PathPicker({
           })}
         </div>
 
+        <button
+          onClick={onCatalogue}
+          aria-expanded={catalogueOpen}
+          className="w-full mt-3 rounded-xl border border-sky-400/20 bg-sky-500/[0.03] p-4 text-left hover:border-sky-400/40 transition-colors group/c"
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="text-[13px] font-medium text-zinc-100">
+              {catalogueOpen ? PATHS_COPY.catalogueClose : PATHS_COPY.catalogueLabel}
+            </span>
+            <ChevronDown className={`size-3.5 text-zinc-600 group-hover/c:text-zinc-300 transition-transform ${catalogueOpen ? "rotate-180" : ""}`} />
+          </span>
+          <span className="block text-[11.5px] text-zinc-400 mt-1.5 leading-relaxed">{PATHS_COPY.catalogueBlurb}</span>
+        </button>
+
         <p className="text-[11px] text-zinc-500 mt-4 leading-relaxed">{PATHS_COPY.note}</p>
       </section>
+
+      {catalogueOpen && children}
     </div>
   )
 }

@@ -1293,12 +1293,12 @@ export function readSources(plan: NsPlan): ReadSource[] {
    * The two prompt sets are answered on two different steps, and a field that
    * lands you on the wrong one is a link that goes to the right page and the
    * wrong screen. The star questions are written on step 1; the review
-   * questions live under Commit.
+   * questions live on Everything, where Commit folded in.
    */
   const starIds = new Set(STAR_PROMPTS.map((p) => p.id))
   for (const prompt of [...STAR_PROMPTS, ...REVIEW_PROMPTS]) {
     push(`answer:${prompt.id}`, prompt.question, starGroup, plan.answers[prompt.id] ?? "", {
-      tab: starIds.has(prompt.id) ? "star" : "commit",
+      tab: starIds.has(prompt.id) ? "star" : "recap",
       anchor: starIds.has(prompt.id) ? `star-${prompt.id}` : `prompt-${prompt.id}`,
     })
   }

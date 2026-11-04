@@ -21,7 +21,6 @@
  */
 
 import type { NsArea } from "@/src/goals/types"
-import { NS_FLOOR } from "@/src/goals/data/northStar"
 
 const C = 195
 const R = 108
@@ -161,7 +160,7 @@ export function AreaWheel({
           ? (goals > 0 ? a.color : "#71717a")
           : subMode === "season" && rank >= 0
             ? a.color
-            : rating != null && rating < NS_FLOOR ? "#fbbf24" : rating != null ? a.color : "#71717a"
+            : rating != null ? a.color : "#71717a"
         const pressProps = {
           role: "button",
           tabIndex: 0,
@@ -240,10 +239,8 @@ export function AreaWheel({
         )
       })}
 
-      {/* The floor sits above the fills so it stays readable on a lit sector. */}
-      <circle cx={C} cy={C} r={(R * NS_FLOOR) / 10} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3 4" className="pointer-events-none">
-        <title>The floor, at {NS_FLOOR}. Below it an area is asking for attention.</title>
-      </circle>
+      {/* No floor ring: the dashed circle at 7 went with the rest of the floor
+          on 2026-11-04 (Plans/life-plan-rebuild.md). */}
 
       {areas.map((_, i) => {
         const [x, y] = polar(C, C, R, i * seg)

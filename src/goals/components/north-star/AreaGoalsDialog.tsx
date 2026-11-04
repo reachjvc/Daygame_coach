@@ -22,7 +22,6 @@ import type { NsArea, NsPlan, VisionGoalType } from "@/src/goals/types"
 import {
   AREA_REVIEW_COPY,
   GOALS_INTRO,
-  NS_FLOOR,
   SEASON_FOCUS_COPY,
   SERVES_COPY,
 } from "@/src/goals/data/northStar"
@@ -112,7 +111,7 @@ export function AreaGoalsDialog({
             <span className="size-3 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
             <span className="text-lg font-semibold text-white">{area.label}</span>
             <span className="ml-auto text-[11px] font-normal tabular-nums shrink-0">
-              <span className={rating == null ? "text-zinc-600" : rating < NS_FLOOR ? "text-amber-300" : "text-zinc-300"}>
+              <span className={rating == null ? "text-zinc-600" : "text-zinc-300"}>
                 {rating != null ? `${rating}/10` : "not rated"}
               </span>
               <span className="text-zinc-600"> · {goals.length} {goals.length === 1 ? "goal" : "goals"}</span>

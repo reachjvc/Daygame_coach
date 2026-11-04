@@ -27,7 +27,7 @@
 import { useState } from "react"
 import { Plus, X } from "lucide-react"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
-import { FOCUS_COPY, NS_FLOOR } from "@/src/goals/data/northStar"
+import { FOCUS_COPY } from "@/src/goals/data/northStar"
 import { SEASON_AREA_LIMIT } from "@/src/goals/data/northStarGuide"
 import { areaReview, wheelRatings } from "@/src/goals/northStarService"
 import { AreaWheel } from "./AreaWheel"
@@ -121,7 +121,7 @@ export function FocusTab({
                     <span className="block text-[10px] text-zinc-500 truncate" title={ten || area.sublabel}>{ten || area.sublabel}</span>
                   </span>
                   <span className={`text-[10.5px] tabular-nums shrink-0 ${
-                    rating == null ? "text-zinc-700" : rating < NS_FLOOR ? "text-amber-300/80" : "text-zinc-500"
+                    rating == null ? "text-zinc-700" : "text-zinc-500"
                   }`}>
                     {rating != null ? `${rating}/10` : "–"}
                   </span>

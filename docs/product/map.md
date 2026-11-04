@@ -122,9 +122,11 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
 **The life half**
 - `goals/` — **by far the biggest slice, over 100k lines, and mostly not live.** The
   live part is Life Mastery: `northStarService` plus the `north-star/`
-  components, a fourteen-step flow at `/plan` — north star, your 10s,
-  the one thing, where to start, templates, systems, experiences, focus &
-  season, values & identity, commit, track, today, journal, everything.
+  components, an eleven-step flow at `/plan` — north star, your 10s,
+  where to start (with the ready-made sets behind a fourth door), systems,
+  experiences, season (the one thing and the focus), values & identity,
+  everything (the plan read back, ending in the commitment), track, today,
+  journal. Old `?step=one|commit|templates` links open those steps' new homes.
   **Since 2026-09-23 the plan lives on the ACCOUNT, and so does the day half** —
   the north star, areas, goals, routines and values in twenty-one `life_plan_*`
   tables, and every rating, tick, day note and journal answer in the four day

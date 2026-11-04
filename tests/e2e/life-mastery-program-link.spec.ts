@@ -80,10 +80,13 @@ async function startFromCatalogue(page: Page, name: RegExp): Promise<void> {
 
 const startStrongLifts = (page: Page) => startFromCatalogue(page, /StrongLifts/i)
 
-/** The Templates step's card, once the enrollment read has landed. */
+/**
+ * The ready-made sets' card, once the enrollment read has landed. The
+ * Templates link opens them on Where to start (they were a step of their own
+ * until Plans/life-plan-rebuild.md, N1), so there is nothing to click.
+ */
 async function openTemplates(page: Page) {
   await page.goto(TEMPLATES, { waitUntil: "networkidle" })
-  await page.getByRole("button", { name: /Templates/ }).first().click()
   const card = page.getByTestId("lm-training-program")
   await expect(card).toBeVisible({ timeout: 20000 })
   return card
@@ -241,7 +244,6 @@ test.describe("Life Mastery and the training database", () => {
 
     try {
       await page.goto(TEMPLATES, { waitUntil: "domcontentloaded" })
-      await page.getByRole("button", { name: /Templates/ }).first().click()
 
       const unavailable = page.getByTestId("lm-training-unavailable")
       await expect(unavailable).toBeVisible({ timeout: 20000 })

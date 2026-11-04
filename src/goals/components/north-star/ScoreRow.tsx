@@ -1,6 +1,5 @@
 "use client"
 
-import { NS_FLOOR } from "@/src/goals/data/northStar"
 
 /**
  * A 0-10 row. Clicking the score you already picked clears it, so "I do not
@@ -18,7 +17,7 @@ export function ScoreRow({ label, value, color, ariaLabel, onPick }: {
       {label && (
         <p className="text-[11px] text-zinc-400 mb-1">
           {label}
-          <span className={`ml-1.5 tabular-nums ${value == null ? "text-zinc-600" : value < NS_FLOOR ? "text-amber-300" : "text-zinc-300"}`}>
+          <span className={`ml-1.5 tabular-nums ${value == null ? "text-zinc-600" : "text-zinc-300"}`}>
             {value != null ? `${value}/10` : "not rated"}
           </span>
         </p>

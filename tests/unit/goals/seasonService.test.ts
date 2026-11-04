@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { emptyNsPlan, setAnswer, toggleSeasonArea, setSeasonFocus, addGoal, planIsUntouched } from "@/src/goals/northStarService"
 import { planHasNothingWritten } from "@/src/goals/lifePlanSync"
 import { currentSeasonOneThing, pastSeasonOneThings, removePastSeason, writeSeasonOneThing } from "@/src/goals/seasonService"
+import { runningSince } from "@/src/goals/oneThingService"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 import type { NsPlan } from "@/src/goals/types"
@@ -44,6 +45,14 @@ describe("a plan holding only a one thing is a plan", () => {
 })
 
 describe("the one thing is the season's sentence", () => {
+  it("says how long it has been running once it has run a day, so a reword visibly keeps the clock", () => {
+    const begun = must(writeSeasonOneThing(emptyNsPlan(), "amend", "Quit vaping", undefined, "2026-09-01", "2026-11-30"))
+    const reworded = must(writeSeasonOneThing(begun, "amend", "Quit vaping, properly", undefined, TODAY, DEFAULT_DUE))
+    expect(runningSince(currentSeasonOneThing(reworded, TODAY), TODAY)).toMatch(/Running since 1 Sept? 2026/)
+    // Not on its first day: there is no clock to reassure anybody about yet.
+    expect(runningSince(currentSeasonOneThing(begun, "2026-09-01"), "2026-09-01")).toBeNull()
+  })
+
   it("the first sentence opens the first season, from today to the default deadline", () => {
     const plan = must(writeSeasonOneThing(emptyNsPlan(), "amend", "Quit vaping", undefined, TODAY, DEFAULT_DUE))
     expect(plan.season).toEqual({ id: "s1", startedOn: TODAY, endsOn: DEFAULT_DUE, sentence: "Quit vaping" })

@@ -398,7 +398,7 @@ export const BOARD_COPY = {
   /** A routine that was already there and only gained the steps it was missing. */
   extendedRoutine: (label: string) => `${label} picked up the steps it was missing`,
   loadTitle: "What this costs a week",
-  loadOver: "That is more week than most weeks have. Nothing is stopping you, but pick one area as the season's focus and let the rest hold their floor.",
+  loadOver: "That is more week than most weeks have. Nothing is stopping you, but pick one area as the season's focus and let the rest tick over.",
   loadFine: "That fits in a week.",
 }
 

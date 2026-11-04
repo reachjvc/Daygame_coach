@@ -28,7 +28,6 @@ import {
   AREA_REVIEW_COPY,
   AREA_TEN_EXAMPLES,
   NS_DAILY_WINDOW,
-  NS_FLOOR,
   RATING_VARIANCE_NOTE,
   SEASON_FOCUS_COPY,
   SERVES_COPY,
@@ -137,7 +136,7 @@ export function AreaDialog({
               </button>
             )}
             <span className="ml-auto text-[11px] font-normal tabular-nums shrink-0">
-              <span className={rating == null ? "text-zinc-600" : rating < NS_FLOOR ? "text-amber-300" : "text-zinc-300"}>
+              <span className={rating == null ? "text-zinc-600" : "text-zinc-300"}>
                 {rating != null ? `${rating}/10` : "not rated"}
               </span>
             </span>

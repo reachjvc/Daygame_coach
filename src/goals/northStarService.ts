@@ -20,7 +20,6 @@ import {
   DEFAULT_ROUTINE_IDS,
   GOAL_DATE_PRESETS,
   NS_DAILY_WINDOW,
-  NS_FLOOR,
   NS_PLAN_VERSION,
   NS_QUALIFY_THRESHOLD,
   NS_SPLITS,
@@ -2848,7 +2847,7 @@ export function setGoalMetric(plan: NsPlan, goalId: string, metric: "daily_area"
       metric: "daily_area",
       unit: "/10",
       ladder: untouched
-        ? { ...defaults, start: current, target: Math.min(10, NS_FLOOR + 2), steps: 4 }
+        ? { ...defaults, start: current, target: 9, steps: 4 }
         : { ...goal.ladder!, start: goal.ladder!.start, target: Math.min(10, goal.ladder!.target) },
     },
     now,
@@ -3307,28 +3306,6 @@ export function rankValueAbove(plan: NsPlan, winner: string, loser: string, now 
   return touch({ ...plan, values: next }, now)
 }
 
-/**
- * Areas sitting under the floor with nothing in the values list pointing at
- * them. His client wanted to change his health and had never written health
- * down: "no wonder you're not creating long-term change here".
- *
- * Matched through the same cue table the suggestions use, so "Vitality" counts
- * as support for Health without a second hand-typed mapping to drift.
- */
-export function areasWithoutValueSupport(plan: NsPlan, today = todayISO()): NsArea[] {
-  if (plan.values.length === 0) return []
-  const written = plan.values.map((v) => v.trim().toLowerCase())
-  const supports = (area: NsArea): boolean => {
-    const haystack = `${area.label} ${area.sublabel}`.toLowerCase()
-    return written.some((value) => {
-      if (haystack.includes(value)) return true
-      const cues = VALUE_CUES.find((c) => c.value.toLowerCase() === value)?.cues ?? []
-      return cues.some((cue) => haystack.includes(cue))
-    })
-  }
-  return areasUnderFloor(plan, today).filter((a) => !supports(a))
-}
-
 /** How far off his "at least seven" the list is. Advisory, never blocking. */
 export function valuesShortBy(plan: NsPlan): number {
   return Math.max(0, VALUES_INTRO.minimum - plan.values.length)
@@ -3735,11 +3712,6 @@ export function goalToolLink(goal: NsGoal): (typeof GOAL_TOOL_LINKS)[number] | n
   return GOAL_TOOL_LINKS.find((link) => link.match.some((m) => title.includes(m))) ?? null
 }
 
-/** Areas sitting under the floor. These are the ones asking for attention. */
-export function areasUnderFloor(plan: NsPlan, today = todayISO()): NsArea[] {
-  const ratings = wheelRatings(plan, today)
-  return plan.areas.filter((a) => ratings[a.id] != null && ratings[a.id] < NS_FLOOR)
-}
 
 /** Every value written anywhere, deduplicated, for the whole-life exercise. */
 /**
@@ -3859,9 +3831,10 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
   if (tab === "pick") return "empty"
 
   /**
-   * Nor has the catalogue. What you take from it lands in the two build steps
-   * and is scored there; a ring on "have you had a look" would be scoring
-   * somebody on browsing.
+   * Nor has the catalogue (a door on the fork since Plans/life-plan-rebuild.md,
+   * N1). What you take from it lands in the two build steps and is scored
+   * there; a ring on "have you had a look" would be scoring somebody on
+   * browsing.
    */
   if (tab === "templates") return "empty"
 
@@ -3879,13 +3852,6 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
    */
   if (tab === "journal") return "empty"
 
-  /**
-   * Nor the last step. It is the other twelve, read back — a ring on it would
-   * fill itself off work that has already been scored where it was done, and
-   * "you have not finished reading your own plan" is not a thing to tell
-   * anybody.
-   */
-  if (tab === "recap") return "empty"
 
   /**
    * TWO STEPS, TWO RINGS, and the join is scored on the second one.
@@ -3932,7 +3898,13 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
     return plan.values.length >= 3 ? "done" : "started"
   }
 
-  // commit
+  /**
+   * EVERYTHING, AND THE COMMITMENT ON IT. Commit folded into it (N1), and the
+   * ring scores the commitment alone. The rest of the page is the other steps,
+   * read back: scoring that would fill the ring off work already scored where
+   * it was done, and "you have not finished reading your own plan" is not a
+   * thing to tell anybody.
+   */
   const said = filled(COMMIT_KEY)
   if (!said) return "empty"
   return filled(COMMIT_DATE_KEY) ? "done" : "started"
@@ -3953,7 +3925,7 @@ export function stepStates(plan: NsPlan, account: NsAccount = NO_ACCOUNT): Recor
  * boxes. It only works if the outstanding work is visible somewhere, which is
  * this.
  */
-export function planTodos(plan: NsPlan, today = todayISO()): Array<{ id: string; text: string; tab: NorthStarTabId }> {
+export function planTodos(plan: NsPlan): Array<{ id: string; text: string; tab: NorthStarTabId }> {
   const out: Array<{ id: string; text: string; tab: NorthStarTabId }> = []
   if (!plan.northStar.trim()) out.push({ id: "star", text: "Your north star paragraph", tab: "star" })
   if (!answerOf(plan, STAR_WHY_ID).trim()) out.push({ id: "why", text: "Why that life matters to you", tab: "star" })
@@ -3981,14 +3953,6 @@ export function planTodos(plan: NsPlan, today = todayISO()): Array<{ id: string;
     // which is where the linking is, so the chip goes there.
     const noAction = plan.goals.filter(goalNeedsAction).length
     if (noAction > 0) out.push({ id: "goalaction", text: `${noAction} ${noAction === 1 ? "goal names" : "goals name"} an outcome with no action`, tab: "systems" })
-  }
-  const unsupported = areasWithoutValueSupport(plan, today)
-  if (unsupported.length > 0) {
-    out.push({
-      id: "valuegap",
-      text: `Under a seven with no value pointing at it: ${unsupported.map((a) => a.label).join(", ")}`,
-      tab: "star",
-    })
   }
   return out
 }
@@ -4283,7 +4247,7 @@ export function planAsText(plan: NsPlan, today = todayISO()): string {
   return blocks.join("\n\n")
 }
 
-export { ROUTINE_BLUEPRINTS, NS_SPLITS, NS_FLOOR, NS_QUALIFY_THRESHOLD, NS_DAILY_WINDOW }
+export { ROUTINE_BLUEPRINTS, NS_SPLITS, NS_QUALIFY_THRESHOLD, NS_DAILY_WINDOW }
 
 // ------------------------------------------------- the common-goal library
 //

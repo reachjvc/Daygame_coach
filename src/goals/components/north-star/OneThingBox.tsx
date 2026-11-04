@@ -54,7 +54,7 @@ export function OneThingBox({
   typed: string | null
   onTyped: (text: string | null) => void
 }) {
-  const { current, past, loaded, signedOut, error: readError, write, remove: removeOne } = account
+  const { current, past, loaded, signedOut, error: readError, write, remove: removeOne, today } = account
 
   const [dueOn, setDueOn] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -162,7 +162,7 @@ export function OneThingBox({
   }
 
   const prompt = oneThingPrompt(current)
-  const since = runningSince(current)
+  const since = runningSince(current, today)
 
   return (
     <div className="mt-3 space-y-3">

@@ -33,6 +33,8 @@ export interface OneThingAccount {
   write: (act: OneThingAct, body: string, dueOn: string | undefined) => Promise<void>
   /** Delete one of the past ones. */
   remove: (id: string) => Promise<void>
+  /** The account's today, or null until it is known. */
+  today: string | null
 }
 
 export function useOneThing(
@@ -71,6 +73,7 @@ export function useOneThing(
       reload,
       write,
       remove,
+      today,
     }),
     [plan, today, loaded, reload, write, remove],
   )

@@ -23,9 +23,7 @@ import type { NsArea, NsPlan } from "@/src/goals/types"
 import {
   AREA_SUGGESTIONS,
   AREAS_INTRO,
-  FLOOR_LINE,
   NOW_INTRO,
-  NS_FLOOR,
   SEASON_FOCUS_COPY,
 } from "@/src/goals/data/northStar"
 import { areaReview, seasonFocus, wheelRatings } from "@/src/goals/northStarService"
@@ -60,17 +58,12 @@ export function NowTab({
 
   const ratings = wheelRatings(plan, today)
   const rated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight != null).length
-  /**
-   * Only once every area has a number.
-   *
-   * It used to appear the moment ONE area was rated, so rating Emotions first
-   * produced "Under the floor right now: Emotions. That is where the attention
-   * goes this season" off a single data point and eleven blanks. You cannot know
-   * what is lowest until you have looked at all of them, and choosing where the
-   * season goes is the user's decision, not a line of ours.
+  /*
+   * NO FLOOR. There was a line here naming the areas "under a seven", and
+   * amber on every number below it. The owner had it taken out on 2026-11-04
+   * (Plans/life-plan-rebuild.md): which area needs work is the person's to
+   * see in their own numbers, not the page's to point at.
    */
-  const allRated = rated === plan.areas.length && plan.areas.length > 0
-  const underFloor = plan.areas.filter((a) => ratings[a.id] != null && ratings[a.id] < NS_FLOOR)
   const focus = seasonFocus(plan)
   // The wheel is the rating picture on this tab, so it carries no goal dots.
   // Goals have their own tab and their own wheelless surface.
@@ -136,20 +129,6 @@ export function NowTab({
             />
             <p className="mt-1 text-center text-[12px] text-zinc-400">
               Click an area to write your 10, rate it, and say why it matters.
-            </p>
-            {/* Nothing is claimed about which area is lowest until every area
-                has a number to be lowest against. */}
-            <p className="mt-1 text-center text-[11.5px] text-zinc-500">
-              {!allRated ? (
-                FLOOR_LINE.waiting(rated, plan.areas.length)
-              ) : underFloor.length === 0 ? (
-                FLOOR_LINE.none
-              ) : (
-                <>
-                  <span className="text-amber-300/85">{FLOOR_LINE.under(underFloor.map((a) => a.label).join(", "))}</span>
-                  <span className="block text-[11px] text-zinc-600 mt-0.5">{FLOOR_LINE.note}</span>
-                </>
-              )}
             </p>
           </div>
         </div>

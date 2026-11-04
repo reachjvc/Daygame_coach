@@ -172,9 +172,13 @@ export const ROUTINE_DOORS: Array<{ routineId: string; label: string; blurb: str
 export const PATHS_COPY = {
   title: "Where do you want to start?",
   help:
-    "You have said what the next few years are for. What comes next is three different jobs, and which one is easier is a fact about you rather than about planning. Pick one — the other two stay here, and everything writes into the same plan.",
+    "You have said what the next few years are for. What comes next is three different jobs, and which one is easier is a fact about you rather than about planning. Pick one — the others stay here, and everything writes into the same plan. Or start from a ready-made set, under them.",
   /** Under the cards, because a fork nobody can back out of is a gate. */
-  note: "Nothing here is a commitment. You can do all three, in any order, and come back to this page from the rail at the top.",
+  note: "Nothing here is a commitment. You can do all of them, in any order, and come back to this page from the rail at the top.",
+  /** The fourth door: the catalogue, folded in from its own step (Plans/life-plan-rebuild.md, N1). */
+  catalogueLabel: "Start from a ready-made set",
+  catalogueBlurb: "Sets, goals and practices other people use, for every area. Take what is yours and leave the rest; what you take lands in Systems and Experiences.",
+  catalogueClose: "Close the ready-made sets",
   viceLabel: "Quit a vice",
   viceBlurb: "The one you would stop if you could. A plan for it, on its own page.",
   viceHref: ROUTES.quitVice,

@@ -477,10 +477,18 @@ export function oneThingCountdown(current: OneThing | null): string {
  * Shown beside the countdown once a chapter has been amended or extended,
  * because that is exactly when somebody would otherwise wonder whether their
  * clock had been restarted by a typo fix.
+ *
+ * AND ONCE IT HAS RUN A DAY, given `today`. The one thing is a season's
+ * sentence since Plans/life-plan-rebuild.md, Phase 3, and a season keeps its
+ * start through every reword and deadline move but counts neither, so
+ * `wordings` is always 1 and the line never showed. A season begun before
+ * today has a clock worth stating.
  */
-export function runningSince(current: OneThing | null): string | null {
+export function runningSince(current: OneThing | null, today?: string | null): string | null {
   if (!current) return null
-  if (current.wordings <= 1 && !current.extended) return null
+  const amended = current.wordings > 1 || current.extended
+  const running = !!today && current.startedOn < today
+  if (!amended && !running) return null
   return `Running since ${formatDueDate(current.startedOn)}`
 }
 

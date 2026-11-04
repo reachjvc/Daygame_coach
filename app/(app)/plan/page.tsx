@@ -3,7 +3,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { getUserGoals, rollGoalPeriods } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
-import { TAB_ORDER } from "@/src/goals/data/northStar"
+import { stepFor, TAB_ORDER } from "@/src/goals/data/northStar"
 import type { NorthStarTabId } from "@/src/goals/types"
 
 /**
@@ -41,9 +41,10 @@ export default async function LifeMasteryPage({
   // ?step=today lands on the day's list. An unknown step opens the flow at the
   // start rather than 404ing: a stale link is not a broken page.
   const { step } = await searchParams
-  // `one` is part of the Season step (`focus`) since Plans/life-plan-rebuild.md, Phase 3.
-  const asked = step === "one" ? "focus" : step
-  const initialTab = TAB_ORDER.includes(asked as NorthStarTabId) ? (asked as NorthStarTabId) : undefined
+  // A step that folded into another (`one`, `commit`, `templates`;
+  // Plans/life-plan-rebuild.md) is handed over as asked: the flow opens its
+  // new home, and on that home the part the link was for.
+  const initialTab = TAB_ORDER.includes(stepFor(step as NorthStarTabId)) ? (step as NorthStarTabId) : undefined
 
   /**
    * THE ACCOUNT'S ZONE, read once for the whole page.

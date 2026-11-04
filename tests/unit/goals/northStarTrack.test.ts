@@ -967,7 +967,8 @@ describe("a field that takes you to the thing instead of quoting it", () => {
     const review = REVIEW_PROMPTS[0]
     const plan = setAnswer(setAnswer(emptyNsPlan(), star.id, "Because of my kids."), review.id, "Mornings.")
     expect(readSource(plan, `answer:${star.id}`)!.home).toEqual({ tab: "star", anchor: `star-${star.id}` })
-    expect(readSource(plan, `answer:${review.id}`)!.home).toEqual({ tab: "commit", anchor: `prompt-${review.id}` })
+    // The review questions are on Everything since Commit folded into it.
+    expect(readSource(plan, `answer:${review.id}`)!.home).toEqual({ tab: "recap", anchor: `prompt-${review.id}` })
   })
 
   it("opens an area's own dialog for anything written inside it", () => {
