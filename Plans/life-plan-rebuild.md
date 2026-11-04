@@ -10,6 +10,9 @@ looked at it and marked it. The page he marks: https://claude.ai/artifact/K5r4E4
 (pictures of every `/plan` step, taken on a copy of his plan in a test account; marks in its `marks`
 store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the marks before the next phase.
 
+**Where it stands, 2026-11-04 night:** Phases 1–6 and Q4 are live; only Phase 7 (it deletes, so it
+waits for your yes) is left, plus one question on the sign-off page (`p5-wheel-question`).
+
 **Marked 2026-11-04 (afternoon):** Good on all nine cards then on the page: 13 steps to 11, Commit on
 Everything, the Templates door, no floor, Running since, the north star history (Phase 2), the season
 (Phase 3), the timeframe and the feeds-by-name (Phase 4 part 1). The values question was marked "Remove
@@ -506,6 +509,9 @@ and shown on the day's summary. Concept items 21 and 34.
   on the day and comes back off; goals copied before still show), `life-mastery-day-persists.spec.ts`
   (a tick made just before a reload is kept), `life-mastery-goal-actions.spec.ts` (the Systems "×").
 - **No database change**, so no backup was needed: it uses Phase 6's table.
+- **Live 2026-11-04 night** (commit `2a5ffc07`). Checked on the live database after: your 91 old goals
+  and their 241 counts untouched, revision 920, no day numbers yet. Sign-off cards `q4-today-counts`,
+  `q4-track` and `fix-systems-x`.
 
 ### Phase 7. Clear out the old homes (deletes: your yes first)
 
