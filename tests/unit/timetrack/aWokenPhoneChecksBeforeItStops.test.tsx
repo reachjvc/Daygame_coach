@@ -165,7 +165,10 @@ describe("a phone that wakes with an old copy", () => {
     serve(account)
 
     render(<TogglLab />)
-    await wait(1_000)
+    // first contact queues one row and sends it after the upload debounce; the
+    // badge said "Saved" before that send too, and now says "Saving 1…" until it
+    // lands. Stepped, so the answer's promises settle between the timer jumps
+    for (let i = 0; i < 10 && !screen.queryByRole("button", { name: /^Saved\./ }); i++) await wait(500)
     expect(screen.getByRole("button", { name: /^Saved\./ })).toBeInTheDocument()
 
     // in a pocket while the PC stops Gym

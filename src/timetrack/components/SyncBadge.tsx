@@ -107,6 +107,10 @@ export function describeBadge(status: SyncStatus, pending: number, check: CheckS
         dot: "bg-destructive",
       }
     case "synced": {
+      // A change waits out the upload debounce before the request starts, and
+      // the status only turns to "saving" when it does. Until then a Stop is
+      // still on this device, so it is not "Saved".
+      if (pending > 0) return describeBadge("saving", pending, check, nowMs)
       if (check.failed) {
         return {
           label: "Couldn't reach the server",

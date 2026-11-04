@@ -31,6 +31,15 @@ import {
 } from './helpers/timetrack'
 
 /**
+ * The tracker's own header. Since Time shows the app's header on the PC
+ * (Plans/time-tracker-like-toggl.md D9) there are two banners on the page, and
+ * the running entry is shown in this one.
+ */
+function trackerHeader(page: Page) {
+  return page.getByRole('banner').filter({ has: page.getByRole('heading', { name: 'Time', exact: true }) })
+}
+
+/**
  * ICS fixture: one timed event today plus an all-day event (which must be skipped).
  * Timestamps are relative to today, or the event lands outside the visible range.
  */
@@ -165,12 +174,12 @@ test.describe('Toggl-style time tracker', () => {
     await page.getByPlaceholder('What are you working on?').fill('E2E entry')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
 
-    await expect(page.getByRole('banner')).toContainText('E2E entry')
+    await expect(trackerHeader(page)).toContainText('E2E entry')
     await expect(page).toHaveTitle(/\d+:\d\d:\d\d · E2E entry/)
 
     await blur(page)
     await page.keyboard.press('s')
-    await expect(page.getByRole('banner')).not.toContainText('E2E entry')
+    await expect(trackerHeader(page)).not.toContainText('E2E entry')
     await expect(page).toHaveTitle('Time')
   })
 
@@ -253,11 +262,11 @@ test.describe('Toggl-style time tracker', () => {
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
     // exactly one toast, not one per React render pass
     await expect(page.getByText(/Project is required/)).toHaveCount(1)
-    await expect(page.getByRole('banner')).not.toContainText('Blocked entry')
+    await expect(trackerHeader(page)).not.toContainText('Blocked entry')
 
     await createProject(page, 'Client work')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await expect(page.getByRole('banner')).toContainText('Blocked entry')
+    await expect(trackerHeader(page)).toContainText('Blocked entry')
   })
 
   test('reports tabs render and rounding changes the total', async ({ page }) => {
@@ -522,11 +531,11 @@ test.describe('Toggl-style time tracker', () => {
     await openFreshTracker(page)
     await page.getByPlaceholder('What are you working on?').fill('Persisted entry')
     await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await expect(page.getByRole('banner')).toContainText('Persisted entry')
+    await expect(trackerHeader(page)).toContainText('Persisted entry')
 
     await page.reload({ waitUntil: 'domcontentloaded' })
     await openTracker(page)
-    await expect(page.getByRole('banner')).toContainText('Persisted entry')
+    await expect(trackerHeader(page)).toContainText('Persisted entry')
 
     await page.setViewportSize({ width: 390, height: 844 })
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(400)

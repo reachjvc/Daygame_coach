@@ -40,6 +40,16 @@ describe("the badge", () => {
     expect(button).toHaveTextContent("Checking…")
   })
 
+  test("never says Saved while a change still waits to be sent", () => {
+    // a Stop waits out the upload debounce before the request starts; the badge
+    // said "Saved" over it, and a browser test that trusted it found the PC
+    // still showing the timer the phone had stopped
+    render(<SyncBadge status="synced" pending={1} check={{ checking: false, lastCheckedAt: NOW, failed: false }} nowMs={NOW} onCheck={() => {}} />)
+    const button = screen.getByRole("button")
+    expect(button, "a stop still on this device read as saved").toHaveTextContent("Saving 1…")
+    expect(button.getAttribute("aria-label") ?? "").not.toMatch(/^Saved/)
+  })
+
   test("says when it last checked", () => {
     expect(badge({ checking: false, lastCheckedAt: NOW - 20_000, failed: false })).toHaveTextContent("Saved · checked just now")
     cleanup()
