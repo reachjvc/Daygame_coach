@@ -41,6 +41,7 @@ import { Check, Pencil, Plus, X } from "lucide-react"
 import type { LinkedProgram, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { HALVES_COPY, MILESTONES_COPY, PLAN_INTRO, ROUTINES_INTRO, ROUTINE_BLUEPRINTS, SYSTEMS_COPY } from "@/src/goals/data/northStar"
 import {
+  actionWouldBeRemoved,
   areaSystemMilestones,
   milestoneGoals,
   milestonesWithoutSystems,
@@ -793,7 +794,16 @@ export function SystemLinks({
 /** One milestone, everything running at it, and a way to point more at it. */
 function MilestoneLinks({ plan, goal, handlers }: { plan: NsPlan; goal: NsGoal; handlers: SystemHandlers }) {
   const [picking, setPicking] = useState(false)
+  /** The step whose "×" would remove it rather than unlink it, asked once. */
+  const [confirming, setConfirming] = useState<string | null>(null)
   const running = systemsForGoal(plan, goal.id)
+  /*
+   * TAKING IT OFF REMOVES IT when it is a goal's own action (in an actions
+   * routine) serving only this goal, as on the goal card: it was written for
+   * this goal and nothing else runs it. That takes its ticks with it, so the
+   * "×" asks first; any other step is only unlinked, at once.
+   */
+  const removes = (stepId: string) => actionWouldBeRemoved(plan, goal.id, stepId)
   const candidates = [
     ...plan.routines.flatMap((r) =>
       r.steps
@@ -826,15 +836,29 @@ function MilestoneLinks({ plan, goal, handlers }: { plan: NsPlan; goal: NsGoal; 
               <span className="text-[9.5px] text-emerald-200/60">
                 {system.routineLabel ?? SYSTEMS_COPY.kind[system.kind]} · {system.daysPerWeek}×
               </span>
-              <button
-                onClick={() =>
-                  system.kind === "step"
-                    ? handlers.onLinkStep(system.routineId as string, system.id, goal.id, false)
-                    : handlers.onLinkGoal(system.id, goal.id, false)
-                }
-                aria-label={`Unlink ${system.title} from ${goal.title}`}
-                className="size-4 rounded text-emerald-200/50 hover:text-rose-300 flex items-center justify-center transition-colors"
-              ><X className="size-3" /></button>
+              {confirming === system.id ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] text-zinc-300">
+                  {SYSTEMS_COPY.removeAsk}
+                  <button
+                    onClick={() => { setConfirming(null); handlers.onLinkStep(system.routineId as string, system.id, goal.id, false) }}
+                    aria-label={`Remove ${system.title}`}
+                    className="text-rose-300 hover:text-rose-200"
+                  >{SYSTEMS_COPY.removeYes}</button>
+                  <button onClick={() => setConfirming(null)} className="text-zinc-400 hover:text-zinc-200">{SYSTEMS_COPY.removeNo}</button>
+                </span>
+              ) : (
+                <button
+                  onClick={() =>
+                    system.kind === "step"
+                      ? removes(system.id)
+                        ? setConfirming(system.id)
+                        : handlers.onLinkStep(system.routineId as string, system.id, goal.id, false)
+                      : handlers.onLinkGoal(system.id, goal.id, false)
+                  }
+                  aria-label={`Unlink ${system.title} from ${goal.title}`}
+                  className="size-4 rounded text-emerald-200/50 hover:text-rose-300 flex items-center justify-center transition-colors"
+                ><X className="size-3" /></button>
+              )}
             </li>
           ))}
         </ul>

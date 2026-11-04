@@ -41,7 +41,7 @@ import type { NsPlan } from "@/src/goals/types"
 import { SEASON_BAND_COPY } from "@/src/goals/data/northStar"
 import { planIsUntouched, todayISO } from "@/src/goals/northStarService"
 import { oneThingCountdown, oneThingPrompt, oneThingStage, type OneThing } from "@/src/goals/oneThingService"
-import { NO_PUSHED_GOALS, todayItems, todayProgress } from "@/src/goals/northStarTrackService"
+import { todayItems, todayProgress } from "@/src/goals/northStarTrackService"
 import type { TrainingTicks } from "@/src/goals/dayTicks"
 import { withReturn } from "@/src/shared/returnTo"
 import { ROUTES } from "@/src/shared/routes"
@@ -148,14 +148,9 @@ export function SeasonBand({ plan, oneThing, ready = true, today: accountToday =
   const today = accountToday ?? todayISO()
   const stage = oneThingStage(oneThing)
   const prompt = oneThingPrompt(oneThing)
-  /* Routine steps only, and that is why no goals are fetched: their ticks are
-     on the plan. A driver's count lives in `user_goals` and belongs to the row
-     that can increment it, not to a summary band. */
-  /* No hub goals and no links, because this band counts routine STEPS only —
-     a driver has a count, not a tick, and `todayProgress` ignores it either
-     way. The empty map is the honest way to say "no goals were fetched here",
-     and it is the same shape the two tabs hand in. */
-  const progress = plan ? todayProgress(todayItems(plan, today, [], NO_PUSHED_GOALS, ticks)) : { done: 0, total: 0 }
+  /* Routine steps only: a driver has a count, not a tick, and `todayProgress`
+     ignores it. */
+  const progress = plan ? todayProgress(todayItems(plan, today, ticks)) : { done: 0, total: 0 }
 
   return (
     <section className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-5" data-testid="season-band">

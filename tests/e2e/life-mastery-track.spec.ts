@@ -1,16 +1,15 @@
 /**
- * Step 11 of the North Star flow, end to end: a plan in localStorage becomes
- * goals the app counts.
+ * The Track step and Today's counting, end to end.
  *
- * The unit tests cover the mapping. What they cannot cover is the crossing
- * itself — that the payload the browser builds is one the batch route accepts,
- * that the tag survives the round trip, and that pressing the button twice does
- * not write the plan twice. That is what this is for.
+ * Since Q4 of Plans/life-plan-rebuild.md nothing is copied into the old goals
+ * table: "Log one" on Today counts a goal on the day itself, in the plan's day
+ * half. What this file proves through the real page: Track copies nothing, the
+ * schedule reads the plan, a count lands on the day row and comes back off, and
+ * goals copied BEFORE the change still show on Track with what was counted on
+ * them.
  *
  * ON THE WORKER'S OWN ACCOUNT (Phase 8). Each test puts this file's plan on
- * the account and empties its goals before it starts, so what it counts is
- * what it pushed. On the old shared account it had to tag its goals with a run
- * id of its own and delete only those, and run its tests one at a time.
+ * the account and empties its goals before it starts.
  */
 
 import { test, expect } from './fixtures/test'
@@ -120,6 +119,16 @@ async function pushedGoals(page: Page) {
   return (await goals(page)).filter((g) => g.template_id?.startsWith('ns:'))
 }
 
+/** Every goal count on the account's days, merged by goal: what Today's "Log one" wrote. */
+async function dayCounts(page: Page): Promise<Record<string, number>> {
+  const res = await page.request.get('/api/life-plan/day')
+  expect(res.ok()).toBeTruthy()
+  const body = (await res.json()) as { numbers?: Record<string, Record<string, number>> }
+  const out: Record<string, number> = {}
+  for (const row of Object.values(body.numbers ?? {})) for (const [id, n] of Object.entries(row)) out[id] = (out[id] ?? 0) + n
+  return out
+}
+
 /** A goal made outside the plan, by this spec, so "not in the plan's hub" has something to be about */
 const FOREIGN_TITLE = 'E2E goal from outside the plan'
 
@@ -133,53 +142,17 @@ test.describe('Life Mastery — the track step', () => {
     await page.goto(ROUTES.plan)
   })
 
-  test('pushes the plan into real goals, and pressing it twice does not double them', async ({ page }) => {
+  test('copies nothing into the old goals table any more, and points at Today', async ({ page }) => {
     await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
+    const counting = page.locator('section', { hasText: 'Counting happens on Today' })
+    await expect(counting.getByRole('heading', { name: 'Counting happens on Today' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Track \d+ goals?$/ })).toHaveCount(0)
+    // Nothing was ever copied on this account, so the old block is not drawn either.
+    await expect(page.locator('section', { hasText: 'Goals sent to the old goals page before' })).toHaveCount(0)
 
-    // The list reads back what each goal becomes before anything is written.
-    // Scoped: the schedule above it names the same drivers, so an unscoped
-    // getByText matches twice and says nothing about either.
-    const pushList = page.locator('section', { hasText: 'Start tracking these' })
-    await expect(pushList.getByText('E2E gym sessions')).toBeVisible()
-    // The ramp's FIRST week, not the 4 it eases into: starting a ramp at its
-    // steady rate starts somebody at the hardest setting (`goalToInsert`).
-    await expect(pushList.getByText('Fitness · 2× a week')).toBeVisible()
-    await expect(pushList.getByText('Fitness · 60 → 100')).toBeVisible()
-    await expect(pushList.getByText('Fun · done or not done')).toBeVisible()
-
-    // Nothing has been written yet.
+    await counting.getByRole('button', { name: 'Go to Today' }).click()
+    await expect(page.getByRole('button', { name: 'Log one E2E gym sessions' })).toBeVisible()
     expect(await pushedGoals(page)).toHaveLength(0)
-
-    await page.getByRole('button', { name: 'Track 3 goals' }).click()
-    await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 15000 })
-
-    const afterFirst = await pushedGoals(page)
-    expect(afterFirst).toHaveLength(3)
-    expect(afterFirst.map((g) => g.title).sort()).toEqual([
-      'E2E bench press',
-      'E2E gym sessions',
-      'E2E northern lights',
-    ])
-
-    // The why crosses over. Both insert paths in goalRepo accepted this column
-    // and wrote none of it, so the reason arrived blank and nothing said so.
-    const gym = afterFirst.find((g) => g.title === 'E2E gym sessions')!
-    expect(gym.motivation_note).toBe('Because the rest of it runs on energy')
-    // Two a week to start, and the steady four the grid showed carried over as
-    // the ramp's last step. Until 2026-10-15 the goal had no four in it at all
-    // and settled at two once the fortnight was up (`steadyRate`).
-    expect(gym.target_value).toBe(2)
-    expect(gym.ramp_steps?.map((s) => s.frequencyPerWeek)).toEqual([2, 4])
-
-    // The rows are ticked as tracked, and the button has nothing left to send.
-    await expect(pushList.getByRole('listitem').getByText('tracked', { exact: true })).toHaveCount(3)
-    await expect(page.getByRole('button', { name: 'Nothing ticked' })).toBeDisabled()
-
-    // A second push from a fresh load must find them, not repeat them.
-    await page.reload()
-    await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
-    await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 15000 })
-    expect(await pushedGoals(page)).toHaveLength(3)
   })
 
   test('shows what you will be doing, week by week and day by day, without the milestones', async ({ page }) => {
@@ -216,26 +189,23 @@ test.describe('Life Mastery — the track step', () => {
     await expect(schedule.getByText('E2E bench press')).toHaveCount(0)
   })
 
-  test('today: a tick, a rating and a note survive a reload, and +1 lands in the database', async ({ page }) => {
-    // Push first, so the driver has something to count into.
-    await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
-    await page.getByRole('button', { name: /^Track \d+ goals?$/ }).click()
-    await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 20000 })
-
+  test('today: a tick, a rating, a note and a count survive a reload, and the count lands on the day', async ({ page }) => {
     await page.getByRole('button', { name: /^\d+\s*Today\b/ }).click()
 
-    // The driver counts into the REAL goal, not a note in a browser.
-    const before = (await goals(page)).find((g) => g.title === 'E2E gym sessions')!
+    // The driver counts on the DAY, with no copy anywhere: the ramp's first
+    // week asks for two, as the Track schedule says.
+    const gym = page.getByRole('listitem').filter({ has: page.getByRole('button', { name: 'Log one E2E gym sessions' }) })
+    await expect(gym.getByText('0 of 2 this week')).toBeVisible()
     await page.getByRole('button', { name: 'Log one E2E gym sessions' }).click()
-    await expect
-      .poll(async () => (await goals(page)).find((g) => g.title === 'E2E gym sessions')?.current_value)
-      .toBe((before.current_value ?? 0) + 1)
+    await expect(gym.getByText('1 of 2 this week')).toBeVisible()
+    await expect.poll(async () => dayCounts(page), { timeout: 15_000 }).toEqual({ g1: 1 })
 
     // …and it comes back off again.
     await page.getByRole('button', { name: 'Take one back off E2E gym sessions' }).click()
-    await expect
-      .poll(async () => (await goals(page)).find((g) => g.title === 'E2E gym sessions')?.current_value)
-      .toBe(before.current_value ?? 0)
+    await expect.poll(async () => dayCounts(page), { timeout: 15_000 }).toEqual({})
+    await page.getByRole('button', { name: 'Log one E2E gym sessions' }).click()
+    await expect.poll(async () => dayCounts(page), { timeout: 15_000 }).toEqual({ g1: 1 })
+    expect(await pushedGoals(page)).toHaveLength(0)
 
     // A step tick, an area rating and a note.
     const vitamins = page.getByRole('checkbox', { name: 'Did E2E vitamins' })
@@ -252,34 +222,31 @@ test.describe('Life Mastery — the track step', () => {
     await expect(page.getByLabel('Anything worth remembering about today')).toHaveValue('Tired but went anyway.')
     await expect(page.getByRole('button', { name: 'Fitness today: 7 out of 10' })).toHaveAttribute('aria-pressed', 'true')
     await expect(vitamins).toBeChecked()
+    await expect(page.getByText('1 of 2 this week')).toBeVisible()
   })
 
-  test('shows the real goals hub on the same tab, holding the pushed goals', async ({ page }) => {
+  test('still shows the goals copied before the change, with their counts, and nothing from outside the plan', async ({ page }) => {
     const seeded = await page.request.post('/api/goals', {
       data: { title: FOREIGN_TITLE, category: 'custom', target_value: 10, life_area: 'custom' },
     })
     expect(seeded.ok(), `could not seed the outside goal: ${seeded.status()}`).toBe(true)
+    // A goal the old Track step copied: tagged with its plan goal, and linked to it on the account.
+    const copied = await page.request.post('/api/goals', {
+      data: { title: 'E2E gym sessions', category: 'custom', target_value: 2, life_area: 'custom', template_id: 'ns:e2e-old-run:g1' },
+    })
+    expect(copied.ok(), `could not seed the copied goal: ${copied.status()}`).toBe(true)
+    const copiedId = ((await copied.json()) as { id: string }).id
+    const linked = await page.request.put('/api/life-plan/goal-link', { data: { links: { g1: copiedId } } })
+    expect(linked.ok(), `could not link it: ${linked.status()}`).toBe(true)
 
+    await page.reload()
     await page.getByRole('button', { name: /^\d+\s*Track\b/ }).click()
-    await page.getByRole('button', { name: 'Track 3 goals' }).click()
-    await expect(page.getByText('Everything in the plan is being tracked.')).toBeVisible({ timeout: 15000 })
-
-    // The hub is the real component, fetching its own data, below the list —
-    // and scoped to this plan. It shipped unscoped and the first thing said
-    // about it was that it pointed at the goals page rather than the plan.
-    const hub = page.locator('section', { hasText: 'This plan, running' })
+    const hub = page.locator('section', { hasText: 'Goals sent to the old goals page before' })
+    // Folded: counting on them there no longer reaches Today.
+    await hub.getByRole('button', { name: /Goals sent to the old goals page before \(1\)/ }).click()
     await expect(hub.getByText('E2E gym sessions')).toBeVisible({ timeout: 15000 })
-
-    // Goals made outside this plan must not be in it. A fresh account holds
-    // none, so this spec seeds one above — with none, this assertion would
-    // pass vacuously.
-    const foreign = (await goals(page)).filter((g) => !g.template_id?.startsWith('ns:'))
-    expect(foreign.map((g) => g.title)).toContain(FOREIGN_TITLE)
-    for (const g of foreign) await expect(hub.getByText(g.title, { exact: true })).toHaveCount(0)
-
-    // Controls that would make a goal outside the scope are off: it would get
-    // no matching tag and vanish the moment it was saved.
+    // Goals made outside this plan are not in it.
+    await expect(hub.getByText(FOREIGN_TITLE, { exact: true })).toHaveCount(0)
     await expect(hub.getByTestId('goals-new-goal-button')).toHaveCount(0)
-    await expect(hub.getByTestId('goals-view-tree-of-life')).toHaveCount(0)
   })
 })

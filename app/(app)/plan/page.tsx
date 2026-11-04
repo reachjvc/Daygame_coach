@@ -1,6 +1,5 @@
 import { createServerSupabaseClient } from "@/src/db/server"
 import { ROUTES } from "@/src/shared/routes"
-import { getUserGoals, rollGoalPeriods } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { stepFor, TAB_ORDER } from "@/src/goals/data/northStar"
@@ -15,14 +14,11 @@ import type { NorthStarTabId } from "@/src/goals/types"
  * was bookmarked breaks. Signed in is the only requirement, and the layout above
  * enforces it.
  *
- * NOBODY'S PLAN MOVED. The flow keeps its plan in the browser's own storage,
- * which belongs to the site rather than to any one page, so changing the address
- * does not lose a plan somebody has already written.
- *
- * The flow itself is storage-first and always was: twelve of its thirteen steps
- * touch no API, and the Track step is the one that pushes the plan into
- * `user_goals`. So the account matters here for exactly one step, and nothing is
- * written until it is pressed.
+ * NOBODY'S PLAN MOVED. The flow keeps its plan, and its days, on the account
+ * (since Plans/life-plan-rebuild.md, Phase 1), with this browser's storage as
+ * a cache, so changing the address does not lose a plan somebody has written.
+ * Nothing is copied into `user_goals` any more (Q4): Today counts goals on the
+ * day itself.
  */
 export default async function LifeMasteryPage({
   searchParams,
@@ -56,21 +52,6 @@ export default async function LifeMasteryPage({
    */
   const timezone = await getUserTimezone(user.id).catch(() => "UTC")
 
-  // Started, not awaited. Same order the API route uses: expired counters are
-  // rolled before they are read, so a weekly total from last week is not shown
-  // as this week's.
-  const goalsPromise =
-    initialTab === "today"
-      ? (async () => {
-          await rollGoalPeriods(user.id, timezone)
-          return getUserGoals(user.id, false, timezone)
-        })().catch((error) => {
-          // The step falls back to fetching for itself.
-          console.error("Failed to pre-read goals for the Today step:", error)
-          return null
-        })
-      : null
-
   return (
     <NorthStarFlow
       userId={user.id}
@@ -78,7 +59,6 @@ export default async function LifeMasteryPage({
       backLabel="Dashboard"
       initialTab={initialTab}
       timezone={timezone}
-      goalsPromise={goalsPromise}
     />
   )
 }

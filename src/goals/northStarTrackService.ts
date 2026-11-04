@@ -38,11 +38,10 @@ import type {
   NsTrackInsert,
   NsTrackRow,
 } from "@/src/goals/types"
-import { addDaysISO, goalsByPriority, isMilestone, isSystem } from "@/src/goals/northStarService"
+import { addDaysISO, goalsByPriority, isMilestone, isSystem, weekStartISO } from "@/src/goals/northStarService"
 import { CADENCE_COPY, TODAY_COPY, JOURNAL_ALL_ID, JOURNAL_COPY, JOURNAL_PREFIX, JOURNAL_SETS, READ_COPY, RECAP_DRIVING_ANCHOR, REVIEW_PROMPTS, SCHEDULE_COPY, STAR_ANCHOR, STAR_PROMPTS, STAR_WHY_ID } from "@/src/goals/data/northStar"
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { NON_REGISTRY_TEMPLATE_PREFIXES } from "@/src/goals/data/templateNamespaces"
-import { periodStartFor } from "@/src/shared/dateUtils"
 /* "Is this step done today" has ONE owner, and it is not this file — see
    `dayTicks.ts` for why it is a leaf both services can import. */
 import { stepTick, type TrainingTicks } from "@/src/goals/dayTicks"
@@ -724,16 +723,46 @@ export interface TrackWeek {
   sessions: number
 }
 
+/** The Monday on or before an ISO date: `northStarService`'s, so a count and its week agree. */
+export { weekStartISO }
+
+/** The first day each part holds a number above zero, found in one pass over the days. */
+export function firstCountDays(plan: NsPlan): Map<string, string> {
+  const firsts = new Map<string, string>()
+  for (const [date, row] of Object.entries(plan.numbers ?? {})) {
+    for (const [id, n] of Object.entries(row)) {
+      const had = firsts.get(id)
+      if (n > 0 && (!had || date < had)) firsts.set(id, date)
+    }
+  }
+  return firsts
+}
+
 /**
- * The Monday on or before an ISO date.
- *
- * Delegates to `periodStartFor`, which is the one implementation of a week
- * boundary in this codebase. There used to be three, and three answers to
- * "which week is this" is how a counter and its period end up disagreeing.
+ * WHICH WEEK OF ITS RAMP A GOAL IS IN: the week it was first counted is week
+ * one (Plans/life-plan-rebuild.md, Q4). The counted copy in the old goals table
+ * walked its ramp from the day Track sent it; a goal counted on its days has no
+ * such day, so its first count starts the ramp. Never counted, it is in week
+ * one, which is where Today and the schedule both start it.
  */
-export function weekStartISO(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number)
-  return periodStartFor("weekly", new Date(y, m - 1, d))
+export function rampWeek(plan: NsPlan, goalId: string, date: string, firsts = firstCountDays(plan)): number {
+  const first = firsts.get(goalId)
+  if (!first || first > date) return 1
+  const [y1, m1, d1] = weekStartISO(first).split("-").map(Number)
+  const [y2, m2, d2] = weekStartISO(date).split("-").map(Number)
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / (7 * 86_400_000)) + 1
+}
+
+/**
+ * HOW MANY OF A GOAL THIS WEEK: the counts on its days, Monday to Sunday
+ * (Plans/life-plan-rebuild.md, Q4). Each day's count is that day's number on
+ * the goal, kept in the day half like a number box's.
+ */
+export function weekCount(plan: NsPlan, goalId: string, date: string): number {
+  const monday = weekStartISO(date)
+  let n = 0
+  for (let i = 0; i < 7; i += 1) n += plan.numbers?.[addDaysISO(monday, i)]?.[goalId] ?? 0
+  return n
 }
 
 /**
@@ -749,10 +778,16 @@ export function trackWeeks(plan: NsPlan, todayISO: string, count = 8): TrackWeek
   const monday = weekStartISO(todayISO)
   const weeks: TrackWeek[] = []
 
+  // A driver's ramp runs from the week it was first counted (`rampWeek`), so
+  // this week's column asks what Today asks; a step has no ramp to walk.
+  const firsts = firstCountDays(plan)
+  const startAt = new Map(activities.map((a) => [a.id, a.kind === "driver" ? rampWeek(plan, a.id, todayISO, firsts) : 1]))
   for (let i = 1; i <= count; i += 1) {
     const rows = activities.map((activity) => {
-      const perWeek = activityPerWeek(activity, i)
-      return { activity, perWeek, stepsUp: i > 1 && perWeek > activityPerWeek(activity, i - 1) }
+      const at = (startAt.get(activity.id) ?? 1) + i - 1
+      const perWeek = activityPerWeek(activity, at)
+      // Marked on the week it rises, this week included once the ramp is under way.
+      return { activity, perWeek, stepsUp: at > 1 && perWeek > activityPerWeek(activity, at - 1) }
     })
     weeks.push({
       index: i,
@@ -973,11 +1008,11 @@ export interface TodayItem {
    * Drivers: always false.
    */
   fromLog: boolean
-  /** Drivers only: the real goal's uuid, once it has been pushed. */
+  /** Drivers only: the plan goal being counted. */
   goalId: string | null
-  /** Drivers only: where the count stands this period, from the hub. */
+  /** Drivers only: how many this week, Monday to Sunday, from the day rows. */
   current: number | null
-  /** Drivers only: what the period is for. */
+  /** Drivers only: what this week asks for, as the Track schedule says. */
   target: number | null
   /** What the plan says about today for this one. */
   when: TodayWhen
@@ -1071,41 +1106,33 @@ export function toggleStepLogged(plan: NsPlan, date: string, stepId: string): Ns
 export function todayItems(
   plan: NsPlan,
   date: string,
-  hubGoals: ReadonlyArray<{ id: string; template_id?: string | null; current_value?: number; target_value?: number }>,
-  /**
-   * WHICH PLAN GOALS ARE COUNTED GOALS — the map, not the run code.
-   *
-   * This took a `runId` and resolved the link itself with `pushedRealIds`,
-   * which reads the `ns:<run>:<goal>` tag. The run is minted in ONE browser's
-   * localStorage, so on a second device every driver resolved to null: no
-   * progress bar under it and no "+1" beside it, on goals the Track step above
-   * had just correctly called tracked. `pushedGoalIds` is the one owner of this
-   * question and reads the account's links first, so it is handed in whole
-   * rather than re-derived here from the weaker half of it.
-   */
-  pushed: ReadonlyMap<string, string>,
   ticks: TrainingTicks
 ): TodayItem[] {
   const [y, m, d] = date.split("-").map(Number)
   const weekday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7
-  const real = pushed
-  const byId = new Map(hubGoals.map((g) => [g.id, g]))
 
+  const firsts = firstCountDays(plan)
   const items = trackActivities(plan).map((activity) => {
     const when = todayWhen(activity, weekday)
     if (activity.kind === "routine") {
       const tick = stepTick(plan, date, activity.id, ticks)
       return { activity, done: tick.done, fromLog: tick.fromLog, goalId: null, current: null, target: null, when }
     }
-    const goalId = real.get(activity.id) ?? null
-    const row = goalId ? byId.get(goalId) : undefined
+    /*
+     * THE COUNT IS THE WEEK'S DAYS (Plans/life-plan-rebuild.md, Q4). It was
+     * the counted goal's in `user_goals`, so a driver Track had never pushed
+     * had no count at all, and one pushed on another device had none here.
+     * Now every driver counts, on the day it was done, and the target is
+     * this week's row of the Track schedule: the same number, its ramp walked
+     * from the week it was first counted (`rampWeek`).
+     */
     return {
       activity,
       done: false,
       fromLog: false,
-      goalId,
-      current: row?.current_value ?? null,
-      target: row?.target_value ?? null,
+      goalId: activity.id,
+      current: weekCount(plan, activity.id, date),
+      target: activityPerWeek(activity, rampWeek(plan, activity.id, date, firsts)),
       when,
     }
   })

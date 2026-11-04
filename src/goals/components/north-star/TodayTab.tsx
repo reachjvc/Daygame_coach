@@ -31,11 +31,11 @@
  * schedule uses (`trackGroups`), so the two screens describe one plan.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { ArrowRight, Check, ChevronDown, ChevronUp, Loader2, Minus, Plus, Trash2 } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { ArrowRight, Check, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
 import { DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
-import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, pushedGoalIds, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
+import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
@@ -45,18 +45,6 @@ import { SENTENCE_HINT } from "./SentenceBox"
 /** "3 Nov": a day key, in the app's own locale and never the reader's zone. */
 const formatShortDay = (key: string) => dateKeyLabel(key, { day: "numeric", month: "short" })
 
-/**
- * The slice of a hub goal this screen reads. Exported so the flow above can
- * accept the server-read list and hand it down without redeclaring the shape.
- */
-export interface TodayHubGoal {
-  id: string
-  template_id?: string | null
-  current_value?: number
-  target_value?: number
-}
-
-type HubGoal = TodayHubGoal
 
 const longDate = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number)
@@ -731,11 +719,8 @@ function SubSteps({
 }
 
 export function TodayTab({
-  goalsPromise,
   plan,
   today,
-  runId,
-  goalLinks,
   ticks,
   onToggleStep,
   onToggleExperience,
@@ -753,7 +738,7 @@ export function TodayTab({
   onRenameSubStep,
   onMoveSubStep,
   onRemoveSubStep,
-  onGoToTrack,
+  onCountGoal,
   onOpenRoutine,
   onOpenField,
   onOpenGoal,
@@ -764,21 +749,6 @@ export function TodayTab({
 }: {
   plan: NsPlan
   today: string
-  runId: string
-  /**
-   * WHICH COUNTED GOAL EACH PLAN GOAL BECAME, as the account knows it.
-   *
-   * Without it this screen resolved a driver's goal through the `ns:<run>:`
-   * tag alone, so on any device that did not do the pushing every driver came
-   * back with no goal at all: no progress bar, no "+1", on goals the Track step
-   * had just called tracked.
-   *
-   * REQUIRED, and deliberately. An optional one is how the same defect reached
-   * the Track step's schedule: the caller that mattered forgot it and every
-   * test still passed. Hand in `{}` to mean "this device has not read the
-   * account's links yet", which is a different thing from "there are none".
-   */
-  goalLinks: Record<string, string>
   /**
    * What the training log ticks, built once by the flow.
    *
@@ -819,7 +789,8 @@ export function TodayTab({
   onRenameSubStep: (id: string, title: string) => void
   onMoveSubStep: (id: string, delta: number) => void
   onRemoveSubStep: (id: string) => void
-  onGoToTrack: () => void
+  /** A driver's count on today: one logged, or one taken back (Plans/life-plan-rebuild.md, Q4). */
+  onCountGoal: (goalId: string, by: 1 | -1) => void
   /**
    * THE WAY OUT OF A TICK LIST, which it did not have.
    *
@@ -865,26 +836,7 @@ export function TodayTab({
   /** Change, or silence, the question a routine step asks. Never deletes an answer. */
   onStepAsks: (routineId: string, stepId: string, question: string | null) => void
   onGoToTab: (tab: NorthStarTabId) => void
-  /**
-   * The hub goals, as a promise the server started before this ever mounted.
-   *
-   * This screen used to open on "loading…" for as long as its own /api/goals
-   * call took, and that call could not even start until the page's JS had
-   * downloaded and mounted. Awaiting a promise the server already started
-   * replaces that round-trip with one that has had a head start. `load` stays
-   * for the refreshes that follow an action, and is the fallback if the
-   * server's read failed.
-   */
-  goalsPromise?: Promise<HubGoal[] | null> | null
 }) {
-  const [hubGoals, setHubGoals] = useState<HubGoal[] | null>(null)
-  /* THE one answer to "which plan goals are counted goals", the same function
-     the Track step asks. Links first, the tag only as a fallback for rows
-     pushed before links existed. */
-  const pushed = useMemo(() => pushedGoalIds(runId, hubGoals ?? [], goalLinks), [runId, hubGoals, goalLinks])
-  const [signedOut, setSignedOut] = useState(false)
-  /** The driver currently being counted, so its buttons can say so. */
-  const [busyId, setBusyId] = useState<string | null>(null)
   /**
    * The note, held locally and committed on blur.
    *
@@ -897,7 +849,6 @@ export function TodayTab({
   useEffect(() => {
     setNote(plan.notes[today] ?? "")
   }, [today, plan.notes])
-  const [error, setError] = useState<string | null>(null)
   /**
    * WHICH HEADERS HAVE BEEN TOGGLED, not which are open.
    *
@@ -916,44 +867,7 @@ export function TodayTab({
       return next
     })
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/goals")
-      if (res.status === 401) {
-        setSignedOut(true)
-        setHubGoals([])
-        return
-      }
-      if (!res.ok) throw new Error("Could not read your goals")
-      const data = await res.json()
-      setHubGoals(Array.isArray(data) ? data : data.goals ?? [])
-      setError(null)
-    } catch (e) {
-      setHubGoals([])
-      setError(e instanceof Error ? e.message : "Could not read your goals")
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!goalsPromise) {
-      load()
-      return
-    }
-    let cancelled = false
-    goalsPromise.then((goals: HubGoal[] | null) => {
-      if (cancelled) return
-      // A null means the server's read failed — ask for them the old way rather
-      // than showing an empty day.
-      if (goals === null) load()
-      else setHubGoals(goals)
-    })
-    return () => { cancelled = true }
-  }, [load, goalsPromise])
-
-  const items = useMemo(
-    () => todayItems(plan, today, hubGoals ?? [], pushed, ticks),
-    [plan, today, hubGoals, pushed, ticks]
-  )
+  const items = useMemo(() => todayItems(plan, today, ticks), [plan, today, ticks])
   const progress = useMemo(() => todayProgress(items), [items])
   /**
    * THREE LISTS, because the plan gives three answers about today.
@@ -1146,29 +1060,11 @@ export function TodayTab({
   const sourceGroups = useMemo(() => group(sources), [sources])
   const placeGroups = useMemo(() => group(places), [places])
 
-  const count = async (item: TodayItem, amount: number) => {
-    if (!item.goalId || busyId) return
-    setBusyId(item.activity.id)
-    setError(null)
-    try {
-      const res = await fetch(`/api/goals/${item.goalId}/increment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
-      })
-      if (!res.ok) throw new Error("That did not save")
-      // Re-read rather than trusting a local guess: the goal may have rolled
-      // over into a new week between the page loading and the button.
-      await load()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "That did not save")
-    } finally {
-      setBusyId(null)
-    }
-  }
-
-  if (hubGoals === null) {
-    return <p className="text-sm text-zinc-500">{TODAY_COPY.loading}</p>
+  /* LOG ONE, on the day (Plans/life-plan-rebuild.md, Q4). It was a request to
+     the old goals table, for goals Track had pushed; now it is the day's own
+     count, saved with the day like a tick. */
+  const count = (item: TodayItem, by: 1 | -1) => {
+    if (item.goalId) onCountGoal(item.goalId, by)
   }
 
   if (items.length === 0) {
@@ -1182,7 +1078,6 @@ export function TodayTab({
 
   const row = (item: TodayItem) => {
     const { activity } = item
-    const busy = busyId === activity.id
 
     if (activity.kind === "routine") {
       const step = planStep(activity.id)
@@ -1262,8 +1157,7 @@ export function TodayTab({
                 grey sentence. A bar only when there is a target to be a
                 fraction of; a plain count when there is not, because a bar
                 with no end is a picture of nothing. */}
-            {item.goalId && (
-              <span className="mt-1.5 flex items-center gap-2">
+            <span className="mt-1.5 flex items-center gap-2">
                 {item.target != null && item.target > 0 && (
                   <span className="h-1 w-full max-w-[7rem] rounded-full bg-white/10 overflow-hidden">
                     <span
@@ -1277,42 +1171,28 @@ export function TodayTab({
                     ? TODAY_COPY.countProgress(counted, item.target)
                     : TODAY_COPY.countSoFar(counted)}
                 </span>
-              </span>
+            </span>
+          </span>
+          <span className="flex flex-col items-end gap-1 shrink-0">
+            <button
+              onClick={() => count(item, 1)}
+              aria-label={TODAY_COPY.countOneAria(activity.title)}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-violet-400/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 transition-colors"
+            >
+              <Plus className="size-3.5" />
+              <span className="text-[11.5px] font-medium">{TODAY_COPY.countOne}</span>
+            </button>
+            {counted > 0 && (
+              <button
+                onClick={() => count(item, -1)}
+                aria-label={TODAY_COPY.countUndoAria(activity.title)}
+                className="inline-flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                <Minus className="size-3" />
+                {TODAY_COPY.countUndo}
+              </button>
             )}
           </span>
-          {item.goalId ? (
-            <span className="flex flex-col items-end gap-1 shrink-0">
-              <button
-                onClick={() => count(item, 1)}
-                disabled={busy}
-                aria-label={TODAY_COPY.countOneAria(activity.title)}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-violet-400/40 bg-violet-500/15 text-violet-100 hover:bg-violet-500/25 disabled:opacity-40 transition-colors"
-              >
-                {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
-                <span className="text-[11.5px] font-medium">{TODAY_COPY.countOne}</span>
-              </button>
-              {counted > 0 && (
-                <button
-                  onClick={() => count(item, -1)}
-                  disabled={busy}
-                  aria-label={TODAY_COPY.countUndoAria(activity.title)}
-                  className="inline-flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-300 disabled:opacity-30 transition-colors"
-                >
-                  <Minus className="size-3" />
-                  {TODAY_COPY.countUndo}
-                </button>
-              )}
-            </span>
-          ) : (
-            /* NOT COUNTED YET, and not given a second tally that would disagree
-               with the real one the day it is pushed. */
-            <button
-              onClick={onGoToTrack}
-              className="text-[10.5px] text-zinc-500 hover:text-zinc-300 underline underline-offset-2 shrink-0 transition-colors"
-            >
-              {TODAY_COPY.notTracked}
-            </button>
-          )}
         </div>
         {fieldsUnder(activity.id, activity.title)}
       </li>
@@ -1410,8 +1290,6 @@ export function TodayTab({
           </p>
         )}
 
-        {error && <p className="px-5 pb-4 text-[11.5px] text-rose-300">{error}</p>}
-        {signedOut && <p className="px-5 pb-4 text-[11.5px] text-zinc-500">{TODAY_COPY.signedOut}</p>}
       </section>
 
       {/* WHAT TODAY COULD BE FOR, which is not the same as what today is for.

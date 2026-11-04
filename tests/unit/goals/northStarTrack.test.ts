@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { addArea, addDailyField, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, emptyNsPlan, journalEntry, journalHistory, linkGoal, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
+import { addArea, addDailyField, countGoal, removeGoal, addExperiences, addGoal, addCustomStep, addPractice, addSubStep, inferStepDestination, updateStep, dailyFieldsFor, dailyRating, emptyNsPlan, journalEntry, journalHistory, linkGoal, loadNsPlan, moveDailyField, moveSubStep, placeStep, removeDailyField, removeSubStep, renameDailyField, renameSubStep, serializeNsPlan, setAnswer, setAreaReview, setDailyFieldKind, setDailyFieldSource, setDailyRating, setDayNote, setJournalEntry, setNorthStar, setValues, subStepProgress, subStepsFor, toggleExperienceDone, updateGoal, updateRoutine } from "@/src/goals/northStarService"
 import { JOURNAL_COPY, REVIEW_PROMPTS, STAR_ANCHOR, STAR_PROMPTS, TAB_ORDER } from "@/src/goals/data/northStar"
 import {
   activityPerWeek,
@@ -42,7 +42,7 @@ import {
 } from "@/src/goals/northStarTrackService"
 import { NO_TRAINING_TICKS, stepTickedByHand } from "@/src/goals/dayTicks"
 import { flattenTree } from "@/src/goals/goalsService"
-import { NO_PUSHED_GOALS } from "@/src/goals/northStarTrackService"
+import { rampWeek, weekCount } from "@/src/goals/northStarTrackService"
 import type { NsGoal, NsPlan } from "@/src/goals/types"
 import { getOrphanedGoalIds, pruneTreeToIds } from "@/src/goals/goalsService"
 import type { GoalWithProgress } from "@/src/goals/types"
@@ -493,7 +493,7 @@ describe("today: what you actually did", () => {
 
   it("puts what is on today first, and keeps the rest inputtable", () => {
     const { plan, stepId } = seedDay()
-    const items = todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS)
+    const items = todayItems(plan, MONDAY, NO_TRAINING_TICKS)
     expect(items[0].activity.id).toBe(stepId)
     expect(items[0].when).toBe("today")
     // A driver names no day, so today is as good a day as any: doing your
@@ -503,7 +503,7 @@ describe("today: what you actually did", () => {
 
   it("does not put a step on a day it is not on", () => {
     const { plan, stepId } = seedDay()
-    const item = todayItems(plan, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
+    const item = todayItems(plan, TUESDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
     expect(item.when).toBe("otherDay")
   })
 
@@ -519,7 +519,7 @@ describe("today: what you actually did", () => {
     const routine = seed.routines[2]
     const weekly = addCustomStep(seed, routine.id, "Weekly review", 30, 1)
     const daily = addCustomStep(weekly, routine.id, "One most important task", 90, 7)
-    const items = todayItems(daily, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS)
+    const items = todayItems(daily, MONDAY, NO_TRAINING_TICKS)
 
     expect(items.find((i) => i.activity.title === "Weekly review")!.when).toBe("anyDay")
     // Seven days a week is every day, this one included, even unplaced.
@@ -530,7 +530,7 @@ describe("today: what you actually did", () => {
     const seed = emptyNsPlan()
     const routine = seed.routines[2]
     const plan = addCustomStep(addCustomStep(seed, routine.id, "Weekly review", 30, 1), routine.id, "One most important task", 90, 7)
-    expect(todayProgress(todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
+    expect(todayProgress(todayItems(plan, MONDAY, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
   })
 
   describe("how often it runs, said on the row", () => {
@@ -601,52 +601,73 @@ describe("today: what you actually did", () => {
     expect(stepTickedByHand(reloaded, MONDAY, stepId)).toBe(false)
   })
 
-  it("hands a driver its real goal and this week's count, once it has been pushed", () => {
-    const { plan, driverId } = seedDay()
-    const hub = [{ id: "uuid-a", template_id: trackTemplateId(RUN, driverId), current_value: 12, target_value: 20 }]
-    const item = todayItems(plan, MONDAY, hub, pushedGoalIds(RUN, hub), NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
-    expect(item.goalId).toBe("uuid-a")
-    expect(item.current).toBe(12)
-    expect(item.target).toBe(20)
-  })
-
   /**
-   * THE SECOND DEVICE, which is what the map is for.
-   *
-   * Same rows, same plan, a DIFFERENT run code — because the run is minted in
-   * one browser's localStorage. Resolved through the account's links this is
-   * the same goal; resolved through the tag, as this screen used to, it is no
-   * goal at all: no progress bar under the driver and no "+1" beside it, on a
-   * goal the Track step above had just called tracked.
+   * EVERY DRIVER COUNTS, ON ITS DAYS (Plans/life-plan-rebuild.md, Q4). The
+   * count was the copied goal's in the old goals table, so a driver Track had
+   * not copied had none, and one copied on another device had none here.
    */
-  it("hands a driver its real goal on a device that did not push it", () => {
+  it("hands every driver its week's count from its days, and this week's ask from the schedule", () => {
     const { plan, driverId } = seedDay()
-    const hub = [{ id: "uuid-a", template_id: trackTemplateId(RUN, driverId), current_value: 12, target_value: 20 }]
-    const links = { [driverId]: "uuid-a" }
-
-    const viaTagOnly = todayItems(plan, MONDAY, hub, pushedGoalIds("a-different-run", hub), NO_TRAINING_TICKS)
-      .find((i) => i.activity.id === driverId)!
-    expect(viaTagOnly.goalId, "the tag alone cannot answer this on another device").toBeNull()
-
-    const viaLinks = todayItems(plan, MONDAY, hub, pushedGoalIds("a-different-run", hub, links), NO_TRAINING_TICKS)
-      .find((i) => i.activity.id === driverId)!
-    expect(viaLinks.goalId, "the account's link answers it everywhere").toBe("uuid-a")
-    expect(viaLinks.current).toBe(12)
+    let counted = countGoal(plan, MONDAY, driverId, 1)
+    counted = countGoal(counted, TUESDAY, driverId, 1)
+    counted = countGoal(counted, TUESDAY, driverId, 1)
+    // The Sunday before is last week's.
+    counted = countGoal(counted, "2026-08-16", driverId, 1)
+    const item = todayItems(counted, TUESDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
+    expect(item.goalId).toBe(driverId)
+    expect(item.current).toBe(3)
+    expect(item.target).toBe(20)
+    expect(weekCount(counted, driverId, "2026-08-23")).toBe(3)
+    expect(weekCount(counted, driverId, "2026-08-24")).toBe(0)
   })
 
-  it("gives an unpushed driver NO local tally to disagree with the real one later", () => {
+  it("walks a ramp from the week the goal was first counted, on Today and on the schedule alike", () => {
     const { plan, driverId } = seedDay()
-    const item = todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
-    expect(item.goalId).toBeNull()
-    expect(item.current).toBeNull()
+    // Two a week for two weeks, then the steady four.
+    const ramped = updateGoal(plan, driverId, { perWeek: 4, rampSteps: [{ frequencyPerWeek: 2, durationWeeks: 2 }] })
+    expect(rampWeek(ramped, driverId, MONDAY)).toBe(1)
+    const first = countGoal(ramped, MONDAY, driverId, 1)
+    const threeWeeksOn = "2026-09-02"
+    expect(rampWeek(first, driverId, threeWeeksOn)).toBe(3)
+    const item = todayItems(first, threeWeeksOn, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!
+    expect(item.target).toBe(4)
+    expect(todayItems(first, MONDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === driverId)!.target).toBe(2)
+    // The schedule's first column is this week, so it asks the same.
+    const week = trackWeeks(first, threeWeeksOn, 2)[0].rows.find((r) => r.activity.id === driverId)!
+    expect(week.perWeek).toBe(4)
+  })
+
+  it("takes its counts with it when the goal goes", () => {
+    const { plan, driverId } = seedDay()
+    const counted = countGoal(plan, MONDAY, driverId, 1)
+    expect(removeGoal(counted, driverId).numbers).toEqual({})
+  })
+
+  it("takes one back off today first, then off the latest earlier day of the week, never below zero", () => {
+    const { plan, driverId } = seedDay()
+    let counted = countGoal(plan, MONDAY, driverId, 1)
+    counted = countGoal(counted, MONDAY, driverId, 1)
+    // Tuesday holds none, so the undo comes off Monday.
+    counted = countGoal(counted, TUESDAY, driverId, -1)
+    expect(counted.numbers[MONDAY][driverId]).toBe(1)
+    counted = countGoal(counted, TUESDAY, driverId, -1)
+    expect(counted.numbers[MONDAY]).toBeUndefined()
+    expect(countGoal(counted, TUESDAY, driverId, -1)).toBe(counted)
+    // A count on a later day of the same week (a clock ahead) can be taken back too.
+    const later = countGoal(plan, "2026-08-19", driverId, 1)
+    expect(countGoal(later, MONDAY, driverId, -1).numbers).toEqual({})
+    // Not into last week, and not for a goal the plan does not have.
+    const lastWeek = countGoal(plan, "2026-08-16", driverId, 1)
+    expect(countGoal(lastWeek, MONDAY, driverId, -1)).toBe(lastWeek)
+    expect(countGoal(plan, MONDAY, "nope", 1)).toBe(plan)
   })
 
   it("counts only today's own steps as the day's list", () => {
     const { plan, stepId } = seedDay()
     // A driver has a weekly count, not a tick, so it is not part of "3 of 4".
-    expect(todayProgress(todayItems(plan, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
+    expect(todayProgress(todayItems(plan, MONDAY, NO_TRAINING_TICKS))).toEqual({ done: 0, total: 1 })
     const ticked = toggleStepLogged(plan, MONDAY, stepId)
-    expect(todayProgress(todayItems(ticked, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS))).toEqual({ done: 1, total: 1 })
+    expect(todayProgress(todayItems(ticked, MONDAY, NO_TRAINING_TICKS))).toEqual({ done: 1, total: 1 })
   })
 
   it("leaves a plan saved before any of this existed alone", () => {
@@ -1464,13 +1485,13 @@ describe("choosing the days a step runs on", () => {
 
   it("is any day until days are picked, and that day's own business after", () => {
     const { plan, routineId, stepId } = seedRate()
-    const before = todayItems(plan, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
+    const before = todayItems(plan, TUESDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!
     expect(before.when).toBe("anyDay")
 
     // Tuesday and Saturday.
     const placed = placeStep(plan, routineId, stepId, [1, 5], null)
-    expect(todayItems(placed, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("today")
-    expect(todayItems(placed, MONDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("otherDay")
+    expect(todayItems(placed, TUESDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("today")
+    expect(todayItems(placed, MONDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("otherDay")
   })
 
   it("keeps the rate honest with the days that were picked", () => {
@@ -1490,7 +1511,7 @@ describe("choosing the days a step runs on", () => {
     expect(step.days).toEqual([])
     // The rate the days left behind is kept — it is the last thing anybody said.
     expect(step.daysPerWeek).toBe(1)
-    expect(todayItems(cleared, TUESDAY, [], NO_PUSHED_GOALS, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
+    expect(todayItems(cleared, TUESDAY, NO_TRAINING_TICKS).find((i) => i.activity.id === stepId)!.when).toBe("anyDay")
   })
 })
 

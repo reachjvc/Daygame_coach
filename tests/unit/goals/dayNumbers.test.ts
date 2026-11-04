@@ -151,3 +151,20 @@ describe("the day half carries the numbers", () => {
     expect(recordOf(setDayNumber(plan, DAY, box, 1, NOW)).numbers).toEqual({ [DAY]: { [box]: 1 } })
   })
 })
+
+describe("a goal's count on the day (Q4)", () => {
+  it("is sent as the day's own number, so a save sent twice lands the same", () => {
+    const before: DayRecord = { ...EMPTY, numbers: { [DAY]: { g1: 3 } } }
+    const after: DayRecord = { ...EMPTY, numbers: { [DAY]: { g1: 4 } } }
+    expect(patchesBetween(before, after)).toEqual([{ date: DAY, numbers: { g1: 4 } }])
+  })
+
+  it("made while the account was read, is added to the account's count", () => {
+    const account: DayRecord = { ...EMPTY, numbers: { [DAY]: { g1: 3 } } }
+    const atLoad: DayRecord = { ...EMPTY, numbers: { [DAY]: { g1: 1 } } }
+    const now: DayRecord = { ...EMPTY, numbers: { [DAY]: { g1: 2 } } }
+    expect(keepEditsMadeWhileLoading(account, atLoad, now, new Set(["g1"])).numbers).toEqual({ [DAY]: { g1: 4 } })
+    // A number box's value is what was typed, not an addition.
+    expect(keepEditsMadeWhileLoading(account, atLoad, now).numbers).toEqual({ [DAY]: { g1: 2 } })
+  })
+})

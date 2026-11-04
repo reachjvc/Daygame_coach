@@ -459,10 +459,59 @@ and shown on the day's summary. Concept items 21 and 34.
   (add a box, type 5,5, reload with the browser copy thrown away, see 5.5 on Today and in the journal,
   empty it and it is gone from the account). The schema test now also knows tables from migrations newer
   than its production dump, as the test database does.
+- **Live 2026-11-04 night**: backup first (`~/dg-backups/life-plan-2026-11-04-before-phase6.json`, 924
+  rows, revision 920), then the migration (the only one pending), then commit `b957822a`. Checked on the
+  live database: the kind check takes `number`, row security on, clients cannot TRUNCATE, your revision
+  still 920 and your 13 days untouched. Sign-off card `p6-number-box`.
+
+### Q4, after Phase 6: Today counts on the day; Track copies nothing
+
+**Built 2026-11-04 night**, with the small fix below.
+- **Today's "Log one"** adds one to the goal's number on today's day row (`life_plan_day_numbers`, Phase
+  6's table). "3 of 4 this week" is the sum of the week's days, Monday to Sunday. Every goal with a weekly
+  number counts now, not only the ones Track had copied; "not counted yet" is gone. "Undo one" comes off
+  today, else off the latest day of the week that has one.
+- **The weekly target** is the Track schedule's number for this week. A ramp ("two a week for two weeks,
+  then four") starts the week a goal is first logged, on Today and on the schedule alike. *Changed from
+  the old way:* the copied goal walked its ramp from the day Track sent it; a goal on its days has no
+  such day, so the first log starts it. Your Approaches goal therefore starts at 5 a week again the first
+  week you log it, not where the copy had got to.
+- **Track copies nothing any more.** The list with "Track N goals" is gone; in its place "Counting
+  happens on Today" with a button there. The schedule stays.
+- **Your 50 goals copied in September stay** in the old table, with the 241 counts on 11 of them (last
+  touched 25 Sep). They still show on Track, folded, under "Goals sent to the old goals page before",
+  because that is the one live place they show (the old goals page itself is archived). Counting there
+  stays there and does not reach Today; the block says so. Whether they go is Phase 7's question.
+- **Your counts do not carry over**: the latest was 25 Sep, and a weekly count from then belongs to a
+  week long over. Nothing is lost: it stays on the old table.
+- **Two devices on the same day:** a count is a day's number like a rating, so the last save wins if two
+  devices that both had the page open count at once. A count logged while the page was still reading the
+  account is added to the account's count, not written over it. (An attempt to send counts as additions
+  was taken back after the second review: a save retried after a failure, or sent while another was in
+  flight, could count twice. Plain numbers cannot.)
+- **Found and fixed on the way:** a tick, rating, number or count made in the few seconds before closing
+  or reloading the page was lost: the day save waits a few seconds, and the next load took the account's
+  days. Now whatever is waiting is sent the moment the page is hidden or left.
+- **The small fix:** the "×" on Systems that unlinked a goal's own action left it in its actions routine
+  serving no goal. It now follows the goal card's rule (`removeAction`): a goal's own action serving only
+  that goal is removed, after one question ("remove it and its ticks?"), because its ticks go too; any
+  other step is only unlinked.
+- Code review, twice: 15 finds, then 15 on the fixes; the real ones fixed (among them the counts that
+  could double, a ramp stuck at its first week, an undo that could do nothing, a goal's counts left
+  behind when it was removed, a confirm missing before the "×" deleted ticks, copy that was no longer
+  true). Left for Phase 7: the push code itself (`buildTrackInserts`, `trackRows`), now unreachable.
+- Tests: `northStarTrack.test.ts` (counts from the days, the ramp from the first log, undo, a removed
+  goal's counts), `secondDeviceCounts.test.tsx` (any device shows the week's count; Log one asks the old
+  table nothing), `dayNumbers.test.ts`, `life-mastery-track.spec.ts` (Track copies nothing; a count lands
+  on the day and comes back off; goals copied before still show), `life-mastery-day-persists.spec.ts`
+  (a tick made just before a reload is kept), `life-mastery-goal-actions.spec.ts` (the Systems "×").
+- **No database change**, so no backup was needed: it uses Phase 6's table.
 
 ### Phase 7. Clear out the old homes (deletes: your yes first)
 
-The list, final once Phases 1–6 are done: `save_life_plan` and the PUT on `/api/life-plan`, the old
+The list, final once Phases 1–6 are done (and Q4 added the push code: `buildTrackInserts`, `trackRows`,
+`linksToBackfill` and the "Goals sent to the old goals page before" block on Track, with the question
+whether your 50 copied goals and their counts go too): `save_life_plan` and the PUT on `/api/life-plan`, the old
 shared browser copy kept as `north-star-v1:orphan`, `life_plans.season_focus_id`,
 `life_plan_areas.season_rank` (not `review_fortnight`: it is still the Your 10s number, see Phase 5),
 `life_plan_goals.serves_one_thing` and

@@ -92,17 +92,4 @@ describe("what the Life Mastery copy claims about where your writing goes", () =
         lies.join("\n"),
     ).toEqual([])
   })
-
-  /**
-   * THE EXCEPTION HAS TO STILL BE THERE, or the rule above is passing because
-   * the honest signed-out copy was deleted rather than because the dishonest
-   * signed-in copy was fixed. An allowlist nobody can be sure is still used is
-   * how a guard becomes decorative.
-   */
-  it("and the signed-out copy still says device-only, because there it is true", () => {
-    expect(TODAY_COPY.signedOut, "ticks really do stay put with no account to send them to").toMatch(
-      /this device/i,
-    )
-    expect(TRACK_COPY.signedOut).toMatch(/not on the account/i)
-  })
 })

@@ -91,3 +91,24 @@ export async function saveDayCatchingUp(
   }
   return saveDayFromBrowser(patch)
 }
+
+/**
+ * Send one day as the page goes away (Plans/life-plan-rebuild.md, Q4).
+ *
+ * `keepalive` lets the browser finish the request after the page is gone. No
+ * answer is waited for and nothing is retried: the page is leaving. The values
+ * are the day's own, never additions, so a day sent here and again by the
+ * usual save lands the same.
+ */
+export function sendDayOnLeave(patch: DayPatch): void {
+  try {
+    void fetch("/api/life-plan/day", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    /* The page is going; there is nobody left to tell. */
+  }
+}

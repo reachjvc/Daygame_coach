@@ -66,10 +66,11 @@ import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
 import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
-import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
+import { fetchDayRecord, saveDayCatchingUp, sendDayOnLeave } from "@/src/goals/lifePlanDayClient"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
 import type { SessionType } from "@/src/health/types"
+import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 import { emptyDayRecord, keepEditsMadeWhileLoading, patchesBetween, recordIsEmpty, recordOf, recordToPatches, type DayRecord } from "@/src/goals/lifePlanDayService"
 import { reconcileProgramReference } from "@/src/goals/programReferenceService"
 import { StarTab } from "./StarTab"
@@ -83,7 +84,7 @@ import { useOneThing } from "./useOneThing"
 import type { NsAccount } from "@/src/goals/types"
 import { PathPicker } from "./PathPicker"
 import { TrackTab } from "./TrackTab"
-import { TodayTab, type TodayHubGoal } from "./TodayTab"
+import { TodayTab } from "./TodayTab"
 import { JournalTab } from "./JournalTab"
 import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
@@ -132,7 +133,6 @@ export function NorthStarFlow({
   backLabel = "Dashboard",
   initialTab = "star",
   timezone = "UTC",
-  goalsPromise,
 }: {
   /** Whose plan this is. The browser's copy is kept under it, so it is never another account's. */
   userId: string
@@ -155,16 +155,6 @@ export function NorthStarFlow({
    * instead would be a link that goes to the right page and the wrong screen.
    */
   initialTab?: NorthStarTabId
-  /**
-   * The account's goals, as a promise the server started and did not await.
-   *
-   * Only the Today step needs them, and only to tick its rows off. Handing over
-   * the promise removes that step's own /api/goals round-trip without holding
-   * the page back: the query runs while the browser parses and reads the plan
-   * out of localStorage. The flow stays localStorage-first and fetches nothing
-   * on mount.
-   */
-  goalsPromise?: Promise<TodayHubGoal[] | null> | null
 }) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
@@ -183,8 +173,8 @@ export function NorthStarFlow({
    * paragraph rather than the step you had been working on, whatever that was.
    *
    * `replaceState`, NOT `router.replace`: `app/life-mastery/page.tsx` is a
-   * server component, so a router navigation re-runs it — auth, the timezone
-   * read, the goals pre-read — on every single step change. This writes the
+   * server component, so a router navigation re-runs it — auth and the
+   * timezone read — on every single step change. This writes the
    * address and nothing else.
    *
    * Wrapped in try/catch because a browser that refuses history writes must not
@@ -295,6 +285,21 @@ export function NorthStarFlow({
    * only be found by looking at what the account last accepted.
    */
   const accountDays = useRef<DayRecord | null>(null)
+  /** What the account last confirmed for the day half; see `accountDays`. */
+  const ackDays = useCallback((record: DayRecord) => {
+    accountDays.current = record
+  }, [])
+  /**
+   * THE DAY CHANGES WAITING TO BE SENT, and a way to send them now.
+   *
+   * The day save waits a few seconds after a change. Close the tab, reload, or
+   * put the phone away inside that wait and the change was only in this
+   * browser's copy; the next load took the account's days and the change was
+   * gone (found in Q4 of Plans/life-plan-rebuild.md, as a flaky browser test).
+   * So the moment the page is hidden or left, what is waiting goes out, with
+   * `keepalive` so the browser finishes the request after the page is gone.
+   */
+  const pendingDays = useRef<DayPatch[]>([])
   /**
    * WHICH COUNTED GOAL EACH PLAN GOAL BECAME, as the ACCOUNT knows it.
    *
@@ -610,8 +615,8 @@ export function NorthStarFlow({
         return
       }
     }
-    accountDays.current = inBrowser
-  }, [])
+    ackDays(inBrowser)
+  }, [ackDays])
 
   /**
    * THE PLAN MOVES ONTO THE ACCOUNT, ONCE.
@@ -626,6 +631,7 @@ export function NorthStarFlow({
    * flow has to keep working with the network on fire, and a browser copy that
    * stops being updated is a browser copy that silently goes stale.
    */
+
   useEffect(() => {
     if (!loaded) return
     let cancelled = false
@@ -704,19 +710,22 @@ export function NorthStarFlow({
          */
         const atLoad = recordOf(decision.plan)
         const base = known ? days! : atLoad
-        setPlan((current) => ({
+        setPlan((current) => {
           // The plan half the same way: an edit made on the copy the page
           // opened with is kept when the account holds that same copy.
-          ...planHalfAfterLoad(current, browserCopy.current, decision.plan),
-          ...keepEditsMadeWhileLoading(base, atLoad, recordOf(current)),
-        }))
+          const half = planHalfAfterLoad(current, browserCopy.current, decision.plan)
+          // A goal's number is a count, merged by adding: the goals are the
+          // ones of the plan half being put on screen.
+          const counted = new Set(half.goals.map((g) => g.id))
+          return { ...half, ...keepEditsMadeWhileLoading(base, atLoad, recordOf(current), counted) }
+        })
         // This IS what the server holds, so the save effect has nothing to
         // send. Without this the first thing the flow does after loading a
         // plan is PUT it straight back. The day half is not in this
         // fingerprint, so the merge above cannot affect it.
         lastSent.current = sendableFingerprint(decision.plan)
         lastSentRows.current = server?.rows ?? null
-        if (days) accountDays.current = known ? days : emptyDayRecord()
+        if (days) ackDays(known ? days : emptyDayRecord())
         setServerState("saved")
         void importDaysOnce(days, recordOf(decision.plan))
         return
@@ -766,10 +775,10 @@ export function NorthStarFlow({
       if (days) {
         if (!recordIsEmpty(days)) {
           const atLoad = recordOf(decision.plan)
-          setPlan((current) => ({ ...current, ...keepEditsMadeWhileLoading(days, atLoad, recordOf(current)) }))
-          accountDays.current = days
+          setPlan((current) => ({ ...current, ...keepEditsMadeWhileLoading(days, atLoad, recordOf(current), new Set(current.goals.map((g) => g.id))) }))
+          ackDays(days)
         } else {
-          accountDays.current = emptyDayRecord()
+          ackDays(emptyDayRecord())
         }
       }
 
@@ -925,6 +934,7 @@ export function NorthStarFlow({
     if (serverState === "offline") return
     const after = recordOf(plan)
     const patches = patchesBetween(accountDays.current, after)
+    pendingDays.current = patches
     if (patches.length === 0) return
 
     const timer = window.setTimeout(() => {
@@ -938,12 +948,27 @@ export function NorthStarFlow({
         }
         // Recorded only when every day in the batch landed, so a failure is
         // retried on the next change rather than remembered as saved.
-        accountDays.current = after
+        ackDays(after)
+        if (pendingDays.current === patches) pendingDays.current = []
         setServerNote("")
       })()
     }, SAVE_DEBOUNCE_MS)
     return () => window.clearTimeout(timer)
-  }, [plan, loaded, serverState, savePlanNow])
+  }, [plan, loaded, serverState, savePlanNow, ackDays])
+
+  // What is waiting goes out the moment the page is hidden or left; see `pendingDays`.
+  useEffect(() => {
+    const leave = () => {
+      if (document.visibilityState === "visible") return
+      for (const patch of pendingDays.current) sendDayOnLeave(patch)
+    }
+    window.addEventListener("pagehide", leave)
+    document.addEventListener("visibilitychange", leave)
+    return () => {
+      window.removeEventListener("pagehide", leave)
+      document.removeEventListener("visibilitychange", leave)
+    }
+  }, [])
 
   /**
    * THE ONE THING, READ ONCE FOR THE WHOLE FLOW.
@@ -1295,8 +1320,11 @@ export function NorthStarFlow({
   }), [])
 
     const systemHandlers = useMemo<SystemHandlers>(() => ({
+    /* Taking a step off a goal follows the goal card's rule (`removeAction`):
+       a step in an actions routine that then serves nothing is removed, not
+       left behind serving no goal; any other step is only unlinked. */
     onLinkStep: (routineId: string, stepId: string, goalId: string, on: boolean) =>
-      setPlan((p) => ns.linkStepToGoal(p, routineId, stepId, goalId, on)),
+      setPlan((p) => (on ? ns.linkStepToGoal(p, routineId, stepId, goalId, true) : ns.removeAction(p, goalId, stepId))),
     onLinkGoal: (fromId: string, toId: string, on: boolean) =>
       setPlan((p) => (on ? ns.linkGoal(p, fromId, toId) : ns.unlinkGoal(p, fromId, toId))),
     onAddSystemMilestone: (routineId: string, id: "hours" | "sessions" | "streak", areaId?: string) =>
@@ -1795,14 +1823,13 @@ export function NorthStarFlow({
           /* The only step that asks what you DID rather than what you want.
              Everything else here is a decision; this is the same plan, on a
              date, with a tick against each line. */
-          runId ? (
             <TodayTab
               ticks={ticks}
-              goalsPromise={goalsPromise}
               plan={plan}
               today={today ?? ns.todayISO()}
-              runId={runId}
-              goalLinks={goalLinks}
+              /* A goal's count on the day, in the day half (Q4 of
+                 Plans/life-plan-rebuild.md); it went to the old goals table. */
+              onCountGoal={(goalId, by) => setPlan((p) => ns.countGoal(p, today ?? ns.todayISO(), goalId, by))}
               onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
               /* The experience's own store, the same one the Experiences step
                  writes — a thing you wanted to have done is ticked once, and
@@ -1838,7 +1865,6 @@ export function NorthStarFlow({
               onRenameSubStep={(id, title) => setPlan((p) => ns.renameSubStep(p, id, title))}
               onMoveSubStep={(id, delta) => setPlan((p) => ns.moveSubStep(p, id, delta))}
               onRemoveSubStep={(id) => setPlan((p) => ns.removeSubStep(p, id))}
-              onGoToTrack={() => setTab("track")}
               /* The same jump the wheel and the area dialogs make: the routine
                  opens expanded on the step that edits it, rather than leaving
                  somebody to find it again. */
@@ -1894,9 +1920,6 @@ export function NorthStarFlow({
               }}
               onGoToTab={(t) => setTab(t)}
             />
-          ) : (
-            <p className="text-sm text-zinc-500">Opening today…</p>
-          )
         ) : tab === "journal" ? (
           /* WHERE THE WRITING LIVES.
              Every other tab that asks for words asks for one kind of them, in
@@ -1995,9 +2018,9 @@ export function NorthStarFlow({
             }
           />
         ) : tab === "track" ? (
-          /* The one step that leaves the browser. Everything else here is a
-             document; this is the same goals hub /dashboard/goals renders,
-             on the rows the plan just created. */
+          /* The weeks at a glance, and the pointer to Today, where goals are
+             counted since Q4 of Plans/life-plan-rebuild.md. The goals copied
+             to the old goals table before that still show here, folded. */
           runId ? (
             <TrackTab
               plan={plan}
@@ -2011,6 +2034,7 @@ export function NorthStarFlow({
                  today's morning routine here too, and two screens showing one
                  routine must not keep two answers to "did you read it". */
               onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
+              onGoToToday={() => setTab("today")}
             />
           ) : (
             /* Renders nothing at all if this is left as `runId && …`, which is

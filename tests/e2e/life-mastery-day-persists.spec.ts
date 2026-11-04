@@ -216,4 +216,25 @@ test.describe("the day half crosses devices", () => {
 
     await laptop.context().close()
   })
+
+  /**
+   * A TICK MADE JUST BEFORE THE PAGE CLOSES IS NOT LOST (Q4 of
+   * Plans/life-plan-rebuild.md). The day save waits a few seconds; a reload
+   * inside that wait left the tick in this browser only, and the next load took
+   * the account's days over it. The browser now keeps what the account last
+   * confirmed, so the next load knows the tick was never sent, and sends it.
+   */
+  test("a tick made just before a reload is kept, and reaches the account", async ({ page }) => {
+    await page.goto(`${ROUTES.plan}?step=today`)
+    const box = page.getByRole("checkbox", { name: "Did E2E cold shower" })
+    await expect(page.getByText("Saved to your account.")).toBeVisible()
+    await box.check()
+    // No wait: the reload lands inside the save's few seconds.
+    await page.reload()
+    await expect(page.getByRole("checkbox", { name: "Did E2E cold shower" })).toBeChecked()
+    await expect.poll(async () => {
+      const day = await readDay(page)
+      return Object.values(day.logged).some((ids) => ids.includes(STEP))
+    }, { timeout: 15_000 }).toBe(true)
+  })
 })

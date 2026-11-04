@@ -121,6 +121,7 @@ import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
 import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { isEmptyReview, readReviews } from "@/src/goals/reviewService"
 import { DAY_LIMITS } from "@/src/goals/lifePlanDayService"
+import { periodStartFor } from "@/src/shared/dateUtils"
 
 // ------------------------------------------------------------------ helpers
 
@@ -2065,6 +2066,8 @@ export function removeGoal(plan: NsPlan, goalId: string, now = nowIso()): NsPlan
       .map((g) => (g.feedsGoalIds.includes(goalId) ? { ...g, feedsGoalIds: g.feedsGoalIds.filter((id) => id !== goalId) } : g)),
     priorityIds: plan.priorityIds.filter((id) => id !== goalId),
     pastSeasons: pastSeasonsWithout(plan.pastSeasons, goalId),
+    // Its counts go with it, as the database's cascade takes them (Q4).
+    numbers: withoutNumbersOf(plan.numbers ?? {}, goalId),
   }, now)
 }
 
@@ -2322,12 +2325,21 @@ export function updateAction(plan: NsPlan, goalId: string, stepId: string, patch
 export function removeAction(plan: NsPlan, goalId: string, stepId: string, now = nowIso()): NsPlan {
   const found = stepById(plan, stepId)
   if (!found || !found.step.servesGoalIds.includes(goalId)) return plan
-  const { routine, step } = found
-  const onlyThisGoal = step.servesGoalIds.every((id) => id === goalId)
-  if (routine.blueprintId !== GOAL_ACTIONS_BLUEPRINT_ID || !onlyThisGoal) {
-    return linkStepToGoal(plan, routine.id, stepId, goalId, false, now)
+  if (!actionWouldBeRemoved(plan, goalId, stepId)) {
+    return linkStepToGoal(plan, found.routine.id, stepId, goalId, false, now)
   }
   return touch({ ...plan, routines: withoutActionSteps(plan.routines, (s) => s.id === stepId) }, now)
+}
+
+/**
+ * Would taking this step off this goal remove it, rather than only unlink it?
+ * Yes for a goal's own action (in an actions routine) that serves only this
+ * goal. One rule for `removeAction` and for any screen that asks first.
+ */
+export function actionWouldBeRemoved(plan: NsPlan, goalId: string, stepId: string): boolean {
+  const found = stepById(plan, stepId)
+  if (!found || !found.step.servesGoalIds.includes(goalId)) return false
+  return found.routine.blueprintId === GOAL_ACTIONS_BLUEPRINT_ID && found.step.servesGoalIds.every((id) => id === goalId)
 }
 
 /**
@@ -3603,13 +3615,18 @@ export function removeDailyField(plan: NsPlan, id: string, now = nowIso()): NsPl
   if (!plan.fields.some((f) => f.id === id)) return plan
   // A NUMBER BOX'S NUMBERS GO WITH IT, as the database's cascade takes them
   // (Phase 6): a number is not writing, and the button says it goes.
-  const numbers: Record<string, Record<string, number>> = {}
-  for (const [date, row] of Object.entries(plan.numbers)) {
+  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id), numbers: withoutNumbersOf(plan.numbers, id) }, now)
+}
+
+/** The day numbers with one part's taken out of every day, as the database's cascade does. */
+function withoutNumbersOf(numbers: Record<string, Record<string, number>>, id: string): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {}
+  for (const [date, row] of Object.entries(numbers)) {
     const rest = { ...row }
     delete rest[id]
-    if (Object.keys(rest).length > 0) numbers[date] = rest
+    if (Object.keys(rest).length > 0) out[date] = rest
   }
-  return touch({ ...plan, fields: plan.fields.filter((f) => f.id !== id), numbers }, now)
+  return out
 }
 
 /**
@@ -3674,6 +3691,49 @@ export function setDayNumber(plan: NsPlan, date: string, fieldId: string, value:
   if (Object.keys(row).length > 0) numbers[date] = row
   else delete numbers[date]
   return touch({ ...plan, numbers }, now)
+}
+
+/**
+ * LOG ONE, OR TAKE ONE BACK (Plans/life-plan-rebuild.md, Q4): a goal's count
+ * on the day, kept in the day half beside the number boxes'. Logging adds to
+ * today. Taking back comes off today first, then off the latest day of the
+ * same week that has one, so an undo the day after still undoes; never below
+ * zero, and a day at zero holds nothing. Only a goal of the plan counts.
+ */
+export function countGoal(plan: NsPlan, date: string, goalId: string, by: 1 | -1, now = nowIso()): NsPlan {
+  if (!plan.goals.some((g) => g.id === goalId)) return plan
+  let day = date
+  if (by < 0 && !(plan.numbers[date]?.[goalId] > 0)) {
+    // Any day of the same week, latest first: the week's count is what the
+    // row shows, so whatever it shows can be taken back.
+    const monday = weekStartISO(date)
+    const sunday = addDaysISO(monday, 6)
+    const held = Object.keys(plan.numbers)
+      .filter((d) => d >= monday && d <= sunday && plan.numbers[d][goalId] > 0)
+      .sort()
+    if (held.length === 0) return plan
+    day = held[held.length - 1]
+  }
+  const row = { ...(plan.numbers[day] ?? {}) }
+  const next = (row[goalId] ?? 0) + by
+  if (next > 0) row[goalId] = Math.min(next, DAY_NUMBER_LIMIT)
+  else delete row[goalId]
+  const numbers = { ...plan.numbers }
+  if (Object.keys(row).length > 0) numbers[day] = row
+  else delete numbers[day]
+  return touch({ ...plan, numbers }, now)
+}
+
+/**
+ * The Monday on or before an ISO date.
+ *
+ * Delegates to `periodStartFor`, which is the one implementation of a week
+ * boundary in this codebase. There used to be three, and three answers to
+ * "which week is this" is how a counter and its period end up disagreeing.
+ */
+export function weekStartISO(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number)
+  return periodStartFor("weekly", new Date(y, m - 1, d))
 }
 
 export function dayNumber(plan: NsPlan, date: string, fieldId: string): number | null {

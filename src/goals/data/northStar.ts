@@ -96,13 +96,11 @@ export const NS_TRACK_RUN_KEY = "north-star-track-run"
  */
 export const TODAY_COPY = {
   help: "Tick off what you have done. Nothing to set up here — this is the plan you already made, on today.",
-  loading: "Opening today…",
   empty:
     "Nothing running yet. Once there are routines or drivers in the plan, this is where you say what you did.",
   nothingOn: "Nothing is scheduled for today. Anything you did anyway is below.",
   doneSuffix: "done",
   allDone: "That is today's list, done.",
-  notTracked: "not counted yet",
   /* THE COUNT, IN WORDS, NEXT TO THE BUTTON THAT MOVES IT.
      It used to be a bare "+1" at the end of the row with the numbers on the
      line above it in a list of four other facts, so the one control on the
@@ -127,7 +125,7 @@ export const TODAY_COPY = {
   standingTitle: "Not a weekly thing",
   standingHelp:
     "What you are climbing towards and what you want to have done. Neither happens on a Tuesday, so neither counts towards today — but the day you finally do one, this is where you say so.",
-  standingMilestone: "a milestone, counted on your goals page",
+  standingMilestone: "a milestone",
   standingNoDate: "no date yet",
   standingDoneOn: "done",
   anyDayTitle: "Any day this week",
@@ -136,8 +134,6 @@ export const TODAY_COPY = {
   restTitle: "On other days",
   restHelp:
     "The plan puts these on days that are not today, and you may have done one anyway. A plan that only accepts the sessions it predicted under-counts the weeks you actually had.",
-  signedOut:
-    "Ticks save on this device. Counting the drivers needs you signed in — they are goals on your account, not notes in a browser.",
   feltTitle: "How today went",
   feltHelp:
     "Rate each area on how it actually felt today, 0 to 10. Same scale as the wheel and the same store, so this is what the rolling average on Your 10s is made of. Skip any of them; click a number again to clear it.",
@@ -625,25 +621,16 @@ export const SCHEDULE_COPY = {
 } as const
 
 export const TRACK_COPY = {
-  title: "Start tracking these",
-  /* IT SAID "Everything up to here saved on this device only" UNTIL 2026-09-25,
-     to somebody signed in, on the one step whose whole job is explaining what
-     reaches the account. Phase 1 put the plan there and M1 put the day half
-     there, and this sentence was left behind — true when it was written,
-     falsified by a commit in another file, and caught by nothing, because the
-     copy lint reads this file every run and checks voice rather than truth.
-     What the step is actually for is narrower and still worth saying: the plan
-     being saved and a goal being COUNTED are two different things. */
+  /* COUNTING MOVED TO TODAY (Plans/life-plan-rebuild.md, Q4). This step used
+     to copy the plan's goals into the old goals table, where they were counted;
+     "Log one" on Today now counts every goal on the day itself. */
+  title: "Counting happens on Today",
   help:
-    "Your plan is already on your account. This is a different thing: tick the goals you actually want counted from now on and they become real goals on the goals page — counted, streaked and reset each week. Nothing is pushed until you press the button, and pressing it again later picks up whatever is new without touching what is already running.",
-  empty: "No goals in the plan yet. Write some on Experiences or Systems and they will show up here.",
-  allTracked: "Everything in the plan is being tracked.",
-  hubTitle: "This plan, running",
-  hubHelp: "The real goals page, showing only what you pushed from this plan. Tick things off here and it counts.",
-  hubScoped: "Only this plan's goals are shown here. Everything else on your account is on",
-  signedOutTitle: "This step needs you signed in",
-  signedOut:
-    "The rest of the flow runs in this browser and asks nothing of you. This step cannot: tracking a goal means a row on your account, counted every day, kept when you open the app on your phone. Sign in and the plan is still here when you come back — it is saved on this device, not on the account.",
+    "Every goal with a weekly number is counted on Today: press Log one on the day you did it, and its week's count goes up. A ramp starts the week you first log it. Nothing is copied anywhere any more.",
+  toToday: "Go to Today",
+  hubTitle: "Goals sent to the old goals page before",
+  hubHelp:
+    "This plan copied these there, and what you counted on them is still there. Counting on them here stays here: it does not reach Today.",
 } as const
 
 /**
@@ -805,7 +792,7 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   focus: "The one thing this season is for, the areas it is about, and when it ends.",
   values: "What you are ranking your life by, in order, and who that makes you.",
   commit: "Read it back, say what could go wrong, and commit to it.",
-  track: "Push the goals into your real goals and tick them off day by day.",
+  track: "Your weeks at a glance: what runs each week, and how it ramps up.",
   today: "What you can put in for today, and nothing else. Tick off what you did.",
   journal: "Everything you write: the questions your routines ask, the ones you add, and every answer you have given them.",
   review: "Look back over a week, month, quarter or year: score each area, keep the magic moments and lessons, and set what comes next.",
@@ -2075,6 +2062,10 @@ export const SYSTEMS_COPY = {
   linkTitle: "What is running at what",
   linkHelp: "Point each system at what it moves. Nothing links itself — a routine step and a goal can share an area and have nothing to do with each other.",
   linkAdd: "link one",
+  /* The "×" on a goal's own action, which removes it (and its ticks), asks once. */
+  removeAsk: "Only this goal's action: remove it and its ticks?",
+  removeYes: "Remove",
+  removeNo: "Keep",
   nothingRunning: "Nothing is running at this yet.",
   nothingToLink: "Nothing to link yet. Add a routine step above, or write a weekly rate below.",
   noMilestones: "Nothing written on the Experiences step yet. That is where they go.",

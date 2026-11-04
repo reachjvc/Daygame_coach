@@ -77,3 +77,49 @@ test.describe("a goal's action", () => {
     }, { timeout: 20_000 }).toEqual([false, false])
   })
 })
+
+/**
+ * THE "×" ON SYSTEMS FOLLOWS THE GOAL CARD'S RULE. It unlinked the step and
+ * left it in its actions routine serving no goal; now, as on the goal card, an
+ * actions-routine step that then serves nothing goes, and any other step is
+ * only unlinked.
+ */
+test.describe("unlinking on Systems", () => {
+  test.beforeEach(async ({ page, account }) => {
+    await seedLifePlan(page, account.id, {
+      version: 1,
+      seq: 20,
+      northStar: "E2E: a plan with a north star.",
+      goals: [{ id: "g1", areaId: "lm_fitness", title: GOAL, type: "achievement", feedsGoalIds: [] }],
+      routines: [
+        {
+          id: "r9", label: "Fitness actions", blueprintId: "actions", kind: "sequence", areaId: "lm_fitness", serves: [],
+          daysPerWeek: 3, splitDays: [],
+          steps: [{ id: "s9", title: ACTION, minutes: 0, daysPerWeek: 3, dimension: "body", servesGoalIds: ["g1"], days: [], startMin: null }],
+        },
+        {
+          id: "r8", label: "Morning", blueprintId: "morning", kind: "sequence", areaId: null, serves: [],
+          daysPerWeek: 7, splitDays: [],
+          steps: [{ id: "s8", title: "E2E: Stretch", minutes: 5, daysPerWeek: 7, dimension: "body", servesGoalIds: ["g1"], days: [], startMin: null }],
+        },
+      ],
+    })
+  })
+
+  test("removes an actions-routine step left serving nothing once asked, and only unlinks any other", async ({ page }) => {
+    await page.goto(`${ROUTES.plan}?step=systems`)
+    // The goal's own action asks first, because removing it takes its ticks.
+    await page.getByRole("button", { name: `Unlink ${ACTION} from ${GOAL}` }).click()
+    await page.getByRole("button", { name: `Remove ${ACTION}` }).click()
+    await page.getByRole("button", { name: `Unlink E2E: Stretch from ${GOAL}` }).click()
+
+    await expect.poll(async () => {
+      const rows = await accountRows(page)
+      return {
+        action: rows.steps.some((s) => s.title === ACTION),
+        stretch: rows.steps.some((s) => s.title === "E2E: Stretch"),
+        links: rows.step_serves.length,
+      }
+    }, { timeout: 15_000 }).toEqual({ action: false, stretch: true, links: 0 })
+  })
+})

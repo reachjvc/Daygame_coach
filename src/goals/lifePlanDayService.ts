@@ -273,6 +273,13 @@ export function keepEditsMadeWhileLoading(
   account: DayRecord,
   atLoad: DayRecord,
   now: DayRecord,
+  /**
+   * The ids whose number is a COUNT (a goal's "Log one", Q4): what was logged
+   * in the window is added to the account's count rather than written over it,
+   * so a count another device made meanwhile is kept. The result is still a
+   * plain number, sent as one: a retried save cannot count twice.
+   */
+  counted: ReadonlySet<string> = new Set(),
 ): DayRecord {
   const merged: Required<DayRecord> = {
     daily: { ...account.daily },
@@ -309,6 +316,15 @@ export function keepEditsMadeWhileLoading(
       for (const id of ids) {
         if (from[id as keyof typeof from] === to[id as keyof typeof to]) continue
         const row = { ...((merged[map] as Record<string, Record<string, never>>)[date] ?? {}) }
+        if (map === "numbers" && counted.has(id)) {
+          const added = ((to[id as keyof typeof to] as number | undefined) ?? 0) - ((from[id as keyof typeof from] as number | undefined) ?? 0)
+          const total = Math.max(0, ((row[id] as number | undefined) ?? 0) + added)
+          if (total > 0) row[id] = total as never
+          else delete row[id]
+          if (Object.keys(row).length > 0) (merged[map] as Record<string, unknown>)[date] = row
+          else delete (merged[map] as Record<string, unknown>)[date]
+          continue
+        }
         const value = to[id as keyof typeof to]
         if (value === undefined) delete row[id]
         else row[id] = value as never

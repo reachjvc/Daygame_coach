@@ -27,7 +27,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { render, screen, waitFor } from "@testing-library/react"
 import { TrackTab } from "@/src/goals/components/north-star/TrackTab"
 import { addRoutine, emptyNsPlan, toggleRoutineStep, updateStep } from "@/src/goals/northStarService"
-import { NO_PUSHED_GOALS, groupLogged, todayItems, todayProgress, trackActivities, trackGroups } from "@/src/goals/northStarTrackService"
+import { groupLogged, todayItems, todayProgress, trackActivities, trackGroups } from "@/src/goals/northStarTrackService"
 import { NO_TRAINING_TICKS, stepTick, trainingTicks } from "@/src/goals/dayTicks"
 import type { NsPlan } from "@/src/goals/types"
 
@@ -93,6 +93,7 @@ describe("the training log reaches the schedule on the branch a signed-in person
         today={TODAY}
         ticks={{ [TODAY]: [strengthStepId] }}
         onToggleStep={vi.fn()}
+        onGoToToday={vi.fn()}
       />
     )
 
@@ -139,7 +140,7 @@ describe("every surface gives the same answer for one morning", () => {
       expect(stepTick(plan, TODAY, strengthStepId, ticks).done).toBe(c.done === 1)
       expect(groupLogged(plan, TODAY, group, ticks)).toEqual({ done: c.done, total: 1 })
       // 3. the Today tab's list, and 4. the season band, which share this path
-      expect(todayProgress(todayItems(plan, TODAY, [], NO_PUSHED_GOALS, ticks))).toEqual({ done: c.done, total: 1 })
+      expect(todayProgress(todayItems(plan, TODAY, ticks))).toEqual({ done: c.done, total: 1 })
     })
   }
 

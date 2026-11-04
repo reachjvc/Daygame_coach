@@ -136,8 +136,11 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   the account; the browser copy is a cache that keeps the page working offline
   and is imported once into an account that holds nothing written. This entry
   said the opposite — "it keeps the plan in the browser's own storage" — until
-  that landed. Two other crossings that are NOT part of that: the one-thing box
-  reads and writes `life_answers`, and the Today tab increments counted goals.
+  that landed. The one-thing box used to read and write `life_answers` and the
+  Today tab used to increment counted goals in `user_goals`; since 2026-11-04
+  the one thing is the plan's season and Today's "Log one" is a number on the
+  day (`life_plan_day_numbers`), and the Track step copies nothing (Q4 of
+  `Plans/life-plan-rebuild.md`). Track still shows goals it copied before.
   The season band does neither; this entry credited it with `life_answers` and
   was simply wrong, which a sweep caught on 2026-09-23 — it takes a plan as
   props and fetches nothing. **Nothing in Life Mastery starts or ends a program any more** — this
