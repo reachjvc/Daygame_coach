@@ -9,9 +9,10 @@
  * the alert center, the idle prompt and the entry-detail modal.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react"
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react"
 import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 import { ROUTE_LABELS } from "@/components/navTabs"
 import { Button } from "@/components/ui/button"
@@ -97,6 +98,21 @@ type TrackerStep = { timetrack: "arrival" | "section" | "sheet" }
 
 function isSheetStep(state: unknown): boolean {
   return (state as Partial<TrackerStep> | null)?.timetrack === "sheet"
+}
+
+/**
+ * Tells the tracker when the app's router changes the address without changing
+ * the page: one of its links to the page you are already on. A component of its
+ * own, inside Suspense, because a prerendered page learns its search params only
+ * in the browser, and the rest of the tracker should not wait for that.
+ */
+function AddressWatcher({ onChange }: { onChange: () => void }) {
+  // null outside the app router (a component test that mounts the tracker alone)
+  const search = useSearchParams()?.toString() ?? ""
+  useEffect(() => {
+    onChange()
+  }, [search, onChange])
+  return null
 }
 
 /** The tab's own history, as the browser's Navigation API lists it; null where there is none (Safari, Firefox) */
@@ -543,19 +559,31 @@ export function TogglLab({
     window.history.replaceState(step, "", trackerAddressFor(window.location.pathname, { section: screenNow.current, entryId: null }))
   }, [])
 
-  // Back and Forward: the address says where you are now
-  useEffect(() => {
-    const onPopState = () => {
-      // leaving the tracker: the router is taking this page down
-      if (trackerPath.current === null || window.location.pathname !== trackerPath.current) return
-      const address = readTrackerAddress(window.location.search)
-      setScreen(address.section ?? "timer")
+  /**
+   * The address says where you are now: after Back or Forward, and after one of
+   * the app's own links to this page (the PC's top bar has "Time" on it).
+   *
+   * Only what differs is applied. The tracker's own steps change the address
+   * too, and they arrive here already true; setting the open sheet again would
+   * hand it a fresh copy of the entry mid-edit.
+   */
+  const applyAddress = useCallback(() => {
+    // not arrived yet, or leaving the tracker: the router is taking this page down
+    if (trackerPath.current === null || window.location.pathname !== trackerPath.current) return
+    const address = readTrackerAddress(window.location.search)
+    const section = address.section ?? "timer"
+    if (section !== screenNow.current) setScreen(section)
+    setDetailEntry((open) => {
+      if ((open?.id ?? null) === address.entryId) return open
       const entries = latestState.current?.entries ?? []
-      setDetailEntry(address.entryId ? (entries.find((e) => e.id === address.entryId && !e.serverDeletedAt) ?? null) : null)
-    }
-    window.addEventListener("popstate", onPopState)
-    return () => window.removeEventListener("popstate", onPopState)
+      return address.entryId ? (entries.find((e) => e.id === address.entryId && !e.serverDeletedAt) ?? null) : null
+    })
   }, [])
+
+  useEffect(() => {
+    window.addEventListener("popstate", applyAddress)
+    return () => window.removeEventListener("popstate", applyAddress)
+  }, [applyAddress])
 
   /**
    * THE WAY OUT RETURNS TO WHERE YOU CAME FROM (D9).
@@ -705,6 +733,9 @@ export function TogglLab({
     <div className="min-h-screen bg-background [&_input[data-slot=input]]:border-border [&_input[data-slot=input]]:bg-background/60 [&_select]:bg-background/60">
       {/* header */}
       <OfflineShell />
+      <Suspense fallback={null}>
+        <AddressWatcher onChange={applyAddress} />
+      </Suspense>
 
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         {/* flex-wrap: on a phone, a running timer plus a sync badge that keeps
