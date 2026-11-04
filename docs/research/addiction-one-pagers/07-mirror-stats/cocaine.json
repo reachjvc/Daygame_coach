@@ -3,13 +3,14 @@
   "stats": [
     {
       "group": "you",
+      "top": true,
       "big": "1 in 5",
-      "line": "About 1 in 5 people who ever use cocaine become dependent at some point. Half of them get there within about 4 years.",
-      "mirror": "Guys who only do lines on nights out and think they're safe.",
+      "line": "About 1 in 5 people who ever use cocaine are projected to become dependent at some point. Half of those got there within about 4 years.",
+      "mirror": "You only do lines on nights out and think you're safe.",
       "basis": {
         "design": "national survey, same people interviewed twice (NESARC)",
         "who": "US adults who had ever used cocaine",
-        "n": "2,259 cocaine users",
+        "n": "2,259 adults who had ever used cocaine; 376 of them became dependent",
         "where": "USA",
         "when": "interviews 2001–2002 and 2004–2005",
         "measured": "estimated lifetime chance of going from first use to the older DSM-IV criteria for dependence"
@@ -25,79 +26,59 @@
     },
     {
       "group": "you",
-      "big": "2×",
-      "line": "Using weekly meant about 2× the odds of cocaine addiction about 3 years later; 1–3 times a month, 1.7×, versus less than monthly.",
-      "mirror": "Weekend users who think 'a few times a month' can't hook them.",
-      "basis": {
-        "design": "national survey, same people re-interviewed (NESARC)",
-        "who": "US adults who had ever used cocaine",
-        "n": "2,501",
-        "where": "USA",
-        "when": "2001–2002, re-interviewed 2004–2005",
-        "measured": "how often people had used cocaine at their heaviest, and whether they had cocaine use disorder at the second interview"
-      },
-      "caveat": "Odds, not risk. The comparison group (less than monthly) is not risk-free. Self-reported. It does not say what share of weekly users got hooked.",
-      "ref": {
-        "cite": "Aharonovich E, Scodes J, Wall MM, et al. (2021). The relationship of frequency of cocaine use to substance and psychiatric disorders in the U.S. general population. Drug and Alcohol Dependence.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/34358768/",
-        "pmid": "34358768",
-        "fetched": true,
-        "quote": "use ≥1x/week and use 1-3 times a month was associated with cocaine use disorder in 2004-2005 (aOR = 2.13 and aOR = 1.67, respectively)."
-      }
-    },
-    {
-      "group": "you",
+      "top": true,
       "big": "2 in 100",
-      "line": "About 2 in 100 American adults used cocaine in the past year (2018–19). Users were more often men aged 18–49.",
-      "mirror": "Guys who feel cocaine is everywhere in their circle.",
+      "line": "About 2 in 100 American adults used cocaine in the past year (2018–19). Among 18- to 25-year-olds it was about 5 in 100.",
+      "mirror": "You feel like cocaine is everywhere in your circle.",
       "basis": {
         "design": "national survey (NSDUH), every year 2006–2019",
         "who": "US adults aged 18 and over",
-        "n": "yearly national samples (size not given in the abstract)",
+        "n": "85,765 adults surveyed in 2018–2019",
         "where": "USA",
         "when": "2006–2019; figure is the 2018–2019 average",
-        "measured": "self-reported cocaine use in the past 12 months, and cocaine use disorder"
+        "measured": "self-reported cocaine use in the past 12 months, and cocaine use disorder. Ages 18 to 25: 5.53%."
       },
       "caveat": "Far fewer adults, 0.37%, met the criteria for cocaine use disorder. Self-reported. Your city or friend group can be very different.",
       "ref": {
         "cite": "Mustaquim D, Jones CM, Compton WM (2021). Trends and correlates of cocaine use among adults in the United States, 2006–2019. Addictive Behaviors.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/33940336/",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10032475/",
         "pmid": "33940336",
         "fetched": true,
-        "quote": "The annual average estimated prevalence of past-year cocaine use among adults was highest in 2006-2007 (2.51%), declined to 1.72% in 2010-2011, and then increased to 2.14% in 2018-2019."
+        "quote": "then increased to 2.14% in 2018–2019 … The prevalence among 18–25 year-olds in 2018–2019 (5.53%) was significantly higher"
       }
     },
     {
-      "group": "start",
-      "big": "5–6%",
-      "line": "Of new cocaine users, about 5–6% were already hooked within 2 years of first use. Smoking crack or injecting made it more likely.",
-      "mirror": "Men in their first year or two of 'just partying'.",
+      "group": "you",
+      "big": "18% vs 9%",
+      "line": "3 years later, about 18% of people who had used cocaine weekly had a cocaine problem, against 9% of those who used less than monthly.",
+      "mirror": "You use every weekend and think it can't hook you.",
       "basis": {
-        "design": "national household survey (NHSDA, now called NSDUH)",
-        "who": "US residents aged 12 and over",
-        "n": "114,241 surveyed; 1,081 had first used cocaine in the past 24 months",
+        "design": "national survey, same people re-interviewed 3 years later (NESARC)",
+        "who": "US adults who had used cocaine in the past year at the first interview",
+        "n": "157 past-year users followed up: 40 weekly, 26 one to three times a month, 91 less than monthly (of 2,501 who had ever used)",
         "where": "USA",
-        "when": "2000–2001",
-        "measured": "share of recent first-time users who had met dependence criteria since they started"
+        "when": "2001–2002, re-interviewed 2004–2005",
+        "measured": "How often people used cocaine in the past year, and whether they had a cocaine problem (DSM-IV abuse or dependence) at the second interview. One to three times a month: about 14%."
       },
-      "caveat": "Covers only the first 2 years; the risk keeps building after that. Self-reported. Young adults aged 21–25 had lower early risk here.",
+      "caveat": "Small groups: only 40 weekly users. After allowing for age and other factors, weekly use meant about 2× the odds. Some may already have had a problem at the start.",
       "ref": {
-        "cite": "O'Brien MS, Anthony JC (2005). Risk of becoming cocaine dependent: epidemiological estimates for the United States, 2000–2001. Neuropsychopharmacology.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/15785780/",
-        "pmid": "15785780",
+        "cite": "Aharonovich E, Scodes J, Wall MM, et al. (2021). The relationship of frequency of cocaine use to substance and psychiatric disorders in the U.S. general population. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8464522/",
+        "pmid": "34358768",
         "fetched": true,
-        "quote": "Between 5 and 6% of these recent-onset users had become cocaine dependent since onset of use."
+        "quote": "frequent cocaine users at Wave 1 (≥1x/week; 17.8%) … Users of cocaine <1x/month at Wave 1 (n=91) had the lowest prevalence of cocaine disorder at Wave 2 (9.2%)"
       }
     },
     {
       "group": "start",
+      "top": true,
       "big": "Age 23–25",
       "line": "Getting hooked on cocaine peaks at age 23–25. Most who get hooked do so within 3 years of first use.",
-      "mirror": "Men in their early-to-mid twenties using a bit more each year.",
+      "mirror": "You're in your twenties and using a bit more each year.",
       "basis": {
         "design": "national survey (National Comorbidity Survey), survival analysis",
         "who": "US population aged 15–54",
-        "n": "8,098",
+        "n": "8,098 people aged 15 to 54; the summary doesn't say how many had used cocaine",
         "where": "USA",
         "when": "published 2002",
         "measured": "age at first use, and age when people first met dependence criteria"
@@ -112,14 +93,37 @@
       }
     },
     {
+      "group": "start",
+      "big": "5–6%",
+      "line": "Of new cocaine users, about 5–6% were already hooked within 2 years of first use. Smoking crack or injecting made it more likely.",
+      "mirror": "You're a year or two into 'just partying' with coke.",
+      "basis": {
+        "design": "national household survey (NHSDA, now called NSDUH)",
+        "who": "US residents aged 12 and over",
+        "n": "1,081 new users (of 114,241 surveyed)",
+        "where": "USA",
+        "when": "2000–2001",
+        "measured": "share of recent first-time users who had met dependence criteria since they started"
+      },
+      "caveat": "Covers only the first 2 years; the risk keeps building after that. Self-reported. Young adults aged 21–25 had lower early risk here.",
+      "ref": {
+        "cite": "O'Brien MS, Anthony JC (2005). Risk of becoming cocaine dependent: epidemiological estimates for the United States, 2000–2001. Neuropsychopharmacology.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/15785780/",
+        "pmid": "15785780",
+        "fetched": true,
+        "quote": "Between 5 and 6% of these recent-onset users had become cocaine dependent since onset of use."
+      }
+    },
+    {
       "group": "cost",
+      "top": true,
       "big": "68%",
       "line": "68% of men in cocaine rehab had had scary, short bursts of paranoia while using. It got worse and came faster over time.",
-      "mirror": "Guys who check the window or the door after a few lines.",
+      "mirror": "You check the window or the door after a few lines.",
       "basis": {
         "design": "interview study",
         "who": "cocaine-dependent men entering a 28-day rehab program, one after another",
-        "n": "50",
+        "n": "50 men in rehab",
         "where": "USA (Yale team)",
         "when": "published 1991",
         "measured": "whether they had had very distressing, short-lived paranoid states while using cocaine"
@@ -137,11 +141,11 @@
       "group": "cost",
       "big": "8 areas",
       "line": "In people off cocaine up to 12 weeks, 46 studies found moderately worse scores in 8 areas of thinking, including attention and memory.",
-      "mirror": "Men who forget things at work and act before thinking.",
+      "mirror": "You forget things at work and act before you think.",
       "basis": {
         "design": "meta-analysis of 46 studies",
         "who": "people with cocaine abuse or dependence vs. healthy comparison groups",
-        "n": "not given in the abstract",
+        "n": "46 studies; the review's summary doesn't say how many people took part",
         "where": "several countries",
         "when": "published 2014",
         "measured": "test scores in 11 areas of thinking, split by how long people had been off cocaine"
@@ -157,13 +161,14 @@
     },
     {
       "group": "quit",
+      "top": true,
       "big": "52%",
       "line": "Of men treated for cocaine addiction in 1988–89, 52% had been cocaine-free for 5 years or more when checked 12 years later.",
-      "mirror": "Anyone who thinks cocaine addiction is a life sentence.",
+      "mirror": "You think cocaine addiction is a life sentence.",
       "basis": {
         "design": "cohort followed 12 years",
         "who": "men (veterans) admitted to treatment for cocaine dependence in 1988–1989",
-        "n": "266 interviewed at 12 years",
+        "n": "266 men interviewed at 12 years",
         "where": "USA (UCLA researchers)",
         "when": "1988–89 to 2002–03",
         "measured": "whether they had used no cocaine for at least 5 years at the 12-year interview"
@@ -179,13 +184,60 @@
     },
     {
       "group": "quit",
+      "top": true,
+      "big": "2 days → 1 year",
+      "line": "Felt craving was strongest 2 days after stopping and fell steadily up to 1 year. Only a brain-wave signal to cocaine pictures was higher at 1 and 6 months.",
+      "mirror": "You're a few weeks off coke and wonder if the pull ever fades.",
+      "basis": {
+        "design": "lab study comparing groups off cocaine for different lengths of time",
+        "who": "adults addicted to cocaine, off for 2 days, 1 week, 1 month, 6 months or 1 year",
+        "n": "76 people in 5 groups: 19 off 2 days, 20 off 1 week, 15 off 1 month, 12 off 6 months, 10 off 1 year",
+        "where": "New York, USA",
+        "when": "2007–2012",
+        "measured": "self-rated craving, and 'wanting' after seeing cocaine pictures, plus a brain-wave (EEG) response to the same pictures"
+      },
+      "caveat": "Different people at each time point, not the same people followed. Small groups. Whether the brain signal leads to slips was not tested.",
+      "ref": {
+        "cite": "Parvaz MA, Moeller SJ, Goldstein RZ (2016). Incubation of cue-induced craving in adults addicted to cocaine measured by electroencephalography. JAMA Psychiatry.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5206796/",
+        "pmid": "27603142",
+        "fetched": true,
+        "quote": "the subjective assessment of baseline craving … and cue-induced liking … and wanting … of cocaine showed a linear decline from 2 days to 1 year of abstinence"
+      }
+    },
+    {
+      "group": "quit",
+      "top": true,
+      "existing": true,
+      "big": "3×",
+      "line": "Rewards for clean urine tests plus the community reinforcement approach (help building a life without cocaine) gave about 3× the odds of being clean at the longest follow-up.",
+      "mirror": "You respond better to rewards and structure than to willpower talks.",
+      "basis": {
+        "design": "network meta-analysis of 50 randomised trials",
+        "who": "adults with cocaine and/or amphetamine addiction",
+        "n": "8 trials tested this combination, with 19 to 50 people in that group each (6,942 people in all 50 trials)",
+        "where": "the 8 trials of this method: US and Spain",
+        "when": "published 2018",
+        "measured": "share clean on urine tests, compared with usual care, at the end of treatment, at 12 weeks and at the longest follow-up after treatment"
+      },
+      "caveat": "Odds, not chance. At the end of treatment it was 2.8×; at 12 weeks 7.6×, but that estimate is very unsure (2× to 28×). Few, small trials.",
+      "ref": {
+        "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6306153/",
+        "pmid": "30586362",
+        "fetched": true,
+        "quote": "and also at 12 weeks (OR 7.60, 95% CI 2.03-28.37, P = 0.002) and at longest follow-up (OR 3.08, 95% CI 1.33-7.17, P = 0.008)"
+      }
+    },
+    {
+      "group": "quit",
       "big": "2×",
       "line": "Adding counselling or a reward program made people about twice as likely to be fully clean at the end of treatment.",
-      "mirror": "Men deciding whether to get help or go it alone.",
+      "mirror": "You're deciding whether to get help or go it alone.",
       "basis": {
         "design": "Cochrane review of 52 randomised trials",
         "who": "adults misusing cocaine or amphetamines",
-        "n": "6,923 (this result: 8 studies, 1,241 people)",
+        "n": "1,241 people in 8 trials (of 52 trials in the review)",
         "where": "mostly USA",
         "when": "searched to November 2015; published 2016",
         "measured": "continuous abstinence at the end of treatment, compared with no added treatment"
@@ -201,59 +253,14 @@
     },
     {
       "group": "quit",
-      "big": "Months 1–6",
-      "line": "Felt craving drops steadily after quitting, but the brain reacts most to cocaine cues at 1 to 6 months off.",
-      "mirror": "Men a few months clean who feel safe and drop their guard.",
-      "basis": {
-        "design": "lab study comparing groups off cocaine for different lengths of time",
-        "who": "adults addicted to cocaine, off for 2 days, 1 week, 1 month, 6 months or 1 year",
-        "n": "76",
-        "where": "New York, USA",
-        "when": "2007–2012",
-        "measured": "brain-wave (EEG) response to cocaine pictures, and self-rated craving"
-      },
-      "caveat": "Different people at each time point, not the same people followed. A brain reaction is not a relapse; relapse was not measured.",
-      "ref": {
-        "cite": "Parvaz MA, Moeller SJ, Goldstein RZ (2016). Incubation of cue-induced craving in adults addicted to cocaine measured by electroencephalography. JAMA Psychiatry.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/27603142/",
-        "pmid": "27603142",
-        "fetched": true,
-        "quote": "the mean (SD) late positive potential amplitudes showed a parabolic trajectory that was higher at 1 (1.26 [1.36] µV) and 6 (1.17 [1.19] µV) months of abstinence"
-      }
-    },
-    {
       "existing": true,
-      "group": "quit",
-      "big": "7.6×",
-      "line": "Rewards for clean urine tests, plus help building a life without cocaine, gave 7.6× the odds of being clean at 12 weeks.",
-      "mirror": "Men who respond to rewards and structure more than to willpower talks.",
-      "basis": {
-        "design": "network meta-analysis of 50 randomised trials",
-        "who": "adults with cocaine and/or amphetamine addiction",
-        "n": "6,942",
-        "where": "several countries (not listed in the abstract)",
-        "when": "published 2018",
-        "measured": "share clean on urine tests, compared with usual care"
-      },
-      "caveat": "Odds, not chance. The range is wide (2.0 to 28.4) and falls to 3.1× at the longest follow-up. Includes amphetamine trials.",
-      "ref": {
-        "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/30586362/",
-        "pmid": "30586362",
-        "fetched": true,
-        "quote": "and also at 12 weeks (OR 7.60, 95% CI 2.03-28.37, P = 0.002) and at longest follow-up (OR 3.08, 95% CI 1.33-7.17, P = 0.008)"
-      }
-    },
-    {
-      "existing": true,
-      "group": "quit",
       "big": "Day 14–17",
       "line": "Two weeks off cocaine, people said they slept well, but sleep tests showed their sleep was at its worst.",
-      "mirror": "Men two weeks clean who feel fine but are tired and slow.",
+      "mirror": "You're two weeks off coke and sure you're sleeping fine.",
       "basis": {
         "design": "23-day inpatient lab study",
         "who": "chronic cocaine users",
-        "n": "12",
+        "n": "12 long-term users in a lab",
         "where": "New Haven, USA (Yale)",
         "when": "published 2006",
         "measured": "sleep by overnight brain-wave recording vs. their own ratings, plus alertness and learning"
@@ -269,13 +276,58 @@
     },
     {
       "group": "after",
+      "top": true,
+      "big": "1 year",
+      "line": "Users who cut cocaine by about 72% did a little better on thinking tests within a year. Those who stopped completely scored like non-users.",
+      "mirror": "You're worried cocaine left you permanently slower.",
+      "basis": {
+        "design": "cohort followed 1 year (Zurich Cocaine Cognition Study)",
+        "who": "cocaine users and people who never used stimulants",
+        "n": "19 users who cut down (those who stopped were some of them), 19 who used more, 19 the same, and 48 non-users",
+        "where": "Zurich, Switzerland",
+        "when": "published 2014",
+        "measured": "13 test scores (attention, working memory, memory, planning) at the start and after 1 year; use checked with hair tests"
+      },
+      "caveat": "Small groups of mostly moderate users. The study doesn't say exactly how many stopped. People who started young recovered working memory less well.",
+      "ref": {
+        "cite": "Vonmoos M, Hulka LM, Preller KH, et al. (2014). Cognitive impairment in cocaine users is drug-induced but partially reversible: evidence from a longitudinal study. Neuropsychopharmacology.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24651468/",
+        "pmid": "24651468",
+        "fetched": true,
+        "quote": "decreased cocaine use (-72%) was linked to small cognitive improvements in all four domains. Importantly, users who ceased taking cocaine seemed to recover completely"
+      }
+    },
+    {
+      "group": "after",
+      "big": "28 days",
+      "line": "In men who stopped cocaine, low mood and craving were worst on the first day and eased steadily over 28 days.",
+      "mirror": "You're in your first days off coke and feel low.",
+      "basis": {
+        "design": "controlled residential study",
+        "who": "male cocaine addicts, mostly injecting, living in a research unit, vs. non-addicted men",
+        "n": "12 users, 10 non-users for comparison",
+        "where": "USA (National Institute on Drug Abuse unit, Maryland)",
+        "when": "published 1990",
+        "measured": "mood, craving and sleep ratings over 28 days"
+      },
+      "caveat": "Tiny, old study of mostly injecting users, with no cocaine around. Their mood was still worse than the controls'.",
+      "ref": {
+        "cite": "Weddington WW, Brown BS, Haertzen CA, et al. (1990). Changes in mood, craving, and sleep during short-term abstinence reported by male cocaine addicts. Archives of General Psychiatry.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/2393345/",
+        "pmid": "2393345",
+        "fetched": true,
+        "quote": "Addicts' mood-distress scores and craving for cocaine were greatest at admission and decreased gradually and steadily during the 28-day study."
+      }
+    },
+    {
+      "group": "after",
       "big": "4 of 5",
       "line": "Twelve years after treatment, men who stayed off cocaine had fewer mental-health symptoms than men still using, on 4 of 5 measures.",
-      "mirror": "Men who wonder if the anxiety and low mood will ever lift.",
+      "mirror": "You wonder if the anxiety and low mood will ever lift.",
       "basis": {
         "design": "cohort followed 12 years",
         "who": "men (veterans) admitted to treatment for cocaine dependence in 1988–1989",
-        "n": "266 interviewed at 12 years",
+        "n": "138 men off cocaine 5+ years, compared with the rest (266 in all)",
         "where": "USA (UCLA researchers)",
         "when": "1988–89 to 2002–03",
         "measured": "a 58-item checklist of mental-health symptoms at intake and at 1, 2 and 12 years"
@@ -291,35 +343,13 @@
     },
     {
       "group": "after",
-      "big": "1 year",
-      "line": "Users who stopped cocaine reached the same thinking scores as non-users within a year. Those who cut use by 72% improved a little.",
-      "mirror": "Men worried cocaine left them permanently slower.",
-      "basis": {
-        "design": "cohort followed 1 year (Zurich Cocaine Cognition Study)",
-        "who": "cocaine users and people who never used stimulants",
-        "n": "57 users (19 used more, 19 less, 19 the same) and 48 controls",
-        "where": "Zurich, Switzerland",
-        "when": "published 2014",
-        "measured": "13 test scores (attention, working memory, memory, planning) at the start and after 1 year; use checked with hair tests"
-      },
-      "caveat": "Small groups of mostly moderate users. People who started young recovered working memory less well.",
-      "ref": {
-        "cite": "Vonmoos M, Hulka LM, Preller KH, et al. (2014). Cognitive impairment in cocaine users is drug-induced but partially reversible: evidence from a longitudinal study. Neuropsychopharmacology.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/24651468/",
-        "pmid": "24651468",
-        "fetched": true,
-        "quote": "cognitive impairment might be partially cocaine-induced but also reversible within 1 year, at least after moderate exposure."
-      }
-    },
-    {
-      "group": "after",
       "big": "5 months",
       "line": "Thinking problems tend to stay through the first months off cocaine, then may fade after about 5 months clean.",
-      "mirror": "Men 2–3 months clean who still feel foggy.",
+      "mirror": "You're two or three months off coke and still feel foggy.",
       "basis": {
         "design": "meta-analysis of 46 studies",
         "who": "people with cocaine abuse or dependence vs. healthy comparison groups",
-        "n": "not given in the abstract",
+        "n": "46 studies; the review's summary doesn't say how many people took part",
         "where": "several countries",
         "when": "published 2014",
         "measured": "test scores by time off: still testing positive, up to 12 weeks, 20 weeks or more"
@@ -331,28 +361,6 @@
         "pmid": "25187977",
         "fetched": true,
         "quote": "Cognitive dysfunctions remain stable during the first months of abstinence and may abate after 5 months of sobriety."
-      }
-    },
-    {
-      "group": "after",
-      "big": "28 days",
-      "line": "In men who stopped cocaine, low mood and craving were worst on the first day and eased steadily over 28 days.",
-      "mirror": "Men in their first days off who feel low.",
-      "basis": {
-        "design": "controlled residential study",
-        "who": "male cocaine addicts, mostly injecting, living in a research unit, vs. non-addicted men",
-        "n": "12 users, 10 controls",
-        "where": "USA (National Institute on Drug Abuse unit, Maryland)",
-        "when": "published 1990",
-        "measured": "mood, craving and sleep ratings over 28 days"
-      },
-      "caveat": "Tiny, old study of mostly injecting users, with no cocaine around. Their mood was still worse than the controls'.",
-      "ref": {
-        "cite": "Weddington WW, Brown BS, Haertzen CA, et al. (1990). Changes in mood, craving, and sleep during short-term abstinence reported by male cocaine addicts. Archives of General Psychiatry.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/2393345/",
-        "pmid": "2393345",
-        "fetched": true,
-        "quote": "Addicts' mood-distress scores and craving for cocaine were greatest at admission and decreased gradually and steadily during the 28-day study."
       }
     }
   ],
@@ -375,7 +383,7 @@
     },
     {
       "claim": "Share who relapse in the first 1–3 months after cocaine treatment.",
-      "why": "No fetched abstract gave a clear percentage (Sinha 2006 reports time to relapse, but no rates). Parvaz 2016's 1–6 month window is used instead."
+      "why": "No fetched abstract gave a clear percentage (Sinha 2006 reports time to relapse, but no rates). Parvaz 2016 (how craving changes over the first year off) is used instead."
     },
     {
       "claim": "How many quit attempts cocaine users usually make.",

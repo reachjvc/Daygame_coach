@@ -10,7 +10,7 @@
   --paper: #ffffff;
   --ink: #161414;
   --ink-2: #4b4646;
-  --muted: #7a7372;
+  --muted: #6a6362;
   --rule: #1d1a1a;
   --hair: #d9d4d2;
   --panel: #f0eeec;
@@ -57,9 +57,9 @@ button { font: inherit; color: inherit; }
 .top .name { font-family: var(--f-display); font-weight: 800; font-stretch: 75%; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
 .tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1 1 420px; }
 .tabs::-webkit-scrollbar { display: none; }
-.tab { border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 5px 13px; font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
+.tab { text-decoration: none; color: inherit; display: inline-block; border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 5px 13px; font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
 .tab:hover { border-color: var(--ink-2); }
-.tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.tab[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .ctrls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .ctrls .eyebrow { margin-right: -6px; }
 .seg { display: inline-flex; border: 1.5px solid var(--lab); border-radius: 8px; overflow: hidden; flex: none; }
@@ -212,13 +212,20 @@ details.src a { color: var(--lab); word-break: break-word; }
 .A-basis { border: 1.5px solid var(--rule); background: var(--panel); padding: 12px 14px; margin-top: 6px; }
 .B-basis { max-width: 46ch; text-align: left; border-top: 1px solid var(--hair); padding-top: 10px; margin-top: 4px; }
 .C-basis { background: var(--panel); padding: 16px 18px; align-self: end; }
-.mir { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--red); }
+.gtag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--red); }
+.mir { font-family: var(--f-display); font-weight: 800; font-stretch: 85%; font-size: 19px; line-height: 1.2; color: var(--ink); text-wrap: pretty; }
+details.why summary, details.more summary { cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--lab); }
+details.why { display: grid; gap: 4px; }
+details.why[open] summary { margin-bottom: 4px; }
+details.more { margin-top: 14px; }
+details.more > summary { font-family: var(--f-display); font-weight: 800; font-stretch: 85%; font-size: 17px; color: var(--ink); padding: 8px 0; border-top: 1.5px solid var(--rule); }
+details.more[open] > summary { margin-bottom: 8px; }
 .sl { font-size: 16px; font-weight: 600; line-height: 1.35; }
 .sb { font-size: 13.5px; color: var(--ink-2); line-height: 1.4; }
 .A-gh, .B-gh, .C-gh { font-family: var(--f-display); font-weight: 800; font-stretch: 85%; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; color: var(--red); margin-top: 6px; }
-.A-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid var(--rule); }
+.A-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 2px solid var(--rule); }
 .A-stats .st { padding: 12px 16px 14px 0; display: grid; gap: 5px; align-content: start; border-bottom: 1px solid var(--hair); }
-.A-stats .st:not(:nth-child(3n + 1)) { border-left: 1px solid var(--hair); padding-left: 16px; }
+.A-stats .st:nth-child(2n) { border-left: 1px solid var(--hair); padding-left: 16px; }
 .A-stats .big, .B-stat .big, .C-stat .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; line-height: 1; }
 .A-stats .big { font-size: 40px; }
 .B-stats { display: grid; gap: 12px; }
@@ -291,6 +298,7 @@ details.src a { color: var(--lab); word-break: break-word; }
 .wc-tr .g { position: absolute; top: -5px; bottom: -6px; width: 1px; background: var(--hair); }
 .wc-bar { position: absolute; top: 6px; height: 10px; border-radius: 5px; background: var(--ink-2); min-width: 6px; }
 .wc-bar.danger { background: var(--danger); }
+.wc-bar.change { background: color-mix(in srgb, var(--muted) 45%, transparent); }
 .wc-bar.trigger { background: transparent; border: 2px solid var(--watch); }
 .wc-bar.fall { background: linear-gradient(to right, var(--ink-2) var(--pk, 0%), color-mix(in srgb, var(--ink-2) 22%, transparent)); }
 .wc-bar.trigger.fall { background: transparent; border-image: none; }
@@ -307,6 +315,7 @@ details.src a { color: var(--lab); word-break: break-word; }
 .wc-key { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); align-items: center; }
 .wc-key .sw { display: inline-block; width: 26px; height: 10px; border-radius: 5px; background: var(--ink-2); margin-right: 6px; vertical-align: -1px; }
 .wc-key .sw.danger { background: var(--danger); }
+.wc-key .sw.change { background: color-mix(in srgb, var(--muted) 45%, transparent); }
 .wc-key .sw.trigger { background: transparent; border: 2px solid var(--watch); }
 .wc-key .sw.open { -webkit-mask-image: linear-gradient(to right, #000 30%, transparent); mask-image: linear-gradient(to right, #000 30%, transparent); }
 .wc-key .pkd { display: inline-block; width: 13px; height: 13px; border-radius: 50%; border: 3px solid var(--ink); margin-right: 6px; vertical-align: -2px; }
@@ -320,7 +329,7 @@ details.src a { color: var(--lab); word-break: break-word; }
 /* ---------- narrow page (a phone, or the Phone button) ---------- */
 @container page (max-width: 760px) {
   .A-head, .C-head, .C-in, .A-stages, .pinlist, .A-stats, .C-steps .two { grid-template-columns: minmax(0, 1fr); }
-  .A-stats .st:not(:nth-child(3n + 1)) { border-left: 0; padding-left: 0; }
+  .A-stats .st:nth-child(2n) { border-left: 0; padding-left: 0; }
   .C-stat { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .ptable thead { display: none; }
   .ptable, .ptable tbody, .ptable tr, .ptable td { display: block; width: 100% !important; }
@@ -370,7 +379,7 @@ details.src a { color: var(--lab); word-break: break-word; }
 
 <header class="top"><div class="wrap">
   <div class="name">One-pager lab</div>
-  <nav class="tabs" role="tablist" aria-label="Addiction" id="tabs"></nav>
+  <nav class="tabs" aria-label="Addiction" id="tabs"></nav>
   <div class="ctrls">
     <span class="eyebrow">Layout</span>
     <div class="seg" id="laySeg"><button type="button" data-l="A">A Poster</button><button type="button" data-l="B">B Story</button><button type="button" data-l="C">C Guide</button></div>
@@ -381,14 +390,15 @@ details.src a { color: var(--lab); word-break: break-word; }
 
 <section class="lab"><div class="wrap">
   <div>
-    <div class="eyebrow">Round 4 &middot; 4 Nov 2026</div>
-    <h2>More numbers, each with what it’s based on. A real plan per addiction.</h2>
+    <div class="eyebrow">Round 5 &middot; 4 Nov 2026 &middot; after a senior review</div>
+    <h2>Every number says what it’s based on. Four up front, the rest one tap away.</h2>
     <ul>
-      <li><b>Is this you?</b> and <b>How quitting goes</b>: 14 to 17 numbers per addiction. Each says who was counted, how many, where and when, and what it doesn’t mean.</li>
-      <li>The big number now says what it’s based on. “90.6% get out” was a lifetime projection, and “out” means no longer hooked, not never drinking again. It now says so.</li>
-      <li>The plan has its own section. Your five steps stay; each one gets things to do for that addiction, and the evidence where there is some.</li>
-      <li>Removed: 2.6 million deaths.</li>
-      <li>Layouts: <b>A Poster</b>, <b>B Story</b> (phone first), <b>C Guide</b>. Switch all at the top, or one section from its blue bar. <b>Lock</b> a section when it works.</li>
+      <li>Each number now opens with a line about you (“You only do lines on nights out and think you’re safe.”), then the number, then what it’s based on. What it counted and what it doesn’t mean are one tap away.</li>
+      <li>Four numbers show in each number section; the rest sit under “More numbers”. The page is about a third shorter on a phone.</li>
+      <li>Fixed after the review: the coke line about months 1–6 (felt craving keeps falling; only a lab brain signal peaked), the porn headline (no <i>measurable</i> withdrawal, in mostly non-hooked students), sample sizes that now count the people behind each number, and the cautious estimate first when a study gave several.</li>
+      <li>The “get free” numbers now say they’re projections and that the real share is likely lower. The Sugar page now leads with junk food and sugary drinks; binge-eating numbers fold under “If it’s binges”.</li>
+      <li>Your plan text: step 1 now says “the table above” (the beliefs come first now), and step 2 says what the habit gives you per page (“gives you confidence” for coke, “keeps you company” for the phone). Say if you want your exact words back.</li>
+      <li>Layouts: <b>A Poster</b>, <b>B Story</b> (phone first), <b>C Guide</b>. <b>Lock</b> a section when it works.</li>
     </ul>
   </div>
   <div class="labbox">
@@ -414,8 +424,8 @@ const SECS = [
   ["timeline", "Timeline"],
   ["beliefs", "Beliefs"],
   ["plan", "Plan"],
-  ["outlook", "How quitting goes"],
   ["story", "Your story"],
+  ["outlook", "How quitting goes"],
   ["others", "Others"],
   ["sources", "Sources"],
 ];
@@ -438,7 +448,8 @@ if (!LAYOUTS[G]) G = "A";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const refs = ns => ns && ns.length ? `<button type="button" class="ref${ns.some(n => page.unchecked.includes(n)) ? " unc" : ""}" data-refs="${ns.join(",")}">[${ns.join(",")}]</button>` : "";
+const refs = ns => ns && ns.length ? `<button type="button" class="ref${ns.some(n => page.unchecked.includes(n)) ? " unc" : ""}" data-refs="${ns.join(",")}" aria-label="Source ${ns.join(", ")}">[${ns.join(",")}]</button>` : "";
+/* fill() and the plan text put raw HTML on the page: safe only because they come from the repo, never from the db. */
 const fill = s => s.replace(/\{(\w+)\}/g, (_, k) => page.subs[k] || k);
 const goal = () => page.mode === "reshape" ? "Goal: cut down, not zero" : "Goal: stop fully";
 const layOf = sec => (LOCKS[sec] && LOCKS[sec].layout) || LOCAL[sec] || G;
@@ -508,14 +519,14 @@ function tlChart() {
     return `<span class="wc-pin k-${m.kind}" style="left:${px}%;top:${lane * 24}px" title="${esc(m.when)}">${num.get(m)}</span>`;
   });
   const rows = W.map(w => {
-    const l = x(w.s), r = x(w.e), cls = [w.kind === "danger" ? "danger" : w.kind === "trigger" ? "trigger" : "", w.open ? "open" : "", w.fall && w.kind !== "trigger" ? "fall" : ""].join(" ");
+    const l = x(w.s), r = x(w.e), cls = [w.kind === "danger" ? "danger" : w.kind === "trigger" ? "trigger" : w.kind === "change" ? "change" : "", w.open ? "open" : "", w.fall && w.kind !== "trigger" ? "fall" : ""].join(" ");
     const pkp = w.pk != null && r > l ? ((x(w.pk) - l) / (r - l) * 100).toFixed(1) + "%" : "0%";
     const pk = w.pk != null && w.kind !== "trigger" ? `<span class="wc-pk ${w.kind === "danger" ? "danger" : ""}" style="left:${x(w.pk)}%"></span>` : "";
     return `<div class="wc-row"><div class="wc-lbl"><b>${esc(w.label)}</b><span>${esc(w.when)} ${refs(w.n)}</span></div><div class="wc-tr" title="${esc(w.label + ": " + w.when)}">${grid}<span class="wc-bar ${cls}" style="left:${l}%;width:${Math.max(0.8, r - l)}%;--pk:${pkp}"></span>${pk}</div></div>`;
   }).join("");
   const axis = `<div class="wc-row wc-axis"><div class="wc-lbl"></div><div class="wc-tr">${ticks.map(([t, lab, minor]) => `<span class="t${minor ? " minor" : ""}${x(t) > 90 ? " end" : ""}" style="left:${x(t)}%">${lab}</span>`).join("")}</div></div>`;
-  const pinRow = `<div class="wc-row wc-pins"><div class="wc-lbl"><span>Moments, numbered below</span></div><div class="wc-tr" style="--h:${lanes.length * 24}px">${pins.join("")}</div></div>`;
-  const key = `<div class="wc-key"><span><i class="sw"></i>When you may feel it</span><span><i class="pkd"></i>Worst around here</span><span><i class="sw open"></i>Fades out: end not measured</span><span><i class="sw trigger"></i>Triggers can still pull</span>${W.some(w => w.kind === "danger") ? `<span><i class="sw danger"></i>Danger</span>` : ""}</div>`;
+  const pinRow = `<div class="wc-row wc-pins"><div class="wc-lbl"><span>Moments, numbered below</span></div><div class="wc-tr" style="--h:${lanes.length * 24}px" role="img" aria-label="Numbered moments on the time line, listed below the chart">${pins.join("")}</div></div>`;
+  const key = `<div class="wc-key"><span><i class="sw"></i>When you may feel it</span><span><i class="pkd"></i>Worst around here</span><span><i class="sw open"></i>Fades out: end not measured</span><span><i class="sw trigger"></i>Triggers can still pull</span>${W.some(w => w.kind === "change") ? `<span><i class="sw change"></i>A change in your body, not a feeling</span>` : ""}${W.some(w => w.kind === "danger") ? `<span><i class="sw danger"></i>Danger</span>` : ""}</div>`;
   const list = `<ol class="pinlist">${page.milestones.map(m => `<li class="k-${m.kind}${m.atH == null ? " untimed" : ""}"><span class="n">${num.get(m)}</span><span><b>${esc(m.when)}.</b> ${esc(m.text)} ${refs(m.n)}</span></li>`).join("")}</ol>`;
   return `${key}<div class="wc" role="group" aria-label="When each thing tends to happen">${pinRow}${rows}${axis}</div><p class="note">Bars show when a thing tends to show up, not how strong it is. Time runs faster to the right: day 1 to week 1 takes as much room as month 1 to month 6.</p>${list}`;
 }
@@ -559,9 +570,9 @@ const R = {
     C: () => `<div class="C-in"><div class="C-side"><span class="no">${no("beliefs")}</span><h2>Old belief, new belief</h2><p>The thoughts that keep you stuck, each with what the evidence says.</p></div><div class="C-main"><div class="C-tiles">${page.beliefs.map((b, i) => `<div class="C-tile${isCut(i) ? " cut" : ""}"><p class="was"><span>“${esc(b.current)}”</span>${rowMarks(i)}</p><p class="now">${esc(b.new)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>`).join("")}</div></div></div>`,
   },
   you: {
-    A: () => statsA("you", ["you", "start", "cost"]),
-    B: () => statsB(["you", "start", "cost"], "Is this you?", "Numbers you might see yourself in. Each one says what it’s based on."),
-    C: () => statsC("you", ["you", "start", "cost"], "Is this you?", "Numbers you might see yourself in. Each one says what it’s based on."),
+    A: () => statsA("you"),
+    B: () => statsB("you"),
+    C: () => statsC("you"),
   },
   plan: {
     A: () => `<div class="A-band"><div class="vl"><span>Plan</span></div><div class="bd"><h2>Five-step strategic plan</h2><table class="ptable"><thead><tr><th>The step</th><th>For ${esc(page.tab.toLowerCase())}</th></tr></thead><tbody>${planSteps().map(st => `<tr><td class="ps"><b class="pt"><i>${st.i}</i>${esc(st.title)}</b><span>${fill(st.text)}</span></td><td class="pd"><ul>${st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${st.proof}</td></tr>`).join("")}</tbody></table></div></div>`,
@@ -569,9 +580,9 @@ const R = {
     C: () => `<div class="C-in"><div class="C-side"><span class="no">${no("plan")}</span><h2>The plan</h2><p>Five steps. Each one with what to do for ${esc(page.tab.toLowerCase())}.</p></div><div class="C-main"><ol class="C-steps">${planSteps().map(st => `<li><div class="h"><span class="i">${st.i}</span><h3>${esc(st.title)}</h3></div><div class="two"><p class="t">${fill(st.text)}</p><div><ul>${st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${st.proof}</div></div></li>`).join("")}</ol></div></div>`,
   },
   outlook: {
-    A: () => statsA("outlook", ["quit", "after"]),
-    B: () => statsB(["quit", "after"], "How quitting goes", "What happens to people who stop, and what they get back."),
-    C: () => statsC("outlook", ["quit", "after"], "How quitting goes", "What happens to people who stop, and what they get back."),
+    A: () => statsA("outlook"),
+    B: () => statsB("outlook"),
+    C: () => statsC("outlook"),
   },
   story: {
     A: () => `<div class="A-blk exp"><h2 style="font-size:24px;font-weight:800;font-stretch:80%">My experience</h2>${expBox()}</div>`,
@@ -602,49 +613,74 @@ function planSteps() {
   });
 }
 const statsOf = groups => (page.stats || []).filter(x => groups.includes(x.group));
+const FOLDS = { binges: "If it’s binges" };
 function basisText(x) {
   const b = x.basis || {};
   return [b.design, [b.n, b.who].filter(Boolean).join(", "), [b.where, b.when].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
 }
-function statBody(x) {
-  return `<p class="sl">${esc(x.line)}</p><p class="sb"><b>Based on:</b> ${esc(basisText(x))}. ${refs(x.n)}</p>${x.basis && x.basis.measured ? `<p class="sb"><b>Counted:</b> ${esc(x.basis.measured)}</p>` : ""}${x.caveat ? `<p class="sb"><b>Keep in mind:</b> ${esc(x.caveat)}</p>` : ""}`;
+function statCard(x, lay) {
+  const b = x.basis || {};
+  const why = b.measured || x.caveat ? `<details class="why"><summary>What it counted, and what it doesn’t mean</summary>${b.measured ? `<p class="sb"><b>Counted:</b> ${esc(b.measured)}</p>` : ""}${x.caveat ? `<p class="sb"><b>Keep in mind:</b> ${esc(x.caveat)}</p>` : ""}</details>` : "";
+  const head = `<span class="gtag">${GROUPS[x.group]}</span>${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}`;
+  const body = `<p class="sl">${esc(x.line)}</p><p class="sb"><b>Based on:</b> ${esc(basisText(x))}. ${refs(x.n)}</p>${why}`;
+  if (lay === "C") return `<div class="C-stat"><div class="big">${esc(x.big)}</div><div>${head}${body}</div></div>`;
+  return `<div class="${lay === "A" ? "st" : "B-stat"}">${head}<div class="big">${esc(x.big)}</div>${body}</div>`;
 }
-const noStats = `<div class="ph"><span class="eyebrow">Coming</span>The numbers for this page are still being checked.</div>`;
-function statsA(sec, groups) {
-  const xs = statsOf(groups);
-  return `<div class="A-band"><div class="vl"><span>${sec === "you" ? "Is this you?" : "Quitting"}</span></div><div class="bd">${xs.length ? groups.filter(g => xs.some(x => x.group === g)).map(g => `<h3 class="A-gh">${GROUPS[g]}</h3><div class="A-stats">${xs.filter(x => x.group === g).map(x => `<div class="st">${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="big">${esc(x.big)}</div>${statBody(x)}</div>`).join("")}</div>`).join("") : noStats}</div></div>`;
+function statGrid(sec, lay) {
+  const xs = statsOf(sec === "you" ? ["you", "start", "cost"] : ["quit", "after"]);
+  if (!xs.length) return `<div class="ph"><span class="eyebrow">Coming</span>The numbers for this page are still being checked.</div>`;
+  let top = xs.filter(x => x.top);
+  if (!top.length) top = xs.slice(0, 4);
+  const rest = xs.filter(x => !top.includes(x)), box = lay === "A" ? "A-stats" : lay === "B" ? "B-stats" : "C-stats";
+  const fold = (label, ys) => ys.length ? `<details class="more"><summary>${esc(label)} (${ys.length})</summary><div class="${box}">${ys.map(x => statCard(x, lay)).join("")}</div></details>` : "";
+  const folds = Object.keys(FOLDS).map(f => fold(FOLDS[f], rest.filter(x => x.fold === f))).join("");
+  return `<div class="${box}">${top.map(x => statCard(x, lay)).join("")}</div>${fold("More numbers", rest.filter(x => !x.fold))}${folds}`;
 }
-function statsB(groups, title, intro) {
-  const xs = statsOf(groups);
-  return `<div class="B-in"><div class="B-kick">In numbers</div><h2>${esc(title)}</h2><p class="note">${esc(intro)}</p>${xs.length ? groups.filter(g => xs.some(x => x.group === g)).map(g => `<h3 class="B-gh">${GROUPS[g]}</h3><div class="B-stats">${xs.filter(x => x.group === g).map(x => `<div class="B-stat">${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="big">${esc(x.big)}</div>${statBody(x)}</div>`).join("")}</div>`).join("") : noStats}</div>`;
-}
-function statsC(sec, groups, title, intro) {
-  const xs = statsOf(groups);
-  return `<div class="C-in"><div class="C-side"><span class="no">${no(sec)}</span><h2>${esc(title)}</h2><p>${esc(intro)}</p></div><div class="C-main">${xs.length ? groups.filter(g => xs.some(x => x.group === g)).map(g => `<h3 class="C-gh">${GROUPS[g]}</h3><div class="C-stats">${xs.filter(x => x.group === g).map(x => `<div class="C-stat"><div class="big">${esc(x.big)}</div><div>${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}${statBody(x)}</div></div>`).join("")}</div>`).join("") : noStats}</div></div>`;
-}
+const STAT_COPY = {
+  you: ["Is this you?", "Numbers you might see yourself in. Each one says what it’s based on."],
+  outlook: ["How quitting goes", "What happens to people who stop, and what they get back."],
+};
+function statsA(sec) { const [t, i] = STAT_COPY[sec]; return `<div class="A-band"><div class="vl"><span>${sec === "you" ? "Is this you?" : "Quitting"}</span></div><div class="bd"><h2>${esc(t)}</h2><p class="note">${esc(i)}</p>${statGrid(sec, "A")}</div></div>`; }
+function statsB(sec) { const [t, i] = STAT_COPY[sec]; return `<div class="B-in"><div class="B-kick">In numbers</div><h2>${esc(t)}</h2><p class="note">${esc(i)}</p>${statGrid(sec, "B")}</div>`; }
+function statsC(sec) { const [t, i] = STAT_COPY[sec]; return `<div class="C-in"><div class="C-side"><span class="no">${no(sec)}</span><h2>${esc(t)}</h2><p>${esc(i)}</p></div><div class="C-main">${statGrid(sec, "C")}</div></div>`; }
 function expBox(quote) {
   const ta = `<textarea id="expText" placeholder="Write your own experience with ${esc(page.tab.toLowerCase())} here. It saves as you type.">${esc((EXP[page.id] || {}).text || "")}</textarea>`;
   return `<p class="note">In your words: what it was like at the start, the hardest day, what you told yourself, what finally worked.</p>${quote ? `<div class="B-quote">${ta}</div>` : ta}<div class="dbstate" id="expState"></div>`;
 }
 function srcBody() {
   const p = page;
-  return `${p.footer ? `<p class="safety"><b>If it gets bad</b><span>${esc(p.footer.text)} ${refs(p.footer.n)}</span></p>` : ""}<details class="src" id="srcBox"><summary>Sources (${p.sources.length})</summary><ol>${p.sources.map(s => `<li id="src-${s.n}">${esc(s.cite)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">link</a>` : ""}${s.fetched ? "" : `<span class="u">unchecked</span>`}</li>`).join("")}</ol></details>`;
+  return `${p.footer ? `<p class="safety"><b>If it gets bad</b><span>${esc(p.footer.text)} ${refs(p.footer.n)}</span></p>` : ""}<details class="src" id="srcBox"><summary>Sources (${p.sources.length})</summary><ol>${p.sources.map(s => `<li id="src-${s.n}">${esc(s.cite)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">link</a>` : ""}${s.story ? `<span class="u">quitters’ stories, not a study</span>` : s.fetched ? "" : `<span class="u">unchecked</span>`}</li>`).join("")}</ol></details>`;
 }
 
 function render() {
-  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.id === page.id));
+  document.querySelectorAll(".tab").forEach(t => t.dataset.id === page.id ? t.setAttribute("aria-current", "page") : t.removeAttribute("aria-current"));
   document.querySelectorAll("#laySeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === G));
   document.querySelectorAll("#viewSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === VIEW));
   const pg = $("#page");
   pg.classList.toggle("phone", VIEW === "phone");
-  const srcOpen = $("#srcBox") && $("#srcBox").open;
+  const srcOpen = $("#srcBox") && $("#srcBox").open, refocus = focusKey(document.activeElement);
   pg.innerHTML = SECS.map(([sec]) => {
     const lay = layOf(sec);
     return `<section class="sec L-${lay}${LOCKS[sec] ? " locked" : ""}" data-sec="${sec}">${labBar(sec, lay)}${R[sec][lay](formOf(lay))}</section>`;
   }).join("");
   if (srcOpen) $("#srcBox").open = true;
+  const back = refocus && document.querySelector(refocus);
+  if (back) back.focus({ preventScroll: true });
   const ls = SECS.filter(([s]) => LOCKS[s]).map(([s, name]) => `<b>${esc(name)}</b> (${LOCKS[s].layout}${s === "timeline" && LOCKS[s].form ? ", " + FORMS[LOCKS[s].form] : ""})`);
   $("#lockedList").innerHTML = ls.length ? ls.join(" &middot; ") : "Nothing locked yet.";
+}
+
+/* a selector for the focused control that still finds it after the page is rebuilt (Lock turns into Unlock and back) */
+function focusKey(a) {
+  if (!a || !a.closest || !a.closest("#page")) return null;
+  const d = a.dataset;
+  if (d.sl) return `[data-sl="${d.sl}"][data-sec="${d.sec}"]`;
+  if (d.sf) return `[data-sf="${d.sf}"]`;
+  if (d.lock) return `[data-unlock="${d.lock}"]`;
+  if (d.unlock) return `[data-lock="${d.unlock}"]`;
+  const k = a.closest("[data-key]");
+  if (k && d.v) return `[data-key="${k.dataset.key}"] .mk[data-v="${d.v}"]`;
+  return null;
 }
 
 function show(id) {
@@ -658,8 +694,6 @@ function save(coll, key, body) {
 }
 
 document.addEventListener("click", e => {
-  const tab = e.target.closest(".tab");
-  if (tab) { location.hash = SLUG[tab.dataset.id]; return; }
   const gl = e.target.closest("#laySeg button");
   if (gl) { G = gl.dataset.l; keep("opLayout", G); Object.keys(LOCAL).forEach(k => delete LOCAL[k]); delete LOCAL_FORM.timeline; render(); return; }
   const vw = e.target.closest("#viewSeg button");
@@ -718,7 +752,7 @@ document.addEventListener("change", e => {
   }
 });
 
-$("#tabs").innerHTML = DATA.pages.map(p => `<button type="button" role="tab" class="tab" data-id="${p.id}">${esc(p.tab)}</button>`).join("");
+$("#tabs").innerHTML = DATA.pages.map(p => `<a class="tab" href="#${SLUG[p.id]}" data-id="${p.id}">${esc(p.tab)}</a>`).join("");
 show(location.hash.slice(1));
 window.addEventListener("hashchange", () => show(location.hash.slice(1)));
 
@@ -733,16 +767,16 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
   const typing = () => { const a = document.activeElement; return a && (a.id === "expText" || a.id === "genNote" || (a.id || "").startsWith("note-")); };
   const done = () => { ready = true; clearTimeout(timer); st.textContent = "Marks, locks and notes save automatically."; };
   db.collection("marks").onSnapshot(s => {
-    const next = {}; s.docs.forEach(x => { next[x.id] = x.data() || {}; }); MARKS = next; done();
+    const next = Object.create(null); s.docs.forEach(x => { next[x.id] = x.data() || {}; }); MARKS = next; done();
     if (MARKS.general && document.activeElement.id !== "genNote") $("#genNote").value = MARKS.general.note || "";
     if (!typing()) render();
   }, onErr);
   db.collection("locks").onSnapshot(s => {
-    const next = {}; s.docs.forEach(x => { const d = x.data() || {}; if (LAYOUTS[d.layout]) next[x.id] = d; }); LOCKS = next; done();
+    const next = Object.create(null); s.docs.forEach(x => { const d = x.data() || {}; if (LAYOUTS[d.layout]) next[x.id] = FORMS[d.form] ? { layout: d.layout, form: d.form } : { layout: d.layout }; }); LOCKS = next; done();
     if (!typing()) render();
   }, onErr);
   db.collection("experience").onSnapshot(s => {
-    const next = {}; s.docs.forEach(x => { next[x.id] = x.data() || {}; }); EXP = next;
+    const next = Object.create(null); s.docs.forEach(x => { next[x.id] = x.data() || {}; }); EXP = next;
     if (!typing()) render();
   }, onErr);
 })();

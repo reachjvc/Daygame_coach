@@ -78,8 +78,27 @@ for page in tpl["pages"]:
         if h:
             page["hero"].update(basedOn=h["basedOn"], caveat=h.get("caveat", ""))
             page["hero"]["n"] = sorted(set(page["hero"]["n"] + num([inline(h["ref"])], "hero basis")))
+    for o in out:
+        if not o["url"].startswith("http"):
+            # the repo's own summary of quitters' accounts: not a study, and its link only works inside the repo
+            o.update(url="", story=True, cite="Quitters’ own accounts (videos and posts), summarised for this project.")
+        o.pop("supports", None)
     page["sources"] = out
-    page["unchecked"] = [o["n"] for o in out if not o["fetched"]]
+    page["unchecked"] = [o["n"] for o in out if not o["fetched"] and not o.get("story")]
+    page.pop("numbers", None)
+    for x in page.get("stats", []):
+        x.pop("ref", None)
+        for field in ["line", "mirror", "caveat"] + [f"basis.{k}" for k in x.get("basis", {})]:
+            v = x["basis"][field[6:]] if field.startswith("basis.") else x.get(field, "")
+            if re.search(r"fetched|not given|our sum|in the abstract", str(v), re.I):
+                problems.append(f"{page['id']} stat {x['big']}: research note in {field}: {v[:60]}")
+    for w in page.get("windows", []):
+        if w["kind"] not in ("feel", "danger", "trigger", "change"):
+            problems.append(f"{page['id']} window {w['label']}: unknown kind {w['kind']}")
+        if not w["s"] <= w.get("pk", w["s"]) <= w["e"]:
+            problems.append(f"{page['id']} window {w['label']}: needs start <= peak <= end")
+        if w["kind"] == "trigger" and (w.get("fall") or w.get("pk") is not None):
+            problems.append(f"{page['id']} window {w['label']}: a trigger row shows when, never how strong")
 
 community = REPO / "community" / "leaves-stages.json"
 tpl["leaves"] = None
@@ -94,3 +113,4 @@ dest.write_text(html)
 print(f"{len(tpl['pages'])} pages, {len(html)//1024} KB -> {dest}")
 for p in problems:
     print("PROBLEM:", p)
+sys.exit(1 if problems else 0)

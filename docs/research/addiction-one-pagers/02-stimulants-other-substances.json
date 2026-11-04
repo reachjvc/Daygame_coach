@@ -396,7 +396,7 @@
     "markers": [
       { "atH": 12, "kind": "danger", "label": "Suicidal thinking can rise as the drug wears off", "refs": ["r3"] },
       { "atH": 24, "kind": "peak", "label": "The crash: 12–24 hours of sleepiness and irritability", "refs": ["r3"] },
-      { "atH": 720, "kind": "trap", "label": "Months 1–6: the craving you feel keeps falling, but people, places and things around coke can still hit hard (brain reaction to cues is highest then)", "refs": ["r4"] },
+      { "atH": 720, "kind": "trap", "label": "Months 1–6: the craving you feel keeps falling; in a lab, the brain still reacted most to coke pictures then (whether that matters for slips is untested)", "refs": ["r4"] },
       { "atH": 360, "kind": "trap", "label": "Days 14–17: measured sleep at its worst while people rate it at its best (12 users)", "refs": ["r10"] }
     ],
     "beliefs": [

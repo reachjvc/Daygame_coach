@@ -3,13 +3,14 @@
   "stats": [
     {
       "group": "you",
+      "top": true,
       "big": "1 in 7",
-      "line": "About 1 in 7 Americans aged 18 to 25 had a drinking problem a doctor could diagnose in the past year.",
-      "mirror": "Young guy who drinks most weekends and wonders if it's a problem",
+      "line": "About 1 in 7 Americans aged 18 to 25 met the doctors' checklist for a drinking problem in the past year.",
+      "mirror": "You're under 26, drink most weekends, and wonder if it's a problem.",
       "basis": {
         "design": "national household survey (NSDUH), figures published by NIAAA",
         "who": "people aged 18 to 25",
-        "n": "not in fetched text",
+        "n": "The survey interviews about 70,000 people aged 12 and up each year; NIAAA doesn't say how many were aged 18 to 25",
         "where": "US",
         "when": "2024",
         "measured": "Survey answers scored against the 11 signs of alcohol use disorder (DSM-5). Two or more signs in the past year counts, from mild to severe. College students 14.5%, others 15.3%."
@@ -24,35 +25,15 @@
     },
     {
       "group": "you",
-      "big": "1 in 4",
-      "line": "About 1 in 4 American men had 5 or more drinks in one sitting at least once in the past month.",
-      "mirror": "Has 5+ beers on a night out most months",
-      "basis": {
-        "design": "national household survey (NSDUH), figures published by NIAAA",
-        "who": "men aged 18 and older",
-        "n": "not in fetched text",
-        "where": "US",
-        "when": "2024",
-        "measured": "Binge drinking: 5 or more drinks on the same occasion (4 for women) on at least one day in the past 30 days. NIAAA's young-adults page gives 26.7% for ages 18 to 25."
-      },
-      "caveat": "One such night in a month is enough to count. It says nothing about how often, or whether it is a problem.",
-      "ref": {
-        "cite": "National Institute on Alcohol Abuse and Alcoholism (2025). Alcohol Use in the United States: Age Groups and Demographic Characteristics (2024 NSDUH data). NIAAA.",
-        "url": "https://www.niaaa.nih.gov/alcohols-effects-health/alcohol-topics/alcohol-facts-and-statistics/alcohol-use-united-states-age-groups-and-demographic-characteristics",
-        "fetched": true,
-        "quote": "reported binge drinking in the past month … 31.8 million men ages 18 and older (24.9% in this age group)"
-      }
-    },
-    {
-      "group": "you",
+      "top": true,
       "existing": true,
       "big": "90%",
       "line": "9 in 10 Americans who drink too much, mostly by binging, aren't dependent. Even binging 10+ times a month, over two-thirds aren't.",
-      "mirror": "Drinks hard on weekends, sure he's not an alcoholic",
+      "mirror": "You drink hard on weekends and are sure you're not an alcoholic.",
       "basis": {
         "design": "national household survey (NSDUH), pooled 3 years",
         "who": "adults 18+ who drank in the past year",
-        "n": "138,100 adults",
+        "n": "About 54,100 'excessive drinkers' (of 138,100 adults surveyed)",
         "where": "US",
         "when": "2009–2011",
         "measured": "Share of 'excessive drinkers' who met DSM-IV dependence (3 of 7 signs in a year). Excessive = binge, heavy (15+ drinks a week for men), any drinking under 21, or while pregnant. Dependence was 4.3% at 1–2 binges a month, 29.8% at 10+."
@@ -67,14 +48,36 @@
       }
     },
     {
+      "group": "you",
+      "big": "1 in 4",
+      "line": "About 1 in 4 American men had 5 or more drinks in one sitting at least once in the past month.",
+      "mirror": "You have five or more drinks on a big night out.",
+      "basis": {
+        "design": "national household survey (NSDUH), figures published by NIAAA",
+        "who": "men aged 18 and older",
+        "n": "The survey interviews about 70,000 people aged 12 and up each year; NIAAA doesn't say how many were men",
+        "where": "US",
+        "when": "2024",
+        "measured": "Binge drinking: 5 or more drinks on the same occasion (4 for women) on at least one day in the past 30 days. NIAAA's young-adults page gives 26.7% for ages 18 to 25."
+      },
+      "caveat": "One such night in a month is enough to count. It says nothing about how often, or whether it is a problem.",
+      "ref": {
+        "cite": "National Institute on Alcohol Abuse and Alcoholism (2025). Alcohol Use in the United States: Age Groups and Demographic Characteristics (2024 NSDUH data). NIAAA.",
+        "url": "https://www.niaaa.nih.gov/alcohols-effects-health/alcohol-topics/alcohol-facts-and-statistics/alcohol-use-united-states-age-groups-and-demographic-characteristics",
+        "fetched": true,
+        "quote": "reported binge drinking in the past month … 31.8 million men ages 18 and older (24.9% in this age group)"
+      }
+    },
+    {
       "group": "start",
+      "top": true,
       "big": "2 in 3",
       "line": "Of Americans who ever got hooked on alcohol, almost half were hooked before 21, and two in three before 25.",
-      "mirror": "Mid-20s, drinking since school, thinks it's just a phase",
+      "mirror": "You've been drinking since school and think it's just a phase.",
       "basis": {
         "design": "national survey (NESARC), face-to-face interviews",
         "who": "adults who had ever been dependent on alcohol",
-        "n": "4,778 adults (of 43,093 surveyed)",
+        "n": "4,778 adults who had ever been hooked (of 43,093 surveyed)",
         "where": "US",
         "when": "2001–2002",
         "measured": "The age at which each person first met the DSM-IV signs of alcohol dependence, as they recalled it. 15% before 18, 47% before 21."
@@ -91,12 +94,12 @@
     {
       "group": "start",
       "big": "Nearly 1 in 4",
-      "line": "Nearly 1 in 4 people who drink get hooked at some point. For half of them, it took about 13 years from the first drink.",
-      "mirror": "Drank for years without trouble, now finds it harder to skip a night",
+      "line": "Nearly 1 in 4 people who drink are projected to get hooked at some point in life. For half of those, it took about 13 years from the first drink.",
+      "mirror": "You drank for years without trouble, but skipping a night feels harder now.",
       "basis": {
         "design": "national survey (NESARC, two waves), survival analysis",
         "who": "adults who had ever had a full drink of alcohol",
-        "n": "28,907 adults",
+        "n": "28,907 adults who had ever drunk alcohol; 4,822 of them became dependent",
         "where": "US",
         "when": "2001–2002 and 2004–2005",
         "measured": "Age at first drink and age at first meeting DSM-IV dependence (3 of 7 signs in a year). Only about 2.0% were hooked within a year of starting, 11.0% within 10 years."
@@ -112,15 +115,16 @@
     },
     {
       "group": "cost",
+      "top": true,
       "big": "−39 points",
-      "line": "After a heavy drinking night, your body's recovery score in the first 3 hours of sleep drops about 39 points. A light night: about 9.",
-      "mirror": "Sleeps 8 hours after drinking and still wakes up wrecked",
+      "line": "After a heavy drinking night (7 drinks on average), the body's recovery score in the first 3 hours of sleep dropped about 39 points. After a light night: about 9.",
+      "mirror": "You sleep eight hours after drinking and still wake up wrecked.",
       "basis": {
         "design": "real-world study; each person compared with himself on nights with and without alcohol",
         "who": "Finnish employees, mean age 45, 56% women",
-        "n": "4,098 adults",
+        "n": "716 people on heavy nights (of 4,098 in the study)",
         "where": "Finland",
-        "when": "not in fetched text",
+        "when": "Published 2018; the paper doesn't give the years of the recordings",
         "measured": "A heart-rate-based 'recovery' score over the first 3 hours of sleep. Low = up to 0.25 g alcohol per kg body weight; high = over 0.75 g/kg (one portion = 12 g)."
       },
       "caveat": "A heart signal of rest from a chest strap, not a full sleep study. Two authors worked for the company that makes the strap.",
@@ -134,35 +138,13 @@
     },
     {
       "group": "cost",
-      "big": "×2",
-      "line": "A drinking problem comes with about twice the odds of major depression. The evidence suggests alcohol drives the depression more than the other way round.",
-      "mirror": "Feels flat most days and drinks to switch off",
-      "basis": {
-        "design": "systematic review and meta-analysis of population studies",
-        "who": "people with alcohol use disorder or major depression",
-        "n": "number of studies not in fetched text",
-        "where": "several countries (not listed in fetched text)",
-        "when": "studies from 1980 to about 2010",
-        "measured": "Pooled adjusted odds that a person with one disorder also has the other."
-      },
-      "caveat": "These are odds from observational studies, not a trial. It does not mean every heavy drinker becomes depressed.",
-      "ref": {
-        "cite": "Boden JM, Fergusson DM (2011). Alcohol and depression. Addiction.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/21382111/",
-        "pmid": "21382111",
-        "fetched": true,
-        "quote": "The analysis revealed that the presence of either disorder doubled the risks of the second disorder, with pooled AORs ranging from 2.00 to 2.09."
-      }
-    },
-    {
-      "group": "cost",
       "big": "£18.60 a week",
       "line": "In England, people who drink at risky levels spend about £18.60 a week on alcohol, on average. That is every single week.",
-      "mirror": "Never adds up the bar tabs and the bottles at home",
+      "mirror": "You've never added up the bar tabs and the bottles at home.",
       "basis": {
         "design": "monthly national survey (new sample each month)",
         "who": "adults 18+ who drink at risky levels (5 or more on the AUDIT-C quiz)",
-        "n": "44,382 adults",
+        "n": "44,382 risky drinkers surveyed 2014–2023; £18.60 is the October 2023 figure",
         "where": "England",
         "when": "March 2014 – October 2023",
         "measured": "Self-reported average weekly spend on alcohol, adjusted for inflation. £18.60 is the October 2023 figure."
@@ -178,13 +160,14 @@
     },
     {
       "group": "quit",
+      "top": true,
       "big": "1 in 4",
-      "line": "Only 1 in 4 Americans once hooked on alcohol ever got treatment. And only 1 in 4 were still hooked in the past year.",
-      "mirror": "Wants to quit but won't go to rehab or AA",
+      "line": "Of Americans once hooked on alcohol, only 1 in 4 were still hooked in the past year. And only 1 in 4 had ever had treatment.",
+      "mirror": "You want to quit drinking but won't go to rehab or AA.",
       "basis": {
         "design": "national survey (NESARC), face-to-face interviews",
         "who": "adults whose alcohol dependence began before the past year",
-        "n": "4,422 adults (of 43,093 surveyed)",
+        "n": "4,422 adults who had been hooked before the past year (of 43,093 surveyed)",
         "where": "US",
         "when": "2001–2002",
         "measured": "Past-year status: still dependent 25.0%, some symptoms left 27.3%, risky drinking without symptoms 11.8%, low-risk drinking 17.7%, not drinking 18.2%. Plus: ever treated or not."
@@ -200,46 +183,25 @@
     },
     {
       "group": "quit",
-      "big": "2 tries",
-      "line": "Half of Americans who beat a drinking or drug problem needed 2 serious tries or fewer. A few needed many more.",
-      "mirror": "Tried to stop before, thinks he failed for good",
+      "top": true,
+      "big": "3 tries",
+      "line": "Of Americans who beat a drinking or drug problem after at least one serious try, half needed 3 tries or fewer. A few needed many more.",
+      "mirror": "You've tried to stop before and think you've failed for good.",
       "basis": {
         "design": "national survey (National Recovery Survey)",
-        "who": "adults who said they used to have an alcohol or drug problem but no longer do",
-        "n": "2,002 adults (of 39,809 screened)",
+        "who": "adults who said they used to have an alcohol or drug problem but no longer do, and had made at least one serious try",
+        "n": "1,742 people (of 2,002 in the study; about 1 in 8 never made a serious try)",
         "where": "US",
-        "when": "not in fetched text",
-        "measured": "Number of serious recovery attempts before the problem was resolved. For people whose main problem was alcohol: average 5.38, median 2 (table)."
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it. Counting everyone, including those who never made a serious try, the middle figure was 2."
       },
-      "caveat": "Counts only people who succeeded, from memory. The average was about 5 because a few people needed dozens of tries.",
+      "caveat": "Counts only people who succeeded, from memory. The average was about 6 because a few people needed dozens of tries.",
       "ref": {
         "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
         "pmid": "31090945",
         "fetched": true,
-        "quote": "The statistical distribution of serious recovery attempts was highly skewed with a mean of 5.35 (SD = 13.41) and median of 2 (interquartile range [IQR] = 1 to 4)."
-      }
-    },
-    {
-      "group": "quit",
-      "big": "62% vs 43%",
-      "line": "People who got help (treatment or AA) in their first year were more often free of problem drinking 3 years later: 62% against 43%.",
-      "mirror": "Thinks getting help is weak and wants to do it alone",
-      "basis": {
-        "design": "cohort followed 16 years",
-        "who": "adults with a drinking problem, never treated before, who had just contacted a referral centre or detox; mean age 33.5, half men",
-        "n": "461 adults",
-        "where": "US (region not named in fetched text)",
-        "when": "not in fetched text",
-        "measured": "Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5% without help and 42.9% with help slid back by year 16."
-      },
-      "caveat": "Not a trial: people chose whether to get help, so they may differ in other ways. Slipping back was common in both groups.",
-      "ref": {
-        "cite": "Moos RH, Moos BS (2006). Rates and predictors of relapse after natural and treated remission from alcohol use disorders. Addiction.",
-        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1976118/",
-        "pmid": "16445550",
-        "fetched": true,
-        "quote": "By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group"
+        "quote": "among participants reporting at least 1 serious recovery attempt (n = 1,742), the mean and median number of recovery attempts were slightly higher—6.14 (SD = 14.20) and 3"
       }
     },
     {
@@ -247,12 +209,12 @@
       "existing": true,
       "big": "1 in 12",
       "line": "For every 12 people who take the medicine acamprosate, one more stays off drink than would without it.",
-      "mirror": "Doesn't know there are pills that help",
+      "mirror": "You didn't know there are pills that help people stop drinking.",
       "basis": {
         "design": "meta-analysis of 122 randomised trials and 1 cohort study",
         "who": "adults with alcohol use disorder treated as outpatients",
-        "n": "22,803 participants in all; acamprosate 27 trials, 7,519 people",
-        "where": "several countries (not listed in fetched text)",
+        "n": "4,847 people in 16 trials (of 122 trials in the review)",
+        "where": "Mostly Europe (16 of 22 placebo trials of acamprosate)",
         "when": "studies from 1970 to March 2014",
         "measured": "Return to any drinking during trials of at least 12 weeks, acamprosate against placebo. Naltrexone: one in 20 for any drinking, one in 12 for heavy drinking."
       },
@@ -266,16 +228,39 @@
       }
     },
     {
+      "group": "quit",
+      "big": "62% vs 43%",
+      "line": "People who got help (treatment or AA) in their first year were more often free of problem drinking 3 years later: 62% against 43%.",
+      "mirror": "You think getting help is weak and want to do it alone.",
+      "basis": {
+        "design": "cohort followed 16 years",
+        "who": "adults with a drinking problem, never treated before, who had just contacted a referral centre or detox; mean age 33.5, half men",
+        "n": "362 who got help vs 99 who didn't (461 in all)",
+        "where": "US",
+        "when": "Followed 16 years; published 2006",
+        "measured": "Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5% without help and 42.9% with help slid back by year 16."
+      },
+      "caveat": "Not a trial: people chose whether to get help, so they may differ in other ways. Slipping back was common in both groups.",
+      "ref": {
+        "cite": "Moos RH, Moos BS (2006). Rates and predictors of relapse after natural and treated remission from alcohol use disorders. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1976118/",
+        "pmid": "16445550",
+        "fetched": true,
+        "quote": "By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group"
+      }
+    },
+    {
       "group": "after",
+      "top": true,
       "big": "1 month",
       "line": "After one month off alcohol, regular drinkers' insulin resistance fell about 26%, their blood pressure about 6%, and their weight 1.5%.",
-      "mirror": "Drinks most days, curious what a month off would do",
+      "mirror": "You drink every week and wonder what a month off would do.",
       "basis": {
         "design": "prospective observational study (people chose to stop or not)",
         "who": "healthy adults drinking more than 64 g a week (men), mean age about 45; not alcohol dependent",
-        "n": "141 adults (94 stopped, 47 kept drinking)",
+        "n": "94 people who stopped (47 who kept drinking, for comparison)",
         "where": "London, UK",
-        "when": "not in fetched text",
+        "when": "Published 2018; the paper doesn't give the study dates",
         "measured": "Blood tests, blood pressure and weight before and after one month. The group that kept drinking showed no significant change."
       },
       "caveat": "Small study, not a trial. Volunteers were not dependent, and nothing shows how long the gains last if drinking resumes.",
@@ -289,15 +274,16 @@
     },
     {
       "group": "after",
+      "top": true,
       "big": "6 years",
       "line": "After beating a drinking or drug problem, quality of life, happiness and self-esteem climb steeply for about 6 years, then keep rising more slowly.",
-      "mirror": "Wonders if sober life ever gets better than this",
+      "mirror": "You wonder if sober life ever gets better than this.",
       "basis": {
         "design": "national survey (National Recovery Survey), one snapshot",
         "who": "adults who said they used to have an alcohol or drug problem but no longer do",
         "n": "2,002 adults (of 39,809 screened)",
         "where": "US",
-        "when": "not in fetched text",
+        "when": "July–August 2016",
         "measured": "Quality of life, happiness, self-esteem, recovery resources and distress, compared across people 0 to 40 years past their problem."
       },
       "caveat": "Happiness and self-esteem dipped in the first year before rising. Different people at different stages, not the same people followed.",
@@ -338,6 +324,10 @@
     {
       "claim": "About 46% of Americans who resolved an alcohol or drug problem did it without any help.",
       "why": "Not stated as such: the paper gives 53.9% who used help, for alcohol and drugs together (Kelly 2017, PMID 29055821). Not used."
+    },
+    {
+      "claim": "A drinking problem comes with about twice the odds of major depression; alcohol seems to drive the depression more than the other way round (Boden 2011, pooled AORs 2.00–2.09).",
+      "why": "Dropped: the publisher page returned 403 and the abstract gives no number of studies or people, so the figure cannot show what it is based on."
     }
   ]
 }

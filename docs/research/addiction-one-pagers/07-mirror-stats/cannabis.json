@@ -3,13 +3,14 @@
   "stats": [
     {
       "group": "you",
+      "top": true,
       "big": "1 in 3",
       "line": "About 1 in 3 daily smokers aged 18–25 met the doctors' checklist for weed addiction. Over 26, about 1 in 6 did.",
-      "mirror": "Young guys who smoke almost every day and wonder if it's a problem.",
+      "mirror": "You're under 26, smoke almost every day, and wonder if it's a problem.",
       "basis": {
         "design": "national survey (NSDUH), every year 2002–2016, pooled",
         "who": "people who used cannabis on 300 or more days in the past year",
-        "n": "22,651 daily or almost-daily users across 2002–2016",
+        "n": "22,651 daily users across 2002–2016; the paper doesn't say how many were 18 to 25 in 2015–2016",
         "where": "USA",
         "when": "figures shown are for 2015–2016",
         "measured": "whether their own answers met the older DSM-IV checklist for cannabis abuse or dependence in the past year"
@@ -25,13 +26,14 @@
     },
     {
       "group": "you",
+      "top": true,
       "big": "42%",
       "line": "Of Americans who used weed in the past month, 42% used it daily or almost daily. Among drinkers it was 11%.",
-      "mirror": "Men who smoke most days and call it 'just how I relax'.",
+      "mirror": "You smoke every day and call it how you relax.",
       "basis": {
         "design": "re-analysis of 27 national surveys (NSDUH and earlier versions)",
         "who": "US general population aged 12 and over",
-        "n": "1,641,041 people across 27 surveys",
+        "n": "1,641,041 people across 27 surveys; the summary doesn't say how many used weed in 2022",
         "where": "USA",
         "when": "1979–2022; figures are for 2022",
         "measured": "how many days in the past month people said they used cannabis or alcohol"
@@ -49,7 +51,7 @@
       "group": "you",
       "big": "4×",
       "line": "Weed seized by US police in 2022 was about 4 times as strong as in 1995: about 16% THC instead of about 4%.",
-      "mirror": "Anyone who says 'it's the same weed my dad smoked'.",
+      "mirror": "You think it's the same weed your dad smoked.",
       "basis": {
         "design": "official lab testing program (NIDA Potency Monitoring Program, University of Mississippi)",
         "who": "cannabis samples seized by the US Drug Enforcement Administration",
@@ -69,57 +71,14 @@
     },
     {
       "group": "start",
-      "big": "Age 18",
-      "line": "The chance of trying weed for the first time peaks at age 18. The chance of getting hooked peaks at 17–18 too.",
-      "mirror": "Men who started in their late teens and never really stopped.",
-      "basis": {
-        "design": "national survey (National Comorbidity Survey), survival analysis",
-        "who": "US population aged 15–54",
-        "n": "8,098",
-        "where": "USA",
-        "when": "published 2002",
-        "measured": "age at first use, and age when people first met the criteria for dependence, from interviews"
-      },
-      "caveat": "Older data. It is the peak age, not the age everyone starts. Only about 8% of users became dependent within 10 years of first use.",
-      "ref": {
-        "cite": "Wagner FA, Anthony JC (2002). From first drug use to drug dependence; developmental periods of risk for dependence upon marijuana, cocaine, and alcohol. Neuropsychopharmacology.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/11927172/",
-        "pmid": "11927172",
-        "fetched": true,
-        "quote": "With respect to risk of initiating use, estimated peak values for alcohol and marijuana were found at age 18"
-      }
-    },
-    {
-      "group": "start",
-      "big": "5 years",
-      "line": "Of people who ever got hooked on weed, half got there within about 5 years of first using it.",
-      "mirror": "Men who started casually and slid into daily use over a few years.",
-      "basis": {
-        "design": "national survey, same people interviewed twice (NESARC)",
-        "who": "US adults who had ever used cannabis",
-        "n": "7,389 cannabis users",
-        "where": "USA",
-        "when": "interviews 2001–2002 and 2004–2005",
-        "measured": "years from first use to first meeting the older DSM-IV criteria for dependence"
-      },
-      "caveat": "Dependence here is the strict older definition. About 9% of all users (8.9%) ever reached it, so most users never do.",
-      "ref": {
-        "cite": "Lopez-Quintero C, Pérez de los Cobos J, Hasin DS, et al. (2011). Probability and predictors of transition from first use to dependence on nicotine, alcohol, cannabis, and cocaine: results of NESARC. Drug and Alcohol Dependence.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/21145178/",
-        "pmid": "21145178",
-        "fetched": true,
-        "quote": "Half of the cases of dependence on nicotine, alcohol, cannabis and cocaine were observed approximately 27, 13, 5 and 4 years after use onset, respectively."
-      }
-    },
-    {
-      "group": "start",
+      "top": true,
       "big": "10+ years",
       "line": "Adults who seek help for weed have smoked almost daily for over 10 years on average, and seriously tried to quit 6+ times.",
-      "mirror": "Men who have 'been meaning to cut down' for years.",
+      "mirror": "You've been meaning to cut down for years.",
       "basis": {
         "design": "review of US treatment research, summing up patient samples",
         "who": "adults entering treatment for marijuana abuse or dependence",
-        "n": "not given; a summary of several treatment studies",
+        "n": "The review sums up treatment studies, including ones with 229 and 450 adults",
         "where": "mainly USA",
         "when": "review published 2007",
         "measured": "years of near-daily use and number of serious quit attempts before treatment, as patients reported"
@@ -134,19 +93,86 @@
       }
     },
     {
+      "group": "start",
+      "big": "5 years",
+      "line": "Of people who ever got hooked on weed, half got there within about 5 years of first using it.",
+      "mirror": "You started casually and slid into daily smoking over a few years.",
+      "basis": {
+        "design": "national survey, same people interviewed twice (NESARC)",
+        "who": "US adults who had ever used cannabis",
+        "n": "529 people who became dependent (of 7,389 who had used weed)",
+        "where": "USA",
+        "when": "interviews 2001–2002 and 2004–2005",
+        "measured": "years from first use to first meeting the older DSM-IV criteria for dependence"
+      },
+      "caveat": "Dependence here is the strict older definition. About 9% of users (8.9%) are projected to ever reach it, so most users never do.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Pérez de los Cobos J, Hasin DS, et al. (2011). Probability and predictors of transition from first use to dependence on nicotine, alcohol, cannabis, and cocaine: results of NESARC. Drug and Alcohol Dependence.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/21145178/",
+        "pmid": "21145178",
+        "fetched": true,
+        "quote": "Half of the cases of dependence on nicotine, alcohol, cannabis and cocaine were observed approximately 27, 13, 5 and 4 years after use onset, respectively."
+      }
+    },
+    {
+      "group": "start",
+      "big": "Age 18",
+      "line": "The chance of trying weed for the first time peaks at age 18. The chance of getting hooked peaks at 17–18 too.",
+      "mirror": "You started in your late teens and never really stopped.",
+      "basis": {
+        "design": "national survey (National Comorbidity Survey), survival analysis",
+        "who": "US population aged 15–54",
+        "n": "8,098 people aged 15 to 54",
+        "where": "USA",
+        "when": "published 2002",
+        "measured": "age at first use, and age when people first met the criteria for dependence, from interviews"
+      },
+      "caveat": "Older data. It is the peak age, not the age everyone starts. Only about 8% of users became dependent within 10 years of first use.",
+      "ref": {
+        "cite": "Wagner FA, Anthony JC (2002). From first drug use to drug dependence; developmental periods of risk for dependence upon marijuana, cocaine, and alcohol. Neuropsychopharmacology.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/11927172/",
+        "pmid": "11927172",
+        "fetched": true,
+        "quote": "With respect to risk of initiating use, estimated peak values for alcohol and marijuana were found at age 18"
+      }
+    },
+    {
+      "group": "cost",
+      "top": true,
+      "big": "−5.5 IQ",
+      "line": "Long-term users lost about 5.5 IQ points between childhood and age 45. People who never used held steady (+0.7).",
+      "mirror": "You've smoked for years and feel slower or more forgetful than before.",
+      "basis": {
+        "design": "birth cohort followed 45 years (Dunedin Study)",
+        "who": "everyone born in Dunedin in 1972–73",
+        "n": "84 long-term users with IQ tests (of 1,037 in the study)",
+        "where": "Dunedin, New Zealand",
+        "when": "followed to age 45; published 2022",
+        "measured": "IQ at ages 7, 9, 11 and 45, plus memory and attention problems noticed by people who knew them"
+      },
+      "caveat": "Long-term means weekly use at 45 and at an earlier check-up; most had smoked 4+ days a week at some point. People who had quit by 45 had still dropped about 3 points. A link; tobacco, alcohol, other drugs and childhood class did not explain it.",
+      "ref": {
+        "cite": "Meier MH, Caspi A, Knodt AR, et al. (2022). Long-term cannabis use and cognitive reserves and hippocampal volume in midlife. American Journal of Psychiatry.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9426660/",
+        "pmid": "35255711",
+        "fetched": true,
+        "quote": "Their mean 5.5-point childhood-to-adulthood IQ decline was significantly larger than that observed among lifelong cannabis non-users (M=0.70)"
+      }
+    },
+    {
       "group": "cost",
       "big": "52% vs 14%",
-      "line": "Among people raised middle class, 52% of long-term weed users ended up lower class than their parents by 38, vs 14% of non-users.",
-      "mirror": "Smart guys from good homes who feel stuck below where they should be.",
+      "line": "Of people raised middle class, 52% of those hooked on weed for years had dropped to a lower class than their parents by 38. Of non-users: 14%.",
+      "mirror": "You grew up comfortable, smoke heavily, and feel you're slipping behind.",
       "basis": {
         "design": "birth cohort followed 38 years (Dunedin Study)",
         "who": "everyone born in Dunedin in one year (1972–73)",
-        "n": "1,037 (whole cohort)",
+        "n": "43 people hooked at 3 or more check-ups (of 947 studied); fewer of them grew up middle class, and the paper doesn't give that number",
         "where": "Dunedin, New Zealand",
         "when": "followed from birth to age 38; cannabis asked about at 18–38",
         "measured": "job and social class at 38 compared with their parents', among those raised middle class"
       },
-      "caveat": "A link, not proof. The authors ruled out childhood poverty, childhood problems and other drugs. 'Long-term' means regular use and dependence at several ages.",
+      "caveat": "A small group, and a link, not proof. It held after allowing for childhood IQ, self-control, family history and other drugs. 'Hooked for years' means dependent at 3 or more check-ups between ages 18 and 38.",
       "ref": {
         "cite": "Cerdá M, Moffitt TE, Meier MH, et al. (2016). Persistent cannabis dependence and alcohol dependence represent risks for midlife economic and social problems: a longitudinal cohort study. Clinical Psychological Science.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5167539/",
@@ -157,58 +183,14 @@
     },
     {
       "group": "cost",
-      "big": "~4×",
-      "line": "Men who smoke daily had about 4 times the odds of not being able to come during sex, compared with men who don't smoke.",
-      "mirror": "Guys who notice sex is harder to finish when high.",
-      "basis": {
-        "design": "national phone survey",
-        "who": "Australians aged 16–64 living in homes with a landline",
-        "n": "8,656 people; 126 used cannabis daily",
-        "where": "Australia",
-        "when": "published 2010",
-        "measured": "self-reported sexual problems in the past year, such as not reaching orgasm or coming too fast"
-      },
-      "caveat": "Odds, not risk: it does not mean 4 times as many men. Only 126 daily users. A link, not proof of cause.",
-      "ref": {
-        "cite": "Smith AM, Ferris JA, Simpson JM, et al. (2010). Cannabis use and sexual health. Journal of Sexual Medicine.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/19694929/",
-        "pmid": "19694929",
-        "fetched": true,
-        "quote": "daily use vs. no use was associated with increased reporting among men of an inability to reach orgasm (3.94, 1.71-9.07; P < 0.01)"
-      }
-    },
-    {
-      "group": "cost",
-      "big": "−5.5 IQ",
-      "line": "Long-term users lost about 5.5 IQ points from childhood to age 45. People who quit showed smaller or no drops.",
-      "mirror": "Men who feel slower or more forgetful than they used to.",
-      "basis": {
-        "design": "birth cohort followed 45 years (Dunedin Study)",
-        "who": "everyone born in Dunedin in 1972–73",
-        "n": "1,037 (94% still in the study at 45)",
-        "where": "Dunedin, New Zealand",
-        "when": "followed to age 45; published 2022",
-        "measured": "IQ at ages 7, 9, 11 and 45, plus memory and attention problems noticed by people who knew them"
-      },
-      "caveat": "Long-term means years of regular use and dependence, not a few joints. A link; tobacco, alcohol, other drugs and childhood class did not explain it.",
-      "ref": {
-        "cite": "Meier MH, Caspi A, Knodt AR, et al. (2022). Long-term cannabis use and cognitive reserves and hippocampal volume in midlife. American Journal of Psychiatry.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/35255711/",
-        "pmid": "35255711",
-        "fetched": true,
-        "quote": "Long-term cannabis users showed IQ decline from childhood to midlife (mean=-5.5 IQ points)"
-      }
-    },
-    {
       "existing": true,
-      "group": "cost",
       "big": "4.8×",
       "line": "Smoking strong weed daily came with 4.8 times the odds of a first psychosis, losing touch with reality, versus never using.",
-      "mirror": "Daily smokers of strong modern weed who've had paranoid or 'off' moments.",
+      "mirror": "You smoke strong weed daily and have had paranoid or 'off' moments.",
       "basis": {
         "design": "case-control study at 11 sites",
         "who": "people aged 18–64 with a first psychosis, and people from the same areas without it",
-        "n": "901 patients, 1,237 controls",
+        "n": "901 people with a first psychosis and 1,237 without; the paper doesn't give how many of them smoked strong weed daily",
         "where": "11 sites in Europe and Brazil (e.g. London, Amsterdam)",
         "when": "2010–2015",
         "measured": "how often people used cannabis and how strong it was (10% THC or more counted as strong)"
@@ -223,82 +205,38 @@
       }
     },
     {
-      "group": "quit",
-      "big": "13%",
-      "line": "Only about 13% of Americans who ever had a weed addiction went to treatment or a 12-step group. Most never got formal help.",
-      "mirror": "Men who want to quit without rehab, therapy or meetings.",
+      "group": "cost",
+      "big": "~4×",
+      "line": "Men who smoked daily had about 4 times the odds of not being able to come during sex, compared with men who didn't use.",
+      "mirror": "You smoke daily and notice sex is harder to finish.",
       "basis": {
-        "design": "national face-to-face survey (NESARC-III)",
-        "who": "US adults aged 18 and over",
-        "n": "36,309",
-        "where": "USA",
-        "when": "2012–2013",
-        "measured": "whether people who ever met the DSM-5 checklist for cannabis use disorder had ever used professional treatment or 12-step programs"
+        "design": "national phone survey",
+        "who": "Australians aged 16–64 living in homes with a landline",
+        "n": "126 daily users, men and women together (of 8,656 surveyed); the paper doesn't say how many were men",
+        "where": "Australia",
+        "when": "published 2010",
+        "measured": "self-reported sexual problems in the past year, such as not reaching orgasm or coming too fast"
       },
-      "caveat": "It shows most people never get help. It does not show how many of them quit on their own.",
+      "caveat": "Odds, not risk: it does not mean 4 times as many men. With so few daily users, the true figure could be anywhere from about 1.7× to 9×. A link, not proof of cause.",
       "ref": {
-        "cite": "Hasin DS, Kerridge BT, Saha TD, et al. (2016). Prevalence and correlates of DSM-5 cannabis use disorder, 2012–2013: findings from NESARC-III. American Journal of Psychiatry.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/26940807/",
-        "pmid": "26940807",
+        "cite": "Smith AM, Ferris JA, Simpson JM, et al. (2010). Cannabis use and sexual health. Journal of Sexual Medicine.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/19694929/",
+        "pmid": "19694929",
         "fetched": true,
-        "quote": "Only 13.2% with lifetime cannabis use disorder participated in 12-step programs or professional treatment."
+        "quote": "daily use vs. no use was associated with increased reporting among men of an inability to reach orgasm (3.94, 1.71-9.07; P < 0.01)"
       }
     },
     {
       "group": "quit",
-      "big": "71%",
-      "line": "71% of people who got 2+ weeks clean slipped at least once within 6 months, on average after about 73 days.",
-      "mirror": "Anyone who quit for a few weeks, then 'just had one'.",
-      "basis": {
-        "design": "follow-up of an outpatient treatment group",
-        "who": "adults in outpatient treatment for marijuana dependence who reached at least 2 weeks without weed",
-        "n": "82",
-        "where": "Vermont, USA",
-        "when": "published 2003",
-        "measured": "first use of any weed (a slip), and return to heavier use (4+ days in any 7 days), over 6 months"
-      },
-      "caveat": "Slips are common, not the end. But 71% of those who slipped went back to heavier use, and early slips were riskier. Small sample.",
-      "ref": {
-        "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
-        "pmid": "14629990",
-        "fetched": true,
-        "quote": "Seventy-one percent used marijuana at least once (i.e., lapsed) within 6 months of initial abstinence, averaging 73 days (SD = 50) till lapsing."
-      }
-    },
-    {
+      "top": true,
       "existing": true,
-      "group": "quit",
-      "big": "47%",
-      "line": "Across 47 studies, 47% of regular or dependent weed users had withdrawal symptoms when they stopped.",
-      "mirror": "Daily smokers who got cranky and sleepless the last time they stopped.",
-      "basis": {
-        "design": "meta-analysis of 47 studies",
-        "who": "people with regular cannabis use or cannabis use disorder; 69% men, median age about 30",
-        "n": "23,518",
-        "where": "several countries",
-        "when": "studies up to June 2019; published 2020",
-        "measured": "share who met the criteria for cannabis withdrawal on a tested checklist"
-      },
-      "caveat": "It depends who is asked: 17% in general-population samples, 54% in outpatients, 87% in inpatients. Daily users had it more often.",
-      "ref": {
-        "cite": "Bahji A, Stephenson C, Tyo R, et al. (2020). Prevalence of cannabis withdrawal symptoms among people with regular or dependent use of cannabinoids: a systematic review and meta-analysis. JAMA Network Open.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/32271390/",
-        "pmid": "32271390",
-        "fetched": true,
-        "quote": "The overall pooled prevalence of CWS was 47% (6469 of 23 518) (95% CI, 41%-52%)"
-      }
-    },
-    {
-      "existing": true,
-      "group": "quit",
       "big": "Day 2–6",
       "line": "Withdrawal usually starts on day 1–3 and peaks on day 2–6. Most symptoms last 4–14 days.",
-      "mirror": "Anyone on day 3 who feels angry, anxious and can't sleep.",
+      "mirror": "You're on day 3 off weed, angry and unable to sleep.",
       "basis": {
         "design": "50-day outpatient study: 5 days of usual use, then 45 days off",
         "who": "heavy marijuana users, plus ex-users for comparison",
-        "n": "18 users, 12 ex-users",
+        "n": "18 heavy users (and 12 ex-users for comparison)",
         "where": "Vermont, USA",
         "when": "published 2003",
         "measured": "daily ratings of anger, anxiety, appetite, weight, irritability, restlessness, shakiness, sleep problems and stomach pain"
@@ -313,19 +251,88 @@
       }
     },
     {
+      "group": "quit",
+      "top": true,
+      "big": "71%",
+      "line": "71% of people who got 2+ weeks off weed in treatment slipped at least once within 6 months, on average after about 73 days.",
+      "mirror": "You quit for a few weeks, then 'just had one'.",
+      "basis": {
+        "design": "follow-up of an outpatient treatment group",
+        "who": "adults in outpatient treatment for marijuana dependence who reached at least 2 weeks without weed",
+        "n": "82 adults in outpatient treatment",
+        "where": "Vermont, USA",
+        "when": "published 2003",
+        "measured": "first use of any weed (a slip), and return to heavier use (4+ days in any 7 days), over 6 months"
+      },
+      "caveat": "Slips are common, not the end. But 71% of those who slipped went back to heavier use, and early slips were riskier. Small sample.",
+      "ref": {
+        "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+        "pmid": "14629990",
+        "fetched": true,
+        "quote": "Seventy-one percent used marijuana at least once (i.e., lapsed) within 6 months of initial abstinence, averaging 73 days (SD = 50) till lapsing."
+      }
+    },
+    {
+      "group": "quit",
+      "existing": true,
+      "big": "47%",
+      "line": "Across 47 studies, 47% of regular or dependent weed users had withdrawal symptoms when they stopped.",
+      "mirror": "You got cranky and couldn't sleep the last time you stopped.",
+      "basis": {
+        "design": "meta-analysis of 47 studies",
+        "who": "people with regular cannabis use or cannabis use disorder; 69% men, median age about 30",
+        "n": "23,518 people in 47 studies",
+        "where": "several countries",
+        "when": "studies up to June 2019; published 2020",
+        "measured": "share who met the criteria for cannabis withdrawal on a tested checklist"
+      },
+      "caveat": "It depends who is asked: 17% in general-population samples, 54% in outpatients, 87% in inpatients. Daily users had it more often.",
+      "ref": {
+        "cite": "Bahji A, Stephenson C, Tyo R, et al. (2020). Prevalence of cannabis withdrawal symptoms among people with regular or dependent use of cannabinoids: a systematic review and meta-analysis. JAMA Network Open.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/32271390/",
+        "pmid": "32271390",
+        "fetched": true,
+        "quote": "The overall pooled prevalence of CWS was 47% (6469 of 23 518) (95% CI, 41%-52%)"
+      }
+    },
+    {
+      "group": "quit",
+      "big": "13%",
+      "line": "Only about 13% of Americans who ever had a weed addiction went to treatment or a 12-step group. Most never got formal help.",
+      "mirror": "You want to quit without rehab, therapy or meetings.",
+      "basis": {
+        "design": "national face-to-face survey (NESARC-III)",
+        "who": "US adults aged 18 and over",
+        "n": "2,242 people who ever had a weed addiction (of 36,309 surveyed)",
+        "where": "USA",
+        "when": "2012–2013",
+        "measured": "whether people who ever met the DSM-5 checklist for cannabis use disorder had ever used professional treatment or 12-step programs"
+      },
+      "caveat": "It shows most people never get help. It does not show how many of them quit on their own.",
+      "ref": {
+        "cite": "Hasin DS, Kerridge BT, Saha TD, et al. (2016). Prevalence and correlates of DSM-5 cannabis use disorder, 2012–2013: findings from NESARC-III. American Journal of Psychiatry.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26940807/",
+        "pmid": "26940807",
+        "fetched": true,
+        "quote": "Only 13.2% with lifetime cannabis use disorder participated in 12-step programs or professional treatment."
+      }
+    },
+    {
       "group": "after",
+      "top": true,
       "big": "72 hours",
       "line": "In studies where users were off weed more than 72 hours, their test scores were no longer clearly worse than non-users'.",
-      "mirror": "Guys afraid they've 'fried their brain' for good.",
+      "mirror": "You're afraid you've fried your brain for good.",
       "basis": {
         "design": "meta-analysis of 69 studies",
         "who": "frequent or heavy cannabis users aged 26 or under (average 20.6, 68% male) vs people with little use",
-        "n": "2,152 users and 6,575 comparison people; 15 studies (928 people) required 72+ hours off",
+        "n": "928 people in 15 studies that required 72+ hours off (of 69 studies in the review)",
         "where": "several countries",
         "when": "studies up to May 2017; published 2018",
         "measured": "scores on memory, attention and other thinking tests"
       },
-      "caveat": "Compares groups at one moment; it does not follow the same people. Young users only. Very long-term heavy users can still show drops (see Dunedin).",
+      "caveat": "Compares groups at one moment; it does not follow the same people. Young users only. Very long-term heavy users can still show drops (see the IQ study above).",
       "ref": {
         "cite": "Scott JC, Slomiak ST, Jones JD, et al. (2018). Association of cannabis with cognitive functioning in adolescents and young adults: a systematic review and meta-analysis. JAMA Psychiatry.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/29710074/",
@@ -336,13 +343,14 @@
     },
     {
       "group": "after",
+      "top": true,
       "big": "Week 1",
       "line": "Young regular users who stopped for a month got better at learning and remembering words, mostly in the first week.",
-      "mirror": "Students and young workers who feel foggy and forgetful.",
+      "mirror": "You feel foggy and forgetful and wonder if a month off helps.",
       "basis": {
         "design": "randomised study: 4 weeks off weed vs. carry on using",
         "who": "regular users aged 16–25 from the community and a high school",
-        "n": "88 (62 asked to stop, 26 kept using); 55 stayed off all 30 days, checked by urine tests",
+        "n": "62 asked to stop for a month vs 26 who kept using (55 stayed off all 30 days)",
         "where": "Boston, USA",
         "when": "2015–2016",
         "measured": "memory and attention tests at the start and every week for 4 weeks"
@@ -360,11 +368,11 @@
       "group": "after",
       "big": "12 weeks",
       "line": "In a 12-week trial, people who cut down felt less anxious, less depressed and slept better than those whose use rose.",
-      "mirror": "Men who smoke to calm anxiety or to fall asleep.",
+      "mirror": "You smoke to calm your nerves or to fall asleep.",
       "basis": {
         "design": "follow-up inside a 12-week medication trial (secondary analysis)",
         "who": "adults aged 18–50 in a trial for cannabis use disorder",
-        "n": "302 (152 cut down, 150 used more)",
+        "n": "302 adults (152 cut down, 150 used more)",
         "where": "USA (UCLA-led)",
         "when": "published 2017",
         "measured": "changes in anxiety, depression, sleep quality and quality of life, next to changes in weed use"
@@ -372,10 +380,10 @@
       "caveat": "This is cutting down, not only quitting. Overall quality of life did not improve in 12 weeks. A link, not proof.",
       "ref": {
         "cite": "Hser YI, Mooney LJ, Huang D, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/28847455/",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
         "pmid": "28847455",
         "fetched": true,
-        "quote": "Changes in symptoms of anxiety and depression, sleep quality, and quality of life were assessed in relation to changes in cannabis use during the 12-week trial of treatment."
+        "quote": "These results indicate a longitudinal relationship between reductions in cannabis use and improvements in anxiety, depression, and sleep quality."
       }
     }
   ],
@@ -422,7 +430,7 @@
     },
     {
       "claim": "Dunedin persistent users lost about 8 IQ points (Meier 2012).",
-      "why": "That number is not in the abstract fetched. Used Meier 2022 (−5.5 IQ points by age 45) instead."
+      "why": "That number is not in the abstract fetched. Used Meier 2022 (−5.5 IQ points by age 45) instead. Note: Meier 2022 found quitters had still dropped 3.3 points, so the old line 'people who quit showed smaller or no drops' was wrong and was fixed."
     }
   ]
 }

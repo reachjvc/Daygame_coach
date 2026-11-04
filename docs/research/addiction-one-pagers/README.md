@@ -56,8 +56,18 @@ end was never measured fades out; a trigger row (a lab test of how strongly cues
 pull) is drawn as an outline, never as craving. The owner locks a section once
 it works, and a locked section keeps its layout on every addiction.
 
+Round 4 adds `07-mirror-stats/<addiction id>.json`: 14 to 17 checked numbers per
+addiction in five groups (you, start, cost, quit, after), each with its basis
+(design, who, how many, where, when, what was counted), a caveat, and a ref
+with a short quote from the fetched source; `lq-details.json` explains the four
+lifetime "get free" hero numbers (projections from NESARC 2001–02; free means
+no dependence signs left, not abstinence). The build numbers these refs once
+per study. The page shows them in two sections, "Is this you?" and "How
+quitting goes", and the plan (`plan` per page in `06-template.json`) has its
+own section: the owner's five steps, each with actions for that addiction.
+
 His marks are in its db: `locks/<section>` (`{layout, form}`; sections are
-head, timeline, beliefs, numbers, story, others, sources), `marks/sec-<section>`
+head, you, timeline, beliefs, plan, outlook, story, others, sources), `marks/sec-<section>`
 (his note on a section), `marks/row-<addiction id>-<row>` (Keep = yes, Cut =
 no), `marks/general`, and his own text in `experience/<addiction id>`. Round 2
 keys (`marks/blk-*`, `marks/tl-*`) were never written.

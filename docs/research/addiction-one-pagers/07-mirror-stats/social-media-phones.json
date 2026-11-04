@@ -2,9 +2,9 @@
   "id": "social-media-phones",
   "hero": {
     "big": "31%",
-    "basedOn": "A model estimate, not a direct count. About 2,000 US adults with Android phones let an app log their use in early 2020; some got pay or app locks at random. The model put self-control problems at 31%.",
-    "caveat": "'Social media' here means six app types, including web browsers and YouTube. Volunteers, not representative; start of the pandemic; the 31% depends on the model's assumptions.",
-    "numberCheck": "31% matches the fetched text: 48 of the minutes per day, 31 percent of baseline use. It is 31% of use of six apps (Facebook, Instagram, Twitter, Snapchat, browsers, YouTube), not social media alone.",
+    "basedOn": "A model estimate, not a direct count. 1,933 US adults with Android phones let an app log their use for 12 weeks in spring 2020; some got pay or app locks at random. The model put self-control problems at 31% of their use.",
+    "caveat": "'Social media' here means six app types, including web browsers and YouTube. Volunteers at the start of the pandemic. The 31% rests on the model; a more cautious reading of the same data gives 16%.",
+    "numberCheck": "31% matches the fetched text: 48 minutes per day, 31 percent of baseline use (primary model). Analysis sample 1,933 (balanced panel). Authors' conservative estimate without habit formation = the limit effect, 22 min/day (16 percent); alternative assumptions mostly larger. Covers six app types (Facebook, Instagram, Twitter, Snapchat, browsers, YouTube).",
     "ref": {
       "cite": "Allcott H, Gentzkow M, Song L (2022). Digital addiction. American Economic Review 112(7):2424-2463 (NBER Working Paper 28936, revised March 2022).",
       "url": "https://www.nber.org/system/files/working_papers/w28936/w28936.pdf",
@@ -16,35 +16,14 @@
   "stats": [
     {
       "group": "you",
-      "big": "6 in 10",
-      "line": "About 6 in 10 Americans aged 18 to 29 say they are online almost constantly.",
-      "mirror": "Young men who reach for the phone between every task.",
-      "basis": {
-        "design": "national survey",
-        "who": "US adults, weighted to match the population",
-        "n": "5,733 adults",
-        "where": "USA",
-        "when": "19 May to 5 Sept 2023",
-        "measured": "Share who answered that they use the internet 'almost constantly'. Self-report. All adults: 41%; ages 18-29: 62%."
-      },
-      "caveat": "'Online' means anything: music, messages, work, not only social media. People judge this themselves, so it is a feeling, not a measured time.",
-      "ref": {
-        "cite": "Gelles-Watnick R (2024). Americans' use of mobile technology and home broadband. Pew Research Center, 31 January 2024.",
-        "url": "https://www.pewresearch.org/internet/2024/01/31/americans-use-of-mobile-technology-and-home-broadband/",
-        "pmid": "",
-        "fetched": true,
-        "quote": "About six-in-ten adults ages 18 to 29 (62%) say they are constantly online"
-      }
-    },
-    {
-      "group": "you",
+      "top": true,
       "big": "113 pickups",
       "line": "Students' own iPhone logs showed about 6 hours 53 minutes of phone use a day and 113 pickups a day.",
-      "mirror": "Anyone who has never looked at his own Screen Time page.",
+      "mirror": "You pick up your phone over a hundred times a day.",
       "basis": {
         "design": "cohort followed 12 weeks (device-logged)",
         "who": "undergraduate students with iPhones, mean age 20.1; 18% men",
-        "n": "187 students",
+        "n": "187 students (34 of them men)",
         "where": "Canada (one university)",
         "when": "autumn 2020",
         "measured": "Weekly screenshots of the iPhone 'Screen Time' page: hours of use and number of pickups, logged by the phone, not guessed."
@@ -60,58 +39,103 @@
     },
     {
       "group": "you",
-      "big": "87%",
-      "line": "87% of students use a screen in bed, for about 42 minutes a night on average.",
-      "mirror": "Men who scroll in bed until the phone drops on their face.",
+      "top": true,
+      "big": "84%",
+      "line": "84% of male Norwegian students use a screen in bed; people who do spend about 42 minutes a night on it.",
+      "mirror": "You use your phone in bed almost every night.",
       "basis": {
         "design": "national survey (cross-sectional)",
-        "who": "college and university students aged 18-28",
-        "n": "45,202 students",
+        "who": "full-time college and university students aged 18 to 28; this figure is the men",
+        "n": "15,097 male students (of 45,654 in the study)",
         "where": "Norway",
         "when": "2022 (SHoT2022 survey)",
-        "measured": "Self-reported nights per week with screens in bed and minutes per night (drop-down menu). 42 minutes is the mean among those who use screens in bed."
+        "measured": "Any screen use after going to bed, self-reported. The 42 minutes is the nightly average among all 39,809 students who use screens in bed, men and women; they did it about 6 nights a week."
       },
-      "caveat": "Self-report; people misjudge screen time. Students, not all young men.",
+      "caveat": "Self-report; people misjudge screen time. Students only. Women did it a little more often (89%).",
       "ref": {
         "cite": "Hjetland GJ, Skogen JC, Hysing M, Gradisar M, Sivertsen B (2025). How and when screens are used: comparing different screen activities and sleep in Norwegian university students. Frontiers in Psychiatry 16:1548273.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12015757/",
         "pmid": "40270574",
         "fetched": true,
-        "quote": "Table 1: 'Using screens in bed, n (%)' 39809 (87.2%); Table 2: 'Time spent on screens in bed, minutes' mean 41.95"
+        "quote": "Using screens in bed, n (%) 27159 (88.9%) 12650 (83.8%) 39809 (87.2%)"
       }
     },
     {
       "group": "you",
-      "big": "5-25%",
-      "line": "Between 5% and 25% of people show addiction-level social media use, depending on how strict the cut-off is.",
-      "mirror": "Men who feel restless when they cannot check their feeds.",
+      "big": "6 in 10",
+      "line": "About 6 in 10 Americans aged 18 to 29 say they are online almost constantly.",
+      "mirror": "You are online almost all day, like most people your age.",
+      "basis": {
+        "design": "national survey",
+        "who": "US adults, weighted to match the population",
+        "n": "546 adults aged 18 to 29 (of 5,733 surveyed)",
+        "where": "USA",
+        "when": "19 May to 5 Sept 2023",
+        "measured": "Share who answered that they use the internet 'almost constantly'. Self-report. All adults: 41%; ages 18-29: 62%."
+      },
+      "caveat": "'Online' means anything: music, messages, work, not only social media. People judge this themselves, so it is a feeling, not a measured time.",
+      "ref": {
+        "cite": "Gelles-Watnick R (2024). Americans' use of mobile technology and home broadband. Pew Research Center, 31 January 2024.",
+        "url": "https://www.pewresearch.org/internet/2024/01/31/americans-use-of-mobile-technology-and-home-broadband/",
+        "pmid": "",
+        "fetched": true,
+        "quote": "About six-in-ten adults ages 18 to 29 (62%) say they are constantly online"
+      }
+    },
+    {
+      "group": "you",
+      "big": "5%",
+      "line": "With strict rules, about 5 in 100 people show addiction-level social media use; looser cut-offs give 13% to 25%.",
+      "mirror": "You feel restless when you can't check your feeds.",
       "basis": {
         "design": "meta-analysis of 63 samples",
         "who": "teens and adults who filled in social media addiction questionnaires",
-        "n": "34,798 people",
+        "n": "34,798 people in 63 studies",
         "where": "32 nations, seven world regions",
         "when": "meta-analysis published 2021",
         "measured": "Share scoring above a cut-off on a questionnaire. Strict rules: 5%; 'severe' cut-off: 13%; 'moderate' cut-off: 25%."
       },
-      "caveat": "A questionnaire score is not a diagnosis. The rate also doubled in collectivist nations (31%) versus individualist ones (14%).",
+      "caveat": "A questionnaire score is not a diagnosis. Rates were twice as high in collectivist nations (31%) as in individualist ones (14%).",
       "ref": {
         "cite": "Cheng C, Lau YC, Chan L, Luk JW (2021). Prevalence of social media addiction across 32 nations: meta-analysis with subgroup analysis of classification schemes and cultural values. Addictive Behaviors 117:106845.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/33550200/",
         "pmid": "33550200",
         "fetched": true,
-        "quote": "The pooled prevalence estimate was 5% (95% CI: 3%-7%) ... that estimate was even higher (25%; 95% CI: 21%-29%)"
+        "quote": "The pooled prevalence estimate was 5% (95% CI: 3%-7%) for studies adopting monothetic or strict monothetic classifications."
       },
       "existing": true
     },
     {
       "group": "start",
+      "big": "19 min",
+      "line": "Paid to cut social media for three weeks, people still used 19 minutes a day less three weeks after the pay stopped.",
+      "mirror": "You scroll today mostly because you scrolled yesterday.",
+      "basis": {
+        "design": "randomised trial",
+        "who": "US adults with Android phones, recruited via Facebook and Instagram ads",
+        "n": "1,933 adults who finished the study; about 1 in 4 got the pay offer",
+        "where": "USA",
+        "when": "March to July 2020 (start of the pandemic)",
+        "measured": "App-logged daily minutes on Facebook, Instagram, Twitter, Snapchat, web browsers and YouTube. Pay cut use by 56 minutes a day; the effect shrank to 12 minutes a day after six weeks."
+      },
+      "caveat": "This shows the habit itself: less use now means less use later, and more use builds more use. Volunteers, not representative.",
+      "ref": {
+        "cite": "Allcott H, Gentzkow M, Song L (2022). Digital addiction. American Economic Review 112(7):2424-2463 (NBER Working Paper 28936, revised March 2022).",
+        "url": "https://www.nber.org/system/files/working_papers/w28936/w28936.pdf",
+        "pmid": "",
+        "fetched": true,
+        "quote": "In the three weeks after the incentive had ended, the bonus treatment group still used 19 minutes less per day."
+      }
+    },
+    {
+      "group": "start",
       "big": "37%",
       "line": "In 2020, 37% of US parents of 9- to 11-year-olds said their child already had their own smartphone.",
-      "mirror": "Men who got a phone before they got their first kiss.",
+      "mirror": "You got your own smartphone before you turned 12.",
       "basis": {
         "design": "national survey",
         "who": "US parents of at least one child under 18",
-        "n": "3,640 parents",
+        "n": "2,647 parents of a child aged 11 or younger (of 3,640 surveyed); Pew didn't report how many had a child aged 9 to 11",
         "where": "USA",
         "when": "2-15 March 2020",
         "measured": "Parents' answer to whether their child aged 9 to 11 has their own smartphone. Most of those children got it between ages 9 and 11."
@@ -126,36 +150,15 @@
       }
     },
     {
-      "group": "start",
-      "big": "19 min",
-      "line": "Paid to cut social media for three weeks, people still used 19 minutes a day less three weeks after the pay stopped.",
-      "mirror": "Men who notice the habit runs on autopilot, not choice.",
-      "basis": {
-        "design": "randomised trial",
-        "who": "US adults with Android phones, recruited via Facebook and Instagram ads",
-        "n": "about 2,000 adults",
-        "where": "USA",
-        "when": "early 2020 (start of the pandemic), about three months",
-        "measured": "App-logged daily minutes on Facebook, Instagram, Twitter, Snapchat, web browsers and YouTube. Pay cut use by 56 min/day; the effect faded to 12 min/day after six weeks."
-      },
-      "caveat": "This shows the habit itself: less use now means less use later, and more use builds more use. Volunteers, not representative.",
-      "ref": {
-        "cite": "Allcott H, Gentzkow M, Song L (2022). Digital addiction. American Economic Review 112(7):2424-2463 (NBER Working Paper 28936, revised March 2022).",
-        "url": "https://www.nber.org/system/files/working_papers/w28936/w28936.pdf",
-        "pmid": "",
-        "fetched": true,
-        "quote": "In the three weeks after the incentive had ended, the bonus treatment group still used 19 minutes less per day."
-      }
-    },
-    {
       "group": "cost",
+      "top": true,
       "big": "24 min",
       "line": "Each extra hour on a screen in bed went with 24 minutes less sleep and 59% higher odds of insomnia symptoms.",
-      "mirror": "Men who wake up tired after 'just one more video'.",
+      "mirror": "You wake up tired after one more video in bed.",
       "basis": {
         "design": "national survey (cross-sectional)",
         "who": "college and university students aged 18-28",
-        "n": "45,202 students",
+        "n": "39,809 students who use a screen in bed (of 45,654)",
         "where": "Norway",
         "when": "2022 (SHoT2022 survey)",
         "measured": "Self-reported screen time after going to bed, sleep duration and insomnia symptoms. It made no difference whether the screen use was social media or something else."
@@ -171,9 +174,32 @@
     },
     {
       "group": "cost",
+      "top": true,
+      "big": "52%",
+      "line": "52% of Americans aged 18 to 29 in a relationship say their partner is at least sometimes distracted by their phone.",
+      "mirror": "You look at your phone while she is talking to you.",
+      "basis": {
+        "design": "national survey",
+        "who": "US adults; this figure is partnered adults aged 18-29",
+        "n": "2,850 adults in a relationship whose partner has a phone (of 4,860 surveyed); Pew didn't report how many were aged 18 to 29",
+        "where": "USA",
+        "when": "16-28 October 2019",
+        "measured": "Share of married, cohabiting or committed adults who say their partner is often or sometimes distracted by their phone while they try to talk."
+      },
+      "caveat": "This is how the partner sees it, not a measured cost. 2019 data; the share was higher (62%) among those aged 30-49.",
+      "ref": {
+        "cite": "Vogels EA, Anderson M (2020). Dating and relationships in the digital age. Pew Research Center, 8 May 2020.",
+        "url": "https://www.pewresearch.org/internet/2020/05/08/dating-and-relationships-in-the-digital-age/",
+        "pmid": "",
+        "fetched": true,
+        "quote": "Fully 62% of 30- to 49-year-olds and 52% of 18-to 29-year-olds who are in a romantic relationship say their partner is at least sometimes distracted by their phone"
+      }
+    },
+    {
+      "group": "cost",
       "big": "8 hours",
       "line": "Adults in a social media trial said they spent about 8 hours a week on Instagram, Facebook, Twitter and TikTok.",
-      "mirror": "Men who say they have no time to train or read.",
+      "mirror": "You say you have no time to train or read.",
       "basis": {
         "design": "randomised trial (baseline figures)",
         "who": "adults recruited via social media, mean age 29.6; 62% women",
@@ -192,38 +218,17 @@
       }
     },
     {
-      "group": "cost",
-      "big": "52%",
-      "line": "52% of Americans aged 18 to 29 in a relationship say their partner is at least sometimes distracted by their phone.",
-      "mirror": "Men whose phone sits on the table during dates.",
-      "basis": {
-        "design": "national survey",
-        "who": "US adults; this figure is partnered adults aged 18-29",
-        "n": "4,860 adults (whole survey)",
-        "where": "USA",
-        "when": "16-28 October 2019",
-        "measured": "Share of married, cohabiting or committed adults who say their partner is often or sometimes distracted by their phone while they try to talk."
-      },
-      "caveat": "This is how the partner sees it, not a measured cost. 2019 data; the share was higher (62%) among those aged 30-49.",
-      "ref": {
-        "cite": "Vogels EA, Anderson M (2020). Dating and relationships in the digital age. Pew Research Center, 8 May 2020.",
-        "url": "https://www.pewresearch.org/internet/2020/05/08/dating-and-relationships-in-the-digital-age/",
-        "pmid": "",
-        "fetched": true,
-        "quote": "Fully 62% of 30- to 49-year-olds and 52% of 18-to 29-year-olds who are in a romantic relationship say their partner is at least sometimes distracted by their phone"
-      }
-    },
-    {
       "group": "quit",
+      "top": true,
       "big": "22 min",
-      "line": "App locks you set yourself cut social media by 22 minutes a day, and 78% kept their locks on for 12 weeks.",
-      "mirror": "Men who keep promising themselves 'less tomorrow'.",
+      "line": "App locks people set for themselves cut social media by 22 minutes a day, and 78% were still using them in the final weeks.",
+      "mirror": "You keep promising yourself you'll use it less tomorrow.",
       "basis": {
         "design": "randomised trial",
         "who": "US adults with Android phones, recruited via Facebook and Instagram ads",
-        "n": "about 2,000 adults",
+        "n": "1,933 adults who finished the study; about 6 in 10 were offered the locks",
         "where": "USA",
-        "when": "early 2020, 12 weeks of limits",
+        "when": "March to July 2020, 12 weeks of limits",
         "measured": "App-logged minutes on Facebook, Instagram, Twitter, Snapchat, browsers and YouTube. Limits locked the app and could not be skipped at once."
       },
       "caveat": "Phone-maker limits are easier to override, so may work less. The effect faded slightly, and people underestimated their next weeks' use by about 6 minutes a day.",
@@ -237,62 +242,19 @@
     },
     {
       "group": "quit",
-      "big": "28 min",
-      "line": "Switching the phone to black-and-white (greyscale) cut screen time by about 28 minutes a day.",
-      "mirror": "Men who open apps without knowing why.",
-      "basis": {
-        "design": "crossover trial, one week each (not truly random)",
-        "who": "first-year medical students",
-        "n": "51 students",
-        "where": "one medical school (country not stated in the abstract)",
-        "when": "published 2026",
-        "measured": "Daily screen time from the phone's built-in tracker, one week greyscale versus one week colour."
-      },
-      "caveat": "Small and short. A larger trial (112 people) also found greyscale cut logged screen time quickly, but saw no change in well-being.",
-      "ref": {
-        "cite": "Hagerty J, Saretha S, Phung B, et al. (2026). A cross-over feasibility trial of smartphone grayscale mode in medical students. Frontiers in Digital Health 8:1816095.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/42518736/",
-        "pmid": "42518736",
-        "fetched": true,
-        "quote": "Grayscale mode was associated with a statistically significant reduction in mean daily screen time compared to color display (mean reduction 28 min per day; p < 0.05)."
-      }
-    },
-    {
-      "group": "quit",
-      "big": "18 min",
-      "line": "No phone in the last 30 minutes before bed: people fell asleep about 12 minutes faster and slept about 18 minutes longer.",
-      "mirror": "Men who scroll in bed and then can't switch off.",
-      "basis": {
-        "design": "randomised pilot trial",
-        "who": "university students with poor sleep and a bedtime phone habit",
-        "n": "38 students",
-        "where": "China",
-        "when": "April 2019, 4 weeks",
-        "measured": "Sleep diary (time to fall asleep, sleep length), a sleep-quality questionnaire, mood and a memory task."
-      },
-      "caveat": "Tiny trial, self-reported sleep. It tested no phone before bed, not phone out of the bedroom.",
-      "ref": {
-        "cite": "He JW, Tu ZH, Xiao L, Su T, Tang YX (2020). Effect of restricting bedtime mobile phone use on sleep, arousal, mood, and working memory: a randomized pilot trial. PLoS ONE 15(2):e0228756.",
-        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7010281/",
-        "pmid": "32040492",
-        "fetched": true,
-        "quote": "Sleep latency in the intervention group was reduced by around 12 minutes and sleep duration was increased by around 18 minutes."
-      }
-    },
-    {
-      "group": "quit",
+      "top": true,
       "big": "30 min",
       "line": "Students who capped Facebook, Instagram and Snapchat at 10 minutes each a day felt less lonely and less depressed after three weeks.",
-      "mirror": "Men who want to cut down, not delete everything.",
+      "mirror": "You want to cut down, not delete everything.",
       "basis": {
         "design": "randomised trial",
-        "who": "undergraduate students",
+        "who": "undergraduate students at the University of Pennsylvania",
         "n": "143 students",
         "where": "USA (University of Pennsylvania)",
         "when": "published 2018; 3 weeks",
         "measured": "Loneliness and depression questionnaires, limited group versus use as usual. About 30 minutes a day in total across the three apps."
       },
-      "caveat": "Small, one university, short. Both groups also felt less anxious, perhaps just from tracking use. The abstract gives no effect sizes.",
+      "caveat": "Small, one university, three weeks. Both groups also felt less anxious, maybe just from tracking their own use.",
       "ref": {
         "cite": "Hunt MG, Marx R, Lipson C, Young J (2018). No more FOMO: limiting social media decreases loneliness and depression. Journal of Social and Clinical Psychology 37(10):751-768.",
         "url": "https://doi.org/10.1521/jscp.2018.37.10.751",
@@ -305,11 +267,11 @@
       "group": "quit",
       "big": "24 hours",
       "line": "In the first 24 hours without a phone, craving rose, but mood and anxiety did not change.",
-      "mirror": "Men who fear a phone break will feel unbearable.",
+      "mirror": "You fear a day without your phone would be unbearable.",
       "basis": {
         "design": "lab study, no control group",
         "who": "university students, mean age 22.4; 33% men",
-        "n": "45 started, 36 finished all sessions",
+        "n": "36 students who did all four sessions (45 started)",
         "where": "UK (Lancaster University)",
         "when": "published 2019",
         "measured": "Questionnaires on mood, anxiety and craving, before, during and after 24 hours with the phone sealed in a bag."
@@ -325,10 +287,55 @@
       "existing": true
     },
     {
+      "group": "quit",
+      "big": "28 min",
+      "line": "Switching the phone to black-and-white (greyscale) cut screen time by about 28 minutes a day.",
+      "mirror": "You open apps without knowing why.",
+      "basis": {
+        "design": "crossover trial, one week each; order set by sign-up date, not by chance",
+        "who": "first-year medical students",
+        "n": "51 students who finished both weeks (61 started)",
+        "where": "USA (California University of Science and Medicine, Colton, California)",
+        "when": "published 2026",
+        "measured": "Daily screen time from the phone's built-in tracker, one week greyscale versus one week colour."
+      },
+      "caveat": "Small and short. A larger trial (112 people) also found greyscale cut logged screen time quickly, but saw no change in well-being.",
+      "ref": {
+        "cite": "Hagerty J, Saretha S, Phung B, et al. (2026). A cross-over feasibility trial of smartphone grayscale mode in medical students. Frontiers in Digital Health 8:1816095.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13381430/",
+        "pmid": "42518736",
+        "fetched": true,
+        "quote": "Grayscale mode was associated with a statistically significant reduction in mean daily screen time compared to color display (mean reduction 28 min per day; p < 0.05)."
+      }
+    },
+    {
+      "group": "quit",
+      "big": "18 min",
+      "line": "No phone in the last 30 minutes before bed: people fell asleep about 12 minutes faster and slept about 18 minutes longer.",
+      "mirror": "You scroll in bed and then can't switch off.",
+      "basis": {
+        "design": "randomised pilot trial",
+        "who": "university students with poor sleep and a bedtime phone habit",
+        "n": "38 students (19 asked to stop, 19 not)",
+        "where": "China",
+        "when": "April 2019, 4 weeks",
+        "measured": "Sleep diary (time to fall asleep, sleep length), a sleep-quality questionnaire, mood and a memory task."
+      },
+      "caveat": "Tiny trial, self-reported sleep. It tested no phone before bed, not phone out of the bedroom.",
+      "ref": {
+        "cite": "He JW, Tu ZH, Xiao L, Su T, Tang YX (2020). Effect of restricting bedtime mobile phone use on sleep, arousal, mood, and working memory: a randomized pilot trial. PLoS ONE 15(2):e0228756.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7010281/",
+        "pmid": "32040492",
+        "fetched": true,
+        "quote": "Sleep latency in the intervention group was reduced by around 12 minutes and sleep duration was increased by around 18 minutes."
+      }
+    },
+    {
       "group": "after",
+      "top": true,
       "big": "1 week",
       "line": "After one week off social media, people felt better and less depressed and anxious than those who kept scrolling.",
-      "mirror": "Men who wonder if a short break is worth it.",
+      "mirror": "You wonder if a short break would make any difference.",
       "basis": {
         "design": "randomised trial",
         "who": "adults recruited via social media, mean age 29.6; 62% women",
@@ -348,38 +355,17 @@
     },
     {
       "group": "after",
-      "big": "6 weeks",
-      "line": "Six weeks off Facebook made people a little happier and less down or anxious. Instagram breaks helped less.",
-      "mirror": "Men who expect a break to change everything at once.",
-      "basis": {
-        "design": "two randomised trials",
-        "who": "US Facebook and Instagram users who used the app at least 15 minutes a day",
-        "n": "19,857 Facebook users; 15,585 Instagram users",
-        "where": "USA",
-        "when": "six weeks before the November 2020 election",
-        "measured": "Self-reported happiness, depression and anxiety, combined into one score. Controls also took a break, but for only one week."
-      },
-      "caveat": "The gain is small. The Instagram result missed the pre-set significance bar. Not yet peer-reviewed; several co-authors work at Meta. Most freed time went to other apps.",
-      "ref": {
-        "cite": "Allcott H, Gentzkow M, Wittenbrink B, et al. (2025). The effect of deactivating Facebook and Instagram on users' emotional state. NBER Working Paper 33697.",
-        "url": "https://www.nber.org/system/files/working_papers/w33697/w33697.pdf",
-        "pmid": "",
-        "fetched": true,
-        "quote": "People who deactivated Facebook for the six weeks before the election reported a 0.060 standard deviation improvement in an index of happiness, depression, and anxiety"
-      }
-    },
-    {
-      "group": "after",
+      "top": true,
       "big": "4 weeks",
       "line": "Four weeks off Facebook freed about an hour a day and made people a bit happier; 80% said the break was good for them.",
-      "mirror": "Men who want their evenings back.",
+      "mirror": "You want your evenings back.",
       "basis": {
         "design": "randomised trial",
         "who": "US adult Facebook users who used it more than 15 minutes a day",
-        "n": "2,743 recruited; paid to deactivate if they agreed",
+        "n": "1,661 adults (580 paid to switch Facebook off, 1,081 kept using it)",
         "where": "USA",
         "when": "Oct-Nov 2018, four weeks before the midterm election",
-        "measured": "Survey index of happiness, life satisfaction, depression and anxiety (up 0.09 SD). Weeks later, Facebook app use was still 22% lower."
+        "measured": "Survey index of happiness, life satisfaction, depression and anxiety (up 0.09 SD). Weeks later, the break group's Facebook app use was still 22% lower."
       },
       "caveat": "The mood gain was small. Participants were younger, more educated and more left-leaning than average users, and were paid.",
       "ref": {
@@ -387,9 +373,31 @@
         "url": "https://web.stanford.edu/~gentzkow/research/facebook.pdf",
         "pmid": "",
         "fetched": true,
-        "quote": "deactivating Facebook for the four weeks before the 2018 US midterm election ... (iii) increased subjective well-being"
+        "quote": "Facebook deactivation increased subjective well-being, and 80 percent of the Treatment group reported that deactivation was good for them."
       },
       "existing": true
+    },
+    {
+      "group": "after",
+      "big": "6 weeks",
+      "line": "Six weeks off Facebook made people a little happier and less down or anxious. Instagram breaks helped less.",
+      "mirror": "You expect one break to change everything at once.",
+      "basis": {
+        "design": "two randomised trials",
+        "who": "US Facebook and Instagram users who used the app at least 15 minutes a day",
+        "n": "19,857 Facebook users and 15,585 Instagram users; 27% were offered pay for the six-week break, the rest for one week",
+        "where": "USA",
+        "when": "six weeks before the November 2020 election",
+        "measured": "Self-reported happiness, depression and anxiety, combined into one score. Controls also took a break, but for only one week."
+      },
+      "caveat": "Small gain, mostly in people over 35; the Instagram gain was mostly in women under 25 and missed the study's own bar. Not yet reviewed by outside experts; several authors work at Meta.",
+      "ref": {
+        "cite": "Allcott H, Gentzkow M, Wittenbrink B, et al. (2025). The effect of deactivating Facebook and Instagram on users' emotional state. NBER Working Paper 33697.",
+        "url": "https://www.nber.org/system/files/working_papers/w33697/w33697.pdf",
+        "pmid": "",
+        "fetched": true,
+        "quote": "People who deactivated Facebook for the six weeks before the election reported a 0.060 standard deviation improvement in an index of happiness, depression, and anxiety"
+      }
     }
   ],
   "rejected": [
