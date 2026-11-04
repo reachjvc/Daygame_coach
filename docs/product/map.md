@@ -201,7 +201,14 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   can finally be started.
 - `timetrack/` — a Toggl Track clone, at `/time`. Nineteen tables of
   its own: workspaces, projects, tags, reports, alerts, webhooks. Ids are made
-  on the device so two offline devices cannot collide.
+  on the device so two offline devices cannot collide. Since 2026-11-04
+  (Plans/time-tracker-like-toggl.md, Phases 4–6): "Switched at…" and "Stopped
+  at…" fix a forgotten timer without arithmetic; [day][hour][minute] drums sit
+  in the entry sheet and those pickers; an entry that starts in the future is
+  "planned", striped and left out of every total until it starts; touching
+  neighbours move together with Undo; the list marks overlaps and small gaps;
+  on a phone the calendar makes, moves and resizes blocks by holding them, and
+  a swipe changes the day. Opening Time with no section lands on Timer.
 - `health/` — weight, sleep, nutrition, workouts. Rolling averages, plateau and
   trend detection, personal records, cross-domain correlation. Its **dedicated
   trackers** are test-only (`WeightTracker`, `SleepTracker`, `NutritionTracker`,

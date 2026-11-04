@@ -1,6 +1,6 @@
 # Time tracker runbook
 
-What to check, and what to do, when something goes wrong with `/dashboard/time`.
+What to check, and what to do, when something goes wrong with `/time`.
 
 ## What the calendar endpoint is allowed to reach
 
@@ -19,12 +19,38 @@ runs as more than one instance, move the counter into Postgres or Redis. Stated 
 
 ## "I lost my tracked time"
 
-1. Which browser and device? Until the sync work lands, a workspace lives in one browser's local storage.
-2. Ask them to open Settings, Data, Export before anything else. That file is the recovery.
-3. `localStorage['toggl-clone:v1']` in the browser console shows the raw workspace. If `version` is 2 it is
-   from the numeric-id era and is converted on load by `stateMigrationService` — never discarded.
-4. If the export is empty and the key is missing, the data is gone: local storage was cleared. There is no
-   server copy yet.
+1. Look at the badge on each device first (table below). "Offline · 2 waiting" or "Not saved" means the
+   change is still in that browser and has not reached the account; "Saved" means the account has it.
+2. The account is the record. A read-only backup of one person's time data:
+   `npx tsx scripts/backup-timetrack.ts --user <id>` (writes `backups/timetrack-<date>.json`, gitignored).
+3. Each browser keeps a copy and an outbox, owned by one account since 2026-11-04 (next section):
+   `toggl-clone:v1` (the copy), `toggl-clone:pending` and `toggl-clone:pending-bases` (what waits to be
+   sent), `toggl-clone:offline-base` (what an opening started from, kept until the account has every change
+   made before it answered), and `toggl-clone:account` (whose all of it is). If `version` in the copy is 2
+   it is from the numeric-id era and is converted on load by `stateMigrationService`, never discarded.
+4. Settings, Data, Export in the tracker writes the same workspace as a file; ask for it before anything
+   else when the account does not have what the person expects.
+
+## One browser, one account (since 2026-11-04)
+
+The audit in `Plans/time-tracker-like-toggl.md` found that Log Out left the tracker in the browser, so the
+next person saw the previous one's entries and could upload them into their own account. Now:
+
+- Every `toggl-clone:` key belongs to the account named in `toggl-clone:account`; each tab also tags its
+  session keys (the unstarted draft, the manual form). `/time` passes the server's user id and claims the
+  browser before anything is read. Another account's copy is removed, never shown, never sent.
+- A copy with no owner recorded (from before the change) is adopted by the first account that opens it,
+  unless its queued rows or its kept base name another account; then it is a stranger's copy.
+- **Log Out** sends what is waiting first (5 s at most). Whatever still cannot go is named, and only "Log
+  out anyway" discards it. A session that ends by itself keeps the owner's copy hidden from others, so the
+  same account sends it after signing in again.
+- A tab whose account changed underneath it stops writing and sending, and reloads.
+- **The server never trusts the browser:** the sync route uses only the session's user id, refuses rows
+  named for another account (409) and versioned writes that name none, and `resolveWorkspaceId` only ever
+  revives the caller's own workspace.
+- Left open (narrow, matters only once a second person uses a browser): an old untagged copy with nothing
+  queued is still shown to the next account, though never uploaded; and signing in through an emailed link
+  does not empty the worker's stored pages (the password login does).
 
 ## Rolling the schema back
 
@@ -52,6 +78,11 @@ whole-row upsert, and so does everyone if the function is missing (PostgREST `PG
   stopped timer or bring back a deleted entry; a tag set replacing the links only with its entry and under its
   check; a refused constraint rolling back the whole call; a second user unable to see or write the first user's
   rows; no session and the `anon` role refused.
+- **Two stops of one running timer** (the phone stopped it; a PC that had not checked yet pressed Stop
+  later): the EARLIER stop wins, and the later device says "Changed on your other device". An edit of an
+  already finished entry keeps the rule above: the field this device changed is laid on top.
+- **A timer stopped by reconciliation at first contact** ("Another device had a timer running too") is
+  queued and sent like any other change, so the account never keeps two timers running.
 
 ## What the sync badge says
 
@@ -118,7 +149,7 @@ command and two minutes, and it is the difference between an app and a bookmark 
 
     npm run build && npx next start -p 3200
 
-Then, in a browser: open `http://localhost:3200/dashboard/time`, wait for it to settle, switch the network off
+Then, in a browser: open `http://localhost:3200/time`, wait for it to settle, switch the network off
 (DevTools → Network → Offline), and open the same address in a new tab. The tracker should appear, with the
 timer field ready. Verified this way on 2026-09-05 on an emulated Pixel 7.
 
