@@ -23,7 +23,7 @@
  * hold here exactly as they do everywhere else.
  */
 
-import { dateKey, epochSeconds, formatWhen, isoFromEpochSeconds } from "./timetrackFormatService"
+import { dateKey, epochMillis, epochSeconds, formatWhen, isoFromEpochSeconds } from "./timetrackFormatService"
 import { liveEntries, reconcileRunningEntries, runningEntry, startTimer, updateEntry } from "./timetrackService"
 import type { EntryDraft, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "./types"
 
@@ -81,9 +81,16 @@ export function momentRefusal(state: TimetrackState, atIso: IsoDateTime, nowIso:
   return null
 }
 
-/** Inside the minute of grace, a moment just ahead of the clock is now */
-function settle(atIso: IsoDateTime, nowIso: IsoDateTime): IsoDateTime {
-  return epochSeconds(atIso) > epochSeconds(nowIso) ? nowIso : atIso
+/**
+ * Inside the minute of grace, a moment just ahead of the clock is now. And a
+ * moment in the running timer's own second, a fraction before its start, is
+ * the start: `momentRefusal` counts whole seconds, a timer's start has
+ * milliseconds, and the end built from it otherwise landed before the start
+ * (edits audit B1) — which the rule refuses, so the tap did nothing.
+ */
+function settle(atIso: IsoDateTime, nowIso: IsoDateTime, running: TimeEntry | null = null): IsoDateTime {
+  const moment = epochSeconds(atIso) > epochSeconds(nowIso) ? nowIso : atIso
+  return running && epochMillis(moment) < epochMillis(running.start) ? running.start : moment
 }
 
 export interface MomentChip {
@@ -161,7 +168,7 @@ export function switchAt(
   const reconciled = reconcileRunningEntries(state).state
   const refusal = momentRefusal(reconciled, atIso, nowIso)
   if (refusal) return nothing(refused(refusal))
-  const moment = settle(atIso, nowIso)
+  const moment = settle(atIso, nowIso, runningEntry(reconciled))
 
   let next = reconciled
   let stopped: TimeEntry | null = null
@@ -194,7 +201,7 @@ export function stopAt(
   if (!running) return { state, violations: refused("Nothing is running"), stopped: null }
   const refusal = momentRefusal(reconciled, atIso, nowIso)
   if (refusal) return { state, violations: refused(refusal), stopped: null }
-  const ended = updateEntry(reconciled, running.id, { stop: settle(atIso, nowIso) }, nowIso)
+  const ended = updateEntry(reconciled, running.id, { stop: settle(atIso, nowIso, running) }, nowIso)
   if (ended.violations.length > 0) return { state, violations: ended.violations, stopped: null }
   return { state: ended.state, violations: [], stopped: byId(ended.state, running.id) }
 }
@@ -361,22 +368,30 @@ export function shiftEdge(
 ): { state: TimetrackState; violations: SaveViolation[] } {
   const entry = byId(state, entryId)
   if (!entry) return { state, violations: [] }
+  // from the exact time, milliseconds and all: rounded down first, −5 on a
+  // five-minute timer-made entry ended it before it began (edits audit B1)
   if (edge === "stop") {
     if (entry.stop === null) return { state, violations: refused("It is still running — use Stop at… to end it") }
-    return updateEntry(state, entryId, { stop: isoFromEpochSeconds(epochSeconds(entry.stop) + seconds) }, nowIso)
+    return updateEntry(state, entryId, { stop: new Date(epochMillis(entry.stop) + seconds * 1000).toISOString() }, nowIso)
   }
-  const start = isoFromEpochSeconds(epochSeconds(entry.start) + seconds)
+  const start = new Date(epochMillis(entry.start) + seconds * 1000).toISOString()
   // a running timer that has not started yet would count down, not up
-  if (entry.stop === null && epochSeconds(start) > epochSeconds(nowIso)) {
+  if (entry.stop === null && epochMillis(start) > epochMillis(nowIso)) {
     return { state, violations: refused("A running timer cannot start in the future") }
   }
   return updateEntry(state, entryId, { start }, nowIso)
 }
 
-/** End now: a finished entry ends at this moment, and a running one stops */
+/**
+ * End now: a finished entry ends at this moment, and a running one stops.
+ * Never before it began: on a timer started this very second, now can be a
+ * fraction before its start, and that end would be refused (edits audit B1).
+ */
 export function endNow(state: TimetrackState, entryId: Id, nowIso: IsoDateTime): { state: TimetrackState; violations: SaveViolation[] } {
-  if (!byId(state, entryId)) return { state, violations: [] }
-  return updateEntry(state, entryId, { stop: nowIso }, nowIso)
+  const entry = byId(state, entryId)
+  if (!entry) return { state, violations: [] }
+  const stop = epochMillis(nowIso) < epochMillis(entry.start) ? entry.start : nowIso
+  return updateEntry(state, entryId, { stop }, nowIso)
 }
 
 /** Entries the one-tap fixes may measure from: live, with times shown */
@@ -464,7 +479,8 @@ export function jointsOf(entries: TimeEntry[], nowIso: IsoDateTime): Joint[] {
 
   const joints: Joint[] = []
   for (const day of days.values()) {
-    day.sort((a, b) => epochSeconds(a.start) - epochSeconds(b.start))
+    // to the millisecond: two entries begun in the same second are still in an order, and Fix needs the right one (B1)
+    day.sort((a, b) => epochMillis(a.start) - epochMillis(b.start))
     for (let i = 1; i < day.length; i++) {
       const earlier = day[i - 1]
       const later = day[i]

@@ -230,17 +230,21 @@ describe("stopping means nothing is running afterwards", () => {
      *
      * Clamping to the start gives a zero-length entry, which this rule allows
      * on purpose and which the app already creates by other routes.
+     *
+     * Since 2026-11-04 typing that start is refused (`aRunningTimerCannotStartInTheFuture`,
+     * edits audit B3), so the future start here is one a device with its clock
+     * ahead stamped — the way such a timer can still arrive.
      */
-    const started = startTimer(
-      baseState(),
-      { description: "future start", projectId: null, taskId: null, tagIds: [], billable: false },
-      NOW_ISO,
-    )
+    const draft = { description: "future start", projectId: null, taskId: null, tagIds: [], billable: false }
     const threeHoursOn = new Date(new Date(NOW_ISO).getTime() + 3 * 3600_000).toISOString()
-    const moved = updateEntry(started.state, started.entry.id, { start: threeHoursOn }, NOW_ISO)
-    expect(moved.violations, "moving a running entry's start ahead is not itself refused").toEqual([])
+    const now = startTimer(baseState(), draft, NOW_ISO)
+    const typed = updateEntry(now.state, now.entry.id, { start: threeHoursOn }, NOW_ISO)
+    expect(typed.violations.map((v) => v.message), "typing a future start is refused now").toEqual([
+      "A running timer cannot start in the future",
+    ])
+    const started = startTimer(baseState(), draft, threeHoursOn)
 
-    const result = stopTimer(moved.state, NOW_ISO)
+    const result = stopTimer(started.state, NOW_ISO)
 
     const stopped = result.state.entries.find((e) => e.id === started.entry.id)!
     expect(new Date(stopped.stop!).getTime(), "stopped before it started").toBeGreaterThanOrEqual(

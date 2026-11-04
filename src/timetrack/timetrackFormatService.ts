@@ -23,6 +23,20 @@ export function epochSeconds(iso: IsoDateTime | Date): number {
   return Math.floor(ms / 1000)
 }
 
+/**
+ * The exact moment, to the millisecond. For ORDER — is this end before that
+ * start? — and for building one time from another.
+ *
+ * Starts are stamped to the millisecond (`serverNowIso`), so whole seconds are
+ * too coarse to compare them by: `epochSeconds` rounds both down, and an end
+ * 640 ms before its start compared equal. Built from a start rounded down, a
+ * zero-length end landed up to 999 ms before the start — a row the database
+ * refuses (`timetrack_entries_stop_after_start`). Lengths stay in seconds.
+ */
+export function epochMillis(iso: IsoDateTime | Date): number {
+  return iso instanceof Date ? iso.getTime() : new Date(iso).getTime()
+}
+
 export function isoFromEpochSeconds(seconds: number): IsoDateTime {
   return new Date(seconds * 1000).toISOString()
 }
@@ -360,8 +374,16 @@ export function formatMoney(amount: number, currency: string): string {
 // ---------------------------------------------------------------------------
 
 /**
+ * What a duration box teaches next to it (plan D11), and what it says when it
+ * cannot read what was typed. One wording, every box.
+ */
+export const DURATION_HINT = "90 = 90 min · 1.30 = 1 h 30 · 1.5 = 1 h 30"
+export const DURATION_UNREADABLE = "Could not read that duration — try 1:30, 1.30 or 90"
+
+/**
  * Parse a duration the way Toggl's duration field does.
  * "1:30" → 5400 · "1:30:15" → 5415 · "1.5" / "1,5" → 5400 (decimal hours)
+ * "1.30" / "1,30" → 5400 (two digits under 60 after the separator: hours and minutes)
  * "90" → 5400 (bare number = minutes) · "1h30m" / "45m" / "30s" → parsed units
  * "1h30" → 5400 · "5m30" → 330 (a bare number after the last unit is the next unit down)
  * Returns null when nothing sensible can be read.
@@ -396,6 +418,18 @@ export function parseDurationInput(raw: string): number | null {
     return Math.round(seconds)
   }
 
+  /**
+   * "1.30" AND "1,30" ARE AN HOUR AND A HALF. The phone opens the decimal pad
+   * here (plan D11), which has no ":" key, and a Dane writes half past one as
+   * 1.30. Both were read as 1.3 hours — 1:18 — and written without a word
+   * (edits audit B7, 2026-11-04). Exactly two digits after the separator, under
+   * 60, are minutes; one digit, or 60 and up, is still a decimal hour, so "1.5"
+   * and "1.75" mean what they always did.
+   */
+  const hoursAndMinutes = /^(\d+)\.(\d{2})$/.exec(text)
+  if (hoursAndMinutes && Number(hoursAndMinutes[2]) < 60) {
+    return Number(hoursAndMinutes[1]) * 3600 + Number(hoursAndMinutes[2]) * 60
+  }
   if (/^\d+\.\d+$/.test(text)) return Math.round(Number(text) * 3600)
   if (/^\d+$/.test(text)) return Number(text) * 60
 
@@ -445,9 +479,17 @@ function readClock(raw: string): { h: number; m: number; bareHour: boolean } | n
    * "p.m." is how some people were taught to write it.
    */
   const meridiem = /([ap])\.?\s*(?:m\.?)?$/.exec(text)?.[1] ?? null
+  /**
+   * Only digits, a separator (":", "." or ","), "h" and am/pm. Everything else was stripped and the
+   * rest read as a time, so "-5" became 5 and then 17:00 after a 10:00 start,
+   * silently (edits audit, 2026-11-04).
+   */
+  if (/[^0-9:.,\sapmh]/.test(text)) return null
   const digits = text.replace(/[^0-9:]/g, "")
   // "now", "pm", "x": no digits is no time — `Number("")` is 0, and it read as midnight
   if (!/\d/.test(digits)) return null
+  // "12345" is not a clock time; it read as 12:34 and dropped the 5
+  if (!digits.includes(":") && digits.length > 4) return null
   let hourText: string
   let m = 0
 
@@ -614,18 +656,74 @@ export function otherHalfOfDay(
 }
 
 /**
- * A START typed as a bare time of day: on the start's own day, unless the entry
- * runs past midnight and that time on the END's day is still before the end.
+ * A START typed as a bare time of day: on the start's own day — or the day
+ * after it, when that is still not after the end and is nearer the start you
+ * are changing.
  *
  * Read on the start's day alone, "00:30" on a 22:00–02:00 entry was half past
- * midnight the night BEFORE, and the entry became 25 hours long. `endIso` is
- * the stop, or now for a running entry.
+ * midnight the night BEFORE, and the entry became 25 hours long; the day after
+ * fixes that. It used to be the END's day instead, which on an entry longer
+ * than a day is a different day altogether: Mon 09:00 → Wed 10:00 given the
+ * start "09:30" became Wed 09:30 → Wed 10:00, 48 hours gone without a question,
+ * and a timer running since yesterday 09:00 jumped to today (edits audit B5,
+ * 2026-11-04). `endIso` is the stop, or now for a running entry.
  */
 export function parseStartTimeInput(raw: string, startIso: IsoDateTime, endIso: IsoDateTime): IsoDateTime | null {
-  const sameDay = parseTimeInput(raw, dateKey(startIso))
-  if (!sameDay || dateKey(endIso) === dateKey(startIso)) return sameDay
-  const onEndDay = parseTimeInput(raw, dateKey(endIso))
-  return onEndDay && epochSeconds(onEndDay) <= epochSeconds(endIso) ? onEndDay : sameDay
+  const clock = readClock(raw)
+  if (!clock) return null
+  const startDay = dateKey(startIso)
+  const sameDay = atClock(startDay, clock.h, clock.m)
+  const dayAfter = atClock(addDays(startDay, 1), clock.h, clock.m)
+  if (epochMillis(dayAfter) > epochMillis(endIso)) return sameDay
+  const from = epochMillis(startIso)
+  return Math.abs(epochMillis(dayAfter) - from) < Math.abs(epochMillis(sameDay) - from) ? dayAfter : sameDay
+}
+
+/**
+ * Whether a typed time or length asks before it is written (plan D10), and how.
+ *
+ * `long`: it makes the entry longer than 12 hours — and longer than it was. An
+ * entry that is already two days long, given a start half an hour later, is not
+ * a 23-hour accident; asking there blocked the very fix it needed.
+ *
+ * `cut`: it takes more than 12 hours off a finished entry, which is what a time
+ * read on the wrong day looks like — Mon 09:00 → Wed 10:00 given the end
+ * "11:00" is Monday 11:00, and 47 hours would go in silence (edits audit B5,
+ * 2026-11-04). Never on a running timer, whose whole point in being given an
+ * end or a length is to be cut short: a timer forgotten overnight.
+ *
+ * `before` is the entry's length before the edit (for a running timer, up to
+ * now), or nothing for an entry that does not exist yet.
+ */
+export function lengthQuestion(
+  seconds: number,
+  before?: { seconds: number; running?: boolean } | null,
+): "long" | "cut" | null {
+  if (seconds > LONG_ENTRY_SECONDS && (!before || seconds > before.seconds)) return "long"
+  if (before && !before.running && before.seconds - seconds > LONG_ENTRY_SECONDS) return "cut"
+  return null
+}
+
+/**
+ * The sheet's mark for an end on a later day than the start: "next day", "+2
+ * days", or nothing. The list's rows use it too, so "22:30–01:15" no longer
+ * reads as a 21-hour entry backwards (edits audit B8).
+ */
+export function endDayMark(startIso: IsoDateTime, stopIso: IsoDateTime | null): string | null {
+  if (!stopIso) return null
+  const days = daysBetween(dateKey(startIso), dateKey(stopIso))
+  if (days <= 0) return null
+  return days === 1 ? "next day" : `+${days} days`
+}
+
+/**
+ * The zone every time on this page is drawn in: this browser's own. The
+ * workspace also keeps a zone, the one of whichever browser first made it, and
+ * Settings showed that one — "Asia/Tokyo — Taken from this browser" in
+ * Copenhagen (edits audit B10, 2026-11-04).
+ */
+export function browserTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
 }
 
 // ---------------------------------------------------------------------------

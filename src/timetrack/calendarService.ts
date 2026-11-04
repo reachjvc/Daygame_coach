@@ -876,6 +876,35 @@ export function snapMinutes(minutes: number, snap = CALENDAR_SNAP_MINUTES): numb
   return Math.max(0, Math.min(24 * 60, Math.round(minutes / snap) * snap))
 }
 
+/** A block is never drawn shorter than this, so a short entry is still something to click */
+export const MIN_BLOCK_PX = 14
+
+/** How tall a block is drawn: its real height less the 1 px gap, but never under `MIN_BLOCK_PX` */
+export function drawnBlockHeight(heightMinutes: number, minuteHeight: number): number {
+  return Math.max(MIN_BLOCK_PX, heightMinutes * minuteHeight - 1)
+}
+
+/**
+ * Where a press on a block grabs it: its bottom edge resizes, the rest moves it.
+ *
+ * The edge is the bottom 8 px of the block AS DRAWN, and never more than a
+ * third of it. It used to be the bottom 8 px of the block's REAL height, while
+ * a 10-minute block is drawn 14 px tall over about 9 px of real height: nearly
+ * all of it was "edge", so a drag by the middle stretched the entry to 70
+ * minutes instead of moving it, and a click resized it (heavy-use audit D4 and
+ * edits audit B2, 2026-11-04).
+ */
+export function blockGrabMode(offsetPx: number, drawnHeightPx: number): "move" | "resize" {
+  const edge = Math.min(8, drawnHeightPx / 3)
+  return offsetPx > drawnHeightPx - edge ? "resize" : "move"
+}
+
+/**
+ * How far the pointer must travel before a press on a block is a drag. Under
+ * it, the press is a click: it opens the entry and changes nothing.
+ */
+export const DRAG_THRESHOLD_PX = 4
+
 
 /**
  * Re-exported because five callers import it from here and because the calendar is

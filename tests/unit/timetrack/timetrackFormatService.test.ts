@@ -55,7 +55,10 @@ describe("duration input parsing", () => {
 
   test("decimal hours with dot or comma", () => {
     expect(parseDurationInput("1.5")).toBe(5400)
-    expect(parseDurationInput("1,25")).toBe(4500)
+    // two digits under 60 after the separator are minutes since 2026-11-04 (edits audit B7):
+    // a Dane writes half past one as 1.30, so 1,25 is 1:25, not 1.25 hours
+    expect(parseDurationInput("1,25")).toBe(5100)
+    expect(parseDurationInput("1,75")).toBe(6300)
   })
 
   test("a bare number means minutes", () => {

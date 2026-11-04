@@ -25,6 +25,7 @@ import {
   dateKeyToDate,
   daysBetween,
   eachDay,
+  epochMillis,
   epochSeconds,
   monthStartOf,
   startOfDayIso,
@@ -328,8 +329,13 @@ export function validateEntry(
    * Equal is allowed, because that is the database's rule
    * (`timetrack_entries_stop_after_start`) and because the app makes zero-length
    * entries on its own — press `N` then `S`, or mis-tap Continue.
+   *
+   * Compared to the millisecond, as the database compares. In whole seconds an
+   * end up to 999 ms before its start passed here and was refused there: the
+   * edit stayed in this browser, and a running timer kept running on the
+   * account (edits audit B1, 2026-11-04).
    */
-  if (candidate.stop !== null && epochSeconds(candidate.stop) < epochSeconds(candidate.start)) {
+  if (candidate.stop !== null && epochMillis(candidate.stop) < epochMillis(candidate.start)) {
     violations.push({ field: "time", message: "An entry cannot end before it starts" })
   }
 
@@ -519,7 +525,8 @@ export function stopTimer(
    * rule allows on purpose.
    */
   const stopOne = (entry: TimeEntry): TimeEntry => {
-    const stop = epochSeconds(nowIso) < epochSeconds(entry.start) ? entry.start : nowIso
+    // to the millisecond: a Stop in the same second as the start is not after it (B1)
+    const stop = epochMillis(nowIso) < epochMillis(entry.start) ? entry.start : nowIso
     return {
       ...entry,
       stop,
@@ -620,6 +627,9 @@ export function createManualEntry(
   return { state: next, violations: [], entry }
 }
 
+/** One wording for one rule, on every path that can break it */
+const RUNNING_START_IN_FUTURE = "A running timer cannot start in the future"
+
 export function updateEntry(
   state: TimetrackState,
   entryId: Id,
@@ -669,6 +679,22 @@ export function updateEntry(
         { field: "time", message: "That end time has not happened yet — press Stop to end the timer now" },
       ],
     }
+  }
+
+  /**
+   * A RUNNING TIMER CANNOT START IN THE FUTURE — WHICHEVER BOX OR DRAG SETS IT.
+   *
+   * The sheet's day picker refused this (`moveEntryToDay`); the row's start box,
+   * the sheet's start box and a calendar drag below the now-line did not, and
+   * all three come through here. The timer then read 0:00:00, the hours it had
+   * tracked left the week total, and Stop wrote a zero-length entry later that
+   * night (edits audit B3, 2026-11-04). Only a start this edit CHANGES: a start
+   * a moment ahead of this device's clock came from another device's clock,
+   * and refusing every edit to that timer would refuse a rename.
+   */
+  const startsRunning = (patch.stop === undefined ? current.stop : patch.stop) === null
+  if (startsRunning && patch.start !== undefined && patch.start !== current.start && epochMillis(patch.start) > epochMillis(nowIso)) {
+    return { state, violations: [{ field: "time", message: RUNNING_START_IN_FUTURE }] }
   }
 
   const merged: TimeEntry = { ...current, ...patch, at: nowIso }
@@ -780,7 +806,8 @@ export function setRunningElapsed(
   const elapsed = epochSeconds(nowIso) - epochSeconds(running.start)
 
   if ((options.shownSeconds ?? elapsed) - wanted >= 60) {
-    const stop = new Date((epochSeconds(running.start) + wanted) * 1000).toISOString()
+    // from the exact start: rounded down first, "0" ended it before it began (B1)
+    const stop = new Date(epochMillis(running.start) + wanted * 1000).toISOString()
     const result = updateEntry(state, running.id, { stop }, nowIso)
     const stopped = result.violations.length > 0 ? null : (result.state.entries.find((e) => e.id === running.id) ?? null)
     return { ...result, stopped }
@@ -794,9 +821,10 @@ export function setRunningElapsed(
  * The "I started late" reading of a shorter time, after `setRunningElapsed`
  * took it as "I forgot to stop": running again, started that long ago.
  *
- * Not while some other timer runs — two running is the state
- * `reconcileRunningEntries` exists to undo, and it would undo it by stopping
- * this one again.
+ * That MOVES the start, which is what Toggl means by editing a running timer's
+ * length — so the button that offers it names the start it will set ("Keep
+ * running from 12:15"), and `resumeFrom` sets exactly that one when it is
+ * pressed, a minute later or not (edits audit B9, 2026-11-04).
  */
 export function resumeWithElapsed(
   state: TimetrackState,
@@ -804,12 +832,32 @@ export function resumeWithElapsed(
   seconds: number,
   nowIso: IsoDateTime,
 ): { state: TimetrackState; violations: SaveViolation[] } {
+  return resumeFrom(state, entryId, resumeStartFor(seconds, nowIso), nowIso)
+}
+
+/** The start "running for `seconds`" means right now */
+export function resumeStartFor(seconds: number, nowIso: IsoDateTime): IsoDateTime {
+  return new Date((epochSeconds(nowIso) - Math.max(0, seconds)) * 1000).toISOString()
+}
+
+/**
+ * Running again from `startIso`.
+ *
+ * Not while some other timer runs — two running is the state
+ * `reconcileRunningEntries` exists to undo, and it would undo it by stopping
+ * this one again.
+ */
+export function resumeFrom(
+  state: TimetrackState,
+  entryId: Id,
+  startIso: IsoDateTime,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[] } {
   const other = runningEntry(state)
   if (other && other.id !== entryId) {
     return { state, violations: [{ field: "time", message: "Another timer is running now — stop it first" }] }
   }
-  const start = new Date((epochSeconds(nowIso) - Math.max(0, seconds)) * 1000).toISOString()
-  return updateEntry(state, entryId, { start, stop: null }, nowIso, { resuming: true })
+  return updateEntry(state, entryId, { start: startIso, stop: null }, nowIso, { resuming: true })
 }
 
 /**
@@ -829,11 +877,12 @@ export function setEntryStart(
 ): { state: TimetrackState; violations: SaveViolation[] } {
   const entry = state.entries.find((e) => e.id === entryId)
   if (!entry) return { state, violations: [] }
-  if (entry.stop === null || epochSeconds(start) <= epochSeconds(entry.stop)) {
+  if (entry.stop === null || epochMillis(start) <= epochMillis(entry.stop)) {
     return updateEntry(state, entryId, { start }, nowIso)
   }
-  const length = epochSeconds(entry.stop) - epochSeconds(entry.start)
-  const stop = new Date((epochSeconds(start) + length) * 1000).toISOString()
+  // to the millisecond, so a zero-length entry stays in order (B1)
+  const lengthMs = epochMillis(entry.stop) - epochMillis(entry.start)
+  const stop = new Date(epochMillis(start) + lengthMs).toISOString()
   return updateEntry(state, entryId, { start, stop }, nowIso)
 }
 
@@ -863,13 +912,14 @@ export function moveEntryToDay(
 
   if (isRunning(entry)) {
     // a running timer that has not started yet would count down, not up
-    if (epochSeconds(start) > epochSeconds(nowIso)) {
-      return { state, violations: [{ field: "date", message: "A running timer cannot start in the future" }] }
+    if (epochMillis(start) > epochMillis(nowIso)) {
+      return { state, violations: [{ field: "date", message: RUNNING_START_IN_FUTURE }] }
     }
     return updateEntry(state, entryId, { start }, nowIso)
   }
-  const length = epochSeconds(entry.stop!) - epochSeconds(entry.start)
-  const stop = new Date((epochSeconds(start) + length) * 1000).toISOString()
+  // to the millisecond, so a zero-length entry stays in order (B1)
+  const lengthMs = epochMillis(entry.stop!) - epochMillis(entry.start)
+  const stop = new Date(epochMillis(start) + lengthMs).toISOString()
   return updateEntry(state, entryId, { start, stop }, nowIso)
 }
 
@@ -882,8 +932,38 @@ export function setEntryDuration(
 ): { state: TimetrackState; violations: SaveViolation[] } {
   const entry = state.entries.find((e) => e.id === entryId)
   if (!entry || isRunning(entry)) return { state, violations: [] }
-  const stop = new Date((epochSeconds(entry.start) + Math.max(0, seconds)) * 1000).toISOString()
+  // from the exact start: rounded down first, "0:00" ended it before it began (B1)
+  const stop = new Date(epochMillis(entry.start) + Math.max(0, seconds) * 1000).toISOString()
   return updateEntry(state, entryId, { stop }, nowIso)
+}
+
+/**
+ * "Drop them": end the entry where the idle time began, and say how much went.
+ *
+ * Never before the entry began. `idleSinceIso` is the last real interaction,
+ * and an entry can start AFTER that: Pomodoro's auto-continue begins one with
+ * nobody touching anything, and the click on Start itself lands a few
+ * milliseconds before the start is stamped. Compared in whole seconds, that
+ * click passed for "not before", and the trim wrote an end 5 ms before the
+ * start, which the account refused (edits audit B1, 2026-11-04). Clamped to the
+ * millisecond, it is a zero-length entry, which the rule allows on purpose.
+ *
+ * `droppedSeconds` is counted to now, not to when the question was first
+ * asked: the question stays on screen while you are away, and "Drop them"
+ * drops all of it (B6).
+ */
+export function dropIdleTime(
+  state: TimetrackState,
+  entryId: Id,
+  idleSinceIso: IsoDateTime,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[]; droppedSeconds: number } {
+  const entry = state.entries.find((e) => e.id === entryId)
+  if (!entry) return { state, violations: [], droppedSeconds: 0 }
+  const trimTo = epochMillis(idleSinceIso) < epochMillis(entry.start) ? entry.start : idleSinceIso
+  const result = updateEntry(state, entryId, { stop: trimTo }, nowIso)
+  const droppedSeconds = Math.max(0, Math.floor((epochMillis(nowIso) - epochMillis(trimTo)) / 1000))
+  return { ...result, droppedSeconds }
 }
 
 /**
@@ -1090,6 +1170,27 @@ export function buildDayGroups(
     else byDay.set(key, [entry])
   }
 
+  /**
+   * A DAY'S HEADER COUNTS THE HOURS THAT FELL ON THAT DAY.
+   *
+   * It summed each entry's whole length on its start day, so a Sunday 22:00 →
+   * Monday 02:00 entry read "Sun 4:00" here while the calendar, the week total
+   * and the reports said two hours on each day (edits audit B8 and heavy-use
+   * audit D8, 2026-11-04). The rows stay where they were — an entry is listed
+   * once, on the day it started — and the header splits it at midnight, as
+   * `entryDaySeconds` does everywhere else. Walked per entry over the days it
+   * touches, not per day over every entry: this runs every second a timer runs.
+   */
+  const dayTotals = new Map<IsoDate, number>()
+  for (const entry of entries) {
+    if (entry.serverDeletedAt) continue
+    const endIso = entry.stop ?? new Date((epochSeconds(entry.start) + entrySeconds(entry, options.nowSec)) * 1000).toISOString()
+    const lastDay = dateKey(endIso)
+    for (let day = dateKey(entry.start); day <= lastDay; day = addDays(day, 1)) {
+      dayTotals.set(day, (dayTotals.get(day) ?? 0) + entryDaySeconds(entry, day, options.nowSec))
+    }
+  }
+
   const days = [...byDay.keys()].sort((a, b) => (a < b ? 1 : -1))
   return days.map((day) => {
     const dayEntries = [...byDay.get(day)!].sort(
@@ -1123,7 +1224,7 @@ export function buildDayGroups(
 
     return {
       date: day,
-      totalSeconds: sumSeconds(dayEntries, options.nowSec),
+      totalSeconds: dayTotals.get(day) ?? 0,
       rows,
     }
   })

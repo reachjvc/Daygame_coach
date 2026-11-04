@@ -308,7 +308,8 @@ describe("the timer bar on a timer forgotten overnight", () => {
       expect.stringMatching(/^Ended “deep work” yesterday at 10:30, 1 hour 30 minutes after it started/),
       "info",
       expect.any(Function),
-      "Keep running",
+      // it moves the start to 1:30 before now, and says so (edits audit B9)
+      "Keep running from 23:30",
     )
   })
 

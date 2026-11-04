@@ -20,7 +20,10 @@ import { AfterCheckContext } from "./afterCheck"
 import { announceNeighbours } from "./neighbourNotice"
 import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
 import {
+  DRAG_THRESHOLD_PX,
+  blockGrabMode,
   dayColumnSeconds,
+  drawnBlockHeight,
   entriesForDay,
   entryInterval,
   eventInterval,
@@ -67,6 +70,15 @@ interface DragState {
   /** Offset from the block top when moving */
   grabOffset?: number
   durationMinutes?: number
+  /**
+   * Where the pointer went down on a block, and whether it has since travelled
+   * `DRAG_THRESHOLD_PX`. Until it has, the press is a click: mouse-up used to
+   * write the snapped pointer position as the end whether or not the mouse
+   * had moved, so a click on a block's lower edge changed its end, and on the
+   * running block stopped the timer (edits audit B2, 2026-11-04).
+   */
+  originY?: number
+  moved?: boolean
 }
 
 export function CalendarView({
@@ -162,6 +174,12 @@ export function CalendarView({
     const { day, mode } = drag
     const from = Math.min(drag.startMinutes, drag.currentMinutes)
     const to = Math.max(drag.startMinutes, drag.currentMinutes)
+
+    // a press on a block that never moved is a click: the click handler opens it
+    if (mode !== "create" && !drag.moved) {
+      setDrag(null)
+      return
+    }
 
     if (mode === "create") {
       if (to - from >= 5) {
@@ -366,7 +384,10 @@ export function CalendarView({
                   }}
                   onMouseMove={(event) => {
                     if (!drag || drag.day !== day) return
-                    setDrag({ ...drag, currentMinutes: minutesFromEvent(event.clientY, dayIndex) })
+                    // a press on a block is a click until the pointer has really moved: see `DragState`
+                    const moved = drag.moved || drag.originY === undefined || Math.abs(event.clientY - drag.originY) >= DRAG_THRESHOLD_PX
+                    if (!moved) return
+                    setDrag({ ...drag, moved: true, currentMinutes: minutesFromEvent(event.clientY, dayIndex) })
                   }}
                 >
                   {/* hour lines */}
@@ -389,6 +410,7 @@ export function CalendarView({
                     const entry = block.item
                     const width = entryLaneWidth / block.columns
                     const project = state.projects.find((p) => p.id === entry.projectId)
+                    const drawnHeight = drawnBlockHeight(block.heightMinutes, minuteHeight)
                     return (
                       <div
                         key={entry.id}
@@ -397,10 +419,12 @@ export function CalendarView({
                           mouseEvent.stopPropagation()
                           if (isMobile) return
                           const minutes = minutesFromEvent(mouseEvent.clientY, dayIndex)
-                          const isResize = mouseEvent.nativeEvent.offsetY > block.heightMinutes * minuteHeight - 8
+                          // measured on the block as drawn, from the block itself, not from a child under the pointer
+                          const offset = mouseEvent.clientY - mouseEvent.currentTarget.getBoundingClientRect().top
                           setDrag({
                             day,
-                            mode: isResize ? "resize" : "move",
+                            mode: blockGrabMode(offset, drawnHeight),
+                            originY: mouseEvent.clientY,
                             startMinutes: block.topMinutes,
                             currentMinutes: minutes,
                             entryId: entry.id,
@@ -421,7 +445,7 @@ export function CalendarView({
                         )}
                         style={{
                           top: block.topMinutes * minuteHeight,
-                          height: Math.max(14, block.heightMinutes * minuteHeight - 1),
+                          height: drawnHeight,
                           left: `${block.column * width}%`,
                           width: `${width}%`,
                           backgroundColor: `${project?.color ?? "#525266"}33`,

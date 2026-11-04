@@ -24,6 +24,7 @@ import { mergeTabStates } from "../tabMergeService"
 import { dateKey, epochSeconds, formatIdleSpan, hourIsInWindow, plural } from "../timetrackFormatService"
 import {
   continueEntry,
+  dropIdleTime,
   entrySeconds,
   forgottenTimer,
   evaluateAlerts,
@@ -32,7 +33,6 @@ import {
   startTimer,
   stopTimer,
   undoDisplacement,
-  updateEntry,
 } from "../timetrackService"
 import type { EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
 
@@ -72,9 +72,12 @@ export interface IdlePrompt {
   entryId: Id
   /** What the timer was tracking, so the prompt can name it */
   description: string
-  /** When interaction stopped */
+  /**
+   * When interaction stopped. How long ago that was is worked out from the
+   * clock each time it is shown, never stored: a stored count froze at the
+   * moment the question first appeared (edits audit B6).
+   */
   idleSinceIso: string
-  idleSeconds: number
 }
 
 export type PomodoroPhase = "idle" | "work" | "break"
@@ -532,7 +535,6 @@ export function useTimetrack() {
       description: running.description,
       // measured on this device's clock, stamped on the server's
       idleSinceIso: new Date(lastInteraction.current + serverOffset()).toISOString(),
-      idleSeconds: Math.floor(idleMs / 1000),
     })
   }, [nowSec, state?.idle.enabled, state?.idle.minutes, running, idlePrompt, state])
 
@@ -558,25 +560,24 @@ export function useTimetrack() {
        * user now believes is the thing that did not occur.
        */
       /**
-       * Never trim to before the entry began.
+       * Never trim to before the entry began, to the millisecond.
        *
        * `idleSinceIso` is the last real interaction, and an entry can start
        * AFTER that: Pomodoro's auto-continue begins one with nobody touching
-       * anything. The trim was then refused — correctly, an entry cannot end
+       * anything, and the click on Start lands a few ms before the start is
+       * stamped. The trim was then refused — correctly, an entry cannot end
        * before it starts — but the prompt had already been dismissed, so
        * nothing was trimmed, the timer kept running, and there was no way back
-       * to the question. Clamping gives a zero-length entry, which the rule
-       * allows on purpose.
+       * to the question. `dropIdleTime` clamps, which gives a zero-length entry.
        */
-      const trimTo =
-        epochSeconds(prompt.idleSinceIso) < epochSeconds(entry.start) ? entry.start : prompt.idleSinceIso
-      const trimmed = updateEntry(state, entry.id, { stop: trimTo }, nowIso)
+      const trimmed = dropIdleTime(state, entry.id, prompt.idleSinceIso, nowIso)
       if (trimmed.violations.length > 0) {
         pushToast(trimmed.violations[0].message, "error")
         return
       }
 
-      const span = formatIdleSpan(prompt.idleSeconds)
+      // what was dropped, counted to now, not the threshold the question first named
+      const span = formatIdleSpan(trimmed.droppedSeconds)
       if (action === "discard_and_stop") {
         setState(() => trimmed.state)
         pushToast(`Dropped ${span} and stopped the timer`)

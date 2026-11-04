@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils"
 import { serverNowIso } from "../serverClock"
 import { IconAuto, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
-  LONG_ENTRY_SECONDS,
+  DURATION_HINT,
+  DURATION_UNREADABLE,
   dateKey,
   epochSeconds,
   formatClock,
@@ -22,6 +23,7 @@ import {
   formatTimeOfDay,
   formatWhen,
   isoFromEpochSeconds,
+  lengthQuestion,
   otherHalfOfDay,
   parseDurationInput,
   parseEndTimeInput,
@@ -40,7 +42,8 @@ import {
   forgottenTimer,
   liveEntries,
   matchAutotracker,
-  resumeWithElapsed,
+  resumeFrom,
+  resumeStartFor,
   runningEntry,
   setRunningElapsed,
   toggleFavorite,
@@ -72,22 +75,29 @@ export function announceEndedEarly(
   pushToast: PushToast,
 ) {
   const what = stopped.description.trim()
-  const when = formatWhen(stopped.stop ?? stopped.start, getState().user.timeFormat, dateKey(new Date()))
+  const format = getState().user.timeFormat
+  const when = formatWhen(stopped.stop ?? stopped.start, format, dateKey(new Date()))
+  /**
+   * The other reading MOVES the start to that long before now — Toggl's meaning
+   * of a running timer's length — so the button says where it will start, and
+   * pressing it later starts it there, not later than it said (edits audit B9).
+   */
+  const from = resumeStartFor(seconds, serverNowIso())
   pushToast(
     `Ended ${what ? `“${what}”` : "the timer"} ${when}, ${formatIdleSpan(seconds)} after it started`,
     "info",
     () => {
-      const refusal = resumeWithElapsed(getState(), stopped.id, seconds, serverNowIso()).violations[0]
+      const refusal = resumeFrom(getState(), stopped.id, from, serverNowIso()).violations[0]
       if (refusal) {
         pushToast(refusal.message, "error")
         return
       }
       setState((current) => {
-        const resumed = resumeWithElapsed(current, stopped.id, seconds, serverNowIso())
+        const resumed = resumeFrom(current, stopped.id, from, serverNowIso())
         return resumed.violations.length > 0 ? current : resumed.state
       })
     },
-    "Keep running",
+    `Keep running from ${formatTimeOfDay(from, format)}`,
   )
 }
 
@@ -110,12 +120,23 @@ export function askBeforeLong(
   write: () => void,
   pushToast: PushToast,
   alternative?: { label: string; write: () => void },
+  /**
+   * The entry's length before this edit, when it has one. Then a typed value
+   * asks only when it makes the entry longer, and also when it cuts more than
+   * 12 hours off a finished one: see `lengthQuestion` (edits audit B5).
+   */
+  before?: { seconds: number; running?: boolean } | null,
 ) {
-  if (seconds <= LONG_ENTRY_SECONDS) {
+  const question = lengthQuestion(seconds, before)
+  if (question === null) {
     write()
     return
   }
   const span = formatIdleSpan(seconds)
+  if (question === "cut") {
+    pushToast(`That cuts it from ${formatIdleSpan(before?.seconds ?? 0)} to ${span}.`, "info", write, `Keep ${span}`)
+    return
+  }
   if (alternative) {
     pushToast(`That makes it ${span}. Did you mean ${alternative.label}?`, "info", alternative.write, `Use ${alternative.label}`, {
       label: `Keep ${span}`,
@@ -130,7 +151,11 @@ export function askBeforeLong(
 export function askAboutTypedTime(
   which: "start" | "stop",
   typedIso: IsoDateTime,
-  entry: { start: IsoDateTime; stop: IsoDateTime },
+  /**
+   * The entry as it is: `stop` is now for a running one, and `running` says so.
+   * `isNew` for manual mode's form, which has no length before this one.
+   */
+  entry: { start: IsoDateTime; stop: IsoDateTime; running?: boolean; isNew?: boolean },
   write: (iso: IsoDateTime) => void,
   pushToast: PushToast,
   timeFormat: TimetrackState["user"]["timeFormat"],
@@ -145,6 +170,7 @@ export function askAboutTypedTime(
     () => write(typedIso),
     pushToast,
     other ? { label: formatTimeOfDay(other, timeFormat), write: () => write(other) } : undefined,
+    entry.isNew ? null : { seconds: epochSeconds(entry.stop) - epochSeconds(entry.start), running: entry.running },
   )
 }
 
@@ -335,6 +361,15 @@ export function TimerBar({
   const [editingDuration, setEditingDuration] = useState(false)
   /** what the box read when you started typing — leaving it as it was is not an edit */
   const durationAtFocus = useRef<string | null>(null)
+  /**
+   * Escape throws the edit away, timer running or not. It did only while none
+   * ran: with a timer running the typed value stayed in the box and the next
+   * click anywhere committed it, so a two-hour timer ended at one hour (edits
+   * audit B4). The flag is for the blur Escape causes, which would otherwise
+   * commit — React has not re-rendered by then, so the blur still sees the
+   * typed text. The same shape as the entry row's `discarding`.
+   */
+  const discardDuration = useRef(false)
 
   const openManualAt = useCallback((base: TimetrackState) => {
     const range = manualRange(base, new Date())
@@ -412,7 +447,7 @@ export function TimerBar({
     durationAtFocus.current = null
     if (durationInput === shown) return
     if (seconds === null) {
-      pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
+      pushToast(DURATION_UNREADABLE, "error")
       setDurationInput(formatClock(runningSeconds))
       return
     }
@@ -472,8 +507,13 @@ export function TimerBar({
   /** The typed length, logged as a finished entry that ends now: see `typedLength` */
   const logTypedLength = () => {
     const seconds = parseDurationInput(durationInput)
-    if (seconds === null || seconds <= 0) {
-      pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
+    if (seconds === null) {
+      pushToast(DURATION_UNREADABLE, "error")
+      return
+    }
+    // read, and nothing to add: say that, rather than that it could not be read
+    if (seconds <= 0) {
+      pushToast("Nothing was added: 0 minutes would be an empty entry. Type how long it took, like 1:30 or 45.", "error")
       return
     }
     askBeforeLong(
@@ -509,7 +549,7 @@ export function TimerBar({
       // the next one opens where this one ended, if that is already past
       if (written) openManualAt(written)
     }
-    askAboutTypedTime("stop", stop, { start, stop }, write, pushToast, latestState.current.user.timeFormat)
+    askAboutTypedTime("stop", stop, { start, stop, isNew: true }, write, pushToast, latestState.current.user.timeFormat)
   }
 
   // The picker hands back a name, not an id, so these create the thing and
@@ -671,6 +711,10 @@ export function TimerBar({
                 setDurationInput(event.target.value)
               }}
               onBlur={() => {
+                if (discardDuration.current) {
+                  discardDuration.current = false
+                  return
+                }
                 if (running) commitRunningDuration()
                 // a typed length stays, waiting for Enter or Add: see `typedLength`
                 else if (!typedLength) setEditingDuration(false)
@@ -682,8 +726,13 @@ export function TimerBar({
                 } else if (event.key === "Enter" && typedLength) {
                   event.preventDefault()
                   logTypedLength()
-                } else if (event.key === "Escape" && !running) {
+                } else if (event.key === "Escape") {
+                  event.preventDefault()
+                  discardDuration.current = true
+                  durationAtFocus.current = null
                   setEditingDuration(false)
+                  setDurationInput(formatClock(runningSeconds))
+                  event.currentTarget.blur()
                 }
               }}
               /* Open with nothing running too: a length typed here is logged
@@ -692,7 +741,7 @@ export function TimerBar({
                  next tick and the typing went nowhere. */
               // the decimal pad on a phone: "1.5" is an hour and a half (plan D11)
               inputMode="decimal"
-              title="90 = 90 min · 1.5 = 1 h 30"
+              title={DURATION_HINT}
               aria-label="Duration"
               className="h-11 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
             />

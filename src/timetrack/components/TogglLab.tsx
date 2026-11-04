@@ -41,7 +41,7 @@ import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
 import { defaultReportConfig, decodeReportConfig } from "../reportsService"
-import { dateKey, formatClock, formatIdleSpan, formatTimeOfDay } from "../timetrackFormatService"
+import { dateKey, formatClock } from "../timetrackFormatService"
 import {
   draftFromStartLink,
   draftOf,
@@ -55,6 +55,7 @@ import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section 
 import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState } from "../types"
 import { CalendarView } from "./CalendarView"
 import { EntryDetailModalBody, EntryList } from "./EntryList"
+import { IdleQuestion } from "./IdleQuestion"
 import { ManageView, type ManageTab } from "./ManageView"
 import { ProjectsView } from "./ProjectsView"
 import { ReportsView } from "./ReportsView"
@@ -181,34 +182,6 @@ function keepTimerBar(patch: Partial<TimerBarSession>) {
 }
 
 /** One idle choice: what happens to the minutes, then what happens to the timer */
-function IdleChoice({
-  label,
-  detail,
-  onClick,
-  primary,
-}: {
-  label: string
-  detail: string
-  onClick: () => void
-  primary?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "w-full rounded-lg border px-3 py-2.5 text-left transition-colors",
-        primary
-          ? "border-primary bg-primary/10 hover:bg-primary/15"
-          : "border-border hover:bg-secondary/50",
-      )}
-    >
-      <span className="block text-sm font-medium">{label}</span>
-      <span className="block text-xs text-muted-foreground">{detail}</span>
-    </button>
-  )
-}
-
 export function TogglLab({
   backHref = "/test",
   backLabel = "/test",
@@ -1108,40 +1081,14 @@ export function TogglLab({
 
       {/* idle prompt */}
       {idlePrompt && (
-        <Modal
-          title={`No activity for ${formatIdleSpan(idlePrompt.idleSeconds)}`}
-          onClose={() => resolveIdle("keep")}
-        >
-          <p className="text-sm">
-            <strong>{idlePrompt.description.trim() || "Your timer"}</strong> has been running since{" "}
-            {formatTimeOfDay(idlePrompt.idleSinceIso, state.user.timeFormat)} with nothing happening on this page.
-            What should happen to those {formatIdleSpan(idlePrompt.idleSeconds)}?
-          </p>
-
-          <div className="mt-4 space-y-2">
-            <IdleChoice
-              label="Count them"
-              detail={`Leave the ${formatIdleSpan(idlePrompt.idleSeconds)} on this entry and keep the timer running.`}
-              onClick={() => resolveIdle("keep")}
-              primary
-            />
-            <IdleChoice
-              label="Drop them, keep tracking"
-              detail={`End this entry at ${formatTimeOfDay(idlePrompt.idleSinceIso, state.user.timeFormat)} and start a fresh one from now.`}
-              onClick={() => resolveIdle("discard")}
-            />
-            <IdleChoice
-              label="Drop them and stop"
-              detail={`End this entry at ${formatTimeOfDay(idlePrompt.idleSinceIso, state.user.timeFormat)} and leave the timer stopped.`}
-              onClick={() => resolveIdle("discard_and_stop")}
-            />
-          </div>
-
-          <p className="mt-3 text-[11px] text-muted-foreground">
-            This page can only see activity on its own tab, so it only asks while you are looking at it. Turn the check
-            off in Settings → Automation.
-          </p>
-        </Modal>
+        // counts the time away up to now, on every tick: see `IdleQuestion`
+        <IdleQuestion
+          prompt={idlePrompt}
+          entryStartIso={state.entries.find((e) => e.id === idlePrompt.entryId)?.start ?? idlePrompt.idleSinceIso}
+          nowSec={nowSec}
+          timeFormat={state.user.timeFormat}
+          onResolve={resolveIdle}
+        />
       )}
 
       {/*

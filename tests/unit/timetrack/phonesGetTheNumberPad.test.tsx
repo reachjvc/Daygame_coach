@@ -91,6 +91,7 @@ describe("the number pad", () => {
     const { getByText } = render(
       <EntryDetailModalBody entry={state.entries[0]} state={state} setState={vi.fn()} pushToast={vi.fn()} nowSec={0} />,
     )
-    expect(getByText(/90 = 90 min · 1\.5 = 1 h 30/)).toBeTruthy()
+    // 1.30 is an hour and a half too, since 2026-11-04 (edits audit B7)
+    expect(getByText(/90 = 90 min · 1\.30 = 1 h 30 · 1\.5 = 1 h 30/)).toBeTruthy()
   })
 })

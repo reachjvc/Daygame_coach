@@ -28,8 +28,11 @@ import {
   IconStart,
 } from "../icons"
 import {
+  DURATION_HINT,
+  DURATION_UNREADABLE,
   dateKey,
   daysBetween,
+  endDayMark,
   epochSeconds,
   formatClock,
   formatDate,
@@ -445,6 +448,8 @@ function EntryFields({
 }) {
   const seconds = row ? row.totalSeconds : entrySeconds(entry, nowSec)
   const running = isRunning(entry)
+  /** "next day" when the end is on a later day than the start, as the sheet says it */
+  const endMark = endDayMark(entry.start, entry.stop)
   const editable = canEditEntry(state, entry)
   const [description, setDescription] = useState(entry.description)
   // Keep the field in step when the entry changes elsewhere (bulk edit, undo, group edit)
@@ -563,15 +568,15 @@ function EntryFields({
       if (which === "stop") announceNextDay(entry.start, at, checked.state, pushToast)
       announceNeighbours(checked, checked.state.user.timeFormat, setState, pushToast)
     }
-    // longer than 12 hours asks first: see `askBeforeLong`
-    const span = { start: entry.start, stop: entry.stop ?? nowIso() }
+    // longer than 12 hours, or 12 hours cut off a finished entry, asks first: see `askBeforeLong`
+    const span = { start: entry.start, stop: entry.stop ?? nowIso(), running }
     askAboutTypedTime(which, iso, span, write, pushToast, state.user.timeFormat)
   }
 
   const commitDuration = (raw: string) => {
     const parsed = parseDurationInput(raw)
     if (parsed === null) {
-      pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
+      pushToast(DURATION_UNREADABLE, "error")
       return
     }
     // a running entry takes the timer bar's rule: shorter ends it, longer moves its start
@@ -596,6 +601,9 @@ function EntryFields({
         if (checked.stopped) announceEndedEarly(checked.stopped, parsed, () => latestState.current, setState, pushToast)
       },
       pushToast,
+      undefined,
+      // a running timer keeps the bar's rule: a typed length is measured on its own
+      running ? null : { seconds: entry.duration },
     )
   }
 
@@ -707,6 +715,11 @@ function EntryFields({
             {!row?.grouped && !entry.duronly && (
               <span className="shrink-0 tabular-nums">
                 {formatTimeLabel(entry.start, state)}–{entry.stop ? formatTimeLabel(entry.stop, state) : "now"}
+                {endMark && (
+                  <span data-end-day className="ml-1 text-[11px] text-primary">
+                    {endMark}
+                  </span>
+                )}
               </span>
             )}
           </div>
@@ -840,8 +853,9 @@ function EntryFields({
         <BillableToggle billable={entry.billable} onChange={(billable) => patch({ billable })} disabled={!editable} />
 
         {/* the cell itself always stays in flow: a display:none grid child is
-          skipped by auto-placement and shifts every later column */}
-        <div className="flex items-center justify-end overflow-hidden">
+          skipped by auto-placement and shifts every later column. Clipped
+          sideways only, so the "next day" under the end box still shows */}
+        <div className="flex items-center justify-end overflow-x-clip">
           {!entry.duronly && !row?.grouped && (
             <div className="hidden items-center gap-1 text-xs md:flex">
               <input
@@ -863,26 +877,37 @@ function EntryFields({
                 )}
               />
               <span className="text-muted-foreground">–</span>
-              <input
-                value={stopDraft ?? (entry.stop ? formatTimeLabel(entry.stop, state) : "now")}
-                onChange={(event) => setStopDraft(event.target.value)}
-                onKeyDown={timeKeys(() => setStopDraft(null))}
-                // "now" is a word, not a time: typing over it should not mean deleting it first
-                onFocus={(event) => event.currentTarget.select()}
-                onBlur={() => {
-                  if (discarding.current) discarding.current = false
-                  // on a running entry this stops it there, so a forgotten timer can end yesterday
-                  else if (stopDraft !== null) commitTime("stop", stopDraft)
-                  setStopDraft(null)
-                }}
-                disabled={!editable}
-                inputMode="numeric"
-                aria-label="End time"
-                className={cn(
-                  timeInputWidth(state),
-                  "rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground",
+              {/* the end box, and under it the sheet's "next day" when the end is on a later day (B8) */}
+              <span className="relative">
+                <input
+                  value={stopDraft ?? (entry.stop ? formatTimeLabel(entry.stop, state) : "now")}
+                  onChange={(event) => setStopDraft(event.target.value)}
+                  onKeyDown={timeKeys(() => setStopDraft(null))}
+                  // "now" is a word, not a time: typing over it should not mean deleting it first
+                  onFocus={(event) => event.currentTarget.select()}
+                  onBlur={() => {
+                    if (discarding.current) discarding.current = false
+                    // on a running entry this stops it there, so a forgotten timer can end yesterday
+                    else if (stopDraft !== null) commitTime("stop", stopDraft)
+                    setStopDraft(null)
+                  }}
+                  disabled={!editable}
+                  inputMode="numeric"
+                  aria-label="End time"
+                  className={cn(
+                    timeInputWidth(state),
+                    "rounded bg-transparent text-center tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:text-muted-foreground",
+                  )}
+                />
+                {endMark && (
+                  <span
+                    data-end-day
+                    className="pointer-events-none absolute inset-x-0 top-full whitespace-nowrap text-center text-[9px] leading-none text-primary"
+                  >
+                    {endMark}
+                  </span>
                 )}
-              />
+              </span>
             </div>
           )}
         </div>
@@ -902,7 +927,7 @@ function EntryFields({
           disabled={!editable || row?.grouped}
           // the decimal pad: "1.5" is an hour and a half (plan D11)
           inputMode="decimal"
-          title="90 = 90 min · 1.5 = 1 h 30"
+          title={DURATION_HINT}
           aria-label="Duration"
           className="w-full rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
         />
@@ -1365,7 +1390,8 @@ export function EntryDetailModalBody({
    * box cannot show.
    */
   type TimeField = "day" | "start" | "stop" | "duration"
-  const [typed, setTyped] = useState<{ field: TimeField; text: string } | null>(null)
+  /** `edited`: typed into since focus, not only held (a held box is not something to read back) */
+  const [typed, setTyped] = useState<{ field: TimeField; text: string; edited?: boolean } | null>(null)
   const pending = useRef<{ field: TimeField; text: string } | null>(null)
   const heldText = useRef<string | null>(null)
   const hold = (field: TimeField, text: string) => {
@@ -1374,7 +1400,7 @@ export function EntryDetailModalBody({
   }
   const type = (field: TimeField, text: string) => {
     pending.current = { field, text }
-    setTyped(pending.current)
+    setTyped({ ...pending.current, edited: true })
   }
   const shown = (field: TimeField, stored: string) => (typed?.field === field ? typed.text : stored)
 
@@ -1395,7 +1421,7 @@ export function EntryDetailModalBody({
     if (edit.field === "duration") {
       const seconds = parseDurationInput(text)
       if (seconds === null) {
-        pushToast("Could not read that duration — try 1:30, 1.5 or 90m", "error")
+        pushToast(DURATION_UNREADABLE, "error")
         return
       }
       // longer than 12 hours asks first: see `askBeforeLong`
@@ -1413,6 +1439,9 @@ export function EntryDetailModalBody({
           landOnCurrent((base) => setEntryDuration(base, entry.id, seconds, nowIso()))
         },
         pushToast,
+        undefined,
+        // a running timer keeps the bar's rule: a typed length is measured on its own
+        isRunning(current) ? null : { seconds: current.duration },
       )
       return
     }
@@ -1444,8 +1473,8 @@ export function EntryDetailModalBody({
       if (field === "stop") announceNextDay(current.start, at, latestState.current, pushToast)
       announceNeighbours(landed, latestState.current.user.timeFormat, setState, pushToast)
     }
-    // longer than 12 hours asks first: see `askBeforeLong`
-    const span = { start: current.start, stop: current.stop ?? nowIso() }
+    // longer than 12 hours, or 12 hours cut off a finished entry, asks first: see `askBeforeLong`
+    const span = { start: current.start, stop: current.stop ?? nowIso(), running: isRunning(current) }
     askAboutTypedTime(field, iso, span, write, pushToast, latestState.current.user.timeFormat)
   }
 
@@ -1541,6 +1570,8 @@ export function EntryDetailModalBody({
   )
 
   const endDays = entry.stop ? daysBetween(dateKey(entry.start), dateKey(entry.stop)) : 0
+  const typedLength = typed?.field === "duration" && typed.edited ? parseDurationInput(typed.text) : null
+  const durationReading = typedLength === null ? null : `${typed!.text.trim()} = ${formatIdleSpan(typedLength)}`
   const durationShown = running
     ? formatClock(entrySeconds(entry, nowSec))
     : formatDuration(entry.duration, state.user.durationFormat)
@@ -1644,7 +1675,8 @@ export function EntryDetailModalBody({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">Duration: 90 = 90 min · 1.5 = 1 h 30</p>
+        {/* while a length is typed, what it will be read as; otherwise the rule (B7) */}
+        <p className="text-xs text-muted-foreground">{durationReading ?? `Duration: ${DURATION_HINT}`}</p>
         {running && (
           <p className="text-xs text-muted-foreground">
             Still running. Forgot to stop it? Type when it ended, or how long you worked, and it ends there.

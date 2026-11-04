@@ -33,6 +33,7 @@ import {
   addDays,
   clampSetting,
   dateKey,
+  browserTimeZone,
   endOfDayIso,
   formatDate,
   formatDuration,
@@ -183,8 +184,10 @@ function ProfilePanel({
             options={WEEK_STARTS.map((w) => ({ id: String(w.id), label: w.label }))}
           />
         </Field>
-        <Field label="Time zone" hint="Taken from this browser">
-          <Input value={state.user.timezone} readOnly className="opacity-70" />
+        {/* the zone this page draws in, which is this browser's — not the one the
+            workspace was first made in, which it also keeps (edits audit B10) */}
+        <Field label="Time zone" hint="This browser's zone. Every time on this page is shown in it">
+          <Input value={browserTimeZone()} readOnly className="opacity-70" />
         </Field>
       </div>
       <div className="mt-2 border-t border-border pt-2">
