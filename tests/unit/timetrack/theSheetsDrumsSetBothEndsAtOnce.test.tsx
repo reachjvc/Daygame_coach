@@ -24,6 +24,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { EntryDetailModalBody } from "@/src/timetrack/components/EntryList"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
 import { emptyDraft, isRunning, runningEntry, startTimer } from "@/src/timetrack/timetrackService"
+import type { PushToast } from "@/src/timetrack/hooks/useTimetrack"
 import type { TimetrackState } from "@/src/timetrack/types"
 
 import { baseState, entry } from "./helpers"
@@ -33,6 +34,7 @@ const NOW = at(4, 16, 0)
 const TODAY = "2026-11-04"
 
 let latest: TimetrackState
+let toast: ReturnType<typeof vi.fn<PushToast>>
 
 /** like TogglLab: the sheet is drawn from the workspace it writes to — and `latest` sees a write made on the way out */
 function Sheet({ initial, id }: { initial: TimetrackState; id: string }) {
@@ -45,7 +47,7 @@ function Sheet({ initial, id }: { initial: TimetrackState; id: string }) {
         latest = updater(latest)
         setState(latest)
       }}
-      pushToast={vi.fn()}
+      pushToast={toast}
       nowSec={epochSeconds(NOW)}
     />
   )
@@ -53,6 +55,7 @@ function Sheet({ initial, id }: { initial: TimetrackState; id: string }) {
 
 const open = (state: TimetrackState, id = "a") => {
   latest = state
+  toast = vi.fn<PushToast>()
   return render(<Sheet initial={state} id={id} />)
 }
 const stored = (id = "a") => latest.entries.find((e) => e.id === id)!
@@ -235,6 +238,19 @@ describe("a running entry (scenario 7)", () => {
     press("End hour", "ArrowDown")
 
     expect(screen.getByRole("status")).toHaveTextContent("That has not happened yet")
+  })
+
+  test("a Stop at… closed without ✓ is not a stop, and says so", () => {
+    const state = running()
+    const id = runningEntry(state)!.id
+    open(state, id)
+    fireEvent.click(screen.getByRole("button", { name: "Stop at…" }))
+    press("End hour", "ArrowUp")
+
+    cleanup()
+
+    expect(isRunning(stored(id))).toBe(true)
+    expect(toast).toHaveBeenCalledWith("Still running: Stop at… was closed without ✓", "info")
   })
 
   test("Stop at… on a timer started a moment ago is not an end before its start", () => {

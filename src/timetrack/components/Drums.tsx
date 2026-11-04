@@ -53,6 +53,7 @@ import type { DurationFormat, IsoDate, IsoDateTime, TimeFormat } from "../types"
  */
 export const DRUM_ITEM_PX = 44
 const VISIBLE = 3
+const SNAP = "y mandatory"
 /** a drum left between two items with no `scrollend` (older Safari) settles after this */
 const SETTLE_MS = 150
 /** a mouse notch is ~100px in Chrome and ~48px in Firefox: one item each; a trackpad adds up to this */
@@ -74,12 +75,19 @@ function tick() {
   }
 }
 
-/** The nearest item that is not greyed, going `direction` from `from`; then back towards `home` */
+/**
+ * The nearest item that is not greyed, going `direction` from `from`; then
+ * back from `from` towards `home`; else `home`, which is no move. The walk back
+ * steps by where `home` is, not by `direction`: from the end of a drum whose
+ * every item is greyed — the value itself too, before a running timer's start —
+ * stepping by `direction` walked off the list and threw (found in review).
+ */
 function reachable(items: DrumItem[], from: number, direction: 1 | -1, home: number): number {
   for (let index = from; index >= 0 && index < items.length; index += direction) {
     if (!items[index].refused) return index
   }
-  for (let index = Math.min(Math.max(from, 0), items.length - 1); index !== home; index -= direction) {
+  const back = home > from ? 1 : -1
+  for (let index = from; index !== home && index >= 0 && index < items.length; index += back) {
     if (!items[index].refused) return index
   }
   return home
@@ -216,6 +224,8 @@ export function Drum({
   /** a mouse or a pen drags it; a finger scrolls it natively, and is only watched */
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "touch" || event.button !== 0 || !ref.current) return
+    // a click follows its own pointerdown: what an earlier drag swallowed is not this one's
+    swallowClick.current = false
     drag.current = { y: event.clientY, top: ref.current.scrollTop, dragging: false, pointerId: event.pointerId }
   }
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -239,7 +249,8 @@ export function Drum({
     drag.current = null
     if (!el || !held?.dragging) return
     swallowClick.current = true
-    el.style.scrollSnapType = ""
+    // back to what the style prop says; "" would remove it, and React would not put it back
+    el.style.scrollSnapType = SNAP
     el.scrollTop = indexAt(el.scrollTop) * DRUM_ITEM_PX
     settle()
   }
@@ -305,7 +316,7 @@ export function Drum({
       )}
       style={{
         height: DRUM_ITEM_PX * VISIBLE,
-        scrollSnapType: "y mandatory",
+        scrollSnapType: SNAP,
         // the value and its neighbours read clearly; further ones fade out at the edges
         maskImage: "linear-gradient(to bottom, transparent, black 30%, black 70%, transparent)",
         WebkitMaskImage: "linear-gradient(to bottom, transparent, black 30%, black 70%, transparent)",

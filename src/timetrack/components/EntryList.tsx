@@ -1564,7 +1564,10 @@ export function EntryDetailModalBody({
       pushToast("Times not changed: the end was before the start", "error")
       return
     }
-    if (isRunning(entry) && target.stop !== null) return
+    if (isRunning(entry) && target.stop !== null) {
+      pushToast("Still running: Stop at… was closed without ✓", "info")
+      return
+    }
     const seconds = target.stop === null ? 0 : epochSeconds(target.stop) - epochSeconds(target.start)
     askBeforeLong(seconds, () => landPair(target), pushToast)
   })

@@ -218,6 +218,43 @@ describe("keys, for a listbox", () => {
   })
 })
 
+describe("a mouse drags it", () => {
+  test("a drag turns it, keeps it snapping, and the next click on an item still counts", () => {
+    render(<Harness initial={at(4, 12, 0)} />)
+    const hour = drum("Hour")
+    const eleven = within(hour).getByRole("option", { name: "11" })
+
+    // drag down two items: the content follows the pointer, so the hour goes back two
+    fireEvent.pointerDown(eleven, { pointerType: "mouse", button: 0, clientY: 100, pointerId: 1 })
+    fireEvent.pointerMove(hour, { pointerType: "mouse", clientY: 100 + ITEM, pointerId: 1 })
+    fireEvent.pointerMove(hour, { pointerType: "mouse", clientY: 100 + 2 * ITEM, pointerId: 1 })
+    fireEvent.pointerUp(hour, { pointerType: "mouse", clientY: 100 + 2 * ITEM, pointerId: 1 })
+
+    expect(box()).toBe("10:00")
+    expect(hour.style.scrollSnapType).toBe("y mandatory")
+
+    // a plain click, on its own, picks an item: the drag's swallowed click must not eat it
+    fireEvent.pointerDown(within(hour).getByRole("option", { name: "09" }), { pointerType: "mouse", button: 0, clientY: 50, pointerId: 2 })
+    fireEvent.pointerUp(hour, { pointerType: "mouse", clientY: 50, pointerId: 2 })
+    fireEvent.click(within(hour).getByRole("option", { name: "09" }))
+    expect(box()).toBe("09:00")
+  })
+})
+
+describe("a value that is itself greyed", () => {
+  test("Home and End on a drum with nothing to reach do nothing, and do not throw", () => {
+    // 08:00 is before the timer began at 09:00:40: every minute of that hour is greyed, the chosen one too
+    render(<Harness initial={at(4, 8, 0)} />)
+    const minute = drum("Minute")
+    expect(() => {
+      fireEvent.keyDown(minute, { key: "End" })
+      fireEvent.keyDown(minute, { key: "Home" })
+      fireEvent.keyDown(minute, { key: "PageDown" })
+    }).not.toThrow()
+    expect(shown).toBe(at(4, 8, 0))
+  })
+})
+
 describe("12-hour mode", () => {
   test("the hour drum reads 12, 1 … 11 beside an AM/PM drum, and turning it to AM is the morning", () => {
     render(<Harness format="h12" initial={at(4, 13, 15)} open />)
