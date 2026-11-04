@@ -228,8 +228,14 @@ season from one place, and `TAB_ORDER` lists the new steps.
   8. Season changes did not stamp the plan's "last changed" time.
   9. Three tests could not fail. They now check the redirect, a plan holding only a one thing, and the
      Season step reaching "done".
-- **Seen in your data, not changed:** one area is stored as `Mission &amp;amp; Purpose` (the "&" saved
-  as HTML code). Fixing the stored name is your call; it is a one-line change.
+- **Live 2026-11-04** (migrations, then commit `4cd83de7`). Your season, read back: `season:s1`, 28 Aug to
+  31 Dec 2026, the sentence (22 characters), the why, cost, identity, values and areas answers, the areas
+  Relationship, Health, Mission & Purpose in that order, and 1 goal. 879 rows: the 873 from before, plus 6.
+- **A correction.** I first reported an area stored as "Mission &amp;amp; Purpose". That was wrong. The
+  backup method (`query_to_xml`) escapes `&`, `<` and `>` as XML. The backups made before Phases 1–3
+  carry that escaping in their text; the data never had it. `life-plan-2026-11-04-after-phase3.json` is
+  made with `json_agg`, one table at a time, and is exact. Your plan's data did not change between the
+  backups (revision 919 throughout), so that file also stands for the old tables.
 
 ### Phase 4. Goals: timeframe, subgoals, habits as routine steps, no copy (Q3–Q6)
 
