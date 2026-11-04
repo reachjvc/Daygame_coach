@@ -19,9 +19,11 @@ import {
   dateKey,
   dateKeyToDate,
   epochSeconds,
+  formatTimeOfDay,
+  isoAtMinutes,
   minutesIntoDay,
 } from "./timetrackFormatService"
-import { entryDaySeconds } from "./timetrackService"
+import { entryDaySeconds, isPlanned } from "./timetrackService"
 import type {
   CalendarEvent,
   EntryDraft,
@@ -29,6 +31,7 @@ import type {
   IsoDate,
   IsoDateTime,
   TimeEntry,
+  TimeFormat,
 } from "./types"
 
 // ---------------------------------------------------------------------------
@@ -884,19 +887,43 @@ export function drawnBlockHeight(heightMinutes: number, minuteHeight: number): n
   return Math.max(MIN_BLOCK_PX, heightMinutes * minuteHeight - 1)
 }
 
+/** What a press on a block takes hold of: its start, its end, or the whole block */
+export type GrabMode = "move" | "resize-start" | "resize-end"
+
+/** A cursor's resize edge: the top or bottom 8 px of a block as drawn */
+export const MOUSE_EDGE_PX = 8
+
 /**
- * Where a press on a block grabs it: its bottom edge resizes, the rest moves it.
+ * A fingertip's: twice as tall, because the point a phone reports for a
+ * finger is the middle of a pad about 10 mm wide, and an 8 px edge is hit by
+ * luck. Still never more than a third of the block (`blockGrabMode`).
+ */
+export const TOUCH_EDGE_PX = 16
+
+/**
+ * Where a press on a block grabs it: its top edge moves the start, its bottom
+ * edge the end, and the rest moves the whole block.
  *
- * The edge is the bottom 8 px of the block AS DRAWN, and never more than a
- * third of it. It used to be the bottom 8 px of the block's REAL height, while
- * a 10-minute block is drawn 14 px tall over about 9 px of real height: nearly
+ * Each edge is measured on the block AS DRAWN, and never more than a third of
+ * it. It used to be the bottom 8 px of the block's REAL height, while a
+ * 10-minute block is drawn 14 px tall over about 9 px of real height: nearly
  * all of it was "edge", so a drag by the middle stretched the entry to 70
  * minutes instead of moving it, and a click resized it (heavy-use audit D4 and
  * edits audit B2, 2026-11-04).
+ *
+ * `start: false` or `end: false` is an edge that is not the entry's own: a
+ * night shift drawn on its second day has midnight for a top, not its start.
+ * Pulling that edge would move the entry across days, so it moves the block.
  */
-export function blockGrabMode(offsetPx: number, drawnHeightPx: number): "move" | "resize" {
-  const edge = Math.min(8, drawnHeightPx / 3)
-  return offsetPx > drawnHeightPx - edge ? "resize" : "move"
+export function blockGrabMode(
+  offsetPx: number,
+  drawnHeightPx: number,
+  { edgePx = MOUSE_EDGE_PX, start = true, end = true }: { edgePx?: number; start?: boolean; end?: boolean } = {},
+): GrabMode {
+  const edge = Math.min(edgePx, drawnHeightPx / 3)
+  if (end && offsetPx > drawnHeightPx - edge) return "resize-end"
+  if (start && offsetPx < edge) return "resize-start"
+  return "move"
 }
 
 /**
@@ -904,6 +931,110 @@ export function blockGrabMode(offsetPx: number, drawnHeightPx: number): "move" |
  * it, the press is a click: it opens the entry and changes nothing.
  */
 export const DRAG_THRESHOLD_PX = 4
+
+/**
+ * How long a finger must stay put before the calendar takes it (D13). Until
+ * then the finger is the page's: a flick scrolls, a sideways flick turns the
+ * day. Android's own long-press is about 400–500 ms, so this is the hold a
+ * phone has already taught.
+ */
+export const LONG_PRESS_MS = 400
+
+/**
+ * How far a finger may wander during that hold and still be holding. Past it,
+ * the finger is going somewhere: a scroll or a swipe, never a drag. Android's
+ * touch slop is 8 dp.
+ */
+export const TOUCH_SLOP_PX = 10
+
+/** How far sideways a finger must travel for the day view to turn the page */
+export const SWIPE_MIN_PX = 56
+
+/**
+ * Which way a finger that was never held turned the day: 1 for the next day
+ * (it went left, as a page is turned), −1 for the day before, 0 for no swipe.
+ *
+ * Mostly sideways only. A scroll is never perfectly vertical, and the browser
+ * has usually taken a vertical one for itself already (`touch-action: pan-y`
+ * sends the page a `pointercancel`); this is the rest of that line.
+ */
+export function swipeDirection(dx: number, dy: number): -1 | 0 | 1 {
+  if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < 1.5 * Math.abs(dy)) return 0
+  return dx < 0 ? 1 : -1
+}
+
+/** The shortest a drag on the calendar leaves an entry: one snap step */
+const SHORTEST_DRAG_MS = CALENDAR_SNAP_MINUTES * 60_000
+
+/**
+ * A press on a block, and where the pointer is now, in snapped minutes of the
+ * day the block is drawn on.
+ */
+export interface BlockDrag {
+  mode: GrabMode
+  /** The block's top as drawn on this day (the entry's start, or 0 for a night's second half) */
+  topMinutes: number
+  /** Where the pointer went down */
+  grabMinutes: number
+  /** Where it is now */
+  pointerMinutes: number
+}
+
+export type BlockDragPatch = { start: IsoDateTime; stop: IsoDateTime | null } | { start: IsoDateTime } | { stop: IsoDateTime }
+
+/**
+ * What a drag on a block writes: the patch for `updateEntry`, or null when the
+ * pointer came back to where it went down and nothing should change.
+ *
+ * - **move**: both ends shift by the snapped distance the pointer travelled
+ *   (`shiftEntryBy`), so the length survives to the second; the block's top
+ *   stops at midnight rather than onto the day before.
+ * - **resize-start** and **resize-end**: that edge moves by the same snapped
+ *   distance, and lands on the 5-minute grid. By the distance, not to the
+ *   pointer: a fingertip's edge is 16 px, about 11 minutes, so a finger near
+ *   the bottom of it that started upwards could send the edge DOWN to the
+ *   step under the finger before it went up. The edge keeps its distance from
+ *   the finger instead and goes the way the finger goes, a step at a time.
+ *
+ * The start stays at least five minutes before the end, and the end five
+ * minutes after the start. A running entry's end is now, so its start cannot
+ * be pulled past the clock either (`updateEntry` would refuse it anyway, in
+ * the words "A running timer cannot start in the future"). The clamps are on
+ * the entry's REAL times, to the millisecond, not on the block as drawn: a
+ * block is never drawn under a minute (`entryInterval`), and a clamp on the
+ * drawing could put an end before a start.
+ */
+export function blockDragPatch(entry: TimeEntry, day: IsoDate, drag: BlockDrag, nowIso: IsoDateTime): BlockDragPatch | null {
+  const delta = drag.pointerMinutes - drag.grabMinutes
+  if (delta === 0) return null
+  if (drag.mode === "move") {
+    const moved = Math.max(-drag.topMinutes, delta)
+    return moved === 0 ? null : shiftEntryBy(entry, moved)
+  }
+  const startMs = new Date(entry.start).getTime()
+  const endIso = entry.stop ?? nowIso
+  const endMs = new Date(endIso).getTime()
+  const edgeIso = drag.mode === "resize-start" ? entry.start : endIso
+  const edgeMs = new Date(isoAtMinutes(day, snapMinutes(minutesIntoDay(edgeIso) + delta))).getTime()
+  if (drag.mode === "resize-start") {
+    const start = Math.min(edgeMs, endMs - SHORTEST_DRAG_MS)
+    return start === startMs ? null : { start: new Date(start).toISOString() }
+  }
+  const stop = Math.max(edgeMs, startMs + SHORTEST_DRAG_MS)
+  return entry.stop && stop === endMs ? null : { stop: new Date(stop).toISOString() }
+}
+
+/**
+ * A block's name for a screen reader and the keyboard: "Gym, 10:00 to 11:30".
+ * Its times are in the person's clock format, like everything else on the page.
+ */
+export function blockLabel(entry: TimeEntry, nowSec: number, timeFormat: TimeFormat): string {
+  const name = entry.description.trim() || "(no description)"
+  const from = formatTimeOfDay(entry.start, timeFormat)
+  if (entry.stop === null) return `${name}, ${from} to now, running`
+  const label = `${name}, ${from} to ${formatTimeOfDay(entry.stop, timeFormat)}`
+  return isPlanned(entry, nowSec) ? `${label}, planned` : label
+}
 
 
 /**

@@ -294,6 +294,11 @@ test.describe('time tracker on a phone', () => {
             el.tagName === 'INPUT' ? ((el.closest('label') as HTMLElement | null) ?? el) : (el as HTMLElement)
           const box = target.getBoundingClientRect()
           if (!box.width || !box.height) continue
+          // A calendar block's height IS its length on the day's time scale:
+          // a 10-minute entry drawn 44px tall would claim most of an hour. It
+          // has always been tapped as drawn; it only became a `role=button`
+          // in Phase 6, so a keyboard and a screen reader can reach it.
+          if (el.hasAttribute('data-entry-block')) continue
           if (getComputedStyle(el).visibility === 'hidden') continue
           if (el.getAttribute('type') === 'hidden') continue
           if (box.height >= 44 && box.width >= 44) continue

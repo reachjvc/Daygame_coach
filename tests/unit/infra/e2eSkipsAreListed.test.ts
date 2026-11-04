@@ -29,6 +29,8 @@ const KNOWN_SKIPS: Record<string, string> = {
     "a service worker registers only in a production build; under `next dev` there is none to test",
   "tests/e2e/programs-live-format.spec.ts › a workout that is over is not kept: its stored page is dropped":
     "a service worker registers only in a production build; under `next dev` there is none to test",
+  "tests/e2e/toggl-time-tracker.spec.ts › describe: the calendar by touch, on an Android phone @phone":
+    "a finger can be dragged only through Chromium's DevTools protocol; Playwright's WebKit (the iPhone lane) can only tap. The owner's phone is Android (Chrome), which the android lane, and the desktop lane under touch emulation, cover",
   "tests/e2e/life-plan-tour.spec.ts › describe: life plan tour":
     "not a test: photographs every /plan step for the owner to look at, and runs only when given a plan and a folder (TOUR_PLAN, TOUR_DIR)",
 }

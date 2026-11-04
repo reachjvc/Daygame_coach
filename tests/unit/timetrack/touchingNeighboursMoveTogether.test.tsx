@@ -267,6 +267,8 @@ describe("in the list", () => {
 
 describe("in the calendar", () => {
   const minuteHeight = 56 / 60
+  // the calendar listens to pointer events (D13), which a browser sends before the mouse events
+  const mouse = { pointerId: 1, pointerType: "mouse", isPrimary: true, button: 0 }
 
   function calendar(initial: TimetrackState) {
     const { setState, stored } = holder(initial)
@@ -282,10 +284,10 @@ describe("in the calendar", () => {
   test("dragging Deep work's bottom edge up to 11:55 takes Email's start along", () => {
     const { block, column, stored, pushToast } = calendar(forgotToSwitch())
 
-    // the bottom 8px of a 330-minute block is the resize handle
-    fireEvent.mouseDown(block, { clientY: 305 })
-    fireEvent.mouseMove(column, { clientY: 715 * minuteHeight })
-    fireEvent.mouseUp(column, { clientY: 715 * minuteHeight })
+    // the bottom 8px of a 330-minute block is the resize handle; 2 h 35 min up takes 14:30 to 11:55
+    fireEvent.pointerDown(block, { ...mouse, clientY: 305 })
+    fireEvent.pointerMove(column, { ...mouse, clientY: 305 - 155 * minuteHeight })
+    fireEvent.pointerUp(column, { ...mouse, clientY: 305 - 155 * minuteHeight })
 
     expect(stored("a").stop).toBe(at(4, 11, 55))
     expect(stored("b").start).toBe(at(4, 11, 55))
@@ -295,9 +297,9 @@ describe("in the calendar", () => {
   test("dragging the whole block moves it alone", () => {
     const { block, column, stored } = calendar(forgotToSwitch())
 
-    fireEvent.mouseDown(block, { clientY: 100 })
-    fireEvent.mouseMove(column, { clientY: 135 * minuteHeight })
-    fireEvent.mouseUp(column, { clientY: 135 * minuteHeight })
+    fireEvent.pointerDown(block, { ...mouse, clientY: 100 })
+    fireEvent.pointerMove(column, { ...mouse, clientY: 135 * minuteHeight })
+    fireEvent.pointerUp(column, { ...mouse, clientY: 135 * minuteHeight })
 
     expect(stored("a").start).toBe(at(4, 9, 30))
     expect(stored("b").start).toBe(at(4, 14, 30))

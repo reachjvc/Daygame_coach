@@ -99,15 +99,17 @@ function calendar(initial: TimetrackState) {
     const height = parseFloat(found!.style.height)
     return { el: found!, top, height }
   }
+  // the calendar listens to pointer events (D13), which a browser sends before the mouse events
+  const mouse = { pointerId: 1, pointerType: "mouse", isPrimary: true, button: 0 }
   const click = (el: HTMLElement, clientY: number) => {
-    fireEvent.mouseDown(el, { clientY })
-    fireEvent.mouseUp(el, { clientY })
+    fireEvent.pointerDown(el, { ...mouse, clientY })
+    fireEvent.pointerUp(el, { ...mouse, clientY })
     fireEvent.click(el, { clientY })
   }
   const drag = (el: HTMLElement, fromY: number, dy: number, steps = 10) => {
-    fireEvent.mouseDown(el, { clientY: fromY })
-    for (let i = 1; i <= steps; i++) fireEvent.mouseMove(el, { clientY: fromY + (dy * i) / steps })
-    fireEvent.mouseUp(el, { clientY: fromY + dy })
+    fireEvent.pointerDown(el, { ...mouse, clientY: fromY })
+    for (let i = 1; i <= steps; i++) fireEvent.pointerMove(el, { ...mouse, clientY: fromY + (dy * i) / steps })
+    fireEvent.pointerUp(el, { ...mouse, clientY: fromY + dy })
     fireEvent.click(el, { clientY: fromY + dy })
   }
   return { block, click, drag, onEditEntry, latest: () => current, setState }
@@ -122,12 +124,12 @@ describe("the resize edge", () => {
     const drawn = drawnBlockHeight(10, MINUTE_PX)
     expect(drawn).toBe(14)
     expect(blockGrabMode(drawn / 2, drawn), "the middle of a short block resizes it").toBe("move")
-    expect(blockGrabMode(drawn - 1, drawn)).toBe("resize")
+    expect(blockGrabMode(drawn - 1, drawn)).toBe("resize-end")
     expect(blockGrabMode(drawn - 6, drawn), "the edge took more than a third").toBe("move")
   })
 
   test("is 8 px on a block tall enough to spare it", () => {
-    expect(blockGrabMode(100 - 7, 100)).toBe("resize")
+    expect(blockGrabMode(100 - 7, 100)).toBe("resize-end")
     expect(blockGrabMode(100 - 9, 100)).toBe("move")
   })
 })
@@ -185,8 +187,8 @@ describe("a drag", () => {
 
     const after = view.latest().entries[0]
     expect(after.start).toBe(at(11, 0))
-    // the end follows the pointer, snapped to 5 minutes
-    expect(after.stop).toBe(new Date(2026, 10, 4, 0, Math.round((fromY / MINUTE_PX + 30) / 5) * 5, 0, 0).toISOString())
+    // the end moves as far as the pointer did, onto the 5-minute grid: 12:07:30 + 30 min is 12:37:30, so 12:40
+    expect(after.stop).toBe(at(12, 40))
   })
 
   test("of less than the threshold is a click", () => {

@@ -14,7 +14,7 @@
  * only those. The one tagged @timing measures wall-clock time on purpose.
  */
 
-import type { Page } from '@playwright/test'
+import { devices, type Page } from '@playwright/test'
 import { test, expect } from './fixtures/test'
 import {
   STORAGE_KEY,
@@ -576,5 +576,250 @@ test.describe('Toggl-style time tracker', () => {
     await page.reload({ waitUntil: 'domcontentloaded' })
     await expect(current()).toHaveText('Calendar', { timeout: 30_000 })
     await expect(page).toHaveURL(/\?view=calendar$/)
+  })
+
+  /**
+   * Phase 6: the calendar with a mouse. A drag on empty space makes a block, a
+   * drag of its body moves it, and its TOP edge resizes it now too; a click
+   * still only opens it (edits audit B2). The pointer is captured only once a
+   * drag has moved: captured on the press, the click went to the day column
+   * and the sheet never opened.
+   */
+  test('the calendar takes a mouse: drag to make, drag to move, either edge to resize, click to open', async ({ page }) => {
+    await openFreshTracker(page)
+    await nav(page, 'Calendar').click()
+    await page.locator('main').getByRole('button', { name: 'Day', exact: true }).click()
+    await page.locator('main').getByRole('button', { name: 'Next', exact: true }).click()
+    await scrollCalendarTo(page, 9 * 60)
+
+    let column = await calendarColumn(page)
+    await page.mouse.move(column.x, column.yAt(10 * 60))
+    await page.mouse.down()
+    for (let m = 5; m <= 90; m += 5) await page.mouse.move(column.x, column.yAt(10 * 60 + m))
+    await page.mouse.up()
+    const block = page.locator('[data-entry-block]')
+    await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
+
+    // by its body, 15 minutes later
+    column = await calendarColumn(page)
+    let box = (await block.boundingBox())!
+    await page.mouse.move(column.x, box.y + box.height / 2)
+    await page.mouse.down()
+    for (let m = 5; m <= 15; m += 5) await page.mouse.move(column.x, box.y + box.height / 2 + m * column.minutePx)
+    await page.mouse.up()
+    await expect(block).toHaveAccessibleName('(no description), 10:15 to 11:45, planned')
+
+    // by its top edge, 30 minutes earlier
+    box = (await block.boundingBox())!
+    await page.mouse.move(column.x, box.y + 3)
+    await page.mouse.down()
+    for (let m = 5; m <= 30; m += 5) await page.mouse.move(column.x, box.y + 3 - m * column.minutePx)
+    await page.mouse.up()
+    await expect(block).toHaveAccessibleName('(no description), 09:45 to 11:45, planned')
+
+    // a click opens it and changes nothing
+    await block.click()
+    const sheet = page.getByRole('dialog', { name: 'Time entry details' })
+    await expect(sheet).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(sheet).toBeHidden()
+    await expect(block).toHaveAccessibleName('(no description), 09:45 to 11:45, planned')
+
+    // and so does Enter, on the block Tab reaches
+    await block.focus()
+    await page.keyboard.press('Enter')
+    await expect(sheet).toBeVisible()
+
+    await savedToAccount(page)
+    expect(await entriesOnAccount(page)).toEqual([''])
+  })
+})
+
+/** The calendar's first day column, measured where it is drawn now: `yAt(minutes)` is a page y */
+async function calendarColumn(page: Page) {
+  const box = (await page.locator('[data-day-column]').first().boundingBox())!
+  const minutePx = box.height / (24 * 60)
+  return { x: box.x + box.width * 0.3, minutePx, yAt: (minutes: number) => box.y + minutes * minutePx + 1 }
+}
+
+/** Scroll the calendar so this minute of the day is at the top of its window */
+async function scrollCalendarTo(page: Page, minutes: number) {
+  await page.evaluate((m) => {
+    const column = document.querySelector('[data-day-column]')!
+    const scroller = document.querySelector<HTMLElement>('[data-calendar-scroll]')!
+    scroller.scrollTop = (m * column.getBoundingClientRect().height) / (24 * 60)
+  }, minutes)
+}
+
+/**
+ * A finger, through Chromium's DevTools protocol: the page gets real touches,
+ * and the browser itself decides whether they scroll — which is what a
+ * synthetic event in the page could never show.
+ */
+async function fingerOn(page: Page) {
+  const cdp = await page.context().newCDPSession(page)
+  const send = (type: 'touchStart' | 'touchMove' | 'touchEnd', x = 0, y = 0) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] })
+  return {
+    down: (x: number, y: number) => send('touchStart', x, y),
+    /** in steps, as a finger reports */
+    slide: async (from: { x: number; y: number }, to: { x: number; y: number }, steps: number) => {
+      for (let i = 1; i <= steps; i++) await send('touchMove', from.x + ((to.x - from.x) * i) / steps, from.y + ((to.y - from.y) * i) / steps)
+    },
+    up: () => send('touchEnd'),
+  }
+}
+
+/** The first day's header: its name, then what it has tracked */
+const dayHeader = (page: Page) => page.locator('[data-day-header]').first().locator('p')
+
+/** The calendar on the phone, by the section bar */
+async function openPhoneCalendar(page: Page) {
+  // dispatchEvent: under `next dev` the dev-tools badge sits over a corner of the bar
+  await page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Calendar' }).dispatchEvent('click')
+  await expect(page.locator('main').getByRole('button', { name: 'Day', exact: true })).toHaveAttribute('data-active', 'true')
+}
+
+/**
+ * Phase 6 of Plans/time-tracker-like-toggl.md: the calendar on the owner's
+ * Android phone. A finger held 400 ms makes, moves and resizes; before that
+ * it scrolls, or swipes the day. Every 5-minute step ticks the vibration.
+ */
+test.describe('the calendar by touch, on an Android phone @phone', () => {
+  test.skip(({ browserName }) => browserName !== 'chromium', "a finger can be dragged only through Chromium's DevTools protocol; Playwright's WebKit (the iPhone lane) can only tap")
+  test.use({
+    viewport: devices['Pixel 7'].viewport,
+    userAgent: devices['Pixel 7'].userAgent,
+    deviceScaleFactor: devices['Pixel 7'].deviceScaleFactor,
+    isMobile: true,
+    hasTouch: true,
+  })
+
+  test('a held finger plans Gym tomorrow 10:00–11:30: striped, counted nowhere, saved to the account @phone', async ({ page }) => {
+    // every tick of the motor, counted
+    await page.addInitScript(() => {
+      const ticks: number[] = []
+      Object.defineProperty(window, '__ticks', { value: ticks })
+      Object.defineProperty(navigator, 'vibrate', { configurable: true, value: (pattern: number) => (ticks.push(pattern), true) })
+    })
+    await openFreshTracker(page)
+    await openPhoneCalendar(page)
+    const todayTotal = await dayHeader(page).nth(1).textContent()
+    // a real tap, which is also what lets Chrome vibrate at all
+    await page.locator('main').getByRole('button', { name: 'Next', exact: true }).tap()
+    await expect(dayHeader(page).first()).not.toHaveText('Today')
+    await scrollCalendarTo(page, 9 * 60 + 15)
+
+    const column = await calendarColumn(page)
+    const finger = await fingerOn(page)
+    await finger.down(column.x, column.yAt(10 * 60))
+    // the hold takes: the block to be appears under the finger
+    const preview = page.locator('[data-preview]')
+    await expect(preview).toBeVisible()
+    await finger.slide({ x: column.x, y: column.yAt(10 * 60) }, { x: column.x, y: column.yAt(11 * 60 + 30) }, 18)
+    await expect(preview).toHaveText('10:00–11:30 · 1h 30m')
+    await expect(preview, 'a planned block lost its stripes while drawn').toHaveAttribute('data-planned', 'true')
+    await finger.up()
+
+    const block = page.locator('[data-entry-block]')
+    await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
+    await expect(block).toHaveCSS('background-image', /repeating-linear-gradient/)
+    await expect(dayHeader(page).nth(1)).toHaveText('0:00')
+    // one tick as the hold took, one per 5-minute step
+    expect(await page.evaluate(() => (window as unknown as { __ticks: number[] }).__ticks)).toEqual(Array(19).fill(5))
+
+    await savedToAccount(page)
+    expect(await entriesOnAccount(page)).toEqual([''])
+
+    // back on today, by a swipe: its total is what it was
+    const swipeY = column.yAt(12 * 60)
+    await finger.down(column.x - 40, swipeY)
+    await finger.slide({ x: column.x - 40, y: swipeY }, { x: column.x + 160, y: swipeY }, 6)
+    await finger.up()
+    await expect(dayHeader(page).first()).toHaveText('Today')
+    await expect(dayHeader(page).nth(1)).toHaveText(todayTotal!)
+
+    // and the list says so beside tomorrow's total
+    await page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Timer' }).dispatchEvent('click')
+    await expect(page.getByText('0:00 · 1:30 planned')).toBeVisible()
+  })
+
+  test('a held block moves alone; its top edge takes the entry before along, its bottom edge only itself @phone', async ({ page }) => {
+    await openFreshTracker(page)
+    await openPhoneCalendar(page)
+    await page.locator('main').getByRole('button', { name: 'Next', exact: true }).tap()
+    await expect(dayHeader(page).first()).not.toHaveText('Today')
+    await scrollCalendarTo(page, 9 * 60)
+    const finger = await fingerOn(page)
+    const column = await calendarColumn(page)
+    const make = async (from: number, to: number) => {
+      await finger.down(column.x, column.yAt(from))
+      await expect(page.locator('[data-preview]')).toBeVisible()
+      await finger.slide({ x: column.x, y: column.yAt(from) }, { x: column.x, y: column.yAt(to) }, (to - from) / 5)
+      await finger.up()
+    }
+    // two blocks that touch: 10:00–11:00, then 11:00–11:30
+    await make(10 * 60, 11 * 60)
+    await make(11 * 60, 11 * 60 + 30)
+    await expect(page.getByRole('button', { name: /^\(no description\), 10:00 to 11:00/ })).toBeVisible()
+    const second = page.getByRole('button', { name: /^\(no description\), 11:00 to 11:30/ })
+    await expect(second).toBeVisible()
+
+    /** Hold a block at this height inside it, wait for the hold to take, and drag it this many minutes */
+    const holdAndDrag = async (block: typeof second, at: (box: { y: number; height: number }) => number, minutes: number) => {
+      const box = (await block.boundingBox())!
+      const y = at(box)
+      await finger.down(column.x, y)
+      await expect(block).toHaveAttribute('data-held', 'true')
+      await finger.slide({ x: column.x, y }, { x: column.x, y: y + minutes * column.minutePx }, Math.abs(minutes) / 5)
+      await finger.up()
+    }
+
+    // its top edge 15 minutes up: the entry that ended where it started ends there too (D12)
+    await holdAndDrag(second, (box) => box.y + 4, -15)
+    await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:30/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^\(no description\), 10:00 to 10:45/ })).toBeVisible()
+    await expect(page.getByText('Also moved ‘(no description)’ to end 10:45')).toBeVisible()
+
+    // its bottom edge 15 minutes down
+    const moved = page.getByRole('button', { name: /^\(no description\), 10:45 to 11:30/ })
+    await holdAndDrag(moved, (box) => box.y + box.height - 4, 15)
+    await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:45/ })).toBeVisible()
+
+    // the first one by its body, 30 minutes earlier: it moves alone
+    const early = page.getByRole('button', { name: /^\(no description\), 10:00 to 10:45/ })
+    await holdAndDrag(early, (box) => box.y + box.height / 2, -30)
+    await expect(page.getByRole('button', { name: /^\(no description\), 09:30 to 10:15/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:45/ })).toBeVisible()
+    await savedToAccount(page)
+  })
+
+  test('a quick flick scrolls the calendar and makes nothing; a sideways swipe turns the day @phone', async ({ page }) => {
+    await openFreshTracker(page)
+    await openPhoneCalendar(page)
+    await scrollCalendarTo(page, 8 * 60)
+    const scrollTop = () => page.locator('[data-calendar-scroll]').evaluate((el) => el.scrollTop)
+    const before = await scrollTop()
+    const column = await calendarColumn(page)
+    const finger = await fingerOn(page)
+    const y = column.yAt(10 * 60)
+
+    await finger.down(column.x, y)
+    await finger.slide({ x: column.x, y }, { x: column.x, y: y - 240 }, 8)
+    await finger.up()
+
+    await expect.poll(scrollTop, { message: 'the flick did not scroll' }).toBeGreaterThan(before + 100)
+    // the press is over, so no hold can take after this
+    await expect(page.locator('[data-calendar-grid]')).not.toHaveAttribute('data-pressing')
+    await expect(page.locator('[data-preview]')).toHaveCount(0)
+    expect((await readState(page)).entries).toEqual([])
+
+    // sideways, leftwards: the next day
+    const swipeY = column.yAt(12 * 60)
+    await finger.down(column.x + 150, swipeY)
+    await finger.slide({ x: column.x + 150, y: swipeY }, { x: column.x - 40, y: swipeY + 6 }, 6)
+    await finger.up()
+    await expect(dayHeader(page).first()).not.toHaveText('Today')
+    expect((await readState(page)).entries).toEqual([])
   })
 })

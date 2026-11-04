@@ -2,7 +2,8 @@
 
 /**
  * Phone-sized viewport detection for the behavioral differences CSS cannot
- * express (default calendar range, whether drag gestures are enabled).
+ * express (the calendar's default range and zoom). Not for switching
+ * gestures off: the calendar's drags work by touch too (Phase 6, D13).
  *
  * Layout differences should normally use Tailwind's `sm:` variants instead —
  * they are SSR-safe, and both halves are simply in the DOM. Use this hook

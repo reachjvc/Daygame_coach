@@ -3,8 +3,13 @@
 /**
  * Calendar view — Toggl's split grid: time entries in the left column of each
  * day, external calendar events in the right column. Supports day/week, three
- * zoom levels, drag-to-create, drag-to-move, edge resize, a now-line, and the
- * click-an-event menu (start timer / copy as entry / open event).
+ * zoom levels, drag-to-create, drag-to-move, resize by either edge, a
+ * now-line, and the click-an-event menu (start timer / copy as entry / open
+ * event).
+ *
+ * Every drag is pointer events, one path for mouse, touch and pen (D13 in
+ * Plans/time-tracker-like-toggl.md): a mouse drags at once; a finger holds
+ * for `LONG_PRESS_MS` first, so scrolling and the day swipe stay the page's.
  */
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react"
@@ -21,7 +26,13 @@ import { announceNeighbours } from "./neighbourNotice"
 import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
 import {
   DRAG_THRESHOLD_PX,
+  LONG_PRESS_MS,
+  MOUSE_EDGE_PX,
+  TOUCH_EDGE_PX,
+  TOUCH_SLOP_PX,
+  blockDragPatch,
   blockGrabMode,
+  blockLabel,
   dayColumnSeconds,
   drawnBlockHeight,
   entriesForDay,
@@ -32,11 +43,15 @@ import {
   layoutBlocks,
   shiftEntryBy,
   snapMinutes,
+  swipeDirection,
+  type BlockDragPatch,
+  type GrabMode,
 } from "../calendarService"
 import {
   addDays,
   dateKey,
   eachDay,
+  epochSeconds,
   formatCompact,
   formatDayHeader,
   formatDuration,
@@ -62,24 +77,60 @@ import { ColorDot, Dropdown, Segmented, plannedStripes } from "./primitives"
 type Range = "day" | "week"
 type ZoomId = (typeof CALENDAR_ZOOMS)[number]["id"]
 
+/** What a drag is doing, and where, drawn as the preview while it lasts */
 interface DragState {
   day: string
+  mode: "create" | GrabMode
+  /** Create: where the drag began. A block: where the pointer went down on it. Snapped minutes. */
   startMinutes: number
   currentMinutes: number
-  mode: "create" | "move" | "resize"
   entryId?: Id
-  /** Offset from the block top when moving */
-  grabOffset?: number
-  durationMinutes?: number
+  /** A block's top as drawn on this day */
+  topMinutes?: number
   /**
-   * Where the pointer went down on a block, and whether it has since travelled
-   * `DRAG_THRESHOLD_PX`. Until it has, the press is a click: mouse-up used to
-   * write the snapped pointer position as the end whether or not the mouse
-   * had moved, so a click on a block's lower edge changed its end, and on the
-   * running block stopped the timer (edits audit B2, 2026-11-04).
+   * Whether the pointer has travelled `DRAG_THRESHOLD_PX` since it went down
+   * on a block. Until it has, the press is a click: mouse-up used to write the
+   * snapped pointer position as the end whether or not the mouse had moved, so
+   * a click on a block's lower edge changed its end, and on the running block
+   * stopped the timer (edits audit B2, 2026-11-04). A create has no click to
+   * protect and counts as moved from the start.
    */
-  originY?: number
-  moved?: boolean
+  moved: boolean
+}
+
+/**
+ * One pointer on the calendar, from down to up (D13: mouse, touch and pen take
+ * the same path).
+ *
+ * A mouse drags at once. A finger or a pen is the page's until it has been
+ * held still for `LONG_PRESS_MS`: before that a flick scrolls (the browser
+ * takes it and sends `pointercancel`) or, on the day view, turns the day. Only
+ * once the hold has taken (`armed`) does the calendar capture the pointer and
+ * keep the page from scrolling under it.
+ */
+interface Gesture {
+  pointerId: number
+  pointerType: string
+  originX: number
+  originY: number
+  /** The day column the press began in; null on the hour ruler. It takes the pointer once the drag moves. */
+  column: HTMLElement | null
+  /** The drag this press would start, decided where it went down; null on the ruler or a calendar event (a swipe only) */
+  plan: DragState | null
+  armed: boolean
+  timer: ReturnType<typeof setTimeout> | null
+}
+
+/**
+ * One tick of the phone's motor (D13): when a hold takes, and on every
+ * 5-minute step after it. Android's Chrome has it; Safari and the desktop do
+ * not, and there it is nothing. Chrome also refuses it until the page has had
+ * a tap, and says so in the console each time, so it is not asked before then.
+ */
+function tick() {
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return
+  navigator.vibrate(5)
 }
 
 export function CalendarView({
@@ -119,9 +170,29 @@ export function CalendarView({
   }, [isMobile, zoomTouched])
   const [anchor, setAnchor] = useState(todayKey)
   const [drag, setDrag] = useState<DragState | null>(null)
-  const gridRef = useRef<HTMLDivElement | null>(null)
+  /**
+   * The same drag, for the pointer handlers. A move and the release can
+   * arrive before React has drawn the move's state, and the release must
+   * write where the pointer really was, not where the last drawn frame had it.
+   */
+  const dragRef = useRef<DragState | null>(null)
+  const showDrag = (next: DragState | null) => {
+    dragRef.current = next
+    setDrag(next)
+  }
+  const gesture = useRef<Gesture | null>(null)
+  /**
+   * A finger is down and its hold has not taken yet. Drawn on the grid as
+   * `data-pressing`, so a browser test can wait for a flick to be over —
+   * after which no hold can take — instead of sleeping past the hold.
+   */
+  const [pressing, setPressing] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  /** Set right after a move/resize so the trailing click doesn't open the editor */
+  /**
+   * Set when a press was a drag, a held finger or a swipe, so the click the
+   * browser may send after it does not open the editor. Cleared by the next
+   * press, so a click that never came cannot swallow the one after it.
+   */
   const suppressClick = useRef(false)
 
   const hourHeight = CALENDAR_ZOOMS.find((z) => z.id === zoom)!.hourHeight
@@ -163,24 +234,193 @@ export function CalendarView({
     // Only re-anchor when the visible range or zoom changes, not every tick
   }, [days[0], days.length, minuteHeight]) // deps intentionally narrow: see comment above
 
-  const minutesFromEvent = (clientY: number, dayIndex: number): number => {
-    const column = gridRef.current?.querySelectorAll("[data-day-column]")[dayIndex] as HTMLElement | undefined
-    if (!column) return 0
-    const rect = column.getBoundingClientRect()
-    return snapMinutes((clientY - rect.top) / minuteHeight)
+  const minutesAt = (clientY: number, column: HTMLElement): number =>
+    snapMinutes((clientY - column.getBoundingClientRect().top) / minuteHeight)
+
+  /**
+   * THE PAGE MUST NOT SCROLL UNDER A HELD FINGER.
+   *
+   * `touch-action` is read once, when the finger lands, and it has to let the
+   * page scroll then, because the finger is the page's until the hold takes.
+   * Afterwards only a touchmove the page cancels keeps the browser from
+   * starting a scroll, and React's touch listeners are passive, which cannot
+   * cancel. Hence a listener of its own, which cancels only while a drag is on.
+   */
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const hold = (event: TouchEvent) => {
+      if (gesture.current?.armed && event.cancelable) event.preventDefault()
+    }
+    container.addEventListener("touchmove", hold, { passive: false })
+    return () => container.removeEventListener("touchmove", hold)
+  }, [])
+
+  /** Let go of the pointer and forget the press, without writing anything */
+  const endGesture = () => {
+    const current = gesture.current
+    gesture.current = null
+    if (current?.timer) clearTimeout(current.timer)
+    setPressing(false)
+    if (current?.column?.hasPointerCapture?.(current.pointerId)) current.column.releasePointerCapture(current.pointerId)
+    if (dragRef.current) showDrag(null)
   }
 
-  const finishDrag = () => {
+  /**
+   * From here the moves come to the drag's column even when the pointer
+   * leaves it, and the release is not lost outside the window.
+   *
+   * Only once the drag has MOVED, never on the press itself: a pointer that is
+   * captured sends its click to the element that captured it, so a block
+   * pressed and let go was clicked on the column instead, and its sheet never
+   * opened (found in the browser while building Phase 6).
+   */
+  const capture = (pressed: Gesture) => {
+    if (pressed.column && !pressed.column.hasPointerCapture?.(pressed.pointerId)) pressed.column.setPointerCapture?.(pressed.pointerId)
+  }
+
+  // a press still held when the calendar goes away (a section change) leaves no timer behind
+  useEffect(() => () => {
+    if (gesture.current?.timer) clearTimeout(gesture.current.timer)
+  }, [])
+
+  /** The hold has taken, or a mouse went down: from here the calendar has the pointer */
+  const arm = (pressed: Gesture) => {
+    if (gesture.current !== pressed || !pressed.plan) return
+    pressed.timer = null
+    pressed.armed = true
+    setPressing(false)
+    // a create has no click to protect; a block waits until it has moved
+    if (pressed.plan.moved) capture(pressed)
+    showDrag(pressed.plan)
+    if (pressed.pointerType !== "mouse") tick()
+  }
+
+  const beginGesture = (event: React.PointerEvent<HTMLElement>, plan: DragState | null) => {
+    const held = gesture.current
+    // a second finger is a pinch, not a drag: let the first one go too
+    if (held && held.pointerId !== event.pointerId && event.pointerType !== "mouse") {
+      endGesture()
+      return
+    }
+    if (held) endGesture()
+    if (event.pointerType === "mouse" && event.button !== 0) return
+    const column = event.currentTarget.closest<HTMLElement>("[data-day-column]")
+    if (plan && !column) return
+    suppressClick.current = false
+    const pressed: Gesture = {
+      pointerId: event.pointerId,
+      pointerType: event.pointerType,
+      originX: event.clientX,
+      originY: event.clientY,
+      column,
+      plan,
+      armed: false,
+      timer: null,
+    }
+    if (event.pointerType === "mouse") {
+      // a cursor cannot scroll the page by dragging, so it drags at once
+      if (!plan) return
+      gesture.current = pressed
+      arm(pressed)
+      return
+    }
+    gesture.current = pressed
+    if (plan) {
+      pressed.timer = setTimeout(() => arm(pressed), LONG_PRESS_MS)
+      setPressing(true)
+    }
+  }
+
+  const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    const pressed = gesture.current
+    if (!pressed || event.pointerId !== pressed.pointerId) return
+    const dx = event.clientX - pressed.originX
+    const dy = event.clientY - pressed.originY
+    if (!pressed.armed) {
+      // a finger going somewhere before the hold took is a scroll or a swipe, never a drag
+      if (pressed.timer && Math.hypot(dx, dy) > TOUCH_SLOP_PX) {
+        clearTimeout(pressed.timer)
+        pressed.timer = null
+        setPressing(false)
+      }
+      return
+    }
+    const current = dragRef.current
+    if (!current || !pressed.column) return
+    // a press on a block is a click until the pointer has really moved: see `DragState`
+    const moved = current.moved || Math.abs(dy) >= DRAG_THRESHOLD_PX
+    if (!moved) return
+    capture(pressed)
+    const minutes = minutesAt(event.clientY, pressed.column)
+    if (moved === current.moved && minutes === current.currentMinutes) return
+    // one tick per 5-minute step
+    if (minutes !== current.currentMinutes) tick()
+    showDrag({ ...current, moved: true, currentMinutes: minutes })
+  }
+
+  const onPointerUp = (event: React.PointerEvent<HTMLElement>) => {
+    const pressed = gesture.current
+    if (!pressed || event.pointerId !== pressed.pointerId) return
+    if (pressed.armed) {
+      finishDrag(pressed)
+    } else if (pressed.pointerType !== "mouse" && range === "day") {
+      const direction = swipeDirection(event.clientX - pressed.originX, event.clientY - pressed.originY)
+      if (direction !== 0) {
+        suppressClick.current = true
+        shift(direction)
+      }
+    }
+    endGesture()
+  }
+
+  /**
+   * A block's new times, written with whatever refused them said out loud.
+   *
+   * Computed against this render's `state` first, so a refusal has somewhere
+   * to be said: move and resize used to take `.state` and drop theirs, so in a
+   * workspace that requires a project — or with a locked date — the block slid
+   * under the cursor, snapped back, and the app said nothing.
+   *
+   * Then applied through the updater, not from this render's `state`: a drag
+   * spans down to up, and a sync pull or the per-minute alert sweep can land
+   * inside it — writing the closure's copy back would throw that away. If the
+   * newer state refuses it too, it is left alone rather than given a copy
+   * that was only valid a moment ago.
+   *
+   * A whole-block move moves the block alone. An edge moves the touching
+   * neighbour's edge with it (D12), never across days (`withNeighbours`).
+   */
+  const commitBlock = (entryId: Id, patch: BlockDragPatch, withEdge: boolean) => {
+    const now = nowIso()
+    const apply = (base: TimetrackState) =>
+      withEdge
+        ? withNeighbours(base, entryId, now, (edited) => updateEntry(edited, entryId, patch, now))
+        : { ...updateEntry(base, entryId, patch, now), moved: [], held: [] }
+    const checked = apply(state)
+    if (checked.violations[0]) {
+      pushToast(checked.violations[0].message, "error")
+      return
+    }
+    setState((current) => {
+      const applied = apply(current)
+      return applied.violations.length > 0 ? current : applied.state
+    })
+    announceNeighbours(checked, state.user.timeFormat, setState, pushToast)
+  }
+
+  const finishDrag = (pressed: Gesture) => {
+    const drag = dragRef.current
     if (!drag) return
     const { day, mode } = drag
     const from = Math.min(drag.startMinutes, drag.currentMinutes)
     const to = Math.max(drag.startMinutes, drag.currentMinutes)
 
-    // a press on a block that never moved is a click: the click handler opens it
-    if (mode !== "create" && !drag.moved) {
-      setDrag(null)
-      return
-    }
+    // the click a browser may send after a held finger or a drag is not a tap
+    if (pressed.pointerType !== "mouse" || drag.moved) suppressClick.current = true
+
+    // a press on a block that never moved: with a mouse, a click (the click handler opens it); held, nothing
+    if (mode !== "create" && !drag.moved) return
 
     if (mode === "create") {
       if (to - from >= 5) {
@@ -196,76 +436,34 @@ export function CalendarView({
         if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
         else setState(() => result.state)
       }
-    } else if (mode === "move" && drag.entryId && drag.durationMinutes) {
-      const newStart = Math.max(0, drag.currentMinutes - (drag.grabOffset ?? 0))
-      if (newStart !== drag.startMinutes) {
-        suppressClick.current = true
-        /**
-         * Computed here rather than inside the updater so a refusal has
-         * somewhere to be said. Drag-to-CREATE above has always shown its
-         * message; move and resize took `.state` and dropped theirs, so in a
-         * workspace that requires a project — or with a locked date — the block
-         * slid under the cursor, snapped back, and the app said nothing.
-         */
-        /**
-         * The whole entry shifts by how far the block was dragged. Setting an
-         * absolute start and an end of `start + heightMinutes` wrote the
-         * layout's one-minute floor into the data and rounded the seconds away
-         * — and, for an entry dragged by its second-day fragment, put both ends
-         * on that fragment's day and destroyed the first half.
-         */
-        const moving = state.entries.find((e) => e.id === drag.entryId)
-        const patch = moving ? shiftEntryBy(moving, newStart - drag.startMinutes) : null
-        const refusal = patch ? updateEntry(state, drag.entryId, patch, nowIso()).violations[0] : undefined
-        if (refusal) pushToast(refusal.message, "error")
-        else if (patch) {
-          /**
-           * Applied through the updater, not from this render's `state`.
-           *
-           * A drag spans mousedown to mouseup, and a sync pull or the
-           * per-minute alert sweep can land inside it — writing the closure's
-           * copy back would throw that away. The check above is on the closure
-           * only to decide whether to complain; the write itself starts from
-           * whatever is current.
-           */
-          setState((current) => {
-            const applied = updateEntry(current, drag.entryId!, patch, nowIso())
-            // refused against the newer state too: leave it alone rather than
-            // write a copy that was only valid a moment ago
-            return applied.violations.length > 0 ? current : applied.state
-          })
-        }
-      }
-    } else if (mode === "resize" && drag.entryId) {
-      suppressClick.current = true
-      /**
-       * A press on the bottom edge that never moved is a click, not a resize.
-       * It used to write the pressed minute, snapped to five, as the end — so
-       * a tap meant to open the entry trimmed it — and now that a resize can
-       * move the entry below as well (D12), a tap would have moved two.
-       */
-      if (drag.currentMinutes === drag.startMinutes + (drag.grabOffset ?? 0)) {
-        setDrag(null)
-        return
-      }
-      const end = Math.max(drag.startMinutes + 5, drag.currentMinutes)
-      const entryId = drag.entryId
-      const now = nowIso()
-      // the bottom edge is the end, so the entry that started where it ended moves with it (D12)
-      const apply = (base: TimetrackState) =>
-        withNeighbours(base, entryId, now, (edited) => updateEntry(edited, entryId, { stop: isoAtMinutes(day, end) }, now))
-      const checked = apply(state)
-      if (checked.violations[0]) pushToast(checked.violations[0].message, "error")
-      else {
-        setState((current) => {
-          const applied = apply(current)
-          return applied.violations.length > 0 ? current : applied.state
-        })
-        announceNeighbours(checked, state.user.timeFormat, setState, pushToast)
-      }
+      return
     }
-    setDrag(null)
+
+    /**
+     * The whole entry shifts by how far the block was dragged, or one edge
+     * goes where the pointer is (`blockDragPatch`). Setting an absolute start
+     * and an end of `start + heightMinutes` wrote the layout's one-minute floor
+     * into the data and rounded the seconds away — and, for an entry dragged by
+     * its second-day fragment, put both ends on that fragment's day and
+     * destroyed the first half. A pointer back where it went down writes
+     * nothing: a tap on an edge used to trim the entry, and now that an edge
+     * moves its neighbour as well (D12), would have moved two.
+     */
+    const moving = state.entries.find((e) => e.id === drag.entryId)
+    const patch = moving ? blockDragPatch(moving, day, blockDrag(drag), nowIso()) : null
+    if (moving && patch) commitBlock(moving.id, patch, mode !== "move")
   }
+
+  /** A block's drag in the terms `blockDragPatch` reads */
+  const blockDrag = (current: DragState) => ({
+    mode: current.mode as GrabMode,
+    topMinutes: current.topMinutes ?? 0,
+    grabMinutes: current.startMinutes,
+    pointerMinutes: current.currentMinutes,
+  })
+
+  /** ↑ and ↓ on a focused block move it 5 minutes, alone, like a drag of its body */
+  const nudge = (entry: TimeEntry, minutes: number) => commitBlock(entry.id, shiftEntryBy(entry, minutes), false)
 
   const rangeLabel =
     range === "day"
@@ -281,7 +479,7 @@ export function CalendarView({
   const gutter = state.user.timeFormat === "h12" ? "w-16" : "w-12"
 
   return (
-    <div className="space-y-3" onMouseUp={finishDrag} onMouseLeave={() => drag && finishDrag()}>
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="icon-sm" onClick={() => shift(-1)} aria-label="Previous">
           <IconPrev className="size-4" />
@@ -331,7 +529,7 @@ export function CalendarView({
           {/* must match the ruler below exactly, or every day column is offset */}
           <div className={cn(gutter, "shrink-0 border-r border-border")} />
           {days.map((day) => (
-            <div key={day} className="flex-1 border-r border-border px-2 py-1.5 last:border-r-0">
+            <div key={day} data-day-header className="flex-1 border-r border-border px-2 py-1.5 last:border-r-0">
               <p className={cn("text-xs font-semibold", day === todayKey && "text-primary")}>
                 {formatDayHeader(day, todayKey)}
               </p>
@@ -343,10 +541,38 @@ export function CalendarView({
         </div>
 
         {/* grid */}
-        <div ref={scrollRef} className="max-h-[70vh] overflow-auto">
-          <div ref={gridRef} className={cn("relative flex", range === "week" && "min-w-[640px] sm:min-w-0")}>
-            {/* hour gutter */}
-            <div className={cn(gutter, "shrink-0 border-r border-border")}>
+        {/*
+          What a finger does before the hold takes is the browser's: up and
+          down scroll. On the day view sideways is kept for the page, so a
+          flick there turns the day instead of panning nothing; the week view
+          is wider than a phone and pans both ways. Pinch-zoom stays on both.
+        */}
+        <div
+          ref={scrollRef}
+          data-calendar-scroll
+          className="max-h-[70vh] overflow-auto"
+          style={{ touchAction: range === "day" ? "pan-y pinch-zoom" : "pan-x pan-y pinch-zoom" }}
+        >
+          <div
+            className={cn(
+              "relative flex select-none [-webkit-touch-callout:none]",
+              range === "week" && "min-w-[640px] sm:min-w-0",
+              drag && "cursor-grabbing",
+            )}
+            data-calendar-grid
+            data-pressing={pressing || undefined}
+            // a held finger is a drag here, not a request for the browser's menu; a right-click still gets it
+            onContextMenu={(event) => {
+              if (gesture.current) event.preventDefault()
+            }}
+            // here rather than on each day, so a swipe begun on the ruler is heard too
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            // the browser took the finger for a scroll, or the pointer went away: nothing is written
+            onPointerCancel={endGesture}
+          >
+            {/* hour gutter: nothing is made here, but a thumb that lands on it may still swipe the day */}
+            <div data-hour-ruler className={cn(gutter, "shrink-0 border-r border-border")} onPointerDown={(event) => beginGesture(event, null)}>
               {Array.from({ length: 24 }, (_, hour) => (
                 <div
                   key={hour}
@@ -364,7 +590,7 @@ export function CalendarView({
               ))}
             </div>
 
-            {days.map((day, dayIndex) => {
+            {days.map((day) => {
               const dayEntries = entriesForDay(entries, day, nowSec)
               const entryBlocks = layoutBlocks(dayEntries, (entry) => entryInterval(entry, day, nowSec))
               const dayEvents = eventsForDay(events, day)
@@ -377,18 +603,10 @@ export function CalendarView({
                   data-day-column
                   className="relative flex-1 border-r border-border last:border-r-0"
                   style={{ height: hourHeight * 24 }}
-                  onMouseDown={(event) => {
-                    if (isMobile) return
-                    if ((event.target as HTMLElement).closest("[data-block]")) return
-                    const minutes = minutesFromEvent(event.clientY, dayIndex)
-                    setDrag({ day, startMinutes: minutes, currentMinutes: minutes, mode: "create" })
-                  }}
-                  onMouseMove={(event) => {
-                    if (!drag || drag.day !== day) return
-                    // a press on a block is a click until the pointer has really moved: see `DragState`
-                    const moved = drag.moved || drag.originY === undefined || Math.abs(event.clientY - drag.originY) >= DRAG_THRESHOLD_PX
-                    if (!moved) return
-                    setDrag({ ...drag, moved: true, currentMinutes: minutesFromEvent(event.clientY, dayIndex) })
+                  onPointerDown={(event) => {
+                    // empty space: a new block from here
+                    const minutes = minutesAt(event.clientY, event.currentTarget)
+                    beginGesture(event, { day, mode: "create", startMinutes: minutes, currentMinutes: minutes, moved: true })
                   }}
                 >
                   {/* hour lines */}
@@ -411,29 +629,70 @@ export function CalendarView({
                     const entry = block.item
                     const width = entryLaneWidth / block.columns
                     const project = state.projects.find((p) => p.id === entry.projectId)
-                    const drawnHeight = drawnBlockHeight(block.heightMinutes, minuteHeight)
-                    // not begun yet: striped over its colour, and out of the day's total above (Q2)
-                    const planned = isPlanned(entry, nowSec)
+                    /**
+                     * The block being dragged is drawn where the drag would put
+                     * it, in its own lane: the entry with the drag's patch on it,
+                     * so what is seen is what will be written. Its lane stays put,
+                     * so it does not jump sideways as it passes another block.
+                     */
+                    // taken: the hold took (or a mouse went down), so it lifts before it moves
+                    const held = drag !== null && drag.entryId === entry.id && drag.day === day
+                    const dragging = held && drag.moved ? drag : null
+                    const patch = dragging ? blockDragPatch(entry, day, blockDrag(dragging), nowIso()) : null
+                    const shown = patch ? { ...entry, ...patch } : entry
+                    const interval = patch ? entryInterval(shown, day, nowSec) : null
+                    const topMinutes = interval ? interval.startMin : block.topMinutes
+                    const heightMinutes = interval ? Math.max(1, interval.endMin - interval.startMin) : block.heightMinutes
+                    const drawnHeight = drawnBlockHeight(heightMinutes, minuteHeight)
+                    // not begun yet: striped over its colour, and out of the day's total above (Q2) — while dragged too
+                    const planned = isPlanned(shown, nowSec)
                     return (
                       <div
                         key={entry.id}
                         data-block
+                        data-entry-block
                         data-planned={planned || undefined}
-                        onMouseDown={(mouseEvent) => {
-                          mouseEvent.stopPropagation()
-                          if (isMobile) return
-                          const minutes = minutesFromEvent(mouseEvent.clientY, dayIndex)
+                        data-held={held || undefined}
+                        data-dragging={dragging ? true : undefined}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={blockLabel(entry, nowSec, state.user.timeFormat)}
+                        onPointerDown={(event) => {
                           // measured on the block as drawn, from the block itself, not from a child under the pointer
-                          const offset = mouseEvent.clientY - mouseEvent.currentTarget.getBoundingClientRect().top
-                          setDrag({
+                          const rect = event.currentTarget.getBoundingClientRect()
+                          /**
+                           * WHERE THE FINGER IS, NOT WHERE CHROME SENT IT. Android's
+                           * Chrome moves a touch that lands near a button onto the
+                           * button ("touch adjustment"), up to about 10 px away, so
+                           * a hold just under a block grabbed that block's edge and
+                           * a block could not be made straight after another (found
+                           * in the browser). A press outside the block's own box is
+                           * the day's: it bubbles on and makes a new block. A box
+                           * with no size has not been laid out, so there is nothing
+                           * to be outside of.
+                           */
+                          const outside =
+                            rect.height > 0 &&
+                            (event.clientY < rect.top || event.clientY > rect.bottom || event.clientX < rect.left || event.clientX > rect.right)
+                          if (outside) return
+                          event.stopPropagation()
+                          const offset = event.clientY - rect.top
+                          const column = event.currentTarget.closest<HTMLElement>("[data-day-column]")
+                          const minutes = column ? minutesAt(event.clientY, column) : block.topMinutes
+                          const mode = blockGrabMode(offset, drawnHeight, {
+                            edgePx: event.pointerType === "mouse" ? MOUSE_EDGE_PX : TOUCH_EDGE_PX,
+                            // an edge that is midnight, not the entry's own start or end, moves the block
+                            start: dateKey(entry.start) === day,
+                            end: entry.stop ? dateKey(entry.stop) === day : day === todayKey,
+                          })
+                          beginGesture(event, {
                             day,
-                            mode: blockGrabMode(offset, drawnHeight),
-                            originY: mouseEvent.clientY,
-                            startMinutes: block.topMinutes,
+                            mode,
+                            startMinutes: minutes,
                             currentMinutes: minutes,
                             entryId: entry.id,
-                            grabOffset: minutes - block.topMinutes,
-                            durationMinutes: block.heightMinutes,
+                            topMinutes: block.topMinutes,
+                            moved: false,
                           })
                         }}
                         onClick={() => {
@@ -441,14 +700,24 @@ export function CalendarView({
                             suppressClick.current = false
                             return
                           }
-                          if (!drag) onEditEntry(entry)
+                          if (!dragRef.current) onEditEntry(entry)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault()
+                            onEditEntry(entry)
+                          } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                            event.preventDefault()
+                            nudge(entry, event.key === "ArrowUp" ? -5 : 5)
+                          }
                         }}
                         className={cn(
-                          "absolute z-10 cursor-grab overflow-hidden rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight",
-                          isRunning(entry) && "animate-pulse",
+                          "absolute z-10 cursor-grab overflow-hidden rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                          isRunning(entry) && !held && "animate-pulse",
+                          held && "z-30 shadow-lg ring-1 ring-primary",
                         )}
                         style={{
-                          top: block.topMinutes * minuteHeight,
+                          top: topMinutes * minuteHeight,
                           height: drawnHeight,
                           left: `${block.column * width}%`,
                           width: `${width}%`,
@@ -459,12 +728,15 @@ export function CalendarView({
                         title={`${entry.description || "(no description)"} · ${project?.name ?? "No project"} · ${formatCompact(entrySeconds(entry, nowSec))}${planned ? " · planned" : ""}`}
                       >
                         {/* Below ~22px there is no room for legible text — the tooltip carries it */}
-                        {block.heightMinutes * minuteHeight >= 22 && (
+                        {heightMinutes * minuteHeight >= 22 && (
                           <>
                             <p className="truncate font-medium">{entry.description || "(no description)"}</p>
-                            {block.heightMinutes * minuteHeight >= 34 && (
+                            {heightMinutes * minuteHeight >= 34 && (
                               <p className="truncate text-muted-foreground">
-                                {project?.name ?? "No project"} · {formatCompact(entrySeconds(entry, nowSec))}
+                                {/* while dragged, where it is going; under a finger the hour lines are hidden */}
+                                {dragging
+                                  ? `${formatTimeOfDay(shown.start, state.user.timeFormat)}–${shown.stop ? formatTimeOfDay(shown.stop, state.user.timeFormat) : "now"}`
+                                  : `${project?.name ?? "No project"} · ${formatCompact(entrySeconds(entry, nowSec))}`}
                               </p>
                             )}
                           </>
@@ -489,7 +761,11 @@ export function CalendarView({
                           left: `${50 + block.column * width}%`,
                           width: `${width}%`,
                         }}
-                        onMouseDown={(mouseEvent) => mouseEvent.stopPropagation()}
+                        // never a new entry under an event; a finger may still swipe the day from here
+                        onPointerDown={(pointerEvent) => {
+                          pointerEvent.stopPropagation()
+                          beginGesture(pointerEvent, null)
+                        }}
                       >
                         <EventBlock
                           event={event}
@@ -535,21 +811,31 @@ export function CalendarView({
                     )
                   })}
 
-                  {/* drag preview */}
-                  {isDragDay && drag.mode === "create" && (
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute left-0 z-30 rounded border border-primary bg-primary/25 px-1 text-[10px]",
-                        splitColumns ? "w-1/2" : "w-full",
-                      )}
-                      style={{
-                        top: Math.min(drag.startMinutes, drag.currentMinutes) * minuteHeight,
-                        height: Math.max(4, Math.abs(drag.currentMinutes - drag.startMinutes) * minuteHeight),
-                      }}
-                    >
-                      {formatCompact(Math.abs(drag.currentMinutes - drag.startMinutes) * 60)}
-                    </div>
-                  )}
+                  {/* the block being made: striped when it would start after now, as it will be once made (Q2) */}
+                  {isDragDay && drag.mode === "create" && (() => {
+                    const from = Math.min(drag.startMinutes, drag.currentMinutes)
+                    const to = Math.max(drag.startMinutes, drag.currentMinutes)
+                    const planned = epochSeconds(isoAtMinutes(day, from)) > nowSec
+                    return (
+                      <div
+                        data-preview
+                        data-planned={planned || undefined}
+                        className={cn(
+                          "pointer-events-none absolute left-0 z-30 overflow-hidden rounded border border-primary bg-primary/25 px-1 text-[10px] leading-tight",
+                          splitColumns ? "w-1/2" : "w-full",
+                        )}
+                        style={{
+                          top: from * minuteHeight,
+                          height: Math.max(4, (to - from) * minuteHeight),
+                          ...(planned ? plannedStripes : {}),
+                        }}
+                      >
+                        {formatTimeOfDay(isoAtMinutes(day, from), state.user.timeFormat)}–{formatTimeOfDay(isoAtMinutes(day, to), state.user.timeFormat)}
+                        {" · "}
+                        {formatCompact((to - from) * 60)}
+                      </div>
+                    )
+                  })()}
                 </div>
               )
             })}
@@ -559,8 +845,9 @@ export function CalendarView({
 
       <p className="text-[11px] text-muted-foreground">
         {isMobile
-          ? "Tap a block to edit it. Use the timer to start new entries."
-          : "Drag empty space to create an entry · drag a block to move it, its bottom edge to resize · click it to edit."}
+          ? "Hold empty space and drag to plan or log a block · hold a block to move it, or its top or bottom edge to resize · tap to edit."
+          : "Drag empty space to create an entry · drag a block to move it, its top or bottom edge to resize · click it to edit."}
+        {isMobile && range === "day" && " Swipe sideways for another day."}
         {splitColumns
           ? " Calendar events share each day on the right and never change your entries."
           : " Connect a calendar to see your events beside your time."}
