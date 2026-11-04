@@ -72,13 +72,19 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     // the browser tab, which used to inherit the root's marketing title
     await expect.poll(() => page.title(), { timeout: 10_000 }).toBe('Time')
 
-    // the way out, which used to be a 20x36px arrow with no label
-    const back = page.locator('header a').first()
-    await expect(back).toHaveAttribute('href', ROUTES.dashboard)
-    await expect(back).toContainText('Dashboard')
-    await expect
-      .poll(async () => (await back.boundingBox())?.height ?? 0, { timeout: 10_000 })
-      .toBeGreaterThanOrEqual(36)
+    // the way out. On a phone it is the tracker's own back control, which used to
+    // be a 20x36px arrow with no label; from 640px up it is the app's header,
+    // which Time shows there since Plans/time-tracker-like-toggl.md D9
+    if ((page.viewportSize()?.width ?? 0) < 640) {
+      const back = page.locator('header:visible a').first()
+      await expect(back).toHaveAttribute('href', ROUTES.dashboard)
+      await expect(back).toContainText('Dashboard')
+      await expect
+        .poll(async () => (await back.boundingBox())?.height ?? 0, { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(36)
+    } else {
+      await expect(page.locator('header:visible').getByRole('link', { name: 'Dashboard' }).first()).toBeVisible()
+    }
 
     // ONE bottom bar. The tracker draws its own sections and the app's tab bar
     // is deliberately not mounted here; two stacked bars on a phone would

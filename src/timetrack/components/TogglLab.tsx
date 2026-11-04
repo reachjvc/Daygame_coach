@@ -698,7 +698,10 @@ export function TogglLab({
               with the workspace's name and a badge reading "Toggl-style time
               tracker" — the name of the thing it was copied from, on the
               product. The workspace name is the subtitle it always was. */}
-          <h1 className={cn("shrink-0 text-sm font-semibold", underAppHeader && "sm:hidden")}>Time</h1>
+          {/* Under the app's header on the PC the title is only read aloud, not
+              removed: the page still needs its one heading, and the browser
+              tests find the tracker by it at every width */}
+          <h1 className={cn("shrink-0 text-sm font-semibold", underAppHeader && "sm:sr-only")}>Time</h1>
           {underAppHeader
             ? sectionTabs("hidden min-w-0 self-stretch overflow-x-auto sm:flex", true)
             : <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>}

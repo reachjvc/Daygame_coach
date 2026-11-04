@@ -521,7 +521,9 @@ test.describe('time tracker on a phone', () => {
       expect(size, 'a section label is below the app-wide 12px floor').toBeGreaterThanOrEqual(12)
     }
 
-    const back = page.locator('header a').first()
+    // `:visible`: the app's own header is in the page too since Time shows it on
+    // the PC, and on a phone it is there but hidden, so plain `header a` found it
+    const back = page.locator('header:visible a').first()
     const box = await back.boundingBox()
     expect(box!.height, 'the only way out of the tracker is under 44px').toBeGreaterThanOrEqual(44)
     expect((await back.innerText()).trim(), 'the way out is an unlabelled arrow').not.toBe('←')

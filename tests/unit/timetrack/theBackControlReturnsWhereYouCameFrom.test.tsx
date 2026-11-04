@@ -114,15 +114,16 @@ describe("the back control", () => {
 })
 
 describe("on the PC, under the app's header", () => {
-  test("the tracker's own back control and title are for phones only", async () => {
+  test("the tracker's own back control is for phones only, and its title is only read aloud there", async () => {
     await mount(<TimetrackScreen />)
     expect(backControl().className.split(/\s+/)).toContain("sm:hidden")
-    expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).toContain("sm:hidden")
+    // still the page's heading: hidden from sight, not removed
+    expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).toContain("sm:sr-only")
   })
 
   test("the lab page has no app header above it, so it keeps its own row everywhere", async () => {
     await mount(<TogglLab />, "/test/toggl")
     expect(backControl().className.split(/\s+/)).not.toContain("sm:hidden")
-    expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).not.toContain("sm:hidden")
+    expect(screen.getByRole("heading", { name: "Time" }).className.split(/\s+/)).not.toContain("sm:sr-only")
   })
 })
