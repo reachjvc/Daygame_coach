@@ -53,6 +53,50 @@ whole-row upsert, and so does everyone if the function is missing (PostgREST `PG
   check; a refused constraint rolling back the whole call; a second user unable to see or write the first user's
   rows; no session and the `anon` role refused.
 
+## What the sync badge says
+
+The badge in the tracker's header reports two things: whether everything typed here has been sent, and when this
+device last heard from the account (`src/timetrack/components/SyncBadge.tsx`, design rules D2 and D6).
+
+| Badge | Meaning | What to do |
+|---|---|---|
+| **Checking…** | The tracker just opened, or the phone just woke, and the first check of the account has not answered yet. Start, Stop and Continue wait for it, three seconds at most. A tap made meanwhile runs when the answer is in; if the other device changed the running timer in between, the tap is dropped with a toast saying so. | Nothing. If it lasts past three seconds it turns into the amber "Couldn't reach the server". |
+| **Saved · checked just now** / **Saved · checked 3 min ago** (a green dot on a phone) | Nothing waiting to be sent, and the account was read that long ago. | Nothing. |
+| **Saved · not checked for 7 min** (amber) | Nothing waiting to be sent, but this device has not heard from the account for over five minutes, so it may not show what the other device did. | Tap the badge: it checks now. |
+| **Couldn't reach the server** (amber) | The last check failed, or the first one did not answer within three seconds. The screen is this device's own copy and might be out of date. | Tap to try again; check the connection. |
+| Saving 2… / Offline · 2 waiting / Not saved / Signed out / This device only | The sending side, as before. | As before. |
+
+Tapping the badge always checks the account and sends whatever is waiting.
+
+Behind it: a device checks the account when the tracker opens, when the page becomes visible (and from the
+back-forward cache), on `focus`, on `online`, on a Realtime ping (below), and once a minute. A failed first
+read is tried again the moment the connection comes back. Whatever is queued is sent at once — with
+`fetch(…, { keepalive: true })`, at most 60 KB per request — when the page is hidden, closed or the tracker is
+left; an upload already in the air when the tracker is left is no longer cut off. Starts and stops are stamped
+with the server's clock: each answer's `Date` header tells the device how far its own clock is off
+(`src/timetrack/serverClockService.ts`); a device whose clock agrees with the server's is left exactly as it is.
+
+## The other device within seconds (Supabase Realtime)
+
+While the tracker is open it subscribes to `postgres_changes` on `public.timetrack_entries`, filtered to the
+signed-in user, through the browser's Supabase client (row security applies to the feed). Every change ping
+starts a check 300 ms later. The ping carries nothing the check uses; the check reads the rows the usual way.
+
+- **Switch it on:** `supabase/migrations/20261104120000_timetrack_entries_realtime.sql` adds the table to the
+  `supabase_realtime` publication. It changes no data and is idempotent. Until it is applied no ping arrives and
+  the tracker behaves as before (the minute's check and the checks above); no code change is needed either way.
+- **Check it is on (read-only):**
+  `select tablename from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'timetrack_entries';`
+  returns one row.
+- **Switch it off:** `supabase/migrations/rollback/20261104120000_timetrack_entries_realtime.down.sql` takes the
+  table out of the publication. Deletes no data; the app falls back by itself.
+- **Cost:** Realtime is included on every Supabase plan, the free one too; one person's pings are far under its
+  limits. If a limit were ever hit, the checks above still work.
+- **Checked** against Postgres 15 in isolation on 2026-11-04: applied twice (added once, then a notice), rolled
+  back twice, and skipped with a notice where the publication does not exist or publishes all tables. The local
+  test stack runs without Realtime (`scripts/db/test-stack.mjs`), so the browser suite cannot see pings; the
+  unit test `theOtherDeviceNoticesWithinSeconds` pins the subscription and what a ping does.
+
 ## Verifying a schema change
 
 The repo's migration history cannot be replayed from scratch — an older migration references `user_goals`,

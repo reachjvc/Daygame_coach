@@ -6,7 +6,7 @@
  * split, favorite, copy start link, delete) and multi-select bulk edit.
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import type { KeyboardEvent } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -70,6 +70,8 @@ import {
 import type { EntryRow, Id, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, touchRow, touchTarget } from "./primitives"
+import { serverNow, serverNowIso } from "../serverClock"
+import { AfterCheckContext } from "./afterCheck"
 import { announceEndedEarly, askAboutTypedTime, askBeforeLong } from "./TimerBar"
 
 interface EntryListProps {
@@ -114,7 +116,7 @@ export function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onG
     })
   }
 
-  const nowIso = () => new Date().toISOString()
+  const nowIso = () => serverNowIso()
 
   const removeEntries = (ids: Id[]) => {
     const result = deleteEntries(state, ids, nowIso())
@@ -419,6 +421,7 @@ function EntryFields({
   const [durationFrozen, setDurationFrozen] = useState<string | null>(null)
   const latestState = useRef(state)
   latestState.current = state
+  const afterCheck = useContext(AfterCheckContext)
   const [startDraft, setStartDraft] = useState<string | null>(null)
   const [stopDraft, setStopDraft] = useState<string | null>(null)
 
@@ -449,7 +452,7 @@ function EntryFields({
     event.currentTarget.blur()
   }
   const project = state.projects.find((p) => p.id === entry.projectId)
-  const nowIso = () => new Date().toISOString()
+  const nowIso = () => serverNowIso()
 
   const patch = (changes: Parameters<typeof updateEntry>[2]) => {
     // An edit made on a collapsed group applies to every entry in it, like Toggl
@@ -554,24 +557,27 @@ function EntryFields({
   const continueButton = (
     <button
       type="button"
-      onClick={() => {
-        const result = continueEntry(state, entry.id, nowIso())
-        if (result.violations.length > 0) {
-          pushToast(result.violations[0].message, "error")
-          return
-        }
-        setState(() => result.state)
-        // This button is 8px from the row's own tap area. If the tap ended a
-        // timer that was running, say which one and offer it back.
-        const { displaced, started } = result
-        if (displaced && started) {
-          pushToast(
-            `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
-            "info",
-            () => setState((current) => undoDisplacement(current, started.id, displaced.id, nowIso())),
-          )
-        }
-      }}
+      onClick={() =>
+        // held until the check after opening or waking lands, then run on the workspace as it is (D2)
+        (afterCheck ?? ((run) => run(latestState.current)))((latest) => {
+          const result = continueEntry(latest, entry.id, nowIso())
+          if (result.violations.length > 0) {
+            pushToast(result.violations[0].message, "error")
+            return
+          }
+          setState(() => result.state)
+          // This button is 8px from the row's own tap area. If the tap ended a
+          // timer that was running, say which one and offer it back.
+          const { displaced, started } = result
+          if (displaced && started) {
+            pushToast(
+              `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
+              "info",
+              () => setState((current) => undoDisplacement(current, started.id, displaced.id, nowIso())),
+            )
+          }
+        })
+      }
       title="Continue this entry (C)"
       aria-label="Continue this entry"
       className={cn(touchTarget, "rounded-md text-primary hover:bg-secondary/60")}
@@ -1078,7 +1084,7 @@ function BulkEditBar({
   onDelete: () => void
 }) {
   const apply = (patch: Parameters<typeof bulkEditEntries>[2]) => {
-    setState((current) => bulkEditEntries(current, selected, patch, new Date().toISOString()))
+    setState((current) => bulkEditEntries(current, selected, patch, serverNowIso()))
   }
 
   return (
@@ -1117,7 +1123,7 @@ export function EntryDetailModalBody({
   state,
   setState,
   pushToast,
-  nowSec = Math.floor(Date.now() / 1000),
+  nowSec = Math.floor(serverNow() / 1000),
 }: {
   entry: TimeEntry
   state: TimetrackState
@@ -1127,7 +1133,7 @@ export function EntryDetailModalBody({
   nowSec?: number
 }) {
   const [description, setDescription] = useState(entry.description)
-  const nowIso = () => new Date().toISOString()
+  const nowIso = () => serverNowIso()
   const running = isRunning(entry)
   const timeFormat = state.user.timeFormat
 

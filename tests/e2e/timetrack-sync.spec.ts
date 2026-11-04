@@ -14,10 +14,11 @@
 
 import { test, expect } from './fixtures/test'
 import { ROUTES } from "@/src/shared/routes"
-import type { Page } from '@playwright/test'
+import { devices, type Page } from '@playwright/test'
 import {
   PENDING_KEY,
   STORAGE_KEY,
+  TRACKER,
   blur,
   entriesOnAccount,
   entryInList,
@@ -338,5 +339,91 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     await page.waitForTimeout(3000)
     expect(await isRunning(), 'the timer came back after being stopped — press twice again').toBe(false)
     await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+  })
+})
+
+/**
+ * THE OWNER'S OWN STORY, END TO END (Phase 2 acceptance in
+ * Plans/time-tracker-like-toggl.md): "I start a timer on the PC, then close it on
+ * the phone once I am done with gym."
+ *
+ * The phone last opened the tracker before Gym was started, so the copy it opens
+ * on has no timer running, and its first read of the account is slow. It must
+ * say "Checking…" over that old copy (D2), then show Gym running, and its Stop
+ * must reach the PC with the phone's stop time.
+ *
+ * The local test backend runs without Supabase Realtime (scripts/db/test-stack.mjs
+ * leaves it out), so the PC hears about the stop the way it does when the
+ * owner looks back at it — the page becoming visible — and not by the change
+ * ping (D4); the ping is pinned by tests/unit/timetrack/theOtherDeviceNoticesWithinSeconds.
+ */
+test.describe('the owner\'s overlap: started on the PC, stopped on the phone', () => {
+  test('the phone says Checking… over its old copy, then shows Gym running, and its Stop reaches the PC', async ({
+    browser,
+    account,
+  }) => {
+    const baseURL = test.info().project.use.baseURL
+    const pcContext = await browser.newContext({ storageState: account.storageState, baseURL, viewport: { width: 1366, height: 900 } })
+    const phoneContext = await browser.newContext({ ...devices['Pixel 7'], storageState: account.storageState, baseURL })
+    try {
+      const pc = await pcContext.newPage()
+      await openFreshTracker(pc)
+
+      // the phone opens the tracker while nothing runs, and is put away: its copy stays on it
+      const before = await phoneContext.newPage()
+      await reopenFromAccount(before)
+      await expect(before.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+      await before.close()
+
+      // the PC starts Gym
+      await pc.getByPlaceholder('What are you working on?').fill('Gym')
+      await pc.locator('main').getByRole('button', { name: 'Start timer' }).click()
+      await savedToAccount(pc)
+      await expect.poll(() => gymOnAccount(pc), { message: 'Gym never reached the account' }).toMatchObject({ running: true })
+
+      // the phone opens again, on its old copy, and its first read of the account is slow
+      const phone = await phoneContext.newPage()
+      let releaseRead: () => void = () => {}
+      const readHeld = new Promise<void>((resolve) => (releaseRead = resolve))
+      await phone.route('**/api/timetrack/sync', async (route) => {
+        if (route.request().method() === 'GET') await readHeld
+        await route.continue()
+      })
+      await phone.goto(TRACKER, { waitUntil: 'domcontentloaded' })
+      await expect(
+        phone.getByRole('button', { name: /^Checking…/ }),
+        'the old copy was shown with no sign that it was being checked',
+      ).toBeVisible({ timeout: 30_000 })
+      releaseRead()
+
+      // then Gym, running, as the PC left it
+      const stop = phone.locator('main').getByRole('button', { name: 'Stop timer' })
+      await expect(stop, 'the phone never showed the timer the PC started').toBeVisible({ timeout: 20_000 })
+      await expect(phone.getByPlaceholder('What are you working on?')).toHaveValue('Gym')
+
+      const pressedAt = await phone.evaluate(() => Date.now())
+      await stop.click()
+      await expect(phone.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+      await savedToAccount(phone)
+
+      // the PC, looked at again, shows it stopped within seconds, at the phone's time
+      await pc.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+      await expect(pc.locator('main').getByRole('button', { name: 'Start timer' }), 'the PC still shows Gym running').toBeVisible({
+        timeout: 5_000,
+      })
+      const response = await pc.request.get('/api/timetrack/sync')
+      const body = (await response.json()) as {
+        rows: { timetrack_entries: { description: string; stopped_at: string | null; deleted_at: string | null }[] }
+      }
+      const gym = body.rows.timetrack_entries.find((e) => e.deleted_at === null && e.description === 'Gym')
+      expect(gym?.stopped_at, 'Gym is not stopped on the account').toBeTruthy()
+      expect(
+        Math.abs(Date.parse(gym!.stopped_at!) - pressedAt),
+        'the account does not carry the moment the phone pressed Stop',
+      ).toBeLessThan(10_000)
+    } finally {
+      await phoneContext.close()
+      await pcContext.close()
+    }
   })
 })

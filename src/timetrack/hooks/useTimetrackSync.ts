@@ -15,9 +15,16 @@
  *     not lose it.
  *  4. Nothing the server sends can overwrite a change of yours that has not
  *     been sent yet. See `syncService`.
+ *  5. After opening or waking it says "Checking…" until it has heard from the
+ *     account, and the tracker's Start and Stop wait for that, three seconds at
+ *     most (D2). It says when it last heard, too (D6), and hears about the other
+ *     device's changes within seconds (D4).
+ *  6. What is queued leaves the moment the page is hidden, closed or left (D3).
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
+
+import { createBrowserSupabaseClient } from "@/src/db/supabase-client"
 
 import {
   emptyRows,
@@ -30,6 +37,7 @@ import {
 } from "@/src/db/timetrackTypes"
 
 import { PENDING_BASES_KEY, PENDING_KEY } from "../config"
+import { noteServerDate, serverNow, serverNowIso } from "../serverClock"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
 import {
@@ -65,6 +73,25 @@ export type SyncStatus =
   | "offline"
   | "error"
 
+/**
+ * WHAT THIS DEVICE KNOWS ABOUT THE ACCOUNT RIGHT NOW, beside what it has sent.
+ *
+ * "Saved" used to describe sending only, so an offline phone with nothing to
+ * send said "Saved" over a timer the PC had stopped hours before (sync #4).
+ */
+export interface CheckState {
+  /**
+   * Opening or waking, and the first check since has not landed yet. The
+   * tracker's Start, Stop and Continue wait while this is true — at most
+   * `CHECK_WAIT_MS`, after which it turns false with `failed` set.
+   */
+  checking: boolean
+  /** When a check last landed, on the server's clock (ms). Null: not yet. */
+  lastCheckedAt: number | null
+  /** The last check failed, or the wait for one ran out */
+  failed: boolean
+}
+
 export interface ImportOffer {
   entries: number
   projects: number
@@ -79,6 +106,11 @@ export interface ImportItem {
   project: string | null
   day: string
   seconds: number
+}
+
+interface FlushOptions {
+  /** the page is being hidden, closed or left: send now, with `keepalive` (D3) */
+  keepalive?: boolean
 }
 
 interface Options {
@@ -112,6 +144,109 @@ const RETRY_MAX_MS = 60_000
  * failure, and the backoff below already knows what to do with those.
  */
 const REQUEST_TIMEOUT_MS = 20_000
+/**
+ * How long Start, Stop and Continue wait for the check after opening or
+ * waking (D2). Longer is a tap that feels broken; shorter is a slow signal
+ * acting on an old copy.
+ */
+export const CHECK_WAIT_MS = 3_000
+/**
+ * The most a request sent on the way out may carry. A browser refuses a
+ * `keepalive` request once all of them in the air together pass 64 KiB, so
+ * this leaves room for the headers.
+ */
+export const KEEPALIVE_BUDGET_BYTES = 60 * 1024
+/** A burst of change pings — one per row of a split — becomes one check */
+const PING_SETTLE_MS = 300
+/** Tab switches fire `focus` and `visibilitychange` together: one check for both */
+const FOCUS_CHECK_GAP_MS = 2_000
+
+/**
+ * Every request to the sync route goes through here, so each answer also tells
+ * this device how far its clock is from the server's (D5, `serverClock`).
+ */
+async function askServer(url: string, init?: RequestInit): Promise<Response> {
+  const sentAt = Date.now()
+  const response = await fetch(url, init)
+  const headers = (response as Partial<Response>).headers
+  noteServerDate(sentAt, Date.now(), headers && typeof headers.get === "function" ? headers.get("date") : null)
+  return response
+}
+
+/**
+ * The largest first batch of `rows` whose request body fits `budget` bytes, or
+ * null when not even one row does. What it leaves out stays queued.
+ */
+function firstBatchWithin(
+  rows: Partial<TimetrackRows>,
+  bodyOf: (batch: Partial<TimetrackRows>) => string,
+  budget: number,
+): Partial<TimetrackRows> | null {
+  const encoder = new TextEncoder()
+  for (let size = Math.min(countRows(rows), MAX_ROWS_PER_REQUEST); size >= 1; size = Math.floor(size / 2)) {
+    const first = splitIntoBatches(rows, size)[0]
+    if (first && encoder.encode(bodyOf(first)).length <= budget) return first
+  }
+  return null
+}
+
+/**
+ * THE OTHER DEVICE'S CHANGES, AS THEY HAPPEN (D4).
+ *
+ * A "something changed, check now" ping from Supabase Realtime for this
+ * account's entries; row security applies to the feed, so it carries nothing
+ * this account could not read anyway, and the check reads the rows the usual
+ * way. Until the table is in the `supabase_realtime` publication (migration
+ * 20261104120000) no ping arrives, and the minute's check is all there is —
+ * which is what there was before. Returns how to stop listening.
+ */
+function listenForChanges(userId: string, onChange: () => void): () => void {
+  try {
+    const client = createBrowserSupabaseClient()
+    // a fresh topic each time: React mounts effects twice in development, and a
+    // channel being removed must not be handed back as the new one
+    const topic = `timetrack-entries:${userId}:${Math.random().toString(36).slice(2)}`
+    const channel = client
+      .channel(topic)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "timetrack_entries", filter: `user_id=eq.${userId}` },
+        () => onChange(),
+      )
+      .subscribe()
+    return () => {
+      void client.removeChannel(channel)
+    }
+  } catch {
+    // no client here (no project settings, a test): the minute's check stands
+    return () => {}
+  }
+}
+
+/**
+ * A dead instance's upload landed: take what it sent out of the queue on disk,
+ * so the next instance does not send it again. Only rows still exactly as they
+ * were sent go; anything changed since stays.
+ */
+function forgetSentOnDisk(accepted: Partial<TimetrackRows>): void {
+  try {
+    const raw = window.localStorage.getItem(PENDING_KEY)
+    if (!raw) return
+    const left = withoutSentRows(JSON.parse(raw) as Partial<TimetrackRows>, accepted)
+    const keys = keysIn(left)
+    const stored = readPendingBases()
+    window.localStorage.setItem(PENDING_KEY, JSON.stringify(left))
+    window.localStorage.setItem(
+      PENDING_BASES_KEY,
+      JSON.stringify({
+        bases: Object.fromEntries(Object.entries(stored.bases).filter(([key]) => keys.has(key))),
+        tagSets: Object.fromEntries(Object.entries(stored.tagSets).filter(([id]) => keys.has(`timetrack_entries/${id}`))),
+      }),
+    )
+  } catch {
+    // the live instance, or the next one, sends it again; the version check makes that harmless
+  }
+}
 
 function readPending(): Partial<TimetrackRows> {
   try {
@@ -209,6 +344,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const [status, setStatus] = useState<SyncStatus>("starting")
   const [pendingCount, setPendingCount] = useState(0)
   const [importOffer, setImportOffer] = useState<ImportOffer | null>(null)
+  const [check, setCheck] = useState<CheckState>({ checking: true, lastCheckedAt: null, failed: false })
+  /** The account this device is signed into, once the first read says so: what the change feed listens to */
+  const [account, setAccount] = useState<string | null>(null)
 
   /** the rows we believe the server has, so a diff knows what is new */
   const serverRows = useRef<TimetrackRows | null>(null)
@@ -301,9 +439,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
    * writes the shared pending queue, which the live instance also owns.
    */
   const unmounted = useRef(false)
-  /** Requests still in the air, so unmounting can stop them rather than let a dead
-   * instance act on the answer. */
+  /**
+   * READS still in the air, so unmounting can stop them rather than let a dead
+   * instance act on the answer. Uploads are not in here any more: leaving the
+   * tracker used to cut off the upload of a change made a moment before, and the
+   * PC then showed the timer running until the phone opened the tracker again
+   * (D3). An upload that lands after its instance is gone only takes what it
+   * sent out of the queue on disk — see `forgetSentOnDisk`.
+   */
   const inFlight = useRef(new Set<AbortController>())
+  /** The 3-second limit on the current "Checking…" (D2) */
+  const checkWait = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** When a check was last asked for, so `focus` right after `visibilitychange` asks once */
+  const lastAsked = useRef(0)
+  /** First contact is in the air: asking again now would read the account twice */
+  const firstContactBusy = useRef(false)
   /**
    * WHAT THIS DEVICE'S COPY IS BASED ON: the server's `updated_at` for each
    * row, as last heard, by `${table}/${key}` — the version a write names.
@@ -359,6 +509,46 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const clearRetry = useCallback(() => {
     if (retryAt.current) clearTimeout(retryAt.current)
     retryAt.current = null
+  }, [])
+
+  /**
+   * "CHECKING…": FROM OPENING OR WAKING UNTIL A CHECK LANDS, THREE SECONDS AT MOST.
+   *
+   * For the seconds after the phone woke it showed its old copy with no sign of
+   * checking, and a tap on Stop in that window stopped, at noon, a timer the PC
+   * had stopped at ten — and the noon stop won (sync #2). While this is set the
+   * tracker holds Start, Stop and Continue. After `CHECK_WAIT_MS` it lets them
+   * go and the badge says the server could not be reached, because acting on an
+   * old copy is better than a button that does nothing.
+   */
+  const beginChecking = useCallback(() => {
+    if (unmounted.current) return
+    setCheck((current) => (current.checking ? current : { ...current, checking: true }))
+    if (checkWait.current) clearTimeout(checkWait.current)
+    checkWait.current = setTimeout(() => {
+      checkWait.current = null
+      setCheck((current) => (current.checking ? { ...current, checking: false, failed: true } : current))
+    }, CHECK_WAIT_MS)
+  }, [])
+
+  /**
+   * How a check ended. `unanswered`: the server answered but there is nothing to
+   * compare with — not signed in. A failed check is never silent: the badge
+   * turns amber and says so (D6).
+   */
+  const noteCheck = useCallback((outcome: "landed" | "failed" | "unanswered") => {
+    if (unmounted.current) return
+    if (checkWait.current) clearTimeout(checkWait.current)
+    checkWait.current = null
+    setCheck((current) =>
+      outcome === "landed"
+        ? { checking: false, lastCheckedAt: serverNow(), failed: false }
+        : outcome === "failed"
+          ? { ...current, checking: false, failed: true }
+          : current.checking
+            ? { ...current, checking: false }
+            : current,
+    )
   }, [])
 
   const savePending = useCallback(() => {
@@ -515,12 +705,12 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         ],
         new Set(),
       )
-      serverRows.current = stateToRows(rowsToState(believed, new Date().toISOString()), uid)
+      serverRows.current = stateToRows(rowsToState(believed, serverNowIso()), uid)
 
       // and what this device shows for them is the merge
       const shown = applyTagSets(mergeIncoming(local, rebased.hold, new Set()), rebased.holdTags)
-      const settled = reconcileRunningEntries(rowsToState(shown, new Date().toISOString()))
-      if (diffRows(local, stateToRows(settled.state, uid), new Date().toISOString()).count > 0) {
+      const settled = reconcileRunningEntries(rowsToState(shown, serverNowIso()))
+      if (diffRows(local, stateToRows(settled.state, uid), serverNowIso()).count > 0) {
         replaceState(settled.state)
       }
     },
@@ -530,10 +720,17 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const settleConflictsRef = useRef(settleConflicts)
   settleConflictsRef.current = settleConflicts
 
-  const flushRef = useRef<(() => Promise<void>) | null>(null)
+  const flushRef = useRef<((options?: FlushOptions) => Promise<void>) | null>(null)
 
-  const flush = useCallback(async () => {
-    if (unmounted.current) return
+  const flush = useCallback(async (options: FlushOptions = {}) => {
+    /**
+     * ON THE WAY OUT (D3): the page is being hidden, closed or left, so this goes
+     * now, with `keepalive`, which a browser finishes even if the page does not
+     * live to read the answer — and it may go from an instance that is already
+     * unmounting, which is the one case a dead instance still sends.
+     */
+    const leaving = options.keepalive === true
+    if (unmounted.current && !leaving) return
     if (flushing.current) {
       // Something was queued while a request was in the air. That used to wait
       // for an unrelated edit: the request ends by setting the status it
@@ -573,29 +770,50 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     const sending = workspaceId ? reattachToWorkspace(queued, workspaceId) : queued
     const answers: VersionedPushResult = { applied: 0, written: {}, conflicts: {}, conflictTags: {} }
     const setsSent: TagSets = {}
+    // each row names the server version it was based on; see `basesFor`
+    const bodyOf = (batch: Partial<TimetrackRows>) =>
+      JSON.stringify({ rows: batch, bases: basesFor(batch, queuedBases), tagSets: setsFor(batch, queuedSets) })
+    // Sent in batches: a year of tracked time is megabytes, and a single
+    // request that large is one the server may simply refuse — leaving the
+    // person with nothing uploaded and no idea why.
+    let batches = splitIntoBatches(sending, MAX_ROWS_PER_REQUEST)
+    /**
+     * On the way out, only what one keepalive request may carry: the browser
+     * refuses one over 64 KiB, and the page may not live to send a second. The
+     * rest stays queued; if the page is still there when this one lands, the
+     * drain-again below sends the next part the same way.
+     */
+    let keepalive = false
+    if (leaving) {
+      const fits = firstBatchWithin(sending, bodyOf, KEEPALIVE_BUDGET_BYTES)
+      if (fits) {
+        batches = [fits]
+        keepalive = true
+      } else {
+        // not even one row fits a keepalive request: send it the ordinary way and hope
+        batches = batches.slice(0, 1)
+      }
+    }
+    /** What actually went, which on the way out may be only part of the queue */
+    const went: Partial<TimetrackRows> = batches.length === 1 ? batches[0] : sending
     try {
-      // Sent in batches: a year of tracked time is megabytes, and a single
-      // request that large is one the server may simply refuse — leaving the
-      // person with nothing uploaded and no idea why.
-      for (const batch of splitIntoBatches(sending, MAX_ROWS_PER_REQUEST)) {
+      for (const batch of batches) {
+        // NOT registered in `inFlight`: an upload outlives the screen that started it (D3)
         const abort = new AbortController()
-        // registered so unmounting can stop it — see the unmount block
-        inFlight.current.add(abort)
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
         const batchSets = setsFor(batch, queuedSets)
         Object.assign(setsSent, batchSets)
         let response: Response
         try {
-          response = await fetch("/api/timetrack/sync", {
+          response = await askServer("/api/timetrack/sync", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            // each row names the server version it was based on; see `basesFor`
-            body: JSON.stringify({ rows: batch, bases: basesFor(batch, queuedBases), tagSets: batchSets }),
+            body: bodyOf(batch),
             signal: abort.signal,
+            keepalive,
           })
         } finally {
           clearTimeout(deadline)
-          inFlight.current.delete(abort)
         }
         if (response.status === 401) {
           // The session ended while the tab was open. Retrying is pointless,
@@ -736,7 +954,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         ...Object.keys(answers.conflictTags),
         ...(answers.conflicts.timetrack_entries ?? []).map((row) => row.id),
       ])
-      const accepted = withoutKeys(sending, refusedKeys, refusedEntries)
+      const accepted = withoutKeys(went, refusedKeys, refusedEntries)
       const acceptedSets = Object.fromEntries(Object.entries(setsSent).filter(([entryId]) => !refusedEntries.has(entryId)))
 
       // what we just sent is now what the server has
@@ -771,7 +989,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        * Removing the sent keys is the same rule stated properly, and it keeps what
        * arrived while the request was in the air.
        */
-      pending.current = pending.current === queued ? {} : withoutSentRows(pending.current, accepted)
+      pending.current = pending.current === queued && went === sending ? {} : withoutSentRows(pending.current, accepted)
+      // gone from the screen already: this instance's queue is no longer the one on disk
+      if (unmounted.current) forgetSentOnDisk(accepted)
 
       /**
        * A row edited while its upload was in the air is still queued — and that
@@ -801,7 +1021,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       )
 
       const stale = countRows(answers.conflicts) > 0
-      if (stale) settleConflictsRef.current?.(answers.conflicts, answers.conflictTags, queuedBases, sending)
+      if (stale && !unmounted.current) settleConflictsRef.current?.(answers.conflicts, answers.conflictTags, queuedBases, went)
 
       savePending()
       retryDelay.current = RETRY_START_MS
@@ -824,6 +1044,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       }
       setStatus(countRows(pending.current) > 0 ? "saving" : "synced")
     } catch (error) {
+      // a send from an instance that has gone stays in the queue on disk for the next one
+      if (unmounted.current) return
       // try again by ourselves, sooner at first and then less often
       if (retryAt.current) clearTimeout(retryAt.current)
       retryAt.current = setTimeout(() => void flushRef.current?.(), retryDelay.current)
@@ -846,7 +1068,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       const more = flushAgain.current || countRows(pending.current) > 0
       flushAgain.current = false
       if (sent && more && retryAt.current === null && !unmounted.current) {
-        setTimeout(() => void flushRef.current?.(), 0)
+        // still hidden: the next part goes the way this one did
+        const stillAway = leaving && document.visibilityState === "hidden"
+        setTimeout(() => void flushRef.current?.({ keepalive: stillAway }), 0)
       }
     }
   }, [clearRetry, pushToast, savePending])
@@ -868,23 +1092,34 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
      * inconvenience; it was the whole feature, off, silently, for an hour.
      */
     unmounted.current = false
+    // "Checking…" from the moment the tracker opens (D2)
+    beginChecking()
     return () => {
       unmounted.current = true
       if (retryAt.current) clearTimeout(retryAt.current)
       retryAt.current = null
       if (firstContactAt.current) clearTimeout(firstContactAt.current)
       firstContactAt.current = null
+      if (checkWait.current) clearTimeout(checkWait.current)
+      checkWait.current = null
       /**
-       * And stop the request itself, not just the timers that would start
-       * another. An upload in the air outlives the screen that started it, and
-       * whatever it does when it answers is done on behalf of a component that no
-       * longer exists — see `savePending`. Aborting is safe: the rows are still in
-       * the queue on disk, and the live instance will send them.
+       * LEAVING THE TRACKER SENDS WHAT IS QUEUED, AND LETS AN UPLOAD IN THE AIR LAND.
+       *
+       * Leaving used to cancel the 800 ms wait and abort the upload in the air, so
+       * a Stop pressed just before going back to the Dashboard waited until the
+       * tracker was opened again, and the PC showed the timer running all that
+       * time (sync #5, getting-around #1). The send goes from this instance,
+       * which is already marked gone: whatever its answer says is applied only to
+       * the queue on disk (`forgetSentOnDisk`), never over the next instance's.
+       *
+       * Reads in the air are still stopped: their answers belong to a screen
+       * that no longer exists.
        */
+      sendOnLeaveRef.current?.()
       for (const controller of inFlight.current) controller.abort()
       inFlight.current.clear()
     }
-  }, [])
+  }, [beginChecking])
 
   // --- first contact: who are we, and what does the server already have? ----
   useEffect(() => {
@@ -899,20 +1134,23 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     startingState.current = state
 
     const attempt = async () => {
-      if (unmounted.current) return
+      if (unmounted.current || firstContactBusy.current) return
+      firstContactBusy.current = true
       try {
         const abort = new AbortController()
         inFlight.current.add(abort)
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
         let response: Response
         try {
-          response = await fetch("/api/timetrack/sync", { signal: abort.signal })
+          // never an answer from a cache: its `Date` would set the clock wrong (D5)
+          response = await askServer("/api/timetrack/sync", { signal: abort.signal, cache: "no-store" })
         } finally {
           clearTimeout(deadline)
           inFlight.current.delete(abort)
         }
         if (response.status === 401) {
           setStatus("local-only")
+          noteCheck("unanswered")
           return
         }
         if (!response.ok) throw new Error(response.statusText)
@@ -924,6 +1162,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         }
         cursor.current = body.cursor
         userId.current = body.userId ?? "self"
+        // the change feed listens for this account, once it is known (D4)
+        setAccount(body.userId ?? null)
 
         if (body.empty) {
           // nothing stored yet. Offer to upload what this browser holds rather
@@ -974,12 +1214,13 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
                 })),
             })
           } else {
-            const everything = diffRows(null, localRows, new Date().toISOString())
+            const everything = diffRows(null, localRows, serverNowIso())
             queueChanges(everything.changed, everything.tagSets)
             savePending()
             void flush()
           }
           setStatus("synced")
+          noteCheck("landed")
           return
         }
 
@@ -995,7 +1236,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          */
         const startingRows = startingState.current ? stateToRows(startingState.current, userId.current) : null
         const latestRows = stateToRows(latestState.current ?? state, userId.current)
-        const sinceOpening = diffRows(startingRows, latestRows, new Date().toISOString())
+        const sinceOpening = diffRows(startingRows, latestRows, serverNowIso())
 
         // the server's own copy of everything: the versions this device's writes will name
         basis.current = new Map()
@@ -1086,7 +1327,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         )
 
         serverRows.current = body.rows
-        const arrived = rowsToState(base, new Date().toISOString())
+        const arrived = rowsToState(base, serverNowIso())
         const settled = reconcileRunningEntries(arrived)
         if (settled.stopped.length > 0) {
           pushToast(
@@ -1115,7 +1356,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         const localRows = stateToRows(latestState.current ?? state, userId.current)
         const adoptedRows = stateToRows(adoptedState, userId.current)
         const nothingNew =
-          diffRows(localRows, adoptedRows, new Date().toISOString()).count === 0
+          diffRows(localRows, adoptedRows, serverNowIso()).count === 0
 
         if (nothingNew) {
           // The baseline is the round-tripped rows, not `body.rows`, for the same
@@ -1132,6 +1373,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         // server already has as this browser would send it is not sent again
         savePending()
         setStatus("synced")
+        noteCheck("landed")
         void flush()
       } catch {
         /**
@@ -1144,17 +1386,21 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
          * reload as the only way out. The badge says something is wrong; it
          * does not say it will stay wrong for ever.
          */
+        if (unmounted.current) return
         setStatus(navigator.onLine ? "error" : "offline")
+        noteCheck("failed")
         const delay = firstContactDelay.current
         firstContactDelay.current = Math.min(delay * 2, RETRY_MAX_MS)
         if (firstContactAt.current) clearTimeout(firstContactAt.current)
         firstContactAt.current = setTimeout(() => void firstContactRef.current?.(), delay)
+      } finally {
+        firstContactBusy.current = false
       }
     }
 
     firstContactRef.current = attempt
     void attempt()
-  }, [state, replaceState, savePending, flush, learn, queueChanges])
+  }, [state, replaceState, savePending, flush, learn, queueChanges, noteCheck])
 
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
@@ -1187,7 +1433,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
     }
 
     const rows = stateToRows(state, userId.current)
-    const { changed, count, tagSets: setsChanged } = diffRows(serverRows.current, rows, new Date().toISOString())
+    const { changed, count, tagSets: setsChanged } = diffRows(serverRows.current, rows, serverNowIso())
     if (count === 0) return
 
     const guard = safeToSend(changed, serverRows.current, adopted.current)
@@ -1279,16 +1525,25 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
       let response: Response
       try {
-        response = await fetch(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`, { signal: abort.signal })
+        response = await askServer(`/api/timetrack/sync?since=${encodeURIComponent(cursor.current)}`, {
+          signal: abort.signal,
+          cache: "no-store",
+        })
       } finally {
         clearTimeout(deadline)
         inFlight.current.delete(abort)
       }
       if (response.status === 401) {
         setStatus("signed-out")
+        noteCheck("unanswered")
         return
       }
-      if (!response.ok) return
+      if (!response.ok) {
+        // A FAILED CHECK IS NOT SILENT. This returned without a word, and the
+        // badge went on saying "Saved" over whatever the other device had done.
+        if (mine === pullSeq.current) noteCheck("failed")
+        return
+      }
       const body = (await response.json()) as { rows: TimetrackRows; cursor: string }
       // A newer request has gone out while this one was in the air. Its answer
       // covers everything this one would have said, and applying this one
@@ -1297,6 +1552,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       // and the cursor only ever moves forward, so a late answer cannot rewind
       // what the next request will ask for
       if (!cursor.current || body.cursor > cursor.current) cursor.current = body.cursor
+      // heard from the account; whatever is applied below lands in the same render
+      noteCheck("landed")
       if (countRows(body.rows) === 0) return
 
       const dirty = keysIn(pending.current)
@@ -1318,7 +1575,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       let unsent: Partial<TimetrackRows> = {}
       let unsentTags: TagSets = {}
       if (latestState.current) {
-        const diff = diffRows(serverRows.current, stateToRows(latestState.current, userId.current), new Date().toISOString())
+        const diff = diffRows(serverRows.current, stateToRows(latestState.current, userId.current), serverNowIso())
         unsent = diff.changed
         unsentTags = diff.tagSets
         for (const key of keysIn(unsent)) dirty.add(key)
@@ -1391,9 +1648,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       // round-tripped, for the reason the baseline below is: a row as the server
       // stores it carries columns the mapper never emits, and those must not read
       // as local changes on the next tick
-      serverRows.current = stateToRows(rowsToState(merged, new Date().toISOString()), userId.current)
+      serverRows.current = stateToRows(rowsToState(merged, serverNowIso()), userId.current)
       const withLocal = applyTagSets(mergeIncoming(merged, unsent, new Set()), unsentTags)
-      const settled = reconcileRunningEntries(rowsToState(withLocal, new Date().toISOString()))
+      const settled = reconcileRunningEntries(rowsToState(withLocal, serverNowIso()))
 
       /**
        * DO NOT REDRAW FOR AN ECHO OF YOUR OWN WRITES.
@@ -1411,7 +1668,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
       const held = latestState.current
       const nothingNew =
         held !== null &&
-        diffRows(stateToRows(held, userId.current), stateToRows(settled.state, userId.current), new Date().toISOString())
+        diffRows(stateToRows(held, userId.current), stateToRows(settled.state, userId.current), serverNowIso())
           .count === 0
 
       /**
@@ -1461,9 +1718,11 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
        */
       replaceState(settled.state)
     } catch {
-      // a failed pull is not worth interrupting anyone: the next one will run
+      // Not worth a toast — the next check will run — but worth the badge: a
+      // phone that cannot reach the account must not look as if it had (D6).
+      if (mine === pullSeq.current) noteCheck("failed")
     }
-  }, [replaceState, learn])
+  }, [replaceState, learn, noteCheck])
 
   /**
    * Signing in again usually happens in this tab, which reloads and starts over.
@@ -1495,9 +1754,9 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
         const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
         let response: Response
         try {
-          response = await fetch(
-            "/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? new Date().toISOString()),
-            { signal: abort.signal },
+          response = await askServer(
+            "/api/timetrack/sync?since=" + encodeURIComponent(cursor.current ?? serverNowIso()),
+            { signal: abort.signal, cache: "no-store" },
           )
         } finally {
           clearTimeout(deadline)
@@ -1543,33 +1802,156 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const pullRef = useRef(pull)
   pullRef.current = pull
 
+  /**
+   * ONE CHECK: ask the account what changed. Before the first read has landed
+   * that means the first read itself, now — coming back online used to send the
+   * queue (which needs the first read, so sent nothing) and leave the first read
+   * waiting out a backoff grown to a minute.
+   */
+  const checkAccount = useCallback(() => {
+    if (unmounted.current) return
+    lastAsked.current = Date.now()
+    if (userId.current && cursor.current) {
+      void pullRef.current()
+      return
+    }
+    if (statusRef.current === "local-only") {
+      // nothing to compare with until somebody signs in; see the recheck above
+      noteCheck("unanswered")
+      return
+    }
+    // the workspace has not loaded yet: first contact starts by itself when it does
+    if (!ready.current || !firstContactRef.current) return
+    if (firstContactAt.current) clearTimeout(firstContactAt.current)
+    firstContactAt.current = null
+    firstContactDelay.current = RETRY_START_MS
+    void firstContactRef.current()
+  }, [noteCheck])
+  const checkRef = useRef(checkAccount)
+  checkRef.current = checkAccount
+
+  /**
+   * Coming back is not a moment to wait out a backoff: the queue may be
+   * sitting on a sixty-second timer from the last failure, and the person is
+   * looking at the screen now.
+   */
+  const resume = useCallback(() => {
+    clearRetry()
+    retryDelay.current = RETRY_START_MS
+    void flushRef.current?.()
+  }, [clearRetry])
+  const resumeRef = useRef(resume)
+  resumeRef.current = resume
+
+  /** On the way out: what is queued goes now, with `keepalive` (D3) */
+  const sendOnLeave = useCallback(() => {
+    if (!userId.current) return
+    if (statusRef.current === "local-only" || statusRef.current === "signed-out") return
+    if (countRows(pending.current) === 0) return
+    clearRetry()
+    void flushRef.current?.({ keepalive: true })
+  }, [clearRetry])
+  const sendOnLeaveRef = useRef<(() => void) | null>(sendOnLeave)
+  sendOnLeaveRef.current = sendOnLeave
+
+  /** The badge, tapped: check now, and send whatever is waiting (D6) */
+  const checkNow = useCallback(() => {
+    if (statusRef.current !== "local-only") beginChecking()
+    checkRef.current()
+    resumeRef.current()
+  }, [beginChecking])
+
+  // --- the minute's check, the fallback when no change ping arrives ----------
   useEffect(() => {
     if (!syncActive) return
-    const timer = setInterval(() => void pullRef.current(), PULL_EVERY_MS)
-    /**
-     * Coming back is not a moment to wait out a backoff: the queue may be
-     * sitting on a sixty-second timer from the last failure, and the person is
-     * looking at the screen now.
-     */
-    const resume = () => {
-      clearRetry()
-      retryDelay.current = RETRY_START_MS
-      void flushRef.current?.()
+    const timer = setInterval(() => checkRef.current(), PULL_EVERY_MS)
+    return () => clearInterval(timer)
+  }, [syncActive])
+
+  /**
+   * --- the page's comings and goings --------------------------------------
+   *
+   * WAKING is the page becoming visible after it was hidden — the phone taken
+   * out of the pocket, the tab switched back to — or coming back from the
+   * browser's back-forward cache. Its copy may be hours old, so it says
+   * "Checking…" and holds Start and Stop until it has heard (D2). Visible again
+   * without having been hidden checks too, as it always did, without the hold.
+   *
+   * LEAVING is the page being hidden or closed: what is queued goes now (D3).
+   *
+   * `online` and `focus` check as well (D4); `focus` comes with
+   * `visibilitychange` on a tab switch, so it asks only if nothing else just did.
+   */
+  useEffect(() => {
+    let hidden = document.visibilityState === "hidden"
+    const wake = () => {
+      if (statusRef.current !== "local-only" && statusRef.current !== "signed-out") beginChecking()
+      checkRef.current()
+      resumeRef.current()
     }
-    const onVisible = () => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        hidden = true
+        sendOnLeaveRef.current?.()
+        return
+      }
       if (document.visibilityState !== "visible") return
-      void pullRef.current()
-      resume()
+      if (hidden) {
+        hidden = false
+        wake()
+        return
+      }
+      checkRef.current()
+      resumeRef.current()
     }
-    const onOnline = () => resume()
-    document.addEventListener("visibilitychange", onVisible)
+    const onPageHide = () => sendOnLeaveRef.current?.()
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) wake()
+    }
+    const onOnline = () => {
+      checkRef.current()
+      resumeRef.current()
+    }
+    const onFocus = () => {
+      if (Date.now() - lastAsked.current < FOCUS_CHECK_GAP_MS) return
+      checkRef.current()
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+    window.addEventListener("pagehide", onPageHide)
+    window.addEventListener("pageshow", onPageShow)
     window.addEventListener("online", onOnline)
+    window.addEventListener("focus", onFocus)
     return () => {
-      clearInterval(timer)
-      document.removeEventListener("visibilitychange", onVisible)
+      document.removeEventListener("visibilitychange", onVisibility)
+      window.removeEventListener("pagehide", onPageHide)
+      window.removeEventListener("pageshow", onPageShow)
       window.removeEventListener("online", onOnline)
+      window.removeEventListener("focus", onFocus)
     }
-  }, [syncActive, clearRetry])
+  }, [beginChecking])
+
+  /**
+   * --- the other device's changes, within seconds (D4) ----------------------
+   *
+   * While the tracker is open, a ping from the account's change feed means
+   * "check now". A burst of them — a split, a bulk edit — is one check, a
+   * moment after the last.
+   */
+  useEffect(() => {
+    if (!account) return
+    let settle: ReturnType<typeof setTimeout> | null = null
+    const stop = listenForChanges(account, () => {
+      if (settle) clearTimeout(settle)
+      settle = setTimeout(() => {
+        settle = null
+        checkRef.current()
+      }, PING_SETTLE_MS)
+    })
+    return () => {
+      if (settle) clearTimeout(settle)
+      stop()
+    }
+  }, [account])
 
   /**
    * Upload what this browser holds. `only` narrows it to chosen entries — the
@@ -1584,7 +1966,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
           ? { ...state, entries: state.entries.filter((entry) => only.includes(entry.id)) }
           : state
       const rows = stateToRows(chosen, userId.current)
-      const everything = diffRows(null, rows, new Date().toISOString())
+      const everything = diffRows(null, rows, serverNowIso())
       queueChanges(everything.changed, everything.tagSets)
       savePending()
       setImportOffer(null)
@@ -1602,7 +1984,7 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   const uploadEverything = useCallback(() => {
     if (!state || !userId.current) return
     const rows = stateToRows(state, userId.current)
-    const everything = diffRows(null, rows, new Date().toISOString())
+    const everything = diffRows(null, rows, serverNowIso())
     queueChanges(everything.changed, everything.tagSets)
     savePending()
     pushToast("Uploading this browser's copy to your account…")
@@ -1632,6 +2014,10 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast }: O
   return {
     status,
     pendingCount,
+    /** what this device knows about the account right now (D2, D6) */
+    check,
+    /** check the account now, and send what is waiting: the badge's tap */
+    checkNow,
     importOffer,
     acceptImport,
     declineImport,

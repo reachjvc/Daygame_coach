@@ -13,12 +13,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { reportError } from "@/src/shared/errorReportService"
 
+import { serverNow, serverNowIso } from "../serverClock"
 import { STATE_VERSION, STORAGE_KEY, WORKSPACE_SIZE_TRIPWIRE } from "../config"
 import { readBackgroundMemory, rememberBackground } from "./backgroundMemory"
 import { newId } from "../idService"
 import { migrateStateToV3, moveLegacyIdleDefault } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
+import { mergeTabStates } from "../tabMergeService"
 import { dateKey, epochSeconds, formatIdleSpan, hourIsInWindow, plural } from "../timetrackFormatService"
 import {
   continueEntry,
@@ -94,6 +96,21 @@ interface LoadResult {
   idleDefaultChanged?: boolean
 }
 
+/**
+ * A shared workspace's name, made from its content, so it is the same in every
+ * tab: a tab that opened on what this browser holds — and so never heard the
+ * message that put it there — still knows it by the name the other tabs use,
+ * and a change built on it can be merged against it. FNV-1a, plus the length.
+ */
+function sharedId(serialised: string): string {
+  let hash = 0x811c9dc5
+  for (let i = 0; i < serialised.length; i++) {
+    hash ^= serialised.charCodeAt(i)
+    hash = Math.imul(hash, 0x01000193)
+  }
+  return `stored:${(hash >>> 0).toString(36)}:${serialised.length}`
+}
+
 function loadState(nowIso: string): LoadResult {
   if (typeof window === "undefined") {
     return { state: createEmptyWorkspace(nowIso), discarded: null, cleanedDemoEntries: 0 }
@@ -159,7 +176,7 @@ function loadState(nowIso: string): LoadResult {
 
 export function useTimetrack() {
   const [state, setStateRaw] = useState<TimetrackState | null>(null)
-  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000))
+  const [nowSec, setNowSec] = useState(() => Math.floor(serverNow() / 1000))
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [idlePrompt, setIdlePrompt] = useState<IdlePrompt | null>(null)
   /**
@@ -174,7 +191,7 @@ export function useTimetrack() {
   const [pomodoroCycles, setPomodoroCycles] = useState(() => memory.pomodoro?.cycles ?? 0)
 
   const toastId = useRef(1)
-  const lastInteraction = useRef(Date.now())
+  const lastInteraction = useRef(serverNow())
   const lastReminder = useRef(memory.lastReminderAt)
   const timelineStart = useRef<number | null>(null)
   const pomodoroLastEntry = useRef<Id | null>(memory.pomodoro?.lastEntryId ?? null)
@@ -187,7 +204,22 @@ export function useTimetrack() {
 
   // --- load once on the client ---------------------------------------------
   useEffect(() => {
-    const loaded = loadState(new Date().toISOString())
+    const loaded = loadState(serverNowIso())
+    /**
+     * What this browser held is shared already: every other tab has it, or
+     * wrote it. If loading changed it (an old setting moved, demo rows
+     * cleaned), that change goes out built on it.
+     */
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY)
+      const held = raw ? (JSON.parse(raw) as TimetrackState) : null
+      if (raw && held?.version === STATE_VERSION) {
+        sharedById.current.set(sharedId(raw), held)
+        lastShared.current = { id: sharedId(raw), state: held }
+      }
+    } catch {
+      // unreadable: `loadState` has already said so
+    }
     setStateRaw(loaded.state)
     if (loaded.discarded) {
       pendingLoadNotice.current = { text: loaded.discarded, tone: "error" }
@@ -231,7 +263,7 @@ export function useTimetrack() {
   const ticksEverySecond = running !== null || pomodoroPhase === "break"
   useEffect(() => {
     const everyMs = ticksEverySecond ? 1000 : IDLE_TICK_MS
-    const timer = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), everyMs)
+    const timer = window.setInterval(() => setNowSec(Math.floor(serverNow() / 1000)), everyMs)
     return () => window.clearInterval(timer)
   }, [ticksEverySecond])
 
@@ -253,49 +285,86 @@ export function useTimetrack() {
   }, [])
 
   // --- other tabs and windows of the same browser --------------------------
+  /**
+   * TWO TABS MUST NOT UNDO EACH OTHER.
+   *
+   * Each change is told to the other tabs with an id and the id of the shared
+   * workspace it was built on. A tab that hears one takes it — laying on top
+   * whatever it changed itself since that workspace (`mergeTabStates`) — and
+   * does NOT tell it back: the sender already stored it and told everyone.
+   * Telling it back is what lost edits: by the time the echo arrived the sender
+   * had moved on, took its own older workspace back, and uploaded that.
+   */
   const channelRef = useRef<BroadcastChannel | null>(null)
-  /** what this tab last wrote, so it ignores the echo of its own message */
-  const lastWriteRef = useRef<string | null>(null)
+  /** the shared workspaces this tab knows by name — sent, heard or read on opening — for merging a message against the one it was built on */
+  const sharedById = useRef(new Map<string, TimetrackState>())
+  const idOfShared = useRef(new WeakMap<TimetrackState, string>())
+  /** a merge of a message with this tab's own changes, and the message it was laid onto: its base when it goes out */
+  const mergedOnto = useRef(new WeakMap<TimetrackState, string>())
+  /** the last shared workspace this tab has drawn: what its own next change is built on */
+  const lastShared = useRef<{ id: string; state: TimetrackState } | null>(null)
+
+  const rememberShared = useCallback((id: string, shared: TimetrackState) => {
+    sharedById.current.set(id, shared)
+    idOfShared.current.set(shared, id)
+    // a few dozen is plenty: a message is built on something at most a moment old
+    if (sharedById.current.size > 32) sharedById.current.delete(sharedById.current.keys().next().value!)
+  }, [])
+
+  const hear = useCallback(
+    (serialised: string, id: string | null, base: string | null) => {
+      const incoming = JSON.parse(serialised) as TimetrackState
+      const name = id ?? sharedId(serialised)
+      // what the sender built on; a message with no base (the storage event) was built on what we last shared
+      const ancestor = (base !== null ? sharedById.current.get(base) : undefined) ?? lastShared.current?.state ?? null
+      rememberShared(name, incoming)
+      setStateRaw((current) => {
+        if (!current || !ancestor) return incoming
+        const next = mergeTabStates(ancestor, current, incoming)
+        if (next !== incoming) mergedOnto.current.set(next, name)
+        return next
+      })
+    },
+    [rememberShared],
+  )
 
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return
     const channel = new BroadcastChannel(STORAGE_KEY)
     channelRef.current = channel
 
-    channel.onmessage = (event: MessageEvent<{ kind: string; serialised: string }>) => {
+    channel.onmessage = (event: MessageEvent<{ kind: string; serialised: string; id?: string; base?: string | null }>) => {
       if (event.data?.kind !== "state") return
-      if (event.data.serialised === lastWriteRef.current) return
       try {
-        lastWriteRef.current = event.data.serialised
-        const incoming = JSON.parse(event.data.serialised) as TimetrackState
-        setState(() => incoming)
+        hear(event.data.serialised, event.data.id ?? null, event.data.base ?? null)
       } catch {
         // A message we cannot read is a bug worth seeing, not something to swallow
         pushToast("Another tab sent an update this one could not read — reload to resync", "error")
       }
     }
 
+    return () => {
+      channel.close()
+      channelRef.current = null
+    }
+  }, [pushToast, hear])
+
+  useEffect(() => {
     // Safari private mode and older browsers have no BroadcastChannel; the
     // storage event is the fallback and fires in other tabs on every write.
+    // Where the channel exists it already carried the change, with its base.
     const onStorage = (event: StorageEvent) => {
+      if (channelRef.current) return
       if (event.key !== STORAGE_KEY || !event.newValue) return
-      if (event.newValue === lastWriteRef.current) return
       try {
-        lastWriteRef.current = event.newValue
-        const incoming = JSON.parse(event.newValue) as TimetrackState
-        setState(() => incoming)
+        hear(event.newValue, null, null)
       } catch {
         pushToast("Another tab saved something this one could not read — reload to resync", "error")
       }
     }
     window.addEventListener("storage", onStorage)
-
-    return () => {
-      channel.close()
-      channelRef.current = null
-      window.removeEventListener("storage", onStorage)
-    }
-  }, [pushToast])
+    return () => window.removeEventListener("storage", onStorage)
+  }, [pushToast, hear])
 
   /**
    * The size tripwire. Reported once per session, to the error channel rather
@@ -319,16 +388,34 @@ export function useTimetrack() {
   // --- persist on every change --------------------------------------------
   useEffect(() => {
     if (!state) return
+    // Heard from another tab, whole: it is stored already and every tab has it.
+    // Telling it back is the echo that lost edits (see `hear`).
+    const heardId = idOfShared.current.get(state)
+    if (heardId !== undefined) {
+      lastShared.current = { id: heardId, state }
+      return
+    }
     try {
       const serialised = JSON.stringify(state)
+      const id = sharedId(serialised)
+      // what this browser holds already — the workspace just read on opening, or
+      // the account's answer another tab took and stored a moment ago — is
+      // nothing to tell anyone
+      if (window.localStorage.getItem(STORAGE_KEY) === serialised) {
+        rememberShared(id, state)
+        lastShared.current = { id, state }
+        return
+      }
       window.localStorage.setItem(STORAGE_KEY, serialised)
       // Tell the other tabs. `localStorage` already fires a `storage` event in
       // other tabs, but not in this one and not reliably before this write is
       // read back, so the channel carries the state we just wrote. Without it,
       // two open tabs each hold their own copy and the last one to save wins,
       // silently throwing away whatever the other one did.
-      lastWriteRef.current = serialised
-      channelRef.current?.postMessage({ kind: "state", serialised })
+      const base = mergedOnto.current.get(state) ?? lastShared.current?.id ?? null
+      rememberShared(id, state)
+      lastShared.current = { id, state }
+      channelRef.current?.postMessage({ kind: "state", serialised, id, base })
       saveFailed.current = false
     } catch {
       // Losing writes silently would look like the page is saving when it is not.
@@ -341,7 +428,7 @@ export function useTimetrack() {
         )
       }
     }
-  }, [state, pushToast])
+  }, [state, pushToast, rememberShared])
 
   // Report the demo re-dating once the toast queue is available
   useEffect(() => {
@@ -405,7 +492,7 @@ export function useTimetrack() {
   // --- idle detection ------------------------------------------------------
   useEffect(() => {
     const mark = () => {
-      lastInteraction.current = Date.now()
+      lastInteraction.current = serverNow()
     }
     const events = ["mousemove", "mousedown", "keydown", "wheel", "touchstart"]
     for (const name of events) window.addEventListener(name, mark, { passive: true })
@@ -425,7 +512,7 @@ export function useTimetrack() {
     // Only meaningful while this page is the thing you are looking at. Working
     // in another window is not idleness, and this page cannot see it.
     if (document.visibilityState !== "visible" || !document.hasFocus()) return
-    const idleMs = Date.now() - lastInteraction.current
+    const idleMs = serverNow() - lastInteraction.current
     if (idleMs < state.idle.minutes * 60_000) return
     setIdlePrompt({
       entryId: running.id,
@@ -439,11 +526,11 @@ export function useTimetrack() {
     (action: "keep" | "discard" | "discard_and_stop") => {
       const prompt = idlePrompt
       if (!prompt) return
-      lastInteraction.current = Date.now()
+      lastInteraction.current = serverNow()
       setIdlePrompt(null)
       if (action === "keep") return
 
-      const nowIso = new Date().toISOString()
+      const nowIso = serverNowIso()
       const entry = state?.entries.find((e) => e.id === prompt.entryId)
       if (!state || !entry) return
 
@@ -518,14 +605,14 @@ export function useTimetrack() {
     }
     if (running && pomodoroPhase === "idle") {
       setPomodoroPhase("work")
-      setPomodoroEndsAt(Date.now() + state.pomodoro.workMinutes * 60_000)
+      setPomodoroEndsAt(serverNow() + state.pomodoro.workMinutes * 60_000)
       pomodoroWorkEntry.current = running.id
     }
     // A focus period carried over belongs to the timer it was started for. If
     // another one runs now — stopped and restarted on another device — it gets
     // its own 25 minutes rather than the end of somebody else's.
     if (running && pomodoroPhase === "work" && pomodoroWorkEntry.current !== null && pomodoroWorkEntry.current !== running.id) {
-      setPomodoroEndsAt(Date.now() + state.pomodoro.workMinutes * 60_000)
+      setPomodoroEndsAt(serverNow() + state.pomodoro.workMinutes * 60_000)
       pomodoroWorkEntry.current = running.id
     }
     if (!running && pomodoroPhase === "work") {
@@ -552,9 +639,9 @@ export function useTimetrack() {
 
   useEffect(() => {
     if (!state?.pomodoro.enabled || pomodoroEndsAt === null) return
-    if (Date.now() < pomodoroEndsAt) return
+    if (serverNow() < pomodoroEndsAt) return
 
-    const nowIso = new Date().toISOString()
+    const nowIso = serverNowIso()
     if (pomodoroPhase === "work") {
       const lastId = running?.id ?? null
       // set before the phase changes, so the memory written for the break carries it
@@ -562,7 +649,7 @@ export function useTimetrack() {
       setState((current) => stopTimer(current, nowIso).state)
       setPomodoroCycles((c) => c + 1)
       setPomodoroPhase("break")
-      setPomodoroEndsAt(Date.now() + state.pomodoro.breakMinutes * 60_000)
+      setPomodoroEndsAt(serverNow() + state.pomodoro.breakMinutes * 60_000)
       if (state.pomodoro.notify) notify("Pomodoro complete", `Timer stopped. Take ${plural(state.pomodoro.breakMinutes, "minute")}.`)
       return
     }
@@ -578,7 +665,7 @@ export function useTimetrack() {
        * for work you are not doing. On the page this is never more than a tick
        * late, so a minute tells the two apart.
        */
-      if (Date.now() - pomodoroEndsAt > 60_000) return
+      if (serverNow() - pomodoroEndsAt > 60_000) return
       if (state.pomodoro.autoContinue && pomodoroLastEntry.current !== null) {
         // Same failure as the idle prompt one screen away: this used to take
         // `.state` and then announce "Continued your last time entry" whether
@@ -600,14 +687,14 @@ export function useTimetrack() {
   // --- tracking reminders -------------------------------------------------
   useEffect(() => {
     if (!state?.reminders.enabled || running) return
-    const now = new Date()
+    const now = new Date(serverNow())
     if (!state.reminders.days.includes(now.getDay())) return
     // a window may wrap past midnight — 20:00 to 03:00 is an ordinary evening window,
     // and the old comparison made it match no hour at all
     if (!hourIsInWindow(now.getHours(), state.reminders.fromHour, state.reminders.toHour)) return
     const gap = state.reminders.everyMinutes * 60_000
-    if (Date.now() - lastReminder.current < gap) return
-    lastReminder.current = Date.now()
+    if (serverNow() - lastReminder.current < gap) return
+    lastReminder.current = serverNow()
     // and on the next visit: arriving is not a reason to say it again
     rememberBackground({ lastReminderAt: lastReminder.current })
     notify("Nothing is tracking", "Start a timer to keep your day accurate.")
@@ -631,7 +718,7 @@ export function useTimetrack() {
   const entryCount = state?.entries.length ?? 0
   useEffect(() => {
     if (!state) return
-    const nowIso = new Date().toISOString()
+    const nowIso = serverNowIso()
     setState((current) => evaluateAlerts(current, dateKey(nowIso), nowIso))
     // Re-evaluated when entries change or the running timer ticks a minute on
   }, [entryCount, Math.floor(nowSec / 60), setState]) // deps intentionally narrow: see comment above
@@ -642,13 +729,13 @@ export function useTimetrack() {
       timelineStart.current = null
       return
     }
-    if (timelineStart.current === null) timelineStart.current = Date.now()
+    if (timelineStart.current === null) timelineStart.current = serverNow()
 
     const flush = () => {
       const startedAt = timelineStart.current
       timelineStart.current = null
       if (startedAt === null) return
-      const seconds = Math.floor((Date.now() - startedAt) / 1000)
+      const seconds = Math.floor((serverNow() - startedAt) / 1000)
       if (seconds < 30) return
       setState((current) => ({
         ...current,
@@ -656,7 +743,7 @@ export function useTimetrack() {
           {
             id: newId(),
             start: new Date(startedAt).toISOString(),
-            end: new Date().toISOString(),
+            end: serverNowIso(),
             label: document.title.split(" · ").pop() ?? "Time tracker",
             converted: false,
           },
@@ -667,7 +754,7 @@ export function useTimetrack() {
 
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush()
-      else timelineStart.current = Date.now()
+      else timelineStart.current = serverNow()
     }
     document.addEventListener("visibilitychange", onVisibility)
     window.addEventListener("beforeunload", flush)
@@ -699,7 +786,7 @@ export function useTimetrack() {
       if (!displaced || !started) return
       const name = (entry: TimeEntry) => entry.description.trim() || "(no description)"
       pushToast(`Stopped “${name(displaced)}” and started “${name(started)}”`, "info", () =>
-        setState((current) => undoDisplacement(current, started.id, displaced.id, new Date().toISOString())),
+        setState((current) => undoDisplacement(current, started.id, displaced.id, serverNowIso())),
       )
     },
     [pushToast, setState],
@@ -710,7 +797,7 @@ export function useTimetrack() {
     () => ({
       start(draft: EntryDraft) {
         if (!state) return
-        const result = startTimer(state, draft, new Date().toISOString())
+        const result = startTimer(state, draft, serverNowIso())
         if (result.violations.length > 0) {
           pushToast(result.violations[0].message, "error")
           return
@@ -719,12 +806,12 @@ export function useTimetrack() {
         announceDisplacement(result.displaced, result.entry)
       },
       stop() {
-        const nowIso = new Date().toISOString()
+        const nowIso = serverNowIso()
         setState((current) => stopTimer(current, nowIso).state)
       },
       continueLast() {
         if (!state) return
-        const nowIso = new Date().toISOString()
+        const nowIso = serverNowIso()
         const nowEpoch = epochSeconds(nowIso)
         const stopped = state.entries
           .filter((e) => !isRunning(e) && !e.serverDeletedAt)
@@ -768,7 +855,7 @@ export function useTimetrack() {
          * contents, which is what is emptied here.
          */
         setStateRaw((current) => {
-          const fresh = createEmptyWorkspace(new Date().toISOString())
+          const fresh = createEmptyWorkspace(serverNowIso())
           if (!current) return fresh
           return { ...fresh, workspace: current.workspace, user: current.user }
         })

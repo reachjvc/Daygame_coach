@@ -7,12 +7,14 @@
  * click-an-event menu (start timer / copy as entry / open event).
  */
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useContext, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CALENDAR_ZOOMS } from "../config"
 import { useIsMobile } from "../hooks/useIsMobile"
+import { serverNowIso } from "../serverClock"
+import { AfterCheckContext } from "./afterCheck"
 import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
 import {
   dayColumnSeconds,
@@ -118,7 +120,8 @@ export function CalendarView({
   const entries = liveEntries(state)
   const enabledCalendars = state.calendars.filter((c) => c.enabled)
   const events = state.events.filter((e) => enabledCalendars.some((c) => c.id === e.calendarId))
-  const nowIso = () => new Date().toISOString()
+  const nowIso = () => serverNowIso()
+  const afterCheck = useContext(AfterCheckContext)
   /** Only give up half of each day to external events when there are some */
   const splitColumns = events.length > 0
   const entryLaneWidth = splitColumns ? 50 : 100
@@ -444,23 +447,26 @@ export function CalendarView({
                           event={event}
                           color={calendar?.color ?? "#4285f4"}
                           calendarName={calendar?.name ?? "Calendar"}
-                          onStart={(draft) => {
-                            const result = startTimer(state, draft, nowIso())
-                            if (result.violations.length > 0) {
-                              pushToast(result.violations[0].message, "error")
-                              return
-                            }
-                            setState(() => result.state)
-                            // starting here ends whatever was running; say so
-                            if (result.displaced) {
-                              const { displaced, entry } = result
-                              pushToast(
-                                `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
-                                "info",
-                                () => setState((current) => undoDisplacement(current, entry.id, displaced.id, nowIso())),
-                              )
-                            }
-                          }}
+                          onStart={(draft) =>
+                            // held until the check after opening or waking lands (D2)
+                            (afterCheck ?? ((run) => run(state)))((latest) => {
+                              const result = startTimer(latest, draft, nowIso())
+                              if (result.violations.length > 0) {
+                                pushToast(result.violations[0].message, "error")
+                                return
+                              }
+                              setState(() => result.state)
+                              // starting here ends whatever was running; say so
+                              if (result.displaced) {
+                                const { displaced, entry } = result
+                                pushToast(
+                                  `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
+                                  "info",
+                                  () => setState((current) => undoDisplacement(current, entry.id, displaced.id, nowIso())),
+                                )
+                              }
+                            })
+                          }
                           onCopy={(draft) => {
                             const result = createManualEntry(
                               state,

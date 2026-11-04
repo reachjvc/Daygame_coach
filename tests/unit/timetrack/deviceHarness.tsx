@@ -16,14 +16,18 @@ import type { TimetrackState } from "@/src/timetrack/types"
 
 type Update = (current: TimetrackState) => TimetrackState
 
+type Sync = ReturnType<typeof useTimetrackSync>
+
 function Device({
   initial,
   onState,
   onApply,
+  onSync,
 }: {
   initial: TimetrackState
   onState: (state: TimetrackState) => void
   onApply: (apply: (update: Update) => void) => void
+  onSync: (sync: Sync) => void
 }) {
   const [state, setState] = useState<TimetrackState | null>(null)
   useEffect(() => setState(initial), [initial])
@@ -34,18 +38,32 @@ function Device({
   useEffect(() => onApply(apply), [apply, onApply])
   const replace = useCallback((next: TimetrackState) => setState(next), [])
   const toast = useCallback(() => {}, [])
-  useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast })
+  const sync = useTimetrackSync({ state, setState: apply, replaceState: replace, pushToast: toast })
+  useEffect(() => {
+    onSync(sync)
+  })
   return null
 }
 
 export function renderDevice(initial: TimetrackState) {
   let latest = initial
   let applyRef: ((update: Update) => void) | null = null
+  let syncRef: Sync | null = null
   const view = render(
-    <Device initial={initial} onState={(state) => (latest = state)} onApply={(apply) => (applyRef = apply)} />,
+    <Device
+      initial={initial}
+      onState={(state) => (latest = state)}
+      onApply={(apply) => (applyRef = apply)}
+      onSync={(sync) => (syncRef = sync)}
+    />,
   )
   return {
     latest: () => latest,
+    /** what the hook hands the screen: the badge's status, the check, `checkNow` */
+    sync: () => {
+      if (!syncRef) throw new Error("the device has not rendered yet")
+      return syncRef
+    },
     /**
      * Inside `act`, so the change commits and its effects run now, as after a
      * tap. Outside it, React leaves the effects for the end of the NEXT `act` —

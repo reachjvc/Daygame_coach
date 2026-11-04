@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { serverNowIso } from "../serverClock"
 import { IconAuto, IconFavorite, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
   LONG_ENTRY_SECONDS,
@@ -70,13 +71,13 @@ export function announceEndedEarly(
     `Ended ${what ? `“${what}”` : "the timer"} ${when}, ${formatIdleSpan(seconds)} after it started`,
     "info",
     () => {
-      const refusal = resumeWithElapsed(getState(), stopped.id, seconds, new Date().toISOString()).violations[0]
+      const refusal = resumeWithElapsed(getState(), stopped.id, seconds, serverNowIso()).violations[0]
       if (refusal) {
         pushToast(refusal.message, "error")
         return
       }
       setState((current) => {
-        const resumed = resumeWithElapsed(current, stopped.id, seconds, new Date().toISOString())
+        const resumed = resumeWithElapsed(current, stopped.id, seconds, serverNowIso())
         return resumed.violations.length > 0 ? current : resumed.state
       })
     },
@@ -267,7 +268,7 @@ export function TimerBar({
       setDraft({ ...latestDraft.current, ...patch })
       return
     }
-    const result = applyDraftPatch(baseState, latestDraft.current, patch, new Date().toISOString())
+    const result = applyDraftPatch(baseState, latestDraft.current, patch, serverNowIso())
     if (result.violations.length > 0) {
       /**
        * A refused patch must not take a just-created project or tag down with
@@ -301,7 +302,7 @@ export function TimerBar({
       // Nothing running, or manual mode: the draft is already the only record
       if (entryId === null || latestMode.current === "manual") return
       if ((runningEntry(current)?.id ?? null) !== entryId) return
-      const result = applyDraftPatch(current, latestDraft.current, { description }, new Date().toISOString())
+      const result = applyDraftPatch(current, latestDraft.current, { description }, serverNowIso())
       if (result.violations.length > 0) {
         pushToast(result.violations[0].message, "error")
         return
@@ -414,14 +415,14 @@ export function TimerBar({
     askBeforeLong(
       seconds,
       () => {
-        const checked = setRunningElapsed(latestState.current, seconds, new Date().toISOString(), options)
+        const checked = setRunningElapsed(latestState.current, seconds, serverNowIso(), options)
         if (checked.violations[0]) {
           pushToast(checked.violations[0].message, "error")
           setDurationInput(formatClock(runningSeconds))
           return
         }
         setState((current) => {
-          const applied = setRunningElapsed(current, seconds, new Date().toISOString(), options)
+          const applied = setRunningElapsed(current, seconds, serverNowIso(), options)
           return applied.violations.length > 0 ? current : applied.state
         })
         if (checked.stopped) announceEndedEarly(checked.stopped, seconds, () => latestState.current, setState, pushToast)
@@ -438,7 +439,7 @@ export function TimerBar({
    * workspace as checked, or null when it was refused.
    */
   const writeNewEntry = (input: { draft: EntryDraft; start: IsoDateTime; stop: IsoDateTime }): TimetrackState | null => {
-    const nowIso = new Date().toISOString()
+    const nowIso = serverNowIso()
     const checked = createManualEntry(latestState.current, input, nowIso)
     if (checked.violations.length > 0) {
       pushToast(checked.violations[0].message, "error")
@@ -463,7 +464,7 @@ export function TimerBar({
     askBeforeLong(
       seconds,
       () => {
-        const nowIso = new Date().toISOString()
+        const nowIso = serverNowIso()
         const start = isoFromEpochSeconds(epochSeconds(nowIso) - seconds)
         if (writeNewEntry({ draft: latestDraft.current, start, stop: nowIso })) setEditingDuration(false)
       },
@@ -500,12 +501,12 @@ export function TimerBar({
   // select it. Both halves land as one state update, because a draft or an
   // entry pointing at a project that does not exist yet is a broken row.
   const handleCreateProject = (name: string) => {
-    const created = createProject(latestState.current, { name }, new Date().toISOString())
+    const created = createProject(latestState.current, { name }, serverNowIso())
     edit({ projectId: created.id, taskId: null }, created.state)
   }
 
   const handleCreateTag = (name: string) => {
-    const created = createTag(latestState.current, name, new Date().toISOString())
+    const created = createTag(latestState.current, name, serverNowIso())
     edit({ tagIds: [...new Set([...latestDraft.current.tagIds, created.id])] }, created.state)
   }
 
@@ -601,7 +602,7 @@ export function TimerBar({
 
           <button
             type="button"
-            onClick={() => setState((current) => toggleFavorite(current, draft, new Date().toISOString()))}
+            onClick={() => setState((current) => toggleFavorite(current, draft, serverNowIso()))}
             title={isFavorite ? "Remove from favorites" : "Add to favorites"}
             aria-label="Toggle favorite"
             className={cn(touchTarget, "rounded-md hover:bg-secondary/60", isFavorite ? "text-primary" : "text-muted-foreground")}

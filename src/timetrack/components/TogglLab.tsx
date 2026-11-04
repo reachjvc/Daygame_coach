@@ -32,7 +32,9 @@ import {
   IconUndo,
 } from "../icons"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
-import { useTimetrackSync, type SyncStatus } from "../hooks/useTimetrackSync"
+import { useTimetrackSync } from "../hooks/useTimetrackSync"
+import { AfterCheckContext, type AfterCheck } from "./afterCheck"
+import { SyncBadge } from "./SyncBadge"
 import { ImportOfferBanner } from "./ImportOfferBanner"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
@@ -46,6 +48,7 @@ import {
   startTimer,
   toggleFavorite,
 } from "../timetrackService"
+import { serverNowIso } from "../serverClock"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
 import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState } from "../types"
 import { CalendarView } from "./CalendarView"
@@ -319,6 +322,45 @@ export function TogglLab({
   screenNow.current = screen
   const runningNow = useRef(running)
   runningNow.current = running
+  const actionsNow = useRef(actions)
+  actionsNow.current = actions
+  const checkingNow = useRef(sync.check.checking)
+  checkingNow.current = sync.check.checking
+
+  /**
+   * A TAP ON START, STOP OR CONTINUE WAITS FOR THE CHECK (D2). See `afterCheck.ts`.
+   *
+   * One tap is held, the last one: what you pressed last is what you meant. It
+   * runs when the check lands — in an effect, after React has drawn what the
+   * check brought, so it acts on the account's copy and not the old one.
+   */
+  const heldTap = useRef<{ run: (latest: TimetrackState) => void; runningId: Id | null } | null>(null)
+  const afterCheck = useCallback<AfterCheck>((run) => {
+    const latest = latestState.current
+    if (!latest) return
+    if (!checkingNow.current) {
+      run(latest)
+      return
+    }
+    heldTap.current = { run, runningId: runningNow.current?.id ?? null }
+  }, [])
+  useEffect(() => {
+    if (sync.check.checking) return
+    const tap = heldTap.current
+    const latest = latestState.current
+    heldTap.current = null
+    if (!tap || !latest) return
+    if ((runningNow.current?.id ?? null) !== tap.runningId) {
+      pushToast(
+        runningNow.current
+          ? `Your other device changed the timer while this one was checking: “${runningNow.current.description.trim() || "(no description)"}” is running now. Tap again if you still want to.`
+          : "Your other device stopped the timer while this one was checking. Tap again if you still want to.",
+      )
+      return
+    }
+    tap.run(latest)
+  }, [sync.check.checking, pushToast])
+  const stopTracking = useCallback(() => afterCheck(() => actionsNow.current.stop()), [afterCheck])
 
   /**
    * The timer bar's edits, kept for this tab while nothing is running (see
@@ -394,7 +436,7 @@ export function TogglLab({
     if (params.get("start") === "1") {
       const linkDraft = draftFromStartLink(state, params)
       setDraftState(linkDraft)
-      const started = startTimer(state, linkDraft, new Date().toISOString())
+      const started = startTimer(state, linkDraft, serverNowIso())
       if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
       else {
         setState(() => started.state)
@@ -497,9 +539,9 @@ export function TogglLab({
     (nextDraft?: EntryDraft) => {
       const payload = nextDraft ?? draft
       if (nextDraft) setDraft(nextDraft)
-      actions.start(payload)
+      afterCheck(() => actionsNow.current.start(payload))
     },
-    [actions, draft, setDraft],
+    [afterCheck, draft, setDraft],
   )
 
   // Keyboard shortcuts — Timer screen only, never while typing (Toggl's rule)
@@ -552,7 +594,7 @@ export function TogglLab({
       const key = event.key.toLowerCase()
       if (key === "s") {
         event.preventDefault()
-        actions.stop()
+        stopTracking()
       } else if (key === "n") {
         event.preventDefault()
         setMode("timer")
@@ -562,7 +604,7 @@ export function TogglLab({
         setMode("manual")
       } else if (key === "c") {
         event.preventDefault()
-        actions.continueLast()
+        afterCheck(() => actionsNow.current.continueLast())
       } else if (/^[1-9]$/.test(event.key)) {
         const favorite = state.favorites[Number(event.key) - 1]
         if (favorite) {
@@ -573,7 +615,7 @@ export function TogglLab({
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [actions, screen, setMode, state, startTracking])
+  }, [afterCheck, screen, setMode, state, startTracking, stopTracking])
 
   const unreadAlerts = useMemo(() => state?.alerts.filter((a) => !a.read) ?? [], [state?.alerts])
 
@@ -672,7 +714,13 @@ export function TogglLab({
                 "basis-full justify-end sm:basis-auto",
             )}
           >
-            <SyncBadge status={sync.status} pending={sync.pendingCount} onRetry={sync.syncNow} />
+            <SyncBadge
+              status={sync.status}
+              pending={sync.pendingCount}
+              check={sync.check}
+              nowMs={nowSec * 1000}
+              onCheck={sync.checkNow}
+            />
             {pomodoro.phase !== "idle" && (
               <span className="hidden items-center gap-1 rounded-full border border-border px-2 py-1 text-xs sm:flex">
                 {pomodoro.phase === "break" ? <IconBreak className="size-3.5" /> : <IconTimer className="size-3.5" />}
@@ -682,7 +730,7 @@ export function TogglLab({
             )}
             {/* On a phone the timer card already shows this, so only surface it elsewhere */}
             <div className={cn(screen === "timer" && "hidden sm:block")}>
-              <RunningPill state={state} nowSec={nowSec} onStop={actions.stop} />
+              <RunningPill state={state} nowSec={nowSec} onStop={stopTracking} />
             </div>
 
             <Dropdown
@@ -778,6 +826,7 @@ export function TogglLab({
       {/* one screen failing must not take the rest of the tracker with it —
           the timer keeps running even if Reports cannot render */}
       <ErrorBoundary label="this screen">
+      <AfterCheckContext.Provider value={afterCheck}>
       <main className="mx-auto max-w-6xl space-y-4 px-3 pb-24 pt-3 sm:px-4 sm:py-4">
         {screen === "timer" && (
           <>
@@ -792,7 +841,7 @@ export function TogglLab({
               runningSeconds={runningSeconds}
               nowSec={nowSec}
               onStart={() => startTracking()}
-              onStop={actions.stop}
+              onStop={stopTracking}
               onEditEntry={openEntry}
               pushToast={pushToast}
             />
@@ -883,6 +932,7 @@ export function TogglLab({
           />
         )}
       </main>
+      </AfterCheckContext.Provider>
       </ErrorBoundary>
 
       {/* bottom navigation (phones) */}
@@ -1077,100 +1127,5 @@ export function TogglLab({
         ))}
       </div>
     </div>
-  )
-}
-
-/**
- * Where your work is being kept, said plainly.
- *
- * This exists because the difference between "saved to your account" and "saved
- * in this browser only" is somebody's history, and a spinner that lies about it
- * is worse than no spinner at all.
- */
-function SyncBadge({
-  status,
-  pending,
-  onRetry,
-}: {
-  status: SyncStatus
-  pending: number
-  onRetry: () => void
-}) {
-  if (status === "starting") return null
-
-  const label: Record<SyncStatus, string> = {
-    starting: "",
-    "local-only": "This device only",
-    "signed-out": "Signed out",
-    synced: "Saved",
-    saving: pending > 0 ? `Saving ${pending}…` : "Saving…",
-    offline: pending > 0 ? `Offline · ${pending} waiting` : "Offline",
-    error: "Not saved",
-  }
-  const title: Record<SyncStatus, string> = {
-    starting: "",
-    "local-only": "Sign in to keep your time on every device. Nothing is lost — it is saved in this browser.",
-    "signed-out": "Your session ended. Everything is still saved in this browser; sign in again to save it to your account.",
-    synced: "Saved to your account",
-    saving: "Sending your latest changes",
-    offline: "No connection. Your work is saved here and will be sent when you are back.",
-    error: "Could not reach your account. Your work is saved in this browser. Tap to try again.",
-  }
-  const tone =
-    status === "synced"
-      ? "border-border text-muted-foreground"
-      : status === "error" || status === "signed-out"
-        // `text-destructive` measured 4.49:1 against this background — a hundredth under
-        // the 4.5:1 floor, on the one label that means "your work did not save"
-        ? "border-destructive/50 text-destructive-foreground bg-destructive"
-        : "border-border text-foreground"
-
-  /**
-   * Quiet when everything is fine, loud when it is not.
-   *
-   * "Saved" is the state you are in almost always, and a phone header has no
-   * room to keep saying so — it shows as a dot. Anything that needs you to know
-   * something (still sending, no connection, signed out, not saved) keeps its
-   * words at every width, because that is the moment the words matter.
-   */
-  const settled = status === "synced" || status === "local-only"
-
-  return (
-    <button
-      type="button"
-      onClick={status === "error" || status === "offline" ? onRetry : undefined}
-      title={title[status]}
-      // both halves: the short state a screen reader announces, and the
-      // sentence explaining what it means for the person's work
-      aria-label={`${label[status]}. ${title[status]}`}
-      className={cn(
-        // 27px tall until this was changed, on a control whose whole point is
-        // being tappable in the one state that matters: "Not saved. Tap to try
-        // again." The header has 57px to give, so this costs nothing.
-        // min-w-11 as well as min-h-11: in its settled state this is a bare dot,
-        // and a dot you can still tap to retry is 24px wide without it
-        "flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-full border px-2 py-1 text-[11px] sm:min-h-0 sm:min-w-0",
-        tone,
-        settled && "border-transparent sm:border-border",
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "size-1.5 shrink-0 rounded-full",
-          status === "synced" && "bg-[#2da608]",
-          status === "saving" && "bg-primary",
-          (status === "offline" || status === "local-only") && "bg-muted-foreground",
-          (status === "error" || status === "signed-out") && "bg-destructive",
-        )}
-      />
-      {/* the word is always there for a screen reader; on a phone only the
-          states that need attention spend space on it */}
-      {/* No `truncate`. A badge cut to "This d…" tells you less than its dot
-          does, and this is the control whose whole job is saying where your work
-          is. When space runs out it is the BACK LABEL that gives way — see the
-          header, which is `min-w-0` for exactly that. */}
-      <span className={cn(settled && "sr-only sm:not-sr-only")}>{label[status]}</span>
-    </button>
   )
 }
