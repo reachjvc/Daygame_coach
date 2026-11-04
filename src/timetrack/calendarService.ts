@@ -1008,20 +1008,37 @@ export function blockDragPatch(entry: TimeEntry, day: IsoDate, drag: BlockDrag, 
   const delta = drag.pointerMinutes - drag.grabMinutes
   if (delta === 0) return null
   if (drag.mode === "move") {
-    const moved = Math.max(-drag.topMinutes, delta)
+    // the top stays on this day: from its midnight to the last step before the next one
+    const moved = Math.min(24 * 60 - CALENDAR_SNAP_MINUTES - drag.topMinutes, Math.max(-drag.topMinutes, delta))
     return moved === 0 ? null : shiftEntryBy(entry, moved)
   }
   const startMs = new Date(entry.start).getTime()
   const endIso = entry.stop ?? nowIso
   const endMs = new Date(endIso).getTime()
   const edgeIso = drag.mode === "resize-start" ? entry.start : endIso
-  const edgeMs = new Date(isoAtMinutes(day, snapMinutes(minutesIntoDay(edgeIso) + delta))).getTime()
+  // an end at the next midnight is this day's bottom, minute 1440, not the next day's minute 0
+  const edgeMinutes = dateKey(edgeIso) === day ? minutesIntoDay(edgeIso) : 24 * 60
+  const edgeMs = new Date(isoAtMinutes(day, snapMinutes(edgeMinutes + delta))).getTime()
   if (drag.mode === "resize-start") {
     const start = Math.min(edgeMs, endMs - SHORTEST_DRAG_MS)
     return start === startMs ? null : { start: new Date(start).toISOString() }
   }
   const stop = Math.max(edgeMs, startMs + SHORTEST_DRAG_MS)
   return entry.stop && stop === endMs ? null : { stop: new Date(stop).toISOString() }
+}
+
+/**
+ * Which of a block's edges, as drawn on `day`, are the entry's own start and
+ * end (`blockGrabMode`'s `start` and `end`). A night shift's second-day half
+ * has midnight for a top; its first-day half has midnight for a bottom —
+ * unless the entry ends exactly at that midnight, which is its real end. A
+ * running entry's end is now, so it is today's.
+ */
+export function ownEdges(entry: TimeEntry, day: IsoDate, todayKey: IsoDate): { start: boolean; end: boolean } {
+  const start = dateKey(entry.start) === day
+  if (entry.stop === null) return { start, end: day === todayKey }
+  const end = dateKey(entry.stop) === day || new Date(entry.stop).getTime() === new Date(isoAtMinutes(day, 24 * 60)).getTime()
+  return { start, end }
 }
 
 /**

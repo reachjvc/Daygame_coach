@@ -24,6 +24,7 @@ import {
   blockDragPatch,
   blockGrabMode,
   blockLabel,
+  ownEdges,
   swipeDirection,
 } from "@/src/timetrack/calendarService"
 import { epochMillis, epochSeconds } from "@/src/timetrack/timetrackFormatService"
@@ -83,6 +84,29 @@ describe("what a drag writes", () => {
     const patch = blockDragPatch(early, DAY, { mode: "move", topMinutes: 30, grabMinutes: 45, pointerMinutes: 0 }, NOW)
 
     expect(patch).toEqual({ start: at(4, 0, 0), stop: at(4, 0, 30) })
+  })
+
+  test("a move below the bottom stops five minutes before the next midnight: the block stays on its day", () => {
+    const hour = exact("h", at(4, 10, 0), at(4, 11, 0))
+    const patch = blockDragPatch(hour, DAY, { mode: "move", topMinutes: 600, grabMinutes: 600, pointerMinutes: 24 * 60 }, NOW)
+
+    expect(patch).toEqual({ start: at(4, 23, 55), stop: at(5, 0, 55) })
+  })
+
+  test("an entry that ends at midnight has that midnight for its end, and it can be pulled earlier", () => {
+    const late = exact("late", at(4, 23, 0), at(5, 0, 0))
+    expect(ownEdges(late, DAY, DAY)).toEqual({ start: true, end: true })
+
+    const patch = blockDragPatch(late, DAY, { mode: "resize-end", topMinutes: 23 * 60, grabMinutes: 1435, pointerMinutes: 1405 }, NOW)
+    expect(patch).toEqual({ stop: at(4, 23, 30) })
+  })
+
+  test("a night's halves own only the edges that are its own", () => {
+    const night = exact("night", at(4, 22, 0), at(5, 2, 0))
+    expect(ownEdges(night, DAY, DAY)).toEqual({ start: true, end: false })
+    expect(ownEdges(night, "2026-11-05", DAY)).toEqual({ start: false, end: true })
+    // a running entry ends now, which is today
+    expect(ownEdges(exact("live", at(4, 14, 0), null), DAY, DAY)).toEqual({ start: true, end: true })
   })
 
   test("the top edge moves the start by the steps the pointer travelled, onto the grid, and leaves the end", () => {

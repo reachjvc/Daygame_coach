@@ -330,6 +330,46 @@ describe("a finger held on a block", () => {
     expect(view.setState).not.toHaveBeenCalled()
   })
 
+  test("a finger that drifts a little while it holds does not move the block when the hold takes", () => {
+    const view = calendar(day())
+    const gym = view.block("Gym")
+    // a hair above a snap step: 6 px of drift and 1 px more would cross it
+    const fromY = y(12, 30) + 3
+
+    view.finger.down(gym.el, fromY)
+    view.finger.move(fromY + 6)
+    view.finger.hold()
+    view.finger.move(fromY + 7)
+    view.finger.up(fromY + 7)
+
+    expect(view.setState, "the drift during the hold was taken for a drag").not.toHaveBeenCalled()
+  })
+
+  test("a press whose release never came does not swallow the next one", () => {
+    const view = calendar(baseState({ entries: [] }))
+
+    // a finger down whose up went somewhere else
+    fireEvent.pointerDown(view.column(), { pointerId: 3, pointerType: "touch", isPrimary: true, clientX: 150, clientY: y(8), button: 0 })
+    view.finger.down(view.column(), y(10))
+    view.finger.hold()
+    view.finger.slide(y(10), y(11), 12)
+    view.finger.up(y(11))
+
+    expect(live(view.latest()).map((e) => [e.start, e.stop])).toEqual([[at(4, 10, 0), at(4, 11, 0)]])
+  })
+
+  test("a second finger is a pinch: the first one's hold is let go, and nothing is made", () => {
+    const view = calendar(baseState({ entries: [] }))
+
+    view.finger.down(view.column(), y(10))
+    fireEvent.pointerDown(view.column(), { pointerId: 8, pointerType: "touch", isPrimary: false, clientX: 200, clientY: y(11), button: 0 })
+    view.finger.hold()
+    view.finger.slide(y(10), y(11), 12)
+    view.finger.up(y(11))
+
+    expect(view.setState).not.toHaveBeenCalled()
+  })
+
   test("the running timer cannot be dragged to start in the future, and says so", () => {
     const running = startTimer(baseState({ entries: [] }), { description: "Live", projectId: null, taskId: null, tagIds: [], billable: false }, at(4, 14, 0)).state
     const view = calendar(running)
@@ -407,15 +447,19 @@ describe("a sideways swipe on the day view", () => {
 describe("with a mouse", () => {
   const mouse = { pointerId: 1, pointerType: "mouse", isPrimary: true, clientX: 150, button: 0 }
 
-  test("a click on a block leaves the pointer alone, so the browser's click lands on the block", () => {
+  test("a press on a block is captured by the block itself, so the browser's click still lands on it", () => {
     const view = calendar(baseState({ entries: [exact("g", at(4, 12, 0), at(4, 13, 0), "Gym")] }))
     const gym = view.block("Gym")
 
     fireEvent.pointerDown(gym.el, { ...mouse, clientY: gym.top + 20 })
-    fireEvent.pointerUp(view.column(), { ...mouse, clientY: gym.top + 20 })
 
-    // a captured pointer sends its click to the column that captured it, and the sheet never opened
-    expect(Element.prototype.setPointerCapture).not.toHaveBeenCalled()
+    // a captured pointer sends its click to whatever captured it: captured by the column, the sheet never opened
+    const capture = Element.prototype.setPointerCapture as unknown as ReturnType<typeof vi.fn>
+    expect(capture.mock.contexts).toEqual([gym.el])
+    fireEvent.pointerUp(gym.el, { ...mouse, clientY: gym.top + 20 })
+    fireEvent.click(gym.el)
+    expect(view.onEditEntry).toHaveBeenCalledTimes(1)
+    expect(released).toHaveBeenCalledWith(1)
   })
 
   test("a drag on empty space creates at once, with no hold", () => {

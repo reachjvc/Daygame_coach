@@ -41,6 +41,7 @@ import {
   eventToDraft,
   eventsForDay,
   layoutBlocks,
+  ownEdges,
   shiftEntryBy,
   snapMinutes,
   swipeDirection,
@@ -113,8 +114,23 @@ interface Gesture {
   pointerType: string
   originX: number
   originY: number
-  /** The day column the press began in; null on the hour ruler. It takes the pointer once the drag moves. */
+  /**
+   * Where the finger was when the hold took. A finger drifts a few pixels
+   * while it holds (up to `TOUCH_SLOP_PX`), and the threshold that tells a
+   * drag from a still hold is measured from here, or that drift alone would
+   * move the block the moment the hold took.
+   */
+  armY: number
+  /** The day column the press began in; null on the hour ruler. Its minutes are the drag's. */
   column: HTMLElement | null
+  /**
+   * What takes the pointer once the calendar has it: the block pressed, or
+   * the column for a new block. The block itself, never its column: the
+   * browser sends the click after a captured press to whatever captured it,
+   * so a block captured by its column never got its click and its sheet
+   * never opened (found in the browser while building Phase 6).
+   */
+  captureTarget: HTMLElement | null
   /** The drag this press would start, decided where it went down; null on the ruler or a calendar event (a swipe only) */
   plan: DragState | null
   armed: boolean
@@ -262,21 +278,20 @@ export function CalendarView({
     gesture.current = null
     if (current?.timer) clearTimeout(current.timer)
     setPressing(false)
-    if (current?.column?.hasPointerCapture?.(current.pointerId)) current.column.releasePointerCapture(current.pointerId)
+    const target = current?.captureTarget
+    if (current && target?.hasPointerCapture?.(current.pointerId)) target.releasePointerCapture(current.pointerId)
     if (dragRef.current) showDrag(null)
   }
 
   /**
-   * From here the moves come to the drag's column even when the pointer
-   * leaves it, and the release is not lost outside the window.
-   *
-   * Only once the drag has MOVED, never on the press itself: a pointer that is
-   * captured sends its click to the element that captured it, so a block
-   * pressed and let go was clicked on the column instead, and its sheet never
-   * opened (found in the browser while building Phase 6).
+   * From here the moves come to the drag even when the pointer leaves the
+   * grid, and the release is not lost outside it: a mouse that left the grid
+   * on its first move used to leave the drag stuck, waiting for an up that
+   * went elsewhere.
    */
   const capture = (pressed: Gesture) => {
-    if (pressed.column && !pressed.column.hasPointerCapture?.(pressed.pointerId)) pressed.column.setPointerCapture?.(pressed.pointerId)
+    const target = pressed.captureTarget
+    if (target && !target.hasPointerCapture?.(pressed.pointerId)) target.setPointerCapture?.(pressed.pointerId)
   }
 
   // a press still held when the calendar goes away (a section change) leaves no timer behind
@@ -290,16 +305,21 @@ export function CalendarView({
     pressed.timer = null
     pressed.armed = true
     setPressing(false)
-    // a create has no click to protect; a block waits until it has moved
-    if (pressed.plan.moved) capture(pressed)
+    capture(pressed)
     showDrag(pressed.plan)
     if (pressed.pointerType !== "mouse") tick()
   }
 
-  const beginGesture = (event: React.PointerEvent<HTMLElement>, plan: DragState | null) => {
+  /** A press: `plan` is the drag it may become (null: a swipe at most), `takes` what captures the pointer once it does */
+  const beginGesture = (event: React.PointerEvent<HTMLElement>, plan: DragState | null, takes: HTMLElement | null = null) => {
     const held = gesture.current
-    // a second finger is a pinch, not a drag: let the first one go too
-    if (held && held.pointerId !== event.pointerId && event.pointerType !== "mouse") {
+    /**
+     * A second finger while the first is down is a pinch, not a drag: let the
+     * first one go too. A new PRIMARY pointer means every earlier one is up,
+     * so a press whose release was lost (its element went away under it) is
+     * forgotten rather than swallowing this one.
+     */
+    if (held && !event.isPrimary) {
       endGesture()
       return
     }
@@ -313,7 +333,9 @@ export function CalendarView({
       pointerType: event.pointerType,
       originX: event.clientX,
       originY: event.clientY,
+      armY: event.clientY,
       column,
+      captureTarget: plan ? (takes ?? column) : null,
       plan,
       armed: false,
       timer: null,
@@ -338,6 +360,8 @@ export function CalendarView({
     const dx = event.clientX - pressed.originX
     const dy = event.clientY - pressed.originY
     if (!pressed.armed) {
+      // where the hold takes, if it does: see `armY`
+      pressed.armY = event.clientY
       // a finger going somewhere before the hold took is a scroll or a swipe, never a drag
       if (pressed.timer && Math.hypot(dx, dy) > TOUCH_SLOP_PX) {
         clearTimeout(pressed.timer)
@@ -348,14 +372,13 @@ export function CalendarView({
     }
     const current = dragRef.current
     if (!current || !pressed.column) return
-    // a press on a block is a click until the pointer has really moved: see `DragState`
-    const moved = current.moved || Math.abs(dy) >= DRAG_THRESHOLD_PX
+    // a press on a block is a click, or a still hold, until the pointer has really moved: see `DragState`
+    const moved = current.moved || Math.abs(event.clientY - pressed.armY) >= DRAG_THRESHOLD_PX
     if (!moved) return
-    capture(pressed)
     const minutes = minutesAt(event.clientY, pressed.column)
     if (moved === current.moved && minutes === current.currentMinutes) return
-    // one tick per 5-minute step
-    if (minutes !== current.currentMinutes) tick()
+    // one tick of the phone's motor per 5-minute step; a mouse has none
+    if (minutes !== current.currentMinutes && pressed.pointerType !== "mouse") tick()
     showDrag({ ...current, moved: true, currentMinutes: minutes })
   }
 
@@ -682,18 +705,13 @@ export function CalendarView({
                           const mode = blockGrabMode(offset, drawnHeight, {
                             edgePx: event.pointerType === "mouse" ? MOUSE_EDGE_PX : TOUCH_EDGE_PX,
                             // an edge that is midnight, not the entry's own start or end, moves the block
-                            start: dateKey(entry.start) === day,
-                            end: entry.stop ? dateKey(entry.stop) === day : day === todayKey,
+                            ...ownEdges(entry, day, todayKey),
                           })
-                          beginGesture(event, {
-                            day,
-                            mode,
-                            startMinutes: minutes,
-                            currentMinutes: minutes,
-                            entryId: entry.id,
-                            topMinutes: block.topMinutes,
-                            moved: false,
-                          })
+                          beginGesture(
+                            event,
+                            { day, mode, startMinutes: minutes, currentMinutes: minutes, entryId: entry.id, topMinutes: block.topMinutes, moved: false },
+                            event.currentTarget,
+                          )
                         }}
                         onClick={() => {
                           if (suppressClick.current) {
