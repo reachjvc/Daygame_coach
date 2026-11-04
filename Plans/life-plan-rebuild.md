@@ -177,6 +177,11 @@ was made. The answers are written to both places until Phase 7. "Start a new nor
 purpose, identity, code, becoming and affirmations as a starting point, but empties the commitment: it
 was made to the old picture. Browser test: `tests/e2e/life-mastery-north-star-history.spec.ts`.
 
+**Live 2026-11-04** (commit `31eb59ce`, then the migration, in that order: the old page's whole-plan save
+cannot fill the new columns). Checked on your account: the paragraph unchanged (1,521 characters), the
+why copied into `purpose` (335 characters, identical), started on 23 Sep 2026, current. Backup before it:
+`~/dg-backups/life-plan-2026-11-04-before-phase2.json`.
+
 ### Phase 3. One season (Q1), and the step list shortened (N1)
 
 1. New tables: `life_plan_seasons` (start, planned end, actual end, the sentence, its why, its cost),
