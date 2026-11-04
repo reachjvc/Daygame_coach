@@ -1,8 +1,8 @@
 # Time tracker: as easy as Toggl on the phone and the PC, and no more bugs between them
 
-**Status (2026-11-04, evening):** Phases 0–5 are live. Phase 6 is being built. Phase 7 is built and waits
-for the owner's yes to its migration. Phase 8 is not started. A five-agent audit the same day found 36 bugs
-(35 different ones); all are fixed and live. See AUDIT below.
+**Status (2026-11-04, evening):** Phases 0–6 are live. Phase 7 is built and waits for the owner's yes to its
+migration. Phase 8 is done except the owner's phone day (B-PHONE). A five-agent audit the same day found 36
+bugs (35 different ones); all are fixed and live. See AUDIT below.
 - Phase 1: 284728a3.
 - Phase 2: d4cd3b1a and 25d2cad2 (versioned writes, migration 20261103120000), then 4cbd7b46, 9e074a3c
   and 108c2ac0 (Checking…, send on leave, server clock, honest badge, live updates, two tabs), with
@@ -12,6 +12,12 @@ for the owner's yes to its migration. Phase 8 is not started. A five-agent audit
   keeps the section on reload). 6c316ae7: the app's own "Time" link works from any section.
 - Phase 4: ad5f11a7 (with audit bugs A4–A6).
 - Phase 5: 13aebeca, 4cf421d9, 60e35816. "Planned" is derived (start after now), so no migration.
+- Phase 6: 185c3cae, 3c41736a. The touch stories run on the desktop (touch emulation) and Android lanes;
+  Playwright cannot drag a finger in WebKit, so they are skipped on the iPhone lane, listed with the reason.
+- Phase 8: two code reviews of 599dfb24..3c41736a (sync and server; screens and time maths). The sync
+  review found 4 problems, fixed in ed55a2e7 and 2d1d7a6b; offline edits now have no age limit, so a Stop
+  made days ago with no signal still reaches the account. The screens review found 7, fixed in fd23ed88
+  and 38659907. Security reviews: see AUDIT. Runbook and map: 3e2bd420.
 - Phase 7: built on a branch, not live. Its migration `20261104160000_running_timer_notification.sql`
   (with rollback) must reach the live database BEFORE the code, because device registration reads
   `push_devices.timer_running`. "Alerted" lives in `notification_sends` (one 'timetrack-alert' row per
@@ -712,6 +718,11 @@ and on Phase 7 (2 low; see Status).
   production build was not measured.
 - A tag or project created under the same name on two devices before either checks becomes two.
 - Realtime cannot be tested in the test database.
+- From the code reviews, small and left for now:
+  - Stop has no lock check, so a timer running since before the lock date can still be stopped.
+  - A keyboard nudge of a calendar block moves real minutes across the clock-change night.
+  - "Fix" is not offered when an entry sits inside another; the sheet fixes it.
+  - On a phone, the "from the day before" row cuts the project name short.
 
 ---
 
