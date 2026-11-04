@@ -539,16 +539,20 @@ test.describe('time tracker on a phone', () => {
     await expect(page.locator('main')).toContainText(/Clients|Tags|Team/)
   })
 
-  test('it opens where you left it, and the tab does not name a lab page', async ({ page }) => {
+  test('a reload stays on its section, Time itself opens on Timer, and the tab does not name a lab page', async ({ page }) => {
     await openFreshTracker(page)
     await goTo(page, 'Reports')
 
+    // the section is in the address, so a reload keeps it
     await page.reload({ waitUntil: 'domcontentloaded' })
-    await openTracker(page)
-
+    await page.getByRole('heading', { name: 'Time', exact: true }).waitFor({ timeout: 30_000 })
     const current = page.locator('nav[aria-label="Sections"] button[aria-current="page"]')
     await expect(current).toHaveText('Reports')
     expect(await page.title()).not.toMatch(/\/test\//)
+
+    // the app's own Time link names no section: that is the timer, whatever was open last
+    await openTracker(page)
+    await expect(current).toHaveText('Timer')
     expect(page.url()).toContain(TRACKER)
   })
 
