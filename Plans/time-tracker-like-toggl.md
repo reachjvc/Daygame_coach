@@ -1,8 +1,21 @@
 # Time tracker: as easy as Toggl on the phone and the PC, and no more bugs between them
 
-**Status:** decided and executing (written 2026-11-03; decisions the same evening, see DECISIONS). Phases
-0–3, the bug fixes, go first on the owner's word: "i am particularly interested in you fixing a bunch
-of the bugs".
+**Status:** Phases 0–3 (the bug fixes) are live as of 2026-11-04. Phases 4–8 are not started. Written
+2026-11-03, with the decisions the same evening (see DECISIONS). The bug fixes went first on the owner's
+word: "i am particularly interested in you fixing a bunch of the bugs".
+- Phase 1: 284728a3.
+- Phase 2: d4cd3b1a and 25d2cad2 (versioned writes, migration 20261103120000), then 4cbd7b46, 9e074a3c
+  and 108c2ac0 (Checking…, send on leave, server clock, honest badge, live updates, two tabs), with
+  migration 20261104120000. The owner said yes to both migrations, a backup was taken before each, and
+  both were applied.
+- Phase 3: 5c70dc38.
+- Fixes found by CI's browser tests: 4a9e2b9c (the PC heading), 152e2e8c (the badge said Saved while a
+  Stop was still queued).
+- Not proven on the live site: the "within seconds" ping. The test database runs without Realtime; only
+  a unit test covers it, and the owner's phone day (B-PHONE) is the real check.
+- Deferred from Phase 3: the offline `?start=1` link (`public/sw.js`, B-SW).
+- Known and harmless, from the Phase 2b review: a row sent twice on a quick leave-and-return is refused
+  once as stale and settles by itself.
 
 **Written for** the owner first (Part 1), then for the AI session that builds it (design rules, blockers,
 questions, phases, Part 2, and the `/goal` prompts at the end). The executing AI treats this plan as the
