@@ -53,6 +53,8 @@ export const ROW_KEY: Record<RowTable, readonly string[]> = {
   seasons: ["id"],
   season_areas: ["season_id", "area_id"],
   season_goals: ["season_id", "goal_id"],
+  reviews: ["id"],
+  review_scores: ["review_id", "area_id"],
   values: ["id"],
   answers: ["id"],
 }

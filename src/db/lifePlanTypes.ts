@@ -28,6 +28,7 @@ export type LifePlanNodeKind =
   | "field"
   | "sub_step"
   | "season"
+  | "review"
 
 export interface LifePlanRow {
   id: string
@@ -291,6 +292,29 @@ export interface SeasonGoalRow {
   position: number
 }
 
+/** A look back over a week, month, quarter or year (Plans/life-plan-rebuild.md, Phase 5). */
+export interface ReviewRow {
+  id: string
+  user_id: string
+  plan_id: string
+  node_kind: "review"
+  cadence: "week" | "fortnight" | "month" | "quarter" | "year"
+  period_start: string
+  period_end: string
+  written_on: string
+  magic_moments: string
+  lessons: string
+  next_outcomes: string
+}
+
+/** One area's 0-10 in one review. */
+export interface ReviewScoreRow {
+  user_id: string
+  review_id: string
+  area_id: string
+  score: number
+}
+
 export interface GoalFeedRow {
   user_id: string
   goal_id: string
@@ -391,6 +415,8 @@ export interface PlanRows {
   seasons: SeasonRow[]
   season_areas: SeasonAreaRow[]
   season_goals: SeasonGoalRow[]
+  reviews: ReviewRow[]
+  review_scores: ReviewScoreRow[]
   values: ValueRow[]
   answers: AnswerRow[]
 }
@@ -418,6 +444,8 @@ export const PLAN_ROW_KEYS = [
   "seasons",
   "season_areas",
   "season_goals",
+  "reviews",
+  "review_scores",
   "values",
   "answers",
 ] as const

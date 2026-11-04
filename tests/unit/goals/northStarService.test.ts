@@ -642,7 +642,7 @@ describe("progress", () => {
     let plan = emptyNsPlan()
     // `pick` is the fork after the one thing: it holds nothing, so it is never
     // done however finished the rest of the plan is.
-    expect(nsProgress(plan).done).toEqual({ star: false, now: false, pick: false, systems: false, milestones: false, focus: false, values: false, recap: false, track: false, today: false, journal: false })
+    expect(nsProgress(plan).done).toEqual({ star: false, now: false, pick: false, systems: false, milestones: false, focus: false, values: false, recap: false, track: false, today: false, journal: false, review: false })
 
     plan = setNorthStar(plan, "I wake up near the water.", NOW)
     // Routines arrive empty, so adding a step is the edit.
@@ -1684,11 +1684,10 @@ describe("goals the page can score for you", () => {
 
 describe("goals that are really one of our own tools", () => {
   it("points the weekly review at the step that does it", () => {
-    // The review tab became the commit step, and that folded into Everything:
-    // read it back, name what could go wrong, commit. A goal called "Weekly
-    // Review" still points at the place that work happens.
+    // The weekly review has a step of its own since Phase 5 of
+    // Plans/life-plan-rebuild.md: a goal called "Weekly Review" points there.
     const plan = addGoal(emptyNsPlan(), "lm_money", "Weekly Review", "habit_ramp", NOW)
-    expect(goalToolLink(plan.goals[0])?.tab).toBe("recap")
+    expect(goalToolLink(plan.goals[0])?.tab).toBe("review")
     expect(goalToolLink(addGoal(emptyNsPlan(), "lm_money", "Squat 140kg", "milestone_ladder", NOW).goals[0])).toBeNull()
   })
 

@@ -119,6 +119,7 @@ import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
 /* "Is this step done today" has ONE owner. `dayTicks` is a leaf so that both
    this file and `northStarTrackService` can reach it without closing a cycle. */
 import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
+import { isEmptyReview, readReviews } from "@/src/goals/reviewService"
 
 // ------------------------------------------------------------------ helpers
 
@@ -474,6 +475,7 @@ export function emptyNsPlan(): NsPlan {
     pastNorthStars: [],
     season: null,
     pastSeasons: [],
+    reviews: [],
     rungs: {},
     areas,
     routines,
@@ -995,6 +997,7 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     pastNorthStars: readPastNorthStars(obj.pastNorthStars),
     season: readSeason(obj.season),
     pastSeasons: readPastSeasons(obj.pastSeasons),
+    reviews: readReviews(obj.reviews, areaIds),
     rungs,
     areas: resolvedAreas,
     routines,
@@ -1465,6 +1468,16 @@ export function removeArea(plan: NsPlan, areaId: string, now = nowIso()): NsPlan
     seasonAreaIds: others(plan.seasonAreaIds),
     seasonFocusId: plan.seasonFocusId === areaId ? null : plan.seasonFocusId,
     pastSeasons: pastSeasonsWithout(plan.pastSeasons, areaId),
+    // Its scores go from every review, as the database drops them with the
+    // area, and a review left holding nothing goes with them.
+    reviews: plan.reviews
+      .map((r) => {
+        if (!(areaId in r.scores)) return r
+        const scores = { ...r.scores }
+        delete scores[areaId]
+        return { ...r, scores }
+      })
+      .filter((r) => !isEmptyReview(r)),
     review,
     daily,
   }, now)
@@ -4015,6 +4028,9 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
    */
   if (tab === "journal") return "empty"
 
+  /** Nor the reviews, for the same reason: they look back on the plan, they are not part of it. */
+  if (tab === "review") return "empty"
+
 
   /**
    * TWO STEPS, TWO RINGS, and the join is scored on the second one.
@@ -4142,6 +4158,7 @@ export function planIsUntouched(plan: NsPlan): boolean {
     // Phase 3: a plan holding only that sentence is a plan to save.
     !(plan.season?.sentence ?? "").trim() &&
     (plan.pastSeasons ?? []).length === 0 &&
+    (plan.reviews ?? []).length === 0 &&
     !areasTouched(plan)
   )
 }

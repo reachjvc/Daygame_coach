@@ -63,7 +63,7 @@ function rows(over: Partial<PlanRows> = {}): PlanRows {
     nodes: [], north_stars: [], areas: [], goals: [], checkpoints: [], obstacles: [],
     beliefs: [], habits: [], goal_feeds: [], goal_serves: [], routines: [],
     routine_serves: [], steps: [], split_days: [], step_serves: [], experiences: [],
-    fields: [], sub_steps: [], values: [], answers: [], seasons: [], season_areas: [], season_goals: [],
+    fields: [], sub_steps: [], values: [], answers: [], seasons: [], season_areas: [], season_goals: [], reviews: [], review_scores: [],
     ...over,
   }
 }

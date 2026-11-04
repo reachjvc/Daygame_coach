@@ -135,6 +135,7 @@ export function planHasNothingWritten(plan: Plan): boolean {
     // The one thing, in the season since Phase 3 of Plans/life-plan-rebuild.md.
     !(plan.season?.sentence ?? "").trim() &&
     (plan.pastSeasons ?? []).length === 0 &&
+    (plan.reviews ?? []).length === 0 &&
     Object.keys(plan.review).length === 0 &&
     Object.values(plan.answers).every((v) => !v.trim()) &&
     Object.values(plan.rungs).every((v) => !v.trim())
@@ -151,7 +152,7 @@ export function planHasNothingWritten(plan: Plan): boolean {
  * `tests/unit/goals/lifePlanSync.test.ts` fails when one is in neither.
  */
 export const SENT_PLAN_FIELDS = [
-  "version", "horizonYears", "northStar", "northStarStartedOn", "pastNorthStars", "season", "pastSeasons", "rungs", "areas", "routines", "goals",
+  "version", "horizonYears", "northStar", "northStarStartedOn", "pastNorthStars", "season", "pastSeasons", "reviews", "rungs", "areas", "routines", "goals",
   "review", "answers", "currentValues", "values", "priorityIds", "seasonFocusId",
   "seasonAreaIds", "experiences", "fields", "subSteps", "seq",
 ] as const
@@ -174,6 +175,30 @@ export const UNSENT_PLAN_FIELDS = ["daily", "logged", "notes", "journal", "updat
  */
 export function sendableFingerprint(plan: Plan): string {
   return JSON.stringify(SENT_PLAN_FIELDS.map((key) => plan[key]))
+}
+
+/**
+ * THE PLAN HALF, WHEN THE ACCOUNT ANSWERS.
+ *
+ * The page opens on this browser's copy and can be edited before the
+ * account's read lands. That read then replaced the plan whole, so an edit
+ * made in that moment (a goal added, a north star typed) was undone on screen
+ * about a second later and never sent. Found in Phase 5 of
+ * Plans/life-plan-rebuild.md, where a review typed straight away was lost.
+ *
+ * KEPT ONLY WHEN IT IS SAFE TO KEEP: the edits sit on the copy the page opened
+ * with, and the account holds that same copy, so the edited plan IS the
+ * account's plan plus the edits, and the save then sends them. In every other
+ * case (another device changed the plan since; the page opened with no copy)
+ * the account's plan is taken, as before: merging two different plans field
+ * by field is how parts get lost.
+ */
+export function planHalfAfterLoad(current: Plan, openedWith: Plan | null, account: Plan): Plan {
+  if (!openedWith) return account
+  const opened = sendableFingerprint(openedWith)
+  if (sendableFingerprint(current) === opened) return account
+  if (sendableFingerprint(account) !== opened) return account
+  return current
 }
 
 export function decideOnLoad({ server, browser }: SyncInputs): SyncDecision {

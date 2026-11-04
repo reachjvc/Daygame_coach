@@ -47,6 +47,8 @@ import type {
   SeasonAreaRow,
   SeasonGoalRow,
   SeasonRow,
+  ReviewRow,
+  ReviewScoreRow,
   SubStepRow,
   ValueRow,
 } from "./lifePlanTypes"
@@ -184,6 +186,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
     checkpoints, obstacles, beliefs,
     goal_feeds, goal_serves, routine_serves, step_serves,
     seasons, season_areas, season_goals,
+    reviews, review_scores,
   ] = await Promise.all([
     all<NodeRow>("life_plan_nodes", "plan", ["id"]),
     all<NorthStarRow>("life_plan_north_stars", "plan", ["id"]),
@@ -207,11 +210,14 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
     all<SeasonRow>("life_plan_seasons", "plan", ["id"]),
     all<SeasonAreaRow>("life_plan_season_areas", "node", ["season_id", "area_id"]),
     all<SeasonGoalRow>("life_plan_season_goals", "node", ["season_id", "goal_id"]),
+    all<ReviewRow>("life_plan_reviews", "plan", ["id"]),
+    all<ReviewScoreRow>("life_plan_review_scores", "node", ["review_id", "area_id"]),
   ])
 
   const goalIds = new Set(goals.map((g) => g.id))
   const routineIds = new Set(routines.map((r) => r.id))
   const stepIds = new Set(steps.filter((s) => routineIds.has(s.routine_id)).map((s) => s.id))
+  const reviewIds = new Set(reviews.map((r) => r.id))
 
   return {
     revision: plan.data.revision as number,
@@ -257,6 +263,8 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
       seasons,
       season_areas: season_areas.filter((r) => seasons.some((s) => s.id === r.season_id)),
       season_goals: season_goals.filter((r) => seasons.some((s) => s.id === r.season_id)),
+      reviews,
+      review_scores: review_scores.filter((r) => reviewIds.has(r.review_id)),
     },
   }
 }

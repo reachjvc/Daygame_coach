@@ -64,12 +64,15 @@ import type {
   SeasonRow,
   SeasonAreaRow,
   SeasonGoalRow,
+  ReviewRow,
+  ReviewScoreRow,
   ValueRow,
 } from "@/src/db/lifePlanTypes"
 import { normalizeNsPlan, readTimeframe } from "./northStarService"
 import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, ONE_ANSWERS } from "./data/northStarStart"
-import type { NsPastNorthStar, NsPastSeason } from "./types"
+import type { NsPastNorthStar, NsPastSeason, NsReview } from "./types"
 import { SEASON_ANSWER_KEYS } from "./seasonAnswers"
+import { reviewIdFor } from "./reviewService"
 
 /**
  * The north star's local id.
@@ -481,6 +484,27 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     seasonParts(n.id, plan.seasonAreaIds ?? [], plan.goals.filter((g) => g.servesOneThing).map((g) => g.id))
   }
 
+  // -------------------------------------------------------------- reviews
+  // Each a node of its own, `review:<cadence>-<periodStart>`, with one score
+  // row per area it scored, in the areas' order (Plans/life-plan-rebuild.md,
+  // Phase 5). A score for an area the plan no longer has is not written: the
+  // database dropped it with the area.
+  const reviews: ReviewRow[] = []
+  const review_scores: ReviewScoreRow[] = []
+  for (const r of plan.reviews ?? []) {
+    const n = node(`review:${r.id}`, "review")
+    reviews.push({
+      id: n.id, user_id: userId, plan_id: planId, node_kind: "review",
+      cadence: r.cadence, period_start: r.periodStart, period_end: r.periodEnd, written_on: r.writtenOn,
+      magic_moments: r.magicMoments, lessons: r.lessons, next_outcomes: r.nextOutcomes,
+    })
+    for (const area of plan.areas) {
+      const score = r.scores[area.id]
+      const to = areaId.get(area.id)
+      if (typeof score === "number" && to) review_scores.push({ user_id: userId, review_id: n.id, area_id: to, score })
+    }
+  }
+
   return {
     plan_id: planId,
     user_id: userId,
@@ -529,6 +553,8 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     seasons,
     season_areas,
     season_goals,
+    reviews,
+    review_scores,
   }
 }
 
@@ -746,12 +772,34 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     for (const g of goals) g.servesOneThing = serving.has(g.id)
   }
 
+  // A review's id is its period (`reviewIdFor`), as its node's local id is.
+  const scoresOf = new Map<string, Record<string, number>>()
+  for (const x of rows.review_scores ?? []) {
+    const area = id(x.area_id)
+    if (!area) continue
+    const into = scoresOf.get(x.review_id) ?? {}
+    into[area] = x.score
+    scoresOf.set(x.review_id, into)
+  }
+  const reviews = (rows.reviews ?? []).map((r): NsReview => ({
+    id: reviewIdFor({ cadence: r.cadence, start: r.period_start }),
+    cadence: r.cadence,
+    periodStart: r.period_start,
+    periodEnd: r.period_end,
+    writtenOn: r.written_on,
+    scores: scoresOf.get(r.id) ?? {},
+    magicMoments: r.magic_moments,
+    lessons: r.lessons,
+    nextOutcomes: r.next_outcomes,
+  }))
+
   const draft = {
     version: rows.version,
     season: currentSeason
       ? { id: seasonId(currentSeason.id), startedOn: currentSeason.started_on ?? null, endsOn: currentSeason.ends_on, sentence: currentSeason.sentence }
       : null,
     pastSeasons,
+    reviews,
     horizonYears: star?.horizon_years ?? 10,
     northStar: star?.text ?? "",
     northStarStartedOn: star?.started_on ?? null,

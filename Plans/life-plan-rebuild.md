@@ -377,6 +377,44 @@ Track run adds no `user_goals` rows.
 **Done when:** a test account can do one review of each kind, the scores show over time, and your
 fortnight scores appear as your first review.
 
+**Built 2026-11-04.**
+- **Where it goes: a step of its own, Review, after Journal** (step 12). Everything stays the plan read
+  back with the commitment; Journal stays the daily writing. A review is a different act from both:
+  looking back over a stretch. Steps 11 to 12. No ring on it, like Today and Journal: it looks back on the
+  plan and is not part of it.
+- **The step:** Week / Month / Quarter / Year; it opens on the period holding today and steps back with
+  the arrows. Each area gets a 0–10 row, with "last time 6, 26 Oct – 1 Nov" under it (the latest review
+  that had ended). Then Magic moments, Lessons, Next outcomes. Then the earlier reviews of that kind,
+  and "Scores over time": areas down, the last 8 reviews of any kind across. "Last weekly review: 9 days
+  ago" at the top (N2: any day; Sunday suggested). A review exists once something is written in it and
+  goes when the last thing is taken out, so looking at old weeks leaves nothing behind.
+- **Tables:** migration `20261104180000_reviews.sql`: `life_plan_reviews` (how often, first and last day,
+  the day written, the three texts; one per plan, kind and start) and `life_plan_review_scores` (one 0–10
+  per area). Both locked to their owner. `20261104180100` lets the change-only save reach them. Saved
+  with the plan, like the season.
+- **Your first review:** the 12 "last two weeks" scores on Your 10s, copied as a review of kind "two
+  weeks", dated the two weeks up to the day your plan row was made (10–23 Sep 2026). Nothing records
+  when those scores were given; that is the only date they have. **Your 10s keeps its own number**: the
+  wheel and its rating are unchanged, and the copy is a snapshot. So `review_fortnight` comes off the
+  Phase 7 list until you decide whether the wheel should show your latest review instead (card
+  `p5-wheel-question`).
+- **The "Weekly Review" goal** from the business template now links to Review instead of Everything.
+- **Found by the browser test, fixed:** the account's copy of the plan lands a moment after the page
+  opens and replaced the plan on screen whole, so anything written in that moment was lost, on any
+  step. Now an edit made on the copy the page opened with is kept when the account holds that same copy
+  (`planHalfAfterLoad`), and the Review step waits for the account before it opens.
+- **Code review: 14 finds, all fixed.** Among them: the scores-over-time table put a year before the
+  weeks inside it; removing an area left empty reviews behind; a damaged browser copy holding 30
+  February would have made every save fail; a cut at 100,000 characters could split an emoji and make
+  every save fail; "last review" named the newest period, not the one written last; the period maths
+  was a fourth copy of the week rule (now the shared one); the database test ran the whole migration
+  under other tests' feet (now only its copy, for its own account).
+- Tests: `reviewService.test.ts` (16), `planHalfAfterLoad.test.ts` (3),
+  `reviewsAreSaved.integration.test.ts` (saved and read back; the copy, once; another account can
+  neither read a review nor hang a score on one), `life-mastery-reviews.spec.ts` (a week across a
+  reload with the browser copy thrown away, the copied review as "last time" and in the table; a month,
+  quarter and year). The rail test now counts 12 steps.
+
 ### Phase 6. Your own Today boxes can hold a number (Q10)
 
 A Today box gets a "number" kind (e.g. approaches, minutes, kilos). The value is stored on the day row
@@ -388,7 +426,8 @@ and shown on the day's summary. Concept items 21 and 34.
 
 The list, final once Phases 1–6 are done: `save_life_plan` and the PUT on `/api/life-plan`, the old
 shared browser copy kept as `north-star-v1:orphan`, `life_plans.season_focus_id`,
-`life_plan_areas.season_rank` and `review_fortnight`, `life_plan_goals.serves_one_thing` and
+`life_plan_areas.season_rank` (not `review_fortnight`: it is still the Your 10s number, see Phase 5),
+`life_plan_goals.serves_one_thing` and
 `user_goal_id`, the north-star and commit rows in `life_plan_answers`, `life_plan_goal_habits` (and
 `NsGoal.habits`, kept empty since Q5),
 `life_chapters`, and the `one_*` rows in `life_answers`, plus the code that reads them. A fresh backup

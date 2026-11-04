@@ -157,6 +157,32 @@ export function fullPlan(): NsPlan {
         focusId: plan.areas[1].id,
       },
     ],
+    /* THE REVIEWS. One week with scores and all three texts, and the copied
+       first one with scores only (Plans/life-plan-rebuild.md, Phase 5). */
+    reviews: [
+      {
+        id: "fortnight-2025-12-22",
+        cadence: "fortnight",
+        periodStart: "2025-12-22",
+        periodEnd: "2026-01-04",
+        writtenOn: "2026-01-04",
+        scores: { [plan.areas[0].id]: 4, [plan.areas[1].id]: 7 },
+        magicMoments: "",
+        lessons: "",
+        nextOutcomes: "",
+      },
+      {
+        id: "week-2026-01-05",
+        cadence: "week",
+        periodStart: "2026-01-05",
+        periodEnd: "2026-01-11",
+        writtenOn: "2026-01-11",
+        scores: { [plan.areas[0].id]: 6, [plan.areas[2].id]: 0 },
+        magicMoments: "Ran ten kilometres for the first time.",
+        lessons: "Sleep before 23 makes the morning.",
+        nextOutcomes: "Three runs. One long.",
+      },
+    ],
   }
 
   return normalizeNsPlan(JSON.parse(serializeNsPlan(plan)))!

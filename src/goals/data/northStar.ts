@@ -493,6 +493,44 @@ export const JOURNAL_PROMPTS: Array<{ id: string; group: string; question: strin
 ]
 
 /**
+ * THE REVIEW STEP: a week, month, quarter or year looked back on
+ * (Plans/life-plan-rebuild.md, Phase 5). Stefan's weekly review: score each
+ * area, the magic moments, the lessons, the outcomes for the next one.
+ */
+export const REVIEW_PERIOD_COPY = {
+  title: "Review",
+  help: "Look back over a stretch of your life: score each area 0 to 10, keep what went well and what it taught you, and say what the next one is to bring.",
+  anyDay: "Any day works. Sunday evening suits most people for the week.",
+  cadences: { week: "Week", month: "Month", quarter: "Quarter", year: "Year" },
+  nouns: { week: "weekly", fortnight: "two-week", month: "monthly", quarter: "quarterly", year: "yearly" },
+  backToNow: "Back to now",
+  earlierPeriod: "Earlier",
+  laterPeriod: "Later",
+  fromTens: "from Your 10s",
+  never: (noun: string) => `No ${noun} review yet.`,
+  last: (noun: string, ago: string, period: string) => `Last ${noun} review: ${ago}, for ${period}.`,
+  scoresTitle: "Score each area",
+  scoresHelp: "How did this area actually go, 0 to 10? Click the same number again to clear it.",
+  scored: (n: number, of: number) => `${n} of ${of} scored`,
+  lastTime: (score: number, period: string) => `last time ${score}, ${period}`,
+  tensSays: (score: number) => `Your 10s says ${score}`,
+  boxes: [
+    { field: "magicMoments", label: "Magic moments", help: "What went well? The moments worth keeping.", placeholder: "The conversation on Tuesday. Finally finishing the deck." },
+    { field: "lessons", label: "Lessons", help: "What did it teach you? What would you do differently?", placeholder: "I lose the evening when I skip the walk." },
+    { field: "nextOutcomes", label: "Next outcomes", help: "What is the next one to bring? The few results that would make it a good one.", placeholder: "Three sessions in the gym. One evening out." },
+  ],
+  earlierTitle: (noun: string) => `Earlier ${noun} reviews`,
+  earlierEmpty: "None before this one.",
+  open: "Open",
+  average: (n: number) => `average ${n}`,
+  remove: "Delete this review",
+  removeConfirm: "Delete it, scores and all?",
+  overTimeTitle: "Scores over time",
+  overTimeHelp: "Every review that scored an area, oldest on the left.",
+  overTimeEmpty: "Score an area and it starts here.",
+} as const
+
+/**
  * THE REVIEWS, as sets rather than single questions.
  *
  * A weekly review is not one box, and offering it as one is how it stops
@@ -697,7 +735,7 @@ export const TRACK_COPY = {
  * Templates went into Where to start as a fourth door: both are places you pass
  * through, and neither holds anything you wrote.
  */
-export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "pick", "systems", "milestones", "focus", "values", "recap", "track", "today", "journal"]
+export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "pick", "systems", "milestones", "focus", "values", "recap", "track", "today", "journal", "review"]
 
 /**
  * Steps that are no longer in the rail, and the step that holds them now. An
@@ -729,7 +767,7 @@ export function stepFor(asked: NorthStarTabId): NorthStarTabId {
  * and nowhere else. See `stepState`.
  */
 export const SCORED_TABS: NorthStarTabId[] = TAB_ORDER.filter(
-  (tab) => tab !== "pick" && tab !== "track" && tab !== "today" && tab !== "journal"
+  (tab) => tab !== "pick" && tab !== "track" && tab !== "today" && tab !== "journal" && tab !== "review"
 )
 
 export const TAB_LABELS: Record<NorthStarTabId, string> = {
@@ -746,6 +784,7 @@ export const TAB_LABELS: Record<NorthStarTabId, string> = {
   track: "Track",
   today: "Today",
   journal: "Journal",
+  review: "Review",
   recap: "Everything",
 }
 
@@ -763,6 +802,7 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   track: "Push the goals into your real goals and tick them off day by day.",
   today: "What you can put in for today, and nothing else. Tick off what you did.",
   journal: "Everything you write: the questions your routines ask, the ones you add, and every answer you have given them.",
+  review: "Look back over a week, month, quarter or year: score each area, keep the magic moments and lessons, and set what comes next.",
   recap: "The whole plan on one page, editable. Check it aims at your 10s, say what could go wrong, and commit to it.",
 }
 
@@ -1936,9 +1976,9 @@ export const SERVES_COPY = {
 export const GOAL_TOOL_LINKS: Array<{ match: string[]; label: string; tab: NorthStarTabId; note: string }> = [
   {
     match: ["weekly review", "weekly reflection"],
-    label: "Run it at the foot of Everything",
-      tab: "recap",
-    note: "This page has the review built in, at the foot of Everything: it reads every area's 10 back beside its goals and asks whether they still aim at it.",
+    label: "Run it on Review",
+    tab: "review",
+    note: "This page has the review built in: the Review step scores each area for the week, keeps its magic moments and lessons, and sets next week's outcomes.",
   },
   {
     match: ["morning ritual", "morning routine"],

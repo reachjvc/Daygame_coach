@@ -1376,7 +1376,7 @@ export interface LifeMasteryProgress {
 /** A goal's horizon, shortest first. The stored values of `life_plan_goals.timeframe`. */
 export type NsGoalTimeframe = "1m" | "90d" | "1y" | "3y" | "5y" | "10y" | "20y"
 
-export type NorthStarTabId = "star" | "now" | "one" | "pick" | "templates" | "systems" | "milestones" | "focus" | "values" | "commit" | "track" | "today" | "journal" | "recap"
+export type NorthStarTabId = "star" | "now" | "one" | "pick" | "templates" | "systems" | "milestones" | "focus" | "values" | "commit" | "track" | "today" | "journal" | "review" | "recap"
 
 /**
  * WHERE A PIECE OF THE PLAN LIVES, written down as somewhere you can be sent.
@@ -1992,6 +1992,35 @@ export interface NsPastSeason {
 }
 
 /**
+ * HOW OFTEN A REVIEW LOOKS BACK (Plans/life-plan-rebuild.md, Phase 5; Q7).
+ *
+ * Stefan's rhythm: every week, then month, quarter and year. `fortnight` is
+ * offered nowhere: it is the kind of the one review copied in from the
+ * "last two weeks" scores on Your 10s, so those scores start the history.
+ */
+export type NsReviewCadence = "week" | "fortnight" | "month" | "quarter" | "year"
+
+/** One look back over a week, month, quarter or year. */
+export interface NsReview {
+  /** `<cadence>-<periodStart>`: one review per period, so the period is the id. */
+  id: string
+  cadence: NsReviewCadence
+  /** The first day the review looks back over, `YYYY-MM-DD`. */
+  periodStart: string
+  /** The last day, inclusive. */
+  periodEnd: string
+  /** The day it was first written in. */
+  writtenOn: string
+  /** Area id to 0-10. An area left unscored is left out. */
+  scores: Record<string, number>
+  /** What went well; the moments worth keeping. */
+  magicMoments: string
+  lessons: string
+  /** What the next period is to bring. */
+  nextOutcomes: string
+}
+
+/**
  * A north star you lived by and then replaced, with the answers it had then.
  *
  * The answers are keyed as on the live plan (`STAR_PROMPTS` ids, `COMMIT_KEY`,
@@ -2029,6 +2058,8 @@ export interface NsPlan {
   season: NsSeason | null
   /** The seasons before it, oldest first. */
   pastSeasons: NsPastSeason[]
+  /** Every week, month, quarter and year looked back on, oldest period first. */
+  reviews: NsReview[]
   /** The optional ladder answers that assemble into the paragraph. */
   rungs: Record<string, string>
   areas: NsArea[]

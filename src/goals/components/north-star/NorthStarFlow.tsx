@@ -65,7 +65,7 @@ import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
 import * as nsTrack from "@/src/goals/northStarTrackService"
 import { archiveCountedGoal, fetchLifePlan, newNodeId, saveLifePlanChanges, startLifePlan } from "@/src/goals/lifePlanClient"
-import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
+import { LIFE_PLAN_IMPORTED_KEY, NOTHING_TO_SHOW, SAVE_DEBOUNCE_MS, canSave, decideOnLoad, planHalfAfterLoad, planHasNothingWritten, sendableFingerprint, syncNotice, type SyncDecision, type SyncState } from "@/src/goals/lifePlanSync"
 import { fetchDayRecord, saveDayCatchingUp } from "@/src/goals/lifePlanDayClient"
 import { NO_TRAINING_TICKS, stepTick, stepTickedByHand, trainingTicks } from "@/src/goals/dayTicks"
 import { useLoad } from "@/src/shared/useLoad"
@@ -88,6 +88,8 @@ import { JournalTab } from "./JournalTab"
 import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
+import { PeriodReviewTab } from "./PeriodReviewTab"
+import { removeReview, writeReview } from "@/src/goals/reviewService"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
@@ -703,7 +705,9 @@ export function NorthStarFlow({
         const atLoad = recordOf(decision.plan)
         const base = known ? days! : atLoad
         setPlan((current) => ({
-          ...decision.plan,
+          // The plan half the same way: an edit made on the copy the page
+          // opened with is kept when the account holds that same copy.
+          ...planHalfAfterLoad(current, browserCopy.current, decision.plan),
           ...keepEditsMadeWhileLoading(base, atLoad, recordOf(current)),
         }))
         // This IS what the server holds, so the save effect has nothing to
@@ -1889,6 +1893,25 @@ export function NorthStarFlow({
             onRemoveField={(id) => setPlan((p) => ns.removeDailyField(p, id))}
             onStepAsks={(routineId, stepId, question) => setPlan((p) => ns.setStepAsks(p, routineId, stepId, question))}
           />
+        ) : tab === "review" ? (
+          /* LOOKING BACK, a week, month, quarter or year at a time (Phase 5
+             of Plans/life-plan-rebuild.md). Saved with the plan, like the
+             season: a review scores the plan's own areas.
+             NOT BEFORE THE ACCOUNT HAS ANSWERED. Its plan lands whole a
+             moment after the page opens, and a review written in that moment
+             was replaced by it and lost (found by the browser test). */
+          decision !== null && today ? (
+            <PeriodReviewTab
+              plan={plan}
+              today={today}
+              handlers={{
+                onWrite: (period, patch) => setPlan((p) => writeReview(p, period, patch, today)),
+                onRemove: (id) => setPlan((p) => removeReview(p, id)),
+              }}
+            />
+          ) : (
+            <p className="text-sm text-zinc-500">Opening your reviews…</p>
+          )
         ) : tab === "recap" ? (
           /* THE PLAN, WHOLE, AND NOTHING BEING ASKED OF YOU.
              Twelve steps wrote this and none of them can show it: each one

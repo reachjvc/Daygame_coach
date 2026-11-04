@@ -24,7 +24,8 @@ test.describe("the folded steps", () => {
     await expect(page.getByText("Pick what you are taking on")).toBeVisible()
 
     const rail = page.getByRole("navigation", { name: "Sections" })
-    await expect(rail.getByRole("button")).toHaveCount(11)
+    // Eleven after the folds, and Review (Phase 5) made twelve.
+    await expect(rail.getByRole("button")).toHaveCount(12)
     await expect(rail.getByRole("button", { name: /Templates/ })).toHaveCount(0)
     await expect(rail.getByRole("button", { name: /^\d+\s*Commit/ })).toHaveCount(0)
 

@@ -1,0 +1,5 @@
+-- The way back from 20261104180100_change_save_reaches_reviews.sql. Deletes no data.
+--
+-- Re-run 20261104140100_change_save_reaches_seasons.sql, whose function has no
+-- review tables on its list. A save that names one is then refused ("cannot
+-- reach"), so put the app back on the code before Phase 5 first.
