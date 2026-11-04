@@ -14,6 +14,7 @@
 
 import { emptyNsPlan, addGoal, addPractice, normalizeNsPlan, serializeNsPlan } from "@/src/goals/northStarService"
 import type { NsPlan } from "@/src/goals/types"
+import { ONE_ANSWERS } from "@/src/goals/data/northStarStart"
 
 /** A plan with something in every part of it, built through the real service. */
 export function fullPlan(): NsPlan {
@@ -137,6 +138,22 @@ export function fullPlan(): NsPlan {
         startedOn: "2025-01-01",
         endedOn: "2026-01-05",
         answers: { star_why: "To be safe." },
+      },
+    ],
+    /* THE SEASONS. The current one with its sentence and dates, and one before
+       it holding everything a season holds (Plans/life-plan-rebuild.md, Phase 3). */
+    season: { id: "s2", startedOn: "2026-01-05", endsOn: "2026-04-05", sentence: "Run the half marathon in April." },
+    pastSeasons: [
+      {
+        id: "s1",
+        startedOn: "2025-10-01",
+        endsOn: "2025-12-31",
+        endedOn: "2026-01-05",
+        sentence: "Get my evenings back.",
+        answers: { [ONE_ANSWERS.why]: "I was tired every night." },
+        areaIds: [plan.areas[1].id],
+        goalIds: [plan.goals[0].id],
+        focusId: plan.areas[1].id,
       },
     ],
   }

@@ -54,7 +54,7 @@ export function OneThingBox({
   typed: string | null
   onTyped: (text: string | null) => void
 }) {
-  const { current, past, loaded, signedOut, error: readError, reload } = account
+  const { current, past, loaded, signedOut, error: readError, write, remove: removeOne } = account
 
   const [dueOn, setDueOn] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -131,23 +131,20 @@ export function OneThingBox({
   const deadlineToSend = dueOn ?? (current && !current.lapsed ? current.dueOn : undefined)
 
   const save = async (act: OneThingAct, deadline: string | undefined) => {
-    if (saving || dateBroken) return
+    // Not before the account has answered: its plan replaces the one on screen
+    // when it lands, and a sentence saved before that would go with it.
+    if (!loaded || saving || dateBroken) return
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch("/api/life-answers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "one_thing", act, body: text, dueOn: deadline }),
-      })
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error ?? "That did not save")
+      // Into the plan's season, saved with the plan (Plans/life-plan-rebuild.md, Phase 3).
+      await write(act, text, deadline)
       /* Back to tracking the account: both boxes drop their local value, so
          what is on screen after a save IS what was saved. Leaving the date
          behind is how the picker ended up showing the deadline of the one thing
          it had just replaced. */
       onTyped(null)
       setDueOn(null)
-      await reload()
     } catch (e) {
       setError(e instanceof Error ? e.message : "That did not save")
     } finally {
@@ -158,9 +155,7 @@ export function OneThingBox({
   const remove = async (chapterId: string) => {
     setError(null)
     try {
-      const res = await fetch(`/api/life-answers?chapterId=${encodeURIComponent(chapterId)}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Could not delete that")
-      await reload()
+      await removeOne(chapterId)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not delete that")
     }
@@ -212,7 +207,7 @@ export function OneThingBox({
              original bug from the screenshot, wearing a new hat. */
           onClick={() => save(actForSave, deadlineToSend)}
           data-testid="one-thing-save"
-          disabled={!dirty || dateBroken || saving || signedOut}
+          disabled={!loaded || !dirty || dateBroken || saving || signedOut}
           className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 text-violet-100 hover:bg-violet-500/30 disabled:opacity-30 transition-colors"
         >
           {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
@@ -249,7 +244,7 @@ export function OneThingBox({
                    person typed is sent, never the one being replaced. */
                 onClick={() => { setConfirmNew(false); void save("start", dueOn ?? undefined) }}
                 data-testid="one-thing-start-new"
-                disabled={!text.trim() || dateBroken || saving || signedOut}
+                disabled={!loaded || !text.trim() || dateBroken || saving || signedOut}
                 className="text-[11px] font-medium px-2.5 py-1 rounded-lg border border-amber-400/40 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 disabled:opacity-30 transition-colors"
               >
                 Yes, this is a new one

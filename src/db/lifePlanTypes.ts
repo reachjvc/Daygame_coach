@@ -27,6 +27,7 @@ export type LifePlanNodeKind =
   | "experience"
   | "field"
   | "sub_step"
+  | "season"
 
 export interface LifePlanRow {
   id: string
@@ -254,6 +255,40 @@ export interface SubStepRow {
   title: string
 }
 
+/** A season: the one thing, its dates and its supports (Plans/life-plan-rebuild.md, Phase 3). */
+export interface SeasonRow {
+  id: string
+  user_id: string
+  plan_id: string
+  node_kind: "season"
+  /** Optional on the way in: the column's default is the day the row is made. */
+  started_on?: string
+  ends_on: string | null
+  /** Null for the current season. */
+  ended_on: string | null
+  sentence: string
+  why: string
+  cost: string
+  identity: string
+  values_note: string
+  areas_note: string
+  focus_id: string | null
+}
+
+export interface SeasonAreaRow {
+  user_id: string
+  season_id: string
+  area_id: string
+  position: number
+}
+
+export interface SeasonGoalRow {
+  user_id: string
+  season_id: string
+  goal_id: string
+  position: number
+}
+
 export interface GoalFeedRow {
   user_id: string
   goal_id: string
@@ -351,6 +386,9 @@ export interface PlanRows {
   experiences: ExperienceRow[]
   fields: FieldRow[]
   sub_steps: SubStepRow[]
+  seasons: SeasonRow[]
+  season_areas: SeasonAreaRow[]
+  season_goals: SeasonGoalRow[]
   values: ValueRow[]
   answers: AnswerRow[]
 }
@@ -375,6 +413,9 @@ export const PLAN_ROW_KEYS = [
   "experiences",
   "fields",
   "sub_steps",
+  "seasons",
+  "season_areas",
+  "season_goals",
   "values",
   "answers",
 ] as const

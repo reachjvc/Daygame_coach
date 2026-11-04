@@ -166,7 +166,9 @@ export function NorthStarFlow({
 }) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
-  const [tab, setTabState] = useState<NorthStarTabId>(initialTab)
+  // "The one thing" is part of the Season step (id `focus`) since Phase 3 of
+  // Plans/life-plan-rebuild.md; an old link or button naming it lands there.
+  const [tab, setTabState] = useState<NorthStarTabId>(initialTab === "one" ? "focus" : initialTab)
 
   /**
    * THE ADDRESS FOLLOWS THE STEP YOU ARE ON.
@@ -183,7 +185,8 @@ export function NorthStarFlow({
    * Wrapped in try/catch because a browser that refuses history writes must not
    * take the step change down with it.
    */
-  const setTab = useCallback((next: NorthStarTabId) => {
+  const setTab = useCallback((asked: NorthStarTabId) => {
+    const next = asked === "one" ? "focus" : asked
     setTabState(next)
     try {
       window.history.replaceState(null, "", `${ROUTES.plan}?step=${next}`)
@@ -914,7 +917,9 @@ export function NorthStarFlow({
    * fill, which is why somebody signing in on a new phone sees their finished
    * step as finished.
    */
-  const oneThing = useOneThing()
+  // Drawn only once the account has answered: until then the plan on screen is
+  // this browser's copy, and the read replaces it, a sentence saved in between too.
+  const oneThing = useOneThing(plan, setPlan, today, timezone, loaded && decision !== null && decision.kind !== "stay-local")
   /**
    * UNSAVED TEXT IN THE ONE THING BOX, held here so it survives leaving the
    * step and coming back — the rail unmounts whichever tab is not showing.
@@ -1642,20 +1647,7 @@ export function NorthStarFlow({
             setOpenId={setNowAreaId}
             areaHandlers={areaHandlers}
             onSeasonFocus={setSeasonFocus}
-            onNext={() => setTab("one")}
-          />
-        ) : tab === "one" ? (
-          /* One sentence, and everything that holds it up. It comes before the
-             goals page because what somebody lists in twelve areas depends on
-             whether they have decided what the year is for. */
-          <OneThingTab
-            plan={plan}
-            handlers={oneThingHandlers}
-            account={oneThing}
-            typed={oneThingTyped}
-            onTyped={setOneThingTyped}
-            today={today}
-            goalHandlers={goalHandlers}
+            onNext={() => setTab("pick")}
           />
         ) : tab === "pick" ? (
           /* The fork. Two doors are the milestones step with a different half
@@ -1694,14 +1686,29 @@ export function NorthStarFlow({
             }}
           />
         ) : tab === "focus" ? (
-          <FocusTab
-            plan={plan}
-            today={today}
-            handlers={focusHandlers}
-            onOpenGoal={(areaId, goalId) => { setPlanAreaId(areaId); setNowGoalId(goalId); setTab("milestones") }}
-            onNext={() => setTab("milestones")}
-            oneThing={oneThingBody}
-          />
+          /* THE SEASON: the one thing, then the areas, focus and goals it is
+             about. Two steps until Plans/life-plan-rebuild.md, Phase 3; one
+             idea, so one step, and one row in the database. */
+          <div className="space-y-8">
+            <OneThingTab
+              plan={plan}
+              handlers={oneThingHandlers}
+              account={oneThing}
+              typed={oneThingTyped}
+              onTyped={setOneThingTyped}
+              today={today}
+              goalHandlers={goalHandlers}
+            />
+            <FocusTab
+              plan={plan}
+              today={today}
+              handlers={focusHandlers}
+              onOpenGoal={(areaId, goalId) => { setPlanAreaId(areaId); setNowGoalId(goalId); setTab("milestones") }}
+              onNext={() => setTab("milestones")}
+              // The sentence is just above, in the same step: no echo of it here.
+              oneThing={null}
+            />
+          </div>
         ) : tab === "milestones" || tab === "systems" ? (
           /* TWO STEPS, ONE BODY. The same wheel, the same routines and the
              same builder; the step decides which half is being written and

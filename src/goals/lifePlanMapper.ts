@@ -62,11 +62,15 @@ import type {
   StepRow,
   StepServeRow,
   SubStepRow,
+  SeasonRow,
+  SeasonAreaRow,
+  SeasonGoalRow,
   ValueRow,
 } from "@/src/db/lifePlanTypes"
 import { normalizeNsPlan } from "./northStarService"
-import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS } from "./data/northStarStart"
-import type { NsPastNorthStar } from "./types"
+import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, ONE_ANSWERS } from "./data/northStarStart"
+import type { NsPastNorthStar, NsPastSeason } from "./types"
+import { SEASON_ANSWER_KEYS } from "./seasonAnswers"
 
 /**
  * The north star's local id.
@@ -439,6 +443,54 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     })),
   ]
 
+  // -------------------------------------------------------------- seasons
+  // The past ones as they were kept, then the current one, built from the
+  // plan's own season fields (Plans/life-plan-rebuild.md, Phase 3). Those
+  // fields are ALSO still written to their old homes above (`season_rank`,
+  // `serves_one_thing`, the answers, `season_focus_id`) until Phase 7.
+  const seasons: SeasonRow[] = []
+  const season_areas: SeasonAreaRow[] = []
+  const season_goals: SeasonGoalRow[] = []
+  const focusUuid = (local: string | null) => (local ? nodes.find((n) => n.local_id === local)?.id ?? null : null)
+  const holdsASeason =
+    plan.season != null ||
+    (plan.seasonAreaIds ?? []).length > 0 ||
+    plan.seasonFocusId != null ||
+    plan.goals.some((g) => g.servesOneThing) ||
+    SEASON_ANSWER_KEYS.some((k) => (plan.answers?.[k] ?? "").trim())
+  const seasonParts = (sid: string, areaIds: string[], goalIds: string[]) => {
+    areaIds.forEach((a, i) => {
+      const area = areaId.get(a)
+      if (area) season_areas.push({ user_id: userId, season_id: sid, area_id: area, position: i })
+    })
+    goalIds.forEach((g, i) => {
+      const goal = goalId.get(g)
+      if (goal) season_goals.push({ user_id: userId, season_id: sid, goal_id: goal, position: i })
+    })
+  }
+  for (const past of plan.pastSeasons ?? []) {
+    const n = node(`season:${past.id}`, "season")
+    seasons.push({
+      id: n.id, user_id: userId, plan_id: planId, node_kind: "season",
+      started_on: past.startedOn, ends_on: past.endsOn, ended_on: past.endedOn,
+      sentence: past.sentence, ...seasonAnswerColumns(past.answers), focus_id: focusUuid(past.focusId),
+    })
+    seasonParts(n.id, past.areaIds, past.goalIds)
+  }
+  if (holdsASeason) {
+    // A plan written before seasons had them all the same: its one season is
+    // the one the database migration made, `season:s1`.
+    const current = plan.season ?? { id: "s1", startedOn: null, endsOn: null, sentence: "" }
+    const n = node(`season:${current.id}`, "season")
+    seasons.push({
+      id: n.id, user_id: userId, plan_id: planId, node_kind: "season",
+      ...(current.startedOn ? { started_on: current.startedOn } : {}),
+      ends_on: current.endsOn, ended_on: null,
+      sentence: current.sentence, ...seasonAnswerColumns(plan.answers ?? {}), focus_id: focusUuid(plan.seasonFocusId),
+    })
+    seasonParts(n.id, plan.seasonAreaIds ?? [], plan.goals.filter((g) => g.servesOneThing).map((g) => g.id))
+  }
+
   return {
     plan_id: planId,
     user_id: userId,
@@ -484,7 +536,30 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     sub_steps,
     values,
     answers,
+    seasons,
+    season_areas,
+    season_goals,
   }
+}
+
+/** A season's supports, as its row's columns. */
+function seasonAnswerColumns(answers: Record<string, string>) {
+  return {
+    why: answers[ONE_ANSWERS.why] ?? "",
+    cost: answers[ONE_ANSWERS.cost] ?? "",
+    identity: answers[ONE_ANSWERS.identity] ?? "",
+    values_note: answers[ONE_ANSWERS.values] ?? "",
+    areas_note: answers[ONE_ANSWERS.areas] ?? "",
+  }
+}
+
+/** A season row's supports, keyed as the steps ask them. Empty ones are left out. */
+function seasonAnswersOf(row: SeasonRow): Record<string, string> {
+  const pairs: Array<[string, string]> = [
+    [ONE_ANSWERS.why, row.why], [ONE_ANSWERS.cost, row.cost], [ONE_ANSWERS.identity, row.identity],
+    [ONE_ANSWERS.values, row.values_note], [ONE_ANSWERS.areas, row.areas_note],
+  ]
+  return Object.fromEntries(pairs.filter(([, v]) => v))
 }
 
 // ---------------------------------------------------------------- rows -> plan
@@ -657,8 +732,40 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
       answers: starAnswersOf(r),
     }))
 
+  // The current season, when the account has one: it is the home of the
+  // focus areas, the focus, the goals inside it and its answers; the old
+  // homes are read only for a plan that has none (Phase 3).
+  const seasonRows = rows.seasons ?? []
+  const currentSeason = seasonRows.find((r) => !r.ended_on) ?? null
+  const inSeason = (sid: string) => ({
+    areaIds: (rows.season_areas ?? []).filter((x) => x.season_id === sid).sort((a, b) => a.position - b.position).map((x) => id(x.area_id)).filter(Boolean),
+    goalIds: (rows.season_goals ?? []).filter((x) => x.season_id === sid).sort((a, b) => a.position - b.position).map((x) => id(x.goal_id)).filter(Boolean),
+  })
+  const seasonId = (uuid: string) => (id(uuid) || uuid).replace(/^season:/, "")
+  const pastSeasons = seasonRows
+    .filter((r) => r !== currentSeason && r.ended_on && r.started_on)
+    .map((r): NsPastSeason => ({
+      id: seasonId(r.id),
+      startedOn: r.started_on!,
+      endsOn: r.ends_on,
+      endedOn: r.ended_on!,
+      sentence: r.sentence,
+      answers: seasonAnswersOf(r),
+      ...inSeason(r.id),
+      focusId: r.focus_id ? id(r.focus_id) || null : null,
+    }))
+  const nowIn = currentSeason ? inSeason(currentSeason.id) : null
+  if (nowIn) {
+    const serving = new Set(nowIn.goalIds)
+    for (const g of goals) g.servesOneThing = serving.has(g.id)
+  }
+
   const draft = {
     version: rows.version,
+    season: currentSeason
+      ? { id: seasonId(currentSeason.id), startedOn: currentSeason.started_on ?? null, endsOn: currentSeason.ends_on, sentence: currentSeason.sentence }
+      : null,
+    pastSeasons,
     horizonYears: star?.horizon_years ?? 10,
     northStar: star?.text ?? "",
     northStarStartedOn: star?.started_on ?? null,
@@ -670,17 +777,25 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     review,
     // The answer rows, with the north star's own columns over them: those are
     // the answers' home now, and the rows are the copy kept until Phase 7.
-    answers: { ...fromAnswers(rows.answers, "answer"), ...(star ? starAnswersOf(star) : {}) },
+    answers: {
+      ...fromAnswers(rows.answers, "answer"),
+      ...(star ? starAnswersOf(star) : {}),
+      ...(currentSeason ? seasonAnswersOf(currentSeason) : {}),
+    },
     currentValues: scoped(rows.values, "past"),
     values: scoped(rows.values, "chosen"),
     priorityIds: [...rows.goals]
       .sort((a, b) => a.priority_rank - b.priority_rank)
       .map((g) => id(g.id)),
-    seasonFocusId: rows.season_focus_id ? id(rows.season_focus_id) : null,
-    seasonAreaIds: areaRows
-      .filter((a) => a.season_rank !== null)
-      .sort((a, b) => (a.season_rank ?? 0) - (b.season_rank ?? 0))
-      .map((a) => id(a.id)),
+    seasonFocusId: currentSeason
+      ? currentSeason.focus_id ? id(currentSeason.focus_id) || null : null
+      : rows.season_focus_id ? id(rows.season_focus_id) : null,
+    seasonAreaIds: nowIn
+      ? nowIn.areaIds
+      : areaRows
+          .filter((a) => a.season_rank !== null)
+          .sort((a, b) => (a.season_rank ?? 0) - (b.season_rank ?? 0))
+          .map((a) => id(a.id)),
     experiences: [...rows.experiences]
       .sort((a, b) => a.position - b.position)
       .map((x): NsExperience => ({

@@ -131,7 +131,7 @@ describe("a save sends only what changed", () => {
     const rows = mapper()
     const plan = fullPlan()
     const after = rows(setNorthStar(plan, "Typed into a plan row that held nothing"))
-    const empty = { ...after, nodes: [], north_stars: [], areas: [], goals: [], checkpoints: [], obstacles: [], beliefs: [], habits: [], goal_feeds: [], goal_serves: [], routines: [], routine_serves: [], steps: [], split_days: [], step_serves: [], experiences: [], fields: [], sub_steps: [], values: [], answers: [] }
+    const empty = { ...after, nodes: [], north_stars: [], areas: [], goals: [], checkpoints: [], obstacles: [], beliefs: [], habits: [], goal_feeds: [], goal_serves: [], routines: [], routine_serves: [], steps: [], split_days: [], step_serves: [], experiences: [], fields: [], sub_steps: [], values: [], answers: [], seasons: [], season_areas: [], season_goals: [] }
     const changes = diffPlanRows(empty, after)
     const star = after.north_stars.find((s) => s.ended_on === null)!
     expect(changes.upsert.nodes).toContainEqual(expect.objectContaining({ id: star.id, kind: "north_star" }))

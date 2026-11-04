@@ -170,12 +170,10 @@ export function FocusTab({
         </p>
       </section>
 
-      {/* THE ONE THING IS NOT HERE ANY MORE.
-          It has step 3 to itself, with the why, the identity, the values and
-          what has to happen for it — asked before the goals rather than after
-          them. What is left here is the season: which areas, and in what
-          order. The sentence is shown so this page still reads as being about
-          something, and it is read-only: one place to write it. */}
+      {/* THE ONE THING IS WRITTEN JUST ABOVE THIS, on the same Season step
+          (Plans/life-plan-rebuild.md, Phase 3), so the flow passes no echo of
+          it. What is here is the rest of the season: which areas, and in what
+          order. The echo stays for a page that shows this half on its own. */}
       <OneThingEcho
         body={oneThing}
         label={FOCUS_COPY.oneEcho}

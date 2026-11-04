@@ -41,7 +41,9 @@ export default async function LifeMasteryPage({
   // ?step=today lands on the day's list. An unknown step opens the flow at the
   // start rather than 404ing: a stale link is not a broken page.
   const { step } = await searchParams
-  const initialTab = TAB_ORDER.includes(step as NorthStarTabId) ? (step as NorthStarTabId) : undefined
+  // `one` is part of the Season step (`focus`) since Plans/life-plan-rebuild.md, Phase 3.
+  const asked = step === "one" ? "focus" : step
+  const initialTab = TAB_ORDER.includes(asked as NorthStarTabId) ? (asked as NorthStarTabId) : undefined
 
   /**
    * THE ACCOUNT'S ZONE, read once for the whole page.

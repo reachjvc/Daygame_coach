@@ -45,6 +45,9 @@ import type {
   SplitDayRow,
   StepRow,
   StepServeRow,
+  SeasonAreaRow,
+  SeasonGoalRow,
+  SeasonRow,
   SubStepRow,
   ValueRow,
 } from "./lifePlanTypes"
@@ -181,6 +184,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
     experiences, fields, sub_steps, values, answers,
     checkpoints, obstacles, beliefs, habits,
     goal_feeds, goal_serves, routine_serves, step_serves,
+    seasons, season_areas, season_goals,
   ] = await Promise.all([
     all<NodeRow>("life_plan_nodes", "plan", ["id"]),
     all<NorthStarRow>("life_plan_north_stars", "plan", ["id"]),
@@ -202,6 +206,9 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
     all<GoalServeRow>("life_plan_goal_serves", "node", ["goal_id", "area_id"]),
     all<RoutineServeRow>("life_plan_routine_serves", "node", ["routine_id", "area_id"]),
     all<StepServeRow>("life_plan_step_serves", "node", ["step_id", "goal_id"]),
+    all<SeasonRow>("life_plan_seasons", "plan", ["id"]),
+    all<SeasonAreaRow>("life_plan_season_areas", "node", ["season_id", "area_id"]),
+    all<SeasonGoalRow>("life_plan_season_goals", "node", ["season_id", "goal_id"]),
   ])
 
   const goalIds = new Set(goals.map((g) => g.id))
@@ -241,6 +248,9 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
       sub_steps,
       values,
       answers,
+      seasons,
+      season_areas: season_areas.filter((r) => seasons.some((s) => s.id === r.season_id)),
+      season_goals: season_goals.filter((r) => seasons.some((s) => s.id === r.season_id)),
     },
   }
 }

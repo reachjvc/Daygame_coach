@@ -682,7 +682,12 @@ export const TRACK_COPY = {
  * on it is yours until one of the other steps wrote it, and scoring it would be
  * scoring the same work twice.
  */
-export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "one", "pick", "templates", "systems", "milestones", "focus", "values", "commit", "track", "today", "journal", "recap"]
+/**
+ * THE STEPS, IN ORDER. "The one thing" and "Focus" became one step, Season,
+ * on 2026-11-04 (Plans/life-plan-rebuild.md, Phase 3). It keeps the id
+ * `focus`, so links and saved positions still land on it; `one` is sent there.
+ */
+export const TAB_ORDER: NorthStarTabId[] = ["star", "now", "pick", "templates", "systems", "milestones", "focus", "values", "commit", "track", "today", "journal", "recap"]
 
 /**
  * The steps that are a WORKSHOP rather than a part of the plan.
@@ -724,7 +729,7 @@ export const TAB_LABELS: Record<NorthStarTabId, string> = {
   templates: "Templates",
   systems: "Systems",
   milestones: "Experiences",
-  focus: "Focus & season",
+  focus: "Season",
   values: "Values & identity",
   commit: "Commit",
   track: "Track",
@@ -741,7 +746,7 @@ export const TAB_BLURBS: Record<NorthStarTabId, string> = {
   templates: "Ready-made sets, goals and practices for every area. Take what is yours, ignore the rest.",
   systems: "What you actually do about it week in week out, and what each one is pointed at.",
   milestones: "Everything you want to experience and have done, area by area. Loose, greedy, nothing final.",
-  focus: "Which areas this season is about, and what comes after it.",
+  focus: "The one thing this season is for, the areas it is about, and when it ends.",
   values: "What you are ranking your life by, in order, and who that makes you.",
   commit: "Read it back, say what could go wrong, and commit to it.",
   track: "Push the goals into your real goals and tick them off day by day.",

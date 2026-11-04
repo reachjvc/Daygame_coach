@@ -638,7 +638,7 @@ describe("progress", () => {
     let plan = emptyNsPlan()
     // `pick` is the fork after the one thing: it holds nothing, so it is never
     // done however finished the rest of the plan is.
-    expect(nsProgress(plan).done).toEqual({ star: false, now: false, one: false, pick: false, templates: false, systems: false, milestones: false, focus: false, values: false, commit: false, track: false, today: false, journal: false, recap: false })
+    expect(nsProgress(plan).done).toEqual({ star: false, now: false, pick: false, templates: false, systems: false, milestones: false, focus: false, values: false, commit: false, track: false, today: false, journal: false, recap: false })
 
     plan = setNorthStar(plan, "I wake up near the water.", NOW)
     // Routines arrive empty, so adding a step is the edit.
@@ -684,7 +684,10 @@ describe("progress", () => {
     expect(stepState(plan, "focus")).toBe("started")
     expect(nsProgress(plan).done.focus).toBe(false)
     plan = setSeasonFocus(plan, "lm_health", NOW)
-    expect(nsProgress(plan).done.focus).toBe(true)
+    // The focus half is done. Since Plans/life-plan-rebuild.md, Phase 3 the
+    // step is the whole Season, so it waits for the one thing half as well.
+    expect(nsProgress(plan).done.focus).toBe(false)
+    expect(stepState(plan, "focus")).toBe("started")
   })
 })
 
@@ -3533,7 +3536,18 @@ describe("the step is not done on a sentence alone", () => {
       plan = setAnswer(plan, key, "written", NOW)
     }
     expect(stepState(plan, "one", SAVED)).toBe("done")
-    expect(nsProgress(plan, SAVED).done.one).toBe(true)
+    // Its own step until Plans/life-plan-rebuild.md, Phase 3; now half of Season,
+    // which is done only when the focus half is too.
+    expect(nsProgress(plan, SAVED).done).not.toHaveProperty("one")
+  })
+
+  it("the Season step is done when both its halves are: the one thing and the focus", () => {
+    let plan = addOneThingRequirement(emptyNsPlan(), "Run 5k", "lm_health", "achievement", NOW)
+    for (const key of [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values]) plan = setAnswer(plan, key, "x", NOW)
+    expect(stepState(plan, "focus", SAVED)).toBe("started")
+    plan = setSeasonFocus(toggleSeasonArea(plan, "lm_health", NOW), "lm_health", NOW)
+    expect(stepState(plan, "focus", SAVED)).toBe("done")
+    expect(nsProgress(plan, SAVED).done.focus).toBe(true)
   })
 
   /**

@@ -1,0 +1,5 @@
+-- The way back from 20261104140100_change_save_reaches_seasons.sql. Deletes no data.
+--
+-- Re-run 20261104100200_change_save_never_writes_the_goal_link.sql, whose
+-- function has no season tables on its list. A save that names one is then
+-- refused ("cannot reach"), so put the app back on the code before Phase 3 first.

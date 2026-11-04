@@ -42,6 +42,7 @@ import {
   WRITE_PHRASES,
 } from "@/src/goals/data/northStar"
 import { AREA_LIBRARY_PILLAR, TAB_ORDER } from "@/src/goals/data/northStar"
+import { SEASON_ANSWER_KEYS } from "@/src/goals/seasonAnswers"
 import {
   GUIDE_QUESTION_ORDER,
   type GuideQuestionId,
@@ -97,7 +98,9 @@ import type {
   NsGoal,
   NsObstacle,
   NsPastNorthStar,
+  NsPastSeason,
   NsPlan,
+  NsSeason,
   NsProgress,
   NsRoutine,
   NsRoutineStep,
@@ -123,7 +126,22 @@ const nowIso = () => new Date().toISOString()
 
 /** Every mutation goes through this, so `updatedAt` can never drift. */
 function touch(plan: NsPlan, now: string): NsPlan {
-  return { ...plan, updatedAt: now }
+  return withImpliedSeason({ ...plan, updatedAt: now })
+}
+
+/**
+ * A plan that holds anything of a season holds a season: focus areas, a
+ * focus, goals serving the one thing or its answers all belong to one. Its id
+ * is `s1`, the one the database migration gave a plan's first season
+ * (Plans/life-plan-rebuild.md, Phase 3). Kept true by every change and by the
+ * loader, so the plan and the rows it is saved as always agree.
+ */
+function withImpliedSeason(plan: NsPlan): NsPlan {
+  if (plan.season || !planHoldsASeason(plan)) return plan
+  const used = new Set(plan.pastSeasons.map((p) => p.id))
+  let n = 1
+  while (used.has(`s${n}`)) n += 1
+  return { ...plan, season: { id: `s${n}`, startedOn: null, endsOn: null, sentence: "" } }
 }
 
 /**
@@ -454,6 +472,8 @@ export function emptyNsPlan(): NsPlan {
     northStar: "",
     northStarStartedOn: null,
     pastNorthStars: [],
+    season: null,
+    pastSeasons: [],
     rungs: {},
     areas,
     routines,
@@ -965,7 +985,7 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     ...subSteps.map((sub) => sub.id),
   ]
 
-  return withUniqueIds({
+  const normalized = withUniqueIds({
     version: NS_PLAN_VERSION,
     horizonYears: HORIZON_CHOICES.includes(obj.horizonYears as (typeof HORIZON_CHOICES)[number])
       ? (obj.horizonYears as number)
@@ -973,6 +993,8 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     northStar: stringOr(obj.northStar, ""),
     northStarStartedOn: isIsoDate(obj.northStarStartedOn) ? obj.northStarStartedOn : null,
     pastNorthStars: readPastNorthStars(obj.pastNorthStars),
+    season: readSeason(obj.season),
+    pastSeasons: readPastSeasons(obj.pastSeasons),
     rungs,
     areas: resolvedAreas,
     routines,
@@ -1001,6 +1023,8 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     seq: Math.max(numberOr(obj.seq, 0), highestSeq(ids)),
     updatedAt: typeof obj.updatedAt === "string" ? obj.updatedAt : null,
   })
+  // A plan written before seasons existed already holds one.
+  return withImpliedSeason(normalized)
 }
 
 function isIsoDate(value: unknown): value is string {
@@ -1028,6 +1052,55 @@ function readPastNorthStars(value: unknown): NsPastNorthStar[] {
               ),
             )
           : {},
+    }))
+    .sort((a, b) => a.startedOn.localeCompare(b.startedOn))
+}
+
+/** True when the plan holds anything of a season: what makes the mapper write one. */
+export function planHoldsASeason(plan: NsPlan): boolean {
+  return (
+    plan.season != null ||
+    (plan.seasonAreaIds ?? []).length > 0 ||
+    plan.seasonFocusId != null ||
+    plan.goals.some((g) => g.servesOneThing) ||
+    SEASON_ANSWER_KEYS.some((k) => (plan.answers?.[k] ?? "").trim().length > 0)
+  )
+}
+
+function readSeason(value: unknown): NsSeason | null {
+  if (!value || typeof value !== "object") return null
+  const v = value as Record<string, unknown>
+  if (typeof v.id !== "string" || !v.id) return null
+  return {
+    id: v.id,
+    startedOn: isIsoDate(v.startedOn) ? v.startedOn : null,
+    endsOn: isIsoDate(v.endsOn) ? v.endsOn : null,
+    sentence: stringOr(v.sentence, ""),
+  }
+}
+
+function readPastSeasons(value: unknown): NsPastSeason[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((p): p is Record<string, unknown> => !!p && typeof p === "object")
+    .filter((p) => typeof p.id === "string" && isIsoDate(p.startedOn) && isIsoDate(p.endedOn))
+    .map((p) => ({
+      id: String(p.id),
+      startedOn: String(p.startedOn),
+      endsOn: isIsoDate(p.endsOn) ? p.endsOn : null,
+      endedOn: String(p.endedOn),
+      sentence: stringOr(p.sentence, ""),
+      answers:
+        p.answers && typeof p.answers === "object"
+          ? Object.fromEntries(
+              Object.entries(p.answers as Record<string, unknown>).filter(
+                (e): e is [string, string] => typeof e[1] === "string",
+              ),
+            )
+          : {},
+      areaIds: readStringList(p.areaIds),
+      goalIds: readStringList(p.goalIds),
+      focusId: typeof p.focusId === "string" ? p.focusId : null,
     }))
     .sort((a, b) => a.startedOn.localeCompare(b.startedOn))
 }
@@ -1376,9 +1449,27 @@ export function removeArea(plan: NsPlan, areaId: string, now = nowIso()): NsPlan
     experiences: plan.experiences.map((x) => (x.areaId === areaId ? { ...x, areaId: null } : x)),
     seasonAreaIds: others(plan.seasonAreaIds),
     seasonFocusId: plan.seasonFocusId === areaId ? null : plan.seasonFocusId,
+    pastSeasons: pastSeasonsWithout(plan.pastSeasons, areaId),
     review,
     daily,
   }, now)
+}
+
+/**
+ * Earlier seasons, with a removed area or goal taken out of them, as the
+ * database's own cascade does to their rows (Plans/life-plan-rebuild.md, Phase 3).
+ */
+function pastSeasonsWithout(seasons: NsPastSeason[], id: string): NsPastSeason[] {
+  return seasons.map((p) =>
+    p.areaIds.includes(id) || p.goalIds.includes(id) || p.focusId === id
+      ? {
+          ...p,
+          areaIds: p.areaIds.filter((x) => x !== id),
+          goalIds: p.goalIds.filter((x) => x !== id),
+          focusId: p.focusId === id ? null : p.focusId,
+        }
+      : p,
+  )
 }
 
 /** How many goals would move if this area were removed. Shown before it is. */
@@ -1917,6 +2008,7 @@ export function removeGoal(plan: NsPlan, goalId: string, now = nowIso()): NsPlan
       .filter((g) => g.id !== goalId)
       .map((g) => (g.feedsGoalIds.includes(goalId) ? { ...g, feedsGoalIds: g.feedsGoalIds.filter((id) => id !== goalId) } : g)),
     priorityIds: plan.priorityIds.filter((id) => id !== goalId),
+    pastSeasons: pastSeasonsWithout(plan.pastSeasons, goalId),
   }, now)
 }
 
@@ -3823,9 +3915,14 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
   }
 
   if (tab === "focus") {
+    // THE SEASON STEP: the one thing and the focus, one step since
+    // Plans/life-plan-rebuild.md, Phase 3. Done when both halves are.
     const areas = plan.seasonAreaIds.length
-    if (areas === 0 && plan.seasonFocusId == null) return "empty"
-    return areas > 0 && plan.seasonFocusId != null ? "done" : "started"
+    const focus: NsStepState =
+      areas === 0 && plan.seasonFocusId == null ? "empty" : areas > 0 && plan.seasonFocusId != null ? "done" : "started"
+    const one = stepState(plan, "one", account)
+    if (one === "empty" && focus === "empty") return "empty"
+    return one === "done" && focus === "done" ? "done" : "started"
   }
 
   if (tab === "values") {
@@ -3919,6 +4016,10 @@ export function planIsUntouched(plan: NsPlan): boolean {
     plan.seasonFocusId == null &&
     plan.seasonAreaIds.length === 0 &&
     plan.experiences.length === 0 &&
+    // The one thing lives in the season since Plans/life-plan-rebuild.md,
+    // Phase 3: a plan holding only that sentence is a plan to save.
+    !(plan.season?.sentence ?? "").trim() &&
+    (plan.pastSeasons ?? []).length === 0 &&
     !areasTouched(plan)
   )
 }

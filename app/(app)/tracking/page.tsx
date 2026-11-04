@@ -9,7 +9,7 @@ import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { getWorkoutLogs } from "@/src/db/healthRepo"
 import { NO_TRAINING_TICKS, trainingTicks, type TrainingTicks } from "@/src/goals/dayTicks"
-import { readOneThing } from "@/src/goals/oneThingServer"
+import { currentSeasonOneThing } from "@/src/goals/seasonService"
 import type { DashboardLayoutResponse } from "@/src/tracking/types"
 import type { NsPlan } from "@/src/goals/types"
 import type { OneThing } from "@/src/goals/oneThingService"
@@ -63,9 +63,8 @@ export default async function TrackingPage() {
       console.error("Failed to pre-render dashboard tiles:", error)
     }
     try {
-      const [stored, thing, timezone] = await Promise.all([
+      const [stored, timezone] = await Promise.all([
         readLifePlan(auth.userId),
-        readOneThing(auth.userId),
         getUserTimezone(auth.userId),
       ])
       today = getTodayInTimezone(timezone)
@@ -101,7 +100,9 @@ export default async function TrackingPage() {
         seasonTicks = trainingTicks(seasonPlan, await getWorkoutLogs(auth.userId, 9), timezone)
       }
 
-      oneThing = thing.current
+      // The season's sentence (Plans/life-plan-rebuild.md, Phase 3), not the
+      // old one-thing tables, which nothing writes any more.
+      oneThing = seasonPlan ? currentSeasonOneThing(seasonPlan, today) : null
       seasonReady = true
     } catch (error) {
       console.error("Failed to read the season band's plan:", error)

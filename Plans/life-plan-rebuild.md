@@ -196,6 +196,41 @@ why copied into `purpose` (335 characters, identical), started on 23 Sep 2026, c
 **Done when:** your one thing appears as the sentence of your current season, every step reads the
 season from one place, and `TAB_ORDER` lists the new steps.
 
+**Built 2026-11-04.**
+- Migration `20261104140000` makes the three tables and copies each plan's season into them.
+  `20261104140100` lets the save reach them.
+- Your copy will be one season. Its sentence is your one thing (22 characters), and it runs from 28 Aug to
+  31 Dec 2026, from its chapter. It also gets your why, cost, identity, values and areas answers, your three
+  focus areas in their order (Relationship, Health, Mission), and the 1 goal marked as serving it.
+- **Where the step sits.** Season is step 7, where Focus was: after goals and experiences, because a
+  season picks areas and goals that already exist, and Stefan's order is yearly goals, then the 90-day
+  focus. "The one thing" was step 3; old links to it open Season. The steps are now 13; N1 is not done
+  yet.
+- **What the box does now.** The one-thing box writes into the plan's season and is saved with the
+  plan. It no longer uses its own route (`/api/life-answers`), which stays unused until Phase 7.
+  Rewording keeps the season. Moving the date changes its end. "Start a new one" ends the season and
+  keeps it whole, with its answers, areas, focus and goals, then opens an empty one.
+- **Found while testing.** The plan from your account replaces the one on screen a moment after the
+  page opens. A sentence saved in that moment was lost. The box now waits for your account before it
+  saves. Browser test: `tests/e2e/life-mastery-season.spec.ts`.
+- **A second review agent found nine problems, all fixed before going live.**
+  1. **High.** On a plan with nothing else written, a first one thing was never saved; it was lost on
+     reload. The page's two "is the plan empty?" checks now count the season.
+  2. A first sentence on a season that already had focus areas kept no start date and no deadline.
+     The countdown could read "lapsed", and the next save would have cleared the areas. It now starts
+     that day, with a deadline.
+  3. "Next" on Your 10s went nowhere.
+  4. The tracking page still showed the old one thing.
+  5. Earlier one things would have vanished from the history. They are copied as past seasons
+     (dry-run on the test database, rolled back).
+  6. Deploy order: database first, push straight after.
+  7. The sentence showed twice on the Season step.
+  8. Season changes did not stamp the plan's "last changed" time.
+  9. Three tests could not fail. They now check the redirect, a plan holding only a one thing, and the
+     Season step reaching "done".
+- **Seen in your data, not changed:** one area is stored as `Mission &amp;amp; Purpose` (the "&" saved
+  as HTML code). Fixing the stored name is your call; it is a one-line change.
+
 ### Phase 4. Goals: timeframe, subgoals, habits as routine steps, no copy (Q3–Q6)
 
 1. Q6: a `timeframe` column on goals (1 month, 90 days, 1, 3, 5, 10 or 20 years), chosen on the goal

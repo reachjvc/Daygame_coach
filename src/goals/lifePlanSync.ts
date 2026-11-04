@@ -132,6 +132,9 @@ export function planHasNothingWritten(plan: Plan): boolean {
     plan.currentValues.length === 0 &&
     plan.seasonFocusId == null &&
     plan.seasonAreaIds.length === 0 &&
+    // The one thing, in the season since Phase 3 of Plans/life-plan-rebuild.md.
+    !(plan.season?.sentence ?? "").trim() &&
+    (plan.pastSeasons ?? []).length === 0 &&
     Object.keys(plan.review).length === 0 &&
     Object.values(plan.answers).every((v) => !v.trim()) &&
     Object.values(plan.rungs).every((v) => !v.trim())
@@ -148,7 +151,7 @@ export function planHasNothingWritten(plan: Plan): boolean {
  * `tests/unit/goals/lifePlanSync.test.ts` fails when one is in neither.
  */
 export const SENT_PLAN_FIELDS = [
-  "version", "horizonYears", "northStar", "northStarStartedOn", "pastNorthStars", "rungs", "areas", "routines", "goals",
+  "version", "horizonYears", "northStar", "northStarStartedOn", "pastNorthStars", "season", "pastSeasons", "rungs", "areas", "routines", "goals",
   "review", "answers", "currentValues", "values", "priorityIds", "seasonFocusId",
   "seasonAreaIds", "experiences", "fields", "subSteps", "seq",
 ] as const

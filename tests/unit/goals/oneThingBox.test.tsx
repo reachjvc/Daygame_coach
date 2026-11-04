@@ -50,6 +50,13 @@ const goalHandlers = (): GoalHandlers =>
     get: () => vi.fn(),
   })
 
+/**
+ * WHAT THE BOX HANDS THE SEASON. It wrote to `/api/life-answers` until the one
+ * thing moved into the plan's season (Plans/life-plan-rebuild.md, Phase 3); a
+ * test that wants to read what was written points this at its own list.
+ */
+let sink: unknown[] | null = null
+
 const account = (over: Partial<OneThingAccount> = {}): OneThingAccount => ({
   current: one(),
   past: [],
@@ -57,6 +64,10 @@ const account = (over: Partial<OneThingAccount> = {}): OneThingAccount => ({
   signedOut: false,
   error: null,
   reload: vi.fn(),
+  write: async (act, body, dueOn) => {
+    sink?.push({ act, body, ...(dueOn === undefined ? {} : { dueOn }) })
+  },
+  remove: vi.fn(async () => {}),
   ...over,
 })
 
@@ -97,17 +108,14 @@ describe("the deadline is editable on its own", () => {
    */
   it("moves the deadline even when the words changed too", async () => {
     const posted: unknown[] = []
-    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
-      posted.push(JSON.parse(String(init.body)))
-      return { ok: true, json: async () => ({}) } as unknown as Response
-    })
+    sink = posted
     render(<Box account={account()} />)
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Quit vaping" } })
     fireEvent.change(dueInput(), { target: { value: "2027-03-01" } })
     fireEvent.click(save())
     await screen.findByTestId("one-thing-save")
     expect(posted[0]).toMatchObject({ act: "extend", body: "Quit vaping", dueOn: "2027-03-01" })
-    vi.unstubAllGlobals()
+    sink = null
   })
 
   it("still offers to replace the sentence when the words change", () => {
@@ -148,10 +156,7 @@ describe("amending, extending and starting are three different acts", () => {
    */
   it("does not hand a new one thing the deadline of the one it replaces", async () => {
     const posted: Array<Record<string, unknown>> = []
-    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
-      posted.push(JSON.parse(String(init.body)))
-      return { ok: true, json: async () => ({}) } as unknown as Response
-    })
+    sink = posted
     // Three days left on the current one, and the picker untouched.
     render(<Box account={account({ current: one({ dueOn: "2026-12-08", daysLeft: 3 }) })} />)
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Bench 100 kg" } })
@@ -160,7 +165,7 @@ describe("amending, extending and starting are three different acts", () => {
     await screen.findByTestId("one-thing-new")
     expect(posted[0].act).toBe("start")
     expect(posted[0].dueOn).not.toBe("2026-12-08")
-    vi.unstubAllGlobals()
+    sink = null
   })
 
   it("asks before starting a new one, and says the clock restarts", () => {
@@ -239,10 +244,7 @@ describe("a run-out one thing does not trap the next one", () => {
    */
   it("starts the next one when the season has run out, rather than extending the old one", async () => {
     const posted: unknown[] = []
-    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
-      posted.push(JSON.parse(String(init.body)))
-      return { ok: true, json: async () => ({}) } as unknown as Response
-    })
+    sink = posted
     const lapsed = one({ dueOn: "2026-01-01", daysLeft: -244, lapsed: true })
     render(<Box account={account({ current: lapsed })} />)
 
@@ -256,7 +258,7 @@ describe("a run-out one thing does not trap the next one", () => {
     await screen.findByTestId("one-thing-save")
 
     expect(posted[0]).toMatchObject({ act: "start", body: "Run a half marathon" })
-    vi.unstubAllGlobals()
+    sink = null
   })
 
   /**
@@ -267,10 +269,7 @@ describe("a run-out one thing does not trap the next one", () => {
    */
   it("still extends when the words are unchanged and only the date moves", async () => {
     const posted: unknown[] = []
-    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
-      posted.push(JSON.parse(String(init.body)))
-      return { ok: true, json: async () => ({}) } as unknown as Response
-    })
+    sink = posted
     const lapsed = one({ dueOn: "2026-01-01", daysLeft: -244, lapsed: true })
     render(<Box account={account({ current: lapsed })} />)
     fireEvent.change(dueInput(), { target: { value: "2027-03-01" } })
@@ -278,7 +277,7 @@ describe("a run-out one thing does not trap the next one", () => {
     await screen.findByTestId("one-thing-save")
 
     expect(posted[0]).toMatchObject({ act: "extend", dueOn: "2027-03-01", body: "Quit weed for 100 days" })
-    vi.unstubAllGlobals()
+    sink = null
   })
 
   /**
@@ -289,17 +288,14 @@ describe("a run-out one thing does not trap the next one", () => {
    */
   it("lets the server pick the first deadline rather than sending the device's idea of it", async () => {
     const posted: Record<string, unknown>[] = []
-    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
-      posted.push(JSON.parse(String(init.body)))
-      return { ok: true, json: async () => ({}) } as unknown as Response
-    })
+    sink = posted
     render(<Box account={account({ current: null })} />)
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Quit weed" } })
     fireEvent.click(save())
     await screen.findByTestId("one-thing-save")
 
     expect(posted[0].dueOn).toBeUndefined()
-    vi.unstubAllGlobals()
+    sink = null
   })
 })
 

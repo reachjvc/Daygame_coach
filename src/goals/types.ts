@@ -1953,6 +1953,36 @@ export interface NsAccount {
 export const NO_ACCOUNT: NsAccount = { hasOneThing: false }
 
 /**
+ * THE SEASON IN FORCE: the one thing, and the dates it runs between
+ * (Plans/life-plan-rebuild.md, Phase 3). Its supports, focus areas, focus and
+ * goals are still the plan's own fields (`answers[ONE_ANSWERS.*]`,
+ * `seasonAreaIds`, `seasonFocusId`, `servesOneThing`): they ARE the current
+ * season's, and the mapper stores them on its row.
+ */
+export interface NsSeason {
+  id: string
+  /** Null until the account says when it started. */
+  startedOn: string | null
+  /** The day it is meant to end; null for "until I say so". */
+  endsOn: string | null
+  sentence: string
+}
+
+/** A season that has ended, with everything it held. */
+export interface NsPastSeason {
+  id: string
+  startedOn: string
+  endsOn: string | null
+  endedOn: string
+  sentence: string
+  /** Keyed as `ONE_ANSWERS` keys them. */
+  answers: Record<string, string>
+  areaIds: string[]
+  goalIds: string[]
+  focusId: string | null
+}
+
+/**
  * A north star you lived by and then replaced, with the answers it had then.
  *
  * The answers are keyed as on the live plan (`STAR_PROMPTS` ids, `COMMIT_KEY`,
@@ -1986,6 +2016,10 @@ export interface NsPlan {
    * your life is kept rather than typed over (Plans/life-plan-rebuild.md, Phase 2).
    */
   pastNorthStars: NsPastNorthStar[]
+  /** The season in force, or null when none has been started. */
+  season: NsSeason | null
+  /** The seasons before it, oldest first. */
+  pastSeasons: NsPastSeason[]
   /** The optional ladder answers that assemble into the paragraph. */
   rungs: Record<string, string>
   areas: NsArea[]

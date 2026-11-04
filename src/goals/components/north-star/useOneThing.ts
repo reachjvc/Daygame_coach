@@ -1,79 +1,77 @@
 "use client"
 
 /**
- * THE ONE THING, FETCHED ONCE FOR THE WHOLE FLOW.
+ * THE ONE THING, READ FROM AND WRITTEN TO THE PLAN'S SEASON.
  *
- * Three components used to fetch `/api/life-answers` separately — the step, the
- * echo on the Focus step, and the step-rail's idea of whether anything had been
- * written — and each declared its own hand-written shape for the reply. Three
- * requests for one fact, and three contracts to keep in step by hand.
- *
- * There is now one request, at the top of the flow, and everything below reads
- * what it returned. The shape is `OneThing` from `oneThingService`, the same
- * type the server builds the reply from, so the two cannot drift apart.
- *
- * **Nothing is cached in the plan.** The sentence used to live in
- * `plan.answers` as a "draft" as well as on the account, which meant the rail
- * scored the copy: a saved one thing on a new phone showed in the header and
- * left the step marked as never started. The copy is gone. What you type before
- * pressing save is React state and nothing else — it is not written to the
- * browser, it is not written to the plan, and it does not survive a reload,
- * which is what "unsaved" should mean.
+ * It used to be fetched once for the whole flow from `/api/life-answers`, its
+ * own tables beside the plan. Since Plans/life-plan-rebuild.md, Phase 3 it is
+ * the sentence of the plan's current season: shown from the plan, written into
+ * the plan, and saved with the plan. The shape is still `OneThing` from
+ * `oneThingService`, so the box and the step that show it did not change.
  */
 
-import { useCallback, useEffect, useState } from "react"
-import type { OneThing } from "@/src/goals/oneThingService"
+import { useCallback, useMemo } from "react"
+import type { OneThing, OneThingAct } from "@/src/goals/oneThingService"
+import { defaultDueOn } from "@/src/goals/oneThingService"
+import { currentSeasonOneThing, pastSeasonOneThings, removePastSeason, writeSeasonOneThing } from "@/src/goals/seasonService"
+import type { NsPlan } from "@/src/goals/types"
 
 export interface OneThingAccount {
   /** The one in force, or null when nothing has ever been written. */
   current: OneThing | null
   /** The ones before it, newest first. */
   past: OneThing[]
-  /** False until the first reply has landed. Nothing should be drawn before it. */
+  /** False until the plan has loaded. Nothing should be drawn before it. */
   loaded: boolean
-  /** True when the request came back 401 — the flow runs signed out too. */
+  /** Kept for the shape the box reads; the plan's own load says signed out. */
   signedOut: boolean
   /** Set when the read itself failed, as opposed to there being nothing to read. */
   error: string | null
-  /** Re-read after a write. */
+  /** Nothing to re-read: the plan is the source. Kept for the box's shape. */
   reload: () => Promise<void>
+  /** Reword it, move its deadline, or start the next season. Throws the reason it was refused. */
+  write: (act: OneThingAct, body: string, dueOn: string | undefined) => Promise<void>
+  /** Delete one of the past ones. */
+  remove: (id: string) => Promise<void>
 }
 
-export function useOneThing(): OneThingAccount {
-  const [current, setCurrent] = useState<OneThing | null>(null)
-  const [past, setPast] = useState<OneThing[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [signedOut, setSignedOut] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export function useOneThing(
+  plan: NsPlan,
+  setPlan: (update: (p: NsPlan) => NsPlan) => void,
+  today: string | null,
+  timezone: string,
+  loaded: boolean,
+): OneThingAccount {
+  const write = useCallback(
+    async (act: OneThingAct, body: string, dueOn: string | undefined) => {
+      // The account's plan replaces the one on screen when it lands, so a
+      // sentence saved before that would be lost with it.
+      if (!today || !loaded) throw new Error("Your plan is still opening. Try again in a moment.")
+      const fresh = defaultDueOn(timezone)
+      // Asked of the plan on screen for the reason, then applied to the latest.
+      const check = writeSeasonOneThing(plan, act, body, dueOn, today, fresh)
+      if (!check.ok) throw new Error(check.reason)
+      setPlan((p) => {
+        const out = writeSeasonOneThing(p, act, body, dueOn, today, fresh)
+        return out.ok ? out.plan : p
+      })
+    },
+    [plan, setPlan, today, timezone, loaded],
+  )
+  const remove = useCallback(async (id: string) => setPlan((p) => removePastSeason(p, id)), [setPlan])
+  const reload = useCallback(async () => {}, [])
 
-  const reload = useCallback(async () => {
-    try {
-      const res = await fetch("/api/life-answers?key=one_thing")
-      if (res.status === 401) {
-        setSignedOut(true)
-        setCurrent(null)
-        setPast([])
-        setError(null)
-        return
-      }
-      if (!res.ok) throw new Error("Could not read your one thing")
-      const data = await res.json()
-      setSignedOut(false)
-      setCurrent(data.current ?? null)
-      setPast(data.past ?? [])
-      setError(null)
-    } catch (e) {
-      // Loud, not silent: a read that failed is not the same as nothing saved,
-      // and drawing "nothing yet" over somebody's season is the worse lie.
-      setError(e instanceof Error ? e.message : "Could not read your one thing")
-    } finally {
-      setLoaded(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    void reload()
-  }, [reload])
-
-  return { current, past, loaded, signedOut, error, reload }
+  return useMemo(
+    () => ({
+      current: today ? currentSeasonOneThing(plan, today) : null,
+      past: today ? pastSeasonOneThings(plan, today) : [],
+      loaded: loaded && !!today,
+      signedOut: false,
+      error: null,
+      reload,
+      write,
+      remove,
+    }),
+    [plan, today, loaded, reload, write, remove],
+  )
 }
