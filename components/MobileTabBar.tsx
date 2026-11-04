@@ -4,8 +4,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState } from "react"
 import { Menu, LogOut } from "lucide-react"
-import { signOut } from "@/app/actions/auth"
-import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
+import { LogOutButton } from "@/components/LogOutButton"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { TABS, MORE_ITEMS, HIDDEN_ROUTE_PREFIXES, PHONE_BAR_HIDDEN_PREFIXES, isActive } from "@/components/navTabs"
 import { isUnder } from "@/src/shared/routes"
@@ -92,22 +91,19 @@ export function MobileTabBar() {
 
         <div className="border-t border-border my-2" />
 
-        {/* NO onClick HERE. Closing the sheet unmounts this form before the
-            browser submits it, so Log Out did nothing at all — you tapped it,
-            the menu slid away, and you were still signed in. Signing out
-            redirects to the front page, which takes the sheet with it.
-            What this phone kept for opening pages with no signal goes first:
-            the server action alone never reaches it (offlineCopies.ts). */}
-        <form
-          action={async () => {
-            await forgetOfflineCopies()
-            await signOut()
-          }}
-        >
-          <SheetRow type="submit" icon={LogOut} testId="more-logout-button">
-            Log Out
-          </SheetRow>
-        </form>
+        {/* THE SHEET STAYS OPEN. Closing it here unmounted Log Out before it
+            ran, so it did nothing at all — you tapped it, the menu slid away,
+            and you were still signed in. Signing out redirects to the front
+            page, which takes the sheet with it; and while Log Out sends or
+            asks about changes not saved yet (LogOutButton), its question is
+            drawn over the sheet. */}
+        <LogOutButton>
+          {({ onClick, busy }) => (
+            <SheetRow icon={LogOut} testId="more-logout-button" onClick={onClick} disabled={busy}>
+              Log Out
+            </SheetRow>
+          )}
+        </LogOutButton>
       </BottomSheet>
     </>
   )

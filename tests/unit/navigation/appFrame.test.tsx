@@ -60,9 +60,11 @@ describe("the app frame", () => {
     expect(current.map((a) => a.textContent)).toEqual(["Settings"])
   })
 
-  it("offers Log Out from the header, as a form, never a link", () => {
+  it("offers Log Out from the header, as a button, never a link", () => {
     // Never clicked in a test against a real account: signOut() ends every
     // session of that account, other sessions' browser tests included.
+    // A button and not a form since 2026-11-04: it sends what the time
+    // tracker has not saved, or asks, before it signs out (LogOutButton).
     path = ROUTES.tracking
     const { container } = render(
       <AppFrame>
@@ -70,7 +72,8 @@ describe("the app frame", () => {
       </AppFrame>,
     )
     const button = headerNav(container).getByRole("button", { name: "Log Out" })
-    expect(button.closest("form")).not.toBeNull()
+    expect(button.tagName).toBe("BUTTON")
+    expect(button.closest("a"), "Log Out is a link, which a prefetch or a stray tap can follow").toBeNull()
   })
 
   it.each([ROUTES.liveWorkout, ROUTES.plan])(

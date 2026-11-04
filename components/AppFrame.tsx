@@ -3,9 +3,8 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { ReactNode } from "react"
-import { signOut } from "@/app/actions/auth"
-import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { AppLogo } from "@/components/AppLogo"
+import { LogOutButton } from "@/components/LogOutButton"
 import { MobileTabBar } from "@/components/MobileTabBar"
 import { Button } from "@/components/ui/button"
 import { HIDDEN_ROUTE_PREFIXES, MORE_ITEMS, PHONE_BAR_HIDDEN_PREFIXES, TABS, isActive } from "@/components/navTabs"
@@ -83,24 +82,24 @@ export function AppFrame({ children }: { children: ReactNode }) {
             })}
             {/* Log Out before the development-only lab link, so the way out is
                 never the item that scrolls out of view. */}
-            {/* What this phone kept for opening pages with no signal goes
-                first: the server action alone never reaches it. */}
-            <form
-              action={async () => {
-                await forgetOfflineCopies()
-                await signOut()
-              }}
-            >
-              <Button
-                variant="ghost"
-                type="submit"
-                size="sm"
-                className="shrink-0 px-2.5 text-foreground hover:text-primary"
-                data-testid="header-logout-button"
-              >
-                Log Out
-              </Button>
-            </form>
+            {/* What this browser kept for opening pages with no signal goes
+                first, and what has not reached the account yet is sent or
+                asked about before it goes (LogOutButton). */}
+            <LogOutButton>
+              {({ onClick, busy }) => (
+                <Button
+                  variant="ghost"
+                  type="button"
+                  size="sm"
+                  className="shrink-0 px-2.5 text-foreground hover:text-primary"
+                  data-testid="header-logout-button"
+                  onClick={onClick}
+                  disabled={busy}
+                >
+                  Log Out
+                </Button>
+              )}
+            </LogOutButton>
             {process.env.NODE_ENV === "development" && (
               <Button asChild variant="ghost" size="sm" className="shrink-0 text-amber-500 hover:text-amber-400">
                 <Link href="/test">Test Pages</Link>

@@ -646,6 +646,39 @@ test.describe('two people on one browser', () => {
     }
   })
 
+  test('Log Out with a change not saved yet sends it first, or asks before losing it', async ({ browser, throwawayAccount }) => {
+    test.setTimeout(150_000)
+    const baseURL = test.info().project.use.baseURL
+    const context = await browser.newContext({ storageState: SIGNED_OUT, baseURL, viewport: { width: 1366, height: 900 } })
+    try {
+      const page = await context.newPage()
+      await signIn(page, throwawayAccount)
+      await openTracker(page)
+      // in the basement: tracked, and not on the account
+      await page.route(SYNC, (route) => route.abort('internetdisconnected'))
+      await trackEntry(page, 'Basement set')
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
+      await whenHydrated(page.getByTestId('header-logout-button'), 60_000)
+
+      await page.getByTestId('header-logout-button').click()
+      const question = page.getByTestId('log-out-unsent')
+      await expect(question, 'Log Out threw the unsent entry away without asking').toBeVisible({ timeout: 20_000 })
+      await expect(question).toContainText(/n't reached your account yet/)
+      await page.getByTestId('log-out-stay').click()
+      await expect(question).toBeHidden()
+      expect(new URL(page.url()).pathname, 'Stay signed in signed out').toBe('/dashboard')
+
+      // the signal is back: Log Out sends it and goes, without asking
+      await page.unroute(SYNC)
+      await page.getByTestId('header-logout-button').click()
+      await expect.poll(() => new URL(page.url()).pathname, { timeout: 30_000 }).toBe('/')
+      await signIn(page, throwawayAccount)
+      expect(await entriesOnAccount(page), 'the entry was lost at Log Out').toContain('Basement set')
+    } finally {
+      await context.close()
+    }
+  })
+
   test('when A\'s session ends with an entry unsent, B signing in on that browser is sent none of it', async ({
     browser,
     throwawayAccount,

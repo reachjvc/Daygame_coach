@@ -37,7 +37,7 @@ import {
 } from "@/src/db/timetrackTypes"
 
 import { ownerChangedUnderneath, startAgain } from "../browserOwner"
-import { OFFLINE_BASE_KEY, PENDING_BASES_KEY, PENDING_KEY, STATE_VERSION } from "../config"
+import { OFFLINE_BASE_KEY, PENDING_BASES_KEY, PENDING_KEY, STATE_VERSION, STORAGE_KEY } from "../config"
 import { noteServerDate, serverNow, serverNowIso } from "../serverClock"
 import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
@@ -126,6 +126,12 @@ interface Options {
    * the lab page and in tests: the first account to answer is taken, as before.
    */
   account?: string
+  /**
+   * What to do when another account answers. The tracker page starts again
+   * (`startAgain`); the sender Log Out mounts (`SendTrackerChanges`) only
+   * notes it, so signing out is not interrupted by a reload.
+   */
+  onAccountChanged?: () => void
 }
 
 const PULL_EVERY_MS = 60_000
@@ -379,6 +385,42 @@ function basesFrom(from: TimetrackRows | null, changed: Partial<TimetrackRows>, 
   return out
 }
 
+/**
+ * HOW MANY CHANGES IN THIS BROWSER HAVE NOT REACHED THE ACCOUNT: the rows in the
+ * queue, and what changed since a base kept while the account had not
+ * answered (rows the queue does not hold already). Log Out tries to send these
+ * and asks before it throws any away (`LogOutButton`).
+ */
+export function unsentTrackerChanges(): number {
+  const queued = readPending()
+  let count = countRows(queued)
+  const kept = readOfflineBase()
+  if (!kept) return count
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const now = raw ? (JSON.parse(raw) as TimetrackState) : null
+    if (!now || now.version !== STATE_VERSION || !Array.isArray(now.entries)) return count
+    const inQueue = keysIn(queued)
+    const since = diffRows(stateToRows(kept.state, kept.owner), stateToRows(now, kept.owner), serverNowIso())
+    for (const key of keysIn(since.changed)) if (!inQueue.has(key)) count += 1
+  } catch {
+    // an unreadable workspace: the queue is all that can be counted
+  }
+  return count
+}
+
+/** The tracker's sync instances mounted in this tab, each able to check and send now */
+const liveSenders = new Set<() => void>()
+
+/**
+ * Ask the tracker mounted in this tab, if there is one, to check the account
+ * and send what waits — what the badge's tap does. False: none is mounted here.
+ */
+export function sendTrackerChangesNow(): boolean {
+  for (const send of liveSenders) send()
+  return liveSenders.size > 0
+}
+
 /** See `OFFLINE_BASE_KEY`: what this browser held when it was last in step, and whose it was */
 interface OfflineBase {
   owner: string
@@ -458,7 +500,7 @@ function otherDeviceKept(overruled: Overruled[], nameOf: (entryId: string) => st
   return `Changed on your other device: ${name} keeps ${kept}${more}.`
 }
 
-export function useTimetrackSync({ state, setState, replaceState, pushToast, account: pageAccount }: Options) {
+export function useTimetrackSync({ state, setState, replaceState, pushToast, account: pageAccount, onAccountChanged }: Options) {
   const [status, setStatus] = useState<SyncStatus>("starting")
   const [pendingCount, setPendingCount] = useState(0)
   const [importOffer, setImportOffer] = useState<ImportOffer | null>(null)
@@ -680,8 +722,8 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
     for (const controller of inFlight.current) controller.abort()
     inFlight.current.clear()
     pending.current = {}
-    startAgain()
-  }, [clearRetry])
+    ;(onAccountChanged ?? startAgain)()
+  }, [clearRetry, onAccountChanged])
   const stopForAnotherAccountRef = useRef(stopForAnotherAccount)
   stopForAnotherAccountRef.current = stopForAnotherAccount
 
@@ -2145,6 +2187,19 @@ export function useTimetrackSync({ state, setState, replaceState, pushToast, acc
   sendOnLeaveRef.current = sendOnLeave
 
   const isChecking = useCallback(() => checkingRef.current, [])
+
+  // Log Out asks this instance to send before anything is thrown away
+  useEffect(() => {
+    const send = () => {
+      if (statusRef.current !== "local-only") beginChecking()
+      checkRef.current()
+      resumeRef.current()
+    }
+    liveSenders.add(send)
+    return () => {
+      liveSenders.delete(send)
+    }
+  }, [beginChecking])
 
   /** The badge, tapped: check now, and send whatever is waiting (D6) */
   const checkNow = useCallback(() => {

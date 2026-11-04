@@ -19,6 +19,7 @@
 import { forgetThisDevice } from "@/src/notifications/pushClient"
 import { forgetThoughtsOnThisDevice } from "@/src/thoughts/logQueue"
 import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
+import { unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
 
 /** The live workout's kept server answer (`useLiveWorkout`). */
 export const LIVE_COPY_KEY = "live-workout-copy-v1"
@@ -45,8 +46,12 @@ const SHELL_STORE_PREFIX = "app-shell-"
  * thought taps and unlike the workout's sets: an entry's text is somebody's
  * day, and a tracker tab still open is told to stop (`browserOwner`).
  */
-export async function forgetOfflineCopies(): Promise<void> {
-  forgetTimeTrackerOnThisDevice()
+export async function forgetOfflineCopies({ keepUnsentTime = false }: { keepUnsentTime?: boolean } = {}): Promise<void> {
+  // Log Out has sent what it could and asked about the rest (LogOutButton). A
+  // sign-out the person did not choose — a password reset — keeps a copy that
+  // still holds unsent changes, as a session that ends does: it is theirs, and
+  // no other account is shown or sent it (`browserOwner`).
+  if (!(keepUnsentTime && unsentTrackerChanges() > 0)) forgetTimeTrackerOnThisDevice()
   await forgetThisDevice()
   forgetThoughtsOnThisDevice()
   try {

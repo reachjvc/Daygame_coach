@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
       // it kills the recovery session so a link left in browser history is inert.
       // What this browser kept of the person goes first, as at Log Out
       // (src/shared/offlineCopies.ts): this is a sign-out too.
-      await forgetOfflineCopies()
+      await forgetOfflineCopies({ keepUnsentTime: true })
       await supabase.auth.signOut()
       router.push("/auth/login?reset=1")
     } catch (error: unknown) {
