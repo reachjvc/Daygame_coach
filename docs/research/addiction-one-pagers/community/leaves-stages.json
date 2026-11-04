@@ -1,0 +1,4147 @@
+{
+ "method": {
+  "question": "If we harvest a thousand-plus r/leaves posts, does each stage of quitting show its own themes, trends and traps?",
+  "harvested": "2026-11-04",
+  "sources": [
+   {
+    "name": "Arctic Shift (public archive of Reddit's own API payloads)",
+    "endpoint": "https://arctic-shift.photon-reddit.com/api/posts/search?subreddit=leaves&after=<epoch>&before=<epoch>&limit=100&sort=asc",
+    "note": "Live reddit.com returns HTTP 403 from this machine, so no post was read on reddit.com. Permalinks are rebuilt from the post id and were not opened."
+   }
+  ],
+  "sampling": "Every post in r/leaves on the 5th, 12th, 19th and 26th of every month, January 2021 to December 2025 (240 whole UTC days, 48 per year). Fixed calendar days so no season or weekday is favoured; January is 1 of 12 months, not the majority as in the August 2026 pass.",
+  "dateRange": {
+   "from": "2021-01-05",
+   "to": "2025-12-26"
+  },
+  "nDownloaded": 24624,
+  "nUsable": 12443,
+  "usableRule": "self post, body of 300 characters or more, not [removed]/[deleted], no removal flag, author not AutoModerator and not deleted",
+  "usableByYear": {
+   "2021": 2209,
+   "2022": 2166,
+   "2023": 2499,
+   "2024": 3139,
+   "2025": 2430
+  },
+  "nWithDuration": 4865,
+  "withDurationByYear": {
+   "2021": 936,
+   "2022": 883,
+   "2023": 933,
+   "2024": 1176,
+   "2025": 937
+  },
+  "nAmbiguousDropped": 207,
+  "nRelapseTitleDropped": 92,
+  "durationRule": {
+   "where": "Title first (a bare count like '47 days!' or 'Day 12'), else the first 350 characters of the body. Flair fields were empty in this subreddit.",
+   "patterns": [
+    "day N / Day #N / day0 (day 0 counted as day 1); 'N-th day clean/sober/without'",
+    "N days|weeks|months|years + clean|sober|free|weed-free|off (weed)|without weed|no weed|in|into quitting|of sobriety|since I quit|strong",
+    "it's been / I've been N units + since I last|without|clean|sober|off",
+    "quit / stopped / last smoked N units ago",
+    "week N (N>=2, counted as its middle day), month N (N>=2)",
+    "compounds: '9 months & 16 days', '3 months and 25 days', '2 and a half months', decimals like '3.5 months'",
+    "a title that starts with a bare count ('10 months and still craving') only when the body also uses a sobriety word"
+   ],
+   "units": "week = 7 days, month = 30 days, year = 365 days",
+   "rejected": [
+    "counts in a past, lost-streak or relapse context (was, had, after, streak, relapsed, made it, lasted, would have been)",
+    "goals and others' timelines (goal, want to, until, first 3 days, people, you)",
+    "durations of use ('smoked for 10 years', '10 years of daily use')",
+    "durations about another substance in the same sentence (alcohol, nicotine, opioids ...)",
+    "posts whose candidates point at two different stages, and body-only posts that list two or more different 'day N' (timelines)",
+    "posts with a relapse word in the title, unless they say day 0/1 (a title count there is usually the lost streak)"
+   ],
+   "audit": "Three hand audits of random parsed posts during development (70, 70 and 60 posts). The last audit, after the fixes, found 0 wrong of 60; earlier rounds found 3-4 wrong in 70, each fixed by a rule above. Expect a few percent misassigned."
+  },
+  "stages": "days 1-3, 4-7, 8-14, 15-30, 31-90, 91-364, 1 year and over (365+). Deviation from the brief: a post saying exactly '1 year' goes in '1 year and over', not '91-365', because one-year milestone posts read like the long-term group.",
+  "themeMethod": [
+   "Read about 40 random posts per stage (titles plus first 300-450 characters) to find what people report.",
+   "Wrote a regex set per theme. A post counts once per theme if title or body matches.",
+   "Filters: negation just before or after ('no cravings', 'anxiety is gone'); sentences that describe life while smoking or a reason to use ('weed helps my anxiety', 'when I was high'); advice sentences addressed to 'you' with no 'I/my'; for positives, wishes and plans ('I want to sleep better').",
+   "Spot-checked 8-12 random hits per theme (more for revised themes), fixed or tightened, re-checked. 'precision' on each theme is the last spot-check.",
+   "'share' = posts in the stage that mention the theme / posts in the stage. 'shareNow' drops sentences with clear look-back cues (first few weeks, at first, last time, years ago); it removes little because most look-backs carry no such cue. 'shareAnyWord' (main symptoms only) = posts that use the topic's core words at all (sleep/slept/insomnia, crav*/urge/tempt ...), including uses that are not the symptom ('weed helps me sleep'). For most symptoms it is well above 'share' and brackets it from above; for cravings it is not, because the strict set also counts 'want to smoke' and 'miss it'.",
+   "Examples: up to 2 per theme per stage, auto-picked at random from sentences that match, are 6-25 words, speak in the first person, have no capitalised names, places, ages, jobs or diagnoses, and carry no negation or wish outside the matched words. Every pick was then read by hand; about 70 were rejected (look-backs, life while smoking, other causes, sensitive detail such as suicidal thoughts, diagnoses or abuse) and replaced. Each text is an exact substring of the archived body (checked by script)."
+  ],
+  "droppedThemes": {
+   "alcohol": "Hits were mostly false positives (\"drink more water\", \"weed hangover\", other people's drinking); the precise version found under 2% of posts. Drinking as a substitute does appear in posts but too rarely to count reliably."
+  },
+  "relapseMethod": "Relapse posts = title says relapsed/caved/slipped/back to day 1 etc. (not 'almost' or 'don't want to'), or the body says 'I relapsed / I caved / I gave in / I smoked again / broke my streak / back to day 1', and the post does not report more than 3 days clean now. Streak at relapse parsed from phrases like 'relapsed after 2 months', 'on day 21', 'broke my 36 day streak', 'I was 72 days sober'. Reasons were hand-coded on a random 100 of these posts (seed 77), because regex reason-counting was tried and its hits were 30-80% wrong depending on category.",
+  "workingFiles": "Full working dataset (id, date, days, title, body) and scripts stay in the session scratchpad, not in the repo, because the bodies are health disclosures.",
+  "caveats": [
+   "Who posts on r/leaves is not everyone who quits. Most quitters never post; people who quit easily have little reason to.",
+   "People post more when it is hard. Day 1-14 posts are often written because something hurts. That inflates symptom shares early and relapse stories overall.",
+   "Late stages are mostly milestone posts (100 days, 6 months, 1 year). They are celebratory and reflective, and most symptom words there are people looking back at their first weeks, not reporting now. In a spot-check, 9 of 12 'can't sleep' hits at 1 year+ were look-backs.",
+   "Keyword counting misses things. Every share here is a floor: a post that describes insomnia without one of the listed phrases does not count. For the main symptoms the any-word upper bound is given next to the share; the truth sits between.",
+   "Mentions are not prevalence. A theme at 15% means 15% of posts at that stage mention it, not that 15% of quitters have it.",
+   "Posts only, no comments. A lot of r/leaves lives in replies.",
+   "Durations are self-reported at the moment of posting. A '1 year clean' post says nothing about later.",
+   "The archive is a snapshot. Some posts will since have been deleted by their authors; examples should be checked against the live page before use in the product.",
+   "Late stages are small: 377 posts at 91-364 days, 206 at 1 year and over. Differences of 2-3 points there are noise.",
+   "Suicidal thoughts are mentioned in 80 of the 4,865 dated posts (1.6%), at every stage. None were kept as examples. Any page built from this needs crisis resources on it.",
+   "Positive changes are under-counted more than symptoms: the positive patterns had to drop wishes ('I want to sleep better'), plans and mixed sentences to stay accurate, so their shares (all at or under 10%) are floors and should be read as a ranking, not a rate."
+  ],
+  "examplesNote": "Verbatim example sentences with post links are kept out of this public repo (health disclosures). Full file: ~/.cache/daygame-research/leaves/leaves-stages-full.json on the owner's machine, with the working data and scripts."
+ },
+ "stages": [
+  {
+   "stage": "days 1-3",
+   "n": 1104,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.188,
+     "count": 208,
+     "shareNow": 0.182,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.183
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.165,
+     "count": 182,
+     "shareNow": 0.165,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.188
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.145,
+     "count": 160,
+     "shareNow": 0.141,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.128,
+     "count": 141,
+     "shareNow": 0.126,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.207
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.116,
+     "count": 128,
+     "shareNow": 0.114,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.273
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.114,
+     "count": 126,
+     "shareNow": 0.112,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.115
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.101,
+     "count": 111,
+     "shareNow": 0.095,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.243
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.099,
+     "count": 109,
+     "shareNow": 0.097,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.108
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.057,
+     "count": 63,
+     "shareNow": 0.053,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.059
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.047,
+     "count": 52,
+     "shareNow": 0.045,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.114
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.045,
+     "count": 50,
+     "shareNow": 0.043,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.044,
+     "count": 49,
+     "shareNow": 0.043,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.11
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.043,
+     "count": 48,
+     "shareNow": 0.043,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.043
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.038,
+     "count": 42,
+     "shareNow": 0.038,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.083
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.027,
+     "count": 30,
+     "shareNow": 0.024,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.017,
+     "count": 19,
+     "shareNow": 0.015,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.012,
+     "count": 13,
+     "shareNow": 0.012,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.012,
+     "count": 13,
+     "shareNow": 0.012,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.008,
+     "count": 9,
+     "shareNow": 0.008,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    }
+   ]
+  },
+  {
+   "stage": "days 4-7",
+   "n": 999,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.218,
+     "count": 218,
+     "shareNow": 0.213,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.234
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.169,
+     "count": 169,
+     "shareNow": 0.161,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.215
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.165,
+     "count": 165,
+     "shareNow": 0.158,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.329
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.148,
+     "count": 148,
+     "shareNow": 0.141,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.289
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.137,
+     "count": 137,
+     "shareNow": 0.133,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.226
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.121,
+     "count": 121,
+     "shareNow": 0.118,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.122
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.112,
+     "count": 112,
+     "shareNow": 0.102,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.12
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.085,
+     "count": 85,
+     "shareNow": 0.083,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.127
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.08,
+     "count": 80,
+     "shareNow": 0.078,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.139
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.062,
+     "count": 62,
+     "shareNow": 0.062,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.149
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.058,
+     "count": 58,
+     "shareNow": 0.057,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.061
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.051,
+     "count": 51,
+     "shareNow": 0.049,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.052
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.038,
+     "count": 38,
+     "shareNow": 0.036,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.037,
+     "count": 37,
+     "shareNow": 0.036,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.032,
+     "count": 32,
+     "shareNow": 0.029,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.031,
+     "count": 31,
+     "shareNow": 0.029,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.021,
+     "count": 21,
+     "shareNow": 0.019,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.019,
+     "count": 19,
+     "shareNow": 0.019,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.011,
+     "count": 11,
+     "shareNow": 0.011,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    }
+   ]
+  },
+  {
+   "stage": "days 8-14",
+   "n": 709,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.226,
+     "count": 160,
+     "shareNow": 0.219,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.245
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.133,
+     "count": 94,
+     "shareNow": 0.124,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.303
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.128,
+     "count": 91,
+     "shareNow": 0.121,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.234
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.123,
+     "count": 87,
+     "shareNow": 0.104,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.175
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.114,
+     "count": 81,
+     "shareNow": 0.106,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.322
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.109,
+     "count": 77,
+     "shareNow": 0.103,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.116
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.106,
+     "count": 75,
+     "shareNow": 0.099,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.178
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.096,
+     "count": 68,
+     "shareNow": 0.085,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.113
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.082,
+     "count": 58,
+     "shareNow": 0.078,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.15
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.058,
+     "count": 41,
+     "shareNow": 0.055,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.069
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.051,
+     "count": 36,
+     "shareNow": 0.048,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.118
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.047,
+     "count": 33,
+     "shareNow": 0.044,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.037,
+     "count": 26,
+     "shareNow": 0.037,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.031,
+     "count": 22,
+     "shareNow": 0.028,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.034
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.027,
+     "count": 19,
+     "shareNow": 0.024,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.027,
+     "count": 19,
+     "shareNow": 0.025,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.021,
+     "count": 15,
+     "shareNow": 0.021,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.021,
+     "count": 15,
+     "shareNow": 0.02,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.011,
+     "count": 8,
+     "shareNow": 0.01,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    }
+   ]
+  },
+  {
+   "stage": "days 15-30",
+   "n": 800,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.21,
+     "count": 168,
+     "shareNow": 0.206,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.245
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.146,
+     "count": 117,
+     "shareNow": 0.134,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.312
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.145,
+     "count": 116,
+     "shareNow": 0.135,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.242
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.13,
+     "count": 104,
+     "shareNow": 0.121,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.13
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.119,
+     "count": 95,
+     "shareNow": 0.101,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.294
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.102,
+     "count": 82,
+     "shareNow": 0.099,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.175
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.081,
+     "count": 65,
+     "shareNow": 0.072,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.142
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.079,
+     "count": 63,
+     "shareNow": 0.074,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.145
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.071,
+     "count": 57,
+     "shareNow": 0.061,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.083
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.056,
+     "count": 45,
+     "shareNow": 0.052,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.059
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.044,
+     "count": 35,
+     "shareNow": 0.041,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.043,
+     "count": 34,
+     "shareNow": 0.043,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.131
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.034,
+     "count": 27,
+     "shareNow": 0.03,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.034
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.033,
+     "count": 26,
+     "shareNow": 0.031,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.031,
+     "count": 25,
+     "shareNow": 0.031,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.025,
+     "count": 20,
+     "shareNow": 0.024,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.021,
+     "count": 17,
+     "shareNow": 0.021,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.02,
+     "count": 16,
+     "shareNow": 0.02,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.014,
+     "count": 11,
+     "shareNow": 0.014,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    }
+   ]
+  },
+  {
+   "stage": "days 31-90",
+   "n": 670,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.24,
+     "count": 161,
+     "shareNow": 0.228,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.278
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.157,
+     "count": 105,
+     "shareNow": 0.142,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.281
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.148,
+     "count": 99,
+     "shareNow": 0.142,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.325
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.093,
+     "count": 62,
+     "shareNow": 0.084,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.096
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.078,
+     "count": 52,
+     "shareNow": 0.072,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.143
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.061,
+     "count": 41,
+     "shareNow": 0.058,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.204
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.058,
+     "count": 39,
+     "shareNow": 0.055,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.106
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.055,
+     "count": 37,
+     "shareNow": 0.051,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.048,
+     "count": 32,
+     "shareNow": 0.046,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.042,
+     "count": 28,
+     "shareNow": 0.037,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.054
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.04,
+     "count": 27,
+     "shareNow": 0.039,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.07
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.04,
+     "count": 27,
+     "shareNow": 0.039,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.136
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.028,
+     "count": 19,
+     "shareNow": 0.027,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.027,
+     "count": 18,
+     "shareNow": 0.024,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.037
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.025,
+     "count": 17,
+     "shareNow": 0.025,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.021,
+     "count": 14,
+     "shareNow": 0.019,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.024
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.021,
+     "count": 14,
+     "shareNow": 0.021,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.013,
+     "count": 9,
+     "shareNow": 0.013,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.01,
+     "count": 7,
+     "shareNow": 0.01,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    }
+   ]
+  },
+  {
+   "stage": "days 91-364",
+   "n": 377,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.292,
+     "count": 110,
+     "shareNow": 0.289,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.284
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.151,
+     "count": 57,
+     "shareNow": 0.151,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.289
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.095,
+     "count": 36,
+     "shareNow": 0.082,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.297
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.072,
+     "count": 27,
+     "shareNow": 0.064,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.077
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.064,
+     "count": 24,
+     "shareNow": 0.064,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.053,
+     "count": 20,
+     "shareNow": 0.042,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.162
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.053,
+     "count": 20,
+     "shareNow": 0.045,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.125
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.053,
+     "count": 20,
+     "shareNow": 0.048,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.133
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.045,
+     "count": 17,
+     "shareNow": 0.045,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.042,
+     "count": 16,
+     "shareNow": 0.034,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.064
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.042,
+     "count": 16,
+     "shareNow": 0.042,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.058
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.037,
+     "count": 14,
+     "shareNow": 0.037,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.037,
+     "count": 14,
+     "shareNow": 0.037,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.034,
+     "count": 13,
+     "shareNow": 0.027,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.032
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.034,
+     "count": 13,
+     "shareNow": 0.034,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.069
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.024,
+     "count": 9,
+     "shareNow": 0.024,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.021,
+     "count": 8,
+     "shareNow": 0.016,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.024
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.021,
+     "count": 8,
+     "shareNow": 0.019,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.005,
+     "count": 2,
+     "shareNow": 0.005,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    }
+   ]
+  },
+  {
+   "stage": "1 year and over",
+   "n": 206,
+   "themes": [
+    {
+     "theme": "Cravings and urges",
+     "id": "cravings",
+     "share": 0.267,
+     "count": 55,
+     "shareNow": 0.257,
+     "keywords": [
+      "crav(?:e|es|ed|ing|ings)",
+      "\\burges?\\b",
+      "tempt(?:ed|ation|ations|ing)",
+      "want(?:ed|ing)?\\s+to\\s+(?:smoke|get\\s+high|hit\\s+(?:a|the)|relapse|buy)",
+      "(?:dying|itching|aching)\\s+(?:to|for)\\s+(?:smoke|a\\s+(?:smoke|hit|joint|bowl|blunt))",
+      "(?:really\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b)",
+      "obsess\\w*\\s+(?:about|over)\\s+(?:weed|smoking|getting\\s+high)"
+     ],
+     "precision": "7-8.5/10",
+     "shareAnyWord": 0.291
+    },
+    {
+     "theme": "Low mood, depression, crying",
+     "id": "lowmood",
+     "share": 0.136,
+     "count": 28,
+     "shareNow": 0.136,
+     "keywords": [
+      "(?:feel|feeling|felt|feels)\\s+(?:so\\s+|really\\s+|very\\s+|pretty\\s+|kinda\\s+|kind\\s+of\\s+|just\\s+|super\\s+|extremely\\s+|incredibly\\s+|absolutely\\s+|completely\\s+|a\\s+bit\\s+|quite\\s+)?(?:down\\b|low\\b|lost\\b|worthless|defeated|awful|terrible|horrible|like\\s+shit|like\\s+crap|like\\s+garbage|shitty|crappy|depressed|sad|miserable|hopeless|like\\s+dying|like\\s+giving\\s+up)",
+      "(?:i'?m|i\\s+am|i\\s+was|been|so|very|really|super|extremely|incredibly|pretty|kinda|a\\s+bit|just|absolutely|fucking)\\s+(?:\\w+\\s+)?(?:depressed|sad\\b|miserable|hopeless)",
+      "(?:my\\s+|the\\s+)?depression\\s+(?:is|has\\s+been|hit|hits|hitting|kicked|kicking|came|comes|got|gets|was|seems)",
+      "(?:waves?|bouts?|feelings?|sense|spells?|periods?)\\s+of\\s+(?:depression|sadness|despair|hopelessness|dread)",
+      "(?:severe|deep|bad|terrible|crippling|horrible|intense|extreme|major|heavy|awful|massive|post[- ]acute)\\s+depression",
+      "(?:having|dealing\\s+with|struggling\\s+with|experiencing|battling|fighting|suffering\\s+(?:from|with))\\s+(?:\\w+\\s+){0,2}depression",
+      "depressed\\s+(?:all|every|as|af|today|lately|since)",
+      "(?:crying|cried|cry)\\s+(?:for\\s+(?:hours|no)|all\\s+(?:day|night)|every\\s+(?:day|night)|myself|uncontrollab\\w+|so\\s+much|a\\s+lot|randomly|over\\s+nothing|at\\s+night)",
+      "(?:been|keep|started|start)\\s+crying",
+      "suicid\\w+\\s+(?:thoughts|ideation|again)",
+      "(?:have|had|having)\\s+suicidal",
+      "(?:in\\s+a\\s+(?:dark|bad)\\s+place|low\\s+mood|rock\\s+bottom)",
+      "despair"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.248
+    },
+    {
+     "theme": "Can't sleep",
+     "id": "sleep",
+     "share": 0.107,
+     "count": 22,
+     "shareNow": 0.092,
+     "keywords": [
+      "insomnia",
+      "(?:haven'?t|hasn'?t|wasn'?t|not|never|barely|hardly)\\s+(?:been\\s+|really\\s+){0,2}able\\s+to\\s+(?:\\w+\\s+){0,3}sleep",
+      "sleep\\s+(?:issues|problems|trouble|disturbances?|is\\s+(?:a\\s+)?(?:struggle|nightmare|mess))",
+      "(?:poor|bad|rough|terrible|horrible|awful|restless|broken|shit|shitty|little|crappy|fitful|disrupted|interrupted)\\s+(?:night'?s\\s+)?sleep",
+      "sleep\\s+(?:will\\s+be|hasn'?t\\s+been|isn'?t|wasn'?t|has\\s+not\\s+been)\\s+(?:\\w+\\s+)?(?:horrible|great|good|bad|terrible|awful|rough|the\\s+best)",
+      "hard\\s+(?:time\\s+)?(?:to\\s+)?(?:fall\\s+|get\\s+to\\s+)?sleep(?:ing)?",
+      "hours?\\s+to\\s+(?:get\\s+to\\s+|fall\\s+a)sleep",
+      "(?:didn'?t|don'?t|can'?t|couldn'?t|haven'?t)\\s+(?:been\\s+)?sleep(?:ing)?\\s+(?:well|much|good|great|at\\s+all|properly)",
+      "toss(?:ed|ing)?\\s+and\\s+turn(?:ed|ing)?",
+      "can'?t\\s+(?:fall\\s+)?sleep",
+      "cannot\\s+sleep",
+      "couldn'?t\\s+(?:fall\\s+)?sleep",
+      "unable\\s+to\\s+sleep",
+      "trouble\\s+(?:falling\\s+|staying\\s+)?(?:a)?sleep(?:ing)?",
+      "hard(?:er)?\\s+(?:time\\s+)?(?:to\\s+)?(?:fall(?:ing)?|stay(?:ing)?)\\s+asleep",
+      "barely\\s+(?:slept|sleep|sleeping)",
+      "(?:didn'?t|haven'?t|hadn'?t)\\s+(?:really\\s+)?slept",
+      "not\\s+(?:been\\s+)?sleeping",
+      "(?:sleep|sleeping)\\s+(?:is|has\\s+been|was)\\s+(?:so\\s+|really\\s+|very\\s+)?(?:terrible|awful|bad|shit|horrible|rough|non-?existent|impossible|broken)",
+      "sleepless",
+      "toss(?:ing)?\\s+and\\s+turn(?:ing)?",
+      "up\\s+all\\s+night",
+      "lack\\s+of\\s+sleep",
+      "sleep[- ]deprived",
+      "sleep\\s+deprivation",
+      "(?:wake|waking|woke)\\s+up\\s+(?:every|multiple|several|\\d+|a\\s+few|many|constantly|throughout)",
+      "no\\s+sleep",
+      "hours?\\s+of\\s+sleep\\s+(?:a|per|last)",
+      "(?:only\\s+)?(?:got|get|getting|slept)\\s+(?:like\\s+|about\\s+|maybe\\s+)?(?:[0-4]|two|three|four)\\s*(?:-\\s*[1-5]\\s*)?hours?\\s+(?:of\\s+)?(?:sleep|last\\s+night|a\\s+night)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.18
+    },
+    {
+     "theme": "Anxiety or panic",
+     "id": "anxiety",
+     "share": 0.083,
+     "count": 17,
+     "shareNow": 0.078,
+     "keywords": [
+      "(?:my\\s+)?anxiety\\s+(?:is|has\\s+been|was|got|gets|feels|came|comes|kicked|hit|hits|spiked|went|keeps|seems)\\s+(?:\\w+\\s+)?(?:bad|terrible|awful|horrible|insane|crazy|through|worse|high|back|in|up|killing|really|so|very|crippling|unbearable|off|out|intense|strong|rough|heavy|wild|ramped|spiking|crazy)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|feeling|feel|felt|so|very|really|super|extremely|incredibly|constantly|always)\\s+(?:\\w+\\s+)?anxious",
+      "panic\\s+attacks?",
+      "(?:having|had|have|getting|got|experiencing|experienced|dealing\\s+with|struggling\\s+with|suffering\\s+(?:from|with)|battling|fighting)\\s+(?:\\w+\\s+){0,3}(?:anxiety|panic)",
+      "(?:crippling|severe|bad|terrible|intense|horrible|constant|extreme|insane|crazy|awful|heavy|massive|major|random|morning|health|crushing|overwhelming|debilitating|unbearable)\\s+anxiety",
+      "anxiety\\s+(?:is\\s+)?(?:hitting|through\\s+the\\s+roof|attacks?)",
+      "(?:minor|some|mild|a\\s+lot\\s+of|lots\\s+of|more|waves?\\s+of|so\\s+much)\\s+(?:\\w+/)?anxiety",
+      "the\\s+anxiety\\s+(?:i|i'?m|i\\s+was|i'?ve\\s+been)\\s+(?:having|getting|feeling|experiencing|had|got)",
+      "heart\\s+(?:is\\s+)?(?:racing|pounding|palpitations)",
+      "palpitations",
+      "racing\\s+heart",
+      "fear\\s+of\\s+dying",
+      "intrusive\\s+thoughts",
+      "(?:feel|feeling)\\s+(?:so\\s+)?(?:on\\s+edge|nervous|paranoid)"
+     ],
+     "precision": "7.5/10",
+     "shareAnyWord": 0.257
+    },
+    {
+     "theme": "Boredom, empty time",
+     "id": "bored",
+     "share": 0.073,
+     "count": 15,
+     "shareNow": 0.068,
+     "keywords": [
+      "bored(?:om)?",
+      "nothing\\s+to\\s+do",
+      "(?:so\\s+much|all\\s+this|too\\s+much)\\s+(?:free|extra|spare|empty)\\s+time",
+      "time\\s+on\\s+my\\s+hands",
+      "(?:don'?t|didn'?t)\\s+know\\s+what\\s+to\\s+do\\s+with\\s+(?:myself|my\\s+time|my\\s+evenings|all)",
+      "fill(?:ing)?\\s+(?:the|my)\\s+(?:time|evenings|nights|days|void)",
+      "time\\s+(?:goes|went|is\\s+going|passes|passing)\\s+(?:by\\s+)?(?:so\\s+)?slow",
+      "(?:life|everything|things|evenings|nights)\\s+(?:is|are|feels?|seems?)\\s+(?:so\\s+)?boring"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.073
+    },
+    {
+     "theme": "Irritable, angry, short-tempered",
+     "id": "anger",
+     "share": 0.063,
+     "count": 13,
+     "shareNow": 0.058,
+     "keywords": [
+      "irritab\\w*",
+      "irritated",
+      "angry",
+      "anger",
+      "\\brage\\b",
+      "raging",
+      "short[- ]tempered",
+      "snap(?:ped|ping)?\\s+at",
+      "mood\\s*swings?",
+      "agitat\\w*",
+      "on\\s+edge",
+      "pissed\\s+off",
+      "cranky",
+      "grumpy",
+      "lash(?:ed|ing)?\\s+out",
+      "(?:yell|yelled|yelling|shout|shouted|shouting|screamed|screaming)\\s+at",
+      "lost\\s+my\\s+temper",
+      "temper"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.058
+    },
+    {
+     "theme": "\"One won't hurt\" or \"I can moderate\" thoughts",
+     "id": "moderation",
+     "share": 0.053,
+     "count": 11,
+     "shareNow": 0.053,
+     "keywords": [
+      "just\\s+(?:once|this\\s+once|for\\s+tonight|on\\s+(?:the\\s+)?weekends?|a\\s+little\\s+(?:bit\\s+)?(?:won'?t|wouldn'?t|is\\s+fine|is\\s+ok)|a\\s+(?:hit|puff|toke)|a\\s+few\\s+hits|a\\s+couple\\s+(?:of\\s+)?hits|one\\s+(?:hit|joint|time|more\\s+(?:time|hit|joint|night)|night|puff|smoke|toke|bowl|blunt|session|sesh|edible|gummy|pre-?roll|cart|last\\s+time))\\b",
+      "just\\s+one(?=\\s*[.!?,\\\"\\u201d)]|\\s+(?:and|then)\\b)",
+      "one\\s+(?:hit|joint|time|bowl|puff|smoke|night|blunt|toke)\\s+(?:won'?t|wouldn'?t|can'?t|couldn'?t|isn'?t\\s+going\\s+to|is\\s+not\\s+going\\s+to)\\s+hurt",
+      "won'?t\\s+hurt",
+      "moderation",
+      "(?:could|can|try|trying|tried|able\\s+to|learn\\s+to|how\\s+to)\\s+(?:to\\s+)?moderate",
+      "moderat\\w+\\s+(?:my\\s+)?(?:use|usage|smoking|consumption|intake|it)\\b",
+      "(?:could|can|able\\s+to)\\s+control\\s+(?:it|my\\s+(?:use|usage|smoking|intake|consumption)|myself)",
+      "smoke\\s+(?:occasionally|socially|responsibly|casually|recreationally|every\\s+(?:once|now))",
+      "(?:only|just)\\s+(?:on|at|for)\\s+(?:weekends|special\\s+occasions|parties)",
+      "reward\\s+(?:myself|me)\\b",
+      "(?:i\\s+)?deserve(?:d)?\\s+(?:a\\s+(?:smoke|hit|joint|break|treat|reward)|to\\s+(?:smoke|get\\s+high|relax|have\\s+(?:a|one|some))|it\\b|one\\b)",
+      "i\\s+can\\s+handle\\s+it",
+      "(?:smoke|smoking|use|using)\\s+(?:like\\s+)?a\\s+normal\\s+person",
+      "(?:i'?m|i\\s+am)\\s+(?:fine|good|ok|okay)\\s+now"
+     ],
+     "precision": "7.5/10"
+    },
+    {
+     "theme": "Flat, numb, nothing feels fun",
+     "id": "flat",
+     "share": 0.049,
+     "count": 10,
+     "shareNow": 0.049,
+     "keywords": [
+      "anhedoni\\w*",
+      "(?:feel|feeling|felt|feels|emotionally)\\s+(?:so\\s+|very\\s+|kind\\s+of\\s+|kinda\\s+|really\\s+|just\\s+|completely\\s+)?(?:numb|flat|empty|hollow|dull|grey|gray|nothing|emotionless|dead\\s+inside|blah|meh|bland|like\\s+a\\s+zombie|like\\s+a\\s+robot)",
+      "emptiness",
+      "emotionless",
+      "joyless",
+      "no\\s+joy",
+      "nothing\\s+(?:is|feels|seems)\\s+(?:fun|enjoyable|exciting|interesting|good|the\\s+same)",
+      "emotional(?:ly)?\\s+numb\\w*",
+      "(?:can'?t|don'?t|couldn'?t)\\s+(?:seem\\s+to\\s+)?(?:enjoy|feel\\s+(?:joy|pleasure|happy|anything|excited))",
+      "lost\\s+(?:all\\s+)?interest\\s+in\\s+(?:everything|things|my|hobbies|life|stuff|anything)",
+      "(?:life|everything)\\s+(?:is|feels|seems)\\s+(?:so\\s+)?(?:boring|dull|grey|gray|flat|bland|pointless|meaningless|empty)",
+      "lack\\s+of\\s+(?:joy|pleasure)",
+      "no\\s+motivation(?!\\s+to\\s+eat)",
+      "(?:i'?m|i\\s+am|feel|feeling|i'?ve\\s+been|so)\\s+(?:\\w+\\s+)?(?:unmotivated|demotivated)",
+      "(?:zero|little|low)\\s+motivation"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "No appetite, nausea, stomach trouble",
+     "id": "appetite",
+     "share": 0.044,
+     "count": 9,
+     "shareNow": 0.044,
+     "keywords": [
+      "no\\s+appetite",
+      "(?:lost|losing)\\s+(?:my\\s+)?appetite",
+      "loss\\s+of\\s+appetite",
+      "lack\\s+of\\s+(?:an\\s+)?appetite",
+      "appetite\\s+(?:is|has\\s+been|was)\\s+(?:\\w+\\s+)?(?:gone|non-?existent|low|terrible|shit|bad|zero|nonexistent|fucked|nil|weak|down)",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|struggl\\w+\\s+to|barely)\\s+(?:eat|stomach)",
+      "not\\s+(?:been\\s+)?(?:hungry|eating)",
+      "no\\s+hunger",
+      "nause\\w*",
+      "throw(?:ing)?\\s+up",
+      "threw\\s+up",
+      "vomit\\w*",
+      "puk(?:e|ed|ing)\\b",
+      "dry\\s+heav\\w*",
+      "stomach\\s+(?:pain|ache|aches|issues|problems|cramps?|is\\s+(?:killing|messed|fucked))",
+      "stomachache",
+      "forc(?:e|ed|ing)\\s+myself\\s+to\\s+eat",
+      "(?:appetite|hunger)\\s+(?:hasn'?t|has\\s+not|isn'?t|is\\s+not|won'?t)\\s+(?:come|came|coming|returned|back)"
+     ],
+     "precision": "9/10",
+     "shareAnyWord": 0.044
+    },
+    {
+     "theme": "Starting over again (many earlier attempts)",
+     "id": "restart",
+     "share": 0.044,
+     "count": 9,
+     "shareNow": 0.044,
+     "keywords": [
+      "(?:day\\s+(?:1|one|0|zero)|square\\s+one)\\s+(?:again|for\\s+the|once\\s+again|\\(again\\))",
+      "(?:another|yet\\s+another)\\s+day\\s+(?:1|one)",
+      "back\\s+(?:to|at|on)\\s+(?:day\\s+)?(?:1|one|0|zero|square\\s+one)\\b",
+      "(?:millionth|hundredth|umpteenth|nth|\\d+(?:th|rd|nd)|third|fourth|fifth)\\s+(?:time|attempt|try)",
+      "tried\\s+(?:to\\s+quit\\s+)?(?:so\\s+many|many|multiple|countless|several|numerous|a\\s+few|a\\s+lot\\s+of)\\s+times",
+      "(?:here\\s+i\\s+am|i'?m\\s+back)\\s+again",
+      "(?:quit|stopped|quitting)\\s+(?:many|multiple|so\\s+many|countless|several)\\s+times",
+      "(?:attempt|try)\\s+(?:number\\s+|#)?\\d+"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Missing weed, romanticising it",
+     "id": "missing",
+     "share": 0.044,
+     "count": 9,
+     "shareNow": 0.044,
+     "keywords": [
+      "romantici[sz]\\w*\\s+(?:it|weed|smoking|being\\s+high|getting\\s+high|the\\s+(?:high|ritual|feeling|good)|my\\s+(?:use|smoking))",
+      "nostalgi\\w*",
+      "(?:i\\s+)?(?:still\\s+)?(?:miss|missing)\\s+(?:smoking|weed|getting\\s+high|being\\s+high|the\\s+high|it\\b|the\\s+ritual|my\\s+(?:bong|pen|cart|joints?))",
+      "(?:feels?|felt)\\s+like\\s+(?:i'?ve\\s+|i\\s+)?(?:lost|losing)\\s+(?:a|an|my)\\s+(?:old\\s+)?(?:best\\s+)?friend",
+      "like\\s+(?:a\\s+)?(?:break\\s*up|breakup)",
+      "(?:grieving|mourning)\\s+(?:the\\s+loss\\s+of\\s+)?(?:weed|it|smoking|the\\s+high|that\\s+feeling)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Brain fog, can't focus",
+     "id": "fog",
+     "share": 0.034,
+     "count": 7,
+     "shareNow": 0.034,
+     "keywords": [
+      "brain\\s*fog",
+      "foggy",
+      "mental\\s+fog",
+      "(?:can'?t|couldn'?t|cannot|unable\\s+to|hard\\s+to|trouble|struggl\\w+\\s+to)\\s+(?:focus|concentrat\\w*|think\\s+(?:straight|clearly))",
+      "(?:head|brain|mind)\\s+(?:feels|is|felt)\\s+(?:so\\s+|really\\s+|still\\s+)?(?:fuzzy|cloudy|slow|mushy|foggy|dull)",
+      "spaced?\\s*out",
+      "spacey"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.136
+    },
+    {
+     "theme": "Vivid dreams or nightmares",
+     "id": "dreams",
+     "share": 0.029,
+     "count": 6,
+     "shareNow": 0.029,
+     "keywords": [
+      "(?:vivid|crazy|intense|weird|wild|insane|strange|lucid|bizarre|realistic|disturbing|scary|terrifying|horrible|bad|crazy\\s+vivid)\\s+dreams?",
+      "nightmares?",
+      "dreams?\\s+(?:are|have\\s+been|were|got|is)\\s+(?:so\\s+|super\\s+|very\\s+|really\\s+|incredibly\\s+|fucking\\s+)?(?:vivid|intense|crazy|wild|insane|real|weird|strange|back|crazy)",
+      "dreaming\\s+(?:again|a\\s+lot|so\\s+much|every\\s+night|vividly|like\\s+crazy)",
+      "dreams?\\s+(?:came|come|are|have\\s+come|started\\s+coming)\\s+back",
+      "(?:started|start|starting)\\s+(?:to\\s+)?dream(?:ing)?",
+      "rem\\s+rebound",
+      "(?:dream|dreams|dreamt|dreamed|dreaming)\\s+(?:about|of|that\\s+i\\s+(?:was\\s+)?)\\s*(?:\\w+\\s+){0,3}(?:smok\\w*|weed|relaps\\w*|getting\\s+high|got\\s+high|hit(?:ting)?\\s+(?:a|the)|joint|bong|blunt|cart|pen)",
+      "smoking\\s+dreams?",
+      "using\\s+dreams?"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.112
+    },
+    {
+     "theme": "Friends, partner or family who smoke",
+     "id": "people",
+     "share": 0.024,
+     "count": 5,
+     "shareNow": 0.019,
+     "keywords": [
+      "(?:friends?|roommates?|room\\s*mates?|flatmates?|housemates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|fianc\\w*|spouse|brother|sister|siblings?|mom|mum|dad|parents?|family|cousins?|coworkers?|everyone\\s+around\\s+me)\\s+(?:still\\s+|also\\s+|all\\s+|both\\s+)?(?:smokes?|smoking|smoked|vapes?|gets?\\s+high|uses?|tokes?)\\b",
+      "(?:smoke|smoking|smoked|get\\s+high|getting\\s+high)\\s+with\\s+(?:my\\s+)?(?:friends?|roommates?|girlfriend|boyfriend|gf|bf|partner|wife|husband|brother|sister|family|the\\s+boys|buddies)",
+      "stoner\\s+friends",
+      "(?:all|most)\\s+(?:of\\s+)?my\\s+friends\\s+(?:smoke|are\\s+stoners|get\\s+high)",
+      "(?:offered|passed)\\s+(?:me\\s+)?(?:a|the)\\s+(?:joint|blunt|hit|bowl|pen|cart|bong|spliff)",
+      "peer\\s+pressure"
+     ],
+     "precision": "8/10"
+    },
+    {
+     "theme": "Night sweats",
+     "id": "sweats",
+     "share": 0.019,
+     "count": 4,
+     "shareNow": 0.019,
+     "keywords": [
+      "night\\s*sweats?",
+      "cold\\s+sweats?",
+      "sweat(?:s|ing|y)?\\b",
+      "soak(?:ed|ing)\\s+(?:the|my|through)",
+      "drenched"
+     ],
+     "precision": "10/10",
+     "shareAnyWord": 0.019
+    },
+    {
+     "theme": "Tired, no energy",
+     "id": "tired",
+     "share": 0.019,
+     "count": 4,
+     "shareNow": 0.019,
+     "keywords": [
+      "exhausted(?!\\s+(?:of|from\\s+(?:my\\s+)?(?:job|work)))",
+      "exhaustion",
+      "fatigue\\w*",
+      "lethargic",
+      "lethargy",
+      "no\\s+energy",
+      "(?:low|zero|little)\\s+energy",
+      "drained",
+      "(?:so|very|really|super|always|constantly)\\s+tired(?!\\s+of)",
+      "sleep(?:ing)?\\s+(?:all\\s+day|\\d{2}\\s+hours|so\\s+much|too\\s+much)"
+     ],
+     "precision": "7/10",
+     "shareAnyWord": 0.049
+    },
+    {
+     "theme": "Strong emotions coming back",
+     "id": "emotions",
+     "share": 0.015,
+     "count": 3,
+     "shareNow": 0.015,
+     "keywords": [
+      "emotions?\\s+(?:are|is|have\\s+been)?\\s*(?:\\w+\\s+)?(?:coming\\s+back|returning|returned|came\\s+back|back|all\\s+over\\s+the\\s+place|overwhelming|heightened|intense|raw|stronger)",
+      "(?:feel|feeling|felt)\\s+(?:so\\s+|very\\s+|really\\s+|extremely\\s+|more\\s+)?emotional",
+      "(?:feel|feeling)\\s+(?:everything|things)\\s+(?:again|more|so\\s+much|deeply|intensely)",
+      "(?:ability\\s+to\\s+)?feel\\s+emotions?\\s+again",
+      "(?:cry|crying|cried)\\s+(?:at|over|during)\\s+(?:a\\s+|every\\s+|the\\s+)?(?:movie|song|show|commercial|video|everything|nothing|little)",
+      "(?:feelings|emotions)\\s+i\\s+(?:had\\s+)?(?:numbed|suppressed|avoided|buried|masked|smoked\\s+away)",
+      "emotional\\s+(?:rollercoaster|roller\\s+coaster|wreck|mess)",
+      "rollercoaster"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Headaches",
+     "id": "headache",
+     "share": 0.01,
+     "count": 2,
+     "shareNow": 0.01,
+     "keywords": [
+      "headaches?",
+      "migraines?",
+      "head\\s+(?:hurts|pain|is\\s+pounding)"
+     ],
+     "precision": "8/10",
+     "shareAnyWord": 0.01
+    },
+    {
+     "theme": "Coughing, sore lungs",
+     "id": "lungs",
+     "share": 0.0,
+     "count": 0,
+     "shareNow": 0.0,
+     "keywords": [
+      "cough\\w*",
+      "phlegm",
+      "mucus",
+      "(?:lungs?|chest)\\s+(?:hurt|hurts|pain|tight|tightness|(?:feels?|is|are)\\s+(?:so\\s+)?(?:tight|heavy|sore|congested))"
+     ],
+     "precision": "6/10"
+    }
+   ]
+  }
+ ],
+ "relapse": {
+  "n": 671,
+  "nWithStreak": 221,
+  "byStage": {
+   "days 1-3": 24,
+   "days 4-7": 40,
+   "days 8-14": 18,
+   "days 15-30": 36,
+   "days 31-90": 45,
+   "days 91-364": 40,
+   "1 year and over": 18
+  },
+  "byStageNote": "Clean time at the moment of relapse, where the post states it. Auto-parsed; a spot-check of 25 random parsed streaks found about 19 right (the rest were near-misses, e.g. 'almost relapsed'). Long lost streaks are more post-worthy and more often given as a number, so later stages are over-represented; quick day-2 relapses mostly appear as 'day 1 again' with no number.",
+  "reasonsSample": "100 relapse posts drawn at random (seed 77) from the 671 auto-detected relapse posts, read and coded by hand. 16 turned out not to describe the author's own relapse (a dream, a near-miss, a history), leaving 84. 21 of those name no reason. A post can name more than one reason, so counts add to more than 63.",
+  "reasons": [
+   {
+    "reason": "\"Just a little won't hurt\" / \"I can moderate now\" (incl. 'delta-8 doesn't count', 'one slip won't reset my timer')",
+    "count": 12
+   },
+   {
+    "reason": "Withdrawal got too hard: no sleep, cravings, feeling sick",
+    "count": 12
+   },
+   {
+    "reason": "Friends, a party, someone offered, or a partner who smokes",
+    "count": 11
+   },
+   {
+    "reason": "Stress or a bad event (work, family illness, an accident, a fight)",
+    "count": 9
+   },
+   {
+    "reason": "Low mood, grief, loneliness, a breakup",
+    "count": 9
+   },
+   {
+    "reason": "A trip, birthday or holiday",
+    "count": 6
+   },
+   {
+    "reason": "It was right there: old stash, dispensary on the way, dealer texted",
+    "count": 6
+   },
+   {
+    "reason": "The break had an end date (drug test passed, probation over, plan done)",
+    "count": 3
+   },
+   {
+    "reason": "Felt great, got comfortable, sure I had it beat",
+    "count": 3
+   },
+   {
+    "reason": "Drinking first",
+    "count": 2
+   }
+  ],
+  "noReasonNamed": 21
+ },
+ "positives": [
+  {
+   "stage": "days 1-3",
+   "n": 1104,
+   "themes": [
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.023,
+     "count": 25,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.021,
+     "count": 23,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.014,
+     "count": 16,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.012,
+     "count": 13,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.008,
+     "count": 9,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.006,
+     "count": 7,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.006,
+     "count": 7,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.005,
+     "count": 5,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.004,
+     "count": 4,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.003,
+     "count": 3,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    }
+   ]
+  },
+  {
+   "stage": "days 4-7",
+   "n": 999,
+   "themes": [
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.062,
+     "count": 62,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.055,
+     "count": 55,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.041,
+     "count": 41,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.038,
+     "count": 38,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.015,
+     "count": 15,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.014,
+     "count": 14,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.008,
+     "count": 8,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.008,
+     "count": 8,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.006,
+     "count": 6,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.0,
+     "count": 0,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    }
+   ]
+  },
+  {
+   "stage": "days 8-14",
+   "n": 709,
+   "themes": [
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.062,
+     "count": 44,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.049,
+     "count": 35,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.042,
+     "count": 30,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.035,
+     "count": 25,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.017,
+     "count": 12,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.017,
+     "count": 12,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.011,
+     "count": 8,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.008,
+     "count": 6,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.008,
+     "count": 6,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.004,
+     "count": 3,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    }
+   ]
+  },
+  {
+   "stage": "days 15-30",
+   "n": 800,
+   "themes": [
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.095,
+     "count": 76,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.065,
+     "count": 52,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.059,
+     "count": 47,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.056,
+     "count": 45,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.035,
+     "count": 28,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.019,
+     "count": 15,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.018,
+     "count": 14,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.016,
+     "count": 13,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.011,
+     "count": 9,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.009,
+     "count": 7,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    }
+   ]
+  },
+  {
+   "stage": "days 31-90",
+   "n": 670,
+   "themes": [
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.082,
+     "count": 55,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.061,
+     "count": 41,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.057,
+     "count": 38,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.055,
+     "count": 37,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.042,
+     "count": 28,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.016,
+     "count": 11,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.013,
+     "count": 9,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.012,
+     "count": 8,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.012,
+     "count": 8,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.009,
+     "count": 6,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    }
+   ]
+  },
+  {
+   "stage": "days 91-364",
+   "n": 377,
+   "themes": [
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.066,
+     "count": 25,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.056,
+     "count": 21,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.048,
+     "count": 18,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.032,
+     "count": 12,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.029,
+     "count": 11,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.019,
+     "count": 7,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.019,
+     "count": 7,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.019,
+     "count": 7,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.016,
+     "count": 6,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.011,
+     "count": 4,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    }
+   ]
+  },
+  {
+   "stage": "1 year and over",
+   "n": 206,
+   "themes": [
+    {
+     "theme": "Proud, more confident",
+     "id": "p_pride",
+     "share": 0.078,
+     "count": 16,
+     "keywords": [
+      "proud\\s+of\\s+(?:myself|me|my\\s*self)",
+      "(?:so|very|really|super|incredibly)\\s+proud",
+      "self[- ]?(?:respect|esteem|confidence|worth)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|up|better|higher|improv\\w*|grow\\w*|increas\\w*|return\\w*)",
+      "(?:more|better|newfound|regained)\\s+self[- ]?(?:respect|esteem|confidence|worth)",
+      "(?:more|new\\w*)\\s+confiden\\w+",
+      "confidence\\s+(?:is\\s+)?(?:\\w+\\s+)?(?:back|up|grow\\w*|boost\\w*|better)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Less anxious, calmer",
+     "id": "p_calm",
+     "share": 0.053,
+     "count": 11,
+     "keywords": [
+      "anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone(?!\\s+(?:\\w+\\s+)?up)|better|less|lower|down|improv\\w*|decreas\\w*|disappear\\w*|non-?existent|subsid\\w*|way\\s+down|calmed|manageable|lifted)",
+      "less\\s+(?:anxious|anxiety|paranoi\\w*|stressed|irritable|depressed)",
+      "(?:calmer|more\\s+calm|feel\\s+calm|at\\s+peace|peaceful)",
+      "(?:no|zero)\\s+(?:more\\s+)?(?:anxiety|paranoia)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Clear head, better memory",
+     "id": "p_clarity",
+     "share": 0.044,
+     "count": 9,
+     "keywords": [
+      "memory\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|improv\\w*|back|coming\\s+back|returning|sharp\\w*)",
+      "(?:remember|remembering)\\s+(?:things|so\\s+much|stuff|names)\\s+(?:better|again|more|now)",
+      "clear(?:er)?\\s*(?:-\\s*)?(?:head(?:ed)?|mind(?:ed)?|thinking)",
+      "(?:mental\\s+)?clarity\\s+(?:is|has|i|coming|returning|back)",
+      "(?:moments?|feeling)\\s+of\\s+clarity",
+      "(?:more|such|new|so\\s+much|newfound|mental)\\s+clarity",
+      "(?:brain\\s+)?fog\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:lift\\w*|gone|clear\\w*|lifting)",
+      "sharper",
+      "(?:focus|concentration)\\s+(?:is|has|got|feels)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|back|returning)",
+      "(?:better|improved)\\s+(?:focus|concentration)",
+      "(?:mind|head|brain)\\s+(?:is|feels)\\s+(?:so\\s+|much\\s+|way\\s+)?(?:clear|clearer|sharper|quicker|faster)"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Motivated, productive, exercising",
+     "id": "p_motivation",
+     "share": 0.039,
+     "count": 8,
+     "keywords": [
+      "motivat(?:ed|ion)\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returning|coming\\s+back|through\\s+the\\s+roof|up)",
+      "(?:more|so|very|super|really|feel|feeling)\\s+(?:\\w+\\s+)?(?:motivated|productive|driven)",
+      "productive\\s+(?:day|week|morning|again)",
+      "getting\\s+(?:things|stuff|shit|so\\s+much|a\\s+lot)\\s+done",
+      "got\\s+(?:so\\s+much|a\\s+lot|more)\\s+(?:done|accomplished)",
+      "(?:started|been|going\\s+to\\s+the|hit\\s+the|back\\s+(?:to|at|in)\\s+the|started\\s+going\\s+to\\s+the|joined\\s+a)\\s+(?:gym|working\\s+out|running|exercising|lifting|going\\s+to\\s+the\\s+gym)",
+      "(?:work(?:ing)?\\s+out|exercis\\w*|gym|running|lifting)\\s+(?:every\\s+(?:day|morning)|daily|again|more|regularly|\\d+\\s+(?:times|days)|consistently)"
+     ],
+     "precision": "6.5/10"
+    },
+    {
+     "theme": "Better relationships, more present",
+     "id": "p_relations",
+     "share": 0.029,
+     "count": 6,
+     "keywords": [
+      "(?:relationships?|marriage)\\s+(?:with\\s+\\w+\\s+)?(?:is|are|has|have)\\s+(?:\\w+\\s+)?(?:better|improv\\w*|stronger|closer|healing|great)",
+      "closer\\s+(?:with|to\\s+my)\\s+(?:\\w+\\s+)?(?:wife|husband|partner|girlfriend|boyfriend|family|kids?|son|daughter|friends|mom|dad|parents)",
+      "(?:i'?m|i\\s+am|i'?ve\\s+been|been|being)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+)?more\\s+present",
+      "(?:present|there)\\s+(?:for|with)\\s+(?:my\\s+)?(?:kids?|children|son|daughter|family|wife|husband|partner|girlfriend|boyfriend|friends)",
+      "reconnect\\w*",
+      "(?:better|real|deeper)\\s+(?:conversations|connections?)",
+      "social(?:ly)?\\s+(?:more\\s+)?(?:confident|better|easier)",
+      "social\\s+anxiety\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:gone|better|less|lower|improv\\w*)"
+     ],
+     "precision": "6.5/8"
+    },
+    {
+     "theme": "New hobbies, time used well",
+     "id": "p_hobbies",
+     "share": 0.029,
+     "count": 6,
+     "keywords": [
+      "(?:new|old)\\s+hobb(?:y|ies)",
+      "picked\\s+up\\s+(?:a\\s+)?(?:\\w+\\s+)?(?:hobby|guitar|reading|painting|drawing|running|piano|instrument|language|books?)",
+      "(?:reading|read)\\s+(?:more|again|books)",
+      "learn(?:ing|ed)\\s+(?:a\\s+new\\s+(?:language|skill|instrument|hobby)|to\\s+play|guitar|piano|japanese|spanish|french|german|to\\s+cook|languages?|coding)",
+      "(?:drawing|painting|writing|journaling|meditat\\w*|cooking)\\s+(?:again|more|every)"
+     ],
+     "precision": "9/10"
+    },
+    {
+     "theme": "Sleeping better",
+     "id": "p_sleep",
+     "share": 0.019,
+     "count": 4,
+     "keywords": [
+      "sleep(?:ing)?\\s+(?:is\\s+|has\\s+been\\s+|was\\s+|got\\s+)?(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|great|amazing|improv\\w*|back\\s+to\\s+normal|fantastic|deeper)",
+      "sleeping\\s+(?:so\\s+)?(?:well|great|like\\s+a\\s+baby|through\\s+the\\s+night|soundly|better)",
+      "(?:wake|waking|woke)\\s+up\\s+(?:feeling\\s+)?(?:refreshed|rested|well[- ]rested|energized)",
+      "(?:fall|falling)\\s+asleep\\s+(?:easily|easier|naturally|fine|without\\s+(?:it|weed|thc))",
+      "sleep\\s+(?:came|has\\s+come|is\\s+coming)\\s+back"
+     ],
+     "precision": "6/8"
+    },
+    {
+     "theme": "Body feels better (lungs, skin, appetite, weight)",
+     "id": "p_body",
+     "share": 0.019,
+     "count": 4,
+     "keywords": [
+      "breath(?:e|ing)\\s+(?:so\\s+much\\s+|much\\s+|way\\s+|a\\s+lot\\s+)?(?:better|easier|clearer)",
+      "lungs?\\s+(?:feel|are|is)\\s+(?:\\w+\\s+)?(?:better|clear\\w*|healthier)",
+      "(?:stopped|no\\s+more)\\s+coughing",
+      "skin\\s+(?:is\\s+|looks\\s+|has\\s+)?(?:\\w+\\s+)?(?:better|clear\\w*|glow\\w*)",
+      "appetite\\s+(?:is\\s+|has\\s+)?(?:\\w+\\s+)?(?:back|returned|returning|coming\\s+back|normal)",
+      "(?:lost|losing|dropped)\\s+(?:\\d+|some|a\\s+lot\\s+of|so\\s+much)\\s+(?:lbs?|pounds|kg|kilos|weight)",
+      "eating\\s+(?:better|healthier|healthy|well)",
+      "(?:look|looking)\\s+(?:better|healthier|younger)"
+     ],
+     "precision": "7/10"
+    },
+    {
+     "theme": "Saving money",
+     "id": "p_money",
+     "share": 0.015,
+     "count": 3,
+     "keywords": [
+      "sav(?:ed|ing)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+of\\s+|tons\\s+of\\s+|over\\s+|about\\s+|around\\s+|nearly\\s+|almost\\s+|up\\s+)?(?:\\$|£|€|money|cash|\\d)",
+      "money\\s+(?:saved(?!\\s+up)|i(?:'ve|\\s+have)\\s+saved|in\\s+the\\s+bank)",
+      "(?:have|having|got|with)\\s+(?:so\\s+much\\s+|a\\s+lot\\s+|tons\\s+|way\\s+)?(?:more|extra)\\s+money",
+      "(?:\\$|£|€)\\s?\\d[\\d,]*\\s+(?:saved|i\\s+(?:would|would'?ve|have)|not\\s+spent)",
+      "not\\s+(?:spending|wasting)\\s+(?:money|\\$|my\\s+money)"
+     ],
+     "precision": "7/8"
+    },
+    {
+     "theme": "More energy",
+     "id": "p_energy",
+     "share": 0.01,
+     "count": 2,
+     "keywords": [
+      "(?:so\\s+much\\s+|way\\s+|a\\s+lot\\s+|tons\\s+)?more\\s+energy",
+      "energy\\s+(?:is|has\\s+been|levels?\\s+(?:are|have|is))\\s+(?:\\w+\\s+)?(?:back|up|better|through\\s+the\\s+roof|high|great|improv\\w*|returning)",
+      "(?:have|had|got|feel|feeling)\\s+(?:so\\s+much|tons\\s+of|lots\\s+of|a\\s+lot\\s+of)\\s+energy",
+      "(?:feel|feeling)\\s+(?:so\\s+)?energi[sz]ed"
+     ],
+     "precision": "7/8"
+    }
+   ]
+  }
+ ]
+}

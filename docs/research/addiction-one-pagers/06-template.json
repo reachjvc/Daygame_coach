@@ -118,7 +118,7 @@
         { "big": "Day 2–6", "text": "is when most symptoms peak. Most are gone by day 14.", "refs": ["r1"] },
         { "big": "4.8×", "text": "the odds of psychosis with daily high-potency weed.", "refs": ["r14"] }
       ],
-      "community": { "forum": "r/leaves", "status": "running" }
+      "community": { "forum": "r/leaves", "status": "done" }
     },
     {
       "id": "cocaine",

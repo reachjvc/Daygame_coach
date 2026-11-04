@@ -289,9 +289,13 @@ function community() {
   const L = DATA.leaves;
   if (page.id === "cannabis" && L && Array.isArray(L.stages)) {
     const st = L.stages.map(s => `<div class="stage"><b>${esc(s.stage)}</b> <span class="urlchip">${s.n} posts</span>${(s.themes || []).slice(0, 3).map(t => `<div class="bar"><span>${esc(t.theme)}</span><span>${Math.round((t.share || 0) * 100)}%</span><div class="meter"><i style="width:${Math.round((t.share || 0) * 100)}%"></i></div></div>`).join("")}</div>`).join("");
-    const rel = L.relapse && L.relapse.reasons ? `<p style="margin-top:10px"><b>Why people slipped:</b> ${L.relapse.reasons.slice(0, 3).map(r => esc(r.reason)).join("; ")}.</p>` : "";
-    const n = L.method && (L.method.nWithDuration || L.method.n_with_duration || L.method.n);
-    return `<h3>What ${n ? esc(n) + " " : ""}r/leaves posters report</h3><p class="tlnote">Share of posts at each stage that mention it. People post more when it is hard.</p>${st}${rel}`;
+    const R = L.relapse || {}, bs = R.byStage || {};
+    const tot = Object.values(bs).reduce((a, b) => a + b, 0);
+    const late = ["days 31-90", "days 91-364", "1 year and over"].reduce((a, k) => a + (bs[k] || 0), 0);
+    const when = tot ? `<p style="margin-top:12px"><b>When people slipped:</b> ${Math.round(100 * late / tot)}% of ${tot} relapses with a day count came after more than a month clean.</p>` : "";
+    const why = R.reasons ? `<p style="margin-top:6px"><b>Why, most often:</b> ${R.reasons.slice(0, 3).map(r => esc(r.reason.replace(/\s*\(.*\)\s*$/, ""))).join("; ")}.</p>` : "";
+    const n = L.method && L.method.nWithDuration;
+    return `<h3>What ${n ? n.toLocaleString("en-US") + " " : ""}r/leaves posts say</h3><p class="tlnote">Share of posts at each stage that mention it, 2021\u20132025. People post more when it is hard, so read the order, not the exact numbers.</p>${st}${when}${why}`;
   }
   const msg = c.status === "running"
     ? `A pilot is reading 1,000+ posts on ${esc(c.forum)}, sorted by how long each writer had been off. What people report at each stage, and when they slip, lands here.`
