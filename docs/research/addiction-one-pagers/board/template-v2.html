@@ -89,6 +89,44 @@ button { font: inherit; color: inherit; }
 .locked .labbar .lbl { color: var(--win); }
 .lockstate { font-weight: 700; color: var(--win); display: inline-flex; align-items: center; gap: 5px; }
 .lockstate svg { width: 13px; height: 13px; }
+.notes { flex: 1 1 100%; display: grid; gap: 6px; }
+.nt { display: flex; gap: 8px; align-items: baseline; background: var(--paper); border: 1px solid var(--hair); border-radius: 8px; padding: 5px 9px; font-size: 14px; color: var(--ink); }
+.nt span { flex: 1; white-space: pre-wrap; }
+.nt time { font-family: var(--f-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.nt button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; }
+.nt.fresh { border-color: var(--win); box-shadow: 0 0 0 3px color-mix(in srgb, var(--win) 22%, transparent); }
+.nadd { display: flex; gap: 6px; align-items: flex-end; }
+.nadd textarea { flex: 1; min-width: 0; font: inherit; font-size: 14px; line-height: 1.4; padding: 5px 9px; border: 1px solid var(--hair); border-radius: 8px; background: var(--paper); color: var(--ink); resize: none; overflow: hidden; min-height: 32px; }
+.nadd button { font: inherit; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 8px; border: 1.5px solid var(--lab); background: var(--lab); color: var(--paper); cursor: pointer; }
+.nstate { font-size: 12px; color: var(--muted); min-height: 1em; }
+.nstate.ok { color: var(--win); font-weight: 600; }
+.labbox .notes { margin-top: 2px; }
+.L-D { background: var(--paper); border: 2px solid var(--rule); padding: 10px 16px 18px; }
+.L-D > .labbar { margin-bottom: 14px; }
+.D-head { display: grid; gap: 8px; }
+.D-head .d-title { font-size: 20px; font-weight: 800; font-stretch: 85%; text-transform: uppercase; letter-spacing: .06em; color: var(--red); line-height: 1.1; }
+.D-head .d-num { display: grid; gap: 6px; }
+.D-head .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 96px; line-height: .88; }
+.D-head .line { font-family: var(--f-display); font-weight: 700; font-stretch: 88%; font-size: 22px; line-height: 1.18; }
+.D-head .sub { color: var(--ink-2); }
+.D-head .d-tap { border-top: 1px solid var(--hair); padding-top: 8px; font-size: 14px; color: var(--ink-2); }
+.D-head .d-tap summary { cursor: pointer; }
+.D-head .d-tap summary i { font-style: normal; color: var(--lab); font-weight: 600; white-space: nowrap; }
+.D-head .d-tap .basis { margin-top: 8px; }
+.D-head .d-full { display: none; }
+/* phone first: the rules above are the phone layout; this block only adds the wide arrangement */
+@container page (min-width: 761px) {
+  .D-head { grid-template-columns: minmax(0, .95fr) minmax(0, 1.35fr); grid-template-areas: "url url" "num title" "num tags" "num full"; column-gap: 32px; row-gap: 10px; align-items: start; }
+  .D-head .d-url { grid-area: url; }
+  .D-head .d-title { grid-area: title; font-size: 48px; font-stretch: 80%; text-transform: none; letter-spacing: 0; color: var(--ink); line-height: 1; }
+  .D-head .d-num { grid-area: num; border-left: 6px solid var(--red); padding-left: 18px; }
+  .D-head .big { font-size: 112px; }
+  .D-head .d-tags { grid-area: tags; }
+  .D-head .d-tap { display: none; }
+  .D-head .d-full { display: block; grid-area: full; }
+  .D-head .d-full .basis { border: 1.5px solid var(--rule); background: var(--panel); padding: 12px 14px; }
+}
+@media (prefers-reduced-motion: no-preference) { .nt { transition: border-color .6s, box-shadow .6s; } }
 .labbar input { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 13.5px; padding: 3px 8px; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); color: var(--ink); }
 .mk { border: 1px solid var(--hair); background: var(--paper); border-radius: 6px; padding: 1px 9px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
 .mk[aria-pressed="true"][data-v="yes"] { background: var(--win); border-color: var(--win); color: var(--paper); }
@@ -390,22 +428,20 @@ details.more[open] > summary { margin-bottom: 8px; }
 
 <section class="lab"><div class="wrap">
   <div>
-    <div class="eyebrow">Round 5 &middot; 4 Nov 2026 &middot; after a senior review</div>
-    <h2>Every number says what it’s based on. Four up front, the rest one tap away.</h2>
+    <div class="eyebrow">Round 6 &middot; 4 Nov 2026 &middot; from your notes</div>
+    <h2>Your notes are now a thread. The first number section is now about how people quit.</h2>
     <ul>
-      <li>Each number now opens with a line about you (“You only do lines on nights out and think you’re safe.”), then the number, then what it’s based on. What it counted and what it doesn’t mean are one tap away.</li>
-      <li>Four numbers show in each number section; the rest sit under “More numbers”. The page is about a third shorter on a phone.</li>
-      <li>Fixed after the review: the coke line about months 1–6 (felt craving keeps falling; only a lab brain signal peaked), the porn headline (no <i>measurable</i> withdrawal, in mostly non-hooked students), sample sizes that now count the people behind each number, and the cautious estimate first when a study gave several.</li>
-      <li>The “get free” numbers now say they’re projections and that the real share is likely lower. The Sugar page now leads with junk food and sugary drinks; binge-eating numbers fold under “If it’s binges”.</li>
-      <li>Your plan text: step 1 now says “the table above” (the beliefs come first now), and step 2 says what the habit gives you per page (“gives you confidence” for coke, “keeps you company” for the phone). Say if you want your exact words back.</li>
-      <li>Layouts: <b>A Poster</b>, <b>B Story</b> (phone first), <b>C Guide</b>. <b>Lock</b> a section when it works.</li>
+      <li>Notes: your earlier notes stay listed; type in the empty box below them and press Enter (or Save) to add the next one. What you type saves as a draft while you type, so nothing is lost if you close the page.</li>
+      <li>“Is this you?” is now <b>How people quit</b>: who gets free, how they quit, what helps. The old screening numbers sit folded at the bottom of that section, marked as proposed to remove. The intro lines that told you what the numbers are are gone.</li>
+      <li>Header: new option <b>D Phone first</b>. On a phone it reads top to bottom: title, number, one line, what it’s based on (one tap). On a wide screen the same pieces sit side by side. Press Wide and Phone above to watch it change.</li>
+      <li>Layouts: <b>A Poster</b>, <b>B Story</b>, <b>C Guide</b>, and <b>D</b> for the header. <b>Lock</b> a section when it works.</li>
     </ul>
   </div>
   <div class="labbox">
     <span class="eyebrow">Locked so far</span>
     <div class="lockedlist" id="lockedList">Nothing locked yet.</div>
-    <label class="eyebrow" for="genNote">Your note on this round</label>
-    <textarea id="genNote" rows="3" placeholder="Anything about the page as a whole"></textarea>
+    <span class="eyebrow">Your notes on the page as a whole</span>
+    <div id="genNotes"></div>
     <div class="dbstate" id="dbstate">Connecting&hellip;</div>
   </div>
 </div></section>
@@ -416,11 +452,13 @@ details.more[open] > summary { margin-bottom: 8px; }
 const DATA = /*DATA*/;
 const SLUG = { alcohol: "alcohol", nicotine: "nicotine", cannabis: "weed", cocaine: "cocaine", porn: "porn", gambling: "betting", "social-media-phones": "phone", "binge-eating-and-ultra-processed-food": "sugar" };
 const LAYOUTS = { A: "Poster", B: "Story", C: "Guide" };
+const EXTRA_LAY = { head: { D: "Phone first" } };
+const laysOf = sec => ({ ...LAYOUTS, ...(EXTRA_LAY[sec] || {}) });
 const FORMS = { line: "Line", rail: "List", grid: "Grid", chart: "Chart" };
 const FORM_OF = { A: "line", B: "rail", C: "chart" };
 const SECS = [
   ["head", "Header"],
-  ["you", "Is this you?"],
+  ["you", "How people quit"],
   ["timeline", "Timeline"],
   ["beliefs", "Beliefs"],
   ["plan", "Plan"],
@@ -429,7 +467,7 @@ const SECS = [
   ["others", "Others"],
   ["sources", "Sources"],
 ];
-const GROUPS = { you: "People like you", start: "How it starts", cost: "What it costs you", quit: "How quitting goes", after: "What you get back" };
+const GROUPS = { who: "Who gets free", how: "How they quit", works: "What helps", you: "People like you", start: "How it starts", cost: "What it costs you", quit: "How quitting goes", after: "What you get back" };
 const KIND = { feel: "What you feel", watch: "Watch out", danger: "Danger", win: "Gets better" };
 const STAGES = [
   { label: "Days 1–3", max: 72 }, { label: "Days 4–14", max: 336 }, { label: "Weeks 3–8", max: 1440 },
@@ -455,16 +493,47 @@ const goal = () => page.mode === "reshape" ? "Goal: cut down, not zero" : "Goal:
 const layOf = sec => (LOCKS[sec] && LOCKS[sec].layout) || LOCAL[sec] || G;
 const formOf = lay => (LOCKS.timeline && LOCKS.timeline.form) || LOCAL_FORM.timeline || FORM_OF[lay];
 
+/* ---------- notes: a thread per section; the box below the thread adds the next note ---------- */
+function notesOf(key) {
+  const m = MARKS[key] || {};
+  if (Array.isArray(m.notes)) return m.notes;
+  return m.note ? [{ text: m.note, t: m.t }] : [];
+}
+const when = t => { if (!t) return ""; const d = new Date(t); return isNaN(d) ? "" : d.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); };
+function noteBox(key, label) {
+  const list = notesOf(key), draft = (MARKS[key] || {}).draft || "";
+  return `<div class="notes" data-notes="${key}">${list.map((n, i) => `<div class="nt" data-i="${i}"><span>${esc(n.text)}</span><time>${when(n.t)}</time><button type="button" data-ndel="${key}" data-i="${i}" aria-label="Remove this note">&times;</button></div>`).join("")}<div class="nadd"><textarea id="note-${key}" rows="1" placeholder="${list.length ? "Add to your notes" : esc(label)}" aria-label="${esc(label)}">${esc(draft)}</textarea><button type="button" data-nsave="${key}">Save</button></div><div class="nstate" id="nstate-${key}">${draft ? "Draft saved. Press Enter to add it." : ""}</div></div>`;
+}
+const grow = el => { el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; };
+const drafts = {};
+function saveDraft(key, val) {
+  MARKS[key] = { ...(MARKS[key] || {}), notes: notesOf(key), draft: val };
+  delete MARKS[key].note;
+  return save("marks", key, MARKS[key]);
+}
+function addNote(key) {
+  const box = document.getElementById("note-" + key), text = box ? box.value.trim() : "";
+  if (!text) return;
+  clearTimeout(drafts[key]); delete drafts[key];
+  const notes = [...notesOf(key), { text, t: new Date().toISOString() }];
+  MARKS[key] = { notes, draft: "" };
+  render();
+  const fresh = document.querySelector(`[data-notes="${key}"] .nt:last-of-type`), st = document.getElementById("nstate-" + key), nb = document.getElementById("note-" + key);
+  if (fresh) { fresh.classList.add("fresh"); setTimeout(() => fresh.classList.remove("fresh"), 1600); }
+  if (nb) nb.focus({ preventScroll: true });
+  if (st) { st.className = "nstate"; st.textContent = "Saving…"; }
+  save("marks", key, MARKS[key]).then(() => { const s2 = document.getElementById("nstate-" + key); if (s2 && db) { s2.className = "nstate ok"; s2.textContent = "✓ Saved"; setTimeout(() => { if (s2.textContent === "✓ Saved") { s2.className = "nstate"; s2.textContent = ""; } }, 2200); } });
+}
+
 /* ---------- section lab bar ---------- */
 function labBar(sec, lay) {
   const [, name] = SECS.find(s => s[0] === sec);
-  const L = LOCKS[sec], note = (MARKS["sec-" + sec] || {}).note || "";
-  const noteIn = `<input type="text" id="note-sec-${sec}" placeholder="Note on this section" value="${esc(note)}" aria-label="Note on ${esc(name)}">`;
+  const L = LOCKS[sec], noteIn = noteBox("sec-" + sec, `Note on ${name}`);
   if (L) {
-    const what = `${L.layout} ${LAYOUTS[L.layout]}${sec === "timeline" && L.form ? ", " + FORMS[L.form] : ""}`;
+    const what = `${L.layout} ${laysOf(sec)[L.layout]}${sec === "timeline" && L.form ? ", " + FORMS[L.form] : ""}`;
     return `<div class="labbar"><span class="lbl">${esc(name)}</span><span class="lockstate">${LOCK_SVG}Locked: ${esc(what)}</span><button type="button" class="lockbtn" data-unlock="${sec}">Unlock</button>${noteIn}</div>`;
   }
-  const seg = `<div class="seg" role="group" aria-label="${esc(name)} layout">${Object.keys(LAYOUTS).map(l => `<button type="button" data-sl="${l}" data-sec="${sec}" aria-pressed="${l === lay}">${l}</button>`).join("")}</div>`;
+  const seg = `<div class="seg" role="group" aria-label="${esc(name)} layout">${Object.keys(laysOf(sec)).map(l => `<button type="button" data-sl="${l}" data-sec="${sec}" aria-pressed="${l === lay}">${l}</button>`).join("")}</div>`;
   const fseg = sec === "timeline" ? `<div class="seg" role="group" aria-label="Timeline form">${Object.keys(FORMS).map(f => `<button type="button" data-sf="${f}" aria-pressed="${f === formOf(lay)}">${FORMS[f]}</button>`).join("")}</div>` : "";
   return `<div class="labbar"><span class="lbl">${esc(name)}</span>${seg}${fseg}<button type="button" class="lockbtn" data-lock="${sec}">${LOCK_SVG}Lock this</button>${noteIn}</div>`;
 }
@@ -555,6 +624,11 @@ const R = {
       <div class="A-hero"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div></div>
       <div class="A-title"><h1>${esc(page.title)}</h1><div><span class="tag">${goal()}</span></div>${heroBasis("A-basis")}</div>
     </div></div>`,
+    D: () => {
+      const h = page.hero, b = h.basedOn || "", cut = b.indexOf(". "), first = cut > 0 ? b.slice(0, cut + 1) : b, rest = cut > 0 ? b.slice(cut + 2) : "";
+      const tap = b ? `<details class="d-tap"><summary><b>Based on:</b> ${esc(first)} <i>More</i></summary><div class="basis">${rest ? `<p>${esc(rest)} ${refs(h.n)}</p>` : `<p>${refs(h.n)}</p>`}${h.caveat ? `<p><b>Keep in mind:</b> ${esc(h.caveat)}</p>` : ""}</div></details>` : heroBasis("D-basis");
+      return `<div class="D-head"><div class="urlchip d-url">yoursite.com/quit/${SLUG[page.id]}</div><h1 class="d-title">${esc(page.title)}</h1><div class="d-num"><div class="big">${esc(h.big)}</div><div class="line">${esc(h.line)} ${refs(h.n)}</div><div class="sub">${esc(h.sub)}</div></div><div class="d-tags"><span class="tag">${goal()}</span></div>${tap}<div class="d-full">${heroBasis("D-basis")}</div></div>`;
+    },
     B: () => `<div class="B-in"><div class="B-head"><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><div class="big">${esc(page.hero.big)}</div><div class="line">${esc(page.hero.line)} ${refs(page.hero.n)}</div><div class="sub">${esc(page.hero.sub)}</div>${heroBasis("B-basis")}</div></div>`,
     C: () => `<div class="C-head"><div><div class="urlchip">yoursite.com/quit/${SLUG[page.id]}</div><h1>${esc(page.title)}</h1><p class="lede"><b>${esc(page.hero.big)}</b> ${esc(page.hero.line)} ${esc(page.hero.sub)} ${refs(page.hero.n)}</p><div class="tags"><span class="tag">${goal()}</span></div></div>
       ${heroBasis("C-basis")}</div>`,
@@ -627,22 +701,22 @@ function statCard(x, lay) {
   return `<div class="${lay === "A" ? "st" : "B-stat"}">${head}<div class="big">${esc(x.big)}</div>${body}</div>`;
 }
 function statGrid(sec, lay) {
-  const xs = statsOf(sec === "you" ? ["you", "start", "cost"] : ["quit", "after"]);
-  if (!xs.length) return `<div class="ph"><span class="eyebrow">Coming</span>The numbers for this page are still being checked.</div>`;
+  const xs = statsOf(sec === "you" ? ["who", "how", "works"] : ["quit", "after"]);
+  const old = sec === "you" ? statsOf(["you", "start", "cost"]) : [];
+  const box = lay === "A" ? "A-stats" : lay === "B" ? "B-stats" : "C-stats";
+  const fold = (label, ys) => ys.length ? `<details class="more"><summary>${esc(label)} (${ys.length})</summary><div class="${box}">${ys.map(x => statCard(x, lay)).join("")}</div></details>` : "";
+  const oldFold = fold("Earlier angle, proposed to remove: “Is this you?”", old);
+  if (!xs.length) return `<div class="ph"><span class="eyebrow">Coming</span>Numbers on who gets free, how they quit and what helps are being researched for this page.</div>${oldFold}`;
   let top = xs.filter(x => x.top);
   if (!top.length) top = xs.slice(0, 4);
-  const rest = xs.filter(x => !top.includes(x)), box = lay === "A" ? "A-stats" : lay === "B" ? "B-stats" : "C-stats";
-  const fold = (label, ys) => ys.length ? `<details class="more"><summary>${esc(label)} (${ys.length})</summary><div class="${box}">${ys.map(x => statCard(x, lay)).join("")}</div></details>` : "";
+  const rest = xs.filter(x => !top.includes(x));
   const folds = Object.keys(FOLDS).map(f => fold(FOLDS[f], rest.filter(x => x.fold === f))).join("");
-  return `<div class="${box}">${top.map(x => statCard(x, lay)).join("")}</div>${fold("More numbers", rest.filter(x => !x.fold))}${folds}`;
+  return `<div class="${box}">${top.map(x => statCard(x, lay)).join("")}</div>${fold("More numbers", rest.filter(x => !x.fold))}${folds}${oldFold}`;
 }
-const STAT_COPY = {
-  you: ["Is this you?", "Numbers you might see yourself in. Each one says what it’s based on."],
-  outlook: ["How quitting goes", "What happens to people who stop, and what they get back."],
-};
-function statsA(sec) { const [t, i] = STAT_COPY[sec]; return `<div class="A-band"><div class="vl"><span>${sec === "you" ? "Is this you?" : "Quitting"}</span></div><div class="bd"><h2>${esc(t)}</h2><p class="note">${esc(i)}</p>${statGrid(sec, "A")}</div></div>`; }
-function statsB(sec) { const [t, i] = STAT_COPY[sec]; return `<div class="B-in"><div class="B-kick">In numbers</div><h2>${esc(t)}</h2><p class="note">${esc(i)}</p>${statGrid(sec, "B")}</div>`; }
-function statsC(sec) { const [t, i] = STAT_COPY[sec]; return `<div class="C-in"><div class="C-side"><span class="no">${no(sec)}</span><h2>${esc(t)}</h2><p>${esc(i)}</p></div><div class="C-main">${statGrid(sec, "C")}</div></div>`; }
+const STAT_COPY = { you: "How people quit", outlook: "How quitting goes" };
+function statsA(sec) { return `<div class="A-band"><div class="vl"><span>${sec === "you" ? "Quitting" : "After"}</span></div><div class="bd"><h2>${esc(STAT_COPY[sec])}</h2>${statGrid(sec, "A")}</div></div>`; }
+function statsB(sec) { return `<div class="B-in"><div class="B-kick">In numbers</div><h2>${esc(STAT_COPY[sec])}</h2>${statGrid(sec, "B")}</div>`; }
+function statsC(sec) { return `<div class="C-in"><div class="C-side"><span class="no">${no(sec)}</span><h2>${esc(STAT_COPY[sec])}</h2></div><div class="C-main">${statGrid(sec, "C")}</div></div>`; }
 function expBox(quote) {
   const ta = `<textarea id="expText" placeholder="Write your own experience with ${esc(page.tab.toLowerCase())} here. It saves as you type.">${esc((EXP[page.id] || {}).text || "")}</textarea>`;
   return `<p class="note">In your words: what it was like at the start, the hardest day, what you told yourself, what finally worked.</p>${quote ? `<div class="B-quote">${ta}</div>` : ta}<div class="dbstate" id="expState"></div>`;
@@ -668,12 +742,15 @@ function render() {
   if (back) back.focus({ preventScroll: true });
   const ls = SECS.filter(([s]) => LOCKS[s]).map(([s, name]) => `<b>${esc(name)}</b> (${LOCKS[s].layout}${s === "timeline" && LOCKS[s].form ? ", " + FORMS[LOCKS[s].form] : ""})`);
   $("#lockedList").innerHTML = ls.length ? ls.join(" &middot; ") : "Nothing locked yet.";
+  $("#genNotes").innerHTML = noteBox("general", "Anything about the page as a whole");
+  document.querySelectorAll(".nadd textarea").forEach(grow);
 }
 
 /* a selector for the focused control that still finds it after the page is rebuilt (Lock turns into Unlock and back) */
 function focusKey(a) {
   if (!a || !a.closest || !a.closest("#page")) return null;
   const d = a.dataset;
+  if (a.id && a.id.startsWith("note-")) return "#" + CSS.escape(a.id);
   if (d.sl) return `[data-sl="${d.sl}"][data-sec="${d.sec}"]`;
   if (d.sf) return `[data-sf="${d.sf}"]`;
   if (d.lock) return `[data-unlock="${d.lock}"]`;
@@ -722,6 +799,15 @@ document.addEventListener("click", e => {
     MARKS[key] = { ...cur, v: cur.v === mk.dataset.v ? null : mk.dataset.v };
     save("marks", key, MARKS[key]); render(); return;
   }
+  const ns = e.target.closest("[data-nsave]");
+  if (ns) { addNote(ns.dataset.nsave); return; }
+  const nd = e.target.closest("[data-ndel]");
+  if (nd) {
+    if (!confirm("Remove this note?")) return;
+    const key = nd.dataset.ndel, notes = notesOf(key).filter((_, i) => i !== +nd.dataset.i);
+    MARKS[key] = { ...(MARKS[key] || {}), notes }; delete MARKS[key].note;
+    save("marks", key, MARKS[key]); render(); return;
+  }
   const r = e.target.closest(".ref");
   if (r) {
     const box = $("#srcBox"); box.open = true;
@@ -733,8 +819,22 @@ document.addEventListener("click", e => {
 });
 
 let tmr = null;
+document.addEventListener("keydown", e => {
+  const t = e.target;
+  if (t.id && t.id.startsWith("note-") && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); addNote(t.id.slice(5)); }
+});
+const flushDrafts = () => Object.keys(drafts).forEach(key => { clearTimeout(drafts[key]); delete drafts[key]; const b = document.getElementById("note-" + key); if (b) saveDraft(key, b.value); });
+window.addEventListener("pagehide", flushDrafts);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushDrafts(); });
 document.addEventListener("input", e => {
   const t = e.target;
+  if (t.id && t.id.startsWith("note-")) {
+    const key = t.id.slice(5), st = document.getElementById("nstate-" + key);
+    grow(t); clearTimeout(drafts[key]);
+    if (st) { st.className = "nstate"; st.textContent = "Typing… saves as a draft"; }
+    drafts[key] = setTimeout(() => { delete drafts[key]; saveDraft(key, t.value).then(() => { const s2 = document.getElementById("nstate-" + key); if (s2 && db) s2.textContent = t.value ? "Draft saved. Press Enter to add it." : ""; }); }, 700);
+    return;
+  }
   if (t.id === "expText") {
     EXP[page.id] = { text: t.value };
     clearTimeout(tmr); $("#expState").textContent = "Saving…";
@@ -744,12 +844,7 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target;
-  if (t.id === "genNote") { MARKS.general = { note: t.value }; save("marks", "general", MARKS.general); }
-  else if (t.id && t.id.startsWith("note-")) {
-    const key = t.id.slice(5);
-    MARKS[key] = { ...(MARKS[key] || {}), note: t.value };
-    save("marks", key, MARKS[key]);
-  }
+  if (t.id && t.id.startsWith("note-") && drafts[t.id.slice(5)]) flushDrafts();
 });
 
 $("#tabs").innerHTML = DATA.pages.map(p => `<a class="tab" href="#${SLUG[p.id]}" data-id="${p.id}">${esc(p.tab)}</a>`).join("");
@@ -764,15 +859,14 @@ window.addEventListener("hashchange", () => show(location.hash.slice(1)));
   db = await window.claude.use("db");
   if (!db) { clearTimeout(timer); st.textContent = "Marks and locks save only for you, signed in on claude.ai."; return; }
   const onErr = () => { clearTimeout(timer); st.textContent = "Could not load saved marks. Reload the page to try again."; };
-  const typing = () => { const a = document.activeElement; return a && (a.id === "expText" || a.id === "genNote" || (a.id || "").startsWith("note-")); };
+  const typing = () => { const a = document.activeElement; return a && (a.id === "expText" || (a.id || "").startsWith("note-")); };
   const done = () => { ready = true; clearTimeout(timer); st.textContent = "Marks, locks and notes save automatically."; };
   db.collection("marks").onSnapshot(s => {
     const next = Object.create(null); s.docs.forEach(x => { next[x.id] = x.data() || {}; }); MARKS = next; done();
-    if (MARKS.general && document.activeElement.id !== "genNote") $("#genNote").value = MARKS.general.note || "";
     if (!typing()) render();
   }, onErr);
   db.collection("locks").onSnapshot(s => {
-    const next = Object.create(null); s.docs.forEach(x => { const d = x.data() || {}; if (LAYOUTS[d.layout]) next[x.id] = FORMS[d.form] ? { layout: d.layout, form: d.form } : { layout: d.layout }; }); LOCKS = next; done();
+    const next = Object.create(null); s.docs.forEach(x => { const d = x.data() || {}; if (laysOf(x.id)[d.layout]) next[x.id] = FORMS[d.form] ? { layout: d.layout, form: d.form } : { layout: d.layout }; }); LOCKS = next; done();
     if (!typing()) render();
   }, onErr);
   db.collection("experience").onSnapshot(s => {
