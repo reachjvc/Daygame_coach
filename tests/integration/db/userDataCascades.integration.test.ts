@@ -89,6 +89,8 @@ const OUTLIVES_ITS_PARENT: Record<string, string> = {
   life_plan_routines_enrollment_id_fkey: "ending a program must not delete the routine that ran it",
   life_plan_goals_user_goal_id_fkey: "deleting the counted goal unlinks the plan's goal; the plan keeps its words",
   life_plans_season_focus_fk: "deleting the focused node clears the focus and leaves the plan",
+  life_plan_seasons_focus_fk:
+    "a season outlives the area or goal it was focused on; clears only focus_id (20261104140000_one_season.sql)",
   // Each clears only its pointer (SET NULL (<pointer>)), never user_id.
   life_plan_goals_area_fk: "a goal outlives its area",
   life_plan_routines_area_fk: "a routine outlives its area",

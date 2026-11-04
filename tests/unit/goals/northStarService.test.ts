@@ -62,6 +62,7 @@ import {
   qualifyWarnings,
   removeArea,
   removeAction,
+  goalActions,
   removeGoal,
   removeReason,
   removeRoutine,
@@ -116,6 +117,7 @@ import {
   goalsLikeOneThing,
   markServesOneThing,
   updateStep,
+  updateAction,
   addAction,
   linkStepToGoal,
   milestoneGoals,
@@ -152,11 +154,11 @@ import {
   valueConflicts,
   valueEvidence,
   valuesDiff,
-  valuesShortBy,
 } from "@/src/goals/northStarService"
 import {
   DEFAULT_AREAS,
   DEFAULT_ROUTINE_IDS,
+  GOAL_ACTIONS_BLUEPRINT_ID,
   NS_QUALIFY_THRESHOLD,
   REVIEW_PROMPTS,
   ROUTINE_BLUEPRINTS,
@@ -200,7 +202,9 @@ describe("emptyNsPlan", () => {
       expect(routineSummary(routine)).toBe("Nothing in it yet")
     }
     expect(weeklyLoad(plan).minutes).toBe(0)
-    for (const bp of ROUTINE_BLUEPRINTS) {
+    // Not the goal-actions one: it is never empty, being made by writing an
+    // action, and it has no library to make a preset from.
+    for (const bp of ROUTINE_BLUEPRINTS.filter((b) => !b.goalActions)) {
       expect(bp.presets.length, `${bp.id} has no preset, so an empty routine would be a dead end`).toBeGreaterThan(0)
     }
   })
@@ -509,9 +513,9 @@ describe("goal links", () => {
 describe("the qualification stack", () => {
   it("names what is still missing, in order", () => {
     const { plan } = planWithGoal()
-    expect(goalGaps(plan.goals[0])).toContain("a why")
-    expect(goalGaps(plan.goals[0])).toContain("an action")
-    expect(goalIsQualified(plan.goals[0])).toBe(false)
+    expect(goalGaps(plan.goals[0], plan)).toContain("a why")
+    expect(goalGaps(plan.goals[0], plan)).toContain("an action")
+    expect(goalIsQualified(plan.goals[0], plan)).toBe(false)
   })
 
   it("counts a goal qualified once every part is written", () => {
@@ -526,19 +530,19 @@ describe("the qualification stack", () => {
       ladder: { start: 100, target: 140, steps: 5, curveTension: 0 },
     }, NOW)
     // An outcome with nothing you could do on a Tuesday is still a gap.
-    expect(goalGaps(done.goals[0])).toEqual(["an action"])
+    expect(goalGaps(done.goals[0], done)).toEqual(["an action"])
     const withAction = addAction(done, goalId, "Squat session", 3, NOW)
-    expect(goalGaps(withAction.goals[0])).toEqual([])
-    expect(goalIsQualified(withAction.goals[0])).toBe(true)
+    expect(goalGaps(withAction.goals[0], withAction)).toEqual([])
+    expect(goalIsQualified(withAction.goals[0], withAction)).toBe(true)
   })
 
   it("asks a finish-line goal for checkpoints instead of a number", () => {
     let plan = addGoal(emptyNsPlan(), "lm_health", "First muscle-up", "achievement", NOW)
-    expect(goalGaps(plan.goals[0])).toContain("checkpoints")
+    expect(goalGaps(plan.goals[0], plan)).toContain("checkpoints")
     plan = addCheckpoint(plan, plan.goals[0].id, "Ten strict pull-ups", NOW)
-    expect(goalGaps(plan.goals[0])).not.toContain("checkpoints")
+    expect(goalGaps(plan.goals[0], plan)).not.toContain("checkpoints")
     // Checkpoints are actions, so naming one clears the action gap too.
-    expect(goalGaps(plan.goals[0])).not.toContain("an action")
+    expect(goalGaps(plan.goals[0], plan)).not.toContain("an action")
   })
 
   it("warns under the threshold and stays quiet at or above it", () => {
@@ -912,7 +916,7 @@ describe("regressions", () => {
 
 describe("presets", () => {
   it("gives every routine, weekly ones included, at least three presets", () => {
-    for (const bp of ROUTINE_BLUEPRINTS) {
+    for (const bp of ROUTINE_BLUEPRINTS.filter((b) => !b.goalActions)) {
       expect(bp.presets.length, `${bp.id} has no presets`).toBeGreaterThanOrEqual(3)
       for (const preset of bp.presets) {
         expect(preset.stepIds.length, `${bp.id}/${preset.id} is empty`).toBeGreaterThan(0)
@@ -1038,16 +1042,125 @@ describe("priority (the full system's ordered list)", () => {
 describe("actions, horizon, reasons and the feeling clause", () => {
   it("asks for an action on an outcome and stops once there is one", () => {
     const { plan, goalId } = planWithGoal()
-    expect(goalNeedsAction(plan.goals[0])).toBe(true)
+    expect(goalNeedsAction(plan.goals[0], plan)).toBe(true)
     const withAction = addAction(plan, goalId, "  Squat session  ", 3, NOW)
-    expect(withAction.goals[0].habits[0]).toMatchObject({ title: "Squat session", daysPerWeek: 3 })
-    expect(goalNeedsAction(withAction.goals[0])).toBe(false)
-    expect(goalNeedsAction(removeAction(withAction, goalId, withAction.goals[0].habits[0].id, NOW).goals[0])).toBe(true)
+    expect(goalActions(withAction, goalId)[0]).toMatchObject({ title: "Squat session", daysPerWeek: 3 })
+    expect(goalNeedsAction(withAction.goals[0], withAction)).toBe(false)
+    const removed = removeAction(withAction, goalId, goalActions(withAction, goalId)[0].id, NOW)
+    expect(goalNeedsAction(removed.goals[0], removed)).toBe(true)
+  })
+
+  it("files an action as a routine step that serves the goal, in its area's actions routine", () => {
+    // Plans/life-plan-rebuild.md, Phase 4, Q5: an action is ticked on Today
+    // like every other step, so it is one.
+    const { plan, goalId } = planWithGoal()
+    const area = plan.areas.find((a) => a.id === plan.goals[0].areaId)!
+    const next = addAction(plan, goalId, "Squat session", 3, NOW)
+    const routine = next.routines.find((r) => r.blueprintId === GOAL_ACTIONS_BLUEPRINT_ID)!
+    expect(routine).toMatchObject({ label: `${area.label} actions`, kind: "weekly", areaId: area.id })
+    expect(routine.steps).toHaveLength(1)
+    expect(routine.steps[0]).toMatchObject({ title: "Squat session", daysPerWeek: 3, servesGoalIds: [goalId] })
+    expect(next.goals[0].habits).toEqual([])
+    // It survives the trip through storage, which drops any routine whose
+    // blueprint it does not know.
+    expect(loadNsPlan(serializeNsPlan(next))!.routines.find((r) => r.id === routine.id)?.steps[0].title).toBe("Squat session")
+  })
+
+  it("makes one step of one action, however many goals name it", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_fitness", "Body weight 80 kg", "milestone_ladder", NOW)
+    plan = addGoal(plan, "lm_fitness", "Waist 80 cm", "milestone_ladder", NOW)
+    const [a, b] = plan.goals.map((g) => g.id)
+    plan = addAction(plan, a, "Train, and hit your protein", 4, NOW)
+    plan = addAction(plan, b, "train, and hit your protein ", 4, NOW)
+    const steps = plan.routines.flatMap((r) => r.steps).filter((s) => s.title === "Train, and hit your protein")
+    expect(steps).toHaveLength(1)
+    expect(steps[0].servesGoalIds).toEqual([a, b])
+    expect(goalActions(plan, b)[0].alsoServes).toEqual([a])
+  })
+
+  it("links a step the plan already runs, by its title, instead of copying it", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_money", "400 deep work hours", "milestone_ladder", NOW)
+    const routineId = plan.routines[0].id
+    plan = addCustomStep(plan, routineId, "Ninety minutes of deep work", 90, 5, NOW)
+    const step = plan.routines[0].steps.at(-1)!
+    plan = addAction(plan, plan.goals[0].id, "Ninety minutes of deep work", 5, NOW)
+    expect(plan.routines.some((r) => r.blueprintId === GOAL_ACTIONS_BLUEPRINT_ID)).toBe(false)
+    expect(plan.routines[0].steps.find((s) => s.id === step.id)!.servesGoalIds).toEqual([plan.goals[0].id])
+  })
+
+  it("takes the step away only when it was this goal's alone, and never one from another routine", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_fitness", "Body weight 80 kg", "milestone_ladder", NOW)
+    plan = addGoal(plan, "lm_fitness", "Waist 80 cm", "milestone_ladder", NOW)
+    const [a, b] = plan.goals.map((g) => g.id)
+    plan = addAction(plan, a, "Train", 4, NOW)
+    plan = addAction(plan, b, "Train", 4, NOW)
+    const stepId = goalActions(plan, a)[0].id
+    // Shared: only the link goes.
+    let next = removeAction(plan, a, stepId, NOW)
+    expect(goalActions(next, a)).toEqual([])
+    expect(goalActions(next, b).map((x) => x.id)).toEqual([stepId])
+    // The last goal it served: the step goes, and the routine it leaves empty.
+    next = removeAction(next, b, stepId, NOW)
+    expect(next.routines.some((r) => r.blueprintId === GOAL_ACTIONS_BLUEPRINT_ID)).toBe(false)
+
+    // A morning-routine step linked as an action is unlinked and stays.
+    let linked = addCustomStep(plan, plan.routines[0].id, "Stretch", 10, 7, NOW)
+    const stretch = linked.routines[0].steps.at(-1)!
+    linked = addAction(linked, a, "Stretch", 7, NOW)
+    linked = removeAction(linked, a, stretch.id, NOW)
+    expect(linked.routines[0].steps.find((s) => s.id === stretch.id)?.servesGoalIds).toEqual([])
+  })
+
+  it("takes a removed goal's own actions with it, as it took its habits", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_fitness", "Body weight 80 kg", "milestone_ladder", NOW)
+    plan = addGoal(plan, "lm_fitness", "Waist 80 cm", "milestone_ladder", NOW)
+    const [a, b] = plan.goals.map((g) => g.id)
+    plan = addAction(plan, a, "Train", 4, NOW)
+    plan = addAction(plan, b, "Train", 4, NOW)
+    plan = addAction(plan, a, "Weigh in", 1, NOW)
+    const next = removeGoal(plan, a, NOW)
+    const steps = next.routines.flatMap((r) => r.steps)
+    expect(steps.map((s) => s.title)).toEqual(expect.arrayContaining(["Train"]))
+    expect(steps.some((s) => s.title === "Weigh in")).toBe(false)
+    expect(steps.find((s) => s.title === "Train")!.servesGoalIds).toEqual([b])
+  })
+
+  it("turns habits a browser copy still carries into actions when it loads", () => {
+    const { plan, goalId } = planWithGoal()
+    const old = JSON.parse(serializeNsPlan(plan))
+    old.goals[0].habits = [{ id: "h900", title: "Squat session", daysPerWeek: 3 }]
+    const loaded = loadNsPlan(JSON.stringify(old))!
+    expect(loaded.goals[0].habits).toEqual([])
+    expect(goalActions(loaded, goalId).map((x) => x.title)).toEqual(["Squat session"])
+    // When it was last changed is not moved by loading it.
+    expect(loaded.updatedAt).toBe(plan.updatedAt)
+  })
+
+  it("leaves a placeholder habit out of the fold, as the copy does", () => {
+    const { plan, goalId } = planWithGoal()
+    const old = JSON.parse(serializeNsPlan(plan))
+    old.goals[0].habits = [{ id: "h901", title: "Work toward: it", daysPerWeek: 3, placeholder: true }]
+    expect(goalActions(loadNsPlan(JSON.stringify(old))!, goalId)).toEqual([])
+  })
+
+  it("lets a goal card change only the frequency that is the step's own", () => {
+    let plan = addGoal(emptyNsPlan(), "lm_fitness", "Waist 80 cm", "milestone_ladder", NOW)
+    const goalId = plan.goals[0].id
+    plan = addAction(plan, goalId, "Train", 4, NOW)
+    const action = goalActions(plan, goalId)[0]
+    expect(action.ownDays).toBe(true)
+    plan = updateAction(plan, goalId, action.id, { title: "Train hard", daysPerWeek: 5 }, NOW)
+    expect(goalActions(plan, goalId)[0]).toMatchObject({ title: "Train hard", daysPerWeek: 5 })
+    // Placed on days, the days are its rate.
+    plan = updateStep(plan, action.routineId, action.id, { days: [0, 2, 4] }, NOW)
+    expect(goalActions(plan, goalId)[0].ownDays).toBe(false)
+    // Not this goal's: nothing happens.
+    expect(removeAction(plan, "g-nope", action.id, NOW)).toBe(plan)
   })
 
   it("never asks a practice for an action, because the goal is the action", () => {
     const plan = addGoal(emptyNsPlan(), "lm_health", "Run", "habit_ramp", NOW)
-    expect(goalNeedsAction(plan.goals[0])).toBe(false)
+    expect(goalNeedsAction(plan.goals[0], plan)).toBe(false)
   })
 
   it("counts goals still missing an action", () => {
@@ -1428,7 +1541,6 @@ describe("the values procedure", () => {
     // which area needs work is the person's to see, not the page's to point at.
     let plan = setValues(emptyNsPlan(), ["Success", "Money"], NOW)
     plan = setAreaReview(plan, "lm_health", { fortnight: 2 }, NOW)
-    // ("5 more values to reach seven" is the values list's length, not the floor.)
     expect(planTodos(plan).map((t) => t.text).join(" ")).not.toMatch(/under a seven|floor/i)
   })
 
@@ -1659,10 +1771,10 @@ describe("nothing is gated, so everything outstanding is listed", () => {
     // And nothing else either: a rate is the whole of a practice. It was being
     // asked for a why, a date, two ratings and a sentence — five boxes for a
     // run — and the row said "needs work" beside something already complete.
-    expect(goalGaps(plan.goals[0])).toEqual([])
-    expect(goalIsQualified(plan.goals[0])).toBe(true)
+    expect(goalGaps(plan.goals[0], plan)).toEqual([])
+    expect(goalIsQualified(plan.goals[0], plan)).toBe(true)
     // A practice with no rate is the one thing missing that matters.
-    expect(goalGaps({ ...plan.goals[0], daysPerWeek: 0 })).toEqual(["a rate"])
+    expect(goalGaps({ ...plan.goals[0], daysPerWeek: 0 }, plan)).toEqual(["a rate"])
 
     // A milestone in the same plan is still asked for both.
     plan = addGoal(plan, "lm_health", "Flat bench 100 kg", "milestone_ladder", NOW)
@@ -1674,11 +1786,13 @@ describe("nothing is gated, so everything outstanding is listed", () => {
     expect(planTodos(plan).find((t) => t.id === "goalwhy")!.text).toContain("1 goal")
   })
 
-  it("counts down the values short of seven", () => {
-    expect(valuesShortBy(emptyNsPlan())).toBe(7)
-    const plan = setValues(emptyNsPlan(), ["A", "B", "C", "D", "E", "F", "G", "H"], NOW)
-    expect(valuesShortBy(plan)).toBe(0)
-    expect(planTodos(plan).map((t) => t.id)).not.toContain("values")
+  it("asks for values while there are none, and never counts toward a number", () => {
+    // The owner had "N more values to reach seven" taken out on 2026-11-04.
+    const empty = planTodos(emptyNsPlan()).find((t) => t.id === "values")
+    expect(empty?.text).toBe("Ask yourself what you value most")
+    const one = setValues(emptyNsPlan(), ["Freedom"], NOW)
+    expect(planTodos(one).map((t) => t.id)).not.toContain("values")
+    expect(planTodos(one).map((t) => t.text).join(" ")).not.toMatch(/seven|more values/i)
   })
 })
 
@@ -2294,18 +2408,18 @@ describe("a library goal arrives with its Tuesday", () => {
     const plan = addGoalFromTarget(emptyNsPlan(), "lm_fitness", "t_bench", undefined, NOW)
     const goal = plan.goals[0]
     expect(goal.type).toBe("milestone_ladder")
-    expect(goal.habits).toHaveLength(1)
-    expect(goal.habits[0].title).toBe(OBJECTIVE_ACTION["obj_strong"].title)
+    expect(goalActions(plan, goal.id)).toHaveLength(1)
+    expect(goalActions(plan, goal.id)[0].title).toBe(OBJECTIVE_ACTION["obj_strong"].title)
     // Which is the whole point: it no longer reports the gap it created.
-    expect(goalNeedsAction(goal)).toBe(false)
+    expect(goalNeedsAction(goal, plan)).toBe(false)
   })
 
   it("leaves a practice and a staged finish line alone", () => {
     // A practice IS its own action, and a staged target already carries steps.
     const ramp = addGoalFromTarget(emptyNsPlan(), "lm_fitness", "t_gym_strong", undefined, NOW)
-    expect(ramp.goals[0].habits).toEqual([])
+    expect(goalActions(ramp, ramp.goals[0].id)).toEqual([])
     const staged = addGoalFromTarget(emptyNsPlan(), "lm_fitness", "t_lift_form", undefined, NOW)
-    expect(staged.goals[0].habits).toEqual([])
+    expect(goalActions(staged, staged.goals[0].id)).toEqual([])
   })
 
   it("brings a whole template in with nothing left flagged for an action", () => {
@@ -2326,7 +2440,7 @@ describe("what the plan costs a week", () => {
     // One training week moves the bench, the squat and the deadlift. Counting it
     // three times invents a load nobody is carrying.
     const plan = addGoalsFromTemplate(emptyNsPlan(), "lm_fitness", "tmpl_strength", 1, NOW)
-    const titles = new Set(plan.goals.flatMap((g) => g.habits.map((h) => h.title)))
+    const titles = new Set(plan.goals.flatMap((g) => goalActions(plan, g.id).map((h) => h.title)))
     expect(titles.size).toBe(1)
     expect(weeklyLoad(plan).actions).toBe(OBJECTIVE_ACTION["obj_strong"].daysPerWeek)
   })
@@ -2574,7 +2688,7 @@ describe("goals arrive in the user's own words", () => {
     expect(milestoneCheckpoints(plan.goals[0]).map((c) => c.title)).toEqual([
       "8 pullups", "9 pullups", "10 pullups",
     ])
-    expect(nextGuideQuestion(plan.goals[0])).toBe("actions")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("actions")
     // English too.
     expect(addGoalsFromDump(emptyNsPlan(), "lm_fitness", "20 pull-ups, up from 12", NOW).goals[0].ladder)
       .toMatchObject({ start: 12, target: 20 })
@@ -2605,7 +2719,7 @@ describe("goals arrive in the user's own words", () => {
     const plan = addGoalsFromDump(emptyNsPlan(), "lm_fitness", "Bænk 28 kg", NOW)
     expect(plan.goals[0].ladder).toMatchObject({ start: 0, target: 28 })
     expect(plan.goals[0].checkpoints).toEqual([])
-    expect(nextGuideQuestion(plan.goals[0])).toBe("start")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("start")
   })
 
   it("files a thing you buy as a finish line, not a climb to its model number", () => {
@@ -2635,24 +2749,24 @@ describe("the guide asks one thing at a time", () => {
     let plan = addGoalsFromDump(emptyNsPlan(), "lm_fitness", "Bænk 28 kg", NOW)
     const id = plan.goals[0].id
     // A climb: where you are, then what you will do, then when, then the whys.
-    expect(nextGuideQuestion(plan.goals[0])).toBe("start")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("start")
     plan = setLadderStart(plan, id, 22, NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("actions")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("actions")
     plan = markAsked(addAction(plan, id, "Strength session", 4, NOW), id, "actions", NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("date")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("date")
     plan = markAsked(plan, id, "date", NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("why")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("why")
     plan = updateGoal(plan, id, { why: "Because I want to be strong" }, NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("cost")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("cost")
     plan = updateGoal(plan, id, { painWhy: "I stay weak" }, NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBeNull()
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBeNull()
   })
 
   it("remembers a skip, so the queue moves on instead of coming back round", () => {
     let plan = addGoalsFromDump(emptyNsPlan(), "lm_fitness", "Bænk 28 kg", NOW)
     const id = plan.goals[0].id
     plan = markAsked(plan, id, "start", NOW)
-    expect(nextGuideQuestion(plan.goals[0])).not.toBe("start")
+    expect(nextGuideQuestion(plan.goals[0], plan)).not.toBe("start")
     // Twice is still once.
     expect(markAsked(plan, id, "start", NOW).goals[0].asked).toEqual(["start"])
   })
@@ -2660,12 +2774,12 @@ describe("the guide asks one thing at a time", () => {
   it("never asks a practice what it will do about itself", () => {
     // The same rule the amber panel uses: a practice IS the action.
     let plan = addGoalFromTarget(emptyNsPlan(), "lm_fitness", "t_gym_strong", undefined, NOW)
-    expect(guideQuestionApplies(plan.goals[0], "actions")).toBe(false)
+    expect(guideQuestionApplies(plan.goals[0], "actions", plan)).toBe(false)
     // And only a finish line gets asked whether it is in the user's hands: a
     // number you climb to is already something you do.
-    expect(guideQuestionApplies(plan.goals[0], "control")).toBe(false)
+    expect(guideQuestionApplies(plan.goals[0], "control", plan)).toBe(false)
     plan = addGoal(plan, "lm_mission", "Internationally bestselling author", "achievement", NOW)
-    expect(guideQuestionApplies(plan.goals[1], "control")).toBe(true)
+    expect(guideQuestionApplies(plan.goals[1], "control", plan)).toBe(true)
   })
 
   it("puts the season's areas at the front of the queue", () => {
@@ -2804,8 +2918,8 @@ describe("a generated rung is not an action", () => {
     let plan = addGoalsFromDump(emptyNsPlan(), "lm_fitness", "Bænk 28 kg", NOW)
     plan = setLadderStart(plan, plan.goals[0].id, 22, NOW)
     expect(milestoneCheckpoints(plan.goals[0])).toHaveLength(4)
-    expect(goalNeedsAction(plan.goals[0])).toBe(true)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("actions")
+    expect(goalNeedsAction(plan.goals[0], plan)).toBe(true)
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("actions")
   })
 
   it("still counts a hand-written checkpoint as the doing", () => {
@@ -2813,7 +2927,7 @@ describe("a generated rung is not an action", () => {
     // who wrote it, which is exactly what the id prefix records.
     let plan = addGoal(emptyNsPlan(), "lm_fitness", "First muscle-up", "achievement", NOW)
     plan = addCheckpoint(plan, plan.goals[0].id, "Nail the movement pattern", NOW)
-    expect(goalNeedsAction(plan.goals[0])).toBe(false)
+    expect(goalNeedsAction(plan.goals[0], plan)).toBe(false)
   })
 })
 
@@ -2823,13 +2937,13 @@ describe("the guide leads with the useful question", () => {
     // one yours?" makes the guide look stupid at the moment it has to look
     // useful, and the actionability question is the whole reason it exists.
     const plan = addGoalsFromDump(emptyNsPlan(), "lm_health", "Ingen smerte i ryggen", NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("actions")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("actions")
   })
 
   it("still gets to control once there is nothing to do about it", () => {
     let plan = addGoalsFromDump(emptyNsPlan(), "lm_mission", "Internationalt bedstsælgende forfatter", NOW)
     plan = markAsked(plan, plan.goals[0].id, "actions", NOW)
-    expect(nextGuideQuestion(plan.goals[0])).toBe("control")
+    expect(nextGuideQuestion(plan.goals[0], plan)).toBe("control")
   })
 
   it("keeps a unit written in any alphabet", () => {
@@ -3684,7 +3798,7 @@ describe("what you want, and what moves it", () => {
     expect(systemsForGoal(plan, goal.id)).toEqual([])
   })
 
-  it("gathers the three shapes that reach a milestone into one list", () => {
+  it("gathers what reaches a milestone into one list, an action being a step", () => {
     let plan = build()
     const goal = milestoneGoals(plan)[0]
     const driver = systemGoals(plan)[0]
@@ -3692,7 +3806,8 @@ describe("what you want, and what moves it", () => {
     plan = linkStepToGoal(plan, "r1", step.id, goal.id, true, NOW)
     plan = linkGoal(plan, driver.id, goal.id, NOW)
     plan = addAction(plan, goal.id, "Eat 180g protein", 7, NOW)
-    expect(systemsForGoal(plan, goal.id).map((s) => s.kind).sort()).toEqual(["action", "driver", "step"])
+    expect(systemsForGoal(plan, goal.id).map((s) => s.kind).sort()).toEqual(["driver", "step", "step"])
+    expect(systemsForGoal(plan, goal.id).map((s) => s.title)).toContain("Eat 180g protein")
   })
 
   it("names the two failure modes", () => {

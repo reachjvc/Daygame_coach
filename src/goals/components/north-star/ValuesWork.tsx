@@ -58,7 +58,6 @@ import {
   nextValuePair,
   valueConflicts,
   valuesDiff,
-  valuesShortBy,
 } from "@/src/goals/northStarService"
 import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
@@ -142,7 +141,6 @@ export function ValuesWork({ plan, handlers, mode }: {
 
   const diff = valuesDiff(plan)
   const conflicts = valueConflicts(plan)
-  const short = valuesShortBy(plan)
   const pair = nextValuePair(plan, settled)
 
   /**
@@ -244,8 +242,8 @@ export function ValuesWork({ plan, handlers, mode }: {
           onAdd={addTo(plan.values, handlers.onValues)}
         />
         <p className="text-[10.5px] text-zinc-600 mt-1.5">
-          {short > 0
-            ? `${VALUES_INTRO.minimumNote} ${short} to go.`
+          {plan.values.length === 0
+            ? VALUES_INTRO.askNote
             : `${plan.values.length} written. ${VALUES_INTRO.daily}`}
         </p>
       </div>

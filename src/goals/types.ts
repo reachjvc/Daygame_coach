@@ -2340,6 +2340,14 @@ export interface RoutineBlueprint {
   defaultStepIds: string[]
   /** The split a training week arrives with, when it has one. */
   defaultSplitId: string | null
+  /**
+   * True for the one blueprint that is not a template: where a goal's actions
+   * live (Plans/life-plan-rebuild.md, Phase 4, Q5). It has no library and no
+   * presets, because what is in it is whatever was written under a goal, and it
+   * is not offered on "add a routine". One per area, made when the first action
+   * of that area is written.
+   */
+  goalActions?: true
 }
 
 /** A whole-life question on the review tab. */

@@ -19,7 +19,7 @@ import { ChevronRight, X } from "lucide-react"
 import type { NsArea, NsGoal, NsPlan } from "@/src/goals/types"
 import { HORIZON_META, formatCountdown } from "@/src/goals/horizonService"
 import { OVERVIEW_COPY, TIMEFRAME_COPY } from "@/src/goals/data/northStar"
-import { GOAL_TIMEFRAMES, goalHorizon, goalIsQualified, goalNeedsAction, goalRank, goalRateLabel, goalsByPriority, isMilestone, milestoneHasSystem } from "@/src/goals/northStarService"
+import { GOAL_TIMEFRAMES, goalActions, goalHorizon, goalIsQualified, goalNeedsAction, goalRank, goalRateLabel, goalsByPriority, isMilestone, milestoneHasSystem } from "@/src/goals/northStarService"
 import { PriorityBadge } from "./GoalCard"
 
 const TYPE_ICON: Record<string, string> = { milestone_ladder: "🎯", habit_ramp: "🔁", achievement: "🏁" }
@@ -296,9 +296,10 @@ function GoalRow({ plan, goal, area, rank, total, today, onOpen, onSetPriority, 
    * What a milestone can be short of is anything moving it AT ALL, and one
    * link fixes that for as many milestones as share the system.
    */
-  const needsAction = isMilestone(goal) ? false : goalNeedsAction(goal)
+  const needsAction = isMilestone(goal) ? false : goalNeedsAction(goal, plan)
   const unserved = isMilestone(goal) && !milestoneHasSystem(plan, goal)
-  const qualified = goalIsQualified(goal)
+  const qualified = goalIsQualified(goal, plan)
+  const actionCount = goalActions(plan, goal.id).length
 
   return (
     <li className="flex items-center gap-2.5 px-5 py-2.5 border-b border-white/[0.07] last:border-b-0 hover:bg-white/[0.02] transition-colors">
@@ -321,7 +322,7 @@ function GoalRow({ plan, goal, area, rank, total, today, onOpen, onSetPriority, 
           <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
           {area?.label ?? ""}
           {goal.type === "habit_ramp" && <span>· {goalRateLabel(goal)}</span>}
-          {goal.habits.length > 0 && <span>· {goal.habits.length} {goal.habits.length === 1 ? "action" : "actions"}</span>}
+          {actionCount > 0 && <span>· {actionCount} {actionCount === 1 ? "action" : "actions"}</span>}
           {goal.reasonsList.length > 0 && <span>· {goal.reasonsList.length} reasons</span>}
         </span>
       </button>

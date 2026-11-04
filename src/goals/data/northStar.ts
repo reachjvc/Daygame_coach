@@ -924,8 +924,13 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
 export const VALUES_INTRO = {
   title: "What matters to you",
   help: "A value is what you fall back on when two things you want will not both fit in the same day. Two lists: what has actually been driving you so far, then what that paragraph would need. They are rarely the same, and the difference is the point. You put them in order later, on the review, once you have seen where you stand.",
-  minimum: 7,
-  minimumNote: "Seven or more is a good list.",
+  /**
+   * Shown under the list while it is empty. There used to be a count here
+   * ("Seven or more is a good list. 7 to go."); the owner had it taken out on
+   * 2026-11-04 with the floor of 7, and asked for a nudge to ask the question
+   * instead of a number to reach.
+   */
+  askNote: "Not sure what goes here? Ask yourself what you would not trade away, even when it costs you, and write the first word that comes.",
   daily: "Write the finished list out and keep it somewhere you see it. Redo it every year or two.",
   /** Shown at the bottom of the elicitation half, saying where the rest is. */
   laterHint: "You order this list on the review, after you have rated your areas and written the values each one asks for.",
@@ -1294,6 +1299,14 @@ export const ROUTINES_INTRO = {
  * habits each with its own days per week. The split designer belongs only to
  * the workout routine.
  */
+/** The blueprint of the routines a goal's actions are kept in. One per area. */
+export const GOAL_ACTIONS_BLUEPRINT_ID = "actions"
+
+/** "Fitness actions": what such a routine is called when it is made. */
+export function goalActionsRoutineLabel(areaLabel: string): string {
+  return `${areaLabel.trim() || "Goal"} actions`
+}
+
 export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
   {
     id: "morning",
@@ -1544,6 +1557,30 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "low-screen", title: "One low-screen evening", minutes: 120, daysPerWeek: 2, dimension: "mind" },
       { id: "breath-long", title: "Long breathwork or meditation sit", minutes: 20, daysPerWeek: 2, dimension: "spirit" },
     ],
+  },
+  /**
+   * WHERE A GOAL'S ACTIONS LIVE (Plans/life-plan-rebuild.md, Phase 4, Q5).
+   *
+   * "What will you actually do about this?" used to be answered in a list
+   * inside the goal, which Today never read: an action written under a goal was
+   * done nowhere. An action is a routine step serving the goal now, so it is
+   * ticked where every other step is. Not a template, so no library and no
+   * presets; see `goalActions` on the type.
+   */
+  {
+    id: GOAL_ACTIONS_BLUEPRINT_ID,
+    label: "Goal actions",
+    kind: "weekly",
+    why: "What you said you would do about your goals, each on its own days. Written under a goal, ticked on Today.",
+    areaSeedId: null,
+    servesAreaIds: [],
+    presets: [],
+    library: [],
+    split: false,
+    daysPerWeek: 7,
+    defaultStepIds: [],
+    defaultSplitId: null,
+    goalActions: true,
   },
 ]
 

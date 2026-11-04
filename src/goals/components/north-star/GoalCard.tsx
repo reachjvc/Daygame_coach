@@ -39,6 +39,7 @@ import { BUILDER_COPY } from "@/src/goals/data/northStarStart"
 import {
   areaGoalExample,
   GOAL_TIMEFRAMES,
+  goalActions,
   goalAlreadyInRoutine,
   goalCanUseDailyMetric,
   goalGaps,
@@ -124,15 +125,15 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
   const [angle, setAngle] = useState(0)
   const color = area?.color ?? "#a1a1aa"
   const hasWhy = goalHasWhy(goal)
-  const qualified = goalIsQualified(goal)
-  const gaps = goalGaps(goal)
+  const qualified = goalIsQualified(goal, plan)
+  const gaps = goalGaps(goal, plan)
   const warnings = qualifyWarnings(goal)
   const isTarget = goal.type === "milestone_ladder"
   const isPractice = goal.type === "habit_ramp"
   const isFinish = goal.type === "achievement"
   const currentAngle = NS_WHY_ANGLES[angle % NS_WHY_ANGLES.length]
   const suggestion = suggestSentence(goal)
-  const needsAction = goalNeedsAction(goal)
+  const needsAction = goalNeedsAction(goal, plan)
   const horizon = goalHorizon(goal, today)
   const horizonMeta = HORIZON_META[horizon]
   const countdown = goal.targetDate ? formatCountdown(goal.targetDate, new Date(`${today}T00:00:00`)) : null
@@ -630,7 +631,7 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             </div>
           </div>
 
-          <ActionBlock goal={goal} color={color} needsAction={needsAction} handlers={handlers} />
+          <ActionBlock goal={goal} plan={plan} color={color} needsAction={needsAction} handlers={handlers} />
           <ReasonsDrill goal={goal} color={color} handlers={handlers} />
           <ObstacleBlock goal={goal} color={color} handlers={handlers} />
           <BeliefBlock goal={goal} color={color} handlers={handlers} />
@@ -1579,12 +1580,18 @@ export function PriorityBadge({ rank, total, color, title, onSet, onMove }: {
  * quietly, so when the shared predicate says one is missing this asks in amber
  * at the point of contact rather than filing a note somewhere.
  */
-function ActionBlock({ goal, color, needsAction, handlers }: {
+function ActionBlock({ goal, plan, color, needsAction, handlers }: {
   goal: NsGoal
+  plan: NsPlan
   color: string
   needsAction: boolean
   handlers: GoalHandlers
 }) {
+  /* The steps that serve this goal (Phase 4, Q5): an action written here is a
+     routine step, ticked on Today, and a step linked here from a routine is an
+     action too. Same list either way. */
+  const actions = goalActions(plan, goal.id)
+  const titleOf = new Map(plan.goals.map((g) => [g.id, g.title]))
   const [draft, setDraft] = useState("")
   const [days, setDays] = useState(3)
   const add = () => {
@@ -1607,30 +1614,42 @@ function ActionBlock({ goal, color, needsAction, handlers }: {
           which is the page illustrating somebody else's life at the moment it
           asks for yours. */}
 
-      {goal.habits.length > 0 && (
-        <ul className="mt-2 space-y-1">
-          {goal.habits.map((h) => (
-            <li key={h.id} className="group/act flex items-center gap-2">
-              <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-              <input
-                value={h.title}
-                onChange={(e) => handlers.onUpdateAction(goal.id, h.id, { title: e.target.value })}
-                aria-label="Action"
-                className="flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] text-zinc-200 focus:outline-none py-0.5 transition-colors"
-              />
-              <select
-                value={h.daysPerWeek}
-                onChange={(e) => handlers.onUpdateAction(goal.id, h.id, { daysPerWeek: Number(e.target.value) })}
-                aria-label={`Days per week for ${h.title}`}
-                className="bg-white/5 border border-white/10 rounded px-1 py-0.5 text-[10px] text-zinc-300 focus:outline-none shrink-0"
-              >
-                {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n} className="bg-zinc-900">{n}×/wk</option>)}
-              </select>
-              <button
-                onClick={() => handlers.onRemoveAction(goal.id, h.id)}
-                aria-label={`Remove action ${h.title}`}
-                className="shrink-0 text-zinc-700 hover:text-rose-300 opacity-0 group-hover/act:opacity-100 focus:opacity-100 transition-all"
-              ><X className="size-3" /></button>
+      {actions.length > 0 && (
+        <ul className="mt-2 space-y-1.5">
+          {actions.map((h) => (
+            <li key={h.id} className="group/act">
+              <div className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                <input
+                  value={h.title}
+                  onChange={(e) => handlers.onUpdateAction(goal.id, h.id, { title: e.target.value })}
+                  aria-label="Action"
+                  className="flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] text-zinc-200 focus:outline-none py-0.5 transition-colors"
+                />
+                {h.ownDays ? (
+                  <select
+                    value={h.daysPerWeek}
+                    onChange={(e) => handlers.onUpdateAction(goal.id, h.id, { daysPerWeek: Number(e.target.value) })}
+                    aria-label={`Days per week for ${h.title}`}
+                    className="bg-white/5 border border-white/10 rounded px-1 py-0.5 text-[10px] text-zinc-300 focus:outline-none shrink-0"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n} className="bg-zinc-900">{n}×/wk</option>)}
+                  </select>
+                ) : (
+                  <span className="text-[10px] text-zinc-500 tabular-nums shrink-0">{h.daysPerWeek}×/wk</span>
+                )}
+                <button
+                  onClick={() => handlers.onRemoveAction(goal.id, h.id)}
+                  aria-label={`Remove action ${h.title}`}
+                  className="shrink-0 text-zinc-700 hover:text-rose-300 opacity-0 group-hover/act:opacity-100 focus:opacity-100 transition-all"
+                ><X className="size-3" /></button>
+              </div>
+              {/* Where it runs, so "why is this on Today twice" never has to be
+                  asked: it is one step, and these are the goals it serves. */}
+              <p className="pl-3.5 text-[10.5px] text-zinc-500">
+                In {h.routineLabel}
+                {h.alsoServes.length > 0 && ` · also serves ${h.alsoServes.map((id) => titleOf.get(id) ?? "another goal").join(", ")}`}
+              </p>
             </li>
           ))}
         </ul>

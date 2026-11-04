@@ -101,58 +101,6 @@ export type SaveOutcome =
   | { ok: false; stale: false; message: string }
 
 /**
- * Send the whole plan, quoting the revision it was built on.
- *
- * `ids` carries every UUID already minted so that a part which still exists
- * keeps the id it had. `newId` is passed in rather than called here so the
- * caller decides — and so a test can make it deterministic.
- */
-export async function saveLifePlanFromBrowser(
-  plan: NsPlan,
-  planId: string,
-  userId: string,
-  revision: number,
-  ids: Map<string, string>,
-  newId: () => string,
-): Promise<SaveOutcome> {
-  let rows: PlanRows
-  try {
-    rows = planToRows(plan, {
-      planId,
-      userId,
-      idFor: (localId: string) => {
-        const had = ids.get(localId)
-        if (had) return had
-        const made = newId()
-        ids.set(localId, made)
-        return made
-      },
-    })
-  } catch (error) {
-    // The mapper refuses a plan whose parts share an id, naming the id. That
-    // is a message worth showing rather than a generic failure.
-    return { ok: false, stale: false, message: error instanceof Error ? error.message : "This plan could not be saved." }
-  }
-
-  try {
-    const res = await fetch("/api/life-plan", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: rows, revision }),
-    })
-    if (res.status === 409) return { ok: false, stale: true }
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as { error?: string } | null
-      return { ok: false, stale: false, message: body?.error ?? "The last change could not be saved." }
-    }
-    const body = (await res.json()) as { revision: number }
-    return { ok: true, revision: body.revision, ids }
-  } catch {
-    return { ok: false, stale: false, message: "The last change could not be saved." }
-  }
-}
-
-/**
  * Send only what changed since the account last accepted the plan.
  *
  * `before` is the ROWS the account holds (as read, then as last accepted),

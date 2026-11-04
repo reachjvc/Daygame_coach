@@ -2,6 +2,8 @@ import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import type { Browser, Page } from "@playwright/test"
 import { planWithSteps, seedLifePlan } from "./helpers/lifePlan"
+import { diffPlanRows } from "@/src/goals/lifePlanDiff"
+import type { PlanRows } from "@/src/db/lifePlanTypes"
 
 /**
  * M1'S ACCEPTANCE: YOUR DAY IS ON YOUR ACCOUNT, NOT IN ONE BROWSER.
@@ -149,7 +151,7 @@ test.describe("the day half crosses devices", () => {
     /**
      * A STRUCTURAL CHANGE, because an identical body is not one.
      *
-     * `save_life_plan` upserts by node id, so re-sending the plan unchanged
+     * A save upserts by node id, so re-sending the plan unchanged
      * keeps every id and fires no cascade — which is exactly the cascade this
      * test exists to watch for. `lifePlanDay.integration.test.ts` proves at the
      * schema level that losing a node row DOES delete its tick, so the node set
@@ -171,7 +173,10 @@ test.describe("the day half crosses devices", () => {
     }
     // Nobody else saves to this account, so the revision just read is current:
     // anything but 200 is this save failing.
-    const saved = await laptop.request.put("/api/life-plan", { data: { plan: grown, revision: body.revision } })
+    // The change-only save, which is the only plan save there is since Phase 4
+    // retired the whole-plan PUT (Plans/life-plan-rebuild.md).
+    const changes = diffPlanRows(plan as unknown as PlanRows, grown as unknown as PlanRows)
+    const saved = await laptop.request.patch("/api/life-plan", { data: { changes, revision: body.revision } })
     expect(saved.status(), `the plan save answered: ${await saved.text()}`).toBe(200)
     const grownBody = (await (await laptop.request.get("/api/life-plan")).json()) as { plan: PlanShape }
     expect(
@@ -180,7 +185,7 @@ test.describe("the day half crosses devices", () => {
     ).toBe(true)
 
     const after = await readDay(page)
-    expect(after.notes[DAY], "the day note survived a whole-plan save").toBe("a day I do not want to lose")
+    expect(after.notes[DAY], "the day note survived a plan save").toBe("a day I do not want to lose")
     expect(
       after.logged[DAY] ?? [],
       "the tick survived a structural plan save — the cascade this design exists to prevent",

@@ -58,7 +58,8 @@ const TABLES: Array<[keyof PlanRows, string, "plan" | "user"]> = [
   ["checkpoints", "life_plan_goal_checkpoints", "user"],
   ["obstacles", "life_plan_goal_obstacles", "user"],
   ["beliefs", "life_plan_goal_beliefs", "user"],
-  ["habits", "life_plan_goal_habits", "user"],
+  // Not "habits": a goal's habits are routine steps since Phase 4 (Q5), and
+  // the repo leaves the old table out of its read, as `readBackOn` does below.
   ["goal_feeds", "life_plan_goal_feeds", "user"],
   ["goal_serves", "life_plan_goal_serves", "user"],
   ["routine_serves", "life_plan_routine_serves", "user"],
@@ -163,6 +164,7 @@ async function readBackOn(db: Client, planId: string, userId: string): Promise<P
     season_focus_id: p.season_focus_id,
     updated_at: p.updated_at,
   }
+  out.habits = []
   for (const [field, table, on] of TABLES) {
     const col = on === "plan" ? "plan_id" : "user_id"
     const val = on === "plan" ? planId : userId

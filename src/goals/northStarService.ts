@@ -36,7 +36,8 @@ import {
   VALUE_CUES,
   VALUE_ENDS_WORDS,
   VALUES_EVIDENCE,
-  VALUES_INTRO,
+  GOAL_ACTIONS_BLUEPRINT_ID,
+  goalActionsRoutineLabel,
   WRITE_FALLBACK_QUESTION,
   WRITE_PHRASES,
 } from "@/src/goals/data/northStar"
@@ -111,7 +112,6 @@ import type {
   RoutineBlueprint,
   RoutineBlueprintStep,
   VisionGoalType,
-  VisionHabit,
   NsAccount,
 } from "@/src/goals/types"
 /** A value, not a type: the loader checks a saved kind against it. */
@@ -1024,7 +1024,7 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     updatedAt: typeof obj.updatedAt === "string" ? obj.updatedAt : null,
   })
   // A plan written before seasons existed already holds one.
-  return withImpliedSeason(normalized)
+  return foldLegacyHabits(withImpliedSeason(normalized))
 }
 
 function isIsoDate(value: unknown): value is string {
@@ -1180,7 +1180,13 @@ function readGoal(g: Record<string, unknown>): NsGoal {
       ? (g.habits as unknown[])
           .filter((h): h is Record<string, unknown> => !!h && typeof h === "object")
           .filter((h) => typeof h.id === "string" && typeof h.title === "string")
-          .map((h) => ({ id: String(h.id), title: String(h.title), daysPerWeek: clamp(numberOr(h.daysPerWeek, 3), 1, 7) }))
+          .map((h) => ({
+            id: String(h.id),
+            title: String(h.title),
+            daysPerWeek: clamp(numberOr(h.daysPerWeek, 3), 1, 7),
+            // Kept so the fold below can leave a stand-in out, as the migration does.
+            placeholder: h.placeholder === true,
+          }))
       : [],
     reasonsList: readStringList(g.reasonsList),
     feeling: stringOr(g.feeling, ""),
@@ -2012,8 +2018,15 @@ export function setGoalType(plan: NsPlan, goalId: string, type: VisionGoalType, 
 }
 
 export function removeGoal(plan: NsPlan, goalId: string, now = nowIso()): NsPlan {
+  // Its actions go with it, as its habits did: an actions-routine step that
+  // served only this goal. A step anything else is served by just loses the link.
+  const routines = withoutActionSteps(plan.routines, (s) => s.servesGoalIds.length > 0 && s.servesGoalIds.every((id) => id === goalId))
+    .map((r) => (r.steps.some((s) => s.servesGoalIds.includes(goalId))
+      ? { ...r, steps: r.steps.map((s) => ({ ...s, servesGoalIds: s.servesGoalIds.filter((id) => id !== goalId) })) }
+      : r))
   return touch({
     ...plan,
+    routines,
     goals: plan.goals
       .filter((g) => g.id !== goalId)
       .map((g) => (g.feedsGoalIds.includes(goalId) ? { ...g, feedsGoalIds: g.feedsGoalIds.filter((id) => id !== goalId) } : g)),
@@ -2124,12 +2137,16 @@ export function areaGoalsByPriority(plan: NsPlan, areaId: string): NsGoal[] {
  * is on the goal, not in a habit list) and a finish line's steps live in
  * `checkpoints`, so both are handed over in the shape the lab expects.
  */
-export function goalNeedsAction(goal: NsGoal): boolean {
+export function goalNeedsAction(goal: NsGoal, plan: NsPlan): boolean {
   // A practice is the action. Asking "what will you do about running 4x a week"
   // is asking the same question twice.
   if (goal.type === "habit_ramp") return false
   return labGoalNeedsAction({
-    habits: goal.habits,
+    // WHAT RUNS AT IT, read off the plan: a routine step serving it (which is
+    // where an action written under it lives since Phase 4, Q5) or a driver
+    // feeding it. It read `goal.habits`, a list nothing ticked, so a goal with
+    // a step pointed at it was still told it had nothing to do on a Tuesday.
+    habits: systemsForGoal(plan, goal.id).map((s) => ({ id: s.id, title: s.title, daysPerWeek: s.daysPerWeek })),
     // Hand-written checkpoints only. A generated milestone is a number on the
     // way to the number — "Bench 24 kg" on the way to 28 — and counting it as
     // an action meant that answering "where are you today", which spaces the
@@ -2151,26 +2168,166 @@ export function goalHorizon(goal: NsGoal, today = todayISO()): Horizon {
   return labGoalHorizon({ type: goal.type, targetDate: goal.targetDate }, today)
 }
 
+// ------------------------------------------------------------ a goal's actions
+//
+// AN ACTION IS A ROUTINE STEP THAT SERVES THE GOAL (Plans/life-plan-rebuild.md,
+// Phase 4, Q5). It was a list inside the goal, and Today never read it, so
+// "what will you actually do about this?" was answered in a place where
+// nothing got done. Now it is a step, ticked where every step is.
+//
+// One step per action, whichever goals it serves: "Train, and hit your
+// protein" under four body goals is one thing you do four times a week, not
+// four things. A new one goes into its area's "<area> actions" routine; one
+// that matches a step the plan already has, by title, is that step.
+
+/** One of a goal's actions: a step serving it, and where the step lives. */
+export interface NsGoalAction {
+  id: string
+  title: string
+  /** Days a week. A sequence routine's steps run whenever the routine does. */
+  daysPerWeek: number
+  routineId: string
+  routineLabel: string
+  /**
+   * Its frequency is its own to change here: a weekly routine's step not yet
+   * placed on days. A sequence step runs when its routine does, and a placed
+   * step's days ARE its rate, as the routine card has it.
+   */
+  ownDays: boolean
+  /** The other goals the same step serves. */
+  alsoServes: string[]
+}
+
+export function goalActions(plan: NsPlan, goalId: string): NsGoalAction[] {
+  const out: NsGoalAction[] = []
+  for (const routine of plan.routines) {
+    for (const step of routine.steps) {
+      if (!step.servesGoalIds.includes(goalId)) continue
+      out.push({
+        id: step.id,
+        title: step.title,
+        daysPerWeek: routine.kind === "sequence" ? routine.daysPerWeek : step.daysPerWeek,
+        routineId: routine.id,
+        routineLabel: routine.label,
+        ownDays: routine.kind === "weekly" && step.days.length === 0,
+        alsoServes: step.servesGoalIds.filter((id) => id !== goalId),
+      })
+    }
+  }
+  return out
+}
+
+function stepById(plan: NsPlan, stepId: string): { routine: NsRoutine; step: NsRoutineStep } | null {
+  for (const routine of plan.routines) {
+    const step = routine.steps.find((s) => s.id === stepId)
+    if (step) return { routine, step }
+  }
+  return null
+}
+
+const sameTitle = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+
+/** The area's actions routine, made if it has none yet. */
+function actionsRoutineFor(plan: NsPlan, areaId: string): { plan: NsPlan; routineId: string } {
+  const area = plan.areas.find((a) => a.id === areaId) ?? null
+  const existing = plan.routines.find(
+    (r) => r.blueprintId === GOAL_ACTIONS_BLUEPRINT_ID && r.areaId === (area ? area.id : null),
+  )
+  if (existing) return { plan, routineId: existing.id }
+  const { plan: withSeq, id } = nextId(plan, "r")
+  const routine: NsRoutine = {
+    id,
+    label: goalActionsRoutineLabel(area?.label ?? ""),
+    blueprintId: GOAL_ACTIONS_BLUEPRINT_ID,
+    kind: "weekly",
+    areaId: area ? area.id : null,
+    serves: [],
+    steps: [],
+    daysPerWeek: 7,
+    splitDays: [],
+    program: null,
+  }
+  return { plan: { ...withSeq, routines: [...withSeq.routines, routine] }, routineId: id }
+}
+
 export function addAction(plan: NsPlan, goalId: string, title: string, daysPerWeek: number, now = nowIso()): NsPlan {
   const trimmed = title.trim()
   if (!trimmed) return plan
   const goal = plan.goals.find((g) => g.id === goalId)
   if (!goal) return plan
-  const { plan: withSeq, id } = nextId(plan, "h")
-  const habit: VisionHabit = { id, title: trimmed, daysPerWeek: clamp(daysPerWeek, 1, 7) }
-  return updateGoal(withSeq, goalId, { habits: [...goal.habits, habit] }, now)
+  // A step the plan already runs keeps its own frequency: it is the same thing
+  // done, and quietly changing a routine's step from a goal card would be worse
+  // than showing its real rate there.
+  for (const routine of plan.routines) {
+    const same = routine.steps.find((s) => sameTitle(s.title, trimmed))
+    if (same) return linkStepToGoal(plan, routine.id, same.id, goalId, true, now)
+  }
+  const { plan: withRoutine, routineId } = actionsRoutineFor(plan, goal.areaId)
+  // No length: an action has a frequency, and how long it takes is not what
+  // was asked. The weekly load counts it as sessions for that reason.
+  const added = addCustomStep(withRoutine, routineId, trimmed, 0, daysPerWeek, now)
+  const step = added.routines.find((r) => r.id === routineId)?.steps.at(-1)
+  if (!step) return plan
+  return linkStepToGoal(added, routineId, step.id, goalId, true, now)
 }
 
-export function updateAction(plan: NsPlan, goalId: string, habitId: string, patch: Partial<Omit<VisionHabit, "id">>, now = nowIso()): NsPlan {
-  const goal = plan.goals.find((g) => g.id === goalId)
-  if (!goal) return plan
-  return updateGoal(plan, goalId, { habits: goal.habits.map((h) => (h.id === habitId ? { ...h, ...patch } : h)) }, now)
+/** Rename an action, or change how often. It is one step, so every goal it serves sees it. */
+export function updateAction(plan: NsPlan, goalId: string, stepId: string, patch: { title?: string; daysPerWeek?: number }, now = nowIso()): NsPlan {
+  const found = stepById(plan, stepId)
+  if (!found || !found.step.servesGoalIds.includes(goalId)) return plan
+  return updateStep(plan, found.routine.id, stepId, patch, now)
 }
 
-export function removeAction(plan: NsPlan, goalId: string, habitId: string, now = nowIso()): NsPlan {
-  const goal = plan.goals.find((g) => g.id === goalId)
-  if (!goal) return plan
-  return updateGoal(plan, goalId, { habits: goal.habits.filter((h) => h.id !== habitId) }, now)
+/**
+ * Take an action off a goal.
+ *
+ * The link goes. The STEP goes only when it lives in an actions routine and no
+ * other goal is served by it, because then it was only ever this goal's action;
+ * a step from the morning routine, or one another goal shares, stays where it
+ * is. An actions routine left empty goes with it.
+ */
+export function removeAction(plan: NsPlan, goalId: string, stepId: string, now = nowIso()): NsPlan {
+  const found = stepById(plan, stepId)
+  if (!found || !found.step.servesGoalIds.includes(goalId)) return plan
+  const { routine, step } = found
+  const onlyThisGoal = step.servesGoalIds.every((id) => id === goalId)
+  if (routine.blueprintId !== GOAL_ACTIONS_BLUEPRINT_ID || !onlyThisGoal) {
+    return linkStepToGoal(plan, routine.id, stepId, goalId, false, now)
+  }
+  return touch({ ...plan, routines: withoutActionSteps(plan.routines, (s) => s.id === stepId) }, now)
+}
+
+/**
+ * The routines with some actions-routine steps taken out, and any actions
+ * routine that leaves empty. Steps in other routines are never touched.
+ */
+function withoutActionSteps(routines: NsRoutine[], drop: (step: NsRoutineStep) => boolean): NsRoutine[] {
+  return routines.flatMap((r) => {
+    if (r.blueprintId !== GOAL_ACTIONS_BLUEPRINT_ID) return [r]
+    const steps = r.steps.filter((s) => !drop(s))
+    if (steps.length === r.steps.length) return [r]
+    return steps.length > 0 ? [{ ...r, steps }] : []
+  })
+}
+
+/**
+ * Habits a plan still carries in the old place, made into actions.
+ *
+ * The account's were copied by migration `20261104170000` and the read leaves
+ * the old rows out, so a plan from the server never has any. A copy kept in
+ * this browser from before can, and the same rule turns them into steps.
+ * When it was last changed is left alone: nothing the person did changed it.
+ */
+function foldLegacyHabits(plan: NsPlan): NsPlan {
+  if (plan.goals.every((g) => g.habits.length === 0)) return plan
+  let next: NsPlan = { ...plan, goals: plan.goals.map((g) => ({ ...g, habits: [] })) }
+  for (const goal of plan.goals) {
+    // A placeholder ("Work toward: <goal>") is a stand-in, not an action.
+    for (const habit of goal.habits) {
+      if (!habit.placeholder) next = addAction(next, goal.id, habit.title, habit.daysPerWeek, plan.updatedAt ?? "")
+    }
+  }
+  return { ...next, updatedAt: plan.updatedAt }
 }
 
 /** Add one or many reasons. Duplicates and blanks are dropped, order kept. */
@@ -2883,7 +3040,7 @@ export function milestoneHasSystem(plan: NsPlan, goal: NsGoal): boolean {
 }
 
 /** What is still missing before this counts as a planned goal. */
-export function goalGaps(goal: NsGoal): string[] {
+export function goalGaps(goal: NsGoal, plan: NsPlan): string[] {
   const gaps: string[] = []
   /**
    * A PRACTICE IS FINISHED WHEN IT HAS A RATE.
@@ -2906,16 +3063,16 @@ export function goalGaps(goal: NsGoal): string[] {
   if (goal.type === "milestone_ladder" && (!goal.ladder || goal.ladder.target === goal.ladder.start)) gaps.push("a number to climb to")
   if (goal.type === "achievement" && goal.checkpoints.length === 0) gaps.push("checkpoints")
   if (goal.beliefLevel == null || goal.desireLevel == null) gaps.push("both ratings")
-  if (goalNeedsAction(goal)) gaps.push("an action")
+  if (goalNeedsAction(goal, plan)) gaps.push("an action")
   if (!goal.sentence.trim()) gaps.push("the sentence")
   return gaps
 }
 
-export function goalIsQualified(goal: NsGoal): boolean {
+export function goalIsQualified(goal: NsGoal, plan: NsPlan): boolean {
   // What it costs if it does not happen is the why asked the other way round,
   // so a practice is not asked that either.
   const painAsked = goalNeedsWhy(goal)
-  return goalGaps(goal).length === 0 && (!painAsked || goal.painWhy.trim().length > 0)
+  return goalGaps(goal, plan).length === 0 && (!painAsked || goal.painWhy.trim().length > 0)
 }
 
 // -------------------------------------------------------------------- review
@@ -3315,11 +3472,6 @@ export function rankValueAbove(plan: NsPlan, winner: string, loser: string, now 
   const next = plan.values.filter((_, i) => i !== wi)
   next.splice(li, 0, plan.values[wi])
   return touch({ ...plan, values: next }, now)
-}
-
-/** How far off his "at least seven" the list is. Advisory, never blocking. */
-export function valuesShortBy(plan: NsPlan): number {
-  return Math.max(0, VALUES_INTRO.minimum - plan.values.length)
 }
 
 export function setValues(plan: NsPlan, values: string[], now = nowIso()): NsPlan {
@@ -3752,8 +3904,8 @@ export function nsProgress(plan: NsPlan, account: NsAccount = NO_ACCOUNT): NsPro
   const starWritten = plan.northStar.trim().length > 0
   const goals = plan.goals.length
   const goalsWithWhy = plan.goals.filter(goalHasWhy).length
-  const goalsQualified = plan.goals.filter(goalIsQualified).length
-  const goalsNeedingAction = plan.goals.filter(goalNeedsAction).length
+  const goalsQualified = plan.goals.filter((g) => goalIsQualified(g, plan)).length
+  const goalsNeedingAction = plan.goals.filter((g) => goalNeedsAction(g, plan)).length
   const areasWithGoals = new Set(plan.goals.map((g) => g.areaId)).size
   const routineSteps = plan.routines.reduce((sum, r) => sum + r.steps.length, 0)
   const areasRated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight != null).length
@@ -3940,14 +4092,9 @@ export function planTodos(plan: NsPlan): Array<{ id: string; text: string; tab: 
   const out: Array<{ id: string; text: string; tab: NorthStarTabId }> = []
   if (!plan.northStar.trim()) out.push({ id: "star", text: "Your north star paragraph", tab: "star" })
   if (!answerOf(plan, STAR_WHY_ID).trim()) out.push({ id: "why", text: "Why that life matters to you", tab: "star" })
-  const short = valuesShortBy(plan)
-  if (short > 0) {
-    out.push({
-      id: "values",
-      text: plan.values.length === 0 ? "Your values, in order" : `${short} more ${short === 1 ? "value" : "values"} to reach seven`,
-      tab: "star",
-    })
-  }
+  // A question, not a count: "N more values to reach seven" went with the
+  // floor of 7 (owner, 2026-11-04). How long the list is, is theirs.
+  if (plan.values.length === 0) out.push({ id: "values", text: "Ask yourself what you value most", tab: "star" })
   const unrated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight == null).length
   if (unrated > 0) out.push({ id: "rate", text: `${unrated} of ${plan.areas.length} areas still unrated`, tab: "now" })
   const noTen = plan.areas.filter((a) => !areaReview(plan, a.id).ten.trim()).length
@@ -3962,7 +4109,7 @@ export function planTodos(plan: NsPlan): Array<{ id: string; text: string; tab: 
     if (noDate > 0) out.push({ id: "goaldate", text: `${noDate} ${noDate === 1 ? "goal has" : "goals have"} no date`, tab: "milestones" })
     // An outcome with nothing running at it is answered on the systems step,
     // which is where the linking is, so the chip goes there.
-    const noAction = plan.goals.filter(goalNeedsAction).length
+    const noAction = plan.goals.filter((g) => goalNeedsAction(g, plan)).length
     if (noAction > 0) out.push({ id: "goalaction", text: `${noAction} ${noAction === 1 ? "goal names" : "goals name"} an outcome with no action`, tab: "systems" })
   }
   return out
@@ -4434,7 +4581,7 @@ export function addGoalFromTarget(plan: NsPlan, areaId: string, targetId: string
   const action = defaultActionForTarget(target)
   if (action) {
     const made = next.goals.find((g) => g.id === goal.id)
-    if (made && goalNeedsAction(made)) next = addAction(next, goal.id, action.title, action.daysPerWeek, now)
+    if (made && goalNeedsAction(made, next)) next = addAction(next, goal.id, action.title, action.daysPerWeek, now)
   }
   return next
 }
@@ -4502,7 +4649,7 @@ export function systemGoals(plan: NsPlan, areaId?: string): NsGoal[] {
 
 /** One thing that runs, and where it lives. */
 export interface NsSystem {
-  kind: "step" | "driver" | "action"
+  kind: "step" | "driver"
   id: string
   title: string
   /** How often it runs, as a number of days a week. */
@@ -4510,40 +4657,32 @@ export interface NsSystem {
   /** The routine it belongs to, for a step. */
   routineId?: string
   routineLabel?: string
-  /** The goal it belongs to, for a driver or an action. */
+  /** The goal it belongs to, for a driver. */
   goalId?: string
 }
 
 /**
  * Everything running at one milestone.
  *
- * Three shapes reach a milestone and they were never gathered in one place:
+ * Three shapes reached a milestone and they were never gathered in one place:
  * a routine step somebody linked here, a driver goal that feeds it, and an
  * action written under the milestone itself. To the person they are one
  * question — "what is actually moving this?" — so they answer as one list.
+ * Since Phase 4 (Q5) an action IS a step serving the goal, so two shapes remain.
  */
 export function systemsForGoal(plan: NsPlan, goalId: string): NsSystem[] {
-  const out: NsSystem[] = []
-  for (const routine of plan.routines) {
-    for (const step of routine.steps) {
-      if (!step.servesGoalIds.includes(goalId)) continue
-      out.push({
-        kind: "step",
-        id: step.id,
-        title: step.title,
-        daysPerWeek: routine.kind === "sequence" ? routine.daysPerWeek : step.daysPerWeek,
-        routineId: routine.id,
-        routineLabel: routine.label,
-      })
-    }
-  }
+  // One reading of "which steps serve this goal, and how often": its actions.
+  const out: NsSystem[] = goalActions(plan, goalId).map((a) => ({
+    kind: "step",
+    id: a.id,
+    title: a.title,
+    daysPerWeek: a.daysPerWeek,
+    routineId: a.routineId,
+    routineLabel: a.routineLabel,
+  }))
   for (const goal of plan.goals) {
     if (!isSystem(goal) || !goal.feedsGoalIds.includes(goalId)) continue
     out.push({ kind: "driver", id: goal.id, title: goal.title, daysPerWeek: goal.daysPerWeek, goalId: goal.id })
-  }
-  const owner = plan.goals.find((g) => g.id === goalId)
-  for (const habit of owner?.habits ?? []) {
-    out.push({ kind: "action", id: habit.id, title: habit.title, daysPerWeek: habit.daysPerWeek, goalId })
   }
   return out
 }
@@ -5276,15 +5415,12 @@ export function planCascade(plan: NsPlan, today = todayISO()): NsCascade {
 export function weeklyLoad(plan: NsPlan): { minutes: number; actions: number; over: boolean } {
   /** One arithmetic for what a routine costs, and it lives in one place. */
   const minutes = plan.routines.reduce((sum, r) => sum + routineWeeklyMinutes(r), 0)
-  const seen = new Map<string, number>()
-  for (const goal of plan.goals) {
-    for (const habit of goal.habits) {
-      const key = habit.title.trim().toLowerCase()
-      if (!key) continue
-      seen.set(key, Math.max(seen.get(key) ?? 0, habit.daysPerWeek))
-    }
-  }
-  const actions = [...seen.values()].reduce((sum, n) => sum + n, 0)
+  // The actions routines' steps: one per action already, however many goals
+  // it serves, so nothing is counted twice. A step in any other routine is in
+  // the minutes.
+  const actions = plan.routines
+    .filter((r) => r.blueprintId === GOAL_ACTIONS_BLUEPRINT_ID)
+    .reduce((sum, r) => sum + r.steps.reduce((n, st) => n + st.daysPerWeek, 0), 0)
   return {
     minutes,
     actions,
@@ -5791,18 +5927,18 @@ export function suggestedActions(plan: NsPlan, goal: NsGoal): Array<{ title: str
  * which comes before when — and the two whys come last, when the goal is real
  * enough to have a reason. Anything already answered or skipped is behind us.
  */
-export function nextGuideQuestion(goal: NsGoal): GuideQuestionId | null {
+export function nextGuideQuestion(goal: NsGoal, plan: NsPlan): GuideQuestionId | null {
   const asked = new Set(goal.asked)
   for (const id of GUIDE_QUESTION_ORDER) {
     if (asked.has(id)) continue
-    if (!guideQuestionApplies(goal, id)) continue
+    if (!guideQuestionApplies(goal, id, plan)) continue
     return id
   }
   return null
 }
 
 /** Whether one question is worth asking about this goal at all. */
-export function guideQuestionApplies(goal: NsGoal, id: GuideQuestionId): boolean {
+export function guideQuestionApplies(goal: NsGoal, id: GuideQuestionId, plan: NsPlan): boolean {
   if (id === "control") {
     // Only of a finish line. A number you climb to is already something you do,
     // and a weekly practice is the most yours-to-decide thing on the page.
@@ -5810,7 +5946,7 @@ export function guideQuestionApplies(goal: NsGoal, id: GuideQuestionId): boolean
   }
   if (id === "start") return goal.type === "milestone_ladder" && !!goal.ladder
   // A practice IS the action, which is the same rule the amber panel uses.
-  if (id === "actions") return goalNeedsAction(goal)
+  if (id === "actions") return goalNeedsAction(goal, plan)
   if (id === "date") return true
   if (id === "why") return !goal.why.trim()
   return !goal.painWhy.trim()
@@ -5841,7 +5977,7 @@ export function guideQueue(plan: NsPlan, areaIds: string[] = []): Array<{ goal: 
   const priority = new Map(areaIds.map((id, i) => [id, i]))
   const order = new Map(plan.goals.map((g, i) => [g.id, i]))
   return plan.goals
-    .map((goal) => ({ goal, question: nextGuideQuestion(goal) }))
+    .map((goal) => ({ goal, question: nextGuideQuestion(goal, plan) }))
     .filter((row): row is { goal: NsGoal; question: GuideQuestionId } => row.question !== null)
     .sort((a, b) =>
       a.goal.asked.length - b.goal.asked.length ||
@@ -5864,13 +6000,13 @@ export function guideProgress(plan: NsPlan): { ready: number; total: number; ans
   for (const goal of plan.goals) {
     for (const id of GUIDE_QUESTION_ORDER) {
       const asked = goal.asked.includes(id)
-      if (!asked && !guideQuestionApplies(goal, id)) continue
+      if (!asked && !guideQuestionApplies(goal, id, plan)) continue
       questions += 1
       if (asked) answered += 1
     }
   }
   return {
-    ready: plan.goals.filter((g) => nextGuideQuestion(g) === null).length,
+    ready: plan.goals.filter((g) => nextGuideQuestion(g, plan) === null).length,
     total: plan.goals.length,
     answered,
     questions,

@@ -35,7 +35,6 @@ import type {
   GoalFeedRow,
   GoalRow,
   GoalServeRow,
-  HabitRow,
   NodeRow,
   NorthStarRow,
   ObstacleRow,
@@ -182,7 +181,7 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
   const [
     nodes, north_stars, areas, goals, routines, steps, split_days,
     experiences, fields, sub_steps, values, answers,
-    checkpoints, obstacles, beliefs, habits,
+    checkpoints, obstacles, beliefs,
     goal_feeds, goal_serves, routine_serves, step_serves,
     seasons, season_areas, season_goals,
   ] = await Promise.all([
@@ -201,7 +200,6 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
     all<CheckpointRow>("life_plan_goal_checkpoints", "node", ["id"]),
     all<ObstacleRow>("life_plan_goal_obstacles", "node", ["id"]),
     all<BeliefRow>("life_plan_goal_beliefs", "node", ["id"]),
-    all<HabitRow>("life_plan_goal_habits", "node", ["id"]),
     all<GoalFeedRow>("life_plan_goal_feeds", "node", ["goal_id", "feeds_goal_id"]),
     all<GoalServeRow>("life_plan_goal_serves", "node", ["goal_id", "area_id"]),
     all<RoutineServeRow>("life_plan_routine_serves", "node", ["routine_id", "area_id"]),
@@ -228,14 +226,22 @@ export async function readLifePlan(userId: string): Promise<StoredPlan | null> {
       seq: plan.data.seq as number,
       season_focus_id: (plan.data.season_focus_id as string | null) ?? null,
       updated_at: plan.data.updated_at as string,
-      nodes,
+      /**
+       * A GOAL'S HABITS ARE ROUTINE STEPS NOW (Plans/life-plan-rebuild.md,
+       * Phase 4, Q5), copied by migration `20261104170000`. The old rows stay
+       * until Phase 7, so they are LEFT OUT OF THE READ, nodes and all. What is
+       * read here is what the change-only save diffs against: a habit row read
+       * here and not written back would be sent as a removal, and the first
+       * save after this change would have deleted every one of them.
+       */
+      nodes: nodes.filter((n) => n.kind !== "habit"),
       north_stars,
       areas,
       goals,
       checkpoints: checkpoints.filter((r) => goalIds.has(r.goal_id)),
       obstacles: obstacles.filter((r) => goalIds.has(r.goal_id)),
       beliefs: beliefs.filter((r) => goalIds.has(r.goal_id)),
-      habits: habits.filter((r) => goalIds.has(r.goal_id)),
+      habits: [],
       goal_feeds: goal_feeds.filter((r) => goalIds.has(r.goal_id)),
       goal_serves: goal_serves.filter((r) => goalIds.has(r.goal_id)),
       routines,

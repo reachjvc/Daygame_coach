@@ -637,7 +637,8 @@ function AddRoutine({ plan, onAdd }: { plan: NsPlan; onAdd: (blueprintId: string
         <button onClick={() => setOpen(false)} className="ml-auto text-[10px] text-zinc-600 hover:text-zinc-400">cancel</button>
       </div>
       <div className="grid gap-2 mt-2">
-        {ROUTINE_BLUEPRINTS.map((bp) => (
+        {/* Not the goal-actions one: it is made by writing an action under a goal. */}
+        {ROUTINE_BLUEPRINTS.filter((bp) => !bp.goalActions).map((bp) => (
           <button
             key={bp.id}
             onClick={() => { onAdd(bp.id); setOpen(false) }}
@@ -825,17 +826,15 @@ function MilestoneLinks({ plan, goal, handlers }: { plan: NsPlan; goal: NsGoal; 
               <span className="text-[9.5px] text-emerald-200/60">
                 {system.routineLabel ?? SYSTEMS_COPY.kind[system.kind]} · {system.daysPerWeek}×
               </span>
-              {system.kind !== "action" && (
-                <button
-                  onClick={() =>
-                    system.kind === "step"
-                      ? handlers.onLinkStep(system.routineId as string, system.id, goal.id, false)
-                      : handlers.onLinkGoal(system.id, goal.id, false)
-                  }
-                  aria-label={`Unlink ${system.title} from ${goal.title}`}
-                  className="size-4 rounded text-emerald-200/50 hover:text-rose-300 flex items-center justify-center transition-colors"
-                ><X className="size-3" /></button>
-              )}
+              <button
+                onClick={() =>
+                  system.kind === "step"
+                    ? handlers.onLinkStep(system.routineId as string, system.id, goal.id, false)
+                    : handlers.onLinkGoal(system.id, goal.id, false)
+                }
+                aria-label={`Unlink ${system.title} from ${goal.title}`}
+                className="size-4 rounded text-emerald-200/50 hover:text-rose-300 flex items-center justify-center transition-colors"
+              ><X className="size-3" /></button>
             </li>
           ))}
         </ul>

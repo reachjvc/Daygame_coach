@@ -42,6 +42,7 @@ import {
   areaReview,
   climbPace,
   formatTargetDate,
+  goalActions,
   goalMilestones,
   goalsInArea,
   parseGoalTarget,
@@ -474,13 +475,15 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
   // stop — and a driver whose own rate IS the commitment does not need an
   // action underneath it either, because it already is one.
   const drives = goal.type === "habit_ramp"
+  // Its actions are the routine steps serving it (Phase 4, Q5).
+  const actions = goalActions(plan, goal.id)
   const missing = [
     // A climb whose target the person has not given yet needs THAT, not a
     // starting point for a number nobody chose.
     climbs && !numbered && !goal.unit.trim() ? BUILDER_COPY.needsTarget : null,
     climbs && (numbered || goal.unit.trim()) && goal.ladder && goal.ladder.start === 0 && !start ? BUILDER_COPY.needsStart : null,
     !drives && !goal.targetDate ? BUILDER_COPY.needsDate : null,
-    !drives && goal.habits.length === 0 ? BUILDER_COPY.needsAction : null,
+    !drives && actions.length === 0 ? BUILDER_COPY.needsAction : null,
     drives && goal.daysPerWeek === 0 ? BUILDER_COPY.needsRate : null,
   ].filter(Boolean) as string[]
 
@@ -522,7 +525,7 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
               : null,
             goal.type === "habit_ramp" ? goalRateLabel(goal) : null,
             goal.targetDate ? `by ${formatTargetDate(goal.targetDate)}` : null,
-            goal.habits.length > 0 ? `${goal.habits.length} ${goal.habits.length === 1 ? "action" : "actions"}` : null,
+            actions.length > 0 ? `${actions.length} ${actions.length === 1 ? "action" : "actions"}` : null,
           ].filter(Boolean).join(" · ")}
           </button>
         </span>
@@ -807,9 +810,9 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
           <div>
             <p className="text-[11.5px] text-zinc-300">{BUILDER_COPY.actionAsk}</p>
             <p className="text-[10.5px] text-zinc-600 mt-0.5 leading-relaxed">{BUILDER_COPY.actionHelp}</p>
-            {goal.habits.length > 0 && (
+            {actions.length > 0 && (
               <ul className="flex flex-wrap gap-1.5 mt-1.5">
-                {goal.habits.map((habit) => (
+                {actions.map((habit) => (
                   <li key={habit.id} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-emerald-100">
                     {habit.title}
                     <span className="text-[9.5px] text-emerald-200/70 tabular-nums">{habit.daysPerWeek}×</span>
@@ -824,7 +827,7 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
             )}
             <div className="flex flex-wrap gap-1.5 mt-1.5">
               {suggestedActions(plan, goal)
-                .filter((s) => !goal.habits.some((h) => h.title.trim().toLowerCase() === s.title.trim().toLowerCase()))
+                .filter((s) => !actions.some((h) => h.title.trim().toLowerCase() === s.title.trim().toLowerCase()))
                 .slice(0, 5)
                 .map((s) => (
                   <button

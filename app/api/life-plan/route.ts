@@ -4,16 +4,22 @@
  * GET hands back the plan and the revision it was read at. PATCH sends only
  * what changed since then (`diffPlanRows`), quoting that revision, and a save
  * built on a stale one is REFUSED with 409 rather than merged — the page then
- * says so. PUT, the whole-plan save, stays until Phase 7 of
- * Plans/life-plan-rebuild.md removes it; the flow no longer calls it. Merging two devices' plans
- * into a third thing neither person wrote is the failure this exists to avoid.
+ * says so. Merging two devices' plans into a third thing neither person wrote
+ * is the failure this exists to avoid.
+ *
+ * PUT, THE WHOLE-PLAN SAVE, IS REFUSED (Phase 4 of Plans/life-plan-rebuild.md).
+ * The flow stopped calling it in Phase 1. It deletes every row its payload
+ * leaves out, so a page that loaded before an update — and does not know a
+ * part the update added — wiped that part on its next save, and since Q5 the
+ * read leaves the old habit rows out, so any whole-plan save would delete them
+ * all. Only a page running old code can still send it; it is told to reload.
  *
  * The day tables are not reachable from here; they get their own route.
  */
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { applyLifePlanChanges, ensureLifePlan, readLifePlan, saveLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
+import { applyLifePlanChanges, ensureLifePlan, readLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
 export async function GET() {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
@@ -29,27 +35,13 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: Request) {
+export async function PUT() {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
-
-  const body = await req.json().catch(() => null)
-  if (!body || typeof body !== "object" || typeof body.revision !== "number" || !body.plan) {
-    return NextResponse.json({ error: "Send a plan and the revision you read" }, { status: 400 })
-  }
-  // The owner is stamped by the repo, from the session — never taken from
-  // the body, and never only at the top level.
-
-  try {
-    const revision = await saveLifePlan(body.plan, body.revision, auth.userId)
-    return NextResponse.json({ revision })
-  } catch (error) {
-    if (error instanceof StalePlanError) {
-      return NextResponse.json({ error: error.message, revision: error.revision }, { status: 409 })
-    }
-    console.error("[life-plan] save failed", error)
-    return NextResponse.json({ error: "Could not save your plan" }, { status: 500 })
-  }
+  return NextResponse.json(
+    { error: "This page is out of date and cannot save. Reload it, and your last change will need making again." },
+    { status: 410 },
+  )
 }
 
 /** Save only what changed. The database refuses any table outside the plan. */

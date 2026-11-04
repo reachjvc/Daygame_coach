@@ -383,6 +383,10 @@ export function RoutineCard({
                 stack beside it, so it shows the first few and fades, the same
                 way the value list does. */}
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              {/* The goal-actions routine has no library: what is in it was
+                  written under a goal. Only "your own step" is offered. */}
+              {(bp?.library.length ?? 0) > 0 && (
+              <>
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                 Pick your steps
                 {/* What is on, counted, at the top of the list you are clicking
@@ -428,8 +432,10 @@ export function RoutineCard({
                 })}
               </ul>
               </Peek>
+              </>
+              )}
 
-              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-white/5">
+              <div className={`flex items-center gap-1.5 ${(bp?.library.length ?? 0) > 0 ? "mt-2 pt-2 border-t border-white/5" : ""}`}>
                 <input
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}

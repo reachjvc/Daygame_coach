@@ -50,7 +50,6 @@ import type {
   GoalFeedRow,
   GoalRow,
   GoalServeRow,
-  HabitRow,
   LifePlanNodeKind,
   NodeRow,
   NorthStarRow,
@@ -190,7 +189,6 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
   const checkpoints: CheckpointRow[] = []
   const obstacles: ObstacleRow[] = []
   const beliefs: BeliefRow[] = []
-  const habits: HabitRow[] = []
   const values: ValueRow[] = []
 
   plan.goals.forEach((goal, i) => {
@@ -251,17 +249,8 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
         evidence: b.evidence ?? "", replacement: b.replacement ?? "",
       })
     })
-    ;(goal.habits ?? []).forEach((h, j) => {
-      const hn = node(h.id, "habit")
-      habits.push({
-        id: hn.id, user_id: userId, goal_id: n.id, node_kind: "habit",
-        position: j, title: h.title ?? "",
-        days_per_week: clamp(h.daysPerWeek ?? 0, 0, 7),
-        placeholder: Boolean(h.placeholder),
-        routine_days: (h.routine?.days ?? []).map((d) => ({ id: d.id, name: d.name })),
-        source_target_id: h.sourceTargetId ?? null,
-      })
-    })
+    // A goal's habits are not written: they are routine steps that serve the
+    // goal now (Phase 4, Q5), and the old table is only kept until Phase 7.
     ;(goal.values ?? []).forEach((v, j) => {
       if (!v.trim()) return
       values.push({
@@ -524,7 +513,7 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     checkpoints,
     obstacles,
     beliefs,
-    habits,
+    habits: [],
     goal_feeds,
     goal_serves,
     routines,
@@ -635,14 +624,9 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     daysPerWeek: g.days_per_week,
     perWeek: g.per_week,
     rampSteps: (g.ramp_steps ?? null) as NsGoal["rampSteps"],
-    habits: byGoal(rows.habits, g.id).map((h) => ({
-      id: id(h.id),
-      title: h.title,
-      daysPerWeek: h.days_per_week,
-      sourceTargetId: h.source_target_id,
-      placeholder: h.placeholder,
-      routine: h.routine_days.length ? { days: h.routine_days.map((d) => ({ id: d.id, name: d.name })) } : null,
-    })),
+    // Never read back, even when the rows carry some: they are routine steps
+    // now (Phase 4, Q5), and the read leaves the old table out.
+    habits: [],
     reasonsList: g.reasons_list,
     feeling: g.feeling,
     checkpoints: byGoal(rows.checkpoints, g.id).map((c): NsCheckpoint => ({

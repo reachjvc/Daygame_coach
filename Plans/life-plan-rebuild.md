@@ -10,6 +10,14 @@ looked at it and marked it. The page he marks: https://claude.ai/artifact/K5r4E4
 (pictures of every `/plan` step, taken on a copy of his plan in a test account; marks in its `marks`
 store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the marks before the next phase.
 
+**Marked 2026-11-04 (afternoon):** Good on all nine cards then on the page: 13 steps to 11, Commit on
+Everything, the Templates door, no floor, Running since, the north star history (Phase 2), the season
+(Phase 3), the timeframe and the feeds-by-name (Phase 4 part 1). The values question was marked "Remove
+it", with the note in chat: "we dont need 7 values, but we can have a hint saying something else that
+still nudges users towards atleast asking themselves what values they have". Done the same day: the count
+is gone, and an empty list asks "Ask yourself what you value most" (Still to fill in) and, under the list,
+"Not sure what goes here? Ask yourself what you would not trade away…". No number anywhere.
+
 ## What you are agreeing to, in plain words
 
 - **No money.** Nothing is bought, rented or signed up for.
@@ -312,9 +320,42 @@ Track run adds no `user_goals` rows.
   keeps its own "built from" stamp (`tests/db/supabase/.temp/assembled.sha256`). Another session's
   rebuild left this checkout's stamp saying "current" over a schema without the new column. Deleting
   the stamp makes the next run rebuild.
-- **Part 2, not started:** step 3 (habits become routine steps, Q5) and step 4 (Track stops copying into
-  `user_goals`, Q4). Both change what Track and Today read, so each gets its own design pass from the
-  code first.
+- **Part 2, built 2026-11-04: step 3 (Q5).** Step 4 (Q4) moved to after Phase 6; see below.
+  - **Your 13 habit rows are 6 actions.** "Train, and hit your protein" sits on four body goals, "Build,
+    then talk to one customer" on four business goals, "Go out and start conversations" on two. N3 said
+    "a routine named after the goal, one per goal that had habits": that would have made 12 one-step
+    routines and put the same thing on Today four times. **Changed, from the data:** one step per action,
+    serving every goal that named it; a step the plan already runs with the same title is linked, not
+    copied ("Ninety minutes of deep work" is in your Business routine, so it now serves Deep Work Hours);
+    the rest go into one "<area> actions" routine per area. For you: Health actions (Screens off, same
+    bedtime, 7×), Fitness actions (Train, and hit your protein, 4×), Relationship actions (Go out and start
+    conversations, 3×; Sit, then write a page, 6×), Mission & Purpose actions (Build, then talk to one
+    customer, 5×). Steps can be moved to another routine by hand, as N3 said.
+  - **The app:** an action written on a goal card is that step now (`addAction`); the card lists the steps
+    serving the goal with the routine they are in and the other goals they serve; taking one off a goal
+    unlinks it, and deletes it only when it sat in an actions routine and served nothing else. Removing a
+    goal takes its own actions with it, as it took its habits. A goal's "needs an action" now counts any
+    step or driver aimed at it. The weekly load counts the actions routines' steps as sessions.
+  - **The old rows stay and are no longer read.** The change-only save removes what it read and did not
+    send back, so the read leaves `life_plan_goal_habits` out, nodes and all: otherwise the first save
+    would have deleted all 13. Test: `tests/integration/repos/goalHabitsBecomeSteps.integration.test.ts`.
+  - **The whole-plan PUT now answers 410 "out of date, reload".** Nothing has called it since Phase 1, it
+    deletes whatever its payload leaves out, and it would have deleted the habit rows. Only a page still
+    running pre-Phase-1 code can send it. (Its database function stays for Phase 7.)
+  - Migration `20261104170000_goal_habits_become_steps` (copies only; running it twice adds nothing). A
+    rolled-back dry run on the live database on 2026-11-04 made exactly the four routines and five steps
+    above and the deep-work link; afterwards the live plan was unchanged (revision 919, 13 habits).
+  - Review: 9 finds, 8 fixed (a placeholder habit in a browser copy became a step; the days box showed
+    for a step placed on days; removing an action that did not serve the goal could delete it; the
+    rollback left step ids behind and took hand-made links; the copy's order differed from the app's;
+    the whole-plan PUT; a duplicated loop). Kept: an action typed with the title of an existing step
+    links that step at its own frequency, rather than changing a routine step from a goal card.
+  - Also fixed: `userDataCascades` had been failing since Phase 3 on the season's focus link, which keeps
+    the season when the focused area or goal goes; it is now listed with that reason.
+- **Step 4 (Q4) waits until after Phase 6.** Today's "+1" on a goal counts into `user_goals`, and only for
+  goals Track copied there. Stopping the copy now would leave every new goal with nothing to count into.
+  Q4's own answer is "counts are kept as day rows", and a day row that holds a number is Phase 6. So Q4
+  is done right after Phase 6, with Today counting into the day.
 
 ### Phase 5. Reviews: week, month, quarter, year (Q7)
 
@@ -341,7 +382,8 @@ and shown on the day's summary. Concept items 21 and 34.
 The list, final once Phases 1–6 are done: `save_life_plan` and the PUT on `/api/life-plan`, the old
 shared browser copy kept as `north-star-v1:orphan`, `life_plans.season_focus_id`,
 `life_plan_areas.season_rank` and `review_fortnight`, `life_plan_goals.serves_one_thing` and
-`user_goal_id`, the north-star and commit rows in `life_plan_answers`, `life_plan_goal_habits`,
+`user_goal_id`, the north-star and commit rows in `life_plan_answers`, `life_plan_goal_habits` (and
+`NsGoal.habits`, kept empty since Q5),
 `life_chapters`, and the `one_*` rows in `life_answers`, plus the code that reads them. A fresh backup
 first. **I ask you before this phase, with the list and the counts.**
 
