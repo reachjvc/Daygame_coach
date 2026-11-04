@@ -3,7 +3,6 @@
   "stats": [
     {
       "group": "you",
-      "top": true,
       "big": "11%",
       "line": "11% of Americans aged 18 to 24 vape, twice as many as smoke cigarettes (5.3%). 17% use some tobacco or nicotine product.",
       "mirror": "You vape every day and don't call yourself a smoker.",
@@ -26,7 +25,6 @@
     },
     {
       "group": "you",
-      "top": true,
       "big": "68%",
       "line": "68% of US smokers want to stop, and 55% tried in the past year. Only 7.4% had recently quit.",
       "mirror": "You tried to quit this year and you're back on them.",
@@ -49,7 +47,6 @@
     },
     {
       "group": "start",
-      "top": true,
       "big": "2 in 3",
       "line": "About 2 in 3 people who smoke a first full cigarette are projected to become dependent on nicotine at some point. For alcohol it's under 1 in 4.",
       "mirror": "You thought you'd only ever smoke socially.",
@@ -94,7 +91,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "1.5×",
       "line": "Men who smoke have about 1.5 times the odds of erection problems of non-smokers. Men who quit: lower, about 1.2 to 1.3 times.",
       "mirror": "You smoke and have had trouble in bed, and blamed nerves.",
@@ -161,53 +157,6 @@
     },
     {
       "group": "quit",
-      "top": true,
-      "big": "About 30",
-      "line": "The best estimate: smokers make about 30 quit attempts, on average, before one sticks. Failing many times is normal.",
-      "mirror": "You've quit a hundred times and think you're the exception.",
-      "basis": {
-        "design": "cohort followed up to 3 years, surveyed every 6 months",
-        "who": "adult smokers who tried to quit",
-        "n": "1,277 smokers",
-        "where": "Ontario, Canada",
-        "when": "from 2005",
-        "measured": "Quit attempts and lasting quits during follow-up, turned into attempts-per-success with a life table. Other methods gave 6.1, 19.6 and 142."
-      },
-      "caveat": "An average that depends on the method; many people quit in far fewer tries. Cigarette smokers only.",
-      "ref": {
-        "cite": "Chaiton M, Diemert L, Cohen JE, et al. (2016). Estimating the number of quit attempts it takes to quit smoking successfully in a longitudinal cohort of smokers. BMJ Open.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/27288378/",
-        "pmid": "27288378",
-        "fetched": true,
-        "quote": "ranged from 6.1 under the assumptions consistent with prior research … 29.6 using the method with the expected lowest bias"
-      }
-    },
-    {
-      "group": "quit",
-      "top": true,
-      "existing": true,
-      "big": "×2.3",
-      "line": "With varenicline, people were about 2.3 times as likely to stay off cigarettes for 6+ months as with a dummy pill.",
-      "mirror": "You think quit pills are for weak people.",
-      "basis": {
-        "design": "Cochrane review, 41 randomised trials for this comparison",
-        "who": "adults who smoke",
-        "n": "17,395 people in 41 trials",
-        "where": "mostly the USA, plus Canada, Europe, Asia and trials run across several countries",
-        "when": "review published 2023",
-        "measured": "Not smoking at 6 months or longer, checked by breath or blood test where possible; varenicline against placebo."
-      },
-      "caveat": "Prescription only; side effects are possible. Compared with a dummy pill. Mostly tested in cigarette smokers, not vapers.",
-      "ref": {
-        "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, et al. (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
-        "pmid": "37142273",
-        "fetched": true,
-        "quote": "We found high-certainty evidence that varenicline helps more people to quit than placebo (RR 2.32, 95% CI 2.15 to 2.51; I2 = 60%, 41 studies, 17,395 participants)"
-      }
-    },
-    {
-      "group": "quit",
       "existing": true,
       "big": "3–5%",
       "line": "Only 3–5% of quit attempts made with no help last 6 to 12 months. Most slips happen in the first 8 days.",
@@ -227,29 +176,8 @@
         "pmid": "14678060",
         "fetched": true,
         "quote": "3-5% of self-quitters achieve prolonged abstinence for 6-12 month after a given quit attempt."
-      }
-    },
-    {
-      "group": "quit",
-      "big": "×1.55",
-      "line": "Patches, gum or lozenges make you about 1.5 times as likely to stay off cigarettes as quitting without them.",
-      "mirror": "You tried a patch once, felt nothing special, and gave up on it.",
-      "basis": {
-        "design": "Cochrane review, 133 randomised trials",
-        "who": "adults motivated to quit, mostly smoking 15+ cigarettes a day",
-        "n": "64,640 people in 133 trials",
-        "where": "mostly North America and Europe",
-        "when": "review published 2018",
-        "measured": "Not smoking after at least 6 months, any form of NRT against placebo or no NRT. Patch 1.64, gum 1.49."
       },
-      "caveat": "Compared with placebo or no NRT, in people who mostly smoked 15+ a day. Not tested here in vapers or pouch users.",
-      "ref": {
-        "cite": "Hartmann-Boyce J, Chepkin SC, Ye W, Bullen C, Lancaster T (2018). Nicotine replacement therapy versus control for smoking cessation. Cochrane Database of Systematic Reviews.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/29852054/",
-        "pmid": "29852054",
-        "fetched": true,
-        "quote": "The RR of abstinence for any form of NRT relative to control was 1.55 (95% confidence interval (CI) 1.49 to 1.61)."
-      }
+      "top": true
     },
     {
       "group": "after",
@@ -318,6 +246,276 @@
         "pmid": "15610111",
         "fetched": true,
         "quote": "After 1 year the ED status improved in > or = 25% of ex-smokers but in none of the current smokers"
+      },
+      "top": true
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "59%",
+      "line": "Of all Americans who had ever smoked, 59% had already quit by 2015.",
+      "mirror": "You think almost nobody really quits smoking for good.",
+      "basis": {
+        "design": "national household survey (NHIS)",
+        "who": "adults who had ever smoked",
+        "n": "33,672 adults surveyed; the report doesn't say how many had ever smoked",
+        "where": "US",
+        "when": "2015",
+        "measured": "Former smokers as a share of everyone who had ever smoked (the 'quit ratio'), from survey answers."
+      },
+      "caveat": "Cigarettes only, not vaping. 'Quit' means not smoking when asked; it counts quitters of all ages, including people who quit long ago.",
+      "ref": {
+        "cite": "Babb S, Malarcher A, Schauer G, Asman K, Jamal A (2017). Quitting smoking among adults - United States, 2000-2015. MMWR Morbidity and Mortality Weekly Report.",
+        "url": "https://europepmc.org/article/MED/28056007",
+        "pmid": "28056007",
+        "fetched": true,
+        "quote": "As of 2015, 59.1% of adults who had ever smoked had quit."
+      }
+    },
+    {
+      "group": "who",
+      "big": "26 years",
+      "line": "Half of Americans hooked on nicotine were free of every sign of it within about 26 years. Nicotine held on longer than alcohol, weed or cocaine.",
+      "mirror": "You've smoked since your teens and think you're a lifer.",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; ages recalled and modelled over a lifetime",
+        "who": "adults who had ever been dependent on nicotine",
+        "n": "6,937 adults who had ever been hooked (of 43,093 surveyed); 1,300 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. Alcohol took 14 years, weed 6, cocaine 5."
+      },
+      "caveat": "The study projects that 84% get free at some point in life; that is a model, not a head count. Men got free more slowly than women. Mostly cigarette smokers, before vaping.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "fetched": true,
+        "quote": "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "54–69%",
+      "line": "In Australian studies, between 54% and 69% of ex-smokers had quit with no medicine and no professional help.",
+      "mirror": "You think you need patches or pills to quit.",
+      "basis": {
+        "design": "systematic review of 19 studies",
+        "who": "smokers and ex-smokers in Australia",
+        "n": "19 studies; the review summary doesn't say how many people",
+        "where": "Australia",
+        "when": "studies published 2005–2012",
+        "measured": "Share of ex-smokers who quit 'unassisted': without medicine (nicotine patches and gum count as medicine) or help from a professional. 41% to 58% of current smokers had tried to quit that way."
+      },
+      "caveat": "It shows how most people quit, not that going alone works better: far more people try alone. Before vaping was common.",
+      "ref": {
+        "cite": "Smith AL, Chapman S, Dunlop SM (2015). What do we know about unassisted smoking cessation in Australia? A systematic review, 2005-2012. Tobacco Control.",
+        "url": "https://europepmc.org/article/MED/24026163",
+        "pmid": "24026163",
+        "fetched": true,
+        "quote": "Data from these studies indicated 54% to 69% of ex-smokers quit unassisted and 41% to 58% of current smokers had attempted to quit unassisted."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "49%",
+      "line": "Nearly half of English smokers said their latest quit attempt began the moment they decided, with no plan. Those unplanned tries were more likely to last 6 months.",
+      "mirror": "You keep waiting for the right day to quit.",
+      "basis": {
+        "design": "national household survey",
+        "who": "smokers who had tried to quit, and ex-smokers, aged 16 and over",
+        "n": "1,914 people: 918 smokers who had tried to quit and 996 ex-smokers",
+        "where": "England",
+        "when": "published 2006",
+        "measured": "Whether the latest quit try was planned ahead or done on the spot, and whether earlier tries lasted at least 6 months. Tries made 6 to 12 months before: odds of lasting 2.5 times as high when unplanned."
+      },
+      "caveat": "A survey, not a trial: people remembered their tries, and on-the-spot decisions may come when people are most ready. Over tries up to 5 years back the odds were 2.6 times as high. It doesn't show that setting a date fails.",
+      "ref": {
+        "cite": "West R, Sohal T (2006). \"Catastrophic\" pathways to smoking cessation: findings from national survey. BMJ.",
+        "url": "https://europepmc.org/article/MED/16443610",
+        "pmid": "16443610",
+        "fetched": true,
+        "quote": "48.6% of smokers reported that their most recent quit attempt was put into effect immediately the decision to quit was made."
+      }
+    },
+    {
+      "group": "how",
+      "big": "65%",
+      "line": "On their latest try, 65% of US smokers stopped all at once and 62% cut down; most tried several ways. Only 12% used quit pills.",
+      "mirror": "You've tried cold turkey and cutting down, and neither stuck.",
+      "basis": {
+        "design": "national online survey, the same smokers followed over time",
+        "who": "adult cigarette smokers who had tried to quit in the past 3 months",
+        "n": "15,943 smokers",
+        "where": "US",
+        "when": "2014–2016",
+        "measured": "Which of 10 methods they used on their latest quit try (more than one allowed). Swapped some cigarettes for vapes 35%, patch or gum 25%, help from a doctor 15%, a quit website 7%, a quitline 5%."
+      },
+      "caveat": "These people were still smoking, so it shows what people use, not what works.",
+      "ref": {
+        "cite": "Caraballo RS, Shafer PR, Patel D, Davis KC, McAfee TA (2017). Quit methods used by US adult cigarette smokers, 2014-2016. Preventing Chronic Disease.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5392446/",
+        "pmid": "28409740",
+        "fetched": true,
+        "quote": "Giving up cigarettes all at once (65.3%) and reducing the number of cigarettes smoked (62.0%) were the most prevalent methods."
+      }
+    },
+    {
+      "group": "how",
+      "big": "About 30",
+      "line": "The best estimate: smokers make about 30 quit attempts, on average, before one sticks. Failing many times is normal.",
+      "mirror": "You've quit a hundred times and think you're the exception.",
+      "basis": {
+        "design": "cohort followed up to 3 years, surveyed every 6 months",
+        "who": "adult smokers who tried to quit",
+        "n": "1,277 smokers",
+        "where": "Ontario, Canada",
+        "when": "from 2005",
+        "measured": "Quit attempts and lasting quits during follow-up, turned into attempts-per-success with a life table. Other methods gave 6.1, 19.6 and 142."
+      },
+      "caveat": "An average that depends on the method; many people quit in far fewer tries. Cigarette smokers only.",
+      "ref": {
+        "cite": "Chaiton M, Diemert L, Cohen JE, et al. (2016). Estimating the number of quit attempts it takes to quit smoking successfully in a longitudinal cohort of smokers. BMJ Open.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/27288378/",
+        "pmid": "27288378",
+        "fetched": true,
+        "quote": "ranged from 6.1 under the assumptions consistent with prior research … 29.6 using the method with the expected lowest bias"
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "existing": true,
+      "big": "×2.3",
+      "line": "With varenicline, people were about 2.3 times as likely to stay off cigarettes for 6+ months as with a dummy pill.",
+      "mirror": "You think quit pills are for weak people.",
+      "basis": {
+        "design": "Cochrane review, 41 randomised trials for this comparison",
+        "who": "adults who smoke",
+        "n": "17,395 people in 41 trials",
+        "where": "mostly the USA, plus Canada, Europe, Asia and trials run across several countries",
+        "when": "review published 2023",
+        "measured": "Not smoking at 6 months or longer, checked by breath or blood test where possible; varenicline against placebo."
+      },
+      "caveat": "Prescription only; side effects are possible. Compared with a dummy pill. Mostly tested in cigarette smokers, not vapers.",
+      "ref": {
+        "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, et al. (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
+        "pmid": "37142273",
+        "fetched": true,
+        "quote": "We found high-certainty evidence that varenicline helps more people to quit than placebo (RR 2.32, 95% CI 2.15 to 2.51; I2 = 60%, 41 studies, 17,395 participants)"
+      }
+    },
+    {
+      "group": "works",
+      "big": "About equal",
+      "line": "Across 22 trials, cutting down before quitting worked about as well as quitting all at once.",
+      "mirror": "You can't face stopping all at once, so you never start.",
+      "basis": {
+        "design": "Cochrane review; this figure pools 22 randomised trials",
+        "who": "adults who smoke and want to quit, about 23 cigarettes a day on average",
+        "n": "9,219 people in 22 trials (of 51 trials with 22,509 people in the review)",
+        "where": "Mostly volunteers recruited through ads; the review summary doesn't list countries",
+        "when": "searched to October 2018; published 2019",
+        "measured": "Not smoking at 6 months or longer: a plan to cut down before quitting, against quitting on a set day. Cutting down with varenicline or fast nicotine (gum, spray) may work better than cutting down alone."
+      },
+      "caveat": "Moderate certainty. One large English trial (697 smokers, all given nicotine patches and nurse support) found stopping at once did better: 22% against 15.5% still off at 6 months.",
+      "ref": {
+        "cite": "Lindson N, Klemperer E, Hong B, Ordóñez-Mena JM, Aveyard P (2019). Smoking reduction interventions for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/31565800",
+        "pmid": "31565800",
+        "fetched": true,
+        "quote": "There is moderate-certainty evidence that neither reduction-to-quit nor abrupt quitting interventions result in superior long-term quit rates when compared with one another."
+      }
+    },
+    {
+      "group": "works",
+      "big": "+3 in 100",
+      "line": "Switching to nicotine vapes helped about 3 more people in every 100 stay off cigarettes than patches or gum did.",
+      "mirror": "You're thinking of swapping cigarettes for a vape to quit.",
+      "basis": {
+        "design": "Cochrane review; this figure pools 9 randomised trials",
+        "who": "adults who smoke",
+        "n": "2,703 people in 9 trials (of 104 studies with 30,366 people in the review)",
+        "where": "The review summary doesn't list countries",
+        "when": "searched to March 2025; published 2025",
+        "measured": "Not smoking cigarettes at 6 months or longer: nicotine vapes against nicotine replacement such as patches and gum. As a ratio, about 1.55 times as many quit."
+      },
+      "caveat": "It counts people off cigarettes, not off nicotine: many may still vape. Tested in smokers, not in people who only vape.",
+      "ref": {
+        "cite": "Lindson N, Livingstone-Banks J, Butler AR, McRobbie H, Bullen CR, Hajek P, et al. (2025). Electronic cigarettes for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/41212103",
+        "pmid": "41212103",
+        "fetched": true,
+        "quote": "In absolute terms, this might translate to an additional three quitters per 100 (95% CI 2 to 5 more)."
+      }
+    },
+    {
+      "group": "works",
+      "big": "×2.7",
+      "line": "In 2 small trials, varenicline (a quit-smoking pill) helped about 2.7 times as many people quit vaping as a dummy pill.",
+      "mirror": "You switched to vaping and now can't quit that either.",
+      "basis": {
+        "design": "Cochrane review, kept up to date; this figure pools 2 randomised trials",
+        "who": "people who vape nicotine",
+        "n": "315 people in 2 trials (of 15 studies with 5,800 people in the review)",
+        "where": "14 of the review's 15 studies were in the USA, 1 in Italy",
+        "when": "searched to July 2025; published 2025",
+        "measured": "Not vaping at 6 months or longer, varenicline against placebo. Text-message programs may help 13- to 24-year-olds a little (×1.32); nicotine patches plus gum showed no clear benefit."
+      },
+      "caveat": "Low certainty: only 2 small trials, and the true effect could be as small as ×1.3. Prescription only.",
+      "ref": {
+        "cite": "Butler AR, Lindson N, Livingstone-Banks J, Notley C, Turner T, Rigotti NA, et al. (2025). Interventions for quitting vaping. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/41288132",
+        "pmid": "41288132",
+        "fetched": true,
+        "quote": "When compared to placebo, varenicline increased vaping cessation rates at six months, but evidence was of low certainty due to imprecision (RR 2.71, 95% CI 1.33 to 5.49"
+      }
+    },
+    {
+      "group": "works",
+      "big": "×1.5",
+      "line": "Being paid or rewarded for staying off cigarettes made people about 1.5 times as likely to still be off 6 months or more later.",
+      "mirror": "You'd quit faster if something real was on the line.",
+      "basis": {
+        "design": "Cochrane review; this figure pools 39 randomised trials",
+        "who": "adults who smoke (not pregnant), in workplaces, clinics and communities",
+        "n": "18,303 people in 39 trials",
+        "where": "33 of the review's 48 trials were in the USA, most others in Europe",
+        "when": "searched to November 2023; published 2025",
+        "measured": "Not smoking at the last check, 6 months or later: cash, vouchers, or money people put down themselves and won back, against no rewards. Leaving out trials still paying at that check: ×1.46, so the gain lasted after rewards stopped."
+      },
+      "caveat": "In most trials a program ran the rewards and checked people's breath or urine. A private bet with a friend was not what was tested.",
+      "ref": {
+        "cite": "Notley C, Gentry S, Livingstone-Banks J, Bauld L, Perera R, Conde M, Hartmann-Boyce J (2025). Incentives for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/39799985",
+        "pmid": "39799985",
+        "fetched": true,
+        "quote": "The pooled RR for quitting with incentives at longest follow-up (six months or more) compared with controls was 1.52 (95% CI 1.33 to 1.74"
+      }
+    },
+    {
+      "group": "works",
+      "big": "×1.55",
+      "line": "Patches, gum or lozenges make you about 1.5 times as likely to stay off cigarettes as quitting without them.",
+      "mirror": "You tried a patch once, felt nothing special, and gave up on it.",
+      "basis": {
+        "design": "Cochrane review, 133 randomised trials",
+        "who": "adults motivated to quit, mostly smoking 15+ cigarettes a day",
+        "n": "64,640 people in 133 trials",
+        "where": "mostly North America and Europe",
+        "when": "review published 2018",
+        "measured": "Not smoking after at least 6 months, any form of NRT against placebo or no NRT. Patch 1.64, gum 1.49."
+      },
+      "caveat": "Compared with placebo or no NRT, in people who mostly smoked 15+ a day. Not tested here in vapers or pouch users.",
+      "ref": {
+        "cite": "Hartmann-Boyce J, Chepkin SC, Ye W, Bullen C, Lancaster T (2018). Nicotine replacement therapy versus control for smoking cessation. Cochrane Database of Systematic Reviews.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/29852054/",
+        "pmid": "29852054",
+        "fetched": true,
+        "quote": "The RR of abstinence for any form of NRT relative to control was 1.55 (95% confidence interval (CI) 1.49 to 1.61)."
       }
     }
   ],
@@ -349,6 +547,22 @@
     {
       "claim": "A year after quitting, quitters report no significant craving (572 smokers).",
       "why": "Verified (Schlam 2012, PMID 22865499) but cut to stay at 14; no number to show."
+    },
+    {
+      "claim": "Two-thirds to three-quarters of ex-smokers quit unaided (Chapman & MacKenzie 2010, PLoS Medicine).",
+      "why": "Now read in full: it is a policy essay quoting older US surveys, not a study. Smith 2015 (19 Australian studies, 54% to 69%) used instead."
+    },
+    {
+      "claim": "Abrupt quitting beat gradual: 22.0% vs 15.5% off at 6 months (Lindson-Hawley 2016, 697 English smokers).",
+      "why": "Verified (PMID 26975007). Shown only in the caveat of the 22-trial Cochrane review, which found the two ways about equal; the cautious pooled result leads."
+    },
+    {
+      "claim": "Unplanned quit attempts lasted 6+ months more often in the US too: 71.7% vs 45.6% (Ferguson 2009, 1,700 people).",
+      "why": "Verified (PMID 19509277); agrees with the English survey already shown, so left out to avoid repeating."
+    },
+    {
+      "claim": "Feeling confident before a quit try predicts success, but only a little (Gwaltney 2009, 54 studies).",
+      "why": "Verified (PMID 19290690), but the size is in standard-deviation units that don't turn into a plain number."
     }
   ]
 }

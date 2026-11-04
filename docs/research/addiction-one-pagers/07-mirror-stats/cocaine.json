@@ -3,7 +3,6 @@
   "stats": [
     {
       "group": "you",
-      "top": true,
       "big": "1 in 5",
       "line": "About 1 in 5 people who ever use cocaine are projected to become dependent at some point. Half of those got there within about 4 years.",
       "mirror": "You only do lines on nights out and think you're safe.",
@@ -26,7 +25,6 @@
     },
     {
       "group": "you",
-      "top": true,
       "big": "2 in 100",
       "line": "About 2 in 100 American adults used cocaine in the past year (2018–19). Among 18- to 25-year-olds it was about 5 in 100.",
       "mirror": "You feel like cocaine is everywhere in your circle.",
@@ -71,7 +69,6 @@
     },
     {
       "group": "start",
-      "top": true,
       "big": "Age 23–25",
       "line": "Getting hooked on cocaine peaks at age 23–25. Most who get hooked do so within 3 years of first use.",
       "mirror": "You're in your twenties and using a bit more each year.",
@@ -116,7 +113,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "68%",
       "line": "68% of men in cocaine rehab had had scary, short bursts of paranoia while using. It got worse and came faster over time.",
       "mirror": "You check the window or the door after a few lines.",
@@ -207,52 +203,6 @@
     },
     {
       "group": "quit",
-      "top": true,
-      "existing": true,
-      "big": "3×",
-      "line": "Rewards for clean urine tests plus the community reinforcement approach (help building a life without cocaine) gave about 3× the odds of being clean at the longest follow-up.",
-      "mirror": "You respond better to rewards and structure than to willpower talks.",
-      "basis": {
-        "design": "network meta-analysis of 50 randomised trials",
-        "who": "adults with cocaine and/or amphetamine addiction",
-        "n": "8 trials tested this combination, with 19 to 50 people in that group each (6,942 people in all 50 trials)",
-        "where": "the 8 trials of this method: US and Spain",
-        "when": "published 2018",
-        "measured": "share clean on urine tests, compared with usual care, at the end of treatment, at 12 weeks and at the longest follow-up after treatment"
-      },
-      "caveat": "Odds, not chance. At the end of treatment it was 2.8×; at 12 weeks 7.6×, but that estimate is very unsure (2× to 28×). Few, small trials.",
-      "ref": {
-        "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.",
-        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6306153/",
-        "pmid": "30586362",
-        "fetched": true,
-        "quote": "and also at 12 weeks (OR 7.60, 95% CI 2.03-28.37, P = 0.002) and at longest follow-up (OR 3.08, 95% CI 1.33-7.17, P = 0.008)"
-      }
-    },
-    {
-      "group": "quit",
-      "big": "2×",
-      "line": "Adding counselling or a reward program made people about twice as likely to be fully clean at the end of treatment.",
-      "mirror": "You're deciding whether to get help or go it alone.",
-      "basis": {
-        "design": "Cochrane review of 52 randomised trials",
-        "who": "adults misusing cocaine or amphetamines",
-        "n": "1,241 people in 8 trials (of 52 trials in the review)",
-        "where": "mostly USA",
-        "when": "searched to November 2015; published 2016",
-        "measured": "continuous abstinence at the end of treatment, compared with no added treatment"
-      },
-      "caveat": "Low-quality evidence. At the longest follow-up the gain was no longer clear. Many comparison groups still got some care.",
-      "ref": {
-        "cite": "Minozzi S, Saulle R, De Crescenzo F, Amato L (2016). Psychosocial interventions for psychostimulant misuse. Cochrane Database of Systematic Reviews.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/27684277/",
-        "pmid": "27684277",
-        "fetched": true,
-        "quote": "increased continuous abstinence at the end of treatment (RR: 2.14, 95% CI 1.27 to -3.59, 8 studies, 1241 participants, low quality evidence)"
-      }
-    },
-    {
-      "group": "quit",
       "existing": true,
       "big": "Day 14–17",
       "line": "Two weeks off cocaine, people said they slept well, but sleep tests showed their sleep was at its worst.",
@@ -299,6 +249,29 @@
     },
     {
       "group": "after",
+      "big": "4 of 5",
+      "line": "Twelve years after treatment, men who stayed off cocaine had fewer mental-health symptoms than men still using, on 4 of 5 measures.",
+      "mirror": "You wonder if the anxiety and low mood will ever lift.",
+      "basis": {
+        "design": "cohort followed 12 years",
+        "who": "men (veterans) admitted to treatment for cocaine dependence in 1988–1989",
+        "n": "138 men off cocaine 5+ years, compared with the rest (266 in all)",
+        "where": "USA (UCLA researchers)",
+        "when": "1988–89 to 2002–03",
+        "measured": "a 58-item checklist of mental-health symptoms at intake and at 1, 2 and 12 years"
+      },
+      "caveat": "Both groups improved in the first year. A link: men who stayed off may have differed from the start. Men only.",
+      "ref": {
+        "cite": "Herbeck DM, Hser YI, Lu AT, et al. (2006). A 12-year follow-up study of psychiatric symptomatology among cocaine-dependent men. Addictive Behaviors.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/16503094/",
+        "pmid": "16503094",
+        "fetched": true,
+        "quote": "By 12-year follow-up, the abstinent group reported significantly lower SCL scores than the non-abstinent group on 4 of the 5 symptom measures."
+      },
+      "top": true
+    },
+    {
+      "group": "after",
       "big": "28 days",
       "line": "In men who stopped cocaine, low mood and craving were worst on the first day and eased steadily over 28 days.",
       "mirror": "You're in your first days off coke and feel low.",
@@ -321,28 +294,6 @@
     },
     {
       "group": "after",
-      "big": "4 of 5",
-      "line": "Twelve years after treatment, men who stayed off cocaine had fewer mental-health symptoms than men still using, on 4 of 5 measures.",
-      "mirror": "You wonder if the anxiety and low mood will ever lift.",
-      "basis": {
-        "design": "cohort followed 12 years",
-        "who": "men (veterans) admitted to treatment for cocaine dependence in 1988–1989",
-        "n": "138 men off cocaine 5+ years, compared with the rest (266 in all)",
-        "where": "USA (UCLA researchers)",
-        "when": "1988–89 to 2002–03",
-        "measured": "a 58-item checklist of mental-health symptoms at intake and at 1, 2 and 12 years"
-      },
-      "caveat": "Both groups improved in the first year. A link: men who stayed off may have differed from the start. Men only.",
-      "ref": {
-        "cite": "Herbeck DM, Hser YI, Lu AT, et al. (2006). A 12-year follow-up study of psychiatric symptomatology among cocaine-dependent men. Addictive Behaviors.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/16503094/",
-        "pmid": "16503094",
-        "fetched": true,
-        "quote": "By 12-year follow-up, the abstinent group reported significantly lower SCL scores than the non-abstinent group on 4 of the 5 symptom measures."
-      }
-    },
-    {
-      "group": "after",
       "big": "5 months",
       "line": "Thinking problems tend to stay through the first months off cocaine, then may fade after about 5 months clean.",
       "mirror": "You're two or three months off coke and still feel foggy.",
@@ -361,6 +312,209 @@
         "pmid": "25187977",
         "fetched": true,
         "quote": "Cognitive dysfunctions remain stable during the first months of abstinence and may abate after 5 months of sobriety."
+      }
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "5 years",
+      "line": "Half of Americans hooked on cocaine were free of every sign of it within about 5 years. By the time they were asked, 336 of 408 already were.",
+      "mirror": "You've been hooked a couple of years and can't see the way out.",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; ages recalled and modelled over a lifetime",
+        "who": "adults who had ever been dependent on cocaine",
+        "n": "408 adults who had ever been hooked (of 43,093 surveyed); 336 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. Alcohol took 14 years, cigarettes 26. Under 9% got free in the first year."
+      },
+      "caveat": "The study projects that 99% get free at some point in life; that is a model, not a head count. Men got free more slowly than women.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "fetched": true,
+        "quote": "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+      }
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "64%",
+      "line": "Of 430 crack smokers in one US city who weren't in treatment, 64% never had a 6-month break from crack over about 9 years.",
+      "mirror": "You've used for years and have never managed six months off.",
+      "basis": {
+        "design": "community group followed about 9 years, no treatment needed to take part",
+        "who": "adults smoking crack, with a positive urine test at the start",
+        "n": "430 people",
+        "where": "Dayton, Ohio, USA",
+        "when": "1996–2005",
+        "measured": "Whether each person ever went 6 months in a row without crack during the study; people were sorted into 3 paths: no change, some change, big change."
+      },
+      "caveat": "One city's crack smokers, found by targeted street recruiting; not a sample of powder users at parties. Men were less likely to get a long break. Breaks shorter than 6 months don't count here.",
+      "ref": {
+        "cite": "Falck RS, Wang J, Carlson RG (2007). Crack cocaine trajectories among users in a midwestern American city. Addiction.",
+        "url": "https://europepmc.org/article/MED/17645426",
+        "pmid": "17645426",
+        "fetched": true,
+        "quote": "For the majority of the people (63.6%), crack use was uninterrupted by extended periods of abstinence during the study."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "59%",
+      "line": "Of Americans who beat a cocaine problem, 59% had used some help along the way: meetings, treatment, or medication. The rest never used any.",
+      "mirror": "You think quitting coke alone is impossible.",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named cocaine or crack as the main one",
+        "n": "The study doesn't say how many of the 2,002 had cocaine as their main problem",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Ever used, at any point: mutual-help groups (such as NA or Cocaine Anonymous), treatment, medication or recovery services. Across all substances 54% used help; mutual-help groups were the most common (45%). For alcohol it was 56%, for weed 46%."
+      },
+      "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more.",
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "fetched": true,
+        "quote": "Factors associated with choosing assisted (54%) vs. unassisted problem resolution. … Cocaine (e.g., coke, crack, freebase) 58.9"
+      }
+    },
+    {
+      "group": "how",
+      "big": "2 tries",
+      "line": "Of Americans who beat a stimulant problem (cocaine, meth and the like), half needed 2 serious tries or fewer. A few needed many more.",
+      "mirror": "You've tried to quit coke before and it didn't stick.",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named a stimulant as the main one",
+        "n": "The study doesn't say how many of the 2,002 had a stimulant as their main problem",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it, counting everyone, including people who never needed a serious try. The middle half needed 1 to 5; the average was about 4.6."
+      },
+      "caveat": "Stimulants as a group, not cocaine alone. Counts only people who succeeded, from memory.",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+        "pmid": "31090945",
+        "fetched": true,
+        "quote": "Mean (SD) Median (IQR) Min, max … Stimulants 4.64 (8.03) 2 (1, 5) 0, 100"
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "existing": true,
+      "big": "3×",
+      "line": "Rewards for clean urine tests plus the community reinforcement approach (help building a life without cocaine) gave about 3× the odds of being clean at the longest follow-up.",
+      "mirror": "You respond better to rewards and structure than to willpower talks.",
+      "basis": {
+        "design": "network meta-analysis of 50 randomised trials",
+        "who": "adults with cocaine and/or amphetamine addiction",
+        "n": "8 trials tested this combination, with 19 to 50 people in that group each (6,942 people in all 50 trials)",
+        "where": "the 8 trials of this method: US and Spain",
+        "when": "published 2018",
+        "measured": "share clean on urine tests, compared with usual care, at the end of treatment, at 12 weeks and at the longest follow-up after treatment"
+      },
+      "caveat": "Odds, not chance. At the end of treatment it was 2.8×; at 12 weeks 7.6×, but that estimate is very unsure (2× to 28×). Few, small trials.",
+      "ref": {
+        "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6306153/",
+        "pmid": "30586362",
+        "fetched": true,
+        "quote": "and also at 12 weeks (OR 7.60, 95% CI 2.03-28.37, P = 0.002) and at longest follow-up (OR 3.08, 95% CI 1.33-7.17, P = 0.008)"
+      }
+    },
+    {
+      "group": "works",
+      "big": "1–4 days",
+      "line": "In treatment trials, heavy users who cut down to 1–4 days a month did about as well up to a year later as those who stopped completely.",
+      "mirror": "You want to cut way down on coke, not stop completely.",
+      "basis": {
+        "design": "pooled data from 7 randomised treatment trials",
+        "who": "adults in outpatient treatment for cocaine who used 5 or more days a month at the start; 64% men in the full pool",
+        "n": "At 6 months: 114 who cut down to 1–4 days and 63 who stopped (of 716 in the 7 trials)",
+        "where": "New Haven County, Connecticut, USA",
+        "when": "published 2019",
+        "measured": "Problems with cocaine, mental health, work, the law and other drugs, 6 and 12 months after treatment, by how far people had cut down by the end of treatment. Only 38% cut down at all; 62% used the same or more."
+      },
+      "caveat": "Those who stopped completely used the least cocaine later. Nobody was assigned to cut down; people did it themselves, and many missed follow-ups.",
+      "ref": {
+        "cite": "Roos CR, Nich C, Mun CJ, Babuscio TA, Mendonca J, Miguel AQC, et al. (2019). Clinical validation of reduction in cocaine frequency level as an endpoint in clinical trials for cocaine use disorder. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6910212/",
+        "pmid": "31677490",
+        "fetched": true,
+        "quote": "among individuals at the high frequency level at baseline, those who reduced to the low frequency level at EOT had similar outcomes at follow-up as those who reduced to abstinence"
+      }
+    },
+    {
+      "group": "works",
+      "big": "0 approved",
+      "line": "No medicine is approved in the US for cocaine addiction. Antidepressants, tested in 38 trials, did nothing for cocaine use.",
+      "mirror": "You've hoped there's a pill that takes the craving away.",
+      "basis": {
+        "design": "systematic review and meta-analysis of 48 randomised trials and 7 earlier reviews",
+        "who": "adults with a cocaine problem",
+        "n": "48 trials of 66 drugs or combinations; the review summary doesn't say how many people",
+        "where": "The review summary doesn't list countries",
+        "when": "searched to November 2017; published 2019",
+        "measured": "Stretches of 3+ weeks fully off cocaine, cocaine use, and staying in treatment, medicine against placebo. Bupropion, topiramate and stimulant medicines may help a little (about 1.4 to 2.6 times as many off), on weak evidence."
+      },
+      "caveat": "It means no pill has proven itself yet, not that every pill is useless. Three may help a little, but the evidence is weak.",
+      "ref": {
+        "cite": "Chan B, Kondo K, Freeman M, Ayers C, Montgomery J, Kansagara D (2019). Pharmacotherapy for cocaine use disorder: a systematic review and meta-analysis. Journal of General Internal Medicine.",
+        "url": "https://europepmc.org/article/MED/31183685",
+        "pmid": "31183685",
+        "fetched": true,
+        "quote": "Antidepressants were the most widely studied drug class (38 RCTs) but appear to have no effect on cocaine use or treatment retention."
+      }
+    },
+    {
+      "group": "works",
+      "big": "36% vs 17%",
+      "line": "A computer program teaching coping skills, used weekly for 8 weeks, doubled the share who got 3+ weeks fully off cocaine: 36% against 17%.",
+      "mirror": "You'd rather learn skills on a screen than sit in a group.",
+      "basis": {
+        "design": "randomised trial",
+        "who": "adults hooked on cocaine who were also in methadone treatment for opioids; 60% women",
+        "n": "101 people",
+        "where": "New Haven, Connecticut, USA",
+        "when": "published 2014",
+        "measured": "3 or more weeks in a row off cocaine during the 8 weeks: the program (7 lessons) plus usual care against usual care alone. The gain held at a check 6 months later."
+      },
+      "caveat": "One small trial, mostly women, all also treated for opioid addiction: a weak fit for men who use at weekends. Lessons on a computer, not a phone app.",
+      "ref": {
+        "cite": "Carroll KM, Kiluk BD, Nich C, Gordon MA, Portnoy GA, Marino DR, Ball SA (2014). Computer-assisted delivery of cognitive-behavioral therapy: efficacy and durability of CBT4CBT among cocaine-dependent individuals maintained on methadone. American Journal of Psychiatry.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4042674/",
+        "pmid": "24577287",
+        "fetched": true,
+        "quote": "Participants assigned to the CBT4CBT condition were significantly more likely to attain three or more consecutive weeks of abstinence from cocaine (36 versus 17%, p<.05, OR =.36)."
+      }
+    },
+    {
+      "group": "works",
+      "big": "2×",
+      "line": "Adding counselling or a reward program made people about twice as likely to be fully clean at the end of treatment.",
+      "mirror": "You're deciding whether to get help or go it alone.",
+      "basis": {
+        "design": "Cochrane review of 52 randomised trials",
+        "who": "adults misusing cocaine or amphetamines",
+        "n": "1,241 people in 8 trials (of 52 trials in the review)",
+        "where": "mostly USA",
+        "when": "searched to November 2015; published 2016",
+        "measured": "continuous abstinence at the end of treatment, compared with no added treatment"
+      },
+      "caveat": "Low-quality evidence. At the longest follow-up the gain was no longer clear. Many comparison groups still got some care.",
+      "ref": {
+        "cite": "Minozzi S, Saulle R, De Crescenzo F, Amato L (2016). Psychosocial interventions for psychostimulant misuse. Cochrane Database of Systematic Reviews.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/27684277/",
+        "pmid": "27684277",
+        "fetched": true,
+        "quote": "increased continuous abstinence at the end of treatment (RR: 2.14, 95% CI 1.27 to -3.59, 8 studies, 1241 participants, low quality evidence)"
       }
     }
   ],
@@ -408,6 +562,22 @@
     {
       "claim": "Prefrontal grey matter grew back after 6 months of no or less use (Parvaz 2017).",
       "why": "Verified, left out to stay at 14 new stats: only 19 people."
+    },
+    {
+      "claim": "Vietnam veterans: drug remission took 9 to 14 years on average and most last quit attempts used no treatment (Price 2001).",
+      "why": "The summary mixes all drugs, and the full text could not be read (the publisher blocked the download)."
+    },
+    {
+      "claim": "Most people addicted to illegal drugs quit by about 30, usually without professional help (Heyman 2013).",
+      "why": "An essay that re-reads other surveys; its cocaine figures are not clear enough to show. NESARC (Lopez-Quintero 2011) used directly."
+    },
+    {
+      "claim": "12-step-style drug counselling beat two kinds of psychotherapy for cocaine (Crits-Christoph 1999, 487 people); active 12-step work, not just attending, went with less use (Weiss 2005).",
+      "why": "Verified (PMIDs 10359461, 15664719), but neither summary gives a plain number."
+    },
+    {
+      "claim": "Most recovered drug users had used treatment before getting free (Cunningham 2000, Ontario).",
+      "why": "The summary gives no numbers."
     }
   ]
 }

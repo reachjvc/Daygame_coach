@@ -3,7 +3,6 @@
   "stats": [
     {
       "group": "you",
-      "top": true,
       "big": "1 in 3",
       "line": "About 1 in 3 daily smokers aged 18–25 met the doctors' checklist for weed addiction. Over 26, about 1 in 6 did.",
       "mirror": "You're under 26, smoke almost every day, and wonder if it's a problem.",
@@ -26,7 +25,6 @@
     },
     {
       "group": "you",
-      "top": true,
       "big": "42%",
       "line": "Of Americans who used weed in the past month, 42% used it daily or almost daily. Among drinkers it was 11%.",
       "mirror": "You smoke every day and call it how you relax.",
@@ -71,7 +69,6 @@
     },
     {
       "group": "start",
-      "top": true,
       "big": "10+ years",
       "line": "Adults who seek help for weed have smoked almost daily for over 10 years on average, and seriously tried to quit 6+ times.",
       "mirror": "You've been meaning to cut down for years.",
@@ -138,7 +135,6 @@
     },
     {
       "group": "cost",
-      "top": true,
       "big": "−5.5 IQ",
       "line": "Long-term users lost about 5.5 IQ points between childhood and age 45. People who never used held steady (+0.7).",
       "mirror": "You've smoked for years and feel slower or more forgetful than before.",
@@ -297,28 +293,6 @@
       }
     },
     {
-      "group": "quit",
-      "big": "13%",
-      "line": "Only about 13% of Americans who ever had a weed addiction went to treatment or a 12-step group. Most never got formal help.",
-      "mirror": "You want to quit without rehab, therapy or meetings.",
-      "basis": {
-        "design": "national face-to-face survey (NESARC-III)",
-        "who": "US adults aged 18 and over",
-        "n": "2,242 people who ever had a weed addiction (of 36,309 surveyed)",
-        "where": "USA",
-        "when": "2012–2013",
-        "measured": "whether people who ever met the DSM-5 checklist for cannabis use disorder had ever used professional treatment or 12-step programs"
-      },
-      "caveat": "It shows most people never get help. It does not show how many of them quit on their own.",
-      "ref": {
-        "cite": "Hasin DS, Kerridge BT, Saha TD, et al. (2016). Prevalence and correlates of DSM-5 cannabis use disorder, 2012–2013: findings from NESARC-III. American Journal of Psychiatry.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/26940807/",
-        "pmid": "26940807",
-        "fetched": true,
-        "quote": "Only 13.2% with lifetime cannabis use disorder participated in 12-step programs or professional treatment."
-      }
-    },
-    {
       "group": "after",
       "top": true,
       "big": "72 hours",
@@ -385,6 +359,230 @@
         "fetched": true,
         "quote": "These results indicate a longitudinal relationship between reductions in cannabis use and improvements in anxiety, depression, and sleep quality."
       }
+    },
+    {
+      "group": "who",
+      "top": true,
+      "big": "6 years",
+      "line": "Half of Americans hooked on weed were free of every sign of it within about 6 years. By the time they were asked, 344 of 530 already were.",
+      "mirror": "You've smoked daily for years and think this is just who you are.",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; ages recalled and modelled over a lifetime",
+        "who": "adults who had ever been dependent on cannabis",
+        "n": "530 adults who had ever been hooked (of 43,093 surveyed); 344 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. Alcohol took 14 years, cigarettes 26."
+      },
+      "caveat": "The study projects that 97% get free at some point in life; that is a model, not a head count. Men got free more slowly than women. Weed was weaker in 2001 than today.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "fetched": true,
+        "quote": "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+      }
+    },
+    {
+      "group": "who",
+      "big": "Age 29",
+      "line": "Americans who beat a weed problem were about 29, on average, when it ended: younger than for drink (38) or other drugs (33).",
+      "mirror": "You're in your twenties and wonder if you'll ever stop.",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named cannabis as the main one",
+        "n": "About 217 people whose main problem was cannabis (a weighted count, of 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Age when the problem ended, as people remembered it. On average they started weekly use at about 17 and used for about 12 years."
+      },
+      "caveat": "An average: plenty got free older or younger. It counts only people who got free.",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+        "pmid": "29287223",
+        "fetched": true,
+        "quote": "resolved their problem significantly earlier (CAN M = 28.87, ALC M = 37.86, OTH M = 33.06, p < 0.01)"
+      }
+    },
+    {
+      "group": "who",
+      "big": "3 in 4",
+      "line": "Of 25 long-time daily smokers who quit on their own, over 3 in 4 skipped treatment because they felt they didn't need it or wanted to do it themselves. Their main reason for stopping: a change in how they saw their smoking.",
+      "mirror": "You want to quit weed your own way, without anyone's program.",
+      "basis": {
+        "design": "interviews and written life stories",
+        "who": "long-time daily cannabis users who had stopped without treatment for at least a year",
+        "n": "25 people",
+        "where": "The study summary doesn't say where",
+        "when": "published 2006",
+        "measured": "Their past use, what set off the change and what kept them off. What helped them stay off: avoiding places where they used to smoke, changing their routine, and new interests."
+      },
+      "caveat": "Only 25 people, picked because they succeeded. It shows how some got free alone, not how often going alone works.",
+      "ref": {
+        "cite": "Ellingstad TP, Sobell LC, Sobell MB, Eickleberry L, Golden CJ (2006). Self-change: a pathway to cannabis abuse resolution. Addictive Behaviors.",
+        "url": "https://europepmc.org/article/MED/15967588",
+        "pmid": "15967588",
+        "fetched": true,
+        "quote": "more than 75% of respondents reported not seeking treatment because they believed it was not needed or because they wanted to quit on their own."
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "46%",
+      "line": "Of Americans who beat a weed problem, 46% had used some help along the way: meetings, treatment, or medication. The rest never used any.",
+      "mirror": "You think you need rehab to get off weed.",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named cannabis as the main one",
+        "n": "About 217 people whose main problem was cannabis (a weighted count, of 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Ever used, at any point: mutual-help groups (such as AA, NA or Marijuana Anonymous), treatment, medication or recovery services. Across all substances 54% used help; mutual-help groups were the most common (45%). For alcohol it was 56%."
+      },
+      "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more.",
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "fetched": true,
+        "quote": "Factors associated with choosing assisted (54%) vs. unassisted problem resolution. … Cannabis (e.g., marijuana, hashish) 45.8"
+      }
+    },
+    {
+      "group": "how",
+      "top": true,
+      "big": "85%",
+      "line": "Of 193 daily smokers trying to change on their own, 85% tried cutting down and 46% tried stopping. Six months later, 8% of those who tried to stop were off weed.",
+      "mirror": "You keep cutting down instead of stopping, and it never lasts.",
+      "basis": {
+        "design": "daily phone check-ins for 3 months, then a survey at 6 months",
+        "who": "daily cannabis users planning to stop or cut down on their own, not in treatment; half men",
+        "n": "193 people",
+        "where": "US (recruited nationwide, mostly online)",
+        "when": "2010–2012",
+        "measured": "Each day: weed use, and whether they were trying to stop or cut down. Most didn't prepare before a quit try. People who failed in month 1 were more likely to try again later (72% against 19%)."
+      },
+      "caveat": "Volunteers paid for daily calls, not a random sample. Only 6% sought treatment. More days of cutting down or stopping went with fewer signs of being hooked later.",
+      "ref": {
+        "cite": "Hughes JR, Naud S, Budney AJ, Fingar JR, Callas PW (2016). Attempts to stop or reduce daily cannabis use: an intensive natural history study. Psychology of Addictive Behaviors.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4877269/",
+        "pmid": "26828641",
+        "fetched": true,
+        "quote": "Most (85%) participants made an intentional reduction attempt during the study."
+      }
+    },
+    {
+      "group": "how",
+      "big": "2 tries",
+      "line": "Of Americans who beat a weed problem, half needed 2 serious tries or fewer. The average was higher, about 5, because a few needed many.",
+      "mirror": "You've tried to quit weed before and it didn't stick.",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named cannabis as the main one",
+        "n": "About 217 people whose main problem was cannabis (a weighted count, of 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it, counting everyone, including people who never needed a serious try. The middle half needed 1 to 4."
+      },
+      "caveat": "Counts only people who succeeded, from memory. Weed was about the same as alcohol on this.",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+        "pmid": "31090945",
+        "fetched": true,
+        "quote": "Mean (SD) Median (IQR) Min, max … Cannabis 4.62 (8.41) 2 (1, 4) 0, 100"
+      }
+    },
+    {
+      "group": "how",
+      "big": "13%",
+      "line": "Only about 13% of Americans who ever had a weed addiction went to treatment or a 12-step group. Most never got formal help.",
+      "mirror": "You want to quit without rehab, therapy or meetings.",
+      "basis": {
+        "design": "national face-to-face survey (NESARC-III)",
+        "who": "US adults aged 18 and over",
+        "n": "2,242 people who ever had a weed addiction (of 36,309 surveyed)",
+        "where": "USA",
+        "when": "2012–2013",
+        "measured": "whether people who ever met the DSM-5 checklist for cannabis use disorder had ever used professional treatment or 12-step programs"
+      },
+      "caveat": "It shows most people never get help. It does not show how many of them quit on their own.",
+      "ref": {
+        "cite": "Hasin DS, Kerridge BT, Saha TD, et al. (2016). Prevalence and correlates of DSM-5 cannabis use disorder, 2012–2013: findings from NESARC-III. American Journal of Psychiatry.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/26940807/",
+        "pmid": "26940807",
+        "fetched": true,
+        "quote": "Only 13.2% with lifetime cannabis use disorder participated in 12-step programs or professional treatment."
+      }
+    },
+    {
+      "group": "works",
+      "top": true,
+      "big": "1 in 4",
+      "line": "In 23 trials of talking therapy for weed, about 1 in 4 people were off weed at the last check-up. Therapy beat no real treatment mostly by cutting how often people smoked.",
+      "mirror": "You've wondered if therapy for weed is worth the time.",
+      "basis": {
+        "design": "Cochrane review of 23 randomised trials",
+        "who": "adults with a weed problem, treated as outpatients or in the community",
+        "n": "4,045 people in 23 trials",
+        "where": "15 trials in the USA; others in Australia, Germany, Switzerland, Canada, Brazil and Ireland",
+        "when": "studies published before July 2015; review 2016",
+        "measured": "Weed use, being off weed, and signs of being hooked, against minimal or no treatment; about 7 sessions over 12 weeks. More than 4 sessions over more than a month did better. Adding rewards (vouchers for weed-free urine tests) helped in 5 of 6 trials."
+      },
+      "caveat": "At around 4 months, therapy made people about 2.5 times as likely to say they weren't using, but that evidence is weak. No kind of therapy clearly worked at 9 months or later.",
+      "ref": {
+        "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/27149547",
+        "pmid": "27149547",
+        "fetched": true,
+        "quote": "abstinence rates were relatively low overall, with approximately one-quarter of participants abstinent at final follow-up."
+      }
+    },
+    {
+      "group": "works",
+      "big": "1 in 3",
+      "line": "About 1 in 3 Americans who beat a weed problem still smoke some weed. Most (63%) stopped completely.",
+      "mirror": "You want to keep smoking sometimes, just not every day.",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named cannabis as the main one",
+        "n": "About 217 people whose main problem was cannabis (a weighted count, of 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Whether people still used their main problem drug, among those who said the problem was over. For alcohol the share still drinking was similar."
+      },
+      "caveat": "They judged for themselves that the problem was over. It shows some people manage light use, not how many tried it and slid back.",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+        "pmid": "29287223",
+        "fetched": true,
+        "quote": "about one third of CAN reported continuing to use at least some cannabis despite resolving their cannabis problem."
+      }
+    },
+    {
+      "group": "works",
+      "big": "0 pills",
+      "line": "No medicine is approved to help people quit weed. In trials, THC-based medicines and a supplement called NAC did not help people stop.",
+      "mirror": "You've hoped a doctor could give you something to quit weed.",
+      "basis": {
+        "design": "Cochrane review of 37 randomised trials",
+        "who": "people hooked on weed, mostly adults; most trials were mostly men",
+        "n": "3,201 people in 37 trials (THC medicines: 290 people in 4 trials; NAC: 270 in 2)",
+        "where": "mostly USA (29 trials), also Australia, Israel, Canada and the UK",
+        "when": "searched to May 2024; published 2025",
+        "measured": "Being off weed at the end of treatment, medicine against a dummy pill. CBD and anti-seizure medicines had too little testing to tell."
+      },
+      "caveat": "Not proof that pills can't help: most were tested in few, small trials. The review calls all of them experimental.",
+      "ref": {
+        "cite": "Spiga F, Parkhouse T, Tang VM, Savović J, Le Foll B, Nielsen S (2025). Pharmacotherapies for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/41025421",
+        "pmid": "41025421",
+        "fetched": true,
+        "quote": "There are currently no pharmacotherapies approved for the treatment of cannabis use disorder"
+      }
     }
   ],
   "rejected": [
@@ -431,6 +629,14 @@
     {
       "claim": "Dunedin persistent users lost about 8 IQ points (Meier 2012).",
       "why": "That number is not in the abstract fetched. Used Meier 2022 (−5.5 IQ points by age 45) instead. Note: Meier 2022 found quitters had still dropped 3.3 points, so the old line 'people who quit showed smaller or no drops' was wrong and was fixed."
+    },
+    {
+      "claim": "Adding rewards (vouchers) to weed therapy: odds of being off weed 3.78 (Halicka 2025) or 'superior abstinence' (Kadden 2007).",
+      "why": "Halicka's estimate is very unsure (0.83 to 17.25) and Kadden's record gives no numbers; the Cochrane '5 of 6 trials' finding is folded into the therapy stat instead."
+    },
+    {
+      "claim": "Only 18% of Americans who beat a weed problem used formal treatment (Kelly 2018).",
+      "why": "Verified, but overlaps the 46% any-help figure and the 13% NESARC figure already shown."
     }
   ]
 }
