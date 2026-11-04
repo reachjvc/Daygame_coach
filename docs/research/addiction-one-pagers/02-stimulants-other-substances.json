@@ -40,13 +40,21 @@
         "startH": 168, "peakH": 840, "endH": 840, "peakIntensity": 4,
         "note": "In paid abstainers, cue-induced craving was higher at day 35 than at day 7 and did not fall on any measure. The study stopped at day 35, so the end is unknown.",
         "refs": ["r2"]
+      },
+      {
+        "track": "craving",
+        "label": "An urge that can return years later; strong for about 1 in 10",
+        "startH": 840, "peakH": 840, "endH": 26280, "peakIntensity": 2,
+        "note": "Among 403 former smokers who had quit 1–10 years earlier (an online consumer panel), 59% had felt a desire to smoke in the past year, but it looked clinically significant in only 11%. A UK guideline says the urge may persist for months or years in some. No fetched study measured it between day 35 and year 1. Drawn to 3 years, the chart's edge.",
+        "refs": ["r19", "r18"]
       }
     ],
     "markers": [
       { "atH": 72, "kind": "peak", "label": "Withdrawal peaks within the first week", "refs": ["r1"] },
       { "atH": 192, "kind": "danger", "label": "Most relapses happen in the first 8 days", "refs": ["r3"] },
       { "atH": 336, "kind": "trap", "label": "Smoking at all in week 2: 83–97% of patch users were smoking again at 6 months", "refs": ["r4"] },
-      { "atH": 840, "kind": "trap", "label": "Day 35: cue craving is higher than at day 7, even as withdrawal fades", "refs": ["r2"] }
+      { "atH": 840, "kind": "trap", "label": "Day 35: cue craving is higher than at day 7, even as withdrawal fades", "refs": ["r2"] },
+      { "atH": 1176, "kind": "milestone", "label": "Measured 7 weeks to 9 years on: people who quit had less anxiety, depression and stress than those who kept smoking (26 studies)", "refs": ["r10"] }
     ],
     "beliefs": [
       {
@@ -158,7 +166,9 @@
       { "id": "r14", "cite": "Heshmati J, Shahen S, Bates EL, et al. (2025). Nicotine pouches and clinical outcomes related to smoking cessation: a systematic review of randomized trials. Addiction.", "kind": "review", "doi": "10.1111/add.70193", "pmid": "41001885", "url": "https://pubmed.ncbi.nlm.nih.gov/41001885/", "fetched": true, "supports": "7 trials, 269 people: no significant increase in smoking cessation with pouches." },
       { "id": "r15", "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.", "kind": "survey", "doi": "10.1111/j.1360-0443.2010.03194.x", "pmid": "21077975", "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/", "fetched": true, "supports": "Lifetime remission 83.7% nicotine; half remitted about 26 years after onset." },
       { "id": "r16", "cite": "Heatherton TF, Kozlowski LT, Frecker RC, Fagerström KO (1991). The Fagerström Test for Nicotine Dependence: a revision of the Fagerström Tolerance Questionnaire. British Journal of Addiction.", "kind": "study", "doi": "10.1111/j.1360-0443.1991.tb01879.x", "pmid": "1932883", "url": "https://pubmed.ncbi.nlm.nih.gov/1932883/", "fetched": true, "supports": "Origin of the FTND as a revision of the Fagerström Tolerance Questionnaire." },
-      { "id": "r17", "cite": "Recovery testimonials corpus, file 05 (nicotine), verified quotes from r/stopsmoking and charity quit stories.", "kind": "other", "url": "docs/research/recovery-testimonials/05-nicotine.md", "fetched": true, "supports": "Verified first-person quotes used as belief sources." }
+      { "id": "r17", "cite": "Recovery testimonials corpus, file 05 (nicotine), verified quotes from r/stopsmoking and charity quit stories.", "kind": "other", "url": "docs/research/recovery-testimonials/05-nicotine.md", "fetched": true, "supports": "Verified first-person quotes used as belief sources." },
+      { "id": "r18", "cite": "Sinclair JMA, Kalk NJ, Kaar SJ, et al. (2026). Evidence-based consensus guidelines for the pharmacological management of substance dependence: recommendations from the British Association for Psychopharmacology. Journal of Psychopharmacology.", "kind": "guideline", "doi": "10.1177/02698811251399593", "pmid": "41731947", "url": "https://europepmc.org/article/PMC/PMC13222391", "fetched": true, "supports": "Nicotine withdrawal subsides over about 4 weeks; the urge to smoke may persist months or years for some" },
+      { "id": "r19", "cite": "Hughes JR (2010). Craving among long-abstinent smokers: an Internet survey. Nicotine & Tobacco Research.", "kind": "survey", "doi": "10.1093/ntr/ntq009", "pmid": "20164170", "url": "https://europepmc.org/article/MED/20164170", "fetched": true, "supports": "403 former smokers 1–10 years off: 59% felt a desire to smoke in the past year; significant in 11%" }
     ]
   },
   {
@@ -209,6 +219,13 @@
         "startH": 48, "peakH": 264, "endH": 720, "peakIntensity": 3,
         "note": "Start later and last longer than other symptoms. Peak day 11 (Hesse 2013); Hesse reports day 9 for Budney 2003. Start and end are not stated in the fetched sources and are drawn.",
         "refs": ["r2"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Poor sleep and strange dreams can outlast the first month",
+        "startH": 672, "peakH": 672, "endH": 1080, "peakIntensity": 2,
+        "note": "In a review of 19 studies, sleep difficulties and strange dreams were still present at day 45, the longest any study ran; sleep-lab problems grew over the first 2 weeks and lasted past day 45. When they end is not known. Drawn to day 45.",
+        "refs": ["r15", "r16"]
       }
     ],
     "markers": [
@@ -250,6 +267,14 @@
         "science": "In a US national survey, 97.2% of people with lifetime cannabis dependence eventually remitted, half of them within about 6 years of onset.",
         "refs": ["r10"],
         "beliefSource": "Not sourced."
+      },
+      {
+        "voice": "Nothing feels fun any more. This flatness will last forever.",
+        "kind": "quitting-wont-work",
+        "verdict": "mostly-false",
+        "science": "Not what studies show. Across 32 studies of many drugs, anhedonia mostly came with heavy use and faded with abstinence. Poor sleep and strange dreams can last past day 45. No cannabis study tracked flatness month by month.",
+        "refs": ["r17", "r15"],
+        "beliefSource": "recovery-testimonials/02-reddit-leaves-cannabis.md TQ16 (u/UnhappySwing): \"It's easy to think that the acute physical symptoms like headaches and nausea, and the long term symptoms like anhedonia and difficulty regulating emotions, will last forever.\" The same author reports they subsided after many months (testimony, not science)."
       }
     ],
     "whatWorks": [
@@ -286,9 +311,10 @@
     },
     "placeholders": [
       { "block": "timeline", "wanted": "A craving curve for cannabis over the first months.", "why": "No fetched study tracked cannabis craving over time." },
-      { "block": "timeline", "wanted": "How long sleep problems and strange dreams last beyond 4 weeks (claims of 45+ days).", "why": "Only found in a secondary book chapter and an interview with Budney, neither fetched as primary sources." },
       { "block": "beliefs", "wanted": "Trial evidence on whether people with cannabis use disorder can return to moderate use.", "why": "Not found in this pass." },
-      { "block": "screener", "wanted": "Licence status of CUDIT-R.", "why": "No licence statement found; one commercial site bundles it with a paid licence." }
+      { "block": "screener", "wanted": "Licence status of CUDIT-R.", "why": "No licence statement found; one commercial site bundles it with a paid licence." },
+      { "block": "timeline", "wanted": "When poor sleep and strange dreams end after day 45", "why": "No study ran longer than 45 days (r15, r16); the end is unknown." },
+      { "block": "timeline", "wanted": "Course of flatness (anhedonia) after stopping cannabis, month by month", "why": "Not found in this pass; the recovery corpus also notes that weeks 2–8 are under-covered." }
     ],
     "refs": [
       { "id": "r1", "cite": "Budney AJ, Moore BA, Vandrey RG, Hughes JR (2003). The time course and significance of cannabis withdrawal. Journal of Abnormal Psychology.", "kind": "study", "doi": "10.1037/0021-843x.112.3.393", "pmid": "12943018", "url": "https://pubmed.ncbi.nlm.nih.gov/12943018/", "fetched": true, "supports": "Onset day 1–3, peak day 2–6, most effects 4–14 days; 18 users." },
@@ -304,7 +330,10 @@
       { "id": "r11", "cite": "Adamson SJ, Kay-Lambkin FJ, Baker AL, et al. (2010). An improved brief measure of cannabis misuse: the Cannabis Use Disorders Identification Test-Revised (CUDIT-R). Drug and Alcohol Dependence.", "kind": "study", "doi": "10.1016/j.drugalcdep.2010.02.017", "pmid": "20347232", "url": "https://pubmed.ncbi.nlm.nih.gov/20347232/", "fetched": true, "supports": "8 items; sensitivity 91%, specificity 90%." },
       { "id": "r12", "cite": "Recovery testimonials corpus, file 02 (r/leaves cannabis), verified archived posts.", "kind": "other", "url": "docs/research/recovery-testimonials/02-reddit-leaves-cannabis.md", "fetched": true, "supports": "Verified first-person quotes used as belief sources." },
       { "id": "r13", "cite": "Recovery testimonials corpus, SYNTHESIS.md (cross-source synthesis of 15 testimonial files).", "kind": "other", "url": "docs/research/recovery-testimonials/SYNTHESIS.md", "fetched": true, "supports": "'Now I can finally moderate' arrives at about 10 days and about 2 months." },
-      { "id": "r14", "cite": "Di Forti M, Quattrone D, Freeman TP, et al. (2019). The contribution of cannabis use to variation in the incidence of psychotic disorder across Europe (EU-GEI). Lancet Psychiatry.", "kind": "study", "doi": "10.1016/S2215-0366(19)30048-3", "pmid": "30902669", "url": "https://pubmed.ncbi.nlm.nih.gov/30902669/", "fetched": true, "supports": "Daily high-potency use: adjusted OR 4.8 for psychotic disorder; case-control, 11 sites." }
+      { "id": "r14", "cite": "Di Forti M, Quattrone D, Freeman TP, et al. (2019). The contribution of cannabis use to variation in the incidence of psychotic disorder across Europe (EU-GEI). Lancet Psychiatry.", "kind": "study", "doi": "10.1016/S2215-0366(19)30048-3", "pmid": "30902669", "url": "https://pubmed.ncbi.nlm.nih.gov/30902669/", "fetched": true, "supports": "Daily high-potency use: adjusted OR 4.8 for psychotic disorder; case-control, 11 sites." },
+      { "id": "r15", "cite": "Center for Substance Abuse Treatment (2010). Protracted Withdrawal. Substance Abuse Treatment Advisory, Volume 9, Issue 1. HHS Publication No. (SMA) 10-4554. SAMHSA.", "kind": "guideline", "url": "https://store.samhsa.gov/sites/default/files/sma10-4554.pdf", "fetched": true, "supports": "Review of 19 studies: sleep difficulties and strange dreams persisted at least 45 days, the longest studied" },
+      { "id": "r16", "cite": "Angarita GA, Emadi N, Hodges S, Morgan PT (2016). Sleep abnormalities associated with alcohol, cannabis, cocaine, and opiate use: a comprehensive review. Addiction Science & Clinical Practice.", "kind": "review", "doi": "10.1186/s13722-016-0056-7", "pmid": "27117064", "url": "https://europepmc.org/article/PMC/PMC4845302", "fetched": true, "supports": "Cannabis sleep disturbances progress over 2 weeks and persist more than 45 days into abstinence" },
+      { "id": "r17", "cite": "Garfield JB, Lubman DI, Yücel M (2014). Anhedonia in substance use disorders: a systematic review of its nature, course and clinical correlates. Australian and New Zealand Journal of Psychiatry.", "kind": "review", "doi": "10.1177/0004867413508455", "pmid": "24270310", "url": "https://europepmc.org/article/MED/24270310", "fetched": true, "supports": "32 studies across substances: anhedonia follows heavy use and diminishes with abstinence" }
     ]
   },
   {
@@ -355,12 +384,20 @@
         "startH": 48, "peakH": 720, "endH": 8760, "peakIntensity": 4,
         "note": "EEG reaction to drug cues was higher at 1 and 6 months than at 2 days, 1 week or 1 year, while self-rated craving showed no such rise. High from month 1 to month 6.",
         "refs": ["r4"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Sleep gets worse in weeks 2–3, even while it feels better",
+        "startH": 168, "peakH": 360, "endH": 1296, "peakIntensity": 2,
+        "note": "Measured sleep was at its worst on days 14–17 while people rated their sleep at its best (12 users, inpatient). In 20 people in treatment, sleep-lab sleep worsened from week 1 to week 2, with signs of improvement by day 54, the longest measured. At 3 weeks deep sleep was still about half that of healthy sleepers. End not established.",
+        "refs": ["r10", "r11", "r12"]
       }
     ],
     "markers": [
       { "atH": 12, "kind": "danger", "label": "Suicidal thinking can rise as the drug wears off", "refs": ["r3"] },
       { "atH": 24, "kind": "peak", "label": "The crash: 12–24 hours of sleepiness and irritability", "refs": ["r3"] },
-      { "atH": 720, "kind": "trap", "label": "Months 1–6: the brain reacts most to cues, while you feel less craving", "refs": ["r4"] }
+      { "atH": 720, "kind": "trap", "label": "Months 1–6: the brain reacts most to cues, while you feel less craving", "refs": ["r4"] },
+      { "atH": 360, "kind": "trap", "label": "Days 14–17: measured sleep at its worst while people rate it at its best (12 users)", "refs": ["r10"] }
     ],
     "beliefs": [
       {
@@ -438,7 +475,8 @@
       { "block": "timeline", "wanted": "Durations of Gawin and Kleber's three phases (crash, withdrawal, extinction) and a modern test of them.", "why": "The 1986 abstract names a three-phase sequence without durations; a controlled residential study (Weddington 1990) found no classic withdrawal pattern; no newer review was fetched." },
       { "block": "beliefs", "wanted": "Verified first-person quotes from people quitting cocaine.", "why": "The testimonial corpus has no cocaine-specific accounts; file 06's stimulant sample is mostly prescription stimulants." },
       { "block": "axes", "wanted": "Whether a break raises overdose risk on return (tolerance loss) for cocaine.", "why": "Not found in fetched sources; set to false pending evidence." },
-      { "block": "screener", "wanted": "Licence status of the SDS.", "why": "No licence statement found." }
+      { "block": "screener", "wanted": "Licence status of the SDS.", "why": "No licence statement found." },
+      { "block": "timeline", "wanted": "Low mood and flatness (anhedonia) beyond the first month after cocaine", "why": "A 1993 review (r13) found symptoms past acute withdrawal consistently described for alcohol and opioids but not for cocaine; no month-by-month study was fetched." }
     ],
     "refs": [
       { "id": "r1", "cite": "Gawin FH, Kleber HD (1986). Abstinence symptomatology and psychiatric diagnosis in cocaine abusers: clinical observations. Archives of General Psychiatry.", "kind": "study", "doi": "10.1001/archpsyc.1986.01800020013003", "pmid": "3947206", "url": "https://pubmed.ncbi.nlm.nih.gov/3947206/", "fetched": true, "supports": "30 users; proposed a three-phase sequence of abstinence symptoms." },
@@ -449,7 +487,11 @@
       { "id": "r6", "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, et al. (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from NESARC. Addiction.", "kind": "survey", "doi": "10.1111/j.1360-0443.2010.03194.x", "pmid": "21077975", "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/", "fetched": true, "supports": "Lifetime remission 99.2% cocaine; half remitted about 5 years after onset." },
       { "id": "r7", "cite": "van Amsterdam J, Gresnigt F, van den Brink W (2024). Cardiovascular risks of simultaneous use of alcohol and cocaine: a systematic review. Journal of Clinical Medicine.", "kind": "review", "doi": "10.3390/jcm13051475", "pmid": "38592322", "url": "https://europepmc.org/abstract/MED/38592322", "fetched": true, "supports": "Co-use raises mortality; cocaethylene 18- to 25-fold sudden death risk." },
       { "id": "r8", "cite": "Kaye S, Darke S (2002). Determining a diagnostic cut-off on the Severity of Dependence Scale (SDS) for cocaine dependence. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.2002.00121.x", "pmid": "12084142", "url": "https://pubmed.ncbi.nlm.nih.gov/12084142/", "fetched": true, "supports": "142 cocaine users; SDS cut-off 3 or more for dependence." },
-      { "id": "r9", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS has five items on impaired control and preoccupation; good psychometrics." }
+      { "id": "r9", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS has five items on impaired control and preoccupation; good psychometrics." },
+      { "id": "r10", "cite": "Morgan PT, Pace-Schott EF, Sahul ZH, et al. (2006). Sleep, sleep-dependent procedural learning and vigilance in chronic cocaine users: evidence for occult insomnia. Drug and Alcohol Dependence.", "kind": "study", "doi": "10.1016/j.drugalcdep.2005.09.014", "pmid": "16260094", "url": "https://europepmc.org/article/MED/16260094", "fetched": true, "supports": "12 inpatients: measured sleep worst at 14–17 days abstinent while self-rated sleep was at its best" },
+      { "id": "r11", "cite": "Angarita GA, Canavan SV, Forselius E, et al. (2014). Abstinence-related changes in sleep during treatment for cocaine dependence. Drug and Alcohol Dependence.", "kind": "study", "doi": "10.1016/j.drugalcdep.2013.11.007", "pmid": "24315572", "url": "https://europepmc.org/article/MED/24315572", "fetched": true, "supports": "20 in treatment: sleep-lab sleep worsened week 1 to 2; possible improvement up to day 54" },
+      { "id": "r12", "cite": "Angarita GA, Emadi N, Hodges S, Morgan PT (2016). Sleep abnormalities associated with alcohol, cannabis, cocaine, and opiate use: a comprehensive review. Addiction Science & Clinical Practice.", "kind": "review", "doi": "10.1186/s13722-016-0056-7", "pmid": "27117064", "url": "https://europepmc.org/article/PMC/PMC4845302", "fetched": true, "supports": "Cocaine: self-rated sleep improves in weeks; at 3 weeks deep sleep still 50% below healthy sleepers" },
+      { "id": "r13", "cite": "Satel SL, Kosten TR, Schuckit MA, Fischman MW (1993). Should protracted withdrawal from drugs be included in DSM-IV? American Journal of Psychiatry.", "kind": "review", "doi": "10.1176/ajp.150.5.695", "pmid": "8097618", "url": "https://europepmc.org/article/MED/8097618", "fetched": true, "supports": "Protracted alcohol and opiate symptoms consistently described, not for cocaine; never conclusively demonstrated" }
     ]
   },
   {
@@ -500,6 +542,20 @@
         "startH": 144, "peakH": 2160, "endH": 8760, "peakIntensity": 4,
         "note": "Rose until 3 months of abstinence, then was lower at 6 months and 1 year (139 people in a rehabilitation centre, cross-sectional: different people at each time point).",
         "refs": ["r3"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Poor sleep: still there for about half at one month",
+        "startH": 168, "peakH": 168, "endH": 720, "peakIntensity": 2,
+        "note": "90 people in residential treatment in Iran: poor sleep quality in 97.8% in week 1 and 52.2% after week 4, the last check; the change was not explained by depression or anxiety. Not measured beyond 1 month.",
+        "refs": ["r12"]
+      },
+      {
+        "track": "mood-sleep",
+        "label": "Weeks to months of up-and-down mood and energy, feeling flat",
+        "startH": 576, "peakH": 576, "endH": 2160, "peakIntensity": 2,
+        "note": "Described as the stimulant 'extinction phase' in an Australian (NSW) clinical guideline, quoted in a 2019 review: swings in mood and energy, irritability, anxiety, fatigue, anhedonia, craving and poor sleep for weeks to months. Not measured month by month, and one study found depressive symptoms largely gone within a week. 3 months drawn, not a sourced end.",
+        "refs": ["r13", "r2"]
       }
     ],
     "markers": [
@@ -584,7 +640,9 @@
       { "id": "r8", "cite": "Trivedi MH, Walker R, Ling W, et al. (2021). Bupropion and naltrexone in methamphetamine use disorder. New England Journal of Medicine.", "kind": "trial", "doi": "10.1056/NEJMoa2020214", "pmid": "33497547", "url": "https://pubmed.ncbi.nlm.nih.gov/33497547/", "fetched": true, "supports": "Weighted response 13.6% vs 2.5% placebo over 12 weeks." },
       { "id": "r9", "cite": "Topp L, Mattick RP (1997). Choosing a cut-off on the Severity of Dependence Scale (SDS) for amphetamine users. Addiction.", "kind": "study", "pmid": "9293043", "url": "https://europepmc.org/abstract/MED/9293043", "fetched": true, "supports": "327 amphetamine users; SDS score above 4 indicates problematic use." },
       { "id": "r10", "cite": "Recovery testimonials corpus, file 06 (opioids and stimulants), verified archived posts from r/StopSpeeding.", "kind": "other", "url": "docs/research/recovery-testimonials/06-opioids-stimulants.md", "fetched": true, "supports": "Meth account of an urge 'every 90 days'." },
-      { "id": "r11", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS: five items on impaired control and preoccupation." }
+      { "id": "r11", "cite": "Gossop M, Darke S, Griffiths P, et al. (1995). The Severity of Dependence Scale (SDS): psychometric properties in English and Australian samples of heroin, cocaine and amphetamine users. Addiction.", "kind": "study", "doi": "10.1046/j.1360-0443.1995.9056072.x", "pmid": "7795497", "url": "https://europepmc.org/abstract/MED/7795497", "fetched": true, "supports": "SDS: five items on impaired control and preoccupation." },
+      { "id": "r12", "cite": "Ardani AR, Saghebi SA, Nahidi M, Zeynalian F (2016). Does abstinence resolve poor sleep quality in former methamphetamine dependents? Sleep Science.", "kind": "study", "doi": "10.1016/j.slsci.2016.11.004", "pmid": "28123671", "url": "https://europepmc.org/article/MED/28123671", "fetched": true, "supports": "90 residential patients, Iran: poor sleep quality 97.8% in week 1, 52.2% after week 4" },
+      { "id": "r13", "cite": "Lerner A, Klein M (2019). Dependence, withdrawal and rebound of CNS drugs: an update and regulatory considerations for new drugs development. Brain Communications.", "kind": "review", "doi": "10.1093/braincomms/fcz025", "pmid": "32954266", "url": "https://europepmc.org/article/PMC/PMC7425303", "fetched": true, "supports": "Stimulant 'extinction phase': mood and energy swings, anhedonia, craving, poor sleep for weeks to months" }
     ]
   },
   {

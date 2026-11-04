@@ -654,5 +654,10 @@
   "decongestant-nasal-spray": "nasal-spray",
   "antidepressant-discontinuation": "antidepressants",
   "cross-addiction": "swapping"
- }
+ },
+ "noCueFloor": [
+  "heroin-fentanyl",
+  "prescription-opioids",
+  "kratom"
+ ]
 }

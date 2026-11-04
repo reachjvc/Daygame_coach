@@ -147,11 +147,11 @@ textarea.note-in { resize: vertical; field-sizing: content; min-height: 34px; ma
 @media (prefers-reduced-motion: reduce) { .frame { transition: none; } }
 
 /* ---------- the mock one-pager (shared pieces) ---------- */
-.op { font-family: var(--f-read); font-size: 16.5px; line-height: 1.55; color: var(--ink); padding: 26px clamp(16px, 4vw, 40px) 30px; display: grid; gap: 30px; container-type: inline-size; }
-.op h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(30px, 6cqi, 44px); letter-spacing: -.02em; }
-.op h2 { font-family: var(--f-display); font-weight: 700; font-size: 21px; letter-spacing: -.01em; }
-.op .lead { font-size: 19px; color: var(--ink-2); max-width: 60ch; }
-.op section { display: grid; gap: 12px; min-width: 0; }
+.op { font-family: var(--f-read); font-size: 15px; line-height: 1.5; color: var(--ink); padding: 22px clamp(16px, 4vw, 40px) 26px; display: grid; gap: 22px; container-type: inline-size; }
+.op h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(28px, 4.6cqi, 40px); letter-spacing: -.02em; }
+.op h2 { font-family: var(--f-display); font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+.op .lead { font-size: 17px; color: var(--ink-2); max-width: 62ch; }
+.op section { display: grid; gap: 10px; min-width: 0; align-content: start; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-family: var(--f-mono); font-size: 11.5px; padding: 3px 9px; border-radius: 4px; background: var(--surface-2); color: var(--ink-2); }
 .chip.danger { background: var(--danger-bg); color: var(--danger); }
@@ -168,8 +168,8 @@ textarea.note-in { resize: vertical; field-sizing: content; min-height: 34px; ma
 .safety .st { font-family: var(--f-display); font-weight: 700; font-size: 15px; }
 .safety.danger .st { color: var(--danger); }
 .safety.caution .st { color: var(--caution); }
-.safety p { font-size: 15.5px; }
-.ph { border: 1px dashed var(--ph-line); border-radius: var(--r); padding: 12px 14px; background: repeating-linear-gradient(135deg, var(--ph-bg) 0 10px, transparent 10px 20px); color: var(--ph); font-size: 14.5px; display: grid; gap: 4px; }
+.safety p { font-size: 14px; }
+.ph { border: 1px dashed var(--ph-line); border-radius: var(--r); padding: 9px 12px; font-size: 13px !important; background: repeating-linear-gradient(135deg, var(--ph-bg) 0 10px, transparent 10px 20px); color: var(--ph); font-size: 14.5px; display: grid; gap: 4px; }
 .ph b { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
 .ph span { color: var(--ink-2); }
 .tl { position: relative; }
@@ -181,8 +181,23 @@ textarea.note-in { resize: vertical; field-sizing: content; min-height: 34px; ma
 .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
 .ev { font-family: var(--f-mono); font-size: 11.5px; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--ink-2); }
 .ev b { font-weight: 500; color: var(--ink); }
+/* option A: a real one-pager. Side by side when the page is wide */
+.opA .a-head, .opA .a-cols { display: grid; gap: 18px; min-width: 0; }
+.opA .a-side { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.opA .a-cols > div { display: grid; gap: 18px; align-content: start; min-width: 0; }
+@container (min-width: 820px) {
+  .opA .a-head { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
+  .opA .a-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .opA .pins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .opA .beliefs { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+}
+details.fold { border-top: 1px solid var(--line); padding-top: 10px; }
+details.fold > summary { cursor: pointer; font-family: var(--f-display); font-weight: 700; font-size: 15px; }
+details.fold > summary .cnt { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 6px; }
+details.fold.ph-fold > summary { color: var(--ph); }
+details.fold > .fold-in { display: grid; gap: 8px; padding-top: 10px; }
 .tlcap { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
-.pins { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; }
+.pins { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px 20px; font-size: 13px; }
 .pins li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: baseline; }
 .pin { width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--f-mono); font-size: 11px; background: var(--ink); color: var(--bg); }
 .pin.danger { background: var(--danger); color: #fff; }
@@ -193,28 +208,28 @@ details.tbl summary { cursor: pointer; font-family: var(--f-mono); font-size: 12
 .tblwrap table { border-collapse: collapse; font-size: 13.5px; min-width: 520px; width: 100%; margin-top: 8px; }
 .tblwrap th, .tblwrap td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .tblwrap th { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 500; }
-.beliefs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.belief { border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 8px; align-content: start; background: var(--surface); }
-.belief .voice { font-family: var(--f-display); font-weight: 600; font-size: 17px; line-height: 1.3; }
+.beliefs { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.belief { border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: grid; gap: 8px; align-content: start; background: var(--surface); }
+.belief .voice { font-family: var(--f-display); font-weight: 600; font-size: 15px; line-height: 1.3; }
 .belief .voice::before { content: "\201C"; color: var(--muted); }
 .belief .voice::after { content: "\201D"; color: var(--muted); }
-.belief p { font-size: 15px; color: var(--ink-2); }
+.belief p { font-size: 13.5px; color: var(--ink-2); }
 .verdict { justify-self: start; font-family: var(--f-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; border: 1.5px solid currentColor; }
 .verdict.v-false, .verdict.v-mostly-false { color: var(--danger); }
 .verdict.v-half-true { color: var(--caution); }
 .verdict.v-true-but { color: var(--accent); }
 .works { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.works li { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; align-items: start; }
+.works li { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 10px; align-items: start; }
 .evd { display: grid; gap: 3px; font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .evd .bars { display: flex; gap: 3px; }
 .evd .bars i { display: block; height: 6px; flex: 1; border-radius: 2px; background: var(--line); }
 .evd .bars i.on { background: var(--accent); }
-.works .wt { font-weight: 600; font-family: var(--f-display); font-size: 15.5px; }
-.works .wn { font-size: 14.5px; color: var(--ink-2); }
-.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-.num { border-top: 3px solid var(--accent); padding-top: 10px; font-size: 15px; color: var(--ink-2); }
+.works .wt { font-weight: 600; font-family: var(--f-display); font-size: 14px; }
+.works .wn { font-size: 13px; color: var(--ink-2); }
+.nums { display: grid; gap: 10px; }
+.num { border-top: 3px solid var(--accent); padding-top: 8px; font-size: 13.5px; color: var(--ink-2); }
 .official { border-left: 3px solid var(--line); padding-left: 14px; display: grid; gap: 4px; }
-.official .os { font-family: var(--f-display); font-weight: 700; font-size: 16px; }
+.official .os { font-family: var(--f-display); font-weight: 700; font-size: 14.5px; }
 .official .oc { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
 .screener { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
 .screener .sn { font-family: var(--f-display); font-weight: 600; }
@@ -223,8 +238,8 @@ details.tbl summary { cursor: pointer; font-family: var(--f-mono); font-size: 12
 .srcs .tag { font-family: var(--f-mono); font-size: 10.5px; padding: 0 5px; border-radius: 3px; margin-left: 4px; }
 .srcs .tag.ok { background: var(--accent-soft); color: var(--accent); }
 .srcs .tag.un { background: var(--ph-bg); color: var(--ph); }
-.op footer { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; font-size: 13.5px; color: var(--muted); }
-.closing { font-family: var(--f-display); font-size: 19px; font-weight: 600; color: var(--ink); }
+.op footer { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.closing { font-family: var(--f-display); font-size: 17px; font-weight: 600; color: var(--ink); }
 
 /* option B */
 .now { display: grid; gap: 14px; }
@@ -332,11 +347,11 @@ table.stress td.nm button { border: 0; background: none; padding: 0; text-align:
 /* reader view: the page alone, as a visitor sees it */
 #reader { min-height: 100%; background: var(--surface); }
 .site { background: var(--surface); border-bottom: 1px solid var(--line); }
-.site-in { max-width: 800px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.site-in { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .site .logo { font-weight: 800; letter-spacing: -.01em; font-size: 17px; color: var(--ink); text-decoration: none; }
 .site .logo small { font-family: var(--f-mono); font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 6px; }
 .site a.all { font-size: 14px; }
-.reader-main { max-width: 800px; margin: 0 auto; padding-bottom: 90px; }
+.reader-main { max-width: 1180px; margin: 0 auto; padding-bottom: 90px; }
 .reader-main > .op { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 @media (min-width: 700px) { .reader-main > .op { padding-left: 40px; padding-right: 40px; } }
 .reader-main .voicehero { margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -504,7 +519,8 @@ function domainOf(item) {
 function smooth(s) { s = Math.max(0, Math.min(1, s)); return s * s * (3 - 2 * s); }
 function inten(p, t) {
   const L = Math.log;
-  const st = Math.max(0.5, +p.startH || 0.5), pk = Math.max(st, +p.peakH || st), en = Math.max(pk * 1.05, +p.endH || pk * 2);
+  let st = Math.max(0.5, +p.startH || 0.5); const pk = Math.max(st, +p.peakH || st), en = Math.max(pk * 1.05, +p.endH || pk * 2);
+  if (pk <= st && st > 6) st = pk * 0.6; /* a phase that starts at full strength still eases in on the chart, no cliff */
   const v = +p.peakIntensity || 3;
   const open = (+p.endH || 0) <= (+p.peakH || 0) && pk > st;
   if (open && t > pk) return v;
@@ -520,7 +536,7 @@ function activeAt(item, t) { return (item.timeline || []).filter(p => inten(p, t
 const CHARTS = new Map(); let chartSeq = 0;
 function timeline(item, o) {
   o = o || {};
-  const W = (o.card || (READER ? innerWidth < 640 : state.phone)) ? 380 : 640, Hh = o.compact ? 150 : 240, pl = 10, pr = 10, pt = o.compact ? 12 : 22, pb = 30;
+  const W = (o.card || (READER ? innerWidth < 640 : state.phone)) ? 380 : (READER && innerWidth >= 1000 ? 1040 : 640), Hh = o.compact ? 150 : (W > 900 ? 230 : 220), pl = 10, pr = 10, pt = o.compact ? 12 : 22, pb = 30;
   const [d0, d1] = domainOf(item); const L = Math.log;
   const x = t => pl + (L(t) - L(d0)) / (L(d1) - L(d0)) * (W - pl - pr);
   const y = v => Hh - pb - v / 5 * (Hh - pt - pb);
@@ -553,7 +569,7 @@ function timeline(item, o) {
     const path = a => "M" + a.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L");
     g += `<path d="${path(band)}L${band[band.length - 1][0].toFixed(1)},${y(0)}L${band[0][0].toFixed(1)},${y(0)}Z" fill="${css(k)}" fill-opacity="0.14"/>`;
     g += `<path d="${path(pts)}" fill="none" stroke="${css(k)}" stroke-width="2" stroke-linejoin="round"/>`;
-    if (k === "craving" && best[1] > 0 && item.group === "substance") {
+    if (k === "craving" && best[1] > 0 && item.group === "substance" && !(B.noCueFloor || []).includes(item.id)) {
       firstPeak = Math.min(...ps.map(p => +p.peakH || 1));
       const fx = x(Math.max(d0, firstPeak)), fy = y(0.7);
       g += `<line x1="${fx}" x2="${x(d1)}" y1="${fy}" y2="${fy}" stroke="${css(k)}" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>`;
@@ -674,28 +690,29 @@ const sec = (title, body) => body ? `<section><h2>${h(title)}</h2>${body}</secti
 
 /* ---------- the four options ---------- */
 function optA(item) {
-  return `<div class="op">
-    <section><div class="eyebrow">Field guide &middot; ${h(groupName(item.group))}</div><h1>${h(item.name)}</h1><p class="lead">${h(item.oneLiner)}${cite(item, item.oneLinerRefs)}</p>${chips(item)}</section>
-    ${safety(item)}
-    ${sec("What stopping feels like, hour by hour", timeline(item) + pinsList(item) + phaseTable(item))}
+  const nRefs = (item.refs || []).length, nPh = (item.placeholders || []).length;
+  return `<div class="op opA">
+    <div class="a-head">
+      <section><div class="eyebrow">${h(groupName(item.group))}</div><h1>${h(item.name)}</h1><p class="lead">${h(item.oneLiner)}${cite(item, item.oneLinerRefs)}</p>${chips(item)}</section>
+      <div class="a-side">${safety(item)}${numbersBlock(item)}</div>
+    </div>
+    ${sec("What stopping feels like, over time", timeline(item) + pinsList(item) + phaseTable(item))}
     ${sec("The thoughts that keep you stuck", beliefsBlock(item))}
-    ${sec("What works, strongest evidence first", worksBlock(item))}
-    ${sec("In numbers", numbersBlock(item))}
-    ${sec("Most people get out", findingText(/Most people recover/i, item))}
-    ${sec("Is it officially an addiction?", officialBlock(item))}
-    ${sec("Check yourself", screenerBlock(item))}
-    ${sec("When it goes well, watch out", goodStretch(item))}
-    ${sec("If you slipped", slipBlock(item))}
-    ${sec("What you get back", ph("What you get back", "Body and life gains over time after stopping (sleep, money, lungs, mood). Not researched yet."))}
-    ${item.id !== "cross-addiction" ? sec("Swapping one for another", crossLink()) : ""}
-    ${(item.placeholders || []).length ? sec("Still missing on this page", itemPlaceholders(item)) : ""}
-    ${sec("Sources", sourcesBlock(item))}
+    <div class="a-cols">
+      <div>${sec("What works, strongest evidence first", worksBlock(item))}</div>
+      <div>${sec("Is it officially an addiction?", officialBlock(item))}${sec("Check yourself", screenerBlock(item))}${sec("Most people get out", findingText(/Most people recover/i, item))}</div>
+      <div>${sec("When it goes well, watch out", goodStretch(item))}${sec("If you slipped", slipBlock(item))}${item.id !== "cross-addiction" ? sec("Swapping one for another", crossLink()) : ""}</div>
+    </div>
+    <details class="fold"><summary>Sources<span class="cnt">${nRefs}</span></summary><div class="fold-in">${sourcesBlock(item)}</div></details>
+    <details class="fold ph-fold"><summary>Still missing on this page<span class="cnt">${nPh + 1} placeholders</span></summary><div class="fold-in">${ph("What you get back", "Body and life gains over time after stopping (sleep, money, lungs, mood). Not researched yet.")}${itemPlaceholders(item)}</div></details>
     ${footer(item)}
   </div>`;
 }
+/* Acute withdrawal = phases that start in the first three days. Later rows are the long phase. */
+function acuteEndOf(item) { return Math.max(0, ...(item.timeline || []).filter(p => (p.track === "body" || p.track === "mood-sleep") && (+p.startH || 0) < 72).map(p => +p.endH || 0)); }
 function stageBelief(item, t) {
   const bs = item.beliefs || []; if (!bs.length) return null;
-  const acuteEnd = Math.max(0, ...(item.timeline || []).filter(p => p.track !== "craving" && p.track !== "hormones").map(p => +p.peakH || 0));
+  const acuteEnd = acuteEndOf(item);
   const want = t < Math.max(24, acuteEnd) ? ["cant-stop", "quitting-wont-work"] : t < 720 ? ["not-that-bad", "can-moderate"] : ["can-moderate", "identity", "not-that-bad"];
   return want.map(k => bs.find(b => b.kind === k)).find(Boolean) || bs[0];
 }
@@ -707,7 +724,7 @@ function optB(item) {
   const nextM = (item.markers || []).filter(m => (+m.atH || 0) > tt).sort((a, b) => a.atH - b.atH)[0];
   const nearM = (item.markers || []).filter(m => (m.kind === "trap" || m.kind === "danger") && Math.abs(Math.log((+m.atH || 1) / tt)) < 0.9);
   const b = stageBelief(item, tt);
-  const lastAcute = Math.max(0, ...(item.timeline || []).filter(p => p.track === "body").map(p => +p.endH || 0));
+  const lastAcute = acuteEndOf(item);
   const good = lastAcute && tt > lastAcute;
   const odAfter = item.axes && item.axes.overdoseRiskAfterBreak && tt > 72;
   const pos = Math.round((Math.log(tt) - Math.log(d0)) / (Math.log(d1) - Math.log(d0)) * 1000);
@@ -733,7 +750,7 @@ function optB(item) {
       ${sec("What works", worksBlock(item))}
       ${sec("Is it officially an addiction?", officialBlock(item))}
       ${sec("Check yourself", screenerBlock(item))}
-      ${sec("Sources", sourcesBlock(item))}
+      <details class="fold"><summary>Sources<span class="cnt">${(item.refs || []).length}</span></summary><div class="fold-in">${sourcesBlock(item)}</div></details>
     </div></details>
     ${footer(item)}
   </div>`;
@@ -747,7 +764,7 @@ function optC(item) {
     ${sec("What actually helps", worksBlock(item))}
     ${sec("The body's side of it", timeline(item, { compact: true }) + pinsList(item))}
     ${sec("Is it officially an addiction?", officialBlock(item))}
-    ${sec("Sources", sourcesBlock(item))}
+    <details class="fold"><summary>Sources<span class="cnt">${(item.refs || []).length}</span></summary><div class="fold-in">${sourcesBlock(item)}</div></details>
     ${footer(item)}
   </div>`;
 }
@@ -924,8 +941,8 @@ function route() {
   }
 }
 window.addEventListener("hashchange", route);
-let lastNarrow = innerWidth < 640;
-window.addEventListener("resize", () => { const n = innerWidth < 640; if (READER && n !== lastNarrow) { lastNarrow = n; renderPage(); } lastNarrow = n; });
+const band = () => innerWidth < 640 ? 0 : innerWidth < 1000 ? 1 : 2; let lastBand = band();
+window.addEventListener("resize", () => { const n = band(); if (READER && n !== lastBand) { lastBand = n; renderPage(); refreshMarks(); } lastBand = n; });
 function go(id, scroll) { if (!BY[id]) return; state.id = id; document.getElementById("pick").value = id; saveView(); renderPage(); refreshMarks(); if (scroll) document.getElementById("try").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-opt]"); if (t) { state.opt = t.dataset.opt; saveView(); renderTabs(); renderPage(); refreshMarks(); return; }
