@@ -363,10 +363,6 @@ export function TogglLab({
     setDraftState(next)
     if (!runningNow.current) keepTimerBar({ draft: next })
   }, [])
-  const setMode = useCallback((next: TimerMode) => {
-    setModeState(next)
-    keepTimerBar({ mode: next })
-  }, [])
 
   /**
    * THE BAR SHOWS WHAT IS TRACKING, WHOEVER CHANGED IT (bug audit A4).
@@ -404,6 +400,22 @@ export function TogglLab({
     mirrored.current = { id: running.id, draft: fromEntry }
     setDraftState(next)
   }, [running?.id, running?.description, running?.projectId, running?.taskId, runningTags, running?.billable]) // deps: the fields the bar shows
+
+  /**
+   * Manual mode adds a finished entry through the same description box, and
+   * adding one empties it. So back on the timer with something running, the
+   * bar shows what runs again: it stayed empty over the running timer, and its
+   * next commit would have renamed the entry to nothing (bug audit E3).
+   */
+  const setMode = useCallback((next: TimerMode) => {
+    setModeState(next)
+    keepTimerBar({ mode: next })
+    const live = runningNow.current
+    if (next !== "timer" || !live) return
+    const fromEntry = draftOf(live)
+    mirrored.current = { id: live.id, draft: fromEntry }
+    setDraftState(fromEntry)
+  }, [])
 
   /**
    * A timer starting or stopping ends the life of the unstarted draft: it was
