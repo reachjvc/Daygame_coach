@@ -22,6 +22,7 @@ import {
   formatTimeOfDay,
   isoAtMinutes,
   minutesIntoDay,
+  startOfDayIso,
 } from "./timetrackFormatService"
 import { entryDaySeconds, isPlanned } from "./timetrackService"
 import type {
@@ -848,7 +849,7 @@ export function layoutBlocks<T>(items: T[], toInterval: (item: T) => Interval): 
  * a day, every entry shorter than a minute counted as sixty seconds, and the
  * calendar reported 12:02 for a day the rest of the app put at 6:41. Day totals
  * come from `entryDaySeconds`; a dragged block's new times come from
- * `shiftEntryBy`.
+ * `blockDragPatch`.
  */
 export function entryInterval(entry: TimeEntry, day: IsoDate, nowSec: number): Interval {
   const startMin = dateKey(entry.start) === day ? minutesIntoDay(entry.start) : 0
@@ -863,14 +864,23 @@ export function eventInterval(event: CalendarEvent, day: IsoDate): Interval {
   return { startMin, endMin: Math.max(startMin + 1, endMin) }
 }
 
-/** Entries that touch `day`, including a running one */
+/**
+ * Entries that touch `day`, including a running one.
+ *
+ * An entry begun on an earlier day touches this one only if it runs PAST its
+ * midnight. One ending at exactly 00:00 was drawn here too, from minute 0 to
+ * minute 0 — a phantom block one minute tall, whose bottom edge could pull the
+ * entry into this day (code review, 2026-11-04). Creating or resizing to the
+ * bottom of the grid makes such entries.
+ */
 export function entriesForDay(entries: TimeEntry[], day: IsoDate, nowSec: number): TimeEntry[] {
+  const midnight = new Date(startOfDayIso(day)).getTime()
   return entries
     .filter((entry) => {
       const startDay = dateKey(entry.start)
       if (startDay === day) return true
       const endIso = entry.stop ?? new Date(nowSec * 1000).toISOString()
-      return startDay < day && dateKey(endIso) >= day
+      return startDay < day && new Date(endIso).getTime() > midnight
     })
     .sort((a, b) => epochSeconds(a.start) - epochSeconds(b.start))
 }
@@ -986,9 +996,9 @@ export type BlockDragPatch = { start: IsoDateTime; stop: IsoDateTime | null } | 
  * What a drag on a block writes: the patch for `updateEntry`, or null when the
  * pointer came back to where it went down and nothing should change.
  *
- * - **move**: both ends shift by the snapped distance the pointer travelled
- *   (`shiftEntryBy`), so the length survives to the second; the block's top
- *   stops at midnight rather than onto the day before.
+ * - **move**: the start moves the snapped distance the pointer travelled, on
+ *   the wall clock like the grid, and the end keeps the entry's length to the
+ *   second; the block's top stops at midnight rather than onto the day before.
  * - **resize-start** and **resize-end**: that edge moves by the same snapped
  *   distance, and lands on the 5-minute grid. By the distance, not to the
  *   pointer: a fingertip's edge is 16 px, about 11 minutes, so a finger near
@@ -1010,7 +1020,19 @@ export function blockDragPatch(entry: TimeEntry, day: IsoDate, drag: BlockDrag, 
   if (drag.mode === "move") {
     // the top stays on this day: from its midnight to the last step before the next one
     const moved = Math.min(24 * 60 - CALENDAR_SNAP_MINUTES - drag.topMinutes, Math.max(-drag.topMinutes, delta))
-    return moved === 0 ? null : shiftEntryBy(entry, moved)
+    if (moved === 0) return null
+    /**
+     * ON THE WALL CLOCK, LIKE A RESIZE. The grid is the clock on the wall, and
+     * a move shifted REAL minutes (`shiftEntryBy`): on 25 October a 01:00–01:30
+     * block dragged down 120 rows landed at 02:00, an hour above the finger,
+     * and on 29 March an hour below (code review, 2026-11-04). The start moves
+     * that many minutes on the wall — seconds kept — and the end keeps the
+     * entry's real length, to the millisecond.
+     */
+    const start = new Date(entry.start)
+    start.setMinutes(start.getMinutes() + moved)
+    const length = entry.stop ? new Date(entry.stop).getTime() - new Date(entry.start).getTime() : null
+    return { start: start.toISOString(), stop: length === null ? null : new Date(start.getTime() + length).toISOString() }
   }
   const startMs = new Date(entry.start).getTime()
   const endIso = entry.stop ?? nowIso
