@@ -16,6 +16,11 @@
  * screens: a device of somebody else's moves to whoever is signed in, with both
  * of its switches off, so A stops reaching it and B is sent nothing they did
  * not ask for; a device of B's own keeps its switches.
+ *
+ * AND A'S TIMER ALREADY ON THE SCREEN GOES TOO (security review, 2026-11-05,
+ * low): the claim stops A's pushes reaching this browser, A's "stopped" push
+ * included, so a running timer shown before the claim stayed there, naming A's
+ * activity. When the answer says the timer is off here, it is closed.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -29,17 +34,29 @@ vi.mock("@/app/actions/auth", () => ({ signOut: vi.fn() }))
 
 const ENDPOINT = "https://fcm.googleapis.com/fcm/send/abc123"
 
-function aBrowserWithAPushAddress({ allowed = true, subscribed = true } = {}) {
+const closed: string[] = []
+
+function aBrowserWithAPushAddress({ allowed = true, subscribed = true, timerHere = false } = {}) {
   vi.stubEnv("NODE_ENV", "production")
   vi.stubGlobal("Notification", { permission: allowed ? "granted" : "default" })
   vi.stubGlobal("PushManager", function PushManager() {})
   const subscription = { endpoint: ENDPOINT, toJSON: () => ({ endpoint: ENDPOINT, keys: { p256dh: "BNcR", auth: "tBHI" } }) }
   Object.defineProperty(navigator, "serviceWorker", {
     configurable: true,
-    value: { getRegistration: async () => ({ pushManager: { getSubscription: async () => (subscribed ? subscription : null) } }) },
+    value: {
+      getRegistration: async () => ({
+        pushManager: { getSubscription: async () => (subscribed ? subscription : null) },
+        // A's running timer, shown before the claim, and a reminder beside it
+        getNotifications: async ({ tag }: { tag?: string } = {}) =>
+          [
+            { tag: "timer-running", close: () => void closed.push("timer-running") },
+            { tag: "thought-prompt", close: () => void closed.push("thought-prompt") },
+          ].filter((n) => !tag || n.tag === tag),
+      }),
+    },
   })
   const fetch = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
-    async () => new Response(JSON.stringify({ id: "d1", enabled: false, timerRunning: false })),
+    async () => new Response(JSON.stringify({ id: "d1", enabled: false, timerRunning: timerHere })),
   )
   vi.stubGlobal("fetch", fetch)
   return fetch
@@ -51,6 +68,7 @@ const posted = (fetch: ReturnType<typeof aBrowserWithAPushAddress>) =>
     .map(([, init]) => JSON.parse(String(init?.body)) as { intent: string; subscription: { endpoint: string } })
 
 beforeEach(() => {
+  closed.length = 0
   Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: undefined })
 })
 
@@ -83,6 +101,18 @@ describe("claimThisDevice", () => {
     const noAddress = aBrowserWithAPushAddress({ subscribed: false })
     await claimThisDevice()
     expect(posted(noAddress)).toHaveLength(0)
+  })
+
+  it("takes the previous person's running timer off the screen when the timer is off here now", async () => {
+    aBrowserWithAPushAddress()
+    await claimThisDevice()
+    expect(closed, "A's running timer stayed on B's screen").toEqual(["timer-running"])
+  })
+
+  it("leaves the timer on the screen when it is this person's own and still on", async () => {
+    aBrowserWithAPushAddress({ timerHere: true })
+    await claimThisDevice()
+    expect(closed).toEqual([])
   })
 
   it("never throws, offline included", async () => {

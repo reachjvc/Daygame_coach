@@ -111,21 +111,24 @@ export async function listDevices(userId: string): Promise<DeviceSummary[]> {
 }
 
 /**
- * Who this browser's address is registered to, if anyone, and whether it is
- * on. Server-only: the answer names another person's id, and is used only to
+ * Who this browser's address is registered to, if anyone, whether it is on,
+ * and the keys it was registered with (another account's device moves only for
+ * a browser posting those). Server-only: the answer names another person's id, and is used only to
  * decide whether a shared browser moves to whoever is signed in now.
  */
 export async function deviceByEndpoint(
   endpoint: string,
-): Promise<{ id: string; userId: string; enabled: boolean; timerRunning: boolean } | null> {
+): Promise<{ id: string; userId: string; enabled: boolean; timerRunning: boolean; p256dh: string; auth: string } | null> {
   const { data, error } = await createAdminSupabaseClient()
     .from("push_devices")
-    .select("id, user_id, enabled, timer_running")
+    .select("id, user_id, enabled, timer_running, p256dh, auth")
     .eq("endpoint", endpoint)
     .maybeSingle()
   if (error) throw new Error(`Failed to look up this device: ${error.message}`)
-  const row = data as { id: string; user_id: string; enabled: boolean; timer_running: boolean } | null
-  return row ? { id: row.id, userId: row.user_id, enabled: row.enabled, timerRunning: row.timer_running } : null
+  const row = data as { id: string; user_id: string; enabled: boolean; timer_running: boolean; p256dh: string; auth: string } | null
+  return row
+    ? { id: row.id, userId: row.user_id, enabled: row.enabled, timerRunning: row.timer_running, p256dh: row.p256dh, auth: row.auth }
+    : null
 }
 
 /**

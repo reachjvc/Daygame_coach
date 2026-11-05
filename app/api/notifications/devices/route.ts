@@ -23,6 +23,15 @@
  *
  * The address is checked against the known push services first
  * (src/notifications/endpoints.ts): the server will POST to it.
+ *
+ * ANOTHER ACCOUNT'S DEVICE MOVES ONLY FOR A BROWSER HOLDING ITS KEYS. Each intent
+ * moved somebody else's row to whoever posted its address, with any keys — so an
+ * address learned anywhere took that person's device, and their pushes went out
+ * to keys the taker chose (security review, 2026-11-05, low). The shared browser
+ * the move is for posts the keys stored with the row: they are that browser's.
+ * Anything else changes nothing, and is answered as an address nobody registered
+ * ("refresh") or one we cannot use ("enable", "timer") — never "it is someone
+ * else's" (`aDeviceMovesOnlyWithItsOwnKeys`).
  */
 
 import { NextResponse } from "next/server"
@@ -49,7 +58,11 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null)
   const sub = readSubscription(body?.subscription)
-  if (!sub) return NextResponse.json({ error: "This browser's notification address is not one we can send to" }, { status: 400 })
+  const unusable = () => NextResponse.json({ error: "This browser's notification address is not one we can send to" }, { status: 400 })
+  if (!sub) return unusable()
+  /** This person's own, new, or another account's posted with the very keys stored for it: see the header */
+  const mayTake = (existing: Awaited<ReturnType<typeof deviceByEndpoint>>) =>
+    !existing || existing.userId === auth.userId || (existing.p256dh === sub.p256dh && existing.auth === sub.auth)
   const label = typeof body?.label === "string" ? body.label.slice(0, 80) : ""
 
   try {
@@ -57,6 +70,7 @@ export async function POST(req: Request) {
       // "Show the running timer on this device", from the tracker's Settings:
       // the timer on, reminders left as they were (off for a browser new here).
       const existing = await deviceByEndpoint(sub.endpoint)
+      if (!mayTake(existing)) return unusable()
       const enabled = existing?.userId === auth.userId ? existing.enabled : false
       const id = await registerDevice(auth.userId, { ...sub, label }, enabled, true)
       // whatever runs now appears at once, rather than at the next start
@@ -67,6 +81,7 @@ export async function POST(req: Request) {
       // A device new to this person starts with the running timer on only if
       // it is the installed app on a phone (Q4 scenario 9); one of theirs keeps its setting.
       const existing = await deviceByEndpoint(sub.endpoint)
+      if (!mayTake(existing)) return unusable()
       const timerRunning = existing?.userId === auth.userId ? existing.timerRunning : timerOnByDefault(label)
       const id = await registerDevice(auth.userId, { ...sub, label }, true, timerRunning)
       return NextResponse.json({ id, enabled: true, timerRunning })
@@ -79,7 +94,7 @@ export async function POST(req: Request) {
       }
     }
     const existing = await deviceByEndpoint(sub.endpoint)
-    if (!existing) return NextResponse.json({ id: null, enabled: false, timerRunning: false })
+    if (!existing || !mayTake(existing)) return NextResponse.json({ id: null, enabled: false, timerRunning: false })
     // someone else's browser moves here with both switches off
     const mine = existing.userId === auth.userId
     const enabled = mine ? existing.enabled : false

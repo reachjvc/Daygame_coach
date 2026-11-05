@@ -163,11 +163,22 @@ export async function claimThisDevice(): Promise<void> {
     const registration = await navigator.serviceWorker.getRegistration()
     const sub = await registration?.pushManager.getSubscription()
     if (!sub) return
-    await fetch("/api/notifications/devices", {
+    const res = await fetch("/api/notifications/devices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subscription: sub.toJSON(), intent: "refresh", label: deviceLabel(navigator.userAgent, isInstalledApp()) }),
     })
+    /**
+     * AND THE PREVIOUS PERSON'S TIMER ON THE SCREEN GOES TOO. Their pushes stop
+     * reaching this browser, their "stopped" one included, so a running timer
+     * shown before now stayed, naming what they were doing (security review,
+     * 2026-11-05, low). The timer off here now: whatever it shows is not this
+     * person's to see.
+     */
+    const answer = res.ok ? ((await res.json().catch(() => ({}))) as { timerRunning?: unknown }) : {}
+    if (answer.timerRunning === false) {
+      for (const shown of (await registration?.getNotifications({ tag: "timer-running" })) ?? []) shown.close()
+    }
   } catch {
     // no worker or no signal: the next page load asks again
   }
