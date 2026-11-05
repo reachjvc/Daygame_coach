@@ -67,6 +67,8 @@ import { HORIZON_META, formatCountdown } from "@/src/goals/horizonService"
 import { REASON_PROMPTS } from "@/src/goals/visionPlanService"
 import { MilestoneCurveEditor } from "../MilestoneCurveEditor"
 import { SentenceBox } from "./SentenceBox"
+import { GoalAchievements } from "./Achievements"
+import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
 export interface GoalHandlers {
   onUpdate: (goalId: string, patch: Partial<Omit<NsGoal, "id">>) => void
@@ -105,7 +107,7 @@ export interface GoalHandlers {
   onGoToTab: (tab: import("@/src/goals/types").NorthStarTabId) => void
 }
 
-export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoals, today, plan, isFocus, open, onToggleOpen, handlers }: {
+export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoals, today, ticks = NO_TRAINING_TICKS, plan, isFocus, open, onToggleOpen, handlers }: {
   goal: NsGoal
   area: NsArea | undefined
   areas: NsArea[]
@@ -115,6 +117,8 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
   rank: number | null
   totalGoals: number
   today: string
+  /** Finished workouts' ticks, so the achievements of the steps serving this goal count training too. */
+  ticks?: TrainingTicks
   /** Needed for the readings the page can take on the goal's behalf. */
   plan: NsPlan
   isFocus: boolean
@@ -527,6 +531,10 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           {isFinish && (
             <Checkpoints goal={goal} color={color} today={today} handlers={handlers} />
           )}
+
+          {/* What it has earned, in place of a date on a goal that repeats
+              (the owner's item 22), and what feeds it has earned. */}
+          <GoalAchievements plan={plan} goal={goal} today={today} ticks={ticks} />
 
           {/* The why. One question at a time, changeable when it runs dry. */}
           <div>

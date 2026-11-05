@@ -91,7 +91,7 @@ import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
-import { rateArea, removeReview, writeReview } from "@/src/goals/reviewService"
+import { appendToReview, rateArea, removeReview, writeReview } from "@/src/goals/reviewService"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
@@ -2041,9 +2041,11 @@ export function NorthStarFlow({
             <PeriodReviewTab
               plan={plan}
               today={today}
+              ticks={ticks}
               handlers={{
                 onWrite: (period, patch) => setPlan((p) => writeReview(p, period, patch, today)),
                 onRemove: (id) => setPlan((p) => removeReview(p, id)),
+                onAddMoments: (period, lines) => setPlan((p) => appendToReview(p, period, "magicMoments", lines, today)),
               }}
             />
           ) : (
@@ -2228,6 +2230,7 @@ export function NorthStarFlow({
             area={area}
             plan={plan}
             today={today ?? ns.todayISO()}
+            ticks={ticks}
             openGoalId={nowGoalId}
             onOpenGoal={(id) => setNowGoalId(nowGoalId === id ? null : id)}
             goalHandlers={goalHandlers}

@@ -29,6 +29,7 @@ import { areaCoverage, areaReach, areaReview, wheelRatings } from "@/src/goals/n
 import { AreaGoals } from "./AreaGoals"
 import { GoalLibrary } from "./GoalLibrary"
 import type { GoalHandlers } from "./GoalCard"
+import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
 const COVERAGE_COPY: Record<"covered" | "thin" | "none", { label: string; color: string; note: string }> = {
   covered: {
@@ -52,6 +53,7 @@ export function AreaGoalsDialog({
   area,
   plan,
   today,
+  ticks = NO_TRAINING_TICKS,
   openGoalId,
   onOpenGoal,
   goalHandlers,
@@ -68,6 +70,8 @@ export function AreaGoalsDialog({
   area: NsArea
   plan: NsPlan
   today: string
+  /** Finished workouts' ticks, so a goal card's achievements count training too. */
+  ticks?: TrainingTicks
   openGoalId: string | null
   onOpenGoal: (id: string) => void
   goalHandlers: GoalHandlers
@@ -172,6 +176,7 @@ export function AreaGoalsDialog({
               area={area}
               plan={plan}
               today={today}
+              ticks={ticks}
               openId={openGoalId}
               onOpen={onOpenGoal}
               handlers={goalHandlers}

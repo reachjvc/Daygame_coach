@@ -495,6 +495,28 @@ export const JOURNAL_PROMPTS: Array<{ id: string; group: string; question: strin
 ]
 
 /**
+ * ACHIEVEMENTS (Plans/life-plan-achievements.md; Q11). The owner's item 22:
+ * "100 approaches in all, or 10 in one day", in place of a date on a goal
+ * that repeats; Stefan: celebrate first.
+ */
+export const ACHIEVEMENT_COPY = {
+  title: "Achievements",
+  none: "Nothing yet. Log one on Today and the first one is yours.",
+  next: (label: string, toGo: string) => `Next: ${label} (${toGo})`,
+  more: (n: number) => `${n} more`,
+  fewer: "Show fewer",
+  ownLabel: (title: string) => `Achievements on ${title}`,
+  fedTitle: "From what feeds it",
+  fedLabel: (title: string) => `Achievements of what feeds ${title}`,
+  reviewTitle: (period: string) => `Earned in ${period}`,
+  reviewHelp: "Start with what went well. These are worked out from what you logged and ticked.",
+  reviewNone: "Nothing new in this stretch. A count on Today or a tick on a routine step is how one starts.",
+  addToMoments: "Add these to Magic moments",
+  added: "Added",
+  todayEarned: (labels: string) => `Earned today: ${labels}`,
+} as const
+
+/**
  * THE REVIEW STEP: a week, month, quarter or year looked back on
  * (Plans/life-plan-rebuild.md, Phase 5). Stefan's weekly review: score each
  * area, the magic moments, the lessons, the outcomes for the next one.

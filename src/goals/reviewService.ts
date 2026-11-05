@@ -180,6 +180,27 @@ export function writeReview(plan: NsPlan, period: ReviewPeriod, patch: ReviewPat
   return { ...plan, reviews: byEnd([...others, next]), updatedAt: now }
 }
 
+/**
+ * Add lines to the end of one of a review's texts, each on its own line,
+ * leaving out any already in it: what "Add these to Magic moments" does with
+ * the achievements of the period, so pressing it twice adds nothing.
+ */
+export function appendToReview(
+  plan: NsPlan,
+  period: ReviewPeriod,
+  field: "magicMoments" | "lessons" | "nextOutcomes",
+  lines: string[],
+  today: string,
+  now = new Date().toISOString(),
+): NsPlan {
+  const had = reviewFor(plan, period)?.[field] ?? ""
+  const present = new Set(had.split("\n").map((l) => l.trim()))
+  const fresh = lines.map((l) => l.trim()).filter((l) => l && !present.has(l))
+  if (fresh.length === 0) return plan
+  const text = [had.replace(/\s+$/, ""), ...fresh].filter(Boolean).join("\n")
+  return writeReview(plan, period, { [field]: text } as ReviewPatch, today, now)
+}
+
 /** Delete one review whole. */
 export function removeReview(plan: NsPlan, id: string, now = new Date().toISOString()): NsPlan {
   if (!plan.reviews.some((r) => r.id === id)) return plan

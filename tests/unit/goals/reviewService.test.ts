@@ -4,6 +4,7 @@ import { planHasNothingWritten } from "@/src/goals/lifePlanSync"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import {
   agoLabel,
+  appendToReview,
   averageScore,
   lastReviewOf,
   lastScores,
@@ -338,5 +339,18 @@ describe("Your 10s reads and rates the reviews", () => {
     // The column keeps its value through a save until Phase 7 drops it.
     const area = rows(plan).areas.find((a) => a.label === health.label)!
     expect(area.review_fortnight).toBe(6)
+  })
+})
+
+describe("adding lines to a review", () => {
+  it("adds each line once, on its own line, after what is there", () => {
+    const week = periodOf("week", TODAY)
+    let plan = writeReview(emptyNsPlan(), week, { magicMoments: "The long walk." }, TODAY, NOW)
+    plan = appendToReview(plan, week, "magicMoments", ["Approaches: 10 in all", "Gym: Done 10 times"], TODAY, NOW)
+    expect(reviewFor(plan, week)!.magicMoments).toBe("The long walk.\nApproaches: 10 in all\nGym: Done 10 times")
+    // Twice adds nothing, and an empty review is started by it.
+    expect(appendToReview(plan, week, "magicMoments", ["Approaches: 10 in all"], TODAY, NOW)).toBe(plan)
+    const fresh = appendToReview(emptyNsPlan(), week, "magicMoments", ["Approaches: 10 in all"], TODAY, NOW)
+    expect(reviewFor(fresh, week)!.magicMoments).toBe("Approaches: 10 in all")
   })
 })

@@ -34,7 +34,8 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
-import { DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
+import { ACHIEVEMENT_COPY, DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
+import { goalAchievements } from "@/src/goals/planAchievementsService"
 import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
@@ -869,6 +870,11 @@ export function TodayTab({
 
   const items = useMemo(() => todayItems(plan, today, ticks), [plan, today, ticks])
   const progress = useMemo(() => todayProgress(items), [items])
+  /** What each counted goal earned today, worked out once per change of the plan (`planAchievementsService`). */
+  const earnedToday = useMemo(
+    () => new Map(plan.goals.map((g) => [g.id, goalAchievements(plan, g.id, today).earned.filter((a) => a.earnedOn === today)])),
+    [plan, today],
+  )
   /**
    * THREE LISTS, because the plan gives three answers about today.
    *
@@ -1172,6 +1178,17 @@ export function TodayTab({
                     : TODAY_COPY.countSoFar(counted)}
                 </span>
             </span>
+            {/* What today's counts earned, said where it was earned (the owner's
+                item 32: celebrating yourself). Worked out, never stored, so an
+                undo takes it back. */}
+            {(() => {
+              const fresh = earnedToday.get(activity.id) ?? []
+              return fresh.length > 0 ? (
+                <span className="mt-1 block text-[10.5px] text-amber-200/80" data-testid="earned-today">
+                  {ACHIEVEMENT_COPY.todayEarned(fresh.map((a) => a.label).join(" · "))}
+                </span>
+              ) : null
+            })()}
           </span>
           <span className="flex flex-col items-end gap-1 shrink-0">
             <button

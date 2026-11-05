@@ -19,11 +19,13 @@ import { Plus } from "lucide-react"
 import type { NsArea, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { areaGoalsByPriority, goalRank, subGoalsOf } from "@/src/goals/northStarService"
 import { GoalCard, type GoalHandlers } from "./GoalCard"
+import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
-export function AreaGoals({ area, plan, today, openId, onOpen, handlers, onAddGoal, showHeading = true }: {
+export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId, onOpen, handlers, onAddGoal, showHeading = true }: {
   area: NsArea
   plan: NsPlan
   today: string
+  ticks?: TrainingTicks
   openId: string | null
   onOpen: (id: string) => void
   handlers: GoalHandlers
@@ -81,6 +83,7 @@ export function AreaGoals({ area, plan, today, openId, onOpen, handlers, onAddGo
           rank={goalRank(plan, goal.id)}
           totalGoals={plan.goals.length}
           today={today}
+          ticks={ticks}
           plan={plan}
           isFocus={plan.seasonFocusId === goal.id}
           open={openId === goal.id}

@@ -19,10 +19,10 @@
  * back to look leaves nothing behind.
  */
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import type { NsPlan, NsReview } from "@/src/goals/types"
-import { REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import { ACHIEVEMENT_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
 import {
   REVIEW_CADENCES,
   REVIEW_LIMITS,
@@ -44,18 +44,25 @@ import {
   type ReviewPeriod,
 } from "@/src/goals/reviewService"
 import { ScoreRow } from "./ScoreRow"
+import { AchievementList } from "./Achievements"
+import { earnedBetween } from "@/src/goals/planAchievementsService"
+import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
 export interface PeriodReviewHandlers {
   onWrite: (period: ReviewPeriod, patch: ReviewPatch) => void
   onRemove: (id: string) => void
+  /** Add lines to the end of Magic moments (`appendToReview`). */
+  onAddMoments: (period: ReviewPeriod, lines: string[]) => void
 }
 
 /** How many reviews the scores-over-time table shows, newest kept. */
 const OVER_TIME_COLUMNS = 8
 
-export function PeriodReviewTab({ plan, today, handlers }: {
+export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handlers }: {
   plan: NsPlan
   today: string
+  /** The finished workouts' ticks, so a step done by training counts toward what was earned. */
+  ticks?: TrainingTicks
   handlers: PeriodReviewHandlers
 }) {
   const [period, setPeriod] = useState<ReviewPeriod>(() => periodOf("week", today))
@@ -130,6 +137,11 @@ export function PeriodReviewTab({ plan, today, handlers }: {
         </div>
       </div>
 
+      {/* Celebrate first (Stefan: "What was the good? Celebrate first, always
+          first"; the owner's item 32). What the stretch earned, worked out from
+          what was logged and ticked in it. */}
+      <EarnedInPeriod key={reviewIdFor(period)} plan={plan} period={period} today={today} ticks={ticks} review={review} onAdd={(lines) => handlers.onAddMoments(period, lines)} />
+
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-baseline gap-2">
           <h3 className="text-[13px] font-semibold text-zinc-200">{COPY.scoresTitle}</h3>
@@ -199,6 +211,39 @@ export function PeriodReviewTab({ plan, today, handlers }: {
 
       <ScoresOverTime plan={plan} openId={review?.id ?? null} onOpen={(r) => setPeriod(periodOfReview(r))} />
     </div>
+  )
+}
+
+/** "Earned in 2 – 8 Nov 2026": the period's achievements, and a way to keep them in Magic moments. */
+function EarnedInPeriod({ plan, period, today, ticks, review, onAdd }: {
+  plan: NsPlan
+  period: ReviewPeriod
+  today: string
+  ticks: TrainingTicks
+  review: NsReview | null
+  onAdd: (lines: string[]) => void
+}) {
+  const earned = useMemo(() => earnedBetween(plan, period.start, period.end, today, ticks), [plan, period.start, period.end, today, ticks])
+  const lines = earned.map((a) => `${a.partTitle}: ${a.label}`)
+  const kept = new Set((review?.magicMoments ?? "").split("\n").map((l) => l.trim()))
+  const allKept = lines.every((l) => kept.has(l))
+  return (
+    <section className="rounded-2xl border border-amber-300/15 bg-amber-400/[0.03] p-5" data-testid="review-earned">
+      <h3 className="text-[13px] font-semibold text-zinc-200">{ACHIEVEMENT_COPY.reviewTitle(periodLabel(period))}</h3>
+      <p className="text-[11px] text-zinc-500 mt-0.5">{earned.length > 0 ? ACHIEVEMENT_COPY.reviewHelp : ACHIEVEMENT_COPY.reviewNone}</p>
+      {earned.length > 0 && (
+        <div className="mt-3">
+          <AchievementList items={earned} withPart label={ACHIEVEMENT_COPY.reviewTitle(periodLabel(period))} />
+          <button
+            onClick={() => onAdd(lines)}
+            disabled={allKept}
+            className="mt-3 text-[11.5px] px-3 py-1.5 rounded-lg border border-white/15 text-zinc-300 hover:text-white hover:border-white/30 disabled:opacity-40 disabled:hover:text-zinc-300 transition-colors"
+          >
+            {allKept ? ACHIEVEMENT_COPY.added : ACHIEVEMENT_COPY.addToMoments}
+          </button>
+        </div>
+      )}
+    </section>
   )
 }
 
