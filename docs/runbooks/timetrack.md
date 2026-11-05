@@ -156,6 +156,21 @@ timer field ready. Verified this way on 2026-09-05 on an emulated Pixel 7.
 What is deliberately NOT cached: anything under `/api/`. Time entries come from the sync layer, which knows
 what is queued and what is stale; a cached API answer would be a second, dumber copy of the truth.
 
+## Where things are since the Toggl layout (2026-11-05)
+
+The owner may ask "where did X go". Phone (below 640px): Projects, Clients, Tags, Settings and Import/export
+are under ⚙ ("Settings and more"); manual entry is ⊕; Stop at…, Switched at…, End now, Duration only and
+Move to another day are in the entry sheet (its ⋮ for the last three); Select/bulk edit is a row's ⋮ →
+Select; Pomodoro is the "Pomodoro" tab next to "List view". PC: the old Calendar tab is "Calendar" in the
+Timer page's Calendar | List view switch; Manage is Clients / Tags / Team in the sidebar; the running
+timer's Started…/Stop at…/Switched at… row is the box that opens on a click on the running time. The
+running-timer notification switch is Settings › Notifications › "Running timer". Where each control came
+from, phase by phase: `Plans/toggl-parity.md`, the Status notes.
+
+How to check a screen against Toggl, and whether a first-time user can find something:
+`~/.cache/daygame-research/toggl/kit/` (side-by-side screenshots; `fb.mjs`, a one-browser-per-agent driver
+for findability checks). Sync regression themes: `~/.cache/daygame-research/time-audit/regression/run.sh`.
+
 ## When something breaks
 
 Crashes are recorded in `error_reports`. Two ways to read them:
