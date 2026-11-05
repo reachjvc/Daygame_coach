@@ -55,7 +55,7 @@
  * /test/vision-plan.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
@@ -257,7 +257,8 @@ export function NorthStarFlow({
   const [otherAccount, setOtherAccount] = useState(false)
   useEffect(() => onAccountChanged(userId, () => setOtherAccount(true)), [userId])
   // Everything else this page draws (the old goals list on Track, its forms) names the account too.
-  useEffect(() => nameEveryRequest(userId), [userId])
+  // A layout effect, so it is in place before any child's first request.
+  useLayoutEffect(() => nameEveryRequest(userId), [userId])
   /**
    * The decision `lifePlanSync` actually made, kept so `canSave` is asked about
    * it rather than about one invented at the call site.

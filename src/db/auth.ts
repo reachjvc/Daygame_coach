@@ -54,7 +54,8 @@ export async function requireAuth(req?: Request): Promise<AuthResult> {
     return {
       success: false,
       response: NextResponse.json(
-        { error: "This page was opened for another account. Reload it." },
+        // `accountChanged`: what the time tracker's sender reads a 409 by (useTimetrackSync).
+        { error: "This page was opened for another account. Reload it.", accountChanged: true },
         { status: 409, headers: { [ACCOUNT_CHANGED_HEADER]: "1" } },
       ),
     }

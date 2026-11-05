@@ -66,8 +66,11 @@ function ownApi(input: RequestInfo | URL): boolean {
 export function nameEveryRequest(account: string): () => void {
   // `globalThis`, which is `window` in a browser and what a bare `fetch(` reads.
   const original = globalThis.fetch
+  // Off once undone, even if something wrapped `fetch` after this and keeps
+  // this wrapper in its chain: a later page must not go on naming this account.
+  let active = true
   const named: typeof fetch = async (input, init) => {
-    if (!ownApi(input)) return original(input, init)
+    if (!active || !ownApi(input)) return original(input, init)
     const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined))
     if (!headers.has(PAGE_ACCOUNT_HEADER)) headers.set(PAGE_ACCOUNT_HEADER, account)
     const res = await original(input, { ...init, headers })
@@ -76,6 +79,7 @@ export function nameEveryRequest(account: string): () => void {
   }
   globalThis.fetch = named
   return () => {
+    active = false
     if (globalThis.fetch === named) globalThis.fetch = original
   }
 }
