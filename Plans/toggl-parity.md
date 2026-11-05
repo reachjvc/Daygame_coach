@@ -334,6 +334,22 @@ That set is the "before" for every later phase.
 timer", "open your projects", "change a setting" pass; the address-driven sections (`?view=`) and Android
 Back work as before (their tests unchanged).
 
+**Status (2026-11-05).** Marks read: none. Built together with Phase 2 and shipped with it. Below 640px
+`TogglLab` hands over to `src/timetrack/components/phone/` (pure logic in `phoneSheetService.ts`); the PC
+is untouched. Header "Timer" with ←, sync dot, ⊕, bell, ⚙; "List view | Pomodoro"; "YOUR ACTIVITY · This
+week"; TODAY / YESTERDAY / "TUE, 3 NOV" with totals; rows name, ● project · #tags, duration, start–end, ▶,
+⋮; the bar at the bottom on every tab (idle "I'm working on…" + ▶, running time, name, project, round ■);
+three tabs; ⚙ opens "Settings and more": Projects, Clients, Tags, Settings, Import and export.
+- Where today's phone extras went: favorites, a strip above the bar; Select and bulk edit, row ⋮ → Select;
+  row ⋮ kept; Pomodoro, its own tab (the Settings card stays); bell, the header; Group similar entries,
+  Settings › Profile; manual mode, ⊕; the rest into the sheet (Phase 2).
+- Kept as ours, not Toggl's: rows keep ⋮ and start–end times (D-KEEP; nothing removed); the bell sits where
+  Toggl has its minimise button; no "+ Add favorite" row when there are none.
+- Findability (fresh agents, phone, true touch): "stop the timer" 1 tap; "open your list of projects" 2 taps
+  (⚙ → Projects; the agent noted ⚙ reads as settings only); "make durations show 1:30:00" 6 actions (⚙ →
+  Settings → Profile). Two findings carried to Phase 3: the running row in the list still shows ▷ (looks
+  like it controls the timer), and the sync dot has no visible or spoken label.
+
 ## Phase 2 — Phone: one sheet, with the drums where Toggl's wheel is · L
 
 1. One tap on the running bar (not on ■) or on a row opens the sheet. A tap on a group row opens the group's
@@ -363,6 +379,40 @@ ended 2 h ago; yesterday 22:30 → today 01:15 = 2:45; plan tomorrow 10:00–11:
 running bar, move the start 6 minutes back, DONE" in 4 actions; side-by-side `phone-sheet` against H25
 help_14 f010 and help_18 f004; findability tasks "change when this entry started, the way you would in
 Toggl" and "you forgot to stop the timer an hour ago; fix it" pass.
+
+**Status (2026-11-05).** Marks read: none. One tap on the bar (not ■) or a row opens one sheet named "Time
+entry": ✕ · ⋮ · DONE (CREATE when new); the big duration with ✎ (digits fill from the right); the name with
+@ and #; chips "@ Add a project" / "# Add tags" / "$ Billable"; "Edit duration": start chip → end chip ("now"
+while running); "Set to last stop time", "Round stop time"; the drums open for the chosen chip; −15 −5 +5
++15; running: round ■ "Stop" with "Stop at…" and "Switched at…"; "Delete time entry". Nothing saves until
+DONE; ✕ with changes asks "Discard changes?" (Keep editing / Discard); Back acts as ✕. Toggl's four refusal
+toasts for typed values. "I'm working on…" opens it counting; ⊕ opens 30 minutes ending now (both from
+Phase 3, built here).
+- The sheet's ⋮ holds End now, Duration only, End where the next one starts, Move to another day;
+  Started at… is in the new-entry sheet's ⋮; Switched to something else? and Stop at… are in the running
+  sheet; a Start the other device beat shows as "Next: … Switch now".
+- Deviations, with why: a length typed into a running timer keeps our rule (longer moves the start back,
+  shorter ends it there; Toggl always moves the start), because the forgotten-timer hint tells you to do
+  exactly that. "Round stop time" rounds to the workspace's rounding setting or the nearest 5 minutes:
+  Toggl documents nowhere what it rounds to. Each time chip is one box (time and date), Toggl's is two.
+- Shared between phone and PC now: Stop at / Switched at (`useMomentActions.ts`), the alerts bell, the
+  signed-out banner. One visible change on the phone: a refused Undo after Stop at… uses the PC's words.
+- Rewritten tests (promise kept): `aTimerStoppedAtOnceIsNotPlanned` (Start then Stop keeps the entry and
+  never says planned; Start/Stop are now in the bar); e2e `trackEntry` helper (an entry tracked past
+  0:00:00 is listed and Start is back; on a phone through the bar's sheet); sync spec: the sleeping-device
+  test (a PC's stop is not undone and the edit is kept), the "Checking…" test, the three overlap tests,
+  "stopped once stays stopped" (start, stop, rename and the running name go through helpers that know both
+  layouts); "On a phone, Back closes the sheet…" (the sheet is now named "Time entry"); edge cases
+  `goToSettings` (through ⚙ on a phone).
+- Findability (phone, true touch): "your running timer started 6 minutes earlier; change when it started"
+  found in 4 taps (bar → −5 → the minute above → DONE), as the acceptance asks; "you forgot to stop the
+  timer an hour ago" 4 taps (bar → Stop at… → "1 h ago" → Stop at 16:55, with Undo). The agents found
+  "Edit duration" (over a start time) and "Set to last stop time" unclear; both are Toggl's own words, kept
+  (D-WORDS).
+- Tests: 54 new unit tests (28 service, 11 Timer tab, 15 sheet); `npm test` 6284 passed; ratchets none new.
+  E2E: toggl-time-tracker 19 + 3, edge cases 3 + 3, sync 14 + 9 (the phone sync file failed once while the
+  shared test database could not create accounts, "Database error checking email"; passed on the rerun).
+  Side-by-sides: `kit/out/p1p2/phone-{timer,runbar,sheet,start,manual,calendar}-phone.png`.
 
 ## Phase 3 — Phone: start, continue, swipe, add a past entry · M
 
