@@ -78,7 +78,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-const theSwitch = () => screen.getByRole("switch", { name: "Show the running timer on this device" })
+const theSwitch = () => screen.getByRole("switch", { name: "Running timer" })
 
 describe("the running timer switch", () => {
   test("shows what the server holds for this device, with the lock-screen line", async () => {

@@ -16,6 +16,7 @@ import { useSearchParams } from "next/navigation"
 import { ROUTE_LABELS } from "@/components/navTabs"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { setHaptics } from "../haptics"
 import { SHORTCUTS, TIMER_BAR_KEY } from "../config"
 import {
   IconBreak,
@@ -486,6 +487,10 @@ export function TogglLab({
    * ref, not the dependency list, keeps it to once: React runs effects twice
    * in development.
    */
+  // Settings › Haptic feedback reaches the drums and the calendar (see `haptics`)
+  const hapticsOn = state?.user.haptics !== false
+  useEffect(() => setHaptics(hapticsOn), [hapticsOn])
+
   const arrived = useRef(false)
   /** the week start the report's range was made with: see `followWeekStart` below */
   const reportWeekStart = useRef<WeekStart | null>(null)
@@ -503,7 +508,9 @@ export function TogglLab({
     setReportConfig(decoded ?? defaults)
     reportWeekStart.current = state.user.weekStart
     // the address's own section, else where you were last time (see `screen`)
-    const section: Screen = decoded ? "reports" : (readTrackerAddress(window.location.search).section ?? screenNow.current)
+    // …and on a phone with nothing named, the tab chosen in Settings › First tab (Toggl's "First tab")
+    const firstTab = !isPc ? state.user.firstTab : undefined
+    const section: Screen = decoded ? "reports" : (readTrackerAddress(window.location.search).section ?? firstTab ?? screenNow.current)
     if (section !== screenNow.current) setScreen(section)
 
     // `?start=1&description=…` start links (Toggl's "Copy start link")

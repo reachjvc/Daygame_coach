@@ -779,7 +779,8 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     const block = page.locator('[data-entry-block]')
     await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
     await expect(block).toHaveCSS('background-image', /repeating-linear-gradient/)
-    await expect(dayHeader(page).nth(1)).toHaveText('0:00')
+    // a fresh account shows durations as 0:47:06, Toggl's default (Plans/toggl-parity.md, Phase 7)
+    await expect(dayHeader(page).nth(1)).toHaveText('0:00:00')
     // one tick as the hold took, one per step — a quarter hour on the phone's calendar (D-PHONE-CAL)
     expect(await page.evaluate(() => (window as unknown as { __ticks: number[] }).__ticks)).toEqual(Array(7).fill(5))
 
@@ -796,7 +797,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
 
     // and the list says so beside tomorrow's total
     await page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'Timer' }).dispatchEvent('click')
-    await expect(page.getByText('0:00 · 1:30 planned')).toBeVisible()
+    await expect(page.getByText('0:00:00 · 1:30:00 planned')).toBeVisible()
   })
 
   test('a held block moves alone; its top edge takes the entry before along, its bottom edge only itself @phone', async ({ page }) => {

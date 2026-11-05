@@ -149,50 +149,65 @@ function ProfilePanel({
   const patch = (changes: Partial<TimetrackState["user"]>) =>
     setState((current) => ({ ...current, user: { ...current.user, ...changes } }))
 
+  /*
+   * TOGGL'S SECTIONS (Plans/toggl-parity.md, Phase 7): Toggl Track keeps the
+   * everyday choices as Date and time, Timer defaults and Notifications. They
+   * were one "Profile" card here, with the running-timer switch three cards down
+   * in Automation. Only switches that do something are shown: Toggl's "Stopped
+   * timer" notification is not built, so it is not here.
+   */
   return (
-    <SectionCard title="Profile" description="How times, dates and durations are shown across every screen.">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name">
-          <Input value={state.user.name} onChange={(event) => patch({ name: event.target.value })} />
-        </Field>
-        <Field label="Email">
-          <Input value={state.user.email} onChange={(event) => patch({ email: event.target.value })} />
-        </Field>
-        <Field label="Duration display format">
-          <MiniSelect
-            value={state.user.durationFormat}
-            onChange={(value) => patch({ durationFormat: value as DurationFormat })}
-            options={DURATION_FORMATS.map((f) => ({ id: f.id, label: f.label }))}
-          />
-        </Field>
-        <Field label="Time format">
-          <MiniSelect
-            value={state.user.timeFormat}
-            onChange={(value) => patch({ timeFormat: value as TimeFormat })}
-            options={TIME_FORMATS.map((f) => ({ id: f.id, label: f.label }))}
-          />
-        </Field>
-        <Field label="Date format">
-          <MiniSelect
-            value={state.user.dateFormat}
-            onChange={(value) => patch({ dateFormat: value as DateFormatId })}
-            options={DATE_FORMATS.map((f) => ({ id: f, label: f }))}
-          />
-        </Field>
-        <Field label="First day of the week">
-          <MiniSelect
-            value={String(state.user.weekStart)}
-            onChange={(value) => patch({ weekStart: Number(value) as WeekStart })}
-            options={WEEK_STARTS.map((w) => ({ id: String(w.id), label: w.label }))}
-          />
-        </Field>
-        {/* the zone this page draws in, which is this browser's — not the one the
-            workspace was first made in, which it also keeps (edits audit B10) */}
-        <Field label="Time zone" hint="This browser's zone. Every time on this page is shown in it">
-          <Input value={browserTimeZone()} readOnly className="opacity-70" />
-        </Field>
-      </div>
-      <div className="mt-2 border-t border-border pt-2">
+    <div className="space-y-4">
+      <SectionCard title="Profile" description="Who you are, and the time zone this page draws in.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Name">
+            <Input value={state.user.name} onChange={(event) => patch({ name: event.target.value })} />
+          </Field>
+          <Field label="Email">
+            <Input value={state.user.email} onChange={(event) => patch({ email: event.target.value })} />
+          </Field>
+          {/* the zone this page draws in, which is this browser's — not the one the
+              workspace was first made in, which it also keeps (edits audit B10) */}
+          <Field label="Time zone" hint="This browser's zone. Every time on this page is shown in it">
+            <Input value={browserTimeZone()} readOnly className="opacity-70" />
+          </Field>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Date and time" description="How times, dates and durations are shown across every screen.">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Date format">
+            <MiniSelect
+              value={state.user.dateFormat}
+              onChange={(value) => patch({ dateFormat: value as DateFormatId })}
+              options={DATE_FORMATS.map((f) => ({ id: f, label: f }))}
+            />
+          </Field>
+          <Field label="Time format">
+            <MiniSelect
+              value={state.user.timeFormat}
+              onChange={(value) => patch({ timeFormat: value as TimeFormat })}
+              options={TIME_FORMATS.map((f) => ({ id: f.id, label: f.label }))}
+            />
+          </Field>
+          <Field label="Duration display format">
+            <MiniSelect
+              value={state.user.durationFormat}
+              onChange={(value) => patch({ durationFormat: value as DurationFormat })}
+              options={DURATION_FORMATS.map((f) => ({ id: f.id, label: f.label }))}
+            />
+          </Field>
+          <Field label="First day of the week">
+            <MiniSelect
+              value={String(state.user.weekStart)}
+              onChange={(value) => patch({ weekStart: Number(value) as WeekStart })}
+              options={WEEK_STARTS.map((w) => ({ id: String(w.id), label: w.label }))}
+            />
+          </Field>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Timer defaults" description="How the timer and its list behave.">
         <ToggleRow
           label="Group similar time entries"
           hint="Collapse entries that share description, project, task, tags and billable status"
@@ -205,8 +220,27 @@ function ProfilePanel({
           checked={state.user.swipeActions !== false}
           onChange={(swipeActions) => patch({ swipeActions })}
         />
-      </div>
-    </SectionCard>
+        <ToggleRow
+          label="Haptic feedback"
+          hint="On a phone, the time drums and the calendar tick as they move"
+          checked={state.user.haptics !== false}
+          onChange={(haptics) => patch({ haptics })}
+        />
+        <Field label="First tab" hint="The tab a phone opens on" className="mt-2">
+          <MiniSelect
+            value={state.user.firstTab ?? "timer"}
+            onChange={(value) => patch({ firstTab: value as "timer" | "calendar" | "reports" })}
+            options={[
+              { id: "timer", label: "Timer" },
+              { id: "calendar", label: "Calendar" },
+              { id: "reports", label: "Reports" },
+            ]}
+          />
+        </Field>
+      </SectionCard>
+
+      <RunningTimerSetting />
+    </div>
   )
 }
 
@@ -432,8 +466,6 @@ function AutomationPanel({
         />
       </SectionCard>
 
-      {/* beside the Pomodoro card's notification switch: the other notification this tracker sends */}
-      <RunningTimerSetting />
 
       <SectionCard title="Idle detection" description="Asks what to do with the gap when a timer runs and nothing happens on this page.">
         <ToggleRow

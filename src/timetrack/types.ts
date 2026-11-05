@@ -55,6 +55,10 @@ export interface UserSettings {
    * workspace saved before this existed has them.
    */
   swipeActions?: boolean
+  /** The phone tab the tracker opens on when the address names none (Settings › First tab). Absent: Timer. */
+  firstTab?: "timer" | "calendar" | "reports"
+  /** The drums' and the calendar's tick (Settings › Haptic feedback). Absent means on. */
+  haptics?: boolean
 }
 
 // ---------------------------------------------------------------------------

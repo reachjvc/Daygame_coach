@@ -21,6 +21,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { hapticsAllowed } from "../haptics"
 import type { DrumBounds, DrumParts, DrumRefusal, TimePair } from "../drumService"
 import {
   MINUTE_LABELS,
@@ -67,6 +68,8 @@ export interface DrumItem {
 }
 
 function tick() {
+  // Settings › Haptic feedback
+  if (!hapticsAllowed()) return
   try {
     // Android Chrome has it; iPhones do not, and the drum works the same without
     if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(5)

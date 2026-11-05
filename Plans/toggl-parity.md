@@ -604,6 +604,48 @@ builder works in parallel), so it shipped first.
 comparison names; your settings row before and after is identical (read-only check of the live row, numbers
 and keys only).
 
+**Status (2026-11-05).** Marks read: none.
+
+Changed labels, old → new (Toggl's word in brackets where it is Toggl's; phone words from
+`notes/mobileapp-strings.txt` and the 2025 help recordings, PC words from `source/translations/`):
+
+| Where | Old | New |
+|---|---|---|
+| Phone, bar | (top card) "What are you working on?" + Start | "I'm working on…" + round ▶ / ■ (Toggl) |
+| Phone, sheet | "Time entry details" modal | "Time entry" sheet: ✕ · ⋮ · DONE / CREATE; "I'm working on…" / "I've worked on…"; "@ Add a project", "# Add tags", "$ Billable"; "Edit duration"; "Set to last stop time", "Round stop time"; "Stop"; "Delete time entry"; "Discard changes?" · "Keep editing" · "Discard" (Toggl) |
+| Phone, sheet | "Start where the last one ended" | "Set to last stop time" (Toggl) |
+| Phone, toasts | (none for typed impossibilities) | "Start time must be before Stop time!", "Stop time must be after Start time!", "Start time must be before current time!", "Duration can't exceed 999 hours!" (Toggl) |
+| Phone, delete | "Deleted … · Undo" | "Time entry was deleted · UNDO" (Toggl) |
+| Phone, tabs | Timer · Calendar · Reports · Projects · More | Timer · Calendar · Reports; ⚙ "Settings and more" (Toggl: three tabs and ⚙) |
+| Phone, list | "This week 14:35 · Group similar entries" | "YOUR ACTIVITY · This week 14:35"; "TODAY", "YESTERDAY", "TUE, 3 NOV" (Toggl) |
+| Phone, calendar | (chrome of the PC calendar) | "THURSDAY, NOV 5 · 1:15", week strip; panel Delete · Edit · Duplicate · Continue · Cancel (Toggl) |
+| Phone, reports | the PC's four tabs | "TRACKED HOURS", "DETAILS", "GROUP BY Projects \| Clients" (Toggl) |
+| PC, shell | tabs Timer · Calendar · Reports · Projects · Manage · Settings | sidebar TRACK Timer; ANALYZE Reports; MANAGE Projects, Clients, Tags, Team; ADMIN Settings (Toggl) |
+| PC, week row | "This week · Group similar entries" | "‹ All dates / This week · W45 ›", "TODAY TOTAL", "WEEK TOTAL", "Calendar \| List view" (Toggl) |
+| PC, row ⋮ | Duplicate · Split in two · Add to favorites · Copy start link · Edit details… · Go to ‹project› · Delete | Split · Pin as favorite · Go to project · Copy description · Copy start link · Duplicate · Delete, then Edit details… (Toggl's order and words) |
+| PC, delete | "Deleted …" | "The time entry was deleted." + Undo (Toggl) |
+| PC, manual | start – end boxes, "Add" | "What have you done?", start + date → stop, "+" "Add time entry" (Toggl) |
+| PC, calendar | (a drag wrote at once) | box "Add description" … "Add time entry"; "Week view ▾" Week / 5 days / Day (Toggl) |
+| Both, pickers | "Search projects…", "Create project" | "Search by project, task or client", "No Project", "+ Create a new project"; tags "Add/filter tags", "Create tag" (Toggl) |
+| Both, settings | one "Profile" card; "Running timer notification" · "Show the running timer on this device" | Profile · Date and time · Timer defaults · Notifications; "Running timer" (Toggl) |
+| Both, durations | Improved (1:30) · Classic (1:30:00) · Decimal (1.50) | Improved (0:47:06) · Hours and minutes (0:47) · Decimal (0.79) (Toggl's names and examples) |
+| Both, dates | the browser's date control ("11/04/2026") | the day in words ("Wed, 4 Nov"), the control still on top |
+| Both, text | "Toggl" in the shortcut list, five Settings texts, Manage | gone (a test reads every section on both sizes for the word) |
+
+- Settings: Profile (name, email, time zone); Date and time (date format, time format, duration display
+  format, first day of the week); Timer defaults (group similar time entries, swipe actions, haptic feedback,
+  first tab); Notifications (running timer, moved here from Automation). New switches, each doing what it
+  says: "Haptic feedback" stills the drums' and the calendar's tick; "First tab" picks the tab a phone opens
+  on (an address that names a section still wins). Toggl's "Stopped timer" is not built, so not shown.
+- Defaults for a new person: 0:47:06, group similar entries on, swipe actions on, haptics on, first tab
+  Timer. Stored keys keep their meaning, so a saved choice never changes: your four settings rows store
+  "improved", which still shows 1:30 (now named "Hours and minutes").
+- Labels pinned by tests: `thePhoneTimerTabIsLaidOutLikeToggls`, `thePhoneReportsTabIsToggls`,
+  `thePickersReadLikeToggls`, `durationsReadLikeToggls`, `settingsReadLikeToggls`, `noScreenSaysToggl`, plus the
+  sheet's and the PC box's tests from Phases 2 and 5.
+- Rewritten test (promise kept): `theRunningTimerSwitchIsPerDevice` finds the switch by its new name
+  "Running timer"; it still promises the switch is per device.
+
 ## Phase 8 — Proof, then the report · M
 
 1. **Adversarial audit, at least six independent agents** on a frozen worktree with throwaway accounts:

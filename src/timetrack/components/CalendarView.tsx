@@ -16,6 +16,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "r
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { hapticsAllowed } from "../haptics"
 import { CALENDAR_ZOOMS } from "../config"
 import { useIsMobile } from "../hooks/useIsMobile"
 import type { PushToast } from "../hooks/useTimetrack"
@@ -169,6 +170,8 @@ interface Gesture {
  * a tap, and says so in the console each time, so it is not asked before then.
  */
 function tick() {
+  // Settings › Haptic feedback
+  if (!hapticsAllowed()) return
   if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return
   if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return
   navigator.vibrate(5)

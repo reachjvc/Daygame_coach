@@ -63,10 +63,11 @@ export function RunningTimerSetting() {
       : "The notification shade shows what is running, with a Stop button. Off by default in a desktop browser.")
 
   return (
-    <SectionCard title="Running timer notification" description="While a timer runs, this device shows it, silently, wherever it was started.">
+    // Toggl's words: Settings › Notifications › "Running timer" (D-NOTIFY)
+    <SectionCard title="Notifications" description="While a timer runs, this device shows it, silently, wherever it was started.">
       <div data-testid="running-timer-setting">
         <ToggleRow
-          label="Show the running timer on this device"
+          label="Running timer"
           hint={hint}
           checked={on}
           onChange={(next) => {
