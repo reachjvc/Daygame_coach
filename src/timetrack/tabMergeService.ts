@@ -17,7 +17,8 @@
  * since takes the message as it is, which is the common case and costs nothing.
  */
 
-import type { TimetrackState } from "./types"
+import { epochSeconds } from "./timetrackFormatService"
+import type { TimeEntry, TimetrackState } from "./types"
 
 type AnyRecord = Record<string, unknown>
 type WithId = { id: string } & AnyRecord
@@ -102,4 +103,58 @@ export function mergeTabStates(ancestor: TimetrackState, ours: TimetrackState, t
   if (same(merged, theirs)) return theirs
   if (same(merged, ours)) return ours
   return merged as TimetrackState
+}
+
+/**
+ * A CHANGE MADE ON THE COPY ON SCREEN, LAID ONTO THE NEWEST COPY THERE IS.
+ *
+ * A tap is worked out on the workspace this page last DREW — `state` in a
+ * component, `latestState` in a ref. By the time React applies it, a newer copy
+ * may be waiting: the account's answer to a check, handed over a moment before
+ * and not drawn yet. Writing the tap's result whole, ignoring the copy React
+ * hands the update, put the drawn copy back over that answer. A timer the PC
+ * had stopped ran again, a rename from the PC was undone — and the sync engine,
+ * finding this device's copy different from the account's, sent it up as an
+ * edit of this device's own, which the account took
+ * (`aRenameTypedWhileTheOtherDeviceStopsKeepsTheStop`,
+ * `aTapOnTheCopyOnScreenKeepsWhatTheOtherDeviceDid`).
+ *
+ * `setState(layOnto(drawn, next))` lays only what the tap changed onto
+ * `current` — field by field, item by item, the rule two tabs already follow —
+ * so what the tap added (a project the picker just created, a new entry) is
+ * kept, and what the other device did meanwhile stays. With nothing newer
+ * waiting it is `next` itself.
+ */
+export function layOnto(drawn: TimetrackState, next: TimetrackState): (current: TimetrackState) => TimetrackState {
+  return (current) => {
+    if (next === drawn) return current
+    if (current === drawn) return next
+    const merged = mergeTabStates(drawn, next, current)
+    if (merged === current || merged === next) return merged
+    const ours = new Map(next.entries.map((e) => [e.id, e]))
+    const theirs = new Map(current.entries.map((e) => [e.id, e]))
+    let mixed = false
+    const entries = merged.entries.map((entry) => {
+      const settled = keptWhole(entry, ours.get(entry.id), theirs.get(entry.id))
+      if (settled !== entry) mixed = true
+      return settled
+    })
+    return mixed ? { ...merged, entries } : merged
+  }
+}
+
+/**
+ * An entry's start, end and length belong together: a negative length is how
+ * a RUNNING entry is written. Field by field, this tap's new start could meet
+ * the other device's stop, and keep the running length beside it. When the
+ * three did not all come from one side, the length is worked out again from
+ * the start and end that were kept.
+ */
+function keptWhole(entry: TimeEntry, ours: TimeEntry | undefined, theirs: TimeEntry | undefined): TimeEntry {
+  const sameTime = (other: TimeEntry | undefined) =>
+    other !== undefined && other.start === entry.start && other.stop === entry.stop && other.duration === entry.duration
+  if (sameTime(ours) || sameTime(theirs)) return entry
+  const duration =
+    entry.stop === null ? -epochSeconds(entry.start) : Math.max(0, epochSeconds(entry.stop) - epochSeconds(entry.start))
+  return duration === entry.duration ? entry : { ...entry, duration }
 }

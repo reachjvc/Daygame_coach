@@ -20,6 +20,7 @@ import { CALENDAR_ZOOMS } from "../config"
 import { useIsMobile } from "../hooks/useIsMobile"
 import type { PushToast } from "../hooks/useTimetrack"
 import { serverNowIso } from "../serverClock"
+import { layOnto } from "../tabMergeService"
 import { withNeighbours } from "../timeFixService"
 import { AfterCheckContext } from "./afterCheck"
 import { announceNeighbours, undoOrSay } from "./neighbourNotice"
@@ -460,7 +461,7 @@ export function CalendarView({
           nowIso(),
         )
         if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else setState(() => result.state)
+        else setState(layOnto(state, result.state))
       }
       return
     }
@@ -801,7 +802,7 @@ export function CalendarView({
                                 pushToast(result.violations[0].message, "error")
                                 return
                               }
-                              setState(() => result.state)
+                              setState(layOnto(latest, result.state))
                               // starting here ends whatever was running; say so
                               if (result.displaced) {
                                 const { displaced, entry } = result
@@ -830,7 +831,7 @@ export function CalendarView({
                               pushToast(result.violations[0].message, "error")
                               return
                             }
-                            setState(() => result.state)
+                            setState(layOnto(state, result.state))
                             pushToast("Calendar event copied as a time entry")
                           }}
                           timeFormat={state.user.timeFormat}

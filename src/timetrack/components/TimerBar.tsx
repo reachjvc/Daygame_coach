@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { serverNowIso } from "../serverClock"
+import { layOnto } from "../tabMergeService"
 import { IconAuto, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
   DURATION_HINT,
@@ -334,7 +335,7 @@ export function TimerBar({
     // Manual mode is a form for an entry that does not exist yet. It never
     // reaches into a timer that happens to be running at the same moment.
     if (latestMode.current === "manual") {
-      if (baseState !== latestState.current) setState(() => baseState)
+      if (baseState !== latestState.current) setState(layOnto(latestState.current, baseState))
       putDraft({ ...latestDraft.current, ...patch })
       return
     }
@@ -349,11 +350,11 @@ export function TimerBar({
        * from the picker — the selection is refused for having no task, and the
        * project would have vanished.
        */
-      if (result.state !== latestState.current) setState(() => result.state)
+      if (result.state !== latestState.current) setState(layOnto(latestState.current, result.state))
       pushToast(result.violations[0].message, "error")
       return
     }
-    if (result.state !== latestState.current) setState(() => result.state)
+    if (result.state !== latestState.current) setState(layOnto(latestState.current, result.state))
     putDraft(result.draft)
   }
 
@@ -660,7 +661,7 @@ export function TimerBar({
           return
         }
         const stopped = result.stopped
-        setState(() => result.state)
+        setState(layOnto(latest, result.state))
         pushToast(`Stopped ${quoted(stopped)} ${when(stopped.stop ?? atIso)}`, "info", () => {
           // read when Undo is pressed: another timer may have started by then
           const refusal = undoStopAt(latestState.current, stopped.id, serverNowIso()).violations[0]
@@ -682,7 +683,7 @@ export function TimerBar({
         return
       }
       const { stopped, started } = result
-      setState(() => result.state)
+      setState(layOnto(latest, result.state))
       if (kind === "switch") setNextDraft(emptyDraft)
       if (stopped) {
         // one change, one Undo: the next entry goes and the first runs again from its own start — both, or neither and why

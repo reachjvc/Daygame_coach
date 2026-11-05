@@ -52,6 +52,7 @@ import {
   deleteWebhook,
   updateAutotracker,
 } from "../timetrackService"
+import { layOnto } from "../tabMergeService"
 import type {
   CalendarSource,
   DateFormatId,
@@ -665,7 +666,7 @@ function AutomationPanel({
                         pushToast(result.violations[0].message, "error")
                         return
                       }
-                      setState(() => ({
+                      setState(layOnto(state, {
                         ...result.state,
                         timeline: result.state.timeline.map((b) => (b.id === block.id ? { ...b, converted: true } : b)),
                       }))
@@ -1360,7 +1361,7 @@ function DataPanel({
               return
             }
             const result = importEntriesCsv(state, text, new Date().toISOString())
-            setState(() => result.state)
+            setState(layOnto(state, result.state))
             pushToast(
               result.skipped.length === 0
                 ? `Imported ${plural(result.imported, "time entry", "time entries")}`

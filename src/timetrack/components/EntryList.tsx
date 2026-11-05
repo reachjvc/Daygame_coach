@@ -93,6 +93,7 @@ import type { DayGroup, EntryRow, Id, IsoDateTime, SaveViolation, TimeEntry, Tim
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "./primitives"
 import { serverNow, serverNowIso } from "../serverClock"
+import { layOnto } from "../tabMergeService"
 import { AfterCheckContext } from "./afterCheck"
 import { EntryDrums } from "./Drums"
 import { announceNeighbours, undoOrSay } from "./neighbourNotice"
@@ -198,7 +199,7 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
 
   const removeEntries = (ids: Id[]) => {
     const result = deleteEntries(state, ids, nowIso())
-    setState(() => result.state)
+    setState(layOnto(state, result.state))
     /**
      * COUNTS WHAT WAS ACTUALLY REMOVED, AND SAYS WHY THE REST WAS NOT.
      *
@@ -725,7 +726,7 @@ function EntryFields({
             pushToast(result.violations[0].message, "error")
             return
           }
-          setState(() => result.state)
+          setState(layOnto(latest, result.state))
           // This button is 8px from the row's own tap area. If the tap ended a
           // timer that was running, say which one and offer it back.
           const { displaced, started } = result
@@ -1138,7 +1139,7 @@ function EntryMenu({
                 {
                   const result = splitEntry(state, entry.id, null, nowIso())
                   if (result.error) pushToast(result.error, "error")
-                  else setState(() => result.state)
+                  else setState(layOnto(state, result.state))
                 }
                 close()
               }}
@@ -1480,8 +1481,9 @@ export function EntryDetailModalBody({
      * to the left. Found by a reviewer; no test typed in both fields before
      * leaving, so nothing caught it.
      */
+    const drawn = latestState.current
     latestState.current = result.state
-    setState(() => result.state)
+    setState(layOnto(drawn, result.state))
     return true
   }
   const commit = (patch: Parameters<typeof updateEntry>[2]): boolean =>

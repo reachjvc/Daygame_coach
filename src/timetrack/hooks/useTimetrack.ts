@@ -22,7 +22,7 @@ import { newId } from "../idService"
 import { migrateStateToV3, moveLegacyIdleDefault } from "../stateMigrationService"
 import { createEmptyWorkspace } from "../data/emptyWorkspace"
 import { removeDemoData } from "../demoDataService"
-import { mergeTabStates } from "../tabMergeService"
+import { layOnto, mergeTabStates } from "../tabMergeService"
 import { dateKey, epochSeconds, formatIdleSpan, hourIsInWindow, plural } from "../timetrackFormatService"
 import {
   continueEntry,
@@ -611,7 +611,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
       // what was dropped, counted to now, not the threshold the question first named
       const span = formatIdleSpan(trimmed.droppedSeconds)
       if (action === "discard_and_stop") {
-        setState(() => trimmed.state)
+        setState(layOnto(state, trimmed.state))
         pushToast(`Dropped ${span} and stopped the timer`)
         return
       }
@@ -630,11 +630,11 @@ export function useTimetrack({ account }: { account?: string } = {}) {
       if (restarted.violations.length > 0) {
         // the trim did happen; only the fresh entry was refused, and the
         // message says exactly that rather than claiming both or neither
-        setState(() => trimmed.state)
+        setState(layOnto(state, trimmed.state))
         pushToast(`Dropped ${span}, but could not start a fresh entry: ${restarted.violations[0].message}`, "error")
         return
       }
-      setState(() => restarted.state)
+      setState(layOnto(state, restarted.state))
       pushToast(`Dropped ${span} and started a fresh entry`)
     },
     [idlePrompt, pushToast, setState, state],
@@ -722,7 +722,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
         if (result.violations.length > 0) {
           if (state.pomodoro.notify) notify("Break over", `Could not continue: ${result.violations[0].message}`)
         } else {
-          setState(() => result.state)
+          setState(layOnto(state, result.state))
           if (state.pomodoro.notify) notify("Break over", "Continued your last time entry.")
         }
       } else if (state.pomodoro.notify) {
@@ -857,7 +857,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
           pushToast(result.violations[0].message, "error")
           return
         }
-        setState(() => result.state)
+        setState(layOnto(state, result.state))
         announceDisplacement(result.displaced, result.entry)
       },
       stop(at?: string) {
@@ -880,7 +880,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
           pushToast(result.violations[0].message, "error")
           return
         }
-        setState(() => result.state)
+        setState(layOnto(state, result.state))
         announceDisplacement(result.displaced, result.started)
       },
       resetWorkspace() {

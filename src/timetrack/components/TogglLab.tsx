@@ -52,6 +52,7 @@ import {
   toggleFavorite,
 } from "../timetrackService"
 import { serverIsoAt } from "../serverClock"
+import { layOnto } from "../tabMergeService"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
 import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
 import { CalendarView } from "./CalendarView"
@@ -498,7 +499,7 @@ export function TogglLab({
           const started = startTimer(latest, linkDraft, tappedAt)
           if (started.violations.length > 0) pushToast(started.violations[0].message, "error")
           else {
-            setState(() => started.state)
+            setState(layOnto(latest, started.state))
             // a link that quietly ends the timer you had running is the worst version
             // of this, because you did not even press anything in this app
             if (started.displaced) {
