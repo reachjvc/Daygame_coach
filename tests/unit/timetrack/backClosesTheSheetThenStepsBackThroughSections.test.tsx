@@ -46,6 +46,20 @@ function tapSection(label: "Timer" | "Calendar" | "Reports" | "Projects") {
   fireEvent.click(button!)
 }
 
+/**
+ * The entry's sheet, from its calendar block. jsdom has no `matchMedia`, so the
+ * tracker takes it for a PC, and there a click on a block opens the box beside
+ * it (Plans/toggl-parity.md Phase 6); its ⋮ → Edit details… opens the sheet.
+ */
+function openSheetFromBlock(title: RegExp) {
+  fireEvent.click(screen.getByTitle(title))
+  const box = screen.queryByRole("dialog", { name: "Edit time entry" })
+  if (!box) return
+  fireEvent.click(within(box).getByRole("button", { name: "More actions for this time entry" }))
+  const menu = document.querySelector("[data-dropdown-panel]") as HTMLElement
+  fireEvent.click(within(menu).getByRole("button", { name: "Edit details…" }))
+}
+
 function sheetOpen(): boolean {
   return screen.queryByRole("dialog", { name: "Time entry details" }) !== null
 }
@@ -75,18 +89,6 @@ async function mount(address: string) {
 }
 
 beforeEach(() => {
-  /**
-   * A phone, as the Back button this is about is Android's. jsdom has no
-   * `matchMedia`, which the tracker reads as a PC, and on a PC a click on a
-   * calendar block opens the box beside it instead of the sheet
-   * (Plans/toggl-parity.md Phase 6); the sheet is one more click away there.
-   */
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.includes("max-width"),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }))
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(NOW)
   vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 401 })))
@@ -113,7 +115,7 @@ describe("Back", () => {
     expect(window.location.search).toBe("?view=calendar")
     expect(section()).toBe("Calendar")
 
-    fireEvent.click(screen.getByTitle(/^planning ·/))
+    openSheetFromBlock(/^planning ·/)
     expect(sheetOpen()).toBe(true)
     expect(new URLSearchParams(window.location.search).get("entry")).toBe("1")
 
@@ -135,7 +137,7 @@ describe("Back", () => {
   test("after the sheet's own Close, Back steps a section instead of opening the sheet again", async () => {
     await mount(LAB)
     tapSection("Calendar")
-    fireEvent.click(screen.getByTitle(/^planning ·/))
+    openSheetFromBlock(/^planning ·/)
     fireEvent.click(screen.getByRole("button", { name: "Close" }))
 
     await waitFor(() => expect(sheetOpen()).toBe(false))
