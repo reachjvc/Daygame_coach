@@ -483,7 +483,17 @@ export function TimerBar({
    * a finished entry that ends now. Leaving the box does not log anything by
    * itself: a tap elsewhere is not a decision.
    */
-  const typedLength = !running && editingDuration && durationInput.trim() !== "" && durationInput !== formatClock(0)
+  /**
+   * THE TIMER THE LENGTH IS BEING TYPED FOR, when it was running at the first
+   * keystroke. The other device can stop it before Enter; the box, with
+   * nothing running any more, read the typed "90" as a length to log, its
+   * button turned into "Add this time" without a word, and Enter added a new,
+   * unnamed 90-minute entry (Phase 8 two-devices audit of
+   * Plans/toggl-parity.md). Until it is let go, the length is not a new entry.
+   */
+  const [durationFor, setDurationFor] = useState<Id | null>(null)
+  const typedLength =
+    !running && durationFor === null && editingDuration && durationInput.trim() !== "" && durationInput !== formatClock(0)
 
   // a timer that starts while a length waits to be logged takes the box back
   const runningId = running?.id ?? null
@@ -811,6 +821,7 @@ export function TimerBar({
             <Input
               value={durationInput}
               onFocus={() => {
+                setDurationFor(running?.id ?? null)
                 durationAtFocus.current = durationInput
                 setEditingDuration(true)
                 // one click on the running time: typeable, and the box opens (D-PC-RUNNING)
@@ -834,6 +845,16 @@ export function TimerBar({
                   // through the blur, so the edit is written once and not again on the way out
                   setBoxOpen(false)
                   event.currentTarget.blur()
+                } else if (event.key === "Enter" && durationFor !== null) {
+                  // the timer it was typed for was stopped elsewhere: nothing is written, the length stays, and it says so
+                  event.preventDefault()
+                  const was = latestState.current.entries.find((e) => e.id === durationFor)
+                  const name = `“${was?.description.trim() || "(no description)"}”`
+                  pushToast(
+                    `${name} was stopped on your other device, so the length you typed was not set. Press Enter again to add it as a new entry, or Esc to drop it.`,
+                  )
+                  // a second Enter, now that it is said, logs it as a finished entry like any typed length
+                  setDurationFor(null)
                 } else if (event.key === "Enter" && typedLength) {
                   event.preventDefault()
                   logTypedLength()
