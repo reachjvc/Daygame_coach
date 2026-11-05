@@ -926,6 +926,9 @@ export function TogglLab({
               size="sm"
               onClick={() => setShortcutsOpen(true)}
               className="hidden text-xs sm:inline-flex"
+              // "⇧?" alone said nothing to a new user or a screen reader (findability check, 2026-11-05)
+              aria-label="Keyboard shortcuts"
+              title="Keyboard shortcuts (Shift+?)"
             >
               ⇧?
             </Button>

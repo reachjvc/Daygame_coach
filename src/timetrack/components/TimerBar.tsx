@@ -20,6 +20,7 @@ import {
   dateKey,
   epochSeconds,
   formatClock,
+  formatDuration,
   formatIdleSpan,
   formatTimeOfDay,
   formatWhen,
@@ -597,6 +598,24 @@ export function TimerBar({
     )
   }
 
+  /**
+   * A click on a time box selects the time it holds, as the list's boxes do: the
+   * cursor landed in the middle of "08:50", and "9:00" typed there read
+   * "089:00:50" (findability check, 2026-11-05).
+   */
+  const selectAll = (event: { currentTarget: HTMLInputElement }) => event.currentTarget.select()
+
+  /** The manual entry's length as the boxes read now, or null while one is unreadable */
+  const manualLength = (() => {
+    if (mode !== "manual") return null
+    const exact = manualStartExact.current
+    const start =
+      exact && exact.text === manualStart.trim() && exact.day === manualDay ? exact.iso : parseTimeInput(manualStart, manualDay)
+    const stop = start ? parseEndTimeInput(manualStop, start) : null
+    if (!start || !stop) return null
+    return Math.max(0, epochSeconds(stop) - epochSeconds(start))
+  })()
+
   const addManualEntry = () => {
     // the exact end manual mode opened at, while its box still says so: see `manualRange`
     const exact = manualStartExact.current
@@ -766,11 +785,17 @@ export function TimerBar({
           {mode === "manual" ? (
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
               {/* the number pad on a phone: "1155" is 11:55 (plan D11) */}
-              <Input value={manualStart} onChange={(e) => typeManual({ start: e.target.value })} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
+              <Input value={manualStart} onChange={(e) => typeManual({ start: e.target.value })} onFocus={selectAll} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
               {/* the PC reads as Toggl Track's manual bar: start and its date, then → stop (D-PC-MANUAL) */}
               {isPc && <DayPicker value={manualDay} onChange={(day) => typeManual({ day })} onStep={(day) => typeManual({ day })} />}
               <span className="text-muted-foreground">{isPc ? "→" : "–"}</span>
-              <Input value={manualStop} onChange={(e) => typeManual({ stop: e.target.value })} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
+              <Input value={manualStop} onChange={(e) => typeManual({ stop: e.target.value })} onFocus={selectAll} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
+              {/* the length, to check before "+" (findability check, 2026-11-05) */}
+              {manualLength !== null && (
+                <span aria-label="Length" className="px-1 text-sm tabular-nums text-muted-foreground">
+                  {formatDuration(manualLength, state.user.durationFormat)}
+                </span>
+              )}
               {/* "" makes `parseTimeInput` build an Invalid Date and throw, and the
                   "pick a start and an end" toast on the next line never gets its turn —
                   `DayPicker` passes on only a whole date */}

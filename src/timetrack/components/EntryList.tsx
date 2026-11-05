@@ -933,7 +933,8 @@ function EntryFields({
           disabled={!editable}
           placeholder="(no description)"
           className={cn(
-            "w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-60",
+            // a ring while typing: with none, a new user could not tell the name had become a box (findability check, 2026-11-05)
+            "w-full min-w-0 rounded-sm bg-transparent text-sm outline-none ring-ring placeholder:text-muted-foreground focus:ring-1 disabled:opacity-60",
             nested && "pl-4",
           )}
         />
