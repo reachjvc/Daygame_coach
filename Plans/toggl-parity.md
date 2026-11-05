@@ -420,6 +420,39 @@ block 15 minutes later", "how many hours did you track last week?".
 W25; findability tasks "you forgot to stop the timer 90 minutes ago; fix it", "rename yesterday's entry",
 "log 45 minutes you did this morning", "find the keyboard shortcuts".
 
+**Status (2026-11-05).** Marks read: none. Built before Phases 1–4 (it touches only the PC; the phone
+builder works in parallel), so it shipped first.
+- Built: sidebar (Track: Timer with a live clock and ✎ while running; Analyze: Reports; Manage: Projects,
+  Clients, Tags, Team; Admin: Settings); week row "‹ … ›", Today total, Week total, Calendar | List view
+  (remembered; the old `?view=calendar` address opens the Timer page on Calendar); one click on the running
+  time opens the box (START, STOP greyed "now", date, Stop at…, Switched at…, the next-entry box, a drum
+  icon; "90" + Enter = started 90 min ago; Esc closes); ▶ ⋮ on hover; ⋮ in Toggl's order and words (Split,
+  Pin as favorite, Go to project, Copy description, Copy start link, Duplicate, Delete, then our Edit
+  details…); delete toast "The time entry was deleted." with Undo; manual mode switch beside Start and M
+  both ways ("What have you done?", start + date → stop, "+" "Add time entry"); T = today, listed.
+  "Toggl" removed from the shortcut list, five Settings texts and Manage.
+- Deviations, with why: List view opens on "All dates" as Toggl Track's List view does (W25 13:54), ‹ › pick
+  a week; Copy start link sits in Toggl's own slot (Toggl has it). The "two rules for a typed start" were
+  already one rule (`setEntryStart`) for a start before the end; only the drums' unsaved pair disagreed,
+  fixed. A start typed AFTER the end still moves the entry (an existing test promises it; Toggl's phone
+  refuses instead).
+- Where today's PC features went: Calendar tab → the Timer page's Calendar view; Manage → Clients / Tags /
+  Team rows; the row under the running bar (Started…, Stop at…, ⋮, Switched to something else?, Switch now)
+  → the running-time box; Change times → ✎ in the sidebar or the box's drums; pencil toggle → mode switch.
+- Rewritten tests (promise kept): `backFromManualTheBarShowsWhatRuns` (after adding by hand the bar shows the
+  running entry); `goToProjectOpensThatProject` (the item opens that project); e2e ".ics import" and
+  "calendar takes a mouse" (reach the calendar through Calendar view); e2e "picker focus" (the menu focuses
+  its first item and Tab moves on; it no longer names the items).
+- Findability (four fresh agents, PC, nothing but the screen): forgotten timer 90 min ago, found in 4
+  actions (typed the end into the row's "now"); rename yesterday's entry, 5; log 45 minutes this morning,
+  found the switch first try, 11 actions; keyboard shortcuts, 1. Fixed from what they hit: a time box now
+  selects its time on click ("9:00" typed into "08:50" read "089:00:50"); the manual bar shows the length;
+  the row's name box shows a ring while typing; "⇧?" is named Keyboard shortcuts. Not changed: the date box
+  reads 11/05/2026 (the browser's own date control; Phase 7 looks at date words).
+- E2E: toggl-time-tracker 19 + 3, edge cases 3 + 3, sync 14 + 9, all passed (PC + phone). Side-by-sides:
+  `kit/out/p5/pc-{layout,running,list,manual,keys}-pc.png`. Kept as ours (D-LOOK): labelled Start/Stop, the
+  bar as a card, our date control.
+
 ## Phase 6 — PC: calendar, reports, pickers · M
 
 1. Calendar: "Week view ▾" with Week / 5 days / Day; − + zoom; drag on empty space creates in 15-minute
