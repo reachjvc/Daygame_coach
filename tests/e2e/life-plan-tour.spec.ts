@@ -18,7 +18,8 @@ import { seedLifePlan } from "./helpers/lifePlan"
  * Optional: TOUR_STEPS=today,journal for some steps only; TOUR_DAYS=<patches.json>
  * for days written after the seed (see below); TOUR_AREA=Health for that area's
  * dialog on Your 10s, and with TOUR_RATE=7 the same dialog again after rating
- * the area 7 for this week; TOUR_GOAL=Approaches for that goal's card, opened from Today.
+ * the area 7 for this week; TOUR_GOAL=Approaches for that goal's card, opened from Today;
+ * TOUR_ELEMENTS=review-goals for a close-up of a part of the last step, by test id.
  *
  * TOUR_PLAN is an `NsPlan` as the flow keeps it (a backup turned into one with
  * `rowsToPlan`, or a made-up one). Without both variables it is skipped, so CI
@@ -68,6 +69,13 @@ test.describe("life plan tour", () => {
       const name = `${String(i + 1).padStart(2, "0")}-${step}.jpg`
       await page.screenshot({ path: path.join(DIR!, name), type: "jpeg", quality: 70 })
       await page.setViewportSize({ width: 1280, height: 900 })
+    }
+
+    // TOUR_ELEMENTS=review-goals,review-earned: a close-up of each, by test id, on the last step taken.
+    for (const testId of (process.env.TOUR_ELEMENTS ?? "").split(",").filter(Boolean)) {
+      const el = page.getByTestId(testId).first()
+      await el.scrollIntoViewIfNeeded()
+      await el.screenshot({ path: path.join(DIR!, `${testId}.jpg`), type: "jpeg", quality: 80 })
     }
 
     const goal = process.env.TOUR_GOAL
