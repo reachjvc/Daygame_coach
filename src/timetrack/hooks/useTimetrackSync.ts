@@ -43,6 +43,7 @@ import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
 import {
   applyTagSets,
+  canTombstone,
   countRows,
   reattachToWorkspace,
   repairPending,
@@ -59,7 +60,7 @@ import {
   withServerTagLinks,
   withoutSentRows,
 } from "../syncService"
-import { olderThan, rebase, versionOf, type BaseRecord, type Bases, type Overruled } from "../syncVersionService"
+import { isBackToBase, olderThan, rebase, versionOf, type BaseRecord, type Bases, type Overruled } from "../syncVersionService"
 import type { TimetrackState } from "../types"
 
 type AnyRow = Record<string, unknown>
@@ -571,6 +572,8 @@ export function useTimetrackSync({
   const userId = useRef<string | null>(null)
   const cursor = useRef<string | null>(null)
   const flushing = useRef(false)
+  /** The rows of the upload in the air, by `${table}/${key}`: a row put back meanwhile is sent again after it */
+  const sendingNow = useRef(new Set<string>())
   const ready = useRef(false)
   /** the latest state, for code that runs after an await and would otherwise see a stale one */
   const latestState = useRef<TimetrackState | null>(null)
@@ -1137,6 +1140,7 @@ export function useTimetrackSync({
     }
     /** What actually went, which on the way out may be only part of the queue */
     const went: Partial<TimetrackRows> = batches.length === 1 ? batches[0] : sending
+    sendingNow.current = keysIn(went)
     try {
       for (const batch of batches) {
         // NOT registered in `inFlight`: an upload outlives the screen that started it (D3)
@@ -1425,6 +1429,7 @@ export function useTimetrackSync({
       }
     } finally {
       flushing.current = false
+      sendingNow.current = new Set()
       /**
        * Whatever was queued while that request was in the air goes now, rather
        * than waiting for a status change that may never come. This is the work
@@ -1831,6 +1836,58 @@ export function useTimetrackSync({
     void attempt()
   }, [state, replaceState, savePending, flush, learn, queueChanges, noteCheck, pushToast, pageAccount, stopForAnotherAccount])
 
+  /**
+   * A ROW PUT BACK LEAVES THE QUEUE — OR, IF ITS SEND IS IN THE AIR, GOES AGAIN AS IT IS NOW.
+   *
+   * Each change below is compared with the account's copy and MERGED into the
+   * queue. An Undo puts a row back exactly as the account has it, so there was
+   * nothing left to compare and the row already queued stayed: a swipe-delete
+   * undone with no signal was sent when the signal came back, and the phone
+   * showed the entry, said "Saved", while the account had it deleted. A Continue
+   * undone sent its stop and its new entry; "Typo" renamed back to "Original"
+   * sent "Typo" (offline audit 2026-11-05,
+   * `anUndoWithNoSignalIsWhatTheAccountGets`).
+   *
+   * So a queued row this device now holds as it was before it was queued
+   * (`isBackToBase`) is taken out. If that row is in the upload in the air, what
+   * lands is no longer what the device shows: the row as it is now — or a
+   * tombstone, for one that is gone — is queued behind it, and goes when the
+   * upload answers, based on the version it wrote.
+   *
+   * Rows still being changed are left to the merge, and a row whose base was not
+   * kept is left queued as before. Returns whether the queue changed.
+   */
+  const takeBackWhatWasPutBack = useCallback((rows: TimetrackRows, changed: Partial<TimetrackRows>): boolean => {
+    const changing = keysIn(changed)
+    const here = indexRows(rows)
+    const tagsHere = linksByEntry(rows)
+    const drop = new Set<string>()
+    const again: Partial<TimetrackRows> = {}
+    const againTags: TagSets = {}
+    for (const [key, queuedRow] of indexRows(pending.current)) {
+      const record = bases.current[key]
+      if (changing.has(key) || !record) continue
+      const table = key.slice(0, key.indexOf("/")) as keyof TimetrackRows
+      const id = key.slice(table.length + 1)
+      const now = here.get(key)
+      if (!isBackToBase(table, now, record, table === "timetrack_entries" ? (tagsHere.get(id) ?? []) : undefined)) continue
+      const resend = sendingNow.current.has(key)
+        ? (now ?? (canTombstone(table) ? { ...queuedRow, deleted_at: serverNowIso() } : null))
+        : null
+      if (!resend) {
+        drop.add(key)
+        continue
+      }
+      ;((again as Record<string, AnyRow[]>)[table] ??= []).push(resend)
+      if (table === "timetrack_entries" && now && !now.deleted_at) againTags[id] = tagsHere.get(id) ?? []
+    }
+    if (drop.size === 0 && countRows(again) === 0) return false
+    const kept = new Set([...keysIn(pending.current)].filter((key) => !drop.has(key)))
+    pending.current = mergeChangeSets(onlyKeys(pending.current, kept), again)
+    tagSets.current = { ...tagSets.current, ...againTags }
+    return true
+  }, [])
+
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
     if (!state) return
@@ -1921,6 +1978,7 @@ export function useTimetrackSync({
 
     const rows = stateToRows(state, userId.current)
     const { changed, count, tagSets: setsChanged } = diffRows(serverRows.current, rows, serverNowIso())
+    if (takeBackWhatWasPutBack(rows, changed)) savePending()
     if (count === 0) return
 
     const guard = safeToSend(changed, serverRows.current, adopted.current)
@@ -1969,7 +2027,7 @@ export function useTimetrackSync({
 
     const timer = setTimeout(() => void flush(), 800)
     return () => clearTimeout(timer)
-  }, [state, syncActive, savePending, flush, queueChanges, pageAccount, stopForAnotherAccount, fromAnotherTab])
+  }, [state, syncActive, savePending, flush, queueChanges, takeBackWhatWasPutBack, pageAccount, stopForAnotherAccount, fromAnotherTab])
 
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {

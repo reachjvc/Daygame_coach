@@ -94,6 +94,26 @@ function isPlainObject(value: unknown): value is AnyRow {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+/**
+ * THE DEVICE HOLDS THIS ROW AGAIN AS IT WAS BEFORE IT WAS QUEUED: an Undo, or a
+ * change put back by hand. `now` is the row as the device holds it now (absent:
+ * gone from it), `base` what the queued change was based on, `tagsNow` an
+ * entry's tags now. Only what this can tell says yes: a base whose copy was not
+ * kept, or an entry whose tags were not, says no, and the row stays queued as it
+ * always did (offline audit 2026-11-05, `anUndoWithNoSignalIsWhatTheAccountGets`).
+ */
+export function isBackToBase(table: TableName, now: AnyRow | undefined, base: BaseRecord, tagsNow?: readonly string[]): boolean {
+  const gone = (row: AnyRow | null | undefined) => !row || Boolean(row.deleted_at)
+  // the account never had it, and the device no longer has it either: created and taken back
+  if (base.v === null) return gone(now)
+  if (!base.row) return false
+  if (gone(now) || gone(base.row)) return gone(now) && gone(base.row)
+  if (table === "timetrack_entries" && (!base.tags || !tagsNow || !sameTagSet(base.tags, tagsNow))) return false
+  const was = base.row
+  // the columns the device holds; the server's own extra columns say nothing about what was done here
+  return Object.keys(now!).every((column) => column === "updated_at" || column === "running_device_id" || sameValue(now![column], was[column]))
+}
+
 /** One value, three ways. `undefined` means "absent". */
 export function mergeValue(base: unknown, mine: unknown, theirs: unknown): unknown {
   if (sameValue(mine, base)) return theirs
