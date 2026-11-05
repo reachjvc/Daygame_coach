@@ -13,6 +13,12 @@ store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the mark
 **Where it stands, 2026-11-04 night:** Phases 1–6 and Q4 are live; only Phase 7 (it deletes, so it
 waits for your yes) is left, plus one question on the sign-off page (`p5-wheel-question`).
 
+**Answered 2026-11-05, in chat:** "we can go with all your recommendations". So the Your 10s wheel will
+show each area's score from the latest review, and rating an area on Your 10s writes into this week's
+review (`p5-wheel-question`: yes). `review_fortnight` joins the Phase 7 list once nothing reads it. That
+answer is not the Phase 7 yes: the recommendation there was to show you the list and the counts first,
+and that has not happened yet.
+
 **Marked 2026-11-04 (afternoon):** Good on all nine cards then on the page: 13 steps to 11, Commit on
 Everything, the Templates door, no floor, Running since, the north star history (Phase 2), the season
 (Phase 3), the timeframe and the feeds-by-name (Phase 4 part 1). The values question was marked "Remove
