@@ -46,7 +46,12 @@ export interface PullResult {
   rows: TimetrackRows
   /** Pass this back as `since` next time */
   cursor: string
+  /** Asked for with `live`: deleted rows, and the tag links of deleted entries, were left out */
+  live?: true
 }
+
+/** The tables with no `deleted_at`: a row in them is there or it is not */
+const NO_DELETED_AT = new Set<keyof TimetrackRows>(["timetrack_entry_tags", "timetrack_webhook_log", "timetrack_settings"])
 
 /**
  * How far behind its checkpoint every check reaches.
@@ -75,12 +80,22 @@ function reachBack(since: string): string {
  * Everything of this user's that changed after `since` — reaching
  * `CHECK_OVERLAP_MS` further back, see there. Omit `since` for a full download —
  * that is what a new device does on its first load.
+ *
+ * `live`, with no `since`: the account as it is, WITHOUT what was deleted —
+ * deleted rows and the tag links of deleted entries. Every opening read the
+ * whole account and had no use for the deleted part: 1,791 live entries came to
+ * 1.5 MB, and 7.7 MB once about 7,000 had been deleted, so a phone on a slow
+ * link took 37–45 s to say "Saved" instead of 6 (heavy-history audit, Phase 8
+ * of Plans/toggl-parity.md). A device holding a row that a live answer lacks
+ * cannot tell "never stored" from "deleted elsewhere", so it asks again without
+ * `live` (`useTimetrackSync`, first contact).
  */
-export async function pullTimetrackRows(userId: string, since?: string | null): Promise<PullResult> {
+export async function pullTimetrackRows(userId: string, since?: string | null, options: { live?: boolean } = {}): Promise<PullResult> {
   const supabase = await createServerSupabaseClient()
   const rows = emptyRows()
   const cursor = new Date().toISOString()
   const changedAfter = since ? reachBack(since) : null
+  const live = options.live === true && !since
 
   for (const table of TIMETRACK_TABLES) {
     /**
@@ -101,6 +116,7 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
         .eq("user_id", userId)
         .range(from, from + PAGE_SIZE - 1)
       if (changedAfter && !NO_UPDATED_AT.has(table)) query = query.gt("updated_at", changedAfter)
+      if (live && !NO_DELETED_AT.has(table)) query = query.is("deleted_at", null)
       // A stable order, or two pages can return the same row and miss another.
       // Not every table is keyed by `id`: settings has one row per person and
       // the tag links are keyed by the pair they join.
@@ -115,7 +131,11 @@ export async function pullTimetrackRows(userId: string, since?: string | null): 
     ;(rows as any)[table] = collected
   }
 
-  return { rows, cursor }
+  if (!live) return { rows, cursor }
+  // the links have no `deleted_at` of their own: those of an entry that is gone go with it
+  const liveEntries = new Set(rows.timetrack_entries.map((entry) => entry.id))
+  rows.timetrack_entry_tags = rows.timetrack_entry_tags.filter((link) => liveEntries.has(link.entry_id))
+  return { rows, cursor, live: true }
 }
 
 /**

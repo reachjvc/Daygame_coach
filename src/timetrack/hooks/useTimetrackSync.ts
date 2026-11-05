@@ -49,6 +49,7 @@ import {
   repairPending,
   diffRows,
   keysIn,
+  liveAnswerCovers,
   mergeChangeSets,
   mergeIncoming,
   rowKey,
@@ -1544,29 +1545,28 @@ export function useTimetrackSync({
       if (unmounted.current || firstContactBusy.current || accountGone.current) return
       firstContactBusy.current = true
       try {
-        const abort = new AbortController()
-        inFlight.current.add(abort)
-        const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
-        let response: Response
-        try {
-          // never an answer from a cache: its `Date` would set the clock wrong (D5)
-          response = await askServer("/api/timetrack/sync", { signal: abort.signal, cache: "no-store" })
-        } finally {
-          clearTimeout(deadline)
-          inFlight.current.delete(abort)
+        const read = async (path: string): Promise<Response> => {
+          const abort = new AbortController()
+          inFlight.current.add(abort)
+          const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+          try {
+            // never an answer from a cache: its `Date` would set the clock wrong (D5)
+            return await askServer(path, { signal: abort.signal, cache: "no-store" })
+          } finally {
+            clearTimeout(deadline)
+            inFlight.current.delete(abort)
+          }
         }
+        // the account without its deleted history, unless this device holds a row it lacks: see below
+        const response = await read("/api/timetrack/sync?live=1")
         if (response.status === 401) {
           setStatus("local-only")
           noteCheck("unanswered")
           return
         }
         if (!response.ok) throw new Error(response.statusText)
-        const body = (await response.json()) as {
-          rows: TimetrackRows
-          cursor: string
-          empty: boolean
-          userId?: string
-        }
+        type Answer = { rows: TimetrackRows; cursor: string; empty: boolean; userId?: string; live?: boolean }
+        let body = (await response.json()) as Answer
         /**
          * THE PAGE WAS OPENED FOR ONE ACCOUNT, AND ANOTHER ANSWERED: somebody
          * signed in as someone else in another tab since. Nothing of this page is
@@ -1582,6 +1582,39 @@ export function useTimetrackSync({
         // the change feed listens for this account, once it is known (D4)
         setAccount(body.userId ?? null)
         const { start, own } = startFor(body.userId ?? null)
+
+        /**
+         * A LIVE ANSWER LEAVES OUT WHAT WAS DELETED, AND THIS DEVICE MAY NOT HAVE HEARD.
+         *
+         * Every opening read the whole account, deleted entries and their tag links
+         * included: 1.5 MB for 1,791 entries became 7.7 MB once about 7,000 had been
+         * deleted, and a phone on a slow link said "Saved" after 37–45 s instead of 6
+         * (heavy-history audit, Phase 8 of Plans/toggl-parity.md). The deleted part
+         * matters only for a row this device holds: everything below takes a row
+         * missing from the answer as one the account never had, keeps it and sends
+         * it, which for an entry deleted elsewhere would bring it back. So a live
+         * answer that lacks any row this device holds — shown, started from, or
+         * queued — is put aside, and the whole account is read as before
+         * (`liveAnswerCovers`, `anOpeningDoesNotDownloadWhatWasDeleted`). A server
+         * from before this ignores `live` and answers whole, without saying `live`.
+         */
+        if (body.live && !body.empty) {
+          const held = [
+            stateToRows(latestState.current ?? state, userId.current),
+            start ? stateToRows(start, userId.current) : null,
+            pending.current,
+          ]
+          if (!liveAnswerCovers(body.rows, held)) {
+            const whole = await read("/api/timetrack/sync")
+            if (!whole.ok) throw new Error(whole.statusText)
+            body = (await whole.json()) as Answer
+            if (pageAccount && body.userId && body.userId !== pageAccount) {
+              stopForAnotherAccount()
+              return
+            }
+            cursor.current = body.cursor
+          }
+        }
 
         if (body.empty) {
           // nothing stored yet. Offer to upload what this browser holds rather

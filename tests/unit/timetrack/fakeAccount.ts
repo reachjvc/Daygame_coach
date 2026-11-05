@@ -6,6 +6,9 @@
  *  - GET with no `since`: every row, tombstones included.
  *  - GET with `since`: the rows changed after it, plus the whole tag-link table,
  *    which has no `updated_at` and so always comes back whole.
+ *  - GET with `live=1` and no `since`: every row that is not deleted, and the
+ *    links of entries that are not, answered with `live: true` — a device that
+ *    holds a row missing from it asks again without (see the route).
  *  - POST carrying `bases`: the versioned write, `timetrack_push`. A row is written
  *    only if the stored `updated_at` is exactly the base the device sent, or if
  *    there is no such row yet. Otherwise the stored row comes back under
@@ -70,6 +73,8 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
   let conflictCount = 0
   let gate: Promise<void> | null = null
   const posts: { versioned: boolean; body: PushBody }[] = []
+  /** every read asked for, by address */
+  const gets: string[] = []
   /** pushes refused because they named another account, which wrote nothing */
   let refusedForAnotherAccount = 0
 
@@ -159,8 +164,17 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
       const answer = push(body)
       return { ok: true, status: 200, json: async () => answer }
     }
-    const since = new URL(String(url), "http://localhost").searchParams.get("since")
+    const params = new URL(String(url), "http://localhost").searchParams
+    const since = params.get("since")
+    gets.push(String(url))
     const rows = read(since)
+    if (params.get("live") === "1" && !since) {
+      const out = rows as unknown as Record<Table, AnyRow[]>
+      for (const table of TIMETRACK_TABLES) out[table] = out[table].filter((row) => !row.deleted_at)
+      const liveEntries = new Set(out.timetrack_entries.map((row) => String(row.id)))
+      out.timetrack_entry_tags = out.timetrack_entry_tags.filter((link) => liveEntries.has(String(link.entry_id)))
+      return { ok: true, status: 200, json: async () => ({ rows, cursor: stamp(), empty: false, userId, live: true }) }
+    }
     return { ok: true, status: 200, json: async () => ({ rows, cursor: stamp(), empty: false, userId }) }
   }
 
@@ -179,6 +193,7 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
       return conflictCount
     },
     posts,
+    gets,
     get refusedForAnotherAccount() {
       return refusedForAnotherAccount
     },
