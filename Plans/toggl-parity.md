@@ -628,7 +628,7 @@ Changed labels, old → new (Toggl's word in brackets where it is Toggl's; phone
 | PC, calendar | (a drag wrote at once) | box "Add description" … "Add time entry"; "Week view ▾" Week / 5 days / Day (Toggl) |
 | Both, pickers | "Search projects…", "Create project" | "Search by project, task or client", "No Project", "+ Create a new project"; tags "Add/filter tags", "Create tag" (Toggl) |
 | Both, settings | one "Profile" card; "Running timer notification" · "Show the running timer on this device" | Profile · Date and time · Timer defaults · Notifications; "Running timer" (Toggl) |
-| Both, durations | Improved (1:30) · Classic (1:30:00) · Decimal (1.50) | Improved (0:47:06) · Hours and minutes (0:47) · Decimal (0.79) (Toggl's names and examples) |
+| Both, durations | Improved (1:30) · Classic (1:30:00) · Decimal (1.50) | Improved (0:47:06) · Hours and minutes (0:47) · Decimal (0.79). Corrected by the Phase 8 audit: only "Improved (0:47:06)" is Toggl's; Toggl's others are "Classic (47:06 min)" and "Decimal (0.79 h)". "Hours and minutes (0:47)" is our own format (the one you use), under a plain name; Toggl's Classic is not built. |
 | Both, dates | the browser's date control ("11/04/2026") | the day in words ("Wed, 4 Nov"), the control still on top |
 | Both, text | "Toggl" in the shortcut list, five Settings texts, Manage | gone (a test reads every section on both sizes for the word) |
 
