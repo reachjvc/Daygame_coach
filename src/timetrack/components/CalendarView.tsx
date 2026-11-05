@@ -359,7 +359,13 @@ export function CalendarView({
     const interval = entryInterval(moving, current.day, nowSec)
     const edge = current.mode === "resize-start" ? interval.startMin : current.mode === "resize-end" ? interval.endMin : (current.topMinutes ?? interval.startMin)
     const landed = snapToQuarterOrEdge(edge + raw - current.startMinutes, edges)
-    return { minutes: current.startMinutes + (landed.minutes - edge), at: landed.at }
+    /**
+     * Where the edge lands, as an instant: the neighbour's own, or the quarter
+     * hour's. Given only as minutes, a move of an entry with seconds added
+     * fractional minutes, the clock dropped the fraction, and 01:20:40 dragged
+     * ten minutes landed at 01:29:40, not 01:30 (heavy-history audit, Phase 8).
+     */
+    return { minutes: current.startMinutes + (landed.minutes - edge), at: landed.at ?? isoAtMinutes(current.day, landed.minutes) }
   }
   /** the phone's edges arrive snapped: `blockDragPatch` keeps them where they are */
   const edgeSnap = phone ? (minutes: number) => minutes : undefined

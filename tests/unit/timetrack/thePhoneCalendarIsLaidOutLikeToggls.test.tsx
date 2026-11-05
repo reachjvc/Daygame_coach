@@ -181,6 +181,18 @@ describe("on the hour grid", () => {
     expect(cal.live().find((e) => e.id !== "1" && e.id !== "2")).toMatchObject({ start: before.stop, stop: at(11, 30) })
   })
 
+  test("a held block moved lands its start on the quarter hour, its length kept exactly, even with seconds (heavy-history audit)", () => {
+    const odd = { ...entry(1, "2026-08-10", "01:20", "01:45"), start: new Date(2026, 7, 10, 1, 20, 40).toISOString(), stop: new Date(2026, 7, 10, 1, 45, 40).toISOString(), duration: 25 * 60 }
+    const cal = phoneCalendar(baseState({ entries: [odd] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    cal.finger.down(block, y(1, 33))
+    cal.finger.hold()
+    cal.finger.slide(y(1, 33), y(1, 43))
+    cal.finger.up(y(1, 43))
+    // not 01:29:40–01:54:40: the move added fractional minutes and the clock dropped the fraction
+    expect(cal.live()[0]).toMatchObject({ start: at(1, 30), stop: at(1, 55) })
+  })
+
   test("the selected block is drawn with its handles", () => {
     const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }), "1")
     const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
