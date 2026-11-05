@@ -1928,7 +1928,13 @@ export interface NsAreaReview {
    * mean something.
    */
   snapshot: string
-  /** Your own rating for the last two weeks, 0-10. */
+  /**
+   * The old "last two weeks" rating, 0-10. Nothing shows or writes it since
+   * 2026-11-05: Your 10s reads and rates through the reviews
+   * (`latestScores`, `rateArea`), where this number was copied as the first
+   * review. The mapper still carries it back unchanged, so a save never
+   * clears the column before Phase 7 drops it (Plans/life-plan-rebuild.md).
+   */
   fortnight: number | null
   /** Whether you say your current goals actually aim at your 10. */
   goalsAim: "yes" | "no" | null
@@ -2013,6 +2019,12 @@ export interface NsReview {
   writtenOn: string
   /** Area id to 0-10. An area left unscored is left out. */
   scores: Record<string, number>
+  /**
+   * Area id to the day its score was last given. Missing on the copied first
+   * review and on scores saved before 2026-11-05; `latestScores` then takes
+   * the earlier of the period's last day and `writtenOn`.
+   */
+  scoredOn?: Record<string, string>
   /** What went well; the moments worth keeping. */
   magicMoments: string
   lessons: string

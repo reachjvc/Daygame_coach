@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { describe, it, expect } from "vitest"
+import { rateArea } from "@/src/goals/reviewService"
 import {
   addArea,
   normalizeNsPlan,
@@ -655,10 +656,10 @@ describe("progress", () => {
     // The assessment step wants the picture AND the number, in every area:
     // eleven rated and one blank is a picture with a hole in it. One area is
     // "started", which is what the middle ring state is for.
-    plan = setAreaReview(plan, "lm_health", { ten: "Strong and light", fortnight: 6 }, NOW)
+    plan = rateArea(setAreaReview(plan, "lm_health", { ten: "Strong and light" }, NOW), "lm_health", 6, TODAY, NOW)
     expect(stepState(plan, "now")).toBe("started")
     expect(nsProgress(plan).done.now).toBe(false)
-    for (const area of plan.areas) plan = setAreaReview(plan, area.id, { ten: "A ten here", fortnight: 6 }, NOW)
+    for (const area of plan.areas) plan = rateArea(setAreaReview(plan, area.id, { ten: "A ten here" }, NOW), area.id, 6, TODAY, NOW)
     expect(nsProgress(plan).done.now).toBe(true)
     expect(nsProgress(plan).done.milestones).toBe(false)
 
@@ -793,7 +794,7 @@ describe("planAsText", () => {
       ladder: { start: 100, target: 140, steps: 5, curveTension: 0 },
     }, NOW)
     plan = addObstacle(plan, plan.goals[0].id, "Work eats my mornings", NOW)
-    plan = setAreaReview(plan, "lm_health", { ten: "Strong and light", fortnight: 6 }, NOW)
+    plan = rateArea(setAreaReview(plan, "lm_health", { ten: "Strong and light" }, NOW), "lm_health", 6, TODAY, NOW)
 
     const text = planAsText(plan, TODAY)
     expect(text).toContain("MY NORTH STAR (10 years out)")
@@ -813,7 +814,7 @@ describe("planAsText", () => {
      * nothing at all beside them. Only the number that can keep a period says
      * one now.
      */
-    expect(text).toContain("Health: 6/10")
+    expect(text).toContain("Health: 6/10 (3 – 9 Aug 2026)")
     expect(text, "a period nothing can date must not be claimed").not.toContain("over the last two weeks")
     expect(text).toContain("A 10 here: Strong and light")
   })
@@ -1360,7 +1361,7 @@ describe("the order of the flow", () => {
   })
 
   it("carries the 10 written on the 'now' tab through to the plan tab", () => {
-    let plan = setAreaReview(emptyNsPlan(), "lm_fitness", { ten: "I train four times a week", fortnight: 4 }, NOW)
+    let plan = rateArea(setAreaReview(emptyNsPlan(), "lm_fitness", { ten: "I train four times a week" }, NOW), "lm_fitness", 4, TODAY, NOW)
     plan = addGoal(plan, "lm_fitness", "Squat 140kg", "milestone_ladder", NOW)
     // The plan tab reads exactly these, so a change on one tab shows on the other.
     expect(areaReview(plan, "lm_fitness").ten).toBe("I train four times a week")
@@ -1540,7 +1541,7 @@ describe("the values procedure", () => {
     // The owner had the floor taken out on 2026-11-04 (Plans/life-plan-rebuild.md):
     // which area needs work is the person's to see, not the page's to point at.
     let plan = setValues(emptyNsPlan(), ["Success", "Money"], NOW)
-    plan = setAreaReview(plan, "lm_health", { fortnight: 2 }, NOW)
+    plan = rateArea(plan, "lm_health", 2, TODAY, NOW)
     expect(planTodos(plan).map((t) => t.text).join(" ")).not.toMatch(/under a seven|floor/i)
   })
 

@@ -103,6 +103,7 @@ import type {
   NsPlan,
   NsSeason,
   NsProgress,
+  NsReview,
   NsRoutine,
   NsRoutineStep,
   NsRoutineProgram,
@@ -119,7 +120,7 @@ import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
 /* "Is this step done today" has ONE owner. `dayTicks` is a leaf so that both
    this file and `northStarTrackService` can reach it without closing a cycle. */
 import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
-import { isEmptyReview, readReviews } from "@/src/goals/reviewService"
+import { isEmptyReview, latestScores, periodLabel, periodOfReview, ratedAreaCount, readReviews } from "@/src/goals/reviewService"
 import { DAY_LIMITS } from "@/src/goals/lifePlanDayService"
 import { periodStartFor } from "@/src/shared/dateUtils"
 
@@ -1496,7 +1497,11 @@ export function removeArea(plan: NsPlan, areaId: string, now = nowIso()): NsPlan
         if (!(areaId in r.scores)) return r
         const scores = { ...r.scores }
         delete scores[areaId]
-        return { ...r, scores }
+        // The day it was given goes with it; no empty map is kept (`writeReview`).
+        const next: NsReview = { ...r, scores, scoredOn: { ...r.scoredOn } }
+        delete next.scoredOn![areaId]
+        if (Object.keys(next.scoredOn!).length === 0) delete next.scoredOn
+        return next
       })
       .filter((r) => !isEmptyReview(r)),
     review,
@@ -3049,7 +3054,7 @@ export function setGoalMetric(plan: NsPlan, goalId: string, metric: "daily_area"
   if (!goal || !goalCanUseDailyMetric(goal)) return plan
   if (metric == null) return updateGoal(plan, goalId, { metric: null }, now)
   const today = todayISO(new Date(now))
-  const current = dailyAverage(plan, goal.areaId, today) ?? areaReview(plan, goal.areaId).fortnight ?? 0
+  const current = dailyAverage(plan, goal.areaId, today) ?? latestScores(plan, today)[goal.areaId]?.score ?? 0
   const defaults = defaultsForType("milestone_ladder").ladder!
   const untouched =
     !goal.ladder || (goal.ladder.start === defaults.start && goal.ladder.target === defaults.target)
@@ -3892,11 +3897,15 @@ export function dailyCount(plan: NsPlan, areaId: string, today = todayISO(), day
   return n
 }
 
-/** What the wheel fills each sector to: your own number, else today's daily one. */
+/**
+ * What the wheel fills each sector to: the area's score in the latest review
+ * (`latestScores`), else the daily average.
+ */
 export function wheelRatings(plan: NsPlan, today = todayISO()): Record<string, number> {
   const out: Record<string, number> = {}
+  const latest = latestScores(plan, today)
   for (const area of plan.areas) {
-    const own = areaReview(plan, area.id).fortnight
+    const own = latest[area.id]?.score
     if (own != null) {
       out[area.id] = own
       continue
@@ -4051,7 +4060,7 @@ export function nsProgress(plan: NsPlan, account: NsAccount = NO_ACCOUNT): NsPro
   const goalsNeedingAction = plan.goals.filter((g) => goalNeedsAction(g, plan)).length
   const areasWithGoals = new Set(plan.goals.map((g) => g.areaId)).size
   const routineSteps = plan.routines.reduce((sum, r) => sum + r.steps.length, 0)
-  const areasRated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight != null).length
+  const areasRated = ratedAreaCount(plan, todayISO())
   const areasWithTen = plan.areas.filter((a) => areaReview(plan, a.id).ten.trim().length > 0).length
   return {
     starWritten,
@@ -4108,7 +4117,7 @@ export function stepState(plan: NsPlan, tab: NorthStarTabId, account: NsAccount 
   }
 
   if (tab === "now") {
-    const rated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight != null).length
+    const rated = ratedAreaCount(plan, todayISO())
     const pictured = plan.areas.filter((a) => areaReview(plan, a.id).ten.trim().length > 0).length
     if (rated === 0 && pictured === 0) return "empty"
     // Every area, both boxes. Eleven areas rated and one blank is not a
@@ -4241,7 +4250,7 @@ export function planTodos(plan: NsPlan): Array<{ id: string; text: string; tab: 
   // A question, not a count: "N more values to reach seven" went with the
   // floor of 7 (owner, 2026-11-04). How long the list is, is theirs.
   if (plan.values.length === 0) out.push({ id: "values", text: "Ask yourself what you value most", tab: "star" })
-  const unrated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight == null).length
+  const unrated = plan.areas.length - ratedAreaCount(plan, todayISO())
   if (unrated > 0) out.push({ id: "rate", text: `${unrated} of ${plan.areas.length} areas still unrated`, tab: "now" })
   const noTen = plan.areas.filter((a) => !areaReview(plan, a.id).ten.trim()).length
   if (noTen > 0 && noTen < plan.areas.length) out.push({ id: "ten", text: `${noTen} areas with no 10 written`, tab: "now" })
@@ -4500,33 +4509,27 @@ export function planAsText(plan: NsPlan, today = todayISO()): string {
     )
   }
 
+  const latest = latestScores(plan, today)
   const reviewed = plan.areas
-    .map((a) => ({ a, r: areaReview(plan, a.id) }))
-    .filter(({ r }) => r.ten.trim() || r.purpose.trim() || r.snapshot.trim() || r.fortnight != null || r.identity.trim() || r.blockers.trim() || r.values.length > 0)
+    .map((a) => ({ a, r: areaReview(plan, a.id), s: latest[a.id] }))
+    .filter(({ r, s }) => r.ten.trim() || r.purpose.trim() || r.snapshot.trim() || s || r.identity.trim() || r.blockers.trim() || r.values.length > 0)
   if (reviewed.length > 0) {
     blocks.push(
       `WHERE I AM\n${reviewed
-        .map(({ a, r }) => {
+        .map(({ a, r, s }) => {
           const avg = dailyAverage(plan, a.id, today)
           /**
-           * NO PERIOD ON A NUMBER THAT CARRIES NO DATE.
+           * EVERY NUMBER SAYS WHAT STRETCH IT IS FOR.
            *
-           * This said "over the last two weeks", and it was true the moment it
-           * was typed — the dialog asks exactly that question. Nothing records
-           * WHEN, so the claim never expires: the owner's twelve areas printed
-           * "over the last two weeks" for numbers given on 2026-08-11, still
-           * saying it forty-six days later, while the genuinely windowed figure
-           * beside it — `dailyAverage`, which has a real fourteen-day window —
-           * correctly printed nothing at all because their newest rating was
-           * thirty-eight days old. One of the two numbers knew it was stale and
-           * the other could not.
-           *
-           * So the looking-back score prints as a score, and the only thing on
-           * this line that asserts a period is the one that can keep it. The
-           * richer fix is to store the day the rating was given and print it;
-           * that needs a column, and a migration is the owner's call.
+           * Until 2026-11-05 the looking-back score was the undated "last two
+           * weeks" number, so it printed bare: the owner's twelve areas once
+           * said "over the last two weeks" forty-six days after the numbers
+           * were given. It now comes from a review, and a review carries its
+           * period, so the line prints the period beside the score. The daily
+           * average keeps its own real window.
            */
-          const lines = [`${a.label}${r.fortnight != null ? `: ${r.fortnight}/10` : ""}${avg != null ? ` (daily average ${avg}, last ${NS_DAILY_WINDOW} days)` : ""}`]
+          const scoreText = s ? `: ${s.score}/10 (${periodLabel(periodOfReview(s.review))})` : ""
+          const lines = [`${a.label}${scoreText}${avg != null ? ` (daily average ${avg}, last ${NS_DAILY_WINDOW} days)` : ""}`]
           if (r.ten.trim()) lines.push(`  A 10 here: ${r.ten.trim()}`)
           if (r.purpose.trim()) lines.push(`  Why it matters: ${r.purpose.trim()}`)
           if (r.snapshot.trim()) lines.push(`  Right now: ${r.snapshot.trim()}`)

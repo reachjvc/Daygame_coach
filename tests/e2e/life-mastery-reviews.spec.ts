@@ -76,6 +76,47 @@ test.describe("the Review step", () => {
     await expect(page.getByLabel("Magic moments")).toHaveValue(MOMENT)
   })
 
+  /**
+   * YOUR 10s READS AND RATES THE REVIEWS (the owner, 2026-11-05). The wheel
+   * shows the latest review's score; rating an area there writes this week's
+   * review, the one the Review step opens; the old two-week number on the
+   * area row is left as it was, for Phase 7.
+   */
+  test("Your 10s shows the latest review and rates into this week's", async ({ page }) => {
+    await page.goto(`${ROUTES.plan}?step=now`)
+    const health = page.getByRole("button", { name: /^Health\. .*Open it\.$/ })
+    await expect(health).toHaveAccessibleName(/Rated 3 out of 10/)
+    await health.click()
+    await expect(page.getByTestId("area-latest-score")).toHaveText(/^The wheel shows 3, from your review of 10 – 23 Sept? 2026\.$/)
+
+    await page.getByRole("button", { name: "Rate Health 7 out of 10 for this week" }).click()
+    await expect(page.getByRole("button", { name: "Rate Health 7 out of 10 for this week" })).toHaveAttribute("aria-pressed", "true")
+    await expect(page.getByTestId("area-latest-score")).toHaveCount(0)
+    await expect.poll(() => accountReviews(page), { timeout: 15_000 }).toEqual([
+      { cadence: "fortnight", magic: "", outcomes: "", scores: [3] },
+      { cadence: "week", magic: "", outcomes: "", scores: [7] },
+    ])
+    const areas = async () => ((await (await page.request.get("/api/life-plan")).json()) as { plan: PlanRows }).plan.areas
+    expect((await areas()).find((a) => a.label === "Health")?.review_fortnight).toBe(3)
+
+    // The Review step holds the same score, across a reload with this browser's copy thrown away.
+    await page.evaluate(() => window.localStorage.clear())
+    await page.goto(`${ROUTES.plan}?step=review`)
+    await expect(page.getByRole("button", { name: /^Score Health 7 out of 10/ })).toHaveAttribute("aria-pressed", "true")
+    await page.goto(`${ROUTES.plan}?step=now`)
+    await expect(health).toHaveAccessibleName(/Rated 7 out of 10/)
+
+    // A second click takes this week's score out; the wheel goes back to September's.
+    await health.click()
+    await page.getByRole("button", { name: "Rate Health 7 out of 10 for this week" }).click()
+    await expect(page.getByTestId("area-latest-score")).toBeVisible()
+    await expect.poll(() => accountReviews(page), { timeout: 15_000 }).toEqual([
+      { cadence: "fortnight", magic: "", outcomes: "", scores: [3] },
+    ])
+    await page.keyboard.press("Escape")
+    await expect(health).toHaveAccessibleName(/Rated 3 out of 10/)
+  })
+
   test("writes a month, a quarter and a year, each its own review", async ({ page }) => {
     await page.goto(`${ROUTES.plan}?step=review`)
     const kinds = page.getByRole("group", { name: "How often" })

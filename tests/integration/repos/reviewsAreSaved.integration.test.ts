@@ -77,6 +77,8 @@ describe("a review", () => {
     const read = (await readLifePlan(user.id))!
     expect(rowsToPlan(read.rows)!.reviews).toEqual(plan.reviews)
     expect(await count("life_plan_review_scores", user.id)).toBe(2)
+    // Each score keeps the day it was given (20261105160000), which Your 10s ranks by.
+    expect(read.rows.review_scores.map((s) => s.scored_on)).toEqual([TODAY, TODAY])
 
     // Taking every score and word out of the week deletes it, and only it.
     let emptied = writeReview(plan, week, { score: { areaId: "lm_health", value: null } }, TODAY, NOW)

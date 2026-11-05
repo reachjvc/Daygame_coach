@@ -90,7 +90,7 @@ import { AreaDialog } from "./AreaDialog"
 import { AreaGoalsDialog } from "./AreaGoalsDialog"
 import { ReviewTab } from "./ReviewTab"
 import { PeriodReviewTab } from "./PeriodReviewTab"
-import { removeReview, writeReview } from "@/src/goals/reviewService"
+import { rateArea, removeReview, writeReview } from "@/src/goals/reviewService"
 import { CommitTab } from "./CommitTab"
 import { ValuesSoFar } from "./ValuesSoFar"
 import { ValuesWork } from "./ValuesWork"
@@ -1179,6 +1179,7 @@ export function NorthStarFlow({
 
   const reviewHandlers = useMemo(() => ({
     onAreaReview: (areaId: string, patch: Partial<NsAreaReview>) => setPlan((p) => ns.setAreaReview(p, areaId, patch)),
+    onRate: (date: string, areaId: string, value: number | null) => setPlan((p) => rateArea(p, areaId, value, date)),
     onDailyRating: (date: string, areaId: string, score: number) => setPlan((p) => ns.setDailyRating(p, date, areaId, score)),
     onAnswer: (promptId: string, text: string) => setPlan((p) => ns.setAnswer(p, promptId, text)),
     onGoToGoals: () => setTab("milestones"),
@@ -2105,6 +2106,7 @@ export function NorthStarFlow({
             plan={plan}
             today={today ?? ns.todayISO()}
             onAreaReview={reviewHandlers.onAreaReview}
+            onRate={reviewHandlers.onRate}
             onDailyRating={reviewHandlers.onDailyRating}
             onUpdateArea={areaHandlers.onUpdateArea}
             onRemoveArea={areaHandlers.onRemoveArea}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { emptyNsPlan, normalizeNsPlan, planIsUntouched, removeArea, serializeNsPlan } from "@/src/goals/northStarService"
+import { emptyNsPlan, normalizeNsPlan, planIsUntouched, removeArea, serializeNsPlan, setAreaReview, wheelRatings } from "@/src/goals/northStarService"
 import { planHasNothingWritten } from "@/src/goals/lifePlanSync"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import {
@@ -7,12 +7,16 @@ import {
   averageScore,
   lastReviewOf,
   lastScores,
+  latestScores,
   periodLabel,
   periodOf,
+  rateArea,
   readReviews,
   removeReview,
   reviewFor,
+  ratedAreaCount,
   reviewsOf,
+  scoreAge,
   scoredReviews,
   shiftPeriod,
   writeReview,
@@ -190,5 +194,149 @@ describe("a review is saved and read back whole", () => {
       "nonsense",
     ], new Set(["lm_health", "lm_money"]))
     expect(read).toEqual([expect.objectContaining({ id: "week-2026-11-02", scores: { lm_health: 4 }, writtenOn: "2026-11-08" })])
+  })
+})
+
+/**
+ * YOUR 10s READS AND RATES THE REVIEWS (the owner, 2026-11-05: "we can go with
+ * all your recommendations", card p5-wheel-question). The wheel shows each
+ * area's score from the latest review; rating there writes this week's.
+ */
+describe("Your 10s reads and rates the reviews", () => {
+  /** The owner's case: one copied two-week review, from September. */
+  function copied(): NsPlan {
+    const plan = emptyNsPlan()
+    const [health, money] = plan.areas
+    return {
+      ...plan,
+      reviews: readReviews([{
+        cadence: "fortnight", periodStart: "2026-09-10", periodEnd: "2026-09-23", writtenOn: "2026-09-23",
+        scores: { [health.id]: 5, [money.id]: 2 },
+      }], new Set(plan.areas.map((a) => a.id))),
+    }
+  }
+
+  it("shows the copied first review's scores on the wheel, as the old number did", () => {
+    const plan = copied()
+    const [health, money, third] = plan.areas
+    expect(wheelRatings(plan, TODAY)).toEqual({ [health.id]: 5, [money.id]: 2 })
+    expect(latestScores(plan, TODAY)[health.id].review.cadence).toBe("fortnight")
+    expect(ratedAreaCount(plan, TODAY)).toBe(2)
+    expect(wheelRatings(plan, TODAY)[third.id]).toBeUndefined()
+  })
+
+  it("writes a rating into this week's review, the one the Review step opens", () => {
+    const [health, money] = copied().areas
+    const plan = rateArea(copied(), health.id, 7, TODAY, NOW)
+    const week = reviewFor(plan, periodOf("week", TODAY))!
+    expect(week.scores).toEqual({ [health.id]: 7 })
+    expect(week.scoredOn).toEqual({ [health.id]: TODAY })
+    expect(week.writtenOn).toBe(TODAY)
+    // Only the area rated moves; the other still shows September's.
+    expect(wheelRatings(plan, TODAY)).toEqual({ [health.id]: 7, [money.id]: 2 })
+    // The copied review is not touched.
+    expect(reviewsOf(plan, "fortnight")[0].scores).toEqual({ [health.id]: 5, [money.id]: 2 })
+  })
+
+  it("takes this week's score out again on a second click, and the wheel falls back to the review before", () => {
+    const [health] = copied().areas
+    const rated = rateArea(copied(), health.id, 7, TODAY, NOW)
+    const cleared = rateArea(rated, health.id, null, TODAY, NOW)
+    expect(reviewFor(cleared, periodOf("week", TODAY))).toBeNull()
+    expect(wheelRatings(cleared, TODAY)[health.id]).toBe(5)
+    // With another score left in the week, the cleared one's day goes with it.
+    const [, money] = copied().areas
+    const both = rateArea(rateArea(rated, money.id, 4, TODAY, NOW), health.id, null, TODAY, NOW)
+    expect(reviewFor(both, periodOf("week", TODAY))).toMatchObject({ scores: { [money.id]: 4 }, scoredOn: { [money.id]: TODAY } })
+  })
+
+  it("goes by the day a score speaks for, so a later look back beats an early score in a longer period", () => {
+    const [health] = emptyNsPlan().areas
+    // The code review's case: the November month scored on the 2nd, the week of 2-8 Nov scored on the 9th.
+    let plan = writeReview(emptyNsPlan(), periodOf("month", "2026-11-02"), { score: { areaId: health.id, value: 4 } }, "2026-11-02", NOW)
+    plan = writeReview(plan, periodOf("week", "2026-11-02"), { score: { areaId: health.id, value: 8 } }, "2026-11-09", NOW)
+    expect(latestScores(plan, "2026-11-10")[health.id].score).toBe(8)
+    // Filling in October's review afterwards does not make it "now": it speaks for 31 Oct.
+    plan = writeReview(plan, periodOf("month", "2026-10-15"), { score: { areaId: health.id, value: 2 } }, "2026-11-10", NOW)
+    expect(latestScores(plan, "2026-11-10")[health.id].score).toBe(8)
+    expect(scoreAge(latestScores(plan, "2026-11-10")[health.id].review, health.id, "2026-11-10")).toBe(2)
+  })
+
+  it("goes by each score's own day inside one week", () => {
+    const [health, money] = emptyNsPlan().areas
+    // Health rated Monday, the month scored Wednesday, Money rated Friday.
+    let plan = rateArea(emptyNsPlan(), health.id, 5, "2026-11-02", NOW)
+    plan = writeReview(plan, periodOf("month", TODAY), { score: { areaId: money.id, value: 3 } }, "2026-11-04", NOW)
+    plan = rateArea(plan, money.id, 6, "2026-11-06", NOW)
+    expect(latestScores(plan, "2026-11-06")[money.id].score).toBe(6)
+  })
+
+  it("prefers the shorter kind when two periods start the same day and speak for the same day", () => {
+    const [health] = emptyNsPlan().areas
+    // June 2026 starts on a Monday: its first week and the month share a first day.
+    let plan = writeReview(emptyNsPlan(), periodOf("month", "2026-06-03"), { score: { areaId: health.id, value: 4 } }, "2026-06-03", NOW)
+    plan = writeReview(plan, periodOf("week", "2026-06-03"), { score: { areaId: health.id, value: 7 } }, "2026-06-03", NOW)
+    expect(latestScores(plan, "2026-06-03")[health.id].score).toBe(7)
+    plan = writeReview(emptyNsPlan(), periodOf("week", "2026-06-03"), { score: { areaId: health.id, value: 7 } }, "2026-06-03", NOW)
+    plan = writeReview(plan, periodOf("month", "2026-06-03"), { score: { areaId: health.id, value: 4 } }, "2026-06-03", NOW)
+    expect(latestScores(plan, "2026-06-03")[health.id].score).toBe(7)
+  })
+
+  it("keeps each score's day through a save and through the browser copy", () => {
+    const [health] = emptyNsPlan().areas
+    const plan = rateArea(emptyNsPlan(), health.id, 6, TODAY, NOW)
+    const out = rows(plan)
+    expect(out.review_scores).toEqual([expect.objectContaining({ score: 6, scored_on: TODAY })])
+    expect(rowsToPlan(out)!.reviews).toEqual(plan.reviews)
+    expect(normalizeNsPlan(JSON.parse(serializeNsPlan(plan)))!.reviews).toEqual(plan.reviews)
+    // A score saved before the column existed reads back with no day, and still ranks by its review.
+    const old = { ...out, review_scores: out.review_scores.map((r) => ({ user_id: r.user_id, review_id: r.review_id, area_id: r.area_id, score: r.score })) }
+    expect(rowsToPlan(old)!.reviews[0].scoredOn).toBeUndefined()
+  })
+
+  it("reads the review that reaches nearest today: this week over this month over this year", () => {
+    const [health] = emptyNsPlan().areas
+    const score = (plan: NsPlan, cadence: "week" | "month" | "quarter" | "year", day: string, value: number) =>
+      writeReview(plan, periodOf(cadence, day), { score: { areaId: health.id, value } }, day, NOW)
+    let plan = score(emptyNsPlan(), "year", TODAY, 3)
+    plan = score(plan, "month", TODAY, 4)
+    expect(latestScores(plan, TODAY)[health.id].score).toBe(4)
+    plan = score(plan, "week", TODAY, 6)
+    expect(latestScores(plan, TODAY)[health.id].score).toBe(6)
+    // A week that is over loses to a month still running: the month reaches today.
+    const lastWeek = score(score(emptyNsPlan(), "week", "2026-10-28", 8), "month", TODAY, 4)
+    expect(latestScores(lastWeek, TODAY)[health.id].score).toBe(4)
+    // Once the month is over too, the week ending later wins.
+    expect(latestScores(score(score(emptyNsPlan(), "month", "2026-09-15", 4), "week", "2026-10-28", 8), TODAY)[health.id].score).toBe(8)
+  })
+
+  it("does not read a review of a period that has not begun", () => {
+    const [health] = emptyNsPlan().areas
+    const plan = writeReview(emptyNsPlan(), periodOf("week", "2026-11-16"), { score: { areaId: health.id, value: 9 } }, "2026-11-16", NOW)
+    expect(latestScores(plan, TODAY)).toEqual({})
+    // Nor counted as rated: the counts and the wheel agree.
+    expect(ratedAreaCount(plan, TODAY)).toBe(0)
+  })
+
+  it("drops a removed area's score and the day it was given", () => {
+    const [health, money] = emptyNsPlan().areas
+    let plan = rateArea(rateArea(emptyNsPlan(), health.id, 6, TODAY, NOW), money.id, 3, TODAY, NOW)
+    plan = removeArea(plan, health.id, NOW)
+    expect(reviewFor(plan, periodOf("week", TODAY))).toMatchObject({ scores: { [money.id]: 3 }, scoredOn: { [money.id]: TODAY } })
+    const textOnly = removeArea(writeReview(rateArea(emptyNsPlan(), health.id, 6, TODAY, NOW), periodOf("week", TODAY), { lessons: "Sleep." }, TODAY, NOW), health.id, NOW)
+    expect(reviewFor(textOnly, periodOf("week", TODAY))!.scoredOn).toBeUndefined()
+  })
+
+  it("no longer reads or writes the old two-week number, and a save carries it back unchanged", () => {
+    const base = emptyNsPlan()
+    const [health] = base.areas
+    const old = setAreaReview(base, health.id, { fortnight: 6 }, NOW)
+    // The old number alone puts nothing on the wheel: Your 10s reads reviews.
+    expect(wheelRatings(old, TODAY)).toEqual({})
+    const plan = rateArea(old, health.id, 3, TODAY, NOW)
+    expect(plan.review[health.id].fortnight).toBe(6)
+    // The column keeps its value through a save until Phase 7 drops it.
+    const area = rows(plan).areas.find((a) => a.label === health.label)!
+    expect(area.review_fortnight).toBe(6)
   })
 })

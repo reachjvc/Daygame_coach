@@ -60,6 +60,7 @@ import {
   valuesDiff,
 } from "@/src/goals/northStarService"
 import type { TrainingTicks } from "@/src/goals/dayTicks"
+import { latestScores } from "@/src/goals/reviewService"
 import { AreaWheel } from "./AreaWheel"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 
@@ -277,7 +278,8 @@ function PracticeRow({
 }
 
 /** One area, read back: the rating, the 10, and what it asks of you. */
-function AreaCard({ area, plan, today, onOpen }: { area: NsArea; plan: NsPlan; today: string; onOpen: () => void }) {
+/** `score`: the latest review's score for the area (`latestScores`), as the wheel shows it. */
+function AreaCard({ area, plan, today, score, onOpen }: { area: NsArea; plan: NsPlan; today: string; score: number | null; onOpen: () => void }) {
   const r = areaReview(plan, area.id)
   const avg = dailyAverage(plan, area.id, today)
   const written = [r.ten, r.purpose, r.identity, r.snapshot].some((t) => t.trim())
@@ -292,7 +294,7 @@ function AreaCard({ area, plan, today, onOpen }: { area: NsArea; plan: NsPlan; t
         <span className="size-2.5 rounded-full shrink-0" style={{ background: area.color }} />
         <span className="text-[13px] font-medium text-zinc-100 min-w-0 flex-1 truncate">{area.label}</span>
         <span className="text-[11px] tabular-nums shrink-0 text-zinc-400">
-          {r.fortnight != null ? `${r.fortnight}/10` : RECAP_COPY.areaUnrated}
+          {score != null ? `${score}/10` : RECAP_COPY.areaUnrated}
           {avg != null && <span className="text-zinc-600"> · {avg}</span>}
         </span>
       </span>
@@ -391,9 +393,8 @@ export function RecapTab({
   const focus = seasonFocus(plan)
   const diff = valuesDiff(plan)
   const routines = plan.routines.filter((r) => r.steps.length > 0)
-  const ratings = Object.fromEntries(
-    plan.areas.map((a) => [a.id, areaReview(plan, a.id).fortnight]).filter(([, v]) => v != null) as Array<[string, number]>
-  )
+  const latest = latestScores(plan, today)
+  const ratings = Object.fromEntries(Object.entries(latest).map(([id, s]) => [id, s.score]))
   const goalCounts = Object.fromEntries(plan.areas.map((a) => [a.id, plan.goals.filter((g) => g.areaId === a.id).length]))
   const committedOn = answerOf(plan, COMMIT_DATE_KEY)
   const closing = REVIEW_PROMPTS.filter((p) => answerOf(plan, p.id).trim() || editing === "closing")
@@ -649,7 +650,7 @@ export function RecapTab({
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mt-4">
           {plan.areas.map((area) => (
-            <AreaCard key={area.id} area={area} plan={plan} today={today} onOpen={() => onOpenArea(area.id)} />
+            <AreaCard key={area.id} area={area} plan={plan} today={today} score={latest[area.id]?.score ?? null} onOpen={() => onOpenArea(area.id)} />
           ))}
         </div>
       </Block>

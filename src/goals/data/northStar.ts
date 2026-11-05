@@ -515,7 +515,6 @@ export const REVIEW_PERIOD_COPY = {
   scoresHelp: "How did this area actually go, 0 to 10? Click the same number again to clear it.",
   scored: (n: number, of: number) => `${n} of ${of} scored`,
   lastTime: (score: number, period: string) => `last time ${score}, ${period}`,
-  tensSays: (score: number) => `Your 10s says ${score}`,
   boxes: [
     { field: "magicMoments", label: "Magic moments", help: "What went well? The moments worth keeping.", placeholder: "The conversation on Tuesday. Finally finishing the deck." },
     { field: "lessons", label: "Lessons", help: "What did it teach you? What would you do differently?", placeholder: "I lose the evening when I skip the walk." },
@@ -1892,8 +1891,8 @@ export const REVIEW_INTRO = {
  * and stops.
  */
 export const RATING_VARIANCE_NOTE = {
-  above: "Your fortnight number is higher than your daily average. Looking back tends to round up, and the daily numbers were made in the moment. Both are real readings.",
-  below: "Your fortnight number is lower than your daily average. Memory weights the worst days heavily. Both are real readings.",
+  above: "Your review score is higher than your daily average. Looking back tends to round up, and the daily numbers were made in the moment. Both are real readings.",
+  below: "Your review score is lower than your daily average. Memory weights the worst days heavily. Both are real readings.",
   gap: 1.5,
 }
 
@@ -2214,7 +2213,15 @@ export const AREA_REVIEW_COPY = {
   done: "Done",
   next: (label: string) => `Next: ${label}`,
   autosave: "Saved as you type.",
-  rating: { question: "Over the last two weeks, where have you been?", help: "Against the 10 you just wrote. Be honest rather than kind." },
+  /*
+   * Stefan's weekly sweep: "I ask myself every week where am I, a scale from 0
+   * to 10 in each area of my life, with 10 being exactly where I want to be"
+   * (8kco2rjijjE). Was "Over the last two weeks", a number of its own; since
+   * 2026-11-05 it is this week's review score.
+   */
+  rating: { question: "This week, where are you?", help: "Against the 10 you just wrote: 10 is exactly where you want to be. Be honest rather than kind. It goes into this week's review." },
+  /** Under the row, until this week is rated: where the wheel's number comes from. */
+  latest: (score: number, period: string) => `The wheel shows ${score}, from your review of ${period}.`,
   goalsAim: { question: "Do your goals here actually move you toward that 10?", help: "Read your goals in this area against the picture. If the answer is no, that is useful. Change the goals." },
   values: { question: "What would you have to value to live at that 10?", help: "One word or a short phrase per line. These are the ones this area asks for." },
   /** Names the short row read off their own writing, above the full library. */

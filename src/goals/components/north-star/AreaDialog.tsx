@@ -34,6 +34,7 @@ import {
 } from "@/src/goals/data/northStar"
 import { LIFE_MASTERY_AREA_MAP } from "@/src/goals/data/lifeMasteryAreas"
 import { areaReach, areaReview, areaValueSuggestions, dailyAverage, dailyCount, wheelRatings } from "@/src/goals/northStarService"
+import { latestScores, periodLabel, periodOf, periodOfReview, reviewFor, scoreAge } from "@/src/goals/reviewService"
 import { ScoreRow } from "./ScoreRow"
 import { TagList } from "./GoalCard"
 import { ValueBrowser } from "./ValueBrowser"
@@ -44,6 +45,7 @@ export function AreaDialog({
   plan,
   today,
   onAreaReview,
+  onRate,
   onDailyRating,
   onUpdateArea,
   onRemoveArea,
@@ -58,6 +60,8 @@ export function AreaDialog({
   plan: NsPlan
   today: string
   onAreaReview: (areaId: string, patch: Partial<NsAreaReview>) => void
+  /** Score the area in the week holding `date`: a review score (`rateArea`). Null clears it. */
+  onRate: (date: string, areaId: string, value: number | null) => void
   onDailyRating: (date: string, areaId: string, score: number) => void
   onUpdateArea: (areaId: string, patch: Partial<Omit<NsArea, "id" | "custom">>) => void
   onRemoveArea: (areaId: string) => void
@@ -81,8 +85,10 @@ export function AreaDialog({
   const review = areaReview(plan, area.id)
   const reach = areaReach(plan, area.id)
   const areaValues = areaValueSuggestions(plan, area.id)
-  const rating = wheelRatings(plan, today)[area.id] ?? null
+  const latest = latestScores(plan, today)[area.id] ?? null
+  const thisWeek = reviewFor(plan, periodOf("week", today))?.scores[area.id] ?? null
   const avg = dailyAverage(plan, area.id, today)
+  const rating = wheelRatings(plan, today)[area.id] ?? null
   const days = dailyCount(plan, area.id, today)
   const todayScore = plan.daily[today]?.[area.id] ?? null
   const hasTen = review.ten.trim().length > 0
@@ -210,13 +216,23 @@ export function AreaDialog({
                 row inside a padded card, so the two rows of eleven buttons were
                 offset from each other by the card's own padding. */}
             <div className="mt-1.5 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 space-y-2.5">
+              {/* Since 2026-11-05 this row writes into this week's review, the
+                  one the Review step scores (it was "The last two weeks", a
+                  number of its own). The wheel shows the latest review's score,
+                  so until this week is rated the line under it says where the
+                  wheel's number comes from. */}
               <ScoreRow
-                label="The last two weeks"
-                value={review.fortnight}
+                label="This week"
+                value={thisWeek}
                 color={area.color}
-                ariaLabel={(n) => `Rate ${area.label} ${n} out of 10 for the last two weeks`}
-                onPick={(n) => onAreaReview(area.id, { fortnight: review.fortnight === n ? null : n })}
+                ariaLabel={(n) => `Rate ${area.label} ${n} out of 10 for this week`}
+                onPick={(n) => onRate(today, area.id, thisWeek === n ? null : n)}
               />
+              {thisWeek == null && latest && (
+                <p className="text-[10.5px] text-zinc-600 -mt-1.5" data-testid="area-latest-score">
+                  {AREA_REVIEW_COPY.latest(latest.score, periodLabel(periodOfReview(latest.review)))}
+                </p>
+              )}
               <div className="pt-2.5 border-t border-white/[0.07]">
                 <ScoreRow
                   label="And today"
@@ -228,15 +244,19 @@ export function AreaDialog({
                 <p className="text-[10.5px] text-zinc-600 mt-1">
                   {days > 0
                     ? `${days} ${days === 1 ? "day" : "days"} rated in the last ${NS_DAILY_WINDOW}, averaging ${avg}`
-                    : "Rate a few days and an average appears here alongside your fortnight number"}
+                    : "Rate a few days and an average appears here alongside your review score"}
                 </p>
               </div>
               {/* Information, not a verdict. The two numbers are made in
                   different ways and are supposed to differ; nothing in the
                   material says a mismatch means one of them is wrong. */}
-              {review.fortnight != null && avg != null && Math.abs(review.fortnight - avg) >= RATING_VARIANCE_NOTE.gap && (
+              {/* Only for a score that speaks for the same stretch as the
+                  daily average: a September number against this fortnight's
+                  days is a change over time, not memory rounding. */}
+              {latest && avg != null && scoreAge(latest.review, area.id, today) < NS_DAILY_WINDOW &&
+                Math.abs(latest.score - avg) >= RATING_VARIANCE_NOTE.gap && (
                 <p className="text-[10.5px] text-zinc-500 leading-relaxed pt-1.5 border-t border-white/[0.07]">
-                  {review.fortnight > avg ? RATING_VARIANCE_NOTE.above : RATING_VARIANCE_NOTE.below}
+                  {latest.score > avg ? RATING_VARIANCE_NOTE.above : RATING_VARIANCE_NOTE.below}
                 </p>
               )}
             </div>

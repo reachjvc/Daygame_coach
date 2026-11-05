@@ -16,7 +16,7 @@
 
 import { useState } from "react"
 import { Check, ChevronDown } from "lucide-react"
-import type { NsArea, NsPlan } from "@/src/goals/types"
+import type { NsArea, NsPlan, NsReview } from "@/src/goals/types"
 import {
   AREA_REVIEW_COPY,
   GAP_WARNING,
@@ -31,6 +31,7 @@ import {
   goalsInArea,
   wheelRatings,
 } from "@/src/goals/northStarService"
+import { latestScores, periodLabel, periodOfReview } from "@/src/goals/reviewService"
 import { AreaWheel } from "./AreaWheel"
 import { ValuesWork, type ValuesHandlers } from "./ValuesWork"
 
@@ -58,6 +59,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
   // the screen CLOSED it — the wheel is a toggle, and it was pre-toggled.
   const [openId, setOpenId] = useState<string | null>(null)
   const ratings = wheelRatings(plan, today)
+  const latest = latestScores(plan, today)
   const goalCounts = Object.fromEntries(plan.areas.map((a) => [a.id, goalsInArea(plan, a.id).length]))
   /*
    * NO FLOOR (2026-11-04, the owner's call; Plans/life-plan-rebuild.md). The
@@ -85,6 +87,7 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
             area={area}
             plan={plan}
             today={today}
+            latest={latest[area.id] ?? null}
             open={openId === area.id}
             onToggle={() => setOpenId(openId === area.id ? null : area.id)}
             handlers={handlers}
@@ -128,10 +131,12 @@ export function ReviewTab({ plan, today, handlers, valuesHandlers, values = true
   )
 }
 
-function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
+function AreaReviewCard({ area, plan, today, latest, open, onToggle, handlers }: {
   area: NsArea
   plan: NsPlan
   today: string
+  /** The latest review's score for the area (`latestScores`), as the wheel shows it, and the review it is from. */
+  latest: { score: number; review: NsReview } | null
   open: boolean
   onToggle: () => void
   handlers: ReviewHandlers
@@ -140,8 +145,9 @@ function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
   const goals = goalsInArea(plan, area.id)
   const avg = dailyAverage(plan, area.id, today)
   const days = dailyCount(plan, area.id, today)
+  const score = latest?.score ?? null
   const hasTen = review.ten.trim().length > 0
-  const answered = hasTen && review.fortnight != null
+  const answered = hasTen && score != null
 
   return (
     <div className={`rounded-2xl border transition-colors ${answered ? "border-white/15 bg-white/[0.03]" : "border-white/10 bg-white/[0.02]"}`}>
@@ -155,8 +161,8 @@ function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
           </span>
         </span>
         <span className="shrink-0 text-right">
-          <span className={`block text-[13px] tabular-nums ${review.fortnight == null ? "text-zinc-600" : "text-zinc-200"}`}>
-            {review.fortnight != null ? `${review.fortnight}/10` : "–/10"}
+          <span className={`block text-[13px] tabular-nums ${score == null ? "text-zinc-600" : "text-zinc-200"}`}>
+            {score != null ? `${score}/10` : "–/10"}
           </span>
           {avg != null && <span className="block text-[9.5px] text-zinc-600 tabular-nums">daily {avg}</span>}
         </span>
@@ -171,8 +177,8 @@ function AreaReviewCard({ area, plan, today, open, onToggle, handlers }: {
           <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
             <div className="flex flex-wrap items-baseline gap-2">
               <span className="text-[11px] text-zinc-400">Your 10 here</span>
-              <span className={`text-[11px] tabular-nums ${review.fortnight == null ? "text-zinc-600" : "text-zinc-300"}`}>
-                {review.fortnight != null ? `you rated it ${review.fortnight}/10` : "not rated yet"}
+              <span className={`text-[11px] tabular-nums ${score == null ? "text-zinc-600" : "text-zinc-300"}`}>
+                {latest ? `you rated it ${latest.score}/10, ${periodLabel(periodOfReview(latest.review))}` : "not rated yet"}
                 {avg != null && <span className="text-zinc-600"> · daily average {avg} over {days} {days === 1 ? "day" : "days"}</span>}
               </span>
               <button onClick={handlers.onGoToNow} className="ml-auto text-[10.5px] text-zinc-500 hover:text-zinc-200 underline decoration-dotted transition-colors shrink-0">

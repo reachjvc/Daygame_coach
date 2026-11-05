@@ -9,7 +9,9 @@
  *
  * Not to be confused with `ReviewTab`, which is the areas' own review on Your
  * 10s: what a 10 looks like, and the one "last two weeks" number. That number
- * started this history: it was copied in as the first review.
+ * started this history: it was copied in as the first review. Since
+ * 2026-11-05 Your 10s rates into this week's review here, and its wheel shows
+ * the latest review's scores (`latestScores`).
  *
  * Any day works (N2). The page opens on the period holding today, says when
  * the last one of its kind was written, and steps back to earlier periods
@@ -63,9 +65,6 @@ export function PeriodReviewTab({ plan, today, handlers }: {
   const noun = COPY.nouns[period.cadence]
   const last = lastReviewOf(plan, period.cadence)
   const before = lastScores(plan, period.start)
-  const tens = Object.keys(before).length === 0
-    ? Object.fromEntries(plan.areas.map((a) => [a.id, plan.review[a.id]?.fortnight ?? null]))
-    : null
   const scoredCount = review ? plan.areas.filter((a) => typeof review.scores[a.id] === "number").length : 0
   const earlier = reviewsOf(plan, period.cadence).filter((r) => r.id !== reviewIdFor(period))
   const write = (patch: ReviewPatch) => handlers.onWrite(period, patch)
@@ -154,14 +153,14 @@ export function PeriodReviewTab({ plan, today, handlers }: {
                   ariaLabel={(n) => `Score ${area.label} ${n} out of 10 for ${periodLabel(period)}`}
                   onPick={(n) => write({ score: { areaId: area.id, value: value === n ? null : n } })}
                 />
-                {prior ? (
+                {/* The old "Your 10s says N" line, shown when no review came
+                    before, went with Your 10s rating into the reviews
+                    (2026-11-05): a Your 10s score IS a review score now. */}
+                {prior && (
                   <p className="text-[10.5px] text-zinc-600 mt-1">
                     {COPY.lastTime(prior.score, periodLabel(periodOfReview(prior.review)))}
                   </p>
-                ) : tens != null && tens[area.id] != null ? (
-                  // No review before this one: the Your 10s number is the one to compare with.
-                  <p className="text-[10.5px] text-zinc-600 mt-1">{COPY.tensSays(tens[area.id]!)}</p>
-                ) : null}
+                )}
               </li>
             )
           })}

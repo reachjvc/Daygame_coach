@@ -26,7 +26,8 @@ import {
   NOW_INTRO,
   SEASON_FOCUS_COPY,
 } from "@/src/goals/data/northStar"
-import { areaReview, seasonFocus, wheelRatings } from "@/src/goals/northStarService"
+import { seasonFocus, wheelRatings } from "@/src/goals/northStarService"
+import { ratedAreaCount } from "@/src/goals/reviewService"
 import { AreaWheel } from "./AreaWheel"
 
 export interface AreaHandlers {
@@ -57,7 +58,7 @@ export function NowTab({
   const [editing, setEditing] = useState(false)
 
   const ratings = wheelRatings(plan, today)
-  const rated = plan.areas.filter((a) => areaReview(plan, a.id).fortnight != null).length
+  const rated = ratedAreaCount(plan, today)
   /*
    * NO FLOOR. There was a line here naming the areas "under a seven", and
    * amber on every number below it. The owner had it taken out on 2026-11-04

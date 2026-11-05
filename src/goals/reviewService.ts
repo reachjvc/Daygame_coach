@@ -156,10 +156,17 @@ export function writeReview(plan: NsPlan, period: ReviewPeriod, patch: ReviewPat
     const { areaId, value } = patch.score
     if (!plan.areas.some((a) => a.id === areaId)) return plan
     const scores = { ...base.scores }
-    if (value == null) delete scores[areaId]
-    else if (Number.isInteger(value) && value >= 0 && value <= 10) scores[areaId] = value
-    else return plan
-    next = { ...base, scores }
+    const scoredOn = { ...base.scoredOn }
+    if (value == null) {
+      delete scores[areaId]
+      delete scoredOn[areaId]
+    } else if (Number.isInteger(value) && value >= 0 && value <= 10) {
+      scores[areaId] = value
+      scoredOn[areaId] = today
+    } else return plan
+    next = { ...base, scores, scoredOn }
+    // No empty map is kept, so a review reads back from storage as it was written.
+    if (Object.keys(scoredOn).length === 0) delete next.scoredOn
   } else {
     const [field, text] = Object.entries(patch)[0] as ["magicMoments" | "lessons" | "nextOutcomes", string]
     next = { ...base, [field]: clip(text) }
@@ -205,6 +212,69 @@ export function lastScores(plan: NsPlan, before: string): Record<string, { score
   return out
 }
 
+
+/**
+ * The last day a score can speak for: the earlier of its period's last day and
+ * the day it was given. A month scored on its second day says nothing about
+ * the rest of it; a week scored after it ended speaks for its Sunday. A score
+ * with no day of its own (the copied first review, scores saved before
+ * 2026-11-05) takes the day its review was first written.
+ */
+function asOf(review: NsReview, areaId: string): string {
+  const given = review.scoredOn?.[areaId] ?? review.writtenOn
+  return given < review.periodEnd ? given : review.periodEnd
+}
+
+/**
+ * WHERE EACH AREA STANDS NOW: its score in the latest review that scored it,
+ * any kind. This is the number Your 10s shows on the wheel (the owner,
+ * 2026-11-05), so the wheel and the reviews are one history, not two numbers
+ * that drift apart.
+ *
+ * "Latest" is the score that speaks for the most recent day (`asOf`). On a tie
+ * the review that began later wins, then the shorter kind: this week's score
+ * beats this month's, and this month's beats this year's. A review of a period
+ * that has not begun is not read.
+ */
+export function latestScores(plan: NsPlan, today: string): Record<string, { score: number; review: NsReview }> {
+  const out: Record<string, { score: number; review: NsReview }> = {}
+  const begun = plan.reviews.filter((r) => r.periodStart <= today)
+  for (const area of plan.areas) {
+    let best: NsReview | null = null
+    for (const r of begun) {
+      if (typeof r.scores[area.id] !== "number") continue
+      if (
+        !best ||
+        (asOf(r, area.id).localeCompare(asOf(best, area.id)) ||
+          r.periodStart.localeCompare(best.periodStart) ||
+          // `ALL_REVIEW_CADENCES` runs shortest first: the narrower look back is the more recent.
+          ALL_REVIEW_CADENCES.indexOf(best.cadence) - ALL_REVIEW_CADENCES.indexOf(r.cadence)) > 0
+      ) best = r
+    }
+    if (best) out[area.id] = { score: best.scores[area.id], review: best }
+  }
+  return out
+}
+
+/** How many days before `today` a review's score for this area speaks for (`asOf`). */
+export function scoreAge(review: NsReview, areaId: string, today: string): number {
+  return daysBetweenDateKeys(asOf(review, areaId), today)
+}
+
+/** How many of the plan's areas have a score on the wheel: what "rated" counts everywhere. */
+export function ratedAreaCount(plan: NsPlan, today: string): number {
+  return Object.keys(latestScores(plan, today)).length
+}
+
+/**
+ * Rate an area on Your 10s: the score goes into this week's review, the same
+ * row the Review step scores. Null takes this week's score out again, and the
+ * wheel falls back to the review before it.
+ */
+export function rateArea(plan: NsPlan, areaId: string, value: number | null, today: string, now = new Date().toISOString()): NsPlan {
+  return writeReview(plan, periodOf("week", today), { score: { areaId, value } }, today, now)
+}
+
 /** The reviews holding a score, oldest first by the day they end: the columns of the scores-over-time table. */
 export function scoredReviews(plan: NsPlan): NsReview[] {
   return byEnd(plan.reviews.filter((r) => Object.keys(r.scores).length > 0))
@@ -247,6 +317,12 @@ export function readReviews(value: unknown, areaIds: Set<string>): NsReview[] {
         }
       }
     }
+    const scoredOn: Record<string, string> = {}
+    if (r.scoredOn && typeof r.scoredOn === "object") {
+      for (const [area, day] of Object.entries(r.scoredOn as Record<string, unknown>)) {
+        if (area in scores && calendarDay(day)) scoredOn[area] = day as string
+      }
+    }
     const text = (v: unknown) => (typeof v === "string" ? clip(v) : "")
     const review: NsReview = {
       id,
@@ -255,6 +331,7 @@ export function readReviews(value: unknown, areaIds: Set<string>): NsReview[] {
       periodEnd,
       writtenOn: calendarDay(r.writtenOn) ? (r.writtenOn as string) : periodEnd,
       scores,
+      ...(Object.keys(scoredOn).length > 0 ? { scoredOn } : {}),
       magicMoments: text(r.magicMoments),
       lessons: text(r.lessons),
       nextOutcomes: text(r.nextOutcomes),

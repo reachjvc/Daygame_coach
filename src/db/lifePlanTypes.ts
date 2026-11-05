@@ -313,6 +313,8 @@ export interface ReviewScoreRow {
   review_id: string
   area_id: string
   score: number
+  /** The day the score was last given (20261105160000); null on the copied first review and older scores. */
+  scored_on?: string | null
 }
 
 export interface GoalFeedRow {

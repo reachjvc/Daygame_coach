@@ -501,7 +501,9 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     for (const area of plan.areas) {
       const score = r.scores[area.id]
       const to = areaId.get(area.id)
-      if (typeof score === "number" && to) review_scores.push({ user_id: userId, review_id: n.id, area_id: to, score })
+      if (typeof score === "number" && to) {
+        review_scores.push({ user_id: userId, review_id: n.id, area_id: to, score, scored_on: r.scoredOn?.[area.id] ?? null })
+      }
     }
   }
 
@@ -774,12 +776,14 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
 
   // A review's id is its period (`reviewIdFor`), as its node's local id is.
   const scoresOf = new Map<string, Record<string, number>>()
+  const scoredOnOf = new Map<string, Record<string, string>>()
   for (const x of rows.review_scores ?? []) {
     const area = id(x.area_id)
     if (!area) continue
     const into = scoresOf.get(x.review_id) ?? {}
     into[area] = x.score
     scoresOf.set(x.review_id, into)
+    if (x.scored_on) scoredOnOf.set(x.review_id, { ...scoredOnOf.get(x.review_id), [area]: x.scored_on })
   }
   const reviews = (rows.reviews ?? []).map((r): NsReview => ({
     id: reviewIdFor({ cadence: r.cadence, start: r.period_start }),
@@ -788,6 +792,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     periodEnd: r.period_end,
     writtenOn: r.written_on,
     scores: scoresOf.get(r.id) ?? {},
+    ...(scoredOnOf.has(r.id) ? { scoredOn: scoredOnOf.get(r.id) } : {}),
     magicMoments: r.magic_moments,
     lessons: r.lessons,
     nextOutcomes: r.next_outcomes,

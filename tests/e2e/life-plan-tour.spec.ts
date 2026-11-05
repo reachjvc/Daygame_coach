@@ -16,7 +16,9 @@ import { seedLifePlan } from "./helpers/lifePlan"
  *   TOUR_PLAN=<plan.json> TOUR_DIR=<folder> npx playwright test life-plan-tour --project=desktop
  *
  * Optional: TOUR_STEPS=today,journal for some steps only; TOUR_DAYS=<patches.json>
- * for days written after the seed (see below).
+ * for days written after the seed (see below); TOUR_AREA=Health for that area's
+ * dialog on Your 10s, and with TOUR_RATE=7 the same dialog again after rating
+ * the area 7 for this week.
  *
  * TOUR_PLAN is an `NsPlan` as the flow keeps it (a backup turned into one with
  * `rowsToPlan`, or a made-up one). Without both variables it is skipped, so CI
@@ -66,6 +68,25 @@ test.describe("life plan tour", () => {
       const name = `${String(i + 1).padStart(2, "0")}-${step}.jpg`
       await page.screenshot({ path: path.join(DIR!, name), type: "jpeg", quality: 70 })
       await page.setViewportSize({ width: 1280, height: 900 })
+    }
+
+    const area = process.env.TOUR_AREA
+    if (area) {
+      await page.goto(`${ROUTES.plan}?step=now`)
+      await expect(page.getByText("Saved to your account.")).toBeVisible()
+      await page.getByRole("button", { name: new RegExp(`^${area}\\. .*Open it\\.$`) }).click()
+      const dialog = page.getByRole("dialog")
+      await expect(dialog).toBeVisible()
+      await page.screenshot({ path: path.join(DIR!, "area-before.jpg"), type: "jpeg", quality: 70 })
+      const rate = process.env.TOUR_RATE
+      if (rate) {
+        const button = dialog.getByRole("button", { name: `Rate ${area} ${rate} out of 10 for this week` })
+        await button.click()
+        await expect(button).toHaveAttribute("aria-pressed", "true")
+        await page.screenshot({ path: path.join(DIR!, "area-after.jpg"), type: "jpeg", quality: 70 })
+        await page.keyboard.press("Escape")
+        await page.screenshot({ path: path.join(DIR!, "wheel-after.jpg"), type: "jpeg", quality: 70 })
+      }
     }
   })
 })

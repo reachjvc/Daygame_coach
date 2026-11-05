@@ -19,6 +19,7 @@
 import { createElement } from "react"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { rateArea } from "@/src/goals/reviewService"
 import { NorthStarFlow } from "@/src/goals/components/north-star/NorthStarFlow"
 import { ROUTES } from "@/src/shared/routes"
 import { SCORED_TABS, TAB_ORDER } from "@/src/goals/data/northStar"
@@ -63,7 +64,7 @@ const SAVED: NsAccount = { hasOneThing: true }
 function completePlan(): NsPlan {
   let plan = setNorthStar(emptyNsPlan(), "I wake up near the water and my work pays for itself.", NOW)
   for (const rung of VISION_RUNGS) plan = setRung(plan, rung.id, "written", NOW)
-  for (const area of plan.areas) plan = setAreaReview(plan, area.id, { ten: "A ten looks like this", fortnight: 6 }, NOW)
+  for (const area of plan.areas) plan = rateArea(setAreaReview(plan, area.id, { ten: "A ten looks like this" }, NOW), area.id, 6, TODAY, NOW)
 
   /* The sentence itself is not written here: it is not part of a plan any more.
      Every call below pairs this plan with `SAVED`. */
@@ -115,7 +116,7 @@ describe("the circles on the rail", () => {
     const steps: Array<(p: NsPlan) => NsPlan> = [
       (p) => setNorthStar(p, "I wake up near the water", NOW),
       (p) => VISION_RUNGS.reduce((acc, r) => setRung(acc, r.id, "written", NOW), p),
-      (p) => p.areas.reduce((acc, a) => setAreaReview(acc, a.id, { ten: "ten", fortnight: 5 }, NOW), p),
+      (p) => p.areas.reduce((acc, a) => rateArea(setAreaReview(acc, a.id, { ten: "ten" }, NOW), a.id, 5, TODAY, NOW), p),
       (p) => setAnswer(p, ONE_ANSWERS.oneThing, "Quit weed", NOW),
       (p) => [ONE_ANSWERS.why, ONE_ANSWERS.cost, ONE_ANSWERS.identity, ONE_ANSWERS.values].reduce((acc, k) => setAnswer(acc, k, "x", NOW), p),
       (p) => addOneThingRequirement(p, "Delete the number", "lm_health", "achievement", NOW),
@@ -152,9 +153,9 @@ describe("the circles on the rail", () => {
 
 describe("what each step counts as full", () => {
   it("wants every area rated AND pictured, not one of them", () => {
-    let plan = setAreaReview(emptyNsPlan(), "lm_health", { ten: "ten", fortnight: 7 }, NOW)
+    let plan = rateArea(setAreaReview(emptyNsPlan(), "lm_health", { ten: "ten" }, NOW), "lm_health", 7, TODAY, NOW)
     expect(stepState(plan, "now")).toBe("started")
-    for (const area of plan.areas) plan = setAreaReview(plan, area.id, { ten: "ten", fortnight: 7 }, NOW)
+    for (const area of plan.areas) plan = rateArea(setAreaReview(plan, area.id, { ten: "ten" }, NOW), area.id, 7, TODAY, NOW)
     expect(stepState(plan, "now")).toBe("done")
   })
 
