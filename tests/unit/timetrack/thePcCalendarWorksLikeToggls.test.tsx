@@ -21,7 +21,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 import { CalendarView } from "@/src/timetrack/components/CalendarView"
 import { CALENDAR_ZOOMS } from "@/src/timetrack/config"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
-import { startTimer } from "@/src/timetrack/timetrackService"
+import { startTimer, stopTimer, updateEntry } from "@/src/timetrack/timetrackService"
 import type { TimeEntry, TimetrackState } from "@/src/timetrack/types"
 
 import { baseState, entry } from "./helpers"
@@ -53,12 +53,14 @@ afterEach(() => {
 })
 
 function calendar(initial: TimetrackState) {
-  const latest = { current: initial, writes: 0 }
+  const latest = { current: initial, writes: 0, other: (() => {}) as (change: (s: TimetrackState) => TimetrackState) => void }
   const onEditEntry = vi.fn()
   const toasts: { text: string; undo?: () => void }[] = []
   function Harness() {
     const [state, setState] = useState(initial)
     latest.current = state
+    // the other device's change, arriving as a sync does: not one of this page's writes
+    latest.other = (change) => act(() => setState((current) => change(current)))
     return (
       <CalendarView
         state={state}
@@ -249,5 +251,34 @@ describe("a click on the running block", () => {
 
     act(() => toast!.undo!())
     expect(cal.latest.current.entries[0].stop, "Undo did not set it running again").toBeNull()
+  })
+})
+
+describe("the box's Save, when the other device changed the entry while it was open (Phase 8 two-devices audit)", () => {
+  test("writes only what was changed in the box: the phone's rename survives a billable tick", () => {
+    const cal = calendar(baseState({ entries: [entry(1, "2026-11-04", "09:00", "10:00", { description: "Gym", billable: false })] }))
+    const gym = cal.block("Gym")
+    cal.press(gym, parseFloat(gym.style.top) + 10)
+    const edit = box("Edit time entry")
+    cal.latest.other((s) => updateEntry(s, "1", { description: "Gym, legs day" }, NOW).state)
+    fireEvent.click(edit.getByRole("button", { name: "Non-billable" }))
+    fireEvent.click(edit.getByRole("button", { name: "Save" }))
+    const after = cal.latest.current.entries[0]
+    expect(after.description, "the box's Save put the old name back over the phone's rename").toBe("Gym, legs day")
+    expect(after.billable).toBe(true)
+  })
+
+  test("a rename saved after the phone stopped the running entry leaves it stopped", () => {
+    const running = startTimer(baseState({ entries: [] }), { description: "Gym", projectId: null, taskId: null, tagIds: [], billable: false }, at(4, 14)).state
+    const cal = calendar(running)
+    const gym = cal.block("Gym")
+    cal.press(gym, parseFloat(gym.style.top) + 10)
+    const edit = box("Edit time entry")
+    cal.latest.other((s) => stopTimer(s, at(4, 14, 30)).state)
+    fireEvent.change(edit.getByLabelText("Description"), { target: { value: "Gym, legs day" } })
+    fireEvent.click(edit.getByRole("button", { name: "Save" }))
+    const after = cal.latest.current.entries[0]
+    expect(after.description).toBe("Gym, legs day")
+    expect(after.stop, "the box's Save set Gym running again").toBe(at(4, 14, 30))
   })
 })
