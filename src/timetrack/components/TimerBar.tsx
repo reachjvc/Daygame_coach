@@ -38,7 +38,6 @@ import {
   createManualEntry,
   createTag,
   createProject,
-  deleteEntries,
   emptyDraft,
   entrySeconds,
   findFavorite,
@@ -50,10 +49,8 @@ import {
   runningEntry,
   setRunningElapsed,
   toggleFavorite,
-  undoDisplacement,
   updateEntry,
 } from "../timetrackService"
-import { stopAt, switchAt, undoStopAt } from "../timeFixService"
 import type { EntryDraft, Id, IsoDate, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { MANUAL_FORM_KEY } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
@@ -61,8 +58,8 @@ import { useIsMobile } from "../hooks/useIsMobile"
 import type { PushToast } from "../hooks/useTimetrack"
 import { AfterCheckContext } from "./afterCheck"
 import { MomentDialog, type MomentKind } from "./MomentPicker"
+import { useMomentActions } from "./useMomentActions"
 import { RunningTimeBox } from "./RunningTimeBox"
-import { undoOrSay } from "./neighbourNotice"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow, touchTarget } from "./primitives"
 
@@ -688,56 +685,10 @@ export function TimerBar({
    * Without the tracker around it — a test, a component on its own — it runs
    * at once on the workspace this bar holds.
    */
+  const runMoment = useMomentActions({ state, setState, pushToast, afterCheck, onSwitched: () => setNextDraft(emptyDraft) })
   const confirmMoment = (kind: MomentKind, atIso: IsoDateTime, nextDraft: EntryDraft) => {
     setMoment(null)
-    const gate = afterCheck ?? ((run: (latest: TimetrackState, tappedAt: IsoDateTime) => void) => run(latestState.current, serverNowIso()))
-    gate((latest) => {
-      const nowIso = serverNowIso()
-      const when = (iso: IsoDateTime) => formatWhen(iso, latest.user.timeFormat, dateKey(nowIso))
-      const quoted = (entry: TimeEntry) => `“${entry.description.trim() || "(no description)"}”`
-
-      if (kind === "stop") {
-        const result = stopAt(latest, atIso, nowIso)
-        if (result.violations[0] || !result.stopped) {
-          pushToast(result.violations[0]?.message ?? "Nothing is running", "error")
-          return
-        }
-        const stopped = result.stopped
-        setState(layOnto(latest, result.state))
-        pushToast(`Stopped ${quoted(stopped)} ${when(stopped.stop ?? atIso)}`, "info", () => {
-          // read when Undo is pressed: another timer may have started by then
-          const refusal = undoStopAt(latestState.current, stopped.id, serverNowIso()).violations[0]
-          if (refusal) {
-            pushToast(refusal.message, "error")
-            return
-          }
-          setState((current) => {
-            const resumed = undoStopAt(current, stopped.id, serverNowIso())
-            return resumed.violations.length > 0 ? current : resumed.state
-          })
-        })
-        return
-      }
-
-      const result = switchAt(latest, nextDraft, atIso, nowIso)
-      if (result.violations[0] || !result.started) {
-        pushToast(result.violations[0]?.message ?? "Could not start the next entry", "error")
-        return
-      }
-      const { stopped, started } = result
-      setState(layOnto(latest, result.state))
-      if (kind === "switch") setNextDraft(emptyDraft)
-      if (stopped) {
-        // one change, one Undo: the next entry goes and the first runs again from its own start — both, or neither and why
-        pushToast(`${quoted(stopped)} ended ${when(started.start)} and ${quoted(started)} started then`, "info", () =>
-          undoOrSay(() => latestState.current, (current) => undoDisplacement(current, started.id, stopped.id, serverNowIso()), setState, pushToast),
-        )
-        return
-      }
-      pushToast(`Started ${quoted(started)} ${when(started.start)}`, "info", () =>
-        undoOrSay(() => latestState.current, (current) => deleteEntries(current, [started.id], serverNowIso()), setState, pushToast),
-      )
-    })
+    runMoment(kind, atIso, nextDraft)
   }
 
   return (

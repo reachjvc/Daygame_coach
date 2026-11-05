@@ -26,14 +26,11 @@ import Link from "next/link"
 import { BottomSheet, SheetRow } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { ROUTES } from "@/src/shared/routes"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import type { PushToast } from "../../hooks/useTimetrack"
 import type { useTimetrackSync } from "../../hooks/useTimetrackSync"
 import {
   IconAdd,
-  IconAlert,
-  IconBell,
   IconCalendar,
   IconClient,
   IconClose,
@@ -46,16 +43,19 @@ import {
 } from "../../icons"
 import { serverNowIso } from "../../serverClock"
 import { dateKey, formatClock, plural } from "../../timetrackFormatService"
-import { bulkEditEntries, emptyDraft, markAlertsRead, toggleFavorite } from "../../timetrackService"
+import { bulkEditEntries, emptyDraft, toggleFavorite } from "../../timetrackService"
 import type { Section } from "../../trackerAddressService"
 import type { EntryDraft, Id, AlertEvent, ReportConfig, TimeEntry, TimetrackState } from "../../types"
 import { AfterCheckContext, type AfterCheck } from "../afterCheck"
+import { AlertsBell } from "../AlertsBell"
+import { SignedOutBanner } from "../SignedOutBanner"
+import { useMomentActions } from "../useMomentActions"
 import { CalendarView } from "../CalendarView"
 import { ImportOfferBanner } from "../ImportOfferBanner"
 import { ManageView, type ManageTab } from "../ManageView"
 import { MomentDialog, type MomentKind } from "../MomentPicker"
 import { ProjectPicker, TagPicker } from "../pickers"
-import { Dropdown, touchTarget } from "../primitives"
+import { touchTarget } from "../primitives"
 import { ProjectsView } from "../ProjectsView"
 import { ReportsView } from "../ReportsView"
 import { SettingsView, type SettingsTab } from "../SettingsView"
@@ -67,7 +67,6 @@ import { deleteWithUndo, PhoneEntryList } from "./PhoneEntryList"
 import { PomodoroPanel, type PomodoroNow } from "./PomodoroPanel"
 import { RunBar } from "./RunBar"
 import type { SetState } from "./landOnCurrent"
-import { useMomentActions } from "./useMomentActions"
 
 /** What the shell is handed by `TogglLab`: its state and its navigation, nothing re-implemented */
 export interface PhoneLab {
@@ -213,7 +212,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
     setState,
     pushToast,
     afterCheck: lab.afterCheck,
-    onSwitched: useCallback(() => setNextDraft(emptyDraft), [setNextDraft]),
+    onSwitched: () => setNextDraft(emptyDraft),
   })
 
   // --- the pieces -------------------------------------------------------------
@@ -303,20 +302,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
         )}
       </header>
 
-      {sync.status === "signed-out" && (
-        <div className="px-3 pt-3">
-          <div className="flex flex-col gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm">
-            <p>
-              <strong>You have been signed out.</strong> Nothing is lost — everything you have done is saved in this browser
-              {sync.pendingCount > 0 && <>, including {sync.pendingCount} change{sync.pendingCount === 1 ? "" : "s"} waiting to be saved to your account</>}
-              . Sign in again to carry on where you left off.
-            </p>
-            <Button size="sm" className="h-11" asChild>
-              <Link href={`/auth/login?next=${encodeURIComponent(typeof window === "undefined" ? ROUTES.time : window.location.pathname)}`}>Sign in again</Link>
-            </Button>
-          </div>
-        </div>
-      )}
+      {sync.status === "signed-out" && <SignedOutBanner pending={sync.pendingCount} />}
       {sync.importOffer && (
         <div className="px-3 pt-3">
           <ImportOfferBanner offer={sync.importOffer} todayKey={dateKey(new Date(nowSec * 1000))} onUpload={sync.acceptImport} onDismiss={sync.declineImport} />
@@ -526,49 +512,6 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
         />
       )}
     </>
-  )
-}
-
-/** Project alerts: the bell the header always had, in the place of Toggl's minimise button */
-function AlertsBell({ state, setState, unread }: { state: TimetrackState; setState: SetState; unread: AlertEvent[] }) {
-  return (
-    <Dropdown
-      align="right"
-      width="w-80"
-      ariaLabel="Project alerts"
-      onOpenChange={(open) => {
-        if (open && unread.length > 0) setState((current) => markAlertsRead(current))
-      }}
-      trigger={() => (
-        <span className={cn(touchTarget, "relative rounded-md text-muted-foreground hover:bg-secondary/60")}>
-          <IconBell className="size-5" />
-          {unread.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex size-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-semibold leading-none text-white">
-              {unread.length}
-            </span>
-          )}
-        </span>
-      )}
-    >
-      {() => (
-        <div className="max-h-72 overflow-y-auto p-2">
-          <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Project alerts</p>
-          {state.alerts.length === 0 ? (
-            <p className="px-1 py-2 text-xs text-muted-foreground">No alerts have fired.</p>
-          ) : (
-            state.alerts.slice(0, 20).map((alert) => (
-              <div key={alert.id} className="flex items-start gap-2 rounded px-1 py-1.5 text-xs">
-                <IconAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-                <span>
-                  <strong>{state.projects.find((p) => p.id === alert.projectId)?.name ?? "Project"}</strong> passed {alert.threshold}% of its{" "}
-                  {alert.basis === "fixed_fee" ? "fixed fee" : "estimate"} for the period starting {alert.periodStart}.
-                </span>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </Dropdown>
   )
 }
 

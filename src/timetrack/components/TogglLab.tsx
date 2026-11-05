@@ -10,7 +10,6 @@
  */
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react"
-import { ROUTES } from "@/src/shared/routes"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
@@ -19,8 +18,6 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { SHORTCUTS, TIMER_BAR_KEY } from "../config"
 import {
-  IconAlert,
-  IconBell,
   IconBreak,
   IconCalendar,
   IconClose,
@@ -47,7 +44,6 @@ import {
   draftFromStartLink,
   draftOf,
   emptyDraft,
-  markAlertsRead,
   startTimer,
   toggleFavorite,
 } from "../timetrackService"
@@ -68,10 +64,11 @@ import { ProjectsView } from "./ProjectsView"
 import { ReportsView } from "./ReportsView"
 import { SettingsView, type SettingsTab } from "./SettingsView"
 import { FavoritesBar, RunningPill, TimerBar, type TimerMode } from "./TimerBar"
-import { Dropdown, Modal, touchTarget } from "./primitives"
+import { Modal } from "./primitives"
 import { BACK_LINK_CLASS, TrackerLoading } from "./TrackerLoading"
-import { useIsMobile } from "../hooks/useIsMobile"
 import { PhoneTracker } from "./phone/PhoneTracker"
+import { AlertsBell } from "./AlertsBell"
+import { SignedOutBanner } from "./SignedOutBanner"
 
 type Screen = Section
 
@@ -279,8 +276,6 @@ export function TogglLab({
   const [draft, setDraftState] = useState<EntryDraft>(() => savedTimerBar()?.draft ?? emptyDraft)
   const [mode, setModeState] = useState<TimerMode>(() => savedTimerBar()?.mode ?? "timer")
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  /** below 640px the phone draws its own screens (`PhoneTracker`, Plans/toggl-parity.md Phases 1–2) */
-  const isMobile = useIsMobile()
   const [moreOpen, setMoreOpen] = useState(false)
   const [detailEntry, setDetailEntry] = useState<TimeEntry | null>(null)
   const [focusProjectId, setFocusProjectId] = useState<Id | null>(null)
@@ -291,6 +286,8 @@ export function TogglLab({
    * week in Calendar). The phone has neither; its Calendar is a tab of its own.
    */
   const isPc = !useIsMobile()
+  /** below 640px the phone draws its own screens (`PhoneTracker`, Plans/toggl-parity.md Phases 1–2) */
+  const isMobile = !isPc
   const [timerView, setTimerViewState] = useState<TimerView>(readTimerView)
   const [weekAnchor, setWeekAnchor] = useState<IsoDate | null>(null)
   const pcList = useMemo(
@@ -922,52 +919,7 @@ export function TogglLab({
               <RunningPill state={state} nowSec={nowSec} onStop={stopTracking} />
             </div>
 
-            <Dropdown
-              align="right"
-              width="w-80"
-              ariaLabel="Project alerts"
-              onOpenChange={(open) => {
-                if (open && unreadAlerts.length > 0) setState((current) => markAlertsRead(current))
-              }}
-              trigger={() => (
-                <span className={cn(touchTarget, "relative rounded-md text-muted-foreground hover:bg-secondary/60")}>
-                  <IconBell className="size-5 sm:size-4" />
-                  {/*
-                    9px was the smallest text anywhere in the slice, on the one badge
-                    whose whole job is to be read at a glance, and at 4.17:1 it was under
-                    the 4.5:1 contrast floor as well. 10px in a slightly larger circle,
-                    at full-strength white on the destructive fill.
-                  */}
-                  {unreadAlerts.length > 0 && (
-                    <span className="absolute -right-1 -top-1 flex size-[18px] items-center justify-center rounded-full bg-destructive text-[10px] font-semibold leading-none text-white">
-                      {unreadAlerts.length}
-                    </span>
-                  )}
-                </span>
-              )}
-            >
-              {() => (
-                <div className="max-h-72 overflow-y-auto p-2">
-                  <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Project alerts
-                  </p>
-                  {state.alerts.length === 0 ? (
-                    <p className="px-1 py-2 text-xs text-muted-foreground">No alerts have fired.</p>
-                  ) : (
-                    state.alerts.slice(0, 20).map((alert) => (
-                      <div key={alert.id} className="flex items-start gap-2 rounded px-1 py-1.5 text-xs">
-                        <IconAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-                        <span>
-                          <strong>{state.projects.find((p) => p.id === alert.projectId)?.name ?? "Project"}</strong> passed{" "}
-                          {alert.threshold}% of its {alert.basis === "fixed_fee" ? "fixed fee" : "estimate"} for the period
-                          starting {alert.periodStart}.
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </Dropdown>
+            <AlertsBell state={state} setState={setState} unread={unreadAlerts} />
 
             <Button
               variant="ghost"
@@ -996,23 +948,7 @@ export function TogglLab({
         onEditRunning={openEntry}
       />
       <div className="min-w-0 flex-1">
-      {sync.status === "signed-out" && (
-        <div className="mx-auto max-w-6xl px-3 pt-3 sm:px-4">
-          <div className="flex flex-col gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm sm:flex-row sm:items-center">
-            <p className="flex-1">
-              <strong>You have been signed out.</strong> Nothing is lost — everything you have done is saved in
-              this browser
-              {sync.pendingCount > 0 && <>, including {sync.pendingCount} change{sync.pendingCount === 1 ? "" : "s"} waiting to be saved to your account</>}
-              . Sign in again to carry on where you left off.
-            </p>
-            <Button size="sm" asChild>
-              <Link href={`/auth/login?next=${encodeURIComponent(typeof window === "undefined" ? ROUTES.time : window.location.pathname)}`}>
-                Sign in again
-              </Link>
-            </Button>
-          </div>
-        </div>
-      )}
+      {sync.status === "signed-out" && <SignedOutBanner pending={sync.pendingCount} />}
 
       {sync.importOffer && (
         <div className="mx-auto max-w-6xl px-3 pt-3 sm:px-4">
