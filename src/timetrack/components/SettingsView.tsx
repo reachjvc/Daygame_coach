@@ -222,7 +222,7 @@ function ProfilePanel({
         />
         <ToggleRow
           label="Haptic feedback"
-          hint="On a phone, the time drums and the calendar tick as they move"
+          hint="On a phone, the time drums and the calendar vibrate lightly as they move"
           checked={state.user.haptics !== false}
           onChange={(haptics) => patch({ haptics })}
         />

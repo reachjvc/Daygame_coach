@@ -645,6 +645,10 @@ Changed labels, old → new (Toggl's word in brackets where it is Toggl's; phone
   sheet's and the PC box's tests from Phases 2 and 5.
 - Rewritten test (promise kept): `theRunningTimerSwitchIsPerDevice` finds the switch by its new name
   "Running timer"; it still promises the switch is per device.
+- Findability (phone): "make the app open on the Calendar" 5 actions (⚙ → Settings → First tab); "the phone
+  buzzes when you scroll a time, turn it off" 4 actions (the agent looked for "vibrate", so the hint now says
+  it). E2E: toggl-time-tracker 20 + 4 (after the day-total words above), edge cases 3 + 3, sync 14 + 9.
+- The live settings check (read-only, keys and numbers only) is in Phase 8's status.
 
 ## Phase 8 — Proof, then the report · M
 
