@@ -12,7 +12,7 @@
  * for `LONG_PRESS_MS` first, so scrolling and the day swipe stay the page's.
  */
 
-import { useContext, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -24,7 +24,8 @@ import { layOnto } from "../tabMergeService"
 import { withNeighbours } from "../timeFixService"
 import { AfterCheckContext } from "./afterCheck"
 import { announceNeighbours, undoOrSay } from "./neighbourNotice"
-import { IconCalendar, IconNext, IconPrev, IconStart } from "../icons"
+import { IconCalendar, IconDown, IconNext, IconPrev, IconStart } from "../icons"
+import { CalendarEntryBox, type CalendarBoxTarget } from "./CalendarEntryBox"
 import {
   DRAG_THRESHOLD_PX,
   LONG_PRESS_MS,
@@ -64,11 +65,14 @@ import {
   weekStartOf,
 } from "../timetrackFormatService"
 import {
+  continueEntry,
   createManualEntry,
+  deleteEntries,
   entrySeconds,
   isPlanned,
   isRunning,
   liveEntries,
+  restoreEntries,
   startTimer,
   undoDisplacement,
   updateEntry,
@@ -76,7 +80,18 @@ import {
 import type { CalendarEvent, EntryDraft, Id, IsoDate, TimeEntry, TimetrackState } from "../types"
 import { ColorDot, Dropdown, Segmented, plannedStripes } from "./primitives"
 
-type Range = "day" | "week"
+/** "workweek" is Toggl Track's "5 days": Monday to Friday of the week shown */
+type Range = "day" | "workweek" | "week"
+
+/** Toggl Track's view menu, "Week view ▾" (D-PC-CAL; W25 10:04) */
+const RANGE_NAMES: { id: Range; label: string }[] = [
+  { id: "week", label: "Week view" },
+  { id: "workweek", label: "5 days view" },
+  { id: "day", label: "Day view" },
+]
+
+/** On the PC a drag or a click on empty space makes a block in 15-minute steps, as Toggl's does (D-PC-CAL) */
+const PC_CREATE_SNAP = 15
 type ZoomId = (typeof CALENDAR_ZOOMS)[number]["id"]
 
 /** What a drag is doing, and where, drawn as the preview while it lasts */
@@ -159,6 +174,8 @@ export function CalendarView({
   onOpenIntegrations,
   anchor: anchorFromPage,
   onAnchor,
+  boxes = false,
+  onGoToProject,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
@@ -174,6 +191,14 @@ export function CalendarView({
    */
   anchor?: IsoDate
   onAnchor?: (day: IsoDate) => void
+  /**
+   * Toggl Track's box beside the block (the PC's Timer page, D-PC-CAL): a
+   * drag or a click on empty space draws a block and asks for it there, and a
+   * click on a block edits it there. Without it, a block opens `onEditEntry`
+   * and a drag writes the block at once, as on the phone.
+   */
+  boxes?: boolean
+  onGoToProject?: (projectId: Id) => void
 }) {
   const isMobile = useIsMobile()
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -204,7 +229,9 @@ export function CalendarView({
     else setOwnAnchor(day)
   }
   /** the week row above says which week this is, so the calendar's own steps are only for a Day view */
-  const rowAbove = onAnchor !== undefined && range === "week"
+  const rowAbove = onAnchor !== undefined && range !== "day"
+  /** what the box beside a block is showing, when it is open */
+  const [boxTarget, setBoxTarget] = useState<CalendarBoxTarget | null>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
   /**
    * The same drag, for the pointer handlers. A move and the release can
@@ -239,6 +266,11 @@ export function CalendarView({
 
   const days = useMemo(() => {
     if (range === "day") return [anchor]
+    // 5 days is Monday to Friday, whatever day the week starts on
+    if (range === "workweek") {
+      const monday = weekStartOf(anchor, 1)
+      return eachDay(monday, addDays(monday, 4))
+    }
     const start = weekStartOf(anchor, state.user.weekStart)
     return eachDay(start, addDays(start, 6))
   }, [range, anchor, state.user.weekStart])
@@ -273,8 +305,10 @@ export function CalendarView({
     // Only re-anchor when the visible range or zoom changes, not every tick
   }, [days[0], days.length, minuteHeight]) // deps intentionally narrow: see comment above
 
-  const minutesAt = (clientY: number, column: HTMLElement): number =>
-    snapMinutes((clientY - column.getBoundingClientRect().top) / minuteHeight)
+  const minutesAt = (clientY: number, column: HTMLElement, snap?: number): number =>
+    snapMinutes((clientY - column.getBoundingClientRect().top) / minuteHeight, snap)
+  /** a new block's steps: 15 minutes with the box, else the calendar's 5 */
+  const createSnap = boxes ? PC_CREATE_SNAP : undefined
 
   /**
    * THE PAGE MUST NOT SCROLL UNDER A HELD FINGER.
@@ -398,7 +432,7 @@ export function CalendarView({
     // a press on a block is a click, or a still hold, until the pointer has really moved: see `DragState`
     const moved = current.moved || Math.abs(event.clientY - pressed.armY) >= DRAG_THRESHOLD_PX
     if (!moved) return
-    const minutes = minutesAt(event.clientY, pressed.column)
+    const minutes = minutesAt(event.clientY, pressed.column, current.mode === "create" ? createSnap : undefined)
     if (moved === current.moved && minutes === current.currentMinutes) return
     // one tick of the phone's motor per 5-minute step; a mouse has none
     if (minutes !== current.currentMinutes && pressed.pointerType !== "mouse") tick()
@@ -468,6 +502,14 @@ export function CalendarView({
     // a press on a block that never moved: with a mouse, a click (the click handler opens it); held, nothing
     if (mode !== "create" && !drag.moved) return
 
+    if (mode === "create" && boxes) {
+      // a click is a 15-minute block where it was pressed (Toggl's default length); a drag is what it covered
+      const dragged = to - from >= PC_CREATE_SNAP
+      const start = dragged ? from : Math.min(from, 24 * 60 - PC_CREATE_SNAP)
+      setBoxTarget({ kind: "new", start: isoAtMinutes(day, start), stop: isoAtMinutes(day, dragged ? to : start + PC_CREATE_SNAP) })
+      return
+    }
+
     if (mode === "create") {
       if (to - from >= 5) {
         const result = createManualEntry(
@@ -511,6 +553,61 @@ export function CalendarView({
   /** ↑ and ↓ on a focused block move it 5 minutes, alone, like a drag of its body */
   const nudge = (entry: TimeEntry, minutes: number) => commitBlock(entry.id, shiftEntryBy(entry, minutes), false)
 
+  /** A block clicked, or Enter on it: the box beside it on the PC, the sheet elsewhere */
+  const openBlock = (entry: TimeEntry) => {
+    if (boxes) setBoxTarget({ kind: "edit", entryId: entry.id })
+    else onEditEntry(entry)
+  }
+
+  /** The box's ▶: the entry again from now, held until the check lands like every start (D2) */
+  const continueFromBox = (entry: TimeEntry) =>
+    (afterCheck ?? ((run) => run(latestState.current, nowIso())))((latest, tappedAt) => {
+      const result = continueEntry(latest, entry.id, tappedAt)
+      if (result.violations.length > 0) {
+        pushToast(result.violations[0].message, "error")
+        return
+      }
+      setState(layOnto(latest, result.state))
+      setBoxTarget(null)
+      const { displaced, started } = result
+      if (displaced && started) {
+        pushToast(
+          `Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`,
+          "info",
+          () => undoOrSay(() => latestState.current, (current) => undoDisplacement(current, started.id, displaced.id, nowIso()), setState, pushToast),
+        )
+      }
+    })
+
+  /** The box's ⋮ → Delete: no question, Toggl Track's words, and Undo */
+  const deleteFromBox = (entry: TimeEntry) => {
+    const checked = deleteEntries(latestState.current, [entry.id], nowIso())
+    if (checked.violations[0] && checked.removed.length === 0) {
+      pushToast(checked.violations[0].message, "error")
+      return
+    }
+    const now = nowIso()
+    setState((current) => deleteEntries(current, [entry.id], now).state)
+    pushToast("The time entry was deleted.", "info", () => setState((current) => restoreEntries(current, checked.removed)))
+  }
+
+  /** What the box sits beside: the block, or the one being drawn */
+  const boxAnchor = useCallback((): HTMLElement | null => {
+    const grid = scrollRef.current
+    if (!grid || !boxTarget) return null
+    return boxTarget.kind === "edit"
+      ? grid.querySelector<HTMLElement>(`[data-entry-id="${CSS.escape(boxTarget.entryId)}"]`)
+      : grid.querySelector<HTMLElement>("[data-preview]")
+  }, [boxTarget])
+
+  const zoomIndex = CALENDAR_ZOOMS.findIndex((z) => z.id === zoom)
+  const stepZoom = (direction: -1 | 1) => {
+    const next = CALENDAR_ZOOMS[zoomIndex + direction]
+    if (!next) return
+    setZoomTouched(true)
+    setZoom(next.id)
+  }
+
   const rangeLabel =
     range === "day"
       ? formatDayHeader(anchor, todayKey)
@@ -543,29 +640,53 @@ export function CalendarView({
         )}
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Segmented
-            size="sm"
-            value={range}
-            onChange={(next) => {
-              setRangeTouched(true)
-              setRange(next)
-            }}
-            options={[
-              { id: "day", label: "Day" },
-              { id: "week", label: "Week" },
-            ]}
-          />
-          <span className="hidden sm:inline-flex">
+          {isMobile ? (
             <Segmented
               size="sm"
-              value={zoom}
+              value={range === "workweek" ? "week" : range}
               onChange={(next) => {
-                setZoomTouched(true)
-                setZoom(next)
+                setRangeTouched(true)
+                setRange(next)
               }}
-              options={CALENDAR_ZOOMS.map((z) => ({ id: z.id, label: z.label }))}
+              options={[
+                { id: "day", label: "Day" },
+                { id: "week", label: "Week" },
+              ]}
             />
-          </span>
+          ) : (
+            // Toggl Track's "Week view ▾" with Week / 5 days / Day (D-PC-CAL)
+            <Dropdown
+              align="right"
+              width="w-44"
+              ariaLabel="Calendar view"
+              trigger={() => (
+                <span className="flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-sm">
+                  {RANGE_NAMES.find((option) => option.id === range)?.label}
+                  <IconDown className="size-3 text-muted-foreground" />
+                </span>
+              )}
+            >
+              {(close) => (
+                <div className="py-1 text-sm">
+                  {RANGE_NAMES.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={range === option.id}
+                      onClick={() => {
+                        setRangeTouched(true)
+                        setRange(option.id)
+                        close()
+                      }}
+                      className={cn("flex w-full items-center px-3 py-1.5 text-left hover:bg-secondary/60", range === option.id && "text-primary")}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Dropdown>
+          )}
           <Button variant="outline" size="sm" onClick={onOpenIntegrations}>
             <IconCalendar className="size-4" />
             {enabledCalendars.length > 0 ? `${enabledCalendars.length} calendar${enabledCalendars.length > 1 ? "s" : ""}` : "Connect calendar"}
@@ -575,9 +696,34 @@ export function CalendarView({
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* day headers */}
-        <div className={cn("flex border-b border-border bg-secondary/30", range === "week" && "min-w-[640px] sm:min-w-0")}>
-          {/* must match the ruler below exactly, or every day column is offset */}
-          <div className={cn(gutter, "shrink-0 border-r border-border")} />
+        <div className={cn("flex border-b border-border bg-secondary/30", range !== "day" && "min-w-[640px] sm:min-w-0")}>
+          {/* must match the ruler below exactly, or every day column is offset; on the PC it holds Toggl's − + zoom */}
+          <div className={cn(gutter, "flex shrink-0 items-center justify-center gap-0.5 border-r border-border")}>
+            {!isMobile && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => stepZoom(-1)}
+                  disabled={zoomIndex <= 0}
+                  aria-label="Zoom out"
+                  title={`Zoom out (${CALENDAR_ZOOMS[zoomIndex - 1]?.label ?? CALENDAR_ZOOMS[0].label})`}
+                  className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-30"
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  onClick={() => stepZoom(1)}
+                  disabled={zoomIndex >= CALENDAR_ZOOMS.length - 1}
+                  aria-label="Zoom in"
+                  title={`Zoom in (${CALENDAR_ZOOMS[zoomIndex + 1]?.label ?? CALENDAR_ZOOMS.at(-1)!.label})`}
+                  className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-30"
+                >
+                  +
+                </button>
+              </>
+            )}
+          </div>
           {days.map((day) => (
             <div key={day} data-day-header className="flex-1 border-r border-border px-2 py-1.5 last:border-r-0">
               <p className={cn("text-xs font-semibold", day === todayKey && "text-primary")}>
@@ -606,7 +752,7 @@ export function CalendarView({
           <div
             className={cn(
               "relative flex select-none [-webkit-touch-callout:none]",
-              range === "week" && "min-w-[640px] sm:min-w-0",
+              range !== "day" && "min-w-[640px] sm:min-w-0",
               drag && "cursor-grabbing",
             )}
             data-calendar-grid
@@ -654,8 +800,10 @@ export function CalendarView({
                   className="relative flex-1 border-r border-border last:border-r-0"
                   style={{ height: hourHeight * 24 }}
                   onPointerDown={(event) => {
-                    // empty space: a new block from here
-                    const minutes = minutesAt(event.clientY, event.currentTarget)
+                    // empty space: a new block from here; with the box, from the quarter pressed in
+                    const minutes = boxes
+                      ? Math.floor((event.clientY - event.currentTarget.getBoundingClientRect().top) / minuteHeight / PC_CREATE_SNAP) * PC_CREATE_SNAP
+                      : minutesAt(event.clientY, event.currentTarget)
                     beginGesture(event, { day, mode: "create", startMinutes: minutes, currentMinutes: minutes, moved: true })
                   }}
                 >
@@ -701,6 +849,7 @@ export function CalendarView({
                         key={entry.id}
                         data-block
                         data-entry-block
+                        data-entry-id={entry.id}
                         data-planned={planned || undefined}
                         data-held={held || undefined}
                         data-dragging={dragging ? true : undefined}
@@ -745,12 +894,12 @@ export function CalendarView({
                             suppressClick.current = false
                             return
                           }
-                          if (!dragRef.current) onEditEntry(entry)
+                          if (!dragRef.current) openBlock(entry)
                         }}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault()
-                            onEditEntry(entry)
+                            openBlock(entry)
                           } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
                             event.preventDefault()
                             nudge(entry, event.key === "ArrowUp" ? -5 : 5)
@@ -863,10 +1012,12 @@ export function CalendarView({
                     )
                   })}
 
-                  {/* the block being made: striped when it would start after now, as it will be once made (Q2) */}
-                  {isDragDay && drag.mode === "create" && (() => {
-                    const from = Math.min(drag.startMinutes, drag.currentMinutes)
-                    const to = Math.max(drag.startMinutes, drag.currentMinutes)
+                  {/* the block being made: striped when it would start after now, as it will be once made (Q2);
+                      with the box, it stays drawn until the box adds it or is closed */}
+                  {((isDragDay && drag.mode === "create") || (!drag && boxTarget?.kind === "new" && dateKey(boxTarget.start) === day)) && (() => {
+                    const pending = !drag && boxTarget?.kind === "new" ? boxTarget : null
+                    const from = pending ? minutesIntoDay(pending.start) : Math.min(drag!.startMinutes, drag!.currentMinutes)
+                    const to = pending ? (dateKey(pending.stop) === day ? minutesIntoDay(pending.stop) : 24 * 60) : Math.max(drag!.startMinutes, drag!.currentMinutes)
                     const planned = epochSeconds(isoAtMinutes(day, from)) > nowSec
                     return (
                       <div
@@ -898,12 +1049,31 @@ export function CalendarView({
       <p className="text-[11px] text-muted-foreground">
         {isMobile
           ? "Hold empty space and drag to plan or log a block · hold a block to move it, or its top or bottom edge to resize · tap to edit."
-          : "Drag empty space to create an entry · drag a block to move it, its top or bottom edge to resize · click it to edit."}
+          : boxes
+            ? "Drag or click empty space to add an entry · drag a block to move it, its top or bottom edge to resize · click it to edit."
+            : "Drag empty space to create an entry · drag a block to move it, its top or bottom edge to resize · click it to edit."}
         {isMobile && range === "day" && " Swipe sideways for another day."}
         {splitColumns
           ? " Calendar events share each day on the right and never change your entries."
           : " Connect a calendar to see your events beside your time."}
       </p>
+
+      {boxes && boxTarget && (
+        <CalendarEntryBox
+          target={boxTarget}
+          state={state}
+          setState={setState}
+          latestState={() => latestState.current}
+          pushToast={pushToast}
+          nowSec={nowSec}
+          anchor={boxAnchor}
+          onClose={() => setBoxTarget(null)}
+          onContinue={continueFromBox}
+          onDelete={deleteFromBox}
+          onEditEntry={onEditEntry}
+          onGoToProject={onGoToProject}
+        />
+      )}
     </div>
   )
 }

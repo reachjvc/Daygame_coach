@@ -1125,7 +1125,7 @@ function EntryFields({
  * strings `TimeEntryContextMenu.*`]. "Edit details…", which Toggl's menu does
  * not have, is kept after them. The phone keeps its own order.
  */
-function EntryMenu({
+export function EntryMenu({
   entry,
   state,
   setState,

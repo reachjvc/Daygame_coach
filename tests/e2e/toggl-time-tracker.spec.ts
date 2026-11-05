@@ -610,7 +610,7 @@ test.describe('Toggl-style time tracker', () => {
   test('the calendar takes a mouse: drag to make, drag to move, either edge to resize, click to open', async ({ page }) => {
     await openFreshTracker(page)
     await openCalendar(page)
-    await page.locator('main').getByRole('button', { name: 'Day', exact: true }).click()
+    await chooseDayView(page)
     await page.locator('main').getByRole('button', { name: 'Next', exact: true }).click()
     await scrollCalendarTo(page, 9 * 60)
 
@@ -619,6 +619,9 @@ test.describe('Toggl-style time tracker', () => {
     await page.mouse.down()
     for (let m = 5; m <= 90; m += 5) await page.mouse.move(column.x, column.yAt(10 * 60 + m))
     await page.mouse.up()
+    // on a PC the drag asks for the block in the box beside it, and Add time entry makes it (Plans/toggl-parity.md Phase 6)
+    const asked = page.getByRole('dialog', { name: 'New time entry' })
+    if (await page.getByRole('navigation', { name: 'Tracker' }).isVisible()) await asked.getByRole('button', { name: 'Add time entry' }).click()
     const block = page.locator('[data-entry-block]')
     await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
 
@@ -639,9 +642,9 @@ test.describe('Toggl-style time tracker', () => {
     await page.mouse.up()
     await expect(block).toHaveAccessibleName('(no description), 09:45 to 11:45, planned')
 
-    // a click opens it and changes nothing
+    // a click opens it and changes nothing: the box beside it on a PC, the sheet on a phone
     await block.click()
-    const sheet = page.getByRole('dialog', { name: 'Time entry details' })
+    const sheet = page.getByRole('dialog', { name: /^(Time entry details|Edit time entry)$/ })
     await expect(sheet).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(sheet).toBeHidden()
@@ -656,6 +659,17 @@ test.describe('Toggl-style time tracker', () => {
     expect(await entriesOnAccount(page)).toEqual([''])
   })
 })
+
+/** Day view: from Toggl Track's "Week view ▾" menu on a PC (Plans/toggl-parity.md Phase 6), the Day chip on a phone */
+async function chooseDayView(page: Page) {
+  const menu = page.getByRole('button', { name: 'Calendar view' })
+  if (await menu.isVisible()) {
+    await menu.click()
+    await page.getByRole('button', { name: 'Day view' }).click()
+  } else {
+    await page.locator('main').getByRole('button', { name: 'Day', exact: true }).click()
+  }
+}
 
 /** The calendar's first day column, measured where it is drawn now: `yAt(minutes)` is a page y */
 async function calendarColumn(page: Page) {

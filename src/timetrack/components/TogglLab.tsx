@@ -787,6 +787,9 @@ export function TogglLab({
       }}
       anchor={onTimerPage ? pcAnchor : undefined}
       onAnchor={onTimerPage ? setWeekAnchor : undefined}
+      // Toggl Track's box beside the block, on the PC's Timer page (Phase 6, D-PC-CAL)
+      boxes={onTimerPage}
+      onGoToProject={goToProject}
     />
   )
 

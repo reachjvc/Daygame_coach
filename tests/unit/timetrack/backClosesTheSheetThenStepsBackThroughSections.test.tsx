@@ -75,6 +75,18 @@ async function mount(address: string) {
 }
 
 beforeEach(() => {
+  /**
+   * A phone, as the Back button this is about is Android's. jsdom has no
+   * `matchMedia`, which the tracker reads as a PC, and on a PC a click on a
+   * calendar block opens the box beside it instead of the sheet
+   * (Plans/toggl-parity.md Phase 6); the sheet is one more click away there.
+   */
+  vi.stubGlobal("matchMedia", (query: string) => ({
+    matches: query.includes("max-width"),
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }))
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(NOW)
   vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 401 })))
