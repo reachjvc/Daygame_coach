@@ -77,12 +77,13 @@ import {
   matchAutotracker,
   moveEntryToDay,
   stopTimer,
+  undoDisplacement,
 } from "../../timetrackService"
 import type { EntryDraft, Id, IsoDateTime, TimetrackState } from "../../types"
 import type { AfterCheck } from "../afterCheck"
 import { MomentDrums } from "../Drums"
 import type { MomentKind } from "../MomentPicker"
-import { announceNeighbours } from "../neighbourNotice"
+import { announceNeighbours, undoOrSay } from "../neighbourNotice"
 import { DescriptionField, ProjectPicker, TagPicker } from "../pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow } from "../primitives"
 import { landOnCurrent, type SetState } from "./landOnCurrent"
@@ -345,7 +346,15 @@ export function EntrySheet({
       }
       // the new entry's id is made here, once
       setState(layOnto(latest, made.state))
-      if (made.stopped) pushToast(`Stopped “${made.stopped.description.trim() || "(no description)"}”, which was running`, "info")
+      const { stopped, created } = made
+      // the other device's timer stopped where this one began: said, with both halves back on Undo
+      if (stopped && created) {
+        pushToast(
+          `Stopped “${stopped.description.trim() || "(no description)"}” and started “${created.description.trim() || "(no description)"}”`,
+          "info",
+          () => undoOrSay(() => latest, (current) => undoDisplacement(current, created.id, stopped.id, serverNowIso()), setState, pushToast),
+        )
+      }
     }
     // a timer starting waits for the check like Start does; its words wait as the next thing if the other device beat it (A5)
     if (final.stop === null) afterCheck(create, { keepAsNext: entryDraftOf(final) })

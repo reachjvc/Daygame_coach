@@ -30,7 +30,7 @@ import {
   parseTimeInput,
   unreadableTimeMessage,
 } from "./timetrackFormatService"
-import { createManualEntry, liveEntries, updateEntry } from "./timetrackService"
+import { createManualEntry, liveEntries, reconcileRunningEntries, runningEntry, updateEntry } from "./timetrackService"
 import type { DateFormatId, EntryDraft, Id, IsoDate, IsoDateTime, RoundingConfig, SaveViolation, TimeEntry, TimetrackState } from "./types"
 
 
@@ -416,11 +416,20 @@ export interface CreateOutcome {
  * the tap, unless the start was moved — and a running one, if the other
  * device started one meanwhile, ends there (`switchAt`, one change, one
  * Undo). With an end it is a finished entry (⊕, or a length typed).
+ *
+ * STARTING A TIMER STOPS THE RUNNING ONE, as in Toggl. When the other device's
+ * timer began after the sheet's start, ending it there would end it before it
+ * began, and `switchAt` refused: "That is before “Gym” started", with the
+ * same minute on screen, and typing the minute of now refused too — the only
+ * ways out were waiting or discarding (two-devices audit, Phase 8). Then the
+ * new one starts now, and the other ends now.
  */
 export function createFromSheet(state: TimetrackState, draft: SheetDraft, nowIso: IsoDateTime): CreateOutcome {
   const words = entryDraftOf(draft)
   if (draft.stop === null) {
-    const begun = switchAt(state, words, draft.start, nowIso)
+    const other = runningEntry(reconcileRunningEntries(state).state)
+    const start = other && ms(draft.start) < ms(other.start) ? nowIso : draft.start
+    const begun = switchAt(state, words, start, nowIso)
     return { state: begun.state, violations: begun.violations, created: begun.started, stopped: begun.stopped }
   }
   const made = createManualEntry(state, { draft: words, start: draft.start, stop: draft.stop }, nowIso)
