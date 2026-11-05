@@ -87,6 +87,20 @@ const nav = (page: import('@playwright/test').Page, name: string | RegExp) =>
   page.getByRole('navigation').getByRole('button', { name })
 
 /**
+ * The calendar: on a PC the Timer page's Calendar view (its "Calendar | List
+ * view" switch, Plans/toggl-parity.md Phase 5), on a phone the Calendar tab.
+ */
+async function openCalendar(page: import('@playwright/test').Page) {
+  const sidebar = page.getByRole('navigation', { name: 'Tracker' })
+  if (!(await sidebar.isVisible())) {
+    await nav(page, 'Calendar').click()
+    return
+  }
+  await sidebar.getByRole('button', { name: /^Timer/ }).click()
+  await page.getByRole('group', { name: 'Timer view' }).getByRole('button', { name: 'Calendar', exact: true }).click()
+}
+
+/**
  * WHAT EACH TAB AND THE ACCOUNT HELD, for a failure that only happens in CI.
  *
  * "Two tabs stay in step" failed on Firefox and Safari in CI's production
@@ -217,7 +231,7 @@ test.describe('Toggl-style time tracker', () => {
 
     await expect(page.getByText(/Imported 1 event \(skipped 1 all-day\)/)).toBeVisible({ timeout: 10_000 })
 
-    await nav(page, 'Calendar').click()
+    await openCalendar(page)
     await expect(page.locator('main')).toContainText('Imported standup')
   })
 
@@ -387,11 +401,18 @@ test.describe('Toggl-style time tracker', () => {
     await page.keyboard.press('Escape')
     await expect.poll(focused).toBe('Tags')
 
-    // a menu has no autoFocus field of its own, so the panel has to place it
+    // a menu has no autoFocus field of its own, so the panel has to place it:
+    // on its first item that can be pressed, and Tab goes on to the next. Which
+    // items those are depends on the layout's order (on a PC, Toggl's:
+    // Plans/toggl-parity.md Phase 5; Split is greyed on an entry this short).
     await row.getByRole('button', { name: 'More actions for this time entry' }).click()
-    await expect.poll(focused).toBe('Duplicate')
+    const items = await page
+      .locator('[data-dropdown-panel] button:not([disabled])')
+      .evaluateAll((buttons) => buttons.map((b) => b.textContent?.trim()))
+    expect(items.length).toBeGreaterThan(1)
+    await expect.poll(focused).toBe(items[0])
     await page.keyboard.press('Tab')
-    await expect.poll(focused).toBe('Add to favorites')
+    await expect.poll(focused).toBe(items[1])
   })
 
   test('idle detection never fires while you work elsewhere, and asks when you come back @timing', async ({ page }) => {
@@ -587,7 +608,7 @@ test.describe('Toggl-style time tracker', () => {
    */
   test('the calendar takes a mouse: drag to make, drag to move, either edge to resize, click to open', async ({ page }) => {
     await openFreshTracker(page)
-    await nav(page, 'Calendar').click()
+    await openCalendar(page)
     await page.locator('main').getByRole('button', { name: 'Day', exact: true }).click()
     await page.locator('main').getByRole('button', { name: 'Next', exact: true }).click()
     await scrollCalendarTo(page, 9 * 60)

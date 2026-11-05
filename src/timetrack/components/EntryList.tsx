@@ -19,6 +19,7 @@ import { useIsMobile } from "../hooks/useIsMobile"
 import type { PushToast } from "../hooks/useTimetrack"
 import {
   IconDelete,
+  IconCopyText,
   IconDuplicate,
   IconEdit,
   IconFavorite,
@@ -220,8 +221,9 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
      * delete looks exactly like a successful one.
      */
     if (result.removed.length > 0) {
-      // Toggl's words for one; a count for several (D-PC-LIST)
-      const said = result.removed.length === 1 ? "The time entry was deleted." : `${plural(result.removed.length, "time entry", "time entries")} deleted`
+      // Toggl Track web's words for one, on the PC (D-PC-LIST); a count for several, and on the phone
+      const said =
+        !isMobile && result.removed.length === 1 ? "The time entry was deleted." : `${plural(result.removed.length, "time entry", "time entries")} deleted`
       pushToast(said, "info", () =>
         setState((latest) => restoreEntries(latest, result.removed)),
       )
@@ -1227,7 +1229,7 @@ function EntryMenu({
           const copyDescription = (
             <MenuItem
               key="description"
-              icon={<IconDuplicate className="size-3.5" />}
+              icon={<IconCopyText className="size-3.5" />}
               label="Copy description"
               disabled={entry.description.trim() === ""}
               onClick={() => {

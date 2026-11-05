@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  ClipboardCopy,
   CircleDollarSign,
   Clock,
   Coffee,
@@ -82,6 +83,7 @@ export const IconList = List
 export const IconGrid = LayoutGrid
 export const IconEdit = Pencil
 export const IconDuplicate = Copy
+export const IconCopyText = ClipboardCopy
 export const IconSplit = Scissors
 export const IconUndo = RotateCcw
 export const IconArchive = Archive
