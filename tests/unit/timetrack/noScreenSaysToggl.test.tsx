@@ -55,7 +55,7 @@ async function open(section: string) {
 /** Press each tab of a row of tabs that is on screen, reading the page after each */
 async function readEachTab(names: string[], said: string[]) {
   for (const name of names) {
-    const tab = screen.queryAllByRole("button", { name, exact: true })[0] ?? screen.queryAllByRole("tab", { name, exact: true })[0]
+    const tab = screen.queryAllByRole("button", { name })[0] ?? screen.queryAllByRole("tab", { name })[0]
     if (!tab) continue
     await act(async () => {
       fireEvent.click(tab)
