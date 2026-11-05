@@ -739,7 +739,15 @@ function EntryFields({
     )
   }
 
-  const continueButton = (
+  /**
+   * No ▶ on the row that is already running: a first-time user saw it and could
+   * not tell what it would do (audit findability, 2026-11-05; the phone lost it
+   * in Phase 3, and Toggl's list does not show the running entry at all). The
+   * slot stays, empty, so the columns line up.
+   */
+  const continueButton = running ? (
+    <span aria-hidden className={touchTarget} />
+  ) : (
     <button
       type="button"
       onClick={() =>
@@ -931,6 +939,8 @@ function EntryFields({
             if (description !== entry.description) patch({ description })
           }}
           disabled={!editable}
+          // named for what it is: the placeholder alone made a screen reader call every row "(no description)"
+          aria-label="Description"
           placeholder="(no description)"
           className={cn(
             // a ring while typing: with none, a new user could not tell the name had become a box (findability check, 2026-11-05)
