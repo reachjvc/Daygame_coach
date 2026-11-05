@@ -55,6 +55,7 @@ import type {
 } from "./types"
 
 import { newId } from "./idService"
+import { startTypedInto } from "./typedStartService"
 import { ROUTES } from "@/src/shared/routes"
 
 // ---------------------------------------------------------------------------
@@ -911,13 +912,10 @@ export function setEntryStart(
 ): { state: TimetrackState; violations: SaveViolation[] } {
   const entry = state.entries.find((e) => e.id === entryId)
   if (!entry) return { state, violations: [] }
-  if (entry.stop === null || epochMillis(start) <= epochMillis(entry.stop)) {
-    return updateEntry(state, entryId, { start }, nowIso)
-  }
-  // to the millisecond, so a zero-length entry stays in order (B1)
-  const lengthMs = epochMillis(entry.stop) - epochMillis(entry.start)
-  const stop = new Date(epochMillis(start) + lengthMs).toISOString()
-  return updateEntry(state, entryId, { start, stop }, nowIso)
+  // the one rule for a typed start, shared with the drums' unsaved pair: see `startTypedInto`
+  const landed = startTypedInto(entry, start)
+  if (landed.stop === entry.stop) return updateEntry(state, entryId, { start }, nowIso)
+  return updateEntry(state, entryId, { start, stop: landed.stop }, nowIso)
 }
 
 /**

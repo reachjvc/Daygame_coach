@@ -67,7 +67,6 @@ import {
   moveEntryToDay,
   restoreEntries,
   setEntryDuration,
-  setEntryStart,
   setRunningElapsed,
   splitEntry,
   startLinkFor,
@@ -85,6 +84,7 @@ import {
   mendJoint,
   shiftEdge,
   startWhereLastEnded,
+  typeStart,
   withNeighbours,
   type Joint,
 } from "../timeFixService"
@@ -659,9 +659,9 @@ function EntryFields({
        */
       const now = nowIso()
       const apply = (base: TimetrackState) =>
-        withNeighbours(base, entry.id, now, (edited) =>
-          which === "stop" ? updateEntry(edited, entry.id, { stop: at }, now) : setEntryStart(edited, entry.id, at, now),
-        )
+        which === "stop"
+          ? withNeighbours(base, entry.id, now, (edited) => updateEntry(edited, entry.id, { stop: at }, now))
+          : typeStart(base, entry.id, at, now)
       const checked = apply(latestState.current)
       if (checked.violations[0]) {
         pushToast(checked.violations[0].message, "error")
@@ -1657,9 +1657,9 @@ export function EntryDetailModalBody({
       // a touching neighbour moves with the edge (D12); a start after the end moves the entry (`setEntryStart`)
       const now = nowIso()
       const landed = landOnCurrent((base) =>
-        withNeighbours(base, entry.id, now, (edited) =>
-          field === "stop" ? updateEntry(edited, entry.id, { stop: at }, now) : setEntryStart(edited, entry.id, at, now),
-        ),
+        field === "stop"
+          ? withNeighbours(base, entry.id, now, (edited) => updateEntry(edited, entry.id, { stop: at }, now))
+          : typeStart(base, entry.id, at, now),
       )
       if (!landed) return
       if (field === "stop") announceNextDay(current.start, at, latestState.current, pushToast)

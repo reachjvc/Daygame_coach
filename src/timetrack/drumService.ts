@@ -27,6 +27,7 @@
 import { addDays, dateKey, dateKeyToDate, daysBetween, formatDuration, pad2, parseDurationInput, parseEndTimeInput, parseStartTimeInput } from "./timetrackFormatService"
 import { LONG_ENTRY_SECONDS } from "./timetrackFormatService"
 import type { DurationFormat, IsoDate, IsoDateTime, TimeFormat } from "./types"
+import { startTypedInto } from "./typedStartService"
 
 /** What three drums show: a day and a time on the wall clock, 24-hour */
 export interface DrumParts {
@@ -328,7 +329,8 @@ export function typedIntoPair(
   const end = pair.stop ?? nowIso
   if (field === "start") {
     const start = parseStartTimeInput(text, pair.start, end)
-    return start ? { ...pair, start } : null
+    // the rule a saved entry's start box follows: the end stays, unless the start lands after it (`startTypedInto`)
+    return start ? startTypedInto(pair, start) : null
   }
   if (field === "stop") {
     const stop = parseEndTimeInput(text, pair.start)

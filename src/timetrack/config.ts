@@ -76,6 +76,12 @@ export const BACKGROUND_KEY = "toggl-clone:background"
 export const TIMER_BAR_KEY = "toggl-clone:timer-bar"
 export const MANUAL_FORM_KEY = "toggl-clone:manual-form"
 /**
+ * The PC Timer page's "Calendar | List view" choice, kept per browser in
+ * `localStorage` (D-PC-SHELL in Plans/toggl-parity.md). Not about anyone's
+ * entries, so it is not one of the keys that follow the account.
+ */
+export const TIMER_VIEW_KEY = "time-tracker:timer-view"
+/**
  * Toggl requires a `created_with` on every entry (toggl).
  *
  * It named `/test/toggl` until this was changed, which meant every entry the

@@ -24,7 +24,7 @@
  */
 
 import { dateKey, epochMillis, epochSeconds, formatWhen, isoFromEpochSeconds, startOfDayIso } from "./timetrackFormatService"
-import { liveEntries, reconcileRunningEntries, runningEntry, startTimer, updateEntry } from "./timetrackService"
+import { liveEntries, reconcileRunningEntries, runningEntry, setEntryStart, startTimer, updateEntry } from "./timetrackService"
 import type { EntryDraft, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "./types"
 
 /**
@@ -346,6 +346,24 @@ export function withNeighbours<R extends { state: TimetrackState; violations: Sa
     to: newEdge,
   }
   return { ...alone, state: followed.state, moved: [move] }
+}
+
+/**
+ * A START TYPED INTO A ROW, THE SHEET OR THE PC'S RUNNING-TIME BOX (D-PC-LIST).
+ *
+ * The one rule (`startTypedInto`, via `setEntryStart`): the end stays and the
+ * length changes, or a running timer goes on from the new start; a start after
+ * the end moves the entry and keeps its length. A touching neighbour's end
+ * follows a start that moved alone (D12, `withNeighbours`). Every screen that
+ * takes a typed start calls this, so none of them can grow a rule of its own.
+ */
+export function typeStart(
+  state: TimetrackState,
+  entryId: Id,
+  startIso: IsoDateTime,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[]; moved: NeighbourMove[]; held: NeighbourHeld[] } {
+  return withNeighbours(state, entryId, nowIso, (edited) => setEntryStart(edited, entryId, startIso, nowIso))
 }
 
 /** "Keep ‘B’ as it was": B's edge goes back, and the edit that moved it stays */
