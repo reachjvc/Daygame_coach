@@ -532,6 +532,7 @@ export function DescriptionField({
   className,
   autoFocus,
   inline,
+  askProject,
 }: {
   state: TimetrackState
   value: string
@@ -552,6 +553,12 @@ export function DescriptionField({
    * what was typed; # the tags and "Create “x”" (`inlineChoices`).
    */
   inline?: { onClearProject: () => void; onCreateProject: (name: string) => void; onCreateTag: (name: string) => void }
+  /**
+   * Bumped by the phone sheet's "@ Add a project" chip, which has put an @ at
+   * the end of the name: the field takes the focus with the caret after it,
+   * and the inline list opens, as Toggl's chip does (V1 0:32).
+   */
+  askProject?: number
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
@@ -621,6 +628,17 @@ export function DescriptionField({
     // (On the inline lists the first row is "No Project", which is a choice too.)
     setHighlight(found ? 0 : -1)
   }
+
+  useEffect(() => {
+    const input = inputRef.current
+    if (!askProject || !input) return
+    input.focus()
+    const end = input.value.length
+    input.setSelectionRange(end, end)
+    syncToken(input.value, end)
+    // only a new ask: `syncToken` reads nothing that changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askProject])
 
   /** a header names a client; Enter and the arrows go past it */
   const pickable = (index: number) => suggestions[index]?.choice?.kind !== "header"

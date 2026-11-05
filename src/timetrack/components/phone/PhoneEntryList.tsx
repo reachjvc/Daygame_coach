@@ -200,6 +200,8 @@ export const PhoneEntryList = memo(function PhoneEntryList({
       {groups.map((group) => {
         // planned entries are in the calendar, not here, until they start (D-PLANNED)
         const rows = listedRows(group, nowSec)
+        // a day whose only entry is the running one is the bar's until it stops
+        if (rows.length === 0 && group.plannedSeconds === 0) return null
         return (
         <section key={group.date} className="pt-2">
           <div className="flex items-baseline justify-between px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

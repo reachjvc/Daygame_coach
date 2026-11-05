@@ -197,6 +197,17 @@ describe("⚙", () => {
   })
 })
 
+describe("an entry with no project (Toggl leaves the line empty)", () => {
+  test("its row and the running bar print no \"No project\", and a row keeps its tags", async () => {
+    asPhone()
+    const copy = withHistory()
+    copy.entries[0] = { ...copy.entries[0], projectId: null, tagIds: ["50"] }
+    await open(startTimer(copy, { description: "Call", projectId: null, taskId: null, tagIds: [], billable: false }, new Date(2026, 7, 10, 11, 0).toISOString()).state)
+    expect(screen.queryAllByText(/No project/)).toEqual([])
+    expect(within(screen.getByRole("main")).getByText(/deep/)).toBeTruthy()
+  })
+})
+
 describe("every tab (audit findability, Phase 8)", () => {
   test("opens at its top: the Calendar's week strip was scrolled out of sight", async () => {
     asPhone()

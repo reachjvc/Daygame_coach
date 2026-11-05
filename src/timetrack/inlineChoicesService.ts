@@ -22,7 +22,7 @@ export type InlineChoice =
   | { kind: "create-tag"; key: string; label: string; name: string }
 
 export const NO_PROJECT = "No Project"
-export const createProjectLabel = (name: string) => `Create “${name}”`
+export const createProjectLabel = (name: string) => (name ? `Create “${name}”` : "Create a new project")
 export const createTagLabel = (name: string) => `Create “${name}”`
 
 /** The rows for `@query` or `#query`, in order; headers are not choices */
@@ -42,7 +42,8 @@ export function inlineChoices(state: TimetrackState, token: { kind: "project" | 
     if (group.client) rows.push({ kind: "header", key: `client:${group.client.id}`, label: group.client.name })
     for (const project of group.projects) rows.push({ kind: "project", key: `project:${project.id}`, label: project.name, id: project.id, color: project.color })
   }
-  if (query && !state.projects.some((project) => project.active && project.name.toLowerCase() === query.toLowerCase())) {
+  // with only @ typed it is still there, and asks for the name (`DescriptionField`'s caller)
+  if (!state.projects.some((project) => project.active && project.name.toLowerCase() === query.toLowerCase())) {
     rows.push({ kind: "create-project", key: "create-project", label: createProjectLabel(query), name: query })
   }
   return rows

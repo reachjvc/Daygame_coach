@@ -196,11 +196,20 @@ describe("planned entries (D-PLANNED)", () => {
 })
 
 describe("what the findability run stumbled on", () => {
-  test("the running row has no ▷: the bar at the bottom is the timer's control", async () => {
+  test("the running entry is the bar's, not a row (Toggl, V1 2:02; H25 f001), and the day still counts it", async () => {
     await open(startTimer(history(), { description: "Call", projectId: null, taskId: null, tagIds: [], billable: false }, new Date(2026, 7, 10, 11, 30).toISOString()).state)
-    const running = main().getByText("Call").closest("[data-swipe-row]") as HTMLElement
-    expect(within(running).queryByRole("button", { name: "Continue this entry" })).toBeNull()
+    expect(main().queryByText("Call"), "the running entry is also a row").toBeNull()
+    expect(within(screen.getByTestId("run-bar")).getByText("Call")).toBeTruthy()
+    // 1:00 + 1:00 finished, and the half hour running: our day total counts it (a deliberate difference)
+    expect(main().getByText("Today").parentElement?.textContent).toContain("2:30")
     expect(within(row("Email")).getByRole("button", { name: "Continue this entry" })).toBeTruthy()
+  })
+
+  test("a group whose only live member runs shows nothing until it stops", async () => {
+    const copy = startTimer(baseState({ entries: [] }), { description: "Gym", projectId: null, taskId: null, tagIds: [], billable: false }, new Date(2026, 7, 10, 11, 30).toISOString()).state
+    await open(copy)
+    expect(main().queryByText("Gym")).toBeNull()
+    expect(main().queryByText("Today")).toBeNull()
   })
 
   test("the sync dot is named, and a tap says what it means", async () => {

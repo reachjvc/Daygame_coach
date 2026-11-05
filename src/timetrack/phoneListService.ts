@@ -9,10 +9,12 @@
  *
  * Planned entries — ones that have not begun — are in the calendar and not in
  * the list until they start, as Toggl's future entries are [HELP]. The day
- * still says how much is planned beside its total.
+ * still says how much is planned beside its total. The running entry is the
+ * bar's, not a row, until it stops (Toggl, V1 2:02, 4:33; H25 help_14 f001);
+ * the day's total keeps counting it, which is ours, not Toggl's.
  */
 
-import { isPlanned } from "./timetrackService"
+import { entrySeconds, isPlanned, isRunning } from "./timetrackService"
 import type { DayGroup, EntryRow } from "./types"
 
 /** How far a finger may drift before it is going somewhere */
@@ -41,7 +43,16 @@ export function swipeAction(dx: number, width: number): SwipeAction {
   return null
 }
 
-/** A row the list shows: not one whose every entry has yet to begin (D-PLANNED) */
+/**
+ * The rows the list shows: each with its entries that have begun and stopped.
+ * A row left with none is not shown — a group whose only live member runs
+ * shows nothing until it stops; one left with some is shown with those.
+ */
 export function listedRows(group: DayGroup, nowSec: number): EntryRow[] {
-  return group.rows.filter((row) => row.entries.some((entry) => !isPlanned(entry, nowSec)))
+  return group.rows.flatMap((row) => {
+    const shown = row.entries.filter((entry) => !isPlanned(entry, nowSec) && !isRunning(entry))
+    if (shown.length === 0) return []
+    if (shown.length === row.entries.length) return [row]
+    return [{ ...row, entries: shown, grouped: shown.length > 1, totalSeconds: shown.reduce((sum, entry) => sum + entrySeconds(entry, nowSec), 0) }]
+  })
 }

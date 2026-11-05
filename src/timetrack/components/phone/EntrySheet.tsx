@@ -194,6 +194,12 @@ export function EntrySheet({
   /** one tap on a chip makes it typeable: its input takes the focus, its time selected (findability 2026-11-05) */
   const focusChip = useRef<Edge | null>(null)
   const [moving, setMoving] = useState(false)
+  /** the "@ Add a project" chip's asks (`DescriptionField`'s `askProject`) */
+  const [askProject, setAskProject] = useState(0)
+  /** "Create a new project" with no name typed: the name it asks for */
+  const [namingProject, setNamingProject] = useState<string | null>(null)
+  /** ⋮ "Project and task…": the full picker, with tasks, which the inline list does not offer */
+  const [pickingProject, setPickingProject] = useState(false)
 
   // what is typed and not yet applied: a ref too, because Enter applies it and the blur that follows must not again
   const [chipText, setChipText] = useState<string | null>(null)
@@ -414,7 +420,11 @@ export function EntrySheet({
     const label = which === "start" ? "Start" : "End"
     if (iso === null) {
       // a running entry's end is "now", with no date, as Toggl's is [H25 help_14 f012]
-      return <span className="flex min-h-11 items-center justify-center rounded-lg px-3 text-sm tabular-nums">now</span>
+      return (
+        <span data-testid="end-chip" className="flex min-h-11 items-center justify-center rounded-lg px-3 text-sm tabular-nums">
+          {formatTimeOfDay(isoFromEpochSeconds(Math.max(nowSec, ownSecond)), format)}
+        </span>
+      )
     }
     const time = formatTimeOfDay(iso, format)
     const date = chipDate(dateKey(iso), state.user.dateFormat)
@@ -480,6 +490,7 @@ export function EntrySheet({
     { label: "Duration only (hide start and end times)", pressed: shown.duronly, run: () => edit((d) => ({ ...d, duronly: !d.duronly })) },
     ...(target.mode === "edit" ? [{ label: "Move to another day…", run: () => setMoving(true) }] : []),
     ...(target.mode === "start" ? [{ label: "Started at…", run: () => moment("start") }] : []),
+    { label: "Project and task…", run: () => setPickingProject(true) },
   ]
 
   const title = isNew ? "New time entry" : "Time entry"
@@ -613,10 +624,16 @@ export function EntrySheet({
             onPickProject={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
             onPickTag={(tagId) => edit((d) => ({ ...d, tagIds: [...new Set([...d.tagIds, tagId])] }))}
             onSubmit={done}
+            askProject={askProject}
             inline={{
               onClearProject: () => edit((d) => ({ ...d, projectId: null, taskId: null })),
               onCreateProject: (name) => {
-                // made now, as the chip's picker makes it; choosing it waits for DONE
+                // with only @ typed there is no name yet: ask for one
+                if (!name.trim()) {
+                  setNamingProject("")
+                  return
+                }
+                // made now, as Toggl's makes it; choosing it waits for DONE
                 const made = createProject(state, { name }, serverNowIso())
                 setState(layOnto(state, made.state))
                 edit((d) => ({ ...d, projectId: made.id, taskId: null }))
@@ -644,24 +661,18 @@ export function EntrySheet({
           {/* the chips [H25 help_14 f012]: project ×, # Add tags, $ Billable */}
           <div className="flex flex-wrap items-center gap-2 py-3">
             <div className={cn("flex items-center rounded-full border border-border", project && "bg-secondary")}>
-              <ProjectPicker
-                state={state}
-                projectId={shown.projectId}
-                taskId={shown.taskId}
-                onChange={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
-                onCreateProject={(name) => {
-                  // the project is made now, as Toggl's picker makes it; choosing it waits for DONE
-                  const made = createProject(state, { name }, serverNowIso())
-                  setState(layOnto(state, made.state))
-                  edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+              {/* "@ Add a project" puts @ in the name and opens the inline list, as Toggl's chip does (V1 0:32) */}
+              <button
+                type="button"
+                onClick={() => {
+                  edit((d) => ({ ...d, description: d.description.trim() ? `${d.description.trimEnd()} @` : "@" }))
+                  setAskProject((n) => n + 1)
                 }}
-                renderTrigger={() => (
-                  <span className={cn("flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm", !project && "text-muted-foreground")}>
-                    {project ? <ColorDot color={project.color} /> : <span aria-hidden>@</span>}
-                    <span className="max-w-[160px] truncate">{project ? (task ? `${project.name} · ${task.name}` : project.name) : "Add a project"}</span>
-                  </span>
-                )}
-              />
+                className={cn("flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm", !project && "text-muted-foreground")}
+              >
+                {project ? <ColorDot color={project.color} /> : <span aria-hidden>@</span>}
+                <span className="max-w-[160px] truncate">{project ? (task ? `${project.name} · ${task.name}` : project.name) : "Add a project"}</span>
+              </button>
               {project && (
                 <button
                   type="button"
@@ -708,6 +719,50 @@ export function EntrySheet({
             </button>
           </div>
 
+          {namingProject !== null && (
+            <div className="flex items-center gap-2 pb-3">
+              <input
+                aria-label="New project name"
+                placeholder="Name your project"
+                autoFocus
+                value={namingProject}
+                onChange={(event) => setNamingProject(event.target.value)}
+                className="h-11 min-w-0 flex-1 rounded-md border border-border bg-background/60 px-3 text-base outline-none"
+              />
+              <Button
+                type="button"
+                className="h-11"
+                disabled={!namingProject.trim()}
+                onClick={() => {
+                  const made = createProject(state, { name: namingProject.trim() }, serverNowIso())
+                  setState(layOnto(state, made.state))
+                  edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+                  setNamingProject(null)
+                }}
+              >
+                Create project
+              </Button>
+              <Button type="button" variant="ghost" className="h-11" onClick={() => setNamingProject(null)}>
+                Cancel
+              </Button>
+            </div>
+          )}
+          {pickingProject && (
+            <ProjectPicker
+              state={state}
+              projectId={shown.projectId}
+              taskId={shown.taskId}
+              autoOpen
+              onClose={() => setPickingProject(false)}
+              onChange={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
+              onCreateProject={(name) => {
+                const made = createProject(state, { name }, serverNowIso())
+                setState(layOnto(state, made.state))
+                edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+              }}
+              renderTrigger={() => <span className="sr-only">Project and task</span>}
+            />
+          )}
           {/* Edit duration: start → end, the two shortcuts, the drums where Toggl's wheel is */}
           <section aria-label="Edit duration" className="rounded-xl bg-secondary/40 p-3">
             {!isNew && (

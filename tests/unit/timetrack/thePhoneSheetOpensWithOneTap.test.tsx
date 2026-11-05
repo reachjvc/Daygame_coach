@@ -117,8 +117,9 @@ describe("one tap on the running bar", () => {
     for (let i = 1; i < order.length; i++) {
       expect(order[i - 1].compareDocumentPosition(order[i]) & Node.DOCUMENT_POSITION_FOLLOWING, `item ${i} out of order`).toBeTruthy()
     }
-    // a running entry's end is "now", with no date
-    expect(s.getByText("now")).toBeTruthy()
+    // a running entry's end is the clock as it runs, with no date, as Toggl's (H25 help_14 f012)
+    const end = s.getByTestId("end-chip")
+    expect(end.textContent).toBe("12:00")
     expect(s.getByText("1:00:00")).toBeTruthy()
   })
 
