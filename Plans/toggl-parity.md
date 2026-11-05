@@ -430,6 +430,26 @@ Phase 3, built here).
 CREATE); a swipe does not fire on a vertical scroll (touch-emulated test); findability tasks "continue
 yesterday's 'Email' entry", "delete an entry and get it back", "add an hour you forgot this morning".
 
+**Status (2026-11-05).** Marks read: none. Built with Phase 4.
+- Swipe right past 75% continues (the running timer stops); swipe left deletes with "Time entry was deleted ·
+  UNDO"; a vertical scroll moves nothing (touch-emulated test). Settings › "Swipe actions", on. Swiping left
+  only deletes (Toggl also offers Favorite there; ours is in the row's ⋮).
+- @ and # in the name list "No Project", projects under their client, "+ Create a new project “x”", tags and
+  "Create “x”", in the PC picker's words. The start and ⊕ sheets fold the drums behind "Edit duration ›".
+- D-PLANNED (phone): planned entries are not rows until they start; the day header still says "· 1:30
+  planned", and a day with only planned entries shows its header and "See in calendar". The PC list still
+  shows them as striped rows (not changed here).
+- From findability: no ▷ on the running row; the sync dot speaks its state and a tap shows the PC badge's
+  sentence; a delete's Undo stays in the bar (no row under it) until the next change or 30 s, one at a
+  time; toasts sit under an open sheet; one tap on a time chip makes it typeable with the time selected; in
+  the sheet a typed end before the start is refused ("Stop time must be after Start time!") instead of
+  rolling to the next morning (crossing midnight is the end chip's day drum).
+- Deviations: the Undo for deletes waits up to 30 s (Toggl: 5 s) because a first-time user missed a shorter
+  one and tapped the ▶ that was under it.
+- Findability (phone, true touch): continue yesterday's Email 1 tap; delete and get it back: MISSED on the
+  first build (Undo gone, tap landed on ▶), fixed, then 3 taps; add a forgotten hour 12 actions, after the
+  chip fix 9.
+
 ## Phase 4 — Phone: Calendar and Reports tabs · M
 
 1. Calendar: "Calendar" header with ⚙; "WEDNESDAY, DEC 10 · 7:05:00"; a week strip with today circled
@@ -447,6 +467,30 @@ yesterday's 'Email' entry", "delete an entry and get it back", "add an hour you 
 
 **Acceptance:** side-by-side `phone-calendar`, `phone-reports`; findability tasks "move yesterday's gym
 block 15 minutes later", "how many hours did you track last week?".
+
+**Status (2026-11-05).** Marks read: none.
+- Calendar tab: "Calendar" header, "THURSDAY, NOV 5 · 1:15", week strip with today circled; a tap on a block
+  selects it (handles) and opens the panel Delete · Edit · Duplicate · Continue · Cancel (running: Discard ·
+  Edit · Stop); Edit opens the sheet; a held finger on empty time makes 30 minutes or fills a gap of 2 h or
+  less; drags snap to 15 minutes or a neighbour's edge, whichever is closer, landing on the neighbour's exact
+  instant; touching neighbours still move together (D-NEIGHBOURS); planned stays striped. Kept as ours: the
+  Day | Week and "Connect calendar" row.
+- Reports tab: "Reports" with ⬇ (CSV) and ⚙; "This week" chip and a date sheet (Today · Yesterday · This week ·
+  Last week · This month · Last month, a month grid with weekday letters); "TRACKED HOURS" with DETAILS (the
+  full reports, every tab kept); bars per day; "GROUP BY Projects | Clients" donut with name, time, %.
+  Not built: the heat-map (not cheap) and Toggl's Team / Projects / Clients / Billable filter chips (those
+  filters are in Details).
+- Rewritten tests (promise kept): "a held finger plans Gym tomorrow…" and "a held block moves alone…" reach
+  tomorrow through the week strip and compare against the day line read at the start; the vibration check
+  expects 7 ticks for 10:00–11:30, one per 15-minute step (it was 19 at 5-minute steps); "quick flick…
+  sideways swipe turns the day" (same label change); "On a phone, Back closes the sheet…" (a tap on a block
+  selects it, so the test taps the panel's Edit first); a typed end in the sheet no longer rolls to the next
+  morning (refused instead, by decision above).
+- Findability (phone): move yesterday's gym block 15 min later: 11 actions through the sheet with a driver
+  that could not hold-and-drag, 5 with it (hold, drag); how many hours last week: 3 taps (Reports → This
+  week → Last week).
+- E2E after the fixes: toggl-time-tracker 20 + 4, edge cases 3 + 3, sync 14 + 9. Side-by-sides:
+  `kit/out/p3p4/phone-{start,swipe,manual,calendar,reports}-phone.png`.
 
 ## Phase 5 — PC: the Timer page · L
 
