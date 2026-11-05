@@ -26,7 +26,7 @@ How it is built: `Plans/thought.md` (Phases 5–6), `src/notifications/`, the pu
 
 Built by `Plans/time-tracker-like-toggl.md`, Phase 7: `src/timetrack/runningTimerService.ts`,
 `app/api/timetrack/stop/route.ts`, the timer half of the notification block in `public/sw.js`, migration
-`20261104160000_running_timer_notification.sql`.
+`20261105150000_running_timer_notification.sql`.
 
 - **Who gets it.** Devices with `push_devices.timer_running` on: "Show the running timer on this device" in the
   tracker's Settings → Automation. Separate from `enabled` (Thought Frequencies). On by default when the
@@ -59,7 +59,7 @@ select public.timetrack_alert_due('<id>');
 ```
 
 Switch the timer off for every device of one person: `update push_devices set timer_running = false where
-user_id = '<id>';`. The whole way back: `supabase/migrations/rollback/20261104160000_running_timer_notification.down.sql`
+user_id = '<id>';`. The whole way back: `supabase/migrations/rollback/20261105150000_running_timer_notification.down.sql`
 (deploy the app from before Phase 7 first; it deletes the timer rows from the send log).
 
 ## Stop every reminder now

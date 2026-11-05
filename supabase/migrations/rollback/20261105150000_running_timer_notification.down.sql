@@ -1,4 +1,4 @@
--- The way back from 20261104160000_running_timer_notification.sql.
+-- The way back from 20261105150000_running_timer_notification.sql.
 --
 -- DELETES ONE KIND OF DATA: the send-log rows of kind 'timetrack-running' and
 -- 'timetrack-alert'. The old kind check cannot be put back while they exist.

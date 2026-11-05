@@ -67,7 +67,7 @@ export function readSubscription(value: unknown): SubscriptionInput | null {
  * device" on? Only the installed app on a phone (Plans/time-tracker-like-
  * toggl.md, Q4 scenario 9): an installed app on a PC is where the timer is
  * already in view. Read from the `deviceLabel` the browser registered with —
- * the same rule migration 20261104160000 applied to the devices that existed.
+ * the same rule migration 20261105150000 applied to the devices that existed.
  */
 export function timerOnByDefault(label: string): boolean {
   return /^(Android phone|iPhone) · installed app$/.test(label)

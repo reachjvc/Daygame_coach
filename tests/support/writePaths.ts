@@ -40,7 +40,7 @@ const DIRECT_WRITE = /\.(insert|update|upsert|delete)\s*\(/
  * out of the register the guard is built to keep.
  *
  * `timetrack_alerts_due` is a `stable` SQL function: the list of 6 h timer
- * alerts due now (migration 20261104160000_running_timer_notification.sql).
+ * alerts due now (migration 20261105150000_running_timer_notification.sql).
  */
 const READ_ONLY_RPCS = new Set(["match_embeddings", "match_embeddings_test", "timetrack_alerts_due"])
 

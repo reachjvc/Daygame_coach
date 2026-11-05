@@ -45,7 +45,7 @@ function productionColumns(): Map<string, Set<string>> {
     tables.set(m[1], new Set(columns))
   }
   // \s+, not one space: a migration may break "alter table x" and "add column"
-  // over two lines, as 20261104160000_running_timer_notification.sql does.
+  // over two lines, as 20261105150000_running_timer_notification.sql does.
   for (const m of newer.matchAll(
     /alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?(?:"?public"?\.)?"?(\w+)"?\s+add\s+column\s+(?:if\s+not\s+exists\s+)?"?(\w+)"?/gi,
   )) {

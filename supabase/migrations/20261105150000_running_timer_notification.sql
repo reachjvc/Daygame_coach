@@ -46,7 +46,7 @@
 -- `notification_sends` stays read-only to its owner, written by the server.
 -- The new function is the clock's alone: no client role may call it.
 --
--- Way back: supabase/migrations/rollback/20261104160000_running_timer_notification.down.sql
+-- Way back: supabase/migrations/rollback/20261105150000_running_timer_notification.down.sql
 
 alter table public.push_devices
   add column if not exists timer_running boolean not null default false;
