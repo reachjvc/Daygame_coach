@@ -206,8 +206,9 @@ export const RECURRING_PERIODS = [
 export const SUMMARY_METRICS = [
   { id: "total", label: "Total hours", kind: "duration" },
   { id: "billable", label: "Billable hours", kind: "duration" },
-  { id: "revenue", label: "Revenue", kind: "money" },
-  { id: "avg_daily", label: "Avg. daily hours", kind: "duration" },
+  // Toggl Track's card titles (`analytics.DashboardGrid.TotalsCard.*`): Amount, Average daily hours
+  { id: "revenue", label: "Amount", kind: "money" },
+  { id: "avg_daily", label: "Average daily hours", kind: "duration" },
   { id: "cost", label: "Cost", kind: "money" },
   { id: "profit", label: "Profit", kind: "money" },
   { id: "fixed_fee", label: "Fixed fee", kind: "money" },

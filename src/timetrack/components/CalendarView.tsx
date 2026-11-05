@@ -316,6 +316,17 @@ export function CalendarView({
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
+    /**
+     * ON A PC, NOW IN VIEW WHEN TODAY IS SHOWN, as Toggl Track's calendar opens
+     * (Phase 8 audit of Plans/toggl-parity.md): at 19:56 with the work done in
+     * the morning, the rule below put the now line off the screen. About a
+     * third of the way down, so what came just before is in view too.
+     */
+    if (!isMobile && days.includes(todayKey)) {
+      const nowMinutes = minutesIntoDay(new Date(nowSec * 1000).toISOString())
+      container.scrollTop = Math.max(0, nowMinutes * minuteHeight - container.clientHeight / 3)
+      return
+    }
     const starts = [
       ...days.flatMap((day) => entriesForDay(entries, day, nowSec).map((entry) => entryInterval(entry, day, nowSec).startMin)),
       ...days.flatMap((day) => eventsForDay(events, day).map((event) => eventInterval(event, day).startMin)),
