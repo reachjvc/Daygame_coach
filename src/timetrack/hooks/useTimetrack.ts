@@ -33,6 +33,7 @@ import {
   isRunning,
   runningEntry,
   startTimer,
+  stopSeen,
   stopTimer,
   undoDisplacement,
 } from "../timetrackService"
@@ -298,6 +299,14 @@ export function useTimetrack({ account }: { account?: string } = {}) {
   const setState = useCallback((updater: (current: TimetrackState) => TimetrackState) => {
     setStateRaw((current) => (current ? updater(current) : current))
   }, [])
+
+  /**
+   * The newest copy this tracker knows: what was drawn, or the account's answer
+   * the sync has handed over and React has not drawn yet (`replaceState`). A
+   * Stop decides against this, outside the update, so a refusal can be said.
+   */
+  const newest = useRef<TimetrackState | null>(state)
+  newest.current = state
 
   const pushToast = useCallback(
     (text: string, tone: "info" | "error" = "info", undo?: () => void, undoLabel?: string, second?: ToastChoice) => {
@@ -860,9 +869,37 @@ export function useTimetrack({ account }: { account?: string } = {}) {
         setState(layOnto(state, result.state))
         announceDisplacement(result.displaced, result.entry)
       },
-      stop(at?: string) {
+      /**
+       * `entryId`: the entry the person saw running when they pressed Stop (null:
+       * none). Given, only that one is stopped, worked out on the newest copy
+       * inside the update; anything else running by then is left, and said
+       * (`stopSeen`). Left out, whatever runs is stopped, as before.
+       */
+      stop(at?: string, entryId?: Id | null) {
         const nowIso = at ?? serverNowIso()
-        setState((current) => stopTimer(current, nowIso).state)
+        if (entryId === undefined) {
+          setState((current) => stopTimer(current, nowIso).state)
+          return
+        }
+        // decided on the newest copy there is, the other device's answer included, so a refusal is said
+        const known = newest.current ?? state
+        if (known) {
+          const decided = stopSeen(known, entryId, nowIso)
+          if (decided.refused) {
+            const name = (entry: TimeEntry | null | undefined) => `“${entry?.description.trim() || "(no description)"}”`
+            if (decided.refused === "other") {
+              pushToast(`Your other device changed the timer just now: ${name(decided.running)} is running, so this Stop was not used. Stop it again if you meant to.`)
+            } else {
+              pushToast(`${name(known.entries.find((e) => e.id === entryId))} was already stopped on your other device.`)
+            }
+            return
+          }
+        }
+        // and again inside the update, on the copy React hands it, where it is only kept or left
+        setState((current) => {
+          const result = stopSeen(current, entryId, nowIso)
+          return result.refused ? current : result.state
+        })
       },
       continueLast(at?: string) {
         if (!state) return
@@ -925,7 +962,9 @@ export function useTimetrack({ account }: { account?: string } = {}) {
          * handed over, and the sync queues the difference. Anything that
          * needs nothing comes back as the same object.
          */
-        setStateRaw(moveLegacyIdleDefault(next).state)
+        const moved = moveLegacyIdleDefault(next).state
+        newest.current = moved
+        setStateRaw(moved)
       },
     }),
     [announceDisplacement, pushToast, setState, state],

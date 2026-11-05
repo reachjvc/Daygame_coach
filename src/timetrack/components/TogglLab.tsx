@@ -381,7 +381,16 @@ export function TogglLab({
     }
     tap.run(latest, serverIsoAt(tap.tappedOnDevice))
   }, [sync.check.checking, pushToast])
-  const stopTracking = useCallback(() => afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt)), [afterCheck])
+  /**
+   * Stop is for the entry on the screen when it was pressed, never for one the
+   * other device started a moment ago and this screen has not drawn yet (Phase 8
+   * two-devices audit; `stopSeen`). The bar, the header pill, S and the
+   * phone's ■ all come through here.
+   */
+  const stopTracking = useCallback(() => {
+    const seen = runningNow.current?.id ?? null
+    afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen))
+  }, [afterCheck])
 
   /**
    * The timer bar's edits, kept for this tab while nothing is running (see
