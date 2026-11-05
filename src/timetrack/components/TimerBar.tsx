@@ -49,9 +49,10 @@ import {
   setRunningElapsed,
   toggleFavorite,
   undoDisplacement,
+  updateEntry,
 } from "../timetrackService"
 import { stopAt, switchAt, undoStopAt } from "../timeFixService"
-import type { EntryDraft, Id, IsoDate, IsoDateTime, TimeEntry, TimetrackState } from "../types"
+import type { EntryDraft, Id, IsoDate, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { MANUAL_FORM_KEY } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
 import type { PushToast } from "../hooks/useTimetrack"
@@ -101,6 +102,22 @@ export function announceEndedEarly(
     },
     `Keep running from ${formatTimeOfDay(from, format)}`,
   )
+}
+
+/**
+ * The bar's typed name, on the entry it was typed into — running or, by the
+ * time the pause is up, stopped by the other device. Gone, or deleted
+ * elsewhere, it is nobody's to name: see `commitDescription`.
+ */
+function describeEntry(
+  state: TimetrackState,
+  entryId: Id,
+  description: string,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; violations: SaveViolation[] } {
+  const entry = state.entries.find((e) => e.id === entryId)
+  if (!entry || entry.serverDeletedAt) return { state, violations: [] }
+  return updateEntry(state, entryId, { description }, nowIso)
 }
 
 /**
@@ -348,19 +365,36 @@ export function TimerBar({
    * It carries the entry it was typed into. Press Continue on some other entry
    * within the pause and the running entry is no longer the one you were
    * describing; writing it there would put your words on the wrong row.
+   *
+   * AND IT LANDS ON THAT ENTRY AS IT IS NOW, NOT AS THIS BAR LAST DREW IT.
+   *
+   * This built the renamed workspace from `latestState` — the copy of the last
+   * render — and put that whole copy in place. Typing "Call with Ana" on the
+   * phone while the PC stopped the call, then waking the phone, did this: the
+   * check handed the stopped copy over, the pause ended before it was drawn,
+   * and the bar's running copy with the new name replaced it. The engine then
+   * saw this device set the call running again, on top of the version the PC's
+   * stop wrote, and the account took it — the call ran again everywhere
+   * (`aRenameTypedWhileTheOtherDeviceStopsKeepsTheStop`). Drawn first, the
+   * other way round, the name looked for a RUNNING entry by that id, found
+   * none, and was thrown away.
+   *
+   * So the name goes onto the entry it was typed into, running or stopped by
+   * now, inside the update, where `current` is the newest copy there is: only
+   * what this bar changed itself is laid onto it. A refusal is asked of the
+   * drawn copy, so it is said once and not from inside React's update.
    */
   const commitDescription = useDebouncedCommit<{ entryId: Id | null; description: string }>(
     ({ entryId, description }) => {
-      const current = latestState.current
       // Nothing running, or manual mode: the draft is already the only record
       if (entryId === null || latestMode.current === "manual") return
-      if ((runningEntry(current)?.id ?? null) !== entryId) return
-      const result = applyDraftPatch(current, latestDraft.current, { description }, serverNowIso())
-      if (result.violations.length > 0) {
-        pushToast(result.violations[0].message, "error")
+      const nowIso = serverNowIso()
+      const drawn = describeEntry(latestState.current, entryId, description, nowIso)
+      if (drawn.violations.length > 0) {
+        pushToast(drawn.violations[0].message, "error")
         return
       }
-      if (result.state !== current) setState(() => result.state)
+      setState((current) => describeEntry(current, entryId, description, nowIso).state)
     },
   )
 
