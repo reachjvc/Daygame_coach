@@ -38,7 +38,8 @@ export function createEmptyWorkspace(nowIso: string): TimetrackState {
     user: {
       name: "You",
       email: "",
-      durationFormat: "improved",
+      // 0:47:06, Toggl's default ("Improved" in Toggl's words; the key is "classic", see DURATION_FORMATS)
+      durationFormat: "classic",
       timeFormat: "h24",
       dateFormat: "YYYY-MM-DD",
       weekStart: 1,

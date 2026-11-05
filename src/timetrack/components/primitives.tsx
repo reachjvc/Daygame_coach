@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { NO_PROJECT_COLOR } from "../config"
 import { IconCheck, IconClose, IconNext, IconPrev } from "../icons"
-import { addDays, dateKey, formatDayHeader } from "../timetrackFormatService"
+import { addDays, dateKey, formatDayHeader, formatDayWords } from "../timetrackFormatService"
 import type { IsoDate } from "../types"
 
 /**
@@ -615,15 +615,32 @@ export function DayPicker({
       >
         <IconPrev className="size-5 sm:size-4" />
       </button>
-      <Input
-        type="date"
-        value={value}
-        // "" is a half-typed date, not a date: see `dateKey`
-        onChange={(event) => event.target.value && onChange(event.target.value)}
-        onBlur={onBlur}
-        aria-label="Date"
-        className="w-[150px] sm:h-8 sm:w-[140px]"
-      />
+      {/*
+        THE DAY IN WORDS, as the day headers write it ("Wed, 4 Nov"). The browser's
+        own date control wrote "11/04/2026" on an American browser, beside
+        "Yesterday" and 24-hour times (findability checks, 2026-11-05). The control
+        still lies on top, unseen, so a click or tap opens the browser's picker and
+        typing still works.
+      */}
+      <span className="relative inline-flex h-11 w-[150px] items-center justify-center rounded-md border border-input bg-transparent text-sm sm:h-8 sm:w-[140px]">
+        {formatDayWords(value, todayKey)}
+        <Input
+          type="date"
+          value={value}
+          // "" is a half-typed date, not a date: see `dateKey`
+          onChange={(event) => event.target.value && onChange(event.target.value)}
+          onClick={(event) => {
+            try {
+              event.currentTarget.showPicker?.()
+            } catch {
+              // not every browser lets a click open it; the control is focused either way
+            }
+          }}
+          onBlur={onBlur}
+          aria-label="Date"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+      </span>
       <button
         type="button"
         onClick={() => onStep(addDays(value, 1))}
@@ -633,7 +650,10 @@ export function DayPicker({
       >
         <IconNext className="size-5 sm:size-4" />
       </button>
-      <span className="px-1 text-xs text-muted-foreground">{formatDayHeader(value, todayKey)}</span>
+      {/* Today or Yesterday beside it; any other day is already said in the box */}
+      {formatDayHeader(value, todayKey) !== formatDayWords(value, todayKey) && (
+        <span className="px-1 text-xs text-muted-foreground">{formatDayHeader(value, todayKey)}</span>
+      )}
     </div>
   )
 }

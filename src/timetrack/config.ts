@@ -151,10 +151,16 @@ export const MIN_SPLIT_SECONDS = 10 * 60
 export const CALENDAR_WINDOW_DAYS_BACK = 60
 export const CALENDAR_WINDOW_DAYS_FORWARD = 30
 
+/**
+ * Toggl's names, Toggl's examples (Plans/toggl-parity.md, Phase 7): Toggl Track
+ * calls 0:47:06 "Improved" and shows it first and by default. The stored keys
+ * keep their old meaning so nobody's saved choice changes: "classic" is h:mm:ss,
+ * "improved" is h:mm (which Toggl does not have; it is ours, named for what it is).
+ */
 export const DURATION_FORMATS = [
-  { id: "improved", label: "Improved (1:30)" },
-  { id: "classic", label: "Classic (1:30:00)" },
-  { id: "decimal", label: "Decimal (1.50)" },
+  { id: "classic", label: "Improved (0:47:06)" },
+  { id: "improved", label: "Hours and minutes (0:47)" },
+  { id: "decimal", label: "Decimal (0.79)" },
 ] as const
 
 export const TIME_FORMATS = [

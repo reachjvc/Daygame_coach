@@ -300,6 +300,11 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 export function formatDayHeader(key: IsoDate, todayKey: IsoDate): string {
   if (key === todayKey) return "Today"
   if (key === addDays(todayKey, -1)) return "Yesterday"
+  return formatDayWords(key, todayKey)
+}
+
+/** "Wed, 4 Nov", with the year when it is not this year's: a day header without Today or Yesterday */
+export function formatDayWords(key: IsoDate, todayKey: IsoDate): string {
   const d = dateKeyToDate(key)
   const sameYear = d.getFullYear() === dateKeyToDate(todayKey).getFullYear()
   const base = `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`
