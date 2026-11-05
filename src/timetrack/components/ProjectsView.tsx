@@ -34,7 +34,7 @@ import {
   secondsInRangeOf,
   liveEntries,
   projectEstimateSeconds,
-  projectPeriod,
+  projectTrackedRange,
   projectPeriodAt,
   updateProject,
   updateTask,
@@ -221,7 +221,7 @@ export function ProjectsView({
         {/* phones: one card per project */}
         <ul className="space-y-2 sm:hidden">
           {projects.map((project) => {
-            const period = projectPeriod(project, todayKey)
+            const period = projectTrackedRange(state, project, todayKey)
             const tracked = secondsInRangeOf(
               liveEntries(state).filter((e) => e.projectId === project.id),
               period.start,
@@ -281,6 +281,8 @@ export function ProjectsView({
                   it holds the same period's hours — so a project created today, with
                   last month's work imported into it, read `0:00` for thirteen hours.
                   The phone card next to this already said "of 10:00 this period".
+                  Since 2026-11-05 a project that does not recur counts from its first
+                  entry (`projectTrackedRange`), so that import now shows.
                 */}
                 <th className="px-3 py-2 text-right font-medium">Tracked (current period)</th>
                 <th className="px-3 py-2 text-right font-medium">Rate</th>
@@ -290,7 +292,7 @@ export function ProjectsView({
             </thead>
             <tbody className="divide-y divide-border">
               {projects.map((project) => {
-                const period = projectPeriod(project, todayKey)
+                const period = projectTrackedRange(state, project, todayKey)
                 const tracked = secondsInRangeOf(
                   liveEntries(state).filter((e) => e.projectId === project.id),
                   period.start,

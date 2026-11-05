@@ -1664,6 +1664,26 @@ export function projectPeriod(project: Project, todayKey: IsoDate): { start: Iso
 }
 
 /**
+ * WHAT A PROJECT'S "TRACKED" COUNTS: its current period, except that a project
+ * which does not recur and has no start date counts from its first entry.
+ * Its one period began on the day it was made, so entries from earlier days
+ * put on it afterwards (or imported) were never counted: Projects said Gym 0:00
+ * over 2:20 this week (found 2026-11-05, Plans/toggl-parity.md Phase 0). The
+ * dashboard's chart keeps `projectPeriod`.
+ */
+export function projectTrackedRange(state: TimetrackState, project: Project, todayKey: IsoDate): { start: IsoDate; end: IsoDate } {
+  const period = projectPeriod(project, todayKey)
+  if (project.recurring || project.startDate) return period
+  let first = period.start
+  for (const e of state.entries) {
+    if (e.projectId !== project.id || e.serverDeletedAt) continue
+    const day = dateKey(e.start)
+    if (day < first) first = day
+  }
+  return { start: first, end: period.end }
+}
+
+/**
  * The project's period `offset` steps from the current one, or `null` when there is no
  * such period. Negative is backwards.
  *

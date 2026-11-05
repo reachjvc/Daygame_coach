@@ -94,7 +94,10 @@ describe("the running entry renamed on the PC", () => {
     expect(bar().value, "the phone stores the new name and its bar still shows the old one").toBe("Gym, legs day")
   })
 
-  test("so a Stop and a Start carry on under the new name", async () => {
+  // Carrying on after a break: Stop, then ▶ on the row. (Until 2026-11-05 it was
+  // Stop and Start, because a stop left the name in the bar; a stop now
+  // empties it, as Toggl's does, so carrying on is the row's Continue.)
+  test("so a Stop and a Continue carry on under the new name", async () => {
     const copy = gymSinceNine()
     const account = await openPhone(copy)
     account.edit("timetrack_entries", gymIn(copy), { description: "Gym, legs day" })
@@ -102,7 +105,7 @@ describe("the running entry renamed on the PC", () => {
 
     fireEvent.click(main().getByRole("button", { name: "Stop timer" }))
     await wait(100)
-    fireEvent.click(main().getByRole("button", { name: "Start timer" }))
+    fireEvent.click(main().getAllByRole("button", { name: "Continue this entry" })[0])
     await wait(100)
 
     const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY)!) as TimetrackState

@@ -294,6 +294,16 @@ export function TimerBar({
   latestState.current = state
   const latestDraft = useRef(draft)
   latestDraft.current = draft
+  /**
+   * Every write to the draft goes through here, so the next write in the same
+   * event builds on it. Picking with @ writes the cleaned words and then the
+   * project; both copied the draft of the last render, so the second put
+   * "Call @Gy" back over "Call" (found 2026-11-05, Plans/toggl-parity.md).
+   */
+  const putDraft = (next: EntryDraft) => {
+    latestDraft.current = next
+    setDraft(next)
+  }
   const latestMode = useRef(mode)
   latestMode.current = mode
 
@@ -301,14 +311,14 @@ export function TimerBar({
    * EVERY CONTROL IN THIS BAR GOES THROUGH HERE. See `applyDraftPatch` for what
    * it is protecting against: the bar used to write only to the draft, so
    * anything entered after pressing Start was shown back to you and thrown
-   * away. Nothing below may call `setDraft` directly.
+   * away. Nothing below may call `setDraft` directly (`putDraft` is its one door).
    */
   const edit = (patch: Partial<EntryDraft>, baseState: TimetrackState = latestState.current) => {
     // Manual mode is a form for an entry that does not exist yet. It never
     // reaches into a timer that happens to be running at the same moment.
     if (latestMode.current === "manual") {
       if (baseState !== latestState.current) setState(() => baseState)
-      setDraft({ ...latestDraft.current, ...patch })
+      putDraft({ ...latestDraft.current, ...patch })
       return
     }
     const result = applyDraftPatch(baseState, latestDraft.current, patch, serverNowIso())
@@ -327,7 +337,7 @@ export function TimerBar({
       return
     }
     if (result.state !== latestState.current) setState(() => result.state)
-    setDraft(result.draft)
+    putDraft(result.draft)
   }
 
   /**
@@ -662,7 +672,7 @@ export function TimerBar({
           projectId={draft.projectId}
           onChange={(description) => {
             // shown at once, stored on a pause: see `commitDescription`
-            setDraft({ ...latestDraft.current, description })
+            putDraft({ ...latestDraft.current, description })
             commitDescription.schedule({ entryId: running?.id ?? null, description })
           }}
           onBlur={commitDescription.flush}

@@ -282,6 +282,14 @@ export function useTimetrack({ account }: { account?: string } = {}) {
    */
   const ticksEverySecond = running !== null || pomodoroPhase === "break"
   useEffect(() => {
+    /**
+     * A start or a stop changes the pace, and "now" is read at once: it could be
+     * ten seconds old from the idle pace. A timer stopped within its first
+     * second then started after that old "now", which is what "planned" means,
+     * and showed striped "planned" for up to ten seconds (found 2026-11-05,
+     * Plans/toggl-parity.md Phase 0).
+     */
+    setNowSec(Math.floor(serverNow() / 1000))
     const everyMs = ticksEverySecond ? 1000 : IDLE_TICK_MS
     const timer = window.setInterval(() => setNowSec(Math.floor(serverNow() / 1000)), everyMs)
     return () => window.clearInterval(timer)

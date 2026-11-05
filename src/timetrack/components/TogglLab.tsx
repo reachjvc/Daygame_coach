@@ -391,12 +391,16 @@ export function TogglLab({
   const mirrored = useRef<{ id: Id; draft: EntryDraft } | null>(null)
   const runningTags = running?.tagIds.join(",")
   useEffect(() => {
-    if (!running) {
-      mirrored.current = null
-      return
-    }
-    const fromEntry = draftOf(running)
-    const last = mirrored.current?.id === running.id ? mirrored.current.draft : null
+    /**
+     * A STOP EMPTIES THE BAR, as Toggl's does. It kept the stopped entry's
+     * name, project and tags, so the next Start repeated them unless each was
+     * cleared by hand (found 2026-11-05, Plans/toggl-parity.md Phase 0).
+     * Carrying on with the same thing is ▶ on its row. A field typed into the
+     * bar and not yet saved stays, by the same rule as below.
+     */
+    if (!running && mirrored.current === null) return
+    const last = running ? (mirrored.current?.id === running.id ? mirrored.current.draft : null) : mirrored.current!.draft
+    const fromEntry = running ? draftOf(running) : emptyDraft
     const shown = draftNow.current
     const keep = <K extends keyof EntryDraft>(key: K, same: (a: EntryDraft[K], b: EntryDraft[K]) => boolean = Object.is) =>
       last && !same(shown[key], last[key]) ? shown[key] : fromEntry[key]
@@ -407,7 +411,7 @@ export function TogglLab({
       tagIds: keep("tagIds", (a, b) => a.join(",") === b.join(",")),
       billable: keep("billable"),
     }
-    mirrored.current = { id: running.id, draft: fromEntry }
+    mirrored.current = running ? { id: running.id, draft: fromEntry } : null
     setDraftState(next)
   }, [running?.id, running?.description, running?.projectId, running?.taskId, runningTags, running?.billable]) // deps: the fields the bar shows
 
