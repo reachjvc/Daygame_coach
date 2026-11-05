@@ -30,6 +30,7 @@ import type { NsGoal, NsPlan, NsReview, NsRoutineStep } from "./types"
 import { addDaysISO, isSystem, weekStartISO } from "./northStarService"
 import { firstCountDays, isEveryDay, practiceRateInWeek, rampWeek, steadyRate } from "./northStarTrackService"
 import { stepTick, NO_TRAINING_TICKS, type TrainingTicks } from "./dayTicks"
+import { climbFraction, readingsOf, takesReadings } from "./goalReadings"
 
 /** Totals a counted goal can reach. */
 export const GOAL_TOTALS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000] as const
@@ -39,8 +40,10 @@ export const BEST_DAYS = [3, 5, 10, 20, 50] as const
 export const WEEKS_IN_A_ROW = [4, 12, 26, 52] as const
 /** Times a routine step can be done. */
 export const STEP_TOTALS = [10, 50, 100, 365, 1000] as const
+/** How far along a number goal's climb a reading can be, as quarters of the way. */
+export const CLIMB_MARKS = [0.25, 0.5, 0.75, 1] as const
 
-export type AchievementKind = "first" | "total" | "best_day" | "weeks" | "milestone" | "experience" | "reviews"
+export type AchievementKind = "first" | "total" | "best_day" | "weeks" | "climb" | "milestone" | "experience" | "reviews"
 
 export interface PlanAchievement {
   /** Stable: the part, the rule, the threshold. */
@@ -170,6 +173,7 @@ const moreWeeks = (n: number) => (n === 1 ? "1 more week" : `${n} more weeks`)
  */
 export function goalAchievements(plan: NsPlan, goalId: string, today: string, firsts = firstCountDays(plan)): PartAchievements {
   const goal = plan.goals.find((g) => g.id === goalId)
+  if (goal && takesReadings(goal)) return climbAchievements(plan, goal, today)
   if (!goal || !isSystem(goal)) return { earned: [], next: null }
   const days = countedDays(plan, goalId, today)
   const unit = unitOf(goal)
@@ -210,6 +214,48 @@ export function goalAchievements(plan: NsPlan, goalId: string, today: string, fi
   const next = nextTotal ? { partId: goalId, label: amount(nextTotal), toGo: toGo(nextTotal - sum) } : streakNext
   return { earned: earned.sort(byDay), next }
 }
+
+/**
+ * A NUMBER GOAL'S CLIMB (Plans/life-plan-readings.md): the first reading, then
+ * a quarter, half, three quarters of the way from its start to its target,
+ * and the target itself, each on the day a reading first got there. Works for
+ * a number that comes down (a weight to lose) as for one that goes up.
+ */
+function climbAchievements(plan: NsPlan, goal: NsGoal, today: string): PartAchievements {
+  const readings = readingsOf(plan, goal.id, today)
+  const mk = (kind: AchievementKind, key: string, label: string, earnedOn: string): PlanAchievement => ({
+    id: `${goal.id}:${kind}:${key}`, partId: goal.id, partTitle: goal.title, kind, label, earnedOn,
+  })
+  // The goal's own unit, a rate included ("5 /month" reads as written), as the readings show it.
+  const unit = goal.unit.trim()
+  if (readings.length === 0) return { earned: [], next: { partId: goal.id, label: "The first reading", toGo: "write where you are now" } }
+  const earned: PlanAchievement[] = [mk("first", "1", "First reading", readings[0].date)]
+  // A climb from a number to the same number has no way to go.
+  if (climbFraction(goal, readings[0].value) === null) return { earned, next: null }
+  let best = 0
+  for (const r of readings) {
+    const f = climbFraction(goal, r.value) ?? 0
+    for (const mark of CLIMB_MARKS) {
+      if (f >= mark && best < mark) {
+        const target = `${goal.ladder!.target}${unit ? ` ${unit}` : ""}`
+        earned.push(mk("climb", String(mark), mark === 1 ? `Reached ${target}` : `${CLIMB_LABEL[mark]} to ${target}`, r.date))
+      }
+    }
+    best = Math.max(best, f)
+  }
+  const nextMark = CLIMB_MARKS.find((m) => m > best)
+  const ladder = goal.ladder!
+  const next = nextMark
+    ? {
+        partId: goal.id,
+        label: nextMark === 1 ? `Reached ${ladder.target}${unit ? ` ${unit}` : ""}` : `${CLIMB_LABEL[nextMark]} to ${ladder.target}${unit ? ` ${unit}` : ""}`,
+        toGo: `at ${Math.round((ladder.start + (ladder.target - ladder.start) * nextMark) * 100) / 100}${unit ? ` ${unit}` : ""}`,
+      }
+    : null
+  return { earned: earned.sort(byDay), next }
+}
+
+const CLIMB_LABEL: Record<number, string> = { 0.25: "A quarter of the way", 0.5: "Halfway", 0.75: "Three quarters of the way" }
 
 /** How often a step is meant to run in a week: its days, or its "N times a week". */
 export function stepPerWeek(step: NsRoutineStep): number {

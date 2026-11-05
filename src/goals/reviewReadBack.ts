@@ -20,6 +20,7 @@ import { firstCountDays, practiceRateInWeek, rampWeek, weekCount } from "./north
 import { stepTick, NO_TRAINING_TICKS, type TrainingTicks } from "./dayTicks"
 import { stepPerWeek } from "./planAchievementsService"
 import { reviewFor, shiftPeriod, type ReviewPeriod } from "./reviewService"
+import { latestReading, takesReadings, type Reading } from "./goalReadings"
 
 /** A counted goal over the period. */
 export interface CountedReadBack {
@@ -37,8 +38,17 @@ export interface CountedReadBack {
   weeks: number
 }
 
+/** A number goal over the period: where it stood at the period's end (or today), and its reading today. */
+export interface NumberReadBack {
+  goal: NsGoal
+  /** The latest reading up to the period's end, or today when the period is still running. */
+  latest: Reading | null
+}
+
 export interface GoalsReadBack {
   counted: CountedReadBack[]
+  /** The number goals (body weight, bench), with their latest reading (Plans/life-plan-readings.md). */
+  numbers: NumberReadBack[]
   /** The season's goals that are not counted: the ones this stretch is meant to be for. */
   season: NsGoal[]
   /** Every other goal, in priority order. */
@@ -83,9 +93,13 @@ export function goalsReadBack(plan: NsPlan, period: ReviewPeriod, today: string)
     const weekTarget = period.cadence === "week" ? targetIn(weekStartISO(period.start)) : 0
     return { goal, count, target: weekTarget > 0 ? weekTarget : null, weeksMet, weeks: weeksSoFar }
   })
-  const season = ordered.filter((g) => !isSystem(g) && g.servesOneThing)
-  const rest = ordered.filter((g) => !isSystem(g) && !g.servesOneThing)
-  return { counted, season, rest }
+  // The season's number goals first: they are what this stretch is for.
+  const numbers = [...ordered.filter((g) => takesReadings(g) && g.servesOneThing), ...ordered.filter((g) => takesReadings(g) && !g.servesOneThing)]
+    .map((goal) => ({ goal, latest: latestReading(plan, goal.id, last) }))
+  const other = ordered.filter((g) => !isSystem(g) && !takesReadings(g))
+  const season = other.filter((g) => g.servesOneThing)
+  const rest = other.filter((g) => !g.servesOneThing)
+  return { counted, numbers, season, rest }
 }
 
 /** A routine over the period: its steps' ticks against what they plan. */

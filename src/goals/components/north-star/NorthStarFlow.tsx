@@ -1220,6 +1220,7 @@ export function NorthStarFlow({
     onRemove: removePlanGoal,
     onLadder: (id: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, id, ladder)),
     onRamp: (id: string, steps: HabitRampStep[] | null) => setPlan((p) => ns.setRamp(p, id, steps)),
+    onReading: (id: string, date: string, value: number | null) => setPlan((p) => ns.setGoalReading(p, date, id, value)),
     onLink: (fromId: string, toId: string) => setPlan((p) => ns.linkGoal(p, fromId, toId)),
     onUnlink: (fromId: string, toId: string) => setPlan((p) => ns.unlinkGoal(p, fromId, toId)),
     onAddObstacle: (id: string, what: string) => setPlan((p) => ns.addObstacle(p, id, what)),
@@ -2046,6 +2047,7 @@ export function NorthStarFlow({
                 onWrite: (period, patch) => setPlan((p) => writeReview(p, period, patch, today)),
                 onRemove: (id) => setPlan((p) => removeReview(p, id)),
                 onAddMoments: (period, lines) => setPlan((p) => appendToReview(p, period, "magicMoments", lines, today)),
+                onReading: (goalId, date, value) => setPlan((p) => ns.setGoalReading(p, date, goalId, value)),
               }}
             />
           ) : (

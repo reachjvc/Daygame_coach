@@ -120,6 +120,7 @@ import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
 /* "Is this step done today" has ONE owner. `dayTicks` is a leaf so that both
    this file and `northStarTrackService` can reach it without closing a cycle. */
 import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
+import { takesReadings } from "@/src/goals/goalReadings"
 import { isEmptyReview, latestScores, periodLabel, periodOfReview, ratedAreaCount, readReviews } from "@/src/goals/reviewService"
 import { DAY_LIMITS } from "@/src/goals/lifePlanDayService"
 import { periodStartFor } from "@/src/shared/dateUtils"
@@ -2021,8 +2022,16 @@ export function updateGoal(plan: NsPlan, goalId: string, patch: Partial<Omit<NsG
  * to look at the controls does not cost the numbers already typed.
  */
 export function setGoalType(plan: NsPlan, goalId: string, type: VisionGoalType, now = nowIso()): NsPlan {
+  const was = plan.goals.find((g) => g.id === goalId)
   return touch({
     ...plan,
+    /*
+     * A GOAL'S DAY NUMBERS MEAN WHAT ITS KIND SAYS: a practice's are counts, a
+     * target's are readings (Plans/life-plan-readings.md). Kept across a change
+     * of kind, readings of 92, 91 and 90 kg would read as 273 sessions in a
+     * week. So they go with the old kind; the card asks first (`TypeToggle`).
+     */
+    numbers: was && was.type !== type ? withoutNumbersOf(plan.numbers ?? {}, goalId) : plan.numbers,
     goals: plan.goals.map((g) => {
       if (g.id !== goalId) return g
       if (g.type === type) return g
@@ -3640,6 +3649,17 @@ export function removeDailyField(plan: NsPlan, id: string, now = nowIso()): NsPl
 }
 
 /** The day numbers with one part's taken out of every day, as the database's cascade does. */
+/** The day numbers with one part's number on one day set, or taken out when null; an emptied day goes. */
+function withDayNumber(numbers: Record<string, Record<string, number>>, date: string, id: string, value: number | null): Record<string, Record<string, number>> {
+  const row = { ...(numbers[date] ?? {}) }
+  if (value === null) delete row[id]
+  else row[id] = value
+  const out = { ...numbers }
+  if (Object.keys(row).length > 0) out[date] = row
+  else delete out[date]
+  return out
+}
+
 function withoutNumbersOf(numbers: Record<string, Record<string, number>>, id: string): Record<string, Record<string, number>> {
   const out: Record<string, Record<string, number>> = {}
   for (const [date, row] of Object.entries(numbers)) {
@@ -3705,13 +3725,7 @@ export const DAY_NUMBER_LIMIT = DAY_LIMITS.number
 export function setDayNumber(plan: NsPlan, date: string, fieldId: string, value: number | null, now = nowIso()): NsPlan {
   if (!plan.fields.some((f) => f.id === fieldId && f.kind === "number")) return plan
   if (value !== null && (!Number.isFinite(value) || Math.abs(value) > DAY_NUMBER_LIMIT)) return plan
-  const row = { ...(plan.numbers[date] ?? {}) }
-  if (value === null) delete row[fieldId]
-  else row[fieldId] = value
-  const numbers = { ...plan.numbers }
-  if (Object.keys(row).length > 0) numbers[date] = row
-  else delete numbers[date]
-  return touch({ ...plan, numbers }, now)
+  return touch({ ...plan, numbers: withDayNumber(plan.numbers, date, fieldId, value) }, now)
 }
 
 /**
@@ -3735,14 +3749,22 @@ export function countGoal(plan: NsPlan, date: string, goalId: string, by: 1 | -1
     if (held.length === 0) return plan
     day = held[held.length - 1]
   }
-  const row = { ...(plan.numbers[day] ?? {}) }
-  const next = (row[goalId] ?? 0) + by
-  if (next > 0) row[goalId] = Math.min(next, DAY_NUMBER_LIMIT)
-  else delete row[goalId]
-  const numbers = { ...plan.numbers }
-  if (Object.keys(row).length > 0) numbers[day] = row
-  else delete numbers[day]
-  return touch({ ...plan, numbers }, now)
+  const next = (plan.numbers[day]?.[goalId] ?? 0) + by
+  return touch({ ...plan, numbers: withDayNumber(plan.numbers, day, goalId, next > 0 ? Math.min(next, DAY_NUMBER_LIMIT) : null) }, now)
+}
+
+/**
+ * A NUMBER GOAL'S READING ON A DAY (Plans/life-plan-readings.md): body weight,
+ * bench, body fat. Kept on the day, like a count, in the same table; the
+ * latest reading is where the goal stands. Only a number goal (a climb) takes
+ * one, and not one wired to the area's daily ratings, which reads those
+ * instead. Null clears the day's reading.
+ */
+export function setGoalReading(plan: NsPlan, date: string, goalId: string, value: number | null, now = nowIso()): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  if (!goal || !takesReadings(goal)) return plan
+  if (value !== null && (!Number.isFinite(value) || Math.abs(value) > DAY_NUMBER_LIMIT)) return plan
+  return touch({ ...plan, numbers: withDayNumber(plan.numbers, date, goalId, value) }, now)
 }
 
 /**

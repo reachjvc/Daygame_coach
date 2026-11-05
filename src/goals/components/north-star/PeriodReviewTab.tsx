@@ -22,7 +22,9 @@
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import type { NsGoal, NsPlan, NsReview, NsReviewVerdict } from "@/src/goals/types"
-import { ACHIEVEMENT_COPY, READBACK_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import { ACHIEVEMENT_COPY, READBACK_COPY, READINGS_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import { ReadingInput, withUnit } from "./GoalReadings"
+import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { goalsReadBack, previousOutcomes, routinesReadBack } from "@/src/goals/reviewReadBack"
 import {
   REVIEW_CADENCES,
@@ -54,7 +56,12 @@ export interface PeriodReviewHandlers {
   onRemove: (id: string) => void
   /** Add lines to the end of Magic moments (`appendToReview`). */
   onAddMoments: (period: ReviewPeriod, lines: string[]) => void
+  /** A number goal's reading on a day (`setGoalReading`). */
+  onReading: (goalId: string, date: string, value: number | null) => void
 }
+
+/** How many number goals show before "N more". */
+const NUMBERS_SHOWN = 6
 
 /** How many reviews the scores-over-time table shows, newest kept. */
 const OVER_TIME_COLUMNS = 8
@@ -154,6 +161,7 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
         ticks={ticks}
         review={review}
         onVerdict={(goalId, value) => write({ verdict: { goalId, value } })}
+        onReading={handlers.onReading}
       />
 
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
@@ -262,18 +270,23 @@ function EarnedInPeriod({ plan, period, today, ticks, review, onAdd }: {
 }
 
 /** The period read back: last period's outcomes, the goals with an answer each, the routines. */
-function ReadBack({ plan, period, today, ticks, review, onVerdict }: {
+function ReadBack({ plan, period, today, ticks, review, onVerdict, onReading }: {
   plan: NsPlan
   period: ReviewPeriod
   today: string
   ticks: TrainingTicks
   review: NsReview | null
   onVerdict: (goalId: string, value: NsReviewVerdict | null) => void
+  onReading: (goalId: string, date: string, value: number | null) => void
 }) {
   const goals = useMemo(() => goalsReadBack(plan, period, today), [plan, period, today])
   const routines = useMemo(() => routinesReadBack(plan, period, today, ticks), [plan, period, today, ticks])
   const before = previousOutcomes(plan, period)
   const [restOpen, setRestOpen] = useState(false)
+  const [numbersOpen, setNumbersOpen] = useState(false)
+  // Today's reading can be written only in a review of a period that holds today.
+  const holdsToday = period.start <= today && today <= period.end
+  const shownNumbers = numbersOpen ? goals.numbers : goals.numbers.slice(0, NUMBERS_SHOWN)
   const verdictOf = (id: string) => review?.verdicts?.[id] ?? null
   const row = (goal: NsGoal, numbers: string | null) => (
     <li key={goal.id} className="py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -306,6 +319,41 @@ function ReadBack({ plan, period, today, ticks, review, onVerdict }: {
               c.target == null && c.weeks > 0 ? READBACK_COPY.weeksOn(c.weeksMet, c.weeks) : null,
             ].filter(Boolean).join(" · ")))}
           </ul>
+        )}
+        {goals.numbers.length > 0 && (
+          <div className="mt-3" data-testid="review-numbers">
+            <p className="text-[11px] text-zinc-500">{READBACK_COPY.numbersTitle}</p>
+            <p className="text-[10.5px] text-zinc-600">{READBACK_COPY.numbersHelp}</p>
+            <ul className="divide-y divide-white/[0.06]">
+              {shownNumbers.map(({ goal, latest }) => (
+                <li key={goal.id} className="py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12.5px] text-zinc-200">
+                      {goal.title}
+                      {goal.servesOneThing && <span className="ml-1.5 text-[10px] text-violet-300/70">{READBACK_COPY.seasonTag}</span>}
+                    </span>
+                    <span className="block text-[10.5px] text-zinc-500 tabular-nums">
+                      {latest ? READINGS_COPY.latest(withUnit(goal, latest.value), dateKeyLabel(latest.date, { day: "numeric", month: "short" })) : READINGS_COPY.noneYet}
+                    </span>
+                  </span>
+                  {holdsToday && (
+                    <ReadingInput
+                      goal={goal}
+                      value={plan.numbers[today]?.[goal.id] ?? null}
+                      onSet={(v) => onReading(goal.id, today, v)}
+                      label={READINGS_COPY.todayAria(goal.title)}
+                    />
+                  )}
+                  <VerdictRow title={goal.title} value={verdictOf(goal.id)} onPick={(v) => onVerdict(goal.id, verdictOf(goal.id) === v ? null : v)} />
+                </li>
+              ))}
+            </ul>
+            {goals.numbers.length > NUMBERS_SHOWN && (
+              <button onClick={() => setNumbersOpen((v) => !v)} aria-expanded={numbersOpen} className="text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors">
+                {numbersOpen ? ACHIEVEMENT_COPY.fewer : ACHIEVEMENT_COPY.more(goals.numbers.length - NUMBERS_SHOWN)}
+              </button>
+            )}
+          </div>
         )}
         {goals.season.length > 0 && (
           <div className="mt-3">

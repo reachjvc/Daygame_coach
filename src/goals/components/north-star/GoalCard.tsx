@@ -34,6 +34,7 @@ import {
   SERVES_COPY,
   TIMEFRAME_COPY,
   VALUE_COLOR,
+  READINGS_COPY,
 } from "@/src/goals/data/northStar"
 import { BUILDER_COPY } from "@/src/goals/data/northStarStart"
 import {
@@ -68,6 +69,8 @@ import { REASON_PROMPTS } from "@/src/goals/visionPlanService"
 import { MilestoneCurveEditor } from "../MilestoneCurveEditor"
 import { SentenceBox } from "./SentenceBox"
 import { GoalAchievements } from "./Achievements"
+import { GoalReadings } from "./GoalReadings"
+import { takesReadings } from "@/src/goals/goalReadings"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
 export interface GoalHandlers {
@@ -76,6 +79,8 @@ export interface GoalHandlers {
   onRemove: (goalId: string) => void
   onLadder: (goalId: string, ladder: MilestoneLadderConfig) => void
   onRamp: (goalId: string, steps: HabitRampStep[] | null) => void
+  /** A number goal's reading on a day (`setGoalReading`). Without it the card shows no readings. */
+  onReading?: (goalId: string, date: string, value: number | null) => void
   onLink: (fromId: string, toId: string) => void
   onUnlink: (fromId: string, toId: string) => void
   onAddObstacle: (goalId: string, what: string) => void
@@ -169,7 +174,11 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             onMove={(d) => handlers.onMovePriority(goal.id, d)}
           />
         )}
-        <TypeToggle type={goal.type} onSetType={(t) => handlers.onSetType(goal.id, t)} />
+        <TypeToggle
+          type={goal.type}
+          heldDays={Object.values(plan.numbers ?? {}).filter((row) => goal.id in row).length}
+          onSetType={(t) => handlers.onSetType(goal.id, t)}
+        />
         <span className="min-w-0 flex-1 basis-40">
           <input
             value={goal.title}
@@ -532,6 +541,11 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
             <Checkpoints goal={goal} color={color} today={today} handlers={handlers} />
           )}
 
+          {/* Where a number goal stands, reading by reading (Stefan's weekly check-in). */}
+          {takesReadings(goal) && handlers.onReading && (
+            <GoalReadings plan={plan} goal={goal} today={today} onReading={(date, v) => handlers.onReading!(goal.id, date, v)} />
+          )}
+
           {/* What it has earned, in place of a date on a goal that repeats
               (the owner's item 22), and what feeds it has earned. */}
           <GoalAchievements plan={plan} goal={goal} today={today} ticks={ticks} />
@@ -719,13 +733,37 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
 }
 
 /** The one-tap flip between the three shapes. */
-function TypeToggle({ type, onSetType }: { type: VisionGoalType; onSetType: (t: VisionGoalType) => void }) {
+/**
+ * The goal's kind. A goal holding day numbers (counts for a practice, readings
+ * for a target) asks first: they mean what the kind says, so they go with
+ * the old kind (`setGoalType`).
+ */
+function TypeToggle({ type, heldDays, onSetType }: { type: VisionGoalType; heldDays: number; onSetType: (t: VisionGoalType) => void }) {
+  const [asking, setAsking] = useState<VisionGoalType | null>(null)
+  const pick = (t: VisionGoalType) => {
+    if (t === type) return
+    if (heldDays > 0) setAsking(t)
+    else onSetType(t)
+  }
+  if (asking) {
+    return (
+      <span className="flex flex-wrap items-center gap-2 shrink-0 text-[11px]" role="group" aria-label={READINGS_COPY.changeKindAria}>
+        <span className="text-amber-200/80">{READINGS_COPY.changeKind(heldDays)}</span>
+        <button onClick={() => { onSetType(asking); setAsking(null) }} className="px-2 py-0.5 rounded-md border border-amber-300/40 text-amber-100 hover:bg-amber-400/10 transition-colors">
+          {READINGS_COPY.changeKindYes}
+        </button>
+        <button onClick={() => setAsking(null)} className="px-2 py-0.5 rounded-md border border-white/10 text-zinc-400 hover:text-zinc-200 transition-colors">
+          {READINGS_COPY.changeKindNo}
+        </button>
+      </span>
+    )
+  }
   return (
     <span className="flex rounded-md border border-white/10 overflow-hidden shrink-0 text-[11px]">
       {GOAL_SHAPES.map((m) => (
         <button
           key={m.type}
-          onClick={() => onSetType(m.type)}
+          onClick={() => pick(m.type)}
           aria-pressed={type === m.type}
           aria-label={m.label}
           title={`${m.label} — ${m.hint}`}

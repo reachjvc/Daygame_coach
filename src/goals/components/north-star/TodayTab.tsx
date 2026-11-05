@@ -38,7 +38,7 @@ import { ACHIEVEMENT_COPY, DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/sr
 import { goalAchievements } from "@/src/goals/planAchievementsService"
 import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
-import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
+import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, isSystem, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { ScoreRow } from "./ScoreRow"
 import { SENTENCE_HINT } from "./SentenceBox"
@@ -872,7 +872,7 @@ export function TodayTab({
   const progress = useMemo(() => todayProgress(items), [items])
   /** What each counted goal earned today, worked out once per change of the plan (`planAchievementsService`). */
   const earnedToday = useMemo(
-    () => new Map(plan.goals.map((g) => [g.id, goalAchievements(plan, g.id, today).earned.filter((a) => a.earnedOn === today)])),
+    () => new Map(plan.goals.filter(isSystem).map((g) => [g.id, goalAchievements(plan, g.id, today).earned.filter((a) => a.earnedOn === today)])),
     [plan, today],
   )
   /**

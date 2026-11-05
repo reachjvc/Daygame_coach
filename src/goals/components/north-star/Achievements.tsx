@@ -14,6 +14,7 @@ import type { NsGoal, NsPlan } from "@/src/goals/types"
 import { ACHIEVEMENT_COPY as COPY } from "@/src/goals/data/northStar"
 import { fedAchievements, goalAchievements, type PlanAchievement } from "@/src/goals/planAchievementsService"
 import { isSystem } from "@/src/goals/northStarService"
+import { takesReadings } from "@/src/goals/goalReadings"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
@@ -58,7 +59,7 @@ export function AchievementList({ items, withPart = false, label }: { items: Pla
  * neither counted nor fed.
  */
 export function GoalAchievements({ plan, goal, today, ticks = NO_TRAINING_TICKS }: { plan: NsPlan; goal: NsGoal; today: string; ticks?: TrainingTicks }) {
-  const own = useMemo(() => (isSystem(goal) ? goalAchievements(plan, goal.id, today) : null), [plan, goal, today])
+  const own = useMemo(() => (isSystem(goal) || takesReadings(goal) ? goalAchievements(plan, goal.id, today) : null), [plan, goal, today])
   const fed = useMemo(() => fedAchievements(plan, goal.id, today, ticks), [plan, goal.id, today, ticks])
   if (!own && fed.length === 0) return null
   return (
@@ -68,7 +69,7 @@ export function GoalAchievements({ plan, goal, today, ticks = NO_TRAINING_TICKS 
         <div className="mt-1.5">
           {own.earned.length > 0
             ? <AchievementList items={own.earned} label={COPY.ownLabel(goal.title)} />
-            : <p className="text-[11px] text-zinc-500">{COPY.none}</p>}
+            : <p className="text-[11px] text-zinc-500">{takesReadings(goal) ? COPY.noneReading : COPY.none}</p>}
           {own.next && (
             <p className="mt-1.5 text-[11px] text-zinc-400" data-testid="achievement-next">
               {COPY.next(own.next.label, own.next.toGo)}

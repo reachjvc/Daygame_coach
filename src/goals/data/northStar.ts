@@ -502,6 +502,7 @@ export const JOURNAL_PROMPTS: Array<{ id: string; group: string; question: strin
 export const ACHIEVEMENT_COPY = {
   title: "Achievements",
   none: "Nothing yet. Log one on Today and the first one is yours.",
+  noneReading: "Nothing yet. Write a reading and the first one is yours.",
   next: (label: string, toGo: string) => `Next: ${label} (${toGo})`,
   more: (n: number) => `${n} more`,
   fewer: "Show fewer",
@@ -514,6 +515,26 @@ export const ACHIEVEMENT_COPY = {
   addToMoments: "Add these to Magic moments",
   added: "Added",
   todayEarned: (labels: string) => `Earned today: ${labels}`,
+} as const
+
+/**
+ * READINGS ON A NUMBER GOAL (Plans/life-plan-readings.md). Stefan: "check in
+ * with my body weight … and measurements on a weekly basis" (tYCT57Onfas).
+ */
+export const READINGS_COPY = {
+  title: "Readings",
+  help: "Where you are now. Write it when you measure; the latest one is where this goal stands.",
+  placeholder: "today",
+  refused: "One number, with a point or a comma for decimals.",
+  todayAria: (title: string) => `Today's reading for ${title}`,
+  since: (change: string, day: string) => `${change.startsWith("-") ? change : `+${change}`} since ${day}`,
+  same: (day: string) => `no change since ${day}`,
+  changeKind: (days: number) => `Its ${days} logged ${days === 1 ? "day goes" : "days go"} with the old kind. Change it?`,
+  changeKindYes: "Change it",
+  changeKindNo: "Keep it",
+  changeKindAria: "Change this goal's kind?",
+  latest: (value: string, day: string) => `latest ${value}, ${day}`,
+  noneYet: "no reading yet",
 } as const
 
 /**
@@ -530,6 +551,9 @@ export const READBACK_COPY = {
   countIn: (n: number) => `${n} in all`,
   weeksOn: (met: number, weeks: number) => `on target ${met} of ${weeks} ${weeks === 1 ? "week" : "weeks"}`,
   noCounted: "No goal is counted yet. A goal you do every week counts on Today.",
+  numbersTitle: "Your numbers",
+  numbersHelp: "Where each one stands. Write today's reading if you measured.",
+  seasonTag: "this season",
   seasonTitle: "This season's goals",
   restTitle: (n: number) => `Your other goals (${n})`,
   verdicts: { on_track: "On track", behind: "Behind", change: "Change the approach" },
