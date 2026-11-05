@@ -21,8 +21,9 @@
 
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
-import type { NsPlan, NsReview } from "@/src/goals/types"
-import { ACHIEVEMENT_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import type { NsGoal, NsPlan, NsReview, NsReviewVerdict } from "@/src/goals/types"
+import { ACHIEVEMENT_COPY, READBACK_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import { goalsReadBack, previousOutcomes, routinesReadBack } from "@/src/goals/reviewReadBack"
 import {
   REVIEW_CADENCES,
   REVIEW_LIMITS,
@@ -142,6 +143,19 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
           what was logged and ticked in it. */}
       <EarnedInPeriod key={reviewIdFor(period)} plan={plan} period={period} today={today} ticks={ticks} review={review} onAdd={(lines) => handlers.onAddMoments(period, lines)} />
 
+      {/* Then the period read back, as Stefan's weekly review goes over the
+          goals: what the period before set out to bring, each goal against
+          its number with an answer, and the routines. */}
+      <ReadBack
+        key={`readback-${reviewIdFor(period)}`}
+        plan={plan}
+        period={period}
+        today={today}
+        ticks={ticks}
+        review={review}
+        onVerdict={(goalId, value) => write({ verdict: { goalId, value } })}
+      />
+
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-baseline gap-2">
           <h3 className="text-[13px] font-semibold text-zinc-200">{COPY.scoresTitle}</h3>
@@ -247,6 +261,107 @@ function EarnedInPeriod({ plan, period, today, ticks, review, onAdd }: {
   )
 }
 
+/** The period read back: last period's outcomes, the goals with an answer each, the routines. */
+function ReadBack({ plan, period, today, ticks, review, onVerdict }: {
+  plan: NsPlan
+  period: ReviewPeriod
+  today: string
+  ticks: TrainingTicks
+  review: NsReview | null
+  onVerdict: (goalId: string, value: NsReviewVerdict | null) => void
+}) {
+  const goals = useMemo(() => goalsReadBack(plan, period, today), [plan, period, today])
+  const routines = useMemo(() => routinesReadBack(plan, period, today, ticks), [plan, period, today, ticks])
+  const before = previousOutcomes(plan, period)
+  const [restOpen, setRestOpen] = useState(false)
+  const verdictOf = (id: string) => review?.verdicts?.[id] ?? null
+  const row = (goal: NsGoal, numbers: string | null) => (
+    <li key={goal.id} className="py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      <span className="min-w-0 flex-1">
+        <span className="block text-[12.5px] text-zinc-200">{goal.title}</span>
+        {numbers && <span className="block text-[10.5px] text-zinc-500 tabular-nums">{numbers}</span>}
+      </span>
+      <VerdictRow title={goal.title} value={verdictOf(goal.id)} onPick={(v) => onVerdict(goal.id, verdictOf(goal.id) === v ? null : v)} />
+    </li>
+  )
+  return (
+    <>
+      {before && (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5" data-testid="review-previous-outcomes">
+          <h3 className="text-[13px] font-semibold text-zinc-200">{READBACK_COPY.previousTitle(READBACK_COPY.units[period.cadence])}</h3>
+          <p className="text-[11px] text-zinc-500 mt-0.5">{READBACK_COPY.previousHelp(periodLabel(before.period))}</p>
+          <p className="mt-2 text-[12.5px] text-zinc-300 whitespace-pre-line leading-relaxed">{before.text}</p>
+        </section>
+      )}
+
+      <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5" data-testid="review-goals">
+        <h3 className="text-[13px] font-semibold text-zinc-200">{READBACK_COPY.goalsTitle(periodLabel(period))}</h3>
+        <p className="text-[11px] text-zinc-500 mt-0.5">{READBACK_COPY.goalsHelp}</p>
+        {goals.counted.length === 0 ? (
+          <p className="text-[11px] text-zinc-600 mt-2">{READBACK_COPY.noCounted}</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-white/[0.06]">
+            {goals.counted.map((c) => row(c.goal, [
+              c.target != null ? READBACK_COPY.countOf(c.count, c.target) : READBACK_COPY.countIn(c.count),
+              c.target == null && c.weeks > 0 ? READBACK_COPY.weeksOn(c.weeksMet, c.weeks) : null,
+            ].filter(Boolean).join(" · ")))}
+          </ul>
+        )}
+        {goals.season.length > 0 && (
+          <div className="mt-3">
+            <p className="text-[11px] text-zinc-500">{READBACK_COPY.seasonTitle}</p>
+            <ul className="divide-y divide-white/[0.06]">{goals.season.map((g) => row(g, null))}</ul>
+          </div>
+        )}
+        {goals.rest.length > 0 && (
+          <div className="mt-3">
+            <button onClick={() => setRestOpen((v) => !v)} aria-expanded={restOpen} className="text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors">
+              {READBACK_COPY.restTitle(goals.rest.length)}
+            </button>
+            {restOpen && <ul className="divide-y divide-white/[0.06]">{goals.rest.map((g) => row(g, null))}</ul>}
+          </div>
+        )}
+      </section>
+
+      {routines.length > 0 && (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5" data-testid="review-routines">
+          <h3 className="text-[13px] font-semibold text-zinc-200">{READBACK_COPY.routinesTitle}</h3>
+          <p className="text-[11px] text-zinc-500 mt-0.5">{READBACK_COPY.routinesHelp}</p>
+          <ul className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {routines.map((r) => (
+              <li key={r.routine.id} className="flex items-baseline justify-between gap-3 text-[12px]">
+                <span className="text-zinc-300 min-w-0 truncate">{r.routine.label}</span>
+                <span className="text-zinc-500 tabular-nums shrink-0">{READBACK_COPY.routineOf(r.done, r.planned)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
+  )
+}
+
+/** On track / Behind / Change the approach. The same answer again takes it back. */
+function VerdictRow({ title, value, onPick }: { title: string; value: NsReviewVerdict | null; onPick: (v: NsReviewVerdict) => void }) {
+  return (
+    <span role="group" aria-label={`How ${title} is going`} className="inline-flex flex-wrap gap-1 shrink-0">
+      {(Object.keys(READBACK_COPY.verdicts) as NsReviewVerdict[]).map((v) => (
+        <button
+          key={v}
+          onClick={() => onPick(v)}
+          aria-pressed={value === v}
+          aria-label={READBACK_COPY.verdictAria(READBACK_COPY.verdicts[v], title)}
+          className={`text-[10.5px] px-2 py-0.5 rounded-full border transition-colors ${
+            value === v ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          {READBACK_COPY.verdicts[v]}
+        </button>
+      ))}
+    </span>
+  )
+}
+
 /**
  * One of the three texts. Held locally and committed on blur, as every box on
  * this flow is: a save re-renders the page around it, and typing through that
@@ -307,7 +422,9 @@ function RemoveReview({ onRemove }: { onRemove: () => void }) {
 
 function EarlierRow({ review, onOpen }: { review: NsReview; onOpen: () => void }) {
   const avg = averageScore(review)
-  const firstLine = review.magicMoments.trim().split("\n")[0] || review.nextOutcomes.trim().split("\n")[0] || ""
+  const answered = Object.keys(review.verdicts ?? {}).length
+  const firstLine =
+    review.magicMoments.trim().split("\n")[0] || review.nextOutcomes.trim().split("\n")[0] || (answered > 0 ? COPY.answered(answered) : "")
   return (
     <li className="flex items-center gap-3 py-2">
       <div className="min-w-0 flex-1">

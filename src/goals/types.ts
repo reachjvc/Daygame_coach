@@ -2006,6 +2006,9 @@ export interface NsPastSeason {
  */
 export type NsReviewCadence = "week" | "fortnight" | "month" | "quarter" | "year"
 
+/** A review's answer on one goal: Stefan's "are you on track, are you behind, what changes do you need to make". */
+export type NsReviewVerdict = "on_track" | "behind" | "change"
+
 /** One look back over a week, month, quarter or year. */
 export interface NsReview {
   /** `<cadence>-<periodStart>`: one review per period, so the period is the id. */
@@ -2025,6 +2028,11 @@ export interface NsReview {
    * the earlier of the period's last day and `writtenOn`.
    */
   scoredOn?: Record<string, string>
+  /**
+   * Goal id to how it is going, in this period's eyes (Plans/life-plan-review-reads-back.md).
+   * Missing when the review said nothing about any goal.
+   */
+  verdicts?: Record<string, NsReviewVerdict>
   /** What went well; the moments worth keeping. */
   magicMoments: string
   lessons: string

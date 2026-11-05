@@ -317,6 +317,14 @@ export interface ReviewScoreRow {
   scored_on?: string | null
 }
 
+/** A review's answer on one goal (20261105170000): on track, behind, or change the approach. */
+export interface ReviewGoalRow {
+  user_id: string
+  review_id: string
+  goal_id: string
+  verdict: "on_track" | "behind" | "change"
+}
+
 export interface GoalFeedRow {
   user_id: string
   goal_id: string
@@ -419,6 +427,7 @@ export interface PlanRows {
   season_goals: SeasonGoalRow[]
   reviews: ReviewRow[]
   review_scores: ReviewScoreRow[]
+  review_goals: ReviewGoalRow[]
   values: ValueRow[]
   answers: AnswerRow[]
 }
@@ -448,6 +457,7 @@ export const PLAN_ROW_KEYS = [
   "season_goals",
   "reviews",
   "review_scores",
+  "review_goals",
   "values",
   "answers",
 ] as const

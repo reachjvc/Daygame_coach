@@ -6,7 +6,7 @@ import { actAs, asOwner, asUser, newUser } from "@/tests/db/harness"
 import { applyLifePlanChanges, ensureLifePlan, readLifePlan } from "@/src/db/lifePlanRepo"
 import { planToRows, rowsToPlan } from "@/src/goals/lifePlanMapper"
 import { diffPlanRows } from "@/src/goals/lifePlanDiff"
-import { emptyNsPlan, setAreaReview } from "@/src/goals/northStarService"
+import { addGoal, emptyNsPlan, removeGoal, setAreaReview } from "@/src/goals/northStarService"
 import { periodOf, writeReview } from "@/src/goals/reviewService"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { NsPlan } from "@/src/goals/types"
@@ -141,5 +141,42 @@ describe("a review", () => {
       ),
     ).rejects.toThrow(/life_plan_review_scores_review_fk/)
     expect(await count("life_plan_review_scores", owner.user.id)).toBe(1)
+  })
+
+  /**
+   * THE ANSWER PER GOAL (20261105170000; Plans/life-plan-review-reads-back.md):
+   * saved with the review and read back the same, gone with its goal, and
+   * nobody else's to read or to hang on someone's review.
+   */
+  it("keeps an answer per goal, its owner's alone", async () => {
+    const owner = await personWithPlan("review-goals-owner")
+    let plan = addGoal(emptyNsPlan(), "lm_fitness", "Gym", "habit_ramp", NOW)
+    plan = writeReview(plan, periodOf("week", TODAY), { verdict: { goalId: plan.goals[0].id, value: "behind" } }, TODAY, NOW)
+    const saved = owner.rows(plan)
+    let revision = await applyLifePlanChanges(diffPlanRows(null, saved), 0, owner.user.id)
+    const read = (await readLifePlan(owner.user.id))!
+    expect(read.rows.review_goals).toEqual([expect.objectContaining({ verdict: "behind" })])
+    expect(rowsToPlan(read.rows)!.reviews).toEqual(plan.reviews)
+
+    const other = await personWithPlan("review-goals-other")
+    const otherPlan = addGoal(emptyNsPlan(), "lm_fitness", "Their gym", "habit_ramp", NOW)
+    const otherRows = other.rows(otherPlan)
+    await applyLifePlanChanges(diffPlanRows(null, otherRows), 0, other.user.id)
+    const reviewId = saved.reviews[0].id
+    expect(await asUser(other.user.id, (q) => q(`select review_id from life_plan_review_goals where review_id = $1`, [reviewId]))).toEqual([])
+    await expect(
+      asUser(other.user.id, (q) =>
+        q(`insert into life_plan_review_goals (user_id, review_id, goal_id, verdict) values ($1, $2, $3, 'on_track')`, [
+          other.user.id, reviewId, otherRows.goals[0].id,
+        ]),
+      ),
+    ).rejects.toThrow(/life_plan_review_goals_review_fk/)
+
+    // Removing the goal takes its answer, and the review with nothing left in it.
+    actAs(owner.user)
+    revision = await applyLifePlanChanges(diffPlanRows(saved, owner.rows(removeGoal(plan, plan.goals[0].id, NOW))), revision, owner.user.id)
+    expect(revision).toBe(2)
+    expect(await count("life_plan_review_goals", owner.user.id)).toBe(0)
+    expect(await count("life_plan_reviews", owner.user.id)).toBe(0)
   })
 })

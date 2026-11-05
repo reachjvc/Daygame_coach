@@ -1015,7 +1015,7 @@ export function normalizeNsPlan(parsed: unknown): NsPlan | null {
     pastNorthStars: readPastNorthStars(obj.pastNorthStars),
     season: readSeason(obj.season),
     pastSeasons: readPastSeasons(obj.pastSeasons),
-    reviews: readReviews(obj.reviews, areaIds),
+    reviews: readReviews(obj.reviews, areaIds, new Set(linkedGoals.map((g) => g.id))),
     rungs,
     areas: resolvedAreas,
     routines,
@@ -1492,18 +1492,16 @@ export function removeArea(plan: NsPlan, areaId: string, now = nowIso()): NsPlan
     pastSeasons: pastSeasonsWithout(plan.pastSeasons, areaId),
     // Its scores go from every review, as the database drops them with the
     // area, and a review left holding nothing goes with them.
-    reviews: plan.reviews
-      .map((r) => {
-        if (!(areaId in r.scores)) return r
-        const scores = { ...r.scores }
-        delete scores[areaId]
-        // The day it was given goes with it; no empty map is kept (`writeReview`).
-        const next: NsReview = { ...r, scores, scoredOn: { ...r.scoredOn } }
-        delete next.scoredOn![areaId]
-        if (Object.keys(next.scoredOn!).length === 0) delete next.scoredOn
-        return next
-      })
-      .filter((r) => !isEmptyReview(r)),
+    reviews: reviewsWithout(plan.reviews, (r) => {
+      if (!(areaId in r.scores)) return r
+      const scores = { ...r.scores }
+      delete scores[areaId]
+      // The day it was given goes with it; no empty map is kept (`writeReview`).
+      const next: NsReview = { ...r, scores, scoredOn: { ...r.scoredOn } }
+      delete next.scoredOn![areaId]
+      if (Object.keys(next.scoredOn!).length === 0) delete next.scoredOn
+      return next
+    }),
     review,
     daily,
   }, now)
@@ -2056,6 +2054,15 @@ export function setGoalType(plan: NsPlan, goalId: string, type: VisionGoalType, 
   }, now)
 }
 
+/**
+ * The reviews with one part taken out of each (`strip`), as the database's
+ * cascade takes a removed area's scores or a removed goal's answers; a review
+ * left holding nothing goes with them.
+ */
+function reviewsWithout(reviews: NsReview[], strip: (r: NsReview) => NsReview): NsReview[] {
+  return reviews.map(strip).filter((r) => !isEmptyReview(r))
+}
+
 export function removeGoal(plan: NsPlan, goalId: string, now = nowIso()): NsPlan {
   // Its actions go with it, as its habits did: an actions-routine step that
   // served only this goal. A step anything else is served by just loses the link.
@@ -2073,6 +2080,15 @@ export function removeGoal(plan: NsPlan, goalId: string, now = nowIso()): NsPlan
     pastSeasons: pastSeasonsWithout(plan.pastSeasons, goalId),
     // Its counts go with it, as the database's cascade takes them (Q4).
     numbers: withoutNumbersOf(plan.numbers ?? {}, goalId),
+    // And the reviews' answers on it; a review left holding nothing goes too.
+    reviews: reviewsWithout(plan.reviews, (r) => {
+      if (!r.verdicts || !(goalId in r.verdicts)) return r
+      const verdicts = { ...r.verdicts }
+      delete verdicts[goalId]
+      const next: NsReview = { ...r, verdicts }
+      if (Object.keys(verdicts).length === 0) delete next.verdicts
+      return next
+    }),
   }, now)
 }
 

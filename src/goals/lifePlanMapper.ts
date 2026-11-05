@@ -66,11 +66,12 @@ import type {
   SeasonGoalRow,
   ReviewRow,
   ReviewScoreRow,
+  ReviewGoalRow,
   ValueRow,
 } from "@/src/db/lifePlanTypes"
 import { normalizeNsPlan, readTimeframe } from "./northStarService"
 import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, ONE_ANSWERS } from "./data/northStarStart"
-import type { NsPastNorthStar, NsPastSeason, NsReview } from "./types"
+import type { NsPastNorthStar, NsPastSeason, NsReview, NsReviewVerdict } from "./types"
 import { SEASON_ANSWER_KEYS } from "./seasonAnswers"
 import { reviewIdFor } from "./reviewService"
 
@@ -491,6 +492,9 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
   // database dropped it with the area.
   const reviews: ReviewRow[] = []
   const review_scores: ReviewScoreRow[] = []
+  // And one answer row per goal it said something about (Plans/life-plan-review-reads-back.md),
+  // in the goals' order; a goal the plan no longer has is not written.
+  const review_goals: ReviewGoalRow[] = []
   for (const r of plan.reviews ?? []) {
     const n = node(`review:${r.id}`, "review")
     reviews.push({
@@ -504,6 +508,11 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
       if (typeof score === "number" && to) {
         review_scores.push({ user_id: userId, review_id: n.id, area_id: to, score, scored_on: r.scoredOn?.[area.id] ?? null })
       }
+    }
+    for (const g of plan.goals) {
+      const verdict = r.verdicts?.[g.id]
+      const to = goalId.get(g.id)
+      if (verdict && to) review_goals.push({ user_id: userId, review_id: n.id, goal_id: to, verdict })
     }
   }
 
@@ -557,6 +566,7 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
     season_goals,
     reviews,
     review_scores,
+    review_goals,
   }
 }
 
@@ -785,6 +795,11 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     scoresOf.set(x.review_id, into)
     if (x.scored_on) scoredOnOf.set(x.review_id, { ...scoredOnOf.get(x.review_id), [area]: x.scored_on })
   }
+  const verdictsOf = new Map<string, Record<string, NsReviewVerdict>>()
+  for (const x of rows.review_goals ?? []) {
+    const goal = id(x.goal_id)
+    if (goal) verdictsOf.set(x.review_id, { ...verdictsOf.get(x.review_id), [goal]: x.verdict })
+  }
   const reviews = (rows.reviews ?? []).map((r): NsReview => ({
     id: reviewIdFor({ cadence: r.cadence, start: r.period_start }),
     cadence: r.cadence,
@@ -793,6 +808,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     writtenOn: r.written_on,
     scores: scoresOf.get(r.id) ?? {},
     ...(scoredOnOf.has(r.id) ? { scoredOn: scoredOnOf.get(r.id) } : {}),
+    ...(verdictsOf.has(r.id) ? { verdicts: verdictsOf.get(r.id) } : {}),
     magicMoments: r.magic_moments,
     lessons: r.lessons,
     nextOutcomes: r.next_outcomes,

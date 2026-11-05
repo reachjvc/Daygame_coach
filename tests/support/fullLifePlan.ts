@@ -178,6 +178,8 @@ export function fullPlan(): NsPlan {
         periodEnd: "2026-01-11",
         writtenOn: "2026-01-11",
         scores: { [plan.areas[0].id]: 6, [plan.areas[2].id]: 0 },
+        // An answer per goal (Plans/life-plan-review-reads-back.md).
+        verdicts: { [plan.goals[0].id]: "behind" },
         magicMoments: "Ran ten kilometres for the first time.",
         lessons: "Sleep before 23 makes the morning.",
         nextOutcomes: "Three runs. One long.",

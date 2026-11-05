@@ -1,0 +1,130 @@
+/**
+ * A REVIEW READS THE PERIOD BACK (Plans/life-plan-review-reads-back.md).
+ *
+ * Stefan, each week: "read over … what are my one-year goals, my three-month
+ * goals, my one-month goals" (8kco2rjijjE); every two weeks: "are you on track,
+ * are you making progress, are you behind" (GXhPOncX8CA). The owner's item 34:
+ * a built-in way to see how well you did, by your own wishes.
+ *
+ * So for the period a review looks back over: each counted goal's count
+ * against its number, each routine's ticks against what it plans, and what the
+ * period before set out to bring. Worked out from the plan's own rows, like the
+ * achievements; only the answer per goal is saved, on the review.
+ *
+ * Pure: the day is handed in.
+ */
+
+import type { NsGoal, NsPlan, NsRoutine } from "./types"
+import { addDaysISO, goalsByPriority, isSystem, weekStartISO } from "./northStarService"
+import { firstCountDays, practiceRateInWeek, rampWeek, weekCount } from "./northStarTrackService"
+import { stepTick, NO_TRAINING_TICKS, type TrainingTicks } from "./dayTicks"
+import { stepPerWeek } from "./planAchievementsService"
+import { reviewFor, shiftPeriod, type ReviewPeriod } from "./reviewService"
+
+/** A counted goal over the period. */
+export interface CountedReadBack {
+  goal: NsGoal
+  /** What was logged in the period, up to today. */
+  count: number
+  /** The week's number, for a week; null for a longer period (it says weeks instead), or a week asking for none. */
+  target: number | null
+  /**
+   * Weeks of the period on target, and the weeks it has had so far: from the
+   * week it was first counted, leaving out weeks asking for none (a rest week
+   * in a ramp), and a week still running only once met.
+   */
+  weeksMet: number
+  weeks: number
+}
+
+export interface GoalsReadBack {
+  counted: CountedReadBack[]
+  /** The season's goals that are not counted: the ones this stretch is meant to be for. */
+  season: NsGoal[]
+  /** Every other goal, in priority order. */
+  rest: NsGoal[]
+}
+
+/** The Mondays of the weeks that start inside the period and have begun by today; a week review has its one. */
+function weeksOf(period: ReviewPeriod, today: string): string[] {
+  if (period.cadence === "week") return [weekStartISO(period.start)]
+  const out: string[] = []
+  const last = period.end < today ? period.end : today
+  let monday = weekStartISO(period.start)
+  if (monday < period.start) monday = addDaysISO(monday, 7)
+  for (; monday <= last; monday = addDaysISO(monday, 7)) out.push(monday)
+  return out
+}
+
+/** The goals, read back over the period: counted ones with their numbers, then the season's, then the rest. */
+export function goalsReadBack(plan: NsPlan, period: ReviewPeriod, today: string): GoalsReadBack {
+  const firsts = firstCountDays(plan)
+  const last = period.end < today ? period.end : today
+  const weeks = weeksOf(period, today)
+  const ordered = goalsByPriority(plan)
+  const counted: CountedReadBack[] = ordered.filter(isSystem).map((goal) => {
+    let count = 0
+    for (let d = period.start; d <= last; d = addDaysISO(d, 1)) count += plan.numbers?.[d]?.[goal.id] ?? 0
+    const targetIn = (monday: string) => practiceRateInWeek(goal, rampWeek(plan, goal.id, monday, firsts))
+    // A goal is judged from the week it was first counted: the weeks before it
+    // was a habit are not weeks it missed.
+    const first = firsts.get(goal.id)
+    const from = first ? weekStartISO(first) : null
+    let weeksMet = 0
+    let weeksSoFar = 0
+    for (const monday of weeks) {
+      if (!from || monday < from) continue
+      const target = targetIn(monday)
+      if (target <= 0) continue
+      const met = weekCount(plan, goal.id, monday) >= target
+      if (met) weeksMet += 1
+      if (met || addDaysISO(monday, 6) < today) weeksSoFar += 1
+    }
+    const weekTarget = period.cadence === "week" ? targetIn(weekStartISO(period.start)) : 0
+    return { goal, count, target: weekTarget > 0 ? weekTarget : null, weeksMet, weeks: weeksSoFar }
+  })
+  const season = ordered.filter((g) => !isSystem(g) && g.servesOneThing)
+  const rest = ordered.filter((g) => !isSystem(g) && !g.servesOneThing)
+  return { counted, season, rest }
+}
+
+/** A routine over the period: its steps' ticks against what they plan. */
+export interface RoutineReadBack {
+  routine: NsRoutine
+  done: number
+  /** What its steps plan for the days of the period gone by so far, rounded: a daily step is one a day. */
+  planned: number
+}
+
+/**
+ * Each routine with steps, its ticks in the period (by hand or by a finished
+ * workout) against its plan for the days of the period that have passed, so a
+ * perfect week reads perfect on a Tuesday, and a month that ends on a
+ * Saturday is not charged the rest of that week. (A step added during the
+ * period is charged from the period's start: the plan does not record when a
+ * step was added.)
+ */
+export function routinesReadBack(plan: NsPlan, period: ReviewPeriod, today: string, ticks: TrainingTicks = NO_TRAINING_TICKS): RoutineReadBack[] {
+  const last = period.end < today ? period.end : today
+  let days = 0
+  for (let d = period.start; d <= last; d = addDaysISO(d, 1)) days += 1
+  return plan.routines
+    .filter((r) => r.steps.length > 0)
+    .map((routine) => {
+      let done = 0
+      let planned = 0
+      for (const step of routine.steps) {
+        planned += (stepPerWeek(step) * days) / 7
+        for (let d = period.start; d <= last; d = addDaysISO(d, 1)) if (stepTick(plan, d, step.id, ticks).done) done += 1
+      }
+      return { routine, done, planned: Math.round(planned) }
+    })
+}
+
+/** What the period before, of the same kind, set out to bring; empty when nothing was written. */
+export function previousOutcomes(plan: NsPlan, period: ReviewPeriod): { text: string; period: ReviewPeriod } | null {
+  if (period.cadence === "fortnight") return null
+  const before = shiftPeriod(period, -1)
+  const text = reviewFor(plan, before)?.nextOutcomes.trim() ?? ""
+  return text ? { text, period: before } : null
+}

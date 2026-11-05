@@ -39,7 +39,7 @@ import type {
   NsTrackRow,
 } from "@/src/goals/types"
 import { addDaysISO, goalsByPriority, isMilestone, isSystem, weekStartISO } from "@/src/goals/northStarService"
-import { CADENCE_COPY, TODAY_COPY, JOURNAL_ALL_ID, JOURNAL_COPY, JOURNAL_PREFIX, JOURNAL_SETS, READ_COPY, RECAP_DRIVING_ANCHOR, REVIEW_PROMPTS, SCHEDULE_COPY, STAR_ANCHOR, STAR_PROMPTS, STAR_WHY_ID } from "@/src/goals/data/northStar"
+import { CADENCE_COPY, TODAY_COPY, JOURNAL_ALL_ID, JOURNAL_COPY, JOURNAL_PREFIX, JOURNAL_SETS, READ_COPY, RECAP_DRIVING_ANCHOR, REVIEW_PERIOD_COPY, REVIEW_PROMPTS, SCHEDULE_COPY, STAR_ANCHOR, STAR_PROMPTS, STAR_WHY_ID } from "@/src/goals/data/northStar"
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { NON_REGISTRY_TEMPLATE_PREFIXES } from "@/src/goals/data/templateNamespaces"
 /* "Is this step done today" has ONE owner, and it is not this file — see
@@ -1447,11 +1447,26 @@ export interface Destination {
   home: NsPlace
 }
 
+/**
+ * THE REVIEW STEP, as a place a row can send you (Plans/life-plan-review-reads-back.md).
+ * The weekly-review routine step pointed at the Journal's four weekly
+ * questions, a second home for the review the Review step holds; it points
+ * here now, and so does any step still naming that set (`destination`).
+ */
+export const REVIEW_DESTINATION_ID = "review"
+const OLD_WEEKLY_REVIEW_ID = `${JOURNAL_PREFIX}weekly-review`
+
 export function destinations(plan: NsPlan): Destination[] {
   const out: Destination[] = readSources(plan).map(({ id, label, group, home }) => ({ id, label, group, home }))
+  out.push({ id: REVIEW_DESTINATION_ID, label: REVIEW_PERIOD_COPY.destination, group: REVIEW_PERIOD_COPY.title, home: { tab: "review" } })
   out.push({ id: JOURNAL_ALL_ID, label: JOURNAL_COPY.title, group: JOURNAL_COPY.tab, home: { tab: "journal" } })
   for (const set of JOURNAL_SETS) {
-    out.push({ id: `${JOURNAL_PREFIX}${set.id}`, label: set.title, group: JOURNAL_COPY.tab, home: { tab: "journal", anchor: journalSetAnchor(set.id) } })
+    const id = `${JOURNAL_PREFIX}${set.id}`
+    // The Journal's weekly questions are not offered as a place to send a row:
+    // a row naming them opens the Review step (`destination`), so offering them
+    // would be a choice that lands somewhere else. The set stays on the Journal.
+    if (id === OLD_WEEKLY_REVIEW_ID) continue
+    out.push({ id, label: set.title, group: JOURNAL_COPY.tab, home: { tab: "journal", anchor: journalSetAnchor(set.id) } })
   }
   return out
 }
@@ -1459,7 +1474,8 @@ export function destinations(plan: NsPlan): Destination[] {
 /** The one destination a row names, or null when it names nothing that exists. */
 export function destination(plan: NsPlan, id: string | null): Destination | null {
   if (!id) return null
-  return destinations(plan).find((d) => d.id === id) ?? null
+  const wanted = id === OLD_WEEKLY_REVIEW_ID ? REVIEW_DESTINATION_ID : id
+  return destinations(plan).find((d) => d.id === wanted) ?? null
 }
 
 /** Where a standard set lands on the journal page. One name, both ends. */

@@ -517,12 +517,38 @@ export const ACHIEVEMENT_COPY = {
 } as const
 
 /**
+ * THE REVIEW READS THE PERIOD BACK (Plans/life-plan-review-reads-back.md).
+ * Stefan: "are you on track, are you making progress, are you behind … what
+ * changes do you need to make" (GXhPOncX8CA).
+ */
+export const READBACK_COPY = {
+  previousTitle: (unit: string) => `What last ${unit} set out to bring`,
+  previousHelp: (period: string) => `Your Next outcomes for ${period}. Did they happen?`,
+  goalsTitle: (period: string) => `Your goals in ${period}`,
+  goalsHelp: "Read each one back. On track, behind, or time to change the approach?",
+  countOf: (n: number, target: number) => `${n} of ${target}`,
+  countIn: (n: number) => `${n} in all`,
+  weeksOn: (met: number, weeks: number) => `on target ${met} of ${weeks} ${weeks === 1 ? "week" : "weeks"}`,
+  noCounted: "No goal is counted yet. A goal you do every week counts on Today.",
+  seasonTitle: "This season's goals",
+  restTitle: (n: number) => `Your other goals (${n})`,
+  verdicts: { on_track: "On track", behind: "Behind", change: "Change the approach" },
+  verdictAria: (label: string, title: string) => `${label}: ${title}`,
+  routinesTitle: "Your routines",
+  routinesHelp: "Ticks in this stretch, on Today or by a finished workout, against what each routine plans.",
+  routineOf: (done: number, planned: number) => `${done} of ${planned}`,
+  units: { week: "week", fortnight: "fortnight", month: "month", quarter: "quarter", year: "year" },
+} as const
+
+/**
  * THE REVIEW STEP: a week, month, quarter or year looked back on
  * (Plans/life-plan-rebuild.md, Phase 5). Stefan's weekly review: score each
  * area, the magic moments, the lessons, the outcomes for the next one.
  */
 export const REVIEW_PERIOD_COPY = {
   title: "Review",
+  /** What a row going to the Review step calls it (`REVIEW_DESTINATION_ID`). */
+  destination: "This week's review",
   help: "Look back over a stretch of your life: score each area 0 to 10, keep what went well and what it taught you, and say what the next one is to bring.",
   anyDay: "Any day works. Sunday evening suits most people for the week.",
   cadences: { week: "Week", month: "Month", quarter: "Quarter", year: "Year" },
@@ -546,6 +572,7 @@ export const REVIEW_PERIOD_COPY = {
   earlierEmpty: "None before this one.",
   open: "Open",
   average: (n: number) => `average ${n}`,
+  answered: (n: number) => `${n} ${n === 1 ? "goal" : "goals"} looked at`,
   remove: "Delete this review",
   removeConfirm: "Delete it, scores and all?",
   overTimeTitle: "Scores over time",
@@ -1514,7 +1541,7 @@ export const ROUTINE_BLUEPRINTS: RoutineBlueprint[] = [
       { id: "deep", title: "Ninety minutes of deep work", minutes: 90, daysPerWeek: 5, dimension: "mind" },
       { id: "shutdown", title: "Daily shutdown. Clear the inbox, plan tomorrow", minutes: 15, daysPerWeek: 5, dimension: "mind" },
       { id: "money-day", title: "Thirty minutes with your numbers, same day each week", minutes: 30, daysPerWeek: 1, dimension: "mind" },
-      { id: "weekly-review", title: "Weekly review", minutes: 30, daysPerWeek: 1, dimension: "mind", goesTo: "journal:weekly-review" },
+      { id: "weekly-review", title: "Weekly review", minutes: 30, daysPerWeek: 1, dimension: "mind", goesTo: "review" },
       { id: "craft", title: "Sharpen your craft", minutes: 30, daysPerWeek: 3, dimension: "mind" },
       { id: "ship", title: "Ship one visible thing", minutes: 60, daysPerWeek: 2, dimension: "mind" },
       { id: "no-social", title: "No social media before noon", minutes: 1, daysPerWeek: 5, dimension: "mind" },

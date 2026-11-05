@@ -69,6 +69,7 @@ const TABLES: Array<[keyof PlanRows, string, "plan" | "user"]> = [
   ["season_goals", "life_plan_season_goals", "user"],
   ["reviews", "life_plan_reviews", "plan"],
   ["review_scores", "life_plan_review_scores", "user"],
+  ["review_goals", "life_plan_review_goals", "user"],
 ]
 
 /** One connection, always closed — none of these tests used to close theirs. */

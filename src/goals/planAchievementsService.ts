@@ -212,7 +212,7 @@ export function goalAchievements(plan: NsPlan, goalId: string, today: string, fi
 }
 
 /** How often a step is meant to run in a week: its days, or its "N times a week". */
-function stepPerWeek(step: NsRoutineStep): number {
+export function stepPerWeek(step: NsRoutineStep): number {
   return Math.max(1, step.days.length || step.daysPerWeek)
 }
 

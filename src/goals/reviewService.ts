@@ -19,7 +19,7 @@
  * week rule in the codebase (Monday to Sunday), not a second copy of it.
  */
 
-import type { NsPlan, NsReview, NsReviewCadence } from "./types"
+import type { NsPlan, NsReview, NsReviewCadence, NsReviewVerdict } from "./types"
 import { addDays } from "./oneThingService"
 import { dateKeyLabel, daysBetweenDateKeys, periodStartFor, previousPeriodStart, type GoalPeriod } from "@/src/shared/dateUtils"
 
@@ -29,6 +29,9 @@ export const ALL_REVIEW_CADENCES = ["week", "fortnight", "month", "quarter", "ye
 /** The kinds a person can start, shortest first. `fortnight` is only ever copied in. */
 export const REVIEW_CADENCES = ["week", "month", "quarter", "year"] as const satisfies readonly NsReviewCadence[]
 export type OfferedCadence = (typeof REVIEW_CADENCES)[number]
+
+/** A review's answers on a goal, as the database's CHECK lists them. */
+export const VERDICTS = ["on_track", "behind", "change"] as const satisfies readonly NsReviewVerdict[]
 
 /** Matches the text columns' CHECK, which counts characters, not UTF-16 units. */
 export const REVIEW_LIMITS = { text: 100_000 } as const
@@ -100,6 +103,7 @@ export function reviewFor(plan: NsPlan, period: ReviewPeriod): NsReview | null {
 
 export type ReviewPatch =
   | { score: { areaId: string; value: number | null } }
+  | { verdict: { goalId: string; value: NsReviewVerdict | null } }
   | { magicMoments: string }
   | { lessons: string }
   | { nextOutcomes: string }
@@ -108,6 +112,7 @@ export type ReviewPatch =
 export function isEmptyReview(r: NsReview): boolean {
   return (
     Object.keys(r.scores).length === 0 &&
+    Object.keys(r.verdicts ?? {}).length === 0 &&
     !r.magicMoments.trim() && !r.lessons.trim() && !r.nextOutcomes.trim()
   )
 }
@@ -167,6 +172,15 @@ export function writeReview(plan: NsPlan, period: ReviewPeriod, patch: ReviewPat
     next = { ...base, scores, scoredOn }
     // No empty map is kept, so a review reads back from storage as it was written.
     if (Object.keys(scoredOn).length === 0) delete next.scoredOn
+  } else if ("verdict" in patch) {
+    const { goalId, value } = patch.verdict
+    if (!plan.goals.some((g) => g.id === goalId)) return plan
+    if (value != null && !VERDICTS.includes(value)) return plan
+    const verdicts = { ...base.verdicts }
+    if (value == null) delete verdicts[goalId]
+    else verdicts[goalId] = value
+    next = { ...base, verdicts }
+    if (Object.keys(verdicts).length === 0) delete next.verdicts
   } else {
     const [field, text] = Object.entries(patch)[0] as ["magicMoments" | "lessons" | "nextOutcomes", string]
     next = { ...base, [field]: clip(text) }
@@ -314,7 +328,7 @@ export function averageScore(review: NsReview): number | null {
  * calendar is dropped here, because the database's date columns refuse it and
  * would refuse every save after.
  */
-export function readReviews(value: unknown, areaIds: Set<string>): NsReview[] {
+export function readReviews(value: unknown, areaIds: Set<string>, goalIds?: Set<string>): NsReview[] {
   if (!Array.isArray(value)) return []
   const seen = new Set<string>()
   const out: NsReview[] = []
@@ -344,6 +358,12 @@ export function readReviews(value: unknown, areaIds: Set<string>): NsReview[] {
         if (area in scores && calendarDay(day)) scoredOn[area] = day as string
       }
     }
+    const verdicts: Record<string, NsReviewVerdict> = {}
+    if (r.verdicts && typeof r.verdicts === "object") {
+      for (const [goal, v] of Object.entries(r.verdicts as Record<string, unknown>)) {
+        if ((!goalIds || goalIds.has(goal)) && VERDICTS.includes(v as NsReviewVerdict)) verdicts[goal] = v as NsReviewVerdict
+      }
+    }
     const text = (v: unknown) => (typeof v === "string" ? clip(v) : "")
     const review: NsReview = {
       id,
@@ -353,6 +373,7 @@ export function readReviews(value: unknown, areaIds: Set<string>): NsReview[] {
       writtenOn: calendarDay(r.writtenOn) ? (r.writtenOn as string) : periodEnd,
       scores,
       ...(Object.keys(scoredOn).length > 0 ? { scoredOn } : {}),
+      ...(Object.keys(verdicts).length > 0 ? { verdicts } : {}),
       magicMoments: text(r.magicMoments),
       lessons: text(r.lessons),
       nextOutcomes: text(r.nextOutcomes),
