@@ -1,0 +1,163 @@
+{
+ "id": "nicotine",
+ "checker": "source checker a (independent; numbers 0-11, the first 12 of 23 changed items)",
+ "on": "2026-11-05",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "19 in 100 (hope-free-now)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Checked in the PMC full text (efetch XML of PMC3227547). The sample is 'respondents with lifetime history of dependence on nicotine (n=6,937)'. Tables 3 and 4 are headed 'Nicotine remission (N=1,300)'. 1,300/6,937 = 18.7%, so '19 in 100' is right. The paper never says in words what the 1,300 counts. Reading it as people already free (remission events in a discrete-time survival table) holds: crude shares sit close to each drug's 10-year share (nicotine 18.7 vs 18.4, alcohol 42.0 vs 37.4, cannabis 64.9 vs 66.2, cocaine 82.4 vs 75.8). Remission means 'finally stopped having any of these experiences ... they never started happening again', so 'free when asked' fits. The caveat holds: 'overreport of remission', non-institutionalized only, men HR 0.81. The quote is word for word, two fragments, 10 words. Severity 'dependent' fits: DSM-IV, 3 of 7 criteria in 12 months. Not more hopeful than the source. Residual doubt: the head-count reading is an inference from a table header. It is no longer on the card; the checker accepts it.",
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "83.7% (hope-lifetime)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "The figure and quote are word for word in the abstract and results ('Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine', 12 words, cut before the other drugs). Also confirmed: 3.0% within the first year, 18.4% at 10 years, n 6,937 of 43,093, 2001-2002, face-to-face interviews, actuarial (life-table) projection, 'overestimation' from institutionalized people not being sampled. The headline says 'projected' (rule 10). The new design wording is plain and accurate.",
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "About 30 (how-tries)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Checked in Table 3 (Europe PMC full text). Daily (n=1092) life table with observed rates gives 29.5 (overall 29.6). The other daily figures are 6.8, 20.4 and 142.3, so the card's 'about 7, 20 and 142' is right for daily smokers. The changeNote's '6.1' is the abstract's overall Method-1 figure; the table gives 6.3 overall and 6.8 daily. That does not affect the card. Also confirmed: the first try had the best chance (11% success); success means 1 year or longer, self-reported; interviews ran 2005 to 2011. The quote is word for word from the Table 3 cells, about 20 words. The heavy tag and weak note fit. 'Many tries is normal' is a little loose but readable; 21 words.",
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4908897/fullTextXML",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "3–5% (how-slips)",
+   "verdict": "fix",
+   "problems": [
+    "The headline 'Most tries made without help end within eight days' shifts the source's claim. The source says 'most relapse occurs in the first 8 days', from 8 relapse curves: of the people who went back, most did so early. That is not the same as most tries, and the curves are a different set from the 15 groups behind 3–5%. 'Early slips are the norm' also names slips, but the source measured relapse (going back to smoking).",
+    "basis.n 'Head count not stated' and basis.where 'Countries not stated' claim the review is silent. Only the PubMed abstract was read (the full review is paywalled), so this is unverified. The full review probably lists its studies. Say 'not known' instead; the build bans 'not given' and similar note words.",
+    "Rest holds: the quote is word for word (15 words); 10 + 2 + 3 = 15 study groups; 8 curves from 2 studies and 5 untreated groups; 'too small and the data too heterogeneous for meta-analysis'; severity 'users', with 'not checked for addiction' in counted; the caveat 'per attempt, not per person' is right."
+   ],
+   "fix": {
+    "headline": "Most who went back did so within eight days; 3–5% of tries without help lasted six months to a year.",
+    "basis.n": "For 3–5%: 15 studies or study groups (a summary of 10 earlier studies, 2 more studies and 3 untreated groups). For eight days: 8 relapse curves from 2 studies and 5 untreated groups. Head count not known.",
+    "basis.where": "Countries not known"
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=14678060 (abstract; full text paywalled)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "12 vs 12 in 100 (helps-stop-vs-cut)",
+   "verdict": "fix",
+   "problems": [
+    "ref.quote puts its fragments out of the source's order. In Summary of findings 1 the row reads: outcome | 12 per 100 | 12 per 100 (11 to 14) | RR 1.01 | 9219 (22 RCTs). The quote puts '9219 (22 RCTs)' before the risk cells. Each fragment is word for word (checked on the PMC page), but the order must follow the source.",
+    "Rest holds: 'Risk with abrupt quitting' 12 per 100 against 'Risk with reduction to quit' 12 per 100 (11 to 14), RR 1.01 (0.87 to 1.17), 9219 people in 22 RCTs, moderate certainty; 51 trials, 22,509 people; 23 cigarettes a day; 29 trials in the USA, 5 in China, the rest mostly Europe; 42 of 51 recruited through media or local ads; search October 2018. The per-100 figures are the table's own, and the caveat says 12 is the typical control rate. The English trial in the caveat (697 smokers, nurse support and nicotine replacement before and after quit day, 22.0% vs 15.5% at 6 months) is confirmed in its own abstract, Lindson-Hawley 2016, Ann Intern Med, PMID 26975007. The cited review does not give those 6-month rates, so the caveat's figure rests on that trial paper."
+   ],
+   "fix": {
+    "ref.quote": "Risk with abrupt quitting | Risk with reduction to quit … Smoking cessation (≥ 6‐month follow‐up) | 12 per 100 | 12 per 100 (11 to 14) … 9219 (22 RCTs)"
+   },
+   "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/ (via WebFetch; Summary of findings 1) and https://pubmed.ncbi.nlm.nih.gov/26975007/",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "23 vs 10 in 100 (helps-medicine)",
+   "verdict": "fix",
+   "problems": [
+    "The headline says 'on a dummy pill, 10 in 100'. The source's arm figure is 99 per 1,000 (9.9 in 100). A rounded per-100 figure must carry 'about'. The ratio was taken out of basis this round, so the card no longer says the 10 is rounded, except through 'exact figures: 230 and 99 in 1,000'. 23 in 100 is exact (230 per 1,000).",
+    "Rest holds (Europe PMC full text, Summary of findings 1): 'Smoking abstinence at longest follow‐up (6+ months)(varenicline vs placebo) | 99 per 1000 | 230 per 1000(213 to 249) | RR 2.32(2.15 to 2.51) | 17,395 (41 studies)', high certainty. SAEs 27 vs 33 per 1000, so 2.7 vs 3.3 in 100 holds. 75 trials, 28 in the USA; search April 2022; strictest definition, biochemically validated where available; adult smokers who wanted to stop. The quote's spacing differs from the XML ('(6+ months)(varenicline'); the words are identical."
+   ],
+   "fix": {
+    "headline": "On varenicline, 23 in 100 smokers stayed off cigarettes six months or more; on a dummy pill, about 10 in 100."
+   },
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10169257/fullTextXML",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "10–12 vs 7 in 100 (helps-talk)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "The plain-language summary sentence matches word for word with one ellipsis: 30 words, at the limit. Also confirmed: RR 1.57 (1.40 to 1.77), 27 studies, 11,100 participants, no pharmacotherapy offered; 49 trials, about 19,000 people; 30 in the USA, the rest mostly Europe, 2 in Australia and 5 in Asia; 19 of 49 recruited hospital inpatients; pregnant women and child/adolescent-only trials excluded; 'Lack of interest in quitting was not an explicit exclusion criterion'; with NRT for all, the benefit was smaller; search May 2016. 'At least 10 in 100' is the low end of the source's 'between 10 and 12'. It is not more hopeful than the source, and the build's two-figure cap rules out '10 to 12' next to '7 in 100'.",
+   "fix": {},
+   "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6464359/ (via WebFetch) and the PMC efetch abstract/PLS",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "Week 1 (after-first-month)",
+   "verdict": "fix",
+   "problems": [
+    "basis.where 'Not stated' and weak '...the size of the fall is not stated' claim the paper is silent. Only the PubMed abstract can be read (the AJP full text returns 403), and the full paper may well give the site and the anxiety scores. Reword so it claims nothing about what the paper leaves out.",
+    "Rest holds: 101 smokers meeting DSM-III-R nicotine dependence; 70 abstinent with no lapse for 4 weeks; single rating plus STAI, from 2 weeks before to 4 weeks after; the quote is contiguous and word for word (26 words); PubMed indexes it as a Randomized Controlled Trial with Double-Blind Method, which backs basis.design; the authors' affiliation is St George's Hospital Medical School, London. The headline matches 'significant decrease in anxiety from the first week of abstinence'."
+   ],
+   "fix": {
+    "basis.where": "The authors worked at St George's Hospital Medical School, London",
+    "weak": "Small: 70 people in one trial from the 1990s; it shows a direction, not a size."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=9356569 (abstract and publication types)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "Years 1 and 3 (after-mood)",
+   "verdict": "fix",
+   "problems": [
+    "The headline 'quitters rated their life and mood better than people ... who kept smoking' reads as a gap made by quitting. The paper compares change from baseline: QOLI total −.23 vs −.40 at year 1 and −.24 vs −.47 at year 3. Quitters already rated life higher at baseline (QOLI total 2.45 vs 2.27, p = .03). The source's own result is 'smaller decreases' in life satisfaction and better change in mood. The new headline says that, and it still answers 'life will feel empty'.",
+    "Rest holds (PMC3298628 author manuscript): the quote is word for word from the abstract (24 words); 376 vs 649 at year 1 and 359 vs 640 at year 3; 1,504 enrolled 2005–2007 in Madison and Milwaukee; more than nine cigarettes a day and motivated to quit; CO-verified; fewer stressors by year 3; no difference in marital satisfaction; 'modest' effects; quitters self-selected."
+   ],
+   "fix": {
+    "headline": "One and three years on, quitters' life and mood held up better than those of people who kept smoking."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3298628 (full text)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "26 years (who-years)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "The quote 'Half of the cases of nicotine … dependence remitted approximately 26 … years after dependence onset' is word for word with two ellipses that cut the other drugs (rule 13). Also confirmed: n 6,937 of 43,093; 3.0% and 18.4%; 83.7% lifetime; non-institutionalized only, so remission is overestimated; men HR 0.81; the paper names no tobacco products for the people with dependence. The headline says 'projected'. The plain-words design change is accurate.",
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "10 vs 7 in 100 (helps-reward)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "The plain-language summary sentence is word for word (26 words); these are the source's own per-100 arm figures. Also confirmed: 39 studies, 18,303 people, RR 1.52; without the 7 studies still paying at follow-up, RR 1.46 (32 studies), 'the impact of incentives continues ... after incentives cease'; 48 mixed-population trials, 33 in the USA, 5 in Asia and Africa, the rest European; search November 2023. Most trials checked abstinence biochemically (stated in the review; a few did not validate everyone). Taking the ratios out of basis leaves the meaning intact.",
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=11725379 (abstract/PLS) and https://pmc.ncbi.nlm.nih.gov/articles/PMC11725379/ (via WebFetch)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "4–5 kg (after-body)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "The quote is word for word from the abstract's conclusion (29 words). Mean gain was 2.85 kg at 3 months and 4.67 kg at 12 months in untreated quitters (61% by month 3), so 'most of the weight came in the first three months' holds; with medication the 12-month gain was 4.08 to 4.86 kg. The n figures match Table 1: 514 untreated (25 studies) at month 12; 1,138 on NRT (19); 183 on bupropion (5); 174 on varenicline (3). 59 of 62 trials were in North America, Europe or Australia. The 16/37/34/13% figures are estimated from means and SDs. The headline is not more hopeful than the source, which itself says most gain comes within three months.",
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3393785 (full text)",
+   "quoteFound": true
+  }
+ ]
+}

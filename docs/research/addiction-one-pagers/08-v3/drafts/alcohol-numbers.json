@@ -1,0 +1,459 @@
+{
+  "id": "alcohol",
+  "numbers": [
+    {
+      "kind": "hope-free-now",
+      "big": "2,008 of 4,781",
+      "headline": "Of 4,781 Americans ever hooked on alcohol, 2,008 were already free of every sign of it when asked.",
+      "mirror": "You think people who drank like you never really get free.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on alcohol",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; a head count on the day of the interview, not a model",
+        "who": "adults who had ever met the DSM-IV criteria for alcohol dependence (3 of 7 signs in one year)",
+        "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "Whether each person had 'finally stopped' having every sign of being hooked, with none coming back, by the interview. 2,008 is the count in the header of the paper's Table 3. 2,008 ÷ 4,781 is about 42% (our sum, not weighted)."
+      },
+      "caveat": "Free here means no signs of being hooked any more, not never drinking. A raw count, not weighted to the US. Many still hooked had only recently started, and people aged 18–29 got free less often.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "fetched": true,
+        "quote": "subsample of respondents with lifetime history of dependence on … alcohol (n=4,781) … Alcohol remission (N=2,008)"
+      },
+      "origin": "07-mirror-stats/alcohol.json who '14 years' (its second figure, 2,008 of 4,781; Table 3 re-fetched 2026-11-05)"
+    },
+    {
+      "kind": "hope-lifetime",
+      "big": "90.6%",
+      "headline": "Of Americans ever hooked on alcohol, 90.6% are projected to get free of it at some point in life.",
+      "mirror": "You've been drinking for years and think you're stuck with it.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on alcohol",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; recalled ages modelled over a lifetime (standard actuarial survival method)",
+        "who": "adults who had ever met the DSM-IV criteria for alcohol dependence",
+        "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had already got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: 37.4%."
+      },
+      "caveat": "A model, not a head count. The authors say recall errors, and people the survey missed (in prison, in hospital, or worse), likely push it too high. Men got free less often than women.",
+      "projection": true,
+      "weak": "A projection from recalled ages; the study's own authors say it probably runs too high.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "fetched": true,
+        "quote": "Lifetime cumulative probability estimates of dependence remission were … 90.6% for alcohol"
+      },
+      "origin": "06-template.json alcohol hero '90.6%' (same study as 07-mirror-stats/alcohol.json who '14 years')"
+    },
+    {
+      "kind": "who-years",
+      "big": "14 years",
+      "headline": "Half of Americans ever hooked on alcohol are projected to be free of it about 14 years after it started.",
+      "mirror": "You've been drinking hard for ten years and think it's too late.",
+      "severity": "dependent",
+      "counted": "people who had ever been hooked on alcohol",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; ages recalled and modelled over a lifetime",
+        "who": "adults who had ever been dependent on alcohol",
+        "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had got free",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never drinking."
+      },
+      "caveat": "A model from recalled ages, not a head count. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women.",
+      "projection": true,
+      "weak": "A projection from recalled ages; the 5 Nov reviewers said it likely runs hopeful.",
+      "ref": {
+        "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+        "pmid": "21077975",
+        "fetched": true,
+        "quote": "Half of the cases of … alcohol … dependence remitted approximately … 14 … years after dependence onset"
+      },
+      "origin": "07-mirror-stats/alcohol.json who '14 years' (other drugs removed from basis and quote, rule 13)"
+    },
+    {
+      "kind": "who-age",
+      "big": "Age 38",
+      "headline": "Americans who beat a drinking problem were about 38, on average, when it ended.",
+      "mirror": "You're in your thirties and think people your age don't change.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one",
+        "n": "About 1,013 people whose main problem was alcohol (a weighted count, of 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Age when the problem ended, as people remembered it. On average they had drunk for about 18 years before that."
+      },
+      "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free, and each judged for himself what a problem was.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+        "pmid": "29287223",
+        "fetched": true,
+        "quote": "The average age at problem resolution was also significantly younger for … relative to ALC (M = 37.86 years; 99% CI: 36.50, 39.21)"
+      },
+      "origin": "07-mirror-stats/alcohol.json who 'Age 38' (the weed figure dropped, rule 13; quote taken from the alcohol-only part of the results text, re-fetched 2026-11-05)"
+    },
+    {
+      "kind": "who-life-event",
+      "big": "×2.2",
+      "headline": "Americans hooked on alcohol were 2.2 times as likely to quit and get free in the 3 years after a first child.",
+      "mirror": "You're becoming a dad and want this to be when you stop.",
+      "severity": "dependent",
+      "counted": "people hooked on alcohol before the past year",
+      "basis": {
+        "design": "national survey (NESARC), face-to-face interviews; life events dated from memory",
+        "who": "adults whose alcohol dependence began before the past year",
+        "n": "4,422 adults who had been hooked (of 43,093 surveyed)",
+        "where": "US",
+        "when": "2001–2002",
+        "measured": "How the chance of getting free changed in the years after leaving school, starting full-time work, marrying, splitting up and becoming a parent. A first marriage raised the chance of getting free while still drinking lightly (×1.37); so did a first marriage ending (×1.76)."
+      },
+      "caveat": "A link, not proof: people ready to change may also be the ones starting families. Men and women together. 'Quit and get free' means free of every sign and not drinking.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Dawson DA, Grant BF, Stinson FS, Chou PS (2006). Maturing out of alcohol dependence: the impact of transitional life events. Journal of Studies on Alcohol.",
+        "url": "https://europepmc.org/article/MED/16568565",
+        "pmid": "16568565",
+        "fetched": true,
+        "quote": "The likelihood of AR was more than doubled in the 3 years after first becoming a parent (HRR = 2.22)"
+      },
+      "origin": "07-mirror-stats/alcohol.json who '×2.2'"
+    },
+    {
+      "kind": "how-alone",
+      "big": "56%",
+      "headline": "Of Americans who beat a drinking problem, 56% had used some help, such as AA, treatment or medicine. The rest used none.",
+      "mirror": "You want to stop on your own, without rehab or meetings.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one",
+        "n": "About 1,000 people whose main problem was alcohol (51% of a weighted 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Ever used, at any point: mutual-help groups (such as AA), treatment, medication or recovery services. Across all substances 54% used help; mutual-help groups were the most common (45%), and 35% had been to AA."
+      },
+      "caveat": "Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "fetched": true,
+        "quote": "Factors associated with choosing assisted (54%) vs. unassisted problem resolution. … Alcohol 55.9"
+      },
+      "origin": "07-mirror-stats/alcohol.json how '56%'"
+    },
+    {
+      "kind": "how-tries",
+      "big": "2 tries",
+      "headline": "Half of Americans who beat a drinking problem needed 2 serious tries or fewer.",
+      "mirror": "You've tried to stop before and think you've failed for good.",
+      "severity": "resolved",
+      "counted": "people who say they beat a drinking problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot",
+        "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one",
+        "n": "About 1,000 people whose main problem was alcohol (the table gives no exact count; a paper on the same survey counts 1,013, weighted)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it. Middle figure (median) 2; the middle half needed 1 to 4; average 5.38. People who never made a serious try count as 0."
+      },
+      "caveat": "Counts only people who succeeded, from memory. A few needed dozens of tries, which pulls the average up to about 5. It does not promise that the next try works.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+        "pmid": "31090945",
+        "fetched": true,
+        "quote": "Mean (SD) Median (IQR) Min, max … Primary substance … Alcohol 5.38 (13.45) 2 (1, 4) 0, 100"
+      },
+      "origin": "new: the alcohol row of Table 1 in the paper behind 07-mirror-stats/alcohol.json how '3 tries' (that figure mixes all drugs)"
+    },
+    {
+      "kind": "how-slips",
+      "big": "1 in 4",
+      "headline": "Of Americans treated for a drinking problem, about 1 in 4 didn't drink at all in the year after.",
+      "mirror": "You drank again after a few weeks and think the whole try is wasted.",
+      "severity": "treatment",
+      "counted": "people treated for a drinking problem",
+      "basis": {
+        "design": "review pooling seven large multisite treatment studies",
+        "who": "adults treated for alcohol use disorders ('alcoholism, broadly defined')",
+        "n": "Not given in the abstract; the full text, which holds the count, was blocked (HTTP 403) and could not be read",
+        "where": "US",
+        "when": "studies published before 2001; review published 2001",
+        "measured": "Not drinking at all, without a break, in the 12 months after treatment, averaged across the studies. Some outcomes were computed with conversion formulas because the studies measured different things."
+      },
+      "caveat": "It does not mean 3 in 4 failed. Another 1 in 10 drank moderately without problems; the rest, as a group, abstained 3 days in 4 and drank 87% less.",
+      "projection": false,
+      "weak": "The abstract gives no head count, and some outcomes are converted estimates rather than direct counts.",
+      "ref": {
+        "cite": "Miller WR, Walters ST, Bennett ME (2001). How effective is alcoholism treatment in the United States? Journal of Studies on Alcohol 62(2):211-220.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/11327187/",
+        "pmid": "11327187",
+        "fetched": true,
+        "quote": "During the year after treatment, 1 in 4 clients remained continuously abstinent on average, and an additional 1 in 10 used alcohol moderately and without problems."
+      },
+      "origin": "new"
+    },
+    {
+      "kind": "helps-stop-vs-cut",
+      "big": "27% vs 7%",
+      "headline": "Among Americans free of alcohol addiction, signs of a problem returned in 27% of light drinkers and 7% of non-drinkers.",
+      "mirror": "You've been off it a while and think you could drink normally now.",
+      "severity": "dependent",
+      "counted": "people once hooked on alcohol, free of it at first interview",
+      "basis": {
+        "design": "national survey (NESARC), the same people interviewed twice, 3 years apart",
+        "who": "adults fully free of alcohol dependence at the first interview",
+        "n": "1,772 people re-interviewed (of 2,109 who were free at the first interview), all drinking groups together",
+        "where": "US",
+        "when": "2001–2002 and 2004–2005",
+        "measured": "Any sign of a drinking problem coming back, and full dependence coming back, by the second interview: light drinkers against non-drinkers. Of those who had no signs but drank risky amounts, 51% had problems back."
+      },
+      "caveat": "Not a trial: people chose whether to drink. Weighing other differences, the odds of problems coming back were 5.8 times as high for light drinkers. For young adults the gap wasn't clear: they slid back most either way.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+        "url": "https://europepmc.org/article/MED/18034696",
+        "pmid": "18034696",
+        "fetched": true,
+        "quote": "By Wave 2, 51.0% of the Wave 1 asymptomatic risk drinkers had experienced the recurrence of AUD symptoms, compared with 27.2% of low-risk drinkers and 7.3% of abstainers."
+      },
+      "origin": "07-mirror-stats/alcohol.json works '27% vs 7%'"
+    },
+    {
+      "kind": "helps-medicine",
+      "big": "1 in 12",
+      "headline": "For every 12 people treated for a drinking problem who take acamprosate, one more stays off drink than with a dummy pill.",
+      "mirror": "You didn't know a pill could help you stay stopped.",
+      "severity": "treatment",
+      "counted": "people in treatment trials for a drinking problem",
+      "basis": {
+        "design": "meta-analysis of 122 randomised trials and 1 cohort study",
+        "who": "adults with alcohol use disorder treated as outpatients",
+        "n": "4,847 people in 16 trials (of 122 trials in the review)",
+        "where": "Mostly Europe (16 of 22 placebo trials of acamprosate)",
+        "when": "studies from 1970 to March 2014",
+        "measured": "Return to any drinking during trials of 12 to 52 weeks, acamprosate against a dummy pill. Naltrexone: one in 20 for any drinking, one in 12 for heavy drinking."
+      },
+      "caveat": "Most trials started after detox or at least 3 days sober: it helps people stay stopped. One in 12 is a modest effect: it helps some people, not everyone. It needs a prescription.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Jonas DE, Amick HR, Feltner C, et al. (2014). Pharmacotherapy for adults with alcohol use disorders in outpatient settings: a systematic review and meta-analysis. JAMA.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/24825644/",
+        "pmid": "24825644",
+        "fetched": true,
+        "quote": "The NNT to prevent return to any drinking for acamprosate was 12 (95% CI, 8 to 26; risk difference [RD], -0.09; 95% CI, -0.14 to -0.04)"
+      },
+      "origin": "07-mirror-stats/alcohol.json works '1 in 12'"
+    },
+    {
+      "kind": "helps-talk",
+      "big": "×1.2",
+      "headline": "In people treated for drinking, AA-based therapy kept 1.2 times as many fully off drink for a year as other therapies.",
+      "mirror": "You think AA is the last thing that would work for you.",
+      "severity": "treatment",
+      "counted": "people in treatment trials for a drinking problem",
+      "basis": {
+        "design": "Cochrane review; this figure pools 2 randomised trials",
+        "who": "adults with a drinking problem who weren't forced into treatment",
+        "n": "1,936 people in 2 trials (of 27 studies with 10,565 people in the review)",
+        "where": "US (the largest trial in this comparison, Project MATCH, ran at US clinics)",
+        "when": "searched to August 2019; published 2020",
+        "measured": "Not drinking at all, without a break, for 12 months: 12-step facilitation from a manual (therapy that steers people into AA) against other set therapies such as CBT. The gap held at 24 and 36 months."
+      },
+      "caveat": "A head-to-head test, and 1.2 times is a modest edge. It tests a therapist steering you into AA, not AA alone. On how much people drank when they did drink, AA-based help did about as well as other therapy, not better.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Kelly JF, Humphreys K, Ferri M (2020). Alcoholics Anonymous and other 12-step programs for alcohol use disorder. Cochrane Database of Systematic Reviews.",
+        "url": "https://europepmc.org/article/MED/32159228",
+        "pmid": "32159228",
+        "fetched": true,
+        "quote": "AA/TSF improves rates of continuous abstinence at 12 months (risk ratio (RR) 1.21, 95% confidence interval (CI) 1.03 to 1.42; 2 studies, 1936 participants; high-certainty evidence)"
+      },
+      "origin": "07-mirror-stats/alcohol.json works '×1.2'"
+    },
+    {
+      "kind": "helps-early-help",
+      "big": "62% vs 43%",
+      "headline": "People with a drinking problem who got help early were more often free of it later: 62% against 43%.",
+      "mirror": "You think getting help is weak and want to do it alone.",
+      "severity": "disorder",
+      "counted": "people with a drinking problem who had just sought help",
+      "basis": {
+        "design": "cohort followed 16 years",
+        "who": "adults with a drinking problem, never treated before, who had just contacted a referral centre or detox; mean age 33.5, half men",
+        "n": "362 who got help vs 99 who didn't (461 in all)",
+        "where": "US",
+        "when": "Followed 16 years; published 2006",
+        "measured": "Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5% without help and 42.9% with help slid back by year 16."
+      },
+      "caveat": "Not a trial: people chose whether to get help, so they may differ in other ways. Slipping back was common in both groups.",
+      "projection": false,
+      "weak": "Only 99 people in the no-help group, and people chose for themselves whether to get help.",
+      "ref": {
+        "cite": "Moos RH, Moos BS (2006). Rates and predictors of relapse after natural and treated remission from alcohol use disorders. Addiction.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1976118/",
+        "pmid": "16445550",
+        "fetched": true,
+        "quote": "By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group"
+      },
+      "origin": "07-mirror-stats/alcohol.json quit '62% vs 43%'"
+    },
+    {
+      "kind": "after-first-month",
+      "big": "45%",
+      "headline": "Of people in hospital to stop heavy drinking, 45% had a measurably less stiff liver after one week off.",
+      "mirror": "You think the damage is done, so stopping now won't change much.",
+      "severity": "treatment",
+      "counted": "people in hospital to stop heavy drinking",
+      "basis": {
+        "design": "prospective study; each person scanned on admission and again a week later",
+        "who": "patients admitted to a liver and addiction unit to stop drinking; median intake 150 g of alcohol a day (about 11 US standard drinks, our sum)",
+        "n": "137 patients; 62 of them had a significant drop",
+        "where": "Paris, France",
+        "when": "2007–2010",
+        "measured": "Liver stiffness on a FibroScan, the scan doctors use to estimate liver scarring, at entry and after 7 days without alcohol. The median fell from 7.2 to 6.1 kPa; the estimated scarring stage fell for 23%."
+      },
+      "caveat": "A softer liver after a week mostly means less inflammation, not healed scarring. 12% got stiffer. It says nothing about how people felt.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Trabut JB, Thépot V, Nalpas B, et al. (2012). Rapid decline of liver stiffness following alcohol withdrawal in heavy drinkers. Alcoholism: Clinical and Experimental Research 36(8):1407-1411.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/22404692/",
+        "pmid": "22404692",
+        "fetched": true,
+        "quote": "LS decreased significantly in 62 patients (45.3%), and there was a reduction in the estimated stage of fibrosis in 32 (23.3%)."
+      },
+      "origin": "new"
+    },
+    {
+      "kind": "after-mood",
+      "big": "42% to 6%",
+      "headline": "Of men treated in hospital for drinking, clear depression fell from 42% on arrival to 6% after a month off.",
+      "mirror": "You feel low without a drink and fear it will never lift.",
+      "severity": "treatment",
+      "counted": "men in hospital treatment for alcoholism",
+      "basis": {
+        "design": "cohort followed through 4 weeks of inpatient treatment",
+        "who": "men with alcoholism and no earlier major psychiatric disorder ('primary alcoholics')",
+        "n": "191 men",
+        "where": "US (the authors were at the San Diego Veterans Administration Medical Center)",
+        "when": "published 1988; the abstract gives no study dates",
+        "measured": "Hamilton Depression Rating Scale within 48 hours of admission and at each of the 4 weeks; 'clinically depressed' means a score of 20 or more. The biggest drop came by week 2."
+      },
+      "caveat": "Men with a separate, earlier depression were left out, so this is mostly low mood that drinking itself causes. It does not show how mood goes after the first month.",
+      "projection": false,
+      "weak": null,
+      "ref": {
+        "cite": "Brown SA, Schuckit MA (1988). Changes in depression among abstinent alcoholics. Journal of Studies on Alcohol 49(5):412-417.",
+        "url": "https://pubmed.ncbi.nlm.nih.gov/3216643/",
+        "pmid": "3216643",
+        "fetched": true,
+        "quote": "42% of alcoholics have clinically significant levels of depression (Hamilton greater than or equal to 20) at intake but only 6% remain clinically depressed at Week 4."
+      },
+      "origin": "new (the same figure is on the 06-template.json alcohol timeline, Week 4 milestone, ref r15)"
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "how-slips",
+      "missing": "When slips happen (which days or weeks after stopping), for people hooked on alcohol. The 1 in 4 answers how many, not when. Also the head count behind 1 in 4.",
+      "searched": "Europe PMC (relapse or lapse, alcohol, 'first drink', detoxification; Project MATCH re-analyses), PubMed abstract of Miller 2001, the journal page (blocked, HTTP 403), Semantic Scholar (abstract withheld), web search for the count. Found only small medicine trials with no timing figures in their abstracts.",
+      "fillLater": "Our r/stopdrinking harvest: posts with a day count that report a slip could show when slips cluster (forum sample, tagged self-hooked)."
+    },
+    {
+      "kind": "after-first-month",
+      "missing": "A first-month number for people hooked on alcohol about something they feel (energy, sleep, money). The liver scan is about people in hospital and is a scan, not a feeling; the one-month study (Mehta 2018) counts drinkers who were not dependent.",
+      "searched": "Europe PMC: brain volume in early abstinence (van Eijk 2013, 49 patients, no figure in abstract; Gazdzinski 2005, 23 patients, no figure), blood pressure in withdrawal (Ceccanti 2006, no head count in abstract; older studies of 9 to 65 patients), liver stiffness after withdrawal (Trabut 2012 used).",
+      "fillLater": "Forum harvest: posts at day 30 that name what changed could be counted (self-hooked)."
+    }
+  ],
+  "notUsed": [
+    {
+      "group": "you",
+      "big": "1 in 7",
+      "why": "Screens the reader (rule 1) and counts mild cases among young adults, not people hooked."
+    },
+    {
+      "group": "you",
+      "big": "90%",
+      "why": "Screens the reader (rule 1) and counts excessive drinkers who were not dependent (rule 2)."
+    },
+    {
+      "group": "you",
+      "big": "1 in 4",
+      "why": "Binge drinking among all US men: ordinary users, a screening line (rules 1 and 2)."
+    },
+    {
+      "group": "start",
+      "big": "2 in 3",
+      "why": "How young people got hooked; no kind in the menu, and the reader is already hooked."
+    },
+    {
+      "group": "start",
+      "big": "Nearly 1 in 4",
+      "why": "The chance a drinker gets hooked; no kind in the menu, and its caveat names cigarettes (rule 13)."
+    },
+    {
+      "group": "cost",
+      "big": "−39 points",
+      "why": "One night's drinking in ordinary employees; no kind in the menu and not people hooked."
+    },
+    {
+      "group": "cost",
+      "big": "£18.60 a week",
+      "why": "Spending of risky drinkers on a short quiz; no kind in the menu and not people hooked."
+    },
+    {
+      "group": "quit",
+      "big": "1 in 4",
+      "why": "Fits hope-free-now, but its 'no longer hooked' includes people with signs left; hope-free-now uses the head count of people free of every sign. Its 'only 1 in 4 ever treated' counts everyone once hooked, not those who got free, so how-alone uses 56%. Kept for a later round."
+    },
+    {
+      "group": "how",
+      "big": "18% vs 18%",
+      "why": "A one-time snapshot of how the once-hooked drank; helps-stop-vs-cut uses the 3-year follow-up of the same survey (27% vs 7%), which shows what happened next."
+    },
+    {
+      "group": "after",
+      "big": "6 years",
+      "why": "Mixes alcohol and drug problems (rule 13); it fits the general kind gen-years, shown once on every page, not this page."
+    },
+    {
+      "group": "how",
+      "big": "3 tries",
+      "why": "Mixes alcohol and drug problems (rule 13); fits the general kind gen-tries. This page uses the alcohol row of the same table (2 tries)."
+    },
+    {
+      "group": "after",
+      "big": "1 month",
+      "why": "Volunteers drank above guidelines but were not dependent (rule 2); after-first-month uses people in hospital to stop drinking. Kept as the fallback if the owner prefers a full month."
+    }
+  ]
+}

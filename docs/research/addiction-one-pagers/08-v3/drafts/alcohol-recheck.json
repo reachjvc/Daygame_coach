@@ -1,0 +1,244 @@
+{
+  "id": "alcohol",
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 0,
+      "label": "hope-free-now 2,008 of 4,781",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Methods: 'This report examined data of the subsample of respondents with lifetime history of dependence on nicotine (n=6,937), alcohol (n=4,781)…'; Table 3 header 'Alcohol remission (N=2,008)'. Quote pieces word for word, under 30 words.",
+        "Fixed caveat holds: Limitations say self-report leads to 'overreport of remission'; Results say the 18–29 group was 'less likely to remit from alcohol dependence' than the 45+ group. Fixed measured holds: the remission question is 'finally stopped having any of these experiences … they never started happening again'; 2,008/4,781 = 42.0%.",
+        "Still an inference (not a fault): the paper never says in words that 2,008 remitted; the header N of the remission survival table is read as the event count. Cross-check: nicotine 1,300/6,937, cannabis 344/530, cocaine 336/408 fit the paper's ordering of remission rates.",
+        "Rules: headline 18 words, 2 figures; mirror 11 words, second person, not a screener; severity 'dependent' fits (DSM-IV, 3 of 7 criteria in 12 months); head count, so no projection wording needed."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC3227547/unicode",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 1,
+      "label": "hope-lifetime 90.6%",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Abstract and Results: 'Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine, 90.6% for alcohol…'; 10-year 37.4%; 'projections were obtained by the standard actuarial method'.",
+        "Fixed caveat now matches the Limitations: overreport of remission (social desirability), and 'institutionalized individuals or those who experienced fatal or severe consequences … may have not been sampled, leading to overestimation of the cumulative probability of remission'. Recall bias is named without a direction, and the caveat says only that recalled ages 'can also be wrong'. 'Males were less likely than females to remit' holds.",
+        "Rules: headline 19 words, 1 figure, says 'projected' (rule 10); the quote's ellipsis drops the nicotine figure (rule 13). The weak line names the projection."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC3227547/unicode",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 3,
+      "label": "who-age Age 38",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Results: 'The average age at problem resolution was also significantly younger for CAN (…) relative to ALC (M = 37.86 years; 99% CI: 36.50, 39.21)'. Quote word for word with the cannabis figure cut (rule 13), 23 words.",
+        "Fixed n holds: tables give 'Alcohol (58.5%, n = 1013)'; 217 + 1,013 + 500 = 1,730 named a main substance, out of a weighted N = 2,002. Fixed measured holds: 'addiction career' is years 'from age of first use for any substance' to resolution (ALC M = 18.39); age of first regular alcohol use M = 19.02. Fixed caveat holds: 'Current Alcohol Use, %' is 34.21 for the alcohol group; the screener problem is 'participant-defined'.",
+        "Rules: headline 14 words, 1 figure; mirror 11 words; severity 'resolved' fits the screener; July–August 2016, US, one snapshot all correct."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC5992615/unicode",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 4,
+      "label": "who-life-event ×2.2",
+      "verdict": "fix",
+      "problems": [
+        "Figure, quote, n (4,422 with prior-to-past-year onset), group, design and caveat hold against the PubMed abstract (the full text is paywalled). The quote is word for word, 20 words. Headline 22 words (at the limit), 2 figures.",
+        "basis.measured still reads more hopeful than the source. The reviewer asked for the 3-year window and the reversal, but only the window went in. The abstract: people 'still dependent 3 or more years after those events occurred had a decreased likelihood of subsequent NR (HRR = 0.70 for both events)'. Add that.",
+        "basis.measured says 'while still drinking lightly'. The source's NR is 'nonabstinent recovery (NR; e.g., low-risk asymptomatic drinking)'. That is the same 'light' vs 'low-risk' slip fixed on numbers #8 and belief #4: low-risk allows up to 4 drinks a day for men. Use 'within low-risk limits'.",
+        "Minor: 'splitting up' stands for 'becoming separated/divorced/widowed', which includes widowhood. Reworded to 'a marriage ending'."
+      ],
+      "fix": {
+        "basis.measured": "How the chance of getting free changed in the years after finishing school, starting full-time work, marrying, a marriage ending and becoming a parent. In the 3 years after a first marriage began or ended, the chance of getting free while still drinking within low-risk limits rose (×1.37 and ×1.76); for people still hooked 3 or more years after either, it fell (×0.70)."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=16568565&rettype=abstract&retmode=text",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 5,
+      "label": "how-alone 56%",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Table 3 caption 'Factors associated with choosing assisted (54%) vs. unassisted problem resolution.' and row 'Primary substance … Alcohol 55.9'. Quote word for word.",
+        "Fixed headline: 20 words, 1 figure. It names the listed services; Methods define 'assisted' as lifetime use of treatment, 'anti-relapse/craving medication', mutual-help groups (AA, NA, SMART Recovery) or community recovery support (sober living, faith-based, recovery community centers). 'The rest, none' reads as none of those, which is right. 'AA-type groups' slightly undersells that SMART Recovery also counted; acceptable.",
+        "Fixed measured holds: 53.9% assisted, mutual-help 45.1%, AA 34.6%, all substances (Table 2). n holds: alcohol 51.2% (weighted) of 2,002. Mirror 11 words."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6076174/unicode",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 6,
+      "label": "how-tries 2 tries",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Table 1 header 'Mean (SD) Median (IQR) Min, max' and row 'Alcohol 5.38 (13.45) 2 (1, 4) 0, 100'. Median 2 means at least half needed 2 or fewer.",
+        "Fixed caveat holds: 'approximately 13% of the sample ( n = 260) reported not making any serious recovery attempts'; among those with at least 1 try ( n = 1,742) the median was 3 (all substances; no alcohol-only figure). Fixed n holds: Kelly 2017 gives alcohol 51.2% (weighted) of 2,002; this paper's table has no per-group count.",
+        "Rules: headline 14 words, 1 figure; mirror 11 words; 'all drugs together' flags the mixed figure without naming another drug (rule 13)."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6602820/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 7,
+      "label": "how-slips 1 in 4",
+      "verdict": "ok",
+      "problems": [
+        "Figure, quote and caveat hold against the PubMed abstract: 'During the year after treatment, 1 in 4 clients remained continuously abstinent on average, and an additional 1 in 10 used alcohol moderately and without problems.' (26 words). Also 3 days in 4 abstinent and 87% less drinking. The hopeful 'about one third … asymptomatic' is not used.",
+        "Fixed basis.n is true: the abstract gives no head count. Tried again 2026-11-05: jsad.com full text HTTP 403 (curl and WebFetch); Semantic Scholar marks it CLOSED; Unpaywall refuses placeholder emails; Cutler & Fishbain 2005 (PMC1185549), which re-tabulates this paper, gives no total n either. The count stays unchecked, and the weak line says so (rule 17).",
+        "Rules: headline 19 words; mirror 14 words (at the limit); 'how-slips' is not in the what-helps group, so '1 in 4' passes rule 12a."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=11327187&rettype=abstract&retmode=text",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 8,
+      "label": "helps-stop-vs-cut 27% vs 7%",
+      "verdict": "fix",
+      "problems": [
+        "Headline, quote and n hold against the full text (Zenodo copy, read 2026-11-05). Table 2 'No. of cases': low-risk drinker 645, abstainer 696; Table 3 all durations: 27.2 vs 7.3; the quote is word for word, 28 words. Headline 20 words, 2 figures.",
+        "Open item resolved, and the caveat is too hopeful about drinking. The full text says 'the overall rates of recurrent dependence did not differ between low-risk drinkers and abstainers (4.0 vs. 2.9%)'. That is the raw rates. After adjusting for confounders, the odds of dependence returning were 'e 1.086 = 3.0 (95% CI = 1.4–6.5)' for low-risk drinkers (Table 4, p = .007), which is significant. Saying only 'did not differ' leaves out that adjusted result.",
+        "Under-5-years and young-adult notes hold. In Table 3, 0–4 years shows 28.3 vs 17.0 with no significance mark between them. The Discussion: 'no increased likelihood … for low-risk drinkers relative to abstainers among those who were 18 to 34 years of age'. Younger people 'had the highest rates of relapse'. 'Young adults' is replaced with the paper's ages 18–34.",
+        "basis.measured threshold: this paper defines risk drinking for men as '14+ drinks per week or 5+ drinks on any day'. So low-risk is fewer than 14 a week, not '14 or fewer on average'. The earlier wording came from Dawson 2005 (PMC6527249), which says 'more than 14'. Changed to match the cited paper; the difference is one drink."
+      ],
+      "fix": {
+        "caveat": "Not a trial: people chose whether to drink. Weighing other differences, the odds of problems coming back were 5.8 times as high for low-risk drinkers. Full dependence came back in 4.0% of low-risk drinkers and 2.9% of non-drinkers; the raw rates did not differ, but weighing other differences, the odds were 3 times as high. For people aged 18–34 and people free under 5 years, the gap wasn't clear; the young slid back most either way.",
+        "basis.measured": "Any sign of a drinking problem coming back, and full dependence coming back, by the second interview: low-risk drinkers against non-drinkers. Low-risk means drinking with no signs of a problem and, for men, fewer than 14 drinks a week and never 5 or more in a day. Of those who had no signs but drank risky amounts, 51% had problems back."
+      },
+      "fetchedUrl": "https://zenodo.org/api/records/1230663/files/article.pdf/content",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 9,
+      "label": "helps-medicine 9 more in 100",
+      "verdict": "fix",
+      "problems": [
+        "Big, headline and quote hold: the abstract gives RD −0.09 (95% CI −0.14 to −0.04) for return to any drinking, acamprosate vs placebo. 9 fewer in 100 drinking again = 9 more in 100 staying off. Headline 21 words, 2 figures; the quote is word for word, 26 words. basis.when holds: searched 'January 1, 1970, to March 1, 2014'.",
+        "Open items resolved from the JAMA full text (jamanetwork.com, read 2026-11-05 via WebFetch). '16 trials, n = 4847' for this outcome; placebo-controlled acamprosate trials 'conducted in Europe (16/22)'; 'Treatment duration ranged from 12 to 52 weeks' and 'after detoxification or required a period of sobriety (at least 3 days)', both said of the included studies in general.",
+        "The caveat cites a commentary for the low-bias point. The paper says it itself, with numbers: the low risk of bias subgroup fell to 'RD, −0.02; 95% CI, −0.09 to 0.05, 4 trials, n = 1409', 'not statistically significant'. Give that figure; it is the cautious estimate (rule 10). The weak line should name it too.",
+        "Rule 12a, still open: the paper gives no placebo-arm rate (the WebFetch read found only risk differences and NNTs). So the per-100-with and per-100-without pair cannot be shown, and the weak line keeps saying so.",
+        "basis.measured gives naltrexone as 'one in 20' and 'one in 12'. That is the '1 in N' form rule 12a bans in the what-helps group. Swapped for the abstract's risk differences: RD −0.05 for any drinking, RD −0.09 for heavy drinking (50 mg/d)."
+      ],
+      "fix": {
+        "caveat": "Most trials in the review started after detox or at least 3 days sober: it helps people stay stopped. Nine more in 100 is a modest effect: it helps some people, not everyone. In the 4 trials least open to bias (1,409 people), the gap was 2 in 100 and not clear. It needs a prescription.",
+        "weak": "The review gives only the gap between the pills, not how many stayed off on each; in the 4 trials least open to bias, the gap was small and not clear.",
+        "basis.measured": "Return to any drinking during trials of 12 to 52 weeks, acamprosate against a dummy pill. Naltrexone (50 mg a day): 5 more in 100 stayed off any drink, and 9 more in 100 stayed off heavy drinking."
+      },
+      "fetchedUrl": "https://jamanetwork.com/journals/jama/fullarticle/1869208",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 10,
+      "label": "helps-talk 42 vs 35 in 100",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Summary of findings 1: 'Proportion of participants (%) completely abstinent', 'Follow‐up: 12 months', 'Study population', '345 per 1000', '418 per 1000 (356 to 490)', 'RR 1.21 (1.03 to 1.42)', '1936 (2 RCTs)', high certainty. 41.8 rounds to 42 and 34.5 to 35, so the gap shown is the smaller one. The quote's cell order follows the table's row spans; each cell is word for word (checked by WebFetch, which cannot return raw text).",
+        "Fixed measured holds. Litt 2007 (n = 210) measured 'continuous abstinence during the 90‐day period prior to each follow‐up'. MATCH (n = 1,726) measured abstinence 'throughout the entire first year'. The abstract: 'This effect remained consistent at both 24 and 36 months.' Fixed caveat holds: drinks per drinking day MD 0.17 lower (−1.11 to 0.77; 1 RCT, moderate certainty), so no better.",
+        "n, who ('non‐coerced adults with AUD'), 27 studies / 10,565, search to 2 August 2019: all in the abstract. 'where' is not stated in the review's study table, but the review names only Manning 2012 (UK) and Vederhus 2014 (Norway) as outside the USA. So US holds.",
+        "Rules: headline 22 words (at the limit); one per-100 pair (rules 12, 12a); mirror 12 words."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7065341/",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 11,
+      "label": "helps-early-help 62% vs 43%",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Results: 'By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group' (read through WebFetch, which caps quotes, so the full sentence was confirmed in two parts). Helped n = 362, no help n = 99; 16-year relapse 60.5% vs 42.9%; mean age 33.5, 49.7% men.",
+        "Fixed headline: 21 words, 2 figures, and it now names the 3-year point. 'Got help early' = treatment and/or AA in the first year after recognising the need. Rules 12 and 12a are met with two per-100 rates.",
+        "Minor, no change: the paper does not name the study site (authors at VA Palo Alto; 'the local geographical area'). 'US' is safe."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1976118/",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 12,
+      "label": "after-first-month 45%",
+      "verdict": "ok",
+      "problems": [
+        "Holds against the PubMed abstract. 137 patients; 'LS decreased significantly in 62 patients (45.3%), and there was a reduction in the estimated stage of fibrosis in 32 (23.3%).' (quote word for word, 21 words). 7.2 to 6.1 kPa; 11.7% increased; 2007–2010; Liver and Addiction Unit, Hôpital Cochin, Paris; median 150 g/d.",
+        "Fixed caveat matches the authors' reading: 'strongly suggests that nonfibrotic lesions (such as the presence of alcoholic hepatitis) may influence LS'. Fixed who: 150 g ÷ 14 g = 10.7, about 11 US standard drinks.",
+        "Rules: headline 19 words, 1 figure; mirror 12 words; severity 'treatment' (hospitalised for withdrawal) fits."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=22404692&rettype=abstract&retmode=text",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 1,
+      "label": "stuck: half needed 3 tries or more",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Results: among 'at least 1 serious recovery attempt ( n = 1,742)', the median was 3 (IQR 1 to 5), so 'half needed 3 tries or more' is right. Fixed proof wording 'did not differ significantly' matches 'Age of onset and primary substance were not significantly associated with number of recovery attempts'.",
+        "Fixed refs[1].quote is word for word: 'there were apparent differences in the distribution of number of recovery attempts by primary substance; however, these did not reach statistical significance' (22 words). refs[0].quote is word for word, 28 words.",
+        "Rules: proof 33 words; severity 'resolved' fits; the mixed group is stated as 'drinking or drug problem' without naming another drug (rule 13)."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6602820/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 2,
+      "label": "hard: withdrawal 36 h; low mood 42% to 6%",
+      "verdict": "ok",
+      "problems": [
+        "Holds. The ASAM PDF (re-fetched 2026-11-05) has both quotes word for word: 'Signs and symptoms of alcohol withdrawal typically begin 6–24 hours after cessation of (or reduction in) alcohol use.' and 'Patients with mild withdrawal and low risk of complicated withdrawal may be observed for up to 36 hours, after which more severe withdrawal is unlikely to develop.' (Recommendation V.1).",
+        "Brown & Schuckit abstract: 'male primary alcoholics (no preexisting major psychiatric disorder)', inpatient, 191 interviewed, 42% at intake (Hamilton ≥20), 'only 6% remain clinically depressed at Week 4'. Both quotes word for word with one ellipsis.",
+        "Fixed proof: 39 words; it keeps 'low-risk' and 'of observation' and names the group as men without earlier major mental illness. Severity 'treatment' fits both sources. Not more hopeful than the sources."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 3,
+      "label": "need: drink and sleep",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Brower 2001: polysomnography of 'male alcoholics undergoing inpatient alcoholism treatment, both following alcohol administration and during alcohol withdrawal'. 'In most of these studies, alcohol administration … resulted in difficulty falling asleep (i.e., prolonged sleep latency), decreased total sleep time'. Figure 1: 'Both after drinking and during withdrawal, sleep latency increases and total sleep time decreases'. 'alcohol is not a reliably effective sedative among alcoholic patients'.",
+        "Fixed proof (38 words) keeps 'In most of these studies' and 'not reliably', and does not overstate. All three quotes are word for word, 30 words or fewer (the first is exactly 30).",
+        "Weak, no field for it on a belief: the studies date from the 1970s and early 1980s, are small, and the review gives no total n. One study (Allen 1980) found more total sleep; Skoloda 1979 found a brief first-week improvement in rated sleep."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC2778757/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 4,
+      "label": "moderation: 27% vs 7%",
+      "verdict": "ok",
+      "problems": [
+        "Holds against the full text (Zenodo PDF). Both quotes are word for word in the abstract (26 and 28 words). 27.2% of 645 low-risk drinkers vs 7.3% of 696 abstainers had AUD symptoms come back by Wave 2 (2004–2005). Everyone was in full remission from DSM-IV dependence at Wave 1, so severity 'dependent' satisfies rule 4.",
+        "Fixed proof: 39 words; 'drank within low-risk limits' matches the paper's 'Low-risk drinker: Consumed alcohol but did not experience any symptoms … and did not meet the criteria for risk drinking'.",
+        "Context, no change to the proof: full dependence came back in 4.0% vs 2.9% (raw rates 'did not differ'; adjusted OR 3.0, 95% CI 1.4–6.5). There was no significant difference for people aged 18–34. Card #8's caveat carries both."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://zenodo.org/api/records/1230663/files/article.pdf/content",
+      "quoteFound": true
+    }
+  ]
+}

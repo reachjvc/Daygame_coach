@@ -1,0 +1,290 @@
+{
+ "about": "Decisions taken for the owner (RULEBOOK rule 27), each with its reason, shown on the review page where he can veto any of them; and at most 7 choices, each phrased as a rule for every page, each with a recommendation already applied in the prototype.",
+ "decisions": [
+  {
+   "id": "reader",
+   "title": "Who every page is written for",
+   "decision": "A man who has tried to cut down or stop and couldn't.",
+   "why": "Your notes of 4 and 5 Nov: he already knows he has a problem, and “10 drinks every day” is a different reader from “above the guidelines”. Every number now says which group it counts."
+  },
+  {
+   "id": "order",
+   "title": "Section order",
+   "decision": "Hope number, beliefs, how hard it feels, who gets free and how, how quitting goes, the plan, sources. Your own story box shows on the review page only, until you write it.",
+   "why": "Your 5 Nov order: one number that creates hope, then beliefs and the graph, then more numbers. The plan comes after the numbers so the reader reaches it having seen that people like him get free."
+  },
+  {
+   "id": "kept-outlook",
+   "title": "Every “How quitting goes” number you liked is back",
+   "decision": "All numbers from the v10 “How quitting goes” section are on the v3 pages, rewritten to the new rules. Where a rule argues against one (it counts ordinary users, not addicts), it carries an amber label and “Proposed to remove” with the reason, for you to decide.",
+   "why": "Your 5 Nov note: “more in line with what I want than a bunch of the other stats”. The first draft had dropped most of them; an owner-lens check caught it before you saw it."
+  },
+  {
+   "id": "counted",
+   "title": "Every number says who was counted",
+   "decision": "A “Counted:” label sits on every number, in plain words. Numbers about heavy or ordinary users (not checked for addiction) get an amber label, and appear only among the how-they-quit and life-after numbers, never as a hope, who-gets-free or what-helps number.",
+   "why": "Your 5 Nov note on severity. It also stops a moderation number from coming from people who were never hooked."
+  },
+  {
+   "id": "oneline",
+   "title": "One number per line",
+   "decision": "Each number gets one sentence of 22 words or fewer with at most two figures; everything else (how many, where, when, what it doesn’t mean) folds under “Based on”.",
+   "why": "You couldn’t follow “What helps” on the first read. A cold reader with no context checked every line before you saw it."
+  },
+  {
+   "id": "per100",
+   "title": "What helps, per 100 people",
+   "decision": "Every “what helps” number says what happened per 100 people with it and per 100 without it (“27 in 100 vs 12 in 100”), never “×2.3” or “1 in 12” alone.",
+   "why": "You couldn’t follow “What helps” on the first read. Studies of how people read risk numbers find ratios and “1 in N” are the formats readers get wrong most; counts per 100 are read right most often."
+  },
+  {
+   "id": "menu",
+   "title": "Numbers come from one menu",
+   "decision": "24 kinds of number in five groups (hope, who gets free, how they quit, what helps, life after). 19 are switched on; every page fills the same kinds, and a kind a page has no honest number for says so on the page. The Number menu tab shows each page’s number for every kind; switch kinds on or off there, for every page at once.",
+   "why": "Your 5 Nov wish to choose from a menu, with general numbers shown once and specific ones per page."
+  },
+  {
+   "id": "general",
+   "title": "Numbers about every addiction",
+   "decision": "Three numbers that pool alcohol and other drugs (tries it took, quit with no help, life in the years after) are kept in the Number menu but off the pages, unless you choose otherwise. The alcohol page keeps one card from the same survey (“6 years”), marked “Proposed to remove” because it mixes drink and drug problems.",
+   "why": "You suggested general numbers shown “somewhere”, and said a one-pager is about one drug. These come from one survey of alcohol and drug problems, so on most pages they would be another drug’s numbers."
+  },
+  {
+   "id": "graph",
+   "title": "How the graph is made, for every addiction",
+   "decision": "About 1,050 posts with a day count read from each addiction’s quit forum (2021–2025, fixed calendar days, 70 per day range); the 534 to 801 that say how the day felt are used. A reader scores how hard that day was, 0 to 10; a second reader, a different AI model, re-scores 15% blind. Version 1 draws a line (a typical day per stage) and a band (where the middle half of scores fell); version 2 draws 20 dots per stage. Body symptoms from clinical sources sit under it as ranges.",
+   "why": "Your 5 Nov note: true to how people feel, not one study. This is the same recipe on every page, and it says how many posts it rests on and how it is biased."
+  },
+  {
+   "id": "phone",
+   "title": "Phone first, wide on big screens",
+   "decision": "Each page is one column on a phone. From 760 px wide, headings move to a left column, numbers sit beside their sentence, and the graph turns from rows into a chart. The review shows both at once.",
+   "why": "You said header B fails on a browser and you were unsure how to design for both. Phone first means the narrow screen gets the real design and the wide screen adds to it, so neither is an afterthought."
+  },
+  {
+   "id": "beliefs",
+   "title": "Beliefs in your two columns, with a test",
+   "decision": "3 to 5 beliefs per page: what you tell yourself, what is also true, and one real-life test for this week. On a wide screen they sit side by side as your columns; on a phone they stack. Every page links to the Belief test page, where the exercise is explained and done, and entries stay private to each reader.",
+   "why": "Your book method and your 5 Nov note: a feature one click away, fully explained."
+  },
+  {
+   "id": "danger",
+   "title": "Danger lines only on the alcohol page",
+   "decision": "On the alcohol page only: the seizure and DTs rows under the graph, one short line in plan step 3 (where the drinking stops), and the “Before you stop” line above the sources, which names the signs (heavy daily drinking, shakes when you stop, an earlier seizure or DTs) and says a seizure or confusion is an emergency. Nowhere else.",
+   "why": "Your 4 Nov note: only where a source ties the risk to the drug, small, never up front. A safety audit found the plan stops drinking at step 3 while the warning sat in step 5 and at the very bottom, so a heavy daily drinker following the steps would stop before seeing it."
+  },
+  {
+   "id": "plan",
+   "title": "Your five steps, longer",
+   "decision": "Your step titles and text stay word for word on every page. Each step now has 4 to 6 actions for that addiction (it had 2 or 3).",
+   "why": "Your 5 Nov note: the plan should be longer."
+  },
+  {
+   "id": "privacy",
+   "title": "Forum posts stay on your machine",
+   "decision": "Downloaded posts and scored text stay in ~/.cache. The repo gets counts and scores only, and the build fails if any 8-word run from a post shows up in a public file.",
+   "why": "The repo is public, and posts are health disclosures."
+  },
+  {
+   "id": "story",
+   "title": "Your story box",
+   "decision": "The “My experience” placeholder from round 3 stays, but only on the review page, so a reader never sees an empty box.",
+   "why": "Cold readers took the placeholder as a sign the page was unfinished. It is yours to write; nothing was removed."
+  }
+ ],
+ "choices": [
+  {
+   "id": "hero",
+   "rule": "The big hope number on every page is:",
+   "why": "Both numbers stay on every page; this picks which one is big. Your rule (cautious estimate first) says the head count: alcohol 42 in 100 already free, weed 65, nicotine 19. On version 2's dot grid both show at once. The projection (90.6%, 97%, 83.7%) is the bigger hope but a model that likely runs high. Porn has neither: no study counts men who got free of porn, and the page says so.",
+   "options": [
+    {
+     "id": "projection",
+     "label": "The lifetime projection, the count under it"
+    },
+    {
+     "id": "count",
+     "label": "The head count, the projection under it"
+    }
+   ],
+   "rec": "count"
+  },
+  {
+   "id": "general",
+   "rule": "Numbers that pool alcohol and other drugs (tries it took, quit with no help, the years after):",
+   "why": "They come from one US survey of people who beat an alcohol or drug problem, about half of them alcohol. On the weed page they name alcohol; nicotine and porn were not in the survey at all; and on the alcohol page the same survey's numbers are already there. So I recommend leaving them off the pages; they stay in the Number menu.",
+   "options": [
+    {
+     "id": "covered",
+     "label": "Show on the pages the survey covers"
+    },
+    {
+     "id": "every",
+     "label": "Show on every page, labelled"
+    },
+    {
+     "id": "page",
+     "label": "Leave them off the pages"
+    }
+   ],
+   "rec": "page"
+  },
+  {
+   "id": "mirror",
+   "rule": "Above each number, the thought it answers (“You’ve tried to stop before and think you’ve failed for good.”):",
+   "why": "It helps a reader find the number that is about him. It is written by us, not quoted from anyone.",
+   "options": [
+    {
+     "id": "keep",
+     "label": "Keep"
+    },
+    {
+     "id": "drop",
+     "label": "Drop"
+    }
+   ],
+   "rec": "keep"
+  },
+  {
+   "id": "appdata",
+   "rule": "Where an app publishes day-by-day check-in data (for now only alcohol: I Am Sober), show it under the forum graph:",
+   "why": "A second, independent source that agrees with the forum curve. It counts heavy drinkers quitting or cutting back who kept writing check-ins in the app, and says so.",
+   "options": [
+    {
+     "id": "show",
+     "label": "Show it"
+    },
+    {
+     "id": "hide",
+     "label": "Leave it out"
+    }
+   ],
+   "rec": "show"
+  },
+  {
+   "id": "planplace",
+   "rule": "The plan sits:",
+   "why": "After the numbers, the reader has seen that people like him get free before he reads what to do. Right after the graph, he gets to it sooner.",
+   "options": [
+    {
+     "id": "after",
+     "label": "After the numbers"
+    },
+    {
+     "id": "early",
+     "label": "Right after the graph"
+    }
+   ],
+   "rec": "after"
+  },
+  {
+   "id": "offreader",
+   "rule": "Numbers you liked in version 10 that count people not checked as hooked (heavy drinkers in a month-off study, students, ordinary smokers):",
+   "why": "Rule 2 says every number should count people like the reader. These carry an amber “Counted: … not checked for addiction” label. One choice for all of them, on every page, instead of one card at a time.",
+   "options": [
+    {
+     "id": "keep",
+     "label": "Keep them, labelled"
+    },
+    {
+     "id": "drop",
+     "label": "Take them off every page"
+    }
+   ],
+   "rec": "keep"
+  },
+  {
+   "id": "sections",
+   "rule": "Which version of each section every page uses:",
+   "why": "Version 1 is your 2025 sheet with the rules applied; version 2 counts people (dots, a fact box). My picks, shown under “Your picks”: the hope number from version 2 (the dot grid shows what is counted and what is projected), the graph from version 1 (one line: when it peaks and when it eases), everything else from version 1. Change any section with the blue bar above it.",
+   "options": [
+    {
+     "id": "v1",
+     "label": "All version 1"
+    },
+    {
+     "id": "v2",
+     "label": "All version 2"
+    },
+    {
+     "id": "mix",
+     "label": "Mixed, my picks per section"
+    }
+   ],
+   "rec": "mix"
+  }
+ ],
+ "graph": [
+  {
+   "title": "The recipe, the same for every addiction",
+   "text": [
+    "Posts from that addiction's quit forum, downloaded from the Arctic Shift public archive (reddit.com blocks this machine): every post from fixed calendar days, 2021 to 2025, so no season or weekday is favoured.",
+    "Only posts that give a day count (“Day 12”, “3 weeks”, or the forum's day badge). 70 posts drawn at random for each of 15 day bins, from day 1 to year 2 and on: about 1,050 per addiction.",
+    "An AI reader scored each post: how hard the writer says staying off is today, 0 (no struggle) to 10 (can barely hold on), and which symptoms they name. Posts about a slip, or that say nothing about how today feels, are left out.",
+    "15% of posts were scored again by a second reader that never saw the first scores, once by the same model and once by a different one (Claude Sonnet). The table below gives how often they landed within 1 point.",
+    "Body symptoms under the graph come from clinical sources, drawn as ranges, never as one curve. A lab test of how strongly cues pull is never drawn as craving."
+   ]
+  },
+  {
+   "title": "What it can't tell you",
+   "text": [
+    "People who post are not everyone who quits. People who find it easy have less reason to post, and people post more on hard days, so the curve likely runs higher than for quitters in general.",
+    "Later days are mostly milestone posts. People who slipped earlier are no longer in them.",
+    "The readers are AI models, not the writers rating themselves. Two models agreeing shows the scores are consistent, not that they are what the writers would have said."
+   ]
+  },
+  {
+   "title": "Your “1,000 people a day”: a proposal for the app",
+   "text": [
+    "One question a day after the quit date, “How hard was today?”, on the same 0 to 10 scale, plus optional symptom taps. Each reader sees his own line over the page's curve.",
+    "Opt-in, counted without names, and shown per day bin only once 30 people have reached it; until then the page keeps the forum curve. Nothing is built: the full proposal is in 08-v3/daily-log-proposal.md."
+   ]
+  }
+ ],
+ "kept": [
+  "The template page (version 10, https://claude.ai/artifact/8D5nSxoACGvVn7PBRHbCus) and the first board (https://claude.ai/artifact/9wfvJfSHm3BNTUXmijH7GK) are untouched, with all your marks.",
+  "Their files are untouched: 06-template.json, 07-mirror-stats/*.json, community/leaves-stages.json, board/build.py, build_template.py, template.html, template-v2.html.",
+  "Nothing was removed from the old pages. Old numbers, beliefs and round-2 milestones this prototype does not show are on the “Not on this page” tab, grouped, each with its reason.",
+  "Betting, phone, sugar and cocaine are not in this prototype; their pages stay as they are on the template page.",
+  "The app is untouched: nothing was built in it (a possible rebuild of the app is still undecided)."
+ ],
+ "recPicks": {
+  "hero": "2",
+  "graph": "1",
+  "general": "2"
+ },
+ "weak": [
+  {
+   "title": "The porn page is a draft: its science is the thinnest",
+   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. Its first number is a statistical model's grouping of adults (men and women, porn and sex together), not a head count, and says so. Every porn card carries a short weak label. A count of r/pornfree posts a year or more in that name what helped could fill some of this later."
+  },
+  {
+   "title": "The lifetime “get free” numbers are projections",
+   "text": "90.6%, 83.7% and 97% are a model built from ages people remembered. The authors say people over-report getting free and the survey missed people in prisons and hospitals, so the real shares are likely lower. That is why the counted share leads and the projection sits under it."
+  },
+  {
+   "title": "The felt-difficulty graph is posts, not people",
+   "text": "It rests on 534 to 801 usable posts per addiction, scored by AI readers, not the writers. People who post are not everyone who quits and likely struggle more. Stages under 25 posts are marked “few” and not used to call the hardest stretch (Day 1 on alcohol and porn; the last stage on porn)."
+  },
+  {
+   "title": "Two AI readers agreeing is not the same as being right",
+   "text": "A second, different model landed within 1 point of the first 92 to 99% of the time. That shows the scores are consistent. Nobody checked them against what the writers would have said."
+  },
+  {
+   "title": "The I Am Sober app curve counts heavy drinkers who kept using the app",
+   "text": "Members who drank 21 to 70 a week, not checked for addiction. 3,274 wrote a check-in on day 1 and 735 on day 30, so later days describe the ones still going."
+  },
+  {
+   "title": "Most “who gets free” numbers are surveys of memory",
+   "text": "Ages and tries are what people remembered years later, in US surveys. None is a trial."
+  },
+  {
+   "title": "The “also true” lines and the tests are written by Claude",
+   "text": "They follow your method and every proof under them is sourced, but no reader has tried them yet. The cold readers here were AI models reading screenshots, not real readers."
+  },
+  {
+   "title": "Not in this prototype: betting, phone, sugar, cocaine",
+   "text": "Their open doubts stand as before (betting 92% rests on 25 men; sugar's top numbers are about weight loss; phone numbers count ordinary users). They stay on the template page until the template is locked."
+  }
+ ]
+}

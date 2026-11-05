@@ -1,0 +1,252 @@
+{
+ "id": "cannabis",
+ "beliefs": [
+  {
+   "kind": "stuck",
+   "limiting": "I’ve smoked for years. I’m stuck.",
+   "counterpart": "Most people hooked on weed get free in the end.",
+   "test": "This week, list the people you know who smoked every day for years and don’t now. Ask one how long he smoked before he stopped. Notice how many years most of them had behind them.",
+   "proof": "In a US survey, 344 of 530 adults ever hooked on weed were already free when asked; an estimated half got free about 6 years after it began. “Free” means no signs of being hooked, not never smoking.",
+   "severity": "dependent",
+   "refs": [
+    {
+     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69. Table 3 (Table 1 gives cannabis dependence N=530).",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+     "pmid": "21077975",
+     "fetched": true,
+     "quote": "Cannabis remission (N=344)"
+    },
+    {
+     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+     "pmid": "21077975",
+     "fetched": true,
+     "quote": "Half of cannabis dependence remissions occurred approximately 6 years after dependence onset among Whites and Blacks, 5 years among Hispanics and NH/PI and 7 years among AI/AN"
+    }
+   ],
+   "origin": "06-template.json cannabis belief 5. Limiting kept. Counterpart put in the form of the row marked Keep (RULEBOOK rule 22): the old “97% … I’m next” rested on a lifetime projection and read as a slogan; the proof now leads with the counted 344 of 530 (rule 10).",
+   "keep": true
+  },
+  {
+   "kind": "hard",
+   "limiting": "I can’t handle quitting. Last time I barely lasted three days.",
+   "counterpart": "It’s a few hard weeks, not forever. I’ve got through hard weeks before.",
+   "test": "Tonight, wait an hour before your first smoke. Rate the urge 0 to 10 every 10 minutes. Notice whether it keeps climbing or comes in waves you can sit through.",
+   "proof": "Weed withdrawal usually lasts up to 3 weeks; poor sleep can last longer. In 49 people hooked on weed and not in treatment, the harm it did to daily life over two weeks off was on average fairly mild.",
+   "severity": "dependent",
+   "refs": [
+    {
+     "cite": "Bonnet U, Preuss UW (2017). The cannabis withdrawal syndrome: current insights. Substance Abuse and Rehabilitation 8:9-37.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5414724/",
+     "pmid": "28490916",
+     "fetched": true,
+     "quote": "The CWS usually lasts up to 3 weeks"
+    },
+    {
+     "cite": "Connor JP, Stjepanović D, Budney AJ, Le Foll B, Hall WD (2022). Clinical management of cannabis withdrawal. Addiction 117(7):2075-2095.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9110555/",
+     "pmid": "34791767",
+     "fetched": true,
+     "quote": "Sleep disturbances may continue for several weeks or longer."
+    },
+    {
+     "cite": "Allsop DJ, Copeland J, Norberg MM, Fu S, Molnar A, Lewis J, Budney AJ (2012). Quantifying the clinical significance of cannabis withdrawal. PLoS One 7(9):e44864. 49 non-treatment-seeking users who met DSM-IV criteria for dependence, two weeks of monitored abstinence.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3458862/",
+     "pmid": "23049760",
+     "fetched": true,
+     "quote": "It is of note that the average level of functional impairment caused by cannabis withdrawal symptoms was relatively mild"
+    }
+   ],
+   "origin": "new",
+   "keep": true
+  },
+  {
+   "kind": "moderation",
+   "limiting": "Day 10, I feel fine. Now I can handle it.",
+   "counterpart": "Feeling fine means the withdrawal is over, not that I’m in control again.",
+   "test": "Write down every time you said “just one”, “only weekends” or “just a break”. Next to each, write how long it took to be back to daily. Notice the pattern.",
+   "proof": "Of 82 people treated for weed dependence who got 2+ weeks off, 71% smoked again within 6 months, and 71% of those went back to 4+ days a week. Early slips led back more often.",
+   "severity": "treatment",
+   "refs": [
+    {
+     "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment 25(2):85-9.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+     "pmid": "14629990",
+     "fetched": true,
+     "quote": "Seventy-one percent used marijuana at least once (i.e., lapsed) within 6 months of initial abstinence, averaging 73 days (SD = 50) till lapsing."
+    },
+    {
+     "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment 25(2):85-9.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+     "pmid": "14629990",
+     "fetched": true,
+     "quote": "Similarly, 71% of those who lapsed, relapsed to heavier use defined as at least 4 days of marijuana use in any 7-day period."
+    },
+    {
+     "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment 25(2):85-9.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+     "pmid": "14629990",
+     "fetched": true,
+     "quote": "Early lapses were more strongly associated with consequent relapse."
+    }
+   ],
+   "origin": "06-template.json cannabis belief 4. Limiting and counterpart kept word for word. Proof replaced: the old one rested on quitters’ stories and a receptor finding; rule 4 needs a study of people who had been hooked.",
+   "keep": true
+  },
+  {
+   "kind": "need",
+   "limiting": "Weed is the only thing that gets me to sleep.",
+   "counterpart": "Weed knocks me out. It doesn’t give me good sleep. Some rough weeks buy my real sleep back.",
+   "test": "For 7 mornings, rate how rested you feel, 0 to 10, and note whether you remember a dream. Notice whether being knocked out is the same as waking up rested.",
+   "proof": "Of 302 adults hooked on weed starting a treatment trial, 69% slept poorly at the start. Over 12 weeks, those who cut down slept better than those whose use rose.",
+   "severity": "dependent",
+   "refs": [
+    {
+     "cite": "Hser YI, Mooney LJ, Huang D, Zhu Y, Tomko RL, McClure E, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment 81:53-58. 302 adults with DSM-IV cannabis dependence in the ACCENT trial.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
+     "pmid": "28847455",
+     "fetched": true,
+     "quote": "A high percentage (68.9%) of the study sample reported poor sleep quality."
+    },
+    {
+     "cite": "Hser YI, Mooney LJ, Huang D, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment 81:53-58.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
+     "pmid": "28847455",
+     "fetched": true,
+     "quote": "individuals who reduced use of cannabis over the trial demonstrated significantly greater reduction of anxiety, depression, and improvements of sleep quality over time"
+    }
+   ],
+   "origin": "06-template.json cannabis belief 2. Limiting kept. Counterpart: “A few rough nights” changed to “Some rough weeks” to fix a fact (sleep trouble can last several weeks or longer). Proof replaced: the old one counted users and inpatients not checked for dependence.",
+   "keep": true
+  }
+ ],
+ "plan": [
+  {
+   "do": [
+    "Write down what weed does for you: sleep, boredom, anxiety, fun.",
+    "Each one is a belief to test. Start with the table above.",
+    "Keep smoking as usual for a few days while you do this. No cutting down yet.",
+    "Before each smoke, note the time, where you are and what you want from it.",
+    "After it, note whether it gave you that, and for how long.",
+    "Allow it. No guilt while you log: you’re investigating, not failing."
+   ]
+  },
+  {
+   "do": [
+    "Sleep: same wake-up time every day, no screens in bed.",
+    "Evenings: plan the first 14 in advance: gym, cooking, a friend, a game.",
+    "Anxiety: a walk or a hard workout when it spikes.",
+    "Boredom: two things that keep your hands busy, set up before the date.",
+    "Keep the ritual, swap the joint: same break, same balcony, tea or a walk instead.",
+    "For each need on your step 1 list, write one swap. 80% of the effect is enough."
+   ],
+   "proof": {
+    "text": "Of 25 long-time daily smokers who quit without treatment for a year or more, the most common things that kept them off were avoiding situations where they smoked, a changed routine and new interests. A small group.",
+    "ref": {
+     "cite": "Ellingstad TP, Sobell LC, Sobell MB, Eickleberry L, Golden CJ (2006). Self-change: a pathway to cannabis abuse resolution. Addictive Behaviors 31(3):519-30.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/15967588/",
+     "pmid": "15967588",
+     "fetched": true,
+     "quote": "The most common reported maintenance factors were avoidance of situations in which cannabis was used, changes in lifestyle, and the development of non-cannabis-related interests."
+    }
+   }
+  },
+  {
+   "do": [
+    "Pick a date a few days to a few weeks out. Put it in your calendar. Smoke as usual until then.",
+    "Throw out the stash, grinder and papers. Delete the dealer’s number.",
+    "Expect the first two weeks to be the hardest.",
+    "For three months, weed is the one thing. No new diet, no new life plan.",
+    "Every day without weed is a complete success. Mark it off.",
+    "If you slip, you’re not back at zero. Go back through steps 1–3, find what the slip gave you, and set a new date."
+   ],
+   "proof": {
+    "text": "In 18 heavy users who stopped, most symptoms peaked on days 2–6 and most were gone by day 14.",
+    "ref": {
+     "cite": "Budney AJ, Moore BA, Vandrey RG, Hughes JR (2003). The time course and significance of cannabis withdrawal. Journal of Abnormal Psychology 112(3):393-402.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/12943018/",
+     "pmid": "12943018",
+     "fetched": true,
+     "quote": "Onset typically occurred between Days 1-3, peak effects between Days 2-6, and most effects lasted 4-14 days."
+    }
+   }
+  },
+  {
+   "do": [
+    "When someone offers, say “I don’t smoke”, not “I’m taking a break”.",
+    "Notice the “I can moderate now” thought, and treat it as a symptom.",
+    "When the urge hits, say “there is a craving”, not “I need to smoke”. Then watch it.",
+    "Rate it 0 to 10 and watch it drop. You don’t have to fight it or obey it.",
+    "Expect “just one” once you feel fine. Decide your answer now, not at the party.",
+    "Tell the people you smoke with that you’ve stopped. Not paused: stopped."
+   ],
+   "proof": {
+    "text": "In a 12-week treatment trial of 302 adults hooked on weed, craving stayed low for 41% and fell over time for another 38%.",
+    "ref": {
+     "cite": "Alias-Ferri M, Flesaker M, Gray K, Tomko R, McPherson S, Korthuis PT, et al. (2026). Longitudinal craving profiles in cannabis use disorder: a latent class growth analysis of the ACCENT (CTN-0053) trial. Drug and Alcohol Dependence 285:113208.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/42184587/",
+     "pmid": "42184587",
+     "fetched": true,
+     "quote": "A four-class solution provided the best fit: low craving (41%), moderate-decreasing craving (38%), moderate-stable craving (11%), and high craving (10%)."
+    }
+   }
+  },
+  {
+   "do": [
+    "Look for CBT with motivation sessions, over a month or more.",
+    "Ask about programmes that reward clean tests.",
+    "Help is a tool, not a verdict. Use what works, drop what doesn’t.",
+    "Free and quick: one friend who quit, an online quit group, a Marijuana Anonymous meeting.",
+    "A few meetings can be enough. You don’t sign up for life."
+   ],
+   "proof": {
+    "text": "In 6 trials with 1,166 people with a weed problem, therapy made people about 2.5 times as likely to be off weed at about 4 months as little or no treatment. Low-quality evidence.",
+    "ref": {
+     "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews 2016(5):CD005336.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/27149547/",
+     "pmid": "27149547",
+     "fetched": true,
+     "quote": "low-quality evidence revealed that those receiving intervention were more likely to report point-prevalence abstinence (risk ratio (RR) 2.55, 95% CI 1.34 to 4.83, six studies, 1166 participants)"
+    }
+   }
+  }
+ ],
+ "notUsed": [
+  {
+   "what": "belief",
+   "limiting": "Weed isn’t addictive.",
+   "origin": "06-template.json cannabis belief 1",
+   "reason": "The reader already knows he is hooked (rule 1); answering this reads as screening him. Its proof counts all past-year users (3 in 10) and regular users (47%), not people hooked (rules 2–3). The 47% stays in 07-mirror-stats."
+  },
+  {
+   "what": "belief",
+   "limiting": "It’s natural, so it’s harmless.",
+   "origin": "06-template.json cannabis belief 3",
+   "reason": "Its proof (4.8 times the odds of psychosis) counts daily strong-weed users not checked for addiction (heavy). It argues for quitting, which the reader already wants; it does not answer a thought that stops him. The number stays in 07-mirror-stats."
+  },
+  {
+   "what": "belief",
+   "limiting": "Nothing’s fun without it. This flatness is forever.",
+   "origin": "06-template.json cannabis belief 6",
+   "reason": "No study found that tracks flatness after quitting weed alone; the old proof pooled 32 studies across several drugs (rule 13). Kept for a later round if a weed-only source turns up; the forum stage for days 31–90 already shows it."
+  },
+  {
+   "what": "belief",
+   "limiting": "These crazy dreams mean something’s wrong.",
+   "origin": "06-template.json cannabis belief 7",
+   "reason": "A symptom note, not a thought that keeps him smoking. The timeline already shows the dreams (worst around days 9–11, can last past day 45)."
+  },
+  {
+   "what": "plan step 3 proof, second sentence",
+   "text": "“Now I can handle it” tends to show up around day 10 and again at month 2.",
+   "origin": "06-template.json cannabis plan step 3 proof (refs r1, r13)",
+   "reason": "The step proof takes one sourced ref. This sentence rests on quitters’ stories in the local corpus (r13), which cannot be quoted without forum text (rule 30). The same timing stays in the timeline milestones, marked as quitters’ stories; step 4 now says “Expect ‘just one’ once you feel fine”."
+  },
+  {
+   "what": "plan step 5 proof, fact fix",
+   "text": "In a Cochrane review of 23 trials, therapy made people about 2.5 times as likely to be off weed at the end (low-quality evidence).",
+   "origin": "06-template.json cannabis plan step 5 proof (ref r7)",
+   "reason": "Not dropped, corrected: the 2.55 figure comes from 6 of the 23 trials (1,166 people) and was measured at early follow-up (median 4 months), not at the end. The new text says so."
+  }
+ ]
+}

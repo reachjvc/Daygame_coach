@@ -1,0 +1,38 @@
+{
+  "id": "general",
+  "checked": [
+    {
+      "index": 0,
+      "where": "numbers",
+      "label": "3 tries",
+      "verdict": "fix",
+      "problems": [
+        "basis.measured says the middle figure of 2 'did not differ by main drug'. Table 1 gives medians of 2 for alcohol, cannabis and stimulants, 3 for opioids and 1 for other drugs. The differences were not statistically significant, but the medians are not all the same. The abstract's 'did not differ' is about significance, so the line overstates it.",
+        "Everything else holds. Median 3 (IQR 1 to 5) and mean 6.14 among the n = 1,742 with at least one serious try; 260 people (about 13%) reported none. The treatment split (any treatment or recovery services: median 3, against 1 without) is from Table 1 and counts the full sample. The 1 in 6 diagnosed (17.0%) and July–August 2016 are from Kelly 2017, which is the same survey. Severity 'resolved' fits. Headline is 21 words with 1 digit figure, mirror is 12 words in the second person, and the quote is 28 words, word for word.",
+        "Minor, no change needed: the survey question was 'how many serious attempts did you make to resolve your alcohol/drug problem before you overcame it?'. The authors note that some people may not have counted the attempt that worked, so 'needed 3 tries' is as close as the source allows."
+      ],
+      "fix": {
+        "basis.measured": "Number of serious tries before the problem was resolved, as people remembered it; each person decided what counted as serious. Counting everyone, including those who never made a serious try, the middle figure was 2; it varied a little by main drug (1 to 3), but not significantly."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6602820/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "numbers",
+      "label": "90%",
+      "verdict": "fix",
+      "problems": [
+        "caveat and weak say a diagnosis 'already counts as help' or 'usually means contact with the services that count as help'. In the source, help ('assisted') means outpatient or inpatient addiction treatment, detox, anti-craving medicine, mutual-help groups or recovery support services. A diagnosis from a doctor is not on that list. The paper gives no information on where people were diagnosed, so the circularity is a possibility, not a fact.",
+        "The figure holds. Table 3 '% assisted' for 'Substance use disorder (vs. not)' is 90.2, and for 'Never been diagnosed (vs. not)' it is 38.9. The 17.0% ever diagnosed with an alcohol or substance use disorder is in Table 1, so n is about 340 of a weighted 2,002. July and August 2016 is confirmed. Severity 'resolved' fits. Headline is 20 words with 1 figure, and the mirror is 14 words in the second person (at the limit).",
+        "The quote is stitched from the Table 3 title and one table row, joined with ellipses. Each fragment is word for word, and 90.2 appears only in the table, so it is kept."
+      ],
+      "fix": {
+        "caveat": "Possibly built in: a diagnosis often comes during addiction treatment, which counts as help here, and the survey did not ask where it came from. It does not show that help caused the recovery, or that the other 10% did worse.",
+        "weak": "Possibly circular, because a diagnosis often comes during addiction treatment, which counts as help here; the diagnosis is self-reported."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=6076174&rettype=xml",
+      "quoteFound": true
+    }
+  ]
+}

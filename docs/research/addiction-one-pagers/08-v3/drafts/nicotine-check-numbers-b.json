@@ -1,0 +1,111 @@
+{
+ "id": "nicotine",
+ "checked": [
+  {
+   "index": 1,
+   "where": "numbers",
+   "label": "83.7%",
+   "verdict": "fix",
+   "problems": [
+    "basis.who says '3 of 7 signs'; the paper says 'Dependence diagnoses require the existence of 3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period'.",
+    "basis.who says 'from any tobacco'; the paper does not say which tobacco products were counted.",
+    "Everything else holds: 83.7% lifetime figure, n=6,937 of 43,093, NESARC 2001-2002 face-to-face, 'standard actuarial method', 3.0% at 1 year and 18.4% at 10 years, men less likely to remit, institutionalized people not sampled ('leading to overestimation'). Quote is word for word in the PMC full text (PMC spells 'Lifetime'; the PubMed abstract spells 'Life-time'). Headline 16 words, 1 figure, says 'projected'; mirror 11 words."
+   ],
+   "fix": {
+    "basis.who": "US adults who had ever met the criteria for nicotine dependence (3 or more of 7 signs within one year), before vaping was common"
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547",
+   "quoteFound": true
+  },
+  {
+   "index": 3,
+   "where": "numbers",
+   "label": "3–5%",
+   "verdict": "fix",
+   "problems": [
+    "Severity 'users' is the honest tag (self-quitters and no-treatment control groups, not checked for dependence), but kinds.json does not allow 'users' for how-slips, so build_v3.py fails rule 3. Do not retag it; this needs the decision already noted in gaps (allow 'users' here, or swap in a dependent-group number).",
+    "basis.n covers only the 3–5% figure. The 'first eight days' half of the headline rests on a different set: 'eight relapse curves from two studies of self-quitters and five no-treatment control groups'.",
+    "basis.n and basis.where claim what the full review does (adds up no people, lists no countries); the full text is paywalled (Wiley, Semantic Scholar CLOSED), so only the abstract can be checked.",
+    "Caveat 'many people try again and succeed later' is not in this source.",
+    "Figure, timing and quote check out: abstract says '3-5% of self-quitters achieve prolonged abstinence for 6-12 month after a given quit attempt' and 'most relapse occurs in the first 8 days'; Addiction 99(1):29-38, Jan 2004. Headline 20 words, 2 digit figures."
+   ],
+   "fix": {
+    "basis.n": "For 3–5%: 15 studies or study groups (a summary of 10 earlier studies, 2 more studies and 3 untreated groups). For eight days: 8 relapse curves from 2 studies and 5 untreated groups. The review's short version gives no head count.",
+    "basis.where": "The review's short version doesn't list the countries",
+    "caveat": "This is per attempt, not per person: it does not show how many succeed on a later try."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=14678060&retmode=xml",
+   "quoteFound": true
+  },
+  {
+   "index": 5,
+   "where": "numbers",
+   "label": "23 vs 10 in 100",
+   "verdict": "fix",
+   "problems": [
+    "Caveat gives side effects as a ratio '(×1.23)', against rule 12a's per-100 form; the review gives the absolute rates: 'Absolute rates for serious adverse events were 3.3% and 2.7% in varenicline and control arms respectively' (control = placebo or no medication, 26 studies, 14,356 people).",
+    "basis.measured says 'checked by breath or blood test where possible'; the review says it used the strictest definition and preferred 'biochemically validated rates where reported' (not specifically blood).",
+    "Rest holds: summary-of-findings row 99 per 1000 vs 230 per 1000, RR 2.32 (2.15 to 2.51), 17,395 people in 41 studies; adult smokers who wanted to stop; USA hosted 28 of 75 studies; searched to 29 April 2022; published 2023. Quote is the SoF table row, cells joined by '|' (cell text word for word)."
+   ],
+   "fix": {
+    "caveat": "Prescription only. Serious side effects were reported a little more often than with a dummy pill or no pill: 3.3 in 100 vs 2.7 in 100. Mostly tested in cigarette smokers, not vapers. It still leaves most people smoking at six months.",
+    "basis.measured": "Not smoking at 6 months or longer, by each trial's strictest definition, with a lab check such as a breath test where the trial did one; varenicline against a dummy pill. 23 in 100 is the review's 230 per 1,000; 10 in 100 rounds its 99 per 1,000. As a ratio: 2.32 times."
+   },
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10169257/fullTextXML",
+   "quoteFound": true
+  },
+  {
+   "index": 7,
+   "where": "numbers",
+   "label": "Week 1",
+   "verdict": "fix",
+   "problems": [
+    "Quote joins two sentences with an ellipsis and drops the one between them; a contiguous 26-word quote exists that also carries 'no evidence of an increase'.",
+    "basis.where 'London, England' is inferred from the authors' affiliation (St George's Hospital Medical School, University of London); the abstract does not say where the smokers were.",
+    "basis.design can be firmer: PubMed indexes it as a Randomized Controlled Trial, double-blind, which backs the caveat about medicine.",
+    "Rest holds: 101 smokers meeting DSM-III-R nicotine dependence, 70 lapse-free for 4 weeks, single rating plus STAI State Form X, rated 2 weeks before to 4 weeks after, 'significant decrease in anxiety from the first week of abstinence'; Am J Psychiatry 1997;154(11):1589-92. Headline 16 words, mirror 10 words."
+   ],
+   "fix": {
+    "ref.quote": "There was no evidence of an increase in anxiety following smoking cessation. However, there was a significant decrease in anxiety from the first week of abstinence.",
+    "basis.where": "Not stated in the paper's short version; the authors worked at St George's Hospital Medical School, London",
+    "basis.design": "double-blind randomised quit-smoking trial; anxiety rated before and after quit day"
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=9356569&retmode=xml",
+   "quoteFound": true
+  },
+  {
+   "index": 9,
+   "where": "numbers",
+   "label": "26 years",
+   "verdict": "fix",
+   "problems": [
+    "Caveat 'Mostly cigarette smokers' is not in the paper; it does not say which tobacco products were counted.",
+    "Quote uses ellipses to cut the other substances (rule 13); the kept words are word for word from 'Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset'. No contiguous nicotine-only sentence with 26 exists, so the elided quote is acceptable.",
+    "Rest holds: n=6,937 ever dependent; 1,300 matches the tables' 'Nicotine remission (N=1,300)'; 3.0% and 18.4%; projection via actuarial method; men lower remission hazard (HR 0.81); institutionalized not sampled. Headline 18 words, says 'projected'."
+   ],
+   "fix": {
+    "caveat": "The study projects that 83.7% get free at some point in life; that is a model, not a head count. People in prisons or hospitals weren't surveyed, so the real pace may be slower. Men got free more slowly than women. Surveyed before vaping; the paper doesn't say which tobacco products people used."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547",
+   "quoteFound": true
+  },
+  {
+   "index": 11,
+   "where": "numbers",
+   "label": "4–5 kg",
+   "verdict": "fix",
+   "problems": [
+    "basis.n is incomplete: the '4–5 kg after 12 months' conclusion pools all groups, and Table 3 at month 12 also has 183 on bupropion (5 studies) and 174 on varenicline (3 studies); nicotine replacement is 1,138 in 19 studies.",
+    "basis.measured gives 16/37/34/13% without saying they are for quitters without medication and were calculated from means and weighted SDs, not counted ('Using the means and weighted standard deviations, we calculated...').",
+    "Note, not a fix: 'most of it in three months' is the paper's own conclusion and holds for quitters without medication (2.85 of 4.67 kg by month 3), but on nicotine replacement only 2.29 of 4.86 kg came by month 3.",
+    "Rest holds: quote word for word (29 words), 62 studies, 59 of 62 trials in North America, Europe or Australia, BMJ 2012;345:e4439. Headline 18 words, 2 figures; mirror 7 words."
+   ],
+   "fix": {
+    "basis.n": "514 quitters without medication at 12 months, in 25 studies; with medication, 1,138 on nicotine replacement (19 studies), 183 on bupropion (5) and 174 on varenicline (3)",
+    "basis.measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. For quitters without medication at 12 months, the authors estimated from the averages and spreads, not by counting people: 16% lost weight, 37% gained under 5 kg, 34% gained 5–10 kg, 13% gained over 10 kg."
+   },
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3393785/fullTextXML",
+   "quoteFound": true
+  }
+ ]
+}

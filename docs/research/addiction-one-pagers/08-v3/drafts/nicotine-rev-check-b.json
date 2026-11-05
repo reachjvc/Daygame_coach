@@ -1,0 +1,108 @@
+{
+  "id": "nicotine",
+  "by": "independent source checker B (second half of changed items; numbers[11] also checked as overlap)",
+  "on": "2026-11-05",
+  "checked": [
+    {
+      "where": "numbers", "index": 11, "label": "4–5 kg (weight after quitting)",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 22782848 and PMC3393785. Quote word for word, 29 words. Table 3 12-month rows: untreated 514 (25 studies), NRT 1138 (19), bupropion 183 (5), varenicline 174 (3); 59 of 62 trials in North America, Europe or Australia. Headline follows the authors' conclusion ('most weight gain occurs within three months'); 22 words or fewer, one figure. Mirror 11 words, second person."
+    },
+    {
+      "where": "numbers", "index": 12, "label": "1 in 4 (erections after quitting)",
+      "verdict": "fix",
+      "problems": [
+        "weak says 'from one clinic'; the abstract (PubMed 15610111) names only the authors' Tehran university urology centre and does not say patients came from one clinic"
+      ],
+      "fix": {
+        "weak": "Small: 118 men who quit, one study in Tehran, and not a trial."
+      },
+      "notes": "Figure, n (118 stopped, 163 continued), quote ('> or = 25% of ex-smokers but in none of the current smokers', 18 words), caveat (older men and advanced ED improved less) all confirmed in the abstract. Headline 22 words, not more hopeful than the source. Tag 'treatment' fits (they requested nicotine replacement)."
+    },
+    {
+      "where": "numbers", "index": 13, "label": "81 in 100 never used help",
+      "verdict": "fix",
+      "problems": [
+        "81 in 100 is arithmetic on the source figure (100 − 18.75 = 81.25), so the line needs 'about'"
+      ],
+      "fix": {
+        "headline": "Of Americans who ever had a nicotine problem, mild cases included, about 81 in 100 had never used any help for it."
+      },
+      "notes": "Refetched PMC8154113 full text. Table 5 'Any treatment services', lifetime any NUD 18.75 (SE 0.51), severe 27.78; abstract quote word for word (16 words). Help types in basis.measured match the Table 5 rows (counselling, support group/internet chat room, prescribed medication, patches/lozenges/gum, e-cigarettes, acupuncture or meditation, any other). No unweighted head count in the paper; 27.9% of 36,309 correct. Fixed headline is 22 words."
+    },
+    {
+      "where": "numbers", "index": 14, "label": "10 in 100 a year go back after a year off",
+      "verdict": "fix",
+      "problems": [
+        "Headline 'the other 90 stayed off' reads as 90 in 100 staying off for good; the figure is a yearly rate, and the source itself says that if it continues, 'after 5 yrs, 41% of 1 yr quitters would have relapsed'. More hopeful than the source.",
+        "Caveat says the yearly losses 'add up' but leaves out the authors' own figure for how much"
+      ],
+      "fix": {
+        "headline": "After a year off, with the medicine stopped, about 10 in 100 quitters went back each year.",
+        "caveat": "Small groups, so the true rate could be anywhere from 5 to 17 in 100 a year. The yearly losses add up: at that rate, the authors work out, about 41 in 100 would be back within 5 more years. A large older US survey found the yearly rate fell below 5 in 100 after year 3. All were cigarette smokers."
+      },
+      "notes": "Refetched PubMed 18706769 and PMC2577779 (manuscript abstract carries the quote with '1 yr', word for word, 27 words). Full text: '4–33/study group and 31–96/study'; Tonnesen 1988 dropped as outlier; CO confirmation in all but Blondal 1989; follow-ups 2–6 yrs; NRT gum, nasal spray, patch; did not continue treatment after 1 yr; NHANES Follow-up 1982–1984: 14% and 10% in years 2 and 3, then '< 5%'. Countries are not stated in the review."
+    },
+    {
+      "where": "beliefs", "index": 0, "label": "I've smoked too long. It's too late.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PMC3227547. Quote 'Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine' word for word in the full text (11 words). 6,937 lifetime dependent; Table header 'Nicotine remission (N=1,300)'. Limitations: self-report leads to 'overreport of remission' and missing institutionalized people leads to 'overestimation'. Proof says 'projected' and 'likely runs high' (rule 10). Tag dependent. Test is safe and one-drug."
+    },
+    {
+      "where": "beliefs", "index": 1, "label": "Quitting will be hell. I can't handle the withdrawal.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 17156182 and 17365764. 214 smokers, clinic-based behavioural group programme; tracked negative affect, arousal, attention disturbance, restlessness, sleep, cognitive performance (no craving); 'All symptoms returned to baseline levels within 10 days of quitting.' word for word. Hughes 2007 quote word for word, 26 words. Proof 27 words. Test (no nicotine until noon, time the urge) is safe."
+    },
+    {
+      "where": "beliefs", "index": 2, "label": "A cigarette is the only thing that calms me down.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 20528815 and 24524926. 469 patients after heart attack or bypass, wanting to stop; 194 (41%) abstinent at 1 year; quote word for word (12 words); 'highly dependent smokers' in the conclusion. Taylor 2014 quote is in the full text, not the abstract (not used in the proof). Test (walk ten minutes instead, rate stress) is safe."
+    },
+    {
+      "where": "beliefs", "index": 3, "label": "Just one won't hurt. I'm still quit.",
+      "verdict": "fix",
+      "problems": [
+        "Proof says 'of the people who smoked at all in week 2'; the source figure is only for people on the active (real) nicotine patch, not everyone in the two trials (half were on placebo)"
+      ],
+      "fix": {
+        "proof": "In two patch trials, of those on a real patch who smoked at all in week 2 after quitting, 83% and 97% were smoking at 6 months."
+      },
+      "notes": "Refetched PubMed 8301790: 'Among active nicotine patch patients who smoked at all during week 2 after quitting, 83% and 97% ...' quote word for word (26 words); 88 and 112 subjects, 15 or more a day, motivated to quit. Shadel PMC3158283 full text: '53.1% ... 65.5%' sentence word for word, n = 63 (32 no lapse, 31 lapse), HR 2.12 (1.03, 4.35). Tag treatment satisfies rule 4. Fixed proof 26 words. Test is safe."
+    },
+    {
+      "where": "beliefs", "index": 4, "label": "Vapes and pouches are basically harmless.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 25332459 and PMC4838001: 3,609 exclusive current e-cig users and ex-smokers (quit 30+ days), survey from December 2012 (to May 2014), 14.5 vs 8.1, higher scores with stronger liquid and longer use; n = 3,446 in the concentration figure; authors call the sample nonrepresentative and likely 'pro-e-cig'. Quote word for word (18 words). Lunell 32319528 quote word for word. Proof 28 words. Test is safe."
+    },
+    {
+      "where": "plan", "index": 0, "label": "Step 1 actions (reordered; 'the beliefs above')",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "No source attached; only order and 'table' to 'beliefs' changed. Six actions, plain words, no cheering, nicotine only, nothing unsafe."
+    },
+    {
+      "where": "plan", "index": 4, "label": "Step 5: varenicline proof and vape action do[3]",
+      "verdict": "fix",
+      "problems": [
+        "do[3] says a vape beats 'patches'; the source compares vapes with nicotine replacement in general, and 4 of the 11 trials gave a patch plus another form",
+        "proof '10 in 100 on a dummy pill' is rounded from 99 per 1000 (Summary of findings table 1), so it needs 'about'"
+      ],
+      "fix": {
+        "do[3]": "Still on cigarettes? A vape gets more smokers off them than patches or gum do. Use it as a step, not a stop: put the day you quit the vape on the calendar, within three months.",
+        "proof.text": "In 41 trials (17,395 people), 23 in 100 on varenicline were still off cigarettes at 6 months or more, against about 10 in 100 on a dummy pill."
+      },
+      "notes": "Refetched PMC10169257 (Livingstone-Banks 2023): SoF 99 per 1000 vs 230 per 1000 (213 to 249), RR 2.32, 41 studies, 17,395, high certainty; plain-language quote 'For every 100 people using varenicline to stop smoking, 21 to 25 might successfully stop' word for word (16 words). Refetched PubMed 42642048 / PMC13506250 (Lindson 2026, CD010216.pub11): doRefs quote word for word (16 words), RR 1.61 (1.23 to 2.12), 11 studies, 4114, 'additional four quitters per 100'; outcome is abstinence from smoking, continued EC use is a separate outcome. 'Within three months' is advice, not a sourced claim, and is safe."
+    },
+    {
+      "where": "windows", "index": 1, "label": "Lab test: smoking cues pulled harder at day 35 than day 7",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 20817135: 86 paid, non-treatment-seeking smokers; 'smoking-cue-induced craving increased with abstinence on some measures'; 'Cue-induced craving was greater in Group 3 (35-day) compared with Group 1 (7-day).'; day 35 the last session. Label and 'when' say what was measured (rule 19): lab cue test, some scales, not everyday craving; trigger row, no peak, no fall; span 168–840 h = days 7–35."
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "id": "porn",
+  "checked": [
+    {
+      "index": 1,
+      "where": "numbers",
+      "label": "4 in 10",
+      "verdict": "ok",
+      "problems": [
+        "Figure holds: Table 1, quit attempts with porn, 4+ past attempts = 40.3% of treatment-interested men vs 5.8% of the others (the 6% in 'measured' is right).",
+        "n holds: Table 1 column 'Yes (n = 186)'; Results: 'Out of the 1,298 individuals surveyed, 14.3% (n = 186) reported a current interest in seeking treatment'. Average age of that group 32.8, so 'average age 33' is right.",
+        "Group: 'self-hooked' is the closest tag. These men said they were interested in treatment; they were not in treatment (only 21.5% had ever sought it). 71% of them scored at or above the HBI cut-off for possible hypersexual disorder, so 'wanted help for their porn use' is fair.",
+        "Where/when/design hold: online survey, June-July 2013, 88% recruited through Craigslist; about 81% USA, 8% Canada, 11% other English-speaking countries. Journal of Behavioral Addictions 5(2):169-178, PMID 27348557.",
+        "Quote is word for word but it is a Table 1 row read across its cells (21 words), not a sentence. No prose sentence in the paper gives the 40.3%, so it stays; the card should not present it as a sentence the authors wrote.",
+        "Rules hold: headline 21 words, 2 figures ('4 in 10', 'four or more'); mirror 12 words, second person, not a screening line; no other addiction, no cheering, not a projection."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5387768/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "numbers",
+      "label": "93% vs 21%",
+      "verdict": "fix",
+      "problems": [
+        "Figure, quote, n and group hold against the abstract: 28 adult males, all but 1 Latter-day Saints, 12-session individual ACT protocol vs waitlist, '93% reduction ACT vs. 21% waitlist'. Quote is word for word (16 words). 'treatment' tag fits a therapy trial.",
+        "Headline reads as if each man cut viewing 93%. The 93% is the ACT group's reduction at the end of therapy (post-treatment), a group figure. Three months later the drop across all 26 men was 86% and only 35% had stopped completely, so the headline should say 'on average' and the caveat should say when the 93% was measured.",
+        "Only the abstract is open (full text paywalled; Semantic Scholar lists it CLOSED). The split of the 28 between arms and the trial dates could not be checked. 'USA' is supported only by the authors' Utah State University affiliation.",
+        "Rules otherwise hold: mirror 10 words, second person, not a screening line; no other addiction, no cheering, not a projection."
+      ],
+      "fix": {
+        "headline": "In a small trial, men in ACT talk therapy cut porn viewing 93% on average, against 21% on a waiting list.",
+        "caveat": "It does not show that ACT beats other therapy: there was no comparison therapy. The 93% was measured at the end of therapy. Once the waiting-list men had therapy too, viewing across all 26 men was down 86% three months later, and 35% had stopped completely."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:27157029%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 5,
+      "where": "numbers",
+      "label": "21 of 42",
+      "verdict": "fix",
+      "problems": [
+        "Figure, n, quote, where, when and design hold: 'Of the 42 members who reported erectile difficulties at the outset of the abstinence attempt, half (n = 21) reported at least some improvements in erectile function' (27 words, word for word). Ages 18-63, journals 2016-2018, attempts 7 days to 12 months, Reboot Nation.",
+        "Group: the 'self-hooked' tag overstates. Table 1: 49 men reported a sexual difficulty (42 of them erectile), and only 32 reported both addiction and a sexual difficulty, so at most 32 of the 42 called themselves addicted. The card should say so.",
+        "Caveat leaves out two limits the authors state that make 21 of 42 possibly too hopeful: the sample 'likely overrepresents members who found abstinence ... beneficial' (men it did not help may just have stopped posting), and reduced masturbation 'could have contributed to improvements in sexual functioning' (86.5% of the 104 were also trying to stop masturbating).",
+        "Minor: the paper says associations between porn and sexual problems are 'generally inconclusive'; the caveat's 'whether porn causes erection problems' is a small stretch, reworded below.",
+        "Rules otherwise hold: headline 21 words, 2 figures; mirror 8 words, second person, not a screening line; no other addiction, no cheering, not a projection."
+      ],
+      "fix": {
+        "caveat": "Their own words, not a doctor's check, and nobody was compared with men who kept watching. The authors say men it helped were likelier to keep posting, and most were also stopping masturbation, so the change may not come from quitting porn alone. At most 32 of the 42 called themselves addicted. Research linking porn to erection problems is inconclusive."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    }
+  ]
+}

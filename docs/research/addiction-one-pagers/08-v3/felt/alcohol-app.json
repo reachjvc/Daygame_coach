@@ -1,0 +1,177 @@
+{
+ "id": "alcohol-app",
+ "source": "I Am Sober app, '30 days without alcohol' guide",
+ "url": "https://iamsober.com/en/tools/alcohol-free-30-day-guide",
+ "dataUrl": "https://iamsober.com/static/alcohol-free-30-day-guide-f307538.js",
+ "read": "2026-11-05",
+ "band": "members who drank 21 to 70 drinks a week (drinking days times drinks per drinking day) and are quitting or cutting back",
+ "severity": "heavy",
+ "counted": "heavy drinkers quitting or cutting back, not checked for addiction",
+ "users": 112675,
+ "measure": "Share of that day's check-ins rated Hard or Impossible on the app's five-step scale (Easy, Not bad, Questionable, Hard, Impossible). The share is of all check-ins that day; the five ratings cover 96% of them on day 0 and 82% on day 30.",
+ "days": [
+  {
+   "day": 0,
+   "n": 1084,
+   "hard": 20.3
+  },
+  {
+   "day": 1,
+   "n": 3274,
+   "hard": 16.8
+  },
+  {
+   "day": 2,
+   "n": 2900,
+   "hard": 15.0
+  },
+  {
+   "day": 3,
+   "n": 2664,
+   "hard": 15.3
+  },
+  {
+   "day": 4,
+   "n": 2372,
+   "hard": 16.1
+  },
+  {
+   "day": 5,
+   "n": 2149,
+   "hard": 14.5
+  },
+  {
+   "day": 6,
+   "n": 1953,
+   "hard": 14.5
+  },
+  {
+   "day": 7,
+   "n": 1880,
+   "hard": 12.8
+  },
+  {
+   "day": 8,
+   "n": 1873,
+   "hard": 11.1
+  },
+  {
+   "day": 9,
+   "n": 1648,
+   "hard": 10.7
+  },
+  {
+   "day": 10,
+   "n": 1580,
+   "hard": 10.5
+  },
+  {
+   "day": 11,
+   "n": 1584,
+   "hard": 10.6
+  },
+  {
+   "day": 12,
+   "n": 1495,
+   "hard": 11.0
+  },
+  {
+   "day": 13,
+   "n": 1413,
+   "hard": 8.6
+  },
+  {
+   "day": 14,
+   "n": 1385,
+   "hard": 9.1
+  },
+  {
+   "day": 15,
+   "n": 1262,
+   "hard": 8.2
+  },
+  {
+   "day": 16,
+   "n": 1305,
+   "hard": 8.4
+  },
+  {
+   "day": 17,
+   "n": 1236,
+   "hard": 8.2
+  },
+  {
+   "day": 18,
+   "n": 1114,
+   "hard": 7.4
+  },
+  {
+   "day": 19,
+   "n": 1100,
+   "hard": 10.0
+  },
+  {
+   "day": 20,
+   "n": 1125,
+   "hard": 9.2
+  },
+  {
+   "day": 21,
+   "n": 1030,
+   "hard": 8.9
+  },
+  {
+   "day": 22,
+   "n": 947,
+   "hard": 8.3
+  },
+  {
+   "day": 23,
+   "n": 955,
+   "hard": 5.8
+  },
+  {
+   "day": 24,
+   "n": 928,
+   "hard": 6.2
+  },
+  {
+   "day": 25,
+   "n": 839,
+   "hard": 8.0
+  },
+  {
+   "day": 26,
+   "n": 759,
+   "hard": 7.4
+  },
+  {
+   "day": 27,
+   "n": 788,
+   "hard": 5.8
+  },
+  {
+   "day": 28,
+   "n": 820,
+   "hard": 8.4
+  },
+  {
+   "day": 29,
+   "n": 823,
+   "hard": 6.4
+  },
+  {
+   "day": 30,
+   "n": 735,
+   "hard": 5.9
+  }
+ ],
+ "caveat": "Only members who wrote a check-in that day are counted: 3,274 check-ins on day 1 and 735 on day 30, from a group of 112,675. The app does not say why the count falls; members who drank and restarted their count, or stopped using the app, leave the later days, so later days describe the ones still going.",
+ "check": {
+  "by": "independent source checker (alcohol-app-check.json)",
+  "on": "2026-11-05",
+  "verdict": "ok",
+  "notes": "all 31 days matched the app's data; wording corrected as the checker gave it"
+ },
+ "quote": "This guide is based on real check-ins from more than 280,000 I Am Sober members who are quitting or cutting back on drinking."
+}

@@ -190,3 +190,27 @@ sounds in someone's head. Science lines are 40 words or fewer.
 | `03-behaviours-screens-money.json` | gambling and sports betting, crypto and day trading, gaming, porn, shopping, social media and phones, dating apps |
 | `04-behaviours-body-boundary.json` | binge eating and sugar, exercise, work, love and limerence, tanning, decongestant nasal spray, antidepressant discontinuation, self-harm (as a boundary case) |
 | `05-cross-addiction-and-framework.json` | the cross-addiction page, plus findings that apply to every page |
+
+## Round 8: the v3 prototype (2026-11-05)
+
+A new prototype, built next to the template page (which stays at version 10):
+four pilot pages (alcohol, nicotine, weed, porn) in two full versions, a review
+page with the owner's choices and vetoes, and a separate Belief test page one
+click from every page. Every note the owner has given is now a numbered rule in
+`RULEBOOK.md`, and `board/build_v3.py` refuses to build when a rule a machine
+can check is broken (severity tag on every number, one drug per page, word
+limits, no screening or cheering, what-helps numbers per 100 people, no forum
+text in a public file). Content lives in `08-v3/` (`SCHEMA.md` there): a menu of
+21 number kinds (`kinds.json`), one file per pilot (`pages/`), the general
+numbers (`general.json`), the decisions shown on the review page
+(`decisions.json`), and the felt-difficulty curves (`felt/`). Each curve comes
+from about 1,050 posts with a day count on that addiction's quit forum
+(Arctic Shift archive, fixed calendar days 2021–2025), scored 0–10 by an AI
+reader and re-scored in part by a second, different model; only counts and
+scores are kept here, the posts stay on the owner's machine. Every number and
+belief proof was written by one agent and passed by a separate one that fetched
+the source again (`drafts/` keeps the trail). Rebuild with
+`python3 board/finalize_v3.py` then
+`python3 board/build_v3.py <out.html> <belief-test-url>`; it also writes
+`<out>-exercise.html`. `08-v3/daily-log-proposal.md` proposes how the app
+could later collect real daily scores instead of forum posts.

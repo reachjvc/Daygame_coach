@@ -1,0 +1,401 @@
+{
+ "about": "The menu of number kinds for the one-pagers (rule 14). Every page fills the same kinds; 'general' kinds are about every addiction and are shown the same on every page. 'pick' marks the kinds recommended for the prototype; the owner's marks on the review page can swap them. 'where' is the page section a picked kind shows in (rule 15: hope first, then beliefs and the graph, then more numbers). 'reader' lists the severity tags a number of this kind may carry (RULEBOOK rule 3).",
+ "groups": {
+  "hope": "Hope",
+  "who": "Who gets free",
+  "how": "How they quit",
+  "helps": "What helps",
+  "after": "Life after"
+ },
+ "kinds": [
+  {
+   "id": "hope-free-now",
+   "group": "hope",
+   "scope": "specific",
+   "pick": true,
+   "where": "hero",
+   "label": "Already free, counted",
+   "question": "Of people who were ever hooked, how many are already free, counted, not projected?",
+   "reader": [
+    "dependent",
+    "disorder",
+    "self-hooked",
+    "screened"
+   ],
+   "why": "Rule 10: the cautious estimate first. A head count is harder to doubt than a lifetime projection."
+  },
+  {
+   "id": "hope-lifetime",
+   "group": "hope",
+   "scope": "specific",
+   "pick": true,
+   "where": "hero-second",
+   "label": "Free in a lifetime, projected",
+   "question": "What share of people ever hooked are projected to get free in their lifetime?",
+   "reader": [
+    "dependent"
+   ],
+   "why": "His original hero (90.6% for alcohol). Kept as the hero's second line, marked as a projection that likely runs high."
+  },
+  {
+   "id": "who-years",
+   "group": "who",
+   "scope": "specific",
+   "pick": false,
+   "where": "more",
+   "label": "Years until half are free",
+   "question": "How long after it started were half of them free?",
+   "reader": [
+    "dependent"
+   ],
+   "why": "Projection from recalled ages; reviewers say it likely runs hopeful. In the menu, not picked."
+  },
+  {
+   "id": "who-age",
+   "group": "who",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "Age when it ended",
+   "question": "How old were people, on average, when the problem ended?",
+   "reader": [
+    "resolved",
+    "dependent",
+    "self-hooked"
+   ],
+   "why": "He liked 'about 38' for alcohol (5 Nov)."
+  },
+  {
+   "id": "who-life-event",
+   "group": "who",
+   "scope": "specific",
+   "pick": false,
+   "where": "more",
+   "label": "What came with getting free",
+   "question": "Which life changes made getting free more likely?",
+   "reader": [
+    "dependent",
+    "resolved"
+   ],
+   "why": "A link, not a cause; useful for some readers. In the menu, not picked."
+  },
+  {
+   "id": "how-alone",
+   "group": "how",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "Quit with no treatment",
+   "question": "Of people who got free, how many never used treatment, a group or medicine?",
+   "reader": [
+    "resolved",
+    "dependent",
+    "self-hooked"
+   ],
+   "why": "He wants to see who quits using what (4 Nov)."
+  },
+  {
+   "id": "how-tries",
+   "group": "how",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "Tries it took",
+   "question": "How many serious tries did it take people who got free?",
+   "reader": [
+    "resolved",
+    "dependent",
+    "self-hooked",
+    "heavy",
+    "screened"
+   ],
+   "why": "Answers 'I've failed before, so I'll fail again'."
+  },
+  {
+   "id": "how-abrupt",
+   "group": "how",
+   "scope": "specific",
+   "pick": false,
+   "where": "more",
+   "label": "All at once or step by step",
+   "question": "Did people stop all at once or cut down first, and which worked?",
+   "reader": [
+    "dependent",
+    "resolved",
+    "treatment",
+    "heavy"
+   ],
+   "why": "In the menu, not picked: on most pages it overlaps with stop-or-cut-down."
+  },
+  {
+   "id": "how-slips",
+   "group": "how",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "How often the first try slips",
+   "question": "How many slip on a try, and when?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy",
+    "self-hooked",
+    "users",
+    "screened"
+   ],
+   "why": "Part of 'How quitting goes', which he liked (5 Nov). A slip is normal, shown with when it happens."
+  },
+  {
+   "id": "helps-stop-vs-cut",
+   "group": "helps",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "Stop fully or cut down",
+   "question": "For people who were hooked, how did stopping fully compare with cutting down?",
+   "reader": [
+    "dependent",
+    "resolved",
+    "treatment"
+   ],
+   "why": "Rule 4: the moderation question answered only with numbers about addicts. The alcohol '27% vs 7%' is the model."
+  },
+  {
+   "id": "helps-medicine",
+   "group": "helps",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "The best-tested medicine",
+   "question": "What does the best-tested medicine do: how many in 100 stay off with it, and how many without it?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "disorder"
+   ],
+   "why": "Shown as 'X in 100 with it vs Y in 100 without' (rule 12a), so it reads on the first pass."
+  },
+  {
+   "id": "helps-talk",
+   "group": "helps",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "Talk therapy or groups",
+   "question": "What does the best-tested therapy or group do?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "disorder",
+    "self-hooked"
+   ],
+   "why": "Help is optional and a tool (his plan step 5); readers want to know if it is worth it."
+  },
+  {
+   "id": "helps-early-help",
+   "group": "helps",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "Getting help early",
+   "question": "Did people who got help early do better later?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "disorder"
+   ],
+   "why": "Picked after the first review: '62% vs 43%' was one of the v10 'How quitting goes' numbers he liked. Not a trial, and it says so."
+  },
+  {
+   "id": "helps-reward",
+   "group": "helps",
+   "scope": "specific",
+   "pick": false,
+   "where": "more",
+   "label": "Something on the line",
+   "question": "Does a reward for staying off help?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy"
+   ],
+   "why": "Strong for nicotine and weed; in the menu, not picked."
+  },
+  {
+   "id": "after-first-month",
+   "group": "after",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "What the first month gives back",
+   "question": "What measurably changes in the first weeks off?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy",
+    "disorder",
+    "users",
+    "self-hooked"
+   ],
+   "why": "Part of 'How quitting goes', which he liked. A heavy-user number is allowed here with its tag shown."
+  },
+  {
+   "id": "after-mood",
+   "group": "after",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "Mood after quitting",
+   "question": "How do mood, anxiety or life satisfaction change after quitting?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy",
+    "resolved",
+    "disorder",
+    "users",
+    "self-hooked"
+   ],
+   "why": "Answers 'life will be empty without it'."
+  },
+  {
+   "id": "after-sleep",
+   "group": "after",
+   "scope": "specific",
+   "pick": false,
+   "where": "outlook",
+   "label": "Sleep after quitting",
+   "question": "When does sleep come back?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy",
+    "users"
+   ],
+   "why": "Often already in the timeline; in the menu, not picked."
+  },
+  {
+   "id": "after-body",
+   "group": "after",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "Body and sex",
+   "question": "What changes in the body, sex or weight?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy",
+    "users",
+    "self-hooked",
+    "screened"
+   ],
+   "why": "Picked after the first review: the v10 'How quitting goes' numbers he liked include body changes (nicotine: erections, weight)."
+  },
+  {
+   "id": "gen-tries",
+   "group": "how",
+   "scope": "general",
+   "pick": true,
+   "where": "general",
+   "label": "Alcohol and drugs pooled: tries it took",
+   "question": "Across alcohol and drugs, how many serious tries did it take?",
+   "reader": [
+    "resolved"
+   ],
+   "why": "The same on every page (rule 14), labelled as every addiction together."
+  },
+  {
+   "id": "gen-alone",
+   "group": "how",
+   "scope": "general",
+   "pick": true,
+   "where": "general",
+   "label": "Alcohol and drugs pooled: quit with no treatment",
+   "question": "Across alcohol and drugs, how many got free without any help?",
+   "reader": [
+    "resolved"
+   ],
+   "why": "The same on every page."
+  },
+  {
+   "id": "gen-years",
+   "group": "after",
+   "scope": "general",
+   "pick": true,
+   "where": "general",
+   "label": "Alcohol and drugs pooled: life keeps getting better",
+   "question": "How does life go in the years after?",
+   "reader": [
+    "resolved"
+   ],
+   "why": "The same on every page."
+  },
+  {
+   "id": "quit-status",
+   "group": "who",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "Still hooked, or not, years later",
+   "question": "Of people who were once hooked, how many are still hooked now, and how many ever had treatment?",
+   "reader": [
+    "dependent",
+    "disorder",
+    "screened"
+   ],
+   "why": "Kept from the v10 'How quitting goes' numbers he liked (alcohol: only 1 in 4 still hooked)."
+  },
+  {
+   "id": "how-withdrawal",
+   "group": "how",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "How many get withdrawal, and when it peaks",
+   "question": "How many get withdrawal symptoms when they stop, and when are they worst?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "heavy",
+    "users",
+    "disorder"
+   ],
+   "why": "Kept from the v10 'How quitting goes' numbers he liked (weed: day 2–6, 47%)."
+  },
+  {
+   "id": "after-lasting",
+   "group": "after",
+   "scope": "specific",
+   "pick": true,
+   "where": "outlook",
+   "label": "Whether it lasts",
+   "question": "Does the change last after help stops, or for good?",
+   "reader": [
+    "dependent",
+    "treatment",
+    "self-hooked",
+    "heavy",
+    "users",
+    "resolved",
+    "screened"
+   ],
+   "why": "Kept from the v10 'How quitting goes' numbers he liked (porn: 74% still watched 70% less three months on; 1 in 6 stopped)."
+  },
+  {
+   "id": "how-with-help",
+   "group": "how",
+   "scope": "specific",
+   "pick": true,
+   "where": "more",
+   "label": "What happened with help, no comparison",
+   "question": "What happened to people who got a kind of help, where no study counts people without it?",
+   "reader": [
+    "treatment",
+    "self-hooked",
+    "screened"
+   ],
+   "why": "Added in gates round 2: a with-help result that has no without-help count can't be a what-helps number (rule 12a), but it still answers who quits using what."
+  }
+ ]
+}

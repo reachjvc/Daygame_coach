@@ -1,0 +1,122 @@
+{
+  "id": "cannabis",
+  "checked": [
+    {
+      "index": 0,
+      "where": "numbers",
+      "label": "344 of 530",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Abstract and Methods give cannabis n=530 (of 43,093). Tables 3 and 4 head the cannabis column 'Cannabis remission (N=344)', which is the count who had remitted by the interview. The paper never says this in a sentence. A cross-check supports it: alcohol is 2,008 of 4,781 and cocaine 336 of 408, which fits each drug's median time to remission.",
+        "Remission means 'finally stopped having any of these experiences … they never started happening again'. That matches 'free' and basis.measured. DSM-IV dependence is 3 or more of 7 criteria within 12 months. Face-to-face interviews, 2001–2002. The limitations name over-reporting of remission and institutionalized people not sampled. Severity 'dependent' fits.",
+        "Headline: 17 words, 2 figures. Mirror: 12 words, second person, not a screening line. Quote: both table headings word for word, under 30 words. Names no other drug.",
+        "Note, no change needed: 'Weed was weaker in 2001 than today' is not in this source. It is a general fact from potency monitoring."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "numbers",
+      "label": "6 years",
+      "verdict": "fix",
+      "problems": [
+        "Rule 13: the quote names nicotine, alcohol and cocaine and gives their figures (26, 14, 5 years). It must be narrowed to the weed figure with ellipses, the same way the 97% item does it.",
+        "The headline says 'about 6 years after it started'. 'It' can be read as starting weed. The source counts from dependence onset: 'remitted approximately … 6 … years after dependence onset'. A reader who counts from his first joint gets a more hopeful date than the source gives, since first use comes years before dependence.",
+        "Everything else holds. It is an actuarial (life-table) projection from recalled ages and says 'projected'. n is 530, of whom 344 remitted. Males had lower hazards of remission. Institutionalized people were not sampled, 'leading to overestimation'. Severity 'dependent' fits. Mirror: 10 words, second person."
+      ],
+      "fix": {
+        "headline": "Half of Americans ever hooked on weed are projected to be free of it about 6 years after first getting hooked.",
+        "ref.quote": "Half of the cases of … cannabis … dependence remitted approximately … 6 … years after dependence onset"
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "numbers",
+      "label": "54%",
+      "verdict": "fix",
+      "problems": [
+        "The caveat understates the uncertainty. Table 3 gives cannabis assisted 45.8% with SE 5.53, so the 95% interval is about ±11 points: assisted about 35–57%, unassisted about 43–65%. 'Several points either way' is too hopeful about precision.",
+        "basis.n reads '11% of a weighted 2,002'. 2,002 is the unweighted final sample and 11.0% is the weighted share (Table 1, primary problem substance cannabis 11.0). Reword it.",
+        "Everything else holds. Table 3 cell 'Cannabis (e.g., marijuana, hashish) 45.8' gives 100 − 45.8 = 54.2. The 'assisted' definition (treatment, anti-craving medication, mutual-help, sober living and other recovery support) matches basis.measured. The survey ran July–August 2016, online (KnowledgePanel). 17.0% had a lifetime alcohol or drug use disorder diagnosis, which is about 1 in 6. Severity 'resolved' fits. Headline: 16 words, 1 figure. Mirror: 10 words."
+      ],
+      "fix": {
+        "basis.n": "About 220 people whose main problem was weed (a weighted 11% of 2,002)",
+        "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43% to 65%). The problem was their own judgment: in the whole survey only about 1 in 6 had ever been diagnosed."
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+      "quoteFound": true
+    },
+    {
+      "index": 6,
+      "where": "numbers",
+      "label": "85%",
+      "verdict": "ok",
+      "problems": [
+        "Holds. n=193 daily users (5+ days/week) who intended to stop or reduce, recruited throughout the US from 1/1/2010 to 3/1/2012. Recruitment was mostly online: bulletin boards 30% and internet ads 23%. Paid $2 per daily IVR call. Mean age 32, 53% men. 75% met DSM-5 CUD on a self-report checklist (2 or more of 11, so mild included).",
+        "85% made an intentional reduction attempt and 46% a quit attempt. 'At 6 month follow-up, 8% of participants had not used cannabis in the last month.' Almost all attempts lasted under a week. 6% sought treatment, and that share is of those who tried to change. More days of abstinence or reduction predicted a greater decline in dependence.",
+        "Severity 'heavy' is allowed for how-abrupt. Headline: 19 words, 2 figures. Mirror: 11 words, second person. Quote word for word, 11 words.",
+        "Note, no change needed: the paper does not state the denominator of the 8% at 6 months. Six-month drop-outs are mentioned, so it may be completers only."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4877269/",
+      "quoteFound": true
+    },
+    {
+      "index": 8,
+      "where": "numbers",
+      "label": "63%",
+      "verdict": "fix",
+      "problems": [
+        "The headline says 'no longer used it at all'. That reads as quit for good since the problem ended. The source measures 'Current Abstinence … From problem substance, % 63.12' and gives no time window. Its paired figure for being off all substances is 'in the past 90 days'. Say 'when asked' instead.",
+        "Everything else holds. The quote is word for word (13 words). Cannabis n=217 (Table 1, 12.6% of those naming a primary substance). The Discussion says 'about one third of CAN reported continuing to use at least some cannabis'. July–August 2016, online. Severity 'resolved' fits helps-stop-vs-cut. Mirror: 12 words, second person. Neither the quote nor the headline names another drug."
+      ],
+      "fix": {
+        "headline": "63% of Americans who beat a weed problem were off weed completely when asked; about 1 in 3 still used some.",
+        "basis.measured": "Whether people were currently not using weed at all when surveyed, among those who said the problem was over. The paper gives no time window for this figure; its figure for being off every substance used the past 90 days."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=5992615",
+      "quoteFound": true
+    },
+    {
+      "index": 10,
+      "where": "numbers",
+      "label": "1 in 4",
+      "verdict": "fix",
+      "problems": [
+        "Rule 9: n is the whole review (4,045 in 23 trials). The abstract gives 'approximately one-quarter of participants abstinent at final follow-up' with no count of the trials or people behind it. Not every trial reported abstinence: the point-prevalence abstinence comparison used 6 studies with 1,166 people. basis.n must say this. The headline should not tie the share to all 23 trials.",
+        "The source calls the share 'relatively low' and 'low and unstable'. A weak flag fits: the share is rough and its basis is not given.",
+        "Everything else holds. The quote is word for word, 15 words, and leaves out the sentence's opening clause that refers to other substances. 15 trials were in the USA, plus 2 Australia, 2 Germany and 1 each in Switzerland, Canada, Brazil and Ireland. About 7 sessions over about 12 weeks. More than 4 sessions over more than 1 month did better. Vouchers helped in 5 of 6 studies. RR 2.55 at a median of 4 months is low-quality evidence. Nothing was consistently effective at 9 months or later. Searched before July 2015. Severity 'treatment' fits treatment seekers. Mirror: 10 words."
+      ],
+      "fix": {
+        "headline": "Across trials of talk therapy for weed, about 1 in 4 people were off weed at the last check-up.",
+        "basis.n": "4,045 people in 23 trials; the review does not say how many trials or people its rough 'one-quarter' share rests on (its main off-weed comparison used 6 trials, 1,166 people)",
+        "weak": "A rough share from the review's summary, which gives neither the number of trials nor the number of people behind it."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:27149547%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 12,
+      "where": "numbers",
+      "label": "12 weeks",
+      "verdict": "fix",
+      "problems": [
+        "basis.when gives only 'published 2017'. The trial ran from January 2014 to April 2015.",
+        "basis.where says 'USA (UCLA-led)'. The data come from six US sites in the NIDA CTN ACCENT trial, and UCLA authors did only this secondary analysis.",
+        "basis.who says 'in a trial for cannabis use disorder'. The source is stricter: everyone had a DSM-IV diagnosis of cannabis dependence. All got NAC or placebo on top of cash rewards for clean urine tests and medication management. That context belongs in the basis.",
+        "Everything else holds. n=302 (152 reduction vs 150 increase, by the slope of weekly use days). The reduction group showed greater falls in anxiety and depression and better sleep, but not quality of life. The quote is word for word, 18 words. Headline: 21 words, 1 figure. Mirror: 10 words, second person. Note: 'the changes were small' is the drafter's reading of small coefficients; the paper does not say it."
+      ],
+      "fix": {
+        "basis.who": "adults aged 18–50 diagnosed as dependent on weed (older DSM-IV criteria), in a 12-week medicine trial (NAC or dummy pill, both with cash rewards for clean urine tests)",
+        "basis.where": "USA (six sites)",
+        "basis.when": "January 2014 – April 2015 (published 2017)"
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=5607644",
+      "quoteFound": true
+    }
+  ]
+}

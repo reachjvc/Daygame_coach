@@ -1,0 +1,108 @@
+{
+  "id": "nicotine",
+  "checked": [
+    {
+      "index": 0,
+      "where": "numbers",
+      "label": "1 in 5",
+      "verdict": "fix",
+      "problems": [
+        "caveat: 'many had been hooked only a few years when asked' is not in the source. The paper gives age groups (25.7% aged 18-29) but no time hooked at interview. Replaced with the authors' own limits: self-report leads to 'overreport of remission', and males were less likely than females to remit from every substance (this reader is a man).",
+        "big: '1 in 5' rounds 18.7% (1,300 of 6,937) up to 20%. The headline already says 'nearly'; the big figure should too.",
+        "1,300 is the N in the Table 3 and 4 headers ('Nicotine remission (N=1,300)'). The paper never says in words that 1,300 remitted. Reading it as the count who got free is an inference, and the 'weak' field already says so.",
+        "The rest holds: 6,937 with lifetime DSM-IV nicotine dependence of 43,093 surveyed, NESARC 2001-2002, face-to-face, 3 or more of 7 criteria within 12 months, the remission question ('finally stopped ... never started happening again'), civilian non-institutionalized only. Severity 'dependent' fits. Headline 21 words; mirror 10 words, second person. The quote joins a Methods phrase and a table header with an ellipsis; each piece is word for word.",
+        "Flag only, no field change: ref.cite is the paper's real title, which names alcohol, cannabis and cocaine. If the rule 13 scan reads ref.cite it will trip. The citation should stay accurate."
+      ],
+      "fix": {
+        "big": "Nearly 1 in 5",
+        "caveat": "A snapshot at the interview, not a lifetime share. 'Free' means no signs of being hooked left, not always nicotine-free. The authors say people tend to over-report getting free, and men got free less often than women. People in prison or hospital were not asked."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text of PMC3227547)",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "numbers",
+      "label": "About 30",
+      "verdict": "fix",
+      "problems": [
+        "basis.measured: 'The first try had the best odds of lasting (11%)' is the all-smoker figure (Method 3 on n=1,277), not the daily-smoker column the card is about. The paper gives no daily-only first-try rate. Say it is for everyone in the study.",
+        "The rest holds: Table 3 daily column (n=1092) gives 6.8, 20.4, 29.5 and 142.3, so 'about 7, 20 and 142' and 29.5 are right; 29.6 overall. The authors call Method 3 'the best set of assumptions'. Ontario Tobacco Survey, every ~6 months for up to 3 years, interviews 2005-2011, success = 1 year or more, self-report, no biochemical check. Severity 'heavy' fits (daily smokers, dependence not checked) and is allowed for how-tries. Headline 20 words; mirror 10 words, second person.",
+        "The quote is Table 3 cells joined with ' | ' and an ellipsis. The words are in the table, but it is not a prose sentence."
+      ],
+      "fix": {
+        "basis.measured": "Quit tries, and quits that lasted a year or more, during follow-up. The authors' preferred model gave 29.5 for daily smokers (29.6 for everyone). Other ways of counting gave about 7, 20 and 142. Across everyone in the study, the first try had the best odds of lasting (11%)."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4908897/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "numbers",
+      "label": "About equal",
+      "verdict": "fix",
+      "problems": [
+        "basis.measured: 'fast nicotine (gum, spray)'. The source's example is 'a fast-acting form of nicotine replacement therapy (NRT), such as gum or lozenge'; spray is not named. Also the pharmacotherapy-aided finding is low certainty overall, moderate only for fast-acting NRT or varenicline, so 'may' is right.",
+        "The rest holds: RR 1.01 (0.87 to 1.17), 22 studies, 9219 participants, moderate certainty; 51 trials, 22,509 participants; about 23 cigarettes a day; most recruited through media or local advertising; search 29 October 2018. Full text (PMC page): 'Most trials were conducted in the USA (29 studies)', then China (5), Spain (3), Switzerland (3), Germany (2), UK (2) and single trials elsewhere, so 'most others in Europe and China' holds.",
+        "The caveat's English trial is a separate paper (Lindson-Hawley 2016, Ann Intern Med, PMID 26975007), fetched: 697 adult smokers, primary care in England, nurse support and nicotine replacement in both arms, 6-month abstinence 15.5% gradual vs 22.0% abrupt. It holds.",
+        "Quote is word for word (23 words; the source uses the Unicode hyphen in 'reduction-to-quit'). Headline 18 words, 1 figure; mirror 11 words, second person."
+      ],
+      "fix": {
+        "basis.measured": "Not smoking at 6 months or longer: a plan to cut down before quitting, against quitting on a set day. Cutting down with varenicline or fast nicotine (gum, lozenge) may work better than cutting down alone."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=6953262 (abstract and plain-language summary); https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/ (included studies); https://pubmed.ncbi.nlm.nih.gov/26975007/ (caveat trial)",
+      "quoteFound": true
+    },
+    {
+      "index": 6,
+      "where": "numbers",
+      "label": "10–12 vs 7 in 100",
+      "verdict": "fix",
+      "problems": [
+        "headline: the source says 'if seven out of 100 smokers managed to quit ... then between 10 and 12 in 100 would be expected to be successful'. The headline states it as a measured result ('stay off'). It is an illustration made from the ratio. It should say 'expected', and use digits for both sides ('seven in a hundred' next to '10 to 12 in 100' is harder to read once).",
+        "basis.where: 'The review's short version does not list the countries' is not a place. The full text says 'Thirty studies were conducted in the USA, three in Spain, three in Denmark, two in the UK, two in Australia' and one each in nine more countries (Germany, Switzerland, Sweden, Netherlands, Hong Kong, China, Japan, Korea, India).",
+        "basis.who: the full text says 'Nineteen of the 49 studies recruited medical or surgical hospital inpatients' and 'Lack of interest in quitting was not an explicit exclusion criterion in any study'. The card should say that not everyone was asking for help.",
+        "The rest holds: RR 1.57 (1.40 to 1.77), 27 studies, 11,100 participants, high quality, no pharmacotherapy; 49 trials, around 19,000; sessions of at least 10 minutes, most much longer, many with phone follow-up; with NRT for all, RR 1.24; searched May 2016, published 2017. Severity 'treatment' fits. Quote word for word with one ellipsis (drops 'using the sort of brief support given to the control groups,'). Mirror 10 words, second person."
+      ],
+      "fix": {
+        "headline": "One-to-one counselling: 10 to 12 in 100 smokers expected to stay off six months, against 7 in 100 with brief support.",
+        "basis.where": "30 of the review's 49 trials in the USA; most others in Europe, some in Australia and Asia",
+        "basis.who": "adult smokers in trials where no one was offered quit medicine; across the review, 19 of 49 trials recruited hospital patients, and not wanting to quit did not rule anyone out"
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=6464359 (abstract and plain-language summary); https://pmc.ncbi.nlm.nih.gov/articles/PMC6464359/ (included studies)",
+      "quoteFound": true
+    },
+    {
+      "index": 8,
+      "where": "numbers",
+      "label": "Years 1 and 3",
+      "verdict": "fix",
+      "problems": [
+        "headline: 'rated life and mood better than those still smoking' reads as quitters scoring higher. The full text says 'All participants showed decreased global QOL', and quitters 'had smaller decreases'. The mood gain is in negative affect (quitters' fell, smokers' rose); positive affect at year 3 was not significant. The headline should say they lost less.",
+        "caveat: 'Marriage satisfaction did not change' is not what the source says. It says 'Smoking status did not influence marital relationship satisfaction', so quitting made no difference to it. Also the authors say the effects were 'modest' (effect sizes '.25 downward'); the card should say so.",
+        "basis.who: the full text gives the entry rules: 'smoking more than nine cigarettes per day', 'motivated to quit smoking', and 'all participants received six one-on-one counseling sessions' plus medicine or placebo. Adding them tells the reader who was counted.",
+        "The rest holds: n 376 vs 649 at year 1 and 359 vs 640 at year 3 (Table 2), 1,504 enrolled, 58.2% women; Madison and Milwaukee, WI; recruited January 2005 to June 2007; CO-confirmed abstinence; non-random quitters named in the caveat. Quote is word for word with the PubMed abstract (25 words; the PMC author manuscript says 'Compared to'). Mirror 8 words, second person. Severity 'treatment' fits."
+      ],
+      "fix": {
+        "headline": "In a quit trial, quitters lost less life satisfaction than those still smoking, and low moods eased, at years 1 and 3.",
+        "basis.who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a placebo (58.2% women)",
+        "caveat": "Quitters weren't chosen at random, so they may differ in other ways. Life satisfaction slipped for everyone, but less for quitters; the authors call the differences modest. Quitting made no difference to marriage satisfaction."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3298628 (full text of PMC3298628); https://pubmed.ncbi.nlm.nih.gov/22160762/ (abstract)",
+      "quoteFound": true
+    },
+    {
+      "index": 10,
+      "where": "numbers",
+      "label": "10 vs 7 in 100",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Plain-language summary: 'For every 100 people who received financial incentives, 10 people were likely to successfully quit smoking at six months or longer, compared to 7 in 100 people who did not receive financial incentives.' RR 1.52 (1.33 to 1.74), 39 studies, 18,303 participants, high certainty; RR 1.46 excluding 7 trials still paying at follow-up. 'Thirty-three of the trials were run in the USA, two in Thailand, one in the Philippines, one in Hong Kong, and one in South Africa. The rest were European.' Searched 2 November 2023; published 2025.",
+        "Caveat: the full text prefers 'biochemically validated over self-reported rates', and almost all trials list a CO, cotinine (saliva or urine) or similar check, so 'breath or urine' in most trials holds. Quote word for word, 26 words, cut mid-sentence. Headline 20 words; mirror 10 words, second person. Severity 'treatment' fits."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=11725379 (abstract and plain-language summary); https://pmc.ncbi.nlm.nih.gov/articles/PMC11725379/ (full text)",
+      "quoteFound": true
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+ "id": "alcohol",
+ "checkedBy": "independent source checker b (rev2)",
+ "checkedOn": "2026-11-05",
+ "scope": "changed items, second half in file order: numbers[16], numbers[17], beliefs[0-4], plan[0,1,2,4], windows[0,2,3,6]. numbers[16] overlaps checker a.",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 16,
+   "label": "how-withdrawal 2–7 days (Mirijello 2015)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Re-fetched PMC4978420 (BioC full text). 'Up to 50% of AUD patients experience withdrawal symptoms' and 'The mild-moderate form of AWS is often self-managed by patients or disappears within 2–7 days from the last drink' are two separate paragraphs, joined by the ellipsis; word for word, 28 words. Mild form = 'tremors, nausea, anxiety, and depression' (matches measured). 6–24 h onset, 'weeks to months' protracted symptoms both in source. Headline 20 words, 2 figures, not more hopeful than source.",
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 17,
+   "label": "after-lasting 6 years (Kelly 2018)",
+   "verdict": "fix",
+   "problems": [
+    "basis.n gives the whole survey (2,002). The 6-year bend comes from the 40-year sample: 'participants that reported resolving their alcohol or drug problem within the last 40 years (n=1879)' (rule 9: n behind that figure).",
+    "'of 39,809 screened' is loose: 39,809 was the sampling frame; 25,229 answered the screening question. Dropped in the fix.",
+    "Rule 13: the basis should say how much of the group is alcohol; Table 1 gives Alcohol 58.55% of the 40-year sample. Added to n.",
+    "Not changed: quote word for word (29 words); bends 0–6 self-esteem, 0–8 quality of life, 0–11 happiness match Table 2; July–August 2016 matches; caveat's first-year dip matches the abstract."
+   ],
+   "fix": {
+    "basis.n": "1,879 adults whose problem ended within the last 40 years (of 2,002 in the survey); about 6 in 10 named alcohol as their main problem"
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: drinking for years, 90.6% / 14 years (Lopez-Quintero 2011)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Proof matches 06-template.json pages[0].beliefs[3].proof word for word. Both quotes are in the abstract and Results (PMC3227547); the ellipses only remove the other drugs. 'projected' present (rule 10). Test is safe.",
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "stuck: always go back, 2 tries (Kelly 2019)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Table 1 row 'Alcohol 5.38 (13.45) 2 (1, 4) 0, 100' confirmed (PMC6602820). Median 2 supports 'half needed 2 serious tries or fewer'; max 100 supports 'a few needed dozens'. Test plans for the moment without seeking it out: safe.",
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "hard: stopping will be hell, mood lifts by week 2 (Brown and Schuckit 1988)",
+   "verdict": "fix",
+   "problems": [
+    "Proof is more hopeful than the source. The study counted only 'male primary alcoholics (no preexisting major psychiatric disorder)' (the belief's own second quote); the proof says 'men in hospital treatment for drinking', so a reader with earlier depression reads a result that excluded men like him.",
+    "Test, plain words: 'Spend the next pull’s hour that way' does not read on the first pass."
+   ],
+   "fix": {
+    "proof": "In a study of men in hospital treatment for drinking, with no earlier major mental illness, low mood lifted fast once they stopped; the biggest lift came in week 2.",
+    "test": "Still drinking? One evening this week, push your first drink back an hour and spend it on a long walk or a workout. Already off it? When the next pull comes, spend an hour that way. Rate the pull 0 to 10 at the start and the end."
+   },
+   "notes": "Both quotes word for word in the PubMed abstract (3216643). 'largest reduction in scores at Week 2' supports 'biggest lift'. Fixed proof: 30 words."
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "need: drink to unwind, sleep (Brower 2001)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "All three quotes word for word (PMC2778757); the first one is exactly 30 words. 'In most of these studies, alcohol administration … resulted in difficulty falling asleep … decreased total sleep time' supports 'often'. Skipping the last drink is a cut, not a stop: safe. Minor, not a fix: the test changes two things at once (the drink and the phone).",
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "moderation: just one, 27 vs 7 in 100 (Dawson 2007)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Both quotes word for word in the abstract (18034696). Per-100 figures are 27.2% and 7.3% rounded. Group: people fully remitted from dependence (rule 4 holds). Test is safe and matches the 'I don’t drink' wording in plan step 4 of v10.",
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "step 1 actions (watch the drinking this week)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "No proof. 'Don’t stop yet … drink as you normally do' adds no risk beyond his current drinking. 6 actions (rule 21).",
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "step 2 sleep action: mends over months to years (Brower 2001)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Brower: falling asleep normal by 5 to 9 months, total sleep 1 to 2 years, broken sleep 'can persist for 1 to 3 years'. 'mends slowly, over months to years' is not more hopeful.",
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3: doctor line, slip line, forum proof (ASAM 2020, own forum data)",
+   "verdict": "fix",
+   "problems": [
+    "Action 6, plain words and safety: 'Talk to the doctor before you start again' can be read as 'before you start drinking again'. The danger the ASAM kindling quote names is stopping again after a run of heavy drinking. Fix: 'before you stop again'."
+   ],
+   "fix": {
+    "do[5]": "Slip? Don’t wait for Monday, and don’t go back to days of normal drinking: the same day, ask what that drink gave you. Drank heavily every day? Talk to the doctor before you stop again."
+   },
+   "notes": "Fetched the ASAM PDF and extracted its text. 'Seizures may begin as early as 8 hours after cessation of (or reduction in) alcohol use and can continue for up to 48 hours' and 'An increasing number of withdrawal episodes is associated with increasing severity through the kindling process.' are both word for word. Proof checked against 08-v3/felt/alcohol.json: bins 3–14 medians are 3, 4, 4, 3, 3, 2.5, 4, 2, 3.5, 3, 2, 1; nUsed 605; the scale text matches. 'after the first three' is cautious, since Day 3's median is already 4."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof: acamprosate 36 vs 23 in 100 (Mann 2004; Jonas 2014)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Mann abstract: 'acamprosate, 36.1%; placebo, 23.4%', continuous abstinence at 6 months, 'recently detoxified, alcohol-dependent individuals'. It used 'Merck-Santé’s internal reports' as a source, which supports 'some reported by its maker'. Jonas 2014 (JAMA full text) has the low risk of bias subgroup for return to any drinking: '(RD, −0.02; 95% CI, −0.09 to 0.05, 4 trials, n = 1409)', not significant. That supports 'a small, unclear gap'. Proof is 39 words with one with-and-without pair.",
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 0,
+   "label": "feel: shaky, sweaty, anxious, bad sleep; hour 6, often gone in 2–7 days",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "ASAM: 'typically begin 6–24 hours after cessation'. Peak at 24 h falls inside ASAM's '6–36 hour window of the emergence, peak, and resolution'. Mirijello: mild form 'disappears within 2–7 days'. e=168 matches. r18 is still missing from the research file; researchRefsToAdd covers it.",
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 2,
+   "label": "danger: DTs, day 2–7, about 5 in 100",
+   "verdict": "fix",
+   "problems": [
+    "More hopeful than the sources. Mirijello: DTs 'usually … appears 48–72h after the last drink, although it could begin up to 10 days later. Symptoms last normally 5–7 days'. ASAM: onset '72 and 96 hours' after the last drink, lasting 'usually for 2–3 days'. 'Day 2–7' with e=168 tells a man on day 8 to 10 that the danger is over.",
+    "Not changed: 'approximately in 5% of patients with AWS' (Mirijello) and 'Hallucinations develop within 12–24 hours' (ASAM) are both correct."
+   ],
+   "fix": {
+    "when": "About 5 in 100 people with withdrawal; usually starts day 2–4, can start as late as day 10; seeing things alone can start at hour 12",
+    "e": 240
+   }
+  },
+  {
+   "where": "windows",
+   "index": 3,
+   "label": "feel: irritable, anxious, poor sleep; from day 5–7 for weeks, sometimes months",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Mirijello: 'some symptoms can persist from weeks to months following the 5–7 days of acute detoxification period'. ASAM: 'subacute symptoms of irritability, anxiety and sleep disturbances can persist for weeks'. The label is ASAM's own list. s=120, open end.",
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 6,
+   "label": "feel: light, broken sleep; 5–9 months / 1–2 years / 1–3 years (Brower 2001)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "All three spans word for word in Brower's sleep-lab section. e=26280 h = 3 years. 'fall' matches 'appear to normalize with sustained abstinence'.",
+   "fix": {}
+  }
+ ]
+}

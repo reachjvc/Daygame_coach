@@ -1,0 +1,246 @@
+{
+ "id": "nicotine",
+ "beliefs": [
+  {
+   "kind": "stuck",
+   "limiting": "I’ve smoked too long. It’s too late.",
+   "counterpart": "Most people hooked on nicotine get free in the end. Plenty of the ex-smokers I know smoked longer than I have.",
+   "test": "This week, ask two or three ex-smokers you know how long they smoked before they stopped for good. Notice how many had smoked as long as you, or longer.",
+   "proof": "Of 6,937 US adults who had ever been hooked on nicotine, 83.7% are projected to lose every sign of it in their lifetime. A projection from the ages they recalled, so likely on the high side.",
+   "severity": "dependent",
+   "refs": [
+    {
+     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/",
+     "pmid": "21077975",
+     "fetched": true,
+     "quote": "Life-time cumulative probability estimates of dependence remission were 83.7% for nicotine"
+    }
+   ],
+   "origin": "06-template.json nicotine belief 4 (limiting kept word for word; counterpart rebuilt on the alcohol row 3 he marked Keep; “I’m not waiting 26 years” dropped because the 26-year figure is not in a quote that names nicotine alone). Not marked by the owner.",
+   "keep": false
+  },
+  {
+   "kind": "hard",
+   "limiting": "Quitting will be hell. I can’t handle the withdrawal.",
+   "counterpart": "I’ve got through rougher weeks than this. And this one ends.",
+   "test": "Pick one ordinary day this week. Push your first cigarette, vape or pouch back two hours. Every 15 minutes, rate the urge 0–10 on paper. Notice whether it stays at the top or rises and falls.",
+   "proof": "In 214 smokers who quit in a clinic group and kept a symptom diary, every withdrawal symptom was back to its pre-quit level within 10 days. A review of 120 studies: worst in week 1, over in 2–4 weeks.",
+   "severity": "treatment",
+   "refs": [
+    {
+     "cite": "Shiffman S, Patten C, Gwaltney C, Paty J, Gnys M, Kassel J, Hickcox M, Waters A, Balabanis M (2006). Natural history of nicotine withdrawal. Addiction 101(12):1822-32.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/17156182/",
+     "pmid": "17156182",
+     "fetched": true,
+     "quote": "All symptoms returned to baseline levels within 10 days of quitting.",
+     "note": "214 cigarette smokers in a clinic-based behavioural group cessation programme who quit for at least 24 hours; symptoms tracked for up to 21 days. Craving is not among the symptoms listed."
+    },
+    {
+     "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+     "pmid": "17365764",
+     "fetched": true,
+     "quote": "Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.",
+     "note": "Review of 120 studies of smokers who stopped; craving was left out of the review."
+    }
+   ],
+   "origin": "new (the withdrawal proof comes from 06-template.json nicotine belief 2)",
+   "keep": false
+  },
+  {
+   "kind": "need",
+   "limiting": "A cigarette is the only thing that calms me down.",
+   "counterpart": "When I go a few hours without it, I get edgy. Part of the calm is just that edge going away.",
+   "test": "Next time you go a few hours without it (a flight, a long meeting), rate your stress 0–10 at the start, just before the first one after, and 10 minutes after it. Notice whether it takes you below where you started, or only back to it.",
+   "proof": "In a year-long study of 469 heart patients who wanted to stop, those who stayed off had a bigger drop in stress than those who kept smoking. Across 26 studies, quitters grew less anxious and stressed than smokers.",
+   "severity": "treatment",
+   "refs": [
+    {
+     "cite": "Hajek P, Taylor T, McRobbie H (2010). The effect of stopping smoking on perceived stress levels. Addiction 105(8):1466-71.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/20528815/",
+     "pmid": "20528815",
+     "fetched": true,
+     "quote": "abstainers recorded a significantly larger decrease in perceived stress than continuing smokers",
+     "note": "469 smokers in hospital after a heart attack or bypass surgery who wanted to stop; 194 stayed off for a year. The authors call them highly dependent smokers."
+    },
+    {
+     "cite": "Taylor G, McNeill A, Girling A, Farley A, Lindson-Hawley N, Aveyard P (2014). Change in mental health after smoking cessation: systematic review and meta-analysis. BMJ 348:g1151.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/24524926/",
+     "pmid": "24524926",
+     "fetched": true,
+     "quote": "Smoking cessation is associated with reduced depression, anxiety, and stress and improved positive mood and quality of life compared with continuing to smoke.",
+     "note": "26 studies: 14 drew on cessation trials, 11 were population cohorts; measured 7 weeks to 9 years later. Observational, so it shows a link, not proof of cause."
+    }
+   ],
+   "origin": "06-template.json nicotine belief 1 (limiting kept word for word; counterpart rewritten from a slogan into something he has felt himself)",
+   "keep": false
+  },
+  {
+   "kind": "moderation",
+   "limiting": "Just one won’t hurt. I’m still quit.",
+   "counterpart": "Every time I went back, it started with just one.",
+   "test": "Write down the last two or three times you went back after stopping. For each: what the first one was, and how many days until you were back to your usual amount. Notice how often “just one” stayed one.",
+   "proof": "Of patch users who smoked at all in week 2, 83% and 97% (two trials) were smoking at 6 months. Quitters told to smoke two cigarettes after 2 days off relapsed sooner, at about twice the rate.",
+   "severity": "treatment",
+   "refs": [
+    {
+     "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/",
+     "pmid": "8301790",
+     "fetched": true,
+     "quote": "Among active nicotine patch patients who smoked at all during week 2 after quitting, 83% and 97% (studies 1 and 2, respectively) were smoking at 6-month follow-up.",
+     "note": "Two patch trials of daily smokers (15 or more a day) motivated to quit: 88 and 112 people. The abstract does not give how many smoked in week 2."
+    },
+    {
+     "cite": "Shadel WG, Martino SC, Setodji C, Cervone D, Witkiewitz K, Beckjord EB, Scharf D, Shih R (2011). Lapse-induced surges in craving influence relapse in adult smokers: an experimental investigation. Health Psychology 30(5):588-96.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/21574708/",
+     "pmid": "21574708",
+     "fetched": true,
+     "quote": "Results of Cox regression analysis revealed that participants in the lapse condition relapsed more quickly than participants in the no-lapse condition (hazard ratio [HR] = 2.12",
+     "note": "63 adults who quit with a brief behavioural programme, randomly told after 48 hours off to smoke two cigarettes or to wait; followed 14 days. Relapse = 7 days in a row of smoking."
+    }
+   ],
+   "origin": "06-template.json nicotine belief 5 (limiting kept word for word; counterpart rewritten into his own experience). Both studies are early in a quit; no fetched study measures one cigarette after months off.",
+   "keep": false
+  },
+  {
+   "kind": "harmless",
+   "limiting": "Vapes and pouches are basically harmless.",
+   "counterpart": "Less harmful, maybe. But I still reach for it all day and get edgy without it.",
+   "test": "For two days, keep a tally of every vape session or pouch on paper, without changing anything. Notice the total, and how many times you reached for it before you had decided to.",
+   "proof": "In 3,609 ex-smokers who vaped, dependence was lower than they recalled on cigarettes, but higher with stronger liquid and longer use. 6 and 8 mg pouches deliver nicotine as fast and as fully as snus and snuff.",
+   "severity": "users",
+   "refs": [
+    {
+     "cite": "Foulds J, Veldheer S, Yingst J, Hrabovsky S, Wilson SJ, Nichols TT, Eissenberg T (2015). Development of a questionnaire for assessing dependence on electronic cigarettes among a large sample of ex-smoking e-cigarette users. Nicotine & Tobacco Research 17(2):186-92.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/25332459/",
+     "pmid": "25332459",
+     "fetched": true,
+     "quote": "E-cig dependence appears to vary by product characteristics and liquid nicotine concentration, and it may increase over time.",
+     "note": "Online survey of 3,609 ex-smokers who vape; dependence on cigarettes was rated from memory (14.5 vs 8.1 on the same 0-20 scale)."
+    },
+    {
+     "cite": "Lunell E, Fagerström K, Hughes J, Pendrill R (2020). Pharmacokinetic comparison of a novel non-tobacco-based nicotine pouch (ZYN) with conventional, tobacco-based Swedish snus and American moist snuff. Nicotine & Tobacco Research 22(10):1757-63.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/32319528/",
+     "pmid": "32319528",
+     "fetched": true,
+     "quote": "The two higher doses of ZYN (6 and 8 mg) deliver nicotine as quickly and to a similar extent as existing smokeless products",
+     "note": "Single-dose crossover study in snus users. One author works for Swedish Match, the maker of ZYN."
+    }
+   ],
+   "origin": "06-template.json nicotine belief 6 (limiting kept word for word; counterpart “Switching is a step down, not a way out.” rewritten into what he notices himself)",
+   "keep": false
+  }
+ ],
+ "plan": [
+  {
+   "do": [
+    "Don’t quit yet. For the next few days, use it the way you always do.",
+    "Write down what you think nicotine gives you: calm, focus, a break.",
+    "Each time, write one line: the time, where you are, what you wanted from it.",
+    "Allow it. No guilt, no promises. You’re studying it, not fighting it.",
+    "Ten minutes after each one, ask: did it give me that, or did it just stop the itch?",
+    "Most of it is relief from the itch nicotine itself made. Test each one in the table above."
+   ]
+  },
+  {
+   "do": [
+    "Take each line from step 1 and find something that gives you about 80% of it.",
+    "Breaks: step outside anyway, without it. Walk, drink water.",
+    "Coffee: change the place or the time for the first weeks.",
+    "Hands and mouth: gum, a toothpick, seeds.",
+    "Vape or pouch at the desk: put mints, sugar-free gum or a cold drink in the same spot.",
+    "Stress: ten slow breaths or a two-minute walk before you decide anything."
+   ],
+   "proof": {
+    "text": "A lab test, not everyday craving: in 86 smokers paid to stay off, smoking cues pulled harder at day 35 than at day 7. Keep the coffee and break swaps past the first month.",
+    "ref": {
+     "cite": "Bedi G, Preston KL, Epstein DH, Heishman SJ, Marrone GF, Shaham Y, de Wit H (2011). Incubation of cue-induced cigarette craving during abstinence in human smokers. Biological Psychiatry 69(7):708-11.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/20817135/",
+     "pmid": "20817135",
+     "fetched": true,
+     "quote": "Cue-induced craving was greater in Group 3 (35-day) compared with Group 1 (7-day).",
+     "note": "86 smokers of 10 or more a day, not seeking treatment, paid to stay off for 7, 14 or 35 days. A lab cue test, not everyday craving."
+    }
+   }
+  },
+  {
+   "do": [
+    "Pick a date a few days to a few weeks out. Write it down and tell one person.",
+    "Throw out every pack, vape and pouch the night before.",
+    "For three months, nicotine is the one thing. Leave the gym, the diet and the rest of your life as they are.",
+    "Treat week 2 as the test: not one puff.",
+    "Mark every day you keep. Each one is a complete success, however loud the urge was.",
+    "Slipped? Don’t just start again tomorrow. Go back through steps 1–3: what it gave you, which swap was missing, a new date."
+   ],
+   "proof": {
+    "text": "Without help, most relapses came in the first 8 days of a quit (eight relapse curves from two studies and five untreated groups).",
+    "ref": {
+     "cite": "Hughes JR, Keely J, Naud S (2004). Shape of the relapse curve and long-term abstinence among untreated smokers. Addiction 99(1):29-38.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/14678060/",
+     "pmid": "14678060",
+     "fetched": true,
+     "quote": "The existing eight relapse curves from two studies of self-quitters and five no-treatment control groups indicate most relapse occurs in the first 8 days."
+    }
+   }
+  },
+  {
+   "do": [
+    "Say “I don’t smoke”, not “I’m trying to quit”.",
+    "When the urge comes, name it: “there is a craving”, not “I need one”.",
+    "When the urge comes with coffee or a drink, it’s the habit asking, not your body.",
+    "Offered one? Answer like a non-smoker: “No thanks, I don’t.” No story, no excuse.",
+    "At the old moments (after food, on a break), do what a non-smoker does there: nothing."
+   ],
+   "proof": {
+    "text": "In 544 ex-smokers in Australia and the UK, those who saw themselves as smokers trying to quit relapsed more within a year than those who saw themselves as ex-smokers or non-smokers.",
+    "ref": {
+     "cite": "Callaghan L, Yong HH, Borland R, Cummings KM, Hitchman SC, Fong GT (2021). What kind of smoking identity following quitting would elevate smokers relapse risk? Addictive Behaviors 112:106654.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/32977267/",
+     "pmid": "32977267",
+     "fetched": true,
+     "quote": "adopted a non-smoker or ex-smoker identity were less likely to relapse than those who failed to do so",
+     "note": "544 former smokers, quit a month or more, in the ITC surveys in Australia and the UK, 2013-14; relapse at 12 months. A link, not proof of cause."
+    }
+   }
+  },
+  {
+   "do": [
+    "Help is a tool, not a must. Use it to make the date stick, not to put it off.",
+    "Ask a doctor about varenicline.",
+    "Or use a patch plus gum or lozenge, not just one.",
+    "Still on cigarettes? A vape helps more smokers stop than patches do. It’s a switch, not an exit.",
+    "Quitting a vape? Ask about varenicline too: in two small trials it helped vapers stop.",
+    "Put money on it: give a friend a sum to hand back at month 3."
+   ],
+   "proof": {
+    "text": "With varenicline, about 2.3 times as many people stayed off cigarettes for 6 months or more as with a dummy pill (41 trials, 17,395 people).",
+    "ref": {
+     "cite": "Livingstone-Banks J, Fanshawe TR, Thomas KH, Theodoulou A, Hajizadeh A, Hartman L, Lindson N (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
+     "pmid": "37142273",
+     "fetched": true,
+     "quote": "We found high-certainty evidence that varenicline helps more people to quit than placebo (RR 2.32, 95% CI 2.15 to 2.51; I2 = 60%, 41 studies, 17,395 participants)"
+    }
+   }
+  }
+ ],
+ "notUsed": [
+  {
+   "belief": "I enjoy it. I don’t want to give it up. → Much of the enjoyment is relief from an itch nicotine gave me. The itch is gone within a month.",
+   "origin": "06-template.json nicotine belief 2",
+   "why": "Overlaps the calm row: both say the reward is the itch going quiet. Its proof (withdrawal fades in 2–4 weeks) now answers the “unbearable” row, and its idea lives in plan step 1. Kept in 06-template.json."
+  },
+  {
+   "belief": "Smoking keeps my weight down. → A few kilos is a fair trade, and I can handle them.",
+   "origin": "06-template.json nicotine belief 3 (and 02 research belief “If I quit I’ll balloon.”)",
+   "why": "Five-row limit, and it is about a cost of quitting, not about whether he can quit. The counterpart is a slogan he may not believe. The 4–5 kg figure stays in the timeline (month 3) and fits the after-body number kind."
+  },
+  {
+   "belief": "Patches are cheating. Cold turkey or nothing. → I’ll take whatever doubles my chances. Pride doesn’t quit for me.",
+   "origin": "06-template.json nicotine belief 7 (and 02 research belief “Patches just feed the addiction.”)",
+   "why": "Pushes help as a must, which clashes with his step 5 (help is optional, a tool). Its 3–5% figure counts single unaided attempts, not people: most ex-smokers in Australian studies quit unaided (Smith 2015). The varenicline figure moved to step 5’s proof."
+  }
+ ]
+}

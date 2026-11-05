@@ -1,0 +1,188 @@
+{
+  "id": "porn",
+  "checkedBy": "independent re-checker (did not write or first-check these items)",
+  "checkedOn": "2026-11-05",
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 0,
+      "label": "hope-free-now 138 vs 42",
+      "verdict": "fix",
+      "problems": [
+        "Only the abstract can be read. Crossref and OpenAlex list the article as hybrid open access under CC BY 4.0, but ScienceDirect returns 403 with a robot captcha, the Elsevier text-mining API returns metadata only, and there is no PMC or repository copy. The figures 138 and 42, the 1,182 total (952+138+50+42), the 2018 and 2022 waves, 'Jewish population in Israel, aged 18-70' and 'self-report measures' all hold against the abstract. The quote is word for word (17 words).",
+        "The headline says 'surveyed twice'. The abstract describes four waves: two pre-war waves that the profiles come from, then T3 and T4 during the war. 'Across two Israeli surveys' is accurate and keeps 22 words and 2 figures.",
+        "The caveat says the study 'says nothing about ... whether it lasted after 2022'. The study did survey people again in wartime and reports 'out-of-control behaviors during wartime' by group. What holds is narrower: the groups rest on the 2018 and 2022 surveys only.",
+        "The rest holds. counted, basis.design, basis.who, basis.n and weak keep to the authors' labels and do not claim more than the abstract. The severity tag 'disorder' (probable CSBD/PPU by self-report) fits, though the cut-offs could not be checked. The mirror has 13 words, is in the second person and is not a screening line. Nothing is a projection, no other addiction is named, and there is no cheering."
+      ],
+      "fix": {
+        "headline": "Across two Israeli surveys, 138 adults fit the pattern the authors call 'recovery' from a porn or sex problem; 42 fit 'chronic'.",
+        "caveat": "Questionnaire scores, not a doctor's diagnosis, and porn and sex problems are counted together. 'Recovery' is the authors' name for a group a model drew; it does not show that each of the 138 dropped below a problem line. The groups rest on the 2018 and 2022 surveys only, so they do not show how people changed or whether it lasted after 2022."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41435755%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 3,
+      "label": "helps-talk 93% vs 21%",
+      "verdict": "fix",
+      "problems": [
+        "The fixed headline holds: 21 words, 2 figures, and 'on average' reads the 93% as a group figure. The fixed caveat holds against the abstract: 'When combining all participants (N=26), a 92% reduction was seen at posttreatment and an 86% reduction at 3-month follow-up'; '35% of participants showed complete cessation'.",
+        "basis.n gives only the whole trial (28). Under rule 9 it should give the split behind 93% and 21%. The 2025 meta-analysis 'Psychotherapy for problematic pornography use' (PMC12231474, Table 1) lists Crosby (2016) as 14 treated and 14 controls at baseline, in the United States, 100% male. The abstract's combined analysis has N = 26, so 2 men are missing from the later figures.",
+        "The rest holds. The quote is word for word (16 words). '28 adult males, all but 1 of whom were members of the Church of Jesus Christ of Latter-day Saints' holds, and so do '12-session individual protocol' and 2016. The severity tag 'treatment' fits. The mirror has 10 words, is in the second person and is not a screening line. Only the abstract is open; the full text is closed."
+      ],
+      "fix": {
+        "basis.n": "28 men: 14 given therapy, 14 on a waiting list; 26 are in the later combined figures"
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:27157029%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 4,
+      "label": "after-first-month 7 days",
+      "verdict": "ok",
+      "problems": [
+        "The fixed severity 'users' matches the source: it was a 'non-clinical sample' and 84.7% scored below the PPCS clinical cutoff of 76. The fixed headline holds: 22 words, 1 figure, and it names 'most not hooked'. The source has 'no significant main effects of group (abstinence vs. control) ... on any of the outcome measures, controlling for baseline scores'.",
+        "The fixed caveat holds. 89.8% had 'no intrinsic desire to quit', and 45.4% of the abstinence group used porn anyway. In the exploratory result, 'an abstinence effect on craving was found at high levels of PPU only once past 4-week FPU reached the threshold of daily use'. Measures were taken at baseline and each night of the 7-day period, with no follow-up.",
+        "The quote is word for word (16 words). n = 176 (86/90), 64.2% female, M age 21.38, psychology undergraduates in Malaysia, Arch Sex Behav 52:1819-1840 (2023): all hold.",
+        "Not a source problem, still open: kinds.json lets after-first-month carry dependent, treatment, heavy and disorder, not users. build_v3.py will refuse this card under rule 3 until it moves kind or is held back. A source checker cannot fix this."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9847461/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 5,
+      "label": "after-body 21 of 42",
+      "verdict": "ok",
+      "problems": [
+        "The fixed caveat holds against the full text. 'the sample overrepresents members who found abstinence and online forum interaction to be beneficial, and as such might have been more likely to persist with abstinence and continue posting'; 'reduction in masturbation frequency ... could have contributed to improvements in sexual functioning'; 'generally inconclusive'.",
+        "'At most 32 of the 42' holds (Table 1: 'Both addiction and sexual difficulty reported' 32). The table also bounds it from below: 49 reported a sexual difficulty and 17 of those did not report addiction, so at least 25 of the 42 called themselves addicted. The tag 'self-hooked' therefore covers most of the 42. Optional wording: '25 to 32 of the 42 called themselves addicted.' The 'most' in 'most were also stopping masturbation' also holds for the 42: at least 86.5% (90) of the 104 meant to stop, so at most 14 did not.",
+        "The quote is word for word (27 words; the source's 'n' is italic, with thin spaces). Headline 21 words, 2 figures; mirror 8 words, second person. Ages 18-63, journals 2016-2018, attempts 7 days to 1 year, Reboot Nation: all hold.",
+        "Not a source problem, still open: after-body is not a picked kind and does not allow self-hooked, so build_v3.py will refuse this card under rule 3."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 0,
+      "label": "stuck (Efrati 138 vs 42)",
+      "verdict": "fix",
+      "problems": [
+        "The fixed proof still says 'Of the groups with likely problems in 2018'. That is the inference from the profile names the first reviewer asked to drop. The abstract gives the labels and sizes only; it does not say each member was over a cut-off in 2018. The proof also says '... by 2022; 42 stayed', which reads as people moving between groups. The profiles span 2018 and 2022 together. The fix uses the authors' labels and says a model drew the groups, the same way as the fixed number card.",
+        "Both refs' cite say 'full text is paywalled'. That is wrong: Crossref and OpenAlex list a CC BY 4.0 hybrid open-access version of record. It could not be read because ScienceDirect serves a captcha. Drop the access note from the cite.",
+        "Both quotes are word for word in the abstract (21 and 24 words). The tag 'disorder' fits. It is not a moderation belief. No other addiction is named and there is no cheering. The fixed proof is 35 words."
+      ],
+      "fix": {
+        "proof": "An Israeli survey asked adults about compulsive sex and problem porn use in 2018 and 2022. A statistical model sorted 138 into a pattern the authors call ‘recovery’ and 42 into one they call ‘chronic’.",
+        "refs[0].cite": "Efrati Y, Shmulewitz D, Skvirsky V, Vider M, Kor A, Lev-Ran S, Mikulincer M (2026). Longitudinal study of probable compulsive sexual behavior disorder and problematic pornography use profiles: their prospective impact on psychopathology during wartime. Addictive Behaviors 175:108589.",
+        "refs[1].cite": "Efrati Y, Shmulewitz D, Skvirsky V, Vider M, Kor A, Lev-Ran S, Mikulincer M (2026). Longitudinal study of probable compulsive sexual behavior disorder and problematic pornography use profiles: their prospective impact on psychopathology during wartime. Addictive Behaviors 175:108589."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41435755%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 1,
+      "label": "hard (Sassover 10-day abstinence)",
+      "verdict": "fix",
+      "problems": [
+        "'kept off all sex, porn included' is not in the source. Study 3 told participants 'to abstain from sexual activity for the next 10 days' and never mentions pornography or masturbation in its method. The authors say the grouping 'did not isolate pornography-specific sexual behaviour'.",
+        "'eased from day 3' can be read as a withdrawal that rose and then eased. The source's baseline was taken 'at baseline prior to any abstinence', and that is when symptoms were highest. WSQ for the CSB group was 63.86 at baseline, 54.36 on day 3, 41.21 on day 7 and 33.43 on day 10, against 40.00 for the non-CSB men on day 10. Symptoms fell from the first check; no rise was measured.",
+        "The rest holds. 14 CSB men after one who slipped was excluded, all male, recruited through social media in Israel, HBYSAS cut-off 18. Both quotes are word for word (28 and 23 words; '3rd' is a superscript in the source). The tag 'disorder' is acceptable for a questionnaire cut-off. The fix is 38 words."
+      ],
+      "fix": {
+        "proof": "In a small study, 14 men who scored as hooked on sex kept off all sexual activity for 10 days. By day 3 their withdrawal-type symptoms had already dropped; by day 10 they matched men below the cut-off."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11502338/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 2,
+      "label": "need (Fernandez 2021 negative affect cue)",
+      "verdict": "ok",
+      "problems": [
+        "The fixed proof keeps the source's hedges: 'had previously often relied on pornography use to regulate negative affect' and 'appeared to have become a conditioned cue'. The source says this of members in general, as the proof does, and it does not count them.",
+        "Both quotes are word for word (25 words; Table 1 'Self-perceived addiction to pornography Yes 80 76.9'). 'Most calling themselves addicted' holds (80 of 104). The tag 'self-hooked' fits. Proof 34 words; no other addiction is named and there is no cheering."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "beliefs",
+      "index": 4,
+      "label": "identity (55 of 104 slipped)",
+      "verdict": "ok",
+      "problems": [
+        "The fixed proof keeps the condition: the source has 'abstinence, although difficult, is achievable with the right combination of internal and external resources'. 'Support and habits' is a loose gloss of internal and external resources, but it is not more hopeful. The proof keeps the slip count and the researchers' reading apart. It does not claim that the men who slipped later stayed off.",
+        "'More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt' is word for word (18 words; 'n' italic). The second quote is word for word (14 words). The tag 'self-hooked' fits. Proof 38 words."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "plan",
+      "index": 0,
+      "label": "plan step 1 proof (Wordecha diary)",
+      "verdict": "ok",
+      "problems": [
+        "The fixed text holds against the full text. 'nine treatment-seeking males' were 'recruited among patients seeking treatment for CSB in sexual health treatment centers in Warsaw' and met at least 4 of Kafka's 5 criteria. The study had a '10-week-long diary assessment'. 'Six out of nine subjects experienced binge ... PuM'. 'For all but one subject (G), pornographic binges led to either a decrease of mood ... or stress', so 5 of the 6 means 'most'. The abstract adds anxiety.",
+        "The quote is word for word (19 words). Proof 35 words. The study is correlational and the proof makes no causal claim."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6174597/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "plan",
+      "index": 1,
+      "label": "plan step 2 proof (lifestyle strategies)",
+      "verdict": "ok",
+      "problems": [
+        "The fixed text follows the source: the strategies 'were incorporated as part of an overall lifestyle change to minimize the frequency of triggering situations and craving'. 'To cut triggers and craving' gives the purpose and does not claim they worked. The n (104) is now given.",
+        "The quote is word for word (28 words). Proof 29 words."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "plan",
+      "index": 2,
+      "label": "plan step 3 proof (blockers, support)",
+      "verdict": "fix",
+      "problems": [
+        "'Mattered most' drops the source's hedge. The source says social support and accountability 'appeared to be the external resources that were most instrumental to members’ ability to sustain abstinence'. Use 'seemed to matter most'.",
+        "The rest holds. 'blocking applications, was described to be somewhat useful' is in the source, which also says barriers were 'useful but not sufficient'. The quote is word for word (23 words). The fix is 31 words."
+      ],
+      "fix": {
+        "text": "In 104 men’s quit journals, blockers were somewhat useful; of outside help, support from other people and being accountable to someone seemed to matter most. Their own accounts, not a trial."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "plan",
+      "index": 4,
+      "label": "plan step 5 proof (ACT 93% vs 21%)",
+      "verdict": "fix",
+      "problems": [
+        "'Self-reported viewing fell 93%' reads as if each man cut viewing by 93%. The fixed number card for the same figure says 'on average'; use the same here.",
+        "Rule 10: the source gives a more cautious figure. 'At the 3-month follow-up assessment, 35% of participants showed complete cessation' (combined N = 26). The proof shows only the end-of-therapy figure. There is room for it within 40 words.",
+        "The rest holds. The quote is word for word (16 words). 28 adult males, all but 1 Latter-day Saints, 12 sessions; the US is confirmed by the 2025 meta-analysis (PMC12231474, Table 1: United States, 14 vs 14). The fix is 39 words."
+      ],
+      "fix": {
+        "text": "In one small US trial of 28 men, nearly all Latter-day Saints, self-reported viewing fell 93% on average after 12 sessions of ACT, against 21% on the waiting list. Three months later, 35% of treated men had stopped completely."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:27157029%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    }
+  ]
+}

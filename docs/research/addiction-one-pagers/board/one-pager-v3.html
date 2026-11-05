@@ -1,0 +1,948 @@
+<title>One-Pager Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Source+Sans+3:ital,wght@0,400..700;1,400&family=IBM+Plex+Mono:wght@400;600&family=Fraunces:opsz,wght@9..144,400..800&display=swap">
+<style>
+/* v3 prototype. The shell (top bar, review panel) wraps one or two frames; each frame holds a .page that is a
+   container, so the page itself lays out by its own width (phone 390 px, wide 1280 px) through container queries.
+   Version 1 keeps the owner's 2025 sheet (ink, red, condensed Archivo). Version 2 is set on .page.v2. Review
+   controls use the dashed blue "lab" style from round 3 so they never read as page content. */
+:root {
+  --bg: #e7e5e2; --paper: #ffffff; --ink: #161414; --ink-2: #4b4646; --muted: #6a6362;
+  --rule: #1d1a1a; --hair: #d9d4d2; --panel: #f2f0ee; --pink: #f7d4d5; --red: #c8202a;
+  --band: #ece8e4; --q: #b9b2ae; --med: #161414;
+  --watch: #9a5500; --danger: #c41d2a; --win: #1c7a3c;
+  --lab: #2f5f8f; --lab-bg: #eef3f8; --ph-bg: #fbf1d4; --ph-line: #e1cd8c;
+  --v2-bg: #f4f6f3; --v2-ink: #10201a; --v2-ink2: #3e4d46; --v2-acc: #0d6b4f; --v2-soft: #dcebe3; --v2-hot: #b5482a; --v2-line: #c9d6cf;
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --f-serif: "Fraunces", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121010; --paper: #1c1919; --ink: #f2eeed; --ink-2: #c8c1c0; --muted: #958d8c;
+    --rule: #d8d2d1; --hair: #3a3434; --panel: #262222; --pink: #4a2629; --red: #ff5c63;
+    --band: #2c2727; --q: #5b5352; --med: #f2eeed;
+    --watch: #e3a33c; --danger: #ff6b72; --win: #5cc681;
+    --lab: #8fbbe6; --lab-bg: #1a232d; --ph-bg: #2e2714; --ph-line: #6b5a24;
+    --v2-bg: #0f1613; --v2-ink: #e6efe9; --v2-ink2: #a9bab1; --v2-acc: #5cc9a2; --v2-soft: #1c2c25; --v2-hot: #ff8a66; --v2-line: #2c3d35;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121010; --paper: #1c1919; --ink: #f2eeed; --ink-2: #c8c1c0; --muted: #958d8c;
+  --rule: #d8d2d1; --hair: #3a3434; --panel: #262222; --pink: #4a2629; --red: #ff5c63;
+  --band: #2c2727; --q: #5b5352; --med: #f2eeed;
+  --watch: #e3a33c; --danger: #ff6b72; --win: #5cc681;
+  --lab: #8fbbe6; --lab-bg: #1a232d; --ph-bg: #2e2714; --ph-line: #6b5a24;
+  --v2-bg: #0f1613; --v2-ink: #e6efe9; --v2-ink2: #a9bab1; --v2-acc: #5cc9a2; --v2-soft: #1c2c25; --v2-hot: #ff8a66; --v2-line: #2c3d35;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--lab); outline-offset: 2px; }
+.wrap { max-width: 1720px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* ---------- shell ---------- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--paper); border-bottom: 2px solid var(--rule); }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-block: 8px; }
+.top .name { font-family: var(--f-display); font-weight: 800; font-stretch: 75%; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 4px 13px; font-weight: 600; font-size: 15px; cursor: pointer; white-space: nowrap; }
+.tab[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.ctl { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-left: auto; }
+.seg { display: inline-flex; border: 1.5px solid var(--lab); border-radius: 8px; overflow: hidden; flex: none; }
+.seg button { border: 0; background: transparent; padding: 3px 10px; cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--lab); white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--lab); }
+.seg button[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lab); }
+
+.review { border-bottom: 1.5px dashed var(--lab); background: var(--lab-bg); }
+.review .wrap { padding-block: 14px 16px; display: grid; gap: 12px; }
+.rtabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.rtabs button { border: 1.5px solid var(--lab); background: var(--paper); color: var(--lab); border-radius: 999px; padding: 3px 12px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.rtabs button[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
+.rtabs .cnt { font-family: var(--f-mono); font-weight: 600; font-size: 11.5px; margin-left: 4px; }
+.rbody { display: grid; gap: 10px; max-width: 1100px; max-height: 48vh; overflow-y: auto; padding-right: 6px; }
+.rbody h2 { font-family: var(--f-display); font-size: 20px; font-weight: 800; font-stretch: 85%; }
+.rbody .lead { color: var(--ink-2); max-width: 75ch; }
+.ritem { background: var(--paper); border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+.ritem h3 { font-size: 16px; font-weight: 700; font-family: var(--f-body); }
+.ritem .why { color: var(--ink-2); font-size: 14.5px; }
+.ritem .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.pill { border: 1.5px solid var(--lab); background: var(--paper); color: var(--lab); border-radius: 7px; padding: 2px 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
+.pill.veto[aria-pressed="true"] { background: var(--danger); border-color: var(--danger); }
+.pill .rec { font-weight: 600; font-size: 11.5px; font-family: var(--f-mono); margin-left: 4px; opacity: .85; }
+.ritem.vetoed { border-color: var(--danger); }
+.ritem.done { border-color: var(--win); }
+.dbstate { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.notes { display: grid; gap: 6px; }
+.nt { display: flex; gap: 8px; align-items: baseline; background: var(--panel); border-radius: 8px; padding: 5px 9px; font-size: 14px; }
+.nt span { flex: 1; white-space: pre-wrap; }
+.nt time { font-family: var(--f-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.nt button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; }
+.nadd { display: flex; gap: 6px; align-items: flex-end; }
+.nadd textarea { flex: 1; min-width: 0; font: inherit; font-size: 14px; padding: 5px 9px; border: 1px solid var(--hair); border-radius: 8px; background: var(--paper); color: var(--ink); resize: vertical; min-height: 34px; }
+.nadd button { font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 8px; border: 1.5px solid var(--lab); background: var(--lab); color: var(--paper); cursor: pointer; }
+.mtable { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--paper); }
+.mtable th, .mtable td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--hair); }
+.mtable th { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.mtable .gen { font-family: var(--f-mono); font-size: 11px; color: var(--lab); }
+.mtable .em { color: var(--muted); font-style: italic; }
+.mscroll { overflow-x: auto; border: 1px solid var(--hair); border-radius: 10px; }
+
+.stage { padding-block: 18px 40px; }
+.frames { display: flex; gap: 24px; align-items: flex-start; justify-content: center; }
+.fcol { display: grid; gap: 6px; min-width: 0; }
+.fcol .flabel { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lab); }
+.fscroll { overflow-x: auto; max-width: 100%; }
+.frame { background: var(--paper); box-shadow: 0 1px 0 var(--hair), 0 10px 30px rgba(0,0,0,.08); }
+.frame.phone { width: 390px; border-radius: 22px; border: 8px solid var(--rule); overflow: hidden; }
+.frame.wide { width: 1280px; border-radius: 6px; border: 1px solid var(--hair); }
+.scaler { transform-origin: top left; }
+@media (max-width: 520px) { .frames { display: block; } .fcol { width: 100%; } .fcol .flabel { padding-left: 16px; } .frame.phone { width: 100%; border-width: 0; border-radius: 0; box-shadow: none; } .stage .wrap { padding-left: 0; padding-right: 0; } }
+
+body.reader .top, body.reader .review { display: none; }
+body.reader .stage { padding: 0; }
+body.reader .stage .wrap { max-width: none; padding: 0; }
+body.reader .frames { display: block; }
+body.reader .back { display: block; margin: 16px auto 24px; width: max-content; font-family: var(--f-mono); font-size: 11.5px; color: var(--lab); background: var(--lab-bg); border: 1px dashed var(--lab); border-radius: 6px; padding: 2px 8px; text-decoration: none; }
+.top .rlink { font-family: var(--f-mono); font-size: 12px; color: var(--lab); }
+/* ---------- the page (both versions) ---------- */
+.page { container: page / inline-size; background: var(--paper); color: var(--ink); }
+.page .sec { position: relative; }
+.labbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; border: 1px dashed var(--lab); background: var(--lab-bg); border-radius: 8px; padding: 4px 9px; font-size: 12.5px; color: var(--ink); margin: 10px 16px 0; font-family: var(--f-body); }
+.labbar .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--lab); font-weight: 600; }
+.labbar .seg button { padding: 1px 8px; font-size: 12.5px; }
+.labbar .nb { border: 0; background: none; color: var(--lab); font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 12.5px; padding: 0; }
+.ref { border: 0; background: none; padding: 0 1px; cursor: pointer; color: var(--muted); font-family: var(--f-mono); font-size: .72em; vertical-align: super; line-height: 0; }
+.ref:hover { color: var(--ink); }
+details > summary { cursor: pointer; }
+.gapl { font-size: 14px; color: var(--muted); font-style: italic; padding-top: 6px; }
+.ph { border: 1.5px dashed var(--ph-line); background: var(--ph-bg); border-radius: 8px; padding: 10px 12px; color: var(--ink-2); font-size: 14.5px; }
+.ph .eyebrow { color: var(--watch); display: block; margin-bottom: 2px; }
+
+/* ---------- version 1: his 2025 sheet, rulebook applied ---------- */
+.v1 { font-family: var(--f-body); }
+.v1 .blk { padding: 22px 16px; border-top: 2px solid var(--rule); display: grid; gap: 14px; }
+.v1 .blk:first-of-type { border-top: 0; }
+.v1 h2 { font-family: var(--f-display); font-weight: 800; font-stretch: 78%; font-size: 26px; line-height: 1.05; text-transform: uppercase; letter-spacing: .01em; }
+.v1 .hero { padding: 22px 16px 20px; display: grid; gap: 12px; }
+.v1 .h-title { font-family: var(--f-display); font-weight: 900; font-stretch: 72%; font-size: 40px; line-height: .95; text-transform: uppercase; color: var(--red); }
+.v1 .h-num { display: grid; gap: 6px; }
+.v1 .h-num .big { font-family: var(--f-display); font-weight: 900; font-stretch: 68%; font-size: 104px; line-height: .86; letter-spacing: -.01em; }
+.v1 .h-num .line { font-family: var(--f-display); font-weight: 700; font-stretch: 88%; font-size: 22px; line-height: 1.18; }
+.v1 .h-side { display: grid; gap: 10px; align-content: end; }
+.v1 .h-second { font-size: 16px; color: var(--ink-2); border-left: 3px solid var(--red); padding-left: 10px; }
+.v1 .h-second b { font-family: var(--f-display); font-stretch: 80%; font-size: 19px; color: var(--ink); }
+.cnt { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { display: inline-block; font-size: 12.5px; font-weight: 600; border-radius: 5px; padding: 1px 7px; background: var(--panel); color: var(--ink-2); }
+.tag.off { background: color-mix(in srgb, var(--watch) 16%, var(--paper)); color: var(--watch); }
+.tag.weak { background: color-mix(in srgb, var(--watch) 12%, var(--paper)); color: var(--watch); }
+.tag.proj { background: var(--pink); color: var(--ink); }
+.tag.prop { background: var(--lab-bg); color: var(--lab); border: 1px dashed var(--lab); }
+.basis { font-size: 14px; color: var(--ink-2); display: grid; gap: 4px; }
+.basis summary { color: var(--ink); font-weight: 600; font-size: 14px; }
+.basis p { margin-top: 4px; }
+.v1 .nrows { display: grid; }
+.v1 .nrow { display: grid; gap: 6px; padding-block: 14px; border-top: 1px solid var(--hair); }
+.v1 .nrow:first-child { border-top: 0; padding-top: 2px; }
+.v1 .gtag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
+.v1 .mir { font-style: italic; color: var(--ink-2); }
+.v1 .nr-main { display: grid; gap: 4px; }
+.v1 .nrow .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 52px; line-height: .95; }
+.v1 .nrow .hl { font-size: 17px; line-height: 1.38; font-weight: 600; }
+.v1 .btable { display: grid; gap: 10px; }
+.v1 .brow { display: grid; gap: 8px; border: 2px solid var(--rule); padding: 12px; }
+.v1 .bcell .bl { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 2px; }
+.v1 .bcell.cur p { font-family: var(--f-display); font-stretch: 85%; font-weight: 700; font-size: 19px; line-height: 1.2; }
+.v1 .bcell.new p.t { font-weight: 700; color: var(--win); font-size: 17px; }
+.v1 .bcell .proof { font-size: 14px; color: var(--ink-2); margin-top: 4px; }
+.v1 .bcell.test p { font-size: 15.5px; }
+.v1 .exlink { display: inline-flex; align-items: center; gap: 8px; justify-self: start; text-decoration: none; color: var(--paper); background: var(--ink); font-weight: 700; padding: 9px 14px; border-radius: 6px; }
+.v1 .exlink:hover { background: var(--red); }
+.v1 .plan { display: grid; gap: 0; border: 2px solid var(--rule); }
+.v1 .pstep { display: grid; gap: 8px; padding: 12px; border-top: 1px solid var(--rule); }
+.v1 .pstep:first-child { border-top: 0; }
+.v1 .pstep h3 { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 19px; display: flex; gap: 10px; align-items: baseline; }
+.v1 .pstep h3 i { font-style: normal; color: var(--red); font-size: 26px; font-stretch: 70%; }
+.v1 .pstep .ptext { color: var(--ink-2); }
+.v1 .pstep ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.v1 .pstep .pproof { font-size: 14px; color: var(--ink-2); border-left: 3px solid var(--hair); padding-left: 8px; }
+.v1 .gens { display: grid; gap: 12px; }
+.v1 .gcard { background: var(--panel); padding: 12px; display: grid; gap: 6px; }
+.v1 .gcard .big { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: 44px; line-height: .95; }
+.v1 .srcs ol { margin: 0; padding-left: 22px; font-size: 13.5px; color: var(--ink-2); display: grid; gap: 4px; }
+.v1 .srcs .u { font-family: var(--f-mono); font-size: 11px; color: var(--watch); margin-left: 6px; }
+.blk.foot { padding-block: 14px; }
+.safety { font-size: 14px; color: var(--ink-2); display: flex; gap: 10px; align-items: baseline; }
+.safety b { color: var(--danger); white-space: nowrap; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; }
+
+/* the felt-difficulty graph, shared by both versions; colours come from the version's tokens */
+.felt { display: grid; gap: 10px; }
+.felt .peaks { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.felt .peaks div { display: grid; }
+.felt .peaks b { font-family: var(--f-display); font-stretch: 75%; font-weight: 900; font-size: 30px; line-height: 1; }
+.felt .peaks span { font-size: 13.5px; color: var(--ink-2); }
+.fv { display: grid; gap: 4px; }
+.fv svg { width: 100%; height: auto; display: block; overflow: visible; }
+.fv .lbl { font-family: var(--f-mono); font-size: 10px; fill: var(--muted); }
+.fv .lbl.k { fill: var(--ink); font-weight: 600; }
+.legendl { font-size: 12px; color: var(--muted); }
+.fv .r { display: grid; grid-template-columns: 74px minmax(0, 1fr) 34px; align-items: center; gap: 8px; font-size: 13px; }
+.fv .r .d { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-2); white-space: nowrap; }
+.fv .r .n { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); text-align: right; }
+.fv .bar { position: relative; height: 18px; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--hair) calc(10% - 1px) 10%); }
+.fv .iqr { position: absolute; top: 4px; bottom: 4px; background: var(--q); border-radius: 3px; }
+.fv .md { position: absolute; top: 1px; width: 4px; margin-left: -2px; bottom: 1px; background: var(--med); border-radius: 2px; }
+.fv .r.thin .iqr { opacity: .45; }
+.fv .r.peak .d, .fv .r.ease .d { color: var(--ink); font-weight: 600; }
+.fv .axis { display: grid; grid-template-columns: 74px minmax(0, 1fr) 34px; gap: 8px; font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); }
+.fv .axis .ticks { position: relative; height: 14px; }
+.fv .axis .ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.fv .axis .ticks span:first-child { transform: none; }
+.fv .axis .ticks span:last-child { transform: translateX(-100%); }
+.fv .r.hd { font-size: 10.5px; }
+.fv .r.thin .d::after { content: " · few"; color: var(--muted); }
+.fh { display: none; }
+.fh svg { width: 100%; height: auto; display: block; overflow: visible; }
+.fh .lbl { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.fh .lbl.k { fill: var(--ink); font-weight: 600; }
+.appc { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--hair); }
+.appbars { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 6px; height: 110px; max-width: 640px; }
+.appbars .yax { display: flex; flex-direction: column; justify-content: space-between; font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); text-align: right; }
+.appbars .bars { display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid var(--hair); background: linear-gradient(var(--hair) 1px, transparent 1px) 0 0 / 100% 20%; }
+.appbars .bars i { flex: 1; background: var(--med); border-radius: 2px 2px 0 0; min-height: 1px; }
+.appx { display: flex; justify-content: space-between; max-width: 640px; padding-left: 40px; font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); }
+.body-rows { display: grid; gap: 6px; }
+.body-rows .br { display: grid; gap: 1px; font-size: 14.5px; padding-left: 10px; border-left: 3px solid var(--hair); }
+.body-rows .br.danger { border-left-color: var(--danger); }
+.body-rows .br.trigger { border-left-style: dashed; }
+.body-rows .br .w { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.body-rows .br.danger .w { color: var(--danger); }
+.stages { display: grid; gap: 6px; }
+.stages h3 { grid-column: 1 / -1; }
+.nw { white-space: nowrap; }
+.stages .st { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; font-size: 14.5px; }
+.stages .st b { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-2); font-weight: 600; padding-top: 2px; }
+.cap { font-size: 13.5px; color: var(--ink-2); display: grid; gap: 4px; }
+.scored { font-size: 13px; color: var(--muted); }
+.cap summary { font-weight: 600; color: var(--ink); }
+.cap ul { margin: 4px 0 0; padding-left: 18px; }
+
+@container page (min-width: 760px) {
+  .v1 .blk, .v1 .hero { padding: 30px 40px; }
+  .labbar { margin: 12px 40px 0; }
+  .v1 .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 48px; align-items: end; }
+  .v1 .h-title { grid-column: 1 / -1; font-size: 64px; }
+  .v1 .h-num .big { font-size: 168px; }
+  .v1 .h-second { font-size: 18px; }
+  .v1 h2 { font-size: 34px; }
+  .v1 .blk { grid-template-columns: 220px minmax(0, 1fr); column-gap: 40px; align-items: start; }
+  .v1 .blk > h2 { grid-row: span 6; position: sticky; top: 70px; }
+  .v1 .nrow { grid-template-columns: 170px minmax(0, 1fr); column-gap: 24px; }
+  .v1 .nrow .gtag, .v1 .nrow .mir, .v1 .nrow .cnt, .v1 .nrow .basis { grid-column: 2; }
+  .v1 .nr-main { display: contents; }
+  .v1 .nrow .big { grid-column: 1; grid-row: 1 / span 5; font-size: 60px; text-align: right; }
+  .v1 .nrow .hl { grid-column: 2; }
+  .v1 .brow { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; }
+  .v1 .pstep { grid-template-columns: minmax(0, .9fr) minmax(0, 1.3fr); gap: 20px; padding: 16px; }
+  .v1 .gens { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fv { display: none; }
+  .fh { display: block; }
+  .stages { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .stages .st { grid-template-columns: 1fr; }
+}
+/* ---------- version 2: count the people (dot grids, 20-dot plots, a fact box) ---------- */
+.v2 { --ink: var(--v2-ink); --ink-2: var(--v2-ink2); --hair: var(--v2-line); --panel: var(--v2-soft); --q: var(--v2-soft); --med: var(--v2-acc); background: var(--v2-bg); color: var(--v2-ink); }
+.page.v2, .page.vmix .v2 { background: var(--v2-bg); }
+.v2 .blk { padding: 26px 16px; display: grid; gap: 14px; border-top: 1px solid var(--v2-line); }
+.v2 h2 { font-family: var(--f-display); font-stretch: 118%; font-weight: 850; font-size: 22px; line-height: 1.1; letter-spacing: -.01em; }
+.v2 .k { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--v2-acc); }
+.v2 .hero { padding: 26px 16px 22px; display: grid; gap: 14px; }
+.v2 .h-title { font-family: var(--f-display); font-stretch: 125%; font-weight: 900; font-size: 30px; line-height: 1.02; letter-spacing: -.02em; }
+.v2 .h-of { font-family: var(--f-display); font-stretch: 110%; font-weight: 700; font-size: 18px; color: var(--v2-ink2); }
+.grid100 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 300px; }
+.grid100 i { aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--v2-line); max-width: 100%; }
+.grid100 i.f { background: var(--v2-acc); border-color: var(--v2-acc); }
+.grid100 i.p { border-color: var(--v2-acc); border-style: dotted; }
+.legend { display: grid; gap: 6px; font-size: 15px; }
+.legend div { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; }
+.legend .sw { width: 14px; height: 14px; border-radius: 50%; margin-top: 4px; border: 2px solid var(--v2-acc); }
+.legend .sw.f { background: var(--v2-acc); }
+.legend .sw.p { border-style: dotted; }
+.legend .sw.e { border-color: var(--v2-line); }
+.legend b { font-family: var(--f-display); font-stretch: 110%; font-weight: 850; font-size: 20px; }
+.v2 .ledger { display: grid; gap: 12px; }
+.v2 .lrow { display: grid; gap: 0; background: var(--paper); border-radius: 4px; overflow: hidden; border: 1px solid var(--v2-line); }
+.v2 .lrow .c { padding: 10px 12px; display: grid; gap: 4px; }
+.v2 .lrow .c.old { background: var(--paper); }
+.v2 .lrow .c.old p { font-family: var(--f-serif); font-size: 19px; line-height: 1.3; font-style: italic; }
+.v2 .lrow .c.new { background: var(--v2-soft); }
+.v2 .lrow .c.new p.t { font-weight: 700; font-size: 17px; }
+.v2 .lrow .c.new .proof { font-size: 14px; color: var(--v2-ink2); }
+.v2 .lrow .c.test { border-top: 1px dashed var(--v2-line); font-size: 15.5px; }
+.v2 .lrow .lab { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--v2-ink2); }
+.v2 .exlink { display: inline-flex; gap: 8px; justify-self: start; text-decoration: none; font-weight: 700; color: var(--v2-acc); border-bottom: 2px solid var(--v2-acc); padding-bottom: 2px; }
+.v2 .exlink:hover { color: var(--v2-ink); border-color: var(--v2-ink); }
+.dp { display: grid; gap: 4px; }
+.dp .row { display: grid; grid-template-columns: 104px minmax(0, 1fr) 30px; align-items: end; gap: 8px; }
+.dp .lab { font-family: var(--f-mono); font-size: 11px; color: var(--v2-ink2); padding-bottom: 2px; }
+.dp .row.pk .lab, .dp .row.es .lab { color: var(--v2-ink); font-weight: 600; }
+.dp .n { font-family: var(--f-mono); font-size: 10px; color: var(--v2-ink2); text-align: right; padding-bottom: 2px; }
+.dp svg { width: 100%; height: auto; display: block; overflow: visible; }
+.dp .ax { display: grid; grid-template-columns: 104px minmax(0, 1fr) 30px; gap: 8px; font-family: var(--f-mono); font-size: 10.5px; color: var(--v2-ink2); }
+.dp .ax .ticks { position: relative; height: 14px; }
+.dp .ax .ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.dp .row.thin svg { opacity: .45; }
+.dp .lab .tv { display: inline-block; min-width: 18px; font-family: var(--f-display); font-stretch: 110%; font-weight: 900; font-size: 17px; color: var(--v2-acc); margin-right: 4px; }
+.dp .lab .tv.hot { color: var(--v2-hot); }
+.v2 .say .sub { font-family: var(--f-body); font-weight: 400; font-size: 15px; color: var(--v2-ink2); }
+.dp .key { font-size: 13.5px; color: var(--v2-ink2); }
+.v2 .say { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 20px; line-height: 1.2; }
+.v2 .say em { font-style: normal; color: var(--v2-hot); }
+.v2 .say strong { color: var(--v2-acc); }
+.v2 .hx { display: grid; gap: 0; }
+.v2 .hxr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding-block: 14px; border-top: 1px solid var(--v2-line); }
+.v2 .hxr:first-child { border-top: 0; }
+.v2 .hxr .top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; }
+.v2 .hxr .big { font-family: var(--f-display); font-stretch: 112%; font-weight: 900; font-size: 34px; line-height: 1; white-space: nowrap; }
+.v2 .hxr .hl { font-size: 16.5px; line-height: 1.4; }
+.v2 .hxr .mir { font-family: var(--f-serif); font-style: italic; color: var(--v2-ink2); font-size: 15.5px; }
+.g10 { display: grid; grid-template-columns: repeat(10, 6px); gap: 2px; }
+.g10 i { width: 6px; height: 6px; border-radius: 50%; background: var(--v2-line); }
+.g10 i.f { background: var(--v2-acc); }
+.v2 .tag { background: var(--paper); border: 1px solid var(--v2-line); }
+.v2 .tag.off, .v2 .tag.weak { background: color-mix(in srgb, var(--watch) 12%, var(--paper)); border-color: transparent; }
+.v2 .track { display: grid; gap: 0; position: relative; }
+.v2 .tstop { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; padding-bottom: 18px; position: relative; }
+.v2 .tstop::before { content: ""; position: absolute; left: 10px; top: 22px; bottom: 0; width: 2px; background: var(--v2-line); }
+.v2 .tstop:last-child::before { display: none; }
+.v2 .tstop .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--v2-acc); color: var(--v2-bg); font-family: var(--f-mono); font-weight: 600; font-size: 12px; display: grid; place-items: center; }
+.v2 .tstop.opt .dot { background: var(--v2-bg); color: var(--v2-acc); border: 2px solid var(--v2-acc); }
+.v2 .tstop .when { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--v2-ink2); }
+.v2 .tstop h3 { font-family: var(--f-display); font-stretch: 112%; font-weight: 850; font-size: 18px; }
+.v2 .tstop .ptext { color: var(--v2-ink2); font-size: 15px; }
+.v2 .tstop ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.v2 .tstop .pproof { font-size: 14px; color: var(--v2-ink2); margin-top: 6px; }
+.fbox { border: 2px solid var(--v2-ink); background: var(--paper); display: grid; }
+.fbox .fh2 { padding: 10px 12px; border-bottom: 1px solid var(--v2-ink); font-weight: 700; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+.fbox .fh2 span:last-child { font-family: var(--f-mono); font-size: 11px; text-align: right; color: var(--v2-ink2); max-width: 120px; }
+.fbox .frow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 9px 12px; border-top: 1px solid var(--v2-line); align-items: baseline; }
+.fbox .frow:first-of-type { border-top: 0; }
+.fbox .frow b { font-family: var(--f-display); font-stretch: 112%; font-weight: 900; font-size: 22px; text-align: right; white-space: nowrap; }
+.fbox .ffoot { padding: 8px 12px; border-top: 1px solid var(--v2-ink); font-size: 13px; color: var(--v2-ink2); display: grid; gap: 4px; }
+.v2 .srcs ol { margin: 0; padding-left: 22px; font-size: 13.5px; color: var(--v2-ink2); display: grid; gap: 4px; }
+.v2 .srcs .u { font-family: var(--f-mono); font-size: 11px; color: var(--watch); margin-left: 6px; }
+@container page (min-width: 760px) {
+  .v2 .blk, .v2 .hero { padding: 36px 56px; }
+  .v2 .hero { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: 56px; align-items: start; grid-template-areas: "title grid" "of grid" "legend grid" "cnt grid" "basis grid"; }
+  .v2 .h-title { grid-area: title; font-size: 52px; }
+  .v2 .h-of { grid-area: of; font-size: 22px; }
+  .v2 .hero .legend { grid-area: legend; }
+  .v2 .hero > .cnt { grid-area: cnt; }
+  .v2 .hero > .basis { grid-area: basis; }
+  .v2 .hero .grid100 { grid-area: grid; max-width: 420px; gap: 8px; justify-self: end; width: 100%; }
+  .v2 h2 { font-size: 30px; }
+  .v2 .lrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); }
+  .v2 .lrow .c.test { grid-column: 1 / -1; }
+  .dp .row, .dp .ax { grid-template-columns: 140px minmax(0, 1fr) 40px; }
+  .v2 .hx { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
+  .v2 .hxr:nth-child(2) { border-top: 0; }
+  .v2 .track { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; }
+  .v2 .tstop { grid-template-columns: 1fr; padding-bottom: 0; }
+  .v2 .tstop::before { left: 22px; right: -18px; top: 10px; bottom: auto; width: auto; height: 2px; }
+  .fbox { max-width: 760px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <span class="name">One-pagers v3</span>
+    <div class="tabs" id="tabs" role="group" aria-label="Addiction"></div>
+    <div class="ctl">
+      <span class="eyebrow">Version</span><div class="seg" id="segV" role="group" aria-label="Version"></div>
+      <span class="eyebrow">View</span><div class="seg" id="segW" role="group" aria-label="Screen size"></div>
+      <span class="eyebrow">Review</span><div class="seg" id="segR" role="group" aria-label="Review controls"></div>
+      <a class="rlink" id="rlink" href="#">Open as a reader sees it</a>
+    </div>
+  </div>
+</header>
+<section class="review" id="review">
+  <div class="wrap">
+    <div class="rtabs" id="rtabs" role="group" aria-label="Review sections"></div>
+    <div class="rbody" id="rbody"></div>
+    <div class="dbstate" id="dbstate">Connecting to the marks store…</div>
+  </div>
+</section>
+<main class="stage"><div class="wrap"><div class="frames" id="frames"></div></div></main>
+
+<script>const DATA = /*DATA*/;</script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const KINDS = Object.fromEntries(DATA.kinds.kinds.map(k => [k.id, k]));
+const GROUPS = DATA.kinds.groups;
+const SECTIONS = [
+  ["hero", "Hope number"], ["beliefs", "Beliefs"], ["graph", "How hard it feels"], ["quit", "Who gets free, and how"],
+  ["outlook", "How quitting goes"], ["plan", "The plan"], ["general", "Every addiction"], ["story", "My experience"], ["sources", "Sources"],
+];
+const VERSIONS = [["mix", "Your picks"], ["1", "1 · Best of what we have"], ["2", "2 · New take"]];
+const st = { pilot: "alcohol", version: "mix", view: innerWidth >= 1250 ? "both" : innerWidth >= 900 ? "wide" : "phone", review: true, rtab: "choices" };
+try { Object.assign(st, JSON.parse(localStorage.getItem("v3state") || "{}")); } catch (e) {}
+const save = () => { try { localStorage.setItem("v3state", JSON.stringify(st)); } catch (e) {} };
+const M = { veto: {}, choices: {}, picks: {}, kinds: {}, notes: {} };   // the marks store, mirrored
+
+// ---------- shared helpers ----------
+const choice = id => M.choices[id]?.pick || (DATA.decisions.choices.find(c => c.id === id) || {}).rec;
+let page, shownRefs = null;
+const fill = t => String(t).replace(/\{(\w+)\}/g, (m, k) => esc(page.subs[k] ?? m));
+const refs = ns => ns && ns.length ? `<button type="button" class="ref" data-refs="${ns.join(",")}" aria-label="Source ${ns.join(", ")}">[${ns.join(",")}]</button>` : "";
+function picked(kid) {
+  const m = M.kinds[kid];
+  return m && typeof m.pick === "boolean" ? m.pick : KINDS[kid].pick;
+}
+const OFF = x => ["heavy", "users"].includes(x.severity);
+function numbersAt(where) {
+  return (page.numbers || []).filter(x => KINDS[x.kind] && picked(x.kind) && KINDS[x.kind].where === where && !(OFF(x) && choice("offreader") === "drop"));
+}
+// a per-card proposal only when its reason is not the one the off-reader choice already covers
+const RULE2 = /(?:not|never) (?:checked|hooked|all hooked)|ordinary|non-addicts|rule 2|mostly not hooked|students|volunteers who were not/i;
+function heroNums() {
+  const all = (page.numbers || []).filter(x => ["hero", "hero-second"].includes(KINDS[x.kind]?.where) && picked(x.kind));
+  const order = choice("hero") === "projection" ? ["hope-lifetime", "hope-free-now"] : ["hope-free-now", "hope-lifetime"];
+  all.sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind));
+  return all;
+}
+function bigOf(x) {
+  const m = String(x.big || "").replace(/,/g, "").match(/^(\d+)\s+of\s+(\d+)$/);
+  return m ? Math.round(100 * m[1] / m[2]) + "%" : x.big;
+}
+function tags(x) {
+  const off = ["heavy", "users"].includes(x.severity);
+  return `<p class="cnt"><span class="tag${off ? " off" : ""}">Counted: ${esc(x.counted)}</span>${x.projection ? `<span class="tag proj">Projected, not counted</span>` : ""}${x.weak ? `<span class="tag weak">Weak: ${esc(x.weak)}</span>` : ""}${x.propose && st.review && !OFF(x) && !RULE2.test(x.propose) ? `<span class="tag prop">Proposed to remove: ${esc(x.propose)}</span>` : ""}</p>`;
+}
+function basis(x, label = "Based on") {
+  const b = x.basis || {};
+  const line = [b.design, b.n, [b.where, b.when].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+  return `<details class="basis"><summary>${esc(label)}</summary>${b.who ? `<p><b>Who:</b> ${esc(b.who)}</p>` : ""}<p>${esc(line)} ${refs(x.n)}</p>${b.measured ? `<p><b>Measured:</b> ${esc(b.measured)}</p>` : ""}${x.caveat ? `<p><b>What it doesn’t mean:</b> ${esc(x.caveat)}</p>` : ""}</details>`;
+}
+function planSteps() {
+  return DATA.plan.titles.map((title, k) => ({ i: k + 1, title, text: DATA.plan.text[k], st: (page.plan || [])[k] || { do: [] } }));
+}
+function stageSummary() {
+  // what people name most in four stages, from the scored posts
+  const f = page.felt; if (!f) return [];
+  const groups = [["Week 1", 0, 4], ["Weeks 2–4", 5, 8], ["Months 2–3", 9, 11], ["Later", 12, 14]];
+  const NAMES = { craving: "cravings", irritable: "short temper", anxious: "anxiety", "low-mood": "low mood", sleep: "bad sleep", dreams: "vivid dreams", tired: "tiredness", "brain-fog": "brain fog", "stomach-appetite": "stomach, appetite", "sweats-shakes": "sweats, shakes", headache: "headaches", restless: "restless", bored: "boredom", lonely: "loneliness", "body-pain": "aches", "libido-low": "no sex drive", "libido-high": "strong sexual urges" };
+  return groups.map(([label, a, b]) => {
+    const bins = f.bins.slice(a, b + 1).filter(x => x.n);
+    const n = bins.reduce((s, x) => s + x.n, 0);
+    if (!n) return { label, n, top: [] };
+    const share = {};
+    for (const x of bins) for (const [k, v] of Object.entries(x.symptoms || {})) share[k] = (share[k] || 0) + (v || 0) * x.n;
+    const top = Object.entries(share).map(([k, v]) => [k, v / n]).sort((p, q) => q[1] - p[1]).slice(0, 3).filter(([, v]) => v >= .05);
+    return { label, n, top: top.map(([k, v]) => `${NAMES[k] || k} ${Math.round(v * 100)}%`) };
+  });
+}
+const fmt1 = v => (Math.round(v * 2) / 2).toString();
+const SPAN = { "Day 1": [1, 1], "Days 2–3": [2, 3], "Days 4–7": [4, 7], "Week 2": [8, 14], "Weeks 3–4": [15, 30], "Month 2": [31, 60], "Month 3": [61, 90], "Months 4–12": [91, 364], "Year 2 +": [365, null] };
+function spanLabel(a, b) {
+  const [f] = SPAN[a.label], t = SPAN[b.label][1];
+  if (a === b) return a.label;
+  if (t && t <= 14) return `Days ${f}–${t}`;
+  if (t && t <= 30) return f <= 7 ? `Day ${f} to day ${t}` : `Days ${f}–${t}`;
+  return `${a.label} to ${b.label.toLowerCase()}`;
+}
+function feltPeaks() {
+  // the same nine stages the graph draws; stages with fewer than 25 posts are drawn but not used here
+  const all = stageDots().map((x, i) => ({ ...x, idx: STAGES[i][1] }));
+  const ss = all.filter(x => x.dots && x.n >= 25);
+  if (!ss.length) return null;
+  ss.forEach(x => (x.med = Math.round(x.med * 2) / 2));
+  const max = Math.max(...ss.map(x => x.med));
+  const i0 = ss.findIndex(x => x.med === max);
+  let i1 = i0;
+  while (i1 + 1 < ss.length && ss[i1 + 1].med === max) i1++;
+  const peak = { ...ss[i0], med: max, label: spanLabel(ss[i0], ss[i1]), stages: ss.slice(i0, i1 + 1).map(x => x.label), hardShare: ss[i0].hardShare, easyShare: ss[i0].easyShare };
+  const after = ss.slice(i1 + 1);
+  const ei = after.findIndex((x, i) => x.med <= max - 1.5 && after.slice(i).every(y => y.med <= max - 1.5));
+  const ease = ei >= 0 ? after[ei] : null, back = null;
+  const fewHigher = all.filter(x => x.n < 25 && x.med != null && x.med > max);
+  const later = after.length ? Math.max(...after.map(x => x.med)) : null;
+  return { peak, ease, back, later, max, stages: all, fewHigher };
+}
+function peaksBlock(pk) {
+  if (!pk) return "";
+  const a = `<div><b>${esc(pk.peak.label)}</b><span>The hardest stretch. A typical day: ${fmt1(pk.max)} out of 10.</span></div>`;
+  const b = pk.ease ? `<div><b>${esc(pk.ease.label)}</b><span>Clearly easier from here. A typical day: ${fmt1(pk.ease.med)} out of 10.${pk.back ? ` It comes back up around ${esc(pk.back.label.toLowerCase())}.` : ""}</span></div>`
+    : `<div><b>Never above ${fmt1(pk.later ?? pk.max)}</b><span>After the hardest stretch, a typical day stays at ${fmt1(pk.later ?? pk.max)} out of 10 or below.</span></div>`;
+  const c = (pk.fewHigher || []).length ? `<p class="scored">${pk.fewHigher.map(x => `${esc(x.label)} is drawn higher but rests on only ${x.n} posts`).join("; ")}.</p>` : "";
+  return `<div class="peaks">${a}${b}</div>${c}`;
+}
+function scoredLine() {
+  const f = page.felt;
+  return `<p class="scored">Scored by an AI reader from ${f.nUsed.toLocaleString("en-US")} posts with a day count. 0 = no struggle, 10 = can barely hold on.</p>`;
+}
+function feltVertical() {
+  // the phone form: the same line and band as the wide chart, drawn for a 390 px screen
+  const pk = feltPeaks(), ss = pk ? pk.stages : stageDots();
+  const SHORT = { "Day 1": "D1", "Days 2–3": "D2–3", "Days 4–7": "D4–7", "Week 2": "W2", "Weeks 3–4": "W3–4", "Month 2": "M2", "Month 3": "M3", "Months 4–12": "M4–12", "Year 2 +": "Y2+" };
+  const W = 360, H = 230, L = 22, R = 6, T = 22, B = 44;
+  const step = (W - L - R) / ss.length, x = i => L + step * (i + .5), y = v => T + (H - T - B) * (1 - v / 10);
+  let g = "";
+  for (let v = 0; v <= 10; v += 5) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)"/><text class="lbl" x="${L - 5}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  const pts = ss.map((b, i) => [i, b]).filter(([, b]) => b.med != null && b.n >= 25);
+  g += `<polygon points="${pts.map(([i, b]) => `${x(i)},${y(b.q3)}`).join(" ")} ${pts.slice().reverse().map(([i, b]) => `${x(i)},${y(b.q1)}`).join(" ")}" fill="var(--q)" opacity=".55"/>`;
+  g += `<polyline points="${pts.map(([i, b]) => `${x(i)},${y(b.med)}`).join(" ")}" fill="none" stroke="var(--med)" stroke-width="3" stroke-linejoin="round"/>`;
+  ss.forEach((b, i) => { if (b.med != null) g += `<circle cx="${x(i)}" cy="${y(b.med)}" r="${b.n < 25 ? 3 : 4.5}" fill="${b.n < 25 ? "var(--paper)" : "var(--med)"}" stroke="var(--med)" stroke-width="${b.n < 25 ? 1.5 : 2}" ${b.n < 25 ? 'stroke-dasharray="2 2"' : ""}/>`; });
+  ss.forEach((b, i) => {
+    const k = pk && (pk.peak.stages.includes(b.label) || (pk.ease && pk.ease.label === b.label));
+    g += `<text class="lbl${k ? " k" : ""}" x="${x(i)}" y="${H - B + 16}" text-anchor="middle">${SHORT[b.label] || b.label}</text><text class="lbl" x="${x(i)}" y="${H - B + 30}" text-anchor="middle">${b.n < 25 ? "few" : b.n}</text>`;
+  });
+  if (pk) {
+    const pi = ss.findIndex(b => b.label === pk.peak.stages[0]);
+    g += `<text class="lbl k" x="${x(pi)}" y="${y(Math.max(ss[pi].q3, ss[pi].med)) - 8}" text-anchor="start">hardest</text>`;
+    if (pk.ease) { const ei = ss.findIndex(b => b.label === pk.ease.label); g += `<text class="lbl k" x="${x(ei)}" y="${y(ss[ei].q3) - 8}" text-anchor="start">easier</text>`; }
+  }
+  return `<div class="fv"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="How hard a typical day was at each stage after stopping, 0 to 10">${g}</svg><p class="legendl">D = day, W = week, M = month, Y = year. Number under each stage: posts. Line: a typical day, 0 = no struggle, 10 = can barely hold on. Grey band: half the posts scored inside it. Hollow dot: too few posts to count.</p></div>`;
+}
+function feltHorizontal() {
+  const pk = feltPeaks(), ss = pk ? pk.stages : stageDots();
+  const W = 1000, H = 300, L = 46, R = 10, T = 22, B = 62;
+  const n = ss.length, step = (W - L - R) / n;
+  const x = i => L + step * (i + .5), y = v => T + (H - T - B) * (1 - v / 10);
+  let s = "";
+  for (let v = 0; v <= 10; v += 2) s += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)" stroke-width="1"/><text class="lbl" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  const pts = ss.map((b, i) => [i, b]).filter(([, b]) => b.med != null && b.n >= 25);
+  const band = pts.map(([i, b]) => `${x(i)},${y(b.q3)}`).join(" ") + " " + pts.slice().reverse().map(([i, b]) => `${x(i)},${y(b.q1)}`).join(" ");
+  s += `<polygon points="${band}" fill="var(--q)" opacity=".55"/>`;
+  s += `<polyline points="${pts.map(([i, b]) => `${x(i)},${y(b.med)}`).join(" ")}" fill="none" stroke="var(--med)" stroke-width="3" stroke-linejoin="round"/>`;
+  ss.forEach((b, i) => { if (b.med != null) s += `<circle cx="${x(i)}" cy="${y(b.med)}" r="${b.n < 25 ? 3.5 : 5}" fill="${b.n < 25 ? "var(--paper)" : "var(--med)"}" stroke="var(--med)" stroke-width="2" ${b.n < 25 ? 'stroke-dasharray="2 2"' : ""}/>`; });
+  ss.forEach((b, i) => {
+    const k = pk && (pk.peak.stages.includes(b.label) || (pk.ease && pk.ease.label === b.label));
+    s += `<text class="lbl${k ? " k" : ""}" x="${x(i)}" y="${H - B + 18}" text-anchor="middle">${esc(b.label)}</text><text class="lbl" x="${x(i)}" y="${H - B + 34}" text-anchor="middle">${b.n}${b.n < 25 ? " · few" : ""}</text>`;
+  });
+  s += `<text class="lbl" x="${L}" y="${H - 6}">Time since the last time · number of posts under each</text>`;
+  if (pk) {
+    const pi = ss.findIndex(b => b.label === pk.peak.stages[0]);
+    s += `<text class="lbl k" x="${x(pi)}" y="${y(ss[pi].q3) - 10}" text-anchor="start">hardest</text>`;
+    if (pk.ease) { const ei = ss.findIndex(b => b.label === pk.ease.label); s += `<text class="lbl k" x="${x(ei)}" y="${y(ss[ei].q3) - 10}" text-anchor="middle">clearly easier from here</text>`; }
+  }
+  return `<div class="fh"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="How hard each day was, by stage since they stopped: the typical day and where most scores fell">${s}</svg></div>`;
+}
+function feltCaption(draw = "The line is a typical day at each stage; half of the posts at each stage scored inside the grey band, a quarter above it and a quarter below.") {
+  const f = page.felt, a = f.agreement;
+  return `<details class="cap"><summary>Based on ${f.nUsed.toLocaleString("en-US")} posts on ${esc(f.forums.join(" and "))}, 2021–2025</summary>
+  <p>Each post gives a day count. A reader (an AI model) scored how hard the writer says staying off is that day, from 0 (no struggle) to 10 (can barely hold on). ${draw} Stages with fewer than 25 posts are marked “few” and are not used to call the hardest stretch. ${f.agreementCross ? `A second reader, a different AI model, re-scored ${f.agreementCross.nRescored} of them without seeing the first scores and landed within 1 point ${Math.round(f.agreementCross.within1 * 100)}% of the time (of ${f.agreementCross.nBothScored} both could score).` : `A second reader re-scored ${a.nRescored} posts blind and landed within 1 point ${Math.round(a.within1 * 100)}% of the time.`}</p>
+  <ul>${f.biases.map(b => `<li>${esc(b)}</li>`).join("")}${f.dropped && f.dropped.relapsed ? `<li>Posts written about a slip were left out (${f.dropped.relapsed} of ${f.nSampled.toLocaleString("en-US")} here), so some of the hardest days may be missing.</li>` : ""}</ul></details>`;
+}
+function appChart() {
+  const a = page.app;
+  if (!a || choice("appdata") === "hide") return "";
+  const max = 25, d1 = a.days.find(d => d.day === 1), d30 = a.days.find(d => d.day === 30);
+  const bars = a.days.map(d => `<i style="height:${(d.hard / max) * 100}%" title="Day ${d.day}: ${d.hard}% of ${d.n} check-ins"></i>`).join("");
+  return `<div class="appc"><h3 class="eyebrow" style="color:var(--muted)">A second source: the I Am Sober app</h3>
+    <p class="hl" style="font-weight:600">Share of daily check-ins rated hard or impossible, by day. ${refs(a.n)}</p>
+    <div class="appbars" role="img" aria-label="From ${a.days[0].hard}% on day 0 to ${d30.hard}% on day 30"><div class="yax"><span>25%</span><span>0%</span></div><div class="bars">${bars}</div></div>
+    <div class="appx"><span>day 0</span><span>day 10</span><span>day 20</span><span>day 30</span></div>
+    <p class="cap">The first bar is day 0, the quit day: ${a.days[0].hard}% of ${a.days[0].n.toLocaleString("en-US")} check-ins. Day 30: ${d30.hard}% of ${d30.n}. A different measure from the graph above: the share of days members rated hard or impossible.</p>
+    <p class="cnt"><span class="tag off">Counted: ${esc(a.counted)}</span></p>
+    <details class="basis"><summary>Based on</summary><p>${esc(a.band)}, ${a.users.toLocaleString("en-US")} members. ${esc(a.measure)}</p><p><b>What it doesn’t mean:</b> ${esc(a.caveat)}</p></details></div>`;
+}
+function stagesBlock() {
+  return `<div class="stages"><h3 class="eyebrow" style="color:var(--muted)">Named most in the posts (share of posts)</h3>${stageSummary().map(s => `<div class="st"><b>${esc(s.label)}</b><span>${s.top.length ? s.top.map(t => `<span class="nw">${esc(t)}</span>`).join(", ") : "too few posts"}</span></div>`).join("")}</div>`;
+}
+function bodyBlock() {
+  if (!(page.windows || []).length) return "";
+  return `<h3 class="eyebrow" style="color:var(--muted)">What the body does</h3>${bodyRows()}`;
+}
+function bodyRows() {
+  return `<div class="body-rows">${(page.windows || []).map(w => `<div class="br ${esc(w.kind)}"><span class="w">${esc(w.when)}</span><span>${esc(w.label)} ${refs(w.n)}</span></div>`).join("")}</div>`;
+}
+function srcList() {
+  return `<ol>${page.sources.filter(s => !shownRefs || shownRefs.has(s.n)).map(s => `<li id="src-${s.n}" value="${s.n}">${esc(s.cite)}${s.url ? ` <a href="${esc(s.url)}" target="_blank" rel="noopener">link</a>` : ""}${s.story ? `<span class="u">quitters’ own accounts, not a study</span>` : s.fetched ? "" : `<span class="u">unchecked</span>`}</li>`).join("")}<li>${esc(page.felt ? `Posts on ${page.felt.forums.join(" and ")} that give a day count, from fixed calendar days in 2021–2025 (Arctic Shift archive), scored for this page. Only counts and scores are kept.` : "")}</li></ol>`;
+}
+const exHref = () => DATA.exerciseUrl ? `${esc(DATA.exerciseUrl)}#${esc(page.id)}` : "#";
+
+// ---------- version 1 ----------
+const V1 = {
+  hero() {
+    const [a, b] = heroNums();
+    if (!a) return `<div class="hero"><h1 class="h-title">${esc(page.title)}</h1><div class="h-num"><p class="line">${esc(page.heroLine || gapFor("hope-free-now"))}</p></div></div>`;
+    return `<div class="hero"><h1 class="h-title">${esc(page.title)}</h1>
+      <div class="h-num"><div class="big">${esc(bigOf(a))}</div><p class="line">${esc(a.headline)} ${refs(a.n)}</p></div>
+      <div class="h-side">${tags(a)}${basis(a)}${b ? `<p class="h-second">${esc(b.headline)} <b>${esc(bigOf(b))}</b> ${refs(b.n)}</p>${tags(b)}${basis(b, "Based on")}` : ""}</div></div>`;
+  },
+  beliefs() {
+    return `<div class="blk"><h2>Beliefs</h2><div class="btable">${page.beliefs.map(b => `<div class="brow">
+      <div class="bcell cur"><span class="bl">What you tell yourself</span><p>${esc(b.limiting)}</p></div>
+      <div class="bcell new"><span class="bl">What is also true</span><p class="t">${esc(b.counterpart)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>
+      <div class="bcell test"><span class="bl">Test it this week</span><p>${esc(b.test)}</p></div></div>`).join("")}</div>
+      <a class="exlink" href="${exHref()}" target="_blank" rel="noopener">Work through your own beliefs →</a></div>`;
+  },
+  graph() {
+    if (!page.felt) return `<div class="blk"><h2>How hard it feels</h2><div class="ph">Forum data still being scored.</div></div>`;
+    const pk = feltPeaks();
+    return `<div class="blk"><h2>How hard it feels</h2><div class="felt">
+      ${peaksBlock(pk)}
+      ${feltVertical()}${feltHorizontal()}${feltCaption()}${stagesBlock()}${appChart()}${bodyBlock()}</div></div>`;
+  },
+  quit() { return statBlock("Who gets free, and how", numbersAt("more")); },
+  outlook() { return statBlock("How quitting goes", numbersAt("outlook")); },
+  plan() {
+    return `<div class="blk"><h2>Five-step plan</h2><div class="plan">${planSteps().map(s => `<div class="pstep"><div><h3><i>${s.i}</i>${esc(s.title)}</h3><p class="ptext">${fill(s.text)}</p></div>
+      <div><ul>${s.st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${s.st.proof ? `<p class="pproof">${esc(s.st.proof.text)} ${refs(s.st.proof.n)}</p>` : ""}</div></div>`).join("")}</div></div>`;
+  },
+  general() {
+    const xs = generalHere();
+    if (!xs.length) return "";
+    return `<div class="blk"><h2>In the years after</h2><div class="gens">${xs.map(x => `<div class="gcard"><div class="big">${esc(x.big)}</div><p class="hl">${esc(x.headline)}</p>${tags(x)}${basis(x)}</div>`).join("")}</div></div>`;
+  },
+  story() {
+    if (!st.review) return "";
+    return `<div class="blk"><h2>My experience</h2><div class="ph"><span class="eyebrow">Placeholder, kept from round 3</span>Your own story with ${esc(page.subs.thing)} goes here: the start, the hardest day, what you told yourself, what finally worked.</div></div>`;
+  },
+  sources() {
+    return `${page.footer ? `<div class="blk foot"><p class="safety"><b>Before you stop</b><span>${esc(page.footer.text)} ${refs(page.footer.n)}</span></p></div>` : ""}<div class="blk srcs"><h2>Sources</h2><div style="display:grid;gap:12px">${srcList()}</div></div>`;
+  },
+};
+function gapLine(where) {
+  const empty = (page.empty || []).filter(k => KINDS[k] && KINDS[k].where === where && picked(k));
+  return empty.length && st.review ? `<p class="gapl">Not yet counted for ${esc(page.subs.gap || page.tab.toLowerCase())}: ${esc(empty.map(k => KINDS[k].label.toLowerCase()).join("; "))}.</p>` : "";
+}
+function statBlock(title, xs) {
+  if (!xs.length) return "";
+  return `<div class="blk"><h2>${esc(title)}</h2><div class="nrows">${xs.map(x => `<div class="nrow"><span class="gtag">${esc(GROUPS[KINDS[x.kind].group])}</span>${x.mirror && choice("mirror") !== "drop" ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="nr-main"><div class="big">${esc(x.big)}</div><p class="hl">${esc(x.headline)} ${refs(x.n)}</p></div>${tags(x)}${basis(x)}</div>`).join("")}</div>${gapLine(title === "How quitting goes" ? "outlook" : "more")}</div>`;
+}
+function generalHere() {
+  const ch = M.choices["general"]?.pick || DATA.decisions.choices.find(c => c.id === "general")?.rec || "covered";
+  if (ch === "page") return [];
+  const twin = { "gen-tries": "how-tries", "gen-alone": "how-alone" };
+  const have = new Set((page.numbers || []).map(x => x.kind));
+  return DATA.general.numbers.filter(x => picked(x.kind) && !have.has(twin[x.kind]) && (ch === "every" || (x.covers || []).includes(page.id)));
+}
+function gapFor(kid) { const g = (page.gaps || []).find(g => g.kind === kid); return g ? g.why : "No honest number found yet."; }
+
+// ---------- version 2: count the people ----------
+function shareOf(big) {
+  const s = String(big || "").replace(/,/g, "");
+  let m = s.match(/^(?:about\s+)?(\d+(?:\.\d+)?)\s*%$/i);
+  if (m) return +m[1];
+  m = s.match(/^(\d+)\s+(?:of|in)\s+(\d+)$/i);
+  if (m) return 100 * m[1] / m[2];
+  return null;
+}
+const g10 = p => p == null ? "" : `<span class="g10" aria-hidden="true">${Array.from({ length: 100 }, (_, i) => `<i class="${i < Math.round(p) ? "f" : ""}"></i>`).join("")}</span>`;
+const STAGES = [["Day 1", [0]], ["Days 2–3", [1, 2]], ["Days 4–7", [3, 4]], ["Week 2", [5, 6]], ["Weeks 3–4", [7, 8]], ["Month 2", [9, 10]], ["Month 3", [11]], ["Months 4–12", [12, 13]], ["Year 2 +", [14]]];
+function stageDots() {
+  const f = page.felt; if (!f) return [];
+  return STAGES.map(([label, idx]) => {
+    const hist = Array(11).fill(0);
+    for (const i of idx) (f.bins[i].hist || []).forEach((c, k) => (hist[k] += c));
+    const n = hist.reduce((a, b) => a + b, 0);
+    const vals = [];
+    hist.forEach((c, k) => { for (let j = 0; j < c; j++) vals.push(k); });
+    const dots = n >= 20 ? Array.from({ length: 20 }, (_, i) => vals[Math.min(n - 1, Math.floor((i + .5) / 20 * n))]) : null;
+    const qt = p => { if (!n) return null; const k = (n - 1) * p, f = Math.floor(k), c = Math.min(n - 1, f + 1); return vals[f] + (vals[c] - vals[f]) * (k - f); };
+    const med = qt(.5), q1 = qt(.25), q3 = qt(.75);
+    const hardShare = n ? vals.filter(v => v >= 6).length / n : 0;
+    const easyShare = n ? vals.filter(v => v <= 2).length / n : 0;
+    return { label, n, dots, med, q1, q3, hardShare, easyShare };
+  });
+}
+function dotStrip(dots) {
+  // a 20-dot quantile plot: each dot is 5% of the posts in that stage, stacked at its score
+  const W = 330, cell = W / 11, r = 6.2;
+  const stack = {};
+  let s = `<line x1="0" x2="${W}" y1="70" y2="70" stroke="var(--v2-line)" stroke-width="1"/>`;
+  for (const v of dots) {
+    const k = stack[v] = (stack[v] || 0) + 1;
+    s += `<circle cx="${cell * (v + .5)}" cy="${70 - r - (k - 1) * (2 * r + 1.2)}" r="${r}" fill="${v >= 6 ? "var(--v2-hot)" : "var(--v2-acc)"}"/>`;
+  }
+  const hi = Math.max(...Object.values(stack));
+  const top = 70 - hi * (2 * r + 1.2) - 2;
+  return `<svg viewBox="0 ${Math.min(0, top)} ${W} ${74 - Math.min(0, top)}" aria-hidden="true">${s}</svg>`;
+}
+const V2 = {
+  hero() {
+    const hs = heroNums();
+    if (!hs.length) return V1.hero();
+    const a = hs.find(x => x.kind === "hope-free-now") || hs[0], b = hs.find(x => x.kind === "hope-lifetime" && x !== a);
+    const pa = shareOf(a.big), pb = b ? shareOf(b.big) : null;
+    if (pa == null) return V1.hero();
+    const fa = Math.round(pa), fb = pb != null ? Math.max(fa, Math.round(pb)) : fa;
+    const dots = Array.from({ length: 100 }, (_, i) => `<i class="${i < fa ? "f" : i < fb ? "p" : ""}"></i>`).join("");
+    return `<div class="hero"><h1 class="h-title">${esc(page.title)}</h1>
+      <p class="h-of">Out of every 100 ${esc(a.counted)}:</p>
+      <div class="legend">${(() => {
+        const cnt = `<div><span class="sw f"></span><span><b>${fa} in 100</b> already free when asked (solid dots). ${refs(a.n)}</span></div>`;
+        const prj = b && pb != null ? `<div><span class="sw p"></span><span><b>${esc(b.big)}</b> projected to get free in a lifetime (solid and dotted dots together). A model, not a count, and likely high. ${refs(b.n)}</span></div>` : "";
+        return choice("hero") === "projection" ? prj + cnt : cnt + prj;
+      })()}
+      ${b && pb != null ? "" : `<div><span class="sw e"></span><span>${100 - fa} not free when asked.</span></div>`}</div>
+      <div class="grid100" role="img" aria-label="${fa} of 100 dots filled${fb > fa ? `, ${fb - fa} more dotted` : ""}">${dots}</div>
+      ${tags(a)}${basis(a)}${b ? tags(b) + basis(b, "Based on: the projection") : ""}</div>`;
+  },
+  beliefs() {
+    return `<div class="blk"><h2>What you tell yourself</h2><div class="ledger">${page.beliefs.map(b => `<div class="lrow">
+      <div class="c old"><span class="lab">The belief</span><p>“${esc(b.limiting)}”</p></div>
+      <div class="c new"><span class="lab">Also true</span><p class="t">${esc(b.counterpart)}</p><p class="proof">${esc(b.proof)} ${refs(b.n)}</p></div>
+      <div class="c test"><span class="lab">The test</span><p>${esc(b.test)}</p></div></div>`).join("")}</div>
+      <a class="exlink" href="${exHref()}" target="_blank" rel="noopener">Do the belief test with your own →</a></div>`;
+  },
+  graph() {
+    if (!page.felt) return V1.graph();
+    const ss = stageDots(), pk = feltPeaks(), peak = pk.peak, ease = pk.ease;
+    const rows = ss.map(s => `<div class="row${peak.stages.includes(s.label) ? " pk" : ""}${ease && s.label === ease.label ? " es" : ""}${s.n < 25 ? " thin" : ""}"><span class="lab"><b class="tv${s.med >= 5 ? " hot" : ""}">${s.med == null ? "–" : fmt1(s.med)}</b>${esc(s.label)}${s.n < 25 ? " · few" : ""}</span>${s.dots ? dotStrip(s.dots) : `<span class="lab">too few posts</span>`}<span class="n">${s.n}</span></div>`).join("");
+    return `<div class="blk"><span class="k">From ${esc(page.felt.forums.join(" and "))}</span><h2>How hard today is, by day</h2>
+      <div class="say">Hardest: <em>${esc(peak.label.toLowerCase())}</em>.<br>${ease ? `Clearly easier from <strong>${esc(ease.label.toLowerCase())}</strong>.` : `Never above <strong>${fmt1(pk.later ?? pk.max)} out of 10</strong> after that.`}<br><span class="sub">Even in the hardest stretch, ${Math.round(peak.easyShare * 20)} of every 20 posts rated that day 2 or less.</span></div>
+      <div class="dp" role="img" aria-label="For each stage of quitting, 20 dots show how hard people said today was, 0 to 10">${rows}
+      <div class="ax"><span></span><div class="ticks"><span style="left:${100 * .5 / 11}%">0 easy</span><span style="left:${100 * 5.5 / 11}%">5</span><span style="left:${100 * 10.5 / 11}%">10</span></div><span>posts</span></div>
+      <p class="key">Each row is one stage. The big figure is a typical day, out of 10. Each dot is 1 in 20 posts, placed at how hard that day was rated; red dots are 6 or more.</p></div>
+      ${scoredLine()}${feltCaption("Each dot stands for 1 in 20 of the posts at that stage.")}${stagesBlock()}${appChart()}${bodyBlock()}</div>`;
+  },
+  quit() { return hx("Who gets free, and how", numbersAt("more")); },
+  outlook() { return hx("How quitting goes", numbersAt("outlook")); },
+  plan() {
+    const when = ["Before the date", "Before the date", "The date", "From the date on", ""];
+    return `<div class="blk"><h2>The five-step plan</h2><div class="track">${planSteps().map((s, i) => `<div class="tstop${i === 4 ? " opt" : ""}"><span class="dot">${s.i}</span><div>${when[i] ? `<span class="when">${when[i]}</span>` : ""}<h3>${esc(s.title)}</h3><p class="ptext">${fill(s.text)}</p><ul>${s.st.do.map(d => `<li>${esc(d)}</li>`).join("")}</ul>${s.st.proof ? `<p class="pproof">${esc(s.st.proof.text)} ${refs(s.st.proof.n)}</p>` : ""}</div></div>`).join("")}</div></div>`;
+  },
+  general() {
+    const xs = generalHere();
+    if (!xs.length) return "";
+    const who = xs[0].counted;
+    return `<div class="blk"><h2>In the years after</h2><div class="fbox">
+      <div class="fh2"><span>${esc(who.charAt(0).toUpperCase() + who.slice(1))}</span><span>US survey, 2016</span></div>
+      ${xs.map(x => `<div class="frow"><span>${esc(x.headline)} ${refs(x.n)}</span><b>${esc(x.big)}</b></div>`).join("")}
+      <div class="ffoot">${xs.map(x => `<details class="basis"><summary>${esc(x.big)}: based on</summary><p>${esc([x.basis.design, x.basis.n].join(" · "))}</p><p><b>What it doesn’t mean:</b> ${esc(x.caveat)}</p></details>`).join("")}</div></div></div>`;
+  },
+  story() { return V1.story(); },
+  sources() { return V1.sources(); },
+};
+function hx(title, xs) {
+  if (!xs.length) return "";
+  return `<div class="blk"><h2>${esc(title)}</h2><div class="hx">${xs.map(x => `<div class="hxr">
+    ${x.mirror && choice("mirror") !== "drop" ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="top"><span class="big">${esc(x.big)}</span>${g10(shareOf(x.big))}</div>
+    <p class="hl">${esc(x.headline)} ${refs(x.n)}</p>${tags(x)}${basis(x)}</div>`).join("")}</div>${gapLine(title === "How quitting goes" ? "outlook" : "more")}</div>`;
+}
+
+// ---------- render ----------
+const R = { "1": V1, "2": typeof V2 !== "undefined" ? V2 : V1 };
+function verOf(sec) {
+  if (st.version !== "mix") return st.version;
+  return String(M.picks[sec]?.v || (DATA.decisions.recPicks || {})[sec] || "1");
+}
+function labbar(sec, name) {
+  if (!st.review) return "";
+  const p = String(M.picks[sec]?.v || (DATA.decisions.recPicks || {})[sec] || "1");
+  const nn = (M.notes["sec-" + sec]?.notes || []).length;
+  return `<div class="labbar"><span class="lbl">${esc(name)}</span><span>Use on every page:</span><span class="seg">${["1", "2"].map(v => `<button type="button" data-pick="${sec}" data-v="${v}" aria-pressed="${p === v}">v${v}</button>`).join("")}</span><button type="button" class="nb" data-note="sec-${sec}">${nn ? `Notes (${nn})` : "Add a note"}</button></div>`;
+}
+function renderPage(frameKind) {
+  page = DATA.pages.find(p => p.id === st.pilot);
+  const out = [];
+  let order = SECTIONS;
+  if (choice("planplace") === "early") order = [...SECTIONS.slice(0, 3), SECTIONS[5], SECTIONS[3], SECTIONS[4], ...SECTIONS.slice(6)];
+  shownRefs = new Set();
+  for (const [sec, name] of order) {
+    const v = verOf(sec);
+    if (sec === "sources") { out.push({ sec, name, v }); continue; }
+    const html = (R[v][sec] || V1[sec])();
+    if (!html) continue;
+    for (const m of html.matchAll(/data-refs="([\d,]+)"/g)) m[1].split(",").forEach(n => shownRefs.add(+n));
+    out.push(`<section class="sec sec-${sec} v${v}" data-sec="${sec}">${labbar(sec, name)}${html}</section>`);
+  }
+  (page.footer?.n || []).forEach(n => shownRefs.add(n));
+  const si = out.findIndex(x => typeof x === "object");
+  if (si >= 0) { const { sec, name, v } = out[si]; out[si] = `<section class="sec sec-${sec} v${v}" data-sec="${sec}">${labbar(sec, name)}${(R[v][sec] || V1[sec])()}</section>`; }
+  return `<article class="page v${st.version === "mix" ? "mix" : st.version}">${out.join("")}</article>`;
+}
+function readerMode() {
+  const m = location.hash.match(/^#read-(alcohol|nicotine|cannabis|porn)-(1|2|mix)$/);
+  return m ? { pilot: m[1], version: m[2] } : null;
+}
+function renderFrames() {
+  const box = $("#frames");
+  const rm = readerMode();
+  document.body.classList.toggle("reader", !!rm);
+  if (rm) {
+    const keep = { pilot: st.pilot, version: st.version, review: st.review };
+    Object.assign(st, { pilot: rm.pilot, version: rm.version, review: false });
+    page = DATA.pages.find(p => p.id === st.pilot);
+    box.innerHTML = `${renderPage("reader")}<a class="back" href="#">← Back to the review page</a>`;
+    Object.assign(st, keep);
+    return;
+  }
+  const ph = `<div class="fcol"><span class="flabel">Phone · 390 px</span><div class="frame phone">${renderPage("phone")}</div></div>`;
+  const wd = `<div class="fcol"><span class="flabel">Wide · 1280 px</span><div class="fscroll"><div class="scaler"><div class="frame wide">${renderPage("wide")}</div></div></div></div>`;
+  box.innerHTML = st.view === "phone" ? ph : st.view === "wide" ? wd : ph + wd;
+  fitWide();
+}
+function fitWide() {
+  const sc = $(".scaler"); if (!sc) return;
+  const col = sc.parentElement;
+  const avail = st.view === "both" ? $("#frames").clientWidth - 390 - 24 - 16 : $("#frames").clientWidth;
+  const k = Math.min(1, Math.max(.3, avail / 1280));
+  sc.style.transform = k < 1 ? `scale(${k})` : "";
+  sc.style.width = "1280px";
+  col.style.width = Math.round(1280 * k) + "px";
+  col.style.height = Math.round(sc.firstElementChild.offsetHeight * k) + "px";
+}
+addEventListener("resize", () => fitWide());
+addEventListener("hashchange", () => renderAll());
+
+function renderTop() {
+  $("#tabs").innerHTML = DATA.pages.map(p => `<button type="button" class="tab" data-pilot="${p.id}" aria-pressed="${p.id === st.pilot}">${esc(p.tab)}</button>`).join("");
+  $("#segV").innerHTML = VERSIONS.map(([v, l]) => `<button type="button" data-ver="${v}" aria-pressed="${st.version === v}">${esc(l)}</button>`).join("");
+  $("#segW").innerHTML = [["phone", "Phone"], ["wide", "Wide"], ["both", "Both"]].map(([v, l]) => `<button type="button" data-view="${v}" aria-pressed="${st.view === v}">${l}</button>`).join("");
+  $("#segR").innerHTML = [["on", "On"], ["off", "Off"]].map(([v, l]) => `<button type="button" data-rev="${v}" aria-pressed="${(st.review ? "on" : "off") === v}">${l}</button>`).join("");
+  $("#review").hidden = !st.review;
+  const rl = $("#rlink"); if (rl) rl.href = `#read-${st.pilot}-${st.version}`;
+}
+// ---------- review panel ----------
+const D = DATA.decisions;
+const RTABS = [["choices", "Choices for you", () => D.choices.length], ["decisions", "Decisions I took", () => D.decisions.length], ["weak", "What is weak", () => (D.weak || []).length], ["menu", "Number menu", () => DATA.kinds.kinds.length], ["graph", "How the graph was made", null], ["kept", "Left untouched", null], ["left", "Not on the pages", () => DATA.pages.reduce((n, p) => n + leftItems(p).length, 0)], ["notes", "Notes", () => Object.values(M.notes).reduce((a, n) => a + (n.notes || []).length, 0)]];
+function leftItems(p0) {
+  const p = p0 || page || DATA.pages.find(x => x.id === st.pilot), out = [];
+  const nu = p.notUsed || {};
+  const lab = x => typeof x === "string" ? x : x.big ? `${x.big}${x.headline ? ": " + x.headline : x.line ? ": " + x.line : ""}` : x.limiting || x.current || x.text || x.from || x.label || JSON.stringify(x).slice(0, 120);
+  const why = x => typeof x === "string" ? "" : x.reason || x.why || (x.rejectedBy && [].concat(x.rejectedBy.why || []).join(" ")) || x.note || "";
+  for (const x of [].concat(nu.numbers || [])) out.push({ kind: "Number from version 10", label: lab(x), why: why(x) });
+  for (const x of [].concat(nu.beliefs || [])) out.push({ kind: "Belief from version 10", label: lab(x), why: why(x) });
+  for (const x of [].concat(nu.milestones || [])) out.push({ kind: "Milestone from round 2", label: lab(x), why: why(x) });
+  for (const x of [].concat(p.rejected || [])) out.push({ kind: "Turned down by a checker", label: lab(x), why: why(x) });
+  return out;
+}
+function noteBox(key) {
+  const n = M.notes[key] || {};
+  return `<div class="notes" data-key="${esc(key)}">${(n.notes || []).map((x, i) => `<div class="nt"><span>${esc(x.text)}</span><time>${esc((x.t || "").slice(5, 16).replace("T", " "))}</time><button type="button" data-ndel="${esc(key)}" data-i="${i}" aria-label="Delete note">×</button></div>`).join("")}
+    <div class="nadd"><textarea id="nt-${esc(key)}" rows="1" placeholder="Add a note">${esc(n.draft || "")}</textarea><button type="button" data-nadd="${esc(key)}">Add</button></div></div>`;
+}
+function renderReview() {
+  $("#rtabs").innerHTML = RTABS.map(([k, l, c]) => `<button type="button" data-rtab="${k}" aria-pressed="${st.rtab === k}">${esc(l)}${c ? `<span class="cnt">${c()}</span>` : ""}</button>`).join("");
+  const b = $("#rbody");
+  if (st.rtab === "choices") {
+    b.innerHTML = `<h2>Up to 7 choices. Each one becomes a rule for every page.</h2><div class="lead">The prototype already uses my recommendation for each. Pick another and every page changes at once. You won’t be asked these again.</div>` +
+      D.choices.map(c => { const cur = M.choices[c.id]?.pick; return `<div class="ritem${cur ? " done" : ""}"><h3>${esc(c.rule)}</h3><p class="why">${esc(c.why)}</p><div class="row">${c.options.map(o => `<button type="button" class="pill" data-choice="${c.id}" data-o="${o.id}" aria-pressed="${(cur || "") === o.id}">${esc(o.label)}${o.id === c.rec ? `<span class="rec">recommended</span>` : ""}</button>`).join("")}</div>${noteBox("ch-" + c.id)}</div>`; }).join("");
+  } else if (st.rtab === "decisions") {
+    b.innerHTML = `<h2>Decisions I took, each with its reason</h2><div class="lead">Veto any of them and say why; I’ll change it on every page.</div>` +
+      D.decisions.map(d => { const v = M.veto[d.id]?.v; return `<div class="ritem${v === "veto" ? " vetoed" : v === "ok" ? " done" : ""}"><h3>${esc(d.title)}</h3><p>${esc(d.decision)}</p><p class="why">Why: ${esc(d.why)}</p><div class="row"><button type="button" class="pill" data-veto="${d.id}" data-v="ok" aria-pressed="${v === "ok"}">Keep</button><button type="button" class="pill veto" data-veto="${d.id}" data-v="veto" aria-pressed="${v === "veto"}">Veto</button></div>${v === "veto" || (M.notes["dec-" + d.id]?.notes || []).length ? noteBox("dec-" + d.id) : ""}</div>`; }).join("");
+  } else if (st.rtab === "weak") {
+    b.innerHTML = `<h2>What is weak</h2><div class="lead">Where the data is thin or I am unsure. These are on the pages too, marked “Weak”.</div>` + (D.weak || []).map(w => `<div class="ritem"><h3>${esc(w.title)}</h3><p class="why">${esc(w.text)}</p></div>`).join("");
+  } else if (st.rtab === "menu") {
+    const rows = [];
+    for (const [gid, gname] of Object.entries(GROUPS)) {
+      for (const k of DATA.kinds.kinds.filter(k => k.group === gid)) {
+        const xs = k.scope === "general" ? DATA.general.numbers.filter(x => x.kind === k.id) : (page.numbers || []).filter(x => x.kind === k.id);
+        const on = picked(k.id);
+        rows.push(`<tr><td>${esc(gname)}</td><td><b>${esc(k.label)}</b>${k.scope === "general" ? ` <span class="gen">general</span>` : ""}<br><span class="em">${esc(k.question)}</span></td><td>${xs.length ? xs.map(x => `<b>${esc(x.big)}</b> ${esc(x.headline)}`).join("<br>") : `<span class="em">Empty: ${esc((k.scope === "general" ? "" : gapFor(k.id)))}</span>`}</td><td><button type="button" class="pill" data-kind="${k.id}" aria-pressed="${on}">${on ? "On every page" : "Off"}</button>${k.pick ? `<span class="rec" style="display:block;color:var(--muted);font-size:11px">my pick</span>` : ""}</td></tr>`);
+      }
+    }
+    b.innerHTML = `<h2>Number menu: ${esc(page.tab)}</h2><div class="lead">Every kind of number, with what this page has for it. Switching a kind on or off changes every page. Switch tabs at the top to see another addiction’s numbers.</div><div class="mscroll"><table class="mtable"><thead><tr><th>Group</th><th>Kind</th><th>This page’s number</th><th>Show</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
+  } else if (st.rtab === "graph") {
+    b.innerHTML = (D.graph || []).map(g => `<div class="ritem"><h3>${esc(g.title)}</h3>${g.text.map(t => `<p class="why">${esc(t)}</p>`).join("")}</div>`).join("") +
+      `<div class="ritem"><h3>Per page</h3><div class="mscroll"><table class="mtable"><thead><tr><th>Page</th><th>Forum</th><th>Posts read</th><th>Used</th><th>Second reader within 1 point</th><th>Other model within 1 point</th></tr></thead><tbody>${DATA.pages.map(p => p.felt ? `<tr><td>${esc(p.tab)}</td><td>${esc(p.felt.forums.join(", "))}</td><td>${p.felt.nSampled}</td><td>${p.felt.nUsed}</td><td>${Math.round(p.felt.agreement.within1 * 100)}% of ${p.felt.agreement.nBothScored}</td><td>${p.felt.agreementCross ? `${Math.round(p.felt.agreementCross.within1 * 100)}% of ${p.felt.agreementCross.nBothScored}` : "–"}</td></tr>` : "").join("")}</tbody></table></div></div>`;
+  } else if (st.rtab === "left") {
+    const all = DATA.pages.flatMap(p => leftItems(p).map(x => ({ ...x, tab: p.tab })));
+    const groups = {};
+    for (const x of all) (groups[x.kind] = groups[x.kind] || []).push(x);
+    b.innerHTML = `<h2>Not on the pages, all four together</h2><div class="lead">Nothing here is deleted. One list for every page, grouped by why it is not shown. Say in a note if a group, or one item, should come back; it then comes back on every page where it fits.</div>` +
+      Object.entries(groups).map(([k, xs]) => `<div class="ritem"><h3>${esc(k)} (${xs.length})</h3><details><summary>Show them</summary>${xs.map(x => `<p><b>${esc(x.tab)}:</b> ${esc(x.label)}${x.why ? ` <span class="why">${esc(x.why)}</span>` : ""}</p>`).join("")}</details></div>`).join("") + noteBox("left-all");
+  } else if (st.rtab === "left-old") {
+    const xs = leftItems();
+    b.innerHTML = `<h2>Not on this page: ${esc(page.tab)}</h2><div class="lead">Nothing here is deleted. These are version 10 numbers and beliefs this page doesn’t show, and candidates a checker turned down, each with the reason. Say in a note if one should come back; it then comes back on every page where it fits.</div>` +
+      (xs.length ? xs.map(x => `<div class="ritem"><span class="eyebrow">${esc(x.kind)}</span><p>${esc(x.label)}</p>${x.why ? `<p class="why">${esc(x.why)}</p>` : ""}</div>`).join("") : `<div class="ritem"><p>Nothing left off.</p></div>`) + noteBox("left-" + page.id);
+  } else if (st.rtab === "kept") {
+    b.innerHTML = `<h2>Left untouched</h2>` + (D.kept || []).map(k => `<div class="ritem"><p>${esc(k)}</p></div>`).join("");
+  } else {
+    const keys = ["general", ...SECTIONS.map(([s]) => "sec-" + s)];
+    b.innerHTML = `<h2>Notes</h2><div class="lead">Anything you want changed. A note on a section applies to that section on every page.</div>` + keys.map(k => `<div class="ritem"><h3>${esc(k === "general" ? "General" : SECTIONS.find(([s]) => "sec-" + s === k)[1])}</h3>${noteBox(k)}</div>`).join("");
+  }
+}
+
+// ---------- marks store ----------
+let DB = null;
+const COLLS = ["veto", "choices", "picks", "kinds", "notes"];
+async function connect() {
+  const s = $("#dbstate");
+  try {
+    DB = await window.claude?.use?.("db");
+  } catch (e) { DB = null; }
+  if (!DB) { s.textContent = "Marks can’t be saved in this view (open the page on claude.ai while signed in)."; return; }
+  s.textContent = "Loading your marks…";
+  let first = 0;
+  const timer = setTimeout(() => { if (first < COLLS.length) s.textContent = "Can’t reach the marks store yet; your marks will show when it answers."; }, 10000);
+  for (const c of COLLS) {
+    let seen = false;
+    DB.collection(c).onSnapshot(snap => {
+      M[c] = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
+      if (!seen) { seen = true; first++; if (first === COLLS.length) { clearTimeout(timer); s.textContent = "Marks save as you click."; } }
+      if (document.activeElement && document.activeElement.tagName === "TEXTAREA") return;
+      renderAll();
+    }, () => { clearTimeout(timer); s.textContent = "The marks store stopped answering; reload the page."; });
+  }
+}
+async function put(coll, id, data) {
+  if (!DB) { $("#dbstate").textContent = "Not saved: no marks store in this view."; return; }
+  M[coll][id] = { ...(M[coll][id] || {}), ...data, t: new Date().toISOString() };
+  renderAll();
+  try { await DB.collection(coll).doc(id).set(M[coll][id]); $("#dbstate").textContent = "Saved."; }
+  catch (e) { $("#dbstate").textContent = "Not saved (" + (e.code || "error") + "). Try again."; }
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.rtab) { st.rtab = t.dataset.rtab; renderAll(); }
+  else if (t.dataset.choice) put("choices", t.dataset.choice, { pick: t.dataset.o });
+  else if (t.dataset.veto) put("veto", t.dataset.veto, { v: t.dataset.v });
+  else if (t.dataset.pick) put("picks", t.dataset.pick, { v: t.dataset.v });
+  else if (t.dataset.kind) put("kinds", t.dataset.kind, { pick: !picked(t.dataset.kind) });
+  else if (t.dataset.note) { st.review = true; st.rtab = "notes"; renderAll(); const el = document.getElementById("nt-" + t.dataset.note); if (el) { el.scrollIntoView({ block: "center" }); el.focus(); } }
+  else if (t.dataset.nadd) {
+    const k = t.dataset.nadd, ta = document.getElementById("nt-" + k), text = ta.value.trim();
+    if (!text) return;
+    const n = M.notes[k] || {};
+    put("notes", k, { notes: [...(n.notes || []), { text, t: new Date().toISOString() }], draft: "" });
+  }
+  else if (t.dataset.ndel) {
+    const k = t.dataset.ndel, n = M.notes[k] || {};
+    put("notes", k, { notes: (n.notes || []).filter((_, i) => i !== +t.dataset.i) });
+  }
+});
+let draftTimer;
+document.addEventListener("input", e => {
+  const ta = e.target.closest("textarea[id^='nt-']"); if (!ta || !DB) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => { const k = ta.id.slice(3); DB.collection("notes").doc(k).set({ ...(M.notes[k] || {}), draft: ta.value }).catch(() => {}); }, 1200);
+});
+connect();
+function renderAll() { page = DATA.pages.find(p => p.id === st.pilot); renderTop(); if (readerMode()) { $("#review").hidden = true; renderFrames(); return; } if (typeof renderReview === "function" && st.review) renderReview(); renderFrames(); save(); }
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, a");
+  if (!t) return;
+  if (t.dataset.pilot) { st.pilot = t.dataset.pilot; renderAll(); }
+  else if (t.dataset.ver) { st.version = t.dataset.ver; renderAll(); }
+  else if (t.dataset.view) { st.view = t.dataset.view; renderAll(); }
+  else if (t.dataset.rev) { st.review = t.dataset.rev === "on"; renderAll(); }
+  else if (t.dataset.refs) {
+    const n = t.dataset.refs.split(",")[0];
+    const frame = t.closest(".frame");
+    const d = frame && frame.querySelector(".sec-sources details, .sec-sources");
+    if (d && d.tagName === "DETAILS") d.open = true;
+    const li = frame && frame.querySelector(`#src-${n}`);
+    if (li) { li.scrollIntoView({ block: "center", behavior: "smooth" }); li.style.background = "var(--pink)"; setTimeout(() => (li.style.background = ""), 1600); }
+  }
+});
+renderAll();
+</script>

@@ -1,0 +1,169 @@
+{
+  "id": "nicotine",
+  "checked": [
+    {
+      "index": 0,
+      "where": "beliefs",
+      "label": "I’ve smoked too long. It’s too late.",
+      "verdict": "fix",
+      "problems": [
+        "Rule 10 broken: the proof opens with the hopeful projection. The full text has a counted figure. The Table 3 and 4 headers read 'Nicotine remission (N=1,300)' out of 6,937 ever dependent, so about 18.7% were already free when asked (unweighted). The alcohol row puts its counted figure (2,008 of 4,781) first, and the nicotine numbers draft already uses 1,300 of 6,937. This row should match.",
+        "The rest holds. NESARC 2001–2002 ran face-to-face interviews with 43,093 US adults; 6,937 had lifetime DSM-IV nicotine dependence. 83.7% is a lifetime cumulative estimate made by the actuarial method, and the paper calls it a projection. 'Lose every sign of it' fits the paper's definition ('finally stopped having any of these experiences … never started happening again'). Severity 'dependent' fits.",
+        "'Likely on the high side' is supported. The limitations say self-report leads to 'overreport of remission' and that the age of remission is open to recall bias.",
+        "Doubt, no field changed: the counterpart 'Most people hooked on nicotine get free in the end' rests on the projection only. Counted, 18.7% were free when asked; half remitted about 26 years after onset; 18.4% were free a decade after onset.",
+        "The quote is word for word from the abstract and is 11 words. The fixed quote adds the Table 3 header with an ellipsis."
+      ],
+      "fix": {
+        "proof": "In a big US survey, 1,300 of 6,937 people ever hooked on nicotine were already free when asked. A projected 83.7% get free in their lifetime, likely on the high side.",
+        "refs[0].quote": "Life-time cumulative probability estimates of dependence remission were 83.7% for nicotine … Nicotine remission (N=1,300)",
+        "refs[0].note": "NESARC 2001–2002, face-to-face interviews with 43,093 US adults; 6,937 had lifetime DSM-IV nicotine dependence. 1,300 is the unweighted count in the Table 3/4 header (18.7%). 'Free' means they had finally stopped having any sign of dependence, with none coming back, as they recalled it. The authors warn that self-report overstates remission."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3227547/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "beliefs",
+      "label": "Quitting will be hell. I can’t handle the withdrawal.",
+      "verdict": "fix",
+      "problems": [
+        "'Every withdrawal symptom was back to its pre-quit level within 10 days' reads more hopeful than the source. Shiffman's 'All symptoms' means only the ones it tracked: negative affect, arousal, attention, restlessness, sleep and cognitive performance. Craving is not among them, and Hughes says outright that his review leaves craving out. The plan's step 2 proof says cue craving is stronger at day 35, so the reader gets two claims that seem to clash.",
+        "Rule 10 (cautious first): the 10-day figure is the hopeful one. Hughes's 'peak within the first week and last 2-4 weeks' is the cautious one and should come first.",
+        "Hughes 2007 is one author's review of 120 studies, and the abstract says 'Data collection and interpretation were based solely on the author's subjective judgments.' That belongs in the note.",
+        "Shiffman: 214 smokers in a clinic-based behavioural group programme who quit for at least 24 hours, tracked with an electronic diary for up to 21 days. Only the abstract could be fetched; the full text is behind a paywall, and the abstract does not say how many were still off at day 10. Severity 'treatment' fits Shiffman. Hughes mixes populations.",
+        "Both quotes are word for word: 11 and 23 words."
+      ],
+      "fix": {
+        "proof": "A review of 120 studies: withdrawal peaks in week 1 and lasts 2–4 weeks. In 214 smokers who quit in a clinic group, each symptom tracked was back to pre-quit level within 10 days. Neither includes craving.",
+        "refs[0].note": "214 cigarette smokers in a clinic-based behavioural group cessation programme who quit for at least 24 hours; electronic diary for up to 21 days. Symptoms tracked: negative affect, arousal, attention, restlessness, sleep, cognitive performance; craving is not listed. Group averages, so some people take longer.",
+        "refs[1].note": "One author's review of 120 studies (1990–2004) of smokers who stopped, read on his own judgement. Craving, hunger and performance were left out of the review."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:17156182%20AND%20SRC:MED&format=json&resultType=core ; https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:17365764%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "beliefs",
+      "label": "A cigarette is the only thing that calms me down.",
+      "verdict": "fix",
+      "problems": [
+        "'Across 26 studies' gives the whole review's count, not the studies behind the figure. In the results, 'Four studies reported change in anxiety' and 'Three studies reported change in stress'; the other studies measured depression, quality of life and positive mood. 'Quitters grew less anxious and stressed than smokers' could also be read as a comparison of levels. The source measured change: anxiety and stress fell more in quitters than in people who kept smoking.",
+        "Hajek holds. 469 smokers hospitalised after a heart attack or bypass surgery wanted to stop and completed the 1-year follow-up; 194 (41%) stayed off, checked by saliva cotinine. The abstainers had a larger drop in perceived stress. The authors call them 'highly dependent smokers'. The quote is word for word.",
+        "Taylor: the conclusion quote is word for word but does not support the counts. The fix gives a quote that does. The review is observational (11 cohorts, 14 secondary analyses of cessation trials, 1 randomised trial), so it shows a link, not proof of cause, as the note says.",
+        "Severity 'treatment' fits Hajek (inpatients who wanted to stop). Taylor's populations are mixed."
+      ],
+      "fix": {
+        "proof": "In 469 heart patients who wanted to stop, those still off a year later had a bigger drop in stress than those who kept smoking. In 4 studies of anxiety and 3 of stress, both fell more in quitters.",
+        "refs[1].quote": "Four studies reported change in anxiety … Three studies reported change in stress from baseline to follow-up",
+        "refs[1].note": "26 studies in all (11 cohorts, 14 drawn from cessation trials, 1 randomised trial). Anxiety was pooled from 4 studies (7 weeks to 12 months), stress from 3 (6 months to 6 years). Observational, so it shows a link, not proof of cause."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:20528815%20AND%20SRC:MED&format=json&resultType=core ; https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3923980/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "beliefs",
+      "label": "Just one won’t hurt. I’m still quit.",
+      "verdict": "fix",
+      "problems": [
+        "Shadel: 'about twice the rate' will be read as twice as many relapsing, and that is wrong. HR 2.12 (95% CI 1.03 to 4.35) is about speed. The full text gives the shares: 'Whereas 53.1% of participants in the no lapse condition relapsed, 65.5% of participants in the lapse condition did so.' Per 100 that is 66 vs 53. The proof also gives no n, and the trial is small: 63 people, 31 told to smoke and 32 told to wait.",
+        "Kenford: the 83% and 97% figures and the quote are word for word. The abstract does not give how many active-patch users smoked in week 2, so the groups behind the figures are unknown and smaller than the active-patch halves of 88 and 112. The proof should say the trials are small. The full text is behind a paywall and was not fetched.",
+        "Rule 4 holds: both studies count people in treatment (Kenford: patch trials, 15 or more a day, motivated to quit; Shadel: brief CBT programme, 15 or more a day), not ordinary users. Severity 'treatment' fits. 83% comes before 97%, so the cautious figure is first.",
+        "Both studies look at slips early in a quit (week 2; after 48 hours off). The origin field already says so."
+      ],
+      "fix": {
+        "proof": "In two small trials, of patch users who smoked at all in week 2, 83% and 97% smoked at 6 months. Of 63 quitters, those assigned two cigarettes after 2 days off relapsed sooner (66 vs 53 in 100).",
+        "refs[0].note": "Two patch trials of daily smokers (15 or more a day) motivated to quit: 88 and 112 people, about half on a real patch. The abstract does not give how many smoked in week 2, so the groups behind 83% and 97% are smaller.",
+        "refs[1].quote": "Whereas 53.1% of participants in the no lapse condition relapsed, 65.5% of participants in the lapse condition did so.",
+        "refs[1].note": "63 adults (15 or more a day) who quit with a brief behavioural programme, randomly told after 48 hours off to smoke two cigarettes (31) or to wait (32); followed 14 days. Relapse = 7 days in a row of smoking. Relapse came sooner after the two cigarettes (HR 2.12, 95% CI 1.03 to 4.35)."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:8301790%20AND%20SRC:MED&format=json&resultType=core ; https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3158283/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "beliefs",
+      "label": "Vapes and pouches are basically harmless.",
+      "verdict": "fix",
+      "problems": [
+        "Lunell: the result is for one brand (ZYN), and the study was paid for by its maker. Europe PMC lists the grant as 'Swedish Match AB', and PubMed lists one author at 'Product Science, Swedish Match'. The proof should say it is maker-funded. The note says only that one author works there.",
+        "Lunell: the note says 'in snus users', but the abstract does not say who took part or how many. The full text is behind a paywall and was not fetched. The quote is word for word.",
+        "Foulds holds. 3,609 is the final sample of exclusive vapers who used to smoke, and the 14.5 vs 8.1 comparison and the trend with longer use are in the source. The liquid-strength analysis used 3,446. The survey ran online from December 2012, and the authors say the volunteers were likely 'pro-e-cig' and recalled their cigarette dependence from memory. The quote is word for word.",
+        "Severity 'users' is allowed for the kind 'harmless' (rule 4 binds only moderation). No other addiction is named; snus and snuff are nicotine products."
+      ],
+      "fix": {
+        "proof": "In 3,609 ex-smokers who vape, dependence was lower than they recalled on cigarettes, but higher with stronger liquid and longer use. A maker-funded test: 6 and 8 mg pouches delivered nicotine as fast and fully as snus and snuff.",
+        "refs[0].note": "Online survey from December 2012 of 3,609 ex-smokers who now only vape; volunteers from vaping websites, likely pro-vaping (the authors say so). Cigarette dependence was rated from memory (14.5 vs 8.1 on the same 0-20 scale); the liquid-strength analysis used 3,446.",
+        "refs[1].note": "Single-dose randomised crossover study of one brand (ZYN), funded by its maker Swedish Match; one author works there. The abstract does not say who took part or how many."
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4838001/ ; https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:32319528%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "plan",
+      "label": "step 2 proof (cue craving stronger at day 35 than day 7)",
+      "verdict": "fix",
+      "problems": [
+        "'In 86 smokers' is the whole study. The day 35 vs day 7 contrast is between two of three randomised single-session groups (Groups 1–3). The reported F(1,59) and t(59) mean those three groups total 62, about 20 each. Group 4, which saw cues repeatedly, is not in this contrast. The exact group sizes are in a supplement that was not fetched.",
+        "'Pulled harder' holds only 'on some measures', as the abstract says. Groups 3 and 1 differed on the TCQ-SF craving scale, but the groups did not differ on QSU-B Factor 1. The source also says cue-induced craving 'did not decrease with abstinence on any measure'.",
+        "The group: non-treatment-seeking smokers of 10 or more a day, paid $30 a day, at the University of Chicago and NIDA in Baltimore. They are heavy users, not checked for dependence, and the plan proof has no severity tag to show this. The proof rightly says 'A lab test, not everyday craving' (rule 19).",
+        "The quote is word for word against the PubMed abstract ('compared with'); the PMC manuscript reads 'compared to'."
+      ],
+      "fix": {
+        "proof.text": "A lab test, not everyday craving: in groups of about 20 smokers paid to stay off, smoking cues pulled harder at day 35 than at day 7 on some scales. Keep the coffee and break swaps past the first month.",
+        "proof.ref.note": "86 non-treatment-seeking smokers of 10 or more a day completed, paid to stay off for 7, 14 or 35 days. The day 35 vs day 7 contrast is between two of three randomised groups that total 62 (from the reported F(1,59)). A lab cue test, not everyday craving."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3027849/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "plan",
+      "label": "step 3 proof (most relapse in first 8 days)",
+      "verdict": "ok",
+      "problems": [
+        "Holds. 'The existing eight relapse curves from two studies of self-quitters and five no-treatment control groups indicate most relapse occurs in the first 8 days.' The quote is word for word, 24 words. 'Without help' fits self-quitters and no-treatment control groups.",
+        "Minor, no change needed. The abstract gives no count of people. The review notes the curves were 'heterogeneous' and that there is 'a paucity of studies'. The people were self-quitters, not checked for dependence. The proof is 23 words and claims no more than the source."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:14678060%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "plan",
+      "label": "step 4 proof (smoker-trying-to-quit identity relapses more)",
+      "verdict": "fix",
+      "problems": [
+        "The n behind the comparison is not 544. Table 2 shows only 14 people still called themselves 'a smoker trying to quit', and 71.4% of them (10 of 14) relapsed. The comparison groups were 150 ex-smokers (7.2% relapsed) and 251 non-smokers (8%). The authors say 'the number of participants who identified as a smoker trying to quit was small'. Rule 17 says the proof must name this weakness, and per-100 figures make the gap readable.",
+        "The rest holds. The sample is 544 former smokers (quit a month or more) from ITC Australia (304) and UK (240), Waves 9 (2013) and 10 (2014), a non-treatment-seeking cohort, with relapse self-reported at the 12-month follow-up. The original quote is word for word. The link is observational, so the note's 'a link, not proof of cause' stays."
+      ],
+      "fix": {
+        "proof.text": "Of 544 ex-smokers in Australia and the UK, 14 still called themselves smokers trying to quit. A year later 10 of those 14 smoked again, against 7 to 8 in 100 who called themselves ex-smokers or non-smokers.",
+        "proof.ref.quote": "Participants who described themselves as ‘A smoker trying to quit’ at baseline (Wave 9) had the highest rates of relapse (71.4%) at follow-up survey (Wave 10)",
+        "proof.ref.note": "544 former smokers, quit a month or more, in the ITC surveys in Australia and the UK, 2013-14; relapse self-reported at 12 months. Groups: 14 'smoker trying to quit' (71.4% relapsed), 150 ex-smokers (7.2%), 251 non-smokers (8%), 129 'smoker who has chosen to no longer smoke' (12.4%). The authors call the first group small. A link, not proof of cause."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7572756/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "plan",
+      "label": "step 5 proof (varenicline vs dummy pill)",
+      "verdict": "fix",
+      "problems": [
+        "Rule 12a: 'about 2.3 times as many' is a relative risk. The rule says a what-helps figure gives per 100 with and per 100 without, never '×'. The review's Summary of findings table gives 99 per 1000 with placebo and 230 per 1000 (213 to 249) with varenicline for abstinence at 6+ months: 23 in 100 vs 10 in 100. Leaving out the absolute rates makes the figure look more hopeful, because it hides that most people on varenicline did not stay off.",
+        "The rest holds. RR 2.32 (2.15 to 2.51), 41 studies, 17,395 participants, high certainty. The quote is word for word, 27 words. The people were smokers in cessation trials, so severity 'treatment' fits.",
+        "Outside the proof, not checked against a source, no field changed: the step 5 actions 'A vape helps more smokers stop than patches do' and 'in two small trials it helped vapers stop' carry no proof of their own."
+      ],
+      "fix": {
+        "proof.text": "In 41 trials (17,395 people), 23 in 100 on varenicline were still off cigarettes at 6 months or more, against 10 in 100 on a dummy pill.",
+        "proof.ref.quote": "For every 100 people using varenicline to stop smoking, 21 to 25 might successfully stop",
+        "proof.ref.note": "Summary of findings table 1, abstinence at longest follow-up (6+ months), varenicline vs placebo: 99 per 1000 with placebo, 230 per 1000 (213 to 249) with varenicline; RR 2.32; 41 studies, 17,395 people; high certainty."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10169257/fullTextXML",
+      "quoteFound": true
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "id": "alcohol",
+  "checked": [
+    {
+      "index": 0,
+      "where": "beliefs",
+      "label": "I’ve been drinking for years. I’m stuck with it.",
+      "verdict": "ok",
+      "problems": [
+        "Holds. The abstract gives n = 4,781 with lifetime DSM-IV alcohol dependence (NESARC 2001–2002, n = 43,093, face-to-face interviews) and a lifetime cumulative remission probability of 90.6%, made by the actuarial method. The paper calls these 'projections', and the proof says 'projected'. The counted figure comes first (rule 10). Severity 'dependent' fits. The proof is 26 words, with no other addiction named and no cheering.",
+        "Minor, no change needed. Table 3 has the column heading 'Alcohol remission (N=2,008)' but never defines N. Reading it as the unweighted count of people who had remitted by the interview is the standard reading for a discrete-time survival table, and it fits the other columns (cannabis 344 of 530, cocaine 336 of 408). The text itself never says '2,008 remitted'.",
+        "Minor, no change needed. In this paper 'free' means they had stopped having any dependence symptoms for good ('finally stopped … never started happening again'). They had not necessarily stopped drinking.",
+        "All three quotes are word for word, with ellipses that drop the other substances: the first and third from the abstract, the second from the Table 3 heading."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547&rettype=xml",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "beliefs",
+      "label": "I’ve tried to stop before. I always go back.",
+      "verdict": "fix",
+      "problems": [
+        "'The number of tries did not differ by main drug' is stronger than the paper's results. The abstract sentence is word for word, but the results say there 'were apparent differences … by primary substance; however, these did not reach statistical significance'. Table 1 medians are 2 for alcohol, cannabis and stimulants, 3 for opioids and 1 for other drugs.",
+        "The rest holds. Among the n = 1,742 (of 2,002 who resolved a problem) with at least 1 serious try, the median was 3 (IQR 1 to 5), so 'half needed 3 tries or more' is right. The survey is US, 2016, cross-sectional and based on recall, and each person decided what counted as 'serious'. Severity 'resolved' fits. The group mixes drugs, and the proof says so (rule 13). The quote is 28 words, word for word.",
+        "Minor, no change needed. Counting everyone, including people with no serious try, the median for people whose main drug was alcohol was 2 (IQR 1 to 4). The paper does not give an alcohol-only median among people with at least one try."
+      ],
+      "fix": {
+        "proof": "Of US adults who beat a drinking or drug problem after at least one serious try, half needed 3 tries or more. The number of tries did not differ significantly by main drug.",
+        "refs[1].quote": "there were apparent differences in the distribution of number of recovery attempts by primary substance; however, these did not reach statistical significance"
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6602820/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "beliefs",
+      "label": "Stopping will be hell. I won’t get through it.",
+      "verdict": "fix",
+      "problems": [
+        "The ASAM line drops a condition and moves the clock. The guideline says 'Patients with mild withdrawal and low risk of complicated withdrawal may be observed for up to 36 hours, after which more severe withdrawal is unlikely to develop'. That is 36 hours of observation, for patients who are both mild and low risk. The proof leaves out 'low risk', and its wording reads as 36 hours after the last drink.",
+        "The '6–24 hours' onset in the guideline applies to withdrawal in general, not only to mild cases. It says 'typically'.",
+        "The Brown and Schuckit sample was 'male primary alcoholics (no preexisting major psychiatric disorder)'. Leaving that out makes the drop from 42% to 6% look as if it applies to everyone. The figures (Hamilton score of 20 or more, 42% at intake, 6% at week 4, n = 191 inpatients) are word for word in the abstract. The abstract does not say whether all 191 were still there at week 4, and the full text (J Stud Alcohol 1988) could not be fetched.",
+        "Both ASAM quotes are word for word (PDF p. 'Recommendation V.1' and the risk-assessment section), and both Brown and Schuckit quotes are word for word in the abstract. Severity 'treatment' fits both sources. The corrected proof is 40 words (at the limit)."
+      ],
+      "fix": {
+        "proof": "Withdrawal typically starts within a day; mild, low-risk cases are unlikely to turn severe after 36 hours of observation (ASAM). In 191 inpatient men without earlier major mental illness, serious low mood fell from 42% to 6% by week 4."
+      },
+      "fetchedUrl": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "beliefs",
+      "label": "I need a drink to unwind after work.",
+      "verdict": "fix",
+      "problems": [
+        "'Nights of drinking and of withdrawal both meant trouble falling asleep and less sleep overall' is stronger than the review. The review says alcoholics 'commonly experience' these problems, and that alcohol 'may prolong sleep latency'. It also says this happened 'In most of these studies'; one study (Allen 1980) found more total sleep after alcohol. Skoloda 1979 found that drink briefly improved sleep quality, mainly in the first week.",
+        "The rest holds. The studies were polysomnography studies from the 1970s and early 1980s, of male alcoholics in inpatient treatment, done after alcohol was given and during withdrawal. 'Not a reliably effective sedative among alcoholic patients' is in the source. Severity 'treatment' fits. All three quotes are word for word and 30 words or fewer (the first is exactly 30).",
+        "Weak, for the card: the studies are old and small, and the review gives no total n."
+      ],
+      "fix": {
+        "proof": "In sleep-lab studies of men in treatment for alcoholism, drink did not reliably help them sleep. In most of these studies, they took longer to fall asleep and slept less, both on drinking nights and in withdrawal (review)."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC2778757/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "beliefs",
+      "label": "I’ve got it under control now. I can handle just one.",
+      "verdict": "fix",
+      "problems": [
+        "'Those who drank lightly' is wrong about the group. The source's group is 'low-risk drinkers'. In the same authors' NESARC definitions (Dawson 2005/2006, PMC6527249), a low-risk drinker is a past-year drinker with no abuse or dependence symptoms who stayed under the risk limits. For men that means no more than 14 drinks a week on average and never 5 or more in a day. That is up to 4 a day, not 'just one', and 'lightly' hides this from a reader weighing moderation.",
+        "The rest holds. People in full remission from DSM-IV alcohol dependence at Wave 1 (2,109 in 2001–2002) were re-interviewed at Wave 2 in 2004–2005 (1,772). By then any AUD symptoms had come back for 27.2% of low-risk drinkers and 7.3% of abstainers, rounded correctly. Severity 'dependent' fits rule 4. Both quotes are word for word and 30 words or fewer. The corrected proof is 39 words.",
+        "Minor, no change needed. 'Signs of a drinking problem' is the recurrence of any AUD symptom. Full dependence came back for 4.0% of low-risk drinkers and 2.9% of abstainers, a much smaller gap. The adjusted odds ratio was 5.8 for any symptom. Age changed the result: for younger alcoholics, the type of remission made no significant difference.",
+        "The per-group n behind 27.2% and 7.3% is not in the abstract, and the full text is behind a paywall."
+      ],
+      "fix": {
+        "proof": "In a US survey of people who had got free of alcohol dependence, signs of a drinking problem came back within 3 years for 27% of those who drank within low-risk limits, and 7% of those who didn’t drink."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:18034696%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "plan",
+      "label": "step 3 proof (cue craving peaks at day 60)",
+      "verdict": "ok",
+      "problems": [
+        "Holds. The study tested inpatient adult male alcoholics for cue-induced craving at 7, 14, 30 and 60 days of abstinence, both between groups and within one group of 19. Craving rated on visual analogue scales 'was the highest at 60 days of abstinence both between and within groups'. Day 60 was the last check, and the proof says so (rule 19). The quote is word for word with an ellipsis. The proof is 28 words.",
+        "Minor, no change needed. Heart rate, blood pressure and skin conductance did not differ between the abstinence groups, so 'pull' means self-rated craving only, which is what the proof describes. The study was in China (not stated in the proof)."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:24698092%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "plan",
+      "label": "step 5 proof (acamprosate NNT 12)",
+      "verdict": "ok",
+      "problems": [
+        "Holds. In a JAMA 2014 meta-analysis of RCTs of 12 weeks or more in outpatient settings (acamprosate: 27 studies, n = 7,519), the NNT to prevent return to any drinking for acamprosate was 12 (95% CI 8 to 26). 'For every 12 … one more stayed off drink than on a dummy pill' is a faithful plain reading. The quote is word for word. The proof is 18 words.",
+        "Minor, no change needed. The NNT runs over each trial's own follow-up, not for life."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:24825644%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    }
+  ]
+}

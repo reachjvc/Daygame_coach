@@ -1,0 +1,193 @@
+{
+  "id": "general",
+  "numbers": [
+    {
+      "kind": "gen-tries",
+      "big": "3 tries",
+      "headline": "Of people who beat an alcohol or drug problem after at least one serious try, half needed 3 tries or fewer.",
+      "mirror": "You've tried to stop before and think you've failed for good.",
+      "severity": "resolved",
+      "counted": "people who beat an alcohol or drug problem after a serious try",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online",
+        "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and had made at least one serious try. Alcohol and drugs together: about half named alcohol as the main problem, the rest cannabis, cocaine, meth, opioids or other drugs.",
+        "n": "1,742 people (of 2,002 in the study; 260, about 1 in 8, said they never made a serious try)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Number of serious tries before the problem was resolved, as people remembered it; each person decided what counted as serious. Counting everyone, including those who never made a serious try, the middle figure was 2; it varied a little by main drug (1 to 3), but not significantly."
+      },
+      "caveat": "Counts only people who succeeded, from memory. The average was about 6 because a few needed dozens of tries. People who had used treatment or groups reported more tries (middle figure 3, against 1 for those who never did). The problem was their own definition: in the same survey only about 1 in 6 had ever been diagnosed with an alcohol or drug disorder.",
+      "projection": false,
+      "weak": "The problem was self-defined and most had never been diagnosed, so milder cases are mixed in with addiction.",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research 43:1533-1544.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+        "pmid": "31090945",
+        "fetched": true,
+        "quote": "among participants reporting at least 1 serious recovery attempt (n = 1,742), the mean and median number of recovery attempts were slightly higher—6.14 (SD = 14.20) and 3"
+      },
+      "origin": "07-mirror-stats/alcohol.json how '3 tries' (all substances; figure, quote and ref kept; caveat adds the treatment split and the diagnosis share; refetched from PMC on 2026-11-05)",
+      "check1": {
+        "verdict": "fix",
+        "by": "reviewer a (general-check-numbers-a.json)",
+        "on": "2026-11-05",
+        "problems": [
+          "basis.measured says the middle figure of 2 'did not differ by main drug'. Table 1 gives medians of 2 for alcohol, cannabis and stimulants, 3 for opioids and 1 for other drugs. The differences were not statistically significant, but the medians are not all the same. The abstract's 'did not differ' is about significance, so the line overstates it.",
+          "Everything else holds. Median 3 (IQR 1 to 5) and mean 6.14 among the n = 1,742 with at least one serious try; 260 people (about 13%) reported none. The treatment split (any treatment or recovery services: median 3, against 1 without) is from Table 1 and counts the full sample. The 1 in 6 diagnosed (17.0%) and July–August 2016 are from Kelly 2017, which is the same survey. Severity 'resolved' fits. Headline is 21 words with 1 digit figure, mirror is 12 words in the second person, and the quote is 28 words, word for word.",
+          "Minor, no change needed: the survey question was 'how many serious attempts did you make to resolve your alcohol/drug problem before you overcame it?'. The authors note that some people may not have counted the attempt that worked, so 'needed 3 tries' is as close as the source allows."
+        ],
+        "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6602820/fullTextXML",
+        "quoteFound": true,
+        "applied": "Applied on 2026-11-05. Re-checked Table 1 (Europe PMC full text): medians 2 alcohol, 2 cannabis, 3 opioids, 2 stimulants, 1 other drugs; p values 0.37 to 0.77."
+      },
+      "fixedFields": [
+        "basis.measured"
+      ]
+    },
+    {
+      "kind": "gen-alone",
+      "big": "46%",
+      "headline": "Of people who beat an alcohol or drug problem, 46% never used treatment, a group like AA, anti-craving medicine or recovery services.",
+      "mirror": "You want to quit on your own and doubt anyone manages it.",
+      "severity": "resolved",
+      "counted": "people who beat an alcohol or drug problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online",
+        "who": "US adults who said yes to 'Did you use to have a problem with drugs or alcohol, but no longer do?'. Alcohol and drugs together: 51% named alcohol as the main problem, 11% cannabis, 10% cocaine, 7% meth, 5% opioids.",
+        "n": "2,002 adults (a weighted sample; 25,229 of 39,809 invited panel members answered the opening question)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Ever used, at any point in life: outpatient, inpatient or detox treatment; anti-craving medicine; mutual-help groups such as AA, NA or SMART Recovery; or recovery services such as sober living or faith-based programmes. 53.9% had used at least one; 46% is the 46.1% who never used any."
+      },
+      "caveat": "It does not mean help is unneeded or that going alone works as well. People who got there alone had milder histories on average, and the problem was their own definition: of the 1 in 6 ever diagnosed with an alcohol or drug disorder, 9 in 10 had used help. Only anti-craving or anti-relapse medicines counted as help.",
+      "projection": false,
+      "weak": "The problem was self-defined and most had never been diagnosed, so milder cases are mixed in with addiction.",
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence 181:162-169.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "fetched": true,
+        "quote": "More than half (53.9%) were in the “assisted” pathway (i.e., lifetime use of one or more AOD treatment or recovery support services; Table 2)."
+      },
+      "origin": "new: all-substances figure from the same table that gave 07-mirror-stats/alcohol.json how '56%' and cannabis.json how '46%' (refetched from PMC on 2026-11-05)",
+      "check1": {
+        "verdict": "fix",
+        "by": "reviewer b (general-check-numbers-b.json)",
+        "on": "2026-11-05",
+        "problems": [
+          "Figure, n, group, where, when, design and quote all hold: 53.9% used help (Table 2 and Results 3.2), so 46.1% never did. The n of 2,002 is right because the figure is over the whole sample. The quote matches word for word (24 words). The 'resolved' tag fits the self-defined screener question.",
+          "The headline says 'never used ... medicine', but the survey counted only anti-relapse or anti-craving medicines (naltrexone, buprenorphine, disulfiram and others, Table 2). Someone who took other medicine still counts as 'never used help', so the headline overstates how 'alone' they were.",
+          "The caveat says 'People who quit alone'. 'Resolved' is not the same as quit: in the same survey 48.6% still used some alcohol or drug (Kelly 2018). Use the headline's word instead.",
+          "Rule 10 note, no field change: if both gen-alone cards show, the diagnosed 90% (#2) is the cautious figure for this reader. This card's caveat already carries it."
+        ],
+        "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6076174/unicode",
+        "quoteFound": true,
+        "applied": "Applied on 2026-11-05. Re-checked Methods (NCBI efetch PMC6076174): help counted only 'anti-relapse/craving medication (e.g., naltrexone ... buprenorphine/naloxone)'."
+      },
+      "fixedFields": [
+        "headline",
+        "caveat"
+      ]
+    },
+    {
+      "kind": "gen-alone",
+      "big": "90%",
+      "headline": "Of people who beat an alcohol or drug problem and had ever been diagnosed with one, 90% had used some help.",
+      "mirror": "Yours got bad enough for a diagnosis; you still want to go it alone.",
+      "severity": "resolved",
+      "counted": "people who beat a diagnosed alcohol or drug problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online",
+        "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and said they had ever been diagnosed with an alcohol or other drug use disorder. Alcohol and drugs together.",
+        "n": "About 340 people (17.0% of a weighted 2,002)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Share who had ever used treatment, anti-craving medicine, mutual-help groups or recovery services: 90.2% of those ever diagnosed, against 38.9% of those never diagnosed with any mental health or substance disorder. The diagnosis is what people reported, not a record."
+      },
+      "caveat": "Possibly built in: a diagnosis often comes during addiction treatment, which counts as help here, and the survey did not ask where it came from. It does not show that help caused the recovery, or that the other 10% did worse.",
+      "projection": false,
+      "weak": "Possibly circular, because a diagnosis often comes during addiction treatment, which counts as help here; the diagnosis is self-reported.",
+      "ref": {
+        "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence 181:162-169.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+        "pmid": "29055821",
+        "fetched": true,
+        "quote": "Factors associated with choosing assisted (54%) vs. unassisted problem resolution. … Lifetime mental health disorder diagnoses … Substance use disorder (vs. not) 90.2"
+      },
+      "origin": "new: companion to the 46% above, for the reader closest to the criteria (Table 3 of the same paper; refetched from PMC on 2026-11-05)",
+      "check1": {
+        "verdict": "fix",
+        "by": "reviewer a (general-check-numbers-a.json)",
+        "on": "2026-11-05",
+        "problems": [
+          "caveat and weak say a diagnosis 'already counts as help' or 'usually means contact with the services that count as help'. In the source, help ('assisted') means outpatient or inpatient addiction treatment, detox, anti-craving medicine, mutual-help groups or recovery support services. A diagnosis from a doctor is not on that list. The paper gives no information on where people were diagnosed, so the circularity is a possibility, not a fact.",
+          "The figure holds. Table 3 '% assisted' for 'Substance use disorder (vs. not)' is 90.2, and for 'Never been diagnosed (vs. not)' it is 38.9. The 17.0% ever diagnosed with an alcohol or substance use disorder is in Table 1, so n is about 340 of a weighted 2,002. July and August 2016 is confirmed. Severity 'resolved' fits. Headline is 20 words with 1 figure, and the mirror is 14 words in the second person (at the limit).",
+          "The quote is stitched from the Table 3 title and one table row, joined with ellipses. Each fragment is word for word, and 90.2 appears only in the table, so it is kept."
+        ],
+        "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=6076174&rettype=xml",
+        "quoteFound": true,
+        "applied": "Applied on 2026-11-05 as the reviewer worded it; the paper does not say where diagnoses came from."
+      },
+      "fixedFields": [
+        "caveat",
+        "weak"
+      ]
+    },
+    {
+      "kind": "gen-years",
+      "big": "6 years",
+      "headline": "Among people who beat an alcohol or drug problem, those free longer rated well-being higher, climbing fast for 6 years, then slower.",
+      "mirror": "You wonder if life without it ever gets better than the first weeks.",
+      "severity": "resolved",
+      "counted": "people who beat an alcohol or drug problem",
+      "basis": {
+        "design": "national survey (National Recovery Survey), one snapshot, answered online; people at different stages compared, not followed",
+        "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and had resolved it within the past 40 years. Alcohol and drugs together: 59% named alcohol as the main problem.",
+        "n": "1,879 people who had resolved their problem within the past 40 years (of 2,002 in the study)",
+        "where": "US",
+        "when": "July–August 2016",
+        "measured": "Quality of life, happiness, self-esteem, recovery resources and psychological distress, compared across people 0 to 40 years past their problem. The 6 years is the authors' summary of where steep gains give way to shallower ones; their fitted models put that bend at 6 years for self-esteem, 8 for quality of life and 11 for happiness."
+      },
+      "caveat": "Different people at different stages, not the same people followed, and only people still free were asked, so those who went back are missing from the later years. Happiness and self-esteem dipped in the first year before rising. Quality of life took about 15 years on average to match a healthy Western European sample. Free of the problem is not always free of every substance: about half still used some alcohol or drug.",
+      "projection": false,
+      "weak": "A snapshot, not a follow-up, and the problem was self-defined, so milder cases are mixed in with addiction.",
+      "ref": {
+        "cite": "Kelly JF, Greene MC, Bergman BG (2018). Beyond abstinence: changes in indices of quality of life with time in recovery in a nationally representative sample of U.S. adults. Alcoholism: Clinical and Experimental Research 42:770-780.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5880708/",
+        "pmid": "29473966",
+        "fetched": true,
+        "quote": "In general, in the 40-year horizon there were initially steep increases in indices of well-being (and steep drops in distress), during the first 6 years, followed by shallower increases."
+      },
+      "origin": "07-mirror-stats/alcohol.json after '6 years' (figure, quote and ref kept; n corrected from the whole study's 2,002 to the 1,879 in the 40-year analysis behind the figure, rule 9; refetched from PMC on 2026-11-05)",
+      "check1": {
+        "verdict": "fix",
+        "by": "reviewer b (general-check-numbers-b.json)",
+        "on": "2026-11-05",
+        "problems": [
+          "The quote matches the abstract word for word (29 words). n = 1,879 matches Table 1's 40-year sample (unweighted), and 'who', where, when and design are correct: 58.55% named alcohol, cross-sectional, July-August 2016.",
+          "'6 years' is the abstract's summary across all well-being measures. The Results say quality of life, happiness and self-esteem improved fastest 'during the first 6–11 years'. The Table 2 spline knots are 8 years for quality of life, 11 for happiness and 6 for self-esteem; recovery capital and distress were fitted as smooth curves. So 'rated life higher, climbing fast for 6 years' is wrong for the life (quality-of-life) score itself.",
+          "basis.measured says the 6 years is 'where a smoothed curve through those scores flattens'. That is not how the paper gets it. The figure is the authors' summary of the fitted models, and each measure bends at a different point.",
+          "The caveat misses two cautious points from the source. Only people still free were surveyed, so those who went back are absent from the later years (the authors say 'among those who continue to stay in recovery'). And quality of life took about 15 years on average to reach a healthy Western European sample's level."
+        ],
+        "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC5880708/unicode",
+        "quoteFound": true,
+        "applied": "Applied on 2026-11-05. Re-checked (NCBI efetch PMC5880708): Results 'first 6–11 years'; Table 2 spline knots 8 (quality of life), 11 (happiness), 6 (self-esteem); 'approximately 15 yrs' to a healthy Western European sample's quality of life; 'among those who continue to stay in recovery'."
+      },
+      "fixedFields": [
+        "headline",
+        "basis.measured",
+        "caveat"
+      ]
+    }
+  ],
+  "gaps": [
+    "Severity: all three sources are the National Recovery Survey, where the problem is self-defined (the yes/no question 'Did you use to have a problem with drugs or alcohol, but no longer do?'). Only 17% had ever been diagnosed with an alcohol or drug disorder, and the authors say a resolved problem 'did not necessarily signify the presence of a diagnosable AOD disorder'. No general number here counts only people who met the criteria for dependence. kinds.json allows only 'resolved' for the gen- kinds, so a dependent-only general number (for example NESARC-III treatment rates for alcohol or drug use disorder) would need the menu changed first; none was fetched.",
+    "Two gen-alone numbers are given: 46% never used help (everyone) and 90% used help (the 17% ever diagnosed). They pull in opposite directions; the 90% is closer to this page's reader but partly circular. Pick one, or show the 46% with the 90% in its caveat as written.",
+    "Clash on the cannabis page: cannabis.json how '46%' means 46% of people who beat a weed problem USED help (45.8%), while gen-alone '46%' means 46% of everyone NEVER used help. If both show on one page the same figure means opposite things. Frame the cannabis how-alone as '54% never used help' (100 minus 45.8).",
+    "Duplicate on the alcohol page: alcohol.json how '3 tries' is the all-substances figure, the same as gen-tries. The alcohol-only figure in Kelly 2019 Table 1 is a middle of 2 tries (IQR 1 to 4, mean 5.38), counting everyone including those with no serious try; it is not given for alcohol among people with at least one try.",
+    "Behaviour pages: the source counts alcohol and drugs only. On a porn or gambling page these numbers are about a different kind of problem; each headline says 'alcohol or drug' so this is visible, but kinds.json labels them 'Every addiction', which overstates it. Suggested label: 'Alcohol and drugs together'.",
+    "No general number for how-slips, hope-free-now or stop-vs-cut-down: kinds.json defines only three general kinds.",
+    "Reviewer b (rule 10, no field change): if both gen-alone cards show, the diagnosed 90% is the cautious figure for this page's reader; the 46% card already carries it in its caveat."
+  ],
+  "rejected": []
+}

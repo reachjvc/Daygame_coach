@@ -1,0 +1,141 @@
+{
+ "id": "cannabis",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "hope-free-now 65%",
+   "verdict": "ok",
+   "problems": [
+    "Note, not blocking: 'Weed was weaker in 2001 than today' is not in this source (true elsewhere: the Spiga 2025 Cochrane review gives US THC about 3% in the 1980s, 12% in 2012, 17% in 2017).",
+    "Checked in PMC3227547: Table 1 'Cannabis Dependence (N=530)', Tables 3 and 4 'Cannabis remission (N=344)'; 344/530 = 64.9%. Remission = 'finally stopped having any of these experiences … they never started happening again'. Limits section names over-report of remission and institutionalized people not sampled. Quote word for word."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "hope-lifetime 97%",
+   "verdict": "ok",
+   "problems": [
+    "Checked: abstract and results give 97.2% lifetime for cannabis and 66.2% a decade after onset. The ethnic groups run 81.6% to 95.6% (the weak line's 82% to 96%). The limits say not sampling institutionalized people leads to 'overestimation'. Men: adjusted HR 0.64 for cannabis (Table 4). 'Projected' is in the headline (rule 10). Quote word for word with ellipsis."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "who-years 6 years",
+   "verdict": "ok",
+   "problems": [
+    "Checked: 'Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset'. The quote's ellipses only drop the other drugs (rule 13). Note, not blocking: the 2001 potency line is not from this source (see item 0)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "who-age Age 29",
+   "verdict": "fix",
+   "problems": [
+    "basis.measured 'the problem lasted about 12 years' is not what was measured. Table 1b row is 'Duration of substance use career – primary substance' = 11.74, and Methods define the career as 'the number of years from age of first use … to the age at which they resolved' their problem. So it counts from first use, not from when the problem began.",
+    "Rest checked in PMC5992615: quote word for word (M = 28.87; 99% CI 26.46, 31.29). Table header 'Cannabis (12.6%, n = 217)' with note 'Displaying weighted counts'. Weekly use began at 16.89. History of alcohol problems 48% and of other drug problems 33% back 'many also had a past problem'. 'About 1 in 6 diagnosed' matches the sister paper on the same survey (Kelly 2017 Table 1: alcohol/substance use disorder diagnosis 17.0%)."
+   ],
+   "fix": {
+    "basis.measured": "Age when the problem ended, as people remembered it. On average they started weekly use at about 17, and about 12 years passed from their first use to the end of the problem."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "how-alone 54%",
+   "verdict": "ok",
+   "problems": [
+    "Checked in PMC6076174: Table 3, primary substance cannabis, 'assisted %' 45.8 with SE 5.53. Plus or minus 1.96 x 5.53 = 10.8 points, so 54.2% unassisted with a range of about 43% to 65% (plain arithmetic on the source's SE). Table 1 gives cannabis as 11.0% of 2,002, about 220. 'Assisted' covers lifetime treatment, medicine, mutual help and recovery support services such as sober living. Lifetime alcohol/substance use disorder diagnosis was 17.0% (about 1 in 6). More severe use went with more assisted pathways. Headline is not more hopeful."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "how-tries 2 tries",
+   "verdict": "ok",
+   "problems": [
+    "Checked in PMC6602820 Table 1, row 'Cannabis | 4.62 (8.41) | 2 (1, 4) | 0, 100'. The question was 'how many serious attempts did you make … before you overcame it?'. The Discussion says some 'did not count the current attempt'. A minimum of 0 means zero-try answers are included. Note, not blocking: this paper gives no cannabis n. 'About 217' comes from the sister paper on the same survey (Kelly 2018, weighted n = 217)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "how-abrupt 85%",
+   "verdict": "fix",
+   "problems": [
+    "counted (the changed field) says 'not all checked for addiction', which is false. All 193 were checked: 'Most (75%) met criteria for DSM-5 Cannabis Use Disorder using a self-report version of the DSM checklist'. A quarter were checked and did not meet it. The build still needs 'not' in a heavy chip, and the fix keeps it.",
+    "weak repeats the same 'not all checked' wording.",
+    "caveat 'Only 6% sought treatment': the source says 'Ten participants sought treatment during the study (6% of those who intentionally tried to stop or reduce …)'. It is 6% of those who tried, not of everyone.",
+    "headline carries two unrelated figures (85% tried cutting down; 8% off for a month). They are not one pair being compared, which breaks rule 12. Side by side they also hint that cutting down fails, which the source does not show: more reduction days predicted a greater fall in dependence and later quit attempts. The 8% stays in basis.measured, so nothing is lost (rule 25).",
+    "Rest checked in PMC4877269: 85% reduction attempt, 46% quit attempt, 8% abstinent the last month at 6 months, at least 5 days a week of use, recruited 1/2010 to 3/2012, mean age 32, 53% men, paid $2 a day. Quote word for word."
+   ],
+   "fix": {
+    "counted": "daily weed users, not all hooked (a quarter missed the checklist)",
+    "weak": "Daily users, not all hooked (a quarter did not meet the checklist), and paid volunteers.",
+    "caveat": "Volunteers paid for daily calls, not a random sample. Almost every try to stop or cut down lasted under a week. Only 10 people (6% of those who tried) sought treatment. More days of cutting down or stopping went with fewer signs of being hooked later. It does not show that cutting down works better or worse than stopping.",
+    "headline": "Of daily users trying to change on their own, 85% tried cutting down at some point."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "helps-medicine 27 vs 26",
+   "verdict": "fix",
+   "problems": [
+    "basis.measured says 'CBD and anti-seizure medicines had too little testing to tell'. That is right for anti-seizure medicines: 1 trial, 29 people, very low certainty, 'we are uncertain'. For CBD the review says it 'may make little to no difference' to being off weed (1 trial, 68 people, low certainty), and its plain summary lists CBD as 'probably ineffective'. 'Too little testing to tell' runs more hopeful than the source for CBD.",
+    "Rest checked in the PMC12481667 full text. Summary of findings 1: placebo 262 per 1000, THC 270 per 1000 (184 to 396), RR 1.03, 290 (4 RCTs), Moderate; so 27 vs 26 per 100 are the review's own figures. SoF 4 (NAC): 352 vs 411 per 1000, 270 (2 RCTs), Moderate. 37 RCTs with 3,201 people: USA 29, Australia 4, Israel 2, Canada 1, UK 1; 32 mostly male; searched to May 2024. 'No pharmacotherapies approved' and 'should still be considered experimental' are both in the source. Eligibility: 'diagnosed as cannabis dependent or who are likely to be dependent'. Quote is table cells, word for word."
+   ],
+   "fix": {
+    "basis.measured": "Being off weed at the end of treatment, THC medicine against a dummy pill; both groups also had talk therapy. The supplement NAC: 41 in 100 vs 35 in 100 (2 trials, 270 people), also no clear difference. CBD (1 trial, 68 people) may make little or no difference; anti-seizure medicines (1 trial, 29 people) were tested too little to tell."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "helps-talk 23 vs 12",
+   "verdict": "fix",
+   "problems": [
+    "basis.measured 'mostly confirmed by urine or hair tests' is not in the source. The review says 'Half of the reviewed studies included collateral verification or urinalysis to confirm self report data'. Off weed (PPA) is 'the proportion of participants reporting abstinence for the month before assessment', which is self-report.",
+    "basis.who 'adults with a weed problem (cannabis use disorder)' is narrower than the eligibility. The review took adults in outpatient or community treatment who '(2) met diagnostic criteria for cannabis abuse or dependence … or (3) were at least near daily cannabis users or (4) were seeking treatment'. The severity tag 'treatment' still fits.",
+    "Rest checked in the PMC4914383 full text. Quote word for word, 25 words: 23% for treated groups at follow-up longer than 4 months, 12% for controls at final follow-up, across 8 PPA studies. 23 vs 12 per 100 are the review's own arm averages. The headline is less hopeful than the review's own RR 2.55 (6 studies, 1,166 people, low quality). 23 trials, 4,045 people; about 7 sessions over about 12 weeks; searched before July 2015; 15 US trials plus the listed countries. Also checked: 'no particular intervention was consistently effective at nine-month follow-up or later'; more than 4 sessions over more than a month did better; vouchers helped in 5 of 6 studies; 'approximately one-quarter of participants abstinent at final follow-up'."
+   ],
+   "fix": {
+    "basis.who": "adults treated as outpatients or in the community who had a weed problem, used weed nearly every day, or were seeking treatment for it",
+    "basis.measured": "Off weed means no use in the month before the check-up, as people reported it; about half of all the trials checked reports with urine tests or people close to them. Therapy was about 7 sessions over 12 weeks; little or none means minimal or no treatment, such as waiting for treatment later. The review sums up the treated as about a quarter off weed at the last check-up."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "how-withdrawal Day 2–6",
+   "verdict": "ok",
+   "problems": [
+    "Checked against the PubMed abstract (no free full text found): 18 users, 5 days of usual use then 45 days off, 12 ex-users, the listed symptoms, and the quote word for word.",
+    "Open doubt, not fixed: the abstract does not say whether the 18 were checked for dependence. If the paywalled Method says they met the dependence criteria, the severity should become 'dependent' and the 'not checked for addiction' chip would be wrong. A gate with full-text access should look.",
+    "'Vermont, USA' comes from the authors' address (University of Vermont), not a stated study site. It is very likely right."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "how-withdrawal 47%",
+   "verdict": "fix",
+   "problems": [
+    "caveat: 47% is a random-effects pooled average of the studies' own rates, not a head count. The same quote's own counts give 6,469 of 23,518 = 27.5%. The card's n is 23,518, so a reader will take 47% as a share of those 23,518 people, which it is not (rule 9: the n behind that exact figure).",
+    "Rest checked in the PubMed abstract (PMID 32271390): 47 studies, 23,518 people, 69% men, median age 29.9, searched to June 19, 2019, population samples 17%, outpatient 54%, inpatient 87%, daily use associated with higher prevalence. Quote word for word, 20 words. Note, not blocking: 'got withdrawal symptoms' in the headline is looser than 'met the criteria for withdrawal' in measured, which is the more cautious reading."
+   ],
+   "fix": {
+    "caveat": "It depends who is asked: 17% in general surveys, 54% in outpatient clinics, 87% in inpatient units. 47% is an average of the studies' own rates; counting heads, 6,469 of the 23,518 had it (about 28 in 100). Daily users had it more often."
+   }
+  }
+ ]
+}

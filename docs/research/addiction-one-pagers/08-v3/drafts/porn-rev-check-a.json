@@ -1,0 +1,145 @@
+{
+  "id": "porn",
+  "checker": "independent source checker A (did not write porn-rev.json)",
+  "on": "2026-11-05",
+  "scope": "first half of the 18 changed items in file order: the 9 changed numbers (indexes 0,1,2,3,4,5,6,8,9). Beliefs, plan and windows are the second half.",
+  "fetched": {
+    "Efrati 2026": "Europe PMC REST abstract (MED 41435755) and the Hebrew University CRIS page; full text (CC BY) refused by ScienceDirect (403) and Elsevier API",
+    "Kraus 2016": "Europe PMC fullTextXML PMC5387768 (Table 1)",
+    "Crosby 2016": "Europe PMC REST abstract (MED 27157029) and contextualscience.org abstract; full text closed (Semantic Scholar CLOSED; USU dissertation PDF 403); 14 vs 14 split confirmed in PMC12231474 Table 1",
+    "Fernandez 2021": "Europe PMC fullTextXML PMC7889567",
+    "Fernandez 2023": "Europe PMC fullTextXML PMC9847461",
+    "Dwulit 2019": "Europe PMC fullTextXML PMC6571756"
+  },
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 0,
+      "label": "hope-free-now 138 of 180 (Efrati 2026)",
+      "verdict": "fix",
+      "problems": [
+        "Quote is word for word in the abstract (under 30 words). 138, 42, 50, 952 = 1,182 hold. Four waves, LPA on the 2018 and 2022 waves, ages 18-70, Jewish community sample, wartime T3/T4 all hold.",
+        "Headline says 'a likely porn problem'. The profiles are 'probable CSBD/PPU' together, so a man in 'recovery' may have had only a compulsive sex problem. The headline is narrower than the source; counted, basis and weak all say porn or sex. Fix the headline to match (22 words, 2 figures).",
+        "The 180 is inferred from the group names ('recovery' and 'chronic' imply a problem in 2018). The abstract gives no cut-off check, and model groups are not cut-offs. The caveat doubts only the 138; it should doubt the 180 too.",
+        "'Men and women together' is not in the abstract (no sex split given). A sister report by the same team (Shmulewitz, Lev-Ran, Mikulincer; EurekAlert 1090806) covers men and women, so it is likely, but unchecked. State it as likely.",
+        "Rule 13: the sex-problem mix is stated in basis.measured, so that half holds once the headline matches."
+      ],
+      "fix": {
+        "headline": "Of 180 adults whose answers showed a likely porn or sex problem, 138 fit the pattern researchers call ‘recovery’ four years later.",
+        "basis.who": "Jewish adults in Israel aged 18 to 70, from a community sample; the abstract gives no split by sex",
+        "caveat": "Questionnaire answers, not a doctor’s check. Men and women are likely counted together (the abstract gives no split by sex), and porn and sex problems are counted together. ‘Recovery’ and ‘chronic’ are the researchers’ names for groups their statistics drew, so they may not mean each of the 180 had a problem in 2018, or that each of the 138 is free. Nothing says whether they tried to quit.",
+        "weak": "Likely men and women mixed, and porn and sex problems counted together."
+      }
+    },
+    {
+      "where": "numbers",
+      "index": 1,
+      "label": "how-tries 4 in 10 (Kraus 2016)",
+      "verdict": "ok",
+      "problems": [
+        "Table 1: 'Quit attempts with porn ... 4+ past attempts 40.3 5.8' for interested (n = 186) vs not interested (n = 1,111). The quote is the table cells word for word, 23 words. 40.3% read as '4 in 10' and 5.8% as '6%' hold.",
+        "n 186 of 1,298 holds. Mean age 32.8 ('33') holds. Craigslist 91.9% of this group holds. June-July 2013, published 2016, USA/Canada/other English-speaking all hold. 'Wanted help' matches the item 'Would you like to seek professional help ... BUT have not yet done so'. Note: 40 of the 186 had sought treatment before.",
+        "Headline is 20 words with 2 figures. Mirror is 11 words, second person, and the number answers it. Self-hooked is allowed for how-tries. No other drug named."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 2,
+      "label": "helps-talk 54 in 100 (Crosby 2016)",
+      "verdict": "fix",
+      "problems": [
+        "Quote is word for word in the abstract (22 words). The 54% follows 'When combining all participants (N=26)', so the 'both groups once treated' reading holds. 14 vs 14 at start is confirmed by the 2025 meta-analysis PMC12231474 Table 1 (100% male, US). '93% ACT vs 21% waitlist' in basis.measured holds.",
+        "n doubt: in the same sentence, '93% of participants' is not a whole number out of 26 (24/26 = 92%, 25/26 = 96%), but it is out of 28 (26/28). The 54% fits both 14/26 and 15/28. So the abstract does not settle whether 26 is the exact count behind this figure. Say so in basis.n.",
+        "The caveat says 'The trial gives no count' of waiting-list men who stopped. Only the abstract was read; the full paper is closed. It should say 'The abstract gives no count'.",
+        "Rule 12a cannot be met from this source: there is no per-100 'without' figure. The caveat says this is not a with-versus-without figure, and the drafter added a gap note for helps-talk. That is the honest way to show it. '54 in 100' is a plain rewrite of the source's 54%; no 'about' is needed.",
+        "Headline is not more hopeful than the source (end-of-therapy figure; the 3-month 35 in 100 is in the caveat). It is 17 words with 2 figures. The mirror is 11 words, second person. Treatment is allowed for helps-talk. The ACT explanation is in plain words."
+      ],
+      "fix": {
+        "basis.n": "26 men, both groups together, in the abstract’s combined count (of 28 who started: 14 given therapy first, 14 on a waiting list); the abstract does not say exactly how many men this percentage counts",
+        "caveat": "The abstract gives no count of men who stopped while on the waiting list (the full paper is not free to read), so this is not a with-versus-without figure. There was no comparison therapy, so it does not show ACT beats other help. Three months later, 35 in 100 had stopped completely."
+      }
+    },
+    {
+      "where": "numbers",
+      "index": 3,
+      "label": "how-slips 55 of 104 (Fernandez 2021)",
+      "verdict": "ok",
+      "problems": [
+        "Quote is word for word in the full text (16 words). 104 journals; 55 with at least one lapse; 80 said they were addicted to porn; ages 18-63; journals from 2016-2018; attempts of 7 days to 12 months; 'at least 86.5%' also abstaining from masturbation; median 36.5 days; 'Members could have continued ... but stopped posting'; Arch Sex Behav 50:711-728 (2021). All hold.",
+        "Headline is 18 words with 2 figures. Self-hooked is allowed for how-slips.",
+        "Minor, no fix: the mirror ('men who really quit never do') is only partly answered. The 55 were men trying to quit, and the study cannot say which of them went on to quit. The number shows slips are common in real attempts; it does not show slips among men who succeeded."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 4,
+      "label": "how-slips 45% (Fernandez 2023)",
+      "verdict": "ok",
+      "problems": [
+        "Quote is word for word in the limitations section (19 words). Results give 39/86 = 45.35%. n 86 of 176 holds. 64.2% female, mean age 21.38, psychology undergraduates in Malaysia, at least 3 times a week, nightly measures including daily porn use all hold.",
+        "Caveat 'most with no wish to quit' holds: 89.8% had no intrinsic desire to quit (48.9% wanted only to cut down, 40.9% neither).",
+        "Users is allowed for how-slips. The counted label says 'not hooked'. Headline is 18 words with 2 figures. The mirror is 12 words, second person. The propose note (rule 2) stays open."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 5,
+      "label": "how-slips 51% (Dwulit 2019)",
+      "verdict": "ok",
+      "problems": [
+        "Quote is word for word in section 3.4. Current users n = 4,260 (2,520 female, 1,740 male), so women are 59%, about 6 in 10. Ages 18-26; online February 2017 to August 2018. All hold.",
+        "Headline is accurate, with 1 figure. Users is allowed for how-slips, and the counted label says 'not checked for addiction'.",
+        "Note, not a source error: the how-slips question is 'How many slip on a try', but 51% is the share of current users who ever tried. Since they still watch, their tries did not stick. The kind label is not printed on the card (only in the gap list), so a reader is not misled."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 6,
+      "label": "how-withdrawal 7 days (Fernandez 2023)",
+      "verdict": "fix",
+      "problems": [
+        "All four quotes are word for word: the abstract's craving sentence, the line-195 'did not play a significant moderating role', the '(19.3%)' daily-use share, and the 'generally does not experience' sentence. Each is under 30 words.",
+        "These hold: 176 (86/90); about 34 daily users (19.3% of 176 = 34.0); 85% below the cut-off (84.7%); 9 in 10 with no wish to quit (89.8%); 45% watched anyway; data from February-March 2021; an exploratory, unplanned check; no follow-up after day 7.",
+        "Headline 'mood and withdrawal were no worse' is firmer than the source. The authors say the lack of mood and withdrawal effects 'needs to be interpreted with caution because given the limited statistical power ... similar but smaller effects may not have been detected'. The headline should say no clear difference was found.",
+        "Caveat 'Even the high scorers were, on average, below the problem line' misdescribes the result. The 'high' level is a single point the model was probed at (+1 SD, 72.82), not an average of high scorers, and it was below the cut-off of 76.",
+        "Users is allowed for how-withdrawal, and the counted label says 'not hooked'. The fixed headline is 22 words with 0 figures."
+      ],
+      "fix": {
+        "headline": "Off for a week, daily users with high problem scores craved more than those still watching; no clear mood or withdrawal difference.",
+        "caveat": "Most were not hooked: 85% scored below the problem cut-off, 9 in 10 had no wish to quit, and 45% of the stop group watched anyway. Even the ‘high’ problem score the researchers tested was below the problem cut-off. The daily-user result rests on few people and an unplanned check; the authors say there were too few people to rule out smaller mood or withdrawal effects. Across everyone, no withdrawal showed up. Nothing was measured after day 7."
+      }
+    },
+    {
+      "where": "numbers",
+      "index": 8,
+      "label": "after-lasting 74% (Crosby 2016)",
+      "verdict": "fix",
+      "problems": [
+        "Quote is word for word in the abstract (22 words). The 74% (at least 70% less viewing) and the 35% (stopped completely) at 3 months hold. Treatment is allowed for after-lasting. Headline is 19 words with 2 figures, and it is not more hopeful than the source. The mirror is kept and answered.",
+        "n '26 men followed up' does not fit the figure. 74% is not a whole number out of 26 (19/26 = 73%, 20/26 = 77%), so the 3-month percentage was worked out on a different count; 8/23 and 17/23 give exactly 35% and 74%. The abstract's N=26 is the combined count, not the 3-month count.",
+        "Caveat says 'Nothing was reported on mood, sex life or relationships'. The abstract says quality of life was measured at the 3-month follow-up but gives no result for it. Say that instead."
+      ],
+      "fix": {
+        "basis.n": "26 men in the combined count, both groups together; the abstract does not say how many were checked at 3 months, and 74% is not a whole number out of 26, so a few were likely missing",
+        "caveat": "About 26 men, nearly all from one church, self-report, only 3 months. At the same check, 35 in 100 had stopped completely. Quality of life was measured, but the abstract gives no result for it.",
+        "weak": "Only about 26 men, almost all from one church."
+      }
+    },
+    {
+      "where": "numbers",
+      "index": 9,
+      "label": "after-lasting 1 in 6 (Dwulit 2019)",
+      "verdict": "ok",
+      "problems": [
+        "Quote is word for word in section 3.2 (only the spacing inside the bracket differs). Ever-watched n = 5,083 (3,004 female, 2,079 male); 823 stopped (484 female, 339 male); 59% women. All hold.",
+        "823/5,083 = 16.2%, so 'about 1 in 6' (16.7%) is plain arithmetic, with 'about'. Men 339/2,079 = 16.3% and women 484/3,004 = 16.1%, so 'men as often as women' holds.",
+        "'1 in' is allowed: after-lasting is in the 'after' group, not 'helps'. Users is allowed, and the counted label says 'not addicts'. The caveat states that 'stopped' has no time frame. Headline is 19 words, 1 figure."
+      ],
+      "fix": {}
+    }
+  ]
+}

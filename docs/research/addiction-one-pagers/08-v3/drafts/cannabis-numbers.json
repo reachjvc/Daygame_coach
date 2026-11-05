@@ -1,0 +1,488 @@
+{
+ "id": "cannabis",
+ "numbers": [
+  {
+   "kind": "hope-free-now",
+   "big": "344 of 530",
+   "headline": "Of 530 Americans ever hooked on weed, 344 were already free of it when they were interviewed.",
+   "mirror": "You think being hooked on weed is just who you are now.",
+   "severity": "dependent",
+   "counted": "people who had ever been hooked on weed",
+   "basis": {
+    "design": "national survey (NESARC), face-to-face interviews, one snapshot",
+    "who": "US adults who had ever met the older DSM-IV criteria for dependence on weed (3 or more of 7 signs within a year)",
+    "n": "530 adults ever hooked on weed (of 43,093 surveyed); 344 of them were free by the interview",
+    "where": "USA",
+    "when": "2001–2002",
+    "measured": "Whether the signs of being hooked had finally stopped and never come back, as people recalled it. Free here means no signs of being hooked any more; it does not have to mean never using."
+   },
+   "caveat": "344 of 530 is about 65%, a raw head count before the survey's weighting. Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today.",
+   "projection": false,
+   "weak": null,
+   "ref": {
+    "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+    "pmid": "21077975",
+    "fetched": true,
+    "quote": "Table 1: \"Cannabis Dependence (N=530)\"; Table 3: \"Cannabis remission (N=344)\""
+   },
+   "origin": "07-mirror-stats/cannabis.json who '6 years' (its head count, 344 of 530; refetched from PMC on 2026-11-05)"
+  },
+  {
+   "kind": "hope-lifetime",
+   "big": "97%",
+   "headline": "97% of Americans ever hooked on weed are projected to get free of it at some point in their lives.",
+   "mirror": "You think you've smoked too long to ever get free.",
+   "severity": "dependent",
+   "counted": "people who had ever been hooked on weed",
+   "basis": {
+    "design": "national survey (NESARC), face-to-face interviews; ages recalled, then a statistical model projects the share over a whole life",
+    "who": "US adults who had ever met the older DSM-IV criteria for dependence on weed",
+    "n": "530 adults ever hooked on weed (of 43,093 surveyed)",
+    "where": "USA",
+    "when": "2001–2002",
+    "measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. A projected 66% were free within 10 years."
+   },
+   "caveat": "A model, not a head count: 344 of the 530 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women.",
+   "projection": true,
+   "weak": "A projection from recalled ages that likely runs high; the same paper's projections for each ethnic group run from 82% to 96%, all below 97%.",
+   "ref": {
+    "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+    "pmid": "21077975",
+    "fetched": true,
+    "quote": "Lifetime cumulative probability estimates of dependence remission were … 97.2% for cannabis"
+   },
+   "origin": "06-template.json cannabis hero '97%' (same source as 07-mirror-stats/cannabis.json who '6 years'; refetched from PMC on 2026-11-05)"
+  },
+  {
+   "kind": "who-years",
+   "big": "6 years",
+   "headline": "Half of Americans ever hooked on weed are projected to be free of it about 6 years after it started.",
+   "mirror": "You've been hooked for years and think it's too late.",
+   "severity": "dependent",
+   "counted": "people who had ever been hooked on weed",
+   "basis": {
+    "design": "national survey (NESARC), face-to-face interviews; ages recalled and modelled over a lifetime",
+    "who": "US adults who had ever met the older DSM-IV criteria for dependence on weed",
+    "n": "530 adults who had ever been hooked (of 43,093 surveyed); 344 of them had got free",
+    "where": "USA",
+    "when": "2001–2002",
+    "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using."
+   },
+   "caveat": "A projection from recalled ages, not a head count. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women. Weed was weaker in 2001 than today.",
+   "projection": true,
+   "weak": "A projection from recalled ages, which likely runs hopeful.",
+   "ref": {
+    "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+    "pmid": "21077975",
+    "fetched": true,
+    "quote": "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+   },
+   "origin": "07-mirror-stats/cannabis.json who '6 years' (figure, n and ref kept; the comparison with other addictions dropped under rule 13; not picked in kinds.json, included because a checked number exists)"
+  },
+  {
+   "kind": "who-age",
+   "big": "Age 29",
+   "headline": "Americans who beat a weed problem were about 29, on average, when it ended.",
+   "mirror": "You're in your twenties and fear you'll never stop.",
+   "severity": "resolved",
+   "counted": "people who beat a weed problem",
+   "basis": {
+    "design": "national survey (National Recovery Survey), one snapshot, answered online",
+    "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one. Many also had a past problem with another substance.",
+    "n": "About 217 people whose main problem was weed (a weighted count, of 2,002)",
+    "where": "USA",
+    "when": "July–August 2016",
+    "measured": "Age when the problem ended, as people remembered it. On average they started weekly use at about 17 and the problem lasted about 12 years."
+   },
+   "caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. The problem was their own judgment: in the whole survey only about 1 in 6 had ever been diagnosed.",
+   "projection": false,
+   "weak": "The problem was self-defined and most in this survey were never diagnosed, so milder cases are mixed in with addiction.",
+   "ref": {
+    "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+    "pmid": "29287223",
+    "fetched": true,
+    "quote": "The average age at problem resolution was also significantly younger for CAN (M = 28.87 years; 99% CI: 26.46, 31.29)"
+   },
+   "origin": "07-mirror-stats/cannabis.json who 'Age 29' (figure, n and ref kept; comparison ages for other addictions dropped under rule 13; quote narrowed to the weed figure; refetched from PMC on 2026-11-05)"
+  },
+  {
+   "kind": "how-alone",
+   "big": "54%",
+   "headline": "About 54% of Americans who beat a weed problem never used treatment, a group or medicine.",
+   "mirror": "You think you can't get off weed without rehab.",
+   "severity": "resolved",
+   "counted": "people who beat a weed problem",
+   "basis": {
+    "design": "national survey (National Recovery Survey), one snapshot, answered online",
+    "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one. Many also had a past problem with another substance.",
+    "n": "About 220 people whose main problem was weed (11% of a weighted 2,002)",
+    "where": "USA",
+    "when": "July–August 2016",
+    "measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8% had used one or more; the other 54% used none."
+   },
+   "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. About 220 people, so the true share could be several points either way. The problem was their own judgment: in the whole survey only about 1 in 6 had ever been diagnosed.",
+   "projection": false,
+   "weak": "The problem was self-defined and most in this survey were never diagnosed, so milder cases are mixed in with addiction.",
+   "ref": {
+    "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
+    "pmid": "29055821",
+    "fetched": true,
+    "quote": "Table 3, column \"assisted %\": \"Cannabis (e.g., marijuana, hashish) 45.8\""
+   },
+   "origin": "07-mirror-stats/cannabis.json how '46%' (same table cell, shown as its complement: 100 − 45.8 = 54% who used no help; ref kept; refetched from PMC on 2026-11-05)"
+  },
+  {
+   "kind": "how-tries",
+   "big": "2 tries",
+   "headline": "Half of Americans who beat a weed problem needed 2 serious tries or fewer.",
+   "mirror": "You've tried to stop before and think you've failed for good.",
+   "severity": "resolved",
+   "counted": "people who beat a weed problem",
+   "basis": {
+    "design": "national survey (National Recovery Survey), one snapshot, answered online",
+    "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one. Many also had a past problem with another substance.",
+    "n": "About 217 people whose main problem was weed (a weighted count, of 2,002)",
+    "where": "USA",
+    "when": "July–August 2016",
+    "measured": "Number of serious tries before the problem was resolved, as people remembered it, counting everyone, including people who never needed a serious try. The middle half needed 1 to 4."
+   },
+   "caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. The problem was their own judgment: in the whole survey only about 1 in 6 had ever been diagnosed.",
+   "projection": false,
+   "weak": "The problem was self-defined and most in this survey were never diagnosed, so milder cases are mixed in with addiction.",
+   "ref": {
+    "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+    "pmid": "31090945",
+    "fetched": true,
+    "quote": "Mean (SD) Median (IQR) Min, max … Cannabis 4.62 (8.41) 2 (1, 4) 0, 100"
+   },
+   "origin": "07-mirror-stats/cannabis.json how '2 tries' (figure, n and ref kept; the comparison with another addiction dropped under rule 13; refetched from PMC on 2026-11-05)"
+  },
+  {
+   "kind": "how-abrupt",
+   "big": "85%",
+   "headline": "Of daily users changing on their own, 85% tried cutting down; only 8% later had a month without weed.",
+   "mirror": "You keep cutting down instead of stopping, and it never lasts.",
+   "severity": "heavy",
+   "counted": "daily weed users trying to stop or cut down alone",
+   "basis": {
+    "design": "daily phone check-ins for 3 months, then a survey at 6 months",
+    "who": "daily or near-daily weed users (5+ days a week) planning to stop or cut down on their own, not in treatment; half men, average age 32. 75% met the checklist for a weed problem, mild cases included.",
+    "n": "193 people",
+    "where": "USA (recruited nationwide, mostly online)",
+    "when": "2010–2012",
+    "measured": "Each day: weed use, and whether they were trying to stop or cut down. 85% tried cutting down at some point and 46% tried stopping. At 6 months, 8% had not used weed in the last month."
+   },
+   "caveat": "Volunteers paid for daily calls, not a random sample. Almost every try to stop or cut down lasted under a week. Only 6% sought treatment. More days of cutting down or stopping went with fewer signs of being hooked later. It does not show that cutting down works better or worse than stopping.",
+   "projection": false,
+   "weak": "Daily users, not all checked as hooked (a quarter did not meet the checklist), and paid volunteers.",
+   "ref": {
+    "cite": "Hughes JR, Naud S, Budney AJ, Fingar JR, Callas PW (2016). Attempts to stop or reduce daily cannabis use: an intensive natural history study. Psychology of Addictive Behaviors.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4877269/",
+    "pmid": "26828641",
+    "fetched": true,
+    "quote": "Most (85%) participants made an intentional reduction attempt during the study."
+   },
+   "origin": "07-mirror-stats/cannabis.json how '85%' (figure, n and ref kept; 75%-met-checklist and the 8% line added from the refetched PMC full text, 2026-11-05; not picked in kinds.json, included because a checked number exists)"
+  },
+  {
+   "kind": "how-slips",
+   "big": "71%",
+   "headline": "Of people treated for weed who got two weeks off, 71% slipped at least once within 6 months.",
+   "mirror": "You slipped once and think the whole quit is ruined.",
+   "severity": "treatment",
+   "counted": "people in treatment for weed who got two weeks off",
+   "basis": {
+    "design": "follow-up of an outpatient treatment group",
+    "who": "adults in outpatient treatment for marijuana dependence who reached at least 2 weeks without weed",
+    "n": "82 adults in outpatient treatment",
+    "where": "Vermont, USA",
+    "when": "published 2003",
+    "measured": "First use of any weed (a slip), and return to heavier use (4+ days in any 7 days), over 6 months. On average the first slip came about 73 days in."
+   },
+   "caveat": "A slip is common, not the end of a try. But 71% of those who slipped went back to heavier use, and early slips were riskier.",
+   "projection": false,
+   "weak": "Only 82 people from one treatment programme, studied over 20 years ago.",
+   "ref": {
+    "cite": "Moore BA, Budney AJ (2003). Relapse in outpatient treatment for marijuana dependence. Journal of Substance Abuse Treatment.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/14629990/",
+    "pmid": "14629990",
+    "fetched": true,
+    "quote": "Seventy-one percent used marijuana at least once (i.e., lapsed) within 6 months of initial abstinence, averaging 73 days (SD = 50) till lapsing."
+   },
+   "origin": "07-mirror-stats/cannabis.json quit '71%' (figure, basis and ref kept; abstract refetched from Europe PMC on 2026-11-05)"
+  },
+  {
+   "kind": "helps-stop-vs-cut",
+   "big": "63%",
+   "headline": "63% of Americans who beat a weed problem no longer used it at all; about 1 in 3 still used some.",
+   "mirror": "You hope you can keep smoking now and then, just not daily.",
+   "severity": "resolved",
+   "counted": "people who beat a weed problem",
+   "basis": {
+    "design": "national survey (National Recovery Survey), one snapshot, answered online",
+    "who": "US adults who said they used to have a substance problem but no longer do, and named weed as the main one. Many also had a past problem with another substance.",
+    "n": "About 217 people whose main problem was weed (a weighted count, of 2,002)",
+    "where": "USA",
+    "when": "July–August 2016",
+    "measured": "Whether people were abstinent from weed at the time of the survey, among those who said the problem was over."
+   },
+   "caveat": "It shows which way people who got free went, not which way works better. They judged for themselves that the problem was over. It doesn't say how much the 1 in 3 still use, or how many tried to keep using and slid back. The problem was their own judgment: in the whole survey only about 1 in 6 had ever been diagnosed.",
+   "projection": false,
+   "weak": "Counts only people who got free, so it cannot compare how often stopping and cutting down fail; the problem was self-defined.",
+   "ref": {
+    "cite": "Kelly JF, Greene MC, Bergman BG (2018). Is recovery from cannabis use problems different from alcohol and other drugs? Results from a national probability-based sample of the United States adult population. International Journal of Drug Policy.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5992615/",
+    "pmid": "29287223",
+    "fetched": true,
+    "quote": "However, 63% of CAN reported being abstinent from their primary substance (i.e., cannabis)"
+   },
+   "origin": "07-mirror-stats/cannabis.json works '1 in 3' (same finding led with its 63% half; n and ref kept; quote swapped to the sentence holding 63%, from the refetched PMC full text, 2026-11-05)"
+  },
+  {
+   "kind": "helps-medicine",
+   "big": "0 pills",
+   "headline": "No medicine is approved to help people quit weed; in trials, THC-based pills and NAC worked no better than dummy pills.",
+   "mirror": "You've hoped a doctor could give you a pill to quit.",
+   "severity": "dependent",
+   "counted": "people hooked on weed in medicine trials",
+   "basis": {
+    "design": "Cochrane review of 37 randomised trials",
+    "who": "people diagnosed as hooked on weed, or likely to be; mostly adults, and most trials were mostly men",
+    "n": "3,201 people in 37 trials (THC medicines: 290 people in 4 trials; NAC: 270 in 2)",
+    "where": "mostly USA (29 trials), also Australia, Israel, Canada and the UK",
+    "when": "searched to May 2024; published 2025",
+    "measured": "Being off weed at the end of treatment, medicine against a dummy pill. CBD and anti-seizure medicines had too little testing to tell."
+   },
+   "caveat": "Not proof that pills can't help: most were tested in few, small trials, and the review calls the evidence uncertain. Because no medicine beat a dummy pill, there is no '1 in N' figure yet.",
+   "projection": false,
+   "weak": null,
+   "ref": {
+    "cite": "Spiga F, Parkhouse T, Tang VM, Savović J, Le Foll B, Nielsen S (2025). Pharmacotherapies for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+    "url": "https://europepmc.org/article/MED/41025421",
+    "pmid": "41025421",
+    "fetched": true,
+    "quote": "There are currently no pharmacotherapies approved for the treatment of cannabis use disorder"
+   },
+   "origin": "07-mirror-stats/cannabis.json works '0 pills' (figure, basis and ref kept; 'who' tightened to the review's own eligibility wording, abstract refetched from Europe PMC on 2026-11-05)"
+  },
+  {
+   "kind": "helps-talk",
+   "big": "1 in 4",
+   "headline": "In 23 trials of talk therapy for weed, about 1 in 4 people were off weed at the last check-up.",
+   "mirror": "You wonder if therapy is worth it after failing alone.",
+   "severity": "treatment",
+   "counted": "people in therapy trials for a weed problem",
+   "basis": {
+    "design": "Cochrane review of 23 randomised trials",
+    "who": "adults with a weed problem (cannabis use disorder), treated as outpatients or in the community",
+    "n": "4,045 people in 23 trials",
+    "where": "15 trials in the USA; others in Australia, Germany, Switzerland, Canada, Brazil and Ireland",
+    "when": "studies published before July 2015; review 2016",
+    "measured": "Weed use, being off weed, and signs of being hooked, against minimal or no treatment; about 7 sessions over 12 weeks. More than 4 sessions over more than a month did better. Adding rewards (vouchers for weed-free urine tests) helped in 5 of 6 trials."
+   },
+   "caveat": "At around 4 months, therapy made people about 2.5 times as likely to say they weren't using, but that evidence is weak. No kind of therapy clearly worked at 9 months or later. The 1 in 4 is a rough share across trials, not the gain over doing nothing.",
+   "projection": false,
+   "weak": null,
+   "ref": {
+    "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.",
+    "url": "https://europepmc.org/article/MED/27149547",
+    "pmid": "27149547",
+    "fetched": true,
+    "quote": "abstinence rates were relatively low overall, with approximately one-quarter of participants abstinent at final follow-up."
+   },
+   "origin": "07-mirror-stats/cannabis.json works '1 in 4' (figure, basis and ref kept; abstract refetched from Europe PMC on 2026-11-05)"
+  },
+  {
+   "kind": "after-first-month",
+   "big": "Week 1",
+   "headline": "Young regular users who stopped for a month got better at learning and remembering words, mostly in the first week.",
+   "mirror": "You feel foggy and fear your memory won't come back.",
+   "severity": "heavy",
+   "counted": "regular weed users aged 16 to 25, not checked for addiction",
+   "basis": {
+    "design": "randomised study: 4 weeks off weed vs. carry on using",
+    "who": "regular users aged 16–25 from the community and a high school, using on about 55 of the last 90 days",
+    "n": "62 asked to stop for a month, with rewards for clean urine tests, vs 26 who kept using (55 stayed off all 30 days)",
+    "where": "Boston, USA",
+    "when": "2015–2016",
+    "measured": "memory and attention tests at the start and every week for 4 weeks"
+   },
+   "caveat": "Memory improved; attention did not. Young users only, and not checked for addiction. It could not say whether school or work results improved.",
+   "projection": false,
+   "weak": "A small trial (62 who stopped) of young users who were not checked for addiction.",
+   "ref": {
+    "cite": "Schuster RM, Gilman J, Schoenfeld D, et al. (2018). One month of cannabis abstinence in adolescents and young adults is associated with improved memory. Journal of Clinical Psychiatry.",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/30408351/",
+    "pmid": "30408351",
+    "fetched": true,
+    "quote": "There was an effect of abstinence on verbal memory (P = .002) ... driven by improved verbal learning in the first week of abstinence."
+   },
+   "origin": "07-mirror-stats/cannabis.json after 'Week 1' (figure, basis and ref kept; use frequency added from the PMC full text, PMC6587572, fetched 2026-11-05)"
+  },
+  {
+   "kind": "after-mood",
+   "big": "12 weeks",
+   "headline": "In a 12-week trial for a weed problem, people who cut down grew less anxious and less depressed, and slept better.",
+   "mirror": "You fear life without weed will feel anxious and empty.",
+   "severity": "treatment",
+   "counted": "adults in a treatment trial for a weed problem",
+   "basis": {
+    "design": "follow-up inside a 12-week medicine trial (secondary analysis)",
+    "who": "adults aged 18–50 in a trial for cannabis use disorder",
+    "n": "302 adults (152 whose use went down, 150 whose use went up)",
+    "where": "USA (UCLA-led)",
+    "when": "published 2017",
+    "measured": "changes in anxiety, depression, sleep quality and quality of life, next to changes in weed use"
+   },
+   "caveat": "This is cutting down, not only quitting. Overall quality of life did not improve in 12 weeks. The changes were small, and it is a link, not proof.",
+   "projection": false,
+   "weak": "A link found after the fact inside one trial; the mood changes were small.",
+   "ref": {
+    "cite": "Hser YI, Mooney LJ, Huang D, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
+    "pmid": "28847455",
+    "fetched": true,
+    "quote": "These results indicate a longitudinal relationship between reductions in cannabis use and improvements in anxiety, depression, and sleep quality."
+   },
+   "origin": "07-mirror-stats/cannabis.json after '12 weeks' (figure, basis and ref kept; abstract refetched from Europe PMC on 2026-11-05)"
+  }
+ ],
+ "gaps": [
+  {
+   "kind": "helps-stop-vs-cut",
+   "status": "partly filled",
+   "note": "Filled with 63% (people who beat a weed problem who no longer use it), which shows the route taken, not which route works. No study was found that compares relapse after stopping with relapse after cutting down among people who had been hooked on weed (the kind of figure the alcohol page's '27% vs 7%' gives).",
+   "searched": "Europe PMC: cannabis/marijuana + remission/recurrence/persistence + abstinence/non-abstinent/moderation/controlled use; cannabis quit vs reduce. Seen: Lozano 2006 (Addiction, PMID 17034438, 291 treatment-seekers; people reached the goal they picked, abstract has no figures, full text paywalled), Stea 2015 (PMID 26168224, 119 recovered; abstinent recoveries had worse histories, no figures in abstract), Brezing 2018 (PMC5846101, 62 people, quality of life, no simple figure), Levin 2021 (PMC8282674, trial reduction categories, no stop-vs-cut figure), Farmer 2015 (PMC4229487, recurrence 27.7% but not split by continued use), Hughes 2016 (daily users, tag 'heavy', not allowed in the helps group; used under how-abrupt).",
+   "later": "Our r/leaves harvest already counts relapse posts by day (103 of 221 after more than a month off; 'I can moderate now' named most). A count of moderation-try posts and how they ended could fill this later as a self-hooked number."
+  },
+  {
+   "kind": "helps-medicine",
+   "status": "filled, no '1 in N'",
+   "note": "No medicine beat a dummy pill for being off weed (Cochrane 2025), so the '1 in N' form the kind asks for does not exist. Shown as '0 pills'.",
+   "searched": "Cochrane 2025 (PMID 41025421) abstract refetched; no single trial was taken over the review."
+  }
+ ],
+ "notUsed": [
+  {
+   "origin": "07-mirror-stats/cannabis.json you '1 in 3'",
+   "big": "1 in 3",
+   "why": "Share of daily users who meet the checklist: a 'who gets hooked' figure, not about quitting; rule 1 (never screen)."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json you '42%'",
+   "big": "42%",
+   "why": "Days of use among ordinary users ('users' tag), and its line compares with another drug (rule 13); no kind fits."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json you '4×'",
+   "big": "4×",
+   "why": "Potency of seized weed; about the drug, not the reader's quitting; no kind fits."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json start '10+ years'",
+   "big": "10+ years",
+   "why": "Years and quit tries before treatment among people still hooked; how-tries asks about people who got free, so Kelly 2019 '2 tries' fits better. Could back a 'stuck' belief."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json start '5 years'",
+   "big": "5 years",
+   "why": "Time from first use to getting hooked; about starting, not getting free; no kind fits."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json start 'Age 18'",
+   "big": "Age 18",
+   "why": "Peak age of starting and getting hooked; about starting; no kind fits."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json cost '−5.5 IQ'",
+   "big": "−5.5 IQ",
+   "why": "A harm of long use; the menu has no cost kind (after-body is about change after quitting and is not picked)."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json cost '52% vs 14%'",
+   "big": "52% vs 14%",
+   "why": "A harm of long dependence (43 people); no cost kind in the menu."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json cost '4.8×'",
+   "big": "4.8×",
+   "why": "A harm (psychosis odds); no cost kind in the menu. Still used as proof in the 06 'natural, so harmless' belief."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json cost '~4×'",
+   "big": "~4×",
+   "why": "Links daily use with sex problems; it does not measure change after quitting, so it does not fit after-body (not picked anyway)."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json quit 'Day 2–6'",
+   "big": "Day 2–6",
+   "why": "Withdrawal timing; it lives in the timeline (06 windows and milestones), not in the number kinds."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json quit '47%'",
+   "big": "47%",
+   "why": "Share who get withdrawal; no kind asks this. It backs the timeline and the 'weed isn't addictive' belief."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json after '72 hours'",
+   "big": "72 hours",
+   "why": "Fits after-first-month but compares different people at one moment; the 'Week 1' trial follows the same people after stopping, so it was chosen."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json who '3 in 4'",
+   "big": "3 in 4",
+   "why": "Why 25 hand-picked self-quitters skipped treatment; too small and not a share of all who quit alone. how-alone uses the national 54%."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json how '13%'",
+   "big": "13%",
+   "why": "Share of everyone who ever had a weed problem (mild included) who got treatment; counts people still hooked too, not people who got free. how-alone uses the 54% of those who got free."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Kelly 2018 18% formal treatment'",
+   "big": "18%",
+   "why": "Already left out in 07; narrower than how-alone (formal treatment only, groups not counted)."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Hirvonen 2012 CB1 receptors'",
+   "big": "about 4 weeks",
+   "why": "Already left out in 07; 30 men, brain scans. The receptor recovery is already a timeline milestone (06, via Bonnet 2017), so it is not repeated as an after-first-month number."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Livne 2019 12.1% withdrawal'",
+   "big": "12.1%",
+   "why": "Already left out in 07; withdrawal share, no kind asks this."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Diep 2022 sleep'",
+   "big": "1.34×",
+   "why": "Already left out in 07; ordinary users, not change after quitting; after-sleep is not picked."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Halicka 2025 / Kadden 2007 vouchers'",
+   "big": "3.78",
+   "why": "Already left out in 07 as too unsure; helps-reward is not picked. The Cochrane '5 of 6 trials' finding stays in the helps-talk basis."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Calabria 2010 17% a year'",
+   "big": "17%",
+   "why": "Already left out in 07 as unclear; hope-free-now uses the NESARC head count instead."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'Hasin 2015 30.6%' and 'CDC 3 in 10'",
+   "big": "30.6%",
+   "why": "Already left out in 07; share of users with a disorder, a 'who gets hooked' figure (rule 1). Still used in the 06 'weed isn't addictive' belief."
+  },
+  {
+   "origin": "07-mirror-stats/cannabis.json rejected 'NSDUH 2024 totals', 'money', 'weekly users', 'Silins 2014', 'Meier 2012'",
+   "big": "various",
+   "why": "Already left out in 07 (unverified, no source, no figure, teenagers, or replaced by Meier 2022); population totals are also banned by rule 11."
+  }
+ ]
+}

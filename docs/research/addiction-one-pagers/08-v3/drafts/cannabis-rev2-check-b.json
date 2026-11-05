@@ -1,0 +1,150 @@
+{
+  "id": "cannabis",
+  "checkedBy": "independent source checker B (did not write the draft)",
+  "checkedOn": "2026-11-05",
+  "scope": "second half of changed items in file order: numbers 14-15, beliefs 0-3, plan 1-4, windows 0-4 (numbers 14 may overlap checker A)",
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 14,
+      "label": "+12 points (life quality, Brezing 2018)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "PMC5846101 full text (NCBI efetch, 2026-11-05): Model 1 N = 52; 29/62 abstinent last 2 weeks; 6.78 raw points = '12% of the maximum possible change'; baseline 49.83 = 64.0%; 'all were daily users'; DSM-IV dependence via SCID; 'clinically meaningful improvement'. Both quotes word for word (28 and 18 words). Analysis covers only those who finished (62 of 122 randomised); the caveat's 'one small trial' covers it."
+    },
+    {
+      "where": "numbers",
+      "index": 15,
+      "label": "12 weeks (cutting down, Hser 2017)",
+      "verdict": "fix",
+      "problems": [
+        "basis.n gives 302, but the abstract's figures come from the final models (Model II), which had N = 219 (Table 3, goodness of fit). In the 302-person model (Model I) the sleep link was not significant (-0.06, SE 0.03, no star); only anxiety and depression were. So 'slept better' rests on 219 people.",
+        "The gains are relative: 'compared to those without reductions in cannabis use'. The caveat should say so.",
+        "changeNote is wrong that this paper does not describe the cash rewards: section 2.3 says 'escalating CM cash vouchers targeted visit attendance and cannabis abstinence'. The reader text 'a reward programme' is still correct, so no change to basis.who.",
+        "Minor, no change needed: all 302 met DSM-IV dependence, so severity 'dependent' would also fit (belief 3 tags the same source 'dependent'); 'treatment' is the more cautious tag and is allowed."
+      ],
+      "fix": {
+        "basis.n": "302 adults (152 whose use went down, 150 whose use went up); the fuller analysis, which allowed for drinking and tobacco, had 219 of them",
+        "caveat": "This is cutting down, not only quitting. The gains are measured against those whose use went up. Better sleep showed only in the fuller analysis of 219 people, which allowed for drinking and tobacco. Cutting down was not linked with better quality of life in 12 weeks. The changes were small, and it is a link, not proof."
+      }
+    },
+    {
+      "where": "beliefs",
+      "index": 0,
+      "label": "I've smoked for years. I'm stuck. (344 of 530)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "PMC3227547 (NCBI efetch, 2026-11-05): Table 1 'Cannabis Dependence (N=530)'; Tables 3/4 'Cannabis remission (N=344)'. Remission = 'finally stopped having any of these experiences ... they never started happening again', so 'free of every sign of it' holds. Proof 21 words; one figure; dependent tag right."
+    },
+    {
+      "where": "beliefs",
+      "index": 1,
+      "label": "I can't handle quitting (up to 3 weeks)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Bonnet 2017 Figure 1 legend: 'The CWS usually lasts up to 3 weeks' (PMC5414724). Connor 2022: 'Sleep disturbances may continue for several weeks or longer.' (PMC9110555, time-course section). Both word for word. 'heavy' tag fits (Connor: 'regular and heavy cannabis users'); not a moderation belief, so rule 4 does not apply. Test is safe."
+    },
+    {
+      "where": "beliefs",
+      "index": 2,
+      "label": "Day 10, I feel fine (71% back to 4+ days a week)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Moore & Budney 2003 abstract (Europe PMC, 2026-11-05): 82 who reached 2+ weeks abstinence in outpatient treatment for marijuana dependence; 71% lapsed within 6 months ('most'); '71% of those who lapsed, relapsed to heavier use defined as at least 4 days of marijuana use in any 7-day period'. Both quotes word for word (23 and 22 words). Proof 30 words. Treatment tag passes rule 4. Test safe."
+    },
+    {
+      "where": "beliefs",
+      "index": 3,
+      "label": "Weed is the only thing that gets me to sleep (69% of 302)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Hser 2017 (PMC5607644): 302 with DSM-IV dependence; Table 2 baseline 'Poor sleep quality 208/68.9' (PSQI > 5, self-report). Quote word for word. The counterpart's 'Some rough weeks buy my real sleep back' is not backed by this proof; the existing propose note already says so and offers a fitting counterpart, so nothing new to change."
+    },
+    {
+      "where": "plan",
+      "index": 1,
+      "label": "Step 2 proof: 25 self-quitters (Ellingstad 2006)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Abstract (Europe PMC, 2026-11-05): 'Long-term daily cannabis abusers (N = 25) who without treatment stopped using cannabis for at least one year'; maintenance-factor quote word for word (24 words). 'changes in lifestyle' given as 'a changed routine' is fair plain wording. Proof 37 words. Clarified actions are safe and plain."
+    },
+    {
+      "where": "plan",
+      "index": 2,
+      "label": "Step 3 proof: 18 heavy users, 4 to 14 days (Budney 2003)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Abstract (Europe PMC, 2026-11-05): 18 marijuana users, 'most effects lasted 4-14 days'; quote word for word (17 words). Only the abstract is free (APA, paywalled). Neither the abstract nor any free source says whether dependence was checked; Bonnet 2017 Table 1 calls the 18 'frequent, heavy cannabis users seeking treatment'. So 'not checked for addiction' is the rulebook's standard wording for the 'heavy' tag, not a confirmed fact. It is the cautious reading and matches the Day 2-6 card, so no change."
+    },
+    {
+      "where": "plan",
+      "index": 3,
+      "label": "Step 4: proof removed, actions only",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "No proof left to source-check. 6 actions (rule 21 needs 3 or more); none makes a figure claim; all safe and plain."
+    },
+    {
+      "where": "plan",
+      "index": 4,
+      "label": "Step 5 proof: 23 in 100 vs 12 in 100 (Gates 2016 Cochrane)",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "PMC4914383 web page (2026-11-05): 'Across the eight studies reporting rates of PPA, an average of 37% ... to 23% at follow-up of longer than four months. In contrast, an average of 12% of those in control conditions reported PPA at final follow-up.' Quote word for word (25 words). Per-100 figures are the source's own arm figures (rule 12a). PPA means no use in the month before the check, so 'off weed at later check-ups' is fair. 'no head count' is true (8 trials, no participant total given for these averages). Proof 33 words."
+    },
+    {
+      "where": "windows",
+      "index": 0,
+      "label": "Less appetite, stomach ache, shaky",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Budney 2003 abstract lists 'decreased appetite', 'shakiness', 'stomach pain'; onset day 1-3, peak day 2-6, most effects 4-14 days. Hesse 2013 Table 5 Budney per-symptom peaks: appetite day 2, physical symptoms about day 1.5. Peak at day 4 within the drawn 2-6 range. Not a trigger row."
+    },
+    {
+      "where": "windows",
+      "index": 1,
+      "label": "Restless, nervous",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Hesse 2013 Table 5 (PMC4015312): Restlessness 6 (Budney 4); Nervousness 4 (Budney 9). 'worst around day 4-9' holds. End at day 14 rests on Budney 'most effects lasted 4-14 days'. Hesse says most symptoms declined over treatment except irritability and dreams, so closing the row is fair."
+    },
+    {
+      "where": "windows",
+      "index": 2,
+      "label": "Irritable, angry",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Hesse Table 5: Irritability/anger 14; Budney column '18,33' = footnote 1 plus 8.33 days (averaged over 3 items), so 'about day 8-14' holds. Hesse: 'Most symptoms declined slightly over time in treatment, except irritability'; assessments at weeks 1, 2 and 4, about 30 days since last use, so open at day 30 with 'week 4, the last check' meets rule 19. Connor 2022 also says anger 'typically peak after 2 weeks'."
+    },
+    {
+      "where": "windows",
+      "index": 3,
+      "label": "Trouble sleeping",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Hesse Table 5: Insomnia 1 (Budney 2). SAMHSA 2010 advisory PDF (library.samhsa.gov, 2026-11-05): 'A review of 19 studies of marijuana withdrawal found that sleep difficulties and strange dreams persisted at least 45 days into abstinence (the longest duration of the studies).' The label matches what was measured; open at day 45 meets rule 19."
+    },
+    {
+      "where": "windows",
+      "index": 4,
+      "label": "Vivid, strange dreams",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "note": "Hesse Table 5: Vivid dreams 11 (Budney 9), so 'worst around day 9-11' holds. SAMHSA 2010: strange dreams persisted at least 45 days, 'the longest duration of the studies'. Open at day 45, says so."
+    }
+  ]
+}

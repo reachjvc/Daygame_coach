@@ -1,0 +1,184 @@
+{
+  "id": "alcohol",
+  "checker": "independent source checker B (second half of the 27 changed items in file order: numbers 13-17, beliefs 0-4, plan 0, 2, 4, windows 4; numbers 13 may overlap checker A if A took 14 items)",
+  "on": "2026-11-05",
+  "fetched": {
+    "PMID 22404692 (Trabut 2012)": "Europe PMC abstract and author affiliation (Hopital Cochin, Paris)",
+    "PMID 3216643 (Brown and Schuckit 1988)": "Europe PMC abstract and affiliation (VA Medical Center, San Diego)",
+    "PMID 15733237 (Dawson 2005)": "Europe PMC abstract; full text not open",
+    "PMC4978420 (Mirijello 2015)": "NCBI efetch full text of the author manuscript, Introduction, section 2 and Table 1 read",
+    "PMC5880708 (Kelly 2018)": "NCBI efetch full text, abstract, methods and results read",
+    "PMC3227547 (Lopez-Quintero 2011)": "NCBI efetch full text, abstract, methods, results and Table 3 header read",
+    "PMC6602820 (Kelly 2019)": "Europe PMC full text XML, methods, results and Table 1 read",
+    "PMC2778757 (Brower 2001)": "Europe PMC full text XML, drinking, withdrawal and recent-abstinence sections read",
+    "PMID 18034696 (Dawson 2007)": "Europe PMC abstract; full text not open",
+    "PMID 24698092 (Li 2015)": "Europe PMC abstract",
+    "PMID 14745302 (Mann 2004)": "Europe PMC abstract",
+    "PMID 24825644 (Jonas 2014)": "Europe PMC abstract (the alsoRef quote is in the abstract word for word)"
+  },
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 13,
+      "label": "after-body 45%: liver scan better after one week off (Trabut 2012)",
+      "verdict": "fix",
+      "problems": [
+        "Headline says '45% showed clearly less liver damage on a scan'. The scan measures liver stiffness, not damage. The abstract reports only that stiffness fell significantly in 62 of 137. 'Less liver damage' reads as the liver healing, which is more hopeful than the source. The authors' own conclusion is that non-scar lesions such as alcoholic hepatitis 'may influence' the reading.",
+        "Caveat says the authors think the drop is 'mostly inflammation easing, not scars healing'. The abstract says only that non-scar lesions 'may influence' the reading. It gives no 'mostly' and does not rule out any scar change.",
+        "Verified: 137 patients, 62 (45.3%) with a significant drop, estimated fibrosis stage lower in 32 (23.3%), 16 (11.7%) worse (about 12 in 100), median 7.2 to 6.1, median intake 150 g/day (about 11 US drinks of 14 g), hospitalised for withdrawal 2007-2010, Hopital Cochin, Paris. The quote is word for word, 21 words. The severity 'treatment' fits. Plain-words and one-drug rules hold (21 had hepatitis C, which is a disease, not another drug)."
+      ],
+      "fix": {
+        "numbers[13].headline": "Of heavy drinkers in hospital to stop, 45% had a clearly better liver scan after just one week off.",
+        "numbers[13].caveat": "The scan reads how stiff the liver is, which rises with scarring and with inflammation. The authors take the quick drop as a sign that inflammation, not just scarring, was pushing the reading up. 12 in 100 got a worse reading. It says nothing about how people felt."
+      }
+    },
+    {
+      "where": "numbers",
+      "index": 14,
+      "label": "after-mood 42% to 6%: depression after a month off (Brown and Schuckit 1988)",
+      "verdict": "ok",
+      "problems": [
+        "Verified: 191 male primary alcoholics (no earlier major psychiatric disorder) in inpatient treatment. Hamilton score at 48 hours and at each of 4 weeks. 42% scored 20 or more at intake and 6% at Week 4. The largest drop came at Week 2. The San Diego VA affiliation is confirmed and the abstract gives no study dates. The quote is word for word, 27 words. The headline is no more hopeful than the source. The severity 'treatment' fits.",
+        "Minor, no change: 'after a month off' is week 4 of inpatient treatment. The men may have stopped a few days before admission, so their real time off was a little longer."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 15,
+      "label": "quit-status 1 in 4 still hooked; 1 in 4 ever treated (Dawson 2005)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the abstract: 4,422 with dependence before the past year, of 43,093. Past-year status 25.0% still dependent, 27.3% partial remission, 11.8% asymptomatic risk drinking, 17.7% low-risk, 18.2% abstainers. 25.5% ever treated. Both '1 in 4' figures are fair roundings. The quote is word for word with one ellipsis, 27 words. The severity 'dependent' fits. quit-status is in the 'who' group, so the 12a ban on '1 in' does not apply.",
+        "The mirror ('nobody gets out without rehab') is answered by plain arithmetic: with 75% not dependent and 74.5% never treated, at least about half of all of them were both. The caveat correctly says that 'not hooked' includes the 27.3% who still had some symptoms.",
+        "Minor wording, no change: 'hooked on alcohol before last year, only 1 in 4 still were' can be misread as the calendar year. 'Of Americans once hooked on alcohol, only 1 in 4 still were last year; just 1 in 4 ever had treatment.' (21 words) reads in one pass, if a cold reader stumbles."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 16,
+      "label": "how-withdrawal 2-7 days (Mirijello 2015)",
+      "verdict": "fix",
+      "problems": [
+        "Caveat says 'Some symptoms can linger for weeks after the first days'. The same review says 'some symptoms can persist from weeks to months following the 5-7 days of acute detoxification period' (protracted withdrawal). 'Weeks' alone is more hopeful than the source.",
+        "Verified in the full text: 'Up to 50% of AUD patients experience withdrawal symptoms [4, 5]'. Two earlier sources sit behind it, so the n line is right. The mild-moderate form is described as 'tremors, nausea, anxiety, and depression', which matches 'shakes, nausea, anxiety and low mood'. The review says withdrawal 'usually develops ... within 6-24 hours'. The authors are in Rome, Italy and at Brown University, US. The quote is word for word with one ellipsis, 28 words. The headline does not overstate: the source's 'often' is kept, and 'shakes, nausea and anxiety' is the source's own definition of the mild-moderate form. No danger text appears, which fits rule 5. The severity 'disorder' fits the AUD patients."
+      ],
+      "fix": {
+        "numbers[16].caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days."
+      }
+    },
+    {
+      "where": "numbers",
+      "index": 17,
+      "label": "after-lasting 6 years: well-being climbs after beating a problem (Kelly 2018)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the full text: final sample n=2,002. The screening question went to 39,809 (25,229 answered). The survey ran July-August 2016. The quote is word for word, 29 words. The headline matches the 40-year finding: steep increases during the first 6 years, then shallower ones. The severity 'resolved' fits the screening question exactly. The mixed alcohol-and-drug group is named in the basis and the weak line (rule 13), and the 'propose' flag stays.",
+        "Minor, no change (rule 25, a number he liked): the headline names happiness as climbing steeply. In the 5-year horizon, happiness and self-esteem dropped in the first year before rising. The caveat says so. 'Quality of life climbed steeply' alone would avoid the tension.",
+        "Optional basis detail for rule 13: 58.6% (weighted) named alcohol as their primary problem. 'about 6 in 10 named alcohol as their main problem' could go in basis.who."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 0,
+      "label": "stuck: I've been drinking for years. I'm stuck with it. (Lopez-Quintero 2011, Keep row)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the full text: alcohol subsample n=4,781, with the quote 'subsample of respondents with lifetime history of dependence on ... alcohol (n=4,781)' word for word. The lifetime projected remission is 90.6%. Half remitted about 14 years after dependence onset. The Table 3 header reads 'Alcohol remission (N=2,008)'. All 4 quotes are word for word, with ellipses that drop the other drugs' figures (rule 13), and each has 30 words or fewer. The proof is 32 words and says 'projected' (rule 10). Its first sentence matches the 06-template v10 proof word for word. The severity 'dependent' fits. The test (ask someone who got out) is safe.",
+        "Minor, no change (the v10 sentence is kept word for word under rule 26): 'half within about 14 years' leaves out 'of getting hooked'. The source counts from dependence onset."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 1,
+      "label": "stuck: I've tried to stop before. I always go back. (Kelly 2019)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in Table 1, primary substance Alcohol: mean 5.38 (SD 13.45), median 2 (IQR 1, 4), min 0, max 100. The quote is the table row, cell for cell. Median 2 supports 'half needed 2 serious tries or fewer'. The question asked was 'how many serious attempts did you make ... before you overcame it?' 'A few needed dozens' fits a maximum of 100 and a mean far above the median. The source gives no count for the tail, so 'a few' is a fair reading. The severity 'resolved' fits. The proof uses alcohol-only figures (rule 13).",
+        "Test safety, no change: it asks him to meet the moment where his last try broke, once, with a plan. That can mean a bar. It asks for no stop, so there is no withdrawal risk. It is a standard rehearsal with an exit time."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 2,
+      "label": "hard: Stopping will be hell. (Brown and Schuckit 1988)",
+      "verdict": "ok",
+      "problems": [
+        "Verified: 'Depressive symptoms of alcoholics abate quickly with the largest reduction in scores at Week 2.' is word for word. The second quote is a word-for-word substring of the abstract's first sentence, 18 words. The proof ('low mood lifted fast once they stopped; the biggest drop came in week 2') is no more hopeful than the source. The study excluded men with an earlier major psychiatric disorder, which the number card's caveat states. The severity 'treatment' fits. The test (delay the first drink one hour and spend it on something hard) is safe for a daily drinker, since withdrawal starts 6-24 hours after the last drink."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 3,
+      "label": "need: I need a drink to unwind after work. (Brower 2001)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the full text: all 3 quotes are word for word. The first is 30 words, at the limit. 'In most of these studies' is the source's phrase, for drinking nights in the inpatient sleep-lab studies of male alcoholics. For withdrawal, the review's figure and its general conclusion say sleep latency stays longer and total sleep time shorter ('disrupted on both drinking and withdrawal nights'). So the proof's wording holds. It is 38 words. The severity 'treatment' fits. The test (bed an hour earlier, phone out) is safe.",
+        "Fact for balance, no change: one inpatient study in the review (Skoloda 1979) found that alcohol temporarily improved sleep quality, mainly in the first week of drinking. The counterpart 'takes the edge off for a while' is consistent with that."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 4,
+      "label": "moderation: I can handle just one. (Dawson 2007)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the abstract: 2,109 people in full remission from dependence at Wave 1, of whom 1,772 were re-interviewed at Wave 2 (2004-2005). Any AUD symptom came back in 51.0% of risk drinkers, 27.2% of low-risk drinkers and 7.3% of abstainers. 27 and 7 in 100 are the source's own arm figures. Both quotes are word for word, 26 and 28 words. Rule 4 holds: everyone counted had been dependent. The test (turn down one offered drink) is safe.",
+        "Minor, no change: 'light drinkers' means the source's 'low-risk drinkers'. Numbers card 8 defines them as up to the low-risk limits, not as one drink now and then. Full dependence came back in only 4.0 vs 2.9 in 100. The proof's 'signs of a drinking problem' correctly names the wider measure, and card 8's caveat gives the narrow one."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 0,
+      "label": "step 1 actions: 'Start with the beliefs above'",
+      "verdict": "ok",
+      "problems": [
+        "No proof on this step, so there is no source to fetch. The only change is 'the table above' to 'the beliefs above'. On the v3 page the beliefs section renders before the plan, so 'above' is true. 'Drink as you normally do' asks for no stop, so there is no withdrawal risk. Plain words and one drug."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 2,
+      "label": "step 3 proof: lab cue test, pull highest at day 60 (Li 2015)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the abstract: inpatient adult male alcoholics in four groups tested once each at 7, 14, 30 and 60 days of abstinence, plus a group of 19 retested at the same days. Craving rated on visual analogue scales after cues was 'the highest at 60 days of abstinence both between and within groups'. Day 60 was the last day tested. The quote is word for word with one ellipsis. 'A lab test, not everyday craving' fits rule 19. The proof is 28 words.",
+        "Fact for the record: heart rate, blood pressure and skin conductance did not differ between the day groups. Only the self-rated pull rose.",
+        "Safety note, not a source problem: a heavy daily drinker stops at this step, but 'See a doctor before you stop' now appears only in step 5 (optional), the timeline and the footer. That was the v10 placement and fits rule 5. It is flagged for the owner-lens and audit gates, with no change proposed here."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 4,
+      "label": "step 5 proof: acamprosate 36 vs 23 in 100 (Mann 2004; Jonas 2014 alsoRef)",
+      "verdict": "ok",
+      "problems": [
+        "Verified in the Mann 2004 abstract: 17 RCTs, 4,087 recently detoxified alcohol-dependent people. Continuous abstinence at 6 months was 36.1% on acamprosate and 23.4% on placebo. '36 in 100' and '23 in 100' are the source's own arm figures (rule 12a). The quote is word for word, cut before 'RB'. The Jonas 2014 quote is word for word in the abstract, 26 words. No '1 in' or 'for every' figure remains. Naltrexone 'helps people stay stopped' is supported by Jonas (return to any drinking, NNT 20).",
+        "Optional, no change: 'people' in the proof could read 'people hooked on alcohol', since all trial patients were dependent and detoxified."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "windows",
+      "index": 4,
+      "label": "trigger row: lab cue test, day 7 to day 60 (r7 = Li 2015)",
+      "verdict": "fix",
+      "problems": [
+        "The v3 page shows this row under the heading 'What the body does'. In Li 2015 the body measures (heart rate, blood pressure, skin conductance) did not differ between day groups. Only the men's own rating of craving to drink cues rose. 'Drink cues pulled harder' under a body heading can read as a body reaction. Rule 19 asks a relabelled row to say what was really measured: a rating.",
+        "Verified: r7 is Li 2015 (PMID 24698092). It tested days 7, 14, 30 and 60 only, so the 'when' line is exact. The row has no peak and no fall (rule 19). On the v3 page the 'open' flag does not render (body rows are text), so the row does not suggest anything after day 60."
+      ],
+      "fix": {
+        "windows[4].label": "In a lab test, men rated the pull of drink cues higher at day 60 than in week 1"
+      }
+    }
+  ]
+}

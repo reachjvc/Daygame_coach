@@ -1,0 +1,114 @@
+{
+  "id": "alcohol",
+  "checked": [
+    {
+      "index": 0,
+      "where": "numbers",
+      "label": "2,008 of 4,781",
+      "verdict": "fix",
+      "problems": [
+        "caveat: 'Many still hooked had only recently started' is not in the source. Replaced with the authors' own limitation: self-report leads to 'overreport of remission'.",
+        "2,008 is the N in the Table 3 header ('Alcohol remission (N=2,008)'). The paper never says in words that 2,008 had remitted. Reading it as the count of people who got free is an inference, but a sound one: the survival analysis covers all 4,781, so the header N is the remission count.",
+        "The quote joins a Methods sentence and a table header with an ellipsis. Each piece is word for word."
+      ],
+      "fix": {
+        "caveat": "Free here means no signs of being hooked any more, not never drinking. A raw count, not weighted to the US. The authors say people tend to over-report getting free, and people aged 18–29 got free less often."
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "numbers",
+      "label": "14 years",
+      "verdict": "ok",
+      "problems": [],
+      "fix": {},
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "numbers",
+      "label": "×2.2",
+      "verdict": "fix",
+      "problems": [
+        "The full text is paywalled (jsad.com gives 403; the archive copy is only the abstract page). Checked against the PubMed abstract only. The figure, n, group, design and quote all match it.",
+        "The paper tested whether effects differ by gender, but the abstract gives no separate figure for men. The card should not suggest that the ×2.2 was shown for men.",
+        "measured: the marriage effects (×1.37, ×1.76) hold only in the first 3 years after the event, and they reverse (×0.70) for people still hooked 3 or more years later. Without that window the line reads more hopeful than the source."
+      ],
+      "fix": {
+        "caveat": "A link, not proof: people ready to change may also be the ones starting families. Men and women together; the summary gives no figure for men alone. 'Quit and get free' means free of every sign and not drinking.",
+        "basis.measured": "How the chance of getting free changed in the years after leaving school, starting full-time work, marrying, splitting up and becoming a parent. In the 3 years after a first marriage, the chance of getting free while still drinking lightly rose (×1.37); so it did after a first marriage ended (×1.76)."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=16568565&rettype=abstract&retmode=text",
+      "quoteFound": true
+    },
+    {
+      "index": 6,
+      "where": "numbers",
+      "label": "2 tries",
+      "verdict": "fix",
+      "problems": [
+        "n: the count '1,013, weighted' is in neither this paper nor the survey's first paper (Kelly 2017, PMC6076174). Kelly 2017 gives alcohol as the main problem for 51.2% of the 2,002, weighted (about 1,025). 'About 1,000' holds; replaced the unchecked 1,013 with the figure checked here.",
+        "Cautious figure: 13% of the sample (n = 260) said they made no serious try, and the authors think some misread the question. Among people with at least 1 try, the median is 3 (all substances together; the paper gives no alcohol-only figure). The caveat should say so.",
+        "Checked: 'July–August 2016' is confirmed in Kelly 2017. The alcohol row (median 2, IQR 1 to 4, mean 5.38) matches Table 1. Tag 'resolved' matches the screening question."
+      ],
+      "fix": {
+        "basis.n": "About 1,000 people whose main problem was alcohol (the table gives no exact count; the survey's first paper puts alcohol as the main problem for 51.2% of the 2,002, weighted)",
+        "caveat": "Counts only people who succeeded, from memory. About 13% of the whole sample said they made no serious try; leaving them out, the middle figure is 3 (all drugs together). A few needed dozens of tries, which pulls the average up to about 5. It does not promise that the next try works."
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+      "quoteFound": true
+    },
+    {
+      "index": 8,
+      "where": "numbers",
+      "label": "27% vs 7%",
+      "verdict": "fix",
+      "problems": [
+        "n: 1,772 is all three drinking groups. The 27.2% rests on 645 low-risk drinkers and the 7.3% on 696 abstainers (Table 2, 'No. of cases').",
+        "The caveat leaves out two findings. Full dependence came back in 4.0% vs 2.9%, which the paper says 'did not differ'. For people free under 5 years at the start, the gap in signs was not significant (28.3% vs 17.0%), and the mirror's reader 'off it a while' may be in that group. The headline and quote are correct; the 27.2/7.3 figures are word for word in the abstract and in Table 3."
+      ],
+      "fix": {
+        "basis.n": "645 light drinkers and 696 non-drinkers (of 1,772 re-interviewed, all free of dependence at the first interview)",
+        "caveat": "Not a trial: people chose whether to drink. Weighing other differences, the odds of problems coming back were 5.8 times as high for light drinkers. Full dependence came back in 4.0% of light drinkers and 2.9% of non-drinkers, which the authors found did not differ. For young adults and people free under 5 years, the gap wasn't clear; young adults slid back most either way."
+      },
+      "fetchedUrl": "https://zenodo.org/records/1230663/files/article.pdf?download=1",
+      "quoteFound": true
+    },
+    {
+      "index": 10,
+      "where": "numbers",
+      "label": "×1.2",
+      "verdict": "fix",
+      "problems": [
+        "The headline's 'fully off drink for a year' overstates. The 2 pooled trials are Project MATCH (1,726) and Litt 2007 (210). Litt measured continuous abstinence 'during the 90-day period prior to each follow-up', so the figure is not a full year off drink in both trials. basis.measured has the same problem.",
+        "The caveat should give the absolute rates from the summary-of-findings table (345 vs 418 per 1000), so the reader sees how modest the edge is.",
+        "Checked: RR 1.21, 2 studies, 1,936 participants, high certainty, searched to 2 August 2019, non-coerced adults; the quote is word for word."
+      ],
+      "fix": {
+        "headline": "In people treated for drinking, AA-based therapy left 1.2 times as many fully off drink at one year as other therapies.",
+        "basis.measured": "Not drinking at all over the stretch counted at the 12-month check (in the smaller trial, the 90 days before it): 12-step facilitation from a manual (therapy that steers people into AA) against other set therapies such as CBT. The gap held at 24 and 36 months.",
+        "caveat": "A head-to-head test, and 1.2 times is a modest edge: about 42 in 100 against 35 in 100. It tests a therapist steering you into AA, not AA alone. On how much people drank when they did drink, AA-based help did about as well as other therapy, not better."
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7065341/",
+      "quoteFound": true
+    },
+    {
+      "index": 12,
+      "where": "numbers",
+      "label": "45%",
+      "verdict": "fix",
+      "problems": [
+        "The caveat 'mostly means less inflammation, not healed scarring' goes past the source. The source says only that the result 'strongly suggests that nonfibrotic lesions (such as the presence of alcoholic hepatitis) may influence LS'. Reworded to the authors' own reading.",
+        "Checked against the abstract (Wiley full text gives 403). 137 patients; 62 (45.3%) had a significant drop; 7.2 to 6.1 kPa; 23.3% had a lower stage; 11.7% went up; 2007–2010; Paris; 150 g/d. The quote is word for word."
+      ],
+      "fix": {
+        "caveat": "The authors take the quick drop as a sign that things other than scarring, such as alcohol hepatitis, push the reading up. 12% got stiffer. It says nothing about how people felt."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=22404692&rettype=abstract&retmode=text",
+      "quoteFound": true
+    }
+  ]
+}

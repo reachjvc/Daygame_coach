@@ -1,0 +1,120 @@
+{
+  "id": "alcohol",
+  "checked": [
+    {
+      "index": 1,
+      "where": "numbers",
+      "label": "90.6%",
+      "verdict": "fix",
+      "problems": [
+        "Figure, quote, n, group, where, when and design hold. 90.6% is the lifetime cumulative probability for alcohol in the abstract and Results; 37.4% at 10 years matches; 4,781 is the alcohol-dependence subsample (Table 1) and 2,008 the remission count (Table 3). Severity 'dependent' fits (DSM-IV, 3 of 7 criteria in 12 months). The headline says 'projected' (rule 10), 19 words, 1 figure. The quote matches with one ellipsis that drops the nicotine figure (rule 13).",
+        "The caveat says the authors blame 'recall errors' for pushing the figure too high. They do not. The Limitations name recall bias without a direction. What they say runs too high is social desirability ('overreport of remission') and people not sampled ('institutionalized individuals or those who experienced fatal or severe consequences ... leading to overestimation').",
+        "Flag only, no field change: ref.cite is the paper's real title, which names nicotine, cannabis and cocaine. If the build's rule 13 scan reads ref.cite, it will trip. The citation should stay accurate."
+      ],
+      "fix": {
+        "caveat": "A model, not a head count. The authors say people over-reporting that they got free, and people the survey missed (in prison, in hospital, or worse), likely push it too high; recalled ages can also be wrong. Men got free less often than women."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC3227547/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "numbers",
+      "label": "Age 38",
+      "verdict": "fix",
+      "problems": [
+        "Figure and quote hold. The Results say 'The average age at problem resolution was also significantly younger for CAN (...) relative to ALC (M = 37.86 years; 99% CI: 36.50, 39.21)'. The ellipsis drops the cannabis figure (rule 13). Table 2 gives 37.86 too. Severity 'resolved' fits the screener question. Where, when (July–August 2016) and design are right. Headline 14 words, 1 figure; the mirror is fine.",
+        "n: the table gives 'Alcohol (58.5%, n = 1013)' as a weighted count. 58.5% is a share of the 1,730 who named a main substance (217 + 1,013 + 500), not of 2,002. About 12% named none and were left out.",
+        "measured: 'they had drunk for about 18 years' overstates what the paper measured. The Methods define the 'addiction career' as years from first use of any substance to resolution. The table labels it 'primary substance' (18.39 years). Mean age of first regular alcohol use was 19.02.",
+        "caveat: 'got free' reads as quitting, but Table 2 shows 34.21% of the alcohol group still drank. Resolved does not mean abstinent, so add what the number does not mean (rule 9).",
+        "Flag only: ref.cite names cannabis in the paper's title. The same rule 13 scan question applies as on #1."
+      ],
+      "fix": {
+        "basis.n": "About 1,013 people whose main problem was alcohol (a weighted count; 1,730 of the 2,002 named a main substance)",
+        "basis.measured": "Age when the problem ended, as people remembered it. The paper puts their average 'addiction career' before that at about 18 years; on average they first drank regularly at 19.",
+        "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free, and each judged for himself what a problem was. Free here is not always quitting: about 1 in 3 still drank some."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC5992615/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 5,
+      "where": "numbers",
+      "label": "56%",
+      "verdict": "fix",
+      "problems": [
+        "Figure holds: Table 3 'Primary substance ... Alcohol 55.9' (% assisted). The quote matches the table caption and that row, with an ellipsis. Severity 'resolved' fits. n holds: alcohol is 51.2% (weighted) of 2,002. Where, when and design are right. The measured all-substance figures match: 53.9%, mutual-help 45.1%, AA 34.6%.",
+        "The headline says 'medicine', but only anti-relapse or anti-craving medicines counted as help (naltrexone, acamprosate, disulfiram, buprenorphine and others, Table 2). 'The rest used none' overstates: they used none of the listed services, but may have had other help, such as a GP or therapy not for addiction. The headline is at the 22-word limit, so it is rewritten at 20 words with 1 figure.",
+        "measured: 'medication' should say anti-craving or anti-relapse medicine, and recovery services should be named (sober living, faith-based, recovery community centres)."
+      ],
+      "fix": {
+        "headline": "Of Americans who beat a drinking problem, 56% used AA-type groups, treatment, anti-craving medicine or recovery services; the rest, none.",
+        "basis.measured": "Ever used, at any point: mutual-help groups (such as AA), treatment, anti-craving or anti-relapse medicine, or recovery services such as sober living. Across all substances 54% used help; mutual-help groups were the most common (45%), and 35% had been to AA."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6076174/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 7,
+      "where": "numbers",
+      "label": "1 in 4",
+      "verdict": "fix",
+      "problems": [
+        "Figure, quote and caveat hold. The abstract quote is word for word (26 words). 1 in 4 is the cautious figure; the Conclusions' 'about one third ... asymptomatic' is the hopeful one, and it is not used. The caveat's 1 in 10, 3 days in 4 and 87% match. Severity 'treatment' fits. Headline 19 words; mirror 14 words.",
+        "n is unchecked (rule 9). The abstract gives no head count, and I could not read the full text: jsad.com full text and PDF returned HTTP 403 on 2026-11-05, Semantic Scholar has it closed, and Europe PMC has no full text. The draft already says so. The only fix possible is to record that the count is unverified. If no count can be found, keep it listed under 'What is weak'."
+      ],
+      "fix": {
+        "basis.n": "Not given in the abstract (seven multisite studies pooled); the journal's full text was blocked (HTTP 403, tried again 2026-11-05), so the head count is unchecked"
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=11327187&rettype=abstract&retmode=text",
+      "quoteFound": true
+    },
+    {
+      "index": 9,
+      "where": "numbers",
+      "label": "1 in 12",
+      "verdict": "fix",
+      "problems": [
+        "The figure and quote match the abstract word for word (26 words). Naltrexone 1 in 20 (any drinking) and 1 in 12 (heavy drinking) match. Severity 'treatment' fits. Headline 22 words (at the limit), 2 figures; the mirror is fine.",
+        "Not verified: 'n: 4,847 people in 16 trials', 'Mostly Europe (16 of 22 placebo trials)', 'trials of 12 to 52 weeks' and 'Most trials started after detox or at least 3 days sober' are not in the abstract. The JAMA full text returned 403, and the AHRQ report behind it (NCBI Bookshelf NBK208590 and effectivehealthcare.ahrq.gov) returned a captcha. The PURLs commentary on this paper (PMC4411263) confirms 22 placebo-controlled acamprosate trials and that trials ran at least 12 weeks (the abstract says 'at least 12 weeks' duration'). It does not confirm 4,847, 16 trials or Europe. Re-check these from the full text before rule 16 passes.",
+        "when: '1970 to March 2014' is the search window, not the study dates.",
+        "caveat is more hopeful than the evidence. The PURLs commentary on this paper says for acamprosate 'the evidence is not as strong (the studies with low bias showed no effect)'. Add that."
+      ],
+      "fix": {
+        "basis.when": "searched from 1970 to March 2014; published 2014",
+        "caveat": "Most trials started after detox or at least 3 days sober: it helps people stay stopped. One in 12 is a modest effect: it helps some people, not everyone. A review of this paper notes the trials least open to bias showed no clear effect. It needs a prescription."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=24825644&rettype=abstract&retmode=text",
+      "quoteFound": true
+    },
+    {
+      "index": 11,
+      "where": "numbers",
+      "label": "62% vs 43%",
+      "verdict": "fix",
+      "problems": [
+        "Figure, quote, n, group and design hold. The Results quote is word for word (25 words). The no help group is n = 99 and the helped group n = 362, 461 in all. The age mean is 33.5 and the sample is 49.7% men. The remission definition and 16-year relapse (60.5% vs 42.9%) match. Entry required only 'one or more' problems or dependence symptoms, so 'disorder' (mild included) is the right tag. Mirror 12 words.",
+        "The headline says 'free of it later' without a time. The figure is at the 3-year follow-up, and by year 16 many had slid back. Name the time. The fix is 21 words with 2 figures; 'three' is spelled out so the line keeps 2 figures.",
+        "Minor, no field change: the 461 are the survivors who completed follow-ups, out of 628 at baseline. The authors also say part of the gap is 'due to self-selection and motivation'. The caveat's 'Not a trial' covers that."
+      ],
+      "fix": {
+        "headline": "People with a drinking problem who got help early were more often free of it three years on: 62% against 43%."
+      },
+      "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1976118/",
+      "quoteFound": true
+    },
+    {
+      "index": 13,
+      "where": "numbers",
+      "label": "42% to 6%",
+      "verdict": "ok",
+      "problems": [
+        "All hold against the abstract: 191 male primary alcoholics, inpatient treatment, Hamilton within 48 hours of admission and at each of 4 weeks. The quote is word for word (27 words), with the cut-off at 20 or more and the largest drop at Week 2. The affiliation is the VA Medical Center, San Diego. Headline 20 words, 2 figures; mirror 12 words; severity 'treatment'.",
+        "Minor: the abstract does not say whether all 191 were rated at Week 4. Optional detail for the caveat: the abstract says vegetative symptoms (such as sleep and appetite) were the most common ones left at discharge."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=3216643&rettype=abstract&retmode=text",
+      "quoteFound": true
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+{
+ "id": "alcohol",
+ "beliefs": [
+  {
+   "kind": "stuck",
+   "limiting": "I’ve been drinking for years. I’m stuck with it.",
+   "counterpart": "Most people hooked on alcohol get free in the end. I’m doing it now.",
+   "test": "This week, list everyone you know who used to drink hard and doesn’t now. Ask one of them how stuck they felt before they stopped. Notice whether they once thought what you think now.",
+   "proof": "In a big US survey, 2,008 of 4,781 people ever hooked on alcohol were already free when asked. A projected 90.6% get free in their lifetime.",
+   "severity": "dependent",
+   "refs": [
+    {
+     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/",
+     "pmid": "21077975",
+     "fetched": true,
+     "quote": "The subsamples of individuals with life-time DSM-IV diagnosis of dependence on … alcohol (n = 4781)"
+    },
+    {
+     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+     "pmid": "21077975",
+     "fetched": true,
+     "quote": "Alcohol remission (N=2,008)"
+    },
+    {
+     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/21077975/",
+     "pmid": "21077975",
+     "fetched": true,
+     "quote": "Life-time cumulative probability estimates of dependence remission were … 90.6% for alcohol"
+    }
+   ],
+   "origin": "06-template.json alcohol belief 4 (marked Keep). Limiting and counterpart word for word. Proof changed: the counted figure (2,008 of 4,781 already free, Table 3 of the paper) now goes before the projection (rule 10); 'half within about 14 years' dropped, because that is the who-years kind, a projection not picked in kinds.json.",
+   "keep": true
+  },
+  {
+   "kind": "stuck",
+   "limiting": "I’ve tried to stop before. I always go back.",
+   "counterpart": "Each try showed me where it breaks. I know more now than I did the first time.",
+   "test": "Write down your last serious try: how long it lasted and the moment it ended. Notice whether that moment was a day, a place or a person you can plan for.",
+   "proof": "Of US adults who beat a drinking or drug problem after at least one serious try, half needed 3 tries or more. The number of tries did not differ by main drug.",
+   "severity": "resolved",
+   "refs": [
+    {
+     "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+     "pmid": "31090945",
+     "fetched": true,
+     "quote": "among participants reporting at least 1 serious recovery attempt (n = 1,742), the mean and median number of recovery attempts were slightly higher—6.14 (SD = 14.20) and 3"
+    },
+    {
+     "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+     "pmid": "31090945",
+     "fetched": true,
+     "quote": "Number of recovery attempts did not differ by primary substance"
+    }
+   ],
+   "origin": "new. The group mixes alcohol and drugs (rule 13: said in the proof); the paper reports no difference by main substance. 1,742 people, of 2,002 who resolved a problem.",
+   "keep": false
+  },
+  {
+   "kind": "hard",
+   "limiting": "Stopping will be hell. I won’t get through it.",
+   "counterpart": "I’ve got through hard weeks before. This is a few hard weeks, not a hard life.",
+   "test": "Write how hard you think quitting will be, 0 to 10. One evening this week, wait 20 minutes before the first drink and rate the urge every 5 minutes. Notice whether it reached your number, and whether it stayed there.",
+   "proof": "In mild cases, withdrawal starts within a day of the last drink and is unlikely to worsen after 36 hours (ASAM guideline). In 191 men treated as inpatients, serious low mood fell from 42% to 6% by week 4.",
+   "severity": "treatment",
+   "refs": [
+    {
+     "cite": "American Society of Addiction Medicine (2020). The ASAM Clinical Practice Guideline on Alcohol Withdrawal Management. Journal of Addiction Medicine.",
+     "url": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
+     "pmid": "32511109",
+     "fetched": true,
+     "quote": "Signs and symptoms of alcohol withdrawal typically begin 6–24 hours after cessation of (or reduction in) alcohol use."
+    },
+    {
+     "cite": "American Society of Addiction Medicine (2020). The ASAM Clinical Practice Guideline on Alcohol Withdrawal Management. Journal of Addiction Medicine.",
+     "url": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
+     "pmid": "32511109",
+     "fetched": true,
+     "quote": "Patients with mild withdrawal and low risk of complicated withdrawal may be observed for up to 36 hours, after which more severe withdrawal is unlikely to develop."
+    },
+    {
+     "cite": "Brown SA, Schuckit MA (1988). Changes in depression among abstinent alcoholics. Journal of Studies on Alcohol.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/3216643/",
+     "pmid": "3216643",
+     "fetched": true,
+     "quote": "depressive symptoms among male primary alcoholics (no preexisting major psychiatric disorder) were studied throughout inpatient treatment for alcoholism. A sample of 191 alcoholics was interviewed"
+    },
+    {
+     "cite": "Brown SA, Schuckit MA (1988). Changes in depression among abstinent alcoholics. Journal of Studies on Alcohol.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/3216643/",
+     "pmid": "3216643",
+     "fetched": true,
+     "quote": "42% of alcoholics have clinically significant levels of depression … at intake but only 6% remain clinically depressed at Week 4"
+    }
+   ],
+   "origin": "new (the template had no 'unbearable' row). Answers it with how long alcohol withdrawal lasts; the timeline carries the longer tail (sleep, months).",
+   "keep": false
+  },
+  {
+   "kind": "need",
+   "limiting": "I need a drink to unwind after work.",
+   "counterpart": "Drinking takes the edge off for an hour. It takes my sleep, and sleep is what would unwind me.",
+   "test": "Drink as you normally do this week. Each morning, write last night’s drinks and rate how rested you feel, 0 to 10. Notice whether the bigger nights bring the worse mornings.",
+   "proof": "In sleep-lab studies of men in treatment for alcoholism, drink did not reliably help them sleep. Nights of drinking and of withdrawal both meant trouble falling asleep and less sleep overall (review).",
+   "severity": "treatment",
+   "refs": [
+    {
+     "cite": "Brower KJ (2001). Alcohol's effects on sleep in alcoholics. Alcohol Research & Health.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2778757/",
+     "pmid": "11584550",
+     "fetched": true,
+     "quote": "Several research groups in the 1970s and early 1980s used polysomnography to study the sleep of male alcoholics undergoing inpatient alcoholism treatment, both following alcohol administration and during alcohol withdrawal"
+    },
+    {
+     "cite": "Brower KJ (2001). Alcohol's effects on sleep in alcoholics. Alcohol Research & Health.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2778757/",
+     "pmid": "11584550",
+     "fetched": true,
+     "quote": "alcohol is not a reliably effective sedative among alcoholic patients. For example, as discussed earlier, alcohol may prolong sleep latency and decrease total sleep time in alcoholics"
+    },
+    {
+     "cite": "Brower KJ (2001). Alcohol's effects on sleep in alcoholics. Alcohol Research & Health.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2778757/",
+     "pmid": "11584550",
+     "fetched": true,
+     "quote": "During both drinking periods and withdrawal, alcoholics commonly experience problems falling asleep and decreased total sleep time."
+    }
+   ],
+   "origin": "06-template.json alcohol belief 1. Limiting word for word. Counterpart's first sentence changed: 'Drinking doesn’t take my stress away' is not something he already believes; 'takes the edge off for an hour' is. Its second sentence is kept. Proof changed from '5–9 months to fall asleep normally' (a cost of quitting, not of drinking) to what drink does to sleep while drinking.",
+   "keep": false
+  },
+  {
+   "kind": "moderation",
+   "limiting": "I’ve got it under control now. I can handle just one.",
+   "counterpart": "I’ve tried “just one” before. I know where it went.",
+   "test": "Write down the last three times you meant to have just one or two. Next to each, write how many it became and how the next day went. Notice how many stayed at one.",
+   "proof": "In a US survey of people who had got free of alcohol dependence, signs of a drinking problem came back within 3 years for 27% of those who drank lightly, and 7% of those who didn’t drink.",
+   "severity": "dependent",
+   "refs": [
+    {
+     "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
+     "pmid": "18034696",
+     "fetched": true,
+     "quote": "The Wave 1 NESARC identified 2,109 individuals who met the DSM-IV criteria for full remission from alcohol dependence. Of these, 1,772 were reinterviewed at Wave 2"
+    },
+    {
+     "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
+     "pmid": "18034696",
+     "fetched": true,
+     "quote": "By Wave 2, 51.0% of the Wave 1 asymptomatic risk drinkers had experienced the recurrence of AUD symptoms, compared with 27.2% of low-risk drinkers and 7.3% of abstainers."
+    }
+   ],
+   "origin": "new (rule 4 model). Counts only people who had been dependent and were fully free at the first interview (1,772 re-interviewed). A survey, not a trial: people chose to drink lightly or not at all.",
+   "keep": false
+  }
+ ],
+ "plan": [
+  {
+   "do": [
+    "Don’t stop yet. For the next few days, drink as you normally do, and watch it.",
+    "Write down what drinking does for you: unwinding, sleep, confidence, fun with friends.",
+    "Before each drink, note the time, the place and what you want from it. Next morning, note whether you got it.",
+    "Allow it. No guilt and no promises this week. You’re finding out, not judging.",
+    "Look at each reason up close: does drinking give you that, or take it back by morning?",
+    "Each one is a belief to test. Start with the table above."
+   ]
+  },
+  {
+   "do": [
+    "Unwinding: a walk, a shower, a hard workout, a show.",
+    "Going out: an alcohol-free beer in your hand, ordered first, before anyone asks.",
+    "Friends: see the ones you’d enjoy sober; meet them for food, sport or coffee.",
+    "Sleep: same bedtime every night, a hot shower, no phone in bed. Expect light sleep at first; it mends over months.",
+    "Confidence: arrive early, before the room fills, and start one conversation while you’re fresh.",
+    "Home: keep a cold soft drink you like in the fridge for the hour you’d pour one."
+   ]
+  },
+  {
+   "do": [
+    "Clear the house of drink the day before.",
+    "Tell one person the date.",
+    "Plan every Friday for the first two months. That’s where the pull lives.",
+    "Drinking heavily every day? See a doctor before you stop.",
+    "One thing only. No new diet, no gym plan, no other big change for these three months.",
+    "Slip? Don’t wait for Monday. Go back to step 1 the same day: what did that drink give you?"
+   ],
+   "proof": {
+    "text": "In a lab test of men treated as inpatients for alcohol, the pull of drink cues was strongest at day 60, the last check, not in week 1.",
+    "ref": {
+     "cite": "Li P, Wu P, Xin X, Fan YL, Wang GB, Wang F, Ma MY, Xue MM, Luo YX, Yang FD, Bao YP, Shi J, Sun HQ, Lu L (2015). Incubation of alcohol craving during abstinence in patients with alcohol dependence. Addiction Biology.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/24698092/",
+     "pmid": "24698092",
+     "fetched": true,
+     "quote": "inpatient adult male alcoholics … Cue-induced alcohol craving measured with visual analogue scales was the highest at 60 days of abstinence"
+    }
+   }
+  },
+  {
+   "do": [
+    "When “just one” comes, answer the way a non-drinker would: “I don’t drink.”",
+    "When the urge comes, name it: “there is a craving.” Not “I want a drink.” Not “I need one.”",
+    "Then watch it like weather. Notice when it peaks and when it fades.",
+    "Feel fine and think “maybe it wasn’t that bad”? That’s the quitting working, not proof you never had to.",
+    "Unsure what to do? Ask what the man a year sober would do tonight, and do that.",
+    "Count the mornings you wake up clear, not the days you missed."
+   ]
+  },
+  {
+   "do": [
+    "Ask a doctor about acamprosate or naltrexone.",
+    "Try AA or another group that meets weekly.",
+    "Use help as a tool for a stretch, not a new identity. Keep what works, drop the rest.",
+    "Ask one friend to check in with you on Fridays for the first two months.",
+    "Slipped more than once? Add one kind of help you haven’t tried, then go back to step 1."
+   ],
+   "proof": {
+    "text": "In trials, for every 12 people who took acamprosate, one more stayed off drink than on a dummy pill.",
+    "ref": {
+     "cite": "Jonas DE, Amick HR, Feltner C, et al. (2014). Pharmacotherapy for adults with alcohol use disorders in outpatient settings: a systematic review and meta-analysis. JAMA.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/24825644/",
+     "pmid": "24825644",
+     "fetched": true,
+     "quote": "The NNT to prevent return to any drinking for acamprosate was 12"
+    }
+   }
+  }
+ ],
+ "notUsed": [
+  {
+   "from": "06-template.json alcohol belief 2",
+   "limiting": "I only drink beer and wine, not the hard stuff.",
+   "counterpart": "A beer, a glass of wine and a shot are the same drink to my body.",
+   "reason": "Argues whether he has a problem, which the reader already knows (rule 1). Its proof (a standard drink holds about 14 g) counts no group of people hooked on alcohol (rule 2)."
+  },
+  {
+   "from": "06-template.json alcohol belief 3",
+   "limiting": "I’m not an alcoholic. It’s not that bad.",
+   "counterpart": "I don’t need a label to decide I want more from life than this.",
+   "reason": "A screening thought (rule 1). Its proof counts excessive drinkers, mostly binge drinkers, 90% of them not dependent: ordinary and heavy users, not the reader (rules 2 and 3)."
+  },
+  {
+   "from": "06-template.json alcohol belief 5",
+   "limiting": "Day 4, I feel fine. Maybe it wasn’t that bad.",
+   "counterpart": "Feeling better is the quitting working, not proof I never had to.",
+   "reason": "The same relapse thought as the new moderation row, which answers it with a number about people once hooked. Its counterpart lives on as a plan step 4 action. Its proof said 'a Friday or a bar' pulls at day 60; the study tested drink cues in a lab, so that fact now sits, reworded, under plan step 3."
+  },
+  {
+   "from": "06-template.json alcohol belief 6",
+   "limiting": "If I can’t quit forever, why bother?",
+   "counterpart": "Every day I keep my promise is a complete win in itself.",
+   "reason": "Its proof (Henssler 2021: cutting down worked as a treatment goal) argues for moderation, against the moderation row and his one-thing plan. The counterpart's idea is already in his step 3 text: every kept day is a complete success."
+  },
+  {
+   "from": "06-template.json alcohol belief 7",
+   "limiting": "I’ll just stop on my own this weekend.",
+   "counterpart": "If I drink heavily every day, I stop with a doctor, not alone on a Saturday.",
+   "reason": "A safety line, not a belief; rule 5 keeps danger text in the timeline and the footer. Its advice stays as the plan action 'Drinking heavily every day? See a doctor before you stop.', moved from step 5 to step 3 so it comes before the date."
+  },
+  {
+   "from": "01-sedatives-opioids.json alcohol belief 'Detox will sort me out.'",
+   "limiting": "Detox will sort me out.",
+   "reason": "About choosing treatment, not about quitting; never in the template's rows. The medicine fact behind it (acamprosate, 1 in 12) is the plan step 5 proof."
+  },
+  {
+   "from": "06-template.json alcohol plan step 5 proof, second half",
+   "text": "In a Cochrane review, AA beat other treatments for staying sober.",
+   "reason": "A step proof takes one ref (SCHEMA); the acamprosate half was kept. The AA fact also needed fixing: the review tested therapy built to get people to AA (twelve-step facilitation), not AA itself."
+  }
+ ]
+}

@@ -1,0 +1,240 @@
+{
+  "id": "porn",
+  "numbers": [
+    {
+      "kind": "hope-free-now",
+      "big": "138 vs 42",
+      "headline": "Of Israeli adults whose answers showed a porn or sex problem, 138 no longer had it four years later; 42 still did.",
+      "mirror": "You've tried to stop before and think you're stuck with this for good.",
+      "severity": "disorder",
+      "counted": "adults whose answers showed a porn or sex problem",
+      "basis": {
+        "design": "community cohort surveyed twice, with people sorted into groups by a statistical model (latent profile analysis)",
+        "who": "Jewish Israeli adults aged 18 to 70, men and women",
+        "n": "180 who scored as having a probable problem at the first survey: 138 in the 'recovery' group and 42 in the 'chronic' group (of 1,182 sorted)",
+        "where": "Israel",
+        "when": "surveys in 2018 and 2022; published 2026",
+        "measured": "Self-report questionnaires for probable compulsive sexual behaviour disorder and problem porn use at both surveys. 'Recovery' and 'chronic' are the authors' names for the groups."
+      },
+      "caveat": "Questionnaire scores, not a doctor's diagnosis, and porn and sex problems are counted together. It says nothing about how the 138 got free or whether it lasted after 2022.",
+      "projection": false,
+      "weak": "Only the abstract could be fetched, so how the model drew the 'recovery' group is unchecked; men and women are mixed.",
+      "ref": {
+        "cite": "Efrati Y, Shmulewitz D, Skvirsky V, Vider M, Kor A, Lev-Ran S, Mikulincer M (2026). Longitudinal study of probable compulsive sexual behavior disorder and problematic pornography use profiles: their prospective impact on psychopathology during wartime. Addictive Behaviors, article 108589.",
+        "url": "https://europepmc.org/article/MED/41435755",
+        "pmid": "41435755",
+        "fetched": true,
+        "quote": "'recovery' (n = 138; 11.68 %),'delayed onset' (n = 50; 4.23 %), and 'chronic' (n = 42; 3.55 %)"
+      },
+      "origin": "new"
+    },
+    {
+      "kind": "how-tries",
+      "big": "4 in 10",
+      "headline": "Of men who wanted help for their porn use, 4 in 10 had already tried to quit four or more times.",
+      "mirror": "You've tried to quit four times and think a fifth is pointless.",
+      "severity": "self-hooked",
+      "counted": "men who said they wanted help for their porn use",
+      "basis": {
+        "design": "online survey",
+        "who": "men who watch porn, found mostly through Craigslist ads; average age 33 among those who wanted help",
+        "n": "186 men who wanted help for their porn use (of 1,298 surveyed)",
+        "where": "USA, Canada and other English-speaking countries",
+        "when": "June and July 2013; published 2016",
+        "measured": "Past tries to quit porn completely and to cut back: none, 1 to 3, or 4 or more. Among men who did not want help, 6% had tried to quit four or more times."
+      },
+      "caveat": "One survey at one moment, so it cannot say whether these men got free later or how many tries quitting usually takes. Volunteers who answered an ad.",
+      "projection": false,
+      "weak": "It counts tries so far by men still struggling, not the tries it took men who got free; no porn study counts those.",
+      "ref": {
+        "cite": "Kraus SW, Martino S, Potenza MN (2016). Clinical characteristics of men interested in seeking treatment for use of pornography. Journal of Behavioral Addictions 5:169-178.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5387768/",
+        "pmid": "27348557",
+        "fetched": true,
+        "quote": "Quit attempts with porn 0 attempts (“never”) 25.3 75.0 251.05 <0.001 1-to-3 past attempts 34.4 19.2 4+ past attempts 40.3 5.8"
+      },
+      "origin": "07-mirror-stats/porn.json how '4 in 10'"
+    },
+    {
+      "kind": "how-slips",
+      "big": "55 of 104",
+      "headline": "Of 104 men keeping an online journal while quitting porn, 55 wrote about slipping at least once.",
+      "mirror": "You broke your streak and think the whole attempt was wasted.",
+      "severity": "self-hooked",
+      "counted": "men on a quit-porn forum, most calling themselves addicted",
+      "basis": {
+        "design": "study of online quitting journals, with no comparison group",
+        "who": "men aged 18 to 63 on the Reboot Nation forum; 80 of the 104 called themselves addicted to porn",
+        "n": "104 men (55 slipped at least once)",
+        "where": "English-language online forum",
+        "when": "journals from 2016 to 2018; published 2021",
+        "measured": "Slips the men wrote about, and how long each journal's attempt ran. Only journals covering 7 days to 12 months were picked. At least 86.5% were also trying to stop masturbating."
+      },
+      "caveat": "Many men just stopped writing, so nobody knows how their attempts ended, and the study does not say when in an attempt the slips came. Half the journals covered 36.5 days or less. Men who journal in public may differ from men who quit quietly.",
+      "projection": false,
+      "weak": "A forum sample of 104 men, read from their own posts, with no record of when the slips happened.",
+      "ref": {
+        "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+        "pmid": "33403533",
+        "fetched": true,
+        "quote": "More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt."
+      },
+      "origin": "07-mirror-stats/porn.json how '55 of 104'"
+    },
+    {
+      "kind": "helps-talk",
+      "big": "93% vs 21%",
+      "headline": "In a small trial, men with problem porn use cut viewing 93% in ACT talk therapy, against 21% on a waiting list.",
+      "mirror": "You've tried willpower alone and want a method that works.",
+      "severity": "treatment",
+      "counted": "men in a therapy trial for problem porn use",
+      "basis": {
+        "design": "randomised trial (ACT therapy vs waiting list)",
+        "who": "adult men with problematic internet porn use; all but one were Latter-day Saints",
+        "n": "28 men, split between therapy and a waiting list",
+        "where": "USA",
+        "when": "published 2016",
+        "measured": "Self-reported porn viewing before and after 12 one-to-one sessions of acceptance and commitment therapy (ACT)."
+      },
+      "caveat": "It does not show that ACT beats other therapy: there was no comparison therapy. Once the waiting-list men had therapy too, 35% of 26 had stopped completely three months later.",
+      "projection": false,
+      "weak": "Only 28 men, almost all from one church, and viewing was self-reported.",
+      "ref": {
+        "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+        "url": "https://europepmc.org/article/MED/27157029",
+        "pmid": "27157029",
+        "fetched": true,
+        "quote": "significant between-condition reductions in pornography viewing compared to the waitlist condition (93% reduction ACT vs. 21% waitlist)"
+      },
+      "origin": "07-mirror-stats/porn.json works '93%'"
+    },
+    {
+      "kind": "after-first-month",
+      "big": "7 days",
+      "headline": "Regular porn users asked to stop for 7 days had no more craving, low mood or withdrawal than those who kept watching.",
+      "mirror": "You fear the first week off will be unbearable.",
+      "severity": "heavy",
+      "counted": "regular porn users, most not hooked",
+      "basis": {
+        "design": "randomised controlled trial",
+        "who": "psychology undergraduates who watched porn 3 or more times a week; 64% women, average age 21",
+        "n": "176: 86 asked to stop for 7 days, 90 who kept watching",
+        "where": "Malaysia",
+        "when": "published 2023",
+        "measured": "Each night for 7 days: craving, good and bad mood, and withdrawal symptoms, compared between the two groups after allowing for starting scores."
+      },
+      "caveat": "Most were not hooked: 85% scored below the problem cut-off, and 45% of the stop group watched anyway. In an extra check, daily users with high problem scores who stopped felt more craving, so this does not show that hooked daily users get no withdrawal. Nothing was measured after day 7.",
+      "projection": false,
+      "weak": "Students, mostly women and mostly not hooked, followed for one week only.",
+      "ref": {
+        "cite": "Fernandez DP, Kuss DJ, Justice LV, Fernandez EF, Griffiths MD (2023). Effects of a 7-day pornography abstinence period on withdrawal-related symptoms in regular pornography users: a randomized controlled study. Archives of Sexual Behavior 52:1819-1840.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9847461/",
+        "pmid": "36652136",
+        "fetched": true,
+        "quote": "generally does not experience withdrawal-like symptoms while trying to abstain from pornography for a 7-day period"
+      },
+      "origin": "07-mirror-stats/porn.json hero (06-template.json hero '7 days'); quote re-fetched from the full text on 2026-11-05"
+    },
+    {
+      "kind": "after-body",
+      "big": "21 of 42",
+      "headline": "Of 42 men on a quit-porn forum who began with erection trouble, 21 wrote that it got at least somewhat better.",
+      "mirror": "You hope quitting porn will fix your erections.",
+      "severity": "self-hooked",
+      "counted": "men on a quit-porn forum who had erection trouble",
+      "basis": {
+        "design": "study of online quitting journals, with no comparison group",
+        "who": "men aged 18 to 63 keeping a journal of a quit-porn attempt on the Reboot Nation forum",
+        "n": "42 men who wrote about erection trouble at the start (of 104 journals)",
+        "where": "English-language online forum",
+        "when": "journals from 2016 to 2018; published 2021",
+        "measured": "What the men wrote about their erections during attempts lasting 7 days to 12 months."
+      },
+      "caveat": "Their own words, not a doctor's check, and nobody was compared with men who kept watching. Some trouble may have had other causes; research on whether porn causes erection problems is inconclusive.",
+      "projection": false,
+      "weak": "A forum sample of 42 men describing themselves, with no comparison group.",
+      "ref": {
+        "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+        "pmid": "33403533",
+        "fetched": true,
+        "quote": "Of the 42 members who reported erectile difficulties at the outset of the abstinence attempt, half (n = 21) reported at least some improvements in erectile function"
+      },
+      "origin": "07-mirror-stats/porn.json who '21 of 42'"
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "hope-lifetime",
+      "searched": "Europe PMC on 2026-11-05: porn or compulsive sexual behaviour with remission, lifetime, natural course, natural recovery and longitudinal; the 2026 expert review of the field (PMC13132360) and the 2026 three-year Budapest study's review of 12 course studies (PMC13371728).",
+      "why": "No study projects the lifetime chance of getting free from a porn problem. The national surveys that give these projections for drugs never asked about porn, and the 2026 expert review says data on onset and remission are lacking. The old hero ('7 days', 06-template.json) is not a projection; it is kept under after-first-month.",
+      "fillLater": "Needs a national survey; the forum harvest cannot give a lifetime share."
+    },
+    {
+      "kind": "who-age",
+      "searched": "Europe PMC on 2026-11-05 (as above, plus age with remission or recovery); Kraus 2016 (PMC5387768), Fernandez 2021 (PMC7889567) and Konkolÿ Thege 2015 (PMC4320621) full texts.",
+      "why": "No porn study reports the age at which the problem ended. Kraus 2016 gives an average age of 33 for men who wanted help, which is when they were struggling, not when it ended.",
+      "fillLater": "Our forum harvest could fill it: success posts that give the writer's age and how long he has been off porn."
+    },
+    {
+      "kind": "how-alone",
+      "searched": "Europe PMC on 2026-11-05; Bőthe 2024 International Sex Survey (in 07); Konkolÿ Thege, Woodin, Hodgins & Williams 2015, Natural course of behavioral addictions: a 5-year longitudinal study, BMC Psychiatry 15:4 (PMC4320621, full text fetched).",
+      "why": "No study counts how the people who got free did it. The nearest numbers count help-seeking among people with a problem at the time: about 1 in 10 of people at risk had ever sought treatment (Bőthe 2024, in 07), and in an Ontario cohort of people who said 'sex or pornography' caused them significant problems, 11.4% on average sought any help in a given year while most problems faded within five years (Konkolÿ Thege 2015, Table 6). Using either here would stretch it.",
+      "fillLater": "Our forum harvest could fill it: success posts that name what the man used (nothing, a blocker, a group, a therapist)."
+    },
+    {
+      "kind": "how-tries",
+      "partial": true,
+      "searched": "Europe PMC on 2026-11-05; Fernandez 2021 and Dwulit 2019 full texts.",
+      "why": "The number given (4 in 10) counts past tries by men still wanting help. No porn study counts how many tries it took men who got free.",
+      "fillLater": "Our forum harvest could fill it: success posts that say how many earlier attempts failed."
+    },
+    {
+      "kind": "how-slips",
+      "partial": true,
+      "searched": "Fernandez 2021 full text (PMC7889567); Fernandez 2023 trial (PMC9847461).",
+      "why": "The number given (55 of 104) says how many slipped, not when. The only timed figure (45% within 7 days, in 07) counts students who were mostly not hooked and did not choose to quit.",
+      "fillLater": "The felt-difficulty forum harvest could show on which days slips cluster."
+    },
+    {
+      "kind": "helps-stop-vs-cut",
+      "searched": "Europe PMC on 2026-11-05: pornography with controlled use, moderation, reduction goal or harm reduction, and abstinence; the 07 PubMed search.",
+      "why": "No study compares quitting completely with cutting down for porn. Men on a quit-porn forum saw moderation as unworkable (Fernandez 2021), but that is their opinion, not a number.",
+      "fillLater": "The forum harvest could count posts about each goal and what followed, but that would stay weak."
+    },
+    {
+      "kind": "helps-medicine",
+      "searched": "Europe PMC on 2026-11-05: naltrexone, paroxetine, citalopram, escitalopram or SSRI with pornography, compulsive sexual or hypersexual, and randomized or placebo; the 2026 review of medicines for online behavioural addictions (PMID 42257421).",
+      "why": "No medicine trial for porn gives a figure that reads as '1 in N'. The only placebo-controlled trial found (Wainberg 2006, PMID 17194276, abstract fetched) had 28 gay and bisexual men with compulsive sexual behaviour; citalopram reduced porn use more than placebo, with no size given. A 2026 Swedish trial (Savard, PMID 42838712, abstract fetched) compared fluoxetine with naltrexone in 80 people with the disorder, without placebo, and found no difference. The 410-man placebo trial (PMID 42919590) is a protocol with no results yet.",
+      "fillLater": "Wait for the escitalopram and naltrexone placebo trial's results."
+    },
+    {
+      "kind": "after-mood",
+      "searched": "Europe PMC on 2026-11-05; the 07 search (Engelhardt 2025, PMID 40483829); López-Pinar 2025 meta-analysis (PMC12231474).",
+      "why": "No study measured mood after hooked men quit porn. The one-week trial found mood no worse than in those who kept watching (used under after-first-month). The 2025 meta-analysis found depression symptoms fell moderately during therapy, but that is an effect size from therapy, not a plain figure about quitting.",
+      "fillLater": "Our forum harvest could fill it: posts that give a day count and describe mood."
+    }
+  ],
+  "notUsed": [
+    {"origin": "07-mirror-stats/porn.json you '11%'", "big": "11%", "reason": "A share of all US men who feel addicted: a screening-style number about ordinary users (rules 1 and 2), not about getting free."},
+    {"origin": "07-mirror-stats/porn.json you '43%'", "big": "43%", "reason": "Warning signs among ordinary monthly users: a screening number (rule 1)."},
+    {"origin": "07-mirror-stats/porn.json you '8%'", "big": "8%", "reason": "How common daily use is: about ordinary users, and no kind in the menu covers it."},
+    {"origin": "07-mirror-stats/porn.json you '91.5%'", "big": "91.5%", "reason": "How common any use is: ordinary users, and no kind in the menu covers it (it stays in the 06 belief proof)."},
+    {"origin": "07-mirror-stats/porn.json you '78.6%'", "big": "78.6%", "reason": "How common monthly use is: ordinary users, and no kind in the menu covers it."},
+    {"origin": "07-mirror-stats/porn.json start '13'", "big": "13", "reason": "Age at first sight of porn: about how use starts, not how it ends; no kind in the menu covers it."},
+    {"origin": "07-mirror-stats/porn.json start '2.7×'", "big": "2.7×", "reason": "Low mood and anxiety predicting daily use: about how use starts; no kind covers it."},
+    {"origin": "07-mirror-stats/porn.json start '46%'", "big": "46%", "reason": "Drift to new genres among ordinary student users: no kind in the menu covers it."},
+    {"origin": "07-mirror-stats/porn.json cost '−0.4 of 10'", "big": "−0.4 of 10", "reason": "A cost of use in ordinary young men; the menu has no cost kind, and it is not about life after quitting."},
+    {"origin": "07-mirror-stats/porn.json cost 'about 2×'", "big": "about 2×", "reason": "Divorce link in ordinary married users; no kind in the menu covers it."},
+    {"origin": "07-mirror-stats/porn.json quit '45%'", "big": "45%", "reason": "How-slips takes the forum '55 of 104', whose men mostly called themselves addicted; this trial's students were mostly not hooked and did not choose to quit. Its 45% stays in the after-first-month caveat."},
+    {"origin": "07-mirror-stats/porn.json quit '51%'", "big": "51%", "reason": "Tries by ordinary student users who still watch; how-tries takes the '4 in 10' from men who wanted help."},
+    {"origin": "07-mirror-stats/porn.json after '74%'", "big": "74%", "reason": "Same ACT trial as the helps-talk card (one number per kind); its 35% stopped-completely figure is in that card's caveat."},
+    {"origin": "07-mirror-stats/porn.json after '1 in 6'", "big": "1 in 6", "reason": "Counts everyone who ever watched, not people who were hooked, so it cannot carry a hope kind (rule 3: no 'users' number in hope)."},
+    {"origin": "07-mirror-stats/porn.json who 'up to 31%'", "big": "up to 31%", "reason": "Shows that scores move in ordinary young adults, not a count of people who got free; hope-free-now uses a head count instead."},
+    {"origin": "07-mirror-stats/porn.json how '1 in 10'", "big": "1 in 10", "reason": "Help-seeking among people at risk now, not how the people who got free did it; named as the nearest number in the how-alone gap."},
+    {"origin": "07-mirror-stats/porn.json how '16 million'", "big": "16 million", "reason": "App installs, not people, and says nothing about quitting; 'million' is also banned in reader text (rule 11)."},
+    {"origin": "07-mirror-stats/porn.json works '3 small trials'", "big": "3 small trials", "reason": "A count of trials, not a result a reader can picture; helps-talk takes a trial result (93% vs 21%) instead. Kept as context for the reviewers: every study in that meta-analysis was at risk of bias."},
+    {"origin": "07-mirror-stats/porn.json works '2.7 of 5'", "big": "2.7 of 5", "reason": "A remembered rating of unknown kinds of help: weaker than a trial result for helps-talk."}
+  ]
+}

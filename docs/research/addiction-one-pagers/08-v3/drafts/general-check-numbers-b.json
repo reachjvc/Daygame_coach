@@ -1,0 +1,42 @@
+{
+  "id": "general",
+  "checked": [
+    {
+      "index": 1,
+      "where": "numbers",
+      "label": "46%",
+      "verdict": "fix",
+      "problems": [
+        "Figure, n, group, where, when, design and quote all hold: 53.9% used help (Table 2 and Results 3.2), so 46.1% never did. The n of 2,002 is right because the figure is over the whole sample. The quote matches word for word (24 words). The 'resolved' tag fits the self-defined screener question.",
+        "The headline says 'never used ... medicine', but the survey counted only anti-relapse or anti-craving medicines (naltrexone, buprenorphine, disulfiram and others, Table 2). Someone who took other medicine still counts as 'never used help', so the headline overstates how 'alone' they were.",
+        "The caveat says 'People who quit alone'. 'Resolved' is not the same as quit: in the same survey 48.6% still used some alcohol or drug (Kelly 2018). Use the headline's word instead.",
+        "Rule 10 note, no field change: if both gen-alone cards show, the diagnosed 90% (#2) is the cautious figure for this reader. This card's caveat already carries it."
+      ],
+      "fix": {
+        "headline": "Of people who beat an alcohol or drug problem, 46% never used treatment, a group like AA, anti-craving medicine or recovery services.",
+        "caveat": "It does not mean help is unneeded or that going alone works as well. People who got there alone had milder histories on average, and the problem was their own definition: of the 1 in 6 ever diagnosed with an alcohol or drug disorder, 9 in 10 had used help. Only anti-craving or anti-relapse medicines counted as help."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6076174/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "numbers",
+      "label": "6 years",
+      "verdict": "fix",
+      "problems": [
+        "The quote matches the abstract word for word (29 words). n = 1,879 matches Table 1's 40-year sample (unweighted), and 'who', where, when and design are correct: 58.55% named alcohol, cross-sectional, July-August 2016.",
+        "'6 years' is the abstract's summary across all well-being measures. The Results say quality of life, happiness and self-esteem improved fastest 'during the first 6–11 years'. The Table 2 spline knots are 8 years for quality of life, 11 for happiness and 6 for self-esteem; recovery capital and distress were fitted as smooth curves. So 'rated life higher, climbing fast for 6 years' is wrong for the life (quality-of-life) score itself.",
+        "basis.measured says the 6 years is 'where a smoothed curve through those scores flattens'. That is not how the paper gets it. The figure is the authors' summary of the fitted models, and each measure bends at a different point.",
+        "The caveat misses two cautious points from the source. Only people still free were surveyed, so those who went back are absent from the later years (the authors say 'among those who continue to stay in recovery'). And quality of life took about 15 years on average to reach a healthy Western European sample's level."
+      ],
+      "fix": {
+        "headline": "Among people who beat an alcohol or drug problem, those free longer rated well-being higher, climbing fast for 6 years, then slower.",
+        "basis.measured": "Quality of life, happiness, self-esteem, recovery resources and psychological distress, compared across people 0 to 40 years past their problem. The 6 years is the authors' summary of where steep gains give way to shallower ones; their fitted models put that bend at 6 years for self-esteem, 8 for quality of life and 11 for happiness.",
+        "caveat": "Different people at different stages, not the same people followed, and only people still free were asked, so those who went back are missing from the later years. Happiness and self-esteem dipped in the first year before rising. Quality of life took about 15 years on average to match a healthy Western European sample. Free of the problem is not always free of every substance: about half still used some alcohol or drug."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC5880708/unicode",
+      "quoteFound": true
+    }
+  ]
+}

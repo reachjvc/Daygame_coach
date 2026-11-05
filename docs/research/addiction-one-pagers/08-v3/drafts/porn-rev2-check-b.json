@@ -1,0 +1,129 @@
+{
+ "id": "porn",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "after-lasting 1 in 6 (Dwulit 2019), basis.design reworded",
+   "verdict": "ok",
+   "problems": [
+    "Included on purpose: 19 changed items split 9/10 or 10/9, so this checker also took the middle item (numbers 9) to make sure it is not left out.",
+    "Only basis.design changed. 'One-time online survey; students chose to take part' matches the full text (Europe PMC): an anonymous online cross-sectional survey, and the authors name volunteer bias.",
+    "Re-verified in the full text: 5,083 ever exposed (2,079 men, 3,004 women, so about 6 in 10 women); 823 stopped (339 men, 484 women); aged 18–26; February 2017 to August 2018. 823/5,083 = 16.2%, so 'about 1 in 6' holds; men 16.3% and women 16.1%, so 'men as often as women' holds.",
+    "The quote is word for word (14 words). Kind after-lasting allows 'users'; the weak and propose notes say plainly that these are ordinary users."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: wired in since a teenager (Efrati 2026)",
+   "verdict": "ok",
+   "problems": [
+    "Abstract re-fetched (Europe PMC, PMID 41435755). The quote is word for word, including the missing space after the comma (25 words). 'Four years apart' = 2018 and 2022 waves; a community sample of Jewish adults in Israel aged 18–70; self-report measures of probable CSBD and PPU.",
+    "The proof claims no more than the abstract: profile names and sizes only, no claim that the 138 had a problem in 2018. Porn and sex are said to be counted together, so rule 13 holds. 33 words.",
+    "Minor: 'A grouping, not a head count' could be misread, since 138 is the number of people put in that group. It matches the hope card's weak chip, and the card caveat explains it, so it is left as is. The test is safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "hard: brutal flatline (Fernandez 2021, porn-only)",
+   "verdict": "fix",
+   "problems": [
+    "Both quotes are word for word in the full text (25 and 7 words). 'Close to one-third' and 'flatline = significant decrease or loss of libido' hold. All 104 journals are by men; 80 of 104 (76.9%) saw themselves as addicted.",
+    "'Two in three wrote of none' is arithmetic on 'close to one-third', but without 'about', and 'wrote of none' reads oddly. Fixed to 'About two in three did not.'",
+    "Note, no fix: in the counterpart, 'most don't' counts men who did not write of a flatline as men who did not have one. The source also says some men had heavy low moods they read as withdrawal, and that coping with bad moods was very hard. 'The hard part is the pull' is the reader's line, not a source claim, so it is left. The test is safe."
+   ],
+   "fix": {
+    "beliefs[1].proof": "In 104 men’s porn-quit journals, most by men calling themselves addicted, close to a third wrote of a ‘flatline’, a spell of low sex drive. About two in three did not. Their own accounts."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "need: switch off (Fernandez 2021, 'more than 75 in 100')",
+   "verdict": "ok",
+   "problems": [
+    "All 5 quotes are word for word in the full text (all 30 words or fewer). The authors define 'most' as more than 75% of members, and that definition covers the whole results section, so 'More than 75 in 100' is the source's own figure.",
+    "'Found other ways to cope' holds: the same section says these strategies were used 'to regulate emotional states that could potentially precipitate a lapse (i.e., momentary cravings and negative affect)'. The list (thinking, exercise, going out, sleep) matches. 38 words. Porn only. The test is safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "moderation: one quick look (Kraus 2016, 46 in 100 of 186)",
+   "verdict": "ok",
+   "problems": [
+    "Full text re-fetched. Table 1, column 'Interested in treatment Yes (n = 186)': cut back 4+ past attempts 46.2%. Both quotes are word for word (21 and 22 words).",
+    "'Cut back, not quit' holds: the questionnaire asks about cut-back attempts and quit attempts separately (quit 4+ = 40.3%). All 1,298 were men. Rule 4 holds: men who wanted treatment for porn, not ordinary users. 27 words. The test is safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "identity: slipped again (Fernandez 2021, 55 of 104)",
+   "verdict": "ok",
+   "problems": [
+    "All 3 quotes are word for word in the full text (18, 7 and 14 words). 'More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt.'",
+    "'How the attempts ended is unknown' holds. The authors say the durations only reflect what was recorded, and that members may have kept going after they stopped posting. The proof claims no success rate. 28 words. Porn only. The test is safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "step 1 proof: 9 men, 6 binged (Wordecha 2018)",
+   "verdict": "fix",
+   "problems": [
+    "Both quotes are word for word in the full text (19 and 14 words). 9 treatment-seeking men, Warsaw labs, 6 of 9 binged (multiple hours or times a day).",
+    "Too broad: the proof says that for the men who binged, binge days came with low mood, stress or anxiety. The full text (Table 5) gives a count: 'For all but one subject (G)', so 5 of the 6. Patient G showed no difference. The changeNote says the abstract gives no count, but the full text does. Fixed with the count, and that sentence added as a quote (28 words).",
+    "The fixed text is 40 words. The actions are only reordered (no change in substance). They are safe, use plain words, and name one drug only."
+   ],
+   "fix": {
+    "plan[0].proof.text": "Of 9 men in Poland seeking help for porn and sex habits, 6 binged on porn for hours or many times a day. For 5 of the 6, binge days came with low mood, stress or anxiety, differing by man.",
+    "plan[0].proof.ref.quotesMore[+]": "For all but one subject (G), pornographic binges led to either a decrease of mood (patients D, E, F, and H) or stress (patients A, D, and E)."
+   }
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 last action: slip points to step 2 swap (Fernandez 2021 proof unchanged)",
+   "verdict": "ok",
+   "problems": [
+    "Only the last action changed: 'Slip? Write down what came just before it, then look again at your step 2 swap for that hour.' It is safe, in plain words, and does not restart the count.",
+    "The unchanged proof quote is word for word in the full text (23 words), and the paraphrase matches."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 3,
+   "label": "step 4 actions 1-2: shower after slip; keep the count (Fernandez 2021 proof unchanged)",
+   "verdict": "ok",
+   "problems": [
+    "New actions 1 and 2 are safe, concrete and in plain words. 'You lost a day, not the three months' fits step 3 ('Mark every kept day').",
+    "The unchanged proof quote is word for word in the full text (23 words). The source defines 'some' as under 50%, which fits 'some found'."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof: ACT trial 54 in 100 (Crosby 2016)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract re-fetched (Europe PMC). The quote is word for word (22 words). The full paper is closed: Semantic Scholar and Unpaywall list no free copy, and the USU and CORE copies return 403 or a bot check.",
+    "Wrong n: '28 men ... had a course of ACT; 54 in 100 had stopped' puts the 54% on 28 men. The abstract gives the 54% right after 'When combining all participants (N=26)'. 28 men enrolled, split between ACT and a waitlist, and 26 are in the combined count. The card basis says the same.",
+    "'No count exists for men without the therapy' claims more than was read. Only the abstract was read, and the closed paper may report waitlist figures. Changed to 'No count was given', as the R1 proof had it.",
+    "The fixed text is 39 words, with one figure, the end-of-therapy timing, and is no more hopeful than the source. The actions are unchanged, safe, and use plain words."
+   ],
+   "fix": {
+    "plan[4].proof.text": "In a small US trial for problem porn use, 26 men, almost all from one church, had a course of ACT; 54 in 100 had stopped watching by the end. No count was given for men without the therapy."
+   }
+  }
+ ]
+}

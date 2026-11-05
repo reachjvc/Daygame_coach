@@ -1,0 +1,281 @@
+{
+ "id": "nicotine",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "hope-free-now",
+   "verdict": "ok",
+   "problems": [
+    "Holds against the PMC full text: 'lifetime history of dependence on nicotine (n=6,937)' (Methods) and Table 3 header 'Nicotine remission (N=1,300)' (Table 4 prints 'N=1300'); 1,300/6,937 = 18.7%, so 'nearly 1 in 5' is right and not rounded up.",
+    "Fixed fields hold: big 'Nearly 1 in 5'; caveat matches 'overreport of remission', 'Males were less likely than females to remit', and 'civilian non-institutionalized population'; basis.who matches '3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period'.",
+    "Severity 'dependent' fits. Headline 21 words, 1 figure; mirror 10 words, second person, not a screening line. Reading 1,300 as the count who got free is still an inference, and 'weak' says so."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text of PMC3227547); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:21077975%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "hope-lifetime",
+   "verdict": "fix",
+   "problems": [
+    "Fixed basis.who holds ('3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period'). Figure, n, NESARC 2001-2002, 'projected', 3.0% and 18.4% all hold; quote word for word in PMC.",
+    "caveat and weak say 'people who died'. Rule 11 says the build bans 'died' in reader number text (build_v3.py checks only headline and big, so it passes today, but the rule's text covers the card). The source's words are 'institutionalized individuals or those who experienced fatal or severe consequences due to their SUD may have not been sampled, leading to overestimation'. Replacement keeps the meaning without the banned word and keeps the source's 'may'."
+   ],
+   "fix": {
+    "caveat": "'Free' means no signs of being hooked left, not that they never touched it again. Men got free less often than women. People in prison or hospital weren't surveyed, and the worst-hit cases may have been missed, so the true share is likely lower.",
+    "weak": "A projection, not a count, and likely high: people in prison or hospital were not asked, and the worst-hit cases may have been missed."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text of PMC3227547); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:21077975%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "how-tries",
+   "verdict": "fix",
+   "problems": [
+    "Fixed basis.measured holds: Table 3 daily column (n=1092) 6.8, 20.4, 29.5, 142.3; overall 29.6; Method 3 'highest on the initial quit attempt (11% success)' is the all-smoker figure, and the card says so. 'Best set of assumptions' is the authors' phrase.",
+    "basis.design says 'with a life table'. 'life table' is on the build's JARGON list and basis values are linted as reader text, so build_v3.py fails rule 8 on this card. Replacement uses the source's own description ('accounting for the declining success rates for subsequent observed quit attempts'; 'followed for up to 3 years at ~6-month intervals').",
+    "Rest holds: Ontario, interviews 2005-2011, success = 1 year or more, self-report, no biochemical check; severity 'heavy' allowed for how-tries; Counted label says not checked. Headline 20 words, 1 figure; mirror 10 words. Quote is Table 3 cells, each word for word."
+   ],
+   "fix": {
+    "basis.design": "cohort surveyed about every 6 months for up to 3 years; a model turned tries into tries per success, letting each later try have lower odds"
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=4908897 (full text of PMC4908897)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "how-slips",
+   "verdict": "fix",
+   "problems": [
+    "Fixed fields hold against the abstract: basis.n matches 'a prior summary of 10 self-quitting studies, two other studies of self-quitters and three no-treatment control groups' and 'eight relapse curves from two studies of self-quitters and five no-treatment control groups'; basis.where and the caveat claim nothing beyond the abstract. Full text is paywalled (Wiley); Unpaywall refused the placeholder email, so it was not fetched.",
+    "headline says 'most slips came in the first eight days'. The source says 'most relapse occurs in the first 8 days'. A slip is one smoke; relapse is going back. The same page uses the difference (the moderation belief's lapse trial), so the headline should say relapse in plain words.",
+    "Severity 'users' is now allowed for how-slips in kinds.json, so the earlier build conflict is gone. Quote word for word. Mirror 11 words, second person."
+   ],
+   "fix": {
+    "headline": "Only 3–5% of unaided quit tries lasted six months to a year; most who went back did it within eight days."
+   },
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:14678060%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "helps-stop-vs-cut",
+   "verdict": "fix",
+   "problems": [
+    "Fixed basis.measured holds: 'reduction aided by pharmacotherapy ... may only be true when fast-acting NRT or varenicline are used' and 'such as gum or lozenge'.",
+    "basis.who says 'adults who smoke and want to quit'. The review's inclusion is 'Cigarette smokers of any age willing to enrol in a smoking cessation trial', and the summary says 'Most were adults'. Replacement says that.",
+    "Rest holds: RR 1.01 (0.87 to 1.17), 22 studies, 9219 participants, moderate certainty; 51 trials, 22,509; 29 in the USA, then China 5, Spain 3, Switzerland 3, Germany 2, UK 2 and single trials elsewhere; search 29 October 2018. Caveat trial (Lindson-Hawley 2016, PMID 26975007): 697 adult smokers, primary care in England, nurse support and NRT both arms, 15.5% vs 22.0% at 6 months. Quote word for word (source uses U+2010 hyphens)."
+   ],
+   "fix": {
+    "basis.who": "people who smoke cigarettes and were willing to join a quit trial, most of them adults, about 23 cigarettes a day on average"
+   },
+   "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6953262/ (full review); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:26975007%20AND%20SRC:MED&format=json&resultType=core (caveat trial)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "helps-medicine",
+   "verdict": "ok",
+   "problems": [
+    "Fixed caveat holds: 'Absolute rates for serious adverse events were 3.3% and 2.7% in varenicline and control arms respectively' (control = placebo or no medication; 26 studies, 14,356). 'Prescription only' matches 'approved as a prescription-only aid'. One included study was of e-cigarette users who smoke, so 'mostly tested in cigarette smokers, not vapers' holds.",
+    "Fixed basis.measured holds: 'the strictest definition of abstinence reported in each study' and 'we favoured biochemically validated over self-reported abstinence'; trials used 'exhaled carbon monoxide, or salivary or urinary cotinine'.",
+    "Rest holds: SoF row 99 per 1000 vs 230 per 1000 (213 to 249), RR 2.32, 17,395 in 41 studies, high certainty; 75 trials, 'The USA hosted the most studies (28 studies)', others include Canada, Europe, Asia, Australia and multi-country trials; search 29 April 2022. Headline 20 words, 2 figures, per 100 both sides."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10169257/fullTextXML",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "helps-talk",
+   "verdict": "fix",
+   "problems": [
+    "Fixed headline holds: the source says 'if seven out of 100 smokers managed to quit for at least six months ... then between 10 and 12 in 100 would be expected to be successful'; 'expected' and the cautious end 'at least 10' are right (10 is about the low end of RR 1.40 x 7).",
+    "Fixed basis.where holds: 'Thirty studies were conducted in the USA, three in Spain, three in Denmark, two in the UK, two in Australia', then one each in Germany, Switzerland, Sweden, Netherlands and five Asian places.",
+    "Fixed basis.who says 'adult smokers'. The review's inclusion is 'Any smokers, except pregnant women' and 'We also exclude trials recruiting only children and adolescents'; it does not say adults only. '19 of 49 ... hospital patients' holds ('medical or surgical hospital inpatients ... or outpatients'), and 'Lack of interest in quitting was not an explicit exclusion criterion in any study' holds.",
+    "Rest holds: RR 1.57 (1.40 to 1.77), 27 studies, 11,100; 49 trials, around 19,000; with NRT for all RR 1.24; May 2016. Quote word for word with one ellipsis, 30 words."
+   ],
+   "fix": {
+    "basis.who": "smokers in trials where no one was offered quit medicine (pregnant women and teen-only trials left out); across the review, 19 of 49 trials recruited hospital patients, and not wanting to quit did not rule anyone out"
+   },
+   "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6464359/ (full review)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "after-first-month",
+   "verdict": "ok",
+   "problems": [
+    "Fixed quote is one contiguous passage of the abstract, word for word, 26 words.",
+    "Fixed basis.where holds: the abstract gives only the affiliation 'St. George's Hospital Medical School, University of London, England'. Fixed basis.design holds: PubMed types 'Randomized Controlled Trial' and MeSH 'Double-Blind Method'.",
+    "Rest holds: 101 smokers meeting DSM-III-R nicotine dependence, 70 lapse-free for 4 weeks, single rating plus STAI State Form X, 2 weeks before to 4 weeks after. Severity 'dependent' fits. Headline 16 words; mirror 10 words."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:9356569%20AND%20SRC:MED&format=json&resultType=core (abstract, MeSH, publication types)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "after-mood",
+   "verdict": "ok",
+   "problems": [
+    "Fixed headline holds: 'All participants showed decreased global QOL' and quitters 'had smaller decreases' at Years 1 and 3; negative affect fell in quitters and rose in smokers at Years 1 and 3. Not more hopeful than the source.",
+    "Fixed basis.who holds: 'smoking more than nine cigarettes per day', 'motivated to quit smoking', 'all participants received six one-on-one counseling sessions', medicine or placebo, 58.2% women. Fixed caveat and weak hold: 'modest effects', 'Smoking status did not influence marital relationship satisfaction'.",
+    "Rest holds: Table 2 n 649/376 at Year 1 and 640/359 at Year 3, 1,504 enrolled, Madison and Milwaukee, January 2005 to June 2007. Quote word for word with the PubMed abstract. Headline 22 words (the maximum), 2 figures."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3298628 (full text); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:22160762%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "who-years",
+   "verdict": "ok",
+   "problems": [
+    "Fixed caveat holds: 83.7% is the actuarial lifetime estimate; 'civilian non-institutionalized' and 'leading to overestimation'; males lower remission hazard (Table 4 HR 0.81); the paper names no tobacco products for the sample.",
+    "Rest holds: 'Half of the cases of nicotine ... dependence remitted approximately 26 ... years after dependence onset'; 6,937 of 43,093; 3.0% and 18.4%. Headline 18 words, says 'projected'. Quote is elided to drop the other drugs; kept words are word for word."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text of PMC3227547); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:21077975%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "after-body",
+   "verdict": "ok",
+   "problems": [
+    "Fixed basis.n holds against Table 3 at month 12: 514 (25 studies) untreated, 1138 (19) NRT, 183 (5) bupropion, 174 (3) varenicline.",
+    "Fixed basis.measured holds: 'Using the means and weighted standard deviations, we calculated that at 12 months after cessation, 16%, 37%, 34%, and 13% of untreated quitters...'.",
+    "Rest holds: quote word for word (29 words), 62 studies, 59 of 62 in North America, Europe or Australia, BMJ 2012. Open doubt kept, not a fix: 'most of it in three months' is the authors' conclusion and fits untreated quitters (2.85 of 4.67 kg), less so NRT users (2.29 of 4.86 kg)."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3393785/fullTextXML",
+   "quoteFound": true
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck",
+   "verdict": "ok",
+   "problems": [
+    "Fixed proof holds and puts the counted figure first (rule 10): 1,300 of 6,937 (Table 3 header 'Nicotine remission (N=1,300)'), then the projected 83.7%, and 'likely on the high side' matches 'overreport of remission' and 'leading to overestimation'.",
+    "Fixed quote: 'Life-time cumulative probability estimates of dependence remission were 83.7% for nicotine' is word for word in the PubMed/Europe PMC abstract; 'Nicotine remission (N=1,300)' is in the PMC full-text table. Fixed note holds.",
+    "Severity 'dependent' fits. Proof 31 words. Open doubt kept: the counterpart 'Most ... get free in the end' rests on the projection."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547 (full text of PMC3227547); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:21077975%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "hard",
+   "verdict": "ok",
+   "problems": [
+    "Fixed proof holds and is cautious first: Hughes 'peak within the first week and last 2-4 weeks' (120 studies, 1990-2004), then Shiffman 'All symptoms returned to baseline levels within 10 days of quitting' (214 smokers, clinic-based behavioural group programme). 'Neither includes craving': Hughes 'does not evaluate craving'; Shiffman's listed measures are negative affect, arousal, attention, restlessness, sleep and cognitive performance.",
+    "Fixed notes hold, including 'based solely on the author's subjective judgments'. Both quotes word for word. Proof 38 words. Shiffman full text is paywalled; only the abstract was checked."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:17156182%20AND%20SRC:MED&format=json&resultType=core ; https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:17365764%20AND%20SRC:MED&format=json&resultType=core",
+   "quoteFound": true
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "need",
+   "verdict": "ok",
+   "problems": [
+    "Fixed proof holds: Hajek, 469 smokers hospitalised after MI or CABG who wanted to stop, 194 abstinent at 1 year, 'abstainers recorded a significantly larger decrease in perceived stress'; Taylor, 'Four studies reported change in anxiety' and 'Three studies reported change in stress', both a larger decrease with quitting than with continued smoking.",
+    "Fixed Taylor quote is word for word (two pieces joined by an ellipsis). Fixed note holds: 26 studies, 'Eleven ... cohort studies, 14 were secondary analyses of cessation interventions, and one was a randomised trial'; anxiety follow-ups seven weeks to 12 months, stress six months to six years. Proof 39 words."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:20528815%20AND%20SRC:MED&format=json&resultType=core ; https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3923980/fullTextXML",
+   "quoteFound": true
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "moderation",
+   "verdict": "ok",
+   "problems": [
+    "Fixed proof holds: Kenford 83% and 97% of active-patch users who smoked in week 2 were smoking at 6 months (trials of 88 and 112); Shadel 'Whereas 53.1% of participants in the no lapse condition relapsed, 65.5% of participants in the lapse condition did so', 63 randomised (32 wait, 31 lapse), HR 2.12 for speed.",
+    "Rule 4 holds: both count treatment-seeking daily smokers of 15 or more a day (severity 'treatment', not heavy/users). Fixed notes hold; Shadel relapse = 'seven consecutive days of smoking', 14-day follow-up. Quotes word for word. Proof 40 words (the maximum).",
+    "Small note, no fix: Kenford's 'about half on a real patch' is inferred from a placebo-controlled design; the abstract gives no split."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:8301790%20AND%20SRC:MED&format=json&resultType=core ; https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3158283",
+   "quoteFound": true
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "harmless",
+   "verdict": "ok",
+   "problems": [
+    "Fixed proof holds: Foulds 3,609 exclusive vapers who used to smoke, PS Cigarette vs E-cig Dependence Index 14.5 vs 8.1 (range 0-20, cigarette rated from memory), higher with longer use and higher nicotine concentration; Lunell 'The two higher doses of ZYN (6 and 8 mg) deliver nicotine as quickly and to a similar extent as existing smokeless products', grant 'Swedish Match AB', one author at 'Product Science, Swedish Match'.",
+    "Fixed notes hold: survey posted December 2012, likely 'pro-e-cig' sample, liquid-strength analysis n = 3,446; Lunell abstract gives no participant count. Quotes word for word. Proof 39 words. Severity 'users' is allowed for this kind."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4838001/ ; https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:32319528%20AND%20SRC:MED&format=json&resultType=core",
+   "quoteFound": true
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "step 2 proof (cue craving)",
+   "verdict": "fix",
+   "problems": [
+    "Fixed 'groups of about 20' holds: the 3-group between-subjects tests report F(1,59) and t(59), so Groups 1-3 total 62. 'Eighty-six participants completed the study'.",
+    "'pulled harder at day 35 than at day 7 on some scales' overstates the day 35 vs day 7 contrast. The full text: 'TCQ-SF Total smoking-cue reactivity was higher in the 35-day than 7-day group' while 'groups did not differ on QSU-B Factor 1'; the QSU-B Factor 2 difference was for neutral cues. So the contrast held on one of three craving scales. The abstract's 'on some measures' covers the between- and within-group results together.",
+    "Rule 19 holds ('A lab test, not everyday craving'). Quote word for word with the PubMed abstract."
+   ],
+   "fix": {
+    "text": "A lab test, not everyday craving: in groups of about 20 smokers paid to stay off, smoking cues pulled harder at day 35 than day 7 on one of three scales. Keep coffee and break swaps past the first month.",
+    "ref.note": "86 non-treatment-seeking smokers of 10 or more a day completed, paid $30 a day to stay off for 7, 14 or 35 days. The day 35 vs day 7 contrast is between two of three randomised groups that total 62 (from the reported F(1,59)); it showed on the TCQ-SF Total only, not on QSU-B Factor 1 or 2. Cue craving did not fall on any measure. A lab cue test, not everyday craving."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3027849 (full text); https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:20817135%20AND%20SRC:MED&format=json&resultType=core (abstract)",
+   "quoteFound": true
+  },
+  {
+   "where": "plan",
+   "index": 3,
+   "label": "step 4 proof (identity)",
+   "verdict": "fix",
+   "problems": [
+    "Fixed text holds: Table 2 'A smoker trying to quit | 14 | 71.4' (10 of 14), ex-smokers 7.2% and non-smokers 8.0%, so '7 to 8 in 100' is right; 544 former smokers quit a month or more, Australia and UK, Waves 9 (2013) and 10 (2014), self-reported relapse at 12 months. Fixed quote word for word.",
+    "Fixed ref.note gives group sizes that the paper itself prints two different ways. Table 2: ex-smoker n=251 (7.2%), non-smoker n=150 (8.0%), 'chosen to no longer smoke' n=126 (12.4%). Table 1A: ex-smoker n=150, non-smoker n=251, chosen n=129. The note paired Table 1A's sizes with Table 2's rates. The reader text does not use these sizes, so only the note changes."
+   ],
+   "fix": {
+    "ref.note": "544 former smokers, quit a month or more, in the ITC surveys in Australia (304) and the UK (240), 2013-14; relapse self-reported at 12 months. Table 2: 14 'smoker trying to quit' (71.4% relapsed), 251 ex-smokers (7.2%), 150 non-smokers (8.0%), 126 'smoker who has chosen to no longer smoke' (12.4%); Table 1A prints the ex-smoker and non-smoker counts the other way round (150 and 251) and 129 for the last group. The authors call the first group small. A link, not proof of cause."
+   },
+   "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=7572756 (full text of PMC7572756)",
+   "quoteFound": true
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof (varenicline)",
+   "verdict": "ok",
+   "problems": [
+    "Fixed text holds: SoF row 'Smoking abstinence at longest follow-up (6+ months)(varenicline vs placebo) | 99 per 1000 | 230 per 1000(213 to 249)', 17,395 people in 41 studies; per 100 both sides, no ratio (rule 12a).",
+    "Fixed quote 'For every 100 people using varenicline to stop smoking, 21 to 25 might successfully stop' is word for word in the plain-language summary; it backs the 23 in 100 side, and the note carries the 99 per 1000 side. Fixed note holds (high certainty). Text 28 words."
+   ],
+   "fix": {},
+   "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10169257/fullTextXML",
+   "quoteFound": true
+  }
+ ]
+}

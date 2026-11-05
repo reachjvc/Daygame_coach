@@ -1,0 +1,450 @@
+{
+ "id": "porn",
+ "beliefs": [
+  {
+   "kind": "stuck",
+   "limiting": "I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.",
+   "counterpart": "Out-of-control porn use often doesn’t last. Plenty of people get past it.",
+   "test": "This week, write down one habit you were once sure you’d never drop, and did. Next to it, write what changed. Notice whether “wired in” held up.",
+   "proof": "An Israeli survey of adults asked about compulsive sex and problem porn use in 2018 and 2022. Of the groups with likely problems in 2018, 138 people fell in a ‘recovery’ group by 2022; 42 stayed ‘chronic’.",
+   "severity": "disorder",
+   "refs": [
+    {
+     "cite": "Efrati Y, Shmulewitz D, Skvirsky V, Vider M, Kor A, Lev-Ran S, Mikulincer M (2026). Longitudinal study of probable compulsive sexual behavior disorder and problematic pornography use profiles: their prospective impact on psychopathology during wartime. Addictive Behaviors 175:108589. Abstract only; full text is paywalled.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/41435755/",
+     "pmid": "41435755",
+     "fetched": true,
+     "quote": "we applied latent profile analysis (LPA) to identify distinct latent profiles of participants' probable CSBD and PPU across 2018 and 2022"
+    },
+    {
+     "cite": "Efrati Y, Shmulewitz D, Skvirsky V, Vider M, Kor A, Lev-Ran S, Mikulincer M (2026). Longitudinal study of probable compulsive sexual behavior disorder and problematic pornography use profiles: their prospective impact on psychopathology during wartime. Addictive Behaviors 175:108589. Abstract only; full text is paywalled.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/41435755/",
+     "pmid": "41435755",
+     "fetched": true,
+     "quote": "'no disorder' (n = 952; 80.54 %),'recovery' (n = 138; 11.68 %),'delayed onset' (n = 50; 4.23 %), and 'chronic' (n = 42; 3.55 %)"
+    }
+   ],
+   "origin": "new",
+   "keep": false,
+   "check1": {
+    "verdict": "fix",
+    "by": "belief reviewer (porn-check-beliefs.json)",
+    "on": "2026-11-05",
+    "problems": [
+     "Only the abstract can be read; the full text is paywalled. The figures 138 ('recovery') and 42 ('chronic') and both quotes match the abstract word for word.",
+     "'Checked adults' reads like a clinical check. The source is a community survey (Jewish adults in Israel, aged 18 to 70) using self-report measures of probable CSBD and PPU.",
+     "'Of those flagged in 2018' is inferred from the profile names. The groups come from latent profile analysis; the abstract does not say each person was over a cut-off in 2018 and under it in 2022. Use the source's own labels.",
+     "The severity tag 'disorder' fits (probable CSBD/PPU by questionnaire, mild included). Name it as weak under rule 17: a community sample, questionnaire-only, profile memberships rather than diagnoses, mixing compulsive sex with porn.",
+     "The cite's year of 2026 matches PubMed (Addictive Behaviors 175:108589). The proof is 29 words, now 37."
+    ],
+    "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41435755%20AND%20SRC:MED&format=json&resultType=core",
+    "quoteFound": true,
+    "applied": "Applied on 2026-11-05: the reviewer's corrections word for word.",
+    "applierNotes": [
+     "Open doubt, no field change: the two reviewers disagree on access. Numbers reviewer a says the full text is CC-BY open access behind a captcha; the refs' cite says 'full text is paywalled'. Both agree only the abstract could be read.",
+     "Rule 17, for the 'What is weak' list: a community sample, questionnaire scores only, groups drawn by a model rather than diagnoses, compulsive sex and porn mixed."
+    ]
+   },
+   "fixedFields": [
+    "proof"
+   ]
+  },
+  {
+   "kind": "hard",
+   "limiting": "Quitting means a brutal flatline and weeks of withdrawal.",
+   "counterpart": "I’ve had days off before. They weren’t brutal; the pull was the hard part.",
+   "test": "Rate your mood, sleep and focus 0–10 each night: three nights while you still watch, then each night of your first days off. Notice which nights score worse.",
+   "proof": "In a small study, 14 men who scored as hooked on sex kept off all sex, porn included, for 10 days. Their withdrawal-type symptoms eased from day 3; by day 10 they matched men below the cut-off.",
+   "severity": "disorder",
+   "refs": [
+    {
+     "cite": "Sassover E, Kushnir T, Weinstein AM (2024). Investigating mood-modification, withdrawal, and sensitization in compulsive sexual behaviour. Frontiers in Psychiatry 15:1421028. Study 3.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11502338/",
+     "pmid": "39465047",
+     "fetched": true,
+     "quote": "This study found that individuals with CSB experienced improvements in various symptoms after abstaining from sexual activity. That was evident as early as the 3rd day after abstention."
+    },
+    {
+     "cite": "Sassover E, Kushnir T, Weinstein AM (2024). Investigating mood-modification, withdrawal, and sensitization in compulsive sexual behaviour. Frontiers in Psychiatry 15:1421028. Study 3.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11502338/",
+     "pmid": "39465047",
+     "fetched": true,
+     "quote": "the consistent reduction in “withdrawal symptoms” led the CSB group to eventually reach to the same levels of symptoms reported by non-CSB individuals"
+    }
+   ],
+   "origin": "06-template.json porn belief 2: limiting kept word for word; counterpart and proof new, because the old proof (the 7-day trial) counted regular users, 85% of them below the problem cut-off",
+   "keep": false,
+   "check1": {
+    "verdict": "fix",
+    "by": "belief reviewer (porn-check-beliefs.json)",
+    "on": "2026-11-05",
+    "problems": [
+     "The groups were set by the Hebrew Bergen-Yale Sex Addiction Scale (cut-off 18). The authors say this grouping did not isolate porn-specific behaviour. 'Hooked on sex or porn' overstates the porn part.",
+     "'Men who weren't hooked' is too strong: 13 of the 16 comparison men scored in the questionnaire's 'moderate sex addiction risk' band. Say 'below the cut-off'.",
+     "The n of 14 is correct, but it is only the men who kept to the break: one man with CSB who slipped was excluded. 'Kept off' says this.",
+     "Both quotes are word for word ('3rd' is a superscript in the source). The figures hold: WSQ 63.86 at baseline, 54.36 at day 3, 33.43 at day 10, against 40.00 for non-CSB men. Israel, men recruited through social media, all male.",
+     "The severity tag 'disorder' is acceptable (a questionnaire cut-off). Small, motivated, self-selected sample; the authors themselves urge caution."
+    ],
+    "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11502338/fullTextXML",
+    "quoteFound": true,
+    "applied": "Applied on 2026-11-05: the reviewer's corrections word for word.",
+    "applierNotes": [
+     "Spot check, PMC11502338 full text re-fetched 2026-11-05: in the Study 3 non-CSB group, '13 participants received a score between 7 and 17' ('moderate sex addiction risk') holds."
+    ]
+   },
+   "fixedFields": [
+    "proof"
+   ]
+  },
+  {
+   "kind": "need",
+   "limiting": "I need it to switch off. Nothing else works at the end of the day.",
+   "counterpart": "Porn is one way I switch off. It isn’t the only one I have.",
+   "test": "The next three times you reach for porn to switch off, do something else for 15 minutes first: a walk, a shower, a call. Rate the pull 0–10 before and after. Notice how much of the need the swap covered.",
+   "proof": "In 104 men’s quit journals, most calling themselves addicted, they had often relied on porn to handle bad moods, and bad moods seemed to have become a trigger. Their own accounts, not a trial.",
+   "severity": "self-hooked",
+   "refs": [
+    {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "Because members had previously often relied on pornography use to regulate negative affect, uncomfortable emotions appeared to have become a conditioned cue for pornography use."
+    },
+    {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728. Table 1 (104 journals).",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "Self-perceived addiction to pornography Yes 80 76.9"
+    }
+   ],
+   "origin": "new (the need named in 06-template.json porn subs: “relaxes you”)",
+   "keep": false,
+   "check1": {
+    "verdict": "fix",
+    "by": "belief reviewer (porn-check-beliefs.json)",
+    "on": "2026-11-05",
+    "problems": [
+     "'Porn had been how they handled bad moods, so bad moods became a trigger' is firmer than the source. The source says members 'had previously often relied' on porn to regulate negative affect, and that bad moods 'appeared to have become' a conditioned cue.",
+     "The n holds: 104 journals, all men (male journal section), 80 (76.9%) self-perceived addicted, so 'most' is right. The severity tag 'self-hooked' is right. Both quotes are word for word. Reboot Nation forum, journals from 2016 to 2018.",
+     "Weak link (no change forced): the proof shows the need was learned, but not that other ways of switching off work. Plan step 2 carries that."
+    ],
+    "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+    "quoteFound": true,
+    "applied": "Applied on 2026-11-05: the reviewer's corrections word for word."
+   },
+   "fixedFields": [
+    "proof"
+   ]
+  },
+  {
+   "kind": "moderation",
+   "limiting": "One quick look won’t hurt. I can handle it now.",
+   "counterpart": "I’ve tried keeping it to a little before. It didn’t stay little.",
+   "test": "This week, each time “just one look” shows up, don’t test it. Write down the time, and how the last “just one” went: how long it ran, how you felt after. Notice whether any of them stayed at one.",
+   "proof": "Of 132 men who wanted help and scored as hypersexual, more than half had tried to cut back four or more times. In men’s own quit journals, any sexual activity during a break could set off new craving.",
+   "severity": "disorder",
+   "refs": [
+    {
+     "cite": "Kraus SW, Martino S, Potenza MN (2016). Clinical characteristics of men interested in seeking treatment for use of pornography. Journal of Behavioral Addictions 5:169-178.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5387768/",
+     "pmid": "27348557",
+     "fetched": true,
+     "quote": "(a) treatment-interested men with hypersexuality (n = 132)"
+    },
+    {
+     "cite": "Kraus SW, Martino S, Potenza MN (2016). Clinical characteristics of men interested in seeking treatment for use of pornography. Journal of Behavioral Addictions 5:169-178. Table 3; the first figure in each row is the treatment-interested hypersexual group (n = 132).",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5387768/",
+     "pmid": "27348557",
+     "fetched": true,
+     "quote": "Cut back attempts 299.8 <0.001 0 attempts (“never”) 10.6 47.6 18.5 70.0 1-to-3 past attempts 32.6 31.3 61.1 21.4 4+ past attempts 56.8 21.1 20.4 8.6"
+    },
+    {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "(3) the “chaser effect”—cravings which were the result of any sexual activity engaged in during abstinence"
+    }
+   ],
+   "origin": "new",
+   "keep": false,
+   "check1": {
+    "verdict": "ok",
+    "by": "belief reviewer (porn-check-beliefs.json)",
+    "on": "2026-11-05",
+    "problems": [
+     "Holds. Table 3: 56.8% of the treatment-interested hypersexual group (n = 132, HBI clinically significant) had 4 or more past cut-back attempts with porn. The first column is that group, so 'more than half' is right and the n is the one behind the figure.",
+     "Rule 4 holds: both sources count hooked people (an HBI cut-off, and a forum sample in which 77% call themselves addicted). The tag 'disorder' fits Kraus.",
+     "All three quotes are word for word. Online survey, recruited mostly through Craigslist, mostly from the US.",
+     "Note: the chaser effect in the source is mainly about masturbation and partnered sex during a break, not a look at porn; 'any sexual activity' does match the source's own words. Cut-back attempts show repeated tries, not measured failure; the proof does not claim more."
+    ],
+    "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5387768/fullTextXML",
+    "quoteFound": true
+   }
+  },
+  {
+   "kind": "identity",
+   "limiting": "I slipped again. I’m just someone who can’t quit.",
+   "counterpart": "A slip is one day. The days I kept still happened.",
+   "test": "If you slip this week, write down that night what came just before it. Then count the days you kept this month. Notice whether the slip deleted any of them.",
+   "proof": "Of 104 men journaling a porn quit, most calling themselves addicted, 55 slipped at least once. The researchers’ reading: quitting is hard, and doable with the right mix of support and habits. Men’s own accounts, not a trial.",
+   "severity": "self-hooked",
+   "refs": [
+    {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt."
+    },
+    {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "members’ experiences showed that abstinence, although difficult, is achievable with the right combination of internal and external resources"
+    }
+   ],
+   "origin": "new (built on 06-template.json porn plan step 4 “A slip is information, not proof you’re broken.”)",
+   "keep": false,
+   "check1": {
+    "verdict": "fix",
+    "by": "belief reviewer (porn-check-beliefs.json)",
+    "on": "2026-11-05",
+    "problems": [
+     "'Quitting is hard, and achievable' drops the source's condition 'with the right combination of internal and external resources', so it reads more hopeful than the source.",
+     "The source does not report how many of the 55 who slipped went on to stay off. The proof must not suggest that it does; the fixed text keeps the two facts separate.",
+     "55 of 104 holds ('More than half of the sample (n = 55)'); the attempts lasted from 7 days to 12 months. The tag 'self-hooked' is right. Both quotes are word for word."
+    ],
+    "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+    "quoteFound": true,
+    "applied": "Applied on 2026-11-05: the reviewer's corrections word for word."
+   },
+   "fixedFields": [
+    "proof"
+   ]
+  }
+ ],
+ "plan": [
+  {
+   "do": [
+    "Write down what porn does for you: stress relief, sleep, boredom, loneliness.",
+    "Each one is a belief to test. Start with the table above.",
+    "Don’t quit yet. For the next few days, watch the way you normally do.",
+    "Before each time, write one line: the hour, where you are, what you felt just before.",
+    "After, one more line: what it gave you, and what it cost.",
+    "At the end, circle what repeats. Those hours and feelings are what your swaps are for."
+   ],
+   "proof": {
+    "text": "In a 10-week diary study of 9 men in treatment in Poland, 6 binged. For most of the 6, binge days came with low mood, stress or anxiety; which one differed from man to man.",
+    "ref": {
+     "cite": "Wordecha M, Wilk M, Kowalewska E, Skorko M, Łapiński A, Gola M (2018). “Pornographic binges” as a key characteristic of males seeking treatment for compulsive sexual behaviors: qualitative and quantitative 10-week-long diary assessment. Journal of Behavioral Addictions 7:433-444.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6174597/",
+     "pmid": "29865868",
+     "fetched": true,
+     "quote": "diary assessment data indicate that specific correlates of binge PuM (decreased mood, increased stress, and anxiety) differ between subjects"
+    },
+    "check1": {
+     "verdict": "fix",
+     "by": "belief reviewer (porn-check-beliefs.json)",
+     "on": "2026-11-05",
+     "problems": [
+      "Wrong n for the finding: only 6 of the 9 men binged, and the mood, stress and anxiety comparisons (Table 5) cover those 6. Of them, 5 showed a significant difference; patient G showed none. So 'binges came with' holds for most of the 6, not all 9.",
+      "'Seeking help': they were patients in treatment for CSB at sexual-health centres in Warsaw, Poland, each meeting at least 4 of Kafka's 5 criteria.",
+      "The quote is word for word from the abstract. Correlation only; the authors say the causal relation is undetermined."
+     ],
+     "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6174597/fullTextXML",
+     "quoteFound": true,
+     "applied": "Applied on 2026-11-05: the reviewer's corrections word for word.",
+     "applierNotes": [
+      "Spot check, PMC6174597 full text re-fetched 2026-11-05: 'Six out of nine subjects experienced binge (multiple hours or times a day) PuM' holds."
+     ]
+    },
+    "fixedFields": [
+     "text"
+    ]
+   }
+  },
+  {
+   "do": [
+    "Late nights: the phone charges outside the bedroom.",
+    "Stress or boredom: a walk, a workout, a call with a friend.",
+    "Loneliness: put that energy into meeting real people.",
+    "A craving that won’t let go: a cold shower, then out of the room.",
+    "The laptop lives on a desk or a shared table, never in bed.",
+    "A swap only has to cover 80% of the need. It doesn’t have to feel as good."
+   ],
+   "proof": {
+    "text": "In 104 men’s quit journals, most calling themselves addicted, men used exercise, going out, meditating and better sleep to cut triggers and craving. Their own accounts, not a trial.",
+    "ref": {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "Day-to-day behavioral strategies (e.g., exercising, meditating, socializing, keeping busy, going out more often, and having a healthier sleep routine) were incorporated as part of an overall lifestyle change"
+    },
+    "check1": {
+     "verdict": "fix",
+     "by": "belief reviewer (porn-check-beliefs.json)",
+     "on": "2026-11-05",
+     "problems": [
+      "'Filled the gap' reframes the source. The strategies were 'incorporated as part of an overall lifestyle change to minimize the frequency of triggering situations and craving', not described as replacing what porn gave.",
+      "The n (104 journals) is missing; add it. The quote is word for word."
+     ],
+     "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+     "quoteFound": true,
+     "applied": "Applied on 2026-11-05: the reviewer's corrections word for word."
+    },
+    "fixedFields": [
+     "text"
+    ]
+   }
+  },
+  {
+   "do": [
+    "Install a blocker and give the password to someone else.",
+    "Start with a 7-day break as an experiment.",
+    "Put that first day a few days or weeks out, not tonight, and tell one person the date.",
+    "After the week, keep going: for three months, porn is the one thing. Leave the rest of your life as it is.",
+    "Mark every kept day. Each one is a complete success, whatever else went wrong.",
+    "Slip? Write down what came just before it, then go back to step 1."
+   ],
+   "proof": {
+    "text": "In 104 men’s quit journals, blockers were somewhat useful; of outside help, support from other people and being accountable to someone mattered most. Their own accounts, not a trial.",
+    "ref": {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "blocking applications, was described to be somewhat useful. However, social support and accountability appeared to be the external resources that were most instrumental"
+    },
+    "check1": {
+     "verdict": "fix",
+     "by": "belief reviewer (porn-check-beliefs.json)",
+     "on": "2026-11-05",
+     "problems": [
+      "'Helped most' is wider than the source. The source says social support and accountability were the most instrumental external resources, not the most helpful of everything; internal strategies were rated separately.",
+      "The source also says barriers were 'useful but not sufficient'. The quote is word for word."
+     ],
+     "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+     "quoteFound": true,
+     "applied": "Applied on 2026-11-05: the reviewer's corrections word for word."
+    },
+    "fixedFields": [
+     "text"
+    ]
+   }
+  },
+  {
+   "do": [
+    "If shame is the engine, work on your values, not only the habit.",
+    "A slip is information, not proof you’re broken.",
+    "When the urge comes, name it: “there is a craving.” Not “I want to.” Never “I need to.”",
+    "Don’t fight the thought. Let the craving sit there and carry on with what you were doing.",
+    "When it pulls, answer the way a man who doesn’t watch porn would: “I don’t watch that.”",
+    "Count the evenings you get back, not the days you missed."
+   ],
+   "proof": {
+    "text": "In men’s quit journals, pushing the thought of porn away was common, and some found over time that it backfired. Their own accounts, not a trial.",
+    "ref": {
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
+     "fetched": true,
+     "quote": "Attempting to suppress thoughts of pornography was a common cognitive strategy used, but some members realized over time that thought suppression was counterproductive"
+    },
+    "check1": {
+     "verdict": "ok",
+     "by": "belief reviewer (porn-check-beliefs.json)",
+     "on": "2026-11-05",
+     "problems": [
+      "Holds. The quote is word for word. 'Some found over time that it backfired' matches 'some members realized over time that thought suppression was counterproductive'. No figure, 26 words."
+     ],
+     "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+     "quoteFound": true
+    }
+   }
+  },
+  {
+   "do": [
+    "Look for a therapist who uses CBT or ACT.",
+    "Help is a tool for steps 1 to 4, not a replacement for them.",
+    "Embarrassed to ask? A therapist who works with this has heard it all before.",
+    "Try a group, online or in a room. Go a few times, and keep going only while it helps.",
+    "Don’t wait for a pill. None is proven for porn yet."
+   ],
+   "proof": {
+    "text": "In one small US trial of 28 men, nearly all Latter-day Saints, self-reported viewing fell 93% after 12 sessions of ACT, against 21% on the waiting list.",
+    "ref": {
+     "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
+     "pmid": "27157029",
+     "fetched": true,
+     "quote": "significant between-condition reductions in pornography viewing compared to the waitlist condition (93% reduction ACT vs. 21% waitlist)"
+    },
+    "check1": {
+     "verdict": "fix",
+     "by": "belief reviewer (porn-check-beliefs.json)",
+     "on": "2026-11-05",
+     "problems": [
+      "The figures and the quote match the abstract word for word (93% ACT against 21% waitlist; 12 sessions; 28 adult males). Full text is paywalled; the USU dissertation copy sits behind a Cloudflare check.",
+      "A key caveat is missing: all but 1 of the 28 were Latter-day Saints, and viewing was self-reported.",
+      "The n per arm behind 93% and 21% could not be checked. 28 is the number randomised; the abstract's combined analysis has N = 26.",
+      "The source also gives more cautious later figures (3 months on: 86% reduction, 35% fully stopped). Consider showing these on the card (rule 10)."
+     ],
+     "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:27157029%20AND%20SRC:MED&format=json&resultType=core",
+     "quoteFound": true,
+     "applied": "Applied on 2026-11-05: the reviewer's corrections word for word."
+    },
+    "fixedFields": [
+     "text"
+    ]
+   }
+  }
+ ],
+ "notUsed": [
+  {
+   "from": "06-template.json porn belief 1",
+   "limiting": "Everyone watches it. It’s harmless.",
+   "counterpart": "Normal isn’t the bar. I decide what it costs me.",
+   "reason": "It argues with a reader who already knows he has a problem (rule 1), and its proof counts ordinary users: 91.5% past-month viewers and 11% who agree “I am addicted” (rules 2 and 3)."
+  },
+  {
+   "from": "06-template.json porn belief 3",
+   "limiting": "Staying off it will give me superpowers.",
+   "counterpart": "Quitting won’t make me magnetic. Going out and talking to women will.",
+   "reason": "Its proof (Zimmer & Imhoff 2020) counts ordinary Reddit users and is about masturbation, not porn; the 07 mirror-stats review rejected that source as off this page’s angle. Kept unchanged in 06-template.json."
+  },
+  {
+   "from": "06-template.json porn belief 4",
+   "limiting": "Porn wrecked my erections.",
+   "counterpart": "If my erections are off, I get checked, and I don’t blame porn alone.",
+   "reason": "It is about what porn causes, not about quitting, and its proof (Grubbs & Gola 2019) counts ordinary users in three samples (rule 3)."
+  },
+  {
+   "from": "06-template.json porn belief 5",
+   "limiting": "I must be an addict. Look how bad I feel about it.",
+   "counterpart": "Guilt isn’t a measure. I judge porn by what it costs me, not by how ashamed I feel.",
+   "reason": "It questions whether the reader has a problem, which rule 1 forbids; its proof (Grubbs 2018) counts ordinary users and the 07 review rejected it as about who feels hooked, not how people quit. The values point lives on in plan step 4 (“If shame is the engine…”)."
+  },
+  {
+   "from": "06-template.json porn belief 6",
+   "limiting": "Blockers never work for me.",
+   "counterpart": "Blockers work when someone else holds the password.",
+   "reason": "A tool, not a belief that keeps the habit going, and its proof was this repo’s own synthesis file (r15), not a fetched source. The action “Install a blocker and give the password to someone else” stays in plan step 3, now with a proof from the 2021 journals study."
+  },
+  {
+   "from": "06-template.json porn plan step 3 proof",
+   "text": "In a trial of 176 regular users, a week off showed no measurable withdrawal. People who quit say blockers work only when someone else holds the key.",
+   "reason": "A step proof now carries one source (SCHEMA); r15 is this repo’s own synthesis, not a fetched source. The 7-day trial stays in the hero and timeline; this step now cites the journals study on blockers and accountability."
+  },
+  {
+   "from": "06-template.json porn plan step 4 proof",
+   "text": "Feeling “addicted” tracks the clash with your own values more than how much you watch.",
+   "reason": "It is about who feels addicted among ordinary users (rules 1 and 3), not about living as if already quit. Replaced by the journals finding that pushing the thought away backfired."
+  }
+ ],
+ "rejected": []
+}

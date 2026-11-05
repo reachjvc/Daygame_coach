@@ -1,0 +1,130 @@
+{
+  "id": "alcohol",
+  "by": "independent source checker A (did not write the draft)",
+  "on": "2026-11-05",
+  "scope": "first half of the changed items in file order: numbers 0-13 (27 changed in all: numbers 0-17, beliefs 0-4, plan 0, 2 and 4, windows 4; this half takes 14 so nothing falls between the two halves)",
+  "checked": [
+    {
+      "where": "numbers", "index": 0, "label": "hope-free-now 42 in 100 (Lopez-Quintero 2011)", "verdict": "fix",
+      "problems": [
+        "Fetched PMC3227547 full text (NCBI). n=4,781 (methods) and Table 3 header 'Alcohol remission (N=2,008)' confirmed; 2,008/4,781 = 42.0%. Quote is word for word with ellipses, 17 words. Over-report of remission, 18-29 remitting less often, and the unweighted head count all confirmed.",
+        "basis.who says '3 of 7 signs'; the source says '3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period'. As written it reads as exactly 3."
+      ],
+      "fix": {"basis.who": "adults who had ever met the doctors' criteria for alcohol dependence (at least 3 of 7 signs in the same year)"}
+    },
+    {
+      "where": "numbers", "index": 1, "label": "hope-lifetime 90.6% (Lopez-Quintero 2011)", "verdict": "ok",
+      "problems": [
+        "Abstract and results: 'Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine, 90.6% for alcohol'. Quote word for word with an ellipsis. 37.4% a decade after onset confirmed. 'standard actuarial method' confirmed. The authors' limitations (over-report of remission; people in institutions or with fatal or severe outcomes not sampled, 'leading to overestimation') support the caveat and weak line. 'projected' is in the headline (rule 10). Men lower hazard (HR 0.8) confirmed."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 2, "label": "who-years 14 years (Lopez-Quintero 2011)", "verdict": "ok",
+      "problems": [
+        "'Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset': the quote keeps the alcohol figure only, word for word with ellipses (rule 13 holds). This is the survival-curve midpoint (37.4% at 10 years), so 'half ... projected to be free about 14 years after' is right. Remission definition ('finally stopped having any of these experiences ... never started happening again') matches basis.measured."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 3, "label": "who-age Age 38 (Kelly 2018)", "verdict": "fix",
+      "problems": [
+        "Fetched PMC5992615. ALC M = 37.86 (99% CI 36.50, 39.21), regular use at 19.02, career 18.39 years, Table 1 'Alcohol (58.5%, n = 1013)' with the note 'Displaying weighted counts', final weighted sample N = 2002, July-August 2016: all confirmed. The quote is word for word; the ellipsis removes the cannabis figure. 'About 1 in 3 still drank some' fits Table 1b: 65.62% of ALC currently abstinent from their problem substance.",
+        "basis.n calls 1,013 'an estimate for the country'. It is the survey's weighted count of respondents, not a national estimate (the national figures are in millions). A reader could take it the wrong way.",
+        "Note, not a fix: ref.cite (the true paper title) contains 'cannabis'. If the rule-13 build scan covers ref fields it will trip; the cite must stay accurate."
+      ],
+      "fix": {"basis.n": "About 1,013 people whose main problem was alcohol (the survey's count after adjusting it to match the US population; 2,002 people surveyed had beaten a drinking or drug problem)"}
+    },
+    {
+      "where": "numbers", "index": 4, "label": "who-life-event ×2.2 (Dawson 2006)", "verdict": "ok",
+      "problems": [
+        "Europe PMC abstract: n = 4,422 with prior-to-past-year onset. 'The likelihood of AR was more than doubled in the 3 years after first becoming a parent (HRR = 2.22)' is word for word, 19 words. The NR plain-words summary matches the abstract (HRR 1.37 and 1.76 within 3 years of a first marriage starting or ending; 0.70 for people still dependent 3+ years after either). The caveat 'a link, not proof' matches the authors' 'selectivity than causation'. The × is allowed: kind who-life-event is in the 'who' group, not what-helps (rule 12a)."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 5, "label": "how-alone 44 in 100 (Kelly 2017)", "verdict": "ok",
+      "problems": [
+        "Fetched PMC6076174. The Table 3 title 'Factors associated with choosing assisted (54%) vs. unassisted problem resolution.' and the row 'Alcohol | 55.9' are word for word. The column is the % assisted within each row (1 substance 46.1, 3+ 58.5), so 100 − 55.9 = 44.1 gives 'about 44 in 100', plain arithmetic. The four kinds of help match the methods definition, and 'unassisted' = 'never having used any of these services'. 'No help at all' is close to the authors' own 'without any external assistance', and the caveat limits it to the four kinds. Alcohol is 51.2% of the 2,002, about 1,025, so 'about 1,000' holds."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 6, "label": "how-tries 2 tries (Kelly 2019)", "verdict": "ok",
+      "problems": [
+        "Fetched PMC6602820. Table row 'Alcohol | 5.38 (13.45) | 2 (1, 4) | 0, 100' confirmed; the quote is word for word across table cells. Median 2 and 75th percentile 4 give 'half 2 or fewer, about 3 in 4 needed 4 or fewer'. 13% reported 0 serious tries, and the authors say they may not have counted the current try: matches the caveat. 'A few needed dozens' is not stated; it follows from the table. With the median at 2, the 75th percentile at 4, and one value of 100, the SD of 13.45 cannot be reached unless several people reported 24 or more tries. Weak point: this paper gives no alcohol-only n; 'about 1,000' comes from the companion paper on the same survey (51.2% of 2,002)."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 7, "label": "how-slips 87% less (Miller 2001)", "verdict": "fix",
+      "problems": [
+        "Europe PMC abstract (full text not freely available). The quote is word for word, 26 words. 1 in 4 continuously abstinent, 1 in 10 moderate without problems, and conversion equations: all confirmed.",
+        "basis.who puts 'alcoholism, broadly defined' in quote marks, but the source says 'alcoholism (broadly defined as alcohol use disorders)'. The quoted words are not word for word.",
+        "The headline's 'people who kept having problems that year' overstates the group. 'The remaining clients' are everyone who did not stay abstinent or drink moderately without problems (the authors' 'unremitted' two thirds). Their problems also fell 60%. 'Kept having' suggests problems all year.",
+        "basis.n and weak say 'the head count is unknown'. The paper surely reports it; only the abstract we can read leaves it out. 'Unknown' tells the reader nobody knows."
+      ],
+      "fix": {
+        "headline": "After treatment for a drinking problem, even people who still had some problems that year drank 87% less, on average.",
+        "basis.who": "adults treated for alcoholism, which the review defines broadly as alcohol use disorders",
+        "basis.n": "Seven large studies run at many US treatment sites; the review's summary gives no head count.",
+        "weak": "The review's summary gives no head count, and some results were estimated from other measures."
+      }
+    },
+    {
+      "where": "numbers", "index": 8, "label": "helps-stop-vs-cut 27 vs 7 in 100 (Dawson 2007)", "verdict": "fix",
+      "problems": [
+        "Abstract plus full text (Zenodo PDF). The quote is word for word, 28 words. The Table 2 rows give 645 low-risk drinkers and 696 abstainers of 1,772 re-interviewed. Low-risk = no abuse or dependence symptoms and not risk drinking (risk = 14+ drinks a week or 5+ on any day for men), which matches the basis. 4.0 vs 2.9 dependence recurrence, adjusted OR 3.0, and no significant low-risk vs abstainer gap for ages 18-34 and for under 5 years in remission: all confirmed.",
+        "The headline's 'Within three years of getting free' is wrong about timing. People were in full remission at Wave 1 for anything from under 5 to over 20 years (the paper reports recurrence by time in remission). The 3 years is the gap between the two interviews, not time since getting free. Rule 19 spirit: say what was really measured."
+      ],
+      "fix": {"headline": "Over the next three years, problems returned for 27 in 100 light drinkers who had beaten alcohol addiction, 7 in 100 non-drinkers."}
+    },
+    {
+      "where": "numbers", "index": 9, "label": "helps-medicine 36 vs 23 in 100 (Mann 2004; Jonas 2014)", "verdict": "ok",
+      "problems": [
+        "Mann abstract: 'Continuous abstinence rates at 6 months were significantly higher in the acamprosate-treated patients (acamprosate, 36.1%; placebo, 23.4%' is word for word. 17 studies, 4,087 individuals, 53% on active drug, and Merck-Sante internal reports: confirmed. The per-100 figures are the source's own arm rates. Jonas 2014 (abstract and JAMA full text): NNT 12, RD -0.09, '16 trials, n = 4847'; the low risk of bias subgroup, 4 trials, 1,409 people, RD -0.02 (95% CI -0.09 to 0.05), not significant: matches basis and caveat. The alsoRef quote is word for word. The headline is no more hopeful than the source.",
+        "Minor, no fix needed: Mann's search found '19 published 1 unpublished RCTs', so 'trials published before 2004' may cover one unpublished trial."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 10, "label": "helps-talk 42 vs 35 in 100 (Kelly 2020 Cochrane)", "verdict": "ok",
+      "problems": [
+        "PMC7065341 (abstract via NCBI; summary of findings table 1 via the PMC page). 'Proportion of participants (%) completely abstinent Follow-up: 12 months', '345 per 1000', '418 per 1000 (356 to 490)', 'RR 1.21 (1.03 to 1.42)', '1936 (2 RCTs)', high certainty: confirmed. The quote is in table reading order with an ellipsis, about 25 words. The 2 trials are MATCH 1997 (1,726) and Litt 2007 (210) = 1,936. Litt measured 'continuous abstinence during the 90-day period prior to each follow-up', so '(in the smaller trial, the 90 days before it)' is right. 'This effect remained consistent at both 24 and 36 months' confirmed. Drinks per drinking day MD -0.17 (CI crosses 0) supports 'about as well'. 41.8 − 34.5 = 7.3 gives 'about 7 more in 100'. Non-coerced adults confirmed."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 11, "label": "helps-early-help 62 vs 43 in 100 (Moos 2006)", "verdict": "ok",
+      "problems": [
+        "PMC1976118 author manuscript (abstract via NCBI; results via the PMC page). 'By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group' confirmed, 24 words. n = 362 helped vs 99 no help (461). The remission criteria, the 16-year relapse figures 60.5% vs 42.9% (of the 3-year remitted), mean age 33.5, 49.7% men, 'treatment and/or AA' in the first year, and the I&R centre or detox contact: all confirmed. The per-100 figures are the source's own."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers", "index": 12, "label": "after-first-month 1 month (Mehta 2018)", "verdict": "fix",
+      "problems": [
+        "Fetched PMC5942469. The quote is word for word from the abstract, U+2212 minus signs included. 94 stopped, 47 controls, London, no study dates given, no significant control changes: confirmed.",
+        "basis.n: the 26% insulin-resistance figure rests on 86 paired observations (Table 1 HOMA row n = 86; a footnote says missing data explains any count below 94), not 94 (rule 9).",
+        "basis.who gives only the men's entry level '(men)'. The group was 43 men and 51 women (women >48 g a week), averaging 258 g a week.",
+        "Only 'known ... alcohol dependence' was excluded, so 'not alcohol dependent' and 'Volunteers were not dependent' claim more than the source. At 258 g a week on average, some could have been undiagnosed.",
+        "'Blood pressure also fell about 6%': systolic fell 6.6% and diastolic 6.3%, so 'about 6%' rounds the systolic figure down."
+      ],
+      "fix": {
+        "counted": "regular drinkers not known to be hooked on alcohol",
+        "basis.who": "healthy men and women drinking more than 64 g of alcohol a week (men) or 48 g (women), about 258 g a week on average (about 18 US standard drinks); mean age about 45; anyone known to be hooked on alcohol was kept out",
+        "basis.n": "86 people who stopped had the insulin test before and after (94 stopped in all; 47 kept drinking, for comparison)",
+        "basis.measured": "Blood tests, blood pressure and weight before and after one month. The group that kept drinking showed no significant change. Blood pressure also fell about 6 to 7%, and weight 1.5%.",
+        "caveat": "Small study, not a trial. People known to be hooked on alcohol were kept out, and nothing shows how long the gains last if drinking resumes."
+      }
+    },
+    {
+      "where": "numbers", "index": 13, "label": "after-body 45% (Trabut 2012)", "verdict": "fix",
+      "problems": [
+        "Europe PMC abstract. The quote is word for word, 21 words. 137 patients, 2007-2010, median 150 g a day (about 11 US drinks), median 7.2 to 6.1 kPa, 62 (45.3%) significant drops, 23.3% lower estimated fibrosis stage, 11.7% rose, and Paris (Hopital Cochin): all confirmed.",
+        "The headline says 45% 'showed clearly less liver damage on a scan'. That is more hopeful than the source. The scan measured stiffness, and the authors conclude the drop 'strongly suggests that nonfibrotic lesions (such as the presence of alcoholic hepatitis) may influence LS'. That is, the fall in the reading is not a measure of less damage. The caveat corrects it, but the headline overreads."
+      ],
+      "fix": {"headline": "Of heavy drinkers in hospital to stop, 45% got a clearly better liver reading on a scan after just one week off."}
+    }
+  ]
+}

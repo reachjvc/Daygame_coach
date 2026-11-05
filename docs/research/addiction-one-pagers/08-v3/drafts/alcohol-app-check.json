@@ -1,0 +1,26 @@
+{
+  "verdict": "fix",
+  "rowsChecked": 31,
+  "mismatches": [],
+  "problems": [
+    "Numbers are right: users 112,675 (cohortUsers.heavier) and all 31 rows of n (source field 'reviews') and hard match dataByBand.heavier exactly. In every row, hard equals the Hard + Impossible columns of difficultyLevelData.heavier, within 0.1 rounding.",
+    "'Evening' is not in the source. The page calls these 'daily check-ins' and the data field is 'reviews'. 'Evening' appears only as a time-of-day label for urge logs. Drop 'evening' from the measure and from the shown title ('Share of daily check-ins rated hard or impossible, by day'), or cite another source that says the review is written in the evening.",
+    "The denominator is all check-ins, not only rated ones. The five ratings add up to 96.1% of check-ins on day 0, 90.2% on day 14 and 81.5% on day 30. The source does not say what the rest are. So 'hard' is a share of all that day's check-ins. Among rated check-ins only, it would be about 21.1% on day 0 and 7.1% on day 30. The growing unrated share makes later days look a bit easier.",
+    "The 21-70 band is not written anywhere on the page. It comes from the script: getBand() multiplies drinking days per week (1-7) by drinks per drinking day (1-10), and cohorts 21-25 through 61-70 drinks/week all use the 'heavier' data. The source does not say how members' own drinking was recorded (probably self-report at onboarding).",
+    "'Before stopping' goes too far. The page counts 'members who are quitting or cutting back on drinking', so some in the band cut back instead of stopping.",
+    "The page never shows these raw band numbers. For any input, it shows a version adjusted per sub-cohort: hard is multiplied by a hardFactor of 0.92-1.34, and n is rescaled. For example, 7 days x 10 drinks shows day 0 as about 27.2% hard, not 20.3%. The file's raw 'heavier' rows are the real underlying data, but do not say 'the guide shows X%'. Cite the data script.",
+    "Caveat: the source does not say why the count falls from 3,274 to 735. The data also counts 'restarts' (a reset day count), so members who drank and restarted leave the later days too, not only people who quit the app. 'n' counts check-ins ('reviews'), not distinct people. Also, of 112,675 members only 3,274 wrote a check-in even on day 1, so most of the group never appears in any day. Most of the gap is not dropout.",
+    "'Not checked for addiction' holds: the source gives only a drinks-per-week grouping, with no screening or diagnosis. Its page also says 'Informational only ... It is not medical advice, a health claim, or a guarantee of what anyone will experience.'"
+  ],
+  "fix": {
+    "measure": "Share of that day's check-ins rated Hard or Impossible on the app's five-step scale (Easy, Not bad, Questionable, Hard, Impossible). The share is of all check-ins that day; the five ratings cover 96% of them on day 0 and 82% on day 30.",
+    "band": "members who drank 21 to 70 drinks a week (drinking days times drinks per drinking day) and are quitting or cutting back",
+    "counted": "heavy drinkers quitting or cutting back, not checked for addiction",
+    "caveat": "Only members who wrote a check-in that day are counted: 3,274 check-ins on day 1 and 735 on day 30, from a group of 112,675. The app does not say why the count falls; members who drank and restarted their count, or stopped using the app, leave the later days, so later days describe the ones still going."
+  },
+  "fetchedUrls": [
+    "https://iamsober.com/en/tools/alcohol-free-30-day-guide",
+    "https://iamsober.com/static/alcohol-free-30-day-guide-f307538.js"
+  ],
+  "quote": "This guide is based on real check-ins from more than 280,000 I Am Sober members who are quitting or cutting back on drinking."
+}

@@ -1,0 +1,71 @@
+{
+  "id": "general",
+  "checkedBy": "independent re-checker (did not write or first-check these items)",
+  "checkedOn": "2026-11-05",
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 0,
+      "label": "gen-tries 3 tries",
+      "verdict": "fix",
+      "problems": [
+        "The fixed field basis.measured holds. Kelly 2019 Table 1 gives full-sample median 2 (IQR 1 to 4); medians by main drug are 2 alcohol, 2 cannabis, 3 opioids, 2 stimulants, 1 other drugs, with p values 0.37 to 0.77. The Limitations say participants decided for themselves what a 'serious' attempt was.",
+        "Figure, n and quote hold. Median 3 (IQR 1 to 5) and mean 6.14 among n = 1,742 with at least one serious try; 260 (about 13%) reported none. The quote is word for word (28 words). The caveat's treatment split (any treatment or recovery services: median 3, against 1 without) is in Table 1. The 1 in 6 diagnosed (17.0%) and July-August 2016 are confirmed in Kelly 2017, the same survey. Severity 'resolved' fits. Headline 21 words, 1 digit figure; mirror 11 words, second person, not a screening line.",
+        "basis.who says 'the rest' named cannabis, cocaine, meth, opioids or other drugs. In Kelly 2017 Table 1, 12.7% of the survey did not identify any problem substance (alcohol 51.2, cannabis 11.0, cocaine 10.0, meth 7.3, opioids 5.3, other 2.6). So 'the rest' is not right; about 1 in 8 named no main drug. These shares are for the whole survey, not only the 1,742."
+      ],
+      "fix": {
+        "basis.who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and had made at least one serious try. Alcohol and drugs together: in the whole survey about half named alcohol as the main problem, most others cannabis, cocaine, meth, opioids or other drugs, and about 1 in 8 named no main drug."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6602820/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 1,
+      "label": "gen-alone 46%",
+      "verdict": "ok",
+      "problems": [
+        "The fixed headline holds: 22 words (at the limit), 1 figure. Help counted only 'anti-relapse/craving medication' (Methods; Table 2 'Anti-relapse/craving medication use (any)' 8.6%), so 'anti-craving medicine' matches. Detox is under formal treatment in Table 2.",
+        "The fixed caveat holds. 'Less severe and less complex substance and mental health history were associated with using an unassisted resolution pathway' (Discussion). The 17.0% ever diagnosed is Table 1 and the 90.2% assisted among them is Table 3. 'Only anti-craving or anti-relapse medicines counted as help' matches the Methods.",
+        "Figure, n, group and quote hold. 53.9% used support (Table 2 and Results 3.2), so 46.1% never did; the figure is over the whole weighted 2,002, so that n is right. 25,229 of 39,809 answered the screener (63.4%). Main-drug shares 51.2, 11.0, 10.0, 7.3, 5.3 (Table 1). July and August 2016 confirmed. The quote is word for word (24 words). Mirror 12 words, second person.",
+        "Note, no field change (rule 10, page order): if both gen-alone cards show, the 90% card (index 2) is the cautious figure for this page's reader and should be placed first; this card's caveat already carries it."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=6076174&rettype=xml",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 2,
+      "label": "gen-alone 90%",
+      "verdict": "fix",
+      "problems": [
+        "Figure and group hold. Table 3 '% assisted' is 90.2 for 'Substance use disorder (vs. not)' and 38.9 for 'Never been diagnosed (vs. not)'. Table 1 gives 'Alcohol/substance use disorder' 17.0%, so about 340 of the weighted 2,002. The survey asked 'Which of the following substance use and/or mental health conditions have you ever been diagnosed with?'. Severity 'resolved' fits. Headline 21 words, 1 figure. Mirror 14 words (at the limit), second person, a statement and not a screening question.",
+        "The quote is stitched from the Table 3 title, a section row and one data row. Each fragment is word for word, and 90.2 appears only in the table, so it is kept.",
+        "The fixed caveat and weak still state facts the source does not give. 'A diagnosis often comes during addiction treatment' is a claim from outside the paper. 'The survey did not ask where it came from' says more than can be checked: the paper reports only the 'ever been diagnosed' question and says nothing about where diagnoses were made. Soften to 'can come' and 'the paper does not say'."
+      ],
+      "fix": {
+        "caveat": "Possibly built in: a diagnosis can come during addiction treatment, which counts as help here, and the paper does not say where diagnoses came from. It does not show that help caused the recovery, or that the other 10% did worse.",
+        "weak": "Possibly circular, because a diagnosis can come during addiction treatment, which counts as help here; the diagnosis is self-reported."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=6076174&rettype=xml",
+      "quoteFound": true
+    },
+    {
+      "where": "numbers",
+      "index": 3,
+      "label": "gen-years 6 years",
+      "verdict": "ok",
+      "problems": [
+        "The fixed headline holds: 22 words (at the limit), 1 figure. It compares people ('those free longer rated well-being higher') rather than claiming they were followed, and 'climbing fast for 6 years, then slower' matches the abstract's 'steep increases in indices of well-being ... during the first 6 years, followed by shallower increases'.",
+        "The fixed basis.measured holds. Table 2 spline knots: quality of life 0-8 then 8-15, happiness 0-11 then 11-18, self-esteem 0-6 then 6-15; recovery capital and distress were fitted as linear plus quadratic. Results: 'highest rates of improvement during the first 6–11 years'.",
+        "The fixed caveat holds. Abstract: 'significant drops in self-esteem and happiness were observed initially during the first year followed by increases'. Results: 'approximately 15 yrs of recovery, on average, to reach the same QOL as the general population in a healthy Western European sample'. Discussion: 'among those who continue to stay in recovery'. 'Slightly less than half (48.6%) reported current use of at least one substance'.",
+        "n = 1,879 is the unweighted 40-year sample (Table 1 header; 1,876 weighted). Alcohol 58.55% (Table 1). Cross-sectional design is correct. The quote is word for word from the abstract (29 words). Mirror 13 words, second person. Severity 'resolved' fits."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=5880708&rettype=xml",
+      "quoteFound": true
+    }
+  ],
+  "notChecked": "The file has no beliefs or plan sections; all four numbers have non-empty fixedFields, so all four were checked."
+}

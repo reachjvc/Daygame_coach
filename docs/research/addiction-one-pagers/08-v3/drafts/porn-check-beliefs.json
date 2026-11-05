@@ -1,0 +1,163 @@
+{
+  "id": "porn",
+  "checked": [
+    {
+      "index": 0,
+      "where": "beliefs",
+      "label": "I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.",
+      "verdict": "fix",
+      "problems": [
+        "Only the abstract can be read; the full text is paywalled. The figures 138 ('recovery') and 42 ('chronic') and both quotes match the abstract word for word.",
+        "'Checked adults' reads like a clinical check. The source is a community survey (Jewish adults in Israel, aged 18 to 70) using self-report measures of probable CSBD and PPU.",
+        "'Of those flagged in 2018' is inferred from the profile names. The groups come from latent profile analysis; the abstract does not say each person was over a cut-off in 2018 and under it in 2022. Use the source's own labels.",
+        "The severity tag 'disorder' fits (probable CSBD/PPU by questionnaire, mild included). Name it as weak under rule 17: a community sample, questionnaire-only, profile memberships rather than diagnoses, mixing compulsive sex with porn.",
+        "The cite's year of 2026 matches PubMed (Addictive Behaviors 175:108589). The proof is 29 words, now 37."
+      ],
+      "fix": {
+        "proof": "An Israeli survey of adults asked about compulsive sex and problem porn use in 2018 and 2022. Of the groups with likely problems in 2018, 138 people fell in a ‘recovery’ group by 2022; 42 stayed ‘chronic’."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41435755%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "beliefs",
+      "label": "Quitting means a brutal flatline and weeks of withdrawal.",
+      "verdict": "fix",
+      "problems": [
+        "The groups were set by the Hebrew Bergen-Yale Sex Addiction Scale (cut-off 18). The authors say this grouping did not isolate porn-specific behaviour. 'Hooked on sex or porn' overstates the porn part.",
+        "'Men who weren't hooked' is too strong: 13 of the 16 comparison men scored in the questionnaire's 'moderate sex addiction risk' band. Say 'below the cut-off'.",
+        "The n of 14 is correct, but it is only the men who kept to the break: one man with CSB who slipped was excluded. 'Kept off' says this.",
+        "Both quotes are word for word ('3rd' is a superscript in the source). The figures hold: WSQ 63.86 at baseline, 54.36 at day 3, 33.43 at day 10, against 40.00 for non-CSB men. Israel, men recruited through social media, all male.",
+        "The severity tag 'disorder' is acceptable (a questionnaire cut-off). Small, motivated, self-selected sample; the authors themselves urge caution."
+      ],
+      "fix": {
+        "proof": "In a small study, 14 men who scored as hooked on sex kept off all sex, porn included, for 10 days. Their withdrawal-type symptoms eased from day 3; by day 10 they matched men below the cut-off."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11502338/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "beliefs",
+      "label": "I need it to switch off. Nothing else works at the end of the day.",
+      "verdict": "fix",
+      "problems": [
+        "'Porn had been how they handled bad moods, so bad moods became a trigger' is firmer than the source. The source says members 'had previously often relied' on porn to regulate negative affect, and that bad moods 'appeared to have become' a conditioned cue.",
+        "The n holds: 104 journals, all men (male journal section), 80 (76.9%) self-perceived addicted, so 'most' is right. The severity tag 'self-hooked' is right. Both quotes are word for word. Reboot Nation forum, journals from 2016 to 2018.",
+        "Weak link (no change forced): the proof shows the need was learned, but not that other ways of switching off work. Plan step 2 carries that."
+      ],
+      "fix": {
+        "proof": "In 104 men’s quit journals, most calling themselves addicted, they had often relied on porn to handle bad moods, and bad moods seemed to have become a trigger. Their own accounts, not a trial."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "beliefs",
+      "label": "One quick look won’t hurt. I can handle it now.",
+      "verdict": "ok",
+      "problems": [
+        "Holds. Table 3: 56.8% of the treatment-interested hypersexual group (n = 132, HBI clinically significant) had 4 or more past cut-back attempts with porn. The first column is that group, so 'more than half' is right and the n is the one behind the figure.",
+        "Rule 4 holds: both sources count hooked people (an HBI cut-off, and a forum sample in which 77% call themselves addicted). The tag 'disorder' fits Kraus.",
+        "All three quotes are word for word. Online survey, recruited mostly through Craigslist, mostly from the US.",
+        "Note: the chaser effect in the source is mainly about masturbation and partnered sex during a break, not a look at porn; 'any sexual activity' does match the source's own words. Cut-back attempts show repeated tries, not measured failure; the proof does not claim more."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5387768/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "beliefs",
+      "label": "I slipped again. I’m just someone who can’t quit.",
+      "verdict": "fix",
+      "problems": [
+        "'Quitting is hard, and achievable' drops the source's condition 'with the right combination of internal and external resources', so it reads more hopeful than the source.",
+        "The source does not report how many of the 55 who slipped went on to stay off. The proof must not suggest that it does; the fixed text keeps the two facts separate.",
+        "55 of 104 holds ('More than half of the sample (n = 55)'); the attempts lasted from 7 days to 12 months. The tag 'self-hooked' is right. Both quotes are word for word."
+      ],
+      "fix": {
+        "proof": "Of 104 men journaling a porn quit, most calling themselves addicted, 55 slipped at least once. The researchers’ reading: quitting is hard, and doable with the right mix of support and habits. Men’s own accounts, not a trial."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 0,
+      "where": "plan",
+      "label": "step 1 proof",
+      "verdict": "fix",
+      "problems": [
+        "Wrong n for the finding: only 6 of the 9 men binged, and the mood, stress and anxiety comparisons (Table 5) cover those 6. Of them, 5 showed a significant difference; patient G showed none. So 'binges came with' holds for most of the 6, not all 9.",
+        "'Seeking help': they were patients in treatment for CSB at sexual-health centres in Warsaw, Poland, each meeting at least 4 of Kafka's 5 criteria.",
+        "The quote is word for word from the abstract. Correlation only; the authors say the causal relation is undetermined."
+      ],
+      "fix": {
+        "proof.text": "In a 10-week diary study of 9 men in treatment in Poland, 6 binged. For most of the 6, binge days came with low mood, stress or anxiety; which one differed from man to man."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6174597/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "plan",
+      "label": "step 2 proof",
+      "verdict": "fix",
+      "problems": [
+        "'Filled the gap' reframes the source. The strategies were 'incorporated as part of an overall lifestyle change to minimize the frequency of triggering situations and craving', not described as replacing what porn gave.",
+        "The n (104 journals) is missing; add it. The quote is word for word."
+      ],
+      "fix": {
+        "proof.text": "In 104 men’s quit journals, most calling themselves addicted, men used exercise, going out, meditating and better sleep to cut triggers and craving. Their own accounts, not a trial."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "plan",
+      "label": "step 3 proof",
+      "verdict": "fix",
+      "problems": [
+        "'Helped most' is wider than the source. The source says social support and accountability were the most instrumental external resources, not the most helpful of everything; internal strategies were rated separately.",
+        "The source also says barriers were 'useful but not sufficient'. The quote is word for word."
+      ],
+      "fix": {
+        "proof.text": "In 104 men’s quit journals, blockers were somewhat useful; of outside help, support from other people and being accountable to someone mattered most. Their own accounts, not a trial."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "plan",
+      "label": "step 4 proof",
+      "verdict": "ok",
+      "problems": [
+        "Holds. The quote is word for word. 'Some found over time that it backfired' matches 'some members realized over time that thought suppression was counterproductive'. No figure, 26 words."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "plan",
+      "label": "step 5 proof",
+      "verdict": "fix",
+      "problems": [
+        "The figures and the quote match the abstract word for word (93% ACT against 21% waitlist; 12 sessions; 28 adult males). Full text is paywalled; the USU dissertation copy sits behind a Cloudflare check.",
+        "A key caveat is missing: all but 1 of the 28 were Latter-day Saints, and viewing was self-reported.",
+        "The n per arm behind 93% and 21% could not be checked. 28 is the number randomised; the abstract's combined analysis has N = 26.",
+        "The source also gives more cautious later figures (3 months on: 86% reduction, 35% fully stopped). Consider showing these on the card (rule 10)."
+      ],
+      "fix": {
+        "proof.text": "In one small US trial of 28 men, nearly all Latter-day Saints, self-reported viewing fell 93% after 12 sessions of ACT, against 21% on the waiting list."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:27157029%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    }
+  ]
+}

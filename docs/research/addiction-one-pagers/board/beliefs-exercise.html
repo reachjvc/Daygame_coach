@@ -1,0 +1,282 @@
+<title>Belief Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Source+Sans+3:ital,wght@0,400..700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* The beliefs exercise, one click from every one-pager. Phone first: one column of numbered steps, each a sheet
+   with the two columns of the owner's method (the old belief | what is also true) and the real-life test under it.
+   Same ink-and-red look as the one-pagers so it reads as the same site. Entries are private to each viewer. */
+:root {
+  --bg: #eceae7; --paper: #ffffff; --ink: #161414; --ink-2: #4b4646; --muted: #6a6362; --rule: #1d1a1a;
+  --hair: #d9d4d2; --panel: #f3f1ef; --red: #c8202a; --green: #1c7a3c; --green-bg: #e8f3ec; --amber: #9a5500; --amber-bg: #fbf1d4;
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #121010; --paper: #1c1919; --ink: #f2eeed; --ink-2: #c8c1c0; --muted: #958d8c; --rule: #d8d2d1; --hair: #3a3434; --panel: #262222; --red: #ff5c63; --green: #5cc681; --green-bg: #17271d; --amber: #e3a33c; --amber-bg: #2e2714; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #121010; --paper: #1c1919; --ink: #f2eeed; --ink-2: #c8c1c0; --muted: #958d8c; --rule: #d8d2d1; --hair: #3a3434; --panel: #262222; --red: #ff5c63; --green: #5cc681; --green-bg: #17271d; --amber: #e3a33c; --amber-bg: #2e2714; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 17px; line-height: 1.5; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.wrap { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { background: var(--paper); border-bottom: 2px solid var(--rule); }
+header .wrap { padding-block: 22px 18px; display: grid; gap: 10px; }
+.kick { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 900; font-stretch: 72%; font-size: 46px; line-height: .95; text-transform: uppercase; color: var(--red); }
+.how { display: grid; gap: 8px; }
+.how ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.how ol b { font-family: var(--f-display); font-stretch: 85%; }
+.pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { border: 1.5px solid var(--hair); background: transparent; border-radius: 999px; padding: 3px 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+main .wrap { padding-block: 20px 60px; display: grid; gap: 18px; }
+.sheet { background: var(--paper); border: 2px solid var(--rule); display: grid; }
+.step { padding: 14px; display: grid; gap: 10px; border-top: 1px solid var(--hair); }
+.step:first-child { border-top: 0; }
+.step h2 { font-family: var(--f-display); font-stretch: 82%; font-weight: 800; font-size: 21px; display: flex; gap: 10px; align-items: baseline; }
+.step h2 i { font-style: normal; color: var(--red); font-size: 28px; font-stretch: 70%; }
+.step .hint { color: var(--ink-2); font-size: 15px; }
+label { font-weight: 600; font-size: 15px; display: grid; gap: 4px; }
+textarea, input[type="text"], input[type="date"] { width: 100%; border: 1px solid var(--hair); border-radius: 6px; background: var(--paper); padding: 8px 10px; font-size: 16px; }
+textarea { resize: vertical; min-height: 64px; }
+.two { display: grid; gap: 12px; }
+.col { display: grid; gap: 8px; padding: 10px; border-radius: 6px; }
+.col.old { background: var(--panel); }
+.col.new { background: var(--green-bg); }
+.col .lab { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.col.new .lab { color: var(--green); }
+.rate { display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 10px; align-items: center; font-size: 14px; }
+.rate input { width: 100%; accent-color: var(--red); }
+.col.new .rate input { accent-color: var(--green); }
+.rate output { font-family: var(--f-mono); font-weight: 600; text-align: right; }
+.sugg { display: grid; gap: 6px; }
+.sugg button { text-align: left; border: 1px dashed var(--hair); background: var(--paper); border-radius: 6px; padding: 6px 9px; cursor: pointer; font-size: 15px; }
+.sugg button:hover { border-color: var(--ink-2); }
+.sugg .src { font-size: 13px; color: var(--ink-2); }
+.kinds { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.kinds .chip { font-size: 14px; }
+.check { margin: 0; padding-left: 20px; font-size: 14.5px; color: var(--ink-2); display: grid; gap: 2px; }
+.warn { background: var(--amber-bg); color: var(--ink); border-radius: 6px; padding: 8px 10px; font-size: 14.5px; }
+.warn b { color: var(--amber); }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { border: 2px solid var(--ink); background: var(--ink); color: var(--paper); border-radius: 6px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--ink); }
+.state { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.list { display: grid; gap: 10px; }
+.list h2 { font-family: var(--f-display); font-stretch: 82%; font-weight: 800; font-size: 22px; text-transform: uppercase; }
+.entry { background: var(--paper); border: 1px solid var(--hair); border-radius: 8px; padding: 12px; display: grid; gap: 6px; }
+.entry.example { border-style: dashed; }
+.entry .meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.entry .meta .st { color: var(--amber); font-weight: 600; }
+.entry .meta .st.done { color: var(--green); }
+.entry .b1 { font-family: var(--f-display); font-stretch: 85%; font-weight: 700; font-size: 18px; }
+.entry .b2 { color: var(--green); font-weight: 600; }
+.entry .shift { font-family: var(--f-mono); font-size: 13px; }
+.entry .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.entry .row button { border: 1px solid var(--hair); background: transparent; border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 14px; }
+.empty { color: var(--ink-2); font-size: 15px; }
+.privacy { font-size: 14px; color: var(--ink-2); }
+@media (min-width: 640px) {
+  h1 { font-size: 64px; }
+  .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .step { padding: 18px 22px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header>
+  <div class="wrap">
+    <span class="kick">Beliefs exercise</span>
+    <h1>Belief test</h1>
+    <div class="how">
+      <p>A belief like “I need it to unwind” runs the habit long after the body is clear. You don’t argue it away. You write it down, find something else you already believe, and then test both in real life.</p>
+      <ol>
+        <li><b>The old belief.</b> Write it the way it sounds in your head. Rate how true it feels.</li>
+        <li><b>What is also true.</b> Write something you also genuinely believe. Not a slogan: something you could defend to a friend.</li>
+        <li><b>The test.</b> One thing you will do this week. Before you do it, write what each belief says will happen.</li>
+        <li><b>The result.</b> Do it. Write what happened. Rate both beliefs again.</li>
+      </ol>
+    </div>
+    <div class="pick" id="pick" role="group" aria-label="Which addiction"></div>
+  </div>
+</header>
+<main>
+  <div class="wrap">
+    <form class="sheet" id="form" autocomplete="off">
+      <div class="step">
+        <h2><i>1</i>The old belief</h2>
+        <div class="sugg" id="sugg"></div>
+        <label for="f-old">In your words<textarea id="f-old" placeholder="I need a drink to unwind after work."></textarea></label>
+        <div class="rate"><input type="range" id="f-old-r" min="0" max="100" step="5" value="70" aria-label="How true the old belief feels, 0 to 100"><output id="o-old">70%</output></div>
+      </div>
+      <div class="step">
+        <h2><i>2</i>What is also true</h2>
+        <p class="hint">Three ways in: what have you seen in your own life that doesn’t fit the old belief? What would you tell a friend who said it? What do the numbers say? Pick one of the common beliefs in step 1 to see what its page says is also true, and the proof.</p>
+        <div class="two">
+          <div class="col old"><span class="lab">Old belief</span><p id="echo-old" class="b1">Write it in step 1.</p></div>
+          <div class="col new"><span class="lab">Also true</span><textarea id="f-new" aria-label="What is also true"></textarea>
+            <div class="rate"><input type="range" id="f-new-r" min="0" max="100" step="5" value="40" aria-label="How true this feels, 0 to 100"><output id="o-new">40%</output></div></div>
+        </div>
+      </div>
+      <div class="step">
+        <h2><i>3</i>The test</h2>
+        <p class="hint">Small, this week, and something you can see the result of. If you won’t take a practical step, ask what you’re reluctant to give up: that is the belief still running.</p>
+        <div id="warn"></div>
+        <div class="kinds"><span class="hint">Four kinds of test:</span>
+          <button type="button" class="chip" data-kind="Do it: go into the situation the old belief says you can’t handle, without it, once.">Do it once without</button>
+          <button type="button" class="chip" data-kind="Watch someone: spend an evening with a person who doesn’t use and see how it goes for them.">Watch someone</button>
+          <button type="button" class="chip" data-kind="Ask: ask two people who quit what the first weeks were really like.">Ask two people</button>
+          <button type="button" class="chip" data-kind="Your own past: find a time you went without it, and what that day was actually like.">Check your past</button></div>
+        <label for="f-test">What I will do<textarea id="f-test"></textarea></label>
+        <ul class="check"><li>Safe, and small enough to do this week.</li><li>Something you can see the result of.</li><li>It could prove the old belief wrong. If no result could, pick another test.</li></ul>
+        <label for="f-when">When<input type="text" id="f-when" placeholder="Thursday after work"></label>
+        <div class="two">
+          <label for="f-pold">The old belief says this will happen<textarea id="f-pold"></textarea></label>
+          <label for="f-pnew">What is also true says<textarea id="f-pnew"></textarea></label>
+        </div>
+      </div>
+      <div class="step">
+        <h2><i>4</i>The result</h2>
+        <p class="hint">Fill this in after the test. Save now and come back.</p>
+        <label for="f-what">What happened<textarea id="f-what"></textarea></label>
+        <div class="two">
+          <div><span class="hint">Old belief now</span><div class="rate"><input type="range" id="f-old-r2" min="0" max="100" step="5" value="70" aria-label="How true the old belief feels now"><output id="o-old2">70%</output></div></div>
+          <div><span class="hint">Also true now</span><div class="rate"><input type="range" id="f-new-r2" min="0" max="100" step="5" value="40" aria-label="How true the new belief feels now"><output id="o-new2">40%</output></div></div>
+        </div>
+        <label for="f-learn">What I learned, and the next test<textarea id="f-learn"></textarea></label>
+        <div class="acts"><button type="submit" class="btn" id="saveBtn">Save</button><button type="button" class="btn ghost" id="newBtn">Start a new one</button><span class="state" id="state"></span></div>
+      </div>
+    </form>
+    <section class="list" aria-labelledby="h-list">
+      <h2 id="h-list">Your tests</h2>
+      <p class="privacy" id="privacy"></p>
+      <div id="entries"></div>
+    </section>
+  </div>
+</main>
+
+<script>const DATA = /*DATA*/;</script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ids = DATA.pages.map(p => p.id);
+let pilot = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : ids[0];
+let entries = [], editing = null, store = null, uid = null;
+const F = ["old", "old-r", "new", "new-r", "test", "when", "pold", "pnew", "what", "old-r2", "new-r2", "learn"];
+
+function renderPick() {
+  $("#pick").innerHTML = DATA.pages.map(p => `<button type="button" class="chip" data-p="${p.id}" aria-pressed="${p.id === pilot}">${esc(p.tab)}</button>`).join("");
+  const p = DATA.pages.find(x => x.id === pilot);
+  $("#sugg").innerHTML = `<span class="hint">Common ones for ${esc(p.tab.toLowerCase())}, or write your own below:</span>` + p.beliefs.map((b, i) => `<button type="button" data-b="${i}">“${esc(b.limiting)}”</button>`).join("");
+  $("#warn").innerHTML = p.danger ? `<p class="warn"><b>Drinking heavily every day?</b> Don’t make stopping all at once your test. Seizures can come 8–48 hours after the last drink; stop with a doctor.</p>` : "";
+}
+function readForm() {
+  const o = {};
+  for (const f of F) o[f] = $("#f-" + f).value;
+  return o;
+}
+function fillForm(e) {
+  for (const f of F) $("#f-" + f).value = e ? e[f] ?? "" : (f.endsWith("r") || f.endsWith("r2") ? (f.startsWith("old") ? 70 : 40) : "");
+  syncOut();
+}
+function syncOut() {
+  $("#o-old").value = $("#f-old-r").value + "%"; $("#o-new").value = $("#f-new-r").value + "%";
+  $("#o-old2").value = $("#f-old-r2").value + "%"; $("#o-new2").value = $("#f-new-r2").value + "%";
+  $("#echo-old").textContent = $("#f-old").value.trim() || "Write it in step 1.";
+}
+function example() {
+  const p = DATA.pages.find(x => x.id === pilot);
+  const b = p.beliefs.find(x => x.keep) || p.beliefs[0];
+  return { example: true, addiction: pilot, old: b.limiting, new: b.counterpart, test: b.test, "old-r": 80, "new-r": 35, status: "Example" };
+}
+function renderEntries() {
+  const mine = entries.filter(e => e.addiction === pilot).sort((a, b) => (b.t || "").localeCompare(a.t || ""));
+  const ex = example();
+  const card = (e, isEx) => {
+    const done = !!(e.what && e.what.trim());
+    const shift = done ? `Old ${e["old-r"]}% → ${e["old-r2"]}% · Also true ${e["new-r"]}% → ${e["new-r2"]}%` : `Old ${e["old-r"]}% · Also true ${e["new-r"]}%`;
+    return `<div class="entry${isEx ? " example" : ""}"><div class="meta"><span class="st${done ? " done" : ""}">${isEx ? "Example" : done ? "Tested" : "Planned"}</span>${e.when ? `<span>${esc(e.when)}</span>` : ""}${e.t ? `<span>${esc(e.t.slice(0, 10))}</span>` : ""}</div>
+      <p class="b1">“${esc(e.old)}”</p><p class="b2">${esc(e.new)}</p>${e.test ? `<p><b>Test:</b> ${esc(e.test)}</p>` : ""}${done ? `<p><b>What happened:</b> ${esc(e.what)}</p>` : ""}<p class="shift">${esc(shift)}</p>
+      ${isEx ? `<div class="row"><button type="button" data-copy="1">Use this as a start</button></div>` : `<div class="row"><button type="button" data-edit="${esc(e.id)}">Open</button><button type="button" data-del="${esc(e.id)}">Delete</button></div>`}</div>`;
+  };
+  $("#entries").innerHTML = (mine.length ? mine.map(e => card(e, false)).join("") : `<p class="empty">No tests saved yet for ${esc(pilot === "cannabis" ? "weed" : pilot)}. The example shows what one looks like; fill in the sheet above and press Save.</p>`) + card(ex, true);
+}
+async function persist(e) {
+  if (store) {
+    await store.collection("data/users/" + uid).doc(e.id).set(e);
+  } else {
+    entries = entries.filter(x => x.id !== e.id).concat([e]);
+    try { localStorage.setItem("belief-tests", JSON.stringify(entries)); } catch (err) { throw new Error("This browser won’t save. Copy your text somewhere safe."); }
+  }
+}
+async function remove(id) {
+  if (store) await store.collection("data/users/" + uid).doc(id).delete();
+  else { entries = entries.filter(x => x.id !== id); try { localStorage.setItem("belief-tests", JSON.stringify(entries)); } catch (e) {} }
+}
+$("#form").addEventListener("input", syncOut);
+$("#form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const o = readForm();
+  if (!o.old.trim()) { $("#state").textContent = "Write the old belief in step 1 first."; return; }
+  const id = editing || ("t" + Math.random().toString(36).slice(2, 10));
+  const e = { id, addiction: pilot, ...o, t: new Date().toISOString() };
+  for (const k of ["old-r", "new-r", "old-r2", "new-r2"]) e[k] = Number(e[k]);
+  $("#state").textContent = "Saving…";
+  try { await persist(e); editing = id; $("#state").textContent = "Saved."; if (!store) renderEntries(); }
+  catch (err) { $("#state").textContent = err.message || "Couldn’t save. Try again."; }
+});
+document.addEventListener("click", async ev => {
+  const t = ev.target.closest("button"); if (!t) return;
+  if (t.dataset.p) { pilot = t.dataset.p; history.replaceState(null, "", "#" + pilot); editing = null; fillForm(null); renderPick(); renderEntries(); }
+  else if (t.dataset.kind) { const ta = $("#f-test"); if (!ta.value.trim()) ta.value = t.dataset.kind; ta.focus(); }
+  else if (t.dataset.b != null) { const b = DATA.pages.find(x => x.id === pilot).beliefs[+t.dataset.b]; $("#f-old").value = b.limiting; syncOut(); showProof(b); }
+  else if (t.dataset.copy) { const e = example(); editing = null; fillForm({ old: e.old, new: e.new, test: e.test, "old-r": 80, "new-r": 35, "old-r2": 80, "new-r2": 35 }); $("#form").scrollIntoView({ behavior: "smooth" }); }
+  else if (t.dataset.edit) { const e = entries.find(x => x.id === t.dataset.edit); editing = e.id; fillForm(e); $("#state").textContent = "Opened. Change it and press Save."; $("#form").scrollIntoView({ behavior: "smooth" }); }
+  else if (t.dataset.del) {
+    if (t.dataset.sure) { await remove(t.dataset.del); if (editing === t.dataset.del) { editing = null; fillForm(null); } if (!store) renderEntries(); }
+    else { t.dataset.sure = "1"; t.textContent = "Press again to delete"; }
+  }
+  else if (t.id === "newBtn") { editing = null; fillForm(null); $("#state").textContent = ""; }
+});
+function showProof(b) {
+  const box = $("#sugg");
+  box.querySelectorAll(".src").forEach(x => x.remove());
+  const p = document.createElement("p");
+  p.className = "src";
+  p.textContent = `Also true, from the page: ${b.counterpart} Proof: ${b.proof}`;
+  box.appendChild(p);
+}
+
+async function start() {
+  renderPick(); fillForm(null); renderEntries();
+  const priv = $("#privacy");
+  try {
+    const [db, user] = await Promise.all([window.claude?.use?.("db"), window.claude?.use?.("user")]);
+    uid = user ? await user.id() : null;
+    if (db && uid) {
+      store = db;
+      priv.textContent = "Saved to your account. Only you can see these entries.";
+      let loaded = false;
+      const timer = setTimeout(() => { if (!loaded) priv.textContent = "Can’t reach your saved tests yet. They will appear when the connection comes back."; }, 10000);
+      db.collection("data/users/" + uid).onSnapshot(snap => {
+        loaded = true; clearTimeout(timer);
+        entries = snap.docs.map(d => d.data()).filter(e => e && e.addiction);
+        priv.textContent = "Saved to your account. Only you can see these entries.";
+        renderEntries();
+      }, () => { clearTimeout(timer); priv.textContent = "Your saved tests can’t be read right now."; });
+      return;
+    }
+  } catch (e) {}
+  try { entries = JSON.parse(localStorage.getItem("belief-tests") || "[]"); } catch (e) { entries = []; }
+  priv.textContent = "Saved in this browser only. Nobody else can see these entries.";
+  renderEntries();
+}
+start();
+</script>

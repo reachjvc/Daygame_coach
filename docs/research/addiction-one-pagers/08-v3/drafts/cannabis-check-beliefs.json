@@ -1,0 +1,124 @@
+{
+  "id": "cannabis",
+  "checked": [
+    {
+      "index": 0,
+      "where": "beliefs",
+      "label": "I’ve smoked for years. I’m stuck.",
+      "verdict": "fix",
+      "problems": [
+        "The 6-year figure is a projection. The paper says 'These projections were obtained by the standard actuarial method', built from ages people recalled. The proof says 'an estimated half', but rule 10 needs the word 'projected' or 'expected'.",
+        "Open doubt, no change made: the paper never says in words that 344 of the 530 had remitted by the interview. 344 is only the column header 'Cannabis remission (N=344)' in Tables 3 and 4 (the survival analyses). Reading it as the number who remitted fits the 66.2% remitted a decade after onset, but it is an inference.",
+        "Checked and holds: 530 adults had lifetime DSM-IV cannabis dependence (NESARC, US, 2001–2002, n=43,093). Remission means they 'finally stopped having any of these experiences (dependence criteria)', not that they stopped using, so the 'Free' line is right. Severity 'dependent' fits. Both quotes are word for word: 3 and 27 words. The fixed proof is 39 words."
+      ],
+      "fix": {
+        "beliefs[0].proof": "In a US survey, 344 of 530 adults ever hooked on weed were already free when asked; half are projected to get free about 6 years after it began. “Free” means no signs of being hooked, not never smoking."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=3227547&retmode=xml (PMC3227547 full text)",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "beliefs",
+      "label": "I can’t handle quitting. Last time I barely lasted three days.",
+      "verdict": "fix",
+      "problems": [
+        "'Not in treatment' reads more hopeful than the study. The 49 were not seeking treatment, but the study gave them support to stay off: 'The cannabis abstinence attempt was supported with a one-hour psychological intervention and contingency management payments totalling AU$450 for adherence to study protocol'. A reader who tries alone gets neither.",
+        "The 'relatively mild' line comes from the discussion. The paper's conclusion is that withdrawal 'is clinically significant because it is associated with functional impairment to normal daily activities, as well as relapse'. Harm was greater in the most hooked (p=0.03). The fix keeps the authors' own 'on average' line but names the payment. There is no room under 40 words for the 'worse for the most hooked' clause.",
+        "Checked and holds: Bonnet 2017 says 'The CWS usually lasts up to 3 weeks' and Connor 2022 says 'Sleep disturbances may continue for several weeks or longer.' Allsop has n=49 who met DSM-IV dependence criteria, Sydney, Australia, two weeks of monitored abstinence. Severity 'dependent' fits, and all three quotes are word for word."
+      ],
+      "fix": {
+        "beliefs[1].proof": "Weed withdrawal usually lasts up to 3 weeks; poor sleep can last longer. In 49 people hooked on weed and paid to stay off, the harm to daily life over two weeks was on average fairly mild.",
+        "beliefs[1].refs[2].cite": "Allsop DJ, Copeland J, Norberg MM, Fu S, Molnar A, Lewis J, Budney AJ (2012). Quantifying the clinical significance of cannabis withdrawal. PLoS One 7(9):e44864. 49 non-treatment-seeking users in Sydney who met DSM-IV criteria for dependence; two weeks of monitored abstinence with a one-hour psychological session and contingency payments up to AU$450."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC3458862/fullTextXML (also PMC5414724, PMC9110555 full texts)",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "beliefs",
+      "label": "Day 10, I feel fine. Now I can handle it.",
+      "verdict": "ok",
+      "problems": [
+        "Only the abstract is open; the full text is paywalled. Every claim is in the abstract: 82 people with 2 or more weeks off during outpatient treatment for marijuana dependence; 71% lapsed within 6 months; 71% of those who lapsed relapsed to 4 or more days in any 7-day period; early lapses were more strongly tied to relapse.",
+        "Rule 4 holds: the sample is people treated for dependence, tagged 'treatment', not 'heavy' or 'users'. Proof is 35 words. All three quotes are word for word (23, 23 and 9 words). No other drug is named."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=14629990&rettype=abstract",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "beliefs",
+      "label": "Weed is the only thing that gets me to sleep.",
+      "verdict": "fix",
+      "problems": [
+        "'Those who cut down slept better than those whose use rose' overstates the result. The paper compared change over time (the slope of sleep scores, β=-0.07, p<0.05), not sleep levels at the end. At baseline the reduction group's PSQI was 6.5 against 6.3. The source says the people who cut down had 'improvements of sleep quality over time' compared with the others.",
+        "This is an association, not proof that cutting down caused better sleep. Everyone was also in a trial with contingency management. Not in the proof text; noted for the 'what is weak' list.",
+        "Checked and holds: 302 adults with DSM-IV cannabis dependence (ACCENT, US multisite, 12 weeks). 208 of 302 (68.9%) had poor sleep at baseline (PSQI above 5). The groups were 152 cut down and 150 rose. Severity 'dependent' fits, and both quotes are word for word."
+      ],
+      "fix": {
+        "beliefs[3].proof": "Of 302 adults hooked on weed starting a treatment trial, 69% slept poorly at the start. Over 12 weeks, sleep improved more for those who cut down than for those whose use rose."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=5607644&retmode=xml (PMC5607644 full text)",
+      "quoteFound": true
+    },
+    {
+      "index": 1,
+      "where": "plan",
+      "label": "step 2 proof (Ellingstad 2006, 25 self-changers)",
+      "verdict": "ok",
+      "problems": [
+        "Only the abstract is open. It supports every part: 'Long-term daily cannabis abusers (N = 25) who without treatment stopped using cannabis for at least one year'; the maintenance factors as quoted; and 'A small group' names the weakness. Small and minor: 'a changed routine' stands for the source's 'changes in lifestyle'.",
+        "The quote is word for word (24 words) and the proof is 37 words. Plan proofs have no severity field. The source's group, long-term daily 'cannabis abusers', is if anything more of a problem group than the proof's wording, so the proof is not more hopeful."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=15967588&rettype=abstract",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "plan",
+      "label": "step 3 proof (Budney 2003, 18 heavy users)",
+      "verdict": "fix",
+      "problems": [
+        "'Most were gone by day 14' is not what the source says. The source says 'most effects lasted 4-14 days'. That is how long the effects lasted, counted from an onset on days 1–3, so the end could fall after day 14. The proof reads more hopeful than the source.",
+        "Checked and holds: 18 marijuana users, after heavy use, a 45-day abstinence phase (Vermont, US). Peak on days 2–6 matches. The quote is word for word (17 words). Only the abstract is open."
+      ],
+      "fix": {
+        "plan[2].proof.text": "In 18 heavy users who stopped, symptoms usually started on days 1–3, peaked on days 2–6, and most lasted 4–14 days."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=12943018&rettype=abstract",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "plan",
+      "label": "step 4 proof (Alias-Ferri 2026, craving classes)",
+      "verdict": "fix",
+      "problems": [
+        "'Craving stayed low for 41%' is wrong. The full text says the low class 'had the lowest mean baseline craving (M = 38.6). Craving then declined through three weeks after randomization before leveling off at week 4 (M = 16.0).' It started lowest and fell; it did not stay flat.",
+        "All participants got contingency management (paid for clean urine tests) on top of NAC or placebo. A reader quitting alone does not get this, so the fix says so.",
+        "Checked and holds: N=302 adults who met DSM-IV cannabis dependence (CTN-0053 ACCENT, US multisite, 12 weeks plus a week-17 follow-up). The classes were 123 (41%) and 116 (38%) of 302. The quote is word for word (20 words). The fixed proof is 36 words."
+      ],
+      "fix": {
+        "plan[3].proof.text": "In a 12-week treatment trial of 302 adults hooked on weed, craving started lowest and fell within weeks for 41%, and started moderate and fell over time for another 38%. Everyone was paid for clean tests."
+      },
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=13289840&retmode=xml (PMC13289840 full text)",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "plan",
+      "label": "step 5 proof (Gates 2016 Cochrane, RR 2.55)",
+      "verdict": "ok",
+      "problems": [
+        "Every part is in the abstract: RR 2.55 (95% CI 1.34 to 4.83) for self-reported point-prevalence abstinence; 6 studies and 1,166 participants; intervention against inactive control at early follow-up (median 4 months); rated low quality. The quote is word for word (27 words) and the proof is 33 words. 'A weed problem' fits 'cannabis use disorder'.",
+        "Context, not an error: the interval is wide (1.34 to 4.83). The review also says 'approximately one-quarter of participants abstinent at final follow-up' and that no intervention was consistently effective at 9 months or later. The proof's 'at about 4 months' and 'Low-quality evidence' keep it from overclaiming."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=27149547&rettype=abstract",
+      "quoteFound": true
+    }
+  ]
+}

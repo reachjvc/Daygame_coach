@@ -1,0 +1,143 @@
+{
+ "id": "cannabis",
+ "checkedBy": "source checker B (independent, fetched NCBI efetch abstracts + PMC full texts + PMC HTML for Cochrane, 2026-11-05)",
+ "scope": "second half of changed items: numbers[11..15], beliefs[0..3], plan[0], plan[4]; windows has no changed items",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "71%",
+   "verdict": "ok",
+   "problems": [
+    "note: abstract (PubMed 14629990) confirms 82 who got 2+ weeks off in outpatient treatment for marijuana dependence, 71% lapsed within 6 months, mean 73 days, 71% of lapsers relapsed to 4+ days in any 7, early lapses linked to relapse. Quote word for word, 23 words.",
+    "note: basis.who/n say 'adults'; the abstract says 'individuals'. Full text is paywalled, so 'adults' is not confirmed from fetched text (likely right: Vermont adult outpatient trials)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "72 hours",
+   "verdict": "fix",
+   "problems": [
+    "headline says 'non-users''; the source compares with 'comparison participants with minimal cannabis exposure' (basis already says 'people with little use').",
+    "basis.who 'aged 26 or under' is wrong: the review took studies whose mean age was 26 or under, not people aged 26 or under; 20.6 and 68% male are for the users in all 69 studies, not the 15.",
+    "basis.n: 928 is users and comparison people together (2152+6575 = 7799+928 = 8727), not 928 users.",
+    "note: quote word for word with one ellipsis, 29 words; d -0.08 not significantly different from 0 confirmed."
+   ],
+   "fix": {
+    "headline": "In studies of young frequent users off weed over 72 hours, test scores showed no clear gap from people who barely used.",
+    "basis.who": "frequent or heavy weed users in studies whose average age was 26 or under (users' average age 20.6, 68% male, across all 69 studies) vs people who had barely used",
+    "basis.n": "928 people, users and comparison people together, in the 15 studies that required more than 72 hours off (of 69 studies in the review)"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "Week 1",
+   "verdict": "ok",
+   "problems": [
+    "note: PMC6587572 confirms 62 vs 26, 55 (88.7%) 30-day abstinent, cash incentives for urine-confirmed abstinence, 54.4/57.5 of past 90 days used, CUDIT means 13-14 but no cannabis diagnosis reported, verbal learning gain in week 1, attention improved alike in both groups, all controls kept using. Quote word for word with ellipsis, 21 words."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "+12 points",
+   "verdict": "ok",
+   "problems": [
+    "note: PMC5846101 confirms DSM-IV dependence, treatment seekers, all daily users, 11-week lofexidine+dronabinol vs placebo, 62 completed week-12 QoL, 52 with baseline scores (model df 47 with 4 covariates = 52), 29/62 abstinent last 2 weeks by self-report, baseline 64.0% of maximum, +6.78 raw = '12% of the maximum possible change' (raw range 14-70), fewer using days linked, gram reduction not linked. Quote word for word, 28 words. '12 points out of 100' is the paper's own 12%."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "12 weeks",
+   "verdict": "fix",
+   "problems": [
+    "basis.who uses 'NAC', jargon with no plain words (plain-words rule).",
+    "basis.who: cash vouchers rewarded showing up as well as clean urine tests (source: 'targeted visit attendance and cannabis abstinence').",
+    "caveat 'Overall quality of life did not improve in 12 weeks' blurs the finding: the source says cutting down was linked with anxiety, depression and sleep but not with quality of life; (no group mean, for any outcome, changed significantly over time).",
+    "note: PMC5607644 confirms 302 adults 18-50, DSM-IV dependence, six US sites, Jan 2014-Apr 2015, 152 negative-slope vs 150 positive-slope. Quote word for word, 20 words. 'small' fits the betas (about -0.1 per step on 0-21 scales)."
+   ],
+   "fix": {
+    "basis.who": "adults aged 18–50 who met the doctors' older checklist for being hooked on weed, in a 12-week medicine trial (a medicine called NAC or a dummy pill; both groups got cash rewards for showing up and for clean urine tests)",
+    "caveat": "This is cutting down, not only quitting. Cutting down was not linked with better quality of life in 12 weeks. The changes were small, and it is a link, not proof."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: I've smoked for years. I'm stuck.",
+   "verdict": "fix",
+   "problems": [
+    "proof 'half within about 6 years' gives no start point; the source counts from dependence onset ('approximately 6 years after dependence onset'). A reader hooked for years could read it as 6 years from quitting or from now.",
+    "note: PMC3227547 confirms Table 1 cannabis dependence N=530, Table 3 'Cannabis remission (N=344)', lifetime 97.2%, remission = 'finally stopped having any of these experiences (dependence criteria)'. All three quotes word for word (ellipsis drops the other drugs, rule 13). Test is one weed-free day: safe."
+   ],
+   "fix": {
+    "proof": "In a big US survey, 344 of 530 people ever hooked on weed were already free. 97.2% are projected to get free in their lifetime; half within about 6 years of getting hooked. “Free” means no signs of being hooked."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "hard: I can't handle quitting.",
+   "verdict": "ok",
+   "problems": [
+    "note: Bonnet 2017 Figure 1 caption 'The CWS usually lasts up to 3 weeks', Connor 2022 'Sleep disturbances may continue for several weeks or longer.', Allsop 2012 49 DSM-IV dependent, AU$450 contingency payments, 'relatively mild' on average and 'very high levels' for some: all word for word in the PMC full texts. Proof 40 words. New test (delay one hour, do something physical) is safe and needs no use."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "moderation: Day 10, I feel fine.",
+   "verdict": "ok",
+   "problems": [
+    "note: all three Moore & Budney quotes word for word in the PubMed abstract; treatment-group proof meets rule 4. New test (say 'I don't smoke', leave for ten minutes) is safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "need: Weed is the only thing that gets me to sleep.",
+   "verdict": "fix",
+   "problems": [
+    "refs[1].cite and refs[2].cite give article number 110969; PubMed and PMC10691527 give Drug Alcohol Depend 252:110989 (an erratum, 253:111020, exists; the quoted results stand in the corrected PMC text).",
+    "note: Hser 68.9% of 302 poor sleep at baseline confirmed (208 of 302, baseline table). Baumer: 53 adolescents (mean 17.8, at least weekly use, not treatment seekers) paid via contingency management; week 1 worse, week 2 better, week 4 comparable to baseline. Quotes word for word. The source also says the abstinent group slept worse than controls over the 4 weeks overall and was already back to baseline by week 2; the proof is not more hopeful than that. Test (one night without the evening smoke) is safe. The propose note on 'real sleep back' stands: the source found sleep back to the old level, not better."
+   ],
+   "fix": {
+    "refs[1].cite": "Baumer AM, Nestor BA, Potter K, Knoll S, Evins AE, Gilman J, Kossowsky J, Schuster RM (2023). Assessing changes in sleep across four weeks among adolescents randomized to incentivized cannabis abstinence. Drug and Alcohol Dependence 252:110989.",
+    "refs[2].cite": "Baumer AM, Nestor BA, Potter K, Knoll S, Evins AE, Gilman J, Kossowsky J, Schuster RM (2023). Assessing changes in sleep across four weeks among adolescents randomized to incentivized cannabis abstinence. Drug and Alcohol Dependence 252:110989."
+   }
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Name what it does for you",
+   "verdict": "ok",
+   "problems": [
+    "note: no proof to source-check. Six actions, plain words, weed only, no cheering; 'keep smoking as usual for a few days while you log' carries no source-tied risk."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Get help that works (optional)",
+   "verdict": "fix",
+   "problems": [
+    "proof 'off weed at the last check-up' is vaguer than the measure: point-prevalence abstinence = no use in the month before the check-up. The 23 is the 8-study average at follow-up longer than four months; the 12 is the control average at final follow-up. Both are the review's own per-arm averages (rule 12a met). The quote is word for word, 25 words (PMC4914383 HTML).",
+    "do[0] 'CBT' is jargon with no plain words.",
+    "note (not fixed, action outside the proof): 'A few meetings can be enough' has no source; the same review found more than four sessions over more than a month did better."
+   ],
+   "fix": {
+    "proof.text": "In trials for a weed problem, on average 23 in 100 people given talk therapy had been off weed for the past month at the last check-up, vs 12 in 100 given little or none.",
+    "do[0]": "Look for talk therapy (CBT) with motivation sessions, over a month or more."
+   }
+  }
+ ]
+}

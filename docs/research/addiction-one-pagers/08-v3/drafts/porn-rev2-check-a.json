@@ -1,0 +1,142 @@
+{
+ "id": "porn",
+ "by": "source checker a (rev2)",
+ "on": "2026-11-05",
+ "scope": "first half of the 19 changed items in file order: numbers 0-9 (beliefs and plan left to checker b)",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "hope-free-now '138 vs 42'",
+   "verdict": "fix",
+   "problems": [
+    "Figures, group sizes (952+138+50+42=1,182), timing and quote are word for word in the Europe PMC abstract (PMID 41435755). Headline is no more hopeful than the source: it uses the researchers' own group names.",
+    "Caveat ends with an absolute claim we cannot check: 'No study counts people who got free of a porn problem; this is the nearest number there is.' Only our own search supports it, so it must say so (rule 28).",
+    "ref.readNote is wrong: the article is open access (CC BY 4.0; Elsevier article record says openaccessType Full), it does not need a subscription. ScienceDirect refused automated fetches (HTTP 403), so the full text is still unread.",
+    "basis.who 'men and women are counted together' is not in the abstract, but a sister paper on the same four-wave panel (Jan 2018, Apr 2022, Dec 2023, Mar 2024; same authors) has 590 women of 1,231 (Levin et al. 2025, PMC12925667), so it holds; readNote should name that basis."
+   ],
+   "fix": {
+    "caveat": "Questionnaire answers, not a doctor’s check, and porn and sex problems are counted together. The researchers’ statistics drew and named the groups, so this does not show that each of the 138 had a problem in 2018 or is free of it now, or that anyone tried to quit. No study we found counts people who got free of a porn problem; this is the nearest number we found.",
+    "ref.readNote": "Abstract only (Europe PMC, PMID 41435755, re-fetched 2026-11-05). The full text is open access (CC BY 4.0, per Elsevier's article record) but ScienceDirect refused automated requests (HTTP 403), so how the groups were drawn is unchecked. 'Men and women counted together' rests on a sister paper on the same four-wave panel: Levin et al. 2025 (PMC12925667), 590 women of 1,231 (47.9%)."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "how-tries '40 in 100'",
+   "verdict": "ok",
+   "problems": [
+    "Table 1 of the full text (PMC5387768): among the 186 men interested in treatment, quit 4+ = 40.3%, cut back 4+ = 46.2%; among the 1,111 not interested, quit 4+ = 5.8% (shown as 6%). Age 32.8. Craigslist 91.9% of the 186 (88% overall). June-July 2013. USA/Canada/other English-speaking. Quote is the flattened table row, word for word, 21 words."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "helps-talk '54 in 100'",
+   "verdict": "fix",
+   "problems": [
+    "Quote and 54% are word for word in the abstract (PMID 27157029, also on the USU repository page). 'After 12 sessions' and posttreatment timing match.",
+    "Headline 'No count exists for men without the therapy' and caveat 'The study reports no count of men who stopped while on the waiting list' assert what the full paper says, but only the abstract was read (full paper paywalled, dissertation refused). Must say no count was found (rule 28).",
+    "basis.n says 26 is the count 'this share comes from'. The same abstract sentence gives 93% for at-least-70% reduction, which no whole number out of 26 gives (24/26 = 92.3%, 25/26 = 96.2%), so the base of these shares is not sure to be 26. The rev2 editNote calls the n edit 'meaning unchanged', but it dropped R1's 'the study does not say exactly how many men this share counts'.",
+    "Dropping the 14/14 split was right: Antons et al. 2022 review (PMC9872540, Table 2) lists therapy n = 14 and waiting list n = 13."
+   ],
+   "fix": {
+    "headline": "After 12 ACT talk-therapy sessions, 54 in 100 men had stopped porn completely. No count was found for men without the therapy.",
+    "basis.n": "28 men started, split between therapy first and a waiting list; 26 are in the combined count, and the study does not say exactly how many this share counts",
+    "caveat": "No count was found for men who stopped while on the waiting list, so this is not a with-versus-without figure. There was no comparison therapy, so it does not show ACT beats other help. Three months later, 35 in 100 had stopped completely."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "how-slips '55 of 104'",
+   "verdict": "fix",
+   "problems": [
+    "Full text (PMC7889567): 55 of 104 lapsed (quote word for word), 80 of 104 self-perceived addicted, ages 18-63, journals from 2016-2018, at least 86.5% also abstaining from masturbation, Table 2 '7 days-30 days 54 52.0'. All match.",
+    "Caveat says the durations were 'judged from the dates of the posts'; the paper inferred them from the men's own day counts first, and from post dates only when those were missing.",
+    "Mirror 'men who really quit never do' implies men who succeeded also slipped; the study cannot say how any attempt ended (caveat says so). 'Serious about quitting' is what the number does show."
+   ],
+   "fix": {
+    "mirror": "You slipped and think men serious about quitting never do.",
+    "caveat": "Many men just stopped writing, so nobody knows how their attempts ended, and the study does not say when in an attempt the slips came. Slips the men did not write about are not counted. About half the attempts (54 of 104) seemed to run 7 to 30 days, judged from the men's own day counts or the dates of their posts. Men who journal in public may differ from men who quit quietly."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "how-slips '45%'",
+   "verdict": "ok",
+   "problems": [
+    "Full text (PMC9847461): 45.4% of the 86 in the abstinence group used at least once (quote word for word); 176 randomised (86/90); 64.2% female; mean age 21.38; regular use = 3+ times a week; Malaysia. Design line is plain and accurate (control group 'free to watch pornography as usual'). Tag 'users' allowed for how-slips."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "how-slips '51%'",
+   "verdict": "ok",
+   "problems": [
+    "Full text (PMC6571756): 4,260 current users (2,520 women, 1,740 men, so about 6 in 10 women); 51.0% made at least one attempt to give up, no sex difference (quote word for word); ages 18-26; survey open February 2017-August 2018; anonymous online, volunteer. All match."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "how-withdrawal '7 days'",
+   "verdict": "fix",
+   "problems": [
+    "Full text (PMC9847461): craving effect only at high problem score and daily use (exploratory, three-way interaction); use frequency did not moderate mood or withdrawal; 19.3% used daily or more (about 34 of 176); 84.7% below the cutoff of 76; 89.8% no wish to quit; high score at +1 SD = 72.82, below 76; study ran February-March 2021. All quotes word for word, 30 words or fewer.",
+    "Headline 'but were no worse in mood or withdrawal' is more certain and more hopeful than the source, which found no significant difference and warns that, with limited power, smaller mood or withdrawal effects may have been missed (R1 had 'no clear ... difference')."
+   ],
+   "fix": {
+    "headline": "A 7-day break: daily users with high problem scores craved more than those watching; no clear difference showed in mood or withdrawal."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "after-body '21 of 42'",
+   "verdict": "ok",
+   "problems": [
+    "Full text (PMC7889567): of 42 with erectile difficulties at the outset, 21 reported at least some improvement (quote word for word, 27 words); 32 reported both addiction and a sexual difficulty, so 'at most 32 of the 42 called themselves addicted' holds; authors say helped members were likelier to keep posting; links between porn and sexual problems 'generally inconclusive'. The medical-causes line is general knowledge, a caveat, not a danger line."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "after-lasting '74%'",
+   "verdict": "fix",
+   "problems": [
+    "74% and 35% at 3 months, and 93% and 54% at posttreatment, are word for word in the abstract (PMID 27157029); basis.n now says only what the source says. Headline is no more hopeful than the source; caveat shows the fade.",
+    "Caveat 'Quality of life was measured, but the study reports no result for it' is false: the Antons et al. 2022 systematic review (PMC9872540, Table 2, Crosby and Twohig row) reports the trial's quality-of-life result as no change for the therapy group. The abstract alone gives no result, which is what R1 said."
+   ],
+   "fix": {
+    "caveat": "Nearly all from one church, self-report, only 3 months. Some progress faded: at the end of therapy 93 in 100 had cut back that much and 54 in 100 had stopped completely; three months later, 74 and 35. Quality of life was measured too; a 2022 review of the trial lists no change in it for the men in therapy.",
+    "alsoRef": {
+     "cite": "Antons S, Engel J, Briken P, Krüger THC, Brand M, Stark R (2022). Treatments and interventions for compulsive sexual behavior disorder with a focus on problematic pornography use: a preregistered systematic review. Journal of Behavioral Addictions 11:643-666.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9872540/",
+     "pmid": "36083776",
+     "fetched": true,
+     "quote": "↔ quality of life (TG: BL = post, CG: BL< post, BL < post)"
+    }
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "after-lasting '1 in 6'",
+   "verdict": "fix",
+   "problems": [
+    "Full text (PMC6571756): 823 of 5,083 ever-exposed reported they had successfully stopped (16.2%, 'about 1 in 6'); men 339 of 2,079 (16.3%), women 484 of 3,004 (16.1%), so 'men as often as women' holds; quote word for word. '1 in 6' is fine outside the what-helps group.",
+    "Caveat 'Most were never hooked' is not in the source: self-perceived addiction was asked only of current users (15.5% of 4,260); the 823 who stopped were never asked."
+   ],
+   "fix": {
+    "caveat": "One-time survey; ‘stopped’ has no time frame, so some may have stopped recently. Those who stopped were not asked whether they had been hooked. Says nothing about what improved afterwards."
+   }
+  }
+ ]
+}

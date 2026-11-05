@@ -1,0 +1,134 @@
+{
+  "id": "porn",
+  "checker": "independent source checker B (second half of changed items: beliefs 0-4, plan 0, 2, 3, 4; no changed windows exist)",
+  "on": "2026-11-05",
+  "fetched": {
+    "PMID 41435755 (Efrati 2026)": "Europe PMC abstract; full text is paywalled",
+    "PMC11502338 (Sassover 2024)": "Europe PMC full text XML, Study 3 and Table 2 read",
+    "PMC7889567 (Fernandez 2021)": "Europe PMC full text XML, Tables 1-2 and themes read",
+    "PMC5387768 (Kraus 2016)": "Europe PMC full text XML, Table 1 read",
+    "PMC6174597 (Wordecha 2018)": "Europe PMC full text XML",
+    "PMID 27157029 (Crosby 2016)": "PubMed abstract via NCBI efetch; full text not open"
+  },
+  "checked": [
+    {
+      "where": "beliefs",
+      "index": 0,
+      "label": "stuck: I've watched porn since I was a teenager... (Efrati 2026)",
+      "verdict": "ok",
+      "problems": [
+        "Minor, no change: 180 is plain arithmetic (138 'recovery' + 42 'chronic'), and reading those two profiles as 'had a likely problem in 2018' follows from the profile names, which the abstract does not define further.",
+        "Minor, no change: the open abstract does not say the sample held both men and women ('community sample of Jewish population in Israel, aged 18-70'). The full text is paywalled. A mixed sample is very likely, but this source cannot confirm it.",
+        "Quote is word for word (25 words). Severity 'disorder' fits (probable CSBD/PPU by screener). The headline is not more hopeful than 138 of 180. The test is safe. The page names the porn-or-sex mix."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 1,
+      "label": "hard: Quitting means a brutal flatline... (Sassover 2024 Study 3)",
+      "verdict": "fix",
+      "problems": [
+        "'low mood' scores: the measure is the DASS-21 total, which adds depression, anxiety and stress. 'Low mood' names only one of the three.",
+        "'men without the problem' reads more hopeful than the source. The comparison men only scored below the HBYSAS cut-off of 18, and 13 of those 16 men were rated 'moderate sex addiction risk' by the questionnaire. Day 10 means: DASS 28.36 vs 33.31, WSQ 33.43 vs 40.00.",
+        "Verified: 14 men, all male, abstained 10 days from all sexual activity, and both groups abstained. Baseline was highest on both scales (DASS 56.00, WSQ 63.86). All 4 quotes are word for word and 30 words or fewer. The test is safe."
+      ],
+      "fix": {
+        "beliefs[1].proof": "In a small study, 14 men with out-of-control sexual behaviour stopped all sexual activity for 10 days. Their distress and withdrawal-type scores were highest before the break; by day 10, no higher than in men below the problem cut-off."
+      }
+    },
+    {
+      "where": "beliefs",
+      "index": 2,
+      "label": "need: I need it to switch off... (Fernandez 2021)",
+      "verdict": "ok",
+      "problems": [
+        "Minor, no change: the authors' 'most' (>75%, as they define it) covers 'internal resources (cognitive and/or behavioral strategies)'. The examples (exercise, meditating, going out, sleep) come from the behavioural subset, whose share is not given. 'such as' keeps this honest. The source says these strategies were used 'to regulate emotional states', which supports 'to cope'.",
+        "Verified: all 104 journals are by men, and 80 of 104 (76.9%) called themselves addicted, so 'most' is right. All 4 quotes are word for word (25 words or fewer). The test is safe."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 3,
+      "label": "moderation: One quick look won't hurt... (Kraus 2016 + Fernandez 2021)",
+      "verdict": "ok",
+      "problems": [
+        "Verified: in Table 1, the Yes column (n = 186) of 'Cut back attempts with porn' gives 4+ past attempts = 46.2, so '46 in 100' is right. The sample is all male. The question was 'cut back', and the proof says 'cut back', not 'quit'.",
+        "Minor, no change: ref 4's quote stops mid-phrase ('after both masturbation'). The source goes on 'and partnered sexual activity'. The proof names masturbation only, which is true but selective. The rest of that sentence holds forum quotes, so it cannot be quoted (rule 30).",
+        "Minor, no change: the cite does not say which Table 1 column the 46.2 belongs to. The first figure in each row is the n = 186 group.",
+        "Severity 'self-hooked' passes rule 4. The authors' 'some' means under 50%, which matches 'some men'. The test is safe."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 4,
+      "label": "identity: I slipped again. I'm just someone who can't quit. (Fernandez 2021)",
+      "verdict": "fix",
+      "problems": [
+        "The headline is more hopeful than the source. 'quitting proved doable' reads as a lasting quit, but the source says 'abstinence attainable' within journal attempts. Of those attempts, 52.0% lasted 7-30 days, and the median was 36.5 days. The authors say they 'were unable to ascertain whether members were typically interested in abstaining temporarily or ceasing the behavior permanently'.",
+        "'half or more' stretches 'many'. The authors define 'many' as 50-75%, so it caps at three quarters.",
+        "'By the researchers' count' overstates. 'Many' is the authors' frequency label, not a reported count.",
+        "Verified: 55 of 104 lapsed at least once. Existing quotes are word for word. The test is safe."
+      ],
+      "fix": {
+        "beliefs[4].proof": "Of 104 men keeping a porn-quit journal, most calling themselves addicted, 55 slipped at least once. The researchers judged staying off doable for half to three quarters of them; half the journals covered a month or less.",
+        "beliefs[4].refs[+]": {
+          "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+          "pmid": "33403533",
+          "fetched": true,
+          "quote": "The majority of inferred total durations of abstinence attempts were between seven and 30 days (52.0%)"
+        }
+      }
+    },
+    {
+      "where": "plan",
+      "index": 0,
+      "label": "step 1 actions reordered; 'table above' to 'beliefs above' (Wordecha 2018 proof unchanged)",
+      "verdict": "ok",
+      "problems": [
+        "The actions were only reordered and none was removed. The reorder matches the 'was' list. The actions are safe, use plain words and name one drug only.",
+        "The unchanged proof re-verified: 9 treatment-seeking men in Warsaw, and 6 of 9 binged. The source says 'For all but one subject (G)' binges went with mood or stress changes, so 'most of the 6' holds. The quote is word for word (19 words)."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 2,
+      "label": "step 3 actions reordered: date first, blocker before that day (Fernandez 2021 proof unchanged)",
+      "verdict": "ok",
+      "problems": [
+        "The 6 actions are kept and reordered, and the 7-day break was folded into 'first week of the three months'. Nothing is removed in substance. The actions are safe and use plain words.",
+        "The unchanged proof quote is word for word (23 words), and the proof's paraphrase ('blockers somewhat useful; support and accountability mattered most') matches."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 3,
+      "label": "step 4 new action: shower, get dressed, get out of the house (Fernandez 2021 proof unchanged)",
+      "verdict": "ok",
+      "problems": [
+        "The new action is concrete, safe and in plain words. No other action changed.",
+        "The unchanged proof quote is word for word (23 words). 'some' means under 50% per the authors' definitions, which matches 'some found'."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 4,
+      "label": "step 5 CBT/ACT explained; proof rewritten to people per 100 (Crosby 2016)",
+      "verdict": "fix",
+      "problems": [
+        "The proof gives no n. The 54% and 35% count 'all participants (N=26)' combined, including the waitlist men after they got ACT later. They are not the randomised ACT arm alone, and not the 28 who enrolled.",
+        "The sentence reads two ways: 'nearly all Latter-day Saints, 54 in 100 men had stopped' can be read as the 54 in 100 being the Latter-day Saints.",
+        "Verified in the abstract: 12-session ACT protocol, 28 adult males, all but 1 Latter-day Saints, complete cessation 54% at posttreatment and 35% at the 3-month follow-up. No cessation figure is given for the waitlist, so 'no such count for men without therapy' is right. The quote is word for word (22 words). The first action's plain-words gloss of CBT/ACT is fine and safe."
+      ],
+      "fix": {
+        "plan[4].proof.text": "In a small US trial, 26 men, nearly all Latter-day Saints, had 12 sessions of ACT. By the end, 54 in 100 had stopped watching completely; three months on, 35 in 100. No count was given for men without therapy."
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "porn",
+  "checked": [
+    {
+      "index": 0,
+      "where": "numbers",
+      "label": "138 vs 42",
+      "verdict": "fix",
+      "problems": [
+        "The headline is more hopeful than the source. The abstract gives the group sizes and the authors' names for them ('recovery' n = 138, 'chronic' n = 42, of 1,182) and nothing more. It does not say what 'recovery' means in scores, or that the 138 'no longer had it' in 2022. Latent profile groups are drawn from average score patterns, so a 'recovery' member may have scored lower without dropping below a problem line. The full text is CC-BY (hybrid open access), but ScienceDirect served a captcha to every route tried. The Elsevier text-mining API returned metadata only. Until someone reads the methods, the card must use the authors' label, not 'no longer had it'.",
+        "basis.n says the 180 'scored as having a probable problem at the first survey'. The abstract does not say this. It is inferred from the group names. Others in 'no disorder' could also have scored above a cut-off in 2018.",
+        "basis.who and weak say 'men and women'. The abstract says only 'community sample of Jewish population in Israel, aged 18-70' and gives no sex split. This is probably true but unchecked.",
+        "basis.design says 'surveyed twice'. The cohort was surveyed four times (2018, 2022, then two waves during the war, 'Using T3 and T4'). The profiles come from the first two.",
+        "Rule 9 build lint: weak contains 'fetched' ('Only the abstract could be fetched'), which is in the banned research-note list for reader text.",
+        "Kind hope-free-now asks for people 'already free, counted, not projected'. A model-drawn 'recovery' class is not a head count of people below a problem line. This is a weak hero; the caveat and weak lines must say so.",
+        "Holds: the quote is word for word in the abstract (17 words). 1,182 = 952+138+50+42. Surveys 2018 and 2022 hold, and so does the April 2026 issue (online 2025). The figures match. Severity 'disorder' (probable CSBD/PPU by self-report screen) is plausible but cut-offs are unchecked. The mirror is 13 words, in the second person, and not a screening line. The headline is 22 words with 2 digit figures ('four years later' adds a third number in words)."
+      ],
+      "fix": {
+        "headline": "Of Israeli adults surveyed twice, 138 fit the pattern the authors call 'recovery' from a porn or sex problem; 42 fit 'chronic'.",
+        "counted": "adults whose questionnaire answers showed a probable porn or sex problem",
+        "basis.design": "community cohort surveyed four times; people were sorted into groups by a statistical model (latent profile analysis) using the 2018 and 2022 surveys",
+        "basis.who": "Jewish adults in Israel aged 18 to 70, from a community sample",
+        "basis.n": "180 in the two groups whose names say the problem was there in 2018: 138 'recovery' and 42 'chronic' (of 1,182 sorted into four groups)",
+        "caveat": "Questionnaire scores, not a doctor's diagnosis, and porn and sex problems are counted together. 'Recovery' is the authors' name for a group a model drew; it does not show that each of the 138 dropped below a problem line. It says nothing about how they changed or whether it lasted after 2022.",
+        "weak": "How the model drew the 'recovery' group is unchecked, so it may not mean each person got free; how many were men is unknown; porn and sex problems are mixed."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41435755%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 2,
+      "where": "numbers",
+      "label": "55 of 104",
+      "verdict": "ok",
+      "problems": [
+        "No problem found. The quote is word for word: 'More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt.' (17 words). N = 104 men, age range 18 to 63. 80 reported being addicted to pornography. Journals were picked from 2016 to 2018, and each had to last at least seven days but no longer than 12 months. At least 86.5% also meant to stop masturbating. The median inferred attempt was 36.5 days. The source supports the caveat that members may have stopped posting. The cite (Arch Sex Behav 50:711-728, 2021) holds.",
+        "Minor, no change needed: the paper does not itself call Reboot Nation 'English-language'. The journals it quotes are in English. Severity 'self-hooked' fits (77% said they were addicted; the 55 are counted from all 104), and the kind how-slips allows it. The headline is 17 words with 2 figures, and the mirror is 11 words in the second person."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7889567/fullTextXML",
+      "quoteFound": true
+    },
+    {
+      "index": 4,
+      "where": "numbers",
+      "label": "7 days",
+      "verdict": "fix",
+      "problems": [
+        "Severity 'heavy' does not match who was counted. The card would show 'heavy users, not checked for addiction', but they were checked. The PPCS was given, and 84.7% scored below the clinical cutoff of 76. Most were not heavy users: 61.4% used 3 or 4 times a week and 19.3% daily. The authors call it a 'non-clinical sample' and speak of 'the average regular pornography user'. That is the 'users' tag (ordinary users, not addicts). Note: kind after-first-month allows only dependent, treatment, heavy and disorder. With the correct tag, the build will refuse this number in that kind, so it needs another kind or must be held back. Holding it back is the writer's or owner's call, not a silent drop.",
+        "The headline reads as being about the reader (a hooked man, rule 2) once it sits under the mirror 'You fear the first week off will be unbearable.' The one subgroup like him, high problem scores plus daily use, felt more craving when abstaining (exploratory). The headline should name that most were not hooked.",
+        "Caveat can add from the source: 89.8% had no wish to quit. The 'high problem' level in the extra check (+1 SD, M = 72.82) was still below the clinical cutoff.",
+        "Holds: the quote is word for word (16 words). n = 176 (86 abstain, 90 control) holds, as do 64.2% female, Mage 21.38, psychology undergraduates in Malaysia, and Arch Sex Behav 52:1819-1840 (2023). The measures were taken each night for 7 days and controlled for baseline. There were 'no significant main effects of group' on craving, positive and negative affect, or withdrawal. 45.4% of the abstinence group used porn anyway. The headline is 22 words with 1 figure."
+      ],
+      "fix": {
+        "severity": "users",
+        "headline": "Porn users, most not hooked, asked to stop for 7 days felt no more withdrawal or craving than those who kept watching.",
+        "caveat": "Most were not hooked: 85% scored below the problem cut-off, 9 in 10 had no wish to quit, and 45% of the stop group watched anyway. In an extra check, daily users with the highest problem scores who stopped felt more craving, so this does not show that hooked daily users get no withdrawal. Nothing was measured after day 7."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9847461/fullTextXML",
+      "quoteFound": true
+    }
+  ]
+}

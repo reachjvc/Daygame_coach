@@ -1,0 +1,113 @@
+{
+  "id": "nicotine",
+  "by": "independent source checker B, round 2 (second half of the 27 changed items in file order: numbers[14], beliefs[0-4], plan[1-4], windows[0-3]; numbers[14] may overlap with checker A)",
+  "on": "2026-11-05",
+  "checked": [
+    {
+      "where": "numbers", "index": 14, "label": "90 in 100 stayed off each later year (after-lasting)",
+      "verdict": "fix",
+      "problems": [
+        "Headline 'about 90 in 100 quitters stayed off each following year, in trials followed up to 6 years' can be read on a first pass as 90 in 100 staying off through all 6 years. The source gives a yearly rate (10%/yr) and the authors' own sum: 'after 5 yrs, 41% of 1 yr quitters would have relapsed'. In the longest trial (Blondal 1999, 6 years), 13 of 32 went back. The caveat corrects it, but the headline alone reads more hopeful than the source (rule 12: understood on the first read). The previous round flagged the same reading for 'the other 90 stayed off'."
+      ],
+      "fix": {
+        "headline": "After a year off, about 90 in 100 quitters in trials stayed off in any one later year. The losses add up."
+      },
+      "notes": "Refetched PubMed 18706769 and PMC2577779 (full text). Quote word for word in the manuscript abstract, 27 words. Confirmed: 8 NRT trials (gum, patch, nasal spray); 'did not continue treatment after 1 yr'; '4–33/study group and 31–96/study'; Tonnesen 1988 dropped as an outlier; CO check in all but Blondal 1989; follow-ups 2–6 yrs; trials 1988–2003; NHANES Follow-up 1982–1984 in the 1990 Surgeon General's report: 14% and 10% in years 2 and 3, then '< 5%'; 41% after 5 yrs; CI 5–17%. 90 is the plain complement of 10, and 'about' is present. Countries are not stated in the review. Fixed headline is 21 words, one figure. Mirror 8 words, second person. Tag 'treatment' fits."
+    },
+    {
+      "where": "beliefs", "index": 0, "label": "I’ve smoked too long. It’s too late.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PMC3227547 (full text). 'Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine' is word for word (11 words). Limitations: 'institutionalized individuals or those who experienced fatal or severe consequences due to their SUD may have not been sampled, leading to overestimation'. Target population was the 'civilian non-institutionalized population', so 'people in prison or hospital weren’t asked' is a fair plain rendering. The proof gives one of the source's reasons (self-report overreport is another), and it points lower, not higher. Says 'projected' (rule 10). 6,937 dependent; Table 3 'Nicotine remission (N=1,300)'. Proof 33 words. Tag dependent. Test is safe and covers nicotine only."
+    },
+    {
+      "where": "beliefs", "index": 1, "label": "Quitting will be hell. I can’t handle the withdrawal.",
+      "verdict": "fix",
+      "problems": [
+        "'Craving wasn’t tracked.' claims more than the source shows. The abstract lists the symptoms this paper analysed, not everything the diaries recorded. The same Pittsburgh team, with the same 214 recent quitters and 4–5 computer prompts a day, reported their urge ratings in a separate paper (Shiffman et al. 1997, J Abnorm Psychol 106:104-16, PMID 9103722: 'Smokers who recently quit (N = 214) monitored smoking urges for up to 26 days after quitting'). Craving was very likely tracked, just not reported in this paper."
+      ],
+      "fix": {
+        "proof": "In 214 smokers who quit in a clinic group, the average score for every symptom tracked was back to its level before quitting within 10 days. This paper didn’t report on craving.",
+        "refs[0].note": "214 cigarette smokers in a clinic-based behavioural group cessation programme who quit for at least 24 hours; electronic diary for up to 21 days. Symptoms analysed: negative affect, arousal, attention, restlessness, sleep, cognitive performance; craving is not reported here (the same team reported the 214’s urges separately: Shiffman 1997, PMID 9103722). Group averages, so some people take longer."
+      },
+      "notes": "Refetched PubMed 17156182: 214 smokers, clinic-based behavioural group programme, quit for at least 24 hours, ED about 5 prompts a day, up to 21 days. 'All symptoms returned to baseline levels within 10 days of quitting.' is word for word (11 words). 'Average' and 'its level before quitting' match 'baseline'. Fixed proof is 32 words. Tag 'treatment' fits. Test (no nicotine until noon, time the urge) is safe and covers nicotine only. alsoRef Hughes 2007 quote is word for word (PubMed 17365764)."
+    },
+    {
+      "where": "beliefs", "index": 2, "label": "A cigarette is the only thing that calms me down.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 20528815. 469 smokers in hospital after MI or CAB surgery who wanted to stop; 194 (41%) abstinent at 1 year, cotinine-checked. The quote is word for word (12 words). 'Heavily hooked' is a plain rendering of the authors' 'highly dependent smokers'. 'Stress fell more ... than in those who kept smoking' matches 'significantly larger decrease in perceived stress than continuing smokers', and it is not more hopeful. Proof 27 words. Test (walk ten minutes instead, rate stress) is safe."
+    },
+    {
+      "where": "beliefs", "index": 3, "label": "Just one won’t hurt. I’m still quit.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 8301790. 'Among active nicotine patch patients who smoked at all during week 2 after quitting, 83% and 97% (studies 1 and 2, respectively) were smoking at 6-month follow-up.' is word for word (27 words). 83 in 100 is study 1's own figure (study 1: 88 subjects, 22-mg patch for 8 weeks, group counselling), with no rounding. 'On the patch' = active patch. Using the lower figure weakens the proof rather than inflating it. Tag 'treatment' meets rule 4 for a moderation belief. Proof 27 words. Test is safe. alsoRef Shadel 2011 is unchanged."
+    },
+    {
+      "where": "beliefs", "index": 4, "label": "Vapes and pouches are basically harmless.",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Only the refs moved. Refetched PubMed 25332459 and PMC4838001: 3,609 exclusive current e-cig users and ex-smokers (quit 30+ days); 'first posted on the Internet in December 2012'; n = 3,446 for liquid strength; 'nonrepresentative', 'likely “pro-e-cig” sample', recruited on specialist e-cig websites; 14.5 vs 8.1. Quote is word for word (18 words). Lunell 2020 (PubMed 32319528): the alsoRef quote is word for word; one author is at Swedish Match; the abstract gives no participant numbers. Proof 26 words."
+    },
+    {
+      "where": "plan", "index": 1, "label": "Step 2: lab proof removed; coffee action changed",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "No proof is left, so nothing to source. The removed Bedi proof is kept in 'was' and notUsed.proofs. The new coffee action ('keep the change past the first month') is advice and makes no evidence claim. Six actions, plain words, nicotine only, safe."
+    },
+    {
+      "where": "plan", "index": 2, "label": "Step 3 proof: most relapses in the first 8 days",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 14678060. The quote is word for word (24 words). 'Smokers quitting without help' = self-quitters and no-treatment control groups. 'Not checked for addiction' and 'older studies' match the how-slips card (studies before 2004; caveat 'the studies are old'). Proof 20 words. The action change to 'first two weeks' is safe and fits the source's 'first week' focus."
+    },
+    {
+      "where": "plan", "index": 3, "label": "Step 4 proof: identity, 71 vs 8 in 100",
+      "verdict": "fix",
+      "problems": [
+        "71 in 100 is 71.4% rounded, so it needs 'about' (the rule's 'plain arithmetic ... with about'; the same fix was made on number 13's 81.25).",
+        "'Smoked again within a year' is not what was measured. At the 2014 follow-up people were asked 'Are you back smoking cigarettes or are you still stopped?', so the figure counts people back smoking at follow-up, not anyone who had a puff during the year."
+      ],
+      "fix": {
+        "proof.text": "In ex-smokers not checked for addiction, about 71 in 100 who still called themselves ‘a smoker trying to quit’ were back smoking a year later, against 8 in 100 who called themselves non-smokers. The first group was only 14 people."
+      },
+      "notes": "Refetched PMC7572756 (full text). Results text: 'Participants who described themselves as ‘A smoker trying to quit’ at baseline (Wave 9) had the highest rates of relapse (71.4%) at follow-up survey (Wave 10), followed by ... non-smokers (8%)'. The quote is word for word with one ellipsis (26 words). Table 2: trying to quit 14 (71.4), non-smoker 150 (8.0), ex-smoker 251 (7.2), chosen to no longer smoke 126 (12.4). Retained sample 544 (Australia 304, UK 240). Limitations call the first group small. Fixed proof is 40 words, exactly at the limit."
+    },
+    {
+      "where": "plan", "index": 4, "label": "Step 5: varenicline proof, vape action, money doRef",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PMC10169257. Summary of findings table 1, varenicline vs placebo, abstinence at longest follow-up (6+ months): 99 per 1000 vs 230 per 1000 (213 to 249), RR 2.32 (2.15 to 2.51), 17,395 people (41 studies), high certainty. The quote is that table row with cells joined by ' | ' (all words and figures as printed, 27 words). 23 in 100 is exact; 'about 10' is 99/1000 rounded. 'Smokers who wanted to stop': the review says 'Participants in the majority of trials were adult smokers, willing to make a quit attempt.' Proof 32 words. Notley 2025 (PubMed 39799985) doRef quote is word for word (22 words). 'Rewards were cash payments, vouchers, or the return of money deposited by those taking part.' is in the plain-language summary. The note honestly says a friend holding the money was not tested. The new vape action makes no evidence claim and is safe. Action 5 ('two small trials') is unchanged and carries no ref; it was not checked here."
+    },
+    {
+      "where": "windows", "index": 0, "label": "Angry, anxious, low, impatient, restless, can’t focus, poor sleep",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 17365764: 'Anger, anxiety, depression, difficulty concentrating, impatience, insomnia, and restlessness are valid withdrawal symptoms that peak within the first week and last 2-4 weeks.' All 7 are now in the label in plain words (depression = low). 'Worst in week 1, gone by week 2–4' matches. pk 72 h is inside week 1 and e 672 h = 4 weeks. Withdrawal is drawn as a range (rule 19)."
+    },
+    {
+      "where": "windows", "index": 1, "label": "Lab test: smoking cues pulled harder at day 35 than day 7",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PMC3027849 (full text). Day 35 vs day 7 differed on TCQ-SF Total only ('Although groups did not differ on QSU-B Factor 1'; the Factor 2 trend was for neutral cues), so 'one of three craving scales' is right. 'Participants’ ratings of craving before cue presentations decreased with abstinence' and 'daily withdrawal symptoms progressively decreased with abstinence' back 'Craving without cues, and withdrawal, fell'. Day 35 was the last session. Trigger row with no peak and no fall; the label says it is a lab test (rule 19). Both note quotes are word for word. Span 168–840 h = days 7–35."
+    },
+    {
+      "where": "windows", "index": 2, "label": "Weight goes up, most of it by month 3",
+      "verdict": "fix",
+      "problems": [
+        "The source says 'about 16% of quitters losing weight', and the figure was worked out from means and SDs, not counted. '16 in 100' drops the source's own 'about' and reads more exact than the source."
+      ],
+      "fix": {
+        "when": "4–5 kg by a year on average; about 16 in 100 quitters lose weight. Measured in smokers."
+      },
+      "notes": "Refetched PubMed 22782848. 'Mean increase of 4-5 kg in body weight after 12 months of abstinence, and most weight gain occurs within three months' matches the label and 'when'. The note quote is word for word. The 16% is for untreated quitters at 12 months, calculated from means and weighted SDs."
+    },
+    {
+      "where": "windows", "index": 3, "label": "An odd urge, years later",
+      "verdict": "ok",
+      "problems": [],
+      "notes": "Refetched PubMed 20164170 and PMC2902924 (full text). 403 former smokers from a Zoomerang consumer panel; 'Almost all (95%) stopped 1–5 years ago'; 59% had a desire in the last year. Clinically significant = a strong desire at least monthly, 11% (n = 45); the authors say 'only 1 in 10'. Prolonged cravers 'used to smoke more (89% vs. 64% smoked more than a pack per day)', which backs 'more often heavy smokers'. 'None of those abstinent for 6–10 years (n = 22) reported clinically significant cravings versus 12% of those abstinent for 1–5 years (n = 381, p = .07)': both note quotes are word for word. Trigger row with no peak and no fall. Optional: the 'none of 22' contrast was not significant (p = .07), and the row could say 'a small group'."
+    }
+  ]
+}

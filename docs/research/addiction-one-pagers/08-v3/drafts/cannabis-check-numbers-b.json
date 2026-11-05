@@ -1,0 +1,105 @@
+{
+  "id": "cannabis",
+  "checked": [
+    {
+      "index": 1,
+      "where": "numbers",
+      "label": "97%",
+      "verdict": "ok",
+      "problems": [
+        "No change needed. 97.2% is in the abstract and in Results ('Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine, 90.6% for alcohol, 97.2% for cannabis, and 99.2% for cocaine'). The headline says 'projected' (rule 10). It has 20 words and 1 figure.",
+        "The n of 530 is right: the survival estimate is over the 530 with lifetime DSM-IV cannabis dependence. The design (face-to-face AUDADIS interviews, 2001-2002, n=43,093) and the remission definition ('finally stopped having any of these experiences ... never started happening again') are correct. 66.2% at 10 years is in Results.",
+        "The caveat is backed by the Discussion. Institutionalized people may not have been sampled, 'leading to overestimation'. Social desirability can lead to 'overreport of remission'. The adjusted HR for men is 0.64 (0.48-0.86, Table 4). Table 3 gives cannabis remission N=344.",
+        "The weak note is right: the ethnic-group figures are 92.2%, 95.6%, 91.9%, 85.5% and 81.6%, all below 97.2%. The quote is word for word, with an ellipsis that cuts out the other drugs (rule 13). The mirror has 10 words, second person, and is not a screening line."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC3227547/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 3,
+      "where": "numbers",
+      "label": "Age 29",
+      "verdict": "ok",
+      "problems": [
+        "No change needed. The age is in Results, word for word: 'The average age at problem resolution was also significantly younger for CAN (M = 28.87 years; 99% CI: 26.46, 31.29)'. It is also in Table 1b ('Age when substance use problem resolved' 28.87 (0.94)). The headline has 14 words and 1 figure.",
+        "The n of 217 is the Table 1 column header 'Cannabis (12.6%, n = 217)', and the footnote says 'Displaying weighted counts'. The design is the NRS, a GfK KnowledgePanel web survey, July-August 2016, final weighted N = 2002. The 'resolved' tag fits the self-defined screener.",
+        "Weekly use at 16.89 and an 11.74-year 'addiction career' are in Results. 'Many also had a past problem with another substance' fits Table 1b (48.44% alcohol problems, 33.34% other drugs).",
+        "Note, no field change: the caveat's 'about 1 in 6 had ever been diagnosed' is not in this paper. It comes from the same survey in Kelly 2017 (PMC6076174, Table 1: ever diagnosed with an alcohol/substance use disorder 17.0%). It holds for the whole NRS sample."
+      ],
+      "fix": {},
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC5992615/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 5,
+      "where": "numbers",
+      "label": "2 tries",
+      "verdict": "fix",
+      "problems": [
+        "The figure holds. Table 1 row 'Cannabis 4.62 (8.41) 2 (1, 4) 0, 100' gives a median of 2 and an IQR of 1-4, so half needed 2 or fewer. The headline has 13 words and 1 figure. The quote is header plus row from the table, word for word with an ellipsis. Mean 4.62 makes 'about 5' right, and the authors recommend the median.",
+        "basis.measured says 'including people who never needed a serious try'. That is more hopeful than the source. Results say about 13% 'reported not making any serious recovery attempts'. The Discussion says they may have misread the question and 'did not count the current attempt'. The card's own caveat says the same, so 'never needed' contradicts it.",
+        "Note, no field change: Kelly 2019 does not give a cannabis n. The 217 comes from Kelly 2018 Table 1, the same survey and the same group (its CAN 'Attempts' mean is also 4.62). The 'about 1 in 6 diagnosed' line comes from Kelly 2017 Table 1 (17.0%), also the same survey."
+      ],
+      "fix": {
+        "basis.measured": "Number of serious tries before the problem was resolved, as people remembered it, counting everyone, including people who reported no serious try at all. The middle half needed 1 to 4."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6602820/unicode",
+      "quoteFound": true
+    },
+    {
+      "index": 7,
+      "where": "numbers",
+      "label": "71%",
+      "verdict": "fix",
+      "problems": [
+        "The figure, n=82, 'two weeks', '6 months', '73 days' and '71% of those who lapsed, relapsed' all match the abstract. The quote is word for word (23 words). The 'treatment' tag fits outpatients treated for marijuana dependence. 'Vermont' rests on the first author's affiliation (Department of Psychiatry, University of Vermont, Burlington), because the abstract does not name a site.",
+        "The headline has three figures: 'two weeks', '71%' and '6 months'. The build regex counts only digits, so it passes, but rule 12 allows 2. 'Two weeks' already sits in basis.who and counted, so it can leave the headline.",
+        "The caveat 'A slip is common, not the end of a try' is more hopeful than the source. The abstract stresses that slips mostly led further: '71% of those who lapsed, relapsed to heavier use' and 'Early lapses were more strongly associated with consequent relapse'."
+      ],
+      "fix": {
+        "headline": "Of people in treatment for weed who had stopped, 71% slipped at least once within 6 months.",
+        "caveat": "A slip is common, but it often led further: 71% of those who slipped went back to heavier use (4+ days in a week), and early slips led there more often."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:14629990%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 9,
+      "where": "numbers",
+      "label": "0 pills",
+      "verdict": "fix",
+      "problems": [
+        "The quote, 37 RCTs, 3,201 participants, the countries (USA 29, Australia 4, Israel 2, Canada 1, UK 1), the May 2024 search, 'mainly recruiting adults' with most participants male in 32 studies, and the eligibility ('people diagnosed as cannabis dependent or who are likely to be dependent') all match the abstract. The 'dependent' tag fits.",
+        "The figures behind 'no better' match: THC preparations RR 1.04 (0.71-1.52; 4 studies, 290 participants) and N-acetylcysteine RR 1.17 (0.73-1.88; 2 studies, 270 participants), both on abstinence at end of treatment.",
+        "The headline says 'THC-based pills'. The abstract says 'THC preparations' and does not say they were pills; THC medicines also come as a mouth spray. 'Dummy pill' has the same problem, since the comparison is placebo. 'NAC' is not explained to a reader (rule 8). The fixed headline has 22 words (the limit) and 0 figures.",
+        "basis.measured and the caveat say 'dummy pill' or 'pills' for the same reason. Replaced with wording the abstract supports."
+      ],
+      "fix": {
+        "headline": "No medicine is approved to treat weed addiction; in trials, THC medicines and the supplement NAC did no better than dummy treatment.",
+        "basis.measured": "Being off weed at the end of treatment, medicine against a dummy treatment (placebo). CBD and anti-seizure medicines had too little testing to tell.",
+        "caveat": "Not proof that medicines can't help: most were tested in few, small trials, and the review calls the evidence uncertain. Because no medicine beat a dummy treatment, there is no '1 in N' figure yet."
+      },
+      "fetchedUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:41025421%20AND%20SRC:MED&format=json&resultType=core",
+      "quoteFound": true
+    },
+    {
+      "index": 11,
+      "where": "numbers",
+      "label": "Week 1",
+      "verdict": "fix",
+      "problems": [
+        "The figure, design, n (62 vs 26, 55 of 62 with 30-day confirmed abstinence), ages 16-25, recruitment (community and a public high school in a northwest Boston suburb), enrolment July 2015 to December 2016, weekly CANTAB tests, 'attention did not' and the academic-outcome caveat all match the abstract and the PMC6587572 full text. The MJ-Abst group used on 54.4 of the past 90 days (Table 1), so 'about 55' is right.",
+        "The quote matches the PubMed abstract word for word, with an ellipsis for 'that was consistent across 4 weeks of abstinence, with no time-by-abstinence interaction, and was'.",
+        "counted, caveat and weak say 'not checked for addiction'. That is wrong: Methods say 'Cannabis and alcohol dependence were assessed at baseline with the Cannabis Use Disorder Identification Test – Revised (CUDIT-R)' (Table 1 mean 14.4 in the abstinence group). Nobody was diagnosed and no share hooked is reported, so the 'heavy' tag can stay, worded as 'not diagnosed'."
+      ],
+      "fix": {
+        "counted": "regular weed users aged 16 to 25, not diagnosed as hooked",
+        "caveat": "Memory improved; attention did not. Young users only. A weed-problem questionnaire was taken at the start, but nobody was diagnosed and the study does not say how many were hooked. It could not say whether school or work results improved.",
+        "weak": "A small trial (62 who stopped) of young users who were not diagnosed as hooked."
+      },
+      "fetchedUrl": "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC6587572/unicode",
+      "quoteFound": true
+    }
+  ]
+}
