@@ -112,6 +112,21 @@ export function presetRange(preset: DatePreset, todayKey: IsoDate, weekStart: We
   }
 }
 
+/**
+ * The preset a range is, when it is one: what the range button names it, as
+ * Toggl Track's says "This week" rather than two dates (D-PC-REPORTS, Phase 6
+ * of Plans/toggl-parity.md). The order is `DATE_PRESETS`'s, so a range that is
+ * two presets at once (this week, early in a year) gets the shorter name.
+ */
+export function matchingPreset(range: DateRange, todayKey: IsoDate, weekStart: WeekStart): DatePreset | null {
+  const presets: DatePreset[] = ["today", "yesterday", "this_week", "last_week", "this_month", "last_month", "this_year", "last_year"]
+  for (const preset of presets) {
+    const candidate = presetRange(preset, todayKey, weekStart)
+    if (candidate.start === range.start && candidate.end === range.end) return preset
+  }
+  return null
+}
+
 export function presetLabel(preset: DatePreset): string {
   return preset.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
 }

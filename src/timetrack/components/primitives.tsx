@@ -758,16 +758,21 @@ export function CheckOption({
   onClick,
   color,
   meta,
+  checkbox,
 }: {
   label: string
   checked: boolean
   onClick: () => void
   color?: string | null
   meta?: string
+  /** said as a checkbox, ticked or not (the tag picker's rows, as in Toggl Track) */
+  checkbox?: boolean
 }) {
   return (
     <button
       type="button"
+      role={checkbox ? "checkbox" : undefined}
+      aria-checked={checkbox ? checked : undefined}
       onClick={onClick}
       className={cn("flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-secondary/60", touchRow)}
     >

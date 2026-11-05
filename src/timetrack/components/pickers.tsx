@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { IconAdd, IconDown, IconMoney, IconTag } from "../icons"
-import { activeToken, clientById, projectsForDescription, removeToken, searchProjects } from "../timetrackService"
+import { projectGroups } from "../pickerService"
+import { activeToken, projectsForDescription, removeToken, searchProjects } from "../timetrackService"
 import type { Id, TimetrackState } from "../types"
 import {
   CheckOption,
@@ -61,18 +62,21 @@ export function ProjectPicker({
   const [query, setQuery] = useState(initialQuery)
   const project = state.projects.find((p) => p.id === projectId) ?? null
   const task = state.tasks.find((t) => t.id === taskId) ?? null
+  const search = useRef<HTMLInputElement | null>(null)
 
   /**
-   * ONE FLAT LIST, MOST RECENTLY USED FIRST.
+   * MOST RECENTLY USED FIRST, UNDER EACH CLIENT, AS TOGGL TRACK GROUPS THEM
+   * (D-PICKERS, Phase 6 of Plans/toggl-parity.md).
    *
-   * It used to be grouped under client headings in alphabetical order, which
-   * asked you to know where your own project sat in someone else's ordering —
-   * and spent a line of a phone screen on a heading reading "No client", which
-   * is what every project here has. The client is still shown, on the row it
-   * belongs to. Matching and ordering both come from `searchProjects`, so this
-   * list and the description field's autocomplete cannot disagree.
+   * It was one flat list, because client headings in alphabetical order had
+   * spent a line of a phone screen on "No client" over every project. Now the
+   * projects with no client come first with no heading at all, so that cost is
+   * gone, and each client heads its own projects, as in Toggl [W25 11:07].
+   * Matching and ordering inside a group still come from `searchProjects`, so
+   * this list and the description field's autocomplete cannot disagree.
    */
   const visible = useMemo(() => searchProjects(state, query), [state, query])
+  const groups = useMemo(() => projectGroups(state, visible), [state, visible])
 
   return (
     <Dropdown
@@ -105,19 +109,26 @@ export function ProjectPicker({
         <div>
           <div className="border-b border-border p-2">
             <Input
+              ref={search}
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              // "add" stays the headline: creating is the primary act here, and
-              // matching a task or a client name is forgiveness, not a feature
-              // to advertise in eleven characters of placeholder.
-              placeholder="Search or add a project…"
+              // Ctrl+Enter creates what was typed, as in Toggl Track (D-PICKERS)
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey) || !onCreateProject || !query.trim()) return
+                event.preventDefault()
+                onCreateProject(query.trim())
+                close()
+              }}
+              // Toggl Track's words: a task or a client name finds the project too (`projectMatches`)
+              placeholder="Search by project, task or client"
               className="h-11 sm:h-8"
             />
           </div>
           <div className="max-h-72 overflow-y-auto py-1">
             <button
               type="button"
+              data-picker-line
               onClick={() => {
                 onChange(null, null)
                 close()
@@ -125,15 +136,26 @@ export function ProjectPicker({
               className={cn("flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-secondary/60", touchRow)}
             >
               <ColorDot color={null} />
-              No project
+              No Project
             </button>
-            {visible.map((candidate) => {
+            {groups.map((group) => (
+              <div key={group.client?.id ?? "no-client"}>
+                {group.client && (
+                  <p
+                    data-picker-line
+                    data-picker-heading
+                    className="truncate px-3 pb-0.5 pt-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
+                    {group.client.name}
+                  </p>
+                )}
+            {group.projects.map((candidate) => {
               const tasks = state.tasks.filter((t) => t.projectId === candidate.id && t.active)
-              const client = clientById(state, candidate.clientId)
               return (
                 <div key={candidate.id}>
                   <button
                     type="button"
+                    data-picker-line
                     onClick={() => {
                       onChange(candidate.id, null)
                       close()
@@ -146,7 +168,6 @@ export function ProjectPicker({
                   >
                     <ColorDot color={candidate.color} />
                     <span className="flex-1 truncate">{candidate.name}</span>
-                    {client && <span className="shrink-0 truncate text-xs text-muted-foreground">{client.name}</span>}
                     {candidate.billable && <IconMoney className="size-3 text-muted-foreground" />}
                   </button>
                   {tasks.map((candidateTask) => (
@@ -168,25 +189,34 @@ export function ProjectPicker({
                 </div>
               )
             })}
+              </div>
+            ))}
             {visible.length === 0 && (
               <p className="px-3 py-3 text-xs text-muted-foreground">
                 {state.projects.length === 0 ? "No projects yet — type a name to add one" : `No project matches “${query}”`}
               </p>
             )}
           </div>
-          {onCreateProject && query.trim() && (
-            <div className="border-t border-border p-2">
+          {/* pinned at the bottom, typed or not, as in Toggl Track (D-PICKERS) */}
+          {onCreateProject && (
+            <div data-picker-pinned className="border-t border-border p-2">
               <Button
                 size="sm"
                 variant="outline"
                 className="w-full"
+                title="Ctrl+Enter"
                 onClick={() => {
+                  // nothing typed yet: the name goes in the box above
+                  if (!query.trim()) {
+                    search.current?.focus()
+                    return
+                  }
                   // creating and selecting happen in one state update upstream
                   onCreateProject(query.trim())
                   close()
                 }}
               >
-                <IconAdd className="size-3.5" /> Create “{query.trim()}”
+                <IconAdd className="size-3.5" /> {query.trim() ? `Create “${query.trim()}”` : "Create a new project"}
               </Button>
             </div>
           )}
@@ -226,7 +256,9 @@ export function TagPicker({
   renderTrigger?: () => ReactNode
 }) {
   const [query, setQuery] = useState(initialQuery)
+  const search = useRef<HTMLInputElement | null>(null)
   const selected = state.tags.filter((t) => tagIds.includes(t.id))
+  const isNew = query.trim() !== "" && !state.tags.some((t) => t.name.toLowerCase() === query.trim().toLowerCase())
   const visible = state.tags.filter((t) => !query.trim() || t.name.toLowerCase().includes(query.trim().toLowerCase()))
 
   return (
@@ -258,10 +290,19 @@ export function TagPicker({
         <div>
           <div className="border-b border-border p-2">
             <Input
+              ref={search}
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search or add a tag…"
+              // Ctrl+Enter creates what was typed, as in Toggl Track (D-PICKERS)
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey) || !onCreateTag || !isNew) return
+                event.preventDefault()
+                onCreateTag(query.trim())
+                setQuery("")
+                close()
+              }}
+              placeholder="Add/filter tags"
               className="h-11 sm:h-8"
             />
           </div>
@@ -269,6 +310,7 @@ export function TagPicker({
             {visible.map((tag) => (
               <CheckOption
                 key={tag.id}
+                checkbox
                 label={tag.name}
                 checked={tagIds.includes(tag.id)}
                 onClick={() =>
@@ -276,25 +318,37 @@ export function TagPicker({
                 }
               />
             ))}
-            {visible.length === 0 && (
-              <p className="px-3 py-3 text-xs text-muted-foreground">
-                {state.tags.length === 0 ? "No tags yet — type a name to add one" : "No tag matches"}
-              </p>
-            )}
+            {visible.length === 0 &&
+              (state.tags.length === 0 ? (
+                // Toggl Track's words for an empty list [W25 11:28]
+                <div className="px-3 py-3 text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground">There are no tags yet</p>
+                  <p className="mt-1">Start typing and press Ctrl+Enter to create a new tag.</p>
+                </div>
+              ) : (
+                <p className="px-3 py-3 text-xs text-muted-foreground">No tag matches</p>
+              ))}
           </div>
-          {onCreateTag && query.trim() && !state.tags.some((t) => t.name.toLowerCase() === query.trim().toLowerCase()) && (
-            <div className="border-t border-border p-2">
+          {/* pinned at the bottom, typed or not, as in Toggl Track (D-PICKERS) */}
+          {onCreateTag && (query.trim() === "" || isNew) && (
+            <div data-picker-pinned className="border-t border-border p-2">
               <Button
                 size="sm"
                 variant="outline"
                 className="w-full"
+                title="Ctrl+Enter"
                 onClick={() => {
+                  // nothing typed yet: the name goes in the box above
+                  if (!isNew) {
+                    search.current?.focus()
+                    return
+                  }
                   onCreateTag(query.trim())
                   setQuery("")
                   close()
                 }}
               >
-                <IconAdd className="size-3.5" /> Create “{query.trim()}”
+                <IconAdd className="size-3.5" /> {isNew ? `Create “${query.trim()}”` : "Create tag"}
               </Button>
             </div>
           )}

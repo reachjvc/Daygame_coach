@@ -450,7 +450,7 @@ test.describe('time tracker on a phone', () => {
 
     // a project to reach for later
     await bar.getByRole('button', { name: 'Project', exact: true }).click()
-    await page.getByPlaceholder(/Search or add a project/).fill('Writing')
+    await page.getByPlaceholder(/Search by project, task or client/).fill('Writing')
     await page.getByRole('button', { name: /Create/ }).click()
     await bar.getByRole('button', { name: 'Writing', exact: true }).click()
     await page.getByRole('button', { name: 'No project', exact: true }).click()
@@ -465,7 +465,7 @@ test.describe('time tracker on a phone', () => {
     await expect.poll(async () => (await runningEntry())?.description).toBe('morning pages')
 
     await bar.getByRole('button', { name: 'Project', exact: true }).click()
-    await page.getByPlaceholder(/Search or add a project/).fill('wri')
+    await page.getByPlaceholder(/Search by project, task or client/).fill('wri')
     await page.getByRole('button', { name: 'Writing', exact: true }).last().click()
     await expect.poll(async () => (await runningEntry())?.project).toBe('Writing')
 
@@ -495,7 +495,7 @@ test.describe('time tracker on a phone', () => {
     const bar = page.locator('main > div').first()
 
     await bar.getByRole('button', { name: 'Project', exact: true }).click()
-    await page.getByPlaceholder(/Search or add a project/).fill('Writing')
+    await page.getByPlaceholder(/Search by project, task or client/).fill('Writing')
     await page.getByRole('button', { name: /Create/ }).click()
     await bar.getByRole('button', { name: 'Writing', exact: true }).click()
     await page.getByRole('button', { name: 'No project', exact: true }).click()

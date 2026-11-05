@@ -78,7 +78,7 @@ const ICS_FIXTURE = [
 async function createProject(page: import('@playwright/test').Page, name: string) {
   const timerBar = page.locator('main > div').first()
   await timerBar.locator('button').first().click()
-  await page.getByPlaceholder('Search or add a project…').fill(name)
+  await page.getByPlaceholder('Search by project, task or client').fill(name)
   await page.getByRole('button', { name: `Create “${name}”` }).click()
   await expect(timerBar.getByRole('button', { name, exact: true })).toBeVisible()
 }
@@ -313,13 +313,13 @@ test.describe('Toggl-style time tracker', () => {
     const row = page.locator('ul.divide-y > li').first()
 
     await row.getByRole('button', { name: 'Tags' }).click()
-    await expect(page.getByText('No tags yet — type a name to add one')).toBeVisible()
-    await page.getByPlaceholder('Search or add a tag…').fill('focus')
+    await expect(page.getByText('There are no tags yet')).toBeVisible()
+    await page.getByPlaceholder('Add/filter tags').fill('focus')
     await page.getByRole('button', { name: /Create/ }).click()
     await expect(row).toContainText('focus')
 
     await row.getByRole('button', { name: 'Project' }).click()
-    await page.getByPlaceholder('Search or add a project…').fill('Book')
+    await page.getByPlaceholder('Search by project, task or client').fill('Book')
     await page.getByRole('button', { name: /Create/ }).click()
     await expect(row).toContainText('Book')
 
@@ -354,7 +354,7 @@ test.describe('Toggl-style time tracker', () => {
     // Creating one closes the panel, and the trigger is then named after it.
     for (const [trigger, name] of [['Tags', 'focus'], ['focus', 'deep work']]) {
       await rows.first().getByRole('button', { name: trigger }).click()
-      await page.getByPlaceholder('Search or add a tag…').fill(name)
+      await page.getByPlaceholder('Add/filter tags').fill(name)
       await page.getByRole('button', { name: `Create “${name}”` }).click()
       await expect(page.locator('[data-dropdown-panel]')).toHaveCount(0)
     }
@@ -393,7 +393,7 @@ test.describe('Toggl-style time tracker', () => {
     const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim())
 
     await row.getByRole('button', { name: 'Tags' }).click()
-    const search = page.getByPlaceholder('Search or add a tag…')
+    const search = page.getByPlaceholder('Add/filter tags')
     await expect(search).toBeFocused()
     await page.keyboard.type('focus')
     await expect(search).toHaveValue('focus')

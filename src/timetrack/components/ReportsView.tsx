@@ -49,6 +49,7 @@ import {
   encodeReportConfig,
   liveReport,
   metricValue,
+  matchingPreset,
   presetLabel,
   presetRange,
   summaryToCsv,
@@ -218,6 +219,7 @@ export function ReportsView({
             key={tab.id}
             type="button"
             onClick={() => update({ tab: tab.id })}
+            aria-current={config.tab === tab.id ? "page" : undefined}
             className={cn(
               "-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium sm:py-2",
               config.tab === tab.id
@@ -380,6 +382,8 @@ function FilterControls({
     onSave(name)
     closeRef.current()
   })
+  // the range named when it is a preset ("This week"), as Toggl Track's is
+  const named = matchingPreset(filters.range, todayKey, state.user.weekStart)
 
   return (
     <>
@@ -390,7 +394,11 @@ function FilterControls({
         width="w-72"
         trigger={() => (
           <span className="flex h-8 items-center gap-2 rounded-md border border-border px-3 text-sm">
-            {formatDate(filters.range.start, state.user.dateFormat)} – {formatDate(filters.range.end, state.user.dateFormat)}
+            {/* a preset is named, as Toggl Track's range says "This week" (D-PC-REPORTS); the dates stay beside it */}
+            {named && <span className="font-medium">{presetLabel(named)}</span>}
+            <span className={cn(named && "text-muted-foreground")}>
+              {formatDate(filters.range.start, state.user.dateFormat)} – {formatDate(filters.range.end, state.user.dateFormat)}
+            </span>
             <IconDown className="size-3 text-muted-foreground" />
           </span>
         )}

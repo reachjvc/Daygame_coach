@@ -113,7 +113,7 @@ describe("the timer bar, picking on a copy the PC has stopped meanwhile", () => 
     timerBarOn(drawn, setState)
 
     fireEvent.click(screen.getByRole("button", { name: "Project" }))
-    fireEvent.change(await screen.findByPlaceholderText(/Search or add a project/), { target: { value: "Writing" } })
+    fireEvent.change(await screen.findByPlaceholderText(/Search by project, task or client/), { target: { value: "Writing" } })
     fireEvent.click(await screen.findByRole("button", { name: /Create/ }))
 
     await waitFor(() =>

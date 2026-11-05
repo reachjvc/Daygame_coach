@@ -227,7 +227,7 @@ describe("a refused edit", () => {
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Project" }))
-    fireEvent.change(await screen.findByPlaceholderText(/Search or add a project/), {
+    fireEvent.change(await screen.findByPlaceholderText(/Search by project, task or client/), {
       target: { value: "Writing" },
     })
     fireEvent.click(await screen.findByRole("button", { name: /Create/ }))

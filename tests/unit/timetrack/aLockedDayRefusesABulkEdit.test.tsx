@@ -89,7 +89,7 @@ function Harness({ initial, latest, errors }: { initial: TimetrackState; latest:
 
 function pickProject(trigger: HTMLElement, name: RegExp) {
   fireEvent.click(trigger)
-  const search = screen.getByPlaceholderText("Search or add a project…")
+  const search = screen.getByPlaceholderText("Search by project, task or client")
   const panel = search.closest("[data-dropdown-panel]") as HTMLElement
   fireEvent.click(within(panel).getAllByRole("button", { name })[0])
 }

@@ -112,7 +112,7 @@ describe("creating an entity from an entry row keeps it and the link", () => {
       </StrictMode>,
     )
 
-    await createFromPicker(firstButton("Tags"), /Search or add a tag/, "focus")
+    await createFromPicker(firstButton("Tags"), /Add\/filter tags/, "focus")
 
     await waitFor(() => expect(latest.current.tags).toHaveLength(1))
     const tag = latest.current.tags[0]
@@ -129,7 +129,7 @@ describe("creating an entity from an entry row keeps it and the link", () => {
       </StrictMode>,
     )
 
-    await createFromPicker(firstButton("Project"), /Search or add a project/, "Book")
+    await createFromPicker(firstButton("Project"), /Search by project, task or client/, "Book")
 
     await waitFor(() => expect(latest.current.projects).toHaveLength(1))
     const project = latest.current.projects[0]
@@ -145,11 +145,11 @@ describe("creating an entity from an entry row keeps it and the link", () => {
       </StrictMode>,
     )
 
-    await createFromPicker(firstButton("Tags"), /Search or add a tag/, "focus")
+    await createFromPicker(firstButton("Tags"), /Add\/filter tags/, "focus")
     await waitFor(() => expect(latest.current.tags).toHaveLength(1))
     await createFromPicker(
       tagPickerShowing("focus"),
-      /Search or add a tag/,
+      /Add\/filter tags/,
       "deep work",
     )
 
@@ -171,7 +171,7 @@ describe("creating an entity from the timer bar keeps it", () => {
       </StrictMode>,
     )
 
-    await createFromPicker(firstButton("Tags"), /Search or add a tag/, "admin")
+    await createFromPicker(firstButton("Tags"), /Add\/filter tags/, "admin")
 
     await waitFor(() => expect(latest.current.tags).toHaveLength(1))
     expect(latest.current.tags[0].name).toBe("admin")
@@ -219,7 +219,7 @@ describe("the picker itself", () => {
     )
 
     fireEvent.click(firstButton("Tags"))
-    const search = await screen.findByPlaceholderText(/Search or add a tag/)
+    const search = await screen.findByPlaceholderText(/Add\/filter tags/)
     const panel = search.closest("[data-dropdown-panel]")
     expect(panel).toBeTruthy()
     expect(panel!.closest("section")).toBeNull()
@@ -240,7 +240,7 @@ describe("the picker itself", () => {
       </StrictMode>,
     )
 
-    const search = await screen.findByPlaceholderText(/Search or add a tag/)
+    const search = await screen.findByPlaceholderText(/Add\/filter tags/)
     const panel = search.closest("[data-dropdown-panel]") as HTMLElement
     expect(panel).toBeTruthy()
     expect(panel.style.opacity).not.toBe("0")
@@ -255,8 +255,8 @@ describe("the picker itself", () => {
     )
 
     fireEvent.click(firstButton("Tags"))
-    const panel = await screen.findByPlaceholderText(/Search or add a tag/)
-    expect(within(panel.closest("div")!.parentElement!).getByText(/No tags yet/)).toBeTruthy()
+    const panel = await screen.findByPlaceholderText(/Add\/filter tags/)
+    expect(within(panel.closest("div")!.parentElement!).getByText(/There are no tags yet/)).toBeTruthy()
   })
 })
 
