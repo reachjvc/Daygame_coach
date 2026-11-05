@@ -1921,8 +1921,25 @@ export function queueWebhook(
 // Entity CRUD
 // ---------------------------------------------------------------------------
 
+/**
+ * A NEW PROJECT'S COLOUR: THE ONE FEWEST LIVE PROJECTS HAVE, first in palette
+ * order when several tie.
+ *
+ * It was the palette entry at `projects.length`, which counted every project
+ * ever made and could land on one in use: "Guitar" came out in Gym's orange
+ * (Phase 6 findability, Plans/toggl-parity.md). Archived projects and
+ * templates are not counted; nobody is choosing between them day to day.
+ */
 export function nextProjectColor(state: TimetrackState): string {
-  return PROJECT_COLORS[state.projects.length % PROJECT_COLORS.length]
+  const uses = new Map<string, number>(PROJECT_COLORS.map((color) => [color, 0]))
+  for (const project of state.projects) {
+    if (!project.active || project.template) continue
+    const color = project.color.toLowerCase()
+    if (uses.has(color)) uses.set(color, uses.get(color)! + 1)
+  }
+  let best: string = PROJECT_COLORS[0]
+  for (const color of PROJECT_COLORS) if (uses.get(color)! < uses.get(best)!) best = color
+  return best
 }
 
 export function addClient(state: TimetrackState, name: string, nowIso: IsoDateTime): { state: TimetrackState; id: Id } {

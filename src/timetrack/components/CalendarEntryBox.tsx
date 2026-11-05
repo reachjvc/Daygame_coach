@@ -12,6 +12,8 @@
  *     ✕ or Escape and the block is gone again.
  *   - a click on a block opens the same box with ▶ (continue), Duplicate, ⋮
  *     and ✕ at the top, and Save at the bottom. What is typed waits for Save.
+ *     The running block's box says RUNNING and has ■ Stop instead of ▶ and
+ *     Duplicate [LIVE web-08].
  *
  * The times follow the sheet's rules for an unsaved pair (`typedIntoPair`): a
  * start keeps the end (the one rule, `startTypedInto`), an end is the first
@@ -30,7 +32,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { typedIntoPair, type TimePair } from "../drumService"
 import type { PushToast } from "../hooks/useTimetrack"
-import { IconClose, IconDuplicate, IconStart } from "../icons"
+import { IconClose, IconDuplicate, IconStart, IconStop } from "../icons"
 import { serverNowIso } from "../serverClock"
 import { withNeighbours } from "../timeFixService"
 import {
@@ -68,6 +70,7 @@ export function CalendarEntryBox({
   anchor,
   onClose,
   onContinue,
+  onStop,
   onDelete,
   onEditEntry,
   onGoToProject,
@@ -84,6 +87,8 @@ export function CalendarEntryBox({
   anchor: () => HTMLElement | null
   onClose: () => void
   onContinue: (entry: TimeEntry) => void
+  /** ■ on the running block: it stops now (the calendar says so, with Undo) */
+  onStop: (entry: TimeEntry) => void
   onDelete: (entry: TimeEntry) => void
   /** the full sheet, from ⋮ → Edit details… */
   onEditEntry: (entry: TimeEntry) => void
@@ -272,6 +277,20 @@ export function CalendarEntryBox({
       style={{ left: place.left, top: place.top, width: BOX_WIDTH }}
     >
       <div className="flex items-center gap-1">
+        {saved && running && (
+          <>
+            <span className="px-1 text-[11px] font-semibold uppercase tracking-wide text-primary">Running</span>
+            <button
+              type="button"
+              onClick={() => onStop(saved)}
+              aria-label="Stop time entry"
+              title="Stop time entry"
+              className={cn(touchTarget, "rounded-full text-destructive hover:bg-destructive/10")}
+            >
+              <IconStop className="size-4" />
+            </button>
+          </>
+        )}
         {saved && !running && (
           <button
             type="button"
@@ -283,7 +302,7 @@ export function CalendarEntryBox({
             <IconStart className="size-4" />
           </button>
         )}
-        {saved && (
+        {saved && !running && (
           <button
             type="button"
             onClick={() => {

@@ -33,6 +33,7 @@ import {
   deleteTask,
   secondsInRangeOf,
   liveEntries,
+  nextProjectColor,
   projectEstimateSeconds,
   projectTrackedRange,
   projectPeriodAt,
@@ -417,7 +418,8 @@ function ProjectDialog({
   const [draft, setDraft] = useState<Omit<Project, "id" | "workspaceId" | "at" | "createdAt">>(() => ({
     clientId: project?.clientId ?? null,
     name: project?.name ?? "",
-    color: project?.color ?? PROJECT_COLORS[state.projects.length % PROJECT_COLORS.length],
+    // the colour fewest live projects have, as every other way of making one picks it (`nextProjectColor`)
+    color: project?.color ?? nextProjectColor(state),
     active: project?.active ?? true,
     isPrivate: project?.isPrivate ?? true,
     billable: project?.billable ?? state.workspace.projectsBillableByDefault,

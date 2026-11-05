@@ -14,13 +14,14 @@
  * one its own style draws, so the calendar's arithmetic runs as in a browser.
  */
 
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { useState } from "react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { CalendarView } from "@/src/timetrack/components/CalendarView"
 import { CALENDAR_ZOOMS } from "@/src/timetrack/config"
 import { epochSeconds } from "@/src/timetrack/timetrackFormatService"
+import { startTimer } from "@/src/timetrack/timetrackService"
 import type { TimeEntry, TimetrackState } from "@/src/timetrack/types"
 
 import { baseState, entry } from "./helpers"
@@ -54,6 +55,7 @@ afterEach(() => {
 function calendar(initial: TimetrackState) {
   const latest = { current: initial, writes: 0 }
   const onEditEntry = vi.fn()
+  const toasts: { text: string; undo?: () => void }[] = []
   function Harness() {
     const [state, setState] = useState(initial)
     latest.current = state
@@ -65,7 +67,9 @@ function calendar(initial: TimetrackState) {
           setState((current) => updater(current))
         }}
         nowSec={NOW_SEC}
-        pushToast={vi.fn()}
+        pushToast={(text: string, _tone?: string, undo?: () => void) => {
+          toasts.push({ text, undo })
+        }}
         onEditEntry={onEditEntry}
         onOpenIntegrations={vi.fn()}
         boxes
@@ -84,7 +88,7 @@ function calendar(initial: TimetrackState) {
   }
   const block = (description: string) =>
     [...view.container.querySelectorAll<HTMLElement>("[data-entry-block]")].find((el) => el.title.startsWith(`${description} `))!
-  return { view, latest, onEditEntry, column, y, press, block }
+  return { view, latest, onEditEntry, column, y, press, block, toasts }
 }
 
 const box = (name: "New time entry" | "Edit time entry") => within(screen.getByRole("dialog", { name }))
@@ -222,5 +226,28 @@ describe("a click on a block", () => {
     const cal = calendar(twoTouching())
     fireEvent.keyDown(cal.block("email"), { key: "Enter" })
     expect((box("Edit time entry").getByLabelText("Description") as HTMLInputElement).value).toBe("email")
+  })
+})
+
+describe("a click on the running block", () => {
+  test("opens the box with Running, ■ Stop, ⋮ and ✕; Stop ends it now, with Undo", () => {
+    const running = startTimer(baseState({ entries: [] }), { description: "call", projectId: null, taskId: null, tagIds: [], billable: false }, at(4, 14)).state
+    const cal = calendar(running)
+    const live = cal.block("call")
+    cal.press(live, parseFloat(live.style.top) + 10)
+    const edit = box("Edit time entry")
+    expect(edit.getByText("Running")).toBeTruthy()
+    for (const name of ["More actions for this time entry", "Close"]) expect(edit.getByRole("button", { name }), name).toBeTruthy()
+    expect(edit.queryByRole("button", { name: "Continue time entry" }), "a running entry has nothing to continue").toBeNull()
+
+    fireEvent.click(edit.getByRole("button", { name: "Stop time entry" }))
+    const stopped = cal.latest.current.entries[0]
+    expect(stopped.stop, "Stop did not end it now").toBe(NOW)
+    expect(screen.queryByRole("dialog", { name: "Edit time entry" })).toBeNull()
+    const toast = cal.toasts.find((t) => t.text.startsWith("Stopped “call”"))
+    expect(toast?.undo, "no Undo after Stop").toBeTruthy()
+
+    act(() => toast!.undo!())
+    expect(cal.latest.current.entries[0].stop, "Undo did not set it running again").toBeNull()
   })
 })

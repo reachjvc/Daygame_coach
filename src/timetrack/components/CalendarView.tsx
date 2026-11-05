@@ -21,7 +21,7 @@ import { useIsMobile } from "../hooks/useIsMobile"
 import type { PushToast } from "../hooks/useTimetrack"
 import { serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
-import { withNeighbours } from "../timeFixService"
+import { stopAt, undoStopAt, withNeighbours } from "../timeFixService"
 import { AfterCheckContext } from "./afterCheck"
 import { announceNeighbours, undoOrSay } from "./neighbourNotice"
 import { IconCalendar, IconDown, IconNext, IconPrev, IconStart } from "../icons"
@@ -60,6 +60,7 @@ import {
   formatDuration,
   formatHourOfDay,
   formatTimeOfDay,
+  formatWhen,
   isoAtMinutes,
   minutesIntoDay,
   weekStartOf,
@@ -579,6 +580,26 @@ export function CalendarView({
       }
     })
 
+  /**
+   * The running block's ■: it stops now. A Stop waits for the check like every
+   * Stop (D2), and says so with the Undo that Stop at… gives (`undoStopAt`).
+   */
+  const stopFromBox = (entry: TimeEntry) =>
+    (afterCheck ?? ((run) => run(latestState.current, nowIso())))((latest, tappedAt) => {
+      const result = stopAt(latest, tappedAt, nowIso())
+      if (result.violations[0] || !result.stopped || result.stopped.id !== entry.id) {
+        pushToast(result.violations[0]?.message ?? "Nothing is running", "error")
+        return
+      }
+      const stopped = result.stopped
+      setState(layOnto(latest, result.state))
+      setBoxTarget(null)
+      const name = `“${stopped.description.trim() || "(no description)"}”`
+      pushToast(`Stopped ${name} ${formatWhen(stopped.stop ?? tappedAt, latest.user.timeFormat, dateKey(nowIso()))}`, "info", () =>
+        undoOrSay(() => latestState.current, (current) => undoStopAt(current, stopped.id, nowIso()), setState, pushToast),
+      )
+    })
+
   /** The box's ⋮ → Delete: no question, Toggl Track's words, and Undo */
   const deleteFromBox = (entry: TimeEntry) => {
     const checked = deleteEntries(latestState.current, [entry.id], nowIso())
@@ -1069,6 +1090,7 @@ export function CalendarView({
           anchor={boxAnchor}
           onClose={() => setBoxTarget(null)}
           onContinue={continueFromBox}
+          onStop={stopFromBox}
           onDelete={deleteFromBox}
           onEditEntry={onEditEntry}
           onGoToProject={onGoToProject}
