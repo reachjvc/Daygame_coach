@@ -579,7 +579,8 @@ test.describe('Toggl-style time tracker', () => {
 
     // the entry is seconds long, so its block is tiny: open it the way a tap does
     await page.locator('[data-block][title^="Back check ·"]').first().dispatchEvent('click')
-    // the phone's one sheet (Plans/toggl-parity.md Phase 2); the PC's is still "Time entry details"
+    // on the phone a tap selects the block and its panel offers Edit (Phase 4), which opens the one sheet (Phase 2)
+    await page.getByRole('region', { name: 'Selected time entry' }).getByRole('button', { name: 'Edit' }).click()
     const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
     await expect(sheet).toBeVisible()
     await expect(page).toHaveURL(/[?&]entry=/)
@@ -706,8 +707,24 @@ async function fingerOn(page: Page) {
   }
 }
 
-/** The first day's header: its name, then what it has tracked */
+/** The first day's header: its name, then what it has tracked (on the phone, the day line above the week strip) */
 const dayHeader = (page: Page) => page.locator('[data-day-header]').first().locator('p')
+
+/**
+ * Tomorrow, the way the phone's calendar gets there (Plans/toggl-parity.md
+ * Phase 4): its day in the week strip, or the next week's strip first when
+ * today ends the week. A real tap, which is also what lets Chrome vibrate.
+ */
+async function tapTomorrow(page: Page) {
+  const tomorrow = await page.evaluate(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
+  const day = page.locator(`[data-day="${tomorrow}"]`)
+  if ((await day.count()) === 0) await page.getByRole('button', { name: 'Next week' }).tap()
+  await day.tap()
+}
 
 /** The calendar on the phone, by the section bar */
 async function openPhoneCalendar(page: Page) {
@@ -741,9 +758,10 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await openFreshTracker(page)
     await openPhoneCalendar(page)
     const todayTotal = await dayHeader(page).nth(1).textContent()
+    const today = (await dayHeader(page).first().textContent())!
     // a real tap, which is also what lets Chrome vibrate at all
-    await page.locator('main').getByRole('button', { name: 'Next', exact: true }).tap()
-    await expect(dayHeader(page).first()).not.toHaveText('Today')
+    await tapTomorrow(page)
+    await expect(dayHeader(page).first()).not.toHaveText(today)
     await scrollCalendarTo(page, 9 * 60 + 15)
 
     const column = await calendarColumn(page)
@@ -761,8 +779,8 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
     await expect(block).toHaveCSS('background-image', /repeating-linear-gradient/)
     await expect(dayHeader(page).nth(1)).toHaveText('0:00')
-    // one tick as the hold took, one per 5-minute step
-    expect(await page.evaluate(() => (window as unknown as { __ticks: number[] }).__ticks)).toEqual(Array(19).fill(5))
+    // one tick as the hold took, one per step — a quarter hour on the phone's calendar (D-PHONE-CAL)
+    expect(await page.evaluate(() => (window as unknown as { __ticks: number[] }).__ticks)).toEqual(Array(7).fill(5))
 
     await savedToAccount(page)
     expect(await entriesOnAccount(page)).toEqual([''])
@@ -772,7 +790,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await finger.down(column.x - 40, swipeY)
     await finger.slide({ x: column.x - 40, y: swipeY }, { x: column.x + 160, y: swipeY }, 6)
     await finger.up()
-    await expect(dayHeader(page).first()).toHaveText('Today')
+    await expect(dayHeader(page).first()).toHaveText(today)
     await expect(dayHeader(page).nth(1)).toHaveText(todayTotal!)
 
     // and the list says so beside tomorrow's total
@@ -783,8 +801,9 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
   test('a held block moves alone; its top edge takes the entry before along, its bottom edge only itself @phone', async ({ page }) => {
     await openFreshTracker(page)
     await openPhoneCalendar(page)
-    await page.locator('main').getByRole('button', { name: 'Next', exact: true }).tap()
-    await expect(dayHeader(page).first()).not.toHaveText('Today')
+    const today = (await dayHeader(page).first().textContent())!
+    await tapTomorrow(page)
+    await expect(dayHeader(page).first()).not.toHaveText(today)
     await scrollCalendarTo(page, 9 * 60)
     const finger = await fingerOn(page)
     const column = await calendarColumn(page)
@@ -833,6 +852,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
   test('a quick flick scrolls the calendar and makes nothing; a sideways swipe turns the day @phone', async ({ page }) => {
     await openFreshTracker(page)
     await openPhoneCalendar(page)
+    const today = (await dayHeader(page).first().textContent())!
     await scrollCalendarTo(page, 8 * 60)
     const scrollTop = () => page.locator('[data-calendar-scroll]').evaluate((el) => el.scrollTop)
     const before = await scrollTop()
@@ -855,7 +875,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await finger.down(column.x + 150, swipeY)
     await finger.slide({ x: column.x + 150, y: swipeY }, { x: column.x - 40, y: swipeY + 6 }, 6)
     await finger.up()
-    await expect(dayHeader(page).first()).not.toHaveText('Today')
+    await expect(dayHeader(page).first()).not.toHaveText(today)
     expect((await readState(page)).entries).toEqual([])
   })
 })

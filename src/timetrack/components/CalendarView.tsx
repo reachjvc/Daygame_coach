@@ -22,6 +22,7 @@ import type { PushToast } from "../hooks/useTimetrack"
 import { serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
 import { stopAt, undoStopAt, withNeighbours } from "../timeFixService"
+import { edgesOfDay, heldBlock, landOnEdge, snapToQuarterOrEdge, spansOfDay, type Landing } from "../phoneCalendarService"
 import { AfterCheckContext } from "./afterCheck"
 import { announceNeighbours, undoOrSay } from "./neighbourNotice"
 import { IconCalendar, IconDown, IconNext, IconPrev, IconStart } from "../icons"
@@ -78,7 +79,7 @@ import {
   undoDisplacement,
   updateEntry,
 } from "../timetrackService"
-import type { CalendarEvent, EntryDraft, Id, IsoDate, TimeEntry, TimetrackState } from "../types"
+import type { CalendarEvent, EntryDraft, Id, IsoDate, IsoDateTime, TimeEntry, TimetrackState } from "../types"
 import { ColorDot, Dropdown, Segmented, plannedStripes } from "./primitives"
 
 /** "workweek" is Toggl Track's "5 days": Monday to Friday of the week shown */
@@ -114,6 +115,13 @@ interface DragState {
    * protect and counts as moved from the start.
    */
   moved: boolean
+  /**
+   * The phone's drags (D-PHONE-CAL): the instant a create began on, and the
+   * instant the moving edge landed on, when either is a neighbour's own edge —
+   * so it is written to the second, not rounded to its minute.
+   */
+  startAt?: IsoDateTime | null
+  currentAt?: IsoDateTime | null
 }
 
 /**
@@ -177,6 +185,7 @@ export function CalendarView({
   onAnchor,
   boxes = false,
   onGoToProject,
+  phone,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
@@ -200,6 +209,14 @@ export function CalendarView({
    */
   boxes?: boolean
   onGoToProject?: (projectId: Id) => void
+  /**
+   * The phone's Calendar tab (Phase 4 of Plans/toggl-parity.md, D-PHONE-CAL):
+   * its own day line and week strip sit above, so the steps and the day's
+   * header go; a tap selects (`selectedId` is drawn with handles); a still
+   * hold on empty space makes 30 minutes or fills a gap of two hours or less;
+   * a drag lands on a quarter hour or a neighbour's edge, whichever is closer.
+   */
+  phone?: { selectedId: Id | null }
 }) {
   const isMobile = useIsMobile()
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -230,7 +247,7 @@ export function CalendarView({
     else setOwnAnchor(day)
   }
   /** the week row above says which week this is, so the calendar's own steps are only for a Day view */
-  const rowAbove = onAnchor !== undefined && range !== "day"
+  const rowAbove = (onAnchor !== undefined && range !== "day") || phone !== undefined
   /** what the box beside a block is showing, when it is open */
   const [boxTarget, setBoxTarget] = useState<CalendarBoxTarget | null>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
@@ -310,6 +327,35 @@ export function CalendarView({
     snapMinutes((clientY - column.getBoundingClientRect().top) / minuteHeight, snap)
   /** a new block's steps: 15 minutes with the box, else the calendar's 5 */
   const createSnap = boxes ? PC_CREATE_SNAP : undefined
+  /** where the pointer is, in minutes of the day, before any snapping: the phone snaps by its own rules */
+  const rawMinutesAt = (clientY: number, column: HTMLElement): number =>
+    Math.min(24 * 60, Math.max(0, (clientY - column.getBoundingClientRect().top) / minuteHeight))
+  /**
+   * THE PHONE'S POINTER, ON ITS QUARTER HOUR OR A NEIGHBOUR'S EDGE (D-PHONE-CAL).
+   * The edge that moves — the new block's end, a resized edge, a moved block's
+   * top — is put where it lands, and the pointer is given back as the minute
+   * that puts it there, so `blockDragPatch` reads it as it reads any drag. A
+   * neighbour's edge comes with its own instant (`at`), which is what is written.
+   */
+  const phonePointer = (current: DragState, raw: number): Landing => {
+    const except = current.entryId ?? null
+    const edges = edgesOfDay(entries, current.day, nowSec, except)
+    if (current.mode === "create") return snapToQuarterOrEdge(raw, edges)
+    const moving = entries.find((e) => e.id === except)
+    if (!moving) return { minutes: raw, at: null }
+    const interval = entryInterval(moving, current.day, nowSec)
+    const edge = current.mode === "resize-start" ? interval.startMin : current.mode === "resize-end" ? interval.endMin : (current.topMinutes ?? interval.startMin)
+    const landed = snapToQuarterOrEdge(edge + raw - current.startMinutes, edges)
+    return { minutes: current.startMinutes + (landed.minutes - edge), at: landed.at }
+  }
+  /** the phone's edges arrive snapped: `blockDragPatch` keeps them where they are */
+  const edgeSnap = phone ? (minutes: number) => minutes : undefined
+  /** a block's new times as this drag would write them; on the phone an edge on a neighbour is the neighbour's own instant */
+  const patchOf = (entry: TimeEntry, day: IsoDate, current: DragState): BlockDragPatch | null => {
+    const patch = blockDragPatch(entry, day, blockDrag(current), nowIso(), edgeSnap)
+    if (!phone || !current.currentAt || current.mode === "create") return patch
+    return landOnEdge(entry, current.mode, current.currentAt)
+  }
 
   /**
    * THE PAGE MUST NOT SCROLL UNDER A HELD FINGER.
@@ -433,11 +479,12 @@ export function CalendarView({
     // a press on a block is a click, or a still hold, until the pointer has really moved: see `DragState`
     const moved = current.moved || Math.abs(event.clientY - pressed.armY) >= DRAG_THRESHOLD_PX
     if (!moved) return
-    const minutes = minutesAt(event.clientY, pressed.column, current.mode === "create" ? createSnap : undefined)
+    const landing = phone ? phonePointer(current, rawMinutesAt(event.clientY, pressed.column)) : null
+    const minutes = landing ? landing.minutes : minutesAt(event.clientY, pressed.column, current.mode === "create" ? createSnap : undefined)
     if (moved === current.moved && minutes === current.currentMinutes) return
     // one tick of the phone's motor per 5-minute step; a mouse has none
     if (minutes !== current.currentMinutes && pressed.pointerType !== "mouse") tick()
-    showDrag({ ...current, moved: true, currentMinutes: minutes })
+    showDrag({ ...current, moved: true, currentMinutes: minutes, currentAt: landing?.at ?? null })
   }
 
   const onPointerUp = (event: React.PointerEvent<HTMLElement>) => {
@@ -512,13 +559,20 @@ export function CalendarView({
     }
 
     if (mode === "create") {
-      if (to - from >= 5) {
+      // the phone: a finger held still makes Toggl's block, 30 minutes or the gap it is in (D-PHONE-CAL)
+      const still = phone && pressed.pointerType !== "mouse" && to - from < 5 ? heldBlock(spansOfDay(entries, day, nowSec), from) : null
+      // the ends that landed on a neighbour's edge are its instants, seconds included
+      const startFirst = drag.startMinutes <= drag.currentMinutes
+      const span = still ?? (to - from >= 5
+        ? { from, to, fromAt: (startFirst ? drag.startAt : drag.currentAt) ?? null, toAt: (startFirst ? drag.currentAt : drag.startAt) ?? null }
+        : null)
+      if (span) {
         const result = createManualEntry(
           state,
           {
             draft: { description: "", projectId: null, taskId: null, tagIds: [], billable: state.workspace.projectsBillableByDefault },
-            start: isoAtMinutes(day, from),
-            stop: isoAtMinutes(day, to),
+            start: span.fromAt ?? isoAtMinutes(day, span.from),
+            stop: span.toAt ?? isoAtMinutes(day, span.to),
           },
           nowIso(),
         )
@@ -539,7 +593,7 @@ export function CalendarView({
      * moves its neighbour as well (D12), would have moved two.
      */
     const moving = state.entries.find((e) => e.id === drag.entryId)
-    const patch = moving ? blockDragPatch(moving, day, blockDrag(drag), nowIso()) : null
+    const patch = moving ? patchOf(moving, day, drag) : null
     if (moving && patch) commitBlock(moving.id, patch, mode !== "move")
   }
 
@@ -716,8 +770,8 @@ export function CalendarView({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
-        {/* day headers */}
-        <div className={cn("flex border-b border-border bg-secondary/30", range !== "day" && "min-w-[640px] sm:min-w-0")}>
+        {/* day headers: on the phone's day view its own day line says this (`PhoneCalendar`) */}
+        <div className={cn("flex border-b border-border bg-secondary/30", range !== "day" && "min-w-[640px] sm:min-w-0", phone && range === "day" && "hidden")}>
           {/* must match the ruler below exactly, or every day column is offset; on the PC it holds Toggl's − + zoom */}
           <div className={cn(gutter, "flex shrink-0 items-center justify-center gap-0.5 border-r border-border")}>
             {!isMobile && (
@@ -821,7 +875,12 @@ export function CalendarView({
                   className="relative flex-1 border-r border-border last:border-r-0"
                   style={{ height: hourHeight * 24 }}
                   onPointerDown={(event) => {
-                    // empty space: a new block from here; with the box, from the quarter pressed in
+                    // empty space: a new block from here; with the box, from the quarter pressed in; on the phone, its quarter or a neighbour's edge
+                    if (phone) {
+                      const landed = snapToQuarterOrEdge(rawMinutesAt(event.clientY, event.currentTarget), edgesOfDay(entries, day, nowSec, null))
+                      beginGesture(event, { day, mode: "create", startMinutes: landed.minutes, currentMinutes: landed.minutes, startAt: landed.at, moved: true })
+                      return
+                    }
                     const minutes = boxes
                       ? Math.floor((event.clientY - event.currentTarget.getBoundingClientRect().top) / minuteHeight / PC_CREATE_SNAP) * PC_CREATE_SNAP
                       : minutesAt(event.clientY, event.currentTarget)
@@ -857,7 +916,7 @@ export function CalendarView({
                     // taken: the hold took (or a mouse went down), so it lifts before it moves
                     const held = drag !== null && drag.entryId === entry.id && drag.day === day
                     const dragging = held && drag.moved ? drag : null
-                    const patch = dragging ? blockDragPatch(entry, day, blockDrag(dragging), nowIso()) : null
+                    const patch = dragging ? patchOf(entry, day, dragging) : null
                     const shown = patch ? { ...entry, ...patch } : entry
                     const interval = patch ? entryInterval(shown, day, nowSec) : null
                     const topMinutes = interval ? interval.startMin : block.topMinutes
@@ -865,12 +924,14 @@ export function CalendarView({
                     const drawnHeight = drawnBlockHeight(heightMinutes, minuteHeight)
                     // not begun yet: striped over its colour, and out of the day's total above (Q2) — while dragged too
                     const planned = isPlanned(shown, nowSec)
+                    const selected = phone?.selectedId === entry.id
                     return (
                       <div
                         key={entry.id}
                         data-block
                         data-entry-block
                         data-entry-id={entry.id}
+                        data-selected={selected || undefined}
                         data-planned={planned || undefined}
                         data-held={held || undefined}
                         data-dragging={dragging ? true : undefined}
@@ -898,7 +959,7 @@ export function CalendarView({
                           event.stopPropagation()
                           const offset = event.clientY - rect.top
                           const column = event.currentTarget.closest<HTMLElement>("[data-day-column]")
-                          const minutes = column ? minutesAt(event.clientY, column) : block.topMinutes
+                          const minutes = column ? (phone ? rawMinutesAt(event.clientY, column) : minutesAt(event.clientY, column)) : block.topMinutes
                           const mode = blockGrabMode(offset, drawnHeight, {
                             edgePx: event.pointerType === "mouse" ? MOUSE_EDGE_PX : TOUCH_EDGE_PX,
                             // an edge that is midnight, not the entry's own start or end, moves the block
@@ -930,6 +991,7 @@ export function CalendarView({
                           "absolute z-10 cursor-grab overflow-hidden rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           isRunning(entry) && !held && "animate-pulse",
                           held && "z-30 shadow-lg ring-1 ring-primary",
+                          selected && "z-20 ring-2 ring-primary",
                         )}
                         style={{
                           top: topMinutes * minuteHeight,
@@ -942,6 +1004,13 @@ export function CalendarView({
                         }}
                         title={`${entry.description || "(no description)"} · ${project?.name ?? "No project"} · ${formatCompact(entrySeconds(entry, nowSec))}${planned ? " · planned" : ""}`}
                       >
+                        {/* the phone's selected block: a handle on each edge, as Toggl draws them [H25 #21] */}
+                        {selected && (
+                          <>
+                            <span data-handle="top" aria-hidden className="pointer-events-none absolute right-2 top-0.5 size-2.5 rounded-full border border-primary bg-white" />
+                            <span data-handle="bottom" aria-hidden className="pointer-events-none absolute bottom-0.5 left-2 size-2.5 rounded-full border border-primary bg-white" />
+                          </>
+                        )}
                         {/* Below ~22px there is no room for legible text — the tooltip carries it */}
                         {heightMinutes * minuteHeight >= 22 && (
                           <>

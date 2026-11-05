@@ -1014,7 +1014,14 @@ export type BlockDragPatch = { start: IsoDateTime; stop: IsoDateTime | null } | 
  * block is never drawn under a minute (`entryInterval`), and a clamp on the
  * drawing could put an end before a start.
  */
-export function blockDragPatch(entry: TimeEntry, day: IsoDate, drag: BlockDrag, nowIso: IsoDateTime): BlockDragPatch | null {
+export function blockDragPatch(
+  entry: TimeEntry,
+  day: IsoDate,
+  drag: BlockDrag,
+  nowIso: IsoDateTime,
+  /** where an edge lands; the phone's pointer arrives already on its quarter hour or neighbour's edge (`phoneCalendarService`) */
+  snap: (minutes: number) => number = snapMinutes,
+): BlockDragPatch | null {
   const delta = drag.pointerMinutes - drag.grabMinutes
   if (delta === 0) return null
   if (drag.mode === "move") {
@@ -1040,7 +1047,7 @@ export function blockDragPatch(entry: TimeEntry, day: IsoDate, drag: BlockDrag, 
   const edgeIso = drag.mode === "resize-start" ? entry.start : endIso
   // an end at the next midnight is this day's bottom, minute 1440, not the next day's minute 0
   const edgeMinutes = dateKey(edgeIso) === day ? minutesIntoDay(edgeIso) : 24 * 60
-  const edgeMs = new Date(isoAtMinutes(day, snapMinutes(edgeMinutes + delta))).getTime()
+  const edgeMs = new Date(isoAtMinutes(day, snap(edgeMinutes + delta))).getTime()
   if (drag.mode === "resize-start") {
     const start = Math.min(edgeMs, endMs - SHORTEST_DRAG_MS)
     return start === startMs ? null : { start: new Date(start).toISOString() }

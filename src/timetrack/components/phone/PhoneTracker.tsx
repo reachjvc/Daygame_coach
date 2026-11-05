@@ -34,6 +34,7 @@ import {
   IconCalendar,
   IconClient,
   IconClose,
+  IconExport,
   IconImport,
   IconProjects,
   IconReports,
@@ -50,7 +51,8 @@ import { AfterCheckContext, type AfterCheck } from "../afterCheck"
 import { AlertsBell } from "../AlertsBell"
 import { SignedOutBanner } from "../SignedOutBanner"
 import { useMomentActions } from "../useMomentActions"
-import { CalendarView } from "../CalendarView"
+import { BlockPanel, PhoneCalendar } from "./PhoneCalendar"
+import { PhoneReports } from "./PhoneReports"
 import { ImportOfferBanner } from "../ImportOfferBanner"
 import { ManageView, type ManageTab } from "../ManageView"
 import { MomentDialog, type MomentKind } from "../MomentPicker"
@@ -133,6 +135,12 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const [selected, setSelected] = useState<Id[] | null>(null)
   /** the day the Calendar tab shows; "See in calendar" on a planned day goes there */
   const [calendarDay, setCalendarDay] = useState<IsoDate | null>(null)
+  /** Reports: Toggl's short screen, or "Details", the full reports (D-PHONE-REPORTS) */
+  const [reportsDetails, setReportsDetails] = useState(false)
+  const reportsDownload = useRef<(() => void) | null>(null)
+  /** the calendar block whose panel is open (D-PHONE-CAL) */
+  const [blockId, setBlockId] = useState<Id | null>(null)
+  const block = screen === "calendar" && blockId ? (state.entries.find((e) => e.id === blockId && !e.serverDeletedAt) ?? null) : null
 
   // --- the sheet, and Back ----------------------------------------------------
 
@@ -222,6 +230,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const title = titleOf(screen, lab.manageTab, lab.settingsTab)
   const go = (section: Section) => {
     setMenuOpen(false)
+    setBlockId(null)
+    setReportsDetails(false)
     if (section !== "projects") lab.setFocusProjectId(null)
     lab.goTo(section)
   }
@@ -265,15 +275,28 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                 sync.checkNow()
               }}
             />
-            <button
-              type="button"
-              onClick={() => openNew("manual")}
-              aria-label="Add a past time entry"
-              title="Add a past time entry"
-              className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
-            >
-              <IconAdd className="size-5 rounded-full border-2 border-current p-0.5" />
-            </button>
+            {/* Reports has ⬇ where the Timer has ⊕, as Toggl's does [H25 help_28] */}
+            {screen === "reports" && !reportsDetails ? (
+              <button
+                type="button"
+                onClick={() => reportsDownload.current?.()}
+                aria-label="Download this report"
+                title="Download this report"
+                className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
+              >
+                <IconExport className="size-5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openNew("manual")}
+                aria-label="Add a past time entry"
+                title="Add a past time entry"
+                className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
+              >
+                <IconAdd className="size-5 rounded-full border-2 border-current p-0.5" />
+              </button>
+            )}
             <AlertsBell state={state} setState={setState} unread={lab.unreadAlerts} />
             <button
               type="button"
@@ -359,12 +382,18 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                  The top of the window is below the header and the day controls,
                  about 14rem down. */
               <div className="[&_[data-calendar-scroll]]:max-h-[calc(100dvh-var(--panel-bottom-inset,7rem)-14rem)]">
-              <CalendarView
+              <PhoneCalendar
                 state={state}
                 setState={setState}
                 nowSec={nowSec}
                 pushToast={pushToast}
-                onEditEntry={lab.openEntry}
+                day={calendarDay ?? dateKey(new Date(nowSec * 1000))}
+                onDay={(day) => {
+                  setCalendarDay(day)
+                  setBlockId(null)
+                }}
+                selectedId={blockId}
+                onSelect={setBlockId}
                 onOpenIntegrations={() => {
                   lab.setSettingsTab("integrations")
                   go("settings")
@@ -372,8 +401,26 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
               />
               </div>
             )}
-            {screen === "reports" && (
-              <ReportsView state={state} setState={setState} nowSec={nowSec} config={lab.reportConfig} setConfig={lab.setReportConfig} pushToast={pushToast} />
+            {screen === "reports" && !reportsDetails && (
+              <PhoneReports
+                state={state}
+                nowSec={nowSec}
+                config={lab.reportConfig}
+                downloadRef={reportsDownload}
+                onDetails={(range) => {
+                  lab.setReportConfig((config) => (config ? { ...config, filters: { ...config.filters, range } } : config))
+                  setReportsDetails(true)
+                }}
+              />
+            )}
+            {/* "Details": today's full reports, every tab kept (D-PHONE-REPORTS) */}
+            {screen === "reports" && reportsDetails && (
+              <>
+                <Button variant="ghost" size="sm" className="h-11 px-1" onClick={() => setReportsDetails(false)}>
+                  ‹ Back to the short report
+                </Button>
+                <ReportsView state={state} setState={setState} nowSec={nowSec} config={lab.reportConfig} setConfig={lab.setReportConfig} pushToast={pushToast} />
+              </>
             )}
             {screen === "projects" && (
               <ProjectsView
@@ -455,6 +502,19 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             </button>
           </div>
         )}
+        {block ? (
+          // a tapped block's panel takes the bar's place, as Toggl's does
+          <BlockPanel
+            entry={block}
+            state={state}
+            setState={setState}
+            pushToast={pushToast}
+            afterCheck={lab.afterCheck}
+            onEdit={() => lab.openEntry(block)}
+            onStop={lab.stopTracking}
+            onClose={() => setBlockId(null)}
+          />
+        ) : (
         <div data-testid="run-bar">
           <RunBar
             state={state}
@@ -467,6 +527,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             onStop={lab.stopTracking}
           />
         </div>
+        )}
         <nav aria-label="Sections" className="flex border-t border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon
