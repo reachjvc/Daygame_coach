@@ -1,6 +1,6 @@
 # Life plan achievements (Q11)
 
-**Status:** written and built 2026-11-05, from Q11 in `Plans/life-plan-tables.md` ("design them after
+**Status:** written, built and **live 2026-11-05** (commits `520c05c9`, `74877158`), from Q11 in `Plans/life-plan-tables.md` ("design them after
 Q1–Q6, since they are built from goals and systems"). Not signed off: card `q11-achievements` on the
 sign-off page (https://claude.ai/artifact/K5r4E4ywmrHfasxNPwdXsr).
 
@@ -61,7 +61,12 @@ So the rules are written once and apply to every goal and routine step, never on
   what was already shown (`goalAchievementRules.ts` explains the same choice for the old goals page).
 - No points, levels or tiers: nothing in your words or Stefan's asks for them.
 
-## Built 2026-11-05
+## Live 2026-11-05
+
+- No database change, so no backup was needed. Checked on the live database after: your revision 920,
+  13 days, no day numbers, 50 goals, unchanged.
+- Found while taking the pictures: your Approaches goal holds the unit "/week", which read "10 /week in
+  all". A unit with a slash is a rate, so it is left out of the label (`74877158`).
 
 - `src/goals/planAchievementsService.ts` (pure), `src/goals/components/north-star/Achievements.tsx`,
   the goal card, the Review step (`appendToReview` in `reviewService.ts`), Today's line.
