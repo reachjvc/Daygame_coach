@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { IconAdd, IconDown, IconMoney, IconTag } from "../icons"
 import { projectGroups } from "../pickerService"
 import { activeToken, projectsForDescription, removeToken, searchProjects } from "../timetrackService"
+import { inlineChoices, type InlineChoice } from "../inlineChoicesService"
 import type { Id, TimetrackState } from "../types"
 import {
   CheckOption,
@@ -406,6 +407,7 @@ export function DescriptionField({
   placeholder = "What are you working on?",
   className,
   autoFocus,
+  inline,
 }: {
   state: TimetrackState
   value: string
@@ -420,6 +422,12 @@ export function DescriptionField({
   placeholder?: string
   className?: string
   autoFocus?: boolean
+  /**
+   * Toggl's inline lists (the phone sheet, Plans/toggl-parity.md Phase 3):
+   * @ offers "No Project", the projects grouped by client and a row creating
+   * what was typed; # the tags and "Create “x”" (`inlineChoices`).
+   */
+  inline?: { onClearProject: () => void; onCreateProject: (name: string) => void; onCreateTag: (name: string) => void }
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
@@ -448,7 +456,10 @@ export function DescriptionField({
   const looseQuery = token || projectId !== null || dismissed.current === value ? "" : value.trim()
   const loose = looseQuery.length >= 2
 
-  const suggestions = useMemo(() => {
+  const suggestions = useMemo((): { id: Id; label: string; color: string | null; choice?: InlineChoice }[] => {
+    if (inline && token) {
+      return inlineChoices(state, token).map((choice) => ({ id: choice.key, label: choice.label, color: choice.kind === "project" ? choice.color : null, choice }))
+    }
     if (loose) {
       return projectsForDescription(state, looseQuery).map((p) => ({ id: p.id, label: p.name, color: p.color }))
     }
@@ -461,7 +472,7 @@ export function DescriptionField({
       .filter((t) => t.name.toLowerCase().includes(query))
       .slice(0, 6)
       .map((t) => ({ id: t.id, label: t.name, color: null }))
-  }, [loose, looseQuery, token, state])
+  }, [loose, looseQuery, token, state, inline])
 
   // gated on exactly what renders the panel: measuring while it is absent
   // would leave it hidden for good, since nothing would re-measure
@@ -483,10 +494,34 @@ export function DescriptionField({
     setToken(found)
     // A typed `@` means you asked for the list, so the first row is already
     // chosen. Plain text means you were writing, so nothing is chosen yet.
+    // (On the inline lists the first row is "No Project", which is a choice too.)
     setHighlight(found ? 0 : -1)
   }
 
+  /** a header names a client; Enter and the arrows go past it */
+  const pickable = (index: number) => suggestions[index]?.choice?.kind !== "header"
+  const step = (from: number, by: 1 | -1) => {
+    for (let i = 1; i <= suggestions.length; i++) {
+      const at = (from + by * i + suggestions.length * 2) % suggestions.length
+      if (pickable(at)) return at
+    }
+    return from
+  }
+
   const choose = (id: Id) => {
+    const inlineChoice = suggestions.find((s) => s.id === id)?.choice
+    if (inline && token && inlineChoice) {
+      if (inlineChoice.kind === "header") return
+      onChange(removeToken(value, token))
+      if (inlineChoice.kind === "project") onPickProject(inlineChoice.id, null)
+      else if (inlineChoice.kind === "tag") onPickTag(inlineChoice.id)
+      else if (inlineChoice.kind === "no-project") inline.onClearProject()
+      else if (inlineChoice.kind === "create-project") inline.onCreateProject(inlineChoice.name)
+      else inline.onCreateTag(inlineChoice.name)
+      setToken(null)
+      inputRef.current?.focus()
+      return
+    }
     if (!token) {
       // Plain text: the words are the description somebody meant to write, so
       // they stay. Only the project is set. (`@wri` is a command, and its text
@@ -510,12 +545,12 @@ export function DescriptionField({
     if (suggestionsOpen) {
       if (event.key === "ArrowDown") {
         event.preventDefault()
-        setHighlight((h) => (h + 1) % suggestions.length)
+        setHighlight((h) => step(h, 1))
         return
       }
       if (event.key === "ArrowUp") {
         event.preventDefault()
-        setHighlight((h) => (h - 1 + suggestions.length) % suggestions.length)
+        setHighlight((h) => step(h, -1))
         return
       }
       if (event.key === "Escape") {
@@ -578,7 +613,12 @@ export function DescriptionField({
           <p className="border-b border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
             {offeringTags ? <>Tags · #{token?.query}</> : token ? <>Projects · @{token.query}</> : <>Set project to</>}
           </p>
-          {suggestions.map((suggestion, index) => (
+          {suggestions.map((suggestion, index) =>
+            suggestion.choice?.kind === "header" ? (
+              <p key={suggestion.id} className="px-3 pb-0.5 pt-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                {suggestion.label}
+              </p>
+            ) : (
             <button
               key={suggestion.id}
               type="button"
@@ -589,10 +629,17 @@ export function DescriptionField({
                 index === highlight ? "bg-secondary" : "hover:bg-secondary/60",
               )}
             >
-              {offeringTags ? <IconTag className="size-3" /> : <ColorDot color={suggestion.color} />}
+              {suggestion.choice?.kind === "create-project" || suggestion.choice?.kind === "create-tag" ? (
+                <IconAdd className="size-3.5" />
+              ) : offeringTags ? (
+                <IconTag className="size-3" />
+              ) : (
+                <ColorDot color={suggestion.color} />
+              )}
               <span className="truncate">{suggestion.label}</span>
             </button>
-          ))}
+            ),
+          )}
           {/* The one place the `@` and `#` grammar is written down where a
               phone can read it. The shortcut overlay that used to be its only
               home is `hidden sm:inline-flex`. */}

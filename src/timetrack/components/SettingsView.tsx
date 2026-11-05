@@ -199,6 +199,12 @@ function ProfilePanel({
           checked={state.user.groupSimilarEntries}
           onChange={(groupSimilarEntries) => patch({ groupSimilarEntries })}
         />
+        <ToggleRow
+          label="Swipe actions"
+          hint="On a phone, swipe an entry right to continue it, left to delete it"
+          checked={state.user.swipeActions !== false}
+          onChange={(swipeActions) => patch({ swipeActions })}
+        />
       </div>
     </SectionCard>
   )

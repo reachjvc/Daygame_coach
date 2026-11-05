@@ -45,7 +45,7 @@ import { serverNowIso } from "../../serverClock"
 import { dateKey, formatClock, plural } from "../../timetrackFormatService"
 import { bulkEditEntries, emptyDraft, toggleFavorite } from "../../timetrackService"
 import type { Section } from "../../trackerAddressService"
-import type { EntryDraft, Id, AlertEvent, ReportConfig, TimeEntry, TimetrackState } from "../../types"
+import type { EntryDraft, Id, IsoDate, AlertEvent, ReportConfig, TimeEntry, TimetrackState } from "../../types"
 import { AfterCheckContext, type AfterCheck } from "../afterCheck"
 import { AlertsBell } from "../AlertsBell"
 import { SignedOutBanner } from "../SignedOutBanner"
@@ -59,7 +59,7 @@ import { touchTarget } from "../primitives"
 import { ProjectsView } from "../ProjectsView"
 import { ReportsView } from "../ReportsView"
 import { SettingsView, type SettingsTab } from "../SettingsView"
-import { SyncBadge } from "../SyncBadge"
+import { SyncBadge, describeBadge } from "../SyncBadge"
 import { FavoritesBar } from "../TimerBar"
 import { BACK_LINK_CLASS } from "../TrackerLoading"
 import { EntrySheet, sheetKey, type SheetTarget } from "./EntrySheet"
@@ -131,6 +131,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const [view, setView] = useState<"list" | "pomodoro">("list")
   const [menuOpen, setMenuOpen] = useState(false)
   const [selected, setSelected] = useState<Id[] | null>(null)
+  /** the day the Calendar tab shows; "See in calendar" on a planned day goes there */
+  const [calendarDay, setCalendarDay] = useState<IsoDate | null>(null)
 
   // --- the sheet, and Back ----------------------------------------------------
 
@@ -251,7 +253,18 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           <h1 className="sr-only">Time</h1>
           <h2 className="min-w-0 shrink truncate text-xl font-semibold">{title}</h2>
           <div className="ml-auto flex shrink-0 items-center">
-            <SyncBadge status={sync.status} pending={sync.pendingCount} check={sync.check} nowMs={nowSec * 1000} onCheck={sync.checkNow} />
+            {/* a dot says nothing by itself: a tap says what it means, in the PC badge's words, and checks (findability, 2026-11-05) */}
+            <SyncBadge
+              status={sync.status}
+              pending={sync.pendingCount}
+              check={sync.check}
+              nowMs={nowSec * 1000}
+              onCheck={() => {
+                const shown = describeBadge(sync.status, sync.pendingCount, sync.check, nowSec * 1000)
+                if (shown) pushToast(`${shown.label}. ${shown.title}`)
+                sync.checkNow()
+              }}
+            />
             <button
               type="button"
               onClick={() => openNew("manual")}
@@ -323,6 +336,10 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                 onGoToProject={lab.goToProject}
                 selected={selected}
                 onSelect={setSelected}
+                onSeeInCalendar={(day) => {
+                  setCalendarDay(day)
+                  go("calendar")
+                }}
               />
             )}
             {screen === "timer" && view === "pomodoro" && (

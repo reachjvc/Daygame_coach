@@ -585,6 +585,20 @@ export function EntrySheet({
             onPickProject={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
             onPickTag={(tagId) => edit((d) => ({ ...d, tagIds: [...new Set([...d.tagIds, tagId])] }))}
             onSubmit={done}
+            inline={{
+              onClearProject: () => edit((d) => ({ ...d, projectId: null, taskId: null })),
+              onCreateProject: (name) => {
+                // made now, as the chip's picker makes it; choosing it waits for DONE
+                const made = createProject(state, { name }, serverNowIso())
+                setState(layOnto(state, made.state))
+                edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+              },
+              onCreateTag: (name) => {
+                const made = createTag(state, name, serverNowIso())
+                setState(layOnto(state, made.state))
+                edit((d) => ({ ...d, tagIds: [...new Set([...d.tagIds, made.id])] }))
+              },
+            }}
             className="mt-1 border-b border-border"
           />
           {suggestion && suggestionProject && shown.projectId !== suggestion.projectId && (

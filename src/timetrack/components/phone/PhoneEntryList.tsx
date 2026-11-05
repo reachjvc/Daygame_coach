@@ -66,7 +66,8 @@ import {
   toggleFavorite,
   undoDisplacement,
 } from "../../timetrackService"
-import type { DayGroup, EntryRow, Id, TimeEntry, TimetrackState } from "../../types"
+import { listedRows, swipeAction, swipeAxis, type SwipeAxis } from "../../phoneListService"
+import type { DayGroup, EntryRow, Id, IsoDate, TimeEntry, TimetrackState } from "../../types"
 import type { AfterCheck } from "../afterCheck"
 import { JointMark } from "../EntryList"
 import { undoOrSay } from "../neighbourNotice"
@@ -85,6 +86,8 @@ interface ListProps {
   /** the bulk bar's selection, or null while not selecting */
   selected: Id[] | null
   onSelect: (ids: Id[] | null) => void
+  /** a day whose only entries are planned: "See in calendar" (D-PLANNED) */
+  onSeeInCalendar: (day: IsoDate) => void
 }
 
 /** "1 time entry deleted", in Toggl's Android words for one [SRC `EntryDeleted`] */
@@ -114,6 +117,7 @@ export const PhoneEntryList = memo(function PhoneEntryList({
   onGoToProject,
   selected,
   onSelect,
+  onSeeInCalendar,
 }: ListProps) {
   const [expanded, setExpanded] = useState<string[]>([])
   const [visibleDays, setVisibleDays] = useState(7)
@@ -139,9 +143,9 @@ export const PhoneEntryList = memo(function PhoneEntryList({
     }
     return found
   }
-  const jointBelow = (group: DayGroup, index: number): Joint | null => {
-    const later = group.rows[index]
-    const earlier = group.rows[index + 1]
+  const jointBelow = (group: DayGroup, rows: EntryRow[], index: number): Joint | null => {
+    const later = rows[index]
+    const earlier = rows[index + 1]
     if (earlier && !later.grouped && !earlier.grouped) return jointsOfDay(group).get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
     if (earlier || later.grouped || later.continuedDays || !group.carriedIn) return null
     for (const carried of group.carriedIn) {
@@ -173,6 +177,8 @@ export const PhoneEntryList = memo(function PhoneEntryList({
     latest: () => latestState.current,
     selecting,
     onStartSelecting: (ids: Id[]) => onSelect(ids),
+    // D-SWIPE: on unless switched off in Settings; not while ticking rows for the bulk bar
+    swipes: state.user.swipeActions !== false && !selecting,
   }
 
   return (
@@ -184,7 +190,10 @@ export const PhoneEntryList = memo(function PhoneEntryList({
         </span>
       </div>
 
-      {groups.map((group) => (
+      {groups.map((group) => {
+        // planned entries are in the calendar, not here, until they start (D-PLANNED)
+        const rows = listedRows(group, nowSec)
+        return (
         <section key={group.date} className="pt-2">
           <div className="flex items-baseline justify-between px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <h3>{formatDayHeader(group.date, todayKey)}</h3>
@@ -194,9 +203,17 @@ export const PhoneEntryList = memo(function PhoneEntryList({
               {group.plannedSeconds > 0 && ` · ${formatDuration(group.plannedSeconds, format)} planned`}
             </span>
           </div>
+          {rows.length === 0 ? (
+            <div className="flex items-center justify-between rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+              <span>Only planned entries: they show here once they start.</span>
+              <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => onSeeInCalendar(group.date)}>
+                See in calendar
+              </Button>
+            </div>
+          ) : (
           <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-            {group.rows.map((row, index) => {
-              const joint = jointBelow(group, index)
+            {rows.map((row, index) => {
+              const joint = jointBelow(group, rows, index)
               const ids = row.entries.map((e) => e.id)
               const open = expanded.includes(row.key)
               return (
@@ -230,7 +247,7 @@ export const PhoneEntryList = memo(function PhoneEntryList({
                   {joint && (
                     <JointMark
                       joint={joint}
-                      across={index === group.rows.length - 1}
+                      across={index === rows.length - 1}
                       state={state}
                       latest={() => latestState.current}
                       setState={setState}
@@ -241,8 +258,10 @@ export const PhoneEntryList = memo(function PhoneEntryList({
               )
             })}
           </ul>
+          )}
         </section>
-      ))}
+        )
+      })}
 
       {allGroups.length > visibleDays && (
         <div className="flex justify-center pt-2">
@@ -273,6 +292,7 @@ function PhoneRow({
   expanded,
   onToggleExpand,
   onStartSelecting,
+  swipes,
 }: {
   entry: TimeEntry
   row?: EntryRow
@@ -291,6 +311,8 @@ function PhoneRow({
   expanded?: boolean
   onToggleExpand?: () => void
   onStartSelecting: (ids: Id[]) => void
+  /** right to continue, left to delete (D-SWIPE) */
+  swipes: boolean
 }) {
   const running = isRunning(entry)
   const planned = isPlanned(entry, nowSec)
@@ -325,10 +347,79 @@ function PhoneRow({
       }
     })
 
+  const ids = row ? row.entries.map((e) => e.id) : [entry.id]
+
+  /**
+   * THE SWIPE (D-SWIPE). A finger that sets off sideways drags the row; one
+   * that sets off up or down is the page's scroll, which `touch-action: pan-y`
+   * leaves to the browser, and the row never moves. Letting go past 75% of the
+   * width acts; less springs back. A mouse does not swipe.
+   */
+  const [offset, setOffset] = useState(0)
+  const press = useRef<{ id: number; x: number; y: number; axis: SwipeAxis; width: number } | null>(null)
+  const swallowClick = useRef(false)
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    swallowClick.current = false
+    if (!swipes || event.pointerType === "mouse") return
+    press.current = { id: event.pointerId, x: event.clientX, y: event.clientY, axis: null, width: event.currentTarget.getBoundingClientRect().width }
+  }
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const held = press.current
+    if (!held || event.pointerId !== held.id) return
+    const dx = event.clientX - held.x
+    if (held.axis === null) {
+      held.axis = swipeAxis(dx, event.clientY - held.y)
+      if (held.axis === "x") event.currentTarget.setPointerCapture?.(event.pointerId)
+    }
+    // a running row has nothing to continue: it only goes left
+    if (held.axis === "x") setOffset(running ? Math.min(0, dx) : dx)
+  }
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const held = press.current
+    press.current = null
+    if (!held || event.pointerId !== held.id || held.axis !== "x") return
+    swallowClick.current = true
+    setOffset(0)
+    const action = swipeAction(event.clientX - held.x, held.width)
+    if (action === "continue" && !running) continueIt()
+    else if (action === "delete") deleteWithUndo(latest(), ids, setState, pushToast)
+  }
+
   return (
     <div
-      className={cn("flex items-center gap-1 py-1.5 pl-3 pr-1", nested && "pl-8", running && "bg-primary/5")}
-      style={planned ? plannedStripes : undefined}
+      data-swipe-row
+      className="relative overflow-hidden"
+      style={{ touchAction: "pan-y" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => {
+        press.current = null
+        setOffset(0)
+      }}
+      onClickCapture={(event) => {
+        // the click a browser sends after a swipe is not a tap on the row
+        if (!swallowClick.current) return
+        swallowClick.current = false
+        event.stopPropagation()
+        event.preventDefault()
+      }}
+    >
+      {offset !== 0 && (
+        <div
+          aria-hidden
+          className={cn(
+            "absolute inset-0 flex items-center px-4 text-sm font-semibold text-white",
+            offset > 0 ? "justify-start bg-primary" : "justify-end bg-destructive",
+          )}
+        >
+          {offset > 0 ? "Continue" : "Delete"}
+        </div>
+      )}
+    <div
+      data-swipe-face
+      className={cn("relative flex items-center gap-1 bg-card py-1.5 pl-3 pr-1", nested && "pl-8", running && "bg-primary/5")}
+      style={{ ...(planned ? plannedStripes : {}), transform: `translateX(${offset}px)` }}
     >
       {selecting && (
         <label className="flex size-11 shrink-0 items-center justify-center">
@@ -384,18 +475,23 @@ function PhoneRow({
           {entry.billable && <IconMoney aria-label="Billable" className="size-3.5 text-muted-foreground" />}
           {running ? formatClock(seconds) : formatDuration(seconds, state.user.durationFormat)}
         </span>
-        <button
-          type="button"
-          onClick={continueIt}
-          aria-label="Continue this entry"
-          className="flex h-9 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
-        >
-          <IconStart className="size-4" />
-        </button>
+        {/* not on the running row: the bar at the bottom is that timer's control, and a ▷ here read as one (findability, 2026-11-05) */}
+        {running ? (
+          <span className="h-9 w-11" />
+        ) : (
+          <button
+            type="button"
+            onClick={continueIt}
+            aria-label="Continue this entry"
+            className="flex h-9 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
+          >
+            <IconStart className="size-4" />
+          </button>
+        )}
       </div>
       <RowMenu
         entry={entry}
-        ids={row ? row.entries.map((e) => e.id) : [entry.id]}
+        ids={ids}
         state={state}
         setState={setState}
         pushToast={pushToast}
@@ -406,6 +502,7 @@ function PhoneRow({
         onSelect={onStartSelecting}
         latest={latest}
       />
+    </div>
     </div>
   )
 }

@@ -49,6 +49,12 @@ export interface UserSettings {
   showTimelineRecorder: boolean
   /** Hides the "this workspace ships with sample data" notice once dismissed */
   demoNoticeDismissed?: boolean
+  /**
+   * The phone list's swipes: right continues, left deletes (D-SWIPE in
+   * Plans/toggl-parity.md). On unless switched off; absent means on, so a
+   * workspace saved before this existed has them.
+   */
+  swipeActions?: boolean
 }
 
 // ---------------------------------------------------------------------------
