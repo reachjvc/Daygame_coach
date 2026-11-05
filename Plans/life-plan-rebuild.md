@@ -16,7 +16,10 @@ for your yes. Q11 (achievements) is live too, from its own plan, `Plans/life-pla
 (card `q11-achievements`). Then comparing /plan with Stefan's method and your words, round by round: round 1,
 the Review step reading the period back (`Plans/life-plan-review-reads-back.md`); round 2, readings on
 number goals (`Plans/life-plan-readings.md`); round 3, goals that can be achieved, paused or dropped
-(`Plans/life-plan-goal-status.md`). All three live 2026-11-05, none signed off.
+(`Plans/life-plan-goal-status.md`); round 4, steps with days (`Plans/life-plan-dated-steps.md`). All
+four live 2026-11-05, none signed off. After round 3 the comparison found nothing left worth building
+for weekly use beyond round 4; two small things stay unbuilt (a why per experience, item 20; a box to
+set one step's day by hand). The rounds stop here.
 
 **Answered 2026-11-05, in chat:** "we can go with all your recommendations". So the Your 10s wheel will
 show each area's score from the latest review, and rating an area on Your 10s writes into this week's

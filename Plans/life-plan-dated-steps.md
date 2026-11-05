@@ -1,6 +1,6 @@
 # Steps with days (round 4 after the rebuild)
 
-**Status:** written and built 2026-11-05. Not signed off: card `dated-steps` on the sign-off page.
+**Status:** written, built and **live 2026-11-05** (migration first, then commit `2e0c01b0`). Not signed off: card `dated-steps` on the sign-off page.
 
 ## What you are agreeing to, in plain words
 
@@ -53,3 +53,9 @@ behind. The new review read these goals back with nothing to judge them by.
 - Tests: `datedSteps.test.ts` (7), `northStarService.test.ts` (the rungs' days given once and kept),
   `life-mastery-dated-steps.spec.ts` (a step three days late on Today, ticked there, done with today's day
   on the account, counted in the week's review).
+
+## Live 2026-11-05
+
+Backup first: `~/dg-backups/life-plan-2026-11-05-before-checkpoint-days.json` (revision 920, the 48 steps
+read again). Then the migration (the only one pending), then the code. Checked on the live database after:
+48 steps, none with a day, revision 920.
