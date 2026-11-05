@@ -54,8 +54,13 @@ import {
 import { serverIsoAt } from "../serverClock"
 import { layOnto } from "../tabMergeService"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
-import type { EntryDraft, Id, ReportConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
+import type { EntryDraft, Id, IsoDate, ReportConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
 import { CalendarView } from "./CalendarView"
+import { useIsMobile } from "../hooks/useIsMobile"
+import { keepTimerView, readTimerView, weekOf, type TimerView } from "../pcTimerPageService"
+import { timerList } from "../timerListService"
+import { PcSidebar, type SidebarPlace } from "./PcSidebar"
+import { PcWeekRow } from "./PcWeekRow"
 import { EntryDetailModalBody, EntryList } from "./EntryList"
 import { IdleQuestion } from "./IdleQuestion"
 import { ManageView, type ManageTab } from "./ManageView"
@@ -80,7 +85,7 @@ type NavItem = { id: Screen; label: string; icon: typeof IconTimer }
  * exist here, and Settings is somewhere you go once. They are one tap away in
  * the sheet, which is the same trade the app's own bar makes with "More".
  *
- * A pointer device keeps all six as tabs; the room is there.
+ * A pointer device has all of them in its left sidebar (`PcSidebar`).
  */
 const PHONE_TABS: NavItem[] = [
   { id: "timer", label: "Timer", icon: IconTimer },
@@ -94,7 +99,6 @@ const MORE_SECTIONS: NavItem[] = [
   { id: "settings", label: "Settings", icon: IconSettings },
 ]
 
-const NAV: NavItem[] = [...PHONE_TABS, ...MORE_SECTIONS]
 
 /** A history step this tracker wrote, so closing the sheet knows whether Back will undo it */
 type TrackerStep = { timetrack: "arrival" | "section" | "sheet" }
@@ -277,6 +281,18 @@ export function TogglLab({
   const [detailEntry, setDetailEntry] = useState<TimeEntry | null>(null)
   const [focusProjectId, setFocusProjectId] = useState<Id | null>(null)
   const [reportConfig, setReportConfig] = useState<ReportConfig | null>(null)
+  /**
+   * THE PC'S TIMER PAGE (Phase 5 of Plans/toggl-parity.md): its view, kept per
+   * browser, and the week its row names (null: All dates in List view, this
+   * week in Calendar). The phone has neither; its Calendar is a tab of its own.
+   */
+  const isPc = !useIsMobile()
+  const [timerView, setTimerViewState] = useState<TimerView>(readTimerView)
+  const [weekAnchor, setWeekAnchor] = useState<IsoDate | null>(null)
+  const pcList = useMemo(
+    () => (state ? timerList(state.entries, state.user.groupSimilarEntries) : null),
+    [state?.entries, state?.user.groupSimilarEntries], // eslint-disable-line react-hooks/exhaustive-deps -- the two fields the list is made of
+  )
 
   /** the latest of each, for the history listeners, which are attached once */
   const latestState = useRef<TimetrackState | null>(state)
@@ -558,6 +574,30 @@ export function TogglLab({
     [goTo],
   )
 
+  /** A row of the PC's sidebar: a section, and for Manage's rows the tab inside it */
+  const goToPlace = useCallback(
+    (place: SidebarPlace) => {
+      if (place.manageTab) setManageTab(place.manageTab)
+      if (place.section !== "projects") setFocusProjectId(null)
+      goTo(place.section)
+    },
+    [goTo],
+  )
+
+  /**
+   * "Calendar | List view" on the PC's Timer page, kept per browser. An address
+   * that named the old Calendar section (`?view=calendar`) shows the Timer page
+   * on its Calendar view; List view from there is the Timer address again.
+   */
+  const setTimerView = useCallback(
+    (view: TimerView) => {
+      setTimerViewState(view)
+      keepTimerView(view)
+      if (view === "list" && screenNow.current === "calendar") goTo("timer")
+    },
+    [goTo],
+  )
+
   /** The detail sheet, opened as a step of its own, so Back closes it */
   const openEntry = useCallback((entry: TimeEntry) => {
     const address = trackerAddressFor(window.location.pathname, { section: screenNow.current, entryId: entry.id })
@@ -686,7 +726,8 @@ export function TogglLab({
         setShortcutsOpen((open) => !open)
         return
       }
-      if (screen !== "timer" || !state) return
+      // the Timer page: on a PC that is also its Calendar view (`?view=calendar`)
+      if ((screen !== "timer" && !(isPc && screen === "calendar")) || !state) return
 
       const key = event.key.toLowerCase()
       if (key === "s") {
@@ -698,7 +739,12 @@ export function TogglLab({
         startTracking()
       } else if (key === "m") {
         event.preventDefault()
-        setMode("manual")
+        // Toggl's M switches between timer and manual mode, both ways
+        setMode(mode === "manual" ? "timer" : "manual")
+      } else if (key === "t") {
+        // Toggl's T: today, in the calendar and the week row above it
+        event.preventDefault()
+        setWeekAnchor(null)
       } else if (key === "c") {
         event.preventDefault()
         afterCheck((_latest, tappedAt) => actionsNow.current.continueLast(tappedAt))
@@ -712,7 +758,7 @@ export function TogglLab({
     }
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
-  }, [afterCheck, screen, setMode, state, startTracking, stopTracking])
+  }, [afterCheck, isPc, mode, screen, setMode, state, startTracking, stopTracking])
 
   const unreadAlerts = useMemo(() => state?.alerts.filter((a) => !a.read) ?? [], [state?.alerts])
 
@@ -721,34 +767,26 @@ export function TogglLab({
     return <TrackerLoading backHref={backHref} backLabel={backText} underAppHeader={underAppHeader} />
   }
 
-  /** The six sections as tabs, for a pointer device; a phone has the bottom bar */
-  const sectionTabs = (className: string, onAppRow: boolean) => (
-    <nav className={className}>
-      {NAV.map((item) => {
-        const Icon = item.icon
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => {
-              goTo(item.id)
-              if (item.id !== "projects") setFocusProjectId(null)
-            }}
-            aria-current={screen === item.id ? "page" : undefined}
-            className={cn(
-              "-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-sm",
-              onAppRow ? "py-2.5" : "py-2",
-              screen === item.id
-                ? "border-primary font-medium text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Icon className="size-4" />
-            {item.label}
-          </button>
-        )
-      })}
-    </nav>
+  /** The Timer page, which on a PC is also where the calendar is */
+  const timerPage = screen === "timer" || (isPc && screen === "calendar")
+  const pcView: TimerView = screen === "calendar" ? "calendar" : timerView
+  const todayKey = dateKey(new Date(nowSec * 1000))
+  const pcAnchor = weekAnchor ?? todayKey
+  const pcWeek = weekOf(pcAnchor, state.user.weekStart)
+  const calendarView = (onTimerPage: boolean) => (
+    <CalendarView
+      state={state}
+      setState={setState}
+      nowSec={nowSec}
+      pushToast={pushToast}
+      onEditEntry={openEntry}
+      onOpenIntegrations={() => {
+        goTo("settings")
+        setSettingsTab("integrations")
+      }}
+      anchor={onTimerPage ? pcAnchor : undefined}
+      onAnchor={onTimerPage ? setWeekAnchor : undefined}
+    />
   )
 
   return (
@@ -770,14 +808,14 @@ export function TogglLab({
             the right-hand group moves to its own line, still right-aligned,
             instead of off the edge. */}
         {/* Under the app's header on a PC (`underAppHeader`) this one row
-            holds the section tabs and the sync badge, and the back control and
+            holds the sync badge (the sections are in `PcSidebar`), and the back control and
             the title are for phones only: the app's header already says both,
             and the calendar keeps the height (Q5, D9 in
             Plans/time-tracker-like-toggl.md). */}
         <div
           className={cn(
             "mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5 sm:gap-3 sm:px-4 sm:py-2",
-            underAppHeader && "sm:flex-nowrap sm:py-0",
+            underAppHeader && "sm:flex-nowrap",
           )}
         >
           {/* The only way out of the tracker on a phone: see `BACK_LINK_CLASS` */}
@@ -795,9 +833,8 @@ export function TogglLab({
               removed: the page still needs its one heading, and the browser
               tests find the tracker by it at every width */}
           <h1 className={cn("shrink-0 text-sm font-semibold", underAppHeader && "sm:sr-only")}>Time</h1>
-          {underAppHeader
-            ? sectionTabs("hidden min-w-0 self-stretch overflow-x-auto sm:flex", true)
-            : <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>}
+          {/* on a PC the sections are down the left (`PcSidebar`) */}
+          {!underAppHeader && <span className="hidden truncate text-xs text-muted-foreground sm:inline">{state.workspace.name}</span>}
 
           {/* min-w-0, because this group holds three things that all want their
               full width: the sync badge with its sentence, the running pill with
@@ -895,9 +932,19 @@ export function TogglLab({
           </div>
         </div>
 
-        {!underAppHeader && sectionTabs("mx-auto hidden max-w-6xl gap-1 overflow-x-auto px-4 sm:flex", false)}
       </header>
 
+      {/* On a PC the sections are down the left, beside everything under the header (Phase 5, D-PC-SHELL) */}
+      <div className="sm:flex">
+      <PcSidebar
+        screen={screen}
+        manageTab={manageTab}
+        running={running}
+        nowSec={nowSec}
+        onGo={goToPlace}
+        onEditRunning={openEntry}
+      />
+      <div className="min-w-0 flex-1">
       {sync.status === "signed-out" && (
         <div className="mx-auto max-w-6xl px-3 pt-3 sm:px-4">
           <div className="flex flex-col gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm sm:flex-row sm:items-center">
@@ -932,7 +979,7 @@ export function TogglLab({
       <ErrorBoundary label="this screen">
       <AfterCheckContext.Provider value={afterCheck}>
       <main className="mx-auto max-w-6xl space-y-4 px-3 pb-24 pt-3 sm:px-4 sm:py-4">
-        {screen === "timer" && (
+        {timerPage && (
           <>
             <TimerBar
               state={state}
@@ -951,6 +998,19 @@ export function TogglLab({
               next={nextDraft}
               setNext={setNextDraft}
             />
+            {isPc && (
+              <PcWeekRow
+                anchor={weekAnchor}
+                todayKey={todayKey}
+                weekStart={state.user.weekStart}
+                todaySeconds={pcList?.groupsAt(nowSec).find((group) => group.date === todayKey)?.totalSeconds ?? 0}
+                weekSeconds={pcList?.weekSecondsAt(pcAnchor, state.user.weekStart, nowSec) ?? 0}
+                durationFormat={state.user.durationFormat}
+                view={pcView}
+                onAnchor={setWeekAnchor}
+                onView={setTimerView}
+              />
+            )}
             <FavoritesBar
               state={state}
               onStart={(favoriteDraft) => startTracking(favoriteDraft)}
@@ -968,30 +1028,27 @@ export function TogglLab({
                 )
               }}
             />
-            <EntryList
-              state={state}
-              setState={setState}
-              nowSec={nowSec}
-              pushToast={pushToast}
-              onEditEntry={openEntry}
-              onGoToProject={goToProject}
-            />
+            {isPc && pcView === "calendar" ? (
+              calendarView(true)
+            ) : (
+              <EntryList
+                state={state}
+                setState={setState}
+                nowSec={nowSec}
+                pushToast={pushToast}
+                onEditEntry={openEntry}
+                onGoToProject={goToProject}
+                // All dates until the week row picks a week, as in Toggl Track's List view
+                weekFrom={isPc && weekAnchor !== null ? pcWeek.from : undefined}
+                weekTo={isPc && weekAnchor !== null ? pcWeek.to : undefined}
+                totalsAbove={isPc}
+              />
+            )}
           </>
         )}
 
-        {screen === "calendar" && (
-          <CalendarView
-            state={state}
-            setState={setState}
-            nowSec={nowSec}
-            pushToast={pushToast}
-            onEditEntry={openEntry}
-            onOpenIntegrations={() => {
-              goTo("settings")
-              setSettingsTab("integrations")
-            }}
-          />
-        )}
+        {/* the phone's Calendar tab; on a PC the calendar is a view of the Timer page */}
+        {screen === "calendar" && !isPc && calendarView(false)}
 
         {screen === "reports" && (
           <ReportsView
@@ -1037,6 +1094,8 @@ export function TogglLab({
       </main>
       </AfterCheckContext.Provider>
       </ErrorBoundary>
+      </div>
+      </div>
 
       {/* bottom navigation (phones) */}
       <nav
@@ -1110,7 +1169,7 @@ export function TogglLab({
             ))}
           </ul>
           <p className="mt-3 text-xs text-muted-foreground">
-            Shortcuts work on the Timer screen and pause while a field is focused — the same rule as Toggl&apos;s web app.
+            Shortcuts work on the Timer page and pause while a field or a dialog has focus.
           </p>
         </Modal>
       )}

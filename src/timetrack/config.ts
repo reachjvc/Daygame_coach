@@ -245,8 +245,9 @@ export const CURRENCIES = ["USD", "EUR", "GBP", "NOK", "SEK", "DKK", "CHF", "AUD
 export const SHORTCUTS = [
   { keys: "S", action: "Stop the running time entry" },
   { keys: "N", action: "Start a new entry in timer mode" },
-  { keys: "M", action: "New entry in manual mode" },
+  { keys: "M", action: "Switch between timer and manual mode" },
   { keys: "C", action: "Continue the last time entry" },
+  { keys: "T", action: "Go to today (in the calendar)" },
   { keys: "1 … 9", action: "Start the matching favorite" },
   { keys: "@", action: "Open the project dropdown (in description)" },
   { keys: "#", action: "Open the tag dropdown (in description)" },

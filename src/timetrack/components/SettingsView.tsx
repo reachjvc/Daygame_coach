@@ -615,7 +615,7 @@ function AutomationPanel({
 
       <SectionCard
         title="Timeline recorder"
-        description="Toggl's desktop app records every application you use. A web page cannot see other apps, so this records only how long this tab stays open. Turn any block into a time entry below."
+        description="A desktop time tracker can record every application you use. A web page cannot see other apps, so this records only how long this tab stays open. Turn any block into a time entry below."
       >
         <ToggleRow
           label="Record this tab's activity"
@@ -855,7 +855,7 @@ export function IntegrationsPanel({
     <div className="space-y-4">
       <SectionCard
         title="External calendars"
-        description={`Events appear in the right column of the calendar view. All-day events are skipped and the window is ${CALENDAR_WINDOW_DAYS_BACK} days back / ${CALENDAR_WINDOW_DAYS_FORWARD} days forward — the same rules Toggl applies.`}
+        description={`Events appear in the right column of the calendar view. All-day events are skipped and the window is ${CALENDAR_WINDOW_DAYS_BACK} days back / ${CALENDAR_WINDOW_DAYS_FORWARD} days forward — the usual rules for calendar import.`}
       >
         {state.calendars.length === 0 ? (
           <EmptyState title="No calendar connected yet" hint="Choose a method below to bring your events in beside your tracked time." />
@@ -1087,7 +1087,7 @@ export function IntegrationsPanel({
           )}
 
           <p className="border-t border-border pt-2 text-[11px] text-muted-foreground">
-            Toggl&apos;s one-click “Connect” button uses a Google OAuth consent screen, which needs an OAuth client ID
+            A one-click “Connect” button needs a Google OAuth consent screen, and that needs an OAuth client ID
             and secret in this app&apos;s environment. Until those exist, the two methods that work here — the secret
             address and a <code>.ics</code> upload — import the same events, and the upload never puts a calendar
             credential anywhere.
@@ -1097,7 +1097,7 @@ export function IntegrationsPanel({
 
       <SectionCard
         title="Webhooks"
-        description="Toggl posts entry and project events to a URL you choose. Here they are recorded below instead of being sent anywhere."
+        description="Webhooks post entry and project events to a URL you choose. Here they are recorded below instead of being sent anywhere."
         actions={
           <div className="flex gap-2">
             <Input {...hookField.inputProps} placeholder="https://example.com/hook" className="h-11 w-full sm:h-8 sm:w-[220px]" />
@@ -1334,7 +1334,7 @@ function DataPanel({
 
       <SectionCard
         title="Import time entries from CSV"
-        description="Takes a Toggl export directly: Description, Project, Client, Task, Tags, Billable, Start date, Start time, End date, End time, Duration. Anything missing — clients, projects, tasks, tags — is created for you."
+        description="Takes a CSV export from another time tracker directly: Description, Project, Client, Task, Tags, Billable, Start date, Start time, End date, End time, Duration. Anything missing — clients, projects, tasks, tags — is created for you."
       >
         <input
           ref={csvInput}

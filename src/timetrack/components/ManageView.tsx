@@ -265,7 +265,7 @@ function TeamPanel({
     <div className="space-y-4">
       <SectionCard
         title="Members"
-        description="Access levels mirror Toggl: basic tracks time, manager sees team reports, admin manages the workspace."
+        description="Three access levels: basic tracks time, manager sees team reports, admin manages the workspace."
         actions={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             {/*

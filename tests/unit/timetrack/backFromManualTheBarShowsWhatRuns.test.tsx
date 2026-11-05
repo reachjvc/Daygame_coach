@@ -52,7 +52,8 @@ afterEach(() => {
 test("adding an entry by hand, then going back to the timer, shows the running entry's name", async () => {
   render(<TogglLab />)
   const main = within(await screen.findByRole("main"))
-  const box = () => main.getByPlaceholderText("What are you working on?") as HTMLInputElement
+  // the PC's manual bar asks "What have you done?", as Toggl Track's does (Plans/toggl-parity.md Phase 5)
+  const box = () => main.getByPlaceholderText(/^What (are you working on|have you done)\?$/) as HTMLInputElement
   await waitFor(() => expect(box().value).toBe("still running"))
 
   fireEvent.click(main.getByRole("button", { name: "Toggle timer or manual mode" }))
@@ -63,7 +64,8 @@ test("adding an entry by hand, then going back to the timer, shows the running e
   fireEvent.blur(start)
   fireEvent.change(end, { target: { value: "06:20" } })
   fireEvent.blur(end)
-  fireEvent.click(main.getByRole("button", { name: "Add" }))
+  // the PC's round "+", "Add time entry"; the phone's button says "Add"
+  fireEvent.click(main.getByRole("button", { name: /^Add( time entry)?$/ }))
   await waitFor(() => expect(stored().entries.map((e) => e.description)).toContain("added by hand"))
 
   fireEvent.click(main.getByRole("button", { name: "Toggle timer or manual mode" }))

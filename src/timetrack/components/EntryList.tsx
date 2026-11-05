@@ -89,7 +89,7 @@ import {
   type Joint,
 } from "../timeFixService"
 import { timerList } from "../timerListService"
-import type { DayGroup, EntryRow, Id, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
+import type { DayGroup, EntryRow, Id, IsoDate, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "./primitives"
 import { serverNow, serverNowIso } from "../serverClock"
@@ -107,6 +107,15 @@ interface EntryListProps {
   onEditEntry: (entry: TimeEntry) => void
   /** "Go to ‹project›" in an entry's ⋮ menu; without it the item is not offered */
   onGoToProject?: (projectId: Id) => void
+  /**
+   * The week the PC's week row names (Phase 5 of Plans/toggl-parity.md): only
+   * its days are listed, as on Toggl Track's web timer page, and the row above
+   * says its total. Without it (the phone) the list runs back day by day.
+   */
+  weekFrom?: IsoDate
+  weekTo?: IsoDate
+  /** the PC's week row says the totals, so the list's own "This week" is not said twice */
+  totalsAbove?: boolean
 }
 
 /**
@@ -115,7 +124,7 @@ interface EntryListProps {
  * on a PC with three months of entries (heavy-user audit of 2026-11-04, D6). Its props
  * are the workspace, the clock and stable callbacks, so a keystroke now changes none.
  */
-export const EntryList = memo(function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onGoToProject }: EntryListProps) {
+export const EntryList = memo(function EntryList({ state, setState, nowSec, pushToast, onEditEntry, onGoToProject, weekFrom, weekTo, totalsAbove }: EntryListProps) {
   /**
    * ONE ROW LAYOUT, NOT BOTH.
    *
@@ -138,7 +147,8 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
   const list = useMemo(() => timerList(state.entries, state.user.groupSimilarEntries), [state.entries, state.user.groupSimilarEntries])
   const entries = list.entries
   const allGroups = useMemo(() => list.groupsAt(nowSec), [list, nowSec])
-  const groups = allGroups.slice(0, visibleDays)
+  const inWeek = weekFrom !== undefined && weekTo !== undefined
+  const groups = inWeek ? allGroups.filter((group) => group.date >= weekFrom && group.date <= weekTo) : allGroups.slice(0, visibleDays)
   const todayKey = dateKey(new Date(nowSec * 1000))
   const weekSeconds = list.weekSecondsAt(todayKey, state.user.weekStart, nowSec)
   /**
@@ -210,7 +220,9 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
      * delete looks exactly like a successful one.
      */
     if (result.removed.length > 0) {
-      pushToast(`${plural(result.removed.length, "time entry", "time entries")} deleted`, "info", () =>
+      // Toggl's words for one; a count for several (D-PC-LIST)
+      const said = result.removed.length === 1 ? "The time entry was deleted." : `${plural(result.removed.length, "time entry", "time entries")} deleted`
+      pushToast(said, "info", () =>
         setState((latest) => restoreEntries(latest, result.removed)),
       )
     }
@@ -236,12 +248,17 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
-        <p className="text-xs text-muted-foreground">
-          This week{" "}
-          <span className="font-semibold tabular-nums text-foreground">
-            {formatDuration(weekSeconds, state.user.durationFormat)}
-          </span>
-        </p>
+        {/* on the PC the week row above says it, for the week it names */}
+        {inWeek || totalsAbove ? (
+          <span />
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            This week{" "}
+            <span className="font-semibold tabular-nums text-foreground">
+              {formatDuration(weekSeconds, state.user.durationFormat)}
+            </span>
+          </p>
+        )}
         <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground sm:min-h-9">
           {/* 16px. A checkbox is not exempt from the floor just because the
               label beside it is also clickable — the <label> wrapper is what
@@ -352,7 +369,13 @@ export const EntryList = memo(function EntryList({ state, setState, nowSec, push
         </section>
       ))}
 
-      {allGroups.length > visibleDays && (
+      {inWeek && groups.length === 0 && (
+        <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+          Nothing tracked this week. ‹ shows the week before.
+        </p>
+      )}
+
+      {!inWeek && allGroups.length > visibleDays && (
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={() => setVisibleDays((v) => v + 7)}>
             Load more days ({allGroups.length - visibleDays} left)
@@ -760,6 +783,7 @@ function EntryFields({
       onEditEntry={onEditEntry}
       onGoToProject={onGoToProject}
       nowIso={nowIso}
+      pc={!isMobile}
     />
   )
 
@@ -850,7 +874,7 @@ function EntryFields({
   const pointerRow = (
     <div
       className={cn(
-        "hidden items-center gap-2 px-3 py-2 sm:grid",
+        "group/row hidden items-center gap-2 px-3 py-2 sm:grid",
         selectionMode ? ROW_GRID.selecting : ROW_GRID.plain,
         running && "bg-primary/5",
       )}
@@ -1060,7 +1084,20 @@ function EntryFields({
           className="w-full rounded bg-transparent text-right text-sm tabular-nums outline-none hover:bg-secondary/60 focus:bg-secondary/60 disabled:opacity-100"
         />
 
-      <div className="flex items-center justify-end">
+      {/*
+        ▶ AND ⋮ SHOW ON HOVER, as in Toggl Track's web list (D-PC-LIST): only
+        where there is a pointer that hovers, so a touch screen at PC width
+        still sees them, and kept while the row has the keyboard or its menu is
+        open. Always on the running row.
+      */}
+      <div
+        data-row-actions
+        className={cn(
+          "flex items-center justify-end",
+          !running &&
+            "pointer-fine:opacity-0 pointer-fine:group-hover/row:opacity-100 pointer-fine:group-focus-within/row:opacity-100 pointer-fine:has-[[aria-expanded=true]]:opacity-100",
+        )}
+      >
         {continueButton}
         {menu}
       </div>
@@ -1076,6 +1113,15 @@ function EntryFields({
 }
 
 /** Per-entry action menu, shared by the phone and pointer layouts */
+/**
+ * Per-entry action menu, shared by the phone and pointer layouts.
+ *
+ * ON THE PC, IN TOGGL TRACK'S ORDER AND WORDS (D-PC-LIST, Phase 5 item 4 of
+ * Plans/toggl-parity.md): Split, Pin as favorite, Go to project, Copy
+ * description, Copy start link, Duplicate, Delete [W25 15:31; Track web's
+ * strings `TimeEntryContextMenu.*`]. "Edit details…", which Toggl's menu does
+ * not have, is kept after them. The phone keeps its own order.
+ */
 function EntryMenu({
   entry,
   state,
@@ -1087,6 +1133,7 @@ function EntryMenu({
   onEditEntry,
   onGoToProject,
   nowIso,
+  pc,
 }: {
   entry: TimeEntry
   state: TimetrackState
@@ -1098,7 +1145,10 @@ function EntryMenu({
   onEditEntry: (entry: TimeEntry) => void
   onGoToProject?: (projectId: Id) => void
   nowIso: () => string
+  /** the pointer layout: Toggl's order and words */
+  pc?: boolean
 }) {
+  const favorite = Boolean(findFavorite(state, draftOf(entry)))
   return (
       <Dropdown
         align="right"
@@ -1110,9 +1160,10 @@ function EntryMenu({
           </span>
         )}
       >
-        {(close) => (
-          <div className="py-1 text-sm">
+        {(close) => {
+          const duplicate = (
             <MenuItem
+              key="duplicate"
               icon={<IconDuplicate className="size-3.5" />}
               label="Duplicate"
               onClick={() => {
@@ -1130,9 +1181,12 @@ function EntryMenu({
                 close()
               }}
             />
+          )
+          const split = (
             <MenuItem
+              key="split"
               icon={<IconSplit className="size-3.5" />}
-              label="Split in two"
+              label={pc ? "Split" : "Split in two"}
               disabled={running || entry.duration <= MIN_SPLIT_SECONDS}
               hint={entry.duration <= MIN_SPLIT_SECONDS ? "Needs > 10 min" : undefined}
               onClick={() => {
@@ -1144,15 +1198,21 @@ function EntryMenu({
                 close()
               }}
             />
+          )
+          const pin = (
             <MenuItem
+              key="favorite"
               icon={<IconFavorite className="size-3.5" />}
-              label={findFavorite(state, draftOf(entry)) ? "Remove favorite" : "Add to favorites"}
+              label={favorite ? "Remove favorite" : pc ? "Pin as favorite" : "Add to favorites"}
               onClick={() => {
                 setState((current) => toggleFavorite(current, draftOf(entry), nowIso()))
                 close()
               }}
             />
+          )
+          const copyLink = (
             <MenuItem
+              key="link"
               icon={<IconLink className="size-3.5" />}
               label="Copy start link"
               onClick={() => {
@@ -1163,7 +1223,23 @@ function EntryMenu({
                 close()
               }}
             />
+          )
+          const copyDescription = (
             <MenuItem
+              key="description"
+              icon={<IconDuplicate className="size-3.5" />}
+              label="Copy description"
+              disabled={entry.description.trim() === ""}
+              onClick={() => {
+                navigator.clipboard?.writeText(entry.description)
+                pushToast("Description copied to clipboard")
+                close()
+              }}
+            />
+          )
+          const details = (
+            <MenuItem
+              key="details"
               icon={<IconEdit className="size-3.5" />}
               label="Edit details…"
               onClick={() => {
@@ -1171,20 +1247,24 @@ function EntryMenu({
                 close()
               }}
             />
-            {/* It set `#project-…` in the address, and nothing listened: the menu
-                closed and that was all. It now opens Projects on that project. */}
-            {project && onGoToProject && (
+          )
+          // It set `#project-…` in the address, and nothing listened: the menu
+          // closed and that was all. It now opens Projects on that project.
+          const goToProject =
+            project && onGoToProject ? (
               <MenuItem
+                key="project"
                 icon={<ColorDot color={project.color} />}
-                label={`Go to ${project.name}`}
+                label={pc ? "Go to project" : `Go to ${project.name}`}
                 onClick={() => {
                   close()
                   onGoToProject(project.id)
                 }}
               />
-            )}
-            <div className="my-1 h-px bg-border" />
+            ) : null
+          const remove = (
             <MenuItem
+              key="delete"
               icon={<IconDelete className="size-3.5" />}
               label="Delete"
               destructive
@@ -1193,8 +1273,16 @@ function EntryMenu({
                 close()
               }}
             />
-          </div>
-        )}
+          )
+          const line = (key: string) => <div key={key} className="my-1 h-px bg-border" />
+          return (
+            <div className="py-1 text-sm">
+              {pc
+                ? [split, pin, goToProject, copyDescription, copyLink, duplicate, remove, line("extras"), details]
+                : [duplicate, split, pin, copyLink, details, goToProject, line("delete"), remove]}
+            </div>
+          )
+        }}
       </Dropdown>
   )
 }

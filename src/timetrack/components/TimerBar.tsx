@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
-import { IconAuto, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
+import { IconAdd, IconAuto, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
   DURATION_HINT,
   DURATION_UNREADABLE,
@@ -56,9 +56,11 @@ import { stopAt, switchAt, undoStopAt } from "../timeFixService"
 import type { EntryDraft, Id, IsoDate, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { MANUAL_FORM_KEY } from "../config"
 import { useDebouncedCommit } from "../hooks/useDebouncedCommit"
+import { useIsMobile } from "../hooks/useIsMobile"
 import type { PushToast } from "../hooks/useTimetrack"
 import { AfterCheckContext } from "./afterCheck"
 import { MomentDialog, type MomentKind } from "./MomentPicker"
+import { RunningTimeBox } from "./RunningTimeBox"
 import { undoOrSay } from "./neighbourNotice"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow, touchTarget } from "./primitives"
@@ -324,6 +326,25 @@ export function TimerBar({
   }
   const latestMode = useRef(mode)
   latestMode.current = mode
+  /**
+   * THE PC'S OWN BAR (Phase 5 of Plans/toggl-parity.md). From 640px the bar
+   * reads as Toggl Track's web bar: one click on the running time opens the
+   * box under it (`RunningTimeBox`), manual mode is a switch beside the main
+   * button with "+" "Add time entry", and the row under the bar moves into
+   * that box. The phone's bar is unchanged.
+   */
+  const isPc = !useIsMobile()
+  const [boxOpen, setBoxOpen] = useState(false)
+  const durationWrap = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!boxOpen) return
+    // a press anywhere outside the time and its box closes it, as Toggl's does
+    const outside = (event: PointerEvent) => {
+      if (!durationWrap.current?.contains(event.target as Node)) setBoxOpen(false)
+    }
+    document.addEventListener("pointerdown", outside)
+    return () => document.removeEventListener("pointerdown", outside)
+  }, [boxOpen])
 
   /**
    * EVERY CONTROL IN THIS BAR GOES THROUGH HERE. See `applyDraftPatch` for what
@@ -470,6 +491,8 @@ export function TimerBar({
   const runningId = running?.id ?? null
   useEffect(() => {
     if (runningId !== null) setEditingDuration(false)
+    // the box is about the timer that was running: another one, or none, closes it
+    setBoxOpen(false)
   }, [runningId])
 
   const suggestion = matchAutotracker(state, draft.description)
@@ -705,6 +728,8 @@ export function TimerBar({
           state={state}
           value={draft.description}
           projectId={draft.projectId}
+          // Toggl's words for its manual bar, on the PC (D-PC-MANUAL); the phone's bar keeps its own
+          placeholder={isPc && mode === "manual" ? "What have you done?" : undefined}
           onChange={(description) => {
             // shown at once, stored on a pause: see `commitDescription`
             putDraft({ ...latestDraft.current, description })
@@ -742,19 +767,24 @@ export function TimerBar({
             <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto">
               {/* the number pad on a phone: "1155" is 11:55 (plan D11) */}
               <Input value={manualStart} onChange={(e) => typeManual({ start: e.target.value })} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="Start time" />
-              <span className="text-muted-foreground">–</span>
+              {/* the PC reads as Toggl Track's manual bar: start and its date, then → stop (D-PC-MANUAL) */}
+              {isPc && <DayPicker value={manualDay} onChange={(day) => typeManual({ day })} onStep={(day) => typeManual({ day })} />}
+              <span className="text-muted-foreground">{isPc ? "→" : "–"}</span>
               <Input value={manualStop} onChange={(e) => typeManual({ stop: e.target.value })} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
               {/* "" makes `parseTimeInput` build an Invalid Date and throw, and the
                   "pick a start and an end" toast on the next line never gets its turn —
                   `DayPicker` passes on only a whole date */}
-              <DayPicker value={manualDay} onChange={(day) => typeManual({ day })} onStep={(day) => typeManual({ day })} />
+              {!isPc && <DayPicker value={manualDay} onChange={(day) => typeManual({ day })} onStep={(day) => typeManual({ day })} />}
             </div>
           ) : (
+            <div ref={durationWrap} className="relative">
             <Input
               value={durationInput}
               onFocus={() => {
                 durationAtFocus.current = durationInput
                 setEditingDuration(true)
+                // one click on the running time: typeable, and the box opens (D-PC-RUNNING)
+                if (isPc && running) setBoxOpen(true)
               }}
               onChange={(event) => {
                 setEditingDuration(true)
@@ -772,12 +802,14 @@ export function TimerBar({
               onKeyDown={(event) => {
                 if (event.key === "Enter" && running) {
                   // through the blur, so the edit is written once and not again on the way out
+                  setBoxOpen(false)
                   event.currentTarget.blur()
                 } else if (event.key === "Enter" && typedLength) {
                   event.preventDefault()
                   logTypedLength()
                 } else if (event.key === "Escape") {
                   event.preventDefault()
+                  setBoxOpen(false)
                   discardDuration.current = true
                   durationAtFocus.current = null
                   setEditingDuration(false)
@@ -795,6 +827,57 @@ export function TimerBar({
               aria-label="Duration"
               className="h-11 w-[100px] text-center tabular-nums sm:h-8 sm:w-[92px]"
             />
+            {boxOpen && running && isPc && (
+              <RunningTimeBox
+                running={running}
+                state={state}
+                setState={setState}
+                latestState={() => latestState.current}
+                pushToast={pushToast}
+                nowSec={nowSec}
+                forgotten={forgottenTimer(state, nowSec) !== null}
+                onClose={() => setBoxOpen(false)}
+                onStopAt={() => {
+                  setBoxOpen(false)
+                  openMoment("stop")
+                }}
+                onSwitchAt={() => {
+                  setBoxOpen(false)
+                  openMoment("switch")
+                }}
+                next={
+                  // the next thing, as under the bar on a phone: typed here, then Switch now
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={nextDescription}
+                      onChange={(event) => setNextDescription(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" || !nextDescription.trim()) return
+                        event.preventDefault()
+                        setBoxOpen(false)
+                        openMoment("switch")
+                      }}
+                      placeholder="Switched to something else?"
+                      aria-label="Next entry"
+                      className="h-8 min-w-0 flex-1 text-sm"
+                    />
+                    {nextDescription.trim() !== "" && (
+                      <Button
+                        size="sm"
+                        className="h-8 px-3"
+                        onClick={() => {
+                          setBoxOpen(false)
+                          confirmMoment("switch", serverNowIso(), { ...nextDraft, description: nextDescription.trim() })
+                        }}
+                      >
+                        Switch now
+                      </Button>
+                    )}
+                  </div>
+                }
+              />
+            )}
+            </div>
           )}
 
           <button
@@ -809,17 +892,30 @@ export function TimerBar({
 
           <div className="mx-1 hidden h-6 w-px bg-border lg:block" />
 
-          <button
-            type="button"
-            onClick={() => setMode(mode === "timer" ? "manual" : "timer")}
-            title={mode === "timer" ? "Switch to manual mode (M)" : "Switch to timer mode (N)"}
-            aria-label="Toggle timer or manual mode"
-            className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
-          >
-            {mode === "timer" ? <IconEdit className="size-5 sm:size-4" /> : <IconTimer className="size-5 sm:size-4" />}
-          </button>
+          {!isPc && (
+            <button
+              type="button"
+              onClick={() => setMode(mode === "timer" ? "manual" : "timer")}
+              title={mode === "timer" ? "Switch to manual mode (M)" : "Switch to timer mode (N)"}
+              aria-label="Toggle timer or manual mode"
+              className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
+            >
+              {mode === "timer" ? <IconEdit className="size-5 sm:size-4" /> : <IconTimer className="size-5 sm:size-4" />}
+            </button>
+          )}
 
-          {mode === "manual" ? (
+          {mode === "manual" && isPc ? (
+            // Toggl Track's round "+" with its tooltip (D-PC-MANUAL)
+            <Button
+              size="icon"
+              className="ml-auto size-9 rounded-full"
+              onClick={addManualEntry}
+              aria-label="Add time entry"
+              title="Add time entry"
+            >
+              <IconAdd className="size-5" />
+            </Button>
+          ) : mode === "manual" ? (
             <Button size="sm" className="ml-auto min-w-[104px] flex-1 sm:flex-none" onClick={addManualEntry}>
               Add
             </Button>
@@ -830,6 +926,7 @@ export function TimerBar({
               className="ml-auto min-w-[104px] flex-1 sm:flex-none"
               onClick={onStop}
               aria-label="Stop timer"
+              title="Stop time entry (S)"
             >
               <IconStop className="size-4" /> Stop
             </Button>
@@ -843,9 +940,25 @@ export function TimerBar({
               className="ml-auto min-w-[104px] flex-1 sm:flex-none"
               onClick={onStart}
               aria-label="Start timer"
+              title="Start time entry"
             >
               <IconStart className="size-4" /> Start
             </Button>
+          )}
+
+          {/* Toggl Track's mode switch, beside the main button: timer above, manual below (D-PC-MANUAL) */}
+          {isPc && (
+            <button
+              type="button"
+              onClick={() => setMode(mode === "timer" ? "manual" : "timer")}
+              title={mode === "timer" ? "Manual Mode (M)" : "Timer Mode (M)"}
+              aria-label="Toggle timer or manual mode"
+              aria-pressed={mode === "manual"}
+              className="flex h-9 w-6 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full border border-border bg-secondary/40 hover:bg-secondary"
+            >
+              <IconTimer className={cn("size-3", mode === "timer" ? "text-primary" : "text-muted-foreground")} />
+              <IconAdd className={cn("size-3", mode === "manual" ? "text-primary" : "text-muted-foreground")} />
+            </button>
           )}
         </div>
       </div>
@@ -861,8 +974,9 @@ export function TimerBar({
         one where the work ended was a trip to another screen. Stop at… sits
         beside the start now; the sheet is in the ⋮ menu.
       */}
+      {/* on the PC all of this is in the box under the running time (`RunningTimeBox`, D-SWITCHED) */}
       {mode === "timer" && running && (
-        <div className="border-t border-border px-3 pb-2 text-xs text-muted-foreground">
+        <div className="border-t border-border px-3 pb-2 text-xs text-muted-foreground sm:hidden">
           <div className="flex items-center gap-x-1">
             <span className="min-w-0 flex-1">
               Started {formatWhen(running.start, state.user.timeFormat, dateKey(new Date(nowSec * 1000)))}

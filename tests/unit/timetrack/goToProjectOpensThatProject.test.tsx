@@ -43,7 +43,8 @@ test("opens Projects on that project's own page", async () => {
   render(<TogglLab />)
 
   fireEvent.click(await screen.findByLabelText("More actions for this time entry"))
-  fireEvent.click(screen.getByRole("button", { name: "Go to Alpha" }))
+  // Toggl's words on the PC ("Go to project"); the phone's menu names it ("Go to Alpha")
+  fireEvent.click(screen.getByRole("button", { name: /^Go to (project|Alpha)$/ }))
 
   expect(
     screen.queryByRole("button", { name: "← All projects" }),

@@ -73,7 +73,7 @@ import {
   undoDisplacement,
   updateEntry,
 } from "../timetrackService"
-import type { CalendarEvent, EntryDraft, Id, TimeEntry, TimetrackState } from "../types"
+import type { CalendarEvent, EntryDraft, Id, IsoDate, TimeEntry, TimetrackState } from "../types"
 import { ColorDot, Dropdown, Segmented, plannedStripes } from "./primitives"
 
 type Range = "day" | "week"
@@ -157,6 +157,8 @@ export function CalendarView({
   pushToast,
   onEditEntry,
   onOpenIntegrations,
+  anchor: anchorFromPage,
+  onAnchor,
 }: {
   state: TimetrackState
   setState: (updater: (current: TimetrackState) => TimetrackState) => void
@@ -165,6 +167,13 @@ export function CalendarView({
   pushToast: PushToast
   onEditEntry: (entry: TimeEntry) => void
   onOpenIntegrations: () => void
+  /**
+   * On the PC's Timer page the week row above the calendar names the week
+   * (Phase 5 of Plans/toggl-parity.md): it holds the day shown, and the
+   * calendar's own ‹ Today › then step only a Day view, which the row does not.
+   */
+  anchor?: IsoDate
+  onAnchor?: (day: IsoDate) => void
 }) {
   const isMobile = useIsMobile()
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -185,7 +194,17 @@ export function CalendarView({
   useEffect(() => {
     if (!zoomTouched) setZoom(isMobile ? "comfortable" : "normal")
   }, [isMobile, zoomTouched])
-  const [anchor, setAnchor] = useState(todayKey)
+  const [ownAnchor, setOwnAnchor] = useState(todayKey)
+  const anchor = anchorFromPage ?? ownAnchor
+  const anchorNow = useRef(anchor)
+  anchorNow.current = anchor
+  const setAnchor = (next: IsoDate | ((current: IsoDate) => IsoDate)) => {
+    const day = typeof next === "function" ? next(anchorNow.current) : next
+    if (onAnchor) onAnchor(day)
+    else setOwnAnchor(day)
+  }
+  /** the week row above says which week this is, so the calendar's own steps are only for a Day view */
+  const rowAbove = onAnchor !== undefined && range === "week"
   const [drag, setDrag] = useState<DragState | null>(null)
   /**
    * The same drag, for the pointer handlers. A move and the release can
@@ -508,16 +527,20 @@ export function CalendarView({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="icon-sm" onClick={() => shift(-1)} aria-label="Previous">
-          <IconPrev className="size-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setAnchor(todayKey)}>
-          Today
-        </Button>
-        <Button variant="outline" size="icon-sm" onClick={() => shift(1)} aria-label="Next">
-          <IconNext className="size-4" />
-        </Button>
-        <span className="ml-1 text-sm font-medium">{rangeLabel}</span>
+        {!rowAbove && (
+          <>
+            <Button variant="outline" size="icon-sm" onClick={() => shift(-1)} aria-label="Previous">
+              <IconPrev className="size-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setAnchor(todayKey)}>
+              Today
+            </Button>
+            <Button variant="outline" size="icon-sm" onClick={() => shift(1)} aria-label="Next">
+              <IconNext className="size-4" />
+            </Button>
+            <span className="ml-1 text-sm font-medium">{rangeLabel}</span>
+          </>
+        )}
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Segmented
