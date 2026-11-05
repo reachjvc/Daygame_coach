@@ -516,6 +516,34 @@ builder works in parallel), so it shipped first.
 **Acceptance:** side-by-side `pc-calendar`, `pc-reports`, `pickers`; findability tasks "add a meeting from
 14:00 to 15:30 yesterday in the calendar", "create a new project while starting a timer".
 
+**Status (2026-11-05).** Marks read: none.
+- Calendar (PC Timer page, Calendar view): "Week view ▾" (Week / 5 days / Day) and − + zoom in the grid's
+  corner; a drag (or a click: 15 minutes) on empty time draws a block in 15-minute steps and opens the box
+  beside it (Add description, project, tags, $, date, start → end, length, "Add time entry"); a click or Enter
+  on a block opens the same box with ▶, Duplicate, ⋮ (Toggl's items, then our Edit details…), ✕ and Save; a
+  running block's box shows Running, ■ Stop, ⋮, ✕. Edits wait for Save, as in Toggl. A new block is written
+  only on "Add time entry" (before, a drag wrote it at once); ✕, Escape or a new drag drops it. Moves and
+  resizes keep 5-minute steps; only new blocks snap to 15. Touching neighbours still move together
+  (D-NEIGHBOURS); planned blocks stay striped; T goes to today.
+- Reports already opened on Summary, this week; the range button now says "This week" with the dates.
+- Pickers (both sizes, shared): "Search by project, task or client", grouped by client under client
+  headings, "No Project", "+ Create a new project" pinned; tags "Add/filter tags" with checkboxes, "Create
+  tag" pinned; Ctrl+Enter creates. A new project gets the colour the fewest live projects have.
+- Rewritten tests (promise kept): `statefulPickers`, `aLockedDayRefusesABulkEdit`,
+  `aTapOnTheCopyOnScreenKeepsWhatTheOtherDeviceDid`, `editsReachTheRunningEntry`, the e2e picker steps and
+  `mobile-toggl.spec` (new placeholder and empty-list words); `backClosesTheSheetThenStepsBackThroughSections`
+  (opens the sheet through the box's ⋮ → Edit details…; still: Back closes the sheet, then steps back
+  through the sections); e2e "calendar takes a mouse" (Day view from the menu, Add time entry after the
+  drag; still: drag makes, drag moves, both edges resize, click/Enter open without changing anything).
+- Findability (PC): "add a meeting 14:00–15:30 yesterday in the calendar" 5 actions; "start 'Scales' in a new
+  project 'Guitar'" 6 actions. Fixed from them: the new project's colour equalled Gym's; the running block's
+  box had no ■. Carried to Phase 7: the date box reads 11/04/2026 beside "Yesterday" (the browser's control).
+- Tests first only partly: the picker and the two fixes were red first; the calendar box and Reports tests
+  were written with their code. E2E 19 + 3, 3 + 3, 14 + 9 passed. Side-by-sides:
+  `kit/out/p6/{pc-calendar-pc,pc-reports-pc,pickers-pc,pickers-phone}.png`. Left as ours: the date control in
+  the box (Toggl: a "Wed, Nov 4" chip), no keep-open pin on the project search, no "· W45" in the Reports
+  range, no Timesheet (D-PC-REPORTS).
+
 ## Phase 7 — Words, defaults, settings · S
 
 1. One pass over every label against `notes/mobileapp-strings.txt` (phone) and `source/translations/`
