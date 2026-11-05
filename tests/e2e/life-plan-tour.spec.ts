@@ -18,7 +18,7 @@ import { seedLifePlan } from "./helpers/lifePlan"
  * Optional: TOUR_STEPS=today,journal for some steps only; TOUR_DAYS=<patches.json>
  * for days written after the seed (see below); TOUR_AREA=Health for that area's
  * dialog on Your 10s, and with TOUR_RATE=7 the same dialog again after rating
- * the area 7 for this week.
+ * the area 7 for this week; TOUR_GOAL=Approaches for that goal's card, opened from Today.
  *
  * TOUR_PLAN is an `NsPlan` as the flow keeps it (a backup turned into one with
  * `rowsToPlan`, or a made-up one). Without both variables it is skipped, so CI
@@ -68,6 +68,19 @@ test.describe("life plan tour", () => {
       const name = `${String(i + 1).padStart(2, "0")}-${step}.jpg`
       await page.screenshot({ path: path.join(DIR!, name), type: "jpeg", quality: 70 })
       await page.setViewportSize({ width: 1280, height: 900 })
+    }
+
+    const goal = process.env.TOUR_GOAL
+    if (goal) {
+      await page.goto(`${ROUTES.plan}?step=today`)
+      await expect(page.getByText("Saved to your account.")).toBeVisible()
+      const open = page.getByRole("button", { name: `Open ${goal} to change its date or its numbers` })
+      await open.locator("xpath=ancestor::li[1]").screenshot({ path: path.join(DIR!, "today-row.jpg"), type: "jpeg", quality: 80 })
+      await open.click()
+      const card = page.getByRole("heading", { name: "Achievements" }).first()
+      await expect(card).toBeVisible()
+      await card.scrollIntoViewIfNeeded()
+      await page.screenshot({ path: path.join(DIR!, "goal-card.jpg"), type: "jpeg", quality: 70 })
     }
 
     const area = process.env.TOUR_AREA

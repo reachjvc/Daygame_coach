@@ -128,6 +128,13 @@ describe("a counted goal", () => {
     expect(earned.some((a) => a.label === "25 in all")).toBe(true)
   })
 
+  it("leaves a rate out of the label: \"/week\" is not a thing counted", () => {
+    const seeded = approaches()
+    let plan = updateGoal(seeded.plan, seeded.id, { unit: "/week" }, NOW)
+    plan = count(plan, "2026-11-03", seeded.id, 10)
+    expect(goalAchievements(plan, seeded.id, TODAY).earned.map((a) => a.label)).toContain("10 in all")
+  })
+
   it("does not count a day after today", () => {
     const seeded = approaches()
     let plan = seeded.plan

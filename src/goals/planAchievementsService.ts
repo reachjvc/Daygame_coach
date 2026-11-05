@@ -70,9 +70,14 @@ export interface PartAchievements {
 
 const byDay = (a: PlanAchievement, b: PlanAchievement) => (b.earnedOn ?? "").localeCompare(a.earnedOn ?? "") || a.id.localeCompare(b.id)
 
-/** The goal's unit when it names one ("approaches"), else none. */
+/**
+ * The goal's unit when it names a thing counted ("approaches"), else none. A
+ * rate ("/week", "days/week", which plans hold for "5× a week") is not a
+ * thing: "10 /week in all" says nothing.
+ */
 function unitOf(goal: NsGoal): string {
-  return goal.unit.trim()
+  const unit = goal.unit.trim()
+  return unit.includes("/") ? "" : unit
 }
 
 /** The days a goal was counted on, oldest first, with each day's number. */
