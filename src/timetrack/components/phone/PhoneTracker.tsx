@@ -138,9 +138,9 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
    * change to the workspace — any write from these screens, or a timer
    * starting or stopping — or 30 seconds; a newer delete's replaces it.
    */
-  const [undo, setUndo] = useState<{ key: number; text: string; run: () => void } | null>(null)
+  const [undo, setUndo] = useState<{ key: number; text: string; run: () => void; ids: string[] } | null>(null)
   const undoCount = useRef(0)
-  const offerUndo = useCallback((text: string, run: () => void) => setUndo({ key: ++undoCount.current, text, run }), [])
+  const offerUndo = useCallback((text: string, run: () => void, ids: string[]) => setUndo({ key: ++undoCount.current, text, run, ids }), [])
   const setState: SetState = useCallback(
     (updater) => {
       setUndo(null)
@@ -153,8 +153,19 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
     const timer = window.setTimeout(() => setUndo(null), UNDO_WAITS_MS)
     return () => window.clearTimeout(timer)
   }, [undo])
+  /**
+   * A timer starting or stopping is a change, so the Undo goes — but not when
+   * the running entry stopped because it was the one deleted: that is the
+   * delete the Undo is for (offline audit, Phase 8).
+   */
   const runningId = running?.id ?? null
-  useEffect(() => setUndo(null), [runningId])
+  const runningBefore = useRef(runningId)
+  useEffect(() => {
+    const was = runningBefore.current
+    runningBefore.current = runningId
+    if (was === runningId) return
+    setUndo((current) => (current && was !== null && runningId === null && current.ids.includes(was) ? current : null))
+  }, [runningId])
 
   /** each tab opens at its top: the Calendar opened scrolled down, its week strip out of sight (audit findability, Phase 8) */
   const shownScreen = useRef(screen)

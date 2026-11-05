@@ -107,7 +107,7 @@ export function deleteWithUndo(latest: TimetrackState, ids: Id[], setState: SetS
     const removed = checked.removed
     setState((current) => deleteEntries(current, ids, serverNowIso()).state)
     const undo = () => setState((current) => restoreEntries(current, removed))
-    if (offerUndo) offerUndo(deletedWords(removed.length), undo)
+    if (offerUndo) offerUndo(deletedWords(removed.length), undo, removed.map((e) => e.id))
     else pushToast(deletedWords(removed.length), "info", undo)
   }
   if (checked.violations.length > 0) pushToast(checked.violations[0].message, "error")

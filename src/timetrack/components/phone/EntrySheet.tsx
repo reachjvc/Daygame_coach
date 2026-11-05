@@ -372,18 +372,26 @@ export function EntrySheet({
 
   // --- the running entry's Stop, Stop at…, Switched at… ---------------------
 
+  /**
+   * ■ STOP: WHAT WAS TYPED IS SAVED NOW; ONLY THE STOP WAITS FOR THE CHECK (D2).
+   *
+   * Both used to wait, together. When the check found the PC had already
+   * stopped this timer, the Stop was dropped ("Tap again if you still want
+   * to") and the name typed here went with it (offline audit, Phase 8). The
+   * name is the person's work whatever happens to the Stop: it goes onto the
+   * entry as it is now, and the PC's stop stands.
+   */
   const stopNow = () => {
     if (target.mode !== "edit") return
     const id = target.entryId
     const changesNow = changesBetween(base, settle(shown).draft ?? shown)
+    if (Object.keys(changesNow).length > 0) landOnCurrent(state, (current) => saveEdit(current, id, changesNow, serverNowIso()), setState, pushToast)
     afterCheck((latest, tappedAt) => {
       landOnCurrent(
         latest,
         (current) => {
-          const saved = Object.keys(changesNow).length > 0 ? saveEdit(current, id, changesNow, tappedAt) : { state: current, violations: [] }
-          if (saved.violations.length > 0) return saved
-          const still = saved.state.entries.find((e) => e.id === id)
-          return still?.stop === null ? { state: stopTimer(saved.state, tappedAt).state, violations: [] } : saved
+          const still = current.entries.find((e) => e.id === id)
+          return still?.stop === null ? { state: stopTimer(current, tappedAt).state, violations: [] } : { state: current, violations: [] }
         },
         setState,
         pushToast,
