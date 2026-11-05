@@ -239,6 +239,8 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
         id: cn.id, user_id: userId, goal_id: n.id, node_kind: "checkpoint",
         position: j, title: c.title ?? "", done: Boolean(c.done),
         celebration: c.celebration ?? "",
+        due_on: c.dueOn ?? null,
+        done_on: c.done ? c.doneOn ?? null : null,
       })
     })
     ;(goal.obstacles ?? []).forEach((o, j) => {
@@ -672,6 +674,8 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     feeling: g.feeling,
     checkpoints: byGoal(rows.checkpoints, g.id).map((c): NsCheckpoint => ({
       id: id(c.id), title: c.title, done: c.done, celebration: c.celebration,
+      ...(c.due_on ? { dueOn: c.due_on } : {}),
+      ...(c.done && c.done_on ? { doneOn: c.done_on } : {}),
     })),
     feedsGoalIds: rows.goal_feeds
       .filter((f) => f.goal_id === g.id)

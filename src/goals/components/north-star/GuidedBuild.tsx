@@ -87,6 +87,8 @@ export interface GuideHandlers extends IdealDayHandlers, WeekHandlers, Experienc
    * not where anybody scales anything any more.
    */
   onProgression: (goalId: string, rungs: string[]) => void
+  /** Give a goal's open steps their days, once, to its date (`dateSteps`). */
+  onDateSteps?: (goalId: string, today: string) => void
   /** The scaling tool's other output: evenly spaced rungs from a range. */
   onMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) => void
   onAction: (goalId: string, title: string, daysPerWeek: number) => void

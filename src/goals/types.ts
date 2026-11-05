@@ -1773,6 +1773,13 @@ export interface NsCheckpoint {
    * of things that land. Optional, and empty on a plain checkpoint.
    */
   celebration?: string
+  /**
+   * The day it is due, given once when the page spreads a goal's steps to its
+   * date (Plans/life-plan-dated-steps.md), or typed. Absent until then.
+   */
+  dueOn?: string
+  /** The day it was ticked. Absent while open, and on a step ticked before days were kept. */
+  doneOn?: string
 }
 
 /** Where a goal is. */

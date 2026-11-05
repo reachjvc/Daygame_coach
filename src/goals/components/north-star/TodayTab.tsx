@@ -34,9 +34,9 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Check, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from "lucide-react"
 import type { NorthStarTabId, NsDailyField, NsFieldKind, NsPlan, NsSubStep } from "@/src/goals/types"
-import { ACHIEVEMENT_COPY, DAY_NOTE_SAVED, GOES_TO_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
+import { ACHIEVEMENT_COPY, DAY_NOTE_SAVED, GOES_TO_COPY, STEP_DAYS_COPY, TODAY_COPY } from "@/src/goals/data/northStar"
 import { goalAchievements } from "@/src/goals/planAchievementsService"
-import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
+import { cadenceLabel, destination, destinations, fieldTargets, groupLogged, groupSummary, readSource, readSources, standingItems, stepsDue, todayItems, todayProgress, trackGroups, type TodayItem } from "@/src/goals/northStarTrackService"
 import { stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { DAY_NUMBER_LIMIT, dailyFieldsFor, dailyRating, dayNumber, formatTargetDate, isSystem, journalEntry, journalHistory, numberHistory, subStepProgress, subStepsFor } from "@/src/goals/northStarService"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
@@ -740,6 +740,7 @@ export function TodayTab({
   onMoveSubStep,
   onRemoveSubStep,
   onCountGoal,
+  onTickStep,
   onOpenRoutine,
   onOpenField,
   onOpenGoal,
@@ -792,6 +793,8 @@ export function TodayTab({
   onRemoveSubStep: (id: string) => void
   /** A driver's count on today: one logged, or one taken back (Plans/life-plan-rebuild.md, Q4). */
   onCountGoal: (goalId: string, by: 1 | -1) => void
+  /** Tick a step on the way to a goal, keeping the day (`setCheckpointDone`). */
+  onTickStep?: (goalId: string, checkpointId: string) => void
   /**
    * THE WAY OUT OF A TICK LIST, which it did not have.
    *
@@ -888,6 +891,7 @@ export function TodayTab({
   const anyDay = items.filter((i) => i.when === "anyDay")
   const rest = items.filter((i) => i.when === "otherDay")
   const standing = useMemo(() => standingItems(plan), [plan])
+  const due = useMemo(() => stepsDue(plan, today), [plan, today])
   /**
    * The write boxes for one row, or nothing at all when nothing is hung off it.
    *
@@ -1073,12 +1077,45 @@ export function TodayTab({
     if (item.goalId) onCountGoal(item.goalId, by)
   }
 
+  /*
+   * STEPS DUE (Plans/life-plan-dated-steps.md): a step on the way to a goal
+   * whose day has come. Open, because a late step folded away is one nobody
+   * sees; drawn on a day with nothing weekly too.
+   */
+  const stepsDueSection = due.length > 0 && onTickStep ? (
+        <section className="rounded-2xl border border-amber-300/20 bg-amber-400/[0.03] px-5 py-4" data-testid="today-steps-due">
+          <h3 className="text-sm font-semibold text-zinc-200">{STEP_DAYS_COPY.todayTitle}</h3>
+          <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed max-w-prose">{STEP_DAYS_COPY.todayHelp}</p>
+          <ul className="mt-2 divide-y divide-white/[0.06]">
+            {due.map((d) => (
+              <li key={d.checkpoint.id} className="flex items-center gap-3 py-2">
+                <button
+                  onClick={() => onTickStep(d.goal.id, d.checkpoint.id)}
+                  aria-label={STEP_DAYS_COPY.tickAria(d.checkpoint.title, d.goal.title)}
+                  className="size-4 rounded-md border border-white/25 hover:border-white/50 shrink-0 transition-colors"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12.5px] text-zinc-200 truncate">{d.checkpoint.title}</span>
+                  <span className="block text-[10.5px] text-zinc-500 truncate">{d.goal.title}</span>
+                </span>
+                <span className={`text-[10.5px] tabular-nums shrink-0 ${d.late > 0 ? "text-amber-300/80" : "text-zinc-400"}`}>
+                  {d.late > 0 ? STEP_DAYS_COPY.late(d.late) : STEP_DAYS_COPY.dueToday}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+  ) : null
+
   if (items.length === 0) {
     return (
-      <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6">
-        <h2 className="text-sm font-semibold text-zinc-200">{longDate(today)}</h2>
-        <p className="text-[12px] text-zinc-500 mt-2 leading-relaxed max-w-prose">{TODAY_COPY.empty}</p>
-      </section>
+      <div className="space-y-5">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-6">
+          <h2 className="text-sm font-semibold text-zinc-200">{longDate(today)}</h2>
+          <p className="text-[12px] text-zinc-500 mt-2 leading-relaxed max-w-prose">{TODAY_COPY.empty}</p>
+        </section>
+        {stepsDueSection}
+      </div>
     )
   }
 
@@ -1321,6 +1358,8 @@ export function TodayTab({
           <div className="mt-3">{groupedList(anyDay, "anyday", true)}</div>
         </section>
       )}
+
+      {stepsDueSection}
 
       {/* NOT A WEEKLY THING AT ALL, folded, out of today's count.
           A milestone is not something you do on a Tuesday and an experience is

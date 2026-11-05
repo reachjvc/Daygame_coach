@@ -22,10 +22,10 @@
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import type { NsGoal, NsPlan, NsReview, NsReviewVerdict } from "@/src/goals/types"
-import { ACHIEVEMENT_COPY, GOAL_STATUS_COPY, READBACK_COPY, READINGS_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import { ACHIEVEMENT_COPY, GOAL_STATUS_COPY, READBACK_COPY, READINGS_COPY, REVIEW_PERIOD_COPY as COPY, STEP_DAYS_COPY } from "@/src/goals/data/northStar"
 import { ReadingInput, withUnit } from "./GoalReadings"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
-import { goalsReadBack, previousOutcomes, routinesReadBack } from "@/src/goals/reviewReadBack"
+import { goalsReadBack, previousOutcomes, routinesReadBack, stepsReadBack } from "@/src/goals/reviewReadBack"
 import {
   REVIEW_CADENCES,
   REVIEW_LIMITS,
@@ -288,6 +288,11 @@ function ReadBack({ plan, period, today, ticks, review, onVerdict, onReading }: 
   const holdsToday = period.start <= today && today <= period.end
   const shownNumbers = numbersOpen ? goals.numbers : goals.numbers.slice(0, NUMBERS_SHOWN)
   const verdictOf = (id: string) => review?.verdicts?.[id] ?? null
+  // A finish-line goal's steps, read back: done, done in this stretch, behind.
+  const stepsLine = (g: NsGoal) => {
+    const s = stepsReadBack(g, period, today)
+    return s ? STEP_DAYS_COPY.readBack(s.done, s.total, s.inPeriod, s.behind) : null
+  }
   const row = (goal: NsGoal, numbers: string | null) => (
     <li key={goal.id} className="py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
       <span className="min-w-0 flex-1">
@@ -370,7 +375,7 @@ function ReadBack({ plan, period, today, ticks, review, onVerdict, onReading }: 
         {goals.season.length > 0 && (
           <div className="mt-3">
             <p className="text-[11px] text-zinc-500">{READBACK_COPY.seasonTitle}</p>
-            <ul className="divide-y divide-white/[0.06]">{goals.season.map((g) => row(g, null))}</ul>
+            <ul className="divide-y divide-white/[0.06]">{goals.season.map((g) => row(g, stepsLine(g)))}</ul>
           </div>
         )}
         {goals.rest.length > 0 && (
@@ -378,7 +383,7 @@ function ReadBack({ plan, period, today, ticks, review, onVerdict, onReading }: 
             <button onClick={() => setRestOpen((v) => !v)} aria-expanded={restOpen} className="text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors">
               {READBACK_COPY.restTitle(goals.rest.length)}
             </button>
-            {restOpen && <ul className="divide-y divide-white/[0.06]">{goals.rest.map((g) => row(g, null))}</ul>}
+            {restOpen && <ul className="divide-y divide-white/[0.06]">{goals.rest.map((g) => row(g, stepsLine(g)))}</ul>}
           </div>
         )}
       </section>

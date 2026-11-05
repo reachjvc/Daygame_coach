@@ -27,7 +27,7 @@ import { useState } from "react"
 import { Check, ChevronDown, Plus, X } from "lucide-react"
 import { ConfirmRemove } from "./ConfirmRemove"
 import type { NsGoal, NsPlan } from "@/src/goals/types"
-import { GOAL_DATE_PRESETS } from "@/src/goals/data/northStar"
+import { GOAL_DATE_PRESETS, STEP_DAYS_COPY } from "@/src/goals/data/northStar"
 import { BUILDER_COPY, OTHER_HALF_COPY, SYSTEM_BUILDER_COPY, WANT_EXAMPLES } from "@/src/goals/data/northStarStart"
 import {
   areaGoalExample,
@@ -757,7 +757,7 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
               {/* WITH THE DATE EACH ONE FALLS ON. An ordered list with no
                   dates is a list you can never be behind on. */}
               <ol className="flex flex-wrap gap-1.5 mt-1.5">
-                {datedRungs(goal, today).map((c, i) => (
+                {datedRungs(goal).map((c, i) => (
                   <li key={c.id} className="inline-flex items-baseline gap-1 text-[10.5px] text-zinc-300 px-2 py-0.5 rounded-full border border-violet-400/30 bg-violet-500/10">
                     <span className="text-zinc-500 tabular-nums">{i + 1}</span>
                     {c.title}
@@ -766,6 +766,14 @@ function AchievementRow({ plan, goal, today, open, onToggle, handlers }: {
                 ))}
               </ol>
               {!goal.targetDate && <p className="text-[10px] text-amber-200/70 mt-1">{BUILDER_COPY.writtenNoDate}</p>}
+              {/* Days are given once and kept (Plans/life-plan-dated-steps.md). */}
+              {goal.targetDate && goal.targetDate > today && handlers.onDateSteps && goal.checkpoints.some((c) => !c.done) && (
+                <button onClick={() => handlers.onDateSteps!(goal.id, today)} className="mt-1.5 text-[10.5px] text-violet-200 underline decoration-dotted underline-offset-2 hover:text-white transition-colors">
+                  {goal.checkpoints.some((c) => !c.done && c.dueOn)
+                    ? STEP_DAYS_COPY.again(formatTargetDate(goal.targetDate))
+                    : STEP_DAYS_COPY.give(formatTargetDate(goal.targetDate))}
+                </button>
+              )}
             </div>
           ) : scaled && rungs.length > 0 && (
             <div>

@@ -36,6 +36,7 @@ import {
   VALUE_COLOR,
   READINGS_COPY,
   GOAL_STATUS_COPY,
+  STEP_DAYS_COPY,
 } from "@/src/goals/data/northStar"
 import { GOAL_STATUSES, isActive } from "@/src/goals/goalStatus"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
@@ -86,6 +87,10 @@ export interface GoalHandlers {
   onRamp: (goalId: string, steps: HabitRampStep[] | null) => void
   /** Achieved, paused, dropped, or active again, on a day (`setGoalStatus`). Without it the card shows no status row. */
   onSetStatus?: (goalId: string, status: NsGoalStatus, date: string) => void
+  /** Give the goal's open steps their days, once, to its date (`dateSteps`). */
+  onDateSteps?: (goalId: string, date: string) => void
+  /** Tick a step, keeping the day (`setCheckpointDone`); without it a tick keeps no day. */
+  onTickCheckpoint?: (goalId: string, checkpointId: string, done: boolean, date: string) => void
   /** A number goal's reading on a day (`setGoalReading`). Without it the card shows no readings. */
   onReading?: (goalId: string, date: string, value: number | null) => void
   onLink: (fromId: string, toId: string) => void
@@ -969,7 +974,9 @@ function Checkpoints({ goal, color, today, handlers }: { goal: NsGoal; color: st
             <li key={c.id} className="group/cp">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handlers.onUpdateCheckpoint(goal.id, c.id, { done: !c.done })}
+                  onClick={() => (handlers.onTickCheckpoint
+                    ? handlers.onTickCheckpoint(goal.id, c.id, !c.done, today)
+                    : handlers.onUpdateCheckpoint(goal.id, c.id, { done: !c.done }))}
                   aria-pressed={c.done}
                   aria-label={`${c.done ? "Undo" : "Mark done"}: ${c.title}`}
                   className="size-4 rounded-md border flex items-center justify-center shrink-0 transition-colors"
@@ -983,6 +990,10 @@ function Checkpoints({ goal, color, today, handlers }: { goal: NsGoal; color: st
                   aria-label="Checkpoint"
                   className={`flex-1 min-w-0 bg-transparent border-b border-transparent hover:border-white/10 focus:border-white/25 text-[12.5px] focus:outline-none py-0.5 transition-colors ${c.done ? "text-zinc-500 line-through" : "text-zinc-200"}`}
                 />
+                {/* Its day: due, or done, or none yet. A late one says so. */}
+                <span className={`shrink-0 text-[10px] tabular-nums ${!c.done && c.dueOn && c.dueOn < today ? "text-amber-300/80" : "text-zinc-500"}`} data-testid="checkpoint-day">
+                  {c.done ? (c.doneOn ? STEP_DAYS_COPY.doneOn(formatShortDay(c.doneOn)) : "") : c.dueOn ? STEP_DAYS_COPY.dueOn(formatShortDay(c.dueOn), c.dueOn < today) : ""}
+                </span>
                 <button
                   onClick={() => handlers.onRemoveCheckpoint(goal.id, c.id)}
                   aria-label={`Remove checkpoint ${c.title}`}
@@ -1005,6 +1016,16 @@ function Checkpoints({ goal, color, today, handlers }: { goal: NsGoal; color: st
             </li>
           ))}
         </ul>
+      )}
+      {goal.targetDate && goal.targetDate > today && handlers.onDateSteps && goal.checkpoints.some((c) => !c.done) && (
+        <button
+          onClick={() => handlers.onDateSteps!(goal.id, today)}
+          className="mt-2 text-[11px] text-violet-200 underline decoration-dotted underline-offset-2 hover:text-white transition-colors"
+        >
+          {goal.checkpoints.some((c) => !c.done && c.dueOn)
+            ? STEP_DAYS_COPY.again(formatShortDay(goal.targetDate))
+            : STEP_DAYS_COPY.give(formatShortDay(goal.targetDate))}
+        </button>
       )}
       <div className="flex items-center gap-1.5 mt-2">
         <Plus className="size-3.5 text-zinc-600 shrink-0" />

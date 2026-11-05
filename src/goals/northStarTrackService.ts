@@ -29,6 +29,7 @@
  */
 
 import type {
+  NsCheckpoint,
   HabitRampStep,
   MilestoneLadderConfig,
   NsArea,
@@ -38,7 +39,7 @@ import type {
   NsTrackInsert,
   NsTrackRow,
 } from "@/src/goals/types"
-import { addDaysISO, goalsByPriority, isMilestone, isSystem, weekStartISO } from "@/src/goals/northStarService"
+import { addDaysISO, daysBetween, goalsByPriority, isMilestone, isSystem, weekStartISO } from "@/src/goals/northStarService"
 import { CADENCE_COPY, TODAY_COPY, JOURNAL_ALL_ID, JOURNAL_COPY, JOURNAL_PREFIX, JOURNAL_SETS, READ_COPY, RECAP_DRIVING_ANCHOR, REVIEW_PERIOD_COPY, REVIEW_PROMPTS, SCHEDULE_COPY, STAR_ANCHOR, STAR_PROMPTS, STAR_WHY_ID } from "@/src/goals/data/northStar"
 import { WEEK_DAYS } from "@/src/goals/data/northStarStart"
 import { NON_REGISTRY_TEMPLATE_PREFIXES } from "@/src/goals/data/templateNamespaces"
@@ -723,6 +724,35 @@ export interface TrackWeek {
   rows: TrackWeekRow[]
   /** Everything added up: how many times you do something this week. */
   sessions: number
+}
+
+/** A step on the way to a goal that is due today or late (Plans/life-plan-dated-steps.md). */
+export interface StepDue {
+  goal: NsGoal
+  checkpoint: NsCheckpoint
+  dueOn: string
+  /** Days past its day; 0 when due today. */
+  late: number
+}
+
+/**
+ * THE STEPS DUE: every open step of a goal being worked on whose day has come,
+ * the latest-due last, so the one most behind is first. Only steps that were
+ * given a day: an undated step is never due.
+ */
+export function stepsDue(plan: NsPlan, today: string): StepDue[] {
+  const out: StepDue[] = []
+  // Every goal: the ranked ones first, then any the ranking does not list.
+  const ranked = goalsByPriority(plan)
+  const goals = [...ranked, ...plan.goals.filter((g) => !ranked.includes(g))]
+  for (const goal of goals) {
+    if (!isActive(goal)) continue
+    for (const checkpoint of goal.checkpoints) {
+      if (checkpoint.done || !checkpoint.dueOn || checkpoint.dueOn > today) continue
+      out.push({ goal, checkpoint, dueOn: checkpoint.dueOn, late: Math.max(0, daysBetween(checkpoint.dueOn, today)) })
+    }
+  }
+  return out.sort((a, b) => a.dueOn.localeCompare(b.dueOn))
 }
 
 /** The Monday on or before an ISO date: `northStarService`'s, so a count and its week agree. */

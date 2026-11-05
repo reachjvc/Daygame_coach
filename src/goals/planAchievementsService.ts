@@ -309,13 +309,13 @@ export function reviewAchievements(plan: NsPlan, today: string): PartAchievement
   return { earned: earned.sort(byDay), next: nextWeeks && current > 0 ? { partId: "reviews", label: `${nextWeeks} weekly reviews in a row`, toGo: moreWeeks(nextWeeks - current) } : null }
 }
 
-/** A goal's milestones reached. The plan does not record when, so these carry no day. */
+/** A goal's milestones reached, on the day each was ticked; one ticked before days were kept carries none. */
 export function milestoneAchievements(plan: NsPlan, goalId: string): PlanAchievement[] {
   const goal = plan.goals.find((g) => g.id === goalId)
   if (!goal) return []
   return goal.checkpoints
     .filter((c) => c.done && c.title.trim())
-    .map((c) => ({ id: `${goalId}:milestone:${c.id}`, partId: goalId, partTitle: goal.title, kind: "milestone", label: `Reached: ${c.title.trim()}`, earnedOn: null }))
+    .map((c) => ({ id: `${goalId}:milestone:${c.id}`, partId: goalId, partTitle: goal.title, kind: "milestone", label: `Reached: ${c.title.trim()}`, earnedOn: c.doneOn ?? null }))
 }
 
 /**

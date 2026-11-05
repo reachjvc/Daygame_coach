@@ -130,6 +130,7 @@ import {
   areaSystemMilestones,
   systemMilestones,
   datedRungs,
+  dateSteps,
   milestoneHasSystem,
   milestoneValues,
   stepState,
@@ -3957,20 +3958,26 @@ describe("written rungs carry dates too", () => {
     let plan = addGoal(emptyNsPlan(), "lm_fitness", "One muscle-up", "achievement", NOW)
     plan = updateGoal(plan, plan.goals[0].id, { targetDate: "2027-01-01" }, NOW)
     plan = setProgression(plan, plan.goals[0].id, ["5 pull-ups", "10 pull-ups", "muscle-up"], NOW)
-    const dated = datedRungs(plan.goals[0], TODAY)
+    // No days until they are given (Plans/life-plan-dated-steps.md): days worked out afresh slid every visit.
+    expect(datedRungs(plan.goals[0]).every((r) => r.date === null)).toBe(true)
+    plan = dateSteps(plan, plan.goals[0].id, TODAY, NOW)
+    const dated = datedRungs(plan.goals[0])
     expect(dated.map((r) => r.title)).toEqual(["5 pull-ups", "10 pull-ups", "muscle-up"])
     expect(dated[dated.length - 1].date).toBe("2027-01-01")
     // In order, and none of them today.
     const dates = dated.map((r) => r.date!)
     expect([...dates].sort()).toEqual(dates)
     expect(dates.every((d) => d > TODAY)).toBe(true)
+    // And kept: pressing again the same day moves nothing.
+    expect(dateSteps(plan, plan.goals[0].id, TODAY, NOW)).toBe(plan)
   })
 
   it("says nothing rather than guessing when there is no date", () => {
     let plan = addGoal(emptyNsPlan(), "lm_fitness", "One muscle-up", "achievement", NOW)
     plan = updateGoal(plan, plan.goals[0].id, { targetDate: null }, NOW)
     plan = setProgression(plan, plan.goals[0].id, ["5 pull-ups", "muscle-up"], NOW)
-    expect(datedRungs(plan.goals[0], TODAY).every((r) => r.date === null)).toBe(true)
+    expect(dateSteps(plan, plan.goals[0].id, TODAY, NOW)).toBe(plan)
+    expect(datedRungs(plan.goals[0]).every((r) => r.date === null)).toBe(true)
   })
 })
 

@@ -1202,6 +1202,8 @@ function readGoal(g: Record<string, unknown>): NsGoal {
             title: String(c.title),
             done: c.done === true,
             celebration: typeof c.celebration === "string" ? c.celebration : "",
+            ...(isIsoDate(c.dueOn) ? { dueOn: c.dueOn } : {}),
+            ...(c.done === true && isIsoDate(c.doneOn) ? { doneOn: c.doneOn } : {}),
           }))
       : [],
     habits: Array.isArray(g.habits)
@@ -2503,10 +2505,58 @@ export function addCheckpoint(plan: NsPlan, goalId: string, title: string, now =
   return updateGoal(withSeq, goalId, { checkpoints: [...goal.checkpoints, checkpoint] }, now)
 }
 
+/**
+ * Tick a step on the way to a goal, or take the tick back, keeping the day it
+ * was done (Plans/life-plan-dated-steps.md).
+ */
+export function setCheckpointDone(plan: NsPlan, goalId: string, checkpointId: string, done: boolean, today: string, now = nowIso()): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  const step = goal?.checkpoints.find((c) => c.id === checkpointId)
+  if (!goal || !step || step.done === done) return plan
+  return updateGoal(plan, goalId, {
+    checkpoints: goal.checkpoints.map((c) => {
+      if (c.id !== checkpointId) return c
+      const next: NsCheckpoint = { ...c, done }
+      if (done) next.doneOn = today
+      else delete next.doneOn
+      return next
+    }),
+  }, now)
+}
+
+/**
+ * GIVE A GOAL'S STEPS THEIR DAYS (the owner's item 27: "a to-do of twenty
+ * things, done in twenty days, and the system should be able to do that").
+ * The open steps, in their order, are spread evenly from today to the goal's
+ * date, the last one on the date itself, and those days are kept: they no
+ * longer move as the days pass, so a step can be behind. Pressed again (the
+ * goal's date moved, a step came back), it spreads the open steps afresh;
+ * steps done keep theirs. Nothing happens without a date after today, or when
+ * every open step already sits where it would go.
+ */
+export function dateSteps(plan: NsPlan, goalId: string, today: string, now = nowIso()): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  if (!goal?.targetDate || goal.targetDate <= today) return plan
+  const open = goal.checkpoints.filter((c) => !c.done)
+  if (open.length === 0) return plan
+  const span = daysBetween(today, goal.targetDate)
+  const dayOf = new Map(open.map((c, i) => [c.id, addDaysISO(today, Math.max(1, Math.round((span * (i + 1)) / open.length)))]))
+  if (open.every((c) => c.dueOn === dayOf.get(c.id))) return plan
+  return updateGoal(plan, goalId, { checkpoints: goal.checkpoints.map((c) => (dayOf.has(c.id) ? { ...c, dueOn: dayOf.get(c.id)! } : c)) }, now)
+}
+
 export function updateCheckpoint(plan: NsPlan, goalId: string, checkpointId: string, patch: Partial<Omit<NsCheckpoint, "id">>, now = nowIso()): NsPlan {
   const goal = plan.goals.find((g) => g.id === goalId)
   if (!goal) return plan
-  return updateGoal(plan, goalId, { checkpoints: goal.checkpoints.map((c) => (c.id === checkpointId ? { ...c, ...patch } : c)) }, now)
+  return updateGoal(plan, goalId, {
+    checkpoints: goal.checkpoints.map((c) => {
+      if (c.id !== checkpointId) return c
+      const next: NsCheckpoint = { ...c, ...patch }
+      // A tick taken back takes its day (`setCheckpointDone` keeps one when ticking).
+      if (patch.done === false) delete next.doneOn
+      return next
+    }),
+  }, now)
 }
 
 /**
@@ -2944,16 +2994,10 @@ export function weeksUntil(targetDate: string | null, today: string): number {
  * evenly between today and the goal's date, the same way the computed ones do,
  * with the last one landing on the date itself.
  */
-export function datedRungs(goal: NsGoal, today = todayISO()): Array<{ id: string; title: string; date: string | null; done: boolean }> {
-  const rungs = milestoneCheckpoints(goal)
-  if (rungs.length === 0) return []
-  const span = goal.targetDate ? daysBetween(today, goal.targetDate) : 0
-  return rungs.map((rung, i) => ({
-    id: rung.id,
-    title: rung.title,
-    date: span > 0 ? addDaysISO(today, Math.round((span * (i + 1)) / rungs.length)) : null,
-    done: rung.done,
-  }))
+export function datedRungs(goal: NsGoal): Array<{ id: string; title: string; date: string | null; done: boolean }> {
+  // The days each rung was given (`dateSteps`), never ones worked out afresh
+  // from today: those moved with every visit, so a rung was never behind.
+  return milestoneCheckpoints(goal).map((rung) => ({ id: rung.id, title: rung.title, date: rung.dueOn ?? null, done: rung.done }))
 }
 
 /** Milestones this goal already carries, as opposed to written checkpoints. */
@@ -5724,7 +5768,9 @@ export function goalMilestones(goal: NsGoal, today = todayISO()): NsMilestone[] 
       goalId: goal.id,
       areaId: goal.areaId,
       label: `${goal.title}: ${c.title}`,
-      date: addDaysISO(today, Math.round((span * (i + 1)) / (checkpoints.length + 1))),
+      // The day it was given (`dateSteps`) when it has one, so every view
+      // agrees with the card and Today; a step without one is placed evenly.
+      date: c.dueOn ?? addDaysISO(today, Math.round((span * (i + 1)) / (checkpoints.length + 1))),
       kind: "checkpoint",
       done: c.done,
     })

@@ -111,6 +111,34 @@ export function goalsReadBack(plan: NsPlan, period: ReviewPeriod, today: string)
   return { counted, numbers, season, rest, changed }
 }
 
+/** A goal's steps over the period (Plans/life-plan-dated-steps.md): null when it has none. */
+export interface StepsReadBack {
+  done: number
+  total: number
+  /** Ticked inside the period, by the day kept on the tick. */
+  inPeriod: number
+  /** Open with their day on or before the period's end (or today, while it runs). */
+  behind: number
+}
+
+/**
+ * As the steps stood at the period's end (or today, while it runs): done by
+ * then, done inside it, and behind by then, a step due today not yet behind.
+ * A step ticked before days were kept counts as done whenever it is read.
+ */
+export function stepsReadBack(goal: NsGoal, period: ReviewPeriod, today: string): StepsReadBack | null {
+  if (goal.checkpoints.length === 0) return null
+  const running = period.end >= today
+  const doneBy = (c: NsGoal["checkpoints"][number]) => c.done && (c.doneOn == null || c.doneOn <= period.end)
+  const dueBy = (day: string) => (running ? day < today : day <= period.end)
+  return {
+    done: goal.checkpoints.filter(doneBy).length,
+    total: goal.checkpoints.length,
+    inPeriod: goal.checkpoints.filter((c) => c.done && c.doneOn != null && c.doneOn >= period.start && c.doneOn <= period.end).length,
+    behind: goal.checkpoints.filter((c) => !doneBy(c) && c.dueOn != null && dueBy(c.dueOn)).length,
+  }
+}
+
 /** A routine over the period: its steps' ticks against what they plan. */
 export interface RoutineReadBack {
   routine: NsRoutine

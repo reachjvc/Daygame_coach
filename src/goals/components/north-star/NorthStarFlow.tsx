@@ -1222,6 +1222,8 @@ export function NorthStarFlow({
     onRamp: (id: string, steps: HabitRampStep[] | null) => setPlan((p) => ns.setRamp(p, id, steps)),
     onReading: (id: string, date: string, value: number | null) => setPlan((p) => ns.setGoalReading(p, date, id, value)),
     onSetStatus: (id: string, status: NsGoalStatus, date: string) => setPlan((p) => ns.setGoalStatus(p, id, status, date)),
+    onDateSteps: (id: string, date: string) => setPlan((p) => ns.dateSteps(p, id, date)),
+    onTickCheckpoint: (id: string, checkpointId: string, done: boolean, date: string) => setPlan((p) => ns.setCheckpointDone(p, id, checkpointId, done, date)),
     onLink: (fromId: string, toId: string) => setPlan((p) => ns.linkGoal(p, fromId, toId)),
     onUnlink: (fromId: string, toId: string) => setPlan((p) => ns.unlinkGoal(p, fromId, toId)),
     onAddObstacle: (id: string, what: string) => setPlan((p) => ns.addObstacle(p, id, what)),
@@ -1495,6 +1497,7 @@ export function NorthStarFlow({
     onRemoveTemplate: (areaId: string, templateId: string) => setPlan((p) => ns.removeTemplateGoals(p, areaId, templateId)),
     onLadder: (goalId: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, goalId, ladder)),
     onProgression: (goalId: string, rungs: string[]) => setPlan((p) => ns.setProgression(p, goalId, rungs)),
+    onDateSteps: (goalId: string, today: string) => setPlan((p) => ns.dateSteps(p, goalId, today)),
     onMilestones: (goalId: string, spec: { from: number; to: number; count: number; unit?: string; prefix?: string }) =>
       setPlan((p) => ns.setMilestones(p, goalId, spec)),
     onUpdateGoal: (goalId: string, patch: { title: string }) => setPlan((p) => ns.updateGoal(p, goalId, patch)),
@@ -1923,6 +1926,7 @@ export function NorthStarFlow({
               /* A goal's count on the day, in the day half (Q4 of
                  Plans/life-plan-rebuild.md); it went to the old goals table. */
               onCountGoal={(goalId, by) => setPlan((p) => ns.countGoal(p, today ?? ns.todayISO(), goalId, by))}
+              onTickStep={(goalId, checkpointId) => setPlan((p) => ns.setCheckpointDone(p, goalId, checkpointId, true, today ?? ns.todayISO()))}
               onToggleStep={(stepId) => setPlan((p) => nsTrack.toggleStepLogged(p, today ?? ns.todayISO(), stepId))}
               /* The experience's own store, the same one the Experiences step
                  writes — a thing you wanted to have done is ticked once, and

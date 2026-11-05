@@ -144,6 +144,10 @@ export interface CheckpointRow {
   title: string
   done: boolean
   celebration: string
+  /** The day it is due (20261105190000); null until the page spreads the dates. */
+  due_on?: string | null
+  /** The day it was ticked; null while open, and on a step ticked before the column. */
+  done_on?: string | null
 }
 
 export interface ObstacleRow {

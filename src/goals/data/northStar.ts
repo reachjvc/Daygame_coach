@@ -518,6 +518,25 @@ export const ACHIEVEMENT_COPY = {
 } as const
 
 /**
+ * STEPS WITH DAYS (Plans/life-plan-dated-steps.md). The owner's item 27: "en
+ * todo med 20 ting og sige at den skulle være færdig om 20 dage, og det skulle
+ * systemet så kunne lave".
+ */
+export const STEP_DAYS_COPY = {
+  give: (date: string) => `Give the steps their days, until ${date}`,
+  again: (date: string) => `Spread the open steps again, until ${date}`,
+  dueOn: (day: string, late: boolean) => (late ? `was due ${day}` : `due ${day}`),
+  doneOn: (day: string) => `done ${day}`,
+  todayTitle: "Steps due",
+  todayHelp: "Steps on the way to your goals, due today or already late. Tick one when it is done.",
+  late: (days: number) => (days === 1 ? "1 day late" : `${days} days late`),
+  dueToday: "due today",
+  tickAria: (title: string, goal: string) => `Done: ${title} (${goal})`,
+  readBack: (done: number, total: number, inPeriod: number, behind: number) =>
+    [`${done} of ${total} steps done`, inPeriod > 0 ? `${inPeriod} in this stretch` : null, behind > 0 ? `${behind} behind` : null].filter(Boolean).join(" · "),
+} as const
+
+/**
  * WHERE A GOAL IS (Plans/life-plan-goal-status.md). Stefan: "I go over the
  * goals that I achieved. I go over the goals that I didn't achieve"; "so I'm
  * taking a break from that goal"; "I didn't set a new goal after that … my
