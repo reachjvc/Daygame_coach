@@ -27,6 +27,7 @@ import {
   reopenFromAccount,
   savedToAccount,
   setIdleOnAccount,
+  timerButton,
   trackEntry,
 } from './helpers/timetrack'
 
@@ -847,6 +848,49 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await expect(page.getByRole('button', { name: /^\(no description\), 09:30 to 10:15/ })).toBeVisible()
     await expect(page.getByRole('button', { name: /^\(no description\), 10:45 to 11:45/ })).toBeVisible()
     await savedToAccount(page)
+  })
+
+  /**
+   * D-SWIPE (Plans/toggl-parity.md Phase 3): right past three quarters of the
+   * row continues it, left deletes it with Undo — and a finger going up the
+   * list is a scroll that moves neither, with real touches the browser itself
+   * decides about.
+   */
+  test('a row swiped right continues it, left deletes it, and a scroll over it does neither @phone', async ({ page }) => {
+    await openFreshTracker(page)
+    await trackEntry(page, 'Email')
+    const row = page.locator('[data-swipe-row]').filter({ hasText: 'Email' }).first()
+    const finger = await fingerOn(page)
+    const box = async () => (await row.boundingBox())!
+
+    // up the list: a scroll, not a swipe
+    let b = await box()
+    await finger.down(b.x + b.width / 2, b.y + b.height / 2)
+    await finger.slide({ x: b.x + b.width / 2, y: b.y + b.height / 2 }, { x: b.x + b.width / 2 + 30, y: b.y + b.height / 2 - 200 }, 8)
+    await finger.up()
+    await expect(timerButton(page, 'Start timer')).toBeVisible()
+    expect((await readState(page)).entries.filter((e: { stop: string | null }) => e.stop === null)).toEqual([])
+
+    // right, past 75%: Email again, running
+    b = await box()
+    await finger.down(b.x + 12, b.y + b.height / 2)
+    await finger.slide({ x: b.x + 12, y: b.y + b.height / 2 }, { x: b.x + 12 + b.width * 0.85, y: b.y + b.height / 2 + 4 }, 10)
+    await finger.up()
+    await expect(timerButton(page, 'Stop timer')).toBeVisible()
+    await expect(page.getByTestId('run-bar')).toContainText('Email')
+    await timerButton(page, 'Stop timer').click()
+
+    // left, past 75%: deleted, with Undo
+    const before = (await readState(page)).entries.filter((e: { serverDeletedAt: string | null }) => !e.serverDeletedAt).length
+    b = await box()
+    await finger.down(b.x + b.width - 12, b.y + b.height / 2)
+    await finger.slide({ x: b.x + b.width - 12, y: b.y + b.height / 2 }, { x: b.x + b.width * 0.1, y: b.y + b.height / 2 - 4 }, 10)
+    await finger.up()
+    // the two Emails are one grouped row by now (Group similar entries), and a row goes whole
+    await expect(page.getByText(/^(Time entry was deleted|\d+ time entries deleted)$/)).toBeVisible()
+    await expect
+      .poll(async () => (await readState(page)).entries.filter((e: { serverDeletedAt: string | null }) => !e.serverDeletedAt).length)
+      .toBeLessThan(before)
   })
 
   test('a quick flick scrolls the calendar and makes nothing; a sideways swipe turns the day @phone', async ({ page }) => {
