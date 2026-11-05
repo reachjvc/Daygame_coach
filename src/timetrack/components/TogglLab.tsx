@@ -1198,11 +1198,15 @@ export function TogglLab({
         refused and here is why", including the range refusals and the import errors,
         so with no live region a screen-reader user got silence where everyone else got
         a sentence.
+
+        On a phone they sit above the bottom bar and UNDER an open sheet or menu: on top
+        they covered a sheet's rows (findability, 2026-11-05). The phone's sheet says its
+        own refusals, and a delete's Undo waits in the bottom bar (`UndoContext`).
       */}
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed bottom-[calc(var(--panel-bottom-inset,4rem)+0.5rem)] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
+        className="pointer-events-none fixed bottom-[calc(var(--panel-bottom-inset,4rem)+0.5rem)] left-1/2 z-[9550] flex w-full max-w-md -translate-x-1/2 sm:z-[9700] flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
       >
         {toasts.map((toast) => {
           /**

@@ -125,10 +125,15 @@ describe("a typed start keeps the end and changes the length", () => {
     expect(withStart(running, at(DAY, "12:30"), NOW)).toEqual({ refusal: "Start time must be before current time!" })
   })
 
-  test("an end before the start is refused; a typed end is the first such time after the start", () => {
+  test("an end before the start is refused, typed too: in the sheet the end's day is the day drum's, not a guess", () => {
     expect(withStop(finished, at(DAY, "08:00"))).toEqual({ refusal: "Stop time must be after Start time!" })
-    // "0100" after a 09:00 start is the next morning, as every end box reads it
-    expect(typeStop(finished, "0100").draft?.stop).toBe(at("2026-08-11", "01:00"))
+    // findability 2026-11-05: 18:20 → 18:50, "0850" typed for the end became tomorrow 08:50, a 14-hour entry
+    const evening = { ...finished, start: at(DAY, "18:20"), stop: at(DAY, "18:50") }
+    expect(typeStop(evening, "0850")).toEqual({ refusal: "Stop time must be after Start time!" })
+    expect(typeStop(finished, "0100")).toEqual({ refusal: "Stop time must be after Start time!" })
+    // on the end's own day: an end already moved to tomorrow by its day drum stays there
+    expect(typeStop({ ...evening, stop: at("2026-08-11", "07:00") }, "0850").draft?.stop).toBe(at("2026-08-11", "08:50"))
+    expect(typeStop(finished, "1030").draft?.stop).toBe(at(DAY, "10:30"))
   })
 
   test("something unreadable says so", () => {

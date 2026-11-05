@@ -17,7 +17,7 @@
  * to project, Select for the bulk bar, Delete).
  */
 
-import { Fragment, memo, useMemo, useRef, useState } from "react"
+import { Fragment, memo, useContext, useMemo, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -73,6 +73,7 @@ import { JointMark } from "../EntryList"
 import { undoOrSay } from "../neighbourNotice"
 import { ColorDot, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "../primitives"
 import { type SetState } from "./landOnCurrent"
+import { UndoContext, type OfferUndo } from "./undoContext"
 import { ProjectLine } from "./RunBar"
 
 interface ListProps {
@@ -95,13 +96,19 @@ export function deletedWords(count: number): string {
   return count === 1 ? "Time entry was deleted" : `${plural(count, "time entry", "time entries")} deleted`
 }
 
-/** Delete, with Undo: the list's ⋮, the sheet and the bulk bar say it the same way */
-export function deleteWithUndo(latest: TimetrackState, ids: Id[], setState: SetState, pushToast: PushToast): Id[] {
+/**
+ * Delete, with Undo: a swipe, the list's ⋮, the sheet, the calendar's panel and
+ * the bulk bar say it the same way. On the phone the Undo is the bottom bar's
+ * (`UndoContext`), which waits; without it, a toast.
+ */
+export function deleteWithUndo(latest: TimetrackState, ids: Id[], setState: SetState, pushToast: PushToast, offerUndo: OfferUndo | null = null): Id[] {
   const checked = deleteEntries(latest, ids, serverNowIso())
   if (checked.removed.length > 0) {
     const removed = checked.removed
     setState((current) => deleteEntries(current, ids, serverNowIso()).state)
-    pushToast(deletedWords(removed.length), "info", () => setState((current) => restoreEntries(current, removed)))
+    const undo = () => setState((current) => restoreEntries(current, removed))
+    if (offerUndo) offerUndo(deletedWords(removed.length), undo)
+    else pushToast(deletedWords(removed.length), "info", undo)
   }
   if (checked.violations.length > 0) pushToast(checked.violations[0].message, "error")
   return checked.removed.map((e) => e.id)
@@ -348,6 +355,7 @@ function PhoneRow({
     })
 
   const ids = row ? row.entries.map((e) => e.id) : [entry.id]
+  const offerUndo = useContext(UndoContext)
 
   /**
    * THE SWIPE (D-SWIPE). A finger that sets off sideways drags the row; one
@@ -382,7 +390,7 @@ function PhoneRow({
     setOffset(0)
     const action = swipeAction(event.clientX - held.x, held.width)
     if (action === "continue" && !running) continueIt()
-    else if (action === "delete") deleteWithUndo(latest(), ids, setState, pushToast)
+    else if (action === "delete") deleteWithUndo(latest(), ids, setState, pushToast, offerUndo)
   }
 
   return (
@@ -534,6 +542,7 @@ function RowMenu({
   latest: () => TimetrackState
 }) {
   const favorite = Boolean(findFavorite(state, draftOf(entry)))
+  const offerUndo = useContext(UndoContext)
   const items: { label: string; icon: React.ReactNode; run: () => void; disabled?: boolean; hint?: string; destructive?: boolean }[] = [
     { label: "Edit details…", icon: <IconEdit className="size-3.5" />, run: onEdit },
     {
@@ -577,7 +586,7 @@ function RowMenu({
       label: "Delete",
       icon: <IconDelete className="size-3.5" />,
       destructive: true,
-      run: () => deleteWithUndo(latest(), ids, setState, pushToast),
+      run: () => deleteWithUndo(latest(), ids, setState, pushToast, offerUndo),
     },
   ]
   return (

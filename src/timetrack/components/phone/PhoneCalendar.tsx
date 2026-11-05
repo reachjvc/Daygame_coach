@@ -15,6 +15,8 @@
  * (`phone` there). Day | Week and "Connect calendar" stay above the grid.
  */
 
+import { useContext } from "react"
+
 import { cn } from "@/lib/utils"
 import type { PushToast } from "../../hooks/useTimetrack"
 import { IconDelete, IconDuplicate, IconEdit, IconNext, IconPrev, IconStart, IconStop } from "../../icons"
@@ -29,6 +31,7 @@ import type { AfterCheck } from "../afterCheck"
 import { CalendarView } from "../CalendarView"
 import { undoOrSay } from "../neighbourNotice"
 import { deleteWithUndo } from "./PhoneEntryList"
+import { UndoContext } from "./undoContext"
 import { ProjectLine } from "./RunBar"
 import type { SetState } from "./landOnCurrent"
 
@@ -134,7 +137,8 @@ export function BlockPanel({
     onClose()
     run()
   }
-  const remove = () => deleteWithUndo(state, [entry.id], setState, pushToast)
+  const offerUndo = useContext(UndoContext)
+  const remove = () => deleteWithUndo(state, [entry.id], setState, pushToast, offerUndo)
   const duplicate = () => {
     const made = duplicateEntry(state, entry.id, serverNowIso())
     if (made.violations[0]) pushToast(made.violations[0].message, "error")

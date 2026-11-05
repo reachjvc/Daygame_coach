@@ -23,10 +23,11 @@
 import type { DrumBounds } from "./drumService"
 import { entryBefore, switchAt, withNeighbours, type NeighbourHeld, type NeighbourMove } from "./timeFixService"
 import {
+  dateKey,
   epochMillis,
   parseDurationInput,
-  parseEndTimeInput,
   parseStartTimeInput,
+  parseTimeInput,
   unreadableTimeMessage,
 } from "./timetrackFormatService"
 import { createManualEntry, liveEntries, updateEntry } from "./timetrackService"
@@ -211,9 +212,15 @@ export function typeStart(draft: SheetDraft, text: string, nowIso: IsoDateTime):
   return withStart(draft, iso, nowIso)
 }
 
-/** An end typed into the end chip: the first such time after the start, as every end box reads it (`parseEndTimeInput`) */
+/**
+ * An end typed into the end chip, on the end's own day: in the sheet the day
+ * is the day drum's to change. Read as "the first such time after the start"
+ * (`parseEndTimeInput`, which the PC list keeps), 08:50 typed for an 18:20
+ * start silently became tomorrow morning, a 14-hour entry (findability,
+ * 2026-11-05); now it is refused in Toggl's words and the end stays.
+ */
 export function typeStop(draft: SheetDraft, text: string): SheetResult {
-  const iso = parseEndTimeInput(text, draft.start)
+  const iso = parseTimeInput(text, dateKey(draft.stop ?? draft.start))
   if (!iso) return { refusal: unreadableTimeMessage(text) ?? UNREADABLE_TIME }
   return withStop(draft, iso)
 }

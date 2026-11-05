@@ -41,6 +41,7 @@ import {
   IconSettings,
   IconTag,
   IconTimer,
+  IconUndo,
 } from "../../icons"
 import { serverNowIso } from "../../serverClock"
 import { dateKey, formatClock, plural } from "../../timetrackFormatService"
@@ -51,6 +52,7 @@ import { AfterCheckContext, type AfterCheck } from "../afterCheck"
 import { AlertsBell } from "../AlertsBell"
 import { SignedOutBanner } from "../SignedOutBanner"
 import { useMomentActions } from "../useMomentActions"
+import { UNDO_WAITS_MS, UndoContext } from "./undoContext"
 import { BlockPanel, PhoneCalendar } from "./PhoneCalendar"
 import { PhoneReports } from "./PhoneReports"
 import { ImportOfferBanner } from "../ImportOfferBanner"
@@ -129,7 +131,30 @@ const SHEET_STEP = { timetrack: "sheet" as const }
 const isSheetStep = (state: unknown) => (state as { timetrack?: string } | null)?.timetrack === "sheet"
 
 export function PhoneTracker({ lab }: { lab: PhoneLab }) {
-  const { state, setState, nowSec, running, pushToast, sync, screen } = lab
+  const { state, setState: writeState, nowSec, running, pushToast, sync, screen } = lab
+
+  /**
+   * A DELETE'S UNDO WAITS (`UndoContext`): in the bottom bar until the next
+   * change to the workspace — any write from these screens, or a timer
+   * starting or stopping — or 30 seconds; a newer delete's replaces it.
+   */
+  const [undo, setUndo] = useState<{ key: number; text: string; run: () => void } | null>(null)
+  const undoCount = useRef(0)
+  const offerUndo = useCallback((text: string, run: () => void) => setUndo({ key: ++undoCount.current, text, run }), [])
+  const setState: SetState = useCallback(
+    (updater) => {
+      setUndo(null)
+      writeState(updater)
+    },
+    [writeState],
+  )
+  useEffect(() => {
+    if (!undo) return
+    const timer = window.setTimeout(() => setUndo(null), UNDO_WAITS_MS)
+    return () => window.clearTimeout(timer)
+  }, [undo])
+  const runningId = running?.id ?? null
+  useEffect(() => setUndo(null), [runningId])
   const [view, setView] = useState<"list" | "pomodoro">("list")
   const [menuOpen, setMenuOpen] = useState(false)
   const [selected, setSelected] = useState<Id[] | null>(null)
@@ -246,7 +271,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   const next = lab.nextDraft.description.trim()
 
   return (
-    <>
+    <UndoContext.Provider value={offerUndo}>
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         {/* ONE ROW, ALWAYS. The sync badge keeps its words while it saves or is
             offline ("Saving 1…"); a row that wrapped then grew by a line and
@@ -455,7 +480,31 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
       </ErrorBoundary>
 
       {/* the bottom: favorites, the bar, the tabs — measured, so menus and toasts stay above it */}
-      <div ref={lab.bottomBarRef} className="fixed inset-x-0 bottom-0 z-[9500] border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <div
+        ref={lab.bottomBarRef}
+        data-bottom-block
+        className="fixed inset-x-0 bottom-0 z-[9500] border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      >
+        {undo && (
+          <div data-testid="undo-bar" role="status" className="flex items-center gap-2 border-b border-border px-3 py-1.5 text-sm">
+            <span className="min-w-0 flex-1">{undo.text}</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-11 font-semibold uppercase tracking-wide text-primary"
+              onClick={() => {
+                const run = undo.run
+                setUndo(null)
+                run()
+              }}
+            >
+              <IconUndo className="size-4" /> Undo
+            </Button>
+            <button type="button" aria-label="Dismiss" onClick={() => setUndo(null)} className={cn(touchTarget, "text-muted-foreground")}>
+              <IconClose className="size-4" />
+            </button>
+          </div>
+        )}
         {selected !== null && (
           <BulkBar
             state={state}
@@ -464,7 +513,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             selected={selected}
             onDone={() => setSelected(null)}
             onDelete={() => {
-              const removed = deleteWithUndo(state, selected, setState, pushToast)
+              const removed = deleteWithUndo(state, selected, setState, pushToast, offerUndo)
               setSelected(selected.filter((id) => !removed.includes(id)))
             }}
           />
@@ -589,7 +638,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           onClose={() => setMoment(null)}
         />
       )}
-    </>
+    </UndoContext.Provider>
   )
 }
 

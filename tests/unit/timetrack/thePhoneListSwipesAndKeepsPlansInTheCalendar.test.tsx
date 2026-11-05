@@ -11,7 +11,7 @@
  * timer's control), and the sync dot says what it means when tapped.
  */
 
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
@@ -112,7 +112,7 @@ describe("a row swiped", () => {
     swipe(row("Email"), -320)
     await waitFor(() => expect(stored().entries.find((e) => e.id === "1")).toBeUndefined())
     expect(screen.getByText("Time entry was deleted")).toBeTruthy()
-    fireEvent.click(screen.getByRole("button", { name: /Undo/ }))
+    fireEvent.click(within(screen.getByTestId("undo-bar")).getByRole("button", { name: /Undo/ }))
     await waitFor(() => expect(stored().entries.find((e) => e.id === "1")).toBeTruthy())
   })
 
@@ -138,6 +138,50 @@ describe("a row swiped", () => {
     swipe(row("Email"), -320)
     expect(stored().entries.filter((e) => e.stop === null)).toHaveLength(0)
     expect(stored().entries.find((e) => e.id === "1")).toBeTruthy()
+  })
+})
+
+describe("a delete's Undo (findability 2026-11-05: it vanished while being read, and the tap landed on a ▶)", () => {
+  const undoBar = () => screen.queryByTestId("undo-bar")
+
+  test("sits in the bottom bar, above the bar's own controls, where no row is under it", async () => {
+    await open(history())
+    swipe(row("Email"), -320)
+    const bar = await screen.findByTestId("undo-bar")
+    expect(bar.textContent).toContain("Time entry was deleted")
+    // inside the block that holds the timer bar and the tabs, which the list is padded clear of
+    expect(bar.closest("[data-bottom-block]")).toBe(screen.getByTestId("run-bar").closest("[data-bottom-block]"))
+  })
+
+  test("stays past ten seconds, and goes at thirty", async () => {
+    await open(history())
+    // the tracker opens on real timers; the Undo's own clock is the fake one
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] })
+    vi.setSystemTime(NOW)
+    swipe(row("Email"), -320)
+    expect(undoBar()).toBeTruthy()
+    act(() => vi.advanceTimersByTime(12_000))
+    expect(undoBar(), "gone while it was still being read").toBeTruthy()
+    act(() => vi.advanceTimersByTime(19_000))
+    expect(undoBar()).toBeNull()
+  })
+
+  test("goes with the next change, and a newer delete replaces it: one at a time", async () => {
+    await open(history())
+    swipe(row("Email"), -320)
+    swipe(row("Write report"), -320)
+    expect(screen.getAllByTestId("undo-bar")).toHaveLength(1)
+    // its Undo is the newer delete's
+    fireEvent.click(within(screen.getByTestId("undo-bar")).getByRole("button", { name: /Undo/ }))
+    await waitFor(() => expect(stored().entries.find((e) => e.id === "2")).toBeTruthy())
+    expect(stored().entries.find((e) => e.id === "1")).toBeUndefined()
+    expect(undoBar()).toBeNull()
+
+    swipe(row("Write report"), -320)
+    expect(undoBar()).toBeTruthy()
+    // a start is a change: the Undo goes
+    fireEvent.click(within(screen.getByTestId("run-bar")).getByRole("button", { name: "Start timer" }))
+    await waitFor(() => expect(undoBar()).toBeNull())
   })
 })
 

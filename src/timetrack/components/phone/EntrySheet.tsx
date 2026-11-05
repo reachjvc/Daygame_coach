@@ -22,7 +22,7 @@
  * new entry Started at….
  */
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react"
+import { useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -87,6 +87,7 @@ import { DescriptionField, ProjectPicker, TagPicker } from "../pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow } from "../primitives"
 import { landOnCurrent, type SetState } from "./landOnCurrent"
 import { deleteWithUndo } from "./PhoneEntryList"
+import { UndoContext } from "./undoContext"
 import { WORKED_ON, WORKING_ON } from "./RunBar"
 
 export type SheetTarget =
@@ -152,8 +153,10 @@ export function EntrySheet({
    * in one event build on each other (picking with @ writes the cleaned words
    * and then the project — the bug Phase 0 fixed in the timer bar).
    */
-  const edit = (change: (draft: SheetDraft) => SheetDraft) =>
+  const edit = (change: (draft: SheetDraft) => SheetDraft) => {
+    setNotice(null)
     setChanges((prev) => (baseRef.current ? changesBetween(baseRef.current, change(shownDraft(baseRef.current, prev))) : prev))
+  }
 
   const shown = base ? shownDraft(base, changes) : null
   /**
@@ -177,6 +180,16 @@ export function EntrySheet({
   const [edge, setEdge] = useState<Edge>(() => (base?.stop === null ? "start" : "stop"))
   const [drumsOpen, setDrumsOpen] = useState(!isNew)
   const [asking, setAsking] = useState(false)
+  const offerUndo = useContext(UndoContext)
+  /**
+   * WHAT THE SHEET REFUSES, SAID IN THE SHEET. On a phone the toasts sit under
+   * an open sheet (they used to cover a sheet's rows, findability 2026-11-05),
+   * so a refusal made while it is open is written here instead.
+   */
+  const [notice, setNotice] = useState<string | null>(null)
+  const refuse = (text: string) => setNotice(text)
+  /** one tap on a chip makes it typeable: its input takes the focus, its time selected (findability 2026-11-05) */
+  const focusChip = useRef<Edge | null>(null)
   const [moving, setMoving] = useState(false)
 
   // what is typed and not yet applied: a ref too, because Enter applies it and the blur that follows must not again
@@ -216,7 +229,7 @@ export function EntrySheet({
 
   const show = (result: SheetResult, apply: (draft: SheetDraft) => SheetDraft) => {
     if (!result.draft) {
-      pushToast(result.refusal, "error")
+      refuse(result.refusal)
       return false
     }
     edit(apply)
@@ -279,7 +292,7 @@ export function EntrySheet({
   const done = () => {
     const settled = settle(shown)
     if (!settled.draft) {
-      pushToast(settled.refusal, "error")
+      refuse(settled.refusal)
       return
     }
     const final = settled.draft
@@ -296,7 +309,7 @@ export function EntrySheet({
       // asked first, so a refusal (a locked week, a required project) keeps the sheet open
       const refusal = saveEdit(state, id, changesNow, serverNowIso()).violations[0]
       if (refusal) {
-        pushToast(refusal.message, "error")
+        refuse(refusal.message)
         return
       }
       const write = (latest: TimetrackState, at: IsoDateTime) => {
@@ -312,7 +325,7 @@ export function EntrySheet({
 
     const refusal = createFromSheet(state, final, serverNowIso()).violations[0]
     if (refusal) {
-      pushToast(refusal.message, "error")
+      refuse(refusal.message)
       return
     }
     const create = (latest: TimetrackState, at: IsoDateTime) => {
@@ -365,14 +378,14 @@ export function EntrySheet({
   const moment = (kind: MomentKind) => {
     const settled = settle(shown)
     if (!settled.draft) {
-      pushToast(settled.refusal, "error")
+      refuse(settled.refusal)
       return
     }
     if (target.mode === "edit") {
       const changesNow = changesBetween(base, settled.draft)
       if (Object.keys(changesNow).length > 0) {
         const id = target.entryId
-        if (!landOnCurrent(state, (current) => saveEdit(current, id, changesNow, serverNowIso()), setState, pushToast)) return
+        if (!landOnCurrent(state, (current) => saveEdit(current, id, changesNow, serverNowIso()), setState, (text) => refuse(text))) return
       }
     }
     onMoment(kind, kind === "start" ? entryDraftOf(settled.draft) : { description: "", projectId: null, taskId: null, tagIds: [], billable: false })
@@ -406,6 +419,12 @@ export function EntrySheet({
       return (
         <div className="flex min-h-11 items-center gap-1 rounded-lg border border-primary bg-primary/10 px-2">
           <input
+            ref={(input) => {
+              if (!input || focusChip.current !== which) return
+              focusChip.current = null
+              input.focus()
+              input.select()
+            }}
             aria-label={`${label} time`}
             inputMode="numeric"
             value={chipText ?? time}
@@ -428,6 +447,7 @@ export function EntrySheet({
         aria-label={`${label}: ${time} ${date}`}
         onClick={() => {
           commitChip()
+          focusChip.current = which
           setEdge(which)
         }}
         className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-border px-2 text-sm tabular-nums hover:bg-secondary/60"
@@ -571,6 +591,11 @@ export function EntrySheet({
               <span className="text-3xl font-semibold tabular-nums">{formatClock(seconds)}</span>
               <IconEdit className="size-4 text-muted-foreground" />
             </button>
+          )}
+          {notice && (
+            <p role="alert" className="mt-1 rounded-md bg-destructive/15 px-2 py-1.5 text-sm text-destructive">
+              {notice}
+            </p>
           )}
           {/* D10: over 12 hours is said here, not asked afterwards; DONE is the answer */}
           {seconds > LONG_ENTRY_SECONDS && <p className="text-xs text-muted-foreground">That makes it {formatIdleSpan(seconds)}.</p>}
@@ -788,7 +813,7 @@ export function EntrySheet({
               <button
                 type="button"
                 onClick={() => {
-                  deleteWithUndo(state, [target.entryId], setState, pushToast)
+                  deleteWithUndo(state, [target.entryId], setState, pushToast, offerUndo)
                   onClose()
                 }}
                 className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold uppercase tracking-wide text-destructive"
@@ -858,7 +883,7 @@ export function EntrySheet({
     if (!shown || target.mode !== "edit") return
     const probe = moveEntryToDay({ ...state, entries: state.entries.map((e) => (e.id === target.entryId ? { ...e, start: shown.start, stop: shown.stop } : e)) }, target.entryId, day, serverNowIso())
     if (probe.violations[0]) {
-      pushToast(probe.violations[0].message, "error")
+      refuse(probe.violations[0].message)
       return
     }
     const moved = probe.state.entries.find((e) => e.id === target.entryId)

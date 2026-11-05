@@ -222,6 +222,12 @@ function DateSheet({
         </button>
       </div>
       <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
+        {/* the weekdays, from the person's first day of the week */}
+        {days.slice(0, 7).map((day) => (
+          <span key={`letter-${day}`} data-weekday className="pb-1 text-[11px] font-medium text-muted-foreground">
+            {"SMTWTFS"[dateKeyToDate(day).getDay()]}
+          </span>
+        ))}
         {days.map((day) => {
           const inRange = day >= picked.start && day <= shownEnd
           return (

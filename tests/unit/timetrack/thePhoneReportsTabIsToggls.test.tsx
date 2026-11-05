@@ -101,6 +101,14 @@ describe("the Reports tab", () => {
     expect(within(main().getByRole("region", { name: "Tracked hours" })).getByText("3:00")).toBeTruthy()
   })
 
+  test("the month grid is headed by the weekdays, from the person's first day of the week", async () => {
+    await openReports(week())
+    fireEvent.click(main().getByRole("button", { name: /This week/ }))
+    const sheet = screen.getByRole("dialog", { name: "Date range" })
+    const letters = [...sheet.querySelectorAll("[data-weekday]")].map((el) => el.textContent)
+    expect(letters).toEqual(["M", "T", "W", "T", "F", "S", "S"])
+  })
+
   test("Group by Clients", async () => {
     await openReports(week())
     fireEvent.click(main().getByRole("radio", { name: "Clients" }))

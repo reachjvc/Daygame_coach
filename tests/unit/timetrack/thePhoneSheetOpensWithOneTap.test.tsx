@@ -236,6 +236,27 @@ describe("one tap on a row", () => {
     await waitFor(() => expect(stored().entries.find((e) => e.id === "1")).toMatchObject({ start: at("08:30"), stop: at("09:00") }))
   })
 
+  test("one tap on a time chip selects it and makes it typeable, its time selected so typing replaces it", async () => {
+    await open(finished())
+    fireEvent.click(within(screen.getByRole("main")).getByText("Email"))
+    fireEvent.click(inSheet().getByRole("button", { name: /^Start/ }))
+    const start = inSheet().getByRole("textbox", { name: "Start time" }) as HTMLInputElement
+    expect(document.activeElement).toBe(start)
+    expect([start.selectionStart, start.selectionEnd]).toEqual([0, start.value.length])
+  })
+
+  test("a typed end before the start is refused in Toggl's words, and the end stays", async () => {
+    await open(finished())
+    fireEvent.click(within(screen.getByRole("main")).getByText("Email"))
+    const end = inSheet().getByRole("textbox", { name: "End time" })
+    fireEvent.change(end, { target: { value: "0750" } })
+    fireEvent.keyDown(end, { key: "Enter" })
+    expect(await screen.findByText("Stop time must be after Start time!")).toBeTruthy()
+    fireEvent.click(inSheet().getByRole("button", { name: "Done" }))
+    await waitFor(() => expect(sheetOpen()).toBe(false))
+    expect(stored().entries.find((e) => e.id === "1")?.stop).toBe(at("09:00"))
+  })
+
   test("130 typed into the duration is 1:30", async () => {
     await open(finished())
     fireEvent.click(within(screen.getByRole("main")).getByText("Email"))
