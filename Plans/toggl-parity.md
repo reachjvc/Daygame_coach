@@ -290,6 +290,31 @@ tests failed before and pass after; `run.sh` prints five theme lines; one side-b
 flow, showing today's state.
 That set is the "before" for every later phase.
 
+**Status (2026-11-05).** Marks read: none (every decision stands).
+- Notification: **live** (code 02a3efaa). Its migration had the same number as a life-plan migration that
+  was already live (`20261104160000_goal_timeframe.sql`), so `db push` would have skipped it; renamed to
+  `20261105150000_running_timer_notification.sql` (rollback renamed too), and a new test refuses two
+  migrations sharing a number. Backup first: `~/dg-backups/timetrack-notify-2026-11-05-before-20261105150000.json`
+  (21 tables, the old clock function, the old constraint). Applied with `db push --linked --yes`; entries
+  1,036 before and after. By the migration's own rule your installed Android phone has the running timer
+  switched on.
+- Soak bug (minute 253): it is audit bug E3, fixed by a25e740c after the soak's build (30ef12c0). Its test
+  `backFromManualTheBarShowsWhatRuns` fails on a25e740c^ and passes now.
+- Item 3, each a failing test first: @/# leave only the words (`pickingWithAtOrHashLeavesOnlyTheWords`); Stop
+  empties the bar (`aStopClearsTheBar`); a timer stopped in its first second is not "planned"
+  (`aTimerStoppedAtOnceIsNotPlanned`; cause: the idle clock ticks every 10 s and a start or stop did not
+  move it); Projects › Tracked counts entries from before the project was made
+  (`aProjectsTrackedTimeIncludesEntriesFromBeforeItWasMade`). Zero-length entries are **kept**: Toggl
+  Track's code keeps short entries; only the new product discards ones under 10 s.
+- Found on the way: a name typed into the bar while the other device stops the timer undid that stop on
+  the account (628b7233, test `aRenameTypedWhileTheOtherDeviceStopsKeepsTheStop`). The same "stale copy
+  replaces the whole workspace" pattern sits in other edits; they are fixed in their own commit.
+- Rewritten test: `theBarFollowsARenameFromTheOtherDevice` "a Stop and a Start carry on under the new name"
+  now presses the row's Continue after Stop (promise kept: carrying on after a break uses the new name).
+- Kit: `~/.cache/daygame-research/toggl/kit/` (refs.json, side-by-side.mjs, stages.mjs, run-all.sh,
+  findability.md); the "before" set is `kit/out/p0-before/` (19 images).
+- Regression base: `~/.cache/daygame-research/time-audit/regression/run.sh`.
+
 ## Phase 1 — Phone: the Timer tab and the bottom bar · L
 
 1. A new phone shell for the tracker: header "Timer" with ← (to where you came from), sync dot, ⊕, ⚙.

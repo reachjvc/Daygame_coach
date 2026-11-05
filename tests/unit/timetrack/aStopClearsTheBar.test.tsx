@@ -7,6 +7,9 @@
  * entry's name, project and tags, so the next Start quietly repeated them
  * ("Call", Gym, admin) unless you cleared each one by hand. Toggl empties the
  * bar on Stop; carrying on with the same thing is ▶ on its row.
+ *
+ * What somebody is typing into the bar at the moment the timer stops (say the
+ * other device stopped it) is theirs, and stays.
  */
 
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
@@ -100,5 +103,19 @@ describe("Stop", () => {
 
     expect(stored().entries.some((e) => e.stop === null), "the stop did not arrive").toBe(false)
     expect(bar().value).toBe("")
+  })
+
+  test("keeps what is being typed when the other device stops the timer", async () => {
+    const copy = callSinceNine()
+    const account = await open(copy)
+    fireEvent.change(bar(), { target: { value: "Call with Ana" } })
+    const id = copy.entries.find((e) => e.duration < 0)!.id
+    account.stop(id, new Date(2026, 7, 10, 11, 0).toISOString())
+    setVisibility("hidden")
+    setVisibility("visible")
+    await wait(2_000)
+
+    expect(stored().entries.some((e) => e.stop === null), "the stop did not arrive").toBe(false)
+    expect(bar().value).toBe("Call with Ana")
   })
 })
