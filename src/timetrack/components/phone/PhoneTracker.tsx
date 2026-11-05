@@ -155,6 +155,39 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   }, [undo])
   const runningId = running?.id ?? null
   useEffect(() => setUndo(null), [runningId])
+
+  /** each tab opens at its top: the Calendar opened scrolled down, its week strip out of sight (audit findability, Phase 8) */
+  const shownScreen = useRef(screen)
+  useEffect(() => {
+    if (shownScreen.current === screen) return
+    shownScreen.current = screen
+    window.scrollTo(0, 0)
+  }, [screen])
+
+  /**
+   * THE BOTTOM BLOCK'S OWN HEIGHT, MEASURED HERE. Every tab is padded clear of
+   * it by this, not only by the page-wide `--panel-bottom-inset` (which the
+   * menus read, and which any bar going away sets back to nothing): on Reports
+   * the last rows of Group by sat under the bar (audit findability, Phase 8).
+   */
+  const [barHeight, setBarHeight] = useState<number | null>(null)
+  const { bottomBarRef } = lab
+  const bottomBlockRef = useCallback(
+    (block: HTMLElement | null) => {
+      const published = bottomBarRef(block)
+      if (!block) return
+      const measure = () => setBarHeight(block.offsetHeight)
+      measure()
+      const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure)
+      observer?.observe(block)
+      return () => {
+        observer?.disconnect()
+        if (typeof published === "function") published()
+      }
+    },
+    [bottomBarRef],
+  )
+  const clearOfBar = barHeight !== null ? `${barHeight + 16}px` : "calc(var(--panel-bottom-inset, 9rem) + 1rem)"
   const [view, setView] = useState<"list" | "pomodoro">("list")
   const [menuOpen, setMenuOpen] = useState(false)
   const [selected, setSelected] = useState<Id[] | null>(null)
@@ -163,6 +196,8 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   /** Reports: Toggl's short screen, or "Details", the full reports (D-PHONE-REPORTS) */
   const [reportsDetails, setReportsDetails] = useState(false)
   const reportsDownload = useRef<(() => void) | null>(null)
+  /** a block a held finger made: its sheet opens with the name ready to type (audit findability, Phase 8) */
+  const nameFor = useRef<Id | null>(null)
   /** the calendar block whose panel is open (D-PHONE-CAL) */
   const [blockId, setBlockId] = useState<Id | null>(null)
   const block = screen === "calendar" && blockId ? (state.entries.find((e) => e.id === blockId && !e.serverDeletedAt) ?? null) : null
@@ -210,6 +245,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   }
 
   const closeSheet = useCallback(() => {
+    nameFor.current = null
     dirty.current = false
     if (backedOut) {
       // Back already took the step away
@@ -372,7 +408,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
 
       <ErrorBoundary label="this screen">
         <AfterCheckContext.Provider value={lab.afterCheck}>
-          <main className="space-y-4 px-3 pt-3" style={{ paddingBottom: "calc(var(--panel-bottom-inset, 9rem) + 1rem)" }}>
+          <main className="space-y-4 px-3 pt-3" style={{ paddingBottom: clearOfBar }}>
             {screen === "timer" && view === "list" && (
               <PhoneEntryList
                 state={state}
@@ -406,7 +442,10 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                  was hidden and the page scrolled under a finger dragging a block.
                  The top of the window is below the header and the day controls,
                  about 14rem down. */
-              <div className="[&_[data-calendar-scroll]]:max-h-[calc(100dvh-var(--panel-bottom-inset,7rem)-14rem)]">
+              <div
+                className="[&_[data-calendar-scroll]]:max-h-[calc(100dvh-var(--phone-bar,7rem)-14rem)]"
+                style={{ "--phone-bar": barHeight !== null ? `${barHeight}px` : undefined } as React.CSSProperties}
+              >
               <PhoneCalendar
                 state={state}
                 setState={setState}
@@ -419,6 +458,11 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                 }}
                 selectedId={blockId}
                 onSelect={setBlockId}
+                onCreated={(entry) => {
+                  setBlockId(null)
+                  nameFor.current = entry.id
+                  lab.openEntry(entry)
+                }}
                 onOpenIntegrations={() => {
                   lab.setSettingsTab("integrations")
                   go("settings")
@@ -481,7 +525,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
 
       {/* the bottom: favorites, the bar, the tabs — measured, so menus and toasts stay above it */}
       <div
-        ref={lab.bottomBarRef}
+        ref={bottomBlockRef}
         data-bottom-block
         className="fixed inset-x-0 bottom-0 z-[9500] border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
@@ -615,6 +659,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           pushToast={pushToast}
           afterCheck={lab.afterCheck}
           dirtyRef={dirty}
+          focusName={target.mode === "edit" && nameFor.current === target.entryId}
           backedOut={backedOut !== null}
           onClose={closeSheet}
           onKeepEditing={keepEditing}

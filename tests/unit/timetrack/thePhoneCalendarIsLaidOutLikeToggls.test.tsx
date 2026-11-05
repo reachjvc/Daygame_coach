@@ -220,7 +220,8 @@ describe("the Calendar tab", () => {
     fireEvent.click(document.querySelector('[data-block][title^="Email "]') as HTMLElement)
     expect(panel().getByText("Email")).toBeTruthy()
     expect(panel().getByText("09:00 – 10:00")).toBeTruthy()
-    expect(panel().getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Delete", "Edit", "Duplicate", "Continue", "Cancel"])
+    expect(within(panel().getByRole("group", { name: "Actions" })).getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Delete", "Edit", "Duplicate", "Continue"])
+    expect(panel().getByRole("button", { name: "Cancel" })).toBeTruthy()
     expect(document.querySelector('[data-block][title^="Email "]')?.getAttribute("data-selected")).toBe("true")
     fireEvent.click(panel().getByRole("button", { name: "Edit" }))
     expect(screen.getByRole("dialog", { name: "Time entry" })).toBeTruthy()
@@ -246,11 +247,45 @@ describe("the Calendar tab", () => {
     expect(screen.getByText("Time entry was deleted")).toBeTruthy()
   })
 
+  test("a block made by holding opens its sheet at once, the name ready to type (audit findability, Phase 8)", async () => {
+    await openTab(baseState({ entries: [] }))
+    const column = document.querySelector<HTMLElement>("[data-day-column]")!
+    const touch = { pointerId: 9, pointerType: "touch", isPrimary: true, clientX: 150, button: 0 }
+    fireEvent.pointerDown(column, { ...touch, clientY: y(10) })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, LONG_PRESS_MS + 60))
+    })
+    fireEvent.pointerUp(column, { ...touch, clientY: y(10) })
+    const sheet = await screen.findByRole("dialog", { name: "Time entry" })
+    const name = within(sheet).getByPlaceholderText("I’ve worked on…")
+    await waitFor(() => expect(document.activeElement).toBe(name))
+    // closed without a name, the block stays, as before
+    fireEvent.click(within(sheet).getByRole("button", { name: "Close" }))
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Time entry" })).toBeNull())
+    expect(stored().entries.filter((e) => !e.serverDeletedAt)).toHaveLength(1)
+  })
+
+  test("a tap on the name in the block's panel opens the sheet, as Edit does", async () => {
+    await openTab(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { description: "Email" })] }))
+    fireEvent.click(document.querySelector('[data-block][title^="Email "]') as HTMLElement)
+    fireEvent.click(panel().getByRole("button", { name: /Email/ }))
+    expect(screen.getByRole("dialog", { name: "Time entry" })).toBeTruthy()
+  })
+
+  test("the hint is above the grid, where it is seen", async () => {
+    await openTab(baseState({ entries: [] }))
+    const hints = screen.getAllByText(/Hold empty space/)
+    expect(hints).toHaveLength(1)
+    const grid = document.querySelector("[data-calendar-grid]")!
+    expect(hints[0].compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   test("a running block offers Discard · Edit · Stop", async () => {
     const running = startTimer(baseState(), { description: "Call", projectId: null, taskId: null, tagIds: [], billable: false }, at(14)).state
     await openTab(running)
     fireEvent.click(document.querySelector('[data-block][title^="Call "]') as HTMLElement)
-    expect(panel().getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Discard", "Edit", "Stop", "Cancel"])
+    expect(within(panel().getByRole("group", { name: "Actions" })).getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Discard", "Edit", "Stop"])
+    expect(panel().getByRole("button", { name: "Cancel" })).toBeTruthy()
     fireEvent.click(panel().getByRole("button", { name: "Stop" }))
     await waitFor(() => expect(stored().entries.some((e) => e.stop === null)).toBe(false))
   })

@@ -712,6 +712,19 @@ async function fingerOn(page: Page) {
 const dayHeader = (page: Page) => page.locator('[data-day-header]').first().locator('p')
 
 /**
+ * A block a held finger made opens its sheet with the name ready to type, as
+ * Toggl opens its editor (audit findability, Phase 8). Closed with nothing
+ * typed, the block stays as it was made.
+ */
+async function closeNewBlockSheet(page: Page) {
+  const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
+  await expect(sheet, 'a block made by holding did not open its sheet').toBeVisible()
+  await expect(sheet.getByPlaceholder(/worked on|working on/)).toBeFocused()
+  await sheet.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(sheet).toBeHidden()
+}
+
+/**
  * Tomorrow, the way the phone's calendar gets there (Plans/toggl-parity.md
  * Phase 4): its day in the week strip, or the next week's strip first when
  * today ends the week. A real tap, which is also what lets Chrome vibrate.
@@ -775,6 +788,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
     await expect(preview).toHaveText('10:00–11:30 · 1h 30m')
     await expect(preview, 'a planned block lost its stripes while drawn').toHaveAttribute('data-planned', 'true')
     await finger.up()
+    await closeNewBlockSheet(page)
 
     const block = page.locator('[data-entry-block]')
     await expect(block).toHaveAccessibleName('(no description), 10:00 to 11:30, planned')
@@ -814,6 +828,7 @@ test.describe('the calendar by touch, on an Android phone @phone', () => {
       await expect(page.locator('[data-preview]')).toBeVisible()
       await finger.slide({ x: column.x, y: column.yAt(from) }, { x: column.x, y: column.yAt(to) }, (to - from) / 5)
       await finger.up()
+      await closeNewBlockSheet(page)
     }
     // two blocks that touch: 10:00–11:00, then 11:00–11:30
     await make(10 * 60, 11 * 60)

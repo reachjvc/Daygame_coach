@@ -119,6 +119,7 @@ export function EntrySheet({
   onClose,
   onKeepEditing,
   onMoment,
+  focusName = false,
 }: {
   target: SheetTarget
   state: TimetrackState
@@ -136,6 +137,8 @@ export function EntrySheet({
   onKeepEditing: () => void
   /** Stop at…, Switched at…, Started at…: the shell closes this and opens the moment picker */
   onMoment: (kind: MomentKind, draft: EntryDraft) => void
+  /** the name takes the focus, as for a new entry: a block a held finger just made */
+  focusName?: boolean
 }) {
   const isNew = target.mode !== "edit"
   const entry = target.mode === "edit" ? (state.entries.find((e) => e.id === target.entryId && !e.serverDeletedAt) ?? null) : null
@@ -605,7 +608,7 @@ export function EntrySheet({
             value={shown.description}
             projectId={shown.projectId}
             placeholder={running ? WORKING_ON : WORKED_ON}
-            autoFocus={isNew}
+            autoFocus={isNew || focusName}
             onChange={(description) => edit((d) => ({ ...d, description }))}
             onPickProject={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
             onPickTag={(tagId) => edit((d) => ({ ...d, tagIds: [...new Set([...d.tagIds, tagId])] }))}

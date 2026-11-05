@@ -218,7 +218,15 @@ export function CalendarView({
    * hold on empty space makes 30 minutes or fills a gap of two hours or less;
    * a drag lands on a quarter hour or a neighbour's edge, whichever is closer.
    */
-  phone?: { selectedId: Id | null }
+  phone?: {
+    selectedId: Id | null
+    /**
+     * A block a held finger made: Toggl opens its editor at once, so the
+     * nameless "(no description)" is not left behind with no way to name it
+     * in sight (audit findability, Phase 8).
+     */
+    onCreated?: (entry: TimeEntry) => void
+  }
 }) {
   const isMobile = useIsMobile()
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -582,7 +590,10 @@ export function CalendarView({
           nowIso(),
         )
         if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else setState(layOnto(state, result.state))
+        else {
+          setState(layOnto(state, result.state))
+          if (result.entry) phone?.onCreated?.(result.entry)
+        }
       }
       return
     }
@@ -774,6 +785,12 @@ export function CalendarView({
         </div>
       </div>
 
+      {phone && (
+        <p className="text-[11px] text-muted-foreground">
+          Hold empty space to add a block · hold a block to move it, or an edge to resize · tap one to choose it.
+          {range === "day" && " Swipe sideways for another day."}
+        </p>
+      )}
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* day headers: on the phone's day view its own day line says this (`PhoneCalendar`) */}
         <div className={cn("flex border-b border-border bg-secondary/30", range !== "day" && "min-w-[640px] sm:min-w-0", phone && range === "day" && "hidden")}>
@@ -1141,6 +1158,8 @@ export function CalendarView({
         </div>
       </div>
 
+      {/* the phone's hint is above the grid, where it is seen (audit findability, Phase 8) */}
+      {!phone && (
       <p className="text-[11px] text-muted-foreground">
         {isMobile
           ? "Hold empty space and drag to plan or log a block · hold a block to move it, or its top or bottom edge to resize · tap to edit."
@@ -1152,6 +1171,7 @@ export function CalendarView({
           ? " Calendar events share each day on the right and never change your entries."
           : " Connect a calendar to see your events beside your time."}
       </p>
+      )}
 
       {boxes && boxTarget && (
         <CalendarEntryBox
