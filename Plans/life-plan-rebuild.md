@@ -10,8 +10,9 @@ looked at it and marked it. The page he marks: https://claude.ai/artifact/K5r4E4
 (pictures of every `/plan` step, taken on a copy of his plan in a test account; marks in its `marks`
 store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the marks before the next phase.
 
-**Where it stands, 2026-11-04 night:** Phases 1–6 and Q4 are live; only Phase 7 (it deletes, so it
-waits for your yes) is left, plus one question on the sign-off page (`p5-wheel-question`).
+**Where it stands, 2026-11-05:** Phases 1–6, Q4, the wheel and the two leaks are live (none signed
+off yet). Phase 7 is prepared, with the list and the live counts, as card `phase7` on the page; it waits
+for your yes. Q11 (achievements) is next.
 
 **Answered 2026-11-05, in chat:** "we can go with all your recommendations". So the Your 10s wheel will
 show each area's score from the latest review, and rating an area on Your 10s writes into this week's
@@ -519,6 +520,63 @@ and shown on the day's summary. Concept items 21 and 34.
   and their 241 counts untouched, revision 920, no day numbers yet. Sign-off cards `q4-today-counts`,
   `q4-track` and `fix-systems-x`.
 
+### After Phase 6, 2026-11-05: the wheel, two leaks, Phase 7 prepared
+
+**The wheel (`p5-wheel-question`: yes), live 2026-11-05** (migration `20261105160000`, then commit
+`6fe0d1b2`).
+- Your 10s, the area cards on Everything, the counts ("12 of 12 rated", the rail ring, the to-do list) and
+  the plan as text read each area's score from the latest review (`latestScores`). The area dialog's
+  row is now "This week" ("This week, where are you?", Stefan's weekly 0–10 sweep, 8kco2rjijjE) and
+  writes into this week's review, the same one the Review step opens. Until this week is rated, the line
+  under it says where the wheel's number comes from ("The wheel shows 2, from your review of
+  10 – 23 Sept 2026").
+- "Latest" is the score that speaks for the most recent day: the earlier of its period's last day and the
+  day it was given. So a month scored on its 2nd does not outrank a week scored after it ended, and
+  filling in October afterwards does not make it "now". For that, each score now keeps the day it was
+  given: migration `20261105160000_review_score_day` adds `life_plan_review_scores.scored_on` (adds
+  only; empty on your copied review, which then counts as of 23 Sep).
+- `review_fortnight` is no longer shown or written. The save carries it back unchanged, so your 12
+  numbers stay as they were; it is on the Phase 7 list. Checked before going live: all 12 equal the
+  copied review's scores, and no other account has any.
+- Gone with it, as a consequence rather than a choice: the Review step's "Your 10s says N" line (a Your
+  10s score is a review score now), and the "Memory weights…" note when the review score is older than
+  the daily window (a September number against this fortnight's days is a change, not memory).
+- Code review three times (9, then 8 finds; the real ones fixed: the ranking above, a removed area
+  leaving its score's day behind, counts disagreeing with the wheel about future periods, the score
+  shown without its period on Everything). Tests: `reviewService.test.ts` (the ranking cases),
+  `reviewsAreSaved.integration.test.ts` (the day is saved), `life-mastery-reviews.spec.ts` (rate on Your
+  10s, see it on Review across a reload, clear it and the wheel goes back to September's).
+- Backup first: `~/dg-backups/life-plan-2026-11-05-before-wheel.json` (1,133 rows in 36 tables, the old
+  goals tables included; revision 920). Checked on the live database after: revision 920, one review, 12
+  scores, the 12 old numbers unchanged, 13 days, 91 old goals.
+
+**Two leaks, live 2026-11-05** (commit `ac26a671`).
+- *An edit made in the seconds before leaving was lost* (the plan save waits a few seconds). The waiting
+  save is now sent the moment the page is hidden, closed, reloaded, or left for another page of the app,
+  `keepalive` when under 32 KB. Plan saves go one at a time: a second waits for the open one, since both
+  carry the same revision and the second would be refused as stale. Left as is, stated: an edit made
+  while a save is already open and the page closes in that instant (under a second) is still only on
+  this device; and a brand-new plan's very first save, sent as the page closes, starts the plan row but
+  its contents come from this browser's copy on the next visit (the existing import rule), not at once.
+- *A tab saved into another account* if somebody signed in as it in another tab of the same browser.
+  Every request the page makes now names the account it was opened for (`x-page-account`; the plan's
+  own calls explicitly, everything else on the page, the old goals list on Track included, through one
+  wrapper while /plan is open). `requireAuth` refuses a request naming another account (409,
+  `x-account-changed`) on every route behind it; the page then stops saving and says "You signed in to
+  another account in another tab. This page has stopped saving; reload it to see that account." A
+  request naming nobody passes, so a tab still on older code keeps working until reloaded. The page is
+  keyed on the account, so a new sign-in is a new page.
+- Code review three times and a security review twice (separate agents): the first round found the old
+  goals list inside Track writing without the account (its "Delete All" could have wiped the other
+  account's goals), the page able to change account without starting over, and a late save losing the
+  account's name; all fixed. Tests: `flowSavesOnLeave.test.tsx` (sent on hiding, once; on leaving inside
+  the app; every request named; a refusal stops everything), `pageAccountRoutes.integration.test.ts`
+  (seven routes refuse and write nothing; the same requests naming the right account, or none, pass),
+  `life-mastery-save-leaks.spec.ts` (an edit just before a reload is on the account; two tabs, second
+  account: it gets no plan and no day). The reload test fails with the fix taken out.
+- Found, not fixed (older, outside this change): "Delete All" in the old goals list on Track deletes every
+  goal on the account, not only the 50 that list shows. Those goals are Phase 7's question.
+
 ### Phase 7. Clear out the old homes (deletes: your yes first)
 
 The list, final once Phases 1–6 are done (and Q4 added the push code: `buildTrackInserts`, `trackRows`,
@@ -531,6 +589,34 @@ shared browser copy kept as `north-star-v1:orphan`, `life_plans.season_focus_id`
 `NsGoal.habits`, kept empty since Q5),
 `life_chapters`, and the `one_*` rows in `life_answers`, plus the code that reads them. A fresh backup
 first. **I ask you before this phase, with the list and the counts.**
+
+**Prepared 2026-11-05, not run** (card `phase7` on the sign-off page). Fresh backup:
+`~/dg-backups/life-plan-2026-11-05-before-wheel.json`. Live counts for your account, read-only:
+
+| What goes | Yours now | Where it lives instead |
+|---|---|---|
+| `life_plan_areas.review_fortnight` | 12 of 12 areas | your first review (12 scores, equal) |
+| `life_plan_areas.season_rank` | 3 of 12 | the season's areas (3, same order) |
+| `life_plans.season_focus_id` | 0 | the season (none set) |
+| `life_plan_goals.serves_one_thing` | 1 of 50 | the season's goals (1) |
+| `life_plan_goals.user_goal_id` | 0 of 50 | nothing (never set for you) |
+| north-star row in `life_plan_answers` (`star_why`) | 1 (335 chars) | the north star's purpose (identical) |
+| commit rows in `life_plan_answers` | 0 | the north star's commitment |
+| `life_plan_goal_habits` | 13 rows, 13 nodes | routine steps serving the goals (13 links) |
+| `life_chapters` | 1 | the season (28 Aug – 31 Dec 2026) |
+| `one_*` rows in `life_answers` | 1 (`one_thing`) | the season's sentence |
+| browser key `north-star-v1:orphan` | unknown (in browsers only) | your account |
+| `save_life_plan` + the PUT on `/api/life-plan`, `/api/life-answers`, the Track push code (`buildTrackInserts`, `trackRows`, `linksToBackfill`), `NsGoal.habits`, the "Goals sent to the old goals page before" block | code | nothing reads them |
+
+**The 50 goals Track copied (`user_goals` tagged `ns:`)**, made 18 Aug, last changed 25 Sep: the "241
+counts" are the current values of 11 of them, and most are readings, not counts (body weight 90, body
+fat 19, waist 90, bench 22 kg, hammer curl 14 kg, and six goals at 1), plus 24 weekly snapshot rows
+(24 Aug – 25 Sep; 10 above zero). All 50 match one of your plan goals by its id. The other 41 old
+goals (March–July) are not part of this. **Recommendation:** first copy their numbers into your plan
+(adds only: each of the 11 values as a day number on the goal, on the day it was last changed; each
+non-zero weekly number on its week's day), so the readings and the August–September weeks show in the
+plan's own history; then delete the 50 copies and their 24 snapshot rows with the rest of Phase 7.
+Nothing you wrote is then only on the old page, which is archived.
 
 ## Ground rules for every phase
 
