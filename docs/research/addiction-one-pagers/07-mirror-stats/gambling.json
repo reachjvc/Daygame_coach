@@ -353,17 +353,17 @@
       "group": "who",
       "top": true,
       "big": "92%",
-      "line": "Of Australian men who got free of a gambling problem, 92% did it without any treatment. For men and women together it was 82%.",
+      "line": "Of Australian men who got free of a gambling disorder, 92% did it without treatment or Gamblers Anonymous. For men and women together it was 82%.",
       "mirror": "You think you need rehab or meetings to get free.",
       "basis": {
         "design": "national telephone survey of twins (one interview each)",
         "who": "Australian adults who had ever had a gambling disorder",
-        "n": "104 people who had ever had a gambling disorder (of 4,764 surveyed); 44 had got free, 57% of them men",
+        "n": "25 men who had got free (of 70 men, and 104 people in all, who had ever had a gambling disorder; 4,764 surveyed)",
         "where": "Australia",
         "when": "interviews 2004 to 2007; published 2009",
-        "measured": "Getting free (no gambling problems at all in the past year), and ever having had treatment for gambling, by sex."
+        "measured": "Getting free (no signs of a gambling disorder in the past year), and ever having seen a professional or gone to Gamblers Anonymous for gambling, by sex."
       },
-      "caveat": "Men were less likely than women to get free at all: 36% vs 56%. The 92% rests on about two dozen men, and one problem-free year is not proof it lasts.",
+      "caveat": "The 92% rests on 25 men, and the gap with women could be chance. Men were less likely than women to get free at all: 36% vs 56%. Most who got free had been problem-free for 2 years or more, as they recalled it in one interview.",
       "ref": {
         "cite": "Slutske WS, Blaszczynski A, Martin NG (2009). Sex differences in the rates of recovery, treatment-seeking, and natural recovery in pathological gambling: results from an Australian community-based twin survey. Twin Research and Human Genetics 12:425-432.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/19803770/",
@@ -376,17 +376,17 @@
       "group": "who",
       "top": true,
       "big": "11%",
-      "line": "Problem gamblers who set out to quit or cut down without treatment gambled less within 6 to 9 months; 11% were betting at a low-risk level 18 months later.",
+      "line": "Problem gamblers who set out to quit or cut down without treatment gambled less within 6 to 9 months; 11.1% were betting at a low-risk level 18 months later.",
       "mirror": "You want to know your odds if you try this without help.",
       "basis": {
         "design": "follow-up study over 18 months (no treatment)",
         "who": "adult problem gamblers from the community who wanted to quit or cut down and were not in treatment",
-        "n": "204 problem gamblers",
-        "where": "Canada (Toronto research team)",
+        "n": "204 problem gamblers at the start",
+        "where": "online study run by a team in Toronto, Canada",
         "when": "published 2018",
         "measured": "Problem-gambling score, how often they gambled and how much money they bet, checked repeatedly for 18 months."
       },
-      "caveat": "A looser bar gives a bigger number: 28.7% stayed below the problem line for a year or more. Volunteers who wanted to change; the study summary doesn't say how many answered at 18 months.",
+      "caveat": "Volunteers who answered ads and wanted to change, with no comparison group. A looser bar gives a bigger number: 28.7% stayed below the problem line for a year or more.",
       "ref": {
         "cite": "Kushnir V, Godinho A, Hodgins DC, Hendershot CS, Cunningham JA (2018). Self-directed gambling changes: trajectory of problem gambling severity in absence of treatment. Journal of Gambling Studies 34:1407-1421.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/29589165/",
@@ -408,7 +408,7 @@
         "when": "interviews 2004 to 2007; published 2010",
         "measured": "Any gambling in the past year, which kinds, and days, hours and share of household income spent on it."
       },
-      "caveat": "Only 44 people, at one point in time, and 'some way' includes lottery tickets. It shows many get free while still gambling a little, not that cutting down is safer than stopping. 62% still played pokies.",
+      "caveat": "Only 44 people, at one point in time, and 'some way' includes lottery tickets. It shows many get free while still gambling, not that cutting down is safer than stopping. 62% still played pokies.",
       "ref": {
         "cite": "Slutske WS, Piasecki TM, Blaszczynski A, Martin NG (2010). Pathological gambling recovery in the absence of abstinence. Addiction 105:2169-2175.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2975751/",
@@ -426,7 +426,7 @@
       "basis": {
         "design": "online survey, weighted to match Canada's regular gamblers",
         "who": "Canadian adults who gamble at least monthly and scored as having a gambling problem",
-        "n": "909 problem gamblers who tried to cut back or stop (796 mainly on their own)",
+        "n": "909 problem gamblers who tried to cut back or stop (796 mainly on their own; 90.2% once weighted)",
         "where": "Canada",
         "when": "August to September 2018; published 2022",
         "measured": "Trying to cut back or stop in the past year; alone or with help; why they did not get help; how well they thought it went."
@@ -443,17 +443,17 @@
     {
       "group": "how",
       "big": "92%",
-      "line": "Gamblers trying to cut back most often used tools in their head: 92% reminded themselves what gambling costs them, and 92% thought about better uses for the money.",
+      "line": "Of 489 gamblers asked about 99 ways to limit their gambling, the most used were in the head: 92% reminded themselves what gambling costs them, and 92% thought about better uses for the money.",
       "mirror": "You keep reminding yourself what betting costs you, and still bet.",
       "basis": {
         "design": "survey with a checklist of 99 ways to cut back",
-        "who": "gamblers trying to limit or reduce their gambling; 333 of the 489 scored as problem gamblers",
+        "who": "gamblers asked which ways to limit or reduce gambling they had used; 333 of the 489 scored as problem gamblers",
         "n": "489 gamblers",
-        "where": "Australia-based research team; the study summary doesn't say where people lived",
+        "where": "run by an Australian research team",
         "when": "published 2018",
         "measured": "Which of 99 strategies they had used, and how helpful each one was."
       },
-      "caveat": "Most used is not most helpful: people rated their strategies only moderately helpful overall. Volunteers, and the study summary doesn't say how many were men.",
+      "caveat": "Most used is not most helpful: people rated their strategies only moderately helpful overall. About a third of the 489 did not score as problem gamblers.",
       "ref": {
         "cite": "Rodda SN, Bagot KL, Cheetham A, Hodgins DC, Hing N, Lubman DI (2018). Types of change strategies for limiting or reducing gambling behaviors and their perceived helpfulness: a factor analysis. Psychology of Addictive Behaviors 32:679-688.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/30211588/",
@@ -463,32 +463,10 @@
       }
     },
     {
-      "group": "how",
-      "big": "almost half",
-      "line": "During brief phone-and-workbook help, almost half of problem gamblers changed their goal at least once: stop everything, stop the one game that hurts, or bet in control.",
-      "mirror": "You keep switching between quitting for good and just cutting back.",
-      "basis": {
-        "design": "second look at a randomised trial; people picked their own goal",
-        "who": "problem gamblers who answered media ads for brief help (a phone talk plus a self-help workbook)",
-        "n": "people from a trial of 314; the study summary doesn't say how many were in this analysis",
-        "where": "Canada (Calgary)",
-        "when": "trial published 2009; this analysis 2015",
-        "measured": "Goal at each check, days gambled, money gambled, and whether people felt they reached their goal."
-      },
-      "caveat": "Those aiming to stop gambled on fewer days, but did not lose less money or feel closer to their goal. Goals were not assigned at random, so this is no fair test of which goal is better.",
-      "ref": {
-        "cite": "Stea JN, Hodgins DC, Fung T (2015). Abstinence versus moderation goals in brief motivational treatment for pathological gambling. Journal of Gambling Studies 31:1029-1045.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/24748014/",
-        "pmid": "24748014",
-        "fetched": true,
-        "quote": "almost half of participants switched their goal at least one time, over 25% of participants selected an unchanging goal of 'quit most problematic type of gambling'"
-      }
-    },
-    {
       "group": "works",
       "top": true,
       "big": "27 trials",
-      "line": "Across 27 trials, therapy with a real person had medium to large effects on problem gambling; self-help books, websites and apps had small ones.",
+      "line": "Across 27 trials, therapy with a real person had medium to large effects on problem gambling up to 3 months later; self-help workbooks, websites and feedback had small ones.",
       "mirror": "You'd rather beat this alone than sit across from a therapist.",
       "basis": {
         "design": "meta-analysis of 27 randomised trials (16 face-to-face, 11 self-help)",
@@ -498,29 +476,29 @@
         "when": "published 2017",
         "measured": "Problem-gambling severity, how often people gambled and money lost, up to 3 months after treatment and at the last check (1.5 to 9 months), against control groups."
       },
-      "caveat": "At the later checks the self-help effects were too small to be sure of, and the face-to-face ones less solid. More intensive self-help did better. Nothing beyond 9 months.",
+      "caveat": "Each kind was tested against its own control groups, not against the other. At the last check (1.5 to 9 months), therapy's effect had shrunk to small-to-medium and self-help's was too small to be sure of. Self-help with 6 or more sessions did better. Nothing beyond 9 months.",
       "ref": {
         "cite": "Goslar M, Leibetseder M, Muench HM, Hofmann SG, Laireiter AR (2017). Efficacy of face-to-face versus self-guided treatments for disordered gambling: a meta-analysis. Journal of Behavioral Addictions 6:142-162.",
-        "url": "https://pubmed.ncbi.nlm.nih.gov/28662618/",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5520130/",
         "pmid": "28662618",
         "fetched": true,
-        "quote": "face-to-face treatments (16 studies with Hedges's g ranging from 0.67 to 1.15) as compared with self-guided treatments (11 studies with Hedges's g ranging from 0.12 to 0.30)"
+        "quote": "face-to-face treatments (16 studies with Hedges’s g ranging from 0.67 to 1.15) as compared with self-guided treatments (11 studies with Hedges’s g ranging from 0.12 to 0.30)"
       }
     },
     {
       "group": "works",
       "big": "51%",
-      "line": "In therapy aimed at betting in control instead of stopping, half of 89 people with a gambling problem no longer had one a year later.",
+      "line": "In therapy aimed at betting in control instead of stopping, half of 89 people with a gambling disorder no longer met its bar a year later.",
       "mirror": "You want to bet now and then without it running your life.",
       "basis": {
         "design": "treatment study with no comparison group",
-        "who": "people with a gambling disorder in a 12-week therapy (CBT) aimed at controlled gambling",
+        "who": "people with a gambling disorder in a CBT program aimed at controlled gambling",
         "n": "89 people, everyone who started counted",
         "where": "Quebec, Canada",
         "when": "published 2009; checked 6 and 12 months after treatment",
         "measured": "Fewer than 5 of the 10 signs of a gambling disorder, at the end of treatment and 6 and 12 months later."
       },
-      "caveat": "No comparison group, so the therapy may not be what did it. Counting only those who finished gives 71%. Only a third kept the cut-down goal all the way; most aimed to stop at least once.",
+      "caveat": "No comparison group, so the therapy may not be what did it. Below the bar can still mean up to 4 of the 10 signs. Counting only those who finished gives 71%.",
       "ref": {
         "cite": "Ladouceur R, Lachance S, Fournier PM (2009). Is control a viable goal in the treatment of pathological gambling? Behaviour Research and Therapy 47:189-197.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/19118818/",
@@ -555,14 +533,14 @@
     {
       "group": "works",
       "big": "68%",
-      "line": "At a Swedish clinic, 68% of patients who had used the national self-ban still gambled, mostly on unlicensed sites.",
+      "line": "At a Swedish clinic, 68% of patients who had used the national self-ban had gambled despite it, mostly on unlicensed sites.",
       "mirror": "You banned yourself from betting sites and found a way around it.",
       "basis": {
         "design": "review of clinic records",
         "who": "people starting treatment for gambling disorder; 73% men; mostly online casino and sports betting",
-        "n": "60 patients who had self-excluded (of 85 starting treatment)",
+        "n": "60 patients who had self-excluded (of 74 whose records covered this; 85 starting treatment)",
         "where": "Malmö, Sweden",
-        "when": "January to September 2021",
+        "when": "records from January to September 2021; published 2022",
         "measured": "Gambling despite being on Spelpaus, Sweden's national self-exclusion covering all licensed operators."
       },
       "caveat": "Only people who ended up in treatment, so those for whom the ban worked are missing. Unlicensed foreign sites are the gap.",
@@ -639,6 +617,10 @@
     {
       "claim": "Problem gambling from 18 to 29 is mostly short-lived; recovery without help is the rule (Slutske 2003).",
       "why": "Summary read: no number for how many got free."
+    },
+    {
+      "claim": "During brief phone-and-workbook help, almost half of problem gamblers changed their goal at least once: stop everything, stop the one game that hurts, or bet in control.",
+      "why": "Stea 2015 (PMID 24748014): only the summary is open, and it gives no count for this analysis; the parent trial had 314 people, so the n behind 'almost half' cannot be shown. The goal-switching figure itself is in the summary."
     }
   ]
 }

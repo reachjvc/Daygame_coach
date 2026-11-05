@@ -75,7 +75,7 @@
       "basis": {
         "design": "national survey (National Comorbidity Survey), survival analysis",
         "who": "US population aged 15–54",
-        "n": "8,098 people aged 15 to 54; the summary doesn't say how many had used cocaine",
+        "n": "8,098 people aged 15 to 54; how many had used cocaine: unknown",
         "where": "USA",
         "when": "published 2002",
         "measured": "age at first use, and age when people first met dependence criteria"
@@ -141,7 +141,7 @@
       "basis": {
         "design": "meta-analysis of 46 studies",
         "who": "people with cocaine abuse or dependence vs. healthy comparison groups",
-        "n": "46 studies; the review's summary doesn't say how many people took part",
+        "n": "46 studies; how many people took part: unknown",
         "where": "several countries",
         "when": "published 2014",
         "measured": "test scores in 11 areas of thinking, split by how long people had been off cocaine"
@@ -300,7 +300,7 @@
       "basis": {
         "design": "meta-analysis of 46 studies",
         "who": "people with cocaine abuse or dependence vs. healthy comparison groups",
-        "n": "46 studies; the review's summary doesn't say how many people took part",
+        "n": "46 studies; how many people took part: unknown",
         "where": "several countries",
         "when": "published 2014",
         "measured": "test scores by time off: still testing positive, up to 12 weeks, 20 weeks or more"
@@ -318,7 +318,7 @@
       "group": "who",
       "top": true,
       "big": "5 years",
-      "line": "Half of Americans hooked on cocaine were free of every sign of it within about 5 years. By the time they were asked, 336 of 408 already were.",
+      "line": "Half of Americans who had ever been hooked on cocaine were free of every sign of it within about 5 years. By the time they were asked, 336 of 408 already were.",
       "mirror": "You've been hooked a couple of years and can't see the way out.",
       "basis": {
         "design": "national survey (NESARC), face-to-face interviews; ages recalled and modelled over a lifetime",
@@ -326,9 +326,9 @@
         "n": "408 adults who had ever been hooked (of 43,093 surveyed); 336 of them had got free",
         "where": "US",
         "when": "2001–2002",
-        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. Alcohol took 14 years, cigarettes 26. Under 9% got free in the first year."
+        "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. Alcohol took 14 years, nicotine 26. For cocaine, 8.6% got free within the first year and 75.8% within 10 years."
       },
-      "caveat": "The study projects that 99% get free at some point in life; that is a model, not a head count. Men got free more slowly than women.",
+      "caveat": "The study projects that 99.2% get free at some point in life; that is a model, not a head count. People in prisons or hospitals weren't surveyed, so the real pace may be slower. Men got free more slowly than women.",
       "ref": {
         "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
@@ -341,17 +341,17 @@
       "group": "who",
       "top": true,
       "big": "64%",
-      "line": "Of 430 crack smokers in one US city who weren't in treatment, 64% never had a 6-month break from crack over about 9 years.",
+      "line": "Of 430 crack smokers recruited in the community in one US city, 63.6% never had a 6-month break from crack while the study ran (1996–2005).",
       "mirror": "You've used for years and have never managed six months off.",
       "basis": {
-        "design": "community group followed about 9 years, no treatment needed to take part",
+        "design": "community sample interviewed again and again from 1996 to 2005; no treatment needed to take part",
         "who": "adults smoking crack, with a positive urine test at the start",
         "n": "430 people",
         "where": "Dayton, Ohio, USA",
         "when": "1996–2005",
-        "measured": "Whether each person ever went 6 months in a row without crack during the study; people were sorted into 3 paths: no change, some change, big change."
+        "measured": "Whether each person ever went 6 months in a row without crack during the study; a statistical model sorted people into 3 paths: no change, some change, big change."
       },
-      "caveat": "One city's crack smokers, found by targeted street recruiting; not a sample of powder users at parties. Men were less likely to get a long break. Breaks shorter than 6 months don't count here.",
+      "caveat": "One city's crack smokers, found by targeted recruiting; not a sample of powder users at parties. The paths come from a statistical model, not a hand count. Men were less likely to get a long break. Breaks shorter than 6 months don't count here.",
       "ref": {
         "cite": "Falck RS, Wang J, Carlson RG (2007). Crack cocaine trajectories among users in a midwestern American city. Addiction.",
         "url": "https://europepmc.org/article/MED/17645426",
@@ -364,17 +364,17 @@
       "group": "how",
       "top": true,
       "big": "59%",
-      "line": "Of Americans who beat a cocaine problem, 59% had used some help along the way: meetings, treatment, or medication. The rest never used any.",
+      "line": "Of Americans who said they had got over a problem mainly with cocaine, 58.9% had used some help along the way: mutual-help meetings, treatment, medication or recovery services. The rest used none of these.",
       "mirror": "You think quitting coke alone is impossible.",
       "basis": {
         "design": "national survey (National Recovery Survey), one snapshot",
         "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named cocaine or crack as the main one",
-        "n": "The study doesn't say how many of the 2,002 had cocaine as their main problem",
+        "n": "2,002 adults who had got over a problem; cocaine was the main one for 10.0% of them (a weighted share; the head count isn't stated)",
         "where": "US",
         "when": "July–August 2016",
         "measured": "Ever used, at any point: mutual-help groups (such as NA or Cocaine Anonymous), treatment, medication or recovery services. Across all substances 54% used help; mutual-help groups were the most common (45%). For alcohol it was 56%, for weed 46%."
       },
-      "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more.",
+      "caveat": "Self-report. Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more.",
       "ref": {
         "cite": "Kelly JF, Bergman B, Hoeppner BB, Vilsaint C, White WL (2017). Prevalence and pathways of recovery from drug and alcohol problems in the United States population: implications for practice, research, and policy. Drug and Alcohol Dependence.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6076174/",
@@ -410,17 +410,17 @@
       "top": true,
       "existing": true,
       "big": "3×",
-      "line": "Rewards for clean urine tests plus the community reinforcement approach (help building a life without cocaine) gave about 3× the odds of being clean at the longest follow-up.",
+      "line": "Rewards for clean urine tests plus the community reinforcement approach (help building a life without cocaine) gave about 3 times the odds of being clean at the longest follow-up, compared with usual care.",
       "mirror": "You respond better to rewards and structure than to willpower talks.",
       "basis": {
         "design": "network meta-analysis of 50 randomised trials",
-        "who": "adults with cocaine and/or amphetamine addiction",
+        "who": "adults with cocaine and/or amphetamine addiction; all 8 trials of this combination were in cocaine users",
         "n": "8 trials tested this combination, with 19 to 50 people in that group each (6,942 people in all 50 trials)",
         "where": "the 8 trials of this method: US and Spain",
         "when": "published 2018",
-        "measured": "share clean on urine tests, compared with usual care, at the end of treatment, at 12 weeks and at the longest follow-up after treatment"
+        "measured": "share clean on urine tests, compared with usual care, at the end of treatment, at 12 weeks and at the longest follow-up after treatment. The program ran 24 weeks in these trials."
       },
-      "caveat": "Odds, not chance. At the end of treatment it was 2.8×; at 12 weeks 7.6×, but that estimate is very unsure (2× to 28×). Few, small trials.",
+      "caveat": "Odds, not chance. At the end of treatment it was 2.8×; at 12 weeks 7.6×, but that estimate is very unsure (2× to 28×). Few, small trials, and only 1 of the 8 tested it directly against usual care; the rest of the comparison is indirect.",
       "ref": {
         "cite": "De Crescenzo F, Ciabattini M, D'Alò GL, et al. (2018). Comparative efficacy and acceptability of psychosocial interventions for individuals with cocaine and amphetamine addiction: a systematic review and network meta-analysis. PLoS Medicine.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6306153/",
@@ -432,17 +432,17 @@
     {
       "group": "works",
       "big": "1–4 days",
-      "line": "In treatment trials, heavy users who cut down to 1–4 days a month did about as well up to a year later as those who stopped completely.",
+      "line": "In treatment trials, heavy users who got down to 1–4 days a month by the end of treatment did about as well up to a year later as those who stopped, on most measures. Stopping still meant less cocaine at 6 months and more clean urine tests.",
       "mirror": "You want to cut way down on coke, not stop completely.",
       "basis": {
         "design": "pooled data from 7 randomised treatment trials",
-        "who": "adults in outpatient treatment for cocaine who used 5 or more days a month at the start; 64% men in the full pool",
+        "who": "adults in outpatient treatment for cocaine (some also on methadone) who used 5 or more days a month at the start; 63.6% men in the full pool",
         "n": "At 6 months: 114 who cut down to 1–4 days and 63 who stopped (of 716 in the 7 trials)",
         "where": "New Haven County, Connecticut, USA",
         "when": "published 2019",
-        "measured": "Problems with cocaine, mental health, work, the law and other drugs, 6 and 12 months after treatment, by how far people had cut down by the end of treatment. Only 38% cut down at all; 62% used the same or more."
+        "measured": "Problems with cocaine, mental health, work, the law and other drugs, 6 and 12 months after treatment, by how far people had cut down by the end of treatment. Only 38.3% dropped at least one level (for example from 5+ days to 1–4); 61.7% stayed at the same level or went up."
       },
-      "caveat": "Those who stopped completely used the least cocaine later. Nobody was assigned to cut down; people did it themselves, and many missed follow-ups.",
+      "caveat": "Nobody was assigned to cut down; people did it themselves. Days of use were self-reported. Only 4 of the 7 trials checked at 12 months.",
       "ref": {
         "cite": "Roos CR, Nich C, Mun CJ, Babuscio TA, Mendonca J, Miguel AQC, et al. (2019). Clinical validation of reduction in cocaine frequency level as an endpoint in clinical trials for cocaine use disorder. Drug and Alcohol Dependence.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6910212/",
@@ -454,13 +454,13 @@
     {
       "group": "works",
       "big": "0 approved",
-      "line": "No medicine is approved in the US for cocaine addiction. Antidepressants, tested in 38 trials, did nothing for cocaine use.",
+      "line": "No medicine is approved in the US for cocaine addiction. Antidepressants, tested in 38 trials, showed no effect on cocaine use.",
       "mirror": "You've hoped there's a pill that takes the craving away.",
       "basis": {
         "design": "systematic review and meta-analysis of 48 randomised trials and 7 earlier reviews",
         "who": "adults with a cocaine problem",
-        "n": "48 trials of 66 drugs or combinations; the review summary doesn't say how many people",
-        "where": "The review summary doesn't list countries",
+        "n": "7 earlier reviews and 48 more trials, covering 66 drugs or combinations; the review gives no total head count",
+        "where": "The review doesn't list countries",
         "when": "searched to November 2017; published 2019",
         "measured": "Stretches of 3+ weeks fully off cocaine, cocaine use, and staying in treatment, medicine against placebo. Bupropion, topiramate and stimulant medicines may help a little (about 1.4 to 2.6 times as many off), on weak evidence."
       },
@@ -484,21 +484,21 @@
         "n": "101 people",
         "where": "New Haven, Connecticut, USA",
         "when": "published 2014",
-        "measured": "3 or more weeks in a row off cocaine during the 8 weeks: the program (7 lessons) plus usual care against usual care alone. The gain held at a check 6 months later."
+        "measured": "3 or more weeks in a row off cocaine during the 8 weeks: the program (7 lessons) plus usual care against usual care alone. Over the 6 months after, the program group kept cutting back more."
       },
-      "caveat": "One small trial, mostly women, all also treated for opioid addiction: a weak fit for men who use at weekends. Lessons on a computer, not a phone app.",
+      "caveat": "One small trial, mostly women, all also treated for opioid addiction: a weak fit for most men who use cocaine. Clean urine tests and self-reported days off did not differ clearly. Lessons on a computer, not a phone app.",
       "ref": {
         "cite": "Carroll KM, Kiluk BD, Nich C, Gordon MA, Portnoy GA, Marino DR, Ball SA (2014). Computer-assisted delivery of cognitive-behavioral therapy: efficacy and durability of CBT4CBT among cocaine-dependent individuals maintained on methadone. American Journal of Psychiatry.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4042674/",
         "pmid": "24577287",
         "fetched": true,
-        "quote": "Participants assigned to the CBT4CBT condition were significantly more likely to attain three or more consecutive weeks of abstinence from cocaine (36 versus 17%, p<.05, OR =.36)."
+        "quote": "Participants assigned to the CBT4CBT condition were significantly more likely to attain three or more consecutive weeks of abstinence from cocaine (36 versus 17%, p<.05, OR=.36)."
       }
     },
     {
       "group": "works",
       "big": "2×",
-      "line": "Adding counselling or a reward program made people about twice as likely to be fully clean at the end of treatment.",
+      "line": "Adding counselling or a reward program made people about twice as likely to be continuously clean at the end of treatment.",
       "mirror": "You're deciding whether to get help or go it alone.",
       "basis": {
         "design": "Cochrane review of 52 randomised trials",
@@ -508,7 +508,7 @@
         "when": "searched to November 2015; published 2016",
         "measured": "continuous abstinence at the end of treatment, compared with no added treatment"
       },
-      "caveat": "Low-quality evidence. At the longest follow-up the gain was no longer clear. Many comparison groups still got some care.",
+      "caveat": "Low-quality evidence. At the longest follow-up the gain was no longer clear. Compared directly with usual care (2 trials), there was no clear gain. Many comparison groups still got some care.",
       "ref": {
         "cite": "Minozzi S, Saulle R, De Crescenzo F, Amato L (2016). Psychosocial interventions for psychostimulant misuse. Cochrane Database of Systematic Reviews.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/27684277/",

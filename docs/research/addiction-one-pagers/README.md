@@ -66,9 +66,39 @@ per study. The page shows them in two sections, "Is this you?" and "How
 quitting goes", and the plan (`plan` per page in `06-template.json`) has its
 own section: the owner's five steps, each with actions for that addiction.
 
+Round 5 applies a senior review: sample sizes count the people behind each
+number, the cautious estimate leads, projections say so, every number opens
+with a second-person `mirror` line, four numbers show per section (`top: true`)
+and the rest fold. The build fails when a research note ("fetched", "not
+given", "our sum", "in the abstract") reaches a reader field, or when a chart
+row is malformed.
+
+Round 6 follows his notes on round 5. "Is this you?" was the wrong angle: a
+man who opens the alcohol page already knows he has a problem, so the first
+number section is now "How people quit", with three groups in
+`07-mirror-stats`: `who` (who gets free), `how` (how they quit) and `works`
+(what helps). Each page has 9 to 12 of them, four `top`. The old `you`,
+`start` and `cost` numbers fold under "Earlier angle, proposed to remove"
+until he decides. Section headings carry no intro line: show, don't tell.
+Header option D ("Phone first") is written for a phone by default and adds the
+wide two-column arrangement with a container query, after he said option B
+fails on a browser.
+
+On 2026-11-05 four separate reviewers checked every who/how/works number
+against its source, two pages each. Most needed a fix: a figure taken from the
+wrong group (the nicotine "49%" counted ex-smokers too; the weed "8%" counted
+everyone, not only those who tried to stop), an n for the whole study instead
+of the subgroup behind the figure (betting "92%" rests on 25 men), rounding
+without "about", a quote that was not word for word, or a line more hopeful
+than its source. One betting number with no countable basis moved to
+`rejected`. The build check now also fails on "study summary" and "summary
+doesn't say".
+
 His marks are in its db: `locks/<section>` (`{layout, form}`; sections are
 head, you, timeline, beliefs, plan, outlook, story, others, sources), `marks/sec-<section>`
-(his note on a section), `marks/row-<addiction id>-<row>` (Keep = yes, Cut =
+(his notes on a section, a thread since round 6: `notes: [{text, t}]` plus an
+unsent `draft`; older docs hold one `note` string, which the page still reads),
+`marks/row-<addiction id>-<row>` (Keep = yes, Cut =
 no), `marks/general`, and his own text in `experience/<addiction id>`. Round 2
 keys (`marks/blk-*`, `marks/tl-*`) were never written.
 

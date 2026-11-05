@@ -90,7 +90,7 @@ for page in tpl["pages"]:
         x.pop("ref", None)
         for field in ["line", "mirror", "caveat"] + [f"basis.{k}" for k in x.get("basis", {})]:
             v = x["basis"][field[6:]] if field.startswith("basis.") else x.get(field, "")
-            if re.search(r"fetched|not given|our sum|in the abstract", str(v), re.I):
+            if re.search(r"fetched|not given|our sum|in the abstract|summary doesn.t say|study summary", str(v), re.I):
                 problems.append(f"{page['id']} stat {x['big']}: research note in {field}: {v[:60]}")
     for w in page.get("windows", []):
         if w["kind"] not in ("feel", "danger", "trigger", "change"):

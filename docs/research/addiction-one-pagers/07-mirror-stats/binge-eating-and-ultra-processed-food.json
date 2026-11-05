@@ -416,7 +416,7 @@
         "when": "1999 to 2006; published 2010",
         "measured": "Highest-ever weight, weight a year ago and weight now, all as people reported them. Counted: at least 10% below the highest weight, both now and a year ago."
       },
-      "caveat": "Some of the loss may not have been on purpose, such as from illness. Weights were remembered, and one year off is not forever. Women did a little better than men (19.2% vs 15.6%).",
+      "caveat": "About weight, not binges or junk food. Some of the loss may not have been on purpose, such as from illness. Weights were remembered, and one year off is not forever. Women did a little better than men (19.2% vs 15.6%).",
       "ref": {
         "cite": "Kraschnewski JL, Boan J, Esposito J, Sherwood NE, Lehman EB, Kephart DK, Sciamanna CN (2010). Long-term weight loss maintenance in the United States. International Journal of Obesity 34:1644-1654.",
         "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3671378/",
@@ -438,7 +438,7 @@
         "when": "published 1997",
         "measured": "How they lost the weight (a formal program or on their own), what they eat and how active they are, all self-reported."
       },
-      "caveat": "Only success stories who signed up, mostly women, so it can't say which way fails more often. Both groups changed food and exercise, and 3 in 4 said a trigger event came first.",
+      "caveat": "About weight, not binges or junk food. Only success stories who signed up, mostly women, so it can't say which way fails more often. Both groups changed food and exercise, and 3 in 4 said a trigger event came first.",
       "ref": {
         "cite": "Klem ML, Wing RR, McGuire MT, Seagle HM, Hill JO (1997). A descriptive study of individuals successful at long-term maintenance of substantial weight loss. American Journal of Clinical Nutrition 66:239-246.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/9250100/",
@@ -460,7 +460,7 @@
         "when": "1993 to 2010; published 2014",
         "measured": "Self-reported weight each year for 10 years, plus exercise, eating habits and how often they weighed themselves."
       },
-      "caveat": "Only people already doing well when they joined, and weights were self-reported. Those who moved less, ate more freely or stopped weighing themselves regained more. The study estimates 87% were still at least 10% lighter.",
+      "caveat": "About weight, not binges or junk food. Only people already doing well when they joined, and weights were self-reported. Those who moved less, ate more freely or stopped weighing themselves regained more. The study estimates 87% were still at least 10% lighter.",
       "ref": {
         "cite": "Thomas JG, Bond DS, Phelan S, Hill JO, Wing RR (2014). Weight-loss maintenance for 10 years in the National Weight Control Registry. American Journal of Preventive Medicine 46:17-23.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/24355667/",
@@ -472,16 +472,16 @@
     {
       "group": "how",
       "top": true,
-      "big": "71% vs 71%",
-      "line": "Fast dieters (12 weeks) and slow dieters (36 weeks) regained the same share of their weight within three years, about 71%. More of the fast group hit their goal: 81% vs 50%.",
+      "big": "76% vs 76%",
+      "line": "Fast dieters (12 weeks) and slow dieters (36 weeks) who reached their goal regained the same share of the lost weight within three years: 76%, counting dropouts. More of the fast group reached it: 81% vs 50%.",
       "mirror": "You want to go all in, but everyone says go slow.",
       "basis": {
         "design": "randomised trial (fast vs slow weight loss, then a 3-year keep-it-off phase)",
         "who": "adults with obesity aged 18 to 70; 51 men, 153 women enrolled",
-        "n": "200 started; 104 who reached their goal finished the 3 years (61 fast, 43 slow)",
+        "n": "200 started; 127 who reached their goal began the 3-year keep-it-off phase (76 fast, 51 slow); 104 finished it",
         "where": "Australia (a hospital in Melbourne)",
         "when": "started 2008 to 2010; published 2014",
-        "measured": "Share of lost weight regained 144 weeks after the weight-loss phase, and how many lost at least 12.5% in the time given."
+        "measured": "Share of lost weight regained 144 weeks after the weight-loss phase: 76% in both groups counting dropouts, 71% and 70.5% among those who finished. Also how many lost at least 12.5% in the time given."
       },
       "caveat": "Most people regained most of their weight either way. This is about the pace of a diet, not about dropping junk food. Mostly women, and only those who hit their goal went on.",
       "ref": {
@@ -489,13 +489,13 @@
         "url": "https://pubmed.ncbi.nlm.nih.gov/25459211/",
         "pmid": "25459211",
         "fetched": true,
-        "quote": "The rate of weight loss does not affect the proportion of weight regained within 144 weeks."
+        "quote": "Intention-to-treat analysis showed similar results (gradual weight loss 76·3% regain, 95% CI 65·2–87·4 vs rapid weight loss 76·3%, 65·8–86·8)."
       }
     },
     {
       "group": "how",
       "big": "42%",
-      "line": "Of US adults trying to lose weight, 63% ate less and 63% exercised. Only 42% cut down on junk food or fast food.",
+      "line": "Of US adults trying to lose weight, about 63% ate less and 63% exercised; about 42% ate less junk food or fast food.",
       "mirror": "You've cut portions but kept the junk food.",
       "basis": {
         "design": "national health survey (NHANES), official statistics brief",
@@ -521,7 +521,7 @@
       "basis": {
         "design": "analysis of a 2-year randomised diet trial (POUNDS Lost)",
         "who": "adults with overweight or obesity on one of four calorie-cut diets; 44% men",
-        "n": "367 adults",
+        "n": "367 adults at the start; 330 at 6 months and 164 at 2 years",
         "where": "USA (Boston and Baton Rouge)",
         "when": "published 2017; checked at the start, 6 months and 2 years",
         "measured": "A craving questionnaire, and how often and how much of those foods people ate, from food records."
@@ -549,7 +549,7 @@
         "when": "2011 to 2012; published 2014",
         "measured": "Weight 12 months after starting, measured by staff who did not know each man's group."
       },
-      "caveat": "Men who chose to sign up. 3.5 years later the first group was still 2.9 kg lighter than at the start, and about 1 in 3 had kept off 5%.",
+      "caveat": "About weight, not binges or junk food, in men who chose to sign up. 3.5 years on, the men still followed up were 2.9 kg lighter than at the start and about 1 in 3 weighed 5% less; the waiting-list men, who did the program a year later, did about as well.",
       "ref": {
         "cite": "Hunt K, Wyke S, Gray CM, Anderson AS, Brady A, Bunn C, Donnan PT, Fenwick E, Grieve E, Leishman J, Miller E, Mutrie N, Rauchhaus P, White A, Treweek S (2014). A gender-sensitised weight loss and healthy living programme for overweight and obese men delivered by Scottish Premier League football clubs (FFIT): a pragmatic randomised controlled trial. Lancet 383:1211-1221.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/24457205/",
@@ -572,7 +572,7 @@
         "when": "published 2012",
         "measured": "Weight and BMI at 1 and 2 years; sugary drinks fell from 1.7 servings a day to nearly none. Help was home deliveries every 2 weeks, plus phone calls with parents."
       },
-      "caveat": "Teens, not grown men. At 2 years, the main test, the difference was too small to be sure of, except among Hispanic teens.",
+      "caveat": "Teens, not grown men, and the drinks were self-reported. At 2 years, the main test, the difference was too small to be sure of, except among Hispanic teens.",
       "ref": {
         "cite": "Ebbeling CB, Feldman HA, Chomitz VR, Antonelli TA, Gortmaker SL, Osganian SK, Ludwig DS (2012). A randomized trial of sugar-sweetened beverages and adolescent body weight. New England Journal of Medicine 367:1407-1416.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/22998339/",
@@ -584,7 +584,7 @@
     {
       "group": "works",
       "big": "6 months",
-      "line": "Six months of eating very little sweet food did not change how much people liked sweet taste, what they chose, or their weight. Afterwards they drifted back to their old sweet intake.",
+      "line": "Six months of eating less sweet food did not change how much people liked sweet taste, what they chose, or their weight. Afterwards they drifted back to their old sweet intake.",
       "mirror": "You hope your sweet tooth fades if you cut sugar long enough.",
       "basis": {
         "design": "randomised trial, three groups (low, regular or high sweet diet)",
@@ -594,7 +594,7 @@
         "when": "2020 to 2024; published 2026",
         "measured": "Liking and sweetness of sweet foods and drinks, food choice, calories and weight, at the start, 6 months and 4 months later. About half of each day's food was supplied."
       },
-      "caveat": "Healthy volunteers, mostly women; fruit and sweeteners counted as sweet. A smaller earlier trial (13 people, 3 months low sugar) found sweet food tasted about 40% sweeter, but was not liked any less.",
+      "caveat": "Healthy volunteers, mostly women; fruit and sweeteners counted as sweet. The low group cut sweet food only from about a fifth to a seventh of its calories. A smaller earlier trial (13 people, 3 months low sugar) found pudding tasted about 40% sweeter, but was not liked any less.",
       "ref": {
         "cite": "Čad EM, Mars M, Pretorius L, van der Kruijssen M, Tang CS, de Jong HB, Balvers M, Appleton KM, de Graaf K (2026). The Sweet Tooth Trial: a parallel randomized controlled trial investigating the effects of a 6-month low, regular, or high dietary sweet taste exposure on sweet taste liking, and various outcomes related to food intake and weight status. American Journal of Clinical Nutrition 123:101073.",
         "url": "https://pubmed.ncbi.nlm.nih.gov/41485871/",
