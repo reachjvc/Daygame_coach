@@ -1,6 +1,6 @@
 # A goal can be achieved, paused or dropped (round 3 after the rebuild)
 
-**Status:** written and built 2026-11-05. Not signed off: card `goal-status` on the sign-off page.
+**Status:** written, built and **live 2026-11-05** (migration first, then commit `dcd9a0dd`). Not signed off: card `goal-status` on the sign-off page.
 
 ## What you are agreeing to, in plain words
 
@@ -48,3 +48,10 @@ with it, and the reward you wrote showed only in its edit box.
   below.
 - Tests: `goalStatus.test.ts` (7), `life-mastery-goal-status.spec.ts` (a goal paused from its card is
   paused on the account, gone from Today across a reload, named in the week's review).
+
+## Live 2026-11-05
+
+Backup first: `~/dg-backups/life-plan-2026-11-05-before-goal-status.json` (the full backup of the hour
+before, revision 920 unchanged since, with the 50 goals read again). Then the migration (the only one
+pending), then the code. Checked on the live database after: 50 of 50 goals active with no day, revision
+920.

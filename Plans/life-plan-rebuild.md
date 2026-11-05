@@ -14,7 +14,9 @@ store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the mark
 off yet). Phase 7 is prepared, with the list and the live counts, as card `phase7` on the page; it waits
 for your yes. Q11 (achievements) is live too, from its own plan, `Plans/life-plan-achievements.md`
 (card `q11-achievements`). Then comparing /plan with Stefan's method and your words, round by round: round 1,
-the Review step reading the period back (`Plans/life-plan-review-reads-back.md`), is live.
+the Review step reading the period back (`Plans/life-plan-review-reads-back.md`); round 2, readings on
+number goals (`Plans/life-plan-readings.md`); round 3, goals that can be achieved, paused or dropped
+(`Plans/life-plan-goal-status.md`). All three live 2026-11-05, none signed off.
 
 **Answered 2026-11-05, in chat:** "we can go with all your recommendations". So the Your 10s wheel will
 show each area's score from the latest review, and rating an area on Your 10s writes into this week's
