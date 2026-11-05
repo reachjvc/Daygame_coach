@@ -37,6 +37,7 @@ import {
   blockDragPatch,
   blockGrabMode,
   blockLabel,
+  calendarDays,
   dayColumnSeconds,
   drawnBlockHeight,
   entriesForDay,
@@ -55,7 +56,6 @@ import {
 import {
   addDays,
   dateKey,
-  eachDay,
   epochSeconds,
   formatCompact,
   formatDayHeader,
@@ -65,7 +65,6 @@ import {
   formatWhen,
   isoAtMinutes,
   minutesIntoDay,
-  weekStartOf,
 } from "../timetrackFormatService"
 import {
   continueEntry,
@@ -285,16 +284,8 @@ export function CalendarView({
   const hourHeight = CALENDAR_ZOOMS.find((z) => z.id === zoom)!.hourHeight
   const minuteHeight = hourHeight / 60
 
-  const days = useMemo(() => {
-    if (range === "day") return [anchor]
-    // 5 days is Monday to Friday, whatever day the week starts on
-    if (range === "workweek") {
-      const monday = weekStartOf(anchor, 1)
-      return eachDay(monday, addDays(monday, 4))
-    }
-    const start = weekStartOf(anchor, state.user.weekStart)
-    return eachDay(start, addDays(start, 6))
-  }, [range, anchor, state.user.weekStart])
+  // 5 days is Monday to Friday of the person's own week holding the day shown (`calendarDays`)
+  const days = useMemo(() => calendarDays(range, anchor, state.user.weekStart), [range, anchor, state.user.weekStart])
 
   const entries = liveEntries(state)
   const enabledCalendars = state.calendars.filter((c) => c.enabled)
