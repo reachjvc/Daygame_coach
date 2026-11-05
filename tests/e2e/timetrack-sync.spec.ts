@@ -19,14 +19,17 @@ import {
   PENDING_KEY,
   STORAGE_KEY,
   TRACKER,
-  blur,
   entriesOnAccount,
   entryInList,
+  expectRunningName,
   openFreshTracker,
   openTracker,
   readState,
+  renameRunning,
   reopenFromAccount,
   savedToAccount,
+  startNamed,
+  timerButton,
   trackEntry,
 } from './helpers/timetrack'
 import { whenHydrated } from './helpers/hydration'
@@ -60,8 +63,9 @@ async function runningOnAccount(page: Page): Promise<string[]> {
 }
 
 const SYNC = /\/api\/timetrack\/sync/
-const startButton = (page: Page) => page.locator('main').getByRole('button', { name: 'Start timer' })
-const stopButton = (page: Page) => page.locator('main').getByRole('button', { name: 'Stop timer' })
+/** where this layout puts them: the bar at the bottom on a phone, the timer bar on a PC (`timerButton`) */
+const startButton = (page: Page) => timerButton(page, 'Start timer')
+const stopButton = (page: Page) => timerButton(page, 'Stop timer')
 /** The first read of the account failed, so Start and Stop act on this copy now (D2) */
 const couldNotCheck = (page: Page) =>
   expect(page.locator('header').getByRole('button', { name: /^Not saved/ })).toBeVisible({ timeout: 30_000 })
@@ -165,9 +169,8 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
    */
   test('a device that slept with an edit queued does not restart a timer the PC stopped', async ({ browser, page, account }) => {
     await openFreshTracker(page)
-    await page.getByPlaceholder('What are you working on?').fill('Gym')
-    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).waitFor({ timeout: 15_000 })
+    await startNamed(page, 'Gym')
+    await timerButton(page, 'Stop timer').waitFor({ timeout: 15_000 })
     await savedToAccount(page)
     await expect.poll(() => gymOnAccount(page), { message: 'Gym never reached the account' }).toMatchObject({ running: true })
 
@@ -176,12 +179,11 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     try {
       const other = await elsewhere.newPage()
       await reopenFromAccount(other)
-      await expect(other.locator('main').getByRole('button', { name: 'Stop timer' })).toBeVisible({ timeout: 25_000 })
+      await expect(timerButton(other, 'Stop timer')).toBeVisible({ timeout: 25_000 })
 
       // it loses signal, and an edit to the running entry waits in its queue
       await elsewhere.setOffline(true)
-      await other.getByPlaceholder('What are you working on?').fill('Gym, legs day')
-      await blur(other)
+      await renameRunning(other, 'Gym, legs day')
       await expect
         .poll(() => other.evaluate((key) => window.localStorage.getItem(key) ?? '', PENDING_KEY), {
           message: 'the edit was never queued, so this proves nothing',
@@ -189,7 +191,7 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
         .toContain('Gym, legs day')
 
       // the PC stops Gym meanwhile
-      await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
+      await timerButton(page, 'Stop timer').click()
       await savedToAccount(page)
       await expect.poll(async () => (await gymOnAccount(page))?.running, { message: 'the PC stop never reached the account' }).toBe(false)
 
@@ -209,10 +211,10 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
         .toEqual({ running: false, description: 'Gym, legs day' })
 
       // and both screens say so
-      await expect(other.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible({ timeout: 20_000 })
+      await expect(timerButton(other, 'Start timer')).toBeVisible({ timeout: 20_000 })
       await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
       await expect(entryInList(page, 'Gym, legs day').first()).toBeVisible({ timeout: 20_000 })
-      await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+      await expect(timerButton(page, 'Start timer')).toBeVisible()
     } finally {
       await elsewhere.close()
     }
@@ -355,23 +357,22 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
         return state.entries.some((e) => e.stop === null || e.duration < 0)
       })
 
-    await page.getByPlaceholder('What are you working on?').fill('stopped exactly once')
-    await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).waitFor({ timeout: 15_000 })
+    await startNamed(page, 'stopped exactly once')
+    await timerButton(page, 'Stop timer').waitFor({ timeout: 15_000 })
     // the start has reached the account, so a pull would bring the running row back
     await savedToAccount(page)
 
     // a pull goes out, and the press happens while its answer is still coming
     await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
     await page.waitForTimeout(120)
-    await page.locator('main').getByRole('button', { name: 'Stop timer' }).click()
+    await timerButton(page, 'Stop timer').click()
 
     await expect.poll(isRunning, { message: 'the press did not stop the timer at all' }).toBe(false)
 
     // long enough for an answer computed before the press to land
     await page.waitForTimeout(3000)
     expect(await isRunning(), 'the timer came back after being stopped — press twice again').toBe(false)
-    await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+    await expect(timerButton(page, 'Start timer')).toBeVisible()
   })
 })
 
@@ -405,12 +406,11 @@ test.describe('the owner\'s overlap: started on the PC, stopped on the phone', (
       // the phone opens the tracker while nothing runs, and is put away: its copy stays on it
       const before = await phoneContext.newPage()
       await reopenFromAccount(before)
-      await expect(before.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+      await expect(timerButton(before, 'Start timer')).toBeVisible()
       await before.close()
 
       // the PC starts Gym
-      await pc.getByPlaceholder('What are you working on?').fill('Gym')
-      await pc.locator('main').getByRole('button', { name: 'Start timer' }).click()
+      await startNamed(pc, 'Gym')
       await savedToAccount(pc)
       await expect.poll(() => gymOnAccount(pc), { message: 'Gym never reached the account' }).toMatchObject({ running: true })
 
@@ -430,18 +430,18 @@ test.describe('the owner\'s overlap: started on the PC, stopped on the phone', (
       releaseRead()
 
       // then Gym, running, as the PC left it
-      const stop = phone.locator('main').getByRole('button', { name: 'Stop timer' })
+      const stop = timerButton(phone, 'Stop timer')
       await expect(stop, 'the phone never showed the timer the PC started').toBeVisible({ timeout: 20_000 })
-      await expect(phone.getByPlaceholder('What are you working on?')).toHaveValue('Gym')
+      await expectRunningName(phone, 'Gym')
 
       const pressedAt = await phone.evaluate(() => Date.now())
       await stop.click()
-      await expect(phone.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+      await expect(timerButton(phone, 'Start timer')).toBeVisible()
       await savedToAccount(phone)
 
       // the PC, looked at again, shows it stopped within seconds, at the phone's time
       await pc.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
-      await expect(pc.locator('main').getByRole('button', { name: 'Start timer' }), 'the PC still shows Gym running').toBeVisible({
+      await expect(timerButton(pc, 'Start timer'), 'the PC still shows Gym running').toBeVisible({
         timeout: 5_000,
       })
       const response = await pc.request.get('/api/timetrack/sync')
@@ -479,8 +479,7 @@ test.describe('the owner\'s overlap, with no signal and with a PC that has not c
     try {
       const pc = await pcContext.newPage()
       await openFreshTracker(pc)
-      await pc.getByPlaceholder('What are you working on?').fill('Gym')
-      await startButton(pc).click()
+      await startNamed(pc, 'Gym')
       await savedToAccount(pc)
       await expect.poll(() => runningOnAccount(pc)).toEqual(['Gym'])
 
@@ -533,8 +532,7 @@ test.describe('the owner\'s overlap, with no signal and with a PC that has not c
       await reopenFromAccount(phone)
       await expect(startButton(phone)).toBeVisible()
 
-      await pc.getByPlaceholder('What are you working on?').fill('Gym')
-      await startButton(pc).click()
+      await startNamed(pc, 'Gym')
       await savedToAccount(pc)
       await expect.poll(() => runningOnAccount(pc)).toEqual(['Gym'])
 
@@ -542,8 +540,7 @@ test.describe('the owner\'s overlap, with no signal and with a PC that has not c
       await phone.route(SYNC, (route) => route.abort('internetdisconnected'))
       await phone.reload({ waitUntil: 'domcontentloaded' })
       await couldNotCheck(phone)
-      await phone.getByPlaceholder('What are you working on?').fill('Walk')
-      await startButton(phone).click()
+      await startNamed(phone, 'Walk')
       await expect(stopButton(phone)).toBeVisible()
 
       await phone.unroute(SYNC)
@@ -570,8 +567,7 @@ test.describe('the owner\'s overlap, with no signal and with a PC that has not c
     try {
       const pc = await pcContext.newPage()
       await openFreshTracker(pc)
-      await pc.getByPlaceholder('What are you working on?').fill('Gym')
-      await startButton(pc).click()
+      await startNamed(pc, 'Gym')
       await savedToAccount(pc)
       const phone = await phoneContext.newPage()
       await reopenFromAccount(phone)
@@ -580,15 +576,14 @@ test.describe('the owner\'s overlap, with no signal and with a PC that has not c
       // after the gym: Stop on the phone, then Shower
       await stopButton(phone).click()
       await expect(startButton(phone)).toBeVisible()
-      await phone.getByPlaceholder('What are you working on?').fill('Shower')
-      await startButton(phone).click()
+      await startNamed(phone, 'Shower')
       await expect(stopButton(phone)).toBeVisible()
       await savedToAccount(phone)
       await expect.poll(() => runningOnAccount(pc)).toEqual(['Shower'])
       const phoneStop = (await entriesWithTimes(pc)).find((e) => e.description === 'Gym')!.stopped_at!
 
       // the PC, not checked since, still shows Gym running, and Stop is pressed there
-      await expect(pc.getByPlaceholder('What are you working on?')).toHaveValue('Gym')
+      await expectRunningName(pc, 'Gym')
       await stopButton(pc).click()
       await expect(pc.getByText(/Changed on your other device: “Gym”/).first(), 'the PC did not say the other device changed Gym').toBeVisible({
         timeout: 15_000,

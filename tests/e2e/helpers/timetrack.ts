@@ -107,6 +107,53 @@ export const entryInList = (page: Page, description: string) =>
   page.locator(`ul.divide-y li:has(input[value="${description}"]), ul.divide-y li:has-text("${description}")`)
 
 /**
+ * BELOW 640px THE TRACKER DRAWS ITS PHONE SCREENS (Plans/toggl-parity.md
+ * Phases 1–2): Start and Stop are the round buttons of the bar at the bottom,
+ * a name is typed in the sheet "I'm working on…" opens, and a running timer's
+ * name is read off that bar. On a wider window it is the timer bar on top. A
+ * test may change where it clicks this way; what it promises stays.
+ */
+export const onPhone = (page: Page) => (page.viewportSize()?.width ?? 1280) < 640
+
+/** "Start timer" or "Stop timer", wherever this layout puts it */
+export const timerButton = (page: Page, name: 'Start timer' | 'Stop timer') =>
+  onPhone(page) ? page.getByTestId('run-bar').getByRole('button', { name }) : page.locator('main').getByRole('button', { name })
+
+/** Start a timer called `description`: typed and Start on a PC; "I'm working on…", the name and CREATE on a phone */
+export async function startNamed(page: Page, description: string): Promise<void> {
+  if (!onPhone(page)) {
+    await page.getByPlaceholder('What are you working on?').fill(description)
+    await timerButton(page, 'Start timer').click()
+    return
+  }
+  await page.getByTestId('run-bar').getByRole('button', { name: /working on/ }).click()
+  const sheet = page.getByRole('dialog', { name: 'New time entry' })
+  await sheet.getByPlaceholder('I’m working on…').fill(description)
+  await sheet.getByRole('button', { name: 'Create' }).click()
+  await expect(sheet).toBeHidden()
+}
+
+/** Rename the running timer: typed into the bar on a PC; in its sheet, then Done, on a phone */
+export async function renameRunning(page: Page, description: string): Promise<void> {
+  if (!onPhone(page)) {
+    await page.getByPlaceholder('What are you working on?').fill(description)
+    await blur(page)
+    return
+  }
+  await page.getByTestId('run-bar').getByRole('button', { name: 'Edit the running time entry' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Time entry' })
+  await sheet.getByPlaceholder('I’m working on…').fill(description)
+  await sheet.getByRole('button', { name: 'Done' }).click()
+  await expect(sheet).toBeHidden()
+}
+
+/** What the running timer is called, as this layout shows it: the bar's field on a PC, the bar's text on a phone */
+export async function expectRunningName(page: Page, description: string): Promise<void> {
+  if (onPhone(page)) await expect(page.getByTestId('run-bar')).toContainText(description)
+  else await expect(page.getByPlaceholder('What are you working on?')).toHaveValue(description)
+}
+
+/**
  * Track one short entry through the timer bar.
  *
  * It runs until the clock in the tab title has ticked past 0:00:00, so the
@@ -114,14 +161,13 @@ export const entryInList = (page: Page, description: string) =>
  * test about totals would be reading nothing.
  */
 export async function trackEntry(page: Page, description: string): Promise<void> {
-  await page.getByPlaceholder('What are you working on?').fill(description)
-  await page.locator('main').getByRole('button', { name: 'Start timer' }).click()
-  const stop = page.locator('main').getByRole('button', { name: 'Stop timer' })
+  await startNamed(page, description)
+  const stop = timerButton(page, 'Stop timer')
   await stop.waitFor({ timeout: 15_000 })
   await expect.poll(() => page.title(), { timeout: 10_000 }).toMatch(/^(?!0:00:00)\d+:\d\d:\d\d · /)
   await stop.click()
   await expect(entryInList(page, description).first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('main').getByRole('button', { name: 'Start timer' })).toBeVisible()
+  await expect(timerButton(page, 'Start timer')).toBeVisible()
 }
 
 /** What this browser holds */

@@ -56,7 +56,7 @@ import {
   type SheetDraft,
   type SheetResult,
 } from "../../phoneSheetService"
-import { serverNowIso } from "../../serverClock"
+import { serverNow, serverNowIso } from "../../serverClock"
 import { layOnto } from "../../tabMergeService"
 import { entryAfter } from "../../timeFixService"
 import {
@@ -156,6 +156,18 @@ export function EntrySheet({
     setChanges((prev) => (baseRef.current ? changesBetween(baseRef.current, change(shownDraft(baseRef.current, prev))) : prev))
 
   const shown = base ? shownDraft(base, changes) : null
+  /**
+   * ITS OWN SECOND HAND WHILE IT RUNS. With nothing running the tracker's clock
+   * ticks every ten seconds, so a new entry's "0:00:00" stood still while the
+   * name was typed; Toggl's counts from the tap [V1 1:51–2:00].
+   */
+  const [ownSecond, setOwnSecond] = useState(() => Math.floor(serverNow() / 1000))
+  const ticking = shown?.stop === null
+  useEffect(() => {
+    if (!ticking) return
+    const timer = window.setInterval(() => setOwnSecond(Math.floor(serverNow() / 1000)), 1000)
+    return () => window.clearInterval(timer)
+  }, [ticking])
   const dirty = base ? isDirty(base, changes) : false
   dirtyRef.current = dirty
   const running = shown?.stop === null
@@ -368,7 +380,7 @@ export function EntrySheet({
 
   // --- the pieces ------------------------------------------------------------
 
-  const seconds = running ? Math.max(0, nowSec - epochSeconds(shown.start)) : Math.max(0, epochSeconds(shown.stop!) - epochSeconds(shown.start))
+  const seconds = running ? Math.max(0, Math.max(nowSec, ownSecond) - epochSeconds(shown.start)) : Math.max(0, epochSeconds(shown.stop!) - epochSeconds(shown.start))
   const project = state.projects.find((p) => p.id === shown.projectId) ?? null
   const task = state.tasks.find((t) => t.id === shown.taskId) ?? null
   const tagNames = state.tags.filter((t) => shown.tagIds.includes(t.id)).map((t) => t.name)
@@ -431,7 +443,7 @@ export function EntrySheet({
       type="button"
       disabled={!enabled}
       onClick={run}
-      className="mt-1 min-h-9 w-full rounded px-1 text-[11px] font-semibold uppercase tracking-wide text-primary disabled:text-muted-foreground disabled:opacity-60"
+      className="mt-1 min-h-9 w-full whitespace-nowrap rounded px-0.5 text-[10px] font-semibold uppercase text-primary disabled:text-muted-foreground disabled:opacity-60"
     >
       {label}
     </button>

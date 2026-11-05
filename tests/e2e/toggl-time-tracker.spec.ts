@@ -579,7 +579,8 @@ test.describe('Toggl-style time tracker', () => {
 
     // the entry is seconds long, so its block is tiny: open it the way a tap does
     await page.locator('[data-block][title^="Back check ·"]').first().dispatchEvent('click')
-    const sheet = page.getByRole('dialog', { name: 'Time entry details' })
+    // the phone's one sheet (Plans/toggl-parity.md Phase 2); the PC's is still "Time entry details"
+    const sheet = page.getByRole('dialog', { name: 'Time entry', exact: true })
     await expect(sheet).toBeVisible()
     await expect(page).toHaveURL(/[?&]entry=/)
 

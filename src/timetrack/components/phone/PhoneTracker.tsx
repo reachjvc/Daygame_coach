@@ -237,16 +237,21 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
   return (
     <>
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
-        <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 px-3 pt-1.5">
+        {/* ONE ROW, ALWAYS. The sync badge keeps its words while it saves or is
+            offline ("Saving 1…"); a row that wrapped then grew by a line and
+            moved everything under it — a finger holding the calendar landed
+            40px off, found by the touch test. The back word and the title give
+            way instead, the back word first. */}
+        <div className="flex items-center gap-x-1 px-3 pt-1.5">
           {/* the way out: see `BACK_LINK_CLASS`; small, left of the title (D-PHONE-SHELL) */}
-          <Link href={lab.backHref} onClick={lab.goBack} className={BACK_LINK_CLASS}>
+          <Link href={lab.backHref} onClick={lab.goBack} className={cn(BACK_LINK_CLASS, "min-w-0 shrink-[3]")}>
             <span className="shrink-0">←</span>
             <span className="max-w-[96px] truncate">{lab.backText}</span>
           </Link>
           {/* the page's one heading, for a screen reader and the browser tests; the title below says where you are */}
           <h1 className="sr-only">Time</h1>
-          <h2 className="min-w-0 truncate text-xl font-semibold">{title}</h2>
-          <div className="ml-auto flex items-center">
+          <h2 className="min-w-0 shrink truncate text-xl font-semibold">{title}</h2>
+          <div className="ml-auto flex shrink-0 items-center">
             <SyncBadge status={sync.status} pending={sync.pendingCount} check={sync.check} nowMs={nowSec * 1000} onCheck={sync.checkNow} />
             <button
               type="button"
@@ -345,6 +350,12 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
               />
             )}
             {screen === "calendar" && (
+              /* THE HOUR GRID ENDS ABOVE THE BAR. Its window is 70vh, sized for the
+                 old 56px tab bar; under the bar and the tabs (116px) its last hour
+                 was hidden and the page scrolled under a finger dragging a block.
+                 The top of the window is below the header and the day controls,
+                 about 14rem down. */
+              <div className="[&_[data-calendar-scroll]]:max-h-[calc(100dvh-var(--panel-bottom-inset,7rem)-14rem)]">
               <CalendarView
                 state={state}
                 setState={setState}
@@ -356,6 +367,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
                   go("settings")
                 }}
               />
+              </div>
             )}
             {screen === "reports" && (
               <ReportsView state={state} setState={setState} nowSec={nowSec} config={lab.reportConfig} setConfig={lab.setReportConfig} pushToast={pushToast} />

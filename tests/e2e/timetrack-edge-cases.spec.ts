@@ -17,11 +17,18 @@ import { test, expect } from './fixtures/test'
 import { PENDING_KEY, entryInList, openFreshTracker, trackEntry } from './helpers/timetrack'
 
 /**
- * Settings is a tab on a pointer device and lives behind "More" on a phone,
- * where the section bar is four tabs plus a sheet — six at 390px meant 10px
- * labels. This spec runs in both projects, so it has to know both ways in.
+ * Settings is a tab on a pointer device and lives behind the gear on a phone
+ * (Plans/toggl-parity.md Phase 1: three tabs, and the gear holds Projects,
+ * Clients, Tags, Settings, Import and export — the old phone had it behind
+ * "More"). This spec runs in both projects, so it has to know both ways in.
  */
 async function goToSettings(page: Page) {
+  const gear = page.getByRole('button', { name: 'Settings and more' })
+  if (await gear.isVisible()) {
+    await gear.click()
+    await page.getByRole('dialog', { name: 'Settings and more' }).getByRole('button', { name: 'Settings', exact: true }).click()
+    return
+  }
   // Whichever bar is on screen. Only the phone bar carries `aria-label="Sections"`
   // — the pointer-device tab row is an unnamed <nav> — and deliberately so: the
   // product-route test in timetrack-sync asserts exactly ONE element has that
