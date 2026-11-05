@@ -601,7 +601,7 @@ export function EntrySheet({
 
           {/* the chips [H25 help_14 f012]: project ×, # Add tags, $ Billable */}
           <div className="flex flex-wrap items-center gap-2 py-3">
-            <div className="flex items-center">
+            <div className={cn("flex items-center rounded-full border border-border", project && "bg-secondary")}>
               <ProjectPicker
                 state={state}
                 projectId={shown.projectId}
@@ -614,12 +614,7 @@ export function EntrySheet({
                   edit((d) => ({ ...d, projectId: made.id, taskId: null }))
                 }}
                 renderTrigger={() => (
-                  <span
-                    className={cn(
-                      "flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm",
-                      project ? "border-transparent bg-secondary" : "border-border text-muted-foreground",
-                    )}
-                  >
+                  <span className={cn("flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm", !project && "text-muted-foreground")}>
                     {project ? <ColorDot color={project.color} /> : <span aria-hidden>@</span>}
                     <span className="max-w-[160px] truncate">{project ? (task ? `${project.name} · ${task.name}` : project.name) : "Add a project"}</span>
                   </span>
@@ -630,7 +625,7 @@ export function EntrySheet({
                   type="button"
                   aria-label="Remove the project"
                   onClick={() => edit((d) => ({ ...d, projectId: null, taskId: null }))}
-                  className="-ml-2 flex size-11 items-center justify-center text-muted-foreground"
+                  className="-ml-3 flex size-11 items-center justify-center rounded-full text-muted-foreground"
                 >
                   <IconClose className="size-4" />
                 </button>
@@ -648,8 +643,8 @@ export function EntrySheet({
               renderTrigger={() => (
                 <span
                   className={cn(
-                    "flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm",
-                    tagNames.length ? "border-transparent bg-secondary" : "border-border text-muted-foreground",
+                    "flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm",
+                    tagNames.length ? "bg-secondary" : "text-muted-foreground",
                   )}
                 >
                   <IconTag className="size-3.5" />
@@ -662,8 +657,8 @@ export function EntrySheet({
               aria-pressed={shown.billable}
               onClick={() => edit((d) => ({ ...d, billable: !d.billable }))}
               className={cn(
-                "flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-sm",
-                shown.billable ? "border-transparent bg-secondary text-foreground" : "border-border text-muted-foreground",
+                "flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 text-sm",
+                shown.billable ? "bg-secondary text-foreground" : "text-muted-foreground",
               )}
             >
               <IconMoney className="size-3.5" />
