@@ -1,6 +1,6 @@
 # The Review step reads your period back (round 1 after the rebuild)
 
-**Status:** written 2026-11-05, building. Found by comparing /plan, screen by screen, with Stefan's method
+**Status:** written, built and **live 2026-11-05** (migration first, then commit `4cb538bc`). Found by comparing /plan, screen by screen, with Stefan's method
 and your concept (a separate agent read the findings and transcripts; every quote below was checked in
 the transcript). Not signed off: card `review-reads-back` on the sign-off page.
 
@@ -66,3 +66,10 @@ Review step. New steps from the library point there too.
   `lifePlanRoundTrip.integration.test.ts` (the table round-trips), `life-mastery-review-reads-back.spec.ts`
   (last week's outcomes, 5 of 21, an answer on the account across a reload; the weekly-review step opens
   Review).
+
+## Live 2026-11-05
+
+Backup first: `~/dg-backups/life-plan-2026-11-05-before-review-goals.json` (1,133 rows, revision 920). Then
+the migration (the only one pending), then the code. Checked on the live database after: the table is
+there with row security on, clients cannot truncate it, the save reaches it; your revision 920, one
+review, 12 scores, no answers yet, 13 days, 50 goals, 29 steps.

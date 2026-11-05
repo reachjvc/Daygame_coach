@@ -13,7 +13,8 @@ store). The pictures come from `tests/e2e/life-plan-tour.spec.ts`. Read the mark
 **Where it stands, 2026-11-05:** Phases 1–6, Q4, the wheel and the two leaks are live (none signed
 off yet). Phase 7 is prepared, with the list and the live counts, as card `phase7` on the page; it waits
 for your yes. Q11 (achievements) is live too, from its own plan, `Plans/life-plan-achievements.md`
-(card `q11-achievements`). Next: comparing /plan with Stefan's method and your words, round by round.
+(card `q11-achievements`). Then comparing /plan with Stefan's method and your words, round by round: round 1,
+the Review step reading the period back (`Plans/life-plan-review-reads-back.md`), is live.
 
 **Answered 2026-11-05, in chat:** "we can go with all your recommendations". So the Your 10s wheel will
 show each area's score from the latest review, and rating an area on Your 10s writes into this week's
