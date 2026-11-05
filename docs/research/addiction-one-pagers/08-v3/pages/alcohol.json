@@ -286,7 +286,7 @@
   }
  ],
  "footerProposal": {
-  "text": "Drinking heavily every day, get the shakes when you stop, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, or confusion and seeing things after stopping, is an emergency: call an ambulance.",
+  "text": "Drinking heavily every day, get the shakes when you stop, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. Any one of these after stopping is an emergency, call an ambulance: a seizure, severe shaking, confusion, or seeing or hearing things.",
   "refs": [
    "r1"
   ],
@@ -413,7 +413,7 @@
     "when": "July–August 2016",
     "measured": "Age when the problem ended, as people remembered it. On average they first drank at about 15 and weekly from about 19, and their drinking career, as the study counts it, lasted about 18 years."
    },
-   "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Free here is not always quitting: about 1 in 3 still drank some.",
+   "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Free here is each person’s own judgment, not always never drinking again; for people once hooked, light drinking brought problems back more often (see “27 vs 7 in 100”).",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -431,7 +431,8 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Mirror: 'You think if you haven't stopped by now, you never will.' reads the wrong way for a reader over 38 (cold reader v2); the new thought is one an average of 38 answers (rule C). Basis: factual audit found '18 years between first use and getting free' wrong (14.90 to 37.86 is about 23); 18.39 is the paper's 'drinking career' figure, now named so, with first use 15 and weekly use 19 from Table 1. Weak: the same short chip as every National Recovery Survey card (owner-lens v1 and v2, task); the long reason is in the caveat ('most never diagnosed': Kelly 2017, same survey, Table 1, only 17.0 in 100 ever diagnosed with an alcohol or drug use disorder). Figure, headline and quote unchanged."
+   "changeNote": "rev2: Mirror: 'You think if you haven't stopped by now, you never will.' reads the wrong way for a reader over 38 (cold reader v2); the new thought is one an average of 38 answers (rule C). Basis: factual audit found '18 years between first use and getting free' wrong (14.90 to 37.86 is about 23); 18.39 is the paper's 'drinking career' figure, now named so, with first use 15 and weekly use 19 from Table 1. Weak: the same short chip as every National Recovery Survey card (owner-lens v1 and v2, task); the long reason is in the caveat ('most never diagnosed': Kelly 2017, same survey, Table 1, only 17.0 in 100 ever diagnosed with an alcohol or drug use disorder). Figure, headline and quote unchanged.",
+   "editNote": "2026-11-06: moderation-leaning sentence replaced (gates round 3, rule 4)"
   },
   {
    "kind": "who-life-event",
@@ -1000,7 +1001,7 @@
    "kind": "hard",
    "limiting": "Stopping will be hell. I won’t get through it.",
    "counterpart": "I’ve got through hard weeks before. This is a few hard weeks, not a hard life.",
-   "test": "Still drinking? One evening this week, push your first drink back an hour and spend it on a long walk or a workout. Already off it? When the next pull comes, spend an hour that way. Rate the pull 0 to 10 at the start and the end.",
+   "test": "Still drinking? One evening this week, push your first drink back an hour and spend it on a long walk or a workout. Already off it? When the next pull comes, spend an hour that way. Rate the pull 0 to 10 at the start and the end. Not a heavy daily drinker? Make it the whole evening, no drink.",
    "proof": "In a study of men in hospital treatment for drinking, with no earlier major mental illness, low mood lifted fast once they stopped; the biggest lift came in week 2.",
    "severity": "treatment",
    "refs": [
@@ -1033,7 +1034,7 @@
    "kind": "need",
    "limiting": "I need a drink to unwind after work.",
    "counterpart": "Drinking takes the edge off for a while. It takes my sleep, and sleep is what would unwind me.",
-   "test": "One night this week, skip your last drink before bed and keep the phone out of the room. Next evening, rate how wound up you feel, 0 to 10, against a usual night.",
+   "test": "One night this week, skip your last drink before bed and keep the phone out of the room. Next evening, rate how wound up you feel, 0 to 10, against a usual night. Not a heavy daily drinker? Make it the whole night off.",
    "proof": "In sleep-lab studies of men treated for alcoholism, drink did not reliably help them sleep: while drinking, they often took longer to fall asleep and slept less.",
    "severity": "treatment",
    "refs": [
