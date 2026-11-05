@@ -17,7 +17,7 @@
 import { useState } from "react"
 import { GOAL_SHAPES } from "@/src/goals/data/goalShapes"
 import { Check, ChevronDown, Minus, Plus, RotateCcw, X } from "lucide-react"
-import type { HabitRampStep, MilestoneLadderConfig, NsArea, NsGoal, NsPlan, VisionGoalType } from "@/src/goals/types"
+import type { HabitRampStep, MilestoneLadderConfig, NsArea, NsGoal, NsGoalStatus, NsPlan, VisionGoalType } from "@/src/goals/types"
 import {
   BELIEF_STEP_COPY,
   GOAL_DATE_PRESETS,
@@ -35,7 +35,10 @@ import {
   TIMEFRAME_COPY,
   VALUE_COLOR,
   READINGS_COPY,
+  GOAL_STATUS_COPY,
 } from "@/src/goals/data/northStar"
+import { GOAL_STATUSES, isActive } from "@/src/goals/goalStatus"
+import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { BUILDER_COPY } from "@/src/goals/data/northStarStart"
 import {
   areaGoalExample,
@@ -73,12 +76,16 @@ import { GoalReadings } from "./GoalReadings"
 import { takesReadings } from "@/src/goals/goalReadings"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
 
+const formatShortDay = (key: string) => dateKeyLabel(key, { day: "numeric", month: "short" })
+
 export interface GoalHandlers {
   onUpdate: (goalId: string, patch: Partial<Omit<NsGoal, "id">>) => void
   onSetType: (goalId: string, type: VisionGoalType) => void
   onRemove: (goalId: string) => void
   onLadder: (goalId: string, ladder: MilestoneLadderConfig) => void
   onRamp: (goalId: string, steps: HabitRampStep[] | null) => void
+  /** Achieved, paused, dropped, or active again, on a day (`setGoalStatus`). Without it the card shows no status row. */
+  onSetStatus?: (goalId: string, status: NsGoalStatus, date: string) => void
   /** A number goal's reading on a day (`setGoalReading`). Without it the card shows no readings. */
   onReading?: (goalId: string, date: string, value: number | null) => void
   onLink: (fromId: string, toId: string) => void
@@ -179,6 +186,11 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           heldDays={Object.values(plan.numbers ?? {}).filter((row) => goal.id in row).length}
           onSetType={(t) => handlers.onSetType(goal.id, t)}
         />
+        {!isActive(goal) && goal.status !== "active" && (
+          <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border border-white/15 text-zinc-400" data-testid="goal-status-tag">
+            {GOAL_STATUS_COPY.tag(goal.status, goal.statusOn ? formatShortDay(goal.statusOn) : null)}
+          </span>
+        )}
         <span className="min-w-0 flex-1 basis-40">
           <input
             value={goal.title}
@@ -380,6 +392,10 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
           )}
           {inRoutine && (
             <p className="text-[11px] text-zinc-500 leading-relaxed">{GOAL_IN_ROUTINE(inRoutine.routine, inRoutine.step)}</p>
+          )}
+
+          {handlers.onSetStatus && (
+            <GoalStatusRow goal={goal} onSet={(s) => handlers.onSetStatus!(goal.id, s, today)} />
           )}
 
           {/* Which area it belongs to, and when. */}
@@ -732,9 +748,47 @@ export function GoalCard({ goal, area, areas, allGoals, subGoals, rank, totalGoa
   )
 }
 
-/** The one-tap flip between the three shapes. */
 /**
- * The goal's kind. A goal holding day numbers (counts for a practice, readings
+ * WHERE THE GOAL IS (Plans/life-plan-goal-status.md): working on it, achieved,
+ * paused or dropped. Achieved says the reward you wrote, and asks for the next
+ * one: Stefan's warning is the drive going once nothing comes after.
+ */
+function GoalStatusRow({ goal, onSet }: { goal: NsGoal; onSet: (s: NsGoalStatus) => void }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3" data-testid="goal-status">
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={GOAL_STATUS_COPY.aria(goal.title)}>
+        {GOAL_STATUSES.map((s) => (
+          <button
+            key={s}
+            onClick={() => onSet(s)}
+            aria-pressed={goal.status === s}
+            className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+              goal.status === s ? "border-white/40 bg-white/10 text-white" : "border-white/10 text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            {GOAL_STATUS_COPY.labels[s]}
+          </button>
+        ))}
+        {!isActive(goal) && goal.statusOn && (
+          <span className="text-[10.5px] text-zinc-500 tabular-nums">{GOAL_STATUS_COPY.since(formatShortDay(goal.statusOn))}</span>
+        )}
+      </div>
+      {goal.status === "achieved" && (
+        <div className="mt-2 space-y-1">
+          <p className="text-[12px] text-amber-100/90">
+            {goal.reward.trim() ? GOAL_STATUS_COPY.reward(goal.reward.trim()) : GOAL_STATUS_COPY.noReward}
+          </p>
+          <p className="text-[11px] text-zinc-400">{GOAL_STATUS_COPY.next}</p>
+        </div>
+      )}
+      {goal.status === "paused" && <p className="mt-2 text-[11px] text-zinc-500">{GOAL_STATUS_COPY.pausedNote}</p>}
+      {goal.status === "dropped" && <p className="mt-2 text-[11px] text-zinc-500">{GOAL_STATUS_COPY.droppedNote}</p>}
+    </div>
+  )
+}
+
+/**
+ * The one-tap flip between the three shapes. A goal holding day numbers (counts for a practice, readings
  * for a target) asks first: they mean what the kind says, so they go with
  * the old kind (`setGoalType`).
  */

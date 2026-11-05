@@ -166,6 +166,7 @@
   "src/goals/northStarService.ts:removeReason": "mentioned",
   "src/goals/northStarService.ts:setGoalMetric": "mentioned",
   "src/goals/northStarService.ts:setGoalServes": "mentioned",
+  "src/goals/northStarService.ts:setGoalStatus": "asserted",
   "src/goals/northStarService.ts:setLadder": "unasserted",
   "src/goals/northStarService.ts:setLadderStart": "mentioned",
   "src/goals/northStarService.ts:setMilestones": "mentioned",

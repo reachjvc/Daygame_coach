@@ -21,6 +21,7 @@ import { stepTick, NO_TRAINING_TICKS, type TrainingTicks } from "./dayTicks"
 import { stepPerWeek } from "./planAchievementsService"
 import { reviewFor, shiftPeriod, type ReviewPeriod } from "./reviewService"
 import { latestReading, takesReadings, type Reading } from "./goalReadings"
+import { isActive } from "./goalStatus"
 
 /** A counted goal over the period. */
 export interface CountedReadBack {
@@ -53,6 +54,8 @@ export interface GoalsReadBack {
   season: NsGoal[]
   /** Every other goal, in priority order. */
   rest: NsGoal[]
+  /** Goals achieved, paused or dropped inside the period. */
+  changed: NsGoal[]
 }
 
 /** The Mondays of the weeks that start inside the period and have begun by today; a week review has its one. */
@@ -71,7 +74,12 @@ export function goalsReadBack(plan: NsPlan, period: ReviewPeriod, today: string)
   const firsts = firstCountDays(plan)
   const last = period.end < today ? period.end : today
   const weeks = weeksOf(period, today)
-  const ordered = goalsByPriority(plan)
+  // The goals that were being worked on during the period: active ones, and
+  // ones finished, paused or dropped only after it began, read back with
+  // their counts like the rest. The ones that changed inside it are also
+  // listed apart (`changed`); the ones set aside before it are left out.
+  const all = goalsByPriority(plan)
+  const ordered = all.filter((g) => isActive(g) || (g.statusOn != null && g.statusOn >= period.start))
   const counted: CountedReadBack[] = ordered.filter(isSystem).map((goal) => {
     let count = 0
     for (let d = period.start; d <= last; d = addDaysISO(d, 1)) count += plan.numbers?.[d]?.[goal.id] ?? 0
@@ -99,7 +107,8 @@ export function goalsReadBack(plan: NsPlan, period: ReviewPeriod, today: string)
   const other = ordered.filter((g) => !isSystem(g) && !takesReadings(g))
   const season = other.filter((g) => g.servesOneThing)
   const rest = other.filter((g) => !g.servesOneThing)
-  return { counted, numbers, season, rest }
+  const changed = all.filter((g) => !isActive(g) && g.statusOn != null && g.statusOn >= period.start && g.statusOn <= period.end)
+  return { counted, numbers, season, rest, changed }
 }
 
 /** A routine over the period: its steps' ticks against what they plan. */

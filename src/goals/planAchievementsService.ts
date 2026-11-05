@@ -43,7 +43,7 @@ export const STEP_TOTALS = [10, 50, 100, 365, 1000] as const
 /** How far along a number goal's climb a reading can be, as quarters of the way. */
 export const CLIMB_MARKS = [0.25, 0.5, 0.75, 1] as const
 
-export type AchievementKind = "first" | "total" | "best_day" | "weeks" | "climb" | "milestone" | "experience" | "reviews"
+export type AchievementKind = "first" | "total" | "best_day" | "weeks" | "climb" | "milestone" | "experience" | "reviews" | "goal"
 
 export interface PlanAchievement {
   /** Stable: the part, the rule, the threshold. */
@@ -318,6 +318,16 @@ export function milestoneAchievements(plan: NsPlan, goalId: string): PlanAchieve
     .map((c) => ({ id: `${goalId}:milestone:${c.id}`, partId: goalId, partTitle: goal.title, kind: "milestone", label: `Reached: ${c.title.trim()}`, earnedOn: null }))
 }
 
+/**
+ * Goals achieved, on the day they were marked so (Plans/life-plan-goal-status.md):
+ * the biggest thing a review can celebrate.
+ */
+export function achievedGoals(plan: NsPlan): PlanAchievement[] {
+  return plan.goals
+    .filter((g) => g.status === "achieved")
+    .map((g) => ({ id: `${g.id}:goal`, partId: g.id, partTitle: g.title, kind: "goal" as const, label: "Achieved", earnedOn: g.statusOn }))
+}
+
 /** Experiences done, on the day they were ticked. */
 export function experienceAchievements(plan: NsPlan): PlanAchievement[] {
   return plan.experiences
@@ -334,6 +344,7 @@ export function allAchievements(plan: NsPlan, today: string, ticks: TrainingTick
   return [
     ...plan.goals.flatMap((g) => [...goalAchievements(plan, g.id, today, firsts).earned, ...milestoneAchievements(plan, g.id)]),
     ...plan.routines.flatMap((r) => r.steps.flatMap((s) => stepAchievements(plan, s.id, today, ticks).earned)),
+    ...achievedGoals(plan),
     ...experienceAchievements(plan),
     ...reviewAchievements(plan, today).earned,
   ].sort(byDay)

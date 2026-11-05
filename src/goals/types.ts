@@ -1775,6 +1775,9 @@ export interface NsCheckpoint {
   celebration?: string
 }
 
+/** Where a goal is. */
+export type NsGoalStatus = "active" | "achieved" | "paused" | "dropped"
+
 export interface NsGoal {
   /**
    * A goal NOT to do — "No weed". Item 14 of the owner's concept list.
@@ -1851,6 +1854,14 @@ export interface NsGoal {
    * (Plans/life-plan-rebuild.md, Phase 4).
    */
   timeframe: NsGoalTimeframe | null
+  /**
+   * Where the goal is (Plans/life-plan-goal-status.md): active, achieved,
+   * paused or dropped. Only an active goal is on Today, Track and the review's
+   * list; the others are kept, with their history, and fold away.
+   */
+  status: NsGoalStatus
+  /** The day it was achieved, paused or dropped; null while active. */
+  statusOn: string | null
   /**
    * Written as an answer to "what needs to happen for the one thing to work".
    *

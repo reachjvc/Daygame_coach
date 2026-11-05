@@ -20,6 +20,8 @@ import type { NsArea, NsPlan, VisionGoalType } from "@/src/goals/types"
 import { areaGoalsByPriority, goalRank, subGoalsOf } from "@/src/goals/northStarService"
 import { GoalCard, type GoalHandlers } from "./GoalCard"
 import { NO_TRAINING_TICKS, type TrainingTicks } from "@/src/goals/dayTicks"
+import { isActive } from "@/src/goals/goalStatus"
+import { GOAL_STATUS_COPY } from "@/src/goals/data/northStar"
 
 export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId, onOpen, handlers, onAddGoal, showHeading = true }: {
   area: NsArea
@@ -35,6 +37,9 @@ export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId
 }) {
   // Priority order, not the order they happened to be typed in.
   const goals = areaGoalsByPriority(plan, area.id)
+  const active = goals.filter(isActive)
+  const finished = goals.filter((g) => !isActive(g))
+  const [finishedOpen, setFinishedOpen] = useState(false)
   const [draft, setDraft] = useState("")
   const [type, setType] = useState<VisionGoalType>("achievement")
 
@@ -67,12 +72,15 @@ export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId
           <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: area.color }} />
           <h3 className="text-[13px] font-semibold text-zinc-200">{area.label}</h3>
           <span className="text-[10.5px] text-zinc-600 tabular-nums">
-            {goals.length === 0 ? "nothing here yet" : `${goals.length} ${goals.length === 1 ? "goal" : "goals"}`}
+            {active.length === 0 ? (finished.length === 0 ? "nothing here yet" : "nothing being worked on") : `${active.length} ${active.length === 1 ? "goal" : "goals"}`}
           </span>
         </div>
       )}
 
-      {goals.map((goal) => (
+      {/* The ones being worked on; the achieved, paused and dropped fold
+          below, kept with their history (Plans/life-plan-goal-status.md). */}
+      {/* Folded, a finished goal opened from elsewhere still shows, on its own. */}
+      {[...active, ...(finishedOpen ? finished : finished.filter((g) => g.id === openId))].map((goal) => (
         <GoalCard
           key={goal.id}
           goal={goal}
@@ -91,6 +99,15 @@ export function AreaGoals({ area, plan, today, ticks = NO_TRAINING_TICKS, openId
           handlers={handlers}
         />
       ))}
+      {finished.length > 0 && (
+        <button
+          onClick={() => setFinishedOpen((v) => !v)}
+          aria-expanded={finishedOpen}
+          className="text-[11px] text-zinc-500 hover:text-zinc-200 transition-colors"
+        >
+          {GOAL_STATUS_COPY.folded(finished.length)}
+        </button>
+      )}
 
       <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/10 px-3 py-2">
         <span className="flex rounded-md border border-white/10 overflow-hidden shrink-0 text-[11px]">

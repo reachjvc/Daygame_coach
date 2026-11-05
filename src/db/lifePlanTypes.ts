@@ -117,6 +117,10 @@ export interface GoalRow {
   is_abstinence: boolean
   /** `NsGoalTimeframe`, or null until picked. */
   timeframe: string | null
+  /** Active, achieved, paused or dropped (20261105180000); missing on a row read before the column. */
+  status?: "active" | "achieved" | "paused" | "dropped"
+  /** The day it got there; null while active. */
+  status_on?: string | null
   serves_one_thing: boolean
   metric: "daily_area" | null
   ladder: unknown | null

@@ -518,6 +518,26 @@ export const ACHIEVEMENT_COPY = {
 } as const
 
 /**
+ * WHERE A GOAL IS (Plans/life-plan-goal-status.md). Stefan: "I go over the
+ * goals that I achieved. I go over the goals that I didn't achieve"; "so I'm
+ * taking a break from that goal"; "I didn't set a new goal after that … my
+ * intensity has diminished" (zuEb-1Ll2h8).
+ */
+export const GOAL_STATUS_COPY = {
+  labels: { active: "Working on it", achieved: "Achieved", paused: "Paused", dropped: "Dropped" },
+  aria: (title: string) => `Where ${title} is`,
+  since: (day: string) => `since ${day}`,
+  tag: (status: "achieved" | "paused" | "dropped", day: string | null) => `${{ achieved: "achieved", paused: "paused", dropped: "dropped" }[status]}${day ? ` ${day}` : ""}`,
+  reward: (reward: string) => `Your reward: ${reward}. Take it.`,
+  noReward: "Done. Say how you will celebrate it, in the reward box below.",
+  next: "What is the next one? Reaching a goal with nothing after it is where the drive goes.",
+  pausedNote: "Kept with everything in it, and off Today and Track until you pick it up again.",
+  droppedNote: "Kept with its history, off Today and Track. Not a failure: it stopped being a must.",
+  folded: (n: number) => `Achieved, paused and dropped (${n})`,
+  changedTitle: (period: string) => `Finished or set aside in ${period}`,
+} as const
+
+/**
  * READINGS ON A NUMBER GOAL (Plans/life-plan-readings.md). Stefan: "check in
  * with my body weight … and measurements on a weekly basis" (tYCT57Onfas).
  */

@@ -72,6 +72,7 @@ import type {
 import { normalizeNsPlan, readTimeframe } from "./northStarService"
 import { COMMIT_DATE_KEY, NORTH_STAR_ANSWER_COLUMNS, ONE_ANSWERS } from "./data/northStarStart"
 import type { NsPastNorthStar, NsPastSeason, NsReview, NsReviewVerdict } from "./types"
+import { readGoalStatus } from "./goalStatus"
 import { SEASON_ANSWER_KEYS } from "./seasonAnswers"
 import { reviewIdFor } from "./reviewService"
 
@@ -222,6 +223,8 @@ export function planToRows(plan: NsPlan, ctx: MapContext): PlanRows {
       per_week: goal.perWeek ?? null,
       is_abstinence: Boolean(goal.isAbstinence),
       timeframe: goal.timeframe ?? null,
+      status: goal.status ?? "active",
+      status_on: goal.status === "active" ? null : goal.statusOn ?? null,
       serves_one_thing: Boolean(goal.servesOneThing),
       metric: goal.metric ?? null,
       ladder: goal.ladder ?? null,
@@ -695,6 +698,7 @@ export function rowsToPlan(rows: PlanRows): NsPlan | null {
     asked: g.asked,
     isAbstinence: g.is_abstinence,
     timeframe: readTimeframe(g.timeframe),
+    ...readGoalStatus(g.status, g.status_on),
   }))
 
   const routines: NsRoutine[] = routineRows.map((r) => ({

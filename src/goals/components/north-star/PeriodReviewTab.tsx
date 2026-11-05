@@ -22,7 +22,7 @@
 import { useMemo, useState } from "react"
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
 import type { NsGoal, NsPlan, NsReview, NsReviewVerdict } from "@/src/goals/types"
-import { ACHIEVEMENT_COPY, READBACK_COPY, READINGS_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
+import { ACHIEVEMENT_COPY, GOAL_STATUS_COPY, READBACK_COPY, READINGS_COPY, REVIEW_PERIOD_COPY as COPY } from "@/src/goals/data/northStar"
 import { ReadingInput, withUnit } from "./GoalReadings"
 import { dateKeyLabel } from "@/src/shared/dateUtils"
 import { goalsReadBack, previousOutcomes, routinesReadBack } from "@/src/goals/reviewReadBack"
@@ -310,6 +310,18 @@ function ReadBack({ plan, period, today, ticks, review, onVerdict, onReading }: 
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-5" data-testid="review-goals">
         <h3 className="text-[13px] font-semibold text-zinc-200">{READBACK_COPY.goalsTitle(periodLabel(period))}</h3>
         <p className="text-[11px] text-zinc-500 mt-0.5">{READBACK_COPY.goalsHelp}</p>
+        {goals.changed.length > 0 && (
+          <div className="mt-2" data-testid="review-changed">
+            <p className="text-[11px] text-zinc-500">{GOAL_STATUS_COPY.changedTitle(periodLabel(period))}</p>
+            <ul className="mt-1 flex flex-wrap gap-1.5">
+              {goals.changed.map((g) => (
+                <li key={g.id} className="text-[11px] px-2 py-0.5 rounded-full border border-white/10 text-zinc-300">
+                  {g.title}: {GOAL_STATUS_COPY.labels[g.status]}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {goals.counted.length === 0 ? (
           <p className="text-[11px] text-zinc-600 mt-2">{READBACK_COPY.noCounted}</p>
         ) : (

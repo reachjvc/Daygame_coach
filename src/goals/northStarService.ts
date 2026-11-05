@@ -96,6 +96,7 @@ import type {
   NsSubStep,
   NsExperience,
   NsGoal,
+  NsGoalStatus,
   NsGoalTimeframe,
   NsObstacle,
   NsPastNorthStar,
@@ -121,6 +122,7 @@ import { NS_FIELD_KINDS, NO_ACCOUNT } from "@/src/goals/types"
    this file and `northStarTrackService` can reach it without closing a cycle. */
 import { stepTick, stepTickedByHand, type TrainingTicks } from "@/src/goals/dayTicks"
 import { takesReadings } from "@/src/goals/goalReadings"
+import { GOAL_STATUSES, readGoalStatus } from "@/src/goals/goalStatus"
 import { isEmptyReview, latestScores, periodLabel, periodOfReview, ratedAreaCount, readReviews } from "@/src/goals/reviewService"
 import { DAY_LIMITS } from "@/src/goals/lifePlanDayService"
 import { periodStartFor } from "@/src/shared/dateUtils"
@@ -1218,6 +1220,7 @@ function readGoal(g: Record<string, unknown>): NsGoal {
     feeling: stringOr(g.feeling, ""),
     feedsGoalIds: readStringList(g.feedsGoalIds),
     timeframe: readTimeframe(g.timeframe),
+    ...readGoalStatus(g.status, g.statusOn),
     servesOneThing: g.servesOneThing === true,
     reward: stringOr(g.reward, ""),
     stake: stringOr(g.stake, ""),
@@ -1994,6 +1997,8 @@ export function addGoal(plan: NsPlan, areaId: string, title: string, type: Visio
     feeling: "",
     feedsGoalIds: [],
     timeframe: null,
+    status: "active",
+    statusOn: null,
     servesOneThing: false,
     reward: "",
     stake: "",
@@ -2099,6 +2104,19 @@ export function removeGoal(plan: NsPlan, goalId: string, now = nowIso()): NsPlan
       return next
     }),
   }, now)
+}
+
+/**
+ * Mark a goal achieved, paused or dropped on `today`, or active again
+ * (Plans/life-plan-goal-status.md). Its counts, readings, milestones and
+ * answers stay: it is kept with its history, not deleted.
+ */
+export function setGoalStatus(plan: NsPlan, goalId: string, status: NsGoalStatus, today: string, now = nowIso()): NsPlan {
+  const goal = plan.goals.find((g) => g.id === goalId)
+  if (!goal || goal.status === status || !GOAL_STATUSES.includes(status)) return plan
+  const updated = updateGoal(plan, goalId, { status, statusOn: status === "active" ? null : today }, now)
+  // A goal set aside is no longer what the season is about; one achieved still was.
+  return (status === "paused" || status === "dropped") && updated.seasonFocusId === goalId ? { ...updated, seasonFocusId: null } : updated
 }
 
 export function setLadder(plan: NsPlan, goalId: string, ladder: MilestoneLadderConfig, now = nowIso()): NsPlan {

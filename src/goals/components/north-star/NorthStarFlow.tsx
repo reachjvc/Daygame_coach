@@ -58,7 +58,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
-import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
+import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsGoalStatus, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
 import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY } from "@/src/goals/data/northStar"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
@@ -1221,6 +1221,7 @@ export function NorthStarFlow({
     onLadder: (id: string, ladder: MilestoneLadderConfig) => setPlan((p) => ns.setLadder(p, id, ladder)),
     onRamp: (id: string, steps: HabitRampStep[] | null) => setPlan((p) => ns.setRamp(p, id, steps)),
     onReading: (id: string, date: string, value: number | null) => setPlan((p) => ns.setGoalReading(p, date, id, value)),
+    onSetStatus: (id: string, status: NsGoalStatus, date: string) => setPlan((p) => ns.setGoalStatus(p, id, status, date)),
     onLink: (fromId: string, toId: string) => setPlan((p) => ns.linkGoal(p, fromId, toId)),
     onUnlink: (fromId: string, toId: string) => setPlan((p) => ns.unlinkGoal(p, fromId, toId)),
     onAddObstacle: (id: string, what: string) => setPlan((p) => ns.addObstacle(p, id, what)),

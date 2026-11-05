@@ -45,6 +45,7 @@ import { NON_REGISTRY_TEMPLATE_PREFIXES } from "@/src/goals/data/templateNamespa
 /* "Is this step done today" has ONE owner, and it is not this file — see
    `dayTicks.ts` for why it is a leaf both services can import. */
 import { stepTick, type TrainingTicks } from "@/src/goals/dayTicks"
+import { isActive } from "@/src/goals/goalStatus"
 
 /**
  * Every row this module has ever been responsible for starts with this.
@@ -645,7 +646,8 @@ export function trackActivities(plan: NsPlan): TrackActivity[] {
 
   // Drivers first: they are the goals, and the plan already ranked them.
   for (const goal of goalsByPriority(plan)) {
-    if (!isSystem(goal)) continue
+    // An achieved, paused or dropped goal is not something you do this week.
+    if (!isSystem(goal) || !isActive(goal)) continue
     const area = areaOf(goal.areaId)
     out.push({
       id: goal.id,
@@ -1215,7 +1217,8 @@ export function standingItems(plan: NsPlan): StandingItem[] {
   )
 
   const milestones: StandingItem[] = plan.goals
-    .filter((goal) => !isSystem(goal) && !promoted.has(goal.id))
+    // An achieved, paused or dropped goal is not standing work (Plans/life-plan-goal-status.md).
+    .filter((goal) => !isSystem(goal) && !promoted.has(goal.id) && isActive(goal))
     .map((goal) => {
       const area = areaOf(goal.areaId)
       const unit = goal.unit.trim() ? ` ${goal.unit.trim()}` : ""
@@ -1408,7 +1411,7 @@ export function readSources(plan: NsPlan): ReadSource[] {
    * why written under the first one, and the row says so rather than opening
    * onto a blank.
    */
-  const top = goalsByPriority(plan).find((g) => g.why.trim())
+  const top = goalsByPriority(plan).find((g) => g.why.trim() && isActive(g))
   if (top) {
     push(`why:top`, READ_COPY.topWhyLabel(top.title), goalsGroup, top.why, {
       tab: isMilestone(top) ? "milestones" : "systems",
