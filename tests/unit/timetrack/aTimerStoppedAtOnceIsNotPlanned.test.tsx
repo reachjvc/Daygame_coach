@@ -26,6 +26,8 @@ import { baseState } from "./helpers"
 
 const NOON = new Date(2026, 7, 10, 12, 0, 0)
 const main = () => within(screen.getByRole("main"))
+/** on a phone, Start and Stop are the round buttons of the bar at the bottom (Plans/toggl-parity.md Phase 1) */
+const bar = () => within(screen.getByTestId("run-bar"))
 
 async function open(copy: TimetrackState) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(copy))
@@ -67,9 +69,9 @@ describe("Start, then Stop at once", () => {
     // the idle clock last ticked a few seconds ago
     await wait(8_000)
 
-    fireEvent.click(main().getByRole("button", { name: "Start timer" }))
+    fireEvent.click(bar().getByRole("button", { name: "Start timer" }))
     await wait(100)
-    fireEvent.click(main().getByRole("button", { name: "Stop timer" }))
+    fireEvent.click(bar().getByRole("button", { name: "Stop timer" }))
 
     const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY)!) as TimetrackState
     expect(stored.entries).toHaveLength(1)

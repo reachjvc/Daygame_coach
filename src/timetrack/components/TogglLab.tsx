@@ -70,6 +70,8 @@ import { SettingsView, type SettingsTab } from "./SettingsView"
 import { FavoritesBar, RunningPill, TimerBar, type TimerMode } from "./TimerBar"
 import { Dropdown, Modal, touchTarget } from "./primitives"
 import { BACK_LINK_CLASS, TrackerLoading } from "./TrackerLoading"
+import { useIsMobile } from "../hooks/useIsMobile"
+import { PhoneTracker } from "./phone/PhoneTracker"
 
 type Screen = Section
 
@@ -277,6 +279,8 @@ export function TogglLab({
   const [draft, setDraftState] = useState<EntryDraft>(() => savedTimerBar()?.draft ?? emptyDraft)
   const [mode, setModeState] = useState<TimerMode>(() => savedTimerBar()?.mode ?? "timer")
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  /** below 640px the phone draws its own screens (`PhoneTracker`, Plans/toggl-parity.md Phases 1–2) */
+  const isMobile = useIsMobile()
   const [moreOpen, setMoreOpen] = useState(false)
   const [detailEntry, setDetailEntry] = useState<TimeEntry | null>(null)
   const [focusProjectId, setFocusProjectId] = useState<Id | null>(null)
@@ -800,6 +804,50 @@ export function TogglLab({
       </Suspense>
       <SendWaitingTimerStops />
 
+      {/* THE PHONE HAS ITS OWN SCREENS, laid out like Toggl Track's Android app
+          (Plans/toggl-parity.md Phases 1–2). Everything around them — the
+          workspace, the sync, the history steps, the toasts — is this shell's. */}
+      {isMobile ? (
+        <PhoneTracker
+          lab={{
+            state,
+            setState,
+            nowSec,
+            running,
+            pushToast,
+            pomodoro,
+            requestNotificationPermission,
+            resetWorkspace: actions.resetWorkspace,
+            replaceState: actions.replaceState,
+            sync,
+            screen,
+            goTo,
+            manageTab,
+            setManageTab,
+            settingsTab,
+            setSettingsTab,
+            focusProjectId,
+            setFocusProjectId,
+            goToProject,
+            draft,
+            startTracking,
+            stopTracking,
+            afterCheck,
+            nextDraft,
+            setNextDraft,
+            detailEntry: detailEntry ? (state.entries.find((e) => e.id === detailEntry.id) ?? detailEntry) : null,
+            openEntry,
+            closeEntry,
+            reportConfig,
+            setReportConfig,
+            backHref,
+            backText,
+            goBack,
+            bottomBarRef,
+            unreadAlerts,
+          }}
+        />
+      ) : (<>
       <header className="sticky top-0 z-[9500] border-b border-border bg-card/95 backdrop-blur">
         {/* flex-wrap: on a phone, a running timer plus a sync badge that keeps
             its words ("Offline · 1 waiting", "Saving 1…") plus the bell do not
@@ -1157,6 +1205,7 @@ export function TogglLab({
           </SheetRow>
         ))}
       </BottomSheet>
+      </>)}
 
       {/* shortcut overlay */}
       {shortcutsOpen && (
@@ -1178,7 +1227,7 @@ export function TogglLab({
       )}
 
       {/* entry details */}
-      {detailEntry && (
+      {detailEntry && !isMobile && (
         <Modal title="Time entry details" onClose={closeEntry}>
           <EntryDetailModalBody
             entry={state.entries.find((e) => e.id === detailEntry.id) ?? detailEntry}
@@ -1214,7 +1263,7 @@ export function TogglLab({
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
+        className="pointer-events-none fixed bottom-[calc(var(--panel-bottom-inset,4rem)+0.5rem)] left-1/2 z-[9700] flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-3 sm:bottom-4 sm:px-4"
       >
         {toasts.map((toast) => {
           /**

@@ -1369,7 +1369,7 @@ function MenuItem({
  * for an overlap, with Fix; quiet for a gap, with Close gap. Each says what it
  * will do in its accessible name and puts it back with Undo.
  */
-function JointMark({
+export function JointMark({
   joint,
   across,
   state,

@@ -5,7 +5,7 @@
  * `@project` and `#tag` autocomplete.
  */
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,7 @@ export function ProjectPicker({
   autoOpen,
   onClose,
   initialQuery = "",
+  renderTrigger,
 }: {
   state: TimetrackState
   projectId: Id | null
@@ -54,6 +55,8 @@ export function ProjectPicker({
   autoOpen?: boolean
   onClose?: () => void
   initialQuery?: string
+  /** the trigger drawn by the caller — the phone sheet's chip — instead of "+ Project" */
+  renderTrigger?: () => ReactNode
 }) {
   const [query, setQuery] = useState(initialQuery)
   const project = state.projects.find((p) => p.id === projectId) ?? null
@@ -83,7 +86,7 @@ export function ProjectPicker({
           onClose?.()
         }
       }}
-      trigger={() => (
+      trigger={() => renderTrigger?.() ?? (
         <span
           className={cn(
             "flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-secondary/60 sm:min-h-0",
@@ -207,6 +210,7 @@ export function TagPicker({
   autoOpen,
   onClose,
   initialQuery = "",
+  renderTrigger,
 }: {
   state: TimetrackState
   tagIds: Id[]
@@ -218,6 +222,8 @@ export function TagPicker({
   autoOpen?: boolean
   onClose?: () => void
   initialQuery?: string
+  /** the trigger drawn by the caller — the phone sheet's chip — instead of "# Tags" */
+  renderTrigger?: () => ReactNode
 }) {
   const [query, setQuery] = useState(initialQuery)
   const selected = state.tags.filter((t) => tagIds.includes(t.id))
@@ -235,7 +241,7 @@ export function TagPicker({
           onClose?.()
         }
       }}
-      trigger={() => (
+      trigger={() => renderTrigger?.() ?? (
         <span
           className={cn(
             "flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm hover:bg-secondary/60 sm:min-h-0",
