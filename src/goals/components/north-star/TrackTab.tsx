@@ -33,6 +33,7 @@ interface HubGoal {
 }
 
 export function TrackTab({
+  account,
   plan,
   runId,
   goalLinks = {},
@@ -43,6 +44,8 @@ export function TrackTab({
   onToggleStep,
   onGoToToday,
 }: {
+  /** The account the page was opened for, named on this step's requests (`src/goals/planAccount.ts`). */
+  account: string
   plan: NsPlan
   runId: string
   /**
@@ -89,6 +92,8 @@ export function TrackTab({
    */
   const loadHub = useCallback(async () => {
     try {
+      // Named like every request from this page (`nameEveryRequest`), so a tab
+      // left open while somebody else signed in shows none of their goals.
       const res = await fetch("/api/goals")
       if (!res.ok) return
       // The route returns a plain array; a defensive read costs nothing.
@@ -132,8 +137,8 @@ export function TrackTab({
        a failure costs them only what they already have — the next load tries
        again. The push's own link write is the one that says so on screen,
        because there a failure means a duplicate on the next device. */
-    void saveGoalLinks(missing)
-  }, [hubGoals, goalLinks, runId])
+    void saveGoalLinks(missing, account)
+  }, [hubGoals, goalLinks, runId, account])
 
   /**
    * The hub below shows THIS plan, not the account.

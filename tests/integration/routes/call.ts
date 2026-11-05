@@ -22,17 +22,23 @@ type Handler = {
 export interface Answer<T = unknown> {
   status: number
   body: T
+  headers: Headers
 }
 
 export async function call<T = Record<string, unknown>>(
   handler: Handler,
   path: string,
-  { method = "GET", body, params = {} }: { method?: string; body?: unknown; params?: Record<string, string> } = {}
+  {
+    method = "GET",
+    body,
+    params = {},
+    headers = {},
+  }: { method?: string; body?: unknown; params?: Record<string, string>; headers?: Record<string, string> } = {}
 ): Promise<Answer<T>> {
-  const init: RequestInit = { method }
+  const init: RequestInit = { method, headers: { ...headers } }
   if (body !== undefined) {
     init.body = typeof body === "string" ? body : JSON.stringify(body)
-    init.headers = { "Content-Type": "application/json" }
+    init.headers = { "Content-Type": "application/json", ...headers }
   }
   const response = await handler(new Request(`http://test.local${path}`, init), { params: Promise.resolve(params) })
   const text = await response.text()
@@ -44,5 +50,5 @@ export async function call<T = Record<string, unknown>>(
       throw new Error(`${method} ${path} answered ${response.status} with a body that is not JSON: ${text.slice(0, 200)}`)
     }
   }
-  return { status: response.status, body: parsed as T }
+  return { status: response.status, body: parsed as T, headers: response.headers }
 }

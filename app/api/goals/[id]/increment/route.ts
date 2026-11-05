@@ -8,7 +8,7 @@ interface RouteParams {
 }
 
 export async function POST(request: Request, { params }: RouteParams) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
 
   try {

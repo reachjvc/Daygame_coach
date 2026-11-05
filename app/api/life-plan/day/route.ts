@@ -22,8 +22,8 @@ import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { dayRowsToRecord, emptyDayRecord, fitAsked, unknownIds, whyNotWritable } from "@/src/goals/lifePlanDayService"
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 
-export async function GET() {
-  const auth = await requireAuth()
+export async function GET(req: Request) {
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
   try {
     const planId = await findLifePlanId(auth.userId)
@@ -40,7 +40,7 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
   const patch = (await req.json().catch(() => null)) as DayPatch | null
   if (!patch || typeof patch.date !== "string") {

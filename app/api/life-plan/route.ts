@@ -20,8 +20,8 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { applyLifePlanChanges, ensureLifePlan, readLifePlan, StalePlanError } from "@/src/db/lifePlanRepo"
-export async function GET() {
-  const auth = await requireAuth()
+export async function GET(req: Request) {
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
 
   try {
@@ -35,8 +35,8 @@ export async function GET() {
   }
 }
 
-export async function PUT() {
-  const auth = await requireAuth()
+export async function PUT(req: Request) {
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
   return NextResponse.json(
     { error: "This page is out of date and cannot save. Reload it, and your last change will need making again." },
@@ -46,7 +46,7 @@ export async function PUT() {
 
 /** Save only what changed. The database refuses any table outside the plan. */
 export async function PATCH(req: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
 
   const body = await req.json().catch(() => null)
@@ -71,8 +71,8 @@ export async function PATCH(req: Request) {
 }
 
 /** Start a plan for an account that has none, so the flow has an id to save against. */
-export async function POST() {
-  const auth = await requireAuth()
+export async function POST(req: Request) {
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
 
   try {

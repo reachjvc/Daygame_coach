@@ -23,7 +23,7 @@ import { findLifePlanId, linkPlanGoal } from "@/src/db/lifePlanRepo"
 import { readNodeIds } from "@/src/db/lifePlanDayRepo"
 
 export async function PUT(req: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(req)
   if (!auth.success) return auth.response
 
   const body = (await req.json().catch(() => null)) as { links?: Record<string, string | null> } | null

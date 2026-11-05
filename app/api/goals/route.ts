@@ -7,7 +7,7 @@ import { CreateGoalSchema } from "@/src/db/goalSchemas"
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
 export async function GET(request: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const { searchParams } = new URL(request.url)
@@ -24,8 +24,8 @@ export async function GET(request: Request) {
   } catch (e) { console.error("Error getting goals:", e); return err("Failed to get goals") }
 }
 
-export async function DELETE() {
-  const auth = await requireAuth()
+export async function DELETE(request: Request) {
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const count = await deleteAllGoals(auth.userId)
@@ -34,7 +34,7 @@ export async function DELETE() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const result = CreateGoalSchema.safeParse(await request.json())

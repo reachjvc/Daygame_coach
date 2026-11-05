@@ -5,7 +5,7 @@ import { getUserTimezone } from "@/src/db/settingsRepo"
 import { getOrphanedGoalIds } from "@/src/goals/goalsService"
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
 
   const includeArchived = request.nextUrl.searchParams.get("includeArchived") === "true"

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
+import { headers } from "next/headers"
 import { createServerSupabaseClient } from "./supabase"
 import { hasAccess, hasPurchased } from "./profilesRepo"
+import { ACCOUNT_CHANGED_HEADER, PAGE_ACCOUNT_HEADER } from "@/src/shared/pageAccount"
 
 export type AuthSuccess = {
   success: true
@@ -25,8 +27,16 @@ export type AuthResult = AuthSuccess | AuthFailure
 /**
  * Require authentication for an API route.
  * Returns user ID and supabase client on success, or a 401 response on failure.
+ *
+ * Also refuses (409, `ACCOUNT_CHANGED_HEADER`) a request from a page that
+ * names another account in `PAGE_ACCOUNT_HEADER`: it was opened before
+ * somebody else signed in on this browser (`src/shared/pageAccount.ts`). Read
+ * from `req` when the route passes it, else from the request being served, so
+ * every route behind this function is covered. A request that names no
+ * account is let through, so a tab still running code from before the header
+ * keeps saving until it is reloaded.
  */
-export async function requireAuth(): Promise<AuthResult> {
+export async function requireAuth(req?: Request): Promise<AuthResult> {
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -40,7 +50,30 @@ export async function requireAuth(): Promise<AuthResult> {
     }
   }
 
+  if (await namesAnotherAccount(req, user.id)) {
+    return {
+      success: false,
+      response: NextResponse.json(
+        { error: "This page was opened for another account. Reload it." },
+        { status: 409, headers: { [ACCOUNT_CHANGED_HEADER]: "1" } },
+      ),
+    }
+  }
+
   return { success: true, userId: user.id, email: user.email, supabase }
+}
+
+/** True when the request names an account other than `userId` (see `requireAuth`). */
+async function namesAnotherAccount(req: Request | undefined, userId: string): Promise<boolean> {
+  let named = req?.headers.get(PAGE_ACCOUNT_HEADER) ?? null
+  if (named === null && !req) {
+    try {
+      named = (await headers()).get(PAGE_ACCOUNT_HEADER)
+    } catch {
+      // Called outside a request (a test calling a handler directly): nothing to read.
+    }
+  }
+  return named !== null && named !== userId
 }
 
 /**

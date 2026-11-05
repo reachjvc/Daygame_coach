@@ -15,12 +15,13 @@
 
 import type { DayPatch } from "@/src/db/lifePlanDayTypes"
 import type { DayRecord } from "./lifePlanDayService"
+import { ACCOUNT_CHANGED_MESSAGE, accountHeaders, refusedForAccount } from "./planAccount"
 
 /** The account's day half, or `undefined` when it could not be read. */
-export async function fetchDayRecord(): Promise<DayRecord | undefined> {
+export async function fetchDayRecord(account: string): Promise<DayRecord | undefined> {
   try {
-    const res = await fetch("/api/life-plan/day")
-    if (!res.ok) return undefined
+    const res = await fetch("/api/life-plan/day", { headers: accountHeaders(account) })
+    if (refusedForAccount(res, account) || !res.ok) return undefined
     const body = (await res.json()) as Partial<DayRecord>
     return {
       daily: body.daily ?? {},
@@ -45,13 +46,14 @@ export type DaySaveOutcome =
   | { ok: false; planBehind: false; message: string }
 
 /** Send one day. Only the keys present are changed. */
-export async function saveDayFromBrowser(patch: DayPatch): Promise<DaySaveOutcome> {
+export async function saveDayFromBrowser(patch: DayPatch, account: string): Promise<DaySaveOutcome> {
   try {
     const res = await fetch("/api/life-plan/day", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...accountHeaders(account) },
       body: JSON.stringify(patch),
     })
+    if (refusedForAccount(res, account)) return { ok: false, planBehind: false, message: ACCOUNT_CHANGED_MESSAGE }
     if (res.ok) return { ok: true }
 
     const body = (await res.json().catch(() => null)) as { error?: string; unknown?: string[] } | null
@@ -77,8 +79,9 @@ export async function saveDayFromBrowser(patch: DayPatch): Promise<DaySaveOutcom
 export async function saveDayCatchingUp(
   patch: DayPatch,
   savePlanFirst: () => Promise<boolean>,
+  account: string,
 ): Promise<DaySaveOutcome> {
-  const first = await saveDayFromBrowser(patch)
+  const first = await saveDayFromBrowser(patch, account)
   if (first.ok || !first.planBehind) return first
 
   const saved = await savePlanFirst()
@@ -89,7 +92,7 @@ export async function saveDayCatchingUp(
       message: "Today could not be saved because your plan has not been saved yet.",
     }
   }
-  return saveDayFromBrowser(patch)
+  return saveDayFromBrowser(patch, account)
 }
 
 /**
@@ -100,11 +103,11 @@ export async function saveDayCatchingUp(
  * are the day's own, never additions, so a day sent here and again by the
  * usual save lands the same.
  */
-export function sendDayOnLeave(patch: DayPatch): void {
+export function sendDayOnLeave(patch: DayPatch, account: string): void {
   try {
     void fetch("/api/life-plan/day", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...accountHeaders(account) },
       body: JSON.stringify(patch),
       keepalive: true,
     }).catch(() => {})

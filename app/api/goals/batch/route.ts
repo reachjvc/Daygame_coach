@@ -6,7 +6,7 @@ import { BatchCreateGoalSchema } from "@/src/db/goalSchemas"
 import type { UserGoalInsert } from "@/src/db/goalTypes"
 
 export async function POST(request: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const result = BatchCreateGoalSchema.safeParse(await request.json())

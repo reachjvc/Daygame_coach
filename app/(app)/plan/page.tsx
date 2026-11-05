@@ -54,6 +54,9 @@ export default async function LifeMasteryPage({
 
   return (
     <NorthStarFlow
+      // A new sign-in is a new page, never this one under another name: the
+      // flow holds the plan it loaded, and its saves name that account.
+      key={user.id}
       userId={user.id}
       backHref={ROUTES.dashboard}
       backLabel="Dashboard"

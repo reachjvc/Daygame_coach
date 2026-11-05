@@ -74,7 +74,7 @@ describe("the browser that pushed writes the links down", () => {
     installFetch(driverId)
 
     render(
-      <TrackTab plan={plan} runId={RUN} today="2026-09-26" goalLinks={{}} ticks={NO_TRAINING_TICKS} onToggleStep={vi.fn()} onGoToToday={vi.fn()} />,
+      <TrackTab account="u1" plan={plan} runId={RUN} today="2026-09-26" goalLinks={{}} ticks={NO_TRAINING_TICKS} onToggleStep={vi.fn()} onGoToToday={vi.fn()} />,
     )
     await waitFor(() => expect(screen.queryByText(/Checking your goals/i)).toBeNull())
 
@@ -90,6 +90,7 @@ describe("the browser that pushed writes the links down", () => {
 
     render(
       <TrackTab
+        account="u1"
         plan={plan}
         runId={RUN}
         today="2026-09-26"

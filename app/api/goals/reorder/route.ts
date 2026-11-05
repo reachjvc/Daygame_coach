@@ -3,7 +3,7 @@ import { requireAuth } from "@/src/db/auth"
 import { reorderGoals } from "@/src/db/goalRepo"
 
 export async function PATCH(request: Request) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
 
   try {

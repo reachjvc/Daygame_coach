@@ -6,8 +6,8 @@ import { UpdateGoalSchema } from "@/src/db/goalSchemas"
 
 type RouteParams = { params: Promise<{ id: string }> }
 
-export async function GET(_request: Request, { params }: RouteParams) {
-  const auth = await requireAuth()
+export async function GET(request: Request, { params }: RouteParams) {
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const tz = await getUserTimezone(auth.userId)
@@ -21,7 +21,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 }
 
 export async function PUT(request: Request, { params }: RouteParams) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const result = UpdateGoalSchema.safeParse(await request.json())
@@ -37,7 +37,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 }
 
 export async function DELETE(request: Request, { params }: RouteParams) {
-  const auth = await requireAuth()
+  const auth = await requireAuth(request)
   if (!auth.success) return auth.response
   try {
     const { id } = await params
