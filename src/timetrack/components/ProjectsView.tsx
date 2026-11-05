@@ -25,7 +25,9 @@ import {
   parseDurationInput,
   plural,
 } from "../timetrackFormatService"
+import { layOnto } from "../tabMergeService"
 import {
+  addClient,
   createProject,
   createProjectFromTemplate,
   createTask,
@@ -43,7 +45,7 @@ import {
 } from "../timetrackService"
 import type { AlertThreshold, Id, Project, RecurringPeriod, TimetrackState } from "../types"
 import { NameField } from "./NameField"
-import { MiniSelect } from "./pickers"
+import { ClientPicker, MiniSelect } from "./pickers"
 import {
   BurnUpChart,
   ColorDot,
@@ -505,10 +507,17 @@ function ProjectDialog({
           <Input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} autoFocus />
         </Field>
         <Field label="Client">
-          <MiniSelect
-            value={draft.clientId === null ? "none" : String(draft.clientId)}
-            onChange={(value) => setDraft({ ...draft, clientId: value === "none" ? null : value })}
-            options={[{ id: "none", label: "No client" }, ...state.clients.map((c) => ({ id: String(c.id), label: c.name }))]}
+          {/* makes a client too, as Toggl Track's project dialog does (Phase 8 findability) */}
+          <ClientPicker
+            state={state}
+            clientId={draft.clientId}
+            onChange={(clientId) => setDraft((held) => ({ ...held, clientId }))}
+            onCreateClient={(name) => {
+              // worked out on the copy on screen, laid onto the current one (`layOnto`), so its id is known here
+              const made = addClient(state, name, new Date().toISOString())
+              setState(layOnto(state, made.state))
+              setDraft((held) => ({ ...held, clientId: made.id }))
+            }}
           />
         </Field>
 
