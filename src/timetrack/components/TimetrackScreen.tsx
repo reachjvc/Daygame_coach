@@ -17,8 +17,7 @@
  * writing that it does not.
  */
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { TogglLab } from "./TogglLab"
 import { ROUTES } from "@/src/shared/routes"
@@ -27,6 +26,7 @@ import {
   SIGNED_OUT_HERE,
   browserOwner,
   claimBrowserCopy,
+  isSigningOut,
   ownerChangedUnderneath,
   startAgain,
   whenSigningOut,
@@ -50,14 +50,31 @@ import { ACCOUNT_KEY } from "../config"
  * into a browser that was being left; and in the tab that logged out, a sign-out
  * that failed with no signal left a tracker that silently saved nothing (a code
  * review, 2026-11-04). Signing in again opens a fresh one.
+ *
+ * AND THE SAME PERSON COMING BACK STARTS THIS TAB AGAIN TOO. It used to start
+ * again only for a DIFFERENT account: A logged out in one tab, signed in again
+ * there and opened Time, and this tab went on saying "You logged out in another
+ * tab" for as long as it was open — with a "Sign in again" that opened the
+ * login form although A was signed in (account-switching audit, Phase 8;
+ * `aTabLoggedOutElsewhereComesBackWithTheSamePerson`). It now starts again the
+ * moment this browser is A's again, or when it is looked at and finds it is;
+ * and "Sign in again" opens Time, which asks for a sign-in only when there is
+ * none. Somebody else claiming the browser starts it again as before: the
+ * reload asks who is signed in, and nothing of A's is left to show.
  */
 export function TimetrackScreen({ account }: { account: string }) {
   useState(() => claimBrowserCopy(account))
   const [loggedOut, setLoggedOut] = useState<"here" | "elsewhere" | null>(null)
+  const loggedOutNow = useRef(loggedOut)
+  loggedOutNow.current = loggedOut
   useEffect(() => {
     const look = () => {
-      if (browserOwner() === SIGNED_OUT_HERE) setLoggedOut((current) => current ?? "elsewhere")
+      const owner = browserOwner()
+      if (owner === SIGNED_OUT_HERE) setLoggedOut((current) => current ?? "elsewhere")
       else if (ownerChangedUnderneath(account)) startAgain()
+      // the same person signed in again and opened Time elsewhere: this tab's tracker stopped, so it starts
+      // again. Not the tab that logged out itself: a reload there could cut off its own sign-out.
+      else if (owner === account && loggedOutNow.current === "elsewhere" && !isSigningOut()) startAgain()
     }
     const onStorage = (event: StorageEvent) => {
       // `key` null: the whole storage was cleared
@@ -69,13 +86,19 @@ export function TimetrackScreen({ account }: { account: string }) {
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) look()
     }
+    // a phone may freeze a tab in the background, and a frozen tab hears nothing: it asks when looked at
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") look()
+    }
     const stopListening = whenSigningOut(() => setLoggedOut("here"))
     window.addEventListener("storage", onStorage)
     window.addEventListener("pageshow", onPageShow)
+    document.addEventListener("visibilitychange", onVisibility)
     return () => {
       stopListening()
       window.removeEventListener("storage", onStorage)
       window.removeEventListener("pageshow", onPageShow)
+      document.removeEventListener("visibilitychange", onVisibility)
     }
   }, [account])
   if (loggedOut) {
@@ -87,9 +110,10 @@ export function TimetrackScreen({ account }: { account: string }) {
           time.
         </p>
         <p className="mt-3">
-          <Link href="/auth/login" className="text-primary underline underline-offset-4">
+          {/* a whole page load: it asks who is signed in, and only somebody who is not is sent to sign in */}
+          <a href={ROUTES.time} className="text-primary underline underline-offset-4">
             Sign in again
-          </Link>
+          </a>
         </p>
       </main>
     )
