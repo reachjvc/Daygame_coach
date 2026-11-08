@@ -631,14 +631,20 @@ export function TimerBar({
    * minutes, "1:30" and "1.30" an hour and a half). Null while nobody is typing.
    */
   const [lengthText, setLengthText] = useState<string | null>(null)
-  const discardLength = useRef(false)
+  /**
+   * What is being typed, as a ref too: Enter writes it and then blurs, and the
+   * blur runs in the same key press with this render's `lengthText` still
+   * holding the text, so reading state wrote it twice (and an unreadable length
+   * said so twice). The ref is emptied by the first write; Escape empties it too.
+   */
+  const lengthTyping = useRef<string | null>(null)
+  const typeLength = (text: string | null) => {
+    lengthTyping.current = text
+    setLengthText(text)
+  }
   const commitLength = () => {
-    const text = lengthText
-    setLengthText(null)
-    if (discardLength.current) {
-      discardLength.current = false
-      return
-    }
+    const text = lengthTyping.current
+    typeLength(null)
     if (text === null || !manualSpan || text.trim() === formatDuration(manualLength ?? 0, state.user.durationFormat)) return
     const seconds = parseDurationInput(text)
     if (seconds === null) {
@@ -785,11 +791,10 @@ export function TimerBar({
                 <Input
                   value={lengthText ?? formatDuration(manualLength, state.user.durationFormat)}
                   onFocus={(event) => {
-                    discardLength.current = false
-                    setLengthText(event.currentTarget.value)
+                    typeLength(event.currentTarget.value)
                     event.currentTarget.select()
                   }}
-                  onChange={(event) => setLengthText(event.target.value)}
+                  onChange={(event) => typeLength(event.target.value)}
                   onBlur={commitLength}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
@@ -799,8 +804,8 @@ export function TimerBar({
                       event.currentTarget.blur()
                     } else if (event.key === "Escape") {
                       event.preventDefault()
-                      discardLength.current = true
-                      setLengthText(null)
+                      // nothing left for the blur to write
+                      typeLength(null)
                       event.currentTarget.blur()
                     }
                   }}

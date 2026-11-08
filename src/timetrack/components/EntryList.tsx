@@ -72,6 +72,7 @@ import {
   setEntryDuration,
   setRunningElapsed,
   splitEntry,
+  stopSeen,
   startLinkFor,
   undoDisplacement,
   tagNames,
@@ -754,6 +755,17 @@ function EntryFields({
    */
   const stopHere = () =>
     (afterCheck ?? ((run) => run(latestState.current, nowIso())))((latest, tappedAt) => {
+      // this row's entry, or nothing: by now the other device may have stopped it or switched (`stopSeen`)
+      const seen = stopSeen(latest, entry.id, tappedAt)
+      if (seen.refused) {
+        const name = (e: TimeEntry | null | undefined) => `“${e?.description.trim() || "(no description)"}”`
+        pushToast(
+          seen.refused === "other"
+            ? `Your other device changed the timer just now: ${name(seen.running)} is running, so nothing was stopped.`
+            : `${name(entry)} was already stopped on your other device.`,
+        )
+        return
+      }
       const result = stopAt(latest, tappedAt, nowIso())
       if (result.violations[0] || !result.stopped || result.stopped.id !== entry.id) {
         pushToast(result.violations[0]?.message ?? "Nothing is running", "error")

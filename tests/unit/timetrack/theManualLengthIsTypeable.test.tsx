@@ -14,6 +14,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
 import { STORAGE_KEY } from "@/src/timetrack/config"
+import { DURATION_UNREADABLE } from "@/src/timetrack/timetrackFormatService"
 import type { TimetrackState } from "@/src/timetrack/types"
 
 import { baseState } from "./helpers"
@@ -90,4 +91,13 @@ test("the entry added is the one the boxes say", async () => {
   fireEvent.click(bar().getByRole("button", { name: "Add time entry" }))
   const added = stored().entries.find((e) => e.description === "scales")!
   expect({ start: added.start, stop: added.stop }).toEqual({ start: at(10, 15), stop: at(11, 45) })
+})
+
+test("Enter on a length that cannot be read says so once, not again on the way out", async () => {
+  const { length } = await manualBar()
+  // really focused, so Enter's own blur happens inside the key press, as in a browser
+  act(() => length().focus())
+  fireEvent.change(length(), { target: { value: "abc" } })
+  fireEvent.keyDown(length(), { key: "Enter" })
+  expect(screen.getAllByText(DURATION_UNREADABLE).length, "Enter and the blur after it each said it").toBe(1)
 })
