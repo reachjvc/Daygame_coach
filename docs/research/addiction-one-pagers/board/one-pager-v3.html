@@ -772,19 +772,22 @@ function gapLine(where, xs = [], part) {
   const hidden = Object.keys(KINDS).filter(k => KINDS[k].scope === "specific" && (page.numbers || []).some(x => x.kind === k) && (page.numbers || []).filter(x => x.kind === k).every(x => OFF(x) && !x.liked && dropOff()));
   const empty = [...new Set([...(page.empty || []), ...hidden])].filter(k => KINDS[k] && ws.includes(KINDS[k].where) && picked(k) && !covered(k) && inPart(k));
   const gr = typeof page.gapReaderLine === "string" ? { text: page.gapReaderLine, kinds: [] } : page.gapReaderLine;
-  const own = [], generic = [];
+  const own = [], generic = [], hiddenG = [];
   if (gr && gr.text && where === "more" && part !== "post") own.push(gr.text);
   for (const k of empty) {
     const g = (page.gaps || []).find(g => g.kind === k);
     if (gr && (gr.kinds || []).includes(k)) continue;
-    if (g && g.reader) { if (!own.includes(g.reader)) own.push(g.reader); }
+    // r7: a kind emptied only by the off-reader answer has a count, just not in people checked as hooked: say so
+    if (hidden.includes(k) && !(page.empty || []).includes(k)) hiddenG.push(KINDS[k].gapPhrase || KINDS[k].label.toLowerCase());
+    else if (g && g.reader) { if (!own.includes(g.reader)) own.push(g.reader); }
     else generic.push(KINDS[k].gapPhrase || KINDS[k].label.toLowerCase());
   }
   // one "Not counted here yet" line per section: the generic phrases join a page's own line that starts that way
   const NC = "Not counted here yet:";
   const oi = own.findIndex(l => l.startsWith(NC));
   if (generic.length && oi >= 0) own[oi] = `${own[oi].replace(/\.$/, "")}; ${generic.join("; ")}.`;
-  const lines = [...own, ...(generic.length && oi < 0 ? [`${NC} ${generic.join("; ")}.`] : [])];
+  const lines = [...own, ...(generic.length && oi < 0 ? [`${NC} ${generic.join("; ")}.`] : []),
+    ...(hiddenG.length ? [`Not counted here yet, in people checked as hooked: ${hiddenG.join("; ")}.`] : [])];
   return lines.map(l => `<p class="gapl">${esc(l)}</p>`).join("");
 }
 // cards with their gap lines where the empty kinds would sit: who/how gaps before the first what-helps card
@@ -1051,7 +1054,7 @@ function renderReview() {
   const b = $("#rbody");
   if (st.rtab === "choices") {
     b.innerHTML = `<h2>${D.choices.length} choices. Each one becomes a rule for every page.</h2><div class="lead">The prototype already uses my recommendation for each. Pick another and every page changes at once. You won’t be asked these again.</div>` +
-      D.choices.map(c => { const cur = M.choices[c.id]?.pick; const its = c.id === "offreader" ? offItems() : null; return `<div class="ritem${cur ? " done" : ""}" data-choice-id="${c.id}"><h3>${esc(c.rule)}</h3><p class="why">${esc(its ? c.why.replace("{offShown}", its.length) : c.why)}</p>${its ? `<details><summary data-count="${its.length}">The ${its.length} cards it covers, on every page</summary>${its.map(x => `<p class="why"><b>${esc(x.tab)} ${esc(x.what)}:</b> ${esc(x.why)}</p>`).join("")}</details>${likedOff().length ? `<p class="why">These stay either way, because you liked them in version 10, with their Counted label: ${esc(likedOff().join(", "))}.</p>` : ""}${offProofs().length ? `<p class="why">Proofs that stay either way, labelled “not checked for addiction”: ${esc(offProofs().join(", "))}.</p>` : ""}` : ""}<div class="row">${c.options.map(o => `<button type="button" class="pill" data-choice="${c.id}" data-o="${o.id}" aria-pressed="${(cur || "") === o.id}">${esc(o.label)}${o.id === c.rec ? `<span class="rec">recommended</span>` : ""}</button>`).join("")}</div>${noteBox("ch-" + c.id)}</div>`; }).join("");
+      D.choices.map(c => { const cur = M.choices[c.id]?.pick; const its = c.id === "offreader" ? offItems() : null; return `<div class="ritem${cur ? " done" : ""}" data-choice-id="${c.id}"><h3>${esc(c.rule)}</h3><p class="why">${esc(its ? c.why.replace("{offShown}", its.length) : c.why)}</p>${its ? `<details><summary data-count="${its.length}">The ${its.length} cards it covers, on every page</summary>${its.map(x => `<p class="why"><b>${esc(x.tab)} ${esc(x.what)}:</b> ${esc(x.why)}</p>`).join("")}</details>${likedOff().length ? `<p class="why">These stay either way, because you liked them in version 10, with their Counted label: ${esc(likedOff().join(", "))}.</p>` : ""}${offProofs().length ? `<p class="why">Proofs that stay either way, each labelled with who was not checked: ${esc(offProofs().join(", "))}.</p>` : ""}` : ""}<div class="row">${c.options.map(o => `<button type="button" class="pill" data-choice="${c.id}" data-o="${o.id}" aria-pressed="${(cur || "") === o.id}">${esc(o.label)}${o.id === c.rec ? `<span class="rec">recommended</span>` : ""}</button>`).join("")}</div>${noteBox("ch-" + c.id)}</div>`; }).join("");
   } else if (st.rtab === "decisions") {
     b.innerHTML = `<h2>Decisions I took, each with its reason</h2><div class="lead">Veto any of them and say why; I’ll change it on every page.</div>` +
       D.decisions.map(d => { const v = M.veto[d.id]?.v; return `<div class="ritem${v === "veto" ? " vetoed" : v === "ok" ? " done" : ""}"><h3>${esc(d.title)}</h3><p>${esc(d.decision)}</p><p class="why">Why: ${esc(d.why)}</p><div class="row"><button type="button" class="pill" data-veto="${d.id}" data-v="ok" aria-pressed="${v === "ok"}">Keep</button><button type="button" class="pill veto" data-veto="${d.id}" data-v="veto" aria-pressed="${v === "veto"}">Veto</button></div>${v === "veto" || (M.notes["dec-" + d.id]?.notes || []).length ? noteBox("dec-" + d.id) : ""}</div>`; }).join("");

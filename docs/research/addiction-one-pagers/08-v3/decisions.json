@@ -25,7 +25,7 @@
   {
    "id": "counted",
    "title": "Every number says who was counted",
-   "decision": "A “Counted:” label sits on every number, in plain words, and a short Counted line under each belief proof and plan proof. Number cards about people not checked for addiction come off the pages under the recommended answer to one choice, except the ones you liked in version 10, which stay labelled; kept cards carry an amber label and never appear as a hope, who-gets-free or what-helps number. A belief or plan proof about such people stays, and its Counted line says “not checked for addiction”. A group sorted by questionnaire answers gets its own label: people whose answers showed a likely … problem.",
+   "decision": "A “Counted:” label sits on every number, in plain words, and a short Counted line under each belief proof and plan proof. Number cards about people not checked for addiction come off the pages under the recommended answer to one choice, except the ones you liked in version 10, which stay labelled; kept cards carry an amber label and never appear as a hope, who-gets-free or what-helps number. A belief or plan proof about such people stays, and its Counted line says who was not checked. A group sorted by questionnaire answers gets its own label: people whose answers showed a likely … problem.",
    "why": "Your 5 Nov note on severity. It also stops a moderation number from coming from people who were never hooked."
   },
   {
@@ -189,7 +189,7 @@
   {
    "id": "offreader",
    "rule": "Number cards about people who are not the reader: not checked as hooked (students, ordinary smokers), people never or still hooked mixed in, or cutting down instead of quitting:",
-   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason. This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says “not checked for addiction”.",
+   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason. This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says who was not checked.",
    "options": [
     {
      "id": "keep",

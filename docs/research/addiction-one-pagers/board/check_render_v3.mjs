@@ -143,7 +143,7 @@ try {
           const rep = (rest.join(";").match(/[a-z]{4,}/gi) || []).map(w => w.toLowerCase()).filter(w => lw.has(w));
           if (rep.length) FAIL(10, where, `a chip repeats “${rep[0]}”: ${c}`);
         }
-        const phrases = r.gapTexts.flatMap((t, i) => t.replace(/^Not counted here yet:\s*/, "").replace(/\.$/, "").split(/;\s*/).map(ph => [i, ph.toLowerCase().split(/\s+/).slice(0, 4).join(" ")]));
+        const phrases = r.gapTexts.flatMap((t, i) => t.replace(/^Not counted here yet(?:, in people checked as hooked)?:\s*/, "").replace(/\.$/, "").split(/;\s*/).map(ph => [i, ph.toLowerCase().split(/\s+/).slice(0, 4).join(" ")]));
         for (const [i, ph] of phrases) if (ph.split(" ").length >= 3 && r.gapTexts.some((t, j) => j !== i && t.toLowerCase().includes(ph))) { FAIL(27, where, `two gap lines say the same thing: “${ph}…”`); break; }
         if (r.averTwice.length) FAIL(10, where, `“average” said twice on one card face (headline and chip): ${r.averTwice.join(", ")}`);
         if (ver === "mix" && r.likedMissing.length) FAIL(26, where, `cards he liked in version 10 are missing on the recommended view: ${r.likedMissing.join(", ")}`);

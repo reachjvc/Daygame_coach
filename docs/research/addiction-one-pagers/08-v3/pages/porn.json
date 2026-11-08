@@ -524,6 +524,11 @@
      "quote": "Complete cessation was seen in 54% of participants at posttreatment and at least a 70% reduction was seen in 93% of participants."
     },
     "why": "r6-owner minor: the same ACT trial's 54 in 100 already shows twice on the page (How they quit card, the 35 in 100 headline). The 104-journals support line it could be swapped for is already step 3's proof, so the proof is dropped, not repeated."
+   },
+   {
+    "what": "propose on the 35 in 100 card",
+    "text": "Kept with this choice from E6: the trial's other figure counts watching far less as success. Version 10 showed that figure (74 in 100 watched far less), not this 35 in 100; you liked that card, and it now shows the men who stopped completely.",
+    "reason": "r7 verify: nothing in the off-reader choice argues against men who stopped completely; the card stays, liked, as the v10 trial card (v10 showed 74 in 100 watched far less)."
    }
   ]
  },
@@ -1424,8 +1429,6 @@
     "propose": null
    },
    "changeNoteR4": "rev5 (2026-11-08): E6 + r5-owner major: the headline leads with what the men did (stopped completely), not 'far less' as a win. | r5-owner major: big figure is the stopped-completely share; 74 in 100 'far less' moves to Measured. | r5-owner major / E6: the 74 in 100 and 'far less' sit in Measured. | Caveat no longer gives the 'cut back' shares as progress (E6); both stopped-completely figures stay.",
-   "propose": "Kept with this choice from E6: the trial's other figure counts watching far less as success. Version 10 showed that figure (74 in 100 watched far less), not this 35 in 100; you liked that card, and it now shows the men who stopped completely.",
-   "liked": true,
    "wasR5": {
     "propose": "In version 10 it counted watching less as success, the moderation angle he called dangerous on 5 Nov (E6); it now shows the stopped-completely share, which is already belief 1's proof. You liked it in version 10."
    }
