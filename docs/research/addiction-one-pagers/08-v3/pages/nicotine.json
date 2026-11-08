@@ -309,6 +309,12 @@
   "by": "data agent (rev5)",
   "note": "After gates round 5 (r5-owner, r5-rules, r5-cold-nicotine) and decisions E1–E6. Changed items: changed true, changeNote (rev5 …), old values in wasR4 by field path, previous changeNote in changeNoteR4; check pending."
  },
+ "rev6": {
+  "round": "rev6",
+  "on": "2026-11-08",
+  "by": "data agent (rev6)",
+  "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
+ },
  "numbers": [
   {
    "kind": "hope-free-now",
@@ -750,18 +756,22 @@
     },
     "changeNote": "r3 audit:rules major (rules 4 and 10): Counted now says 'not checked for addiction' (no trial in the review checked); a pooled figure, so projection:true and 'Expected' in the headline. Rule 6: the English trial's 22.0% and 15.5% written per 100 on the card. Ref and basis unchanged."
    },
-   "changeNote": "rev5 (2026-11-08): r5-cold-nicotine: the old headline did not say both work the same, so it read as 'nothing helps'. | r5-rules minor: Counted line was 15 words (SCHEMA 12); still says 'not checked', so E3 puts it in the off-reader list.",
+   "changeNote": "rev6 (2026-11-08): r6-rules minor: a real reason for the off-reader list instead of its Counted label.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[4].propose"
    },
    "wasR4": {
     "headline": "Expected off six months later: 12 in 100 who cut down first, 12 in 100 who stopped at once.",
     "counted": "smokers in quit trials who wanted to stop; not checked for addiction by a doctor"
    },
-   "changeNoteR4": "rev5 (2026-11-08): r5-cold-nicotine: the old headline did not say both work the same, so it read as 'nothing helps'."
+   "changeNoteR4": "rev5 (2026-11-08): r5-cold-nicotine: the old headline did not say both work the same, so it read as 'nothing helps'.",
+   "wasR5": {
+    "propose": null
+   },
+   "propose": "It counts smokers in quit trials, not checked for addiction (rule 2), and cutting down is the angle you called dangerous; the page's stop-at-once advice stands without it."
   },
   {
    "kind": "helps-medicine",
@@ -769,7 +779,7 @@
    "headline": "On varenicline, a prescription pill, about 23 in 100 smokers are expected to stay off six months; on a dummy, 10.",
    "mirror": "You doubt a quit pill makes any real difference.",
    "severity": "treatment",
-   "counted": "smokers in quit trials who wanted to stop",
+   "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
    "basis": {
     "design": "a review of trials; this figure combines 41 trials that split people by chance",
     "who": "adult smokers who wanted to stop; how much they smoked is not reported for this figure",
@@ -845,13 +855,19 @@
     },
     "changeNote": "r3 audit:rules major (rule 10): the 23 is the control risk times the pooled effect, so projection:true, the finding's headline and a Weak chip. Rule 3: who says the use level is not given for this figure. Quote and figures unchanged (PMC10169257 summary-of-findings table)."
    },
-   "changeNote": "D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it. r4 owner major (three chips).",
+   "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. | The off-reader list shows a real reason, not the Counted label (r6-rules minor).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
-   }
+    "notes": "checked after revision: corrections applied to numbers[5].propose"
+   },
+   "wasR5": {
+    "counted": "smokers in quit trials who wanted to stop",
+    "propose": null
+   },
+   "propose": "It counts smokers in quit-pill trials who wanted to stop; the trials did not require them to be hooked (rule 2, F2).",
+   "changeNoteR5": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list."
   },
   {
    "kind": "helps-talk",
@@ -859,7 +875,7 @@
    "headline": "One-to-one counselling: about 11 in 100 smokers expected to stay off six months, against 7 in 100 with brief advice.",
    "mirror": "You think talking to someone about smoking won't change anything.",
    "severity": "treatment",
-   "counted": "smokers in counselling trials; wanting to quit was not required",
+   "counted": "smokers in counselling trials, not checked for addiction or wish to quit",
    "basis": {
     "design": "a review of trials; this figure combines 27 trials that split people by chance",
     "who": "smokers in trials where no one was offered quit medicine (pregnant women and teen-only trials left out); across the review, 19 of 49 trials recruited hospital patients, and the review did not require people to want to quit; how much they smoked is not reported for this figure",
@@ -936,13 +952,17 @@
     },
     "changeNote": "r3 audit:rules minor (rule 3): Counted matches the who line (19 of 49 trials recruited hospital patients; wanting to quit not required). r3 audit:rules major (rule 10): both figures are worked out from the review's combined trials, so projection:true and a Weak chip; the headline already says 'expected'. Who says the use level is not given."
    },
-   "changeNote": "D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it. r4 owner major (three chips).",
+   "changeNote": "rev6 (2026-11-08): r6 build (rule 27): a real reason for the off-reader list.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
-   }
+    "notes": "checked after revision: corrections applied to numbers[6].counted"
+   },
+   "wasR5": {
+    "propose": null
+   },
+   "propose": "It counts smokers in counselling trials where wanting to quit was not required, not checked for addiction (rule 2)."
   },
   {
    "kind": "after-first-month",
@@ -1045,10 +1065,10 @@
    "headline": "Quitters rated their life and mood better than people who kept smoking, one and three years on.",
    "mirror": "You worry life will feel empty without cigarettes.",
    "severity": "treatment",
-   "counted": "smokers in a quit trial, followed three years",
+   "counted": "smokers in a quit trial; addiction scored, not required to join",
    "basis": {
     "design": "the same people followed 3 years, inside a quit-smoking trial",
-    "who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (about 58 in 100 women)",
+    "who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (about 58 in 100 women); their average score on an addiction test (Fagerström) was about 5 out of 10, middling",
     "n": "376 quitters vs 649 smokers at year 1; 359 vs 640 at year 3 (1,504 started)",
     "where": "Madison and Milwaukee, Wisconsin, US",
     "when": "joined 2005–2007, followed 3 years",
@@ -1100,17 +1120,24 @@
     },
     "changeNote": "v10 number he liked (rule 26): figure, basis facts and ref kept. Cold readers: 'held up better' was vague; headline is back to the v10 wording, which says what the abstract says (quitters rated life and mood better than people who kept smoking). A0: weak chip 5 words. Plain words: 'cohort', 'randomised', 'placebo', 'biochemical' out of basis. PubMed abstract refetched 2026-11-05: 'Compared with continuing smokers, quitters showed improved global QOL, HR-QOL, and affect at years 1 and 3'."
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds).",
+   "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. | The off-reader list shows a real reason, not the Counted label (r6-rules minor). E2: a v10 'How quitting goes' card he liked, so liked: true and it stays.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[8].basis.who"
+    "notes": "checked after revision: corrections applied to numbers[8].counted, numbers[8].propose, numbers[8].basis.who"
    },
    "timeIsResult": true,
    "wasR4": {
     "basis.who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (58.2% women)"
-   }
+   },
+   "wasR5": {
+    "counted": "smokers in a quit trial, followed three years",
+    "propose": null
+   },
+   "propose": "It counts smokers of 10 or more a day in a quit trial, who did not have to be hooked to join (rule 2, F2). You liked it in version 10.",
+   "changeNoteR5": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list.",
+   "liked": true
   },
   {
    "kind": "who-years",
@@ -1214,7 +1241,7 @@
    "headline": "With rewards for staying off, about 10 in 100 smokers are expected to be off six months later; without, 7 in 100.",
    "mirror": "You'd quit faster if something real was on the line.",
    "severity": "treatment",
-   "counted": "smokers in quit trials, rewarded for staying off",
+   "counted": "smokers in quit trials, rewarded for staying off, not checked for addiction",
    "basis": {
     "design": "a review of trials; this figure combines 39 trials that split people by chance",
     "who": "adults who smoke (not pregnant), in workplaces, clinics and communities; how much they smoked is not reported for this figure",
@@ -1286,13 +1313,19 @@
     },
     "changeNote": "Same as the r3 audit:rules major on the other what-helps cards (rule 10): its own caveat says the 10 in 100 is worked out from the combined effect, so projection:true, 'expected' in the headline and a Weak chip. Rule 3: who says the use level is not given. Figures and ref unchanged."
    },
-   "changeNote": "D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it. r4 owner major (three chips).",
+   "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. | The off-reader list shows a real reason, not the Counted label (r6-rules minor).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
-   }
+   },
+   "wasR5": {
+    "counted": "smokers in quit trials, rewarded for staying off",
+    "propose": null
+   },
+   "propose": "It counts smokers in reward trials, not checked for addiction (rule 2, F2).",
+   "changeNoteR5": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list."
   },
   {
    "kind": "after-body",
@@ -1300,7 +1333,7 @@
    "headline": "Quitters gained 4–5 kg on average in the first year.",
    "mirror": "You fear the weight will keep piling on once you quit.",
    "severity": "treatment",
-   "counted": "people who stayed quit in quit trials",
+   "counted": "people who stayed quit in quit trials, not checked for addiction",
    "basis": {
     "design": "a review combining 62 studies",
     "who": "people who stayed quit in quit-smoking trials, with or without medication; how much they smoked is not reported for this figure",
@@ -1362,7 +1395,7 @@
     },
     "changeNote": "v10 number he liked: figure, ref and basis facts kept. Rule C and cold reader v2 ('my worry is that it keeps piling on; the card doesn't say whether gain stops'): headline now gives the part of the source that answers it (the gain slowed after month 3); the monthly averages behind that go into basis.measured. Plain words: 'meta-analysis' out of basis.design. PubMed abstract refetched 2026-11-05: mean gain 2.85 kg at 3 months, 4.23 kg at 6, 4.67 kg at 12 in untreated quitters; 'most weight gain occurs within three months of quitting'."
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: a pooled mean across studies, now pooled: true (chip 'Average across studies'). r5-rules minor: % to 'N in 100' in the fold, matching the body row's 16 in 100.",
+   "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. | The off-reader list shows a real reason, not the Counted label (r6-rules minor). E2: a v10 'How quitting goes' card he liked, so liked: true and it stays.",
    "note": {
     "quote": "mean weight gain was 1.12 kg (95% confidence interval 0.76 to 1.47), 2.26 kg (1.98 to 2.54), 2.85 kg (2.42 to 3.28), 4.23 kg (3.69 to 4.77), and 4.67 kg",
     "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/"
@@ -1377,7 +1410,14 @@
    "wasR4": {
     "pooled": null,
     "basis.measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. Quitters without medication gained about 2.9 kg by month 3, 4.2 kg by month 6 and 4.7 kg by month 12. For them at 12 months, the authors estimated from the averages and spreads, not by counting people: 16% lost weight, 37% gained under 5 kg, 34% gained 5–10 kg, 13% gained over 10 kg."
-   }
+   },
+   "wasR5": {
+    "counted": "people who stayed quit in quit trials",
+    "propose": null
+   },
+   "propose": "It counts people in quit trials, not checked for addiction (rule 2, F2). You liked it in version 10.",
+   "changeNoteR5": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list.",
+   "liked": true
   },
   {
    "kind": "after-body",
@@ -1385,7 +1425,7 @@
    "headline": "Of men with erection problems who quit smoking, at least 25 in 100 improved a year later; none who kept smoking did.",
    "mirror": "You think what smoking did to your sex life won't come back.",
    "severity": "treatment",
-   "counted": "men with erection problems who asked for help to quit",
+   "counted": "men with erection problems seeking quit help, not checked for addiction",
    "basis": {
     "design": "the same men followed 1 year, not a trial",
     "who": "male smokers with erection problems and no other known cause, who asked for nicotine replacement; how much they smoked is not reported",
@@ -1448,13 +1488,20 @@
     },
     "changeNote": "r3 audit:rules major (rule 3): who says how much they smoked is not given (the abstract reports pack-years were measured, not the level). PubMed abstract refetched 2026-11-08."
    },
-   "changeNote": "r4 owner minor and rules minor (rule 12b, D7): shares as 'N in 100'; the finding's headline. Source's '> or = 25%' unchanged in the quote.",
+   "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. | The off-reader list shows a real reason, not the Counted label (r6-rules minor). E2: a v10 'How quitting goes' card he liked, so liked: true and it stays.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[12].big, numbers[12].headline"
-   }
+    "notes": "checked after revision"
+   },
+   "wasR5": {
+    "counted": "men with erection problems who asked for help to quit",
+    "propose": null
+   },
+   "propose": "It counts smokers with erection problems who asked for nicotine replacement, not checked for addiction (rule 2, F2). You liked it in version 10.",
+   "changeNoteR5": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list.",
+   "liked": true
   },
   {
    "kind": "quit-status",
@@ -1549,7 +1596,7 @@
    "headline": "Of quitters still off a year after quit day, about 90 in 100 stayed off one more year, on average.",
    "mirror": "You think even a year off won't stick.",
    "severity": "treatment",
-   "counted": "people still off a year into quit-medicine trials",
+   "counted": "people still off a year into quit-medicine trials, not checked for addiction",
    "basis": {
     "design": "a review combining 8 trials of nicotine medicines that split people by chance, followed 2 to 6 years after quit day",
     "who": "adult smokers who quit in nicotine gum, patch or nasal spray trials and were still off at one year; no trial treatment after the first year; how much they smoked is not reported for this figure",
@@ -1622,7 +1669,7 @@
     },
     "changeNote": "r3 audit:rules major (rule 10): a pooled yearly rate from a meta-analysis, so projection:true and the finding's headline. Rule 3: who says the use level is not given. Ref unchanged."
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: the review's pooled yearly rate, not worked out: projection false, pooled true, chip 'Average across studies'. Source re-fetched: 8 studies located, the pooled 10%/yr leaves one outlier out, so the headline names no trial count. Weak 'Small trials' stays.",
+   "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. | The off-reader list shows a real reason, not the Counted label (r6-rules minor).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
@@ -1634,7 +1681,13 @@
     "projection": true,
     "pooled": null,
     "headline": "Of quitters still off a year after quit day, about 90 in 100 are expected to stay off one more year."
-   }
+   },
+   "wasR5": {
+    "counted": "people still off a year into quit-medicine trials",
+    "propose": null
+   },
+   "propose": "It counts people in nicotine-medicine trials, not checked for addiction (rule 2, F2).",
+   "changeNoteR5": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list."
   }
  ],
  "beliefs": [
@@ -2089,7 +2142,7 @@
   },
   {
    "label": "Weight goes up, most of it by month 3",
-   "when": "4–5 kg by a year on average; about 16 in 100 quitters are estimated to lose weight. Measured in smokers.",
+   "when": "4–5 kg by a year, on average. Measured in smokers.",
    "s": 168,
    "e": 8760,
    "kind": "change",
@@ -2109,16 +2162,19 @@
     },
     "changeNote": "Source checker (optional, same reason as row 1) and cold reader ('16% of whom?'): says 16 in 100 quitters and that it was measured in smokers. PubMed abstract refetched 2026-11-05."
    },
-   "changeNote": "r3 audit:rules minor (rule 10): the 16 in 100 was estimated from averages and spreads, not counted, so the row says 'estimated'. PubMed abstract refetched 2026-11-08.",
+   "changeNote": "rev6 (2026-11-08): r6-rules minor (rule 12): one idea; the 16 in 100 stays in the 4–5 kg card's Measured line.",
    "note": {
     "quote": "Variation in weight change is large, with about 16% of quitters losing weight",
     "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/"
    },
    "check": {
-    "by": "revision checker b (nicotine)",
+    "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
+   },
+   "wasR5": {
+    "when": "4–5 kg by a year on average; about 16 in 100 quitters are estimated to lose weight. Measured in smokers."
    }
   },
   {
@@ -2240,7 +2296,7 @@
   },
   {
    "do": [
-    "Pick a date a few days to a few weeks out. Write it down and tell one person.",
+    "Pick a date a few days to a few weeks out. Write it down and tell one person. Already off it? Today is your date.",
     "Throw out every pack, vape and pouch the night before.",
     "For three months, nicotine is the one thing. Leave the gym, the diet and the rest of your life as they are.",
     "Treat the first two weeks as the test: not one puff.",
@@ -2310,7 +2366,10 @@
      ]
     }
    },
-   "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)"
+   "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)",
+   "wasR5": {
+    "do.0": "Pick a date a few days to a few weeks out. Write it down and tell one person."
+   }
   },
   {
    "do": [
@@ -2403,7 +2462,7 @@
     },
     "severity": "treatment",
     "projection": true,
-    "counted": "smokers in quit trials who wanted to stop",
+    "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
     "was": {
      "counted": null,
      "check": {
@@ -2421,11 +2480,14 @@
      },
      "changeNote": "r3 audit:rules major (rule 10): the 23 is worked out from the pooled effect, so 'are expected'. Rule 12: '41 trials' and the digit 6 left the line (two figures: 23 and 10); the 41 trials stay in the ref note. Severity added."
     },
-    "changeNote": "D6: plan proof carries its Counted line; projection:true already set. Text and ref unchanged.",
+    "changeNote": "rev6 (2026-11-08): F2 (r6-owner major, r6-rules major): source re-checked 2026-11-08 (Europe PMC abstract: selection by trial design or by smoking, no test for dependence), so the Counted line says 'not checked for addiction'; E3 then computes the off list. Same group as the 23 vs 10 card.",
     "check": {
      "by": "revision checker a (nicotine)",
      "on": "2026-11-08",
      "verdict": "ok"
+    },
+    "wasR5": {
+     "counted": "smokers in quit trials who wanted to stop"
     }
    },
    "was": {

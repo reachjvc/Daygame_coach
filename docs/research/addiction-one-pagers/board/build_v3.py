@@ -105,6 +105,11 @@ def share_fmt(t, raw=True):
 
 # rule 10 / E5: a pooled average of studies' rates says so with one chip
 POOLED_TEXT = re.compile(r"\baverag\w* (?:across|in the \d+)|\bpooled\b|review (?:pooling|combining)|combin\w* \d+ (?:trials|studies)", re.I)
+# F3 / rule 4: a face that sells using less ("87% less", "on fewer days") says plainly it is not stopping
+LESS = re.compile(r"\b\d+% less\b|\bfar less\b|\bless often\b|\bfewer days\b|\bon fewer\b|\bwent down\b|\b(?:drank|used|smoked|watched) less\b", re.I)
+NOT_STOP = re.compile(r"not (?:stopp?ing|quitting|stop|quit)|quitters? (?:were )?not counted|less, not none|not counted on their own", re.I)
+# a card whose group mixes drink and drugs (choice 2 names it; it sits in no other choice, D3/F5)
+MIXED = re.compile(r"\b(?:alcohol|drink\w*) or (?:other )?drugs?\b", re.I)
 # rule 12c (D7): a big figure is a result, not a time stamp ("Week 1", "72 hours", "7 days", "Years 1 and 3")
 TIME_BIG = re.compile(r"^(?:day|days|week|weeks|month|months|year|years)\b|^\d[\d–-]*\s*(?:hours?|days?|weeks?|months?|years?)$", re.I)
 # rule 12b: in the big figure itself, only a drop or rise ("87% less") stays in %
@@ -172,6 +177,14 @@ def check_number(x, page, kinds, where, general=False):
     btxt = reader_text(*(x.get("basis") or {}).values(), x.get("caveat"))
     if POOLED_TEXT.search(btxt) and not (x.get("pooled") or x.get("projection")):
         P(10, where, f"its basis says {POOLED_TEXT.search(btxt).group(0)!r}, but it is neither pooled nor a projection (one chip, E5)")
+    face = reader_text(x.get("big"), x.get("headline"))
+    if k["group"] in ("after", "helps") and LESS.search(face) and not NOT_STOP.search(reader_text(face, x.get("weak"))):
+        P(4, where, f"the face sells using less ({LESS.search(face).group(0)!r}) without saying it is not stopping (F3)")
+    if x.get("pooled") and re.search(r"averag\w*\s+across", x.get("headline", ""), re.I):
+        P(10, where, "the headline says 'average' and the chip says it again (one chip, D6)")
+    is_off = x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""), re.I)
+    if is_off and not x.get("liked") and not x.get("propose") and not general and k["pick"]:
+        P(27, where, "an off-reader card with no 'propose' reason: the review would print its label as the reason")
     if x.get("liked") and not (x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""))):
         P(28, where, "marked liked (kept against the off-reader choice) but no rule argues against it; drop 'liked'")
     if TIME_BIG.search(big) and not x.get("timeIsResult"):
@@ -355,8 +368,17 @@ def review_facts(pages, kinds_doc):
     acts = [len(st.get("do", [])) for p in pages for st in p.get("plan", [])]
     picked = {k["id"] for k in kinds if k["pick"]}
     is_off = lambda x: x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""), re.I)
-    off = sum(1 for p in pages for x in p.get("numbers", []) if is_off(x) and not x.get("liked") and x["kind"] in picked)
-    liked = [f"{p['tab'].lower()} {x['big']}" for p in pages for x in p.get("numbers", []) if is_off(x) and x.get("liked") and x["kind"] in picked]
+    mixed = lambda x: MIXED.search(x.get("counted", ""))
+    off = sum(1 for p in pages for x in p.get("numbers", []) if is_off(x) and not x.get("liked") and not mixed(x) and x["kind"] in picked)
+    liked = [f"{p['tab'].lower()} {x['big']}" for p in pages for x in p.get("numbers", []) if is_off(x) and x.get("liked") and not mixed(x) and x["kind"] in picked]
+    mixed_shown = [(p, x) for p in pages for x in p.get("numbers", []) if mixed(x) and x["kind"] in picked]
+    per_page = {}
+    for pg in pages:
+        nm = pg["id"].capitalize()
+        per_page[f"off{nm}"] = ", ".join(x["big"] for x in pg.get("numbers", []) if is_off(x) and not x.get("liked") and x["kind"] in picked) or "none"
+        per_page[f"liked{nm}"] = ", ".join(x["big"] for x in pg.get("numbers", []) if is_off(x) and x.get("liked") and x["kind"] in picked) or "none"
+    emerg = [sent for pg in pages if pg.get("footerLevel") == "danger" for sent in re.split(r"(?<=[.?])\s+", pg["footer"]["text"]) if "emergency" in sent]
+    own_pct = [f"{pg['tab'].lower()} belief {i + 1}: {m.group(0)}" for pg in pages for i, b in enumerate(pg.get("beliefs", [])) if b.get("ownWords") for m in [re.search(r"\d+(?:\.\d+)?%", b.get("proof") or "")] if m]
     return {
         "nKinds": str(len(kinds)), "nGroups": str(len(kinds_doc["groups"])),
         "nPicked": str(sum(1 for k in kinds if k["scope"] == "specific" and k["pick"])),
@@ -374,6 +396,10 @@ def review_facts(pages, kinds_doc):
         "dangerPages": " and ".join(p["tab"].lower() for p in pages if p["danger"]) or "no page",
         "noteLine": " ".join(f"On the {p['tab'].lower()} page: one small “Before you stop” line above the sources: “{p['footer']['text']}”" for p in pages if p.get("footerLevel") == "note"),
         "offCards": str(off),
+        **per_page,
+        "mixedLine": " ".join(f"{p['tab']} “{x['big']}” mixes drink and drugs too; it stays because you liked it in version 10." if x.get("liked") else f"{p['tab']} “{x['big']}” mixes drink and drugs too and follows this choice." for p, x in mixed_shown),
+        "emergencyLine": " ".join(re.sub(r"\s*\[[\d,]+\]", "", e) for e in emerg) or "none",
+        "ownWordsPct": f", except where your own kept sentences use % ({'; '.join(own_pct)})" if own_pct else "",
         "nLiked": str(len(liked)), "likedCards": ", ".join(liked) or "none",
         "likedLine": f"The ones you liked in version 10 stay either way: {', '.join(liked)}." if liked else "",
     }
@@ -409,6 +435,10 @@ def check_asserts(decisions, pages, kinds):
                         P(28, w, f"says every {pid} card carries a Weak label, but {x.get('big')!r} has none")
             if "dangerPages" in a and sorted(a["dangerPages"]) != sorted(p["id"] for p in pages if p["danger"]):
                 P(28, w, f"names danger pages {a['dangerPages']}, the pages say {[p['id'] for p in pages if p['danger']]}")
+            if a.get("noHeroLine"):
+                for pg in pages:
+                    if pg.get("heroLine") and not any(x["kind"] in ("hope-free-now", "hope-lifetime") for x in pg.get("numbers", [])):
+                        P(28, w, f"says a page with no hope number opens straight on the beliefs, but {pg['id']} has a heroLine")
             if "maxChoices" in a and len(decisions.get("choices", [])) > a["maxChoices"]:
                 P(27, w, f"{len(decisions['choices'])} choices ({a['maxChoices']} max)")
             if "rec" in a:
@@ -596,6 +626,10 @@ def main():
             lint(fp.get("text", ""), pid, f"{pid} footer")
             page["footer"] = {k: fp[k] for k in ("text", "refs")}
             page["footerLevel"] = "danger" if page["danger"] else "note"
+        # F1: a body-row line that says the footer counts a sign "at any time" needs a footer with no qualifier
+        em = " ".join(t for t in re.split(r"(?<=[.?])\s+", (page.get("footer") or {}).get("text", "")) if "emergency" in t)
+        if any("at any time" in (w.get("caption") or "") for w in page["windows"]) and re.search(r"sharply|heavily|if you", em):
+            P(5, f"{pid} footer", f"a body row says the footer calls it an emergency at any time, but the footer's line has a qualifier: {em[:120]!r}")
         number_sources(page, {**{r["id"]: r for r in research[pid]["refs"]}, **extra}, kinds)
         ff = V3 / "felt" / f"{pid}.json"
         if ff.exists():

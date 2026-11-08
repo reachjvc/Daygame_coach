@@ -1,0 +1,40 @@
+{
+ "id": "porn",
+ "round": "rev6",
+ "by": "independent source checker a (rev6)",
+ "on": "2026-11-08",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "40 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Kraus, Martino, Potenza 2016 full text (PMC5387768) re-read: 186 treatment-interested men; group (a) 'treatment-interested men with hypersexuality (n = 132)', HBI cutoff >= 53 'indicating the presence of a possible HD'. So '132 of the 186 scored at or above a checklist line' is exact, and 'not checked by a doctor' is exact (no diagnosis). Same label as belief 4 now. Self-hooked key word 'said' passes the build regex. Table quote unchanged (40.3%)."
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "35 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Liked reason now says v10 showed 74 in 100 watched far less, not this 35 in 100. Crosby & Twohig 2016 quote unchanged."
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "One quick look won't hurt (Counted)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Counted 'men who said they wanted porn help, not checked by a doctor' = numbers[1] label; keeps the D1 'not checked' words on the Counted line, not in the proof. 46.2% cut-back figure matches Table 1."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 proof dropped",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "proof null; old proof kept in proofR5 and in notUsed.other with a reason (54 in 100 already shown twice). The 104-journals line it names is plan[2]'s proof, as the reason says."
+  }
+ ]
+}

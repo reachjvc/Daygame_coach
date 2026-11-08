@@ -1,0 +1,120 @@
+{
+ "id": "alcohol",
+ "round": "rev6",
+ "by": "independent source checker a (rev6)",
+ "on": "2026-11-08",
+ "checked": [
+  {
+   "where": "footer",
+   "index": null,
+   "path": "footerProposal",
+   "label": "Before you stop footer (F1 emergency line)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "F1 sentence matches the brief word for word; no qualifier left in the emergency sentence ('sharply' only in the doctor sentence, D10). NHS alcohol-use-disorder re-read 2026-11-08: 999 list is 'shaking visibly', 'being unusually restless, irritable or upset', 'confusion', 'seeing, hearing, or feeling things that are not there', 'having a seizure'. Footer covers 4 of 5; 'feeling things' and 'unusually restless' are not in it. Not a read-out qualifier, so ok; the main session may add them if length allows. NHS says 'after stopping'; the footer's 'or cut down' is wider, which is the safe side (NHS symptoms section: 'If you stop drinking or cut down')."
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "About 91 in 100",
+   "verdict": "fix",
+   "problems": [
+    "Measured line says 'belief 1 quotes the same 90.6 in his own words': 'his' has no referent for a reader and is a process note (whose words?)."
+   ],
+   "fix": {
+    "numbers[1].basis.measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100. The study gives 90.6 in 100, shown here as about 91; the first belief below uses the same 90.6%."
+   },
+   "notes": "Figure, group and quote unchanged and confirmed earlier (Lopez-Quintero 2011, 90.6% for alcohol)."
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "44 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Pointer now names all three footer signs and says 'now'; 'Don't stop alone' is safe. Figure unchanged."
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "25 in 100 (was 87% less)",
+   "verdict": "fix",
+   "problems": [
+    "Source confirmed: Miller, Walters, Bennett 2001 abstract (Europe PMC, PMID 11327187, re-read 2026-11-08): 'During the year after treatment, 1 in 4 clients remained continuously abstinent on average, and an additional 1 in 10 used alcohol moderately and without problems.' quotesMore is word for word and 12 words. Group: clients treated for alcoholism, 'broadly defined as alcohol use disorders' (treatment tag right). Timing: the year after treatment. 'Did not drink at all' = continuously abstinent; the average is carried by the chip (pooled). Headline is not more hopeful than the source.",
+    "Mirror no longer fits the face: 'You drank again after a few weeks and think the whole try is wasted' was answered by the old 87%-less face. The new face says 25 in 100 stayed off; a man who drank again is in the other 75, so the face now confirms his fear rather than answering it. The answer for him (drank on 1 day in 4, 87% less) is in the fold only, by design (F3).",
+    "Rule 10: '3 days in 4' and '87% less' are now said twice (Measured and caveat)."
+   ],
+   "fix": {
+    "numbers[7].mirror": "You think almost nobody stays off drink for a whole year after getting help.",
+    "numbers[7].basis.measured": "Drinking in the 12 months after treatment, averaged across the studies: 25 in 100 didn't drink at all, and another 10 in 100 drank moderately without problems. Some results were estimated with formulas because the studies measured different things."
+   },
+   "notes": "Caveat keeps '3 days in 4' and '87% less' once, told as not the result, then the 7 vs 27 pointer: F3 met. If the main session prefers to keep the mirror, the owner's own r6 fix ('the rest drank on far fewer days') is the alternative, but the rules gate wanted the face to be non-drinking only."
+  },
+  {
+   "where": "numbers",
+   "index": 16,
+   "label": "2–7 days",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Pointer names the footer's signs and says 'now'; 'after you stop or cut back' is wider than the footer's 'in the morning until you drink', which is safe. Mirijello 2015 quote unchanged."
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "Stopping will be hell (test)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Full footer signs, 'Skip the dry evening and read Before you stop now'. No drink-delay drill for a heavy daily drinker. Brown & Schuckit 1988 proof unchanged."
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "I need a drink to unwind (test)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "He now skips the dry night if any sign applies; 'now'. Brower 2001 proof unchanged."
+  },
+  {
+   "where": "windows",
+   "index": 1,
+   "label": "Seizure risk row",
+   "verdict": "fix",
+   "problems": [
+    "F1: pointers name the footer's signs. The 'when' is fixed ('now'), but the row label the changeNote relies on names only part of them: 'shake in the morning' (not sweaty or sick) and 'had one before' (a seizure, not the DTs)."
+   ],
+   "fix": {
+    "windows[1].label": "Seizure risk, if you drink heavily every day, are shaky, sweaty or sick in the morning, or had a seizure or the DTs before"
+   },
+   "notes": "If the label is too long for the chart, keep the label and change the when to: '8–48 hours, highest around hour 24. Drinking heavily every day, shaky, sweaty or sick in the morning, or had a seizure or the DTs before? Read Before you stop now'."
+  },
+  {
+   "where": "windows",
+   "index": 2,
+   "label": "DTs row caption",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "'the footer counts it as an emergency on its own' is now true: the footer lists 'seeing or hearing things' alone, with no qualifier."
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "Step 3 do (Already off it?)",
+   "verdict": "fix",
+   "problems": [
+    "do[2] 'Tell one person the date. Already off it? Today is your date.' is right (F1).",
+    "do[0] (not changed this round, but the same F1 sign list) says 'shaky or sick in the morning', leaving out 'sweaty', which the footer, the cards and the belief tests now all include."
+   ],
+   "fix": {
+    "plan[2].do[0]": "Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? See a doctor before you set the date, and stop with them, not alone."
+   }
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 proof (36 vs 23 in 100)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Mann, Lehert, Morgan 2004 abstract re-read 2026-11-08: 17 RCTs, 4,087 people, 'Continuous abstinence rates at 6 months ... acamprosate, 36.1%; placebo, 23.4%'; conclusion names 'recently detoxified, alcohol-dependent individuals'. 'On average across trials after detox', 'fully off drink' (continuous abstinence) and 'six months' all match. Quote word for word."
+  }
+ ]
+}

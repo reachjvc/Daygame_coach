@@ -354,7 +354,7 @@
   }
  ],
  "footerProposal": {
-  "text": "Drinking heavily every day (UK doctors draw the line at about 15 units a day: 8 to 9 US drinks, 5 to 7 pints of beer, or 1.5 bottles of wine), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut back sharply is an emergency: call an ambulance.",
+  "text": "Drinking heavily every day (UK doctors draw the line at about 15 units a day: 8 to 9 US drinks, 5 to 7 pints of beer, or 1.5 bottles of wine), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut down is an emergency: call an ambulance.",
   "refs": [
    "r1",
    "r3",
@@ -385,14 +385,24 @@
     "note": "read 2026-11-08, recommendation 1.3.4.1; research file ref r3. 15 UK units = 120 g of alcohol, about 6 to 7 pints of 4% beer"
    }
   ],
-  "changeNote": "rev4 (2026-11-08): Safety r4 (D10): emergency line counts cutting back sharply too (ASAM: withdrawal comes when drinking stops or drops); amount line adds US drinks and wine ('1.5 bottles', not the audit's 'a bottle and a half': that 8-word run matches a harvested forum post, rule 30) (15 units = 120 g = about 8.6 US drinks of 14 g; a 75 cl bottle of 13% wine is about 9.75 units). Same place, same size, same refs. Previous: Drinking heavily every day (UK doctors draw the line at about 15 units a day, 5 to 7 pints of beer depending on strength), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop drinking is an emergency: call an ambulance. | earlier: rev3 (2026-11-08): safety audit r3 major: the emergency line must count any one sign alone, as NHS does (shaking visibly, confusion, seeing or hearing things, a seizure); now 'visible shaking' and 'seeing or hearing things' each stand alone, cited to NHS (r19). Safety audit r3 minor: 'heavily every day' now has an amount (NICE CG115, r3: over 15 units a day) and the morning signs NHS lists (r20). Same place, same size (rule 5). Previous text: Drinking heavily every day, get the shakes when you stop, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. Any one of these after stopping is an emergency, call an ambulance: a seizure, severe shaking, confusion, or seeing or hearing things.",
-  "changed": true
+  "changeNote": "rev6 (2026-11-08): F1 (r6-rules blocker): the emergency sentence loses 'sharply', so no reader can read himself out; the doctor sentence keeps 'stop or cut back sharply' (D10). Same NHS sources (999 list: shaking visibly, confusion, seeing or hearing things, seizure).",
+  "changed": true,
+  "wasR5": {
+   "text": "Drinking heavily every day (UK doctors draw the line at about 15 units a day: 8 to 9 US drinks, 5 to 7 pints of beer, or 1.5 bottles of wine), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut back sharply is an emergency: call an ambulance."
+  },
+  "changeNoteR5": "rev4 (2026-11-08): Safety r4 (D10): emergency line counts cutting back sharply too (ASAM: withdrawal comes when drinking stops or drops); amount line adds US drinks and wine ('1.5 bottles', not the audit's 'a bottle and a half': that 8-word run matches a harvested forum post, rule 30) (15 units = 120 g = about 8.6 US drinks of 14 g; a 75 cl bottle of 13% wine is about 9.75 units). Same place, same size, same refs. Previous: Drinking heavily every day (UK doctors draw the line at about 15 units a day, 5 to 7 pints of beer depending on strength), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop drinking is an emergency: call an ambulance. | earlier: rev3 (2026-11-08): safety audit r3 major: the emergency line must count any one sign alone, as NHS does (shaking visibly, confusion, seeing or hearing things, a seizure); now 'visible shaking' and 'seeing or hearing things' each stand alone, cited to NHS (r19). Safety audit r3 minor: 'heavily every day' now has an amount (NICE CG115, r3: over 15 units a day) and the morning signs NHS lists (r20). Same place, same size (rule 5). Previous text: Drinking heavily every day, get the shakes when you stop, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. Any one of these after stopping is an emergency, call an ambulance: a seizure, severe shaking, confusion, or seeing or hearing things."
  },
  "rev5": {
   "round": "rev5",
   "on": "2026-11-08",
   "by": "data agent (rev5)",
   "note": "After gates round 5 (r5-owner, r5-rules, r5-cold-nicotine) and decisions E1–E6. Changed items: changed true, changeNote (rev5 …), old values in wasR4 by field path, previous changeNote in changeNoteR4; check pending."
+ },
+ "rev6": {
+  "round": "rev6",
+  "on": "2026-11-08",
+  "by": "data agent (rev6)",
+  "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
  },
  "numbers": [
   {
@@ -446,7 +456,7 @@
     "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had already got free",
     "where": "US",
     "when": "2001–2002",
-    "measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100."
+    "measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100. The study gives 90.6 in 100, shown here as about 91; the first belief below uses the same figure."
    },
    "caveat": "A model, not a head count. The authors say people over-reporting that they got free, and people the survey missed (in prison, in hospital, or worse), likely push it too high; recalled ages can also be wrong. Men got free less often than women.",
    "projection": true,
@@ -464,12 +474,15 @@
     "by": "revision checker a (alcohol)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[1].basis.measured"
    },
-   "changeNote": "rev4 (2026-11-08): Weak chip 'Projection, likely runs high' to 'Likely runs high' (D6: the projection is said once, by the projection chip). Measured share as 'N in 100'. basis.who: use level (rule 3). | earlier: rev2: Weak chip cut to 4 words (task A0); the longer reason (over-reporting and people the survey missed push it too high) is already in the caveat. Figure, headline, mirror, basis and quote unchanged; quote re-read in the full text.",
+   "changeNote": "rev6 (2026-11-08): r6 brief: belief 1 (his own words, kept) says 90.6% next to the hero's 'About 91 in 100'; the hero fold now says one rounds to the other.",
    "revNotes": [
     "main session fix 2026-11-08 after rev3 build: rule 12b: 90.6% written as about 91 in 100 (90.6% stays in the quote)"
-   ]
+   ],
+   "wasR5": {
+    "basis.measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100."
+   }
   },
   {
    "kind": "who-years",
@@ -594,7 +607,7 @@
     "when": "July–August 2016",
     "measured": "Ever used, at any point: mutual-help groups (such as AA), treatment, anti-craving or anti-relapse medicine, or recovery services such as sober living. 55.9 in 100 of the alcohol group had used at least one, so about 44 in 100 used none."
    },
-   "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Drinking heavily every day? Read Before you stop first: stopping alone can be dangerous.",
+   "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Don't stop alone: read Before you stop now.",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -612,8 +625,11 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): basis.n: the same alcohol-group figure as Age 38 and 2 tries (rules r4 minor). The Before you stop pointer in the caveat stays (D5). | earlier: rev3 (2026-11-08): basis.who: use level added (rule 3; the survey gives none). Nothing else changed. | earlier: rev2: Weak: the same short National Recovery Survey chip (owner-lens v1 and v2: the weed page marked the same survey weak, alcohol did not); the long reason is in the caveat. Caveat ends with one pointer to Before you stop (safety audit: the going-alone card never tied back to the seizure line). Figure, headline, mirror and quote unchanged.",
-   "editNote": "2026-11-06: wording edit after gates round 2 (meaning and source unchanged)"
+   "changeNote": "rev6 (2026-11-08): F1 + r6-rules minor (safety): 'first' read as 'then stop alone'; now 'now', with the footer's signs.",
+   "editNote": "2026-11-06: wording edit after gates round 2 (meaning and source unchanged)",
+   "wasR5": {
+    "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Drinking heavily every day? Read Before you stop first: stopping alone can be dangerous."
+   }
   },
   {
    "kind": "how-tries",
@@ -652,9 +668,9 @@
   },
   {
    "kind": "after-lasting",
-   "big": "87% less",
-   "headline": "In the year after treatment for a drinking problem, those who still had problems drank 87% less alcohol than before, on average.",
-   "mirror": "You drank again after a few weeks and think the whole try is wasted.",
+   "big": "25 in 100",
+   "headline": "In the year after treatment for a drinking problem, 25 in 100 did not drink at all.",
+   "mirror": "You think almost nobody stays off drink for a whole year after getting help.",
    "severity": "treatment",
    "counted": "people treated for a drinking problem",
    "basis": {
@@ -663,9 +679,9 @@
     "n": "Seven large studies run at many US treatment sites; no head count is stated.",
     "where": "US",
     "when": "studies published before 2001; review published 2001",
-    "measured": "Drinking in the 12 months after treatment, averaged across the studies: 25 in 100 didn't drink at all, another 10 in 100 drank moderately without problems, and the rest, as a group, didn't drink on 3 days in 4 and drank 87% less. Some results were estimated with formulas because the studies measured different things."
+    "measured": "Drinking in the 12 months after treatment, averaged across the studies: 25 in 100 didn't drink at all, and another 10 in 100 drank moderately without problems. Some results were estimated with formulas because the studies measured different things."
    },
-   "caveat": "An average for a group, not a promise for one person. It does not show when slips happened. Some results were estimated from other measures, because the studies measured different things. The 10 in 100 who drank moderately were people treated for any drinking problem, mild ones included; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
+   "caveat": "The rest drank less, which this card does not count as the result: as a group they went without drink on 3 days in 4 and drank 87% less. An average for a group, not a promise for one person. It does not show when slips happened. The 10 in 100 who drank moderately were people treated for any drinking problem, mild ones included; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
    "projection": false,
    "weak": "Some results estimated, no head count",
    "ref": {
@@ -674,21 +690,30 @@
     "pmid": "11327187",
     "fetched": true,
     "quote": "The remaining clients, as a group, showed substantial improvement, abstaining on 3 days out of 4 and reducing their overall alcohol consumption by 87%, on average.",
-    "via": "re-read 2026-11-05 rev2 (Europe PMC abstract): 'During the year after treatment, 1 in 4 clients remained continuously abstinent'"
+    "via": "re-read 2026-11-05 rev2 (Europe PMC abstract): 'During the year after treatment, 1 in 4 clients remained continuously abstinent'",
+    "quotesMore": [
+     "During the year after treatment, 1 in 4 clients remained continuously abstinent on average"
+    ]
    },
    "origin": "new",
    "check": {
     "by": "revision checker a (alcohol)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[7].mirror, numbers[7].basis.measured"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: an average across seven studies, now pooled: true, so it shows the one chip 'Average across studies'; Weak names the estimating instead.",
+   "changeNote": "rev6 (2026-11-08): F3 + r6-rules major (safety) + r6-owner minor: the face leads with not drinking; 87% less (drinking less) moves to the fold, as porn 74 in 100 did (E6). | F3: headline says what a quitter needs (did not drink at all; the chip says it is an average); source quote unchanged, the 25 in 100 is in its Measured line. | r6-rules minor (rule 10): said three times; Measured and Weak keep it. | F3: the reduction is told plainly as not the result, before the 7 vs 27 pointer the caveat already ends with. | Quote check: the abstract's 'During the year after treatment, 1 in 4 clients remained continuously abstinent on average' is added to quotesMore (re-read 2026-11-08 Europe PMC, PMID 11327187).",
    "pooled": true,
    "wasR4": {
     "pooled": null,
     "weak": "No head count stated"
-   }
+   },
+   "wasR5": {
+    "big": "87% less",
+    "headline": "In the year after treatment for a drinking problem, those who still had problems drank 87% less alcohol than before, on average.",
+    "caveat": "An average for a group, not a promise for one person. It does not show when slips happened. The 10 in 100 who drank moderately were people treated for any drinking problem, mild ones included; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card)."
+   },
+   "changeNoteR5": "rev6 (2026-11-08): F3 + r6-rules major (safety) + r6-owner minor: the face leads with not drinking; 87% less (drinking less) moves to the fold, as porn 74 in 100 did (E6). | F3: headline says what a quitter needs (did not drink at all; the chip says it is an average); source quote unchanged, the 25 in 100 is in its Measured line. | r6-rules minor (rule 10): said three times; Measured and Weak keep it."
   },
   {
    "kind": "helps-stop-vs-cut",
@@ -1017,7 +1042,7 @@
     "when": "published 2015",
     "measured": "Up to half of patients with a drinking problem get withdrawal symptoms. Whether withdrawal comes on when drinking stops or drops, and how long the milder form lasts: shakes, nausea, anxiety and low mood. It usually starts 6–24 hours after the last drink."
    },
-   "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. Shaky after you stop or cut back? Read Before you stop now.",
+   "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. Shaky, sweaty or sick after you stop or cut back, drinking heavily every day, or had a seizure or the DTs before? Read Before you stop now.",
    "projection": false,
    "weak": "Rough figure, not a count",
    "ref": {
@@ -1029,7 +1054,7 @@
     "via": "re-read 2026-11-05 rev2 (NCBI full text of the author manuscript)"
    },
    "origin": "new (kind how-withdrawal, picked after the first review)",
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (safety): covers cutting back, as the Measured line and the footer do; 'now', not 'first' after the fact.",
+   "changeNote": "rev6 (2026-11-08): F1: the pointer names the footer's signs.",
    "check": {
     "by": "revision checker a (alcohol)",
     "on": "2026-11-08",
@@ -1040,6 +1065,9 @@
    "timeIsResult": true,
    "wasR4": {
     "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. If you get the shakes when you stop, read Before you stop first."
+   },
+   "wasR5": {
+    "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. Shaky after you stop or cut back? Read Before you stop now."
    }
   },
   {
@@ -1146,7 +1174,7 @@
    "kind": "hard",
    "limiting": "Stopping will be hell. I won’t get through it.",
    "counterpart": "I’ve got through hard weeks before. This is a few hard weeks, not a hard life.",
-   "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day? Skip the dry evening and read Before you stop. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on.",
+   "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the dry evening and read Before you stop now. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on.",
    "proof": "In a study of men in hospital treatment for drinking, with no earlier major mental illness, low mood lifted fast once they stopped; the biggest lift came in week 2.",
    "severity": "treatment",
    "refs": [
@@ -1173,16 +1201,19 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (safety): 'first' let a heavy daily drinker do the dry evening after reading; now he skips it. Two branches kept (D5).",
+   "changeNote": "rev6 (2026-11-08): F1 + r6-rules minor (safety): the footer's full signs, not only heavy daily drinking; 'now'.",
    "wasR4": {
     "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day? Read Before you stop first. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on."
+   },
+   "wasR5": {
+    "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day? Skip the dry evening and read Before you stop. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on."
    }
   },
   {
    "kind": "need",
    "limiting": "I need a drink to unwind after work.",
    "counterpart": "Drinking takes the edge off for a while. It takes my sleep, and sleep is what would unwind me.",
-   "test": "Still drinking? Drinking heavily every day? Read Before you stop before any night without drink. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank.",
+   "test": "Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the night without drink and read Before you stop now. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank.",
    "proof": "In sleep-lab studies of men treated for alcoholism, drink did not reliably help them sleep: while drinking, they often took longer to fall asleep and slept less.",
    "severity": "treatment",
    "refs": [
@@ -1214,9 +1245,12 @@
     "by": "revision checker a (alcohol)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to beliefs[3].test"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): Test: the owner-lens r4 wording (watch sleep, compare a drinking night with one without), in two branches with a short Before you stop pointer (D5). No drink is cut down for the test. Proof unchanged. | earlier: rev3 (2026-11-08): Test: safety audit r3 (it assumed he drinks that night) and owner-lens r3 (skipping the last drink is a cut-down drill): now no drink is cut down. A daily drinker watches his drinking nights' sleep and sees the doctor first; others take the whole night off; someone already off it tests the phone part (brief rule 4). Proof and refs unchanged. | earlier: rev2: Test: owner-lens critics (v1 and v2) said the old test never changed the drinking, so it did not test 'drink takes my sleep'; now it skips the last drink before bed (the task's example), which is not a heavy daily drinker stopping. Proof: '(review)' out (owner-lens v1 and v2); 'in withdrawal' dropped, since the sleep action in plan step 2 and the timeline say sleep is light at first (cold reader: it blurred the point). Old proof: 'In sleep-lab studies of men in treatment for alcoholism, drink did not reliably help them sleep. In most of these studies, they took longer to fall asleep and slept less, both on drinking nights and in withdrawal (review).'. Same source, all three quotes: 'During both drinking periods and withdrawal, alcoholics commonly experience problems falling asleep and decreased total sleep time.'"
+   "changeNote": "rev6 (2026-11-08): F1 + r6-rules minor (safety): 'before' implied he could do the dry night once he had read it; now he skips it.",
+   "wasR5": {
+    "test": "Still drinking? Drinking heavily every day? Read Before you stop before any night without drink. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank."
+   }
   },
   {
    "kind": "moderation",
@@ -1274,8 +1308,8 @@
    }
   },
   {
-   "label": "Seizure risk, if you drink heavily every day, shake in the morning, or had one before",
-   "when": "8–48 hours, highest around hour 24; see Before you stop",
+   "label": "Seizure risk, if you drink heavily every day, are shaky, sweaty or sick in the morning, or had a seizure or the DTs before",
+   "when": "8–48 hours, highest around hour 24; read Before you stop now",
    "s": 8,
    "pk": 24,
    "e": 48,
@@ -1283,12 +1317,15 @@
    "refs": [
     "r1"
    ],
-   "changeNote": "rev3 (2026-11-08): Safety audit r3: a binge drinker with an earlier seizure or the DTs, or a man with morning shakes, read himself out of 'if you drank heavily every day'; the row now names them and points to the footer (the timeline must stand on its own). Start, peak, end and ref unchanged.",
+   "changeNote": "rev6 (2026-11-08): F1: every pointer says 'now'; the row label already names the signs.",
    "check": {
-    "by": "revision checker b (alcohol)",
+    "by": "revision checker a (alcohol)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to windows[1].label"
+   },
+   "wasR5": {
+    "when": "8–48 hours, highest around hour 24; see Before you stop"
    }
   },
   {
@@ -1302,7 +1339,7 @@
     "r1",
     "r18"
    ],
-   "changeNote": "rev5 (2026-11-08): r5-rules major (rule 25): a reader line in 'note' was stripped before render; now 'caption', which the template renders.",
+   "changeNote": "rev6 (2026-11-08): F1: matches the footer, which no longer has a qualifier and does not say 'at any time'.",
    "check": {
     "by": "revision checker a (alcohol)",
     "on": "2026-11-08",
@@ -1312,7 +1349,10 @@
    "wasR4": {
     "note": "About 5 in 100 people with withdrawal get the DTs. Seeing or hearing things alone, without the confusion, can start at hour 12; the footer calls it an emergency at any time."
    },
-   "caption": "About 5 in 100 people with withdrawal get the DTs. Seeing or hearing things alone, without the confusion, can start at hour 12; the footer calls it an emergency at any time."
+   "caption": "About 5 in 100 people with withdrawal get the DTs. Seeing or hearing things alone, without the confusion, can start at hour 12; the footer counts it as an emergency on its own.",
+   "wasR5": {
+    "caption": "About 5 in 100 people with withdrawal get the DTs. Seeing or hearing things alone, without the confusion, can start at hour 12; the footer calls it an emergency at any time."
+   }
   },
   {
    "label": "Irritable, anxious, poor sleep",
@@ -1411,9 +1451,9 @@
   },
   {
    "do": [
-    "Drinking heavily every day, shaky or sick in the morning until you drink, or had a seizure or the DTs before? See a doctor before you set the date, and stop with them, not alone.",
+    "Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? See a doctor before you set the date, and stop with them, not alone.",
     "Clear the house of drink the day before.",
-    "Tell one person the date.",
+    "Tell one person the date. Already off it? Today is your date.",
     "Plan every Friday for the first two months: where you’ll be, and what you’ll drink instead.",
     "One thing only: no new diet and no other big change for these three months. A walk or a workout as a swap is fine.",
     "Slip? Don’t wait for Monday, and don’t go back to days of normal drinking: the same day, ask what that drink gave you."
@@ -1481,7 +1521,10 @@
      "i": 0
     }
    ],
-   "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)"
+   "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)",
+   "wasR5": {
+    "do.2": "Tell one person the date."
+   }
   },
   {
    "do": [
@@ -1502,7 +1545,7 @@
     "Slipped more than once? Add one kind of help you haven’t tried, and ask step 1’s questions again the same day, not after days of normal drinking."
    ],
    "proof": {
-    "text": "In trials after detox, 36 in 100 people hooked on alcohol stayed fully off drink for months on acamprosate; 23 in 100 on a dummy pill.",
+    "text": "On average across trials after detox, 36 in 100 people hooked on alcohol stayed fully off drink for six months on acamprosate; 23 in 100 on a dummy pill.",
     "ref": {
      "cite": "Mann K, Lehert P, Morgan MY (2004). The efficacy of acamprosate in the maintenance of abstinence in alcohol-dependent individuals: results of a meta-analysis. Alcoholism: Clinical and Experimental Research 28(1):51-63.",
      "url": "https://pubmed.ncbi.nlm.nih.gov/14745302/",
@@ -1520,12 +1563,15 @@
      "via": "re-read 2026-11-05 rev2 (JAMA full text, subgroup analysis); the card's alsoRef keeps the NNT quote"
     },
     "check": {
-     "by": "revision checker b (alcohol)",
+     "by": "revision checker a (alcohol)",
      "on": "2026-11-08",
      "verdict": "ok"
     },
     "severity": "treatment",
-    "changeNote": "rev3 (2026-11-08): Owner-lens r3 blocker and rules audit (rule 12): the doubt sentence and 'some reported by its maker' left the line; both stay on the 36 vs 23 card (weak chip and caveat), and the alsoRef stays. Severity added (treatment, as on the card). Same source and figures. 'for six months' left the line (rule 12, number words counted); the card's Measured keeps it."
+    "changeNote": "rev6 (2026-11-08): r6-rules minor: a pooled average read as a head count, and 'for months' blurred the card's 6 months.",
+    "wasR5": {
+     "text": "In trials after detox, 36 in 100 people hooked on alcohol stayed fully off drink for months on acamprosate; 23 in 100 on a dummy pill."
+    }
    },
    "doRefs": [
     {

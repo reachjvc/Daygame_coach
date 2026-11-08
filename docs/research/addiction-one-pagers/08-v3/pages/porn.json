@@ -512,6 +512,18 @@
      ]
     },
     "why": "r5-owner minor: a raw count on the face (rule 12b), it mixes in sex (rule 13), its Counted line did not match, and it does not back up step 1. Dropped; the 104-journals line it could be swapped for already stands as belief 3's proof, so it is not repeated."
+   },
+   {
+    "from": "08-v3 plan step 5 proof (rev5)",
+    "text": "At the end of a course of ACT, a talk therapy, 54 in 100 men in a small US trial had stopped porn completely.",
+    "ref": {
+     "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
+     "pmid": "27157029",
+     "fetched": true,
+     "quote": "Complete cessation was seen in 54% of participants at posttreatment and at least a 70% reduction was seen in 93% of participants."
+    },
+    "why": "r6-owner minor: the same ACT trial's 54 in 100 already shows twice on the page (How they quit card, the 35 in 100 headline). The 104-journals support line it could be swapped for is already step 3's proof, so the proof is dropped, not repeated."
    }
   ]
  },
@@ -573,6 +585,12 @@
   "on": "2026-11-08",
   "by": "data agent (rev5)",
   "note": "After gates round 5 (r5-owner, r5-rules, r5-cold-nicotine) and decisions E1–E6. Changed items: changed true, changeNote (rev5 …), old values in wasR4 by field path, previous changeNote in changeNoteR4; check pending."
+ },
+ "rev6": {
+  "round": "rev6",
+  "on": "2026-11-08",
+  "by": "data agent (rev6)",
+  "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
  },
  "numbers": [
   {
@@ -687,7 +705,7 @@
    "headline": "Of men who wanted help for their porn use, 40 in 100 had already tried to quit completely four or more times.",
    "mirror": "You’ve tried four times and think nobody fails that often.",
    "severity": "self-hooked",
-   "counted": "men who said they wanted help for porn, not in treatment",
+   "counted": "men who said they wanted porn help, not checked by a doctor",
    "basis": {
     "design": "online survey",
     "who": "men who watch porn and said they wanted help for it, found mostly through Craigslist ads; average age 33; 132 of the 186 scored at or above a checklist line for likely out-of-control sexual behaviour; about 80 in 100 of all men surveyed watched at least weekly",
@@ -714,7 +732,7 @@
     "mirror": "You've tried to quit four times and think a fifth is pointless.",
     "weak": "It counts tries so far by men still struggling, not the tries it took men who got free; no porn study counts those."
    },
-   "changeNote": "D1: severity self-hooked stands (men who said they wanted help, a non-treatment sample); counted label already says so. Rule 12b in the fold: 'about 8 in 10' and '6%' written as N in 100. Full text re-fetched (NCBI efetch) 2026-11-08.",
+   "changeNote": "rev6 (2026-11-08): r6-owner + r6-rules minor: one label for the same 186 men (Kraus 2016) as belief 4; 132 of 186 scored above a checklist line, so 'by a doctor' is exact. | Now in the off-reader list (owner: let it, the list is computed); a real reason shown.",
    "check": {
     "by": "revision checker a (porn)",
     "on": "2026-11-08",
@@ -760,7 +778,13 @@
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision: corrections applied to numbers[1].severity, numbers[1].counted"
-   }
+   },
+   "wasR5": {
+    "counted": "men who said they wanted help for porn, not in treatment",
+    "propose": null
+   },
+   "propose": "It counts men who said they wanted help, not checked by a doctor (rule 2, F2); most scored above a checklist line, but none were diagnosed.",
+   "changeNoteR5": "rev6 (2026-11-08): r6-owner + r6-rules minor: one label for the same 186 men (Kraus 2016) as belief 4; 132 of 186 scored above a checklist line, so 'by a doctor' is exact."
   },
   {
    "kind": "how-with-help",
@@ -1327,7 +1351,7 @@
     "quote": "At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% of participants showing at least 70% reduction in viewing."
    },
    "origin": "07-mirror-stats/porn.json after '74%' (v10 'How quitting goes')",
-   "changeNote": "rev5 (2026-11-08): E6 + r5-owner major: the headline leads with what the men did (stopped completely), not 'far less' as a win. | r5-owner major: big figure is the stopped-completely share; 74 in 100 'far less' moves to Measured. | r5-owner major / E6: the 74 in 100 and 'far less' sit in Measured. | Caveat no longer gives the 'cut back' shares as progress (E6); both stopped-completely figures stay. | E6: marked propose so it falls under the off-reader choice; E2: liked in version 10 (kinds.json after-lasting: 'porn: 74% …'), liked: true, so it stays under 'Take them off'.",
+   "changeNote": "rev6 (2026-11-08): r6 brief + r6-owner minor: the liked reason says plainly that v10 showed 74, not 35.",
    "was": {
     "line": "Three months after ACT therapy ended, 35% of men had stopped completely and 74% still watched at least 70% less.",
     "mirror": "You fear any progress will fade once the help stops."
@@ -1336,7 +1360,7 @@
     "by": "revision checker a (porn)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[8].basis.measured, numbers[8].propose"
+    "notes": "checked after revision"
    },
    "wasR1": {
     "mirror": "You fear any progress will fade once the help stops.",
@@ -1400,8 +1424,11 @@
     "propose": null
    },
    "changeNoteR4": "rev5 (2026-11-08): E6 + r5-owner major: the headline leads with what the men did (stopped completely), not 'far less' as a win. | r5-owner major: big figure is the stopped-completely share; 74 in 100 'far less' moves to Measured. | r5-owner major / E6: the 74 in 100 and 'far less' sit in Measured. | Caveat no longer gives the 'cut back' shares as progress (E6); both stopped-completely figures stay.",
-   "propose": "In version 10 it counted watching less as success, the moderation angle he called dangerous on 5 Nov (E6); it now shows the stopped-completely share, which is already belief 1's proof. You liked it in version 10.",
-   "liked": true
+   "propose": "Kept with this choice from E6: the trial's other figure counts watching far less as success. Version 10 showed that figure (74 in 100 watched far less), not this 35 in 100; you liked that card, and it now shows the men who stopped completely.",
+   "liked": true,
+   "wasR5": {
+    "propose": "In version 10 it counted watching less as success, the moderation angle he called dangerous on 5 Nov (E6); it now shows the stopped-completely share, which is already belief 1's proof. You liked it in version 10."
+   }
   },
   {
    "kind": "after-lasting",
@@ -1841,7 +1868,7 @@
      }
     ]
    },
-   "changeNote": "D1: kind back to moderation. Severity self-hooked is right: Kraus counted men who said they wanted help, a non-treatment sample (the rev3 note said treatment; the checker set self-hooked, which D1 confirms). 'not checked by a doctor' moves out of the proof into a belief Counted line that says plainly who was counted and 'not checked for addiction' (needs the template to render belief 'counted'). The proof argues against the 'just one'; it does not support moderating. Weak named. Full text re-fetched 2026-11-08, Table 1 cut back 4+ 46.2.",
+   "changeNote": "rev6 (2026-11-08): Same label as the 40 in 100 card (r6).",
    "check": {
     "by": "revision checker a (porn)",
     "on": "2026-11-08",
@@ -1908,7 +1935,7 @@
     "counted": null,
     "weak": null
    },
-   "counted": "men who said they wanted help for porn, not checked for addiction",
+   "counted": "men who said they wanted porn help, not checked by a doctor",
    "weak": "No study of men checked for porn addiction",
    "changeNoteR3": "Rules audit (r3): Kraus counted men who wanted treatment, not men checked for addiction; tag now treatment and the proof says plainly they were not checked by a doctor (rule 4: no study of men checked for porn addiction tests cutting back). The 186 is dropped from the face (cold reader: it never came back); the 40-in-100 card names the same men. Full text re-fetched 2026-11-08, Table 1 cut back 4+ 46.2.",
    "checkR3": {
@@ -1916,6 +1943,9 @@
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision: corrections applied to beliefs[3].severity, beliefs[3].proof"
+   },
+   "wasR5": {
+    "counted": "men who said they wanted help for porn, not checked for addiction"
    }
   },
   {
@@ -2313,7 +2343,41 @@
     "Try a group, online or in a room. Go a few times, and keep going only while it helps.",
     "Don’t wait for a pill. None is proven for porn yet."
    ],
-   "proof": {
+   "proof": null,
+   "was": {
+    "do": [
+     "Look for a therapist who uses CBT or ACT.",
+     "Help is a tool for steps 1 to 4, not a replacement for them.",
+     "Embarrassed to ask? A therapist who works with this has heard it all before.",
+     "Try a group, online or in a room. Go a few times, and keep going only while it helps.",
+     "Don’t wait for a pill. None is proven for porn yet."
+    ]
+   },
+   "proofR1": {
+    "text": "In a small US trial, 26 men, nearly all Latter-day Saints, had 12 sessions of ACT. By the end, 54 in 100 had stopped watching completely; three months on, 35 in 100. No count was given for men without therapy.",
+    "ref": {
+     "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
+     "pmid": "27157029",
+     "fetched": true,
+     "quote": "Complete cessation was seen in 54% of participants at posttreatment and at least a 70% reduction was seen in 93% of participants."
+    },
+    "changeNote": "Rule 12a: the proof gave a cut in viewing (93% vs 21%), not people. Now in people (54 in 100 stopped, 35 in 100 three months on). It says plainly that the trial has no people count without therapy. Abstract re-fetched on Europe PMC.",
+    "was": "In one small US trial of 28 men, nearly all Latter-day Saints, self-reported viewing fell 93% on average after 12 sessions of ACT, against 21% on the waiting list. Three months later, 35% of treated men had stopped completely.",
+    "check": {
+     "by": "revision checker b (porn)",
+     "on": "2026-11-05",
+     "verdict": "ok"
+    }
+   },
+   "doR2": [
+    "Look for a therapist who uses CBT or ACT: talk therapies that work on the habit and the urges, not on blame.",
+    "Help is a tool for steps 1 to 4, not a replacement for them.",
+    "Embarrassed to ask? A therapist who works with this has heard it all before.",
+    "Try a group, online or in a room. Go a few times, and keep going only while it helps.",
+    "Don’t wait for a pill. None is proven for porn yet."
+   ],
+   "proofR5": {
     "text": "At the end of a course of ACT, a talk therapy, 54 in 100 men in a small US trial had stopped porn completely.",
     "ref": {
      "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
@@ -2354,40 +2418,7 @@
      "on": "2026-11-08",
      "verdict": "ok"
     }
-   },
-   "was": {
-    "do": [
-     "Look for a therapist who uses CBT or ACT.",
-     "Help is a tool for steps 1 to 4, not a replacement for them.",
-     "Embarrassed to ask? A therapist who works with this has heard it all before.",
-     "Try a group, online or in a room. Go a few times, and keep going only while it helps.",
-     "Don’t wait for a pill. None is proven for porn yet."
-    ]
-   },
-   "proofR1": {
-    "text": "In a small US trial, 26 men, nearly all Latter-day Saints, had 12 sessions of ACT. By the end, 54 in 100 had stopped watching completely; three months on, 35 in 100. No count was given for men without therapy.",
-    "ref": {
-     "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
-     "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
-     "pmid": "27157029",
-     "fetched": true,
-     "quote": "Complete cessation was seen in 54% of participants at posttreatment and at least a 70% reduction was seen in 93% of participants."
-    },
-    "changeNote": "Rule 12a: the proof gave a cut in viewing (93% vs 21%), not people. Now in people (54 in 100 stopped, 35 in 100 three months on). It says plainly that the trial has no people count without therapy. Abstract re-fetched on Europe PMC.",
-    "was": "In one small US trial of 28 men, nearly all Latter-day Saints, self-reported viewing fell 93% on average after 12 sessions of ACT, against 21% on the waiting list. Three months later, 35% of treated men had stopped completely.",
-    "check": {
-     "by": "revision checker b (porn)",
-     "on": "2026-11-05",
-     "verdict": "ok"
-    }
-   },
-   "doR2": [
-    "Look for a therapist who uses CBT or ACT: talk therapies that work on the habit and the urges, not on blame.",
-    "Help is a tool for steps 1 to 4, not a replacement for them.",
-    "Embarrassed to ask? A therapist who works with this has heard it all before.",
-    "Try a group, online or in a room. Go a few times, and keep going only while it helps.",
-    "Don’t wait for a pill. None is proven for porn yet."
-   ]
+   }
   }
  ]
 }

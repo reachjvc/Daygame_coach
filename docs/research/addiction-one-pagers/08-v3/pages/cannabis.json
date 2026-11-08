@@ -491,6 +491,19 @@
     "changed": true,
     "changeNote": "Round 4 (rev3, 2026-11-08): Entry added (r3 rules major)."
    }
+  ],
+  "other": [
+   {
+    "from": "08-v3 cannabis belief 2 ref (rev5)",
+    "ref": {
+     "cite": "Bonnet U, Preuss UW (2017). The cannabis withdrawal syndrome: current insights. Substance Abuse and Rehabilitation 8:9-37.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5414724/",
+     "pmid": "28490916",
+     "fetched": true,
+     "quote": "The CWS usually lasts up to 3 weeks"
+    },
+    "why": "r6 rev6: the proof now rests on Connor 2022 for both halves; Bonnet 2017's 'usually lasts up to 3 weeks' gave a length that clashed with the Day 2–6 card and the body rows."
+   }
   ]
  },
  "gapReaderLine": {
@@ -509,6 +522,12 @@
   "by": "data agent (rev5)",
   "note": "After gates round 5 (r5-owner, r5-rules, r5-cold-nicotine) and decisions E1–E6. Changed items: changed true, changeNote (rev5 …), old values in wasR4 by field path, previous changeNote in changeNoteR4; check pending."
  },
+ "rev6": {
+  "round": "rev6",
+  "on": "2026-11-08",
+  "by": "data agent (rev6)",
+  "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
+ },
  "numbers": [
   {
    "kind": "hope-free-now",
@@ -525,7 +544,7 @@
     "when": "2001–2002",
     "measured": "Whether the signs of being hooked had finally stopped and never come back, as people recalled it. Free here means no signs of being hooked any more; it does not have to mean never using."
    },
-   "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card).",
+   "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
    "projection": false,
    "weak": null,
    "ref": {
@@ -542,9 +561,12 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (safety, D10 half-landed): the 71 in 100 pointer now in the count fold too, not only the projection fold.",
+   "changeNote": "rev6 (2026-11-08): r6-owner minor: the 71 in 100 is any slip within 6 months; the 4+ days fact is in that card's caveat.",
    "wasR4": {
     "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today."
+   },
+   "wasR5": {
+    "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card)."
    }
   },
   {
@@ -562,7 +584,7 @@
     "when": "2001–2002",
     "measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. The model puts about 66 in 100 free within 10 years."
    },
-   "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card).",
+   "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
    "projection": true,
    "weak": "Likely runs high",
    "ref": {
@@ -579,12 +601,15 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds).",
+   "changeNote": "rev6 (2026-11-08): r6-owner minor: the 71 in 100 is any slip within 6 months; the 4+ days fact is in that card's caveat.",
    "revNotes": [
     "main session fix 2026-11-08 after rev3 build: rule 12b: 97% written as 97 in 100"
    ],
    "wasR4": {
     "basis.measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. A projected 66% were free within 10 years."
+   },
+   "wasR5": {
+    "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card)."
    }
   },
   {
@@ -792,7 +817,7 @@
     "when": "searched to May 2024; published 2025",
     "measured": "Being off weed at the end of treatment, THC medicine against a dummy; both groups also had talk therapy. THC medicines give weed's own active chemical in a set dose; single studies suggest they can ease withdrawal and craving. The supplement NAC: 41 in 100 vs 35 in 100 (2 trials, 270 people), also no clear difference. CBD (1 trial, 68 people) may make little or no difference; anti-seizure medicines (1 trial, 29 people) were tested too little to tell."
    },
-   "caveat": "No medicine is approved to treat weed addiction. This is not proof that none can help: most were tested in only a few small trials, and the review says all are still experimental. For THC medicines and NAC, it rates the no-better result as moderately certain.",
+   "caveat": "26 in 100 is the typical rate on a dummy pill in these trials; 27 in 100 is that rate times the review's combined effect. No medicine is approved to treat weed addiction. This is not proof that none can help: most were tested in only a few small trials, and the review says all are still experimental. For THC medicines and NAC, it rates the no-better result as moderately certain.",
    "projection": true,
    "weak": null,
    "ref": {
@@ -809,9 +834,12 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-owner + r5-rules major (D6): chip read 'Worked out, not counted; worked out'; the Weak duplicate is gone, so the chip is 'Worked out, not counted'.",
+   "changeNote": "rev6 (2026-11-08): r6-rules minor: says what was worked out (the review's table: 262 and 270 per 1,000).",
    "wasR4": {
     "weak": "Worked out, not counted"
+   },
+   "wasR5": {
+    "caveat": "No medicine is approved to treat weed addiction. This is not proof that none can help: most were tested in only a few small trials, and the review says all are still experimental. For THC medicines and NAC, it rates the no-better result as moderately certain."
    }
   },
   {
@@ -900,7 +928,7 @@
   {
    "kind": "how-withdrawal",
    "big": "47 in 100",
-   "headline": "Averaged across dozens of studies, about 47 in 100 regular or hooked weed users got withdrawal when they stopped.",
+   "headline": "About 47 in 100 regular or hooked weed users got withdrawal when they stopped, across 47 studies.",
    "mirror": "You got cranky and sleepless last time and think it's just you.",
    "severity": "heavy",
    "counted": "regular weed users, many not checked for addiction",
@@ -924,7 +952,7 @@
     "quote": "The overall pooled prevalence of CWS was 47% (6469 of 23 518) (95% CI, 41%-52%)"
    },
    "origin": "07-mirror-stats/cannabis.json quit '47%' (v10 'How quitting goes'; figure, basis and ref kept, basis in plain words; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev5 (2026-11-08): E5: Weak 'Average across studies' repeated the pooled chip word for word (a chip never repeats words); the chip carries it. | r5-rules minor: 'closer to the 54 in 100' clashed with the page's other 54 in 100. E2: liked in version 10 (kinds.json: 'weed: … 47%'), liked: true. | Brief (rule 12b in folds). | Brief (no raw 'N of M' in folds).",
+   "changeNote": "rev6 (2026-11-08): r6-rules minor (rule 10): 'Averaged across' repeated the chip.",
    "check": {
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
@@ -939,7 +967,10 @@
     "basis.who": "people who used weed regularly (each study set its own bar for 'regular') or were hooked on it; 69% men, typical age about 30",
     "basis.measured": "Share who met the criteria for weed withdrawal on a tested checklist. The 47 in 100 is the review's pooled average of the studies' own rates. Counting every person instead, 6,469 of 23,518 had it (about 28 in 100), because the biggest studies were general surveys, where rates were lowest."
    },
-   "changeNoteR4": "rev5 (2026-11-08): E5: Weak 'Average across studies' repeated the pooled chip word for word (a chip never repeats words); the chip carries it. | r5-rules minor: 'closer to the 54 in 100' clashed with the page's other 54 in 100. E2: liked in version 10 (kinds.json: 'weed: … 47%'), liked: true. | Brief (rule 12b in folds)."
+   "changeNoteR4": "rev5 (2026-11-08): E5: Weak 'Average across studies' repeated the pooled chip word for word (a chip never repeats words); the chip carries it. | r5-rules minor: 'closer to the 54 in 100' clashed with the page's other 54 in 100. E2: liked in version 10 (kinds.json: 'weed: … 47%'), liked: true. | Brief (rule 12b in folds).",
+   "wasR5": {
+    "headline": "Averaged across dozens of studies, about 47 in 100 regular or hooked weed users got withdrawal when they stopped."
+   }
   },
   {
    "kind": "how-slips",
@@ -978,7 +1009,7 @@
   {
    "kind": "after-first-month",
    "big": "72 hours",
-   "headline": "No clear gap on thinking tests from people who barely used, in young frequent users off weed for more than 72 hours.",
+   "headline": "Young frequent users off weed for more than 72 hours scored about the same on thinking tests as people who barely used.",
    "mirror": "You're afraid you've fried your brain for good.",
    "severity": "heavy",
    "counted": "frequent young weed users, not checked for addiction",
@@ -1002,12 +1033,12 @@
     "quote": "studies requiring an abstinence period longer than 72 hours (15 studies; n = 928) had an overall effect size (d, -0.08 ...) that was not significantly different from 0"
    },
    "origin": "07-mirror-stats/cannabis.json after '72 hours' (v10 'How quitting goes'; figure, basis and ref kept; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds). | E5: a review pooling 69 studies' effect sizes, now pooled: true (chip 'Average across studies').",
+   "changeNote": "rev6 (2026-11-08): r6-owner minor: reads in one go.",
    "check": {
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[12].basis.who"
+    "notes": "checked after revision"
    },
    "timeIsResult": true,
    "wasR4": {
@@ -1016,7 +1047,10 @@
    },
    "pooled": true,
    "changeNoteR4": "rev5 (2026-11-08): Brief (rule 12b in folds).",
-   "liked": true
+   "liked": true,
+   "wasR5": {
+    "headline": "No clear gap on thinking tests from people who barely used, in young frequent users off weed for more than 72 hours."
+   }
   },
   {
    "kind": "after-first-month",
@@ -1099,10 +1133,10 @@
   {
    "kind": "after-mood",
    "big": "12 weeks",
-   "headline": "People whose weed days went down grew less anxious than those whose went up, in a 12-week weed treatment trial.",
+   "headline": "In a 12-week weed treatment trial, anxiety eased for people who smoked on fewer days; quitters were not counted on their own.",
    "mirror": "You smoke to calm your nerves and fear less weed means more anxiety.",
-   "severity": "treatment",
-   "counted": "adults in a treatment trial for a weed problem",
+   "severity": "dependent",
+   "counted": "people hooked on weed, in a treatment trial",
    "basis": {
     "design": "a later look at data from a 12-week medicine trial",
     "who": "adults aged 18–50 who met the doctors' older checklist for being hooked on weed, using on about 26 of the last 30 days at the start, in a 12-week medicine trial (a medicine called NAC or a dummy pill; both groups were also in a reward programme)",
@@ -1111,9 +1145,9 @@
     "when": "January 2014 – April 2015 (published 2017)",
     "measured": "changes in anxiety, depression, sleep quality and quality of life, next to changes in weed use"
    },
-   "caveat": "This is using less, not stopping: the study sorts people by whether their weed days went down or up, and does not count quitters on their own. The gains are measured against those whose use went up. Better sleep showed only in the fuller analysis of 219 people, which allowed for other substance use. Using less was not linked with better quality of life in 12 weeks. The changes were small, and it is a link, not proof. For people treated for weed, a slip after two weeks off led most of them back to 4+ days a week (the 71 in 100 card).",
+   "caveat": "This is using less, not stopping: the study sorts people by whether their weed days went down or up, and does not count quitters on their own. The gains are measured against those whose use went up. Better sleep showed only in the fuller analysis of 219 people, which allowed for other substance use. Using less was not linked with better quality of life in 12 weeks. The changes were small, and it is a link, not proof. For people treated for weed, a slip after two weeks off led most of them back to 4+ days a week (see the 71 in 100 card's caveat).",
    "projection": false,
-   "weak": "Small changes, found after the fact",
+   "weak": "Using less, not quitting; small changes",
    "ref": {
     "cite": "Hser YI, Mooney LJ, Huang D, et al. (2017). Reductions in cannabis use are associated with improvements in anxiety, depression, and sleep quality, but not quality of life. Journal of Substance Abuse Treatment.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5607644/",
@@ -1129,13 +1163,21 @@
     "notes": "checked after revision"
    },
    "propose": "It is about using less, not quitting, so it answers no kind's question cleanly; the +12 points life-quality card is the quitting answer.",
-   "changeNote": "rev5 (2026-11-08): r5-rules minor: dropped the leftover 'Covered by the one choice…' and the pointer 'above' that pointed at nothing on the review page.",
+   "changeNote": "rev6 (2026-11-08): r6-owner minor: same pointer fix. | F3 + r6-owner major: the face says plainly it counted using less, not quitting; the caveat points to the 71 in 100 card. | r6-owner major. | r6-rules minor: same 302-adult NAC trial as belief 4 (tagged dependent), and its who line says they met the doctors' checklist for being hooked. | Counted line to match the tag and belief 4.",
    "editNote": "2026-11-06: 'drinking and tobacco' -> 'other substance use' (rule 13 wording only)",
    "timeIsResult": true,
    "wasR4": {
     "propose": "It is about using less, not quitting, so it answers no kind's question cleanly; the life-quality card above is the quitting answer. Covered by the one choice on numbers whose group or question is off."
    },
-   "liked": true
+   "liked": true,
+   "wasR5": {
+    "caveat": "This is using less, not stopping: the study sorts people by whether their weed days went down or up, and does not count quitters on their own. The gains are measured against those whose use went up. Better sleep showed only in the fuller analysis of 219 people, which allowed for other substance use. Using less was not linked with better quality of life in 12 weeks. The changes were small, and it is a link, not proof. For people treated for weed, a slip after two weeks off led most of them back to 4+ days a week (the 71 in 100 card).",
+    "headline": "People whose weed days went down grew less anxious than those whose went up, in a 12-week weed treatment trial.",
+    "weak": "Small changes, found after the fact",
+    "severity": "treatment",
+    "counted": "adults in a treatment trial for a weed problem"
+   },
+   "changeNoteR5": "rev6 (2026-11-08): r6-owner minor: same pointer fix. | F3 + r6-owner major: the face says plainly it counted using less, not quitting; the caveat points to the 71 in 100 card. | r6-owner major. | r6-rules minor: same 302-adult NAC trial as belief 4 (tagged dependent), and its who line says they met the doctors' checklist for being hooked."
   }
  ],
  "beliefs": [
@@ -1170,33 +1212,32 @@
    "limiting": "I can’t handle quitting. Last time I barely lasted three days.",
    "counterpart": "It’s a few hard weeks, not forever. I’ve got through hard weeks before.",
    "test": "One evening this week, spend the hour you’d usually smoke on something hard and physical: a run, a workout, a long uphill walk. Guess first how hard it will be, out of 10. Afterwards, put the real score next to your guess.",
-   "proof": "In reviews of people with weed withdrawal, it usually lasts up to 3 weeks; poor sleep can go on for several weeks or longer.",
+   "proof": "In reviews of people with weed withdrawal, most signs peak on days 2–6, some last up to 3 weeks or more in heavy users, and poor sleep can go on for several weeks or longer.",
    "severity": "heavy",
    "refs": [
-    {
-     "cite": "Bonnet U, Preuss UW (2017). The cannabis withdrawal syndrome: current insights. Substance Abuse and Rehabilitation 8:9-37.",
-     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5414724/",
-     "pmid": "28490916",
-     "fetched": true,
-     "quote": "The CWS usually lasts up to 3 weeks"
-    },
     {
      "cite": "Connor JP, Stjepanović D, Budney AJ, Le Foll B, Hall WD (2022). Clinical management of cannabis withdrawal. Addiction 117(7):2075-2095.",
      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9110555/",
      "pmid": "34791767",
      "fetched": true,
-     "quote": "Sleep disturbances may continue for several weeks or longer."
+     "quote": "most symptoms generally peak at days 2-6, with some symptoms lasting up to 3 weeks or more in heavy cannabis users",
+     "quotesMore": [
+      "Sleep disturbances may continue for several weeks or longer."
+     ]
     }
    ],
    "origin": "new",
    "keep": false,
    "check": {
-    "by": "revision checker b (cannabis)",
+    "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "Round 4 (rev3, 2026-11-08): Proof names its group (r3 rules minor: the 'heavy' tag had no group on the face), the auditor's wording; one figure. keep set to false: 'new' row, he cannot have marked it Keep. || Earlier: Round 3 (rev2). Proof: owner-lens v2 (research words on the card face: 'harm to daily life was fairly mild on average, very high for some') and task A0 (one figure): the 49-people sentence moved to notUsed, so the proof holds one figure (up to 3 weeks); 'longer' now 'several weeks or longer', the source's words (cold readers asked how long). Refs: only the two sources the proof uses (Allsop 2012 dropped with its sentence). Severity: without the Allsop study of people hooked on weed, both refs describe stopping after long-term regular use, so 'heavy' (cautious; rule 3). Test: safety auditor: 'put your first smoke off by one hour' assumed a smoke follows and reads as a cue for someone already off; now the hour you'd usually smoke is lived without it, which works whether or not he has stopped, and the record is one score against a guess (expected against actual difficulty). Quotes rechecked: Bonnet 2017 'The CWS usually lasts up to 3 weeks'; Connor 2022 'Sleep disturbances may continue for several weeks or longer.' (PMC full texts via Europe PMC, 2026-11-05)."
+   "changeNote": "rev6 (2026-11-08): r6-rules minor: one length across the page (Day 2–6 card, body rows to week 4). Connor 2022 abstract re-read 2026-11-08 (Europe PMC).",
+   "wasR5": {
+    "proof": "In reviews of people with weed withdrawal, it usually lasts up to 3 weeks; poor sleep can go on for several weeks or longer."
+   }
   },
   {
    "kind": "moderation",
@@ -1500,7 +1541,7 @@
     "A few meetings can be enough. You don’t sign up for life."
    ],
    "proof": {
-    "text": "In therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups more than 4 months after starting.",
+    "text": "Averaged across eight therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups over four months on.",
     "ref": {
      "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.",
      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4914383/",
@@ -1513,8 +1554,11 @@
      "on": "2026-11-08",
      "verdict": "ok"
     },
-    "changeNote": "rev4 (2026-11-08): Same time point as the 23 in 100 card, 'more than 4 months after talk therapy' (r4 owner and rules minors). 2 figures, 29 words. || Earlier: Round 4 (rev3, 2026-11-08): Owner-lens r3 major: '23 in 100 … vs 12 in 100' was not like for like; now the with-help figure alone, the same figure and wording as the '23 in 100' card (brief rule 5), and 'Averages across trials; no head count.' (a process note) left to the card's Weak chip. Severity 'treatment' added. Old text in notUsed. || Earlier: Round 3 (rev2): same fix as the '23 vs 12' card (source checker: the 23% is 'at follow‐up of longer than four months', not 'at the last check-up'), and task A0: a proof that reuses a card's number carries the card's counted point (therapy trials for a weed problem) and weak point (averages across trials, no head count). Old text in notUsed. PMC page refetched 2026-11-05.",
-    "severity": "treatment"
+    "changeNote": "rev6 (2026-11-08): r6-rules minor: a pooled average no longer reads as a head count (the card's Measured: 'the average in the 8 trials').",
+    "severity": "treatment",
+    "wasR5": {
+     "text": "In therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups more than 4 months after starting."
+    }
    }
   }
  ]

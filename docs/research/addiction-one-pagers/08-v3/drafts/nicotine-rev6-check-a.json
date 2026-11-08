@@ -1,0 +1,119 @@
+{
+ "id": "nicotine",
+ "round": "rev6",
+ "by": "independent source checker a (rev6)",
+ "on": "2026-11-08",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "12 vs 12 in 100",
+   "verdict": "fix",
+   "problems": [
+    "propose is a real reason now (r6-rules minor), but says 'the angle he called dangerous'; the review page talks to the owner as 'you' ('You liked it in version 10' on the other cards)."
+   ],
+   "fix": {
+    "numbers[4].propose": "It counts smokers in quit trials, not checked for addiction (rule 2), and cutting down is the angle you called dangerous; the page's stop-at-once advice stands without it."
+   },
+   "notes": "Label unchanged; Lindson 2019 figure unchanged."
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "23 vs 10 in 100",
+   "verdict": "fix",
+   "problems": [
+    "Label right: Livingstone-Banks 2023 abstract re-read 2026-11-08: selection is RCTs of the drug against placebo etc. with 6+ months follow-up; nothing on dependence. 'not checked for addiction' matches who was counted (F2).",
+    "propose claims 'no quit-pill trial checked smokers for addiction'. That is a universal claim the source does not make and can't be checked from it; many such trials scored dependence (Fagerström) at the start without requiring it (as Piper 2012 did, see numbers[8])."
+   ],
+   "fix": {
+    "numbers[5].propose": "It counts smokers in quit-pill trials who wanted to stop; the trials did not require them to be hooked (rule 2, F2)."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "11 vs 7 in 100",
+   "verdict": "fix",
+   "problems": [
+    "F2: the counselling trials did not check for addiction either (Lancaster & Stead 2017; the who line says wanting to quit was not even required), and the propose says 'not checked for addiction', but the Counted label does not. F2 says the Counted label must say it."
+   ],
+   "fix": {
+    "numbers[6].counted": "smokers in counselling trials, not checked for addiction or wish to quit"
+   },
+   "notes": "11 words; keeps 'trial' (treatment key word) and 'not'."
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "Years 1 and 3",
+   "verdict": "fix",
+   "problems": [
+    "F2: 'not checked for addiction' is false for this source. Piper 2012 full text (PMC3298628, read 2026-11-08): 'Baseline questionnaires assessed demographics, smoking history, and nicotine dependence', including the Fagerström test (FTND), NDSS, TDS and WISDM; Table 1 FTND total means 4.8 to 5.6 across its groups, about 5 out of 10. Inclusion was >9 cigarettes a day, CO >9 and motivated to quit: dependence was scored but not required to join.",
+    "Who line and n unchanged and right (1,504 started; 58.2% women)."
+   ],
+   "fix": {
+    "numbers[8].counted": "smokers in a quit trial; addiction scored, not required to join",
+    "numbers[8].propose": "It counts smokers of 10 or more a day in a quit trial, who did not have to be hooked to join (rule 2, F2). You liked it in version 10.",
+    "numbers[8].basis.who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (about 58 in 100 women); their average score on an addiction test (Fagerström) was about 5 out of 10, middling"
+   },
+   "notes": "It is liked (E2), so it stays either way. Without 'not checked' it may leave the computed off list; the template agent should confirm E3 still treats it right (it is not a hooked-only group, so 'not required to join' should count as off-reader if E3 keys on more than the exact words)."
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "10 vs 7 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Notley 2025 abstract re-read: mixed-population RCTs in workplaces, clinics, communities; no dependence selection. Label matches. 11 words."
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "4–5 kg",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Aubin 2012 full text (PMC3393785) re-read: trials of NRT, bupropion, varenicline and exercise reporting weight in abstainers; no dependence selection. One included study (Shiffman) split smokers by dependence level for dosing, so a few were scored; the pooled group was not selected for addiction, so the page's 'not checked' convention holds."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "At least 25 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Pourmand 2004 abstract re-read: 'Smokers who requested nicotine replacement therapy (NRT) and complained of ED'; no dependence test named. Full text (BJU Int) not open, so checked on the abstract only. Label matches; 10 words."
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "90 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Hughes, Peters, Naud 2008 (PMC2577779) re-read: 8 RCTs of nicotine medicines, inclusion by abstinence at 1 year and follow-up rules, not by dependence. One trial (Tonnesen 1988) split arms by high/low dependence, so a minority were scored; label convention holds. 11 words."
+  },
+  {
+   "where": "windows",
+   "index": 2,
+   "label": "Weight row",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "'4–5 kg by a year, on average' matches Aubin's conclusion; 16 in 100 stays on the card's Measured line (rule 12 one idea)."
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "Step 3 do (Already off it?)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "do[0] ends 'Already off it? Today is your date.' (F1). Proof unchanged."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 proof (23 vs 10)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Counted now 'smokers in quit trials who wanted to stop, not checked for addiction', same as numbers[5] (one group, one label)."
+  }
+ ]
+}

@@ -1,0 +1,76 @@
+{
+ "id": "cannabis",
+ "round": "rev6",
+ "by": "independent source checker a (rev6)",
+ "on": "2026-11-08",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "65 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Pointer now 'see the 71 in 100 card's caveat'; that caveat does carry 'most of those who slipped went back to using 4+ days in a week'. Figure unchanged."
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "97 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Same pointer fix; true against numbers[11].caveat."
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "27 vs 26 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Caveat's worked-out line matches the ref quote ('262 per 1000', '270 per 1000 (184 to 396)'); 27 = placebo rate times the combined effect is the table's method. 2 figures."
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "47 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Headline no longer repeats the chip (rule 10). Bahji 2020 quote unchanged ('47% (6469 of 23 518)', 47 studies)."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "72 hours",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Reads in one go; 'about the same' matches 'not significantly different from 0' (Scott 2018, 15 studies, n = 928)."
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "12 weeks (retag to dependent)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Retag confirmed. Hser 2017 full text (PMC5607644 via NCBI efetch, read 2026-11-08): 'In the parent study (ACCENT), 302 adults (ages 18–50) with a diagnosis of cannabis dependence (per DSM-IV ... criteria) were randomized'. So the trial required dependence: severity 'dependent', Counted 'people hooked on weed, in a treatment trial' (has 'hooked', 8 words) is right, and matches belief 4. F3: headline says it counted using less ('people who smoked on fewer days; quitters were not counted on their own'), Weak 'Using less, not quitting; small changes', caveat opens 'This is using less, not stopping' and ends on the 71 in 100 pointer. Abstract confirms n 302, 152 reduction vs 150 increase, 12-week trial."
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "I can't handle quitting (withdrawal length)",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "Connor 2022 abstract re-read 2026-11-08 (Europe PMC): 'most symptoms generally peak at days 2-6, with some symptoms lasting up to 3 weeks or more in heavy cannabis users' is word for word. The proof now agrees with the Day 2–6 card (peak days 2–6, most lasted 4–14 days) and the body rows (irritable still there at week 4; sleep to day 45): 'some last up to 3 weeks or more' and 'poor sleep ... several weeks or longer' fit both. No line gives a competing 'usual' length. 2 figures. Answers 'barely lasted three days' (day 3 sits in the peak)."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 proof (23 in 100)",
+   "verdict": "fix",
+   "problems": [
+    "Dropping 'given talk therapy' changed the meaning: the 23% is the average among people given the therapies; control groups averaged 12% (ref quote: 'to 23% at follow-up of longer than four months. In contrast, an average of 12% of those in control conditions'). 'Averaged across eight therapy trials ..., 23 in 100 had not used' now reads as everyone in the trials, controls included."
+   ],
+   "fix": {
+    "plan[4].proof.text": "Averaged across eight therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups over four months on."
+   }
+  }
+ ]
+}

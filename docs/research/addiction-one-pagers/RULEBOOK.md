@@ -74,7 +74,10 @@ belief whatever kind it was filed under. Check: Build fails on a "just one"
 belief not filed as `moderation`; on a moderation belief answered by other
 people whose Counted line lacks "not checked"; on "not checked" inside its
 proof sentence; and when a stop-or-cut-down number counts other people
-without saying "not checked for addiction".
+without saying "not checked for addiction". A life-after or what-helps card
+whose face sells using less ("87% less", "on fewer days", "went down") says
+plainly that it counted using less, not stopping (round 6, F3); the build fails
+otherwise.
 
 ## B. Voice
 
@@ -87,7 +90,11 @@ of really bad cases". He has said no doctor will review the pages. Never ask
 him whether to add a crisis line. Danger text sits in the timeline, the
 footer, and (added 5 Nov after a safety audit) one small line in the plan step
 where the reader stops, because a heavy daily drinker who follows the steps
-stops before he reaches the footer. A page without a danger level may carry one small footer line, never up
+stops before he reaches the footer. The emergency line counts any one sign
+at any time after stopping or cutting down, with no qualifier a reader can use
+to read himself out, and every pointer to Before you stop says "now", never
+"first" (round 6, F1). Build fails when a body row says the footer counts a
+sign "at any time" while the footer's emergency line carries a qualifier. A page without a danger level may carry one small footer line, never up
 front, when a source ties a risk to quitting that drug (nicotine, 8 Nov: clozapine
 and olanzapine levels rise once smoking stops, Kroon 2007). Check: Build allows danger rows only on a
 page whose research file has `safety.level: danger`, and never in the hero.
@@ -136,8 +143,10 @@ card, a worked-out figure shows its Counted label and one amber chip, "Worked ou
 average, `pooled: true`), carrying anything else its Weak label says; "not
 counted" is never said twice (round 4, D6). In the hero the chip names its
 figure ("About 91 in 100: worked out, not counted; likely runs high"), so it
-never reads as a label on the head count. Check: Build fails when a number
-marked `projection` has no "projected" or "expected" in its line; the render
+never reads as a label on the head count. A face never says "average across" above an "Average across studies" chip
+(round 6). Check: Build fails when a number
+marked `projection` has no "projected" or "expected" in its line, and on a
+pooled card whose headline says "averaged across"; the render
 check fails when the hero has both hope numbers but shows only one, when a
 projection chip sits in a hero with no projected figure, and on the old
 "Projected, not counted" chip.
@@ -214,7 +223,8 @@ graph, then more numbers.** His words (5 Nov): "Perhaps a good combination is
 leading with one statistic creating hope, and then some belifs/the graph, then
 more statistics." When no study counts people hooked on it who got free (porn,
 8 Nov), the page has no hope number: its title, then the beliefs, with no line
-between them (round 5, E1: a line that says what comes next breaks rule 6); "Who gets free, and how" says plainly what is
+between them (round 5, E1: a line that says what comes next breaks rule 6; the review page's
+sentences about it carry an assert the build re-checks, round 6); "Who gets free, and how" says plainly what is
 not counted, and What is weak lists it. Check: Build (the section order is
 fixed in the template; a page with no hope number needs its plain gap line,
 and its hero line may carry no figure); the render check fails when such a
@@ -260,14 +270,17 @@ highest typical day among stages with 25 posts or more (a hollow stage never
 sets it; a line that falls steadily from its first stage peaks there): "<stage>:
 the hardest. A typical day: X out of 10." Then "Easier from <stage>: Y out of
 10.", the first later stage at least 1.5 points below the peak with every stage
-after it at least 1 point below. Where no stage qualifies: "No clear easing: a
-typical day stays near X out of 10 through <last counted stage>." Never "No
-clear peak". Pages carry no headline text of their own, and any page text about
+after it at least 1 point below. A later stage that ties the top belongs to the
+hardest stretch. Where no stage qualifies there is one line only, with no
+"hardest" line and no "hardest" label on the chart (round 6, F4): "No clear
+easing: a typical day stays near X out of 10 from <first counted stage>
+through <last counted stage>." Never "No clear peak". Pages carry no headline text of their own, and any page text about
 the graph agrees with it. A plan proof that quotes the graph uses a figure the graph shows. Check:
 Build fails on a page's `feltHeadlineProposal` and on a plan proof's "N out of
 10" that no stage of the graph shows; the render check fails on more than one
 graph headline, on "No clear peak", on an "easier from" stage (or "No clear
-easing") that the stage medians don't give, and when the page's stage medians
+easing") that the stage medians don't give, on "hardest" next to "No clear
+easing", and when the page's stage medians
 differ from the build's.
 
 **19. A lab cue test is never drawn as craving.** Withdrawal is drawn as
@@ -339,7 +352,12 @@ not asked again, and each card sits in exactly one choice. The off-reader
 choice covers number cards only: every card tagged `heavy` or `users`, carrying
 a `propose`, or whose Counted label says "not checked" or "not required" (round
 5, E3), except the liked ones (rule 26); its count is the length of the list it
-shows (round 4, D2/D3). Belief and plan proofs about people not checked for addiction
+shows (round 4, D2/D3). Whether a card says "not checked for addiction" is
+decided by who its source counted, never by hand (round 6, F2), and every card
+in the choice carries a `propose` reason (Build fails without one). A card
+whose Counted label mixes drink and drugs is named in the pooled-numbers choice
+only, never in the off-reader list (F5). A kind whose every card the current
+answer hides gets its gap line like an empty kind. Belief and plan proofs about people not checked for addiction
 stay, labelled so, and the choice names them in one line. The review page says
 under its tabs that only "Choices for you" needs him. Check: Build (at most 7 choices); the render check fails on a
 "Proposed to remove" chip and on more than 7 asks on the review page; Gate.

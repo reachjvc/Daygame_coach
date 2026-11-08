@@ -21,7 +21,7 @@ Built by `board/build_v3.py` into the prototype. Rules: `../RULEBOOK.md`.
   "mirror": "…",                      // 14 words or fewer, second person, a thought about quitting (never a screening question)
   "severity": "dependent",            // RULEBOOK rule 3: dependent | disorder | treatment | resolved | self-hooked | heavy | users | screened
   "counted": "people who had ever been hooked on alcohol",   // plain words, 12 or fewer, with its tag's key words (rule 3)
-  "propose": null,                    // or why a rule argues against this card: it then falls under the one off-reader choice (rule 27)
+  "propose": null,                    // why a rule argues against this card; required on every card in the off-reader choice (rule 27)
   "basis": {
     "design": "…", "who": "…",
     "n": "…",                         // the people behind THIS figure, not the whole study

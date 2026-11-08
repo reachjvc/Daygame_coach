@@ -54,14 +54,20 @@ try {
               const KK = Object.fromEntries(DATA.kinds.kinds.map(k => [k.id, k]));
               const noHero = !art.querySelector(".sec-hero .big, .sec-hero .grid100");
               const out = [];
-              for (const k of P.empty || []) {
+              const shownAll = new Set([...art.querySelectorAll("[data-kind]")].map(e => e.dataset.kind));
+              const noCard = Object.keys(KK).filter(k => KK[k].scope === "specific" && KK[k].pick && !shownAll.has(k));
+              const gr = P.gapReaderLine && typeof P.gapReaderLine === "object" ? P.gapReaderLine : null;
+              for (const k of noCard) {
                 const K = KK[k]; if (!K || !K.pick) continue;
                 const where = K.where.startsWith("hero") ? (noHero ? "more" : null) : K.where;
                 if (!where || !["more", "outlook"].includes(where)) continue;
                 const sec = art.querySelector(where === "more" ? ".sec-quit" : ".sec-outlook");
                 const shown = sec ? [...sec.querySelectorAll("[data-kind]")].map(e => e.dataset.kind) : [];
                 const covered = shown.some(s => KK[s].group === K.group || (K.near || []).includes(s));
-                if (!covered && !(sec && sec.querySelector(".gapl"))) out.push(k);
+                const gtext = sec ? [...sec.querySelectorAll(".gapl")].map(g => g.innerText).join(" ") : "";
+                const g = (P.gaps || []).find(g => g.kind === k);
+                const named = (K.gapPhrase && gtext.includes(K.gapPhrase)) || (g && g.reader && gtext.includes(g.reader.replace(/\.$/, ""))) || (gr && (gr.kinds || []).includes(k) && gtext.includes(gr.text));
+                if (!covered && !named) out.push(k);
               }
               return out;
             })(),
@@ -80,10 +86,12 @@ try {
               if (!P.feltMeds) return null;
               const order = ["Day 1", "Days 2–3", "Days 4–7", "Week 2", "Weeks 3–4", "Month 2", "Month 3", "Months 4–12", "Year 2 +"].filter(l => l in P.feltMeds);
               const v = order.map(l => P.feltMeds[l]), max = Math.max(...v);
-              let i = v.indexOf(max); while (i + 1 < v.length && v[i + 1] === max) i++;
+              const i = v.lastIndexOf(max);   // a later tie belongs to the hardest stretch
               for (let j = i + 1; j < v.length; j++) if (v[j] <= max - 1.5 && v.slice(j + 1).every(y => y <= max - 1)) return order[j].toLowerCase();
               return "";
             })(),
+            chartLabels: [...art.querySelectorAll(".sec-graph svg text.k")].map(t => t.textContent).join(" ").toLowerCase(),
+            averTwice: [...art.querySelectorAll("[data-kind]")].filter(c => /averag\w*\s+across/i.test((c.querySelector(".hl") || {}).textContent || "") && /Average across studies/.test(c.textContent)).map(c => c.querySelector(".big")?.textContent),
             chips: [...art.querySelectorAll(".tag.weak")].map(t => t.textContent.trim()),
             gapTexts: [...art.querySelectorAll(".gapl")].map(g => g.innerText.trim()),
             likedMissing: (P.numbers || []).filter(x => x.liked && DATA.kinds.kinds.find(k => k.id === x.kind)?.pick).map(x => x.big).filter(b => !txt.includes(b)),
@@ -126,6 +134,7 @@ try {
         if (r.expectEase != null) {
           if (r.expectEase && !r.graphAll.includes(`easier from ${r.expectEase}`)) FAIL(18, where, `the graph should say “Easier from ${r.expectEase}” (E4)`);
           if (!r.expectEase && !r.graphAll.includes("no clear easing")) FAIL(18, where, "no stage qualifies as easier, but the graph doesn't say “No clear easing” (E4)");
+          if (!r.expectEase && /the hardest|hardest/.test(r.graphAll + " " + r.chartLabels)) FAIL(18, where, "“No clear easing” with a “hardest” line or chart label (F4: one line)");
         }
         for (const c of r.chips) {
           if ((c.match(/worked out/gi) || []).length > 1) FAIL(10, where, `a chip says “worked out” twice: ${c}`);
@@ -136,6 +145,7 @@ try {
         }
         const phrases = r.gapTexts.flatMap((t, i) => t.replace(/^Not counted here yet:\s*/, "").replace(/\.$/, "").split(/;\s*/).map(ph => [i, ph.toLowerCase().split(/\s+/).slice(0, 4).join(" ")]));
         for (const [i, ph] of phrases) if (ph.split(" ").length >= 3 && r.gapTexts.some((t, j) => j !== i && t.toLowerCase().includes(ph))) { FAIL(27, where, `two gap lines say the same thing: “${ph}…”`); break; }
+        if (r.averTwice.length) FAIL(10, where, `“average” said twice on one card face (headline and chip): ${r.averTwice.join(", ")}`);
         if (ver === "mix" && r.likedMissing.length) FAIL(26, where, `cards he liked in version 10 are missing on the recommended view: ${r.likedMissing.join(", ")}`);
         if (r.medDiff.length) FAIL(18, where, `graph stage medians differ from the build's: ${r.medDiff.join("; ")}`);
         if (r.felth !== 1) FAIL(18, where, `${r.felth} graph headlines (one, D9)`);

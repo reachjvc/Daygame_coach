@@ -10,8 +10,11 @@
   {
    "id": "order",
    "title": "Section order",
-   "decision": "Hope number, beliefs, how hard it feels, who gets free and how (who, how they quit, what helps), how quitting goes (life after), the plan, sources. A page with no hope number ({noHero}) opens with its title and one line with no number, then the beliefs. Your own story box shows on the review page only, until you write it.",
-   "why": "Your 5 Nov order: one number that creates hope, then beliefs and the graph, then more numbers. The plan comes after the numbers so the reader reaches it having seen that people like him get free. This was a choice last round too; it is one decision now, so you are not asked it twice."
+   "decision": "Hope number, beliefs, how hard it feels, who gets free and how (who, how they quit, what helps), how quitting goes (life after), the plan, sources. A page with no hope number ({noHero}) opens with its title, then the beliefs, with no line between them. Your own story box shows on the review page only, until you write it.",
+   "why": "Your 5 Nov order: one number that creates hope, then beliefs and the graph, then more numbers. The plan comes after the numbers so the reader reaches it having seen that people like him get free. This was a choice last round too; it is one decision now, so you are not asked it twice.",
+   "assert": {
+    "noHeroLine": true
+   }
   },
   {
    "id": "kept-outlook",
@@ -34,7 +37,7 @@
   {
    "id": "per100",
    "title": "What helps, per 100 people",
-   "decision": "Every “what helps” number says what happened per 100 people with it and per 100 without it (“27 in 100 vs 12 in 100”), never “×2.3” or “1 in 12” alone. When no study gives a without-it figure, the number sits under How they quit as “What happened with help, no comparison”, marked Weak. Every share of people on a page is written “N in 100”, the hope number too.",
+   "decision": "Every “what helps” number says what happened per 100 people with it and per 100 without it (“27 in 100 vs 12 in 100”), never “×2.3” or “1 in 12” alone. When no study gives a without-it figure, the number sits under How they quit as “What happened with help, no comparison”, marked Weak. Every share of people on a page is written “N in 100”, the hope number too{ownWordsPct}.",
    "why": "You couldn’t follow “What helps” on the first read. Studies of how people read risk numbers find ratios and “1 in N” are the formats readers get wrong most; counts per 100 are read right most often."
   },
   {
@@ -70,7 +73,7 @@
   {
    "id": "danger",
    "title": "Danger lines only where a source ties them to the drug",
-   "decision": "On the {dangerPages} page: the seizure and DTs rows under the graph (red), one short line in plan step 3 (where the drinking stops), a one-line pointer to “Before you stop” in two card folds (44 in 100, 2–7 days), the same pointer in two belief tests (rows 3 and 4), and the “Before you stop” line above the sources, which names the signs and says a seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut back sharply is an emergency. {noteLine} On the porn page: one line in the erection card’s fold, that a doctor can check for medical causes, with its source. Nowhere else, and never up front.",
+   "decision": "On the {dangerPages} page: the seizure and DTs rows under the graph (red), one short line in plan step 3 (where the drinking stops), a one-line pointer to “Before you stop” in two card folds (44 in 100, 2–7 days), the same pointer in two belief tests (rows 3 and 4), and the “Before you stop” line above the sources, which names the signs and says: “{emergencyLine}” {noteLine} On the porn page: one line in the erection card’s fold, that a doctor can check for medical causes, with its source. Nowhere else, and never up front.",
    "why": "Your 4 Nov note: only where a source ties the risk to the drug, small, never up front. A safety audit found the plan stops drinking at step 3 while the warning sat in step 5 and at the very bottom, so a heavy daily drinker following the steps would stop before seeing it.",
    "assert": {
     "dangerPages": [
@@ -105,8 +108,11 @@
   {
    "id": "nohero",
    "title": "A page with no hope number",
-   "decision": "Where no study counts people hooked on it who got free ({noHero}), the page has no big number: its title, one line with no number, then the beliefs. “Who gets free, and how” says plainly what no study has counted yet.",
-   "why": "Rule 15 asks for a number that creates hope; the nearest porn figures are a statistical grouping and students, and a gap as the first words is no hope either."
+   "decision": "Where no study counts people hooked on it who got free ({noHero}), the page has no big number: its title, then the beliefs. “Who gets free, and how” says plainly what no study has counted yet.",
+   "why": "Rule 15 asks for a number that creates hope; the nearest porn figures are a statistical grouping and students, and a gap as the first words is no hope either.",
+   "assert": {
+    "noHeroLine": true
+   }
   },
   {
    "id": "byline",
@@ -125,7 +131,7 @@
   {
    "id": "hero",
    "rule": "The big hope number on every page is:",
-   "why": "Both numbers stay on every page, together, in one view; this picks which one is big. Your own rule 15 says lead with one number that creates hope, so I recommend the lifetime projection ({heroProj}), with the head count right under it ({heroCount}). Rule 10 (cautious estimate first) came from reviewers, not from you; with the head count big, nicotine would open on 19 in 100. This is a judgment call: the projection is a model that likely runs high, and the page says so once, on the chip under it. Pages with no hope number ({noHero}) open at the beliefs either way.",
+   "why": "Both numbers stay on every page, together, in one view; this picks which one comes first and leads the dot grid. Your own rule 15 says lead with one number that creates hope, so I recommend the lifetime projection ({heroProj}), with the head count right under it ({heroCount}). Rule 10 (cautious estimate first) came from reviewers, not from you; with the head count big, nicotine would open on 19 in 100. This is a judgment call: the projection is a model that likely runs high, and the page says so once, on the chip under it. Pages with no hope number ({noHero}) open at the beliefs either way.",
    "options": [
     {
      "id": "projection",
@@ -147,7 +153,7 @@
   {
    "id": "general",
    "rule": "Numbers that mix every drug together (tries it took, used no help, life in the years after):",
-   "why": "One US survey of people who beat a drink or drug problem also reports numbers for everyone together, not split by drug. The pages already show its alcohol-only and weed-only numbers. I recommend leaving the mixed ones off.",
+   "why": "One US survey of people who beat a drink or drug problem also reports numbers for everyone together, not split by drug. The pages show its alcohol-only and weed-only numbers. I recommend leaving the mixed ones off. {mixedLine}",
    "options": [
     {
      "id": "covered",
@@ -182,8 +188,8 @@
   },
   {
    "id": "offreader",
-   "rule": "Number cards about people who are not the reader: not checked as hooked (heavy drinkers in a month-off study, students, ordinary smokers), people never or still hooked mixed in, or cutting down instead of quitting:",
-   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason. {likedLine} This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says “not checked for addiction”.",
+   "rule": "Number cards about people who are not the reader: not checked as hooked (students, ordinary smokers), people never or still hooked mixed in, or cutting down instead of quitting:",
+   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason. This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says “not checked for addiction”.",
    "options": [
     {
      "id": "keep",
@@ -262,7 +268,7 @@
  "weak": [
   {
    "title": "The porn page is a draft: its science is the thinnest",
-   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. So the page has no hope number: it opens at the beliefs, and “Who gets free, and how” says plainly what is not counted. Its other numbers are small (one forum’s journals, one church-based trial of 26 men); the statistical grouping of adults and the student studies are off the page under the recommended off-reader answer, except one you liked in version 10, which stays labelled.",
+   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. So the page has no hope number: it opens at the beliefs, and “Who gets free, and how” says plainly what is not counted. Its other numbers are small (one forum’s journals, one church-based trial of 26 men). Under the recommended off-reader answer these porn cards come off: {offPorn}; these stay because you liked them in version 10: {likedPorn}.",
    "assert": {
     "noKinds": {
      "porn": [
