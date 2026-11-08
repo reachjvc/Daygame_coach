@@ -15,7 +15,6 @@
 
 import { useState, type MutableRefObject } from "react"
 
-import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { IconDown, IconNext, IconPrev } from "../../icons"
@@ -155,11 +154,12 @@ export function PhoneReports({
         <DonutChart slices={summary.pie.map((slice) => ({ key: slice.key, label: slice.label, color: slice.color, value: slice.seconds }))} formatValue={duration} />
       </section>
 
-      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Date range">
+      {sheetOpen && (
         <DateSheet
           range={range}
           todayKey={todayKey}
           weekStart={state.user.weekStart}
+          onCancel={() => setSheetOpen(false)}
           onPreset={(preset) => {
             setChoice({ preset })
             setSheetOpen(false)
@@ -169,22 +169,28 @@ export function PhoneReports({
             setSheetOpen(false)
           }}
         />
-      </BottomSheet>
+      )}
     </div>
   )
 }
 
-/** Toggl's date sheet: the presets, then a month you pick a first and a last day in [H25 help_28 f010] */
+/**
+ * Toggl's date sheet [H25 help_28 f010]: Cancel · ‹ month › · Done across the
+ * top, the presets under it, then the month, where a first and a last day
+ * are tapped. Cancel, the backdrop and Escape change nothing.
+ */
 function DateSheet({
   range,
   todayKey,
   weekStart,
+  onCancel,
   onPreset,
   onRange,
 }: {
   range: DateRange
   todayKey: IsoDate
   weekStart: TimetrackState["user"]["weekStart"]
+  onCancel: () => void
   onPreset: (preset: DatePreset) => void
   onRange: (range: DateRange) => void
 }) {
@@ -202,24 +208,40 @@ function DateSheet({
     })
 
   return (
-    <div className="space-y-3 pb-2">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Date range"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onCancel()
+      }}
+      className="fixed inset-0 z-[9600] flex flex-col justify-end bg-black/60"
+    >
+      <button type="button" aria-hidden tabIndex={-1} className="flex-1 cursor-default" onClick={onCancel} />
+      <div className="max-h-[92dvh] space-y-3 overflow-y-auto rounded-t-2xl border-t border-border bg-card px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
+      <div data-sheet-header className="flex items-center gap-1">
+        <Button type="button" variant="ghost" className="h-11 px-2" onClick={onCancel}>
+          Cancel
+        </Button>
+        <button type="button" aria-label="Previous month" onClick={() => setMonth(monthStartOf(addDays(month, -1)))} className="ml-auto flex size-11 items-center justify-center">
+          <IconPrev className="size-4" />
+        </button>
+        <span className="min-w-[8.5rem] text-center text-sm font-medium">
+          {MONTHS[first.getMonth()]} {first.getFullYear()}
+        </span>
+        <button type="button" aria-label="Next month" onClick={() => setMonth(nextMonth)} className="mr-auto flex size-11 items-center justify-center">
+          <IconNext className="size-4" />
+        </button>
+        <Button type="button" variant="ghost" className="h-11 px-2 font-semibold text-primary" onClick={() => onRange({ start: picked.start, end: shownEnd })}>
+          Done
+        </Button>
+      </div>
       <div className="flex flex-wrap gap-2">
         {PRESETS.map((preset) => (
           <Button key={preset.id} type="button" variant="outline" size="sm" className="h-11 rounded-full" onClick={() => onPreset(preset.id)}>
             {preset.label}
           </Button>
         ))}
-      </div>
-      <div className="flex items-center justify-between">
-        <button type="button" aria-label="Previous month" onClick={() => setMonth(monthStartOf(addDays(month, -1)))} className="flex size-11 items-center justify-center">
-          <IconPrev className="size-4" />
-        </button>
-        <span className="text-sm font-medium">
-          {MONTHS[first.getMonth()]} {first.getFullYear()}
-        </span>
-        <button type="button" aria-label="Next month" onClick={() => setMonth(nextMonth)} className="flex size-11 items-center justify-center">
-          <IconNext className="size-4" />
-        </button>
       </div>
       <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
         {/* the weekdays, from the person's first day of the week */}
@@ -250,10 +272,6 @@ function DateSheet({
           )
         })}
       </div>
-      <div className="flex justify-end">
-        <Button type="button" className="h-11 min-w-[96px]" onClick={() => onRange({ start: picked.start, end: shownEnd })}>
-          Done
-        </Button>
       </div>
     </div>
   )

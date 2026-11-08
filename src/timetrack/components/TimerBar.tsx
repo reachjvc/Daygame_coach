@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
-import { IconAdd, IconAuto, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
+import { IconAdd, IconAuto, IconClose, IconFavorite, IconMenu, IconStart, IconStop, IconTimer, IconEdit } from "../icons"
 import {
   DURATION_HINT,
   DURATION_UNREADABLE,
@@ -483,7 +483,17 @@ export function TimerBar({
    * a finished entry that ends now. Leaving the box does not log anything by
    * itself: a tap elsewhere is not a decision.
    */
-  const typedLength = !running && editingDuration && durationInput.trim() !== "" && durationInput !== formatClock(0)
+  /**
+   * THE TIMER THE LENGTH IS BEING TYPED FOR, when it was running at the first
+   * keystroke. The other device can stop it before Enter; the box, with
+   * nothing running any more, read the typed "90" as a length to log, its
+   * button turned into "Add this time" without a word, and Enter added a new,
+   * unnamed 90-minute entry (Phase 8 two-devices audit of
+   * Plans/toggl-parity.md). Until it is let go, the length is not a new entry.
+   */
+  const [durationFor, setDurationFor] = useState<Id | null>(null)
+  const typedLength =
+    !running && durationFor === null && editingDuration && durationInput.trim() !== "" && durationInput !== formatClock(0)
 
   // a timer that starts while a length waits to be logged takes the box back
   const runningId = running?.id ?? null
@@ -602,16 +612,51 @@ export function TimerBar({
    */
   const selectAll = (event: { currentTarget: HTMLInputElement }) => event.currentTarget.select()
 
-  /** The manual entry's length as the boxes read now, or null while one is unreadable */
-  const manualLength = (() => {
+  /** The manual entry's start and end as the boxes read now, or null while one is unreadable */
+  const manualSpan = (() => {
     if (mode !== "manual") return null
     const exact = manualStartExact.current
     const start =
       exact && exact.text === manualStart.trim() && exact.day === manualDay ? exact.iso : parseTimeInput(manualStart, manualDay)
     const stop = start ? parseEndTimeInput(manualStop, start) : null
     if (!start || !stop) return null
-    return Math.max(0, epochSeconds(stop) - epochSeconds(start))
+    return { start, stop }
   })()
+  const manualLength = manualSpan ? Math.max(0, epochSeconds(manualSpan.stop) - epochSeconds(manualSpan.start)) : null
+
+  /**
+   * THE LENGTH IS A BOX TOO (Phase 8 audit of Plans/toggl-parity.md): it looked
+   * like one and a user typed 30 minutes into it. A length typed there keeps the
+   * end and moves the start, read as the running duration reads it ("30" is 30
+   * minutes, "1:30" and "1.30" an hour and a half). Null while nobody is typing.
+   */
+  const [lengthText, setLengthText] = useState<string | null>(null)
+  /**
+   * What is being typed, as a ref too: Enter writes it and then blurs, and the
+   * blur runs in the same key press with this render's `lengthText` still
+   * holding the text, so reading state wrote it twice (and an unreadable length
+   * said so twice). The ref is emptied by the first write; Escape empties it too.
+   */
+  const lengthTyping = useRef<string | null>(null)
+  const typeLength = (text: string | null) => {
+    lengthTyping.current = text
+    setLengthText(text)
+  }
+  const commitLength = () => {
+    const text = lengthTyping.current
+    typeLength(null)
+    if (text === null || !manualSpan || text.trim() === formatDuration(manualLength ?? 0, state.user.durationFormat)) return
+    const seconds = parseDurationInput(text)
+    if (seconds === null) {
+      pushToast(DURATION_UNREADABLE, "error")
+      return
+    }
+    // the end stays; the start is that long before it, to the second (`resumeStartFor`)
+    const start = resumeStartFor(seconds, manualSpan.stop)
+    const shown = formatTimeOfDay(start, state.user.timeFormat)
+    typeManual({ start: shown, day: dateKey(start) })
+    manualStartExact.current = { text: shown, day: dateKey(start), iso: start }
+  }
 
   const addManualEntry = () => {
     // the exact end manual mode opened at, while its box still says so: see `manualRange`
@@ -743,9 +788,33 @@ export function TimerBar({
               <Input value={manualStop} onChange={(e) => typeManual({ stop: e.target.value })} onFocus={selectAll} inputMode="numeric" className="h-11 w-[76px] text-center sm:h-8 sm:w-[70px]" aria-label="End time" />
               {/* the length, to check before "+" (findability check, 2026-11-05) */}
               {manualLength !== null && (
-                <span aria-label="Length" className="px-1 text-sm tabular-nums text-muted-foreground">
-                  {formatDuration(manualLength, state.user.durationFormat)}
-                </span>
+                <Input
+                  value={lengthText ?? formatDuration(manualLength, state.user.durationFormat)}
+                  onFocus={(event) => {
+                    typeLength(event.currentTarget.value)
+                    event.currentTarget.select()
+                  }}
+                  onChange={(event) => typeLength(event.target.value)}
+                  onBlur={commitLength}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      // written here; the blur after it finds nothing left to write
+                      event.preventDefault()
+                      commitLength()
+                      event.currentTarget.blur()
+                    } else if (event.key === "Escape") {
+                      event.preventDefault()
+                      // nothing left for the blur to write
+                      typeLength(null)
+                      event.currentTarget.blur()
+                    }
+                  }}
+                  // the decimal pad: "1.5" is an hour and a half (plan D11)
+                  inputMode="decimal"
+                  title={DURATION_HINT}
+                  aria-label="Length"
+                  className="h-11 w-[76px] text-center tabular-nums sm:h-8 sm:w-[70px]"
+                />
               )}
               {/* "" makes `parseTimeInput` build an Invalid Date and throw, and the
                   "pick a start and an end" toast on the next line never gets its turn —
@@ -757,6 +826,7 @@ export function TimerBar({
             <Input
               value={durationInput}
               onFocus={() => {
+                setDurationFor(running?.id ?? null)
                 durationAtFocus.current = durationInput
                 setEditingDuration(true)
                 // one click on the running time: typeable, and the box opens (D-PC-RUNNING)
@@ -780,6 +850,16 @@ export function TimerBar({
                   // through the blur, so the edit is written once and not again on the way out
                   setBoxOpen(false)
                   event.currentTarget.blur()
+                } else if (event.key === "Enter" && durationFor !== null) {
+                  // the timer it was typed for was stopped elsewhere: nothing is written, the length stays, and it says so
+                  event.preventDefault()
+                  const was = latestState.current.entries.find((e) => e.id === durationFor)
+                  const name = `“${was?.description.trim() || "(no description)"}”`
+                  pushToast(
+                    `${name} was stopped on your other device, so the length you typed was not set. Press Enter again to add it as a new entry, or Esc to drop it.`,
+                  )
+                  // a second Enter, now that it is said, logs it as a finished entry like any typed length
+                  setDurationFor(null)
                 } else if (event.key === "Enter" && typedLength) {
                   event.preventDefault()
                   logTypedLength()
@@ -950,6 +1030,37 @@ export function TimerBar({
         one where the work ended was a trip to another screen. Stop at… sits
         beside the start now; the sheet is in the ⋮ menu.
       */}
+      {/*
+        WHAT WAITS AS THE NEXT THING, IN SIGHT ON THE PC (bug audit A5, found
+        again in Phase 8 of Plans/toggl-parity.md). Words Started while the
+        other device ran something else are kept as the next thing; on a PC
+        their box is in the closed popover and the row below is hidden, so they
+        were kept where nobody could see them. While they have words, they show
+        here, as the phone's strip shows them, until switched to or let go.
+      */}
+      {isPc && mode === "timer" && running && nextDescription.trim() !== "" && (
+        <div data-next-strip className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2 text-sm">
+          <span className="min-w-0 flex-1 truncate">
+            Next: <strong>“{nextDescription.trim()}”</strong>
+          </span>
+          <Button size="sm" className="h-8 px-3" onClick={() => confirmMoment("switch", serverNowIso(), { ...nextDraft, description: nextDescription.trim() })}>
+            Switch now
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 px-3" onClick={() => openMoment("switch")}>
+            Switched at…
+          </Button>
+          <button
+            type="button"
+            onClick={() => setNextDraft(emptyDraft)}
+            aria-label="Forget the next entry"
+            title="Forget the next entry"
+            className={cn(touchTarget, "rounded-md text-muted-foreground hover:bg-secondary/60")}
+          >
+            <IconClose className="size-4" />
+          </button>
+        </div>
+      )}
+
       {/* on the PC all of this is in the box under the running time (`RunningTimeBox`, D-SWITCHED) */}
       {mode === "timer" && running && (
         <div className="border-t border-border px-3 pb-2 text-xs text-muted-foreground sm:hidden">
@@ -1013,7 +1124,7 @@ export function TimerBar({
               aria-label="Next entry"
               className="h-11 min-w-0 basis-full text-sm sm:h-8 sm:basis-0 sm:flex-1"
             />
-            {nextDescription.trim() !== "" && (
+            {nextDescription.trim() !== "" && !isPc && (
               <>
                 {/* one tap: the running one ends now and this starts now, stamped at the tap (A5, A6) */}
                 <Button

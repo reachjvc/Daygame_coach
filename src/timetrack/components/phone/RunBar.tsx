@@ -26,15 +26,16 @@ import { ColorDot } from "../primitives"
 export const WORKING_ON = "I’m working on…"
 export const WORKED_ON = "I’ve worked on…"
 
-/** "● Alpha • Acme": a project and its client, or "No project" */
+/** "● Alpha • Acme": a project and its client; nothing at all with no project, as Toggl leaves that line empty */
 export function ProjectLine({ state, entry, className }: { state: TimetrackState; entry: Pick<TimeEntry, "projectId" | "billable">; className?: string }) {
   const project = projectById(state, entry.projectId)
-  const client = project ? clientById(state, project.clientId) : null
+  if (!project) return null
+  const client = clientById(state, project.clientId)
   return (
     <span className={cn("flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground", className)}>
-      {project && <ColorDot color={project.color} />}
+      <ColorDot color={project.color} />
       <span className="min-w-0 truncate">
-        {project ? project.name : "No project"}
+        {project.name}
         {client && ` • ${client.name}`}
       </span>
     </span>
@@ -69,7 +70,7 @@ export function RunBar({
           <span className={cn("block truncate text-sm leading-snug", !running.description.trim() && "text-muted-foreground")}>
             {running.description.trim() || "+ Add description"}
           </span>
-          <span className="flex items-center gap-2">
+          <span className="flex min-h-4 items-center gap-2">
             <ProjectLine state={state} entry={running} />
             {running.billable && <IconMoney aria-label="Billable" className="size-3.5 shrink-0 text-muted-foreground" />}
           </span>

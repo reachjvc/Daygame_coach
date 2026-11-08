@@ -37,6 +37,7 @@ import {
   blockDragPatch,
   blockGrabMode,
   blockLabel,
+  calendarDays,
   dayColumnSeconds,
   drawnBlockHeight,
   entriesForDay,
@@ -55,7 +56,6 @@ import {
 import {
   addDays,
   dateKey,
-  eachDay,
   epochSeconds,
   formatCompact,
   formatDayHeader,
@@ -65,7 +65,6 @@ import {
   formatWhen,
   isoAtMinutes,
   minutesIntoDay,
-  weekStartOf,
 } from "../timetrackFormatService"
 import {
   continueEntry,
@@ -219,7 +218,15 @@ export function CalendarView({
    * hold on empty space makes 30 minutes or fills a gap of two hours or less;
    * a drag lands on a quarter hour or a neighbour's edge, whichever is closer.
    */
-  phone?: { selectedId: Id | null }
+  phone?: {
+    selectedId: Id | null
+    /**
+     * A block a held finger made: Toggl opens its editor at once, so the
+     * nameless "(no description)" is not left behind with no way to name it
+     * in sight (audit findability, Phase 8).
+     */
+    onCreated?: (entry: TimeEntry) => void
+  }
 }) {
   const isMobile = useIsMobile()
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -285,16 +292,8 @@ export function CalendarView({
   const hourHeight = CALENDAR_ZOOMS.find((z) => z.id === zoom)!.hourHeight
   const minuteHeight = hourHeight / 60
 
-  const days = useMemo(() => {
-    if (range === "day") return [anchor]
-    // 5 days is Monday to Friday, whatever day the week starts on
-    if (range === "workweek") {
-      const monday = weekStartOf(anchor, 1)
-      return eachDay(monday, addDays(monday, 4))
-    }
-    const start = weekStartOf(anchor, state.user.weekStart)
-    return eachDay(start, addDays(start, 6))
-  }, [range, anchor, state.user.weekStart])
+  // 5 days is Monday to Friday of the person's own week holding the day shown (`calendarDays`)
+  const days = useMemo(() => calendarDays(range, anchor, state.user.weekStart), [range, anchor, state.user.weekStart])
 
   const entries = liveEntries(state)
   const enabledCalendars = state.calendars.filter((c) => c.enabled)
@@ -316,6 +315,17 @@ export function CalendarView({
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
+    /**
+     * ON A PC, NOW IN VIEW WHEN TODAY IS SHOWN, as Toggl Track's calendar opens
+     * (Phase 8 audit of Plans/toggl-parity.md): at 19:56 with the work done in
+     * the morning, the rule below put the now line off the screen. About a
+     * third of the way down, so what came just before is in view too.
+     */
+    if (!isMobile && days.includes(todayKey)) {
+      const nowMinutes = minutesIntoDay(new Date(nowSec * 1000).toISOString())
+      container.scrollTop = Math.max(0, nowMinutes * minuteHeight - container.clientHeight / 3)
+      return
+    }
     const starts = [
       ...days.flatMap((day) => entriesForDay(entries, day, nowSec).map((entry) => entryInterval(entry, day, nowSec).startMin)),
       ...days.flatMap((day) => eventsForDay(events, day).map((event) => eventInterval(event, day).startMin)),
@@ -349,7 +359,21 @@ export function CalendarView({
     const interval = entryInterval(moving, current.day, nowSec)
     const edge = current.mode === "resize-start" ? interval.startMin : current.mode === "resize-end" ? interval.endMin : (current.topMinutes ?? interval.startMin)
     const landed = snapToQuarterOrEdge(edge + raw - current.startMinutes, edges)
-    return { minutes: current.startMinutes + (landed.minutes - edge), at: landed.at }
+    /**
+     * Back where the edge would land unmoved: the pointer is home, and home
+     * writes nothing (see `finishDrag`). Without this an entry at 09:00:40
+     * dragged away and back was snapped to 09:00, and a touching neighbour
+     * rewritten with it (code review of 47e97f0c).
+     */
+    const home = snapToQuarterOrEdge(edge, edges)
+    if (landed.minutes === home.minutes && landed.at === home.at) return { minutes: current.startMinutes, at: null }
+    /**
+     * Where the edge lands, as an instant: the neighbour's own, or the quarter
+     * hour's. Given only as minutes, a move of an entry with seconds added
+     * fractional minutes, the clock dropped the fraction, and 01:20:40 dragged
+     * ten minutes landed at 01:29:40, not 01:30 (heavy-history audit, Phase 8).
+     */
+    return { minutes: current.startMinutes + (landed.minutes - edge), at: landed.at ?? isoAtMinutes(current.day, landed.minutes) }
   }
   /** the phone's edges arrive snapped: `blockDragPatch` keeps them where they are */
   const edgeSnap = phone ? (minutes: number) => minutes : undefined
@@ -357,7 +381,7 @@ export function CalendarView({
   const patchOf = (entry: TimeEntry, day: IsoDate, current: DragState): BlockDragPatch | null => {
     const patch = blockDragPatch(entry, day, blockDrag(current), nowIso(), edgeSnap)
     if (!phone || !current.currentAt || current.mode === "create") return patch
-    return landOnEdge(entry, current.mode, current.currentAt)
+    return landOnEdge(entry, day, current.mode, current.currentAt, patch, nowIso())
   }
 
   /**
@@ -580,7 +604,10 @@ export function CalendarView({
           nowIso(),
         )
         if (result.violations.length > 0) pushToast(result.violations[0].message, "error")
-        else setState(layOnto(state, result.state))
+        else {
+          setState(layOnto(state, result.state))
+          if (result.entry) phone?.onCreated?.(result.entry)
+        }
       }
       return
     }
@@ -772,6 +799,12 @@ export function CalendarView({
         </div>
       </div>
 
+      {phone && (
+        <p className="text-[11px] text-muted-foreground">
+          Hold empty space to add a block · hold a block to move it, or an edge to resize · tap one to choose it.
+          {range === "day" && " Swipe sideways for another day."}
+        </p>
+      )}
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         {/* day headers: on the phone's day view its own day line says this (`PhoneCalendar`) */}
         <div className={cn("flex border-b border-border bg-secondary/30", range !== "day" && "min-w-[640px] sm:min-w-0", phone && range === "day" && "hidden")}>
@@ -1139,6 +1172,8 @@ export function CalendarView({
         </div>
       </div>
 
+      {/* the phone's hint is above the grid, where it is seen (audit findability, Phase 8) */}
+      {!phone && (
       <p className="text-[11px] text-muted-foreground">
         {isMobile
           ? "Hold empty space and drag to plan or log a block · hold a block to move it, or its top or bottom edge to resize · tap to edit."
@@ -1150,6 +1185,7 @@ export function CalendarView({
           ? " Calendar events share each day on the right and never change your entries."
           : " Connect a calendar to see your events beside your time."}
       </p>
+      )}
 
       {boxes && boxTarget && (
         <CalendarEntryBox

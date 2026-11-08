@@ -27,6 +27,7 @@ import {
   IconMenu,
   IconSplit,
   IconStart,
+  IconStop,
 } from "../icons"
 import {
   DURATION_HINT,
@@ -34,6 +35,7 @@ import {
   addDays,
   continuedMark,
   dateKey,
+  formatWhen,
   daysBetween,
   endDayMark,
   epochSeconds,
@@ -70,6 +72,7 @@ import {
   setEntryDuration,
   setRunningElapsed,
   splitEntry,
+  stopSeen,
   startLinkFor,
   undoDisplacement,
   tagNames,
@@ -85,7 +88,9 @@ import {
   mendJoint,
   shiftEdge,
   startWhereLastEnded,
+  stopAt,
   typeStart,
+  undoStopAt,
   withNeighbours,
   type Joint,
 } from "../timeFixService"
@@ -739,7 +744,51 @@ function EntryFields({
     )
   }
 
-  const continueButton = (
+  /**
+   * No ▶ on the row that is already running: a first-time user saw it and could
+   * not tell what it would do (audit findability, 2026-11-05; the phone lost it
+   * in Phase 3). Its slot holds ■ instead, which stops it, as Toggl Track's web
+   * list has (Phase 8 Toggl-parity audit). It stops now, waits for the check
+   * like every Stop (D2), and says so with the Undo Stop at… gives. Named "Stop
+   * this timer": the bar's own is "Stop timer", and one name on two buttons in
+   * one page is one too many for anyone finding them by name.
+   */
+  const stopHere = () =>
+    (afterCheck ?? ((run) => run(latestState.current, nowIso())))((latest, tappedAt) => {
+      // this row's entry, or nothing: by now the other device may have stopped it or switched (`stopSeen`)
+      const seen = stopSeen(latest, entry.id, tappedAt)
+      if (seen.refused) {
+        const name = (e: TimeEntry | null | undefined) => `“${e?.description.trim() || "(no description)"}”`
+        pushToast(
+          seen.refused === "other"
+            ? `Your other device changed the timer just now: ${name(seen.running)} is running, so nothing was stopped.`
+            : `${name(entry)} was already stopped on your other device.`,
+        )
+        return
+      }
+      const result = stopAt(latest, tappedAt, nowIso())
+      if (result.violations[0] || !result.stopped || result.stopped.id !== entry.id) {
+        pushToast(result.violations[0]?.message ?? "Nothing is running", "error")
+        return
+      }
+      const stopped = result.stopped
+      setState(layOnto(latest, result.state))
+      const name = `“${stopped.description.trim() || "(no description)"}”`
+      pushToast(`Stopped ${name} ${formatWhen(stopped.stop ?? tappedAt, latest.user.timeFormat, dateKey(nowIso()))}`, "info", () =>
+        undoOrSay(() => latestState.current, (current) => undoStopAt(current, stopped.id, nowIso()), setState, pushToast),
+      )
+    })
+  const continueButton = running ? (
+    <button
+      type="button"
+      onClick={stopHere}
+      aria-label="Stop this timer"
+      title="Stop timer"
+      className={cn(touchTarget, "rounded-full text-destructive hover:bg-destructive/10")}
+    >
+      <IconStop className="size-5 sm:size-4" />
+    </button>
+  ) : (
     <button
       type="button"
       onClick={() =>
@@ -931,6 +980,8 @@ function EntryFields({
             if (description !== entry.description) patch({ description })
           }}
           disabled={!editable}
+          // named for what it is: the placeholder alone made a screen reader call every row "(no description)"
+          aria-label="Description"
           placeholder="(no description)"
           className={cn(
             // a ring while typing: with none, a new user could not tell the name had become a box (findability check, 2026-11-05)

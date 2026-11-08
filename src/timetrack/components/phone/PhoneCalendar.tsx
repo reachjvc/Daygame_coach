@@ -44,6 +44,7 @@ export function PhoneCalendar({
   onDay,
   selectedId,
   onSelect,
+  onCreated,
   onOpenIntegrations,
 }: {
   state: TimetrackState
@@ -54,6 +55,8 @@ export function PhoneCalendar({
   onDay: (day: IsoDate) => void
   selectedId: Id | null
   onSelect: (id: Id | null) => void
+  /** a held finger made a block: its sheet opens, the name ready to type */
+  onCreated: (entry: TimeEntry) => void
   onOpenIntegrations: () => void
 }) {
   const todayKey = dateKey(new Date(nowSec * 1000))
@@ -104,7 +107,7 @@ export function PhoneCalendar({
         onOpenIntegrations={onOpenIntegrations}
         anchor={day}
         onAnchor={onDay}
-        phone={{ selectedId }}
+        phone={{ selectedId, onCreated }}
       />
     </div>
   )
@@ -114,6 +117,7 @@ export function PhoneCalendar({
 export function BlockPanel({
   entry,
   state,
+  latestState,
   setState,
   pushToast,
   afterCheck,
@@ -123,6 +127,12 @@ export function BlockPanel({
 }: {
   entry: TimeEntry
   state: TimetrackState
+  /**
+   * The workspace as it is now, for the switch's Undo: pressed after a third
+   * timer started, the copy from the tap found nothing in the way and did
+   * nothing, in silence (code review of ddffc410, same as the sheet's).
+   */
+  latestState: () => TimetrackState
   setState: SetState
   pushToast: PushToast
   afterCheck: AfterCheck
@@ -155,7 +165,7 @@ export function BlockPanel({
       const { displaced, started } = result
       if (displaced && started) {
         pushToast(`Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`, "info", () =>
-          undoOrSay(() => latest, (current) => undoDisplacement(current, started.id, displaced.id, serverNowIso()), setState, pushToast),
+          undoOrSay(latestState, (current) => undoDisplacement(current, started.id, displaced.id, serverNowIso()), setState, pushToast),
         )
       }
     })
@@ -173,14 +183,17 @@ export function BlockPanel({
       ]
   return (
     <section role="region" aria-label="Selected time entry" className="px-3 pb-1 pt-3">
-      <div className="flex items-baseline justify-between gap-2">
-        <p className={cn("min-w-0 truncate text-sm font-medium", !entry.description.trim() && "text-muted-foreground")}>
-          {entry.description.trim() || "Add description"}
-        </p>
-        <p className="shrink-0 text-xs tabular-nums text-muted-foreground">{span}</p>
-      </div>
-      <ProjectLine state={state} entry={entry} className="mt-0.5" />
-      <div className="mt-3 flex justify-around">
+      {/* it looks tappable, so it is: the name opens the sheet, as Edit does (audit findability, Phase 8) */}
+      <button type="button" onClick={act(onEdit)} className="block w-full text-left">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className={cn("min-w-0 truncate text-sm font-medium", !entry.description.trim() && "text-muted-foreground")}>
+            {entry.description.trim() || "Add description"}
+          </span>
+          <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{span}</span>
+        </span>
+        <ProjectLine state={state} entry={entry} className="mt-0.5" />
+      </button>
+      <div role="group" aria-label="Actions" className="mt-3 flex justify-around">
         {actions.map((action) => {
           const Icon = action.icon
           return (

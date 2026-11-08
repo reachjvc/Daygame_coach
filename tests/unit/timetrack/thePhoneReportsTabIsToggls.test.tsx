@@ -109,6 +109,24 @@ describe("the Reports tab", () => {
     expect(letters).toEqual(["M", "T", "W", "T", "F", "S", "S"])
   })
 
+  test("the date sheet is headed Cancel · ‹ month › · Done, as Toggl's (H25 help_28 f010); Cancel changes nothing", async () => {
+    await openReports(week())
+    fireEvent.click(main().getByRole("button", { name: /This week/ }))
+    const sheet = screen.getByRole("dialog", { name: "Date range" })
+    const header = sheet.querySelector("[data-sheet-header]") as HTMLElement
+    expect([...header.querySelectorAll("button")].map((b) => b.getAttribute("aria-label") ?? b.textContent?.trim())).toEqual([
+      "Cancel",
+      "Previous month",
+      "Next month",
+      "Done",
+    ])
+    expect(header.textContent).toContain("August 2026")
+    fireEvent.click(within(sheet).getByRole("button", { name: "2026-08-04" }))
+    fireEvent.click(within(header).getByRole("button", { name: "Cancel" }))
+    expect(screen.queryByRole("dialog", { name: "Date range" })).toBeNull()
+    expect(within(main().getByRole("region", { name: "Tracked hours" })).getByText("3:30")).toBeTruthy()
+  })
+
   test("Group by Clients", async () => {
     await openReports(week())
     fireEvent.click(main().getByRole("radio", { name: "Clients" }))

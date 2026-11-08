@@ -197,6 +197,54 @@ describe("⚙", () => {
   })
 })
 
+describe("an entry with no project (Toggl leaves the line empty)", () => {
+  test("its row and the running bar print no \"No project\", and a row keeps its tags", async () => {
+    asPhone()
+    const copy = withHistory()
+    copy.entries[0] = { ...copy.entries[0], projectId: null, tagIds: ["50"] }
+    await open(startTimer(copy, { description: "Call", projectId: null, taskId: null, tagIds: [], billable: false }, new Date(2026, 7, 10, 11, 0).toISOString()).state)
+    expect(screen.queryAllByText(/No project/)).toEqual([])
+    expect(within(screen.getByRole("main")).getByText(/deep/)).toBeTruthy()
+  })
+})
+
+describe("every tab (audit findability, Phase 8)", () => {
+  test("opens at its top: the Calendar's week strip was scrolled out of sight", async () => {
+    asPhone()
+    const scrolled = vi.fn()
+    vi.stubGlobal("scrollTo", scrolled)
+    await open(withHistory())
+    scrolled.mockClear()
+    fireEvent.click(within(sections()).getByRole("button", { name: "Calendar" }))
+    expect(scrolled).toHaveBeenCalledWith(0, 0)
+    scrolled.mockClear()
+    fireEvent.click(within(sections()).getByRole("button", { name: "Reports" }))
+    expect(scrolled).toHaveBeenCalledWith(0, 0)
+  })
+
+  test("is padded clear of the bottom bar by the bar's own height, whatever else sets the page's inset", async () => {
+    asPhone()
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        disconnect() {}
+        unobserve() {}
+      },
+    )
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
+      return this.hasAttribute("data-bottom-block") ? 140 : 0
+    })
+    await open(withHistory())
+    // the page-wide inset says nothing is there (another bar went away): the list must still clear this one
+    document.documentElement.style.setProperty("--panel-bottom-inset", "0px")
+    fireEvent.click(within(sections()).getByRole("button", { name: "Reports" }))
+    expect(screen.getByRole("main").style.paddingBottom).toBe("156px")
+    fireEvent.click(within(sections()).getByRole("button", { name: "Timer" }))
+    expect(screen.getByRole("main").style.paddingBottom).toBe("156px")
+  })
+})
+
 test("the PC keeps its own timer bar", async () => {
   await open(withHistory())
   expect(within(screen.getByRole("main")).getByPlaceholderText("What are you working on?")).toBeTruthy()

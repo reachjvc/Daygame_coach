@@ -1273,6 +1273,23 @@ export function followWeekStart(config: ReportConfig, todayKey: IsoDate, from: W
   return config
 }
 
+/**
+ * A NEW REPORT'S ROUNDING IS THE WORKSPACE'S DEFAULT, EVEN WHEN THAT ARRIVES LATE.
+ *
+ * The same shape as `followWeekStart`, for "Default report rounding": the report is
+ * made when the tracker opens, and on a browser with no copy of its own — after Log
+ * Out, or a new phone — that is the empty workspace's rounding, off. The account's
+ * arrived a moment later and the report never heard of it, so the first open after
+ * signing in added up raw minutes (account-switching audit, Phase 8). A report still
+ * on the old default moves to the new one; a rounding chosen in the report is the
+ * person's and is returned untouched, the same object.
+ */
+export function followRounding(config: ReportConfig, from: RoundingConfig, to: RoundingConfig): ReportConfig {
+  const same = (a: RoundingConfig, b: RoundingConfig) => a.enabled === b.enabled && a.mode === b.mode && a.minutes === b.minutes
+  if (same(from, to) || !same(config.rounding, from)) return config
+  return { ...config, rounding: { ...to } }
+}
+
 /** Toggl shares saved reports by link; we encode the whole config in the URL */
 export function encodeReportConfig(config: ReportConfig): string {
   return btoa(unescape(encodeURIComponent(JSON.stringify(config))))

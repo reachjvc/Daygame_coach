@@ -43,11 +43,13 @@ import { stateToRows, rowsToState } from "../timetrackMapperService"
 import { reconcileRunningEntries } from "../timetrackService"
 import {
   applyTagSets,
+  canTombstone,
   countRows,
   reattachToWorkspace,
   repairPending,
   diffRows,
   keysIn,
+  liveAnswerCovers,
   mergeChangeSets,
   mergeIncoming,
   rowKey,
@@ -59,7 +61,7 @@ import {
   withServerTagLinks,
   withoutSentRows,
 } from "../syncService"
-import { olderThan, rebase, versionOf, type BaseRecord, type Bases, type Overruled } from "../syncVersionService"
+import { isBackToBase, olderThan, rebase, versionOf, type BaseRecord, type Bases, type Overruled } from "../syncVersionService"
 import type { TimetrackState } from "../types"
 
 type AnyRow = Record<string, unknown>
@@ -571,6 +573,12 @@ export function useTimetrackSync({
   const userId = useRef<string | null>(null)
   const cursor = useRef<string | null>(null)
   const flushing = useRef(false)
+  /**
+   * The upload in the air: its rows as they were queued, by `${table}/${key}`, and
+   * the tag sets it carries. A row put back meanwhile is sent again after it, based
+   * on what was sent (see `takeBackWhatWasPutBack`).
+   */
+  const sendingNow = useRef<{ rows: Map<string, AnyRow>; tags: TagSets }>({ rows: new Map(), tags: {} })
   const ready = useRef(false)
   /** the latest state, for code that runs after an await and would otherwise see a stale one */
   const latestState = useRef<TimetrackState | null>(null)
@@ -1137,6 +1145,7 @@ export function useTimetrackSync({
     }
     /** What actually went, which on the way out may be only part of the queue */
     const went: Partial<TimetrackRows> = batches.length === 1 ? batches[0] : sending
+    sendingNow.current = { rows: indexRows(onlyKeys(queued, keysIn(went))), tags: setsFor(went, queuedSets) }
     try {
       for (const batch of batches) {
         // NOT registered in `inFlight`: an upload outlives the screen that started it (D3)
@@ -1425,6 +1434,7 @@ export function useTimetrackSync({
       }
     } finally {
       flushing.current = false
+      sendingNow.current = { rows: new Map(), tags: {} }
       /**
        * Whatever was queued while that request was in the air goes now, rather
        * than waiting for a status change that may never come. This is the work
@@ -1539,29 +1549,28 @@ export function useTimetrackSync({
       if (unmounted.current || firstContactBusy.current || accountGone.current) return
       firstContactBusy.current = true
       try {
-        const abort = new AbortController()
-        inFlight.current.add(abort)
-        const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
-        let response: Response
-        try {
-          // never an answer from a cache: its `Date` would set the clock wrong (D5)
-          response = await askServer("/api/timetrack/sync", { signal: abort.signal, cache: "no-store" })
-        } finally {
-          clearTimeout(deadline)
-          inFlight.current.delete(abort)
+        const read = async (path: string): Promise<Response> => {
+          const abort = new AbortController()
+          inFlight.current.add(abort)
+          const deadline = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS)
+          try {
+            // never an answer from a cache: its `Date` would set the clock wrong (D5)
+            return await askServer(path, { signal: abort.signal, cache: "no-store" })
+          } finally {
+            clearTimeout(deadline)
+            inFlight.current.delete(abort)
+          }
         }
+        // the account without its deleted history, unless this device holds a row it lacks: see below
+        const response = await read("/api/timetrack/sync?live=1")
         if (response.status === 401) {
           setStatus("local-only")
           noteCheck("unanswered")
           return
         }
         if (!response.ok) throw new Error(response.statusText)
-        const body = (await response.json()) as {
-          rows: TimetrackRows
-          cursor: string
-          empty: boolean
-          userId?: string
-        }
+        type Answer = { rows: TimetrackRows; cursor: string; empty: boolean; userId?: string; live?: boolean }
+        let body = (await response.json()) as Answer
         /**
          * THE PAGE WAS OPENED FOR ONE ACCOUNT, AND ANOTHER ANSWERED: somebody
          * signed in as someone else in another tab since. Nothing of this page is
@@ -1577,6 +1586,39 @@ export function useTimetrackSync({
         // the change feed listens for this account, once it is known (D4)
         setAccount(body.userId ?? null)
         const { start, own } = startFor(body.userId ?? null)
+
+        /**
+         * A LIVE ANSWER LEAVES OUT WHAT WAS DELETED, AND THIS DEVICE MAY NOT HAVE HEARD.
+         *
+         * Every opening read the whole account, deleted entries and their tag links
+         * included: 1.5 MB for 1,791 entries became 7.7 MB once about 7,000 had been
+         * deleted, and a phone on a slow link said "Saved" after 37–45 s instead of 6
+         * (heavy-history audit, Phase 8 of Plans/toggl-parity.md). The deleted part
+         * matters only for a row this device holds: everything below takes a row
+         * missing from the answer as one the account never had, keeps it and sends
+         * it, which for an entry deleted elsewhere would bring it back. So a live
+         * answer that lacks any row this device holds — shown, started from, or
+         * queued — is put aside, and the whole account is read as before
+         * (`liveAnswerCovers`, `anOpeningDoesNotDownloadWhatWasDeleted`). A server
+         * from before this ignores `live` and answers whole, without saying `live`.
+         */
+        if (body.live && !body.empty) {
+          const held = [
+            stateToRows(latestState.current ?? state, userId.current),
+            start ? stateToRows(start, userId.current) : null,
+            pending.current,
+          ]
+          if (!liveAnswerCovers(body.rows, held)) {
+            const whole = await read("/api/timetrack/sync")
+            if (!whole.ok) throw new Error(whole.statusText)
+            body = (await whole.json()) as Answer
+            if (pageAccount && body.userId && body.userId !== pageAccount) {
+              stopForAnotherAccount()
+              return
+            }
+            cursor.current = body.cursor
+          }
+        }
 
         if (body.empty) {
           // nothing stored yet. Offer to upload what this browser holds rather
@@ -1831,6 +1873,74 @@ export function useTimetrackSync({
     void attempt()
   }, [state, replaceState, savePending, flush, learn, queueChanges, noteCheck, pushToast, pageAccount, stopForAnotherAccount])
 
+  /**
+   * A ROW PUT BACK LEAVES THE QUEUE — OR, IF ITS SEND IS IN THE AIR, GOES AGAIN AS IT IS NOW.
+   *
+   * Each change below is compared with the account's copy and MERGED into the
+   * queue. An Undo puts a row back exactly as the account has it, so there was
+   * nothing left to compare and the row already queued stayed: a swipe-delete
+   * undone with no signal was sent when the signal came back, and the phone
+   * showed the entry, said "Saved", while the account had it deleted. A Continue
+   * undone sent its stop and its new entry; "Typo" renamed back to "Original"
+   * sent "Typo" (offline audit 2026-11-05,
+   * `anUndoWithNoSignalIsWhatTheAccountGets`).
+   *
+   * So a queued row this device now holds as it was before it was queued
+   * (`isBackToBase`) is taken out. If that row is in the upload in the air, what
+   * lands is no longer what the device shows: the row as it is now — or a
+   * tombstone, for one that is gone — is queued behind it, and goes when the
+   * upload answers, based on the version it wrote.
+   *
+   * AND BASED ON WHAT WAS SENT, IN CASE THE ANSWER NEVER COMES. The row put back
+   * kept the base from before the send. When the send was saved and its answer
+   * lost — a request that timed out after the server wrote it — the retry was
+   * refused as stale, and the merge, finding this device's copy equal to that old
+   * base, took the account's: the delete, or "Typo", came back (a code review,
+   * 2026-11-05). Based on the row as sent, the put-back is this device's change
+   * whichever happened; `sent` says the account may hold that row now, so a new
+   * row taken back is no longer taken for one the account never had.
+   *
+   * Rows still being changed are left to the merge, and a row whose base was not
+   * kept is left queued as before. Returns whether the queue changed.
+   */
+  const takeBackWhatWasPutBack = useCallback((rows: TimetrackRows, changed: Partial<TimetrackRows>): boolean => {
+    const changing = keysIn(changed)
+    const here = indexRows(rows)
+    const tagsHere = linksByEntry(rows)
+    const drop = new Set<string>()
+    const again: Partial<TimetrackRows> = {}
+    const againTags: TagSets = {}
+    const againBases: Bases = {}
+    for (const [key, queuedRow] of indexRows(pending.current)) {
+      const record = bases.current[key]
+      if (changing.has(key) || !record) continue
+      const table = key.slice(0, key.indexOf("/")) as keyof TimetrackRows
+      const id = key.slice(table.length + 1)
+      const now = here.get(key)
+      if (!isBackToBase(table, now, record, table === "timetrack_entries" ? (tagsHere.get(id) ?? []) : undefined)) continue
+      const sent = sendingNow.current.rows.get(key)
+      const resend = sent ? (now ?? (canTombstone(table) ? { ...queuedRow, deleted_at: serverNowIso() } : null)) : null
+      if (!resend) {
+        drop.add(key)
+        continue
+      }
+      ;((again as Record<string, AnyRow[]>)[table] ??= []).push(resend)
+      if (table === "timetrack_entries" && now && !now.deleted_at) againTags[id] = tagsHere.get(id) ?? []
+      againBases[key] = {
+        ...record,
+        row: sent!,
+        sent: true,
+        ...(table === "timetrack_entries" ? { tags: sendingNow.current.tags[id] ?? record.tags } : {}),
+      }
+    }
+    if (drop.size === 0 && countRows(again) === 0) return false
+    const kept = new Set([...keysIn(pending.current)].filter((key) => !drop.has(key)))
+    pending.current = mergeChangeSets(onlyKeys(pending.current, kept), again)
+    tagSets.current = { ...tagSets.current, ...againTags }
+    bases.current = { ...bases.current, ...againBases }
+    return true
+  }, [])
+
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
     if (!state) return
@@ -1921,6 +2031,7 @@ export function useTimetrackSync({
 
     const rows = stateToRows(state, userId.current)
     const { changed, count, tagSets: setsChanged } = diffRows(serverRows.current, rows, serverNowIso())
+    if (takeBackWhatWasPutBack(rows, changed)) savePending()
     if (count === 0) return
 
     const guard = safeToSend(changed, serverRows.current, adopted.current)
@@ -1969,7 +2080,7 @@ export function useTimetrackSync({
 
     const timer = setTimeout(() => void flush(), 800)
     return () => clearTimeout(timer)
-  }, [state, syncActive, savePending, flush, queueChanges, pageAccount, stopForAnotherAccount, fromAnotherTab])
+  }, [state, syncActive, savePending, flush, queueChanges, takeBackWhatWasPutBack, pageAccount, stopForAnotherAccount, fromAnotherTab])
 
   // --- ask for other devices' changes ---------------------------------------
   const pull = useCallback(async () => {

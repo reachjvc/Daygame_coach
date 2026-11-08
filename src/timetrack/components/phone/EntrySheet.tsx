@@ -77,12 +77,13 @@ import {
   matchAutotracker,
   moveEntryToDay,
   stopTimer,
+  undoDisplacement,
 } from "../../timetrackService"
 import type { EntryDraft, Id, IsoDateTime, TimetrackState } from "../../types"
 import type { AfterCheck } from "../afterCheck"
 import { MomentDrums } from "../Drums"
 import type { MomentKind } from "../MomentPicker"
-import { announceNeighbours } from "../neighbourNotice"
+import { announceNeighbours, undoOrSay } from "../neighbourNotice"
 import { DescriptionField, ProjectPicker, TagPicker } from "../pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow } from "../primitives"
 import { landOnCurrent, type SetState } from "./landOnCurrent"
@@ -111,6 +112,7 @@ export function EntrySheet({
   target,
   state,
   setState,
+  latestState,
   nowSec,
   pushToast,
   afterCheck,
@@ -119,10 +121,18 @@ export function EntrySheet({
   onClose,
   onKeepEditing,
   onMoment,
+  focusName = false,
 }: {
   target: SheetTarget
   state: TimetrackState
   setState: SetState
+  /**
+   * The workspace as it is now, for an Undo pressed after this sheet closed:
+   * the switch's Undo asked the copy from before the create, so with a third
+   * timer started since it found nothing in the way, then did nothing, in
+   * silence (code review of ddffc410).
+   */
+  latestState: () => TimetrackState
   nowSec: number
   pushToast: PushToast
   afterCheck: AfterCheck
@@ -136,6 +146,8 @@ export function EntrySheet({
   onKeepEditing: () => void
   /** Stop at…, Switched at…, Started at…: the shell closes this and opens the moment picker */
   onMoment: (kind: MomentKind, draft: EntryDraft) => void
+  /** the name takes the focus, as for a new entry: a block a held finger just made */
+  focusName?: boolean
 }) {
   const isNew = target.mode !== "edit"
   const entry = target.mode === "edit" ? (state.entries.find((e) => e.id === target.entryId && !e.serverDeletedAt) ?? null) : null
@@ -191,6 +203,12 @@ export function EntrySheet({
   /** one tap on a chip makes it typeable: its input takes the focus, its time selected (findability 2026-11-05) */
   const focusChip = useRef<Edge | null>(null)
   const [moving, setMoving] = useState(false)
+  /** the "@ Add a project" chip's asks (`DescriptionField`'s `askProject`) */
+  const [askProject, setAskProject] = useState(0)
+  /** "Create a new project" with no name typed: the name it asks for */
+  const [namingProject, setNamingProject] = useState<string | null>(null)
+  /** ⋮ "Project and task…": the full picker, with tasks, which the inline list does not offer */
+  const [pickingProject, setPickingProject] = useState(false)
 
   // what is typed and not yet applied: a ref too, because Enter applies it and the blur that follows must not again
   const [chipText, setChipText] = useState<string | null>(null)
@@ -323,20 +341,28 @@ export function EntrySheet({
       return
     }
 
-    const refusal = createFromSheet(state, final, serverNowIso()).violations[0]
+    const refusal = createFromSheet(state, final, serverNowIso(), base?.start ?? null).violations[0]
     if (refusal) {
       refuse(refusal.message)
       return
     }
     const create = (latest: TimetrackState, at: IsoDateTime) => {
-      const made = createFromSheet(latest, final, at)
+      const made = createFromSheet(latest, final, at, base?.start ?? null)
       if (made.violations[0]) {
         pushToast(made.violations[0].message, "error")
         return
       }
       // the new entry's id is made here, once
       setState(layOnto(latest, made.state))
-      if (made.stopped) pushToast(`Stopped “${made.stopped.description.trim() || "(no description)"}”, which was running`, "info")
+      const { stopped, created } = made
+      // the other device's timer stopped where this one began: said, with both halves back on Undo
+      if (stopped && created) {
+        pushToast(
+          `Stopped “${stopped.description.trim() || "(no description)"}” and started “${created.description.trim() || "(no description)"}”`,
+          "info",
+          () => undoOrSay(latestState, (current) => undoDisplacement(current, created.id, stopped.id, serverNowIso()), setState, pushToast),
+        )
+      }
     }
     // a timer starting waits for the check like Start does; its words wait as the next thing if the other device beat it (A5)
     if (final.stop === null) afterCheck(create, { keepAsNext: entryDraftOf(final) })
@@ -354,18 +380,26 @@ export function EntrySheet({
 
   // --- the running entry's Stop, Stop at…, Switched at… ---------------------
 
+  /**
+   * ■ STOP: WHAT WAS TYPED IS SAVED NOW; ONLY THE STOP WAITS FOR THE CHECK (D2).
+   *
+   * Both used to wait, together. When the check found the PC had already
+   * stopped this timer, the Stop was dropped ("Tap again if you still want
+   * to") and the name typed here went with it (offline audit, Phase 8). The
+   * name is the person's work whatever happens to the Stop: it goes onto the
+   * entry as it is now, and the PC's stop stands.
+   */
   const stopNow = () => {
     if (target.mode !== "edit") return
     const id = target.entryId
     const changesNow = changesBetween(base, settle(shown).draft ?? shown)
+    if (Object.keys(changesNow).length > 0) landOnCurrent(state, (current) => saveEdit(current, id, changesNow, serverNowIso()), setState, pushToast)
     afterCheck((latest, tappedAt) => {
       landOnCurrent(
         latest,
         (current) => {
-          const saved = Object.keys(changesNow).length > 0 ? saveEdit(current, id, changesNow, tappedAt) : { state: current, violations: [] }
-          if (saved.violations.length > 0) return saved
-          const still = saved.state.entries.find((e) => e.id === id)
-          return still?.stop === null ? { state: stopTimer(saved.state, tappedAt).state, violations: [] } : saved
+          const still = current.entries.find((e) => e.id === id)
+          return still?.stop === null ? { state: stopTimer(current, tappedAt).state, violations: [] } : { state: current, violations: [] }
         },
         setState,
         pushToast,
@@ -411,7 +445,11 @@ export function EntrySheet({
     const label = which === "start" ? "Start" : "End"
     if (iso === null) {
       // a running entry's end is "now", with no date, as Toggl's is [H25 help_14 f012]
-      return <span className="flex min-h-11 items-center justify-center rounded-lg px-3 text-sm tabular-nums">now</span>
+      return (
+        <span data-testid="end-chip" className="flex min-h-11 items-center justify-center rounded-lg px-3 text-sm tabular-nums">
+          {formatTimeOfDay(isoFromEpochSeconds(Math.max(nowSec, ownSecond)), format)}
+        </span>
+      )
     }
     const time = formatTimeOfDay(iso, format)
     const date = chipDate(dateKey(iso), state.user.dateFormat)
@@ -477,6 +515,7 @@ export function EntrySheet({
     { label: "Duration only (hide start and end times)", pressed: shown.duronly, run: () => edit((d) => ({ ...d, duronly: !d.duronly })) },
     ...(target.mode === "edit" ? [{ label: "Move to another day…", run: () => setMoving(true) }] : []),
     ...(target.mode === "start" ? [{ label: "Started at…", run: () => moment("start") }] : []),
+    { label: "Project and task…", run: () => setPickingProject(true) },
   ]
 
   const title = isNew ? "New time entry" : "Time entry"
@@ -605,15 +644,21 @@ export function EntrySheet({
             value={shown.description}
             projectId={shown.projectId}
             placeholder={running ? WORKING_ON : WORKED_ON}
-            autoFocus={isNew}
+            autoFocus={isNew || focusName}
             onChange={(description) => edit((d) => ({ ...d, description }))}
             onPickProject={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
             onPickTag={(tagId) => edit((d) => ({ ...d, tagIds: [...new Set([...d.tagIds, tagId])] }))}
             onSubmit={done}
+            askProject={askProject}
             inline={{
               onClearProject: () => edit((d) => ({ ...d, projectId: null, taskId: null })),
               onCreateProject: (name) => {
-                // made now, as the chip's picker makes it; choosing it waits for DONE
+                // with only @ typed there is no name yet: ask for one
+                if (!name.trim()) {
+                  setNamingProject("")
+                  return
+                }
+                // made now, as Toggl's makes it; choosing it waits for DONE
                 const made = createProject(state, { name }, serverNowIso())
                 setState(layOnto(state, made.state))
                 edit((d) => ({ ...d, projectId: made.id, taskId: null }))
@@ -641,24 +686,18 @@ export function EntrySheet({
           {/* the chips [H25 help_14 f012]: project ×, # Add tags, $ Billable */}
           <div className="flex flex-wrap items-center gap-2 py-3">
             <div className={cn("flex items-center rounded-full border border-border", project && "bg-secondary")}>
-              <ProjectPicker
-                state={state}
-                projectId={shown.projectId}
-                taskId={shown.taskId}
-                onChange={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
-                onCreateProject={(name) => {
-                  // the project is made now, as Toggl's picker makes it; choosing it waits for DONE
-                  const made = createProject(state, { name }, serverNowIso())
-                  setState(layOnto(state, made.state))
-                  edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+              {/* "@ Add a project" puts @ in the name and opens the inline list, as Toggl's chip does (V1 0:32) */}
+              <button
+                type="button"
+                onClick={() => {
+                  edit((d) => ({ ...d, description: d.description.trim() ? `${d.description.trimEnd()} @` : "@" }))
+                  setAskProject((n) => n + 1)
                 }}
-                renderTrigger={() => (
-                  <span className={cn("flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm", !project && "text-muted-foreground")}>
-                    {project ? <ColorDot color={project.color} /> : <span aria-hidden>@</span>}
-                    <span className="max-w-[160px] truncate">{project ? (task ? `${project.name} · ${task.name}` : project.name) : "Add a project"}</span>
-                  </span>
-                )}
-              />
+                className={cn("flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm", !project && "text-muted-foreground")}
+              >
+                {project ? <ColorDot color={project.color} /> : <span aria-hidden>@</span>}
+                <span className="max-w-[160px] truncate">{project ? (task ? `${project.name} · ${task.name}` : project.name) : "Add a project"}</span>
+              </button>
               {project && (
                 <button
                   type="button"
@@ -705,6 +744,50 @@ export function EntrySheet({
             </button>
           </div>
 
+          {namingProject !== null && (
+            <div className="flex items-center gap-2 pb-3">
+              <input
+                aria-label="New project name"
+                placeholder="Name your project"
+                autoFocus
+                value={namingProject}
+                onChange={(event) => setNamingProject(event.target.value)}
+                className="h-11 min-w-0 flex-1 rounded-md border border-border bg-background/60 px-3 text-base outline-none"
+              />
+              <Button
+                type="button"
+                className="h-11"
+                disabled={!namingProject.trim()}
+                onClick={() => {
+                  const made = createProject(state, { name: namingProject.trim() }, serverNowIso())
+                  setState(layOnto(state, made.state))
+                  edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+                  setNamingProject(null)
+                }}
+              >
+                Create project
+              </Button>
+              <Button type="button" variant="ghost" className="h-11" onClick={() => setNamingProject(null)}>
+                Cancel
+              </Button>
+            </div>
+          )}
+          {pickingProject && (
+            <ProjectPicker
+              state={state}
+              projectId={shown.projectId}
+              taskId={shown.taskId}
+              autoOpen
+              onClose={() => setPickingProject(false)}
+              onChange={(projectId, taskId) => edit((d) => ({ ...d, projectId, taskId }))}
+              onCreateProject={(name) => {
+                const made = createProject(state, { name }, serverNowIso())
+                setState(layOnto(state, made.state))
+                edit((d) => ({ ...d, projectId: made.id, taskId: null }))
+              }}
+              renderTrigger={() => <span className="sr-only">Project and task</span>}
+            />
+          )}
           {/* Edit duration: start → end, the two shortcuts, the drums where Toggl's wheel is */}
           <section aria-label="Edit duration" className="rounded-xl bg-secondary/40 p-3">
             {!isNew && (

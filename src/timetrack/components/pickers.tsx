@@ -360,6 +360,130 @@ export function TagPicker({
 }
 
 // ---------------------------------------------------------------------------
+// Client picker (the project form)
+// ---------------------------------------------------------------------------
+
+/**
+ * THE PROJECT FORM'S CLIENT, WHICH CAN MAKE ONE (Phase 8 findability of
+ * Plans/toggl-parity.md).
+ *
+ * It was a plain list of "No client" and the clients that exist, so a project
+ * for a new client meant leaving the form for Manage → Clients and coming back
+ * (a fresh user gave up after 15 actions). Toggl Track's project dialog makes
+ * a client from its own client picker. Here a name that does not exist is
+ * offered as "Create client “x”"; Enter or Ctrl+Enter makes it and picks it,
+ * and a name that does exist picks that one rather than making it twice.
+ */
+export function ClientPicker({
+  state,
+  clientId,
+  onChange,
+  onCreateClient,
+}: {
+  state: TimetrackState
+  clientId: Id | null
+  onChange: (clientId: Id | null) => void
+  /** makes the client and picks it */
+  onCreateClient?: (name: string) => void
+}) {
+  const [query, setQuery] = useState("")
+  const client = state.clients.find((c) => c.id === clientId) ?? null
+  const text = query.trim().toLowerCase()
+  // archived clients are not offered, except the one already chosen
+  const visible = state.clients.filter((c) => (!c.archived || c.id === clientId) && (!text || c.name.toLowerCase().includes(text)))
+  const exact = text ? (state.clients.find((c) => c.name.toLowerCase() === text) ?? null) : null
+  const isNew = text !== "" && exact === null
+
+  return (
+    <Dropdown
+      width="w-72"
+      ariaLabel="Client"
+      onOpenChange={(open) => {
+        if (!open) setQuery("")
+      }}
+      trigger={() => (
+        <span
+          className={cn(
+            "flex h-11 w-full items-center gap-1.5 rounded-md border border-border px-2 text-base sm:h-8 sm:text-sm",
+            client ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          <span className="min-w-0 flex-1 truncate text-left">{client ? client.name : "No client"}</span>
+          <IconDown className="size-3 text-muted-foreground" />
+        </span>
+      )}
+    >
+      {(close) => (
+        <div>
+          <div className="border-b border-border p-2">
+            <Input
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || !text) return
+                event.preventDefault()
+                if (exact) onChange(exact.id)
+                else if (onCreateClient) onCreateClient(query.trim())
+                else return
+                close()
+              }}
+              placeholder="Find or create a client"
+              className="h-11 sm:h-8"
+            />
+          </div>
+          <div className="max-h-60 overflow-y-auto py-1">
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null)
+                close()
+              }}
+              className={cn("flex w-full items-center px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-secondary/60", touchRow)}
+            >
+              No client
+            </button>
+            {visible.map((candidate) => (
+              <button
+                key={candidate.id}
+                type="button"
+                onClick={() => {
+                  onChange(candidate.id)
+                  close()
+                }}
+                className={cn(
+                  "flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-secondary/60",
+                  touchRow,
+                  candidate.id === clientId && "text-primary",
+                )}
+              >
+                <span className="truncate">{candidate.name}</span>
+              </button>
+            ))}
+          </div>
+          {onCreateClient && isNew && (
+            <div data-picker-pinned className="border-t border-border p-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                title="Enter"
+                onClick={() => {
+                  onCreateClient(query.trim())
+                  close()
+                }}
+              >
+                <IconAdd className="size-3.5" /> {`Create client “${query.trim()}”`}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </Dropdown>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Billable toggle
 // ---------------------------------------------------------------------------
 
@@ -408,6 +532,7 @@ export function DescriptionField({
   className,
   autoFocus,
   inline,
+  askProject,
 }: {
   state: TimetrackState
   value: string
@@ -428,6 +553,12 @@ export function DescriptionField({
    * what was typed; # the tags and "Create “x”" (`inlineChoices`).
    */
   inline?: { onClearProject: () => void; onCreateProject: (name: string) => void; onCreateTag: (name: string) => void }
+  /**
+   * Bumped by the phone sheet's "@ Add a project" chip, which has put an @ at
+   * the end of the name: the field takes the focus with the caret after it,
+   * and the inline list opens, as Toggl's chip does (V1 0:32).
+   */
+  askProject?: number
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
@@ -497,6 +628,17 @@ export function DescriptionField({
     // (On the inline lists the first row is "No Project", which is a choice too.)
     setHighlight(found ? 0 : -1)
   }
+
+  useEffect(() => {
+    const input = inputRef.current
+    if (!askProject || !input) return
+    input.focus()
+    const end = input.value.length
+    input.setSelectionRange(end, end)
+    syncToken(input.value, end)
+    // only a new ask: `syncToken` reads nothing that changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askProject])
 
   /** a header names a client; Enter and the arrows go past it */
   const pickable = (index: number) => suggestions[index]?.choice?.kind !== "header"

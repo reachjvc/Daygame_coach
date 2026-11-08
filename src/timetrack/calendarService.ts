@@ -18,11 +18,13 @@ import {
   addDays,
   dateKey,
   dateKeyToDate,
+  eachDay,
   epochSeconds,
   formatTimeOfDay,
   isoAtMinutes,
   minutesIntoDay,
   startOfDayIso,
+  weekStartOf,
 } from "./timetrackFormatService"
 import { entryDaySeconds, isPlanned } from "./timetrackService"
 import type {
@@ -33,6 +35,7 @@ import type {
   IsoDateTime,
   TimeEntry,
   TimeFormat,
+  WeekStart,
 } from "./types"
 
 // ---------------------------------------------------------------------------
@@ -1113,4 +1116,24 @@ export function shiftEntryBy(entry: TimeEntry, deltaMinutes: number): { start: I
     start: new Date(new Date(entry.start).getTime() + deltaMs).toISOString(),
     stop: entry.stop ? new Date(new Date(entry.stop).getTime() + deltaMs).toISOString() : null,
   }
+}
+
+/**
+ * THE DAYS A CALENDAR VIEW SHOWS, for the day it is on (`anchor`).
+ *
+ * A week runs from the person's first day of the week. "5 days" (Toggl Track's
+ * "5 days view") is the Monday-to-Friday of THAT week: it took the Monday on or
+ * before the day shown, so with weeks from Sunday, Sunday 1 Nov showed Mon 26 –
+ * Fri 30 Oct under a week row saying "This week" (Phase 8 heavy-history audit of
+ * Plans/toggl-parity.md). Saturday starts did the same.
+ */
+export function calendarDays(range: "day" | "workweek" | "week", anchor: IsoDate, weekStart: WeekStart): IsoDate[] {
+  if (range === "day") return [anchor]
+  const from = weekStartOf(anchor, weekStart)
+  const week = eachDay(from, addDays(from, 6))
+  if (range === "week") return week
+  return week.filter((day) => {
+    const weekday = dateKeyToDate(day).getDay()
+    return weekday >= 1 && weekday <= 5
+  })
 }

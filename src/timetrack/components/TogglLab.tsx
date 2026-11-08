@@ -39,7 +39,7 @@ import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { SendWaitingTimerStops } from "./RunningTimerSetting"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
-import { defaultReportConfig, decodeReportConfig, followWeekStart } from "../reportsService"
+import { defaultReportConfig, decodeReportConfig, followRounding, followWeekStart } from "../reportsService"
 import { dateKey, formatClock } from "../timetrackFormatService"
 import {
   draftFromStartLink,
@@ -51,7 +51,7 @@ import {
 import { serverIsoAt } from "../serverClock"
 import { layOnto } from "../tabMergeService"
 import { pageBeforeTracker, readTrackerAddress, trackerAddressFor, type Section } from "../trackerAddressService"
-import type { EntryDraft, Id, IsoDate, ReportConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
+import type { EntryDraft, Id, IsoDate, ReportConfig, RoundingConfig, TimeEntry, TimetrackState, WeekStart } from "../types"
 import { CalendarView } from "./CalendarView"
 import { useIsMobile } from "../hooks/useIsMobile"
 import { keepTimerView, readTimerView, weekOf, type TimerView } from "../pcTimerPageService"
@@ -381,7 +381,16 @@ export function TogglLab({
     }
     tap.run(latest, serverIsoAt(tap.tappedOnDevice))
   }, [sync.check.checking, pushToast])
-  const stopTracking = useCallback(() => afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt)), [afterCheck])
+  /**
+   * Stop is for the entry on the screen when it was pressed, never for one the
+   * other device started a moment ago and this screen has not drawn yet (Phase 8
+   * two-devices audit; `stopSeen`). The bar, the header pill, S and the
+   * phone's ■ all come through here.
+   */
+  const stopTracking = useCallback(() => {
+    const seen = runningNow.current?.id ?? null
+    afterCheck((_latest, tappedAt) => actionsNow.current.stop(tappedAt, seen))
+  }, [afterCheck])
 
   /**
    * The timer bar's edits, kept for this tab while nothing is running (see
@@ -494,6 +503,10 @@ export function TogglLab({
   const arrived = useRef(false)
   /** the week start the report's range was made with: see `followWeekStart` below */
   const reportWeekStart = useRef<WeekStart | null>(null)
+  /** the workspace rounding the report was made with, null for a shared report's own: see `followRounding` below */
+  const reportRounding = useRef<RoundingConfig | null>(null)
+  /** Settings › First tab may still arrive with the account's settings, and nobody has gone anywhere yet */
+  const firstTabPending = useRef(false)
   useEffect(() => {
     if (!state || arrived.current) return
     arrived.current = true
@@ -507,6 +520,7 @@ export function TogglLab({
     const decoded = shared ? decodeReportConfig(shared, defaults) : null
     setReportConfig(decoded ?? defaults)
     reportWeekStart.current = state.user.weekStart
+    reportRounding.current = decoded ? null : state.workspace.rounding
     // the address's own section, else where you were last time (see `screen`)
     // …and on a phone with nothing named, the tab chosen in Settings › First tab (Toggl's "First tab")
     const firstTab = !isPc ? state.user.firstTab : undefined
@@ -541,6 +555,8 @@ export function TogglLab({
     const { entryId } = readTrackerAddress(window.location.search)
     const linked = entryId ? (state.entries.find((e) => e.id === entryId && !e.serverDeletedAt) ?? null) : null
     if (linked) setDetailEntry(linked)
+    // a phone that opened where nothing was named: see Settings › First tab below
+    firstTabPending.current = !isPc && !decoded && !readTrackerAddress(window.location.search).section && !linked
 
     // Replaced, not pushed: arriving is one step, wherever the link pointed.
     const arrival: TrackerStep = { timetrack: "arrival" }
@@ -559,6 +575,38 @@ export function TogglLab({
     setReportConfig((config) => (config ? followWeekStart(config, dateKey(new Date()), from, weekStart) : config))
   }, [weekStart])
 
+  /** …and its rounding follows Default report rounding the same way, until it is changed in the report */
+  const workspaceRounding = state?.workspace.rounding
+  useEffect(() => {
+    const from = reportRounding.current
+    if (!workspaceRounding || !from) return
+    reportRounding.current = workspaceRounding
+    setReportConfig((config) => (config ? followRounding(config, from, workspaceRounding) : config))
+  }, [workspaceRounding])
+
+  /**
+   * SETTINGS › FIRST TAB, WHEN THE ACCOUNT'S SETTINGS ARRIVE AFTER THE TRACKER OPENED.
+   *
+   * Arriving reads the first tab from the workspace it opens with — on a phone
+   * with no copy of its own (after Log Out, or a new phone) the empty one, which
+   * has none — so the first open after signing in showed Timer, and only the
+   * next open showed the tab chosen (account-switching audit, Phase 8). The
+   * account's choice is taken when it arrives, until the first check has
+   * landed. Never once the person has gone somewhere: a tab they chose in this
+   * visit is theirs (`goTo` and Back clear this).
+   */
+  const firstTabNow = isPc ? undefined : state?.user.firstTab
+  const heardFromAccount = sync.check.lastCheckedAt !== null
+  useEffect(() => {
+    if (!firstTabPending.current) return
+    if (firstTabNow && firstTabNow !== screenNow.current) {
+      setScreen(firstTabNow)
+      const arrival: TrackerStep = { timetrack: "arrival" }
+      window.history.replaceState(arrival, "", trackerAddressFor(window.location.pathname, { section: firstTabNow, entryId: null }))
+    }
+    if (heardFromAccount) firstTabPending.current = false
+  }, [firstTabNow, heardFromAccount])
+
   /**
    * GOING SOMEWHERE INSIDE THE TRACKER IS A STEP IN THE BROWSER'S HISTORY (D8).
    *
@@ -567,6 +615,7 @@ export function TogglLab({
    * were. A section is a step; the same section again is not.
    */
   const goTo = useCallback((next: Screen) => {
+    firstTabPending.current = false
     if (next === screenNow.current) return
     const step: TrackerStep = { timetrack: "section" }
     window.history.pushState(step, "", trackerAddressFor(window.location.pathname, { section: next, entryId: null }))
@@ -644,7 +693,11 @@ export function TogglLab({
     if (trackerPath.current === null || window.location.pathname !== trackerPath.current) return
     const address = readTrackerAddress(window.location.search)
     const section = address.section ?? "timer"
-    if (section !== screenNow.current) setScreen(section)
+    if (section !== screenNow.current) {
+      // Back, Forward or a link went somewhere: the first tab arriving late does not move it again
+      firstTabPending.current = false
+      setScreen(section)
+    }
     setDetailEntry((open) => {
       if ((open?.id ?? null) === address.entryId) return open
       const entries = latestState.current?.entries ?? []

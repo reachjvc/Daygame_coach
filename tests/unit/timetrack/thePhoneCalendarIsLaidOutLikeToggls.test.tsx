@@ -181,6 +181,77 @@ describe("on the hour grid", () => {
     expect(cal.live().find((e) => e.id !== "1" && e.id !== "2")).toMatchObject({ start: before.stop, stop: at(11, 30) })
   })
 
+  test("a held block moved lands its start on the quarter hour, its length kept exactly, even with seconds (heavy-history audit)", () => {
+    const odd = { ...entry(1, "2026-08-10", "01:20", "01:45"), start: new Date(2026, 7, 10, 1, 20, 40).toISOString(), stop: new Date(2026, 7, 10, 1, 45, 40).toISOString(), duration: 25 * 60 }
+    const cal = phoneCalendar(baseState({ entries: [odd] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    cal.finger.down(block, y(1, 33))
+    cal.finger.hold()
+    cal.finger.slide(y(1, 33), y(1, 43))
+    cal.finger.up(y(1, 43))
+    // not 01:29:40–01:54:40: the move added fractional minutes and the clock dropped the fraction
+    expect(cal.live()[0]).toMatchObject({ start: at(1, 30), stop: at(1, 55) })
+  })
+
+  /**
+   * THE QUARTER HOUR INSIDE `blockDragPatch`'S RULES (code review of 47e97f0c).
+   * Every phone drag had come back with an instant and went straight to
+   * `landOnEdge`, past the rules below.
+   */
+  test("a night shift dragged by its second-day half moves whole, its first half kept", () => {
+    const night = { ...entry(1, "2026-08-09", "22:00", "23:00"), stop: at(2, 0, 10), duration: 4 * 3600 }
+    const cal = phoneCalendar(baseState({ entries: [night] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    cal.finger.down(block, y(1))
+    cal.finger.hold()
+    cal.finger.slide(y(1), y(2))
+    cal.finger.up(y(2))
+    // not 01:00–05:00 on the 10th, the 9th's two hours gone
+    expect(cal.live()[0]).toMatchObject({ start: at(23, 0, 9), stop: at(3, 0, 10) })
+  })
+
+  test("a top dragged past the bottom stops at the shortest block", () => {
+    const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    cal.finger.down(block, y(9) + 2)
+    cal.finger.hold()
+    cal.finger.slide(y(9) + 2, y(11) + 2)
+    cal.finger.up(y(11) + 2)
+    expect(cal.live()[0]).toMatchObject({ start: at(9, 55), stop: at(10) })
+  })
+
+  test("a block moved down past midnight keeps its top on its own day", () => {
+    const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "23:00", "23:15")] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    // seven minutes into the block, to the grid's bottom: its top lands on the next midnight's quarter hour
+    cal.finger.down(block, y(23, 7))
+    cal.finger.hold()
+    cal.finger.slide(y(23, 7), y(24) + 30 * MINUTE_PX)
+    cal.finger.up(y(24) + 30 * MINUTE_PX)
+    expect(cal.live()[0]).toMatchObject({ start: at(23, 55), stop: at(0, 10, 11) })
+  })
+
+  test("a finger back where it went down writes nothing, to the entry or its neighbour", () => {
+    const odd = { ...entry(1, "2026-08-10", "09:00", "10:00"), start: new Date(2026, 7, 10, 9, 0, 40).toISOString() }
+    const next = entry(2, "2026-08-10", "10:00", "11:00")
+    const cal = phoneCalendar(baseState({ entries: [odd, next] }))
+    const before = cal.live().map((e) => ({ ...e }))
+    const block = cal.view.container.querySelector<HTMLElement>('[data-block][title^="work "]')!
+    // the bottom edge, down half an hour and back
+    cal.finger.down(block, y(10) - 2)
+    cal.finger.hold()
+    cal.finger.slide(y(10) - 2, y(10, 30) - 2)
+    cal.finger.slide(y(10, 30) - 2, y(10) - 2)
+    cal.finger.up(y(10) - 2)
+    // the body, down half an hour and back: its seconds are not snapped away
+    cal.finger.down(block, y(9, 30))
+    cal.finger.hold()
+    cal.finger.slide(y(9, 30), y(10))
+    cal.finger.slide(y(10), y(9, 30))
+    cal.finger.up(y(9, 30))
+    expect(cal.live().map((e) => [e.start, e.stop])).toEqual(before.map((e) => [e.start, e.stop]))
+  })
+
   test("the selected block is drawn with its handles", () => {
     const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }), "1")
     const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
@@ -220,7 +291,8 @@ describe("the Calendar tab", () => {
     fireEvent.click(document.querySelector('[data-block][title^="Email "]') as HTMLElement)
     expect(panel().getByText("Email")).toBeTruthy()
     expect(panel().getByText("09:00 – 10:00")).toBeTruthy()
-    expect(panel().getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Delete", "Edit", "Duplicate", "Continue", "Cancel"])
+    expect(within(panel().getByRole("group", { name: "Actions" })).getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Delete", "Edit", "Duplicate", "Continue"])
+    expect(panel().getByRole("button", { name: "Cancel" })).toBeTruthy()
     expect(document.querySelector('[data-block][title^="Email "]')?.getAttribute("data-selected")).toBe("true")
     fireEvent.click(panel().getByRole("button", { name: "Edit" }))
     expect(screen.getByRole("dialog", { name: "Time entry" })).toBeTruthy()
@@ -246,11 +318,45 @@ describe("the Calendar tab", () => {
     expect(screen.getByText("Time entry was deleted")).toBeTruthy()
   })
 
+  test("a block made by holding opens its sheet at once, the name ready to type (audit findability, Phase 8)", async () => {
+    await openTab(baseState({ entries: [] }))
+    const column = document.querySelector<HTMLElement>("[data-day-column]")!
+    const touch = { pointerId: 9, pointerType: "touch", isPrimary: true, clientX: 150, button: 0 }
+    fireEvent.pointerDown(column, { ...touch, clientY: y(10) })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, LONG_PRESS_MS + 60))
+    })
+    fireEvent.pointerUp(column, { ...touch, clientY: y(10) })
+    const sheet = await screen.findByRole("dialog", { name: "Time entry" })
+    const name = within(sheet).getByPlaceholderText("I’ve worked on…")
+    await waitFor(() => expect(document.activeElement).toBe(name))
+    // closed without a name, the block stays, as before
+    fireEvent.click(within(sheet).getByRole("button", { name: "Close" }))
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Time entry" })).toBeNull())
+    expect(stored().entries.filter((e) => !e.serverDeletedAt)).toHaveLength(1)
+  })
+
+  test("a tap on the name in the block's panel opens the sheet, as Edit does", async () => {
+    await openTab(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00", { description: "Email" })] }))
+    fireEvent.click(document.querySelector('[data-block][title^="Email "]') as HTMLElement)
+    fireEvent.click(panel().getByRole("button", { name: /Email/ }))
+    expect(screen.getByRole("dialog", { name: "Time entry" })).toBeTruthy()
+  })
+
+  test("the hint is above the grid, where it is seen", async () => {
+    await openTab(baseState({ entries: [] }))
+    const hints = screen.getAllByText(/Hold empty space/)
+    expect(hints).toHaveLength(1)
+    const grid = document.querySelector("[data-calendar-grid]")!
+    expect(hints[0].compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
   test("a running block offers Discard · Edit · Stop", async () => {
     const running = startTimer(baseState(), { description: "Call", projectId: null, taskId: null, tagIds: [], billable: false }, at(14)).state
     await openTab(running)
     fireEvent.click(document.querySelector('[data-block][title^="Call "]') as HTMLElement)
-    expect(panel().getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Discard", "Edit", "Stop", "Cancel"])
+    expect(within(panel().getByRole("group", { name: "Actions" })).getAllByRole("button").map((b) => b.textContent?.trim())).toEqual(["Discard", "Edit", "Stop"])
+    expect(panel().getByRole("button", { name: "Cancel" })).toBeTruthy()
     fireEvent.click(panel().getByRole("button", { name: "Stop" }))
     await waitFor(() => expect(stored().entries.some((e) => e.stop === null)).toBe(false))
   })

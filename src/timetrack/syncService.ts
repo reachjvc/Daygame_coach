@@ -304,6 +304,30 @@ export function withServerTagLinks(
   return { ...rows, timetrack_entry_tags: links }
 }
 
+/**
+ * A LIVE ANSWER SPEAKS FOR EVERY ROW THIS DEVICE HOLDS.
+ *
+ * The opening asks for the account without its deleted rows (`live=1`,
+ * `pullTimetrackRows`) and treats the answer as the whole account: a row it holds
+ * that the answer lacks is one the account never had, and is kept and sent. In a
+ * live answer that row may instead have been deleted elsewhere — sending it would
+ * bring the entry back. So the live answer is used only when it holds every row
+ * in `held` (what is shown, what the opening started from, what is queued); else
+ * the opening asks for the whole account. Tables with no `deleted_at` are whole
+ * in either answer, and a tag link goes with its entry.
+ */
+export function liveAnswerCovers(answer: TimetrackRows, held: (Partial<TimetrackRows> | null)[]): boolean {
+  const whole = new Set<TableName>(["timetrack_entry_tags", "timetrack_webhook_log", "timetrack_settings"])
+  for (const table of TIMETRACK_TABLES) {
+    if (whole.has(table)) continue
+    const there = new Set(((answer[table] ?? []) as unknown as AnyRow[]).map((row) => rowKey(table, row)))
+    for (const rows of held) {
+      for (const row of (rows?.[table] ?? []) as unknown as AnyRow[]) if (!there.has(rowKey(table, row))) return false
+    }
+  }
+  return true
+}
+
 /** Every row key in a change set, so the caller knows what is still in flight */
 export function keysIn(rows: Partial<TimetrackRows>): Set<string> {
   const keys = new Set<string>()

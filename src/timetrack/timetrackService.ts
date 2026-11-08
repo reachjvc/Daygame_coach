@@ -520,6 +520,29 @@ export function startTimer(
   return { state: next, entry, violations: [], displaced: ended.stopped }
 }
 
+/**
+ * STOP THE ENTRY THAT WAS ON THE SCREEN, OR NOTHING (Phase 8 two-devices audit
+ * of Plans/toggl-parity.md).
+ *
+ * `stopTimer` stops whatever runs at the moment the update is applied. A Stop
+ * tapped while the screen showed Gym, landing as the other device's switch to
+ * Shower arrived and before it was drawn, stopped Shower — an entry this
+ * screen never showed. So a Stop names the entry it was pressed for (null: the
+ * screen showed nothing running) and is refused when that is not what runs
+ * now: `other` when something else runs, `gone` when it was stopped elsewhere.
+ */
+export function stopSeen(
+  state: TimetrackState,
+  entryId: Id | null,
+  nowIso: IsoDateTime,
+): { state: TimetrackState; stopped: TimeEntry | null; refused: "other" | "gone" | null; running: TimeEntry | null } {
+  const live = runningEntry(state)
+  const seenStillRuns = entryId !== null && state.entries.some((e) => e.id === entryId && isRunning(e) && !e.serverDeletedAt)
+  if (seenStillRuns) return { ...stopTimer(state, nowIso), refused: null, running: null }
+  if (live) return { state, stopped: null, refused: "other", running: live }
+  return { state, stopped: null, refused: entryId === null ? null : "gone", running: null }
+}
+
 export function stopTimer(
   state: TimetrackState,
   nowIso: IsoDateTime,

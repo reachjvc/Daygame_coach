@@ -13,8 +13,8 @@
 
 import { createContext } from "react"
 
-/** "Time entry was deleted", and what Undo puts back */
-export type OfferUndo = (text: string, undo: () => void) => void
+/** "Time entry was deleted", what Undo puts back, and which entries went: a running one going is no reason to drop its own Undo */
+export type OfferUndo = (text: string, undo: () => void, ids: string[]) => void
 
 export const UndoContext = createContext<OfferUndo | null>(null)
 

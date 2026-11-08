@@ -65,6 +65,10 @@ describe("the rows, as rules", () => {
     expect(inlineChoices(baseState(), { kind: "project", query: "Alpha" }).some((r) => r.kind === "create-project")).toBe(false)
   })
 
+  test("with only @ typed it still ends with Create a new project, which asks for a name", () => {
+    expect(inlineChoices(baseState(), { kind: "project", query: "" }).at(-1)).toMatchObject({ kind: "create-project", label: "Create a new project", name: "" })
+  })
+
   test("# lists tags and offers to create the one typed", () => {
     expect(inlineChoices(baseState(), { kind: "tag", query: "mee" }).map((r) => r.label)).toEqual(["meeting", "Create “mee”"])
     expect(inlineChoices(baseState(), { kind: "tag", query: "deep" }).map((r) => r.kind)).toEqual(["tag"])
@@ -108,6 +112,25 @@ describe("in the sheet", () => {
     fireEvent.click(within(panel()).getByRole("button", { name: "Create “focus”" }))
     await waitFor(() => expect(stored().tags.some((t) => t.name === "focus")).toBe(true))
     expect(sheet.getByRole("button", { name: /meeting, focus/ })).toBeTruthy()
+  })
+
+  test("the \"Add a project\" chip puts @ in the name and shows the inline list, as Toggl's does (V1 0:32)", async () => {
+    const sheet = await openManualSheet()
+    const box = sheet.getByPlaceholderText("I’ve worked on…") as HTMLInputElement
+    type(box, "Call")
+    fireEvent.click(sheet.getByRole("button", { name: /Add a project/ }))
+    expect(box.value).toBe("Call @")
+    expect(document.activeElement).toBe(box)
+    const list = within(panel())
+    expect(list.getByText(NO_PROJECT)).toBeTruthy()
+    // only @: Create a new project asks for the name
+    fireEvent.click(list.getByRole("button", { name: "Create a new project" }))
+    const name = sheet.getByRole("textbox", { name: "New project name" })
+    fireEvent.change(name, { target: { value: "Guitar" } })
+    fireEvent.click(sheet.getByRole("button", { name: "Create project" }))
+    await waitFor(() => expect(stored().projects.some((p) => p.name === "Guitar")).toBe(true))
+    expect(sheet.getByRole("button", { name: /Guitar/ })).toBeTruthy()
+    expect(box.value).toBe("Call")
   })
 
   test("No Project clears the chosen project", async () => {

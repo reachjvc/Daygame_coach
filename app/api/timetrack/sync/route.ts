@@ -17,14 +17,19 @@ function isTagSets(value: unknown): value is TagSets {
   return Object.values(value).every((tags) => Array.isArray(tags) && tags.every((tag) => typeof tag === "string"))
 }
 
-/** What changed since `since` (omit it for a full download). */
+/**
+ * What changed since `since` (omit it for a full download). `live=1` with no
+ * `since`: the account without its deleted rows, answered with `live: true` —
+ * see `pullTimetrackRows`.
+ */
 export async function GET(request: Request) {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
 
-  const since = new URL(request.url).searchParams.get("since")
+  const params = new URL(request.url).searchParams
+  const since = params.get("since")
   try {
-    const result = await pullTimetrackRows(auth.userId, since)
+    const result = await pullTimetrackRows(auth.userId, since, { live: params.get("live") === "1" })
     return NextResponse.json({
       ...result,
       userId: auth.userId,

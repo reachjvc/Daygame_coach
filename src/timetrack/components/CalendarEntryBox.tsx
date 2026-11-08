@@ -108,6 +108,15 @@ export function CalendarEntryBox({
 
   const [draft, setDraft] = useState<EntryDraft>(initialDraft)
   const [pair, setPair] = useState<TimePair>(initialPair)
+  /**
+   * What the box showed when it opened. Save writes only what differs from it,
+   * laid onto the newest copy: it wrote every field it had copied, so a rename
+   * made on the phone while the box was open was put back by a billable tick
+   * on the PC, and a running entry the phone stopped was set running again by
+   * a rename (Phase 8 two-devices audit of Plans/toggl-parity.md).
+   */
+  const opened = useRef<{ draft: EntryDraft; pair: TimePair } | null>(null)
+  if (opened.current === null) opened.current = { draft, pair }
   const [typed, setTyped] = useState<{ field: Field; text: string } | null>(null)
   /** what the box holds now, for Save, which may run before React has drawn the last keystroke */
   const now = useRef({ draft, pair })
@@ -116,8 +125,10 @@ export function CalendarEntryBox({
   // another block, or a fresh drag: the box starts over from it
   const targetKey = target.kind === "edit" ? `edit:${target.entryId}` : `new:${target.start}:${target.stop}`
   useEffect(() => {
-    setDraft(initialDraft())
-    setPair(initialPair())
+    const fresh = { draft: initialDraft(), pair: initialPair() }
+    opened.current = fresh
+    setDraft(fresh.draft)
+    setPair(fresh.pair)
     setTyped(null)
   }, [targetKey]) // eslint-disable-line react-hooks/exhaustive-deps -- only a new target resets what is being typed
 
@@ -210,14 +221,21 @@ export function CalendarEntryBox({
       return
     }
     const entry = saved!
-    const patch = {
-      description: fields.description,
-      projectId: fields.projectId,
-      taskId: fields.taskId,
-      tagIds: fields.tagIds,
-      billable: fields.billable,
-      start: at.start,
-      ...(running ? {} : { stop: at.stop }),
+    // only what was changed here (see `opened`); a running end is never written, so a Save cannot restart a timer
+    const was = opened.current!
+    const patch: Parameters<typeof updateEntry>[2] = {}
+    if (fields.description !== was.draft.description) patch.description = fields.description
+    if (fields.projectId !== was.draft.projectId || fields.taskId !== was.draft.taskId) {
+      patch.projectId = fields.projectId
+      patch.taskId = fields.taskId
+    }
+    if (fields.tagIds.join(",") !== was.draft.tagIds.join(",")) patch.tagIds = fields.tagIds
+    if (fields.billable !== was.draft.billable) patch.billable = fields.billable
+    if (at.start !== was.pair.start) patch.start = at.start
+    if (at.stop !== was.pair.stop && at.stop !== null) patch.stop = at.stop
+    if (Object.keys(patch).length === 0) {
+      onClose()
+      return
     }
     const before = running ? null : { seconds: entry.duration }
     askBeforeLong(

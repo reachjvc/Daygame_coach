@@ -214,6 +214,17 @@ Business logic in `*Service.ts`, database access only in `src/db/*Repo.ts`.
   neighbours move together with Undo; the list marks overlaps and small gaps;
   on a phone the calendar makes, moves and resizes blocks by holding them, and
   a swipe changes the day. Opening Time with no section lands on Timer.
+  Since 2026-11-05 (Plans/toggl-parity.md) it is laid out like Toggl Track. On
+  a phone (below 640px, `components/phone/`): a "Timer" header with ⊕ and ⚙,
+  "List view | Pomodoro", the running or idle bar at the bottom on every tab,
+  three tabs Timer · Calendar · Reports, and ⚙ "Settings and more" holding
+  Projects, Clients, Tags, Settings, Import and export. One tap on the bar or a
+  row opens one "Time entry" sheet with the drums under its start and end;
+  rows swipe right to continue, left to delete (Undo). On a PC: a sidebar
+  (Timer, Reports, Projects, Clients, Tags, Team, Settings), Calendar | List
+  view inside Timer, a box under the running time (Start, Stop at…, Switched
+  at…), a calendar box for new and clicked blocks, and Toggl's picker words.
+  Settings › First tab picks the tab a phone opens on.
 - `health/` — weight, sleep, nutrition, workouts. Rolling averages, plateau and
   trend detection, personal records, cross-domain correlation. Its **dedicated
   trackers** are test-only (`WeightTracker`, `SleepTracker`, `NutritionTracker`,

@@ -1020,7 +1020,8 @@ export function DonutChart({
         </text>
       </svg>
       <ul className="w-full flex-1 space-y-1 sm:min-w-[160px]">
-        {slices.slice(0, 8).map((slice) => (
+        {/* every one: the list stopped at eight with no line for the rest, and for a month of 41 projects covered 35% of the time (heavy-history audit, Phase 8) */}
+        {slices.map((slice) => (
           <li key={slice.key} className="flex items-center gap-2 text-xs">
             <ColorDot color={slice.color} />
             <span className="flex-1 truncate">{slice.label}</span>

@@ -17,6 +17,8 @@
  * never ask again; the person has to undo it in their settings.
  */
 
+import { deviceLabel } from "./endpoints"
+
 export type PushSupport = "ready" | "needs-install" | "unsupported" | "dev"
 
 export function isAppleTouch(): boolean {
@@ -133,5 +135,51 @@ export async function forgetThisDevice(): Promise<void> {
   } catch {
     // No signal: the address stays registered until the push service reports
     // it gone or the next person to sign in here takes it over, switched off.
+  }
+}
+
+/**
+ * A SIGNED-IN PAGE TAKES THIS BROWSER'S PUSH ADDRESS FOR WHOEVER IS SIGNED IN.
+ *
+ * A session that ends without Log Out — it expires, the cookies are cleared —
+ * leaves the address registered as the previous person's device, and the
+ * server went on sending them their running timer here, by name, after
+ * somebody else had signed in. Only Time › Settings and Thoughts asked the
+ * server to take it over (`usePushDevice`), so the next person saw the previous
+ * one's pushes until they happened to open one of those (account-switching
+ * audit, Phase 8; `theNextPersonTakesOverThisBrowsersPushAddress`).
+ *
+ * Asked once per page load by the (app) layout. The server's "refresh" answer
+ * is the one those screens already get: somebody else's device moves to whoever
+ * is signed in with both switches off, the person's own keeps its switches, and
+ * an address with no device is not registered. Chosen over unsubscribing at
+ * sign-in, which would also take the same person's own notifications away each
+ * time they signed in again, and would need every way of signing in to do it.
+ * Never throws; asks nothing of a browser that never allowed notifications.
+ */
+export async function claimThisDevice(): Promise<void> {
+  if (pushSupport() !== "ready" || permission() !== "granted") return
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    const sub = await registration?.pushManager.getSubscription()
+    if (!sub) return
+    const res = await fetch("/api/notifications/devices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscription: sub.toJSON(), intent: "refresh", label: deviceLabel(navigator.userAgent, isInstalledApp()) }),
+    })
+    /**
+     * AND THE PREVIOUS PERSON'S TIMER ON THE SCREEN GOES TOO. Their pushes stop
+     * reaching this browser, their "stopped" one included, so a running timer
+     * shown before now stayed, naming what they were doing (security review,
+     * 2026-11-05, low). The timer off here now: whatever it shows is not this
+     * person's to see.
+     */
+    const answer = res.ok ? ((await res.json().catch(() => ({}))) as { timerRunning?: unknown }) : {}
+    if (answer.timerRunning === false) {
+      for (const shown of (await registration?.getNotifications({ tag: "timer-running" })) ?? []) shown.close()
+    }
+  } catch {
+    // no worker or no signal: the next page load asks again
   }
 }

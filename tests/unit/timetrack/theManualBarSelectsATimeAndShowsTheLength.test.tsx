@@ -69,6 +69,7 @@ describe("the manual bar", () => {
     render(<StrictMode><Harness /></StrictMode>)
     fireEvent.change(screen.getByLabelText("Start time"), { target: { value: "9:00" } })
     fireEvent.change(screen.getByLabelText("End time"), { target: { value: "9:45" } })
-    expect(screen.getByLabelText("Length").textContent).toBe("0:45")
+    // a box now, which a length can be typed into (theManualLengthIsTypeable): what it holds is the length
+    expect((screen.getByLabelText("Length") as HTMLInputElement).value).toBe("0:45")
   })
 })

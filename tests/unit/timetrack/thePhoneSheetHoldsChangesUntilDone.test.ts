@@ -207,6 +207,38 @@ describe("a new entry", () => {
   })
 })
 
+describe("CREATE while the other device's timer runs (two-devices audit, Phase 8)", () => {
+  // the phone's sheet opened at 11:40; the PC started Gym at 11:45 and the phone heard it
+  const gymFromPc = () => startTimer(baseState(), { ...emptyDraft, description: "Gym" }, at(DAY, "11:45")).state
+
+  test("starting the new one stops the other, as starting a timer does: here, now, since the sheet's start is before Gym's", () => {
+    const made = createFromSheet(gymFromPc(), { ...startingDraft(emptyDraft, at(DAY, "11:40")), description: "Stretching" }, NOW, at(DAY, "11:40"))
+    expect(made.violations).toEqual([])
+    expect(made.created).toMatchObject({ description: "Stretching", start: NOW, stop: null })
+    expect(made.stopped).toMatchObject({ description: "Gym", stop: NOW })
+  })
+
+  test("a start after Gym's is kept: Gym ends exactly there", () => {
+    const made = createFromSheet(gymFromPc(), { ...startingDraft(emptyDraft, at(DAY, "11:50")), description: "Stretching" }, NOW)
+    expect(made.created).toMatchObject({ start: at(DAY, "11:50") })
+    expect(made.stopped).toMatchObject({ description: "Gym", stop: at(DAY, "11:50") })
+  })
+
+  test("a start the person typed before Gym's is refused, not moved to now (code review of ddffc410)", () => {
+    const opened = startingDraft(emptyDraft, at(DAY, "11:46"))
+    const typed = { ...opened, start: at(DAY, "11:30"), description: "Stretching" }
+    const made = createFromSheet(gymFromPc(), typed, NOW, opened.start)
+    expect(made.created).toBeNull()
+    expect(made.violations[0]?.message).toMatch(/before “Gym” started/)
+  })
+
+  test("the sheet's own counting start, beaten by the other device's, still becomes now", () => {
+    const opened = { ...startingDraft(emptyDraft, at(DAY, "11:40")), description: "Stretching" }
+    const made = createFromSheet(gymFromPc(), opened, NOW, opened.start)
+    expect(made.created).toMatchObject({ start: NOW })
+  })
+})
+
 describe("DONE", () => {
   test("nothing is a change until it differs, and setting it back is no change", () => {
     const draft = sheetDraftOf(entry(1, DAY, "09:00", "10:00", { description: "Email" }))

@@ -224,6 +224,42 @@ describe("the setting, per device", () => {
   })
 })
 
+describe("a browser A left without Log Out, then B signed in on it", () => {
+  const sub = (e: string) => ({ endpoint: e, keys: { p256dh: "BNcR_x", auth: "tBHI_x" } })
+
+  /**
+   * What every signed-in page now asks when it loads (`claimThisDevice`, the (app)
+   * layout): before, only Time › Settings and Thoughts asked, so A's running timer,
+   * by name, went on reaching B's screen (account-switching audit, Phase 8).
+   */
+  it("is B's once B's page asks: A's running timer no longer reaches it, and B is sent nothing they did not ask for", async () => {
+    const a = await newUser("left-a")
+    actAs(a)
+    const phone = endpoint()
+    await call(devicesRoute.POST, "/api/notifications/devices", {
+      method: "POST",
+      body: { intent: "enable", label: "Android phone · installed app", subscription: sub(phone) },
+    })
+    expect((await listDevices(a.id)).map((d) => [d.enabled, d.timerRunning])).toEqual([[true, true]])
+
+    const b = await newUser("left-b")
+    actAs(b)
+    const asked = await call<{ id: string; enabled: boolean; timerRunning: boolean }>(devicesRoute.POST, "/api/notifications/devices", {
+      method: "POST",
+      body: { intent: "refresh", label: "Android phone · installed app", subscription: sub(phone) },
+    })
+
+    expect(asked.status, JSON.stringify(asked.body)).toBe(200)
+    expect(asked.body).toMatchObject({ enabled: false, timerRunning: false })
+    expect(await listDevices(a.id), "the browser is still A's device").toEqual([])
+    expect((await listDevices(b.id)).map((d) => [d.enabled, d.timerRunning])).toEqual([[false, false]])
+
+    actAs(a)
+    await announce(a.id, { kind: "running", entry: timer() }, new Date("2026-11-04T16:30:00Z"))
+    expect(JSON.stringify(sent), "A's running timer still reached the browser B is signed in on").not.toContain(phone)
+  })
+})
+
 /** One running entry for `userId`, in their one workspace (made if missing), arranged as the owner. */
 async function entryOf(userId: string, over: { description?: string; startedAt?: string } = {}): Promise<string> {
   const id = randomUUID()
