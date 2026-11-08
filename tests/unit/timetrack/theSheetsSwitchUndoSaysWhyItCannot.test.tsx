@@ -14,7 +14,8 @@ import { useRef, useState } from "react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { EntrySheet } from "@/src/timetrack/components/phone/EntrySheet"
-import { runningEntry, startTimer } from "@/src/timetrack/timetrackService"
+import { BlockPanel } from "@/src/timetrack/components/phone/PhoneCalendar"
+import { runningEntry, startTimer, stopTimer } from "@/src/timetrack/timetrackService"
 import type { EntryDraft, TimetrackState } from "@/src/timetrack/types"
 
 import { baseState } from "./helpers"
@@ -70,6 +71,47 @@ test("Undo after a third timer started says so, and changes nothing", () => {
   const switched = pushToast.mock.calls.find(([text]) => String(text).startsWith("Stopped “Gym”"))
   expect(switched, "no switch toast").toBeDefined()
   // a third timer, from the other device, before Undo is pressed
+  act(() => write((s) => startTimer(s, draft("Call"), at(11, 52)).state))
+  const before = current
+  act(() => switched![2]())
+  expect(pushToast).toHaveBeenLastCalledWith("Nothing was undone: Another timer is running now — stop it first", "error")
+  expect(current).toBe(before)
+  expect(runningEntry(current)?.description).toBe("Call")
+})
+
+test("the calendar panel's Continue: Undo after a third timer started says so, and changes nothing", () => {
+  const read = stopTimer(startTimer(baseState(), draft("Read"), at(9)).state, at(10)).state
+  const gym = startTimer(read, draft("Gym"), at(11, 45)).state
+  const readEntry = gym.entries.find((e) => e.description === "Read")!
+  const pushToast = vi.fn()
+  let current = gym
+  let write: (updater: (s: TimetrackState) => TimetrackState) => void = () => {}
+  function Shell() {
+    const [state, set] = useState(gym)
+    const latest = useRef(state)
+    latest.current = state
+    write = (updater) => {
+      current = updater(current)
+      set(current)
+    }
+    return (
+      <BlockPanel
+        entry={readEntry}
+        state={state}
+        latestState={() => latest.current}
+        setState={write}
+        pushToast={pushToast}
+        afterCheck={(run) => run(latest.current, new Date().toISOString())}
+        onEdit={() => {}}
+        onStop={() => {}}
+        onClose={() => {}}
+      />
+    )
+  }
+  render(<Shell />)
+  fireEvent.click(screen.getByRole("button", { name: "Continue" }))
+  const switched = pushToast.mock.calls.find(([text]) => String(text).startsWith("Stopped “Gym”"))
+  expect(switched, "no switch toast").toBeDefined()
   act(() => write((s) => startTimer(s, draft("Call"), at(11, 52)).state))
   const before = current
   act(() => switched![2]())

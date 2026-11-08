@@ -117,6 +117,7 @@ export function PhoneCalendar({
 export function BlockPanel({
   entry,
   state,
+  latestState,
   setState,
   pushToast,
   afterCheck,
@@ -126,6 +127,12 @@ export function BlockPanel({
 }: {
   entry: TimeEntry
   state: TimetrackState
+  /**
+   * The workspace as it is now, for the switch's Undo: pressed after a third
+   * timer started, the copy from the tap found nothing in the way and did
+   * nothing, in silence (code review of ddffc410, same as the sheet's).
+   */
+  latestState: () => TimetrackState
   setState: SetState
   pushToast: PushToast
   afterCheck: AfterCheck
@@ -158,7 +165,7 @@ export function BlockPanel({
       const { displaced, started } = result
       if (displaced && started) {
         pushToast(`Stopped “${displaced.description.trim() || "(no description)"}” and started “${entry.description.trim() || "(no description)"}”`, "info", () =>
-          undoOrSay(() => latest, (current) => undoDisplacement(current, started.id, displaced.id, serverNowIso()), setState, pushToast),
+          undoOrSay(latestState, (current) => undoDisplacement(current, started.id, displaced.id, serverNowIso()), setState, pushToast),
         )
       }
     })

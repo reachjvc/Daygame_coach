@@ -614,6 +614,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           <BlockPanel
             entry={block}
             state={state}
+            latestState={() => latestState.current}
             setState={setState}
             pushToast={pushToast}
             afterCheck={lab.afterCheck}
