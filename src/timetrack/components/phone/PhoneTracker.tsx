@@ -140,6 +140,9 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
    */
   const [undo, setUndo] = useState<{ key: number; text: string; run: () => void; ids: string[] } | null>(null)
   const undoCount = useRef(0)
+  /** the workspace as it is now, for an Undo pressed after the sheet that offered it closed */
+  const latestState = useRef(state)
+  latestState.current = state
   const offerUndo = useCallback((text: string, run: () => void, ids: string[]) => setUndo({ key: ++undoCount.current, text, run, ids }), [])
   const setState: SetState = useCallback(
     (updater) => {
@@ -666,6 +669,7 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
           target={target}
           state={state}
           setState={setState}
+          latestState={() => latestState.current}
           nowSec={nowSec}
           pushToast={pushToast}
           afterCheck={lab.afterCheck}

@@ -193,6 +193,65 @@ describe("on the hour grid", () => {
     expect(cal.live()[0]).toMatchObject({ start: at(1, 30), stop: at(1, 55) })
   })
 
+  /**
+   * THE QUARTER HOUR INSIDE `blockDragPatch`'S RULES (code review of 47e97f0c).
+   * Every phone drag had come back with an instant and went straight to
+   * `landOnEdge`, past the rules below.
+   */
+  test("a night shift dragged by its second-day half moves whole, its first half kept", () => {
+    const night = { ...entry(1, "2026-08-09", "22:00", "23:00"), stop: at(2, 0, 10), duration: 4 * 3600 }
+    const cal = phoneCalendar(baseState({ entries: [night] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    cal.finger.down(block, y(1))
+    cal.finger.hold()
+    cal.finger.slide(y(1), y(2))
+    cal.finger.up(y(2))
+    // not 01:00–05:00 on the 10th, the 9th's two hours gone
+    expect(cal.live()[0]).toMatchObject({ start: at(23, 0, 9), stop: at(3, 0, 10) })
+  })
+
+  test("a top dragged past the bottom stops at the shortest block", () => {
+    const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    cal.finger.down(block, y(9) + 2)
+    cal.finger.hold()
+    cal.finger.slide(y(9) + 2, y(11) + 2)
+    cal.finger.up(y(11) + 2)
+    expect(cal.live()[0]).toMatchObject({ start: at(9, 55), stop: at(10) })
+  })
+
+  test("a block moved down past midnight keeps its top on its own day", () => {
+    const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "23:00", "23:15")] }))
+    const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!
+    // seven minutes into the block, to the grid's bottom: its top lands on the next midnight's quarter hour
+    cal.finger.down(block, y(23, 7))
+    cal.finger.hold()
+    cal.finger.slide(y(23, 7), y(24) + 30 * MINUTE_PX)
+    cal.finger.up(y(24) + 30 * MINUTE_PX)
+    expect(cal.live()[0]).toMatchObject({ start: at(23, 55), stop: at(0, 10, 11) })
+  })
+
+  test("a finger back where it went down writes nothing, to the entry or its neighbour", () => {
+    const odd = { ...entry(1, "2026-08-10", "09:00", "10:00"), start: new Date(2026, 7, 10, 9, 0, 40).toISOString() }
+    const next = entry(2, "2026-08-10", "10:00", "11:00")
+    const cal = phoneCalendar(baseState({ entries: [odd, next] }))
+    const before = cal.live().map((e) => ({ ...e }))
+    const block = cal.view.container.querySelector<HTMLElement>('[data-block][title^="work "]')!
+    // the bottom edge, down half an hour and back
+    cal.finger.down(block, y(10) - 2)
+    cal.finger.hold()
+    cal.finger.slide(y(10) - 2, y(10, 30) - 2)
+    cal.finger.slide(y(10, 30) - 2, y(10) - 2)
+    cal.finger.up(y(10) - 2)
+    // the body, down half an hour and back: its seconds are not snapped away
+    cal.finger.down(block, y(9, 30))
+    cal.finger.hold()
+    cal.finger.slide(y(9, 30), y(10))
+    cal.finger.slide(y(10), y(9, 30))
+    cal.finger.up(y(9, 30))
+    expect(cal.live().map((e) => [e.start, e.stop])).toEqual(before.map((e) => [e.start, e.stop]))
+  })
+
   test("the selected block is drawn with its handles", () => {
     const cal = phoneCalendar(baseState({ entries: [entry(1, "2026-08-10", "09:00", "10:00")] }), "1")
     const block = cal.view.container.querySelector<HTMLElement>("[data-block]")!

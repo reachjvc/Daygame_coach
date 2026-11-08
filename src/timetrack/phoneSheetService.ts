@@ -423,12 +423,19 @@ export interface CreateOutcome {
  * same minute on screen, and typing the minute of now refused too — the only
  * ways out were waiting or discarding (two-devices audit, Phase 8). Then the
  * new one starts now, and the other ends now.
+ *
+ * ONLY FOR THE SHEET'S OWN START. `countingFrom` is the start the sheet
+ * counted from by itself (the tap); a start the person typed is theirs, and
+ * one before the running timer began is refused with `switchAt`'s words, as it
+ * always was. Moved to now, 08:30 typed on purpose with a timer running since
+ * 09:00 on this very screen was lost without a word (code review of ddffc410).
  */
-export function createFromSheet(state: TimetrackState, draft: SheetDraft, nowIso: IsoDateTime): CreateOutcome {
+export function createFromSheet(state: TimetrackState, draft: SheetDraft, nowIso: IsoDateTime, countingFrom: IsoDateTime | null = null): CreateOutcome {
   const words = entryDraftOf(draft)
   if (draft.stop === null) {
     const other = runningEntry(reconcileRunningEntries(state).state)
-    const start = other && ms(draft.start) < ms(other.start) ? nowIso : draft.start
+    const own = countingFrom !== null && ms(draft.start) === ms(countingFrom)
+    const start = own && other && ms(draft.start) < ms(other.start) ? nowIso : draft.start
     const begun = switchAt(state, words, start, nowIso)
     return { state: begun.state, violations: begun.violations, created: begun.started, stopped: begun.stopped }
   }

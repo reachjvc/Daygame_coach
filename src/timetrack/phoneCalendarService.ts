@@ -18,13 +18,16 @@
  */
 
 import { entriesForDay, entryInterval, type BlockDragPatch, type GrabMode } from "./calendarService"
-import { addDays, dateKey, dateKeyToDate, weekStartOf } from "./timetrackFormatService"
+import { CALENDAR_SNAP_MINUTES } from "./config"
+import { addDays, dateKey, dateKeyToDate, isoAtMinutes, weekStartOf } from "./timetrackFormatService"
 import type { Id, IsoDate, IsoDateTime, TimeEntry, WeekStart } from "./types"
 
 export const QUARTER = 15
 export const HELD_BLOCK_MINUTES = 30
 export const FILLED_GAP_MINUTES = 120
 const DAY_MINUTES = 24 * 60
+/** the shortest a drag leaves an entry, as `blockDragPatch` has it: one snap step */
+const SHORTEST_MS = CALENDAR_SNAP_MINUTES * 60_000
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -110,13 +113,47 @@ export function heldBlock(
 }
 
 /**
- * A dragged block's new times, with the edge that landed on a neighbour put
- * on the neighbour's own instant: a resized edge exactly there, a moved block
- * with its top exactly there and its length kept to the millisecond.
+ * A dragged block's new times, with the moving edge put on the instant it
+ * landed on (a neighbour's own, or the quarter hour's): a resized edge exactly
+ * there, a moved block with its top exactly there and its length kept to the
+ * millisecond.
+ *
+ * INSIDE `blockDragPatch`'S RULES. `rules` is what `blockDragPatch` wrote for
+ * the same drag, and null (nothing to write) stays null. Its clamps stay too:
+ * a top dragged past the bottom stops at the shortest block, a moved block's
+ * top stays on the day it is drawn on, and a night shift moved by its
+ * second-day half moves whole, its first half kept — the top that landed is
+ * the drawn one, midnight, not the entry's start (code review of 47e97f0c:
+ * the instant used to go straight in, and 22:00–02:00 dragged an hour down on
+ * day two was written 01:00–05:00 on day two).
  */
-export function landOnEdge(entry: TimeEntry, mode: GrabMode, at: IsoDateTime): BlockDragPatch {
-  if (mode === "resize-start") return { start: at }
-  if (mode === "resize-end") return { stop: at }
-  const length = entry.stop ? Date.parse(entry.stop) - Date.parse(entry.start) : null
-  return { start: at, stop: length === null ? null : new Date(Date.parse(at) + length).toISOString() }
+export function landOnEdge(
+  entry: TimeEntry,
+  day: IsoDate,
+  mode: GrabMode,
+  at: IsoDateTime,
+  rules: BlockDragPatch | null,
+  nowIso: IsoDateTime,
+): BlockDragPatch | null {
+  if (rules === null) return null
+  const atMs = Date.parse(at)
+  const startMs = Date.parse(entry.start)
+  const endMs = Date.parse(entry.stop ?? nowIso)
+  if (mode === "resize-start") {
+    const start = Math.min(atMs, endMs - SHORTEST_MS)
+    return start === startMs ? null : { start: new Date(start).toISOString() }
+  }
+  if (mode === "resize-end") {
+    const stop = Math.max(atMs, startMs + SHORTEST_MS)
+    return entry.stop && stop === endMs ? null : { stop: new Date(stop).toISOString() }
+  }
+  // the top as drawn on this day: the entry's start, or midnight for a night's second half
+  const topMs = dateKey(entry.start) === day ? startMs : Date.parse(isoAtMinutes(day, 0))
+  const lastTopMs = Date.parse(isoAtMinutes(day, DAY_MINUTES - CALENDAR_SNAP_MINUTES))
+  // a top past the day's last step, or above its midnight: `blockDragPatch`'s clamp has it
+  if (atMs < Date.parse(isoAtMinutes(day, 0)) || atMs > lastTopMs) return rules
+  const shift = atMs - topMs
+  if (shift === 0) return null
+  const start = startMs + shift
+  return { start: new Date(start).toISOString(), stop: entry.stop ? new Date(Date.parse(entry.stop) + shift).toISOString() : null }
 }

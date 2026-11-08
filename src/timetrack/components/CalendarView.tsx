@@ -360,6 +360,14 @@ export function CalendarView({
     const edge = current.mode === "resize-start" ? interval.startMin : current.mode === "resize-end" ? interval.endMin : (current.topMinutes ?? interval.startMin)
     const landed = snapToQuarterOrEdge(edge + raw - current.startMinutes, edges)
     /**
+     * Back where the edge would land unmoved: the pointer is home, and home
+     * writes nothing (see `finishDrag`). Without this an entry at 09:00:40
+     * dragged away and back was snapped to 09:00, and a touching neighbour
+     * rewritten with it (code review of 47e97f0c).
+     */
+    const home = snapToQuarterOrEdge(edge, edges)
+    if (landed.minutes === home.minutes && landed.at === home.at) return { minutes: current.startMinutes, at: null }
+    /**
      * Where the edge lands, as an instant: the neighbour's own, or the quarter
      * hour's. Given only as minutes, a move of an entry with seconds added
      * fractional minutes, the clock dropped the fraction, and 01:20:40 dragged
@@ -373,7 +381,7 @@ export function CalendarView({
   const patchOf = (entry: TimeEntry, day: IsoDate, current: DragState): BlockDragPatch | null => {
     const patch = blockDragPatch(entry, day, blockDrag(current), nowIso(), edgeSnap)
     if (!phone || !current.currentAt || current.mode === "create") return patch
-    return landOnEdge(entry, current.mode, current.currentAt)
+    return landOnEdge(entry, day, current.mode, current.currentAt, patch, nowIso())
   }
 
   /**

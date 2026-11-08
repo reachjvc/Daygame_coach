@@ -112,6 +112,7 @@ export function EntrySheet({
   target,
   state,
   setState,
+  latestState,
   nowSec,
   pushToast,
   afterCheck,
@@ -125,6 +126,13 @@ export function EntrySheet({
   target: SheetTarget
   state: TimetrackState
   setState: SetState
+  /**
+   * The workspace as it is now, for an Undo pressed after this sheet closed:
+   * the switch's Undo asked the copy from before the create, so with a third
+   * timer started since it found nothing in the way, then did nothing, in
+   * silence (code review of ddffc410).
+   */
+  latestState: () => TimetrackState
   nowSec: number
   pushToast: PushToast
   afterCheck: AfterCheck
@@ -333,13 +341,13 @@ export function EntrySheet({
       return
     }
 
-    const refusal = createFromSheet(state, final, serverNowIso()).violations[0]
+    const refusal = createFromSheet(state, final, serverNowIso(), base?.start ?? null).violations[0]
     if (refusal) {
       refuse(refusal.message)
       return
     }
     const create = (latest: TimetrackState, at: IsoDateTime) => {
-      const made = createFromSheet(latest, final, at)
+      const made = createFromSheet(latest, final, at, base?.start ?? null)
       if (made.violations[0]) {
         pushToast(made.violations[0].message, "error")
         return
@@ -352,7 +360,7 @@ export function EntrySheet({
         pushToast(
           `Stopped “${stopped.description.trim() || "(no description)"}” and started “${created.description.trim() || "(no description)"}”`,
           "info",
-          () => undoOrSay(() => latest, (current) => undoDisplacement(current, created.id, stopped.id, serverNowIso()), setState, pushToast),
+          () => undoOrSay(latestState, (current) => undoDisplacement(current, created.id, stopped.id, serverNowIso()), setState, pushToast),
         )
       }
     }
