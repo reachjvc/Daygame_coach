@@ -1,0 +1,143 @@
+{
+ "id": "cannabis",
+ "checkedBy": "independent source checker, part b (rev3)",
+ "checkedOn": "2026-11-08",
+ "scopeNote": "23 changed items (numbers 15, beliefs 4, plan 4). Part b = numbers[12] onward. numbers[11] also checked (Moore 2003, same source as beliefs[2]) in case part a stopped at 11 items.",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "71 in 100 (Moore 2003)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Abstract (Europe PMC, 2026-11-08): 82 who reached 2+ weeks off in 'outpatient treatment for marijuana dependence'; 71% lapsed within 6 months, mean 73 days; quote word for word, 22 words. 'dependent' supported ('marijuana-dependent outpatients'). Headline 2 figures, not more hopeful."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "72 hours (Scott 2018)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Abstract: 'studies requiring an abstinence period longer than 72 hours (15 studies; n = 928) had an overall effect size (d, -0.08; 95% CI, -0.22 to 0.07) that was not significantly different from 0'. Quote uses '...' for the CI, otherwise word for word. Use level: abstract says only 'frequent or heavy cannabis use'; 2152 users mean age 20.6, 68.4% male: basis matches. 'no clear gap' = not significantly different from 0. heavy tag and Counted label fit."
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "Week 1 (Schuster 2018)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Abstract + PMC6587572 full text: 62 abstinence vs 26 monitoring, 55 (88.7%) 30-day abstinent; Table 1 days used of past 90: 57.5 and 54.4 (about 55); recruited from community and a high school in a northwest Boston suburb, July 2015 to Dec 2016; CUDIT at baseline, no diagnosis count; attention improved similarly in both. Quote word for word (with '...')."
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "12 weeks (Hser 2017)",
+   "verdict": "fix",
+   "problems": [
+    "Headline reads as an absolute fall ('grew less anxious and depressed'); the paper compares slopes against the use-increase group, and overall mean slopes did not change (Results 3.2). Caveat says so, but the headline is a bit more hopeful than the source.",
+    "'fewer and fewer days' overstates the grouping: people were split only by whether their weekly-use slope went down or up."
+   ],
+   "fix": {
+    "numbers[15].headline": "In a 12-week weed treatment trial, people whose weed days went down grew less anxious and depressed than those whose went up."
+   },
+   "notes": "Checked in PMC5607644 full text: 302 with DSM-IV cannabis dependence, 6 sites, Jan 2014 to Apr 2015, 152/150, Table 2 past-30-day use 26.0/6.2, quote word for word (abstract conclusion). Caveat on sleep holds: Table 3 sleep slope -0.06(0.03) not starred in Model I (N=302), -0.07(0.03)* in Model II (N=219). No quality-of-life link. Fix headline is 22 words, 1 figure."
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "I've smoked for years. I'm stuck.",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "PMC3227547: Table header 'Cannabis Dependence (N=530)', hazard table 'Cannabis remission (N=344)'; 344/530 = 64.9%, 'about 65 in 100' is plain arithmetic. Remission = stopped having any dependence criteria, so 'free of every sign of it' fits. Quote joins two table headers with '…' (word for word). dependent tag right. Test safe."
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "I can't handle quitting",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Bonnet 2017 full text: 'The CWS usually lasts up to 3 weeks' (word for word). Connor 2022 full text: 'Sleep disturbances may continue for several weeks or longer.' (word for word). Both describe stopping after long-term regular/heavy use, so 'heavy' is the cautious tag. Proof 1 figure, under 40 words. Test safe."
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "Day 10, I feel fine",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Moore 2003 abstract: '71% of those who lapsed, relapsed to heavier use defined as at least 4 days of marijuana use in any 7-day period' (quote word for word, 22 words). 'most' for 71% is fair; '4+ days a week' = 4 days in any 7-day period. Group hooked on weed in treatment: rule 4 met. Test safe (no use drill)."
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "Weed is the only thing that gets me to sleep",
+   "verdict": "fix",
+   "problems": [
+    "origin is stale: it still says the counterpart was changed to 'Some rough weeks'; the counterpart is now his first two v10 sentences and the third is in notUsed.beliefs[16]."
+   ],
+   "fix": {
+    "beliefs[3].origin": "06-template.json cannabis belief 2. Limiting kept. Counterpart: his first two sentences kept word for word; the third ('A few rough nights buy my real sleep back', changed to 'Some rough weeks' in round 2) is in notUsed, as no source supports it. Proof replaced: the old one counted users and inpatients not checked for dependence."
+   },
+   "notes": "Proof checked in PMC5607644: 'A high percentage (68.9%) of the study sample reported poor sleep quality.' (word for word); Table 2 208/302 = 68.9%; sample had DSM-IV cannabis dependence, measured at baseline (still using). 69% is plain rounding. 2 figures. dependent tag right. Test safe for a reader still smoking or already off."
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Step 1 actions",
+   "verdict": "fix",
+   "problems": [
+    "do[0] holds two ideas (log as usual without cutting down; do the belief tests this week). One idea per line."
+   ],
+   "fix": {
+    "plan[0].do": [
+     "Still smoking? Smoke as usual for a few days while you log; don’t cut down yet.",
+     "Do the belief tests above this week too: each one is a one-off trial run.",
+     "Already stopped? Don’t start smoking again to do this step: write it from memory.",
+     "Allow it. No guilt while you log: you’re investigating, not failing.",
+     "Write down what weed does for you: sleep, boredom, anxiety, fun.",
+     "Before each smoke, note the time, where you are and what you want from it.",
+     "After it, note whether it gave you that, and for how long.",
+     "Each thing weed does for you is a belief to test. Start with the beliefs above."
+    ]
+   },
+   "notes": "No figures, no source. Safe: no cut-down drill, 'Already stopped?' line keeps a quitter from restarting."
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "Step 2 proof (Ellingstad 2006)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Abstract: 'Long-term daily cannabis abusers (N = 25) who without treatment stopped using cannabis for at least one year'; quote word for word (23 words). 'resolved' fits people who beat a problem on their own. Plain-word paraphrase is faithful; 'A small group.' names the weakness. Outside scope but noted: plan[1].do[5] '80% of the effect is enough' is an unsourced figure."
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "Step 3 actions and proof (Budney 2003)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Abstract: 18 users, 45-day abstinence, 'most effects lasted 4-14 days' (quote word for word). Budney 2004 review (Am J Psychiatry, csam-asam.org PDF) describes this study as '18 daily cannabis users' with no dependence criterion, so 'heavy users, not checked for addiction' holds. Actions: one idea each, safe."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 proof (Gates 2016)",
+   "verdict": "fix",
+   "problems": [
+    "Timing wrong: the source's 'follow-up of longer than four months' is counted from baseline (the same sentence gives '24% at three to four months from baseline'), not from the end of therapy, which ran about 12 weeks. '4+ months after talk therapy' reads as after therapy ended.",
+    "'23 in 100 had not used' does not say these were the people given talk therapy (an average across the 8 trials reporting abstinence)."
+   ],
+   "fix": {
+    "plan[4].proof.text": "In therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups over 4 months after starting."
+   },
+   "notes": "PMC4914383 (Results, point-prevalence abstinence): 'Across the eight studies reporting rates of PPA, an average of 37% intervention participants achieved PPA at end of treatment and this decreased to 24% at three to four months from baseline and to 23% at follow‐up of longer than four months.' Quote word for word, 25 words. treatment tag right."
+  }
+ ]
+}

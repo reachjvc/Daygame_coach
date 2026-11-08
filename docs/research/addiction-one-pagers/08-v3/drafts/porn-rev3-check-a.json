@@ -1,0 +1,177 @@
+{
+ "id": "porn",
+ "part": "a",
+ "checkedBy": "rev3 source checker a (porn)",
+ "checkedOn": "2026-11-08",
+ "scope": "numbers 0-9, beliefs 0-1 (12 of 23 changed items: 10 numbers, 5 beliefs, 5 plan proofs, 3 plan step sets); windows none",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "quit-status 138 (Efrati 2026)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract (PubMed efetch 2026-11-08) confirms 952/138/50/42 = 1,182, Jewish community sample aged 18-70, 2018 and 2022 waves; quote word for word. Headline (20 words, 2 figures) says only what the abstract says.",
+    "basis.n opens with '180: 138 … and 42 …', which pairs 'recovery' and 'chronic' as if they were the people with a problem: the exact claim r3 removed from the headline. The figure 138 is out of the 1,182 sorted.",
+    "Minor: ref.readNote says the full text is open access (CC BY), gaps[0] says it needs a subscription; Europe PMC lists it as not open access. 'Men and women together' rests on a sister paper, not this abstract (noted in readNote)."
+   ],
+   "fix": {
+    "numbers[0].basis.n": "1,182 adults sorted into four groups: 138 in the group named ‘recovery’, 42 ‘chronic’, 50 ‘delayed onset’, 952 ‘no disorder’"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "how-tries 40 in 100 (Kraus 2016)",
+   "verdict": "fix",
+   "problems": [
+    "Figures confirmed in Table 1 (full text, PMC efetch): quit 4+ 40.3 vs 5.8; cut back 4+ 46.2; n = 186 of 1,298; Craigslist 88%; June-July 2013; mean age 32.8; 132 treatment-interested men with hypersexuality; ~80% weekly. Quote is Table 1 text word for word.",
+    "Severity 'treatment' is wrong: the paper says it 'recruited participants from a non-treatment seeking sample of men'; these men only reported an interest in seeking treatment. Also kinds.json how-tries reader list has no 'treatment', so the build would refuse it. self-hooked is in the list and fits (agrees with part-b checker)."
+   ],
+   "fix": {
+    "numbers[1].severity": "self-hooked",
+    "numbers[1].counted": "men who said they wanted help for porn, not in treatment"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "how-with-help 54 in 100 (Crosby 2016)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract confirms 28 men, all but 1 LDS, 93% vs 21%, combined N=26, cessation 54% posttreatment; quote word for word. Full text not reachable (Europe PMC: not open access).",
+    "The 54 in 100 is of the 26 men in the combined count, not 28; the Weak chip says 28 men (agrees with part-b checker).",
+    "Caveat 'The study gives no stop count for the waiting list' cannot be checked: only the abstract was read. Reword as what the figure itself is."
+   ],
+   "fix": {
+    "numbers[2].weak": "No comparison count; 26 men, almost all one church",
+    "numbers[2].caveat": "This figure counts all men after they had therapy, so there are no untreated men to compare it with. There was no comparison therapy, so it does not show ACT beats other help. Three months later, 35 in 100 had stopped completely."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "how-slips 53 in 100 (Fernandez 2021)",
+   "verdict": "ok",
+   "problems": [
+    "Full text confirms n = 55 of 104 lapsed (52.9 -> 53 in 100), journals 2016-2018 from the male section, 7 days-12 months, 54 of 104 inferred 7-30 days, at least 86.5% also abstaining from masturbation, 80 self-perceived addicted, ages 18-63. Quote word for word."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "how-slips 45 in 100 (Fernandez 2023)",
+   "verdict": "ok",
+   "problems": [
+    "45.4% of the 86-person abstinence group confirmed; 64.2% female, mean age 21.38, >= three times a week; quote word for word. users tag allowed for how-slips."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "how-slips 51 in 100 (Dwulit 2019)",
+   "verdict": "ok",
+   "problems": [
+    "51.0% of 4,260 current users (1,740 men), aged 18-26, Feb 2017-Aug 2018, most often once a week, 10.7% daily; quote word for word. 'and gone back' is a fair reading: they are current users."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "how-withdrawal 7 days (Fernandez 2023)",
+   "verdict": "ok",
+   "problems": [
+    "Exploratory three-way interaction confirmed: at high PPU and daily FPU the abstinence group craved more than controls; high PPU (+1 SD, 72.82) below the 76 cutoff; 84.7% below cutoff, 89.8% no wish to quit, 19.3% daily (about 34 of 176); 2021 sessions (Feb, Mar) confirmed. All four quotes word for word."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "after-body 50 in 100 (Fernandez 2021 + Grubbs & Gola 2019)",
+   "verdict": "ok",
+   "problems": [
+    "21 of 42 confirmed; 'at most 32 of the 42 called themselves addicted' holds (32 reported both addiction and any sexual difficulty); authors say the sample overrepresents men who found it beneficial and kept posting. Grubbs & Gola quotes word for word in the abstract; caveat wording matches it."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "after-lasting 74 in 100 (Crosby 2016 + Antons 2022)",
+   "verdict": "ok",
+   "problems": [
+    "Abstract: at 3 months 35% cessation, 74% at least 70% reduction; quote word for word. Antons Table 2 row for Crosby & Twohig shows '↔ quality of life(TG: BL = post, …)' (spacing differs only). Antons lists TG 14 + CG 13 = 27, not 28; the card's '26 combined' is the abstract's figure, so fine."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "after-lasting 16 in 100 (Dwulit 2019)",
+   "verdict": "ok",
+   "problems": [
+    "823 of 5,083 (339 of 2,079 men) confirmed; arithmetic 16.2/16.3/16.1 right; quote word for word (spacing only). Headline answers 'who stopped', not 'does it last': already carried by its propose note."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: 35 in 100 three months after ACT",
+   "verdict": "ok",
+   "problems": [
+    "Proof matches the abstract (35% complete cessation at 3-month follow-up); quote word for word; treatment tag right (Antons: entry criteria include at least one failed attempt to stop). Test safe. Efrati proof listed in notUsed.replaced."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "hard: flatline close to 33 in 100",
+   "verdict": "ok",
+   "problems": [
+    "Both quotes word for word in the full text (flatline 'close to one-third'; Table 1 'Self-perceived addiction to pornography Yes 80 76.9'). self-hooked right. Test safe (two days, split still-watching/already-off). Sassover proof in notUsed.replaced."
+   ],
+   "fix": {}
+  }
+ ],
+ "extra": [
+  {
+   "field": "heroLine",
+   "verdict": "ok",
+   "problems": [
+    "'Men get off porn' is backed by the ACT trial (35 in 100 stopped completely at 3 months, men in a therapy trial) and Dwulit (339 men stopped, ordinary users); neither counts men hooked on porn who got free, so the line is a plain claim, not a figure. 'It starts with what you tell yourself' is his step 1, not a source claim."
+   ]
+  },
+  {
+   "field": "heroDecision",
+   "verdict": "ok",
+   "problems": [
+    "Hands-off trial (Bőthe 2021, PMID 34727088) abstract confirms differential dropout of 89%; reasons hold."
+   ]
+  },
+  {
+   "field": "gapReaderLine",
+   "verdict": "ok",
+   "problems": [
+    "Matches gaps searches (Efrati, Engelhardt follow people but give no share who got free). 'No study' is a universal claim resting on our searches; acceptable as the line."
+   ]
+  },
+  {
+   "field": "feltHeadlineProposal",
+   "verdict": "fix",
+   "problems": [
+    "felt/porn.json medians: Day 1 = 6 (n 15), Day 2 = 5 (n 40), Day 3 = 3, days 4 to week 4 = 4, days 31-45 = 3.5, 46-60 = 3, month 3 = 4 (n 26), months 4-12 = 3, year 2+ = 2 (n 17).",
+    "'No clear easing … stays at 3 to 4 through month 3' leaves out days 1-2 (6 and 5): the medians do fall after day 2. 'why' says the peak and the after level are both 4; the peak median is 6 (Day 1), so the why is wrong. The old line 'Never above 4' was also false for days 1-2."
+   ],
+   "fix": {
+    "feltHeadlineProposal.text": "Hardest in the first two days. After that, a typical day sits at 3 to 4 out of 10 through month 3.",
+    "feltHeadlineProposal.why": "felt/porn.json medians: day 1 at 6 (15 posts), day 2 at 5, then 3 to 4 from day 3 through month 3 (26 posts), 3 in months 4 to 12, 2 in year 2 and later (17 posts). The old line 'Never above 4' is false for days 1 and 2. The template computes this line; data only proposes it."
+   }
+  }
+ ]
+}

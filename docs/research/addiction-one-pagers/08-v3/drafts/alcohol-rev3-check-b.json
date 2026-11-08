@@ -1,0 +1,172 @@
+{
+ "id": "alcohol",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 17,
+   "label": "6 years (after-lasting, Kelly 2018)",
+   "verdict": "ok",
+   "problems": [
+    "Re-fetched PMC5880708 (BioC full text). n 1,879 = the 40-year subsample (of 2,002); 58.6% alcohol as primary = 'about 6 in 10'; July-August 2016; quote word for word (abstract Results). Use level is not reported, as basis.who now says. Drink and drugs mixed: already in weak and propose (rule 13). The dropped half of 'propose' (same number as the Every addiction section) follows the changeNote's reason; no reader text lost."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "stuck: 'I always go back' (Kelly 2019 tries)",
+   "verdict": "ok",
+   "problems": [
+    "Re-fetched PMC6602820: Primary substance Alcohol, median 2 (IQR 1-4), quote matches the table. 'a few needed dozens' cut; the changeNote records it. Severity resolved matches 'who say they beat'. Test unchanged and safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "hard: 'Stopping will be hell' (Brown & Schuckit 1988)",
+   "verdict": "ok",
+   "problems": [
+    "Re-fetched PMID 3216643: male primary alcoholics, no preexisting major psychiatric disorder, inpatient; 'largest reduction in scores at Week 2'. Both quotes word for word. Test is safe: a daily drinker or a man with morning shakes skips nothing and books the doctor; no drink-delay drill is left. Minor, not blocking: the doctor branch does not name an earlier seizure or the DTs, which plan step 3 action 1 does."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "need: 'I need a drink to unwind' (Brower 2001)",
+   "verdict": "fix",
+   "problems": [
+    "Sources fine: all three Brower quotes word for word (PMC2778757). The test is safe, with no cut-down drill. But the last sentence, 'Next evening, rate ... against a night you drank', fits only the 'Not every day' branch. The daily drinker had no night off to compare, and the man already off it has no recent night of drinking. Split the rating per branch."
+   ],
+   "fix": {
+    "beliefs[3].test": "Drink every day? Leave the drink as it is until you have seen the doctor (step 3); on three nights this week, note how long you took to fall asleep and how often you woke. Not every day? Take one whole night off, phone out of the room; next evening, rate how wound up you feel, 0 calm to 10 on edge, against an evening after you drank. Already off it? Keep the phone out one night and rate the next evening the same way, against an evening after a phone night."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "moderation: 'I can handle just one' (Dawson 2007, 7 vs 27 in 100)",
+   "verdict": "fix",
+   "problems": [
+    "Re-fetched PMID 18034696: 7.3% of abstainers and 27.2% of low-risk drinkers had AUD symptoms come back by Wave 2 (3 years); n 1,772; dependent is the right tag. Two problems. With 'within 3 years' gone, the line has no time span and can read as a lifetime rate. 'within a few years' adds no figure (the build's NUMWORD list has no 'few'). Also, 'first asked, 27 in 100 light drinkers' has no joining word, so a cold reader trips on it."
+   ],
+   "fix": {
+    "beliefs[4].proof": "In a US survey of people who had got free of alcohol dependence, problems came back within a few years for 7 in 100 who weren’t drinking when first asked, and 27 in 100 light drinkers."
+   }
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "step 1 actions (Still drinking? / Already stopped?)",
+   "verdict": "fix",
+   "problems": [
+    "No figures or sources. Safe: no stopping or cutting down is ordered, and the already-stopped reader is told not to restart. Action 1 now holds two ideas (drink as normal and watch it; the belief tests are an exception) in three sentences, against one idea per line. Split it into two lines. Nothing else is dropped."
+   ],
+   "fix": {
+    "plan[0].do": [
+     "Still drinking? Don’t stop yet. This week, drink as you normally do, and watch it.",
+     "The belief tests above are one-off trial runs; they don’t break this week.",
+     "Already stopped? Don’t start drinking again to do this step: write it from memory.",
+     "Write down what drinking does for you: unwinding, sleep, confidence, fun with friends.",
+     "Before each drink, note the time, the place and what you want from it. Next morning, note whether you got it.",
+     "Allow it. No guilt and no promises this week. You’re finding out, not judging.",
+     "Look at each reason up close: does drinking give you that, or take it back by morning?",
+     "Each one is a belief to test. Start with the beliefs above."
+    ]
+   }
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "step 2 swaps (going out, sleep)",
+   "verdict": "fix",
+   "problems": [
+    "Going out: fine and safe; the alcohol-free beer is kept, with a condition. Sleep: 'Expect light sleep in the first weeks' is more hopeful than the page's own source. Brower 2001 (r13) has falling asleep normal only by month 5-9, and broken sleep lasting 1-3 years, as timeline row 6 shows. The new line suggests sleep is fine after a few weeks. Fix without the fear range the owner-lens asked to drop: no time cap at all."
+   ],
+   "fix": {
+    "plan[1].do[3]": "Sleep: same bedtime every night, a hot shower, no phone in bed. Expect light sleep at first; it mends slowly."
+   }
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 actions (doctor line first, slip line)",
+   "verdict": "fix",
+   "problems": [
+    "Doctor line checked: the NHS alcohol-support quote is word for word (list items joined), and so is NICE CG115 1.3.4.1. The ASAM seizure 8-48 h and kindling quotes are word for word (ASAM PDF re-read). Safe: a heavy daily drinker, a man with morning signs, or one with an earlier seizure or the DTs sees the doctor before setting the date. Dropped with no notUsed entry and no mention in the changeNote: rev2 action 6's second sentence, 'Drank heavily every day? Talk to the doctor before you start again.' Action 1 now covers the case at the next quit date, so the cut is defensible, but rule 25 needs an entry."
+   ],
+   "fix": {
+    "notUsed.other[+]": {
+     "from": "rev2 plan step 3 action 6, second sentence",
+     "text": "Drank heavily every day? Talk to the doctor before you start again.",
+     "why": "Action 1 now comes first and sends a heavy daily drinker, a man with morning signs, or one with an earlier seizure or the DTs to the doctor before any quit date, a new one after a slip included. The slip line keeps one idea (rule 12)."
+    }
+   }
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 proof (r/stopdrinking, 4 out of 10 or less)",
+   "verdict": "fix",
+   "problems": [
+    "Data checked in 08-v3/felt/alcohol.json: medians from Days 4-5 to Year 2+ are 3,4,4,3,3,2.5,4,2,3.5,3,2,1, all 4 or less; Day 3 is 4 and Days 1-2 are 5; nUsed 605. Severity self-hooked fits forum posters. With 'scored by an AI reader' cut, the passive 'scored 4 out of 10' reads as if the posters rated themselves. Rule 20 says the scores come from readers, not from the writers. Name a reader in plain words, with no process note and no new figure."
+   ],
+   "fix": {
+    "plan[2].proof.text": "In r/stopdrinking posts with a day count, a reader rated a typical day after the first few days at 4 out of 10 or less."
+   }
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 actions (acamprosate or naltrexone, Jonas 2014 doRef)",
+   "verdict": "ok",
+   "problems": [
+    "Re-fetched PMID 24825644: 'Both acamprosate and oral naltrexone were associated with reduction in return to drinking.' is word for word in Conclusions. 'help some people' matches the modest effect (NNT 12 and 20). Slip line unchanged."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof (acamprosate 36 vs 23 in 100, Mann 2004)",
+   "verdict": "fix",
+   "problems": [
+    "Re-fetched PMID 14745302: recently detoxified, alcohol-dependent; continuous abstinence at 6 months 36.1% vs 23.4%. The quote is word for word, and 'treatment' is the right tag. With 'six months' gone, 'stayed fully off drink' has no time span and can read as for good, which is more hopeful than the source (Mann gives 12-month rates separately). 'for months' adds no figure. Also open, not fixed here: with the doubt sentence gone, the plan line no longer says the best-run trials (Jonas alsoRef) showed a small, unclear gap. That stays on the card only."
+   ],
+   "fix": {
+    "plan[4].proof.text": "In trials after detox, 36 in 100 people hooked on alcohol stayed fully off drink for months on acamprosate; 23 in 100 on a dummy pill."
+   }
+  },
+  {
+   "where": "windows",
+   "index": 1,
+   "label": "Seizure risk row (label, when)",
+   "verdict": "ok",
+   "problems": [
+    "ASAM PDF: seizures 'as early as 8 hours ... up to 48 hours with peak activity occurring around 24 hours'. s/pk/e unchanged. 'see Before you stop' matches the footer heading in board/one-pager-v3.html. Minor: 'or had one before' leaves out an earlier DTs, which the changeNote names; the footer and plan step 3 cover it."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 2,
+   "label": "DTs row (when, note)",
+   "verdict": "ok",
+   "problems": [
+    "Mirijello 2015 (PMC4978420): 'Usually it appears 48-72h after the last drink, although it could begin up to 10 days later'. ASAM: delirium onset 72-96 h. So 'usually day 2-4, as late as day 10' is right. The 5 in 100 (Mirijello 'approximately in 5%') and hour 12 (ASAM 'Hallucinations develop within 12-24 hours') moved to the note, not dropped. The footerProposal in pages/alcohol.json names 'seeing or hearing things' as an emergency, and the build reads it. The note does not show until the template shows it."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 6,
+   "label": "Sleep row (when, note)",
+   "verdict": "ok",
+   "problems": [
+    "Brower 2001: 'sleep latency appeared to normalize by 5 to 9 months'; 'sleep fragmentation ... can persist for 1 to 3 years'. Both match. 'total sleep time took 1 to 2 years' moved to the note, so nothing is lost. 2 ranges in the line."
+   ],
+   "fix": {}
+  }
+ ]
+}

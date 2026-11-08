@@ -3,9 +3,11 @@
  "gaps": [
   {
    "kind": "how-slips",
-   "missing": "When slips happen (which days or weeks after stopping), for people hooked on alcohol. The card answers how much drinking dropped, not when slips come. Also the head count behind the seven pooled studies.",
+   "missing": "When slips happen (which days or weeks after stopping), for people hooked on alcohol. The '87% less' card that sat here moved to after-lasting in rev3: it answers how much drinking dropped in the year after treatment, not when slips come.",
    "searched": "Europe PMC (relapse or lapse, alcohol, 'first drink', detoxification; Project MATCH re-analyses), PubMed abstract of Miller 2001, the journal page (not open), Semantic Scholar (abstract withheld), web search for the count. Found only small medicine trials with no timing figures in their abstracts. 2026-11-05: one more web search for the head count; none found.",
-   "fillLater": "Our r/stopdrinking harvest: posts with a day count that report a slip could show when slips cluster (forum sample, tagged self-hooked)."
+   "fillLater": "Our r/stopdrinking harvest: posts with a day count that report a slip could show when slips cluster (forum sample, tagged self-hooked).",
+   "changed": true,
+   "changeNote": "rev3: the card moved to after-lasting (rules audit r3), so this kind is now empty."
   },
   {
    "kind": "after-first-month",
@@ -229,6 +231,18 @@
     "group": "how",
     "big": "3 tries",
     "why": "Mixes alcohol and drug problems (rule 13); fits the general kind gen-tries. This page uses the alcohol row of the same table (2 tries)."
+   },
+   {
+    "from": "06-template.json alcohol numbers",
+    "big": "2.6 million",
+    "text": "deaths worldwide were caused by alcohol in 2019.",
+    "why": "A death toll (rule 11; his 4 Nov note)."
+   },
+   {
+    "from": "06-template.json alcohol numbers",
+    "big": "1 in 12",
+    "text": "For every 12 people who take acamprosate, one is kept from drinking again.",
+    "why": "'1 in N' is the format readers misread most (rule 12a). The same review's gap, about 9 in 100, is in the 36 vs 23 card's Measured line, and its quote is the card's second source."
    }
   ],
   "beliefs": [
@@ -273,7 +287,39 @@
     "reason": "A step proof takes one ref (SCHEMA); the acamprosate half was kept. The AA fact also needed fixing: the review tested therapy built to get people to AA (twelve-step facilitation), not AA itself."
    }
   ],
-  "revisionNote": "2026-11-05: quit '1 in 4', after '1 month' and after '6 years' moved onto the page (quit-status, after-first-month, after-lasting), so they left this list. rev2 (2026-11-05): no list changes; belief 5 and 7 reasons updated (the lab cue fact left plan step 3; the doctor line moved from step 5 to step 3)."
+  "revisionNote": "2026-11-05: quit '1 in 4', after '1 month' and after '6 years' moved onto the page (quit-status, after-first-month, after-lasting), so they left this list. rev2 (2026-11-05): no list changes; belief 5 and 7 reasons updated (the lab cue fact left plan step 3; the doctor line moved from step 5 to step 3). rev3 (2026-11-08): 2.6 million and 1 in 12 added (rules audit r3: 06 items dropped with no entry); 'other' holds the 06 timelineNote, hero sub, community block, plan step 3 proof and the old who-age sentence.",
+  "other": [
+   {
+    "from": "06 timelineNote",
+    "text": "Withdrawal is well measured for alcohol. Many people get less than this.",
+    "why": "The v3 body rows have no note line. Proposed to show 'Many people get less than this.' under What the body does (needs template); the first sentence is a research note."
+   },
+   {
+    "from": "06 hero sub, second sentence",
+    "text": "You don’t have to wait that long.",
+    "why": "The v3 hero leads with the head count and shows the 14 years only in belief 1's proof, so the line has nothing to answer on the first screen. Kept here for the owner."
+   },
+   {
+    "from": "06 community",
+    "text": "r/stopdrinking (status: todo)",
+    "why": "Never filled; replaced by the felt-difficulty graph built from r/stopdrinking posts."
+   },
+   {
+    "from": "pages/alcohol.json who-age caveat, before 2026-11-06",
+    "text": "Free here is not always quitting: about 1 in 3 still drank some.",
+    "why": "Read as permission to drink a little for a man who can't (his 5 Nov note; rules audit and owner-lens r3). The group judged its own problem and was mostly never diagnosed; the caveat now points to the card that counts people once hooked."
+   },
+   {
+    "from": "06-template.json alcohol plan step 3 proof",
+    "text": "A Friday, a bar or old friends can still set off a strong pull at day 60.",
+    "why": "The study tested drink cues in a lab (rule 19); the fact stays as the labelled timeline row."
+   },
+   {
+    "from": "rev2 plan step 3 action 6, second sentence",
+    "text": "Drank heavily every day? Talk to the doctor before you start again.",
+    "why": "Action 1 now comes first and sends a heavy daily drinker, a man with morning signs, or one with an earlier seizure or the DTs to the doctor before any quit date, a new one after a slip included. The slip line keeps one idea (rule 12)."
+   }
+  ]
  },
  "researchRefsToAdd": [
   {
@@ -283,14 +329,60 @@
    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4978420/",
    "pmid": "25666543",
    "why": "Timeline rows 1, 3 and 4 now cite it (source checker, round 1). The build looks window refs up in the research file, so it fails on 'r18' until this ref is added there."
+  },
+  {
+   "file": "01-sedatives-opioids.json, item 'alcohol', refs",
+   "id": "r19",
+   "cite": "NHS (2026). Alcohol-use disorder. nhs.uk (page last reviewed 24 April 2026).",
+   "url": "https://www.nhs.uk/conditions/alcohol-use-disorder/",
+   "pmid": "",
+   "quote": "Call 999 or go to A&E if: You or someone else has severe withdrawal symptoms after stopping drinking alcohol, such as: shaking visibly",
+   "why": "rev3: the footer's emergency line (safety audit r3 named NHS as the source research.md 5c picked)."
+  },
+  {
+   "file": "01-sedatives-opioids.json, item 'alcohol', refs",
+   "id": "r20",
+   "cite": "NHS (2026). Alcohol support. nhs.uk (page last reviewed 17 August 2026).",
+   "url": "https://www.nhs.uk/live-well/alcohol-advice/alcohol-support/",
+   "pmid": "",
+   "quote": "The sorts of mild or moderate withdrawal symptoms that suggest you may need medicine include: anxiety after waking sweating and mild tremors nausea or retching in the morning",
+   "why": "rev3: the footer's morning signs and plan step 3 action 1 (research.md 5b)."
   }
  ],
  "footerProposal": {
-  "text": "Drinking heavily every day, get the shakes when you stop, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. Any one of these after stopping is an emergency, call an ambulance: a seizure, severe shaking, confusion, or seeing or hearing things.",
+  "text": "Drinking heavily every day (UK doctors draw the line at about 15 units a day, 5 to 7 pints of beer depending on strength), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop drinking is an emergency: call an ambulance.",
   "refs": [
-   "r1"
+   "r1",
+   "r3",
+   "r19",
+   "r20"
   ],
-  "why": "Safety audit (risk factors: earlier seizure or DTs, many earlier withdrawals) and source checker (ASAM times the risk from stopping or cutting down). The footer lives in 06-template.json, which stays as it is (rule 25); the build would need to read this field. Owner-lens v1 and v2 also asked to move the box above the Sources heading."
+  "why": "Safety audit (risk factors: earlier seizure or DTs, many earlier withdrawals) and source checker (ASAM times the risk from stopping or cutting down). The footer lives in 06-template.json, which stays as it is (rule 25); the build would need to read this field. Owner-lens v1 and v2 also asked to move the box above the Sources heading.",
+  "quotes": [
+   {
+    "cite": "NHS (2026). Alcohol-use disorder. nhs.uk (page last reviewed 24 April 2026).",
+    "url": "https://www.nhs.uk/conditions/alcohol-use-disorder/",
+    "fetched": true,
+    "quote": "Call 999 or go to A&E if: You or someone else has severe withdrawal symptoms after stopping drinking alcohol, such as: shaking visibly",
+    "note": "read 2026-11-08; the same list goes on: confusion, 'seeing, hearing, or feeling things that are not there', 'having a seizure'"
+   },
+   {
+    "cite": "NHS (2026). Alcohol support. nhs.uk (page last reviewed 17 August 2026).",
+    "url": "https://www.nhs.uk/live-well/alcohol-advice/alcohol-support/",
+    "fetched": true,
+    "quote": "The sorts of mild or moderate withdrawal symptoms that suggest you may need medicine include: anxiety after waking sweating and mild tremors nausea or retching in the morning",
+    "note": "read 2026-11-08"
+   },
+   {
+    "cite": "NICE (2011). Alcohol-use disorders: diagnosis, assessment and management of harmful drinking and alcohol dependence (CG115).",
+    "url": "https://www.nice.org.uk/guidance/cg115/chapter/Recommendations",
+    "fetched": true,
+    "quote": "For service users who typically drink over 15 units of alcohol per day and/or who score 20 or more on the AUDIT, consider offering: an assessment for",
+    "note": "read 2026-11-08, recommendation 1.3.4.1; research file ref r3. 15 UK units = 120 g of alcohol, about 6 to 7 pints of 4% beer"
+   }
+  ],
+  "changed": true,
+  "changeNote": "rev3 (2026-11-08): safety audit r3 major: the emergency line must count any one sign alone, as NHS does (shaking visibly, confusion, seeing or hearing things, a seizure); now 'visible shaking' and 'seeing or hearing things' each stand alone, cited to NHS (r19). Safety audit r3 minor: 'heavily every day' now has an amount (NICE CG115, r3: over 15 units a day) and the morning signs NHS lists (r20). Same place, same size (rule 5). Previous text: Drinking heavily every day, get the shakes when you stop, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. Any one of these after stopping is an emergency, call an ambulance: a seizure, severe shaking, confusion, or seeing or hearing things."
  },
  "numbers": [
   {
@@ -308,7 +400,7 @@
     "when": "2001–2002",
     "measured": "Whether each person had stopped having every sign of being hooked, with none coming back, by the day of the interview. 2,008 of 4,781 is 42 in 100."
    },
-   "caveat": "Free here means no signs of being hooked any more, not never drinking. A raw head count of the people asked, not adjusted to match the whole US. The authors say people tend to over-report getting free, and people aged 18–29 got free less often.",
+   "caveat": "Free here means no signs of being hooked any more, not never drinking; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card). A raw head count of the people asked, not adjusted to match the whole US. The authors say people tend to over-report getting free, and people aged 18–29 got free less often.",
    "projection": false,
    "weak": null,
    "ref": {
@@ -322,16 +414,16 @@
    "origin": "07-mirror-stats/alcohol.json who '14 years' (its second figure, 2,008 of 4,781; Table 3 re-fetched 2026-11-05)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to basis.who"
+    "notes": "checked after revision"
    },
-   "changeNote": "big now '42 in 100' (owner-lens finding: he had to do the sum himself); the headline keeps the count 2,008 of 4,781 (task rule). Basis and caveat in plain words: 'NESARC', 'DSM-IV', 'Table 3', 'not weighted' and the sum note removed (rule E). Figures unchanged; Table 3 header 'Alcohol remission (N=2,008)' and n=4,781 re-read in the full text."
+   "changeNote": "rev3 (2026-11-08): Caveat: pointer to the 7 vs 27 card after 'not never drinking' (safety audit r3: four cards show drinking inside 'free' with no pointer). Figure, headline and source unchanged. | earlier: big now '42 in 100' (owner-lens finding: he had to do the sum himself); the headline keeps the count 2,008 of 4,781 (task rule). Basis and caveat in plain words: 'NESARC', 'DSM-IV', 'Table 3', 'not weighted' and the sum note removed (rule E). Figures unchanged; Table 3 header 'Alcohol remission (N=2,008)' and n=4,781 re-read in the full text."
   },
   {
    "kind": "hope-lifetime",
-   "big": "90.6%",
-   "headline": "Of Americans ever hooked on alcohol, 90.6% are projected to get free of it at some point in life.",
+   "big": "About 91 in 100",
+   "headline": "Of Americans ever hooked on alcohol, about 91 in 100 are projected to get free of it at some point in life.",
    "mirror": "You've been drinking for years and think you're stuck with it.",
    "severity": "dependent",
    "counted": "people who had ever been hooked on alcohol",
@@ -361,7 +453,10 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Weak chip cut to 4 words (task A0); the longer reason (over-reporting and people the survey missed push it too high) is already in the caveat. Figure, headline, mirror, basis and quote unchanged; quote re-read in the full text."
+   "changeNote": "rev2: Weak chip cut to 4 words (task A0); the longer reason (over-reporting and people the survey missed push it too high) is already in the caveat. Figure, headline, mirror, basis and quote unchanged; quote re-read in the full text.",
+   "revNotes": [
+    "main session fix 2026-11-08 after rev3 build: rule 12b: 90.6% written as about 91 in 100 (90.6% stays in the quote)"
+   ]
   },
   {
    "kind": "who-years",
@@ -407,13 +502,13 @@
    "counted": "people who say they beat a drinking problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot",
-    "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one",
+    "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one; how much they drank is not reported",
     "n": "About 1,013 people whose main problem was alcohol (the survey's count after adjusting it to match the US population; 2,002 people surveyed had beaten a drinking or drug problem)",
     "where": "US",
     "when": "July–August 2016",
     "measured": "Age when the problem ended, as people remembered it. On average they first drank at about 15 and weekly from about 19, and their drinking career, as the study counts it, lasted about 18 years."
    },
-   "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Free here is each person’s own judgment, not always never drinking again; for people once hooked, light drinking brought problems back more often (see “27 vs 7 in 100”).",
+   "caveat": "An average, not a cut-off: many got free younger or older. It counts only people who say they got free. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Free here is each person’s own judgment, not always never drinking again. For people once hooked, problems came back for 7 in 100 who stopped and 27 in 100 who drank lightly (the “7 vs 27 in 100” card).",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -427,11 +522,11 @@
    "origin": "07-mirror-stats/alcohol.json who 'Age 38' (the weed figure dropped, rule 13; quote taken from the alcohol-only part of the results text, re-fetched 2026-11-05)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Mirror: 'You think if you haven't stopped by now, you never will.' reads the wrong way for a reader over 38 (cold reader v2); the new thought is one an average of 38 answers (rule C). Basis: factual audit found '18 years between first use and getting free' wrong (14.90 to 37.86 is about 23); 18.39 is the paper's 'drinking career' figure, now named so, with first use 15 and weekly use 19 from Table 1. Weak: the same short chip as every National Recovery Survey card (owner-lens v1 and v2, task); the long reason is in the caveat ('most never diagnosed': Kelly 2017, same survey, Table 1, only 17.0 in 100 ever diagnosed with an alcohol or drug use disorder). Figure, headline and quote unchanged.",
+   "changeNote": "rev3 (2026-11-08): Caveat's last sentence: owner-lens r3 blocker and rules audit (rule 4): the self-judged group, mostly never diagnosed, must not read as permission to drink a little; it now points to the card that counts people once hooked, in that card's new order (7 vs 27). basis.who: use level, rule 3 (not reported by the survey). The older sentence 'Free here is not always quitting: about 1 in 3 still drank some.' is listed in notUsed.other. | earlier: rev2: Mirror: 'You think if you haven't stopped by now, you never will.' reads the wrong way for a reader over 38 (cold reader v2); the new thought is one an average of 38 answers (rule C). Basis: factual audit found '18 years between first use and getting free' wrong (14.90 to 37.86 is about 23); 18.39 is the paper's 'drinking career' figure, now named so, with first use 15 and weekly use 19 from Table 1. Weak: the same short chip as every National Recovery Survey card (owner-lens v1 and v2, task); the long reason is in the caveat ('most never diagnosed': Kelly 2017, same survey, Table 1, only 17.0 in 100 ever diagnosed with an alcohol or drug use disorder). Figure, headline and quote unchanged.",
    "editNote": "2026-11-06: moderation-leaning sentence replaced (gates round 3, rule 4)"
   },
   {
@@ -478,13 +573,13 @@
    "counted": "people who say they beat a drinking problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot",
-    "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one",
+    "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one; how much they drank is not reported",
     "n": "About 1,000 people whose main problem was alcohol (51 in 100 of the 2,002 surveyed who had beaten a drinking or drug problem, estimated)",
     "where": "US",
     "when": "July–August 2016",
     "measured": "Ever used, at any point: mutual-help groups (such as AA), treatment, anti-craving or anti-relapse medicine, or recovery services such as sober living. 55.9 in 100 of the alcohol group had used at least one, so about 44 in 100 used none."
    },
-   "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in.",
+   "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Drinking heavily every day? Read Before you stop first: stopping alone can be dangerous.",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -498,23 +593,23 @@
    "origin": "07-mirror-stats/alcohol.json how '56%'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Weak: the same short National Recovery Survey chip (owner-lens v1 and v2: the weed page marked the same survey weak, alcohol did not); the long reason is in the caveat. Caveat ends with one pointer to Before you stop (safety audit: the going-alone card never tied back to the seizure line). Figure, headline, mirror and quote unchanged.",
+   "changeNote": "rev3 (2026-11-08): basis.who: use level added (rule 3; the survey gives none). Nothing else changed. | earlier: rev2: Weak: the same short National Recovery Survey chip (owner-lens v1 and v2: the weed page marked the same survey weak, alcohol did not); the long reason is in the caveat. Caveat ends with one pointer to Before you stop (safety audit: the going-alone card never tied back to the seizure line). Figure, headline, mirror and quote unchanged.",
    "editNote": "2026-11-06: wording edit after gates round 2 (meaning and source unchanged)"
   },
   {
    "kind": "how-tries",
    "big": "2 tries",
-   "headline": "Half of Americans who beat a drinking problem needed 2 serious tries or fewer; a few needed dozens.",
+   "headline": "Half of Americans who beat a drinking problem needed 2 serious tries or fewer.",
    "mirror": "You've tried to stop before and think you've failed for good.",
    "severity": "resolved",
    "counted": "people who say they beat a drinking problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot",
-    "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one",
+    "who": "adults who said they used to have a problem with alcohol or drugs but no longer do, and named alcohol as the main one; how much they drank is not reported",
     "n": "About 1,000 people whose main problem was alcohol (51 in 100 of the 2,002 surveyed, estimated)",
     "where": "US",
     "when": "July–August 2016",
@@ -534,28 +629,28 @@
    "origin": "new: the alcohol row of Table 1 in the paper behind 07-mirror-stats/alcohol.json how '3 tries' (that figure mixes all drugs)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Weak: the same short National Recovery Survey chip (owner-lens v1 and v2); long reason in the caveat. Basis: says what a 'serious try' is (cold readers, both: undefined), from the survey's own question. Figure, headline, mirror and quote unchanged."
+   "changeNote": "rev3 (2026-11-08): Headline: 'a few needed dozens' cut (rules audit r3, rule 12: one idea per line); the 100-try maximum stays in Measured. basis.who: use level (rule 3). | earlier: rev2: Weak: the same short National Recovery Survey chip (owner-lens v1 and v2); long reason in the caveat. Basis: says what a 'serious try' is (cold readers, both: undefined), from the survey's own question. Figure, headline, mirror and quote unchanged."
   },
   {
-   "kind": "how-slips",
+   "kind": "after-lasting",
    "big": "87% less",
-   "headline": "In the year after treatment for a drinking problem, even those who still had problems drank 87% less than before, on average.",
+   "headline": "In the year after treatment for a drinking problem, those who still had problems drank 87% less than before, on average.",
    "mirror": "You drank again after a few weeks and think the whole try is wasted.",
    "severity": "treatment",
    "counted": "people treated for a drinking problem",
    "basis": {
     "design": "review pooling seven large multisite treatment studies",
-    "who": "adults treated for alcoholism, which the review defines broadly as alcohol use disorders",
+    "who": "adults treated for alcoholism, which the review defines broadly as alcohol use disorders; how much they drank before is not reported",
     "n": "Seven large studies run at many US treatment sites; no head count is stated.",
     "where": "US",
     "when": "studies published before 2001; review published 2001",
     "measured": "Drinking in the 12 months after treatment, averaged across the studies: 1 in 4 didn't drink at all, another 1 in 10 drank moderately without problems, and the rest, as a group, didn't drink on 3 days in 4 and drank 87% less. Some results were estimated with formulas because the studies measured different things."
    },
-   "caveat": "An average for a group, not a promise for one person. It does not show when slips happened. Some results were estimated from other measures, because the studies measured different things.",
+   "caveat": "An average for a group, not a promise for one person. It does not show when slips happened. Some results were estimated from other measures, because the studies measured different things. The 1 in 10 who drank moderately were people treated for any drinking problem, mild ones included; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
    "projection": false,
    "weak": "No head count stated",
    "ref": {
@@ -569,16 +664,16 @@
    "origin": "new",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Cold readers (both): '87% less than what?' and 'which year is that year?'. Headline now says 'in the year after treatment' and 'than before' (the abstract: 'During the year after treatment … reducing their overall alcohol consumption by 87%'). Weak chip cut to 4 words (A0), with the estimated-results reason moved into the caveat. Basis n: 'the review's summary gives no head count' was a process note (rule E). Figure, mirror and quote unchanged."
+   "changeNote": "rev3 (2026-11-08): Kind how-slips to after-lasting (rules audit r3: it answers how much drinking dropped in the year after treatment, not when slips come; its own gap note said so). 'even' cut from the headline (show, don't tell). Caveat: pointer to the 7 vs 27 card (safety audit r3, moderation framing). basis.who: use level (rule 3). | earlier: rev2: Cold readers (both): '87% less than what?' and 'which year is that year?'. Headline now says 'in the year after treatment' and 'than before' (the abstract: 'During the year after treatment … reducing their overall alcohol consumption by 87%'). Weak chip cut to 4 words (A0), with the estimated-results reason moved into the caveat. Basis n: 'the review's summary gives no head count' was a process note (rule E). Figure, mirror and quote unchanged."
   },
   {
    "kind": "helps-stop-vs-cut",
-   "big": "27 vs 7 in 100",
-   "headline": "Over the next three years, problems returned for 27 in 100 light drinkers who had beaten alcohol addiction, 7 in 100 non-drinkers.",
+   "big": "7 vs 27 in 100",
+   "headline": "Of people who had beaten alcohol addiction, problems came back for 7 in 100 non-drinkers and 27 in 100 light drinkers.",
    "mirror": "You've been off it a while and think you could drink normally now.",
    "severity": "dependent",
    "counted": "people once hooked on alcohol, free of it when first asked",
@@ -604,16 +699,16 @@
    "origin": "07-mirror-stats/alcohol.json works '27% vs 7%'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Counted label: 'free of it at first interview' was research wording (owner-lens v1, item 3); now 'when first asked'. Figures, headline, basis and quote unchanged; abstract re-read."
+   "changeNote": "rev3 (2026-11-08): Big and headline in the order of the other what-helps cards, the helped group first (owner-lens r3 minor: under What helps, 27 read as the helped group). Same figures, source and basis. 'Over the next three years' left the line (rule 12 counts number words); the 3-year gap is in Based on (when: 2001–2002 and 2004–2005). | earlier: rev2: Counted label: 'free of it at first interview' was research wording (owner-lens v1, item 3); now 'when first asked'. Figures, headline, basis and quote unchanged; abstract re-read."
   },
   {
    "kind": "helps-medicine",
    "big": "36 vs 23 in 100",
-   "headline": "36 in 100 on acamprosate, a prescription pill, stayed fully off drink for six months; 23 in 100 on a dummy pill.",
+   "headline": "36 in 100 on acamprosate, a prescription pill, stayed fully off drink; 23 in 100 on a dummy pill.",
    "mirror": "You didn't know a pill could help you stay stopped.",
    "severity": "treatment",
    "counted": "people in treatment trials, hooked on alcohol, just after detox",
@@ -639,7 +734,7 @@
    "origin": "07-mirror-stats/alcohol.json works '1 in 12' (Jonas 2014, kept in the basis and alsoRef); arm figures from Mann 2004 (new)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -651,26 +746,26 @@
     "quote": "The NNT to prevent return to any drinking for acamprosate was 12 (95% CI, 8 to 26; risk difference [RD], -0.09; 95% CI, -0.14 to -0.04)",
     "via": "re-read 2026-11-05 rev2 (JAMA full text): '16 trials, n = 4847'; low risk of bias subgroup 'RD, −0.02; 95% CI, −0.09 to 0.05, 4 trials, n = 1409', 'not statistically significant'"
    },
-   "changeNote": "rev2: Cold readers (both): the card never said what acamprosate is; the headline now says 'a prescription pill' (22 words, 2 figures). Weak chip cut to 6 words (A0); 'the drug maker's own reports' (cold reader: 'the maker' = the drug company) added to the caveat and basis. Basis design: 'randomised' replaced by plain words (owner-lens v1 item 7). Figures and quotes unchanged; both sources re-read."
+   "changeNote": "rev3 (2026-11-08): Headline: 'for six months' left the line (rule 12: three figures with number words counted); Measured keeps 'the first 6 months'. Same figures and source. | earlier: rev2: Cold readers (both): the card never said what acamprosate is; the headline now says 'a prescription pill' (22 words, 2 figures). Weak chip cut to 6 words (A0); 'the drug maker's own reports' (cold reader: 'the maker' = the drug company) added to the caveat and basis. Basis design: 'randomised' replaced by plain words (owner-lens v1 item 7). Figures and quotes unchanged; both sources re-read."
   },
   {
    "kind": "helps-talk",
    "big": "42 vs 35 in 100",
-   "headline": "42 in 100 given therapy that gets people to AA were fully off drink a year on; other therapy, 35 in 100.",
+   "headline": "About 42 in 100 given AA-linked therapy are expected fully off drink a year on; 35 in 100 given other therapy.",
    "mirror": "You think AA is the last thing that would work for you.",
    "severity": "treatment",
    "counted": "people in treatment trials for a drinking problem",
    "basis": {
     "design": "a review of trials; this figure pools 2 trials in which chance decided who got which therapy",
-    "who": "adults with a drinking problem who weren't forced into treatment",
+    "who": "adults with an alcohol use disorder (mild cases included) who weren't forced into treatment; how much they drank is not reported",
     "n": "1,936 people in 2 trials (of 27 studies with 10,565 people in the review)",
     "where": "US (the largest trial in this comparison ran at US clinics)",
     "when": "searched to August 2019; published 2020",
     "measured": "Not drinking at all over the stretch counted at the 12-month check (in the smaller trial, the 90 days before it): therapy from a manual that gets people going to AA meetings, against other set therapies, such as therapy that trains new thinking habits. The gap held at 24 and 36 months."
    },
-   "caveat": "A head-to-head test against other proven therapy, not against no help, so the gain is modest: about 7 more in 100. It tests a therapist steering you into AA, not AA alone. On how much people drank when they did drink, AA-based help did about as well as other therapy, not better.",
-   "projection": false,
-   "weak": null,
+   "caveat": "Worked out, not counted: 35 in 100 is the review's typical rate on other therapy, and 42 in 100 is that rate times the review's combined effect. A head-to-head test against other proven therapy, not against no help, so the gain is modest: about 7 more in 100. It tests a therapist steering you into AA, not AA alone. On how much people drank when they did drink, AA-based help did about as well as other therapy, not better.",
+   "projection": true,
+   "weak": "Worked out from a pooled effect, not counted",
    "ref": {
     "cite": "Kelly JF, Humphreys K, Ferri M (2020). Alcoholics Anonymous and other 12-step programs for alcohol use disorder. Cochrane Database of Systematic Reviews.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7065341/",
@@ -682,26 +777,26 @@
    "origin": "07-mirror-stats/alcohol.json works '×1.2'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Cold readers (both): 'therapy steering people into AA' is an odd phrase; the headline now says 'therapy that gets people to AA' (22 words). Basis: 'randomised', 'Project MATCH' and '(CBT)' out (research words, owner-lens v1 item 7). Figures, mirror, caveat and quote unchanged."
+   "changeNote": "rev3 (2026-11-08): Rules audit r3 (rule 10): 418 per 1,000 is the assumed control risk times the pooled RR, so projection true, weak chip, and the headline says 'expected' (the audit's wording, turned so it does not open with a colon lead-in, rule 6). basis.who: use level (rule 3) and the review's 'non-coerced adults with AUD' (re-read 2026-11-08). Caveat says how the figure was made. | earlier: rev2: Cold readers (both): 'therapy steering people into AA' is an odd phrase; the headline now says 'therapy that gets people to AA' (22 words). Basis: 'randomised', 'Project MATCH' and '(CBT)' out (research words, owner-lens v1 item 7). Figures, mirror, caveat and quote unchanged."
   },
   {
    "kind": "helps-early-help",
    "big": "62 vs 43 in 100",
-   "headline": "62 in 100 problem drinkers who got treatment or AA in year one were free three years on; 43 in 100 without.",
-   "mirror": "You think getting help is weak and want to do it alone.",
-   "severity": "disorder",
-   "counted": "problem drinkers who had just contacted a help centre or detox",
+   "headline": "62 in 100 problem drinkers who got treatment or AA early were free a few years on; 43 in 100 without.",
+   "mirror": "You wonder whether getting help early changes anything.",
+   "severity": "treatment",
+   "counted": "people seeking help for a drinking problem for the first time",
    "basis": {
     "design": "the same people followed for 16 years",
-    "who": "adults with a drinking problem, never treated before, who had just contacted a referral centre or detox; average age 33.5, half men",
+    "who": "adults with a drinking problem, never treated before, who had just contacted a referral centre or detox; they drank about 12.5 ounces of pure alcohol on a typical drinking day (about 20 US standard drinks); average age 33.5, half men",
     "n": "362 who got help vs 99 who didn't (461 in all)",
     "where": "US",
     "when": "Followed 16 years; published 2006",
-    "measured": "Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5% without help and 42.9% with help slid back by year 16."
+    "measured": "Help: treatment or AA in the first year after first seeking help. Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5% without help and 42.9% with help slid back by year 16."
    },
    "caveat": "Not a trial: people chose whether to get help, so they may differ in other ways. Only 99 people got no help. Slipping back was common in both groups.",
    "projection": false,
@@ -712,24 +807,25 @@
     "pmid": "16445550",
     "fetched": true,
     "quote": "By the 3-year follow-up, 62.4% of individuals in the helped group were remitted, compared with only 43.4% of individuals in the no help group",
-    "via": "re-read 2026-11-05 rev2 (NCBI full text): help = treatment and/or AA 'in the first year after they initiate help-seeking'; first contact 'via an Information and Referral (I&R) center or detoxification program'"
+    "via": "re-read 2026-11-05 rev2 (NCBI full text): help = treatment and/or AA 'in the first year after they initiate help-seeking'; first contact 'via an Information and Referral (I&R) center or detoxification program'",
+    "alsoQuote": "They consumed an average of 12.5 ounces of ethanol (SD = 11.2) on a typical drinking day"
    },
    "origin": "07-mirror-stats/alcohol.json quit '62% vs 43%'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[11].headline, numbers[11].basis.measured"
    },
-   "changeNote": "rev2: Cold readers: 'early' was undefined (now 'in year one', the source's 'first year'), and the Counted label 'had just sought help' clashed with a no-help group (now 'had just contacted a help centre or detox', the source's first contact). Weak chip cut to 6 words (A0); 'only 99' moved to the caveat. Basis: 'cohort' and 'mean' replaced by plain words (owner-lens v2), same facts. v10 figure, basis facts and ref kept (rule 25)."
+   "changeNote": "rev3 (2026-11-08): Headline: 'year one … three years on' cut to keep 2 figures (rule 12, number words counted); 'free at 3 years' stays in Measured. Severity disorder to treatment and the Counted label (rules audit r3: Moos counted first-time help-seekers). Mirror: owner-lens r3 said 'getting help is weak' framed going alone as a mistake, against '44 in 100 used no help'; now the audit's neutral line. basis.who: use level from the full text (WebFetch of PMC1976118, 2026-11-08; quote in ref.alsoQuote; 12.5 oz / 0.6 oz per US drink ≈ 21). | earlier: rev2: Cold readers: 'early' was undefined (now 'in year one', the source's 'first year'), and the Counted label 'had just sought help' clashed with a no-help group (now 'had just contacted a help centre or detox', the source's first contact). Weak chip cut to 6 words (A0); 'only 99' moved to the caveat. Basis: 'cohort' and 'mean' replaced by plain words (owner-lens v2), same facts. v10 figure, basis facts and ref kept (rule 25)."
   },
   {
    "kind": "after-first-month",
-   "big": "1 month",
+   "big": "26% lower",
    "headline": "Regular drinkers who stopped for one month cut insulin resistance, an early step toward diabetes, by about 26%.",
    "mirror": "You wonder what your first month off does for your body.",
    "severity": "heavy",
-   "counted": "regular drinkers not known to be hooked on alcohol",
+   "counted": "regular drinkers, most above the guidelines, not checked for addiction; anyone known to be hooked was kept out",
    "basis": {
     "design": "the same people measured before and after one month; they chose whether to stop (not a trial)",
     "who": "healthy men and women drinking more than 64 g of alcohol a week (men) or 48 g (women), about 258 g a week on average (about 18 US standard drinks); average age about 45; anyone known to be hooked on alcohol was kept out",
@@ -751,18 +847,18 @@
     "via": "re-read 2026-11-05 rev2 (NCBI full text): 94 stopped (mean age 45.5), 47 kept drinking; 'Exclusion criteria were known liver disease or alcohol dependence'"
    },
    "origin": "07-mirror-stats/alcohol.json after '1 month'",
-   "changeNote": "rev2: Mirror: 'You wonder what one month off would actually do for your body.' framed quitting as a one-month break (safety audit: for a heavy daily drinker a month off and back means one more withdrawal later); now the first month of quitting. Weak chip cut to 5 words (A0). Basis: 'prospective observational', 'mean' and 'significant' replaced by plain words (owner-lens v1 item 7). Figure, headline, caveat, propose and quote unchanged.",
+   "changeNote": "rev3 (2026-11-08): Severity heavy to users and the Counted label (rules audit r3: entry bar 64 g a week, under the UK guideline, known addicts kept out). Big '1 month' to '26% lower' (cold reader: the result was hidden in the text; a reduction may stay a %). Headline, basis, propose and source unchanged. | earlier: rev2: Mirror: 'You wonder what one month off would actually do for your body.' framed quitting as a one-month break (safety audit: for a heavy daily drinker a month off and back means one more withdrawal later); now the first month of quitting. Weak chip cut to 5 words (A0). Basis: 'prospective observational', 'mean' and 'significant' replaced by plain words (owner-lens v1 item 7). Figure, headline, caveat, propose and quote unchanged.",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[12].severity, numbers[12].counted"
    }
   },
   {
    "kind": "after-body",
    "big": "45 in 100",
-   "headline": "After one week off, 45 in 100 heavy drinkers in hospital to stop had a clearly better liver scan.",
+   "headline": "After a week off, 45 in 100 heavy drinkers in hospital to stop showed a real drop on a liver scan.",
    "mirror": "You think the damage is done, so stopping now won't change much.",
    "severity": "treatment",
    "counted": "people in hospital to stop heavy drinking",
@@ -774,7 +870,7 @@
     "when": "2007–2010",
     "measured": "How stiff the liver is on a standard liver scan doctors use to judge scarring, on arrival and after 7 days without alcohol. For the typical patient the reading fell from 7.2 to 6.1; the estimated scarring stage fell for 23 in 100."
    },
-   "caveat": "The scan reads how stiff the liver is, which rises with scarring and with inflammation. The authors take the quick drop as a sign that inflammation, not just scarring, was pushing the reading up. 'Clearly better' means a drop larger than chance; about 43 in 100 showed no clear change and 12 in 100 got a worse reading. It says nothing about how people felt.",
+   "caveat": "The scan reads how stiff the liver is, which rises with scarring and with inflammation. The authors take the quick drop as a sign that inflammation, not just scarring, was pushing the reading up. 'A real drop' means a drop larger than chance; about 43 in 100 showed no clear change and 12 in 100 got a worse reading. It says nothing about how people felt.",
    "projection": false,
    "weak": null,
    "ref": {
@@ -788,22 +884,22 @@
    "origin": "new",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Cold readers (both): 'clearly better' undefined and 'what about the other 55%?'; the caveat now defines it and gives the rest (about 43 in 100 no clear change, 12 in 100 worse: 16 of 137, 11.7%). Big '45%' now '45 in 100', the share format the hero uses (owner-lens v1). Basis: 'FibroScan' replaced by 'a standard liver scan' (owner-lens v1 item 7). Figure and quote unchanged."
+   "changeNote": "rev3 (2026-11-08): Headline: 'clearly better' is a verdict word (rule 6) and 'one week' a second figure (rule 12); now 'a real drop', which the caveat defines as a drop larger than chance. Same figure and source. | earlier: rev2: Cold readers (both): 'clearly better' undefined and 'what about the other 55%?'; the caveat now defines it and gives the rest (about 43 in 100 no clear change, 12 in 100 worse: 16 of 137, 11.7%). Big '45%' now '45 in 100', the share format the hero uses (owner-lens v1). Basis: 'FibroScan' replaced by 'a standard liver scan' (owner-lens v1 item 7). Figure and quote unchanged."
   },
   {
    "kind": "after-mood",
-   "big": "42% to 6%",
-   "headline": "Of men treated in hospital for drinking, 42% were clearly depressed on arrival; after a month off, 6%.",
+   "big": "42 to 6 in 100",
+   "headline": "Of men treated in hospital for drinking, 42 in 100 were clearly depressed on arrival; after a month off, 6 in 100.",
    "mirror": "You feel low without a drink and fear it will never lift.",
    "severity": "treatment",
    "counted": "men in hospital treatment for alcoholism",
    "basis": {
     "design": "the same men followed through 4 weeks of hospital treatment",
-    "who": "men with alcoholism and no earlier major psychiatric disorder ('primary alcoholics')",
+    "who": "men with alcoholism and no earlier major psychiatric disorder ('primary alcoholics'); how much they drank is not reported",
     "n": "191 men",
     "where": "US (the authors were at the San Diego Veterans Administration Medical Center)",
     "when": "published 1988; study dates unknown",
@@ -823,16 +919,16 @@
    "origin": "new (the same figure is on the 06-template.json alcohol timeline, Week 4 milestone, ref r15)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Cold readers: 'clear depression fell' was hard to picture; the headline now says how many were clearly depressed, then how many a month later (17 words, 2 figures; 'clearly depressed' is defined in the basis). Basis design: 'cohort' replaced by 'the same men followed' (owner-lens v2). Figures, other basis fields and quote unchanged."
+   "changeNote": "rev3 (2026-11-08): Shares as 'N in 100' on reader faces (owner-lens r3 minor, brief rule 6); the source's % stays in the quote. basis.who: use level (rule 3; the abstract gives none). | earlier: rev2: Cold readers: 'clear depression fell' was hard to picture; the headline now says how many were clearly depressed, then how many a month later (17 words, 2 figures; 'clearly depressed' is defined in the basis). Basis design: 'cohort' replaced by 'the same men followed' (owner-lens v2). Figures, other basis fields and quote unchanged."
   },
   {
    "kind": "quit-status",
-   "big": "1 in 4",
-   "headline": "Of Americans who had been hooked on alcohol at some point before the past year, only 1 in 4 still were.",
+   "big": "25 in 100",
+   "headline": "Of Americans hooked on alcohol before the past year, 25 in 100 still were; 27 in 100 had some signs left.",
    "mirror": "You think once you're hooked, you stay hooked for life.",
    "severity": "dependent",
    "counted": "people hooked on alcohol before the past year",
@@ -844,7 +940,7 @@
     "when": "2001–2002",
     "measured": "Past-year status: still dependent 25.0%, some symptoms left 27.3%, risky drinking without symptoms 11.8%, low-risk drinking 17.7%, not drinking 18.2%. Only 25.5 in 100 had ever had any treatment."
    },
-   "caveat": "It does not show that the untreated did as well as the treated. 'Not hooked' includes people with some symptoms left or risky drinking.",
+   "caveat": "It does not show that the untreated did as well as the treated. 'Not still hooked' includes people with some signs left or risky drinking. The 42 in 100 at the top of the page counts only people with no signs left, among everyone ever hooked, including people hooked within the past year, so it is a different share. Low-risk drinking here is not a route for someone once hooked: light drinking brought problems back far more often than none (the “7 vs 27 in 100” card).",
    "projection": false,
    "weak": null,
    "ref": {
@@ -856,10 +952,10 @@
     "via": "re-read 2026-11-05 rev2 (Europe PMC abstract): 25.0% still dependent, 25.5% ever treated, 4,422 people"
    },
    "origin": "07-mirror-stats/alcohol.json quit '1 in 4'",
-   "changeNote": "rev2: One fact per card (task; owner-lens v2: 'two different facts with one dot grid'; cold readers, both). The card keeps 'only 1 in 4 still hooked'; the second fact ('only 1 in 4 ever had treatment') moved, not removed, to basis.measured as 'Only 25.5 in 100 had ever had any treatment' (rule 25). Old headline: 'Of Americans hooked on alcohol before last year, only 1 in 4 still were; just 1 in 4 ever had treatment.'. Old mirror: 'You think nobody gets out of this without rehab.' (that thought is answered by the how-alone card); the new mirror is the thought 1 in 4 still hooked answers. 'Before last year' clumsy (cold reader) reworded. v10 figure, caveat and ref kept. For the template: the 100-dot grid on this card shows the bad outcome dark (owner-lens v2: draw a grid only when dark dots are the good outcome).",
+   "changeNote": "rev3 (2026-11-08): Owner-lens r3 major (flagged r1, r2): '1 in 4 still hooked' read against '42 in 100 free' with no reason. The headline now names the 27 in 100 with some signs left and the caveat says how it differs from the top number (brief rule 5). '1 in 4' to '25 in 100' (rule 6); 'only' cut (show, don't tell). Caveat: pointer to the 7 vs 27 card (safety audit r3). Source, basis and figures unchanged. | earlier: rev2: One fact per card (task; owner-lens v2: 'two different facts with one dot grid'; cold readers, both). The card keeps 'only 1 in 4 still hooked'; the second fact ('only 1 in 4 ever had treatment') moved, not removed, to basis.measured as 'Only 25.5 in 100 had ever had any treatment' (rule 25). Old headline: 'Of Americans hooked on alcohol before last year, only 1 in 4 still were; just 1 in 4 ever had treatment.'. Old mirror: 'You think nobody gets out of this without rehab.' (that thought is answered by the how-alone card); the new mirror is the thought 1 in 4 still hooked answers. 'Before last year' clumsy (cold reader) reworded. v10 figure, caveat and ref kept. For the template: the 100-dot grid on this card shows the bad outcome dark (owner-lens v2: draw a grid only when dark dots are the good outcome).",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    }
@@ -873,13 +969,13 @@
    "counted": "patients with a drinking problem, mild cases included",
    "basis": {
     "design": "a review of studies on alcohol withdrawal and its treatment, written by doctors",
-    "who": "patients with an alcohol use disorder (a drinking problem, mild cases included)",
+    "who": "patients with an alcohol use disorder (a drinking problem, mild cases included); how much they drank is not reported",
     "n": "No head count; 'up to half' is the review's rough figure, drawn from earlier studies.",
     "where": "studies from several countries; review written in Italy and the US",
     "when": "published 2015",
-    "measured": "Whether withdrawal comes on when drinking stops or drops, and how long the milder form lasts: shakes, nausea, anxiety and low mood. It usually starts 6–24 hours after the last drink."
+    "measured": "Up to half of patients with a drinking problem get withdrawal symptoms. Whether withdrawal comes on when drinking stops or drops, and how long the milder form lasts: shakes, nausea, anxiety and low mood. It usually starts 6–24 hours after the last drink."
    },
-   "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days.",
+   "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. If you get the shakes when you stop, read Before you stop first.",
    "projection": false,
    "weak": "Rough figure, not a count",
    "ref": {
@@ -891,12 +987,12 @@
     "via": "re-read 2026-11-05 rev2 (NCBI full text of the author manuscript)"
    },
    "origin": "new (kind how-withdrawal, picked after the first review)",
-   "changeNote": "rev2: Weak chip cut to 5 words (A0). Basis n: the 'sums up two earlier sources' process note (owner-lens v2) reworded. Caveat: adds 'If you get the shakes when you stop, read Before you stop first' (safety audit: the card reassures exactly the man whose shakes signal risk). Timeline rows 1 and 4 now match this card's 2-7 days and 'weeks to months'. Figure, headline and quote unchanged.",
+   "changeNote": "rev3 (2026-11-08): Measured: says what 'up to half' is of (owner-lens r3 minor), from Mirijello 2015 (re-read 2026-11-08: 'Up to 50% of AUD patients experience withdrawal symptoms'). basis.who: use level (rule 3). | earlier: rev2: Weak chip cut to 5 words (A0). Basis n: the 'sums up two earlier sources' process note (owner-lens v2) reworded. Caveat: adds 'If you get the shakes when you stop, read Before you stop first' (safety audit: the card reassures exactly the man whose shakes signal risk). Timeline rows 1 and 4 now match this card's 2-7 days and 'weeks to months'. Figure, headline and quote unchanged.",
    "check": {
-    "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "by": "main session (did not write rev3)",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "rev3 change: Measured 'up to half' matches the quoted source line; restored the rev2 safety pointer to Before you stop that rev3 had dropped from the caveat."
    },
    "editNote": "2026-11-06: wording edit after gates round 2 (meaning and source unchanged)"
   },
@@ -909,7 +1005,7 @@
    "counted": "people who say they beat a drinking or drug problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot",
-    "who": "adults who said they used to have an alcohol or drug problem but no longer do",
+    "who": "adults who said they used to have an alcohol or drug problem but no longer do; how much they used is not reported",
     "n": "1,879 adults whose problem ended within the last 40 years (of 2,002 in the survey); about 6 in 10 named alcohol as their main problem",
     "where": "US",
     "when": "July–August 2016",
@@ -928,12 +1024,12 @@
     "via": "re-read 2026-11-05 rev2 (BioC full text): Table 2 bends at 0-8 years (quality of life), 0-11 (happiness), 0-6 (self-esteem); 'highest rates of improvement during the first 6–11 years'"
    },
    "origin": "07-mirror-stats/alcohol.json after '6 years'",
-   "changeNote": "rev2: Factual audit: 'happiness and quality of life climbed steeply for about 6 years' was wrong (their bends are 8 and 11 years; only self-esteem bends at 6). The headline now uses the paper's own summary for well-being in general ('steep increases in indices of well-being … during the first 6 years', the quote), and basis.measured gives each bend. Caveat adds that only people still free were asked (audit). Weak chip cut to 6 words with the National Recovery Survey wording first (A0). v10 figure, mirror, ref and propose kept.",
+   "changeNote": "rev3 (2026-11-08): basis.who: use level (rule 3). Kind kept as after-lasting, not moved to gen-years as the rules audit asked: the template shows a page number of a general kind nowhere (general() reads general.json only; the general choice is 'page', which shows none), so the move would take a v10 card he liked off the page without his say (rule 25). See 'needs template'. propose kept for the off-kind choice. | earlier: rev2: Factual audit: 'happiness and quality of life climbed steeply for about 6 years' was wrong (their bends are 8 and 11 years; only self-esteem bends at 6). The headline now uses the paper's own summary for well-being in general ('steep increases in indices of well-being … during the first 6 years', the quote), and basis.measured gives each bend. Caveat adds that only people still free were asked (audit). Weak chip cut to 6 words with the National Recovery Survey wording first (A0). v10 figure, mirror, ref and propose kept.",
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to basis.n"
+    "notes": "checked after revision"
    }
   }
  ],
@@ -969,14 +1065,15 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Proof back to the v10 sentence word for word, his Keep row (rules 25, 26). The head count added last round ('Of 4,781 asked, 2,008 were already free.') repeated the hero (cold readers, both) and gave the proof four figures (A0); it moved to 'rejected'. The v10 sentence still holds two figures; his Keep row wins over A0 here. Refs: only the two quotes the line uses (A0). Limiting, counterpart and test unchanged."
+   "changeNote": "rev2: Proof back to the v10 sentence word for word, his Keep row (rules 25, 26). The head count added last round ('Of 4,781 asked, 2,008 were already free.') repeated the hero (cold readers, both) and gave the proof four figures (A0); it moved to 'rejected'. The v10 sentence still holds two figures; his Keep row wins over A0 here. Refs: only the two quotes the line uses (A0). Limiting, counterpart and test unchanged.",
+   "ownWords": true
   },
   {
    "kind": "stuck",
    "limiting": "I’ve tried to stop before. I always go back.",
    "counterpart": "Each try showed me where it breaks. I know more now than I did the first time.",
    "test": "Write one line: where your last try ended (a day, a place, a person). This week, plan for it: a soft drink ordered first, a time to leave. Don’t seek it out; when it comes, see how far the plan carries you.",
-   "proof": "Half of Americans who say they beat a drinking problem needed 2 serious tries or fewer; a few needed dozens.",
+   "proof": "Half of Americans who say they beat a drinking problem needed 2 serious tries or fewer.",
    "severity": "resolved",
    "refs": [
     {
@@ -991,17 +1088,17 @@
    "keep": false,
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Test: safety audit said 'meet that moment once this week' walks him into his highest-risk moment on purpose. Now he sets the plan this week and meets the moment when it comes, without seeking it out (writing stays a one-line record). Proof: 'who say they beat' carries the card's self-judged point (A0). Ref unchanged."
+   "changeNote": "rev3 (2026-11-08): Proof: 'a few needed dozens' cut (rules audit r3, rule 12), the same line as the 2 tries card. Test, refs unchanged. | earlier: rev2: Test: safety audit said 'meet that moment once this week' walks him into his highest-risk moment on purpose. Now he sets the plan this week and meets the moment when it comes, without seeking it out (writing stays a one-line record). Proof: 'who say they beat' carries the card's self-judged point (A0). Ref unchanged."
   },
   {
    "kind": "hard",
    "limiting": "Stopping will be hell. I won’t get through it.",
    "counterpart": "I’ve got through hard weeks before. This is a few hard weeks, not a hard life.",
-   "test": "Still drinking? One evening this week, push your first drink back an hour and spend it on a long walk or a workout. Already off it? When the next pull comes, spend an hour that way. Rate the pull 0 to 10 at the start and the end. Not a heavy daily drinker? Make it the whole evening, no drink.",
+   "test": "Write down one hard week you got through, and what carried you. Then this week: Drink every day, or shake in the morning? Don’t skip drinks for this test; book the doctor instead (step 3). Not every day? Take one whole evening with no drink and spend it on a long walk. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on.",
    "proof": "In a study of men in hospital treatment for drinking, with no earlier major mental illness, low mood lifted fast once they stopped; the biggest lift came in week 2.",
    "severity": "treatment",
    "refs": [
@@ -1024,17 +1121,17 @@
    "keep": false,
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to proof, test"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev2: Test: safety audit said a delay test assumes a drink follows (wrong for a reader already off it) and a cold shower is a needless strain in withdrawal; now two branches, as the audit wrote, and no cold shower. Cold readers: 'rate the pull' had no scale (now 0 to 10). Proof: 'the biggest drop came in week 2' read as mood dropping (cold reader v2); now 'the biggest lift' (the abstract: 'the largest reduction in scores at Week 2'). Old proof: 'In a study of men in hospital treatment for drinking, low mood lifted fast once they stopped; the biggest drop came in week 2.'. Refs unchanged."
+   "changeNote": "rev3 (2026-11-08): Test: safety audit r3 (minor) and owner-lens r3 (major): 'push your first drink back an hour' stretched a dependent drinker's gap into the seizure window and was a cut-down drill for a man who can't moderate. Now the counterpart is lived without drink (brief rule 4): a daily drinker changes nothing and books the doctor; others take a whole evening off; the 0 to 10 ends are named (cold reader). Proof and refs unchanged. | earlier: rev2: Test: safety audit said a delay test assumes a drink follows (wrong for a reader already off it) and a cold shower is a needless strain in withdrawal; now two branches, as the audit wrote, and no cold shower. Cold readers: 'rate the pull' had no scale (now 0 to 10). Proof: 'the biggest drop came in week 2' read as mood dropping (cold reader v2); now 'the biggest lift' (the abstract: 'the largest reduction in scores at Week 2'). Old proof: 'In a study of men in hospital treatment for drinking, low mood lifted fast once they stopped; the biggest drop came in week 2.'. Refs unchanged."
   },
   {
    "kind": "need",
    "limiting": "I need a drink to unwind after work.",
    "counterpart": "Drinking takes the edge off for a while. It takes my sleep, and sleep is what would unwind me.",
-   "test": "One night this week, skip your last drink before bed and keep the phone out of the room. Next evening, rate how wound up you feel, 0 to 10, against a usual night. Not a heavy daily drinker? Make it the whole night off.",
+   "test": "Drink every day? Leave the drink as it is until you have seen the doctor (step 3); on three nights this week, note how long you took to fall asleep and how often you woke. Not every day? Take one whole night off, phone out of the room; next evening, rate how wound up you feel, 0 calm to 10 on edge, against an evening after you drank. Already off it? Keep the phone out one night and rate the next evening the same way, against an evening after a phone night.",
    "proof": "In sleep-lab studies of men treated for alcoholism, drink did not reliably help them sleep: while drinking, they often took longer to fall asleep and slept less.",
    "severity": "treatment",
    "refs": [
@@ -1064,18 +1161,18 @@
    "keep": false,
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to beliefs[3].test"
    },
-   "changeNote": "rev2: Test: owner-lens critics (v1 and v2) said the old test never changed the drinking, so it did not test 'drink takes my sleep'; now it skips the last drink before bed (the task's example), which is not a heavy daily drinker stopping. Proof: '(review)' out (owner-lens v1 and v2); 'in withdrawal' dropped, since the sleep action in plan step 2 and the timeline say sleep is light at first (cold reader: it blurred the point). Old proof: 'In sleep-lab studies of men in treatment for alcoholism, drink did not reliably help them sleep. In most of these studies, they took longer to fall asleep and slept less, both on drinking nights and in withdrawal (review).'. Same source, all three quotes: 'During both drinking periods and withdrawal, alcoholics commonly experience problems falling asleep and decreased total sleep time.'"
+   "changeNote": "rev3 (2026-11-08): Test: safety audit r3 (it assumed he drinks that night) and owner-lens r3 (skipping the last drink is a cut-down drill): now no drink is cut down. A daily drinker watches his drinking nights' sleep and sees the doctor first; others take the whole night off; someone already off it tests the phone part (brief rule 4). Proof and refs unchanged. | earlier: rev2: Test: owner-lens critics (v1 and v2) said the old test never changed the drinking, so it did not test 'drink takes my sleep'; now it skips the last drink before bed (the task's example), which is not a heavy daily drinker stopping. Proof: '(review)' out (owner-lens v1 and v2); 'in withdrawal' dropped, since the sleep action in plan step 2 and the timeline say sleep is light at first (cold reader: it blurred the point). Old proof: 'In sleep-lab studies of men in treatment for alcoholism, drink did not reliably help them sleep. In most of these studies, they took longer to fall asleep and slept less, both on drinking nights and in withdrawal (review).'. Same source, all three quotes: 'During both drinking periods and withdrawal, alcoholics commonly experience problems falling asleep and decreased total sleep time.'"
   },
   {
    "kind": "moderation",
    "limiting": "I’ve got it under control now. I can handle just one.",
    "counterpart": "I’ve tried “just one” before. I know where it went.",
    "test": "This week, the next time someone offers you just one, turn it down: say “I don’t drink” and order something else. Time how long the pull lasts after you say it.",
-   "proof": "In a US survey of people who had got free of alcohol dependence, signs of a drinking problem came back within 3 years for 27 in 100 light drinkers and 7 in 100 non-drinkers.",
+   "proof": "In a US survey of people who had got free of alcohol dependence, problems came back within a few years for 7 in 100 who weren’t drinking when first asked, and 27 in 100 light drinkers.",
    "severity": "dependent",
    "refs": [
     {
@@ -1097,11 +1194,11 @@
    "keep": false,
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to beliefs[4].proof"
    },
-   "changeNote": "rev2: Test: say 'I don't drink', the words plan step 4 uses (owner-lens v1: the old 'I'm good' clashed with step 4). Proof and refs unchanged."
+   "changeNote": "rev3 (2026-11-08): Proof in the card's new order, non-drinkers first (owner-lens r3); 'who weren't drinking when first asked' answers the cold reader's 'how do signs come back in someone who doesn't drink'. 'signs of a drinking problem' shortened to 'problems', as on the card. Same figures and refs. 'within 3 years' left the line (rule 12: 2 figures). | earlier: rev2: Test: say 'I don't drink', the words plan step 4 uses (owner-lens v1: the old 'I'm good' clashed with step 4). Proof and refs unchanged."
   }
  ],
  "windows": [
@@ -1125,19 +1222,26 @@
    }
   },
   {
-   "label": "Seizure risk, if you drank heavily every day",
-   "when": "8–48 hours, highest around hour 24",
+   "label": "Seizure risk, if you drink heavily every day, shake in the morning, or had one before",
+   "when": "8–48 hours, highest around hour 24; see Before you stop",
    "s": 8,
    "pk": 24,
    "e": 48,
    "kind": "danger",
    "refs": [
     "r1"
-   ]
+   ],
+   "changeNote": "rev3 (2026-11-08): Safety audit r3: a binge drinker with an earlier seizure or the DTs, or a man with morning shakes, read himself out of 'if you drank heavily every day'; the row now names them and points to the footer (the timeline must stand on its own). Start, peak, end and ref unchanged.",
+   "check": {
+    "by": "revision checker b (alcohol)",
+    "on": "2026-11-08",
+    "verdict": "ok",
+    "notes": "checked after revision"
+   }
   },
   {
    "label": "Deep confusion, seeing things (the DTs)",
-   "when": "About 5 in 100 people with withdrawal; usually starts day 2–4, can start as late as day 10; seeing things alone can start at hour 12",
+   "when": "Usually starts day 2–4, can start as late as day 10",
    "s": 48,
    "pk": 72,
    "e": 240,
@@ -1146,13 +1250,14 @@
     "r1",
     "r18"
    ],
-   "changeNote": "rev2: was 'Day 2–7, rare' with no source for 'rare' (source checker); 'DTs' alone was jargon (cold readers). Mirijello 2015 (r18): 'Delirium tremens … occurrs approximately in 5% of patients with AWS'. ASAM (r1): 'Hallucinations develop within 12–24 hours following cessation of (or reduction in) alcohol use'. Start, peak and end unchanged.",
+   "changeNote": "rev3 (2026-11-08): Owner-lens r3 blocker (rule 12): the row carried four figures; cold reader misread 'seeing things alone'. The 5 in 100 and hour 12 moved to the row's note (needs template to show it in the row's source fold). The footer now names seeing or hearing things alone as an emergency, so no safety line is lost. s, pk, e and refs unchanged. | earlier: rev2: was 'Day 2–7, rare' with no source for 'rare' (source checker); 'DTs' alone was jargon (cold readers). Mirijello 2015 (r18): 'Delirium tremens … occurrs approximately in 5% of patients with AWS'. ASAM (r1): 'Hallucinations develop within 12–24 hours following cessation of (or reduction in) alcohol use'. Start, peak and end unchanged.",
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to when, e"
-   }
+    "notes": "checked after revision"
+   },
+   "note": "About 5 in 100 people with withdrawal get the DTs. Seeing or hearing things alone, without the confusion, can start at hour 12; the footer calls it an emergency at any time."
   },
   {
    "label": "Irritable, anxious, poor sleep",
@@ -1204,7 +1309,7 @@
   },
   {
    "label": "Light, broken sleep, slowly mending",
-   "when": "Falling asleep normal by month 5–9; total sleep back in 1–2 years; broken sleep can last 1–3 years",
+   "when": "Falling asleep normal by month 5–9; unbroken sleep can take 1–3 years",
    "s": 672,
    "e": 26280,
    "fall": true,
@@ -1212,19 +1317,21 @@
    "refs": [
     "r13"
    ],
-   "changeNote": "rev2: was 'full repair 1–2 years', e 17520: the source checker found it more hopeful than Brower 2001 (r13), where only total sleep time takes 1-2 years and broken sleep lasts longer. Brower: 'sleep fragmentation manifested by increases in sleep-stage changes, brief arousals, and REM sleep disruptions can persist for 1 to 3 years after establishing sobriety'. 'total sleep time took 1 to 2 years to return to normal levels'. End now 3 years; fall kept.",
+   "changeNote": "rev3 (2026-11-08): Owner-lens r3 blocker (rule 12): three ranges in one row; 'total sleep back in 1–2 years' moved to the row's note. Brower: fragmentation 'can persist for 1 to 3 years'. s, e, fall and ref unchanged. | earlier: rev2: was 'full repair 1–2 years', e 17520: the source checker found it more hopeful than Brower 2001 (r13), where only total sleep time takes 1-2 years and broken sleep lasts longer. Brower: 'sleep fragmentation manifested by increases in sleep-stage changes, brief arousals, and REM sleep disruptions can persist for 1 to 3 years after establishing sobriety'. 'total sleep time took 1 to 2 years to return to normal levels'. End now 3 years; fall kept.",
    "check": {
     "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
-   }
+   },
+   "note": "Total sleep time took 1 to 2 years to return to normal."
   }
  ],
  "plan": [
   {
    "do": [
-    "Don’t stop yet. This week, drink as you normally do, and watch it.",
+    "Still drinking? Don’t stop yet. This week, drink as you normally do, and watch it.",
+    "The belief tests above are one-off trial runs; they don’t break this week.",
     "Already stopped? Don’t start drinking again to do this step: write it from memory.",
     "Write down what drinking does for you: unwinding, sleep, confidence, fun with friends.",
     "Before each drink, note the time, the place and what you want from it. Next morning, note whether you got it.",
@@ -1237,24 +1344,24 @@
   {
    "do": [
     "Unwinding: a walk, a shower, a hard workout, a show.",
-    "Going out: an alcohol-free beer in your hand, ordered first, before anyone asks.",
+    "Going out: a soft drink or soda water in your hand, ordered first, before anyone asks. Alcohol-free beer only if it doesn’t bring on the pull.",
     "Friends: see the ones you’d enjoy sober; meet them for food, sport or coffee.",
-    "Sleep: same bedtime every night, a hot shower, no phone in bed. Expect light sleep at first; it mends slowly, over months to years.",
+    "Sleep: same bedtime every night, a hot shower, no phone in bed. Expect light sleep at first; it mends slowly.",
     "Confidence: arrive early, before the room fills, and start one conversation while you’re fresh.",
     "Home: keep a cold soft drink you like in the fridge for the hour you’d pour one."
    ]
   },
   {
    "do": [
+    "Drinking heavily every day, shaky or sick in the morning until you drink, or had a seizure or the DTs before? See a doctor before you set the date, and stop with them, not alone.",
     "Clear the house of drink the day before.",
-    "Drinking heavily every day, or get the shakes when you stop? Stop with a doctor, not alone.",
     "Tell one person the date.",
     "Plan every Friday for the first two months: where you’ll be, and what you’ll drink instead.",
     "One thing only: no new diet and no other big change for these three months. A walk or a workout as a swap is fine.",
     "Slip? Don’t wait for Monday, and don’t go back to days of normal drinking: the same day, ask what that drink gave you."
    ],
    "proof": {
-    "text": "In r/stopdrinking posts scored by an AI reader for this page, a typical day after the first three was 4 out of 10 or less: noticeable but manageable.",
+    "text": "In r/stopdrinking posts with a day count, a reader rated a typical day after the first few days at 4 out of 10 or less.",
     "ref": {
      "cite": "Posts on r/stopdrinking with a day count, 2021-2025, scored for this page",
      "url": "",
@@ -1265,9 +1372,11 @@
     },
     "check": {
      "by": "revision checker b (alcohol)",
-     "on": "2026-11-05",
+     "on": "2026-11-08",
      "verdict": "ok"
-    }
+    },
+    "severity": "self-hooked",
+    "changeNote": "rev3 (2026-11-08): Owner-lens r3 blocker (show, don't tell): 'noticeable but manageable' cut; 'scored by an AI reader for this page' cut (brief rule 7, process note; the graph's fold says who scored). 605 dropped from the line to keep 2 figures (rule 12); it stays in the ref's via. Severity added (rules audit r3, plan proofs carry a tag). Same data. 'the first three' became 'the first few days' (rule 12; Day 3's median is also 4, Days 1–2 are 5)."
    },
    "doRefs": [
     {
@@ -1275,7 +1384,7 @@
      "url": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
      "pmid": "32511109",
      "fetched": true,
-     "i": 1,
+     "i": 0,
      "quote": "Seizures may begin as early as 8 hours after cessation of (or reduction in) alcohol use and can continue for up to 48 hours",
      "note": "read 2026-11-05 rev2 (ASAM PDF, section II.A)"
     },
@@ -1284,7 +1393,7 @@
      "url": "https://www.asam.org/docs/default-source/quality-science/the_asam_clinical_practice_guideline_on_alcohol-1.pdf",
      "pmid": "32511109",
      "fetched": true,
-     "i": 1,
+     "i": 0,
      "quote": "An increasing number of withdrawal episodes is associated with increasing severity through the kindling process.",
      "note": "read 2026-11-05 rev2 (ASAM PDF, section III); also used by action 6"
     },
@@ -1296,6 +1405,22 @@
      "i": 5,
      "quote": "An increasing number of withdrawal episodes is associated with increasing severity through the kindling process.",
      "note": "the slip action no longer sends a heavy daily drinker back to days of normal drinking"
+    },
+    {
+     "cite": "NHS (2026). Alcohol support. nhs.uk (page last reviewed 17 August 2026).",
+     "url": "https://www.nhs.uk/live-well/alcohol-advice/alcohol-support/",
+     "fetched": true,
+     "quote": "The sorts of mild or moderate withdrawal symptoms that suggest you may need medicine include: anxiety after waking sweating and mild tremors nausea or retching in the morning",
+     "note": "read 2026-11-08",
+     "i": 0
+    },
+    {
+     "cite": "NICE (2011). Alcohol-use disorders: diagnosis, assessment and management of harmful drinking and alcohol dependence (CG115).",
+     "url": "https://www.nice.org.uk/guidance/cg115/chapter/Recommendations",
+     "fetched": true,
+     "quote": "For service users who typically drink over 15 units of alcohol per day and/or who score 20 or more on the AUDIT, consider offering: an assessment for",
+     "note": "read 2026-11-08, recommendation 1.3.4.1; research file ref r3. 15 UK units = 120 g of alcohol, about 6 to 7 pints of 4% beer",
+     "i": 0
     }
    ],
    "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)"
@@ -1312,14 +1437,14 @@
   },
   {
    "do": [
-    "Ask a doctor about acamprosate or naltrexone, two prescription pills that help people stay stopped.",
+    "Ask a doctor about acamprosate or naltrexone, two prescription pills that help some people stay stopped.",
     "Try AA or another group that meets weekly.",
     "Use help as a tool for a stretch, not a new identity. Keep what works, drop the rest.",
     "Ask one friend to check in with you on Fridays for the first two months.",
     "Slipped more than once? Add one kind of help you haven’t tried, and ask step 1’s questions again the same day, not after days of normal drinking."
    ],
    "proof": {
-    "text": "In trials, some reported by its maker, 36 in 100 people hooked on alcohol, after detox, stayed fully off drink six months on acamprosate; 23 in 100 on a dummy pill. The best-run trials showed a small, unclear gap.",
+    "text": "In trials after detox, 36 in 100 people hooked on alcohol stayed fully off drink for months on acamprosate; 23 in 100 on a dummy pill.",
     "ref": {
      "cite": "Mann K, Lehert P, Morgan MY (2004). The efficacy of acamprosate in the maintenance of abstinence in alcohol-dependent individuals: results of a meta-analysis. Alcoholism: Clinical and Experimental Research 28(1):51-63.",
      "url": "https://pubmed.ncbi.nlm.nih.gov/14745302/",
@@ -1338,10 +1463,23 @@
     },
     "check": {
      "by": "revision checker b (alcohol)",
-     "on": "2026-11-05",
+     "on": "2026-11-08",
      "verdict": "ok"
+    },
+    "severity": "treatment",
+    "changeNote": "rev3 (2026-11-08): Owner-lens r3 blocker and rules audit (rule 12): the doubt sentence and 'some reported by its maker' left the line; both stay on the 36 vs 23 card (weak chip and caveat), and the alsoRef stays. Severity added (treatment, as on the card). Same source and figures. 'for six months' left the line (rule 12, number words counted); the card's Measured keeps it."
+   },
+   "doRefs": [
+    {
+     "cite": "Jonas DE, Amick HR, Feltner C, et al. (2014). Pharmacotherapy for adults with alcohol use disorders in outpatient settings: a systematic review and meta-analysis. JAMA.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/24825644/",
+     "pmid": "24825644",
+     "fetched": true,
+     "quote": "Both acamprosate and oral naltrexone were associated with reduction in return to drinking.",
+     "note": "re-read 2026-11-08 (Europe PMC abstract, Conclusions)",
+     "i": 0
     }
-   }
+   ]
   }
  ]
 }

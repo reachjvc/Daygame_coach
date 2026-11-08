@@ -1,5 +1,5 @@
 {
- "about": "The menu of number kinds for the one-pagers (rule 14). Every page fills the same kinds; 'general' kinds are about every addiction and are shown the same on every page. 'pick' marks the kinds recommended for the prototype; the owner's marks on the review page can swap them. 'where' is the page section a picked kind shows in (rule 15: hope first, then beliefs and the graph, then more numbers). 'reader' lists the severity tags a number of this kind may carry (RULEBOOK rule 3).",
+ "about": "The menu of number kinds for the one-pagers (rule 14). Every page fills the same kinds; 'general' kinds are about every addiction and are shown the same on every page. 'pick' marks the kinds recommended for the prototype (general kinds follow the choice 'general' instead); the owner's marks on the review page can swap them. 'where' is the page section a picked kind shows in (rule 15: hope first, then beliefs and the graph, then more numbers). 'reader' lists the severity tags a number of this kind may carry (RULEBOOK rule 3). 'gapPhrase' is the plain reader words for a kind a page has no number for (the gap line: 'Not counted here yet: …'). Sections: 'more' is “Who gets free, and how” (who, how they got free, what helps); 'outlook' is “How quitting goes” (slips, withdrawal, life after).",
  "groups": {
   "hope": "Hope",
   "who": "Who gets free",
@@ -19,10 +19,10 @@
    "reader": [
     "dependent",
     "disorder",
-    "self-hooked",
-    "screened"
+    "self-hooked"
    ],
-   "why": "Rule 10: the cautious estimate first. A head count is harder to doubt than a lifetime projection."
+   "why": "The head count: harder to doubt than a lifetime projection. Shown with the projection in the hero; which one is big is the choice 'hero' (rule 10's exception).",
+   "gapPhrase": "how many people hooked on it are free now"
   },
   {
    "id": "hope-lifetime",
@@ -35,7 +35,8 @@
    "reader": [
     "dependent"
    ],
-   "why": "His original hero (90.6% for alcohol). Kept as the hero's second line, marked as a projection that likely runs high."
+   "why": "His original hero (90.6% for alcohol), the bigger hope. Leads the hero by rule 15 (his words: lead with hope), its line says 'projected', and its one Weak label says it likely runs high.",
+   "gapPhrase": "how many get free in a lifetime"
   },
   {
    "id": "who-years",
@@ -48,7 +49,8 @@
    "reader": [
     "dependent"
    ],
-   "why": "Projection from recalled ages; reviewers say it likely runs hopeful. In the menu, not picked."
+   "why": "Projection from recalled ages; reviewers say it likely runs hopeful. In the menu, not picked.",
+   "gapPhrase": "how long until half are free"
   },
   {
    "id": "who-age",
@@ -63,7 +65,8 @@
     "dependent",
     "self-hooked"
    ],
-   "why": "He liked 'about 38' for alcohol (5 Nov)."
+   "why": "He liked 'about 38' for alcohol (5 Nov).",
+   "gapPhrase": "the age when it ended"
   },
   {
    "id": "who-life-event",
@@ -77,7 +80,8 @@
     "dependent",
     "resolved"
    ],
-   "why": "A link, not a cause; useful for some readers. In the menu, not picked."
+   "why": "A link, not a cause; useful for some readers. In the menu, not picked.",
+   "gapPhrase": "which life changes came with getting free"
   },
   {
    "id": "how-alone",
@@ -92,7 +96,8 @@
     "dependent",
     "self-hooked"
    ],
-   "why": "He wants to see who quits using what (4 Nov)."
+   "why": "He wants to see who quits using what (4 Nov).",
+   "gapPhrase": "how many got free with no treatment"
   },
   {
    "id": "how-tries",
@@ -107,9 +112,11 @@
     "dependent",
     "self-hooked",
     "heavy",
-    "screened"
+    "screened",
+    "treatment"
    ],
-   "why": "Answers 'I've failed before, so I'll fail again'."
+   "why": "Answers 'I've failed before, so I'll fail again'.",
+   "gapPhrase": "how many tries it took"
   },
   {
    "id": "how-abrupt",
@@ -125,7 +132,8 @@
     "treatment",
     "heavy"
    ],
-   "why": "In the menu, not picked: on most pages it overlaps with stop-or-cut-down."
+   "why": "In the menu, not picked: on most pages it overlaps with stop-or-cut-down.",
+   "gapPhrase": "stopping at once against step by step"
   },
   {
    "id": "how-slips",
@@ -143,7 +151,8 @@
     "users",
     "screened"
    ],
-   "why": "Part of 'How quitting goes', which he liked (5 Nov). A slip is normal, shown with when it happens."
+   "why": "Part of 'How quitting goes', which he liked (5 Nov). A slip is normal, shown with when it happens.",
+   "gapPhrase": "how often a try slips, and when"
   },
   {
    "id": "helps-stop-vs-cut",
@@ -158,7 +167,8 @@
     "resolved",
     "treatment"
    ],
-   "why": "Rule 4: the moderation question answered only with numbers about addicts. The alcohol '27% vs 7%' is the model."
+   "why": "Rule 4: the moderation question answered only with numbers about addicts. The alcohol '27% vs 7%' is the model.",
+   "gapPhrase": "stopping fully against cutting down"
   },
   {
    "id": "helps-medicine",
@@ -173,7 +183,8 @@
     "treatment",
     "disorder"
    ],
-   "why": "Shown as 'X in 100 with it vs Y in 100 without' (rule 12a), so it reads on the first pass."
+   "why": "Shown as 'X in 100 with it vs Y in 100 without' (rule 12a), so it reads on the first pass.",
+   "gapPhrase": "a medicine, with it and without"
   },
   {
    "id": "helps-talk",
@@ -189,14 +200,15 @@
     "disorder",
     "self-hooked"
    ],
-   "why": "Help is optional and a tool (his plan step 5); readers want to know if it is worth it."
+   "why": "Help is optional and a tool (his plan step 5); readers want to know if it is worth it.",
+   "gapPhrase": "talk therapy or a group, with it and without"
   },
   {
    "id": "helps-early-help",
    "group": "helps",
    "scope": "specific",
    "pick": true,
-   "where": "outlook",
+   "where": "more",
    "label": "Getting help early",
    "question": "Did people who got help early do better later?",
    "reader": [
@@ -204,7 +216,8 @@
     "treatment",
     "disorder"
    ],
-   "why": "Picked after the first review: '62% vs 43%' was one of the v10 'How quitting goes' numbers he liked. Not a trial, and it says so."
+   "why": "Picked after the first review: '62% vs 43%' was one of the v10 'How quitting goes' numbers he liked. Not a trial, and it says so.",
+   "gapPhrase": "getting help early against late"
   },
   {
    "id": "helps-reward",
@@ -219,7 +232,8 @@
     "treatment",
     "heavy"
    ],
-   "why": "Strong for nicotine and weed; in the menu, not picked."
+   "why": "Strong for nicotine and weed; in the menu, not picked.",
+   "gapPhrase": "a reward for staying off"
   },
   {
    "id": "after-first-month",
@@ -237,7 +251,8 @@
     "users",
     "self-hooked"
    ],
-   "why": "Part of 'How quitting goes', which he liked. A heavy-user number is allowed here with its tag shown."
+   "why": "Part of 'How quitting goes', which he liked. A heavy-user number is allowed here with its tag shown.",
+   "gapPhrase": "what the first month gives back"
   },
   {
    "id": "after-mood",
@@ -256,7 +271,8 @@
     "users",
     "self-hooked"
    ],
-   "why": "Answers 'life will be empty without it'."
+   "why": "Answers 'life will be empty without it'.",
+   "gapPhrase": "mood after quitting"
   },
   {
    "id": "after-sleep",
@@ -272,7 +288,8 @@
     "heavy",
     "users"
    ],
-   "why": "Often already in the timeline; in the menu, not picked."
+   "why": "Often already in the timeline; in the menu, not picked.",
+   "gapPhrase": "sleep after quitting"
   },
   {
    "id": "after-body",
@@ -290,13 +307,14 @@
     "self-hooked",
     "screened"
    ],
-   "why": "Picked after the first review: the v10 'How quitting goes' numbers he liked include body changes (nicotine: erections, weight)."
+   "why": "Picked after the first review: the v10 'How quitting goes' numbers he liked include body changes (nicotine: erections, weight).",
+   "gapPhrase": "the body and sex after quitting"
   },
   {
    "id": "gen-tries",
    "group": "how",
    "scope": "general",
-   "pick": true,
+   "pick": false,
    "where": "general",
    "label": "Alcohol and drugs pooled: tries it took",
    "question": "Across alcohol and drugs, how many serious tries did it take?",
@@ -309,7 +327,7 @@
    "id": "gen-alone",
    "group": "how",
    "scope": "general",
-   "pick": true,
+   "pick": false,
    "where": "general",
    "label": "Alcohol and drugs pooled: quit with no treatment",
    "question": "Across alcohol and drugs, how many got free without any help?",
@@ -322,7 +340,7 @@
    "id": "gen-years",
    "group": "after",
    "scope": "general",
-   "pick": true,
+   "pick": false,
    "where": "general",
    "label": "Alcohol and drugs pooled: life keeps getting better",
    "question": "How does life go in the years after?",
@@ -336,7 +354,7 @@
    "group": "who",
    "scope": "specific",
    "pick": true,
-   "where": "outlook",
+   "where": "more",
    "label": "Still hooked, or not, years later",
    "question": "Of people who were once hooked, how many are still hooked now, and how many ever had treatment?",
    "reader": [
@@ -344,7 +362,8 @@
     "disorder",
     "screened"
    ],
-   "why": "Kept from the v10 'How quitting goes' numbers he liked (alcohol: only 1 in 4 still hooked)."
+   "why": "Kept from the v10 'How quitting goes' numbers he liked (alcohol: only 1 in 4 still hooked).",
+   "gapPhrase": "how many are still hooked years later"
   },
   {
    "id": "how-withdrawal",
@@ -361,7 +380,8 @@
     "users",
     "disorder"
    ],
-   "why": "Kept from the v10 'How quitting goes' numbers he liked (weed: day 2–6, 47%)."
+   "why": "Kept from the v10 'How quitting goes' numbers he liked (weed: day 2–6, 47%).",
+   "gapPhrase": "how many get withdrawal, and when it peaks"
   },
   {
    "id": "after-lasting",
@@ -380,7 +400,8 @@
     "resolved",
     "screened"
    ],
-   "why": "Kept from the v10 'How quitting goes' numbers he liked (porn: 74% still watched 70% less three months on; 1 in 6 stopped)."
+   "why": "Kept from the v10 'How quitting goes' numbers he liked (porn: 74% still watched 70% less three months on; 1 in 6 stopped).",
+   "gapPhrase": "whether it lasts"
   },
   {
    "id": "how-with-help",
@@ -395,7 +416,8 @@
     "self-hooked",
     "screened"
    ],
-   "why": "Added in gates round 2: a with-help result that has no without-help count can't be a what-helps number (rule 12a), but it still answers who quits using what."
+   "why": "Added in gates round 2: a with-help result that has no without-help count can't be a what-helps number (rule 12a), but it still answers who quits using what.",
+   "gapPhrase": "what happened with help"
   }
  ]
 }

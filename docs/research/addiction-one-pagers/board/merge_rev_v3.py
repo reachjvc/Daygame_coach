@@ -15,18 +15,34 @@ from finalize_v3 import setpath
 
 V3 = Path(__file__).resolve().parent.parent / "08-v3"
 D = V3 / "drafts"
-TODAY = "2026-11-05"
+TODAY = "2026-11-08"
 
 
 def main(ids, rnd="rev"):
     for pid in ids:
         rev = json.loads((D / f"{pid}-{rnd}.json").read_text())
-        verdicts = {}
+        verdicts, page_fixes = {}, []
+        rank = {"ok": 0, "fix": 1, "reject": 2}
         for part in "ab":
             f = D / f"{pid}-{rnd}-check-{part}.json"
             if f.exists():
                 for c in json.loads(f.read_text()).get("checked", []):
-                    verdicts[(c.get("where", "numbers"), c["index"])] = (c, part)
+                    c = dict(c)
+                    fix = {}
+                    for path, val in (c.get("fix") or {}).items():
+                        if re.match(r"^(?:numbers|beliefs|plan|windows)\[\d+\]\.", path) or "." not in path.split("[")[0] and not path.startswith(("notUsed", "gaps", "rejected")):
+                            fix[path] = val
+                        else:  # a page-level field (notUsed.other[+], gaps…): applied to the page, not the item
+                            page_fixes.append((path, val))
+                    c["fix"] = fix
+                    key = (c.get("where", "numbers"), c["index"])
+                    if key in verdicts:  # two entries for one item (a step's actions and its proof): combine
+                        prev = verdicts[key][0]
+                        c["fix"] = {**prev.get("fix", {}), **fix}
+                        if rank.get(prev["verdict"], 0) > rank.get(c["verdict"], 0):
+                            c["verdict"] = prev["verdict"]
+                        c["problems"] = (prev.get("problems") or []) + (c.get("problems") or [])
+                    verdicts[key] = (c, part)
         log, rejected = [], list(rev.get("rejected", []))
         out = {k: v for k, v in rev.items() if k not in ("numbers", "beliefs", "windows", "plan")}
         for where in ("numbers", "beliefs", "windows"):
@@ -53,6 +69,12 @@ def main(ids, rnd="rev"):
         plan = copy.deepcopy(rev.get("plan", []))
         for i, st in enumerate(plan):
             pr = st.get("proof")
+            if not pr and st.get("changed"):
+                v = verdicts.get(("plan", i))
+                for path, val in ((v[0].get("fix") or {}) if v else {}).items():
+                    setpath(st, re.sub(r"^plan\[\d+\]\.", "", path), val)
+                if not v:
+                    log.append(f"{pid} plan {i + 1}: actions CHANGED, NO CHECK")
             if pr and pr.pop("changed", False) or (pr and st.pop("changed", False)):
                 v = verdicts.get(("plan", i))
                 if v and v[0]["verdict"] == "reject":
@@ -74,6 +96,9 @@ def main(ids, rnd="rev"):
             st.pop("changeNote", None)
         out["plan"] = plan
         out["rejected"] = rejected
+        for path, val in page_fixes:
+            setpath(out, path, val)
+            log.append(f"{pid} page field {path}: applied")
         (V3 / "pages" / f"{pid}.json").write_text(json.dumps(out, ensure_ascii=False, indent=1))
         print(f"{pid}: {len(out['numbers'])} numbers, {len(out['beliefs'])} beliefs, {len(out.get('windows', []))} windows, {len(rejected)} rejected")
         print("\n".join(log))

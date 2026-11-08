@@ -1,0 +1,163 @@
+{
+ "id": "porn",
+ "checked": [
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "hard: flatline close to 33 in 100 (Fernandez 2021)",
+   "verdict": "ok",
+   "problems": [
+    "Possible overlap with part a (23 changed items; split point is beliefs[0] or [1]).",
+    "Counterpart 'Mostly, the hard part is the pull' is not backed by a figure; the source's craving/trigger themes fit it, so left as belief wording."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "need: more than 75 in 100 coped other ways (Fernandez 2021)",
+   "verdict": "fix",
+   "problems": [
+    "'Most' (>75%) in the source is 'internal resources (cognitive and/or behavioral strategies) to aid their abstinence'; the examples list (exercise, going out, sleep) is the next sentence with no frequency. The proof ties the list to the >75% as if all of them used those ones.",
+    "Rev2 face text 'had often used porn to handle bad moods' dropped without a notUsed entry."
+   ],
+   "fix": {
+    "beliefs[2].proof": "In 104 men’s porn-quit journals, most by men who called themselves addicted, more than 75 in 100 wrote of other ways to get through, such as exercise, going out, better sleep or changing how they thought.",
+    "notUsed.replaced[+]": {
+     "from": "08-v3 belief 3 proof, first sentence (rev2)",
+     "text": "Men in 104 porn-quit journals, most calling themselves addicted, had often used porn to handle bad moods.",
+     "reason": "Rule 12 and cold reader (r3): the proof now carries only the counterpart's finding; the mood finding stays in the quote."
+    }
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "moderation: 46 in 100 cut back 4+ times (Kraus 2016)",
+   "verdict": "fix",
+   "problems": [
+    "Figure ok: Table 1, 4+ cut-back attempts 46.2% of the 186 treatment-interested men; quotes word for word.",
+    "Severity 'treatment' renders 'Counted: people in treatment for porn'. The source says these men only reported a current interest in seeking treatment, recruited 'from a non-treatment seeking sample of men'; most had never sought treatment. Label overstates who was counted. Use self-hooked (rule 4 still passes) and say 'said' so the build's self-hooked wording check matches. The how-tries card (numbers[1], part a) has the same group and the same tag: same fix applies there.",
+    "Rev2 face text 'Of 186 men' and 'and still wanted help' dropped without a notUsed entry."
+   ],
+   "fix": {
+    "beliefs[3].severity": "self-hooked",
+    "beliefs[3].proof": "Of men who said they wanted help with porn, not checked by a doctor, 46 in 100 had already tried to cut back, not quit, four or more times.",
+    "notUsed.replaced[+]": {
+     "from": "08-v3 belief 4 proof (rev2)",
+     "text": "Of 186 men who wanted help with porn, 46 in 100 had already tried to cut back, not quit, four or more times, and still wanted help.",
+     "reason": "Cold reader (r3): the 186 never came back; the how-tries card names the same men."
+    }
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "identity: 53 in 100 slipped (Fernandez 2021)",
+   "verdict": "ok",
+   "problems": [
+    "55/104 = 52.9, '53 in 100' is plain rounding and matches the how-slips card. Dropped 'How the attempts ended is unknown' is in notUsed and the card caveat."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "step 1 proof: 9 men, 6 binged (Wordecha 2018)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract: 'Binge PuM was related to decreased mood and/or increased stress or anxiety'; full text: 'For all but one subject (G)'. The line reads as true for all 6; one of them showed no such link.",
+    "Rev2 text 'for hours or many times a day' and 'For 5 of the 6 … differing by man' dropped without a notUsed entry."
+   ],
+   "fix": {
+    "plan[0].proof.text": "Of 9 men in Poland seeking help for porn and sex habits, 6 binged on porn, and for all but one of them binge days came with low mood, stress or anxiety.",
+    "notUsed.replaced[+]": {
+     "from": "08-v3 plan step 1 proof (rev2)",
+     "text": "Of 9 men in Poland seeking help for porn and sex habits, 6 binged on porn for hours or many times a day. For 5 of the 6, binge days came with low mood, stress or anxiety, differing by man.",
+     "reason": "Rule 12 (r3): four figures down to two."
+    }
+   }
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "step 1 actions (Still watching? / Already stopped?)",
+   "verdict": "ok",
+   "problems": [
+    "Action 1 holds two ideas (watch normally; belief tests fit this week); readable, left. Safe: no drink-type delay drill, porn only. Old actions all kept or in notUsed."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "step 2 proof: lifestyle habits (Fernandez 2021)",
+   "verdict": "fix",
+   "problems": [
+    "Proof matches the quote word for word in meaning; severity self-hooked ok.",
+    "Rev2 text 'to cut triggers and craving' dropped without a notUsed entry ('Their own accounts, not a trial' is covered)."
+   ],
+   "fix": {
+    "notUsed.replaced[+]": {
+     "from": "08-v3 plan step 2 proof end (rev2)",
+     "text": "to cut triggers and craving",
+     "reason": "Owner lens (r3): the proof now says only what its quote says."
+    }
+   }
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 proof: blockers somewhat useful, support most (Fernandez 2021)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 actions (calendar, slip same day)",
+   "verdict": "ok",
+   "problems": [
+    "Dropped 'Each one is a complete success…' and old slip action are in notUsed. 6 actions, plain, porn only."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 3,
+   "label": "step 4 proof: thought suppression backfired (Fernandez 2021)",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word, 24 words; no figures; severity self-hooked."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof: ACT 54 in 100 stopped (Crosby 2016)",
+   "verdict": "fix",
+   "problems": [
+    "54% is of all 26 men who had ACT (both arms combined, posttreatment), not of the 28 randomised. Weak chip says '28 men'; the n behind the figure is 26.",
+    "Rev2 text '26 men, almost all from one church' dropped from the face; the weak chip carries it once corrected, but no notUsed entry for the plan proof."
+   ],
+   "fix": {
+    "plan[4].proof.weak": "26 men, almost all one church; no comparison count",
+    "notUsed.replaced[+]": {
+     "from": "08-v3 plan step 5 proof (rev2)",
+     "text": "In a small US trial for problem porn use, 26 men, almost all from one church, had a course of ACT; 54 in 100 had stopped watching by the end. No count was given for men without the therapy.",
+     "reason": "Rule 7 and cold reader (r3): the n and the missing comparison move to the Weak chip and the card."
+    }
+   }
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 actions (CBT/ACT spelled out)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {}
+  }
+ ]
+}

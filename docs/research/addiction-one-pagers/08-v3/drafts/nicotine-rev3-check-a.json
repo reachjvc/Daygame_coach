@@ -1,0 +1,136 @@
+{
+ "id": "nicotine",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "19 in 100 free when asked",
+   "verdict": "fix",
+   "problems": [
+    "1,300/6,937 = 18.7%; rounding to 19 in 100 is arithmetic, so it needs 'about' (brief: plain arithmetic with 'about'). Quote pieces word for word in PMC3227547 (methods n=6,937; Table 3/4 header 'Nicotine remission (N=1,300)'). Caveat's over-report claim matches the limitations ('overreport of remission')."
+   ],
+   "fix": {
+    "numbers[0].big": "About 19 in 100",
+    "numbers[0].headline": "About 19 in 100 Americans ever hooked on nicotine were already free of it when asked."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "84 in 100 projected lifetime",
+   "verdict": "fix",
+   "problems": [
+    "83.7% shown as 84 in 100 is rounding; add 'about'. Quote word for word; 3.0% and 18.4% confirmed as cumulative probabilities (projected); weak chip fair."
+   ],
+   "fix": {
+    "numbers[1].headline": "About 84 in 100 Americans ever hooked on nicotine are projected to get free of it in their lifetime."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "About 30 tries (daily smokers)",
+   "verdict": "ok",
+   "problems": [
+    "29.5 daily (Table 3, life table observed rates), 6.8/20.4/142.3 other methods, 11% then 5% first/second observed try, success = 1 year without relapse: all confirmed in PMC4908897. projection:true and 'expected' fit a model. Heavy tag and Counted fine; sits in outlook, not who-gets-free."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "3-5 in 100 unaided tries",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word (PubMed 14678060); 'most relapse occurs in the first 8 days' confirmed; abstract gives no head count or use level, so who line and Weak chip are accurate. Users tag matches."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "12 vs 12 cut down vs stop",
+   "verdict": "fix",
+   "problems": [
+    "Counted says 'not checked for addiction', and the changeNote says no trial checked. The review says 32 of 51 trials reported a Fagerström dependence score (mean 3.0 to 7.3); none required a diagnosis. Say what is true. Figures, n 9,219 (22 RCTs), 23 a day, 29 of 51 USA, Oct 2018 search, and quote all confirmed in PMC6953262. The 697-smoker English trial (FTCD 6.0) is in the review; its 22.0% vs 15.5% is not in the review text (it is from the trial paper), so 'about 16 in 100' is fine but not checkable from this ref."
+   ],
+   "fix": {
+    "numbers[4].counted": "smokers in quit trials who wanted to stop, not diagnosed as addicted"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "23 vs 10 varenicline",
+   "verdict": "ok",
+   "problems": [
+    "SoF row 99 vs 230 per 1000, RR 2.32, 17,395 (41 studies) and SAE 3.3% vs 2.7% confirmed in PMC10169257; search 29 April 2022; footnote confirms intervention risk is worked out from control risk, so projection:true is right. 10 is rounded from 99 and is covered by the headline's 'about'."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "11 vs 7 counselling",
+   "verdict": "fix",
+   "problems": [
+    "Counted 'many not trying to quit' says more than the source. The review says only: 'Lack of interest in quitting was not an explicit exclusion criterion in any study, but the level of motivation to quit smoking was sometimes difficult to assess.' Also 19 of 49 trials recruited hospital inpatients or outpatients, not only inpatients (the who line's 'hospital patients' is acceptable). SoF 7 vs 11 per 100 (10 to 12), RR 1.57, 11,100 (27 RCTs), 30 USA trials, May 2016 all confirmed in PMC6464359."
+   ],
+   "fix": {
+    "numbers[6].counted": "smokers in counselling trials; wanting to quit was not required"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "Anxiety fell from week 1",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word, 27 words (PubMed 9356569); 70 of 101, DSM-III-R dependence, lapse-free criterion confirmed. New headline is not more hopeful than the source; the 'no rise' half stays in the quote."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "Half free about 26 years in",
+   "verdict": "fix",
+   "problems": [
+    "Quote and 26 years confirmed in PMC3227547. Caveat writes 83.7% as '84 in 100' without 'about'; match the hero fix."
+   ],
+   "fix": {
+    "numbers[9].caveat": "The study projects that about 84 in 100 get free at some point in life; that is a model, not a head count, built from ages people recalled over decades. People in prisons or hospitals weren't surveyed, so the real pace may be slower. Men got free more slowly than women. Surveyed before vaping; the paper doesn't say which tobacco products people used."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "10 vs 7 rewards",
+   "verdict": "ok",
+   "problems": [
+    "Plain-language summary 10 vs 7 in 100 and SoF 71 vs 108 per 1000, 18,303 (39 RCTs), 33 of 48 USA, search Nov 2023, sensitivity analysis confirmed (PMC11725379, PMC page and Europe PMC abstract). 108 per 1000 is closer to 11 in 100; the card uses the review's own '10 in 100' and its caveat names the 108, so not more hopeful than the source."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "4-5 kg first year",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word, 29 words (PubMed 22782848); 2.85/4.23/4.67 kg and 16/37/34/13% confirmed; abstract gives no use level. Minor: the mirror ('keep piling on') is now only answered by 'most in month 3' in the body row label and the quote, not the headline."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "1 in 4 erection improved",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word (PubMed 15610111); 118 vs 163, requested NRT, other causes excluded, pack-years measured but level not given: who line accurate. Older men and severe cases improved less: confirmed."
+   ],
+   "fix": {}
+  }
+ ]
+}

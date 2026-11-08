@@ -8,6 +8,7 @@ Fails (exit 1) on any rule break; each PROBLEM line names the rule.
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -20,13 +21,28 @@ SEVERITY = {
     "dependent": "people hooked on {x}",
     "disorder": "people with a {x} problem, mild cases included",
     "treatment": "people in treatment for {x}",
-    "resolved": "people who beat a {x} problem",
+    "resolved": "people who say they beat a {x} problem",
     "self-hooked": "people who say they feel hooked on {x}",
     "heavy": "heavy users, not checked for addiction",
     "users": "ordinary users, not addicts",
     "screened": "people whose questionnaire answers showed a likely {x} problem",
 }
 OFF_READER = {"heavy", "users"}
+# rule 3: the Counted label carries the words that tell its tag apart (a label can't drift from what was counted)
+COUNTED_KEYS = {
+    "dependent": r"hooked|dependen|addict|criteria",
+    "disorder": r"\bmild\b",
+    "treatment": r"treat|trial|therap|help|clinic|hospital|programme|program|detox|rehab|counsell",
+    "resolved": r"\bsays?\b|\bsaid\b",
+    "self-hooked": r"\bsays?\b|\bsaid\b|calling themselves|call themselves|\bfeel",
+    "heavy": r"\bnot\b",
+    "users": r"\bnot\b",
+    "screened": r"questionnaire|answers|screen",
+}
+# rule 3: basis.who says how much they used (his 5 Nov "10 drinks every day" against "above the guidelines")
+USE_LEVEL = r"\d|daily|a day|a week|times|hooked|dependen|addict|criteria|checklist|diagnos|not reported"
+# rule 4: a moderation answer counts people who were hooked, or says plainly that it didn't check
+MOD_OK = {"dependent", "resolved", "disorder"}
 OTHER = {
     "alcohol": r"alcohol|drink(?:s|ing|er|ers)?|drunk|beer|wine|liquor|sober from booze",
     "nicotine": r"nicotine|cigarettes?|cigs?|tobacco|vap(?:e|es|ing|er|ers)|pouch(?:es)?|smokers?",
@@ -39,10 +55,43 @@ ALLOW = {"nicotine": {"drink"}, "cannabis": {"smokers", "smoker"}}
 SUBS_V3 = {"cannabis": {"thing": "weed smoking"}, "porn": {"thing": "porn use"}, "nicotine": {"verb": "smoke or vape"}}
 SCREEN = r"is this you|are you addicted|take the test|\bquiz\b|screener|do you have a problem"
 CHEER = r"you'?ve got this|you got this|you can do it|proud of you|amazing|journey|\bstay strong\b"
-NOTE = r"fetched|not given|our sum|in the abstract|summary doesn.t say|study summary|HTTP \d|could not be read|only the abstract|\.md\b|Table \d"
+NOTE = r"fetched|not given|our sum|in the abstract|summary doesn.t say|study summary|HTTP \d|could not be read|only the abstract|\.md\b|Table \d|we found|was found|were found|no count was|this paper|nearest number|\br\d{1,2}\)"
+# rule 6 (show, don't tell): a line opens with the fact, never with a verdict on it
+# a short clause before a colon that judges ("No medicine has clearly helped: …", "Cutting down, not quitting: …");
+# a plain label before a colon ("Body: …", "One-to-one counselling: …") is not a verdict
+VERDICT_LEADIN = re.compile(r"^(?=[^:.\d]{2,45}:\s)[^:]*\b(?:no|not|never|clearly|most|only|just|even|good|bad|better|worse|helped|helps|works?|worked|failed|safe|normal|easy|hard)\b[^:]*:\s", re.I)
+VERDICT_SHORT = re.compile(r"^[A-Z]\w*(?:\s+\w+){0,2}\.\s")          # "Most slip. Of people …"
+VERDICT_WORDS = re.compile(r"noticeable but manageable|complete success|good news|bad news|\bin short\b|bottom line|don.t worry|that.s normal|which is normal|clearly (?:helped|works?|worked|better)", re.I)
 JARGON = r"\bmedian\b|quantile|latent profile|life table|\bkPa\b|secondary analysis|odds ratio|hazard ratio|confidence interval|95% CI|\bIQR\b|\bSD\b|p ?< ?0|middle score|middle half|severity"
 TOLL = r"\bdeaths?\b|\bdied\b|million|billion"
-FIG = re.compile(r"\d[\d,.]*\s*(?:%|in\s+\d[\d,]*)?")
+# a figure: a number, a range ("2–7 days" is one), a share ("7 in 100" is one) or a number word ("half", "one in three")
+FIG = re.compile(r"\d[\d,.]*(?:\s*[–-]\s*\d[\d,.]*)?\s*(?:%|in\s+\d[\d,]*)?")
+# number words count, except a time window ("six months later" frames the figure, it isn't one) and "one-to-one"
+NUMWORD = re.compile(r"(?<!no )(?<!any)(?<!-)\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|half|a third|a quarter|dozens?)\b(?!-)(?:\s+in\s+(?:\d[\d,]*|\w+))?(?! of (?:the|them|those|these))(?!\s+(?:hours?|days?|weeks?|months?|years?)\b)", re.I)
+
+
+def figs(s):
+    """Rule 12: how many figures a line carries, number words included."""
+    s = s or ""
+    spans = [m.span() for m in FIG.finditer(s)] + [m.span() for m in NUMWORD.finditer(s)]
+    spans.sort()
+    out = []
+    for a, b in spans:
+        if out and a <= out[-1][1]:
+            out[-1] = (out[-1][0], max(b, out[-1][1]))
+        else:
+            out.append((a, b))
+    return len(out)
+
+
+def verdict(s):
+    s = (s or "").strip()
+    m = VERDICT_LEADIN.search(s) or VERDICT_SHORT.search(s) or VERDICT_WORDS.search(s)
+    return m.group(0).strip() if m else None
+
+
+# rule 12b: a share of people is written "N in 100"; only a drop or rise ("87% less") stays in %
+BIG_OK_KINDS = set()   # none: since round 4 every share on a reader face is "N in 100", the hero projection too
 
 problems = []
 
@@ -85,6 +134,17 @@ def check_number(x, page, kinds, where, general=False):
         P(3, where, f"a {sev} number whose Counted label doesn't say they weren't addicts: {x.get('counted')}")
     if sev in OFF_READER and k["group"] in ("hope", "who", "helps"):
         P(3, where, f"a {sev} number in the {k['group']} group")
+    if sev in COUNTED_KEYS and not re.search(COUNTED_KEYS[sev], x.get("counted", ""), re.I):
+        P(3, where, f"Counted label doesn't match its tag {sev}: {x.get('counted')!r}")
+    if not re.search(USE_LEVEL, str((x.get("basis") or {}).get("who", "")), re.I):
+        P(3, where, f"basis.who doesn't say how much they used (or 'not reported'): {(x.get('basis') or {}).get('who')!r}")
+    if x.get("kind") == "helps-stop-vs-cut" and sev not in MOD_OK and "not checked" not in reader_text(x.get("headline"), x.get("counted"), x.get("caveat")):
+        P(4, where, f"a stop-or-cut-down number on {sev} people that doesn't say 'not checked for addiction'")
+    big = str(x.get("big", ""))
+    if x.get("kind") not in BIG_OK_KINDS and (re.search(r"^\D*\d[\d,]*\s+of\s+\d", big) or (re.search(r"%", big) and not re.search(r"%\s*(?:less|more|lower|higher|fewer)", big))):
+        P("12b", where, f"a share written as % or 'N of M' in the big figure (write 'N in 100'): {big}")
+    if verdict(x.get("headline")):
+        P(6, where, f"headline opens with a verdict: {verdict(x.get('headline'))!r}")
     b = x.get("basis") or {}
     for f in ("who", "n", "where", "when", "measured"):
         if not str(b.get(f, "")).strip():
@@ -94,12 +154,12 @@ def check_number(x, page, kinds, where, general=False):
     h = x.get("headline", "")
     if wc(h) > 22:
         P(12, where, f"headline is {wc(h)} words (22 max)")
-    if len(FIG.findall(h)) > 2:
-        P(12, where, f"headline has {len(FIG.findall(h))} figures (2 max): {h}")
+    if figs(h) > 2:
+        P(12, where, f"headline has {figs(h)} figures (2 max): {h}")
     m = x.get("mirror", "")
     if m and (wc(m) > 14 or not re.search(r"\byou", m, re.I)):
         P(8, where, f"mirror line must be 14 words or fewer in the second person: {m}")
-    if k["group"] == "helps" and len(FIG.findall(h)) < 2 and not x.get("noComparison"):
+    if k["group"] == "helps" and figs(h) < 2 and not x.get("noComparison"):
         P("12a", where, f"a what-helps number without a with-and-without pair: {h[:70]}")
     if k["group"] == "helps" and re.search(r"×|\b\d+(?:\.\d+)?\s?times\b|\b1 in \d", x.get("big", "") + " " + h):
         P("12a", where, f"a what-helps number as a ratio or '1 in N': {x.get('big')}")
@@ -168,8 +228,9 @@ def number_sources(page, own, kinds):
         if k not in order:
             order[k] = len(out) + 1
             story = not str(r.get("url", "")).startswith("http") and not r.get("own")
-            out.append({"n": order[k], "cite": "Quitters’ own accounts (videos and posts), summarised for this project." if story else r.get("cite", ""),
-                        "url": "" if story else r.get("url", ""), "fetched": bool(r.get("fetched")), "story": story})
+            out.append({"n": order[k], "cite": "Quitters’ own accounts (videos and posts), summarised for this project." if story else r.get("shortCite") or r.get("cite", ""),
+                        "url": "" if story else r.get("url", ""), "fetched": bool(r.get("fetched")), "story": story,
+                        "own": bool(r.get("own"))})  # own: our forum harvest; the page lists it once, with the graph
         return [order[k]]
 
     def rk(keys, where):
@@ -200,11 +261,99 @@ def number_sources(page, own, kinds):
     for i, st in enumerate(page.get("plan", [])):
         if st.get("proof"):
             st["proof"]["n"] = cite(st["proof"].get("ref"), f"plan {i}")
+            if st["proof"].get("alt"):
+                st["proof"]["alt"]["n"] = cite(st["proof"]["alt"].get("ref"), f"plan {i} stand-in")
     if page.get("app"):
         page["app"]["n"] = cite({"cite": page["app"]["source"] + " (read " + page["app"]["read"] + ")", "url": page["app"]["url"], "fetched": True}, "app")
     if page.get("footer"):
         page["footer"]["n"] = rk(page["footer"].get("refs", []), "footer")
     page["sources"] = out
+
+
+# the nine stages the graph draws (the same as STAGES in one-pager-v3.html) and the post count under which a stage is drawn hollow
+STAGES = [("Day 1", [0]), ("Days 2–3", [1, 2]), ("Days 4–7", [3, 4]), ("Week 2", [5, 6]), ("Weeks 3–4", [7, 8]),
+          ("Month 2", [9, 10]), ("Month 3", [11]), ("Months 4–12", [12, 13]), ("Year 2 +", [14])]
+MIN_POSTS = 25
+
+
+def rng(vals, fmt=lambda v: f"{v:,}", sep=" to "):
+    vals = sorted(set(vals))
+    return fmt(vals[0]) if len(vals) == 1 else f"{fmt(vals[0])}{sep}{fmt(vals[-1])}"
+
+
+def review_facts(pages, kinds_doc):
+    """Rule 28: every figure the review page states about the pages is computed from them, so it can't drift."""
+    kinds = kinds_doc["kinds"]
+    felt = [p for p in pages if p.get("felt")]
+    few = {}
+    for p in felt:
+        for label, idx in STAGES:
+            n = sum(sum(p["felt"]["bins"][i].get("hist") or []) for i in idx)
+            if n < MIN_POSTS:
+                few.setdefault(label, []).append(p["tab"].lower())
+    hero = lambda p, k: next((x for x in p.get("numbers", []) if x["kind"] == k), None)
+    app = [p for p in pages if p.get("app")]
+    day = lambda d: next((x["n"] for x in app[0]["app"]["days"] if x["day"] == d), None) if app else None
+    acts = [len(st.get("do", [])) for p in pages for st in p.get("plan", [])]
+    off = sum(1 for p in pages for x in p.get("numbers", []) if x.get("severity") in OFF_READER or x.get("propose"))
+    off += sum(1 for p in pages for st in p.get("plan", []) if (st.get("proof") or {}).get("severity") in OFF_READER)
+    return {
+        "nKinds": str(len(kinds)), "nGroups": str(len(kinds_doc["groups"])),
+        "nPicked": str(sum(1 for k in kinds if k["scope"] == "specific" and k["pick"])),
+        "nGeneral": str(sum(1 for k in kinds if k["scope"] == "general")),
+        "feltRead": rng([p["felt"]["nSampled"] for p in felt]),
+        "feltUsed": rng([p["felt"]["nUsed"] for p in felt]),
+        "agreeCross": rng([round(100 * p["felt"]["agreementCross"]["within1"]) for p in felt if p["felt"].get("agreementCross")], lambda v: f"{v}%"),
+        "fewStages": "; ".join(f"{k} on {' and '.join(v)}" for k, v in few.items()) or "none",
+        "appPages": ", ".join(p["tab"].lower() for p in app) or "none",
+        "app1": f"{day(1):,}" if day(1) else "?", "app30": f"{day(30):,}" if day(30) else "?",
+        "heroProj": ", ".join(f"{x['big']} ({p['tab'].lower()})" for p in pages if (x := hero(p, "hope-lifetime"))) or "none",
+        "heroCount": ", ".join(f"{p['tab'].lower()} {x['big'][:1].lower() + x['big'][1:]}" for p in pages if (x := hero(p, "hope-free-now"))) or "none",
+        "noHero": " and ".join(p["tab"].lower() for p in pages if not hero(p, "hope-free-now") and not hero(p, "hope-lifetime")) or "no page",
+        "planActions": rng(acts) if acts else "?",
+        "dangerPages": " and ".join(p["tab"].lower() for p in pages if p["danger"]) or "no page",
+        "noteLine": " ".join(f"On the {p['tab'].lower()} page: one small “Before you stop” line above the sources: “{p['footer']['text']}”" for p in pages if p.get("footerLevel") == "note"),
+        "offCards": str(off),
+    }
+
+
+def fill_review(obj, facts, where="decisions"):
+    if isinstance(obj, str):
+        for t in re.findall(r"\{(\w+)\}", obj):
+            if t not in facts:
+                P(28, where, f"unknown fact {{{t}}} in review text")
+        return re.sub(r"\{(\w+)\}", lambda m: facts.get(m.group(1), m.group(0)), obj)
+    if isinstance(obj, list):
+        return [fill_review(x, facts, where) for x in obj]
+    if isinstance(obj, dict):
+        return {k: fill_review(v, facts, f"{where}.{obj.get('id', k)}") for k, v in obj.items()}
+    return obj
+
+
+def check_asserts(decisions, pages, kinds):
+    """Rule 28: a review sentence about specific pages carries an 'assert' the build re-checks against those pages."""
+    byid = {p["id"]: p for p in pages}
+    for sec in ("decisions", "choices", "weak"):
+        for d in decisions.get(sec, []):
+            a = d.pop("assert", None) or {}
+            w = f"review {sec} {d.get('id') or d.get('title', '')[:40]!r}"
+            for pid, ks in (a.get("noKinds") or {}).items():
+                for x in byid[pid].get("numbers", []):
+                    if x["kind"] in ks and kinds[x["kind"]]["pick"]:
+                        P(28, w, f"says {pid} has no {x['kind']} number, but it has {x.get('big')!r}")
+            for pid in a.get("allWeak") or []:
+                for x in byid[pid].get("numbers", []):
+                    if not x.get("weak"):
+                        P(28, w, f"says every {pid} card carries a Weak label, but {x.get('big')!r} has none")
+            if "dangerPages" in a and sorted(a["dangerPages"]) != sorted(p["id"] for p in pages if p["danger"]):
+                P(28, w, f"names danger pages {a['dangerPages']}, the pages say {[p['id'] for p in pages if p['danger']]}")
+            if "maxChoices" in a and len(decisions.get("choices", [])) > a["maxChoices"]:
+                P(27, w, f"{len(decisions['choices'])} choices ({a['maxChoices']} max)")
+            if "rec" in a:
+                for cid, rec in a["rec"].items():
+                    c = next((c for c in decisions.get("choices", []) if c["id"] == cid), None)
+                    if not c or c.get("rec") != rec:
+                        P(28, w, f"assumes choice {cid} recommends {rec!r}")
 
 
 def main():
@@ -244,6 +393,23 @@ def main():
                 P(14, pid, f"picked kind {kid} is empty and has no gap note")
         bs = page.get("beliefs", [])
         page.setdefault("heroLine", None)
+        if not any(kinds.get(x["kind"], {}).get("where") in ("hero", "hero-second") and kinds[x["kind"]]["pick"] for x in nums):
+            g = next((g for g in page.get("gaps", []) if g.get("kind") == "hope-free-now" and g.get("reader")), None)
+            gr = page.get("gapReaderLine")
+            if not (g or (isinstance(gr, dict) and gr.get("text")) or isinstance(gr, str)):
+                P(15, pid, "no hope number, and 'Who gets free, and how' has no plain line saying so (gapReaderLine)")
+        if page["heroLine"]:
+            lint(page["heroLine"], pid, f"{pid} hero line")
+            if figs(page["heroLine"]):
+                P(15, pid, f"the hero line has a figure but is not a checked number: {page['heroLine']}")
+        gr = page.get("gapReaderLine")
+        if gr:
+            lint(gr if isinstance(gr, str) else gr.get("text", ""), pid, f"{pid} gap reader line")
+        if page.get("feltHeadlineProposal"):
+            lint(page["feltHeadlineProposal"].get("text", ""), pid, f"{pid} graph headline")
+        for g in page.get("gaps", []):
+            if g.get("reader"):
+                lint(g["reader"], pid, f"{pid} gap line {g.get('kind')}")
         if not 3 <= len(bs) <= 5:
             P(22, pid, f"{len(bs)} beliefs (3 to 5)")
         for i, b in enumerate(bs):
@@ -253,10 +419,18 @@ def main():
                     P(22, w, f"{f} missing")
             if b.get("severity") not in SEVERITY:
                 P(3, w, f"severity {b.get('severity')!r} unknown")
-            if b.get("kind") == "moderation" and b.get("severity") in OFF_READER:
-                P(4, w, "a moderation belief answered with a source about non-addicts")
+            # rule 4: a moderation belief is answered only by a source that counted people who were hooked; a proof
+            # that says "not checked for addiction" can't answer it (that row is another kind, or it goes)
+            if b.get("kind") == "moderation" and b.get("severity") not in MOD_OK:
+                P(4, w, f"a moderation belief answered with {b.get('severity')} people (needs {', '.join(sorted(MOD_OK))})")
+            if b.get("kind") == "moderation" and re.search(r"not checked", b.get("proof") or "", re.I):
+                P(4, w, "a moderation belief whose proof says 'not checked for addiction'")
             if wc(b.get("proof")) > 40:
                 P(8, w, f"proof is {wc(b['proof'])} words (40 max)")
+            if figs(b.get("proof")) > 2 and not b.get("ownWords"):   # rule 26: his own v10 sentence stays word for word
+                P(12, w, f"proof has {figs(b.get('proof'))} figures (2 max): {b.get('proof')}")
+            if verdict(b.get("proof")):
+                P(6, w, f"proof opens with a verdict: {verdict(b.get('proof'))!r}")
             c = b.get("check") or {}
             if not (c.get("by") and c.get("verdict") == "ok"):
                 P(16, w, "proof not passed by a separate source checker")
@@ -270,7 +444,24 @@ def main():
             if len(st.get("do", [])) < 3:
                 P(21, f"{pid} plan step {i + 1}", f"{len(st.get('do', []))} actions (3 or more)")
             lint(reader_text(*st.get("do", [])), None, f"{pid} plan step {i + 1}")
+            for d in st.get("do", []):
+                if VERDICT_WORDS.search(d):
+                    P(6, f"{pid} plan step {i + 1}", f"an action that is a verdict, not a thing to do: {VERDICT_WORDS.search(d).group(0)!r} in {d[:60]!r}")
             if st.get("proof"):
+                pt = st["proof"].get("text", "")
+                if figs(pt) > 2 and not st["proof"].get("ownWords"):
+                    P(12, f"{pid} plan step {i + 1} proof", f"{figs(pt)} figures (2 max): {pt}")
+                if verdict(pt):
+                    P(6, f"{pid} plan step {i + 1} proof", f"opens with a verdict: {verdict(pt)!r}")
+                alt = st["proof"].get("alt")
+                if alt:
+                    check_ref(alt.get("ref"), f"{pid} plan step {i + 1} stand-in proof")
+                    lint(alt.get("text", ""), pid, f"{pid} plan step {i + 1} stand-in proof")
+                    if alt.get("severity") in OFF_READER:
+                        P(3, f"{pid} plan step {i + 1} stand-in proof", "the stand-in for an off-reader proof is off-reader too")
+                ps = st["proof"].get("severity")
+                if ps is not None and ps not in SEVERITY:
+                    P(3, f"{pid} plan step {i + 1} proof", f"severity {ps!r} unknown")
                 check_ref(st["proof"].get("ref"), f"{pid} plan step {i + 1} proof")
                 if re.search(r"×|\b\d+(?:\.\d+)?\s?times\b|\b1 in \d|for every \d+", st["proof"].get("text", "")):
                     P("12a", f"{pid} plan step {i + 1} proof", "a what-helps figure as a ratio or '1 in N'")
@@ -282,7 +473,22 @@ def main():
                 P(19, f"{pid} window {w['label']}", "a trigger row shows when, never how strong")
             if w["kind"] == "danger" and not page["danger"]:
                 P(5, f"{pid} window {w['label']}", "danger row on a page with no sourced danger")
+            for f in ("label", "when"):
+                if figs(w.get(f)) > 2:
+                    P(12, f"{pid} body row {w['label'][:30]!r}", f"{f} has {figs(w.get(f))} figures (2 max): {w.get(f)}")
+                if verdict(w.get(f)):
+                    P(6, f"{pid} body row {w['label'][:30]!r}", f"{f} opens with a verdict: {verdict(w.get(f))!r}")
+            if not (isinstance(w.get("s"), (int, float)) and isinstance(w.get("e"), (int, float)) and 0 < w["s"] <= w["e"]):
+                P(18, f"{pid} body row {w['label'][:30]!r}", "needs a start and end in hours (s <= e) to be drawn as a bar")
+            elif w.get("pk") is not None and not w["s"] <= w["pk"] <= w["e"]:
+                P(18, f"{pid} body row {w['label'][:30]!r}", "peak outside its start and end")
+            lint(reader_text(w.get("label"), w.get("when"), w.get("note")), pid, f"{pid} body row")
+        # the 06 line under the body rows ("Many people get less than this.") stays unless the v3 page replaces it (rule 25)
+        page["timelineNote"] = page.get("timelineNote", o.get("timelineNote")) if page["windows"] else None
+        if page["timelineNote"]:
+            lint(page["timelineNote"], pid, f"{pid} body note")
         page["footer"] = o.get("footer") if page["danger"] else None
+        page["footerLevel"] = "danger" if page["footer"] else None
         af = V3 / "felt" / f"{pid}-app.json"
         if af.exists():
             page["app"] = json.loads(af.read_text())
@@ -291,9 +497,17 @@ def main():
                 P(16, f"{pid} app data", "not passed by a separate source checker")
         # refs a v3 page adds for its own rows (01-04 stay as they are) and a checked footer override
         extra = {r["id"]: {**r, "fetched": True} for r in page.pop("researchRefsToAdd", [])}
-        if page.get("footerProposal") and page["danger"]:
-            page["footer"] = {k: page["footerProposal"][k] for k in ("text", "refs")}
-        page.pop("footerProposal", None)
+        # a footer line needs a source that ties the risk to this drug or to quitting it (rule 5): on a danger page it
+        # replaces 06's, elsewhere it is a single small note (nicotine: clozapine and olanzapine), never up front
+        fp = page.pop("footerProposal", None)
+        if fp:
+            if not fp.get("refs"):
+                P(5, f"{pid} footer", "a footer line without a source")
+            if not page["danger"] and wc(fp.get("text")) > 40:   # a note stays small; a danger footer names every sign
+                P(8, f"{pid} footer", f"footer line is {wc(fp.get('text'))} words (40 max)")
+            lint(fp.get("text", ""), pid, f"{pid} footer")
+            page["footer"] = {k: fp[k] for k in ("text", "refs")}
+            page["footerLevel"] = "danger" if page["danger"] else "note"
         number_sources(page, {**{r["id"]: r for r in research[pid]["refs"]}, **extra}, kinds)
         ff = V3 / "felt" / f"{pid}.json"
         if ff.exists():
@@ -305,11 +519,15 @@ def main():
             P(18, pid, "no felt-difficulty file")
         pages.append(page)
 
+    if len(decisions.get("choices", [])) > 7:
+        P(27, "review", f"{len(decisions['choices'])} choices (7 max)")
+    check_asserts(decisions, pages, kinds)
+    decisions = fill_review(decisions, review_facts(pages, kinds_doc))
     for page in pages:
         # the v3 graph replaces round 2's milestone list; list them on the review page so nothing drops silently (rule 25)
         nu = page.setdefault("notUsed", {})
         if isinstance(nu, dict):
-            nu["milestones"] = [{"label": f"{m.get('when')}: {m.get('text')}", "why": "Round 2 milestone. The v3 graph and the body rows replace the milestone list; say in a note if one should come back."} for m in page.get("milestones", [])]
+            nu["milestones"] = nu.get("milestones") or [{"label": f"{m.get('when')}: {m.get('text')}", "why": "Round 2 milestone. The v3 graph and the body rows replace the milestone list; say in a note if one should come back."} for m in page.get("milestones", [])]
         page.pop("milestones", None)
         sanitize(page)
     sanitize(general)
@@ -334,6 +552,20 @@ def main():
     print(priv.stdout.strip())
     if priv.returncode:
         P(30, "privacy", "forum text found (see above)")
+    # the rendered pages themselves (rules 24, 27, 28): every reader view at 390 and 1280 px, and the review page
+    rc = HERE / "check_render_v3.mjs"
+    if rc.exists() and shutil.which("node") and not os.environ.get("NO_RENDER_CHECK"):
+        r = subprocess.run(["node", str(rc), str(dest)], capture_output=True, text=True, timeout=900, cwd=str(REPO.parent.parent.parent))
+        for line in r.stdout.splitlines():
+            m = re.match(r"FAIL (\S+) (.*?): (.*)", line)
+            if m:
+                P(m.group(1), "rendered " + m.group(2), m.group(3))
+            else:
+                print(line)
+        if r.returncode and "FAIL" not in r.stdout:
+            P(29, "render check", (r.stderr or "did not run").strip().splitlines()[-1][:300])
+    else:
+        print("render check skipped (no node, or NO_RENDER_CHECK set)")
     print(f"{len(pages)} pages, {len(html) // 1024} KB -> {dest}")
     for p in pages:
         print(f"  {p['id']}: {len(p.get('numbers', []))} numbers, {len(p.get('beliefs', []))} beliefs, empty kinds: {', '.join(p['empty']) or 'none'}")

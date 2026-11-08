@@ -1,0 +1,150 @@
+{
+ "id": "alcohol",
+ "part": "a",
+ "by": "revision checker a, rev3 (alcohol), 2026-11-08",
+ "scope": "numbers[0,3,5..15] (first 13 of 26 changed items), plus footerProposal and researchRefsToAdd as asked",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "42 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMC3227547 re-read (NCBI efetch full text): n=4,781; Table 3 'Alcohol remission (N=2,008)'; remission = 'finally stopped having any of these experiences ... never started happening again' supports 'free of every sign'; over-report and 18-29 HR 0.77 confirmed. New caveat pointer matches Dawson 2007 (27.2 vs 7.3)."
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "Age 38",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMC5992615 full text: ALC M = 37.86 (99% CI 36.50, 39.21), quote word for word with ellipsis; Table 1a alcohol n = 1013 (weighted); first use 14.90, 'Age of Weekly Use' 19.02, career 18.39; July-August 2016. No use level in the paper, so 'how much they drank is not reported' is right. New caveat sentence is safe and points to a dependent-tagged card."
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "44 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMC6076174 full text: Table 3 'Factors associated with choosing assisted (54%) vs. unassisted problem resolution.', Alcohol 55.9; Alcohol 51.2% of sample; lifetime AUD/SUD diagnosis 17.0. 100-55.9 = about 44. Only basis.who changed vs pages/alcohol.json. Side note, not a fix: rev2 had a caveat pointer 'No help is not no doctor: if you drank heavily every day, read Before you stop'; it is already gone from pages/alcohol.json (2026-11-06 edit), so rev3 drops nothing, but the going-alone card again has no tie to the footer."
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "2 tries",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMC6602820 full text: Alcohol 5.38 (13.45), median 2 (1, 4), 0, 100; question wording confirmed. Headline 15 words, 1 figure; nothing lost (max 100 stays in Measured)."
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "87% less",
+   "verdict": "ok",
+   "problems": [
+    "Kind how-slips to after-lasting leaves how-slips empty on this page and puts two cards on after-lasting (also numbers[17]); fine by the kinds menu (after-lasting allows treatment), but the build's empty-kinds list will now show how-slips."
+   ],
+   "notes": "PMID 11327187 abstract re-read: 1 in 4 abstinent, 1 in 10 moderate without problems, 'abstaining on 3 days out of 4 and reducing their overall alcohol consumption by 87%, on average', conversion equations; quote word for word (26 words). 'broadly defined as alcohol use disorders' supports the new moderation caveat (mild cases included)."
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "7 vs 27 in 100",
+   "verdict": "ok",
+   "problems": [
+    "Headline no longer says when (3 years); basis.when keeps it. Not more hopeful, so ok."
+   ],
+   "notes": "PMID 18034696 abstract re-read: 27.2% low-risk, 7.3% abstainers, 51.0% asymptomatic risk; dependence 4.0 / 2.9; 1,772 re-interviewed; age modifier. Quote word for word (26 words). The 645/696 arm sizes and the 'fewer than 14 drinks' wording are in the full text only (Wiley, paywalled); not re-fetched by me; those fields are unchanged in rev3."
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "36 vs 23 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMID 14745302 abstract: 36.1% vs 23.4% continuous abstinence at 6 months, 17 trials, 4087, 53% active, Merck-Sante internal reports; quote word for word. Headline 16 words, 2 figures; the 6 months stays in Measured."
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "42 vs 35 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMC7065341 abstract (NCBI efetch): RR 1.21 (1.03 to 1.42), 2 studies, 1936; consistent at 24 and 36 months; 'non-coerced adults with AUD'; 27 studies, 10,565; searched to 2 August 2019; drinks per drinking day 'as well as'. Summary-of-findings per-1000 row not in the fetched text, but 345 x 1.21 = 417.5, so 418/1000 is the assumed control risk times the RR: projection true and 'expected' are right, and 'about' is present. Headline 20 words, 2 figures."
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "62 vs 43 in 100",
+   "verdict": "fix",
+   "problems": [
+    "'free years later' is vaguer than the source (remission at 3 years) and, beside Measured's 16-year relapse figures, can read as free 16 years on: more hopeful than the source. 'a few years on' says 3 without a figure; 'early' keeps 22 words, and Measured now says what early means."
+   ],
+   "fix": {
+    "numbers[11].headline": "62 in 100 problem drinkers who got treatment or AA early were free a few years on; 43 in 100 without.",
+    "numbers[11].basis.measured": "Help: treatment or AA in the first year after first seeking help. Free at 3 years: no drinking or moderate drinking in each of the past 6 months, no drinking problems, no intoxication in the past month. Of those free at 3 years, 60.5% without help and 42.9% with help slid back by year 16."
+   },
+   "notes": "PMC1976118 full text via WebFetch: 62.4% vs 43.4% at 3 years (quote ok); n 362 / 99; 12.5 ounces of ethanol (SD 11.2) on a typical drinking day (alsoQuote word for word; /0.6 oz = about 21, 'about 20' ok); age 33.5, 49.7% men; first contact via I&R centre or detox; help 'in the first year'. Severity treatment fits first-time help-seekers."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "26% lower",
+   "verdict": "fix",
+   "problems": [
+    "Severity 'users' and Counted 'not addicts' overstate what the source shows. The entry bar was >64 g a week, but the stopping group averaged 258.2 g a week (about 32 UK units, over twice the guideline), the authors call them 'moderate–heavy drinkers', and 61.0% scored as harmful use on the AUDIT at baseline. Only known dependence was excluded; nobody was checked for it. That is rule 3's 'heavy' (not checked for addiction), which after-first-month allows.",
+    "26% is the median of each person's change (IQR -48.6% to +0.3%), not a group average; 'about' covers it."
+   ],
+   "fix": {
+    "numbers[12].severity": "heavy",
+    "numbers[12].counted": "regular drinkers, most above the guidelines, not checked for addiction; anyone known to be hooked was kept out"
+   },
+   "notes": "PMC5942469 full text (Europe PMC XML): >64 g/week men, >48 g/week women; exclusion 'known liver disease or alcohol dependence'; 94 stopped, mean age 45.5; 47 controls; HOMA paired n 86; HOMA -25.9%, systolic -6.6%, diastolic -6.3%, weight -1.5%; no significant change in controls; quote word for word."
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "45 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMID 22404692 abstract: 137 patients, median 150 g/d (about 11 US drinks), 2007-2010, median LS 7.2 to 6.1 kPa, 62 (45.3%) significant drop, 32 (23.3%) lower fibrosis stage, 16 (11.7%) up; quote word for word. 'a real drop' = per-patient p<0.05, as the caveat says."
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "42 to 6 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMID 3216643 abstract: 191 male primary alcoholics, Hamilton >=20, 42% at intake, 6% at Week 4, largest drop at Week 2; quote word for word. No use level in the abstract."
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "25 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "PMID 15733237 abstract: 4,422 PPY dependent of 43,093; 25.0 still dependent, 27.3 partial remission (= 'some signs left'), 11.8, 17.7, 18.2; 25.5% ever treated; quote word for word with ellipsis. Headline 20 words, 2 figures. Caveat's contrast with the 42 in 100 hero is right: Lopez-Quintero counts all lifetime dependence and 'stopped having any' criteria."
+  },
+  {
+   "where": "footer",
+   "index": 0,
+   "label": "footerProposal (emergency footer)",
+   "verdict": "fix",
+   "problems": [
+    "'6 or 7 pints of beer' holds only for 4% beer (15 units = 6.5 pints at 4%, 5.4 pints at 5%). A man on 5 or 6 pints of 5% lager is over NICE's line but reads himself as under it. That is the unsafe direction, so the pint range must cover strength."
+   ],
+   "fix": {
+    "footerProposal.text": "Drinking heavily every day (UK doctors draw the line at about 15 units a day, 5 to 7 pints of beer depending on strength), shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Talk to a doctor before you stop or cut back sharply: seizures can come 8–48 hours later, and each withdrawal can be worse. A seizure, confusion, seeing or hearing things, or visible shaking after you stop drinking is an emergency: call an ambulance."
+   },
+   "notes": "All three quotes fetched 2026-11-08 and word for word, each 30 words or fewer: NHS alcohol-use-disorder (last reviewed 24 April 2026) 'Call 999 or go to A&E if: ... shaking visibly' (24 words), list goes on: restless/irritable/upset, confusion, seeing/hearing/feeling things, seizure; NHS alcohol-support (last reviewed 17 August 2026) morning-signs quote (27 words); NICE CG115 1.3.4.1 '...over 15 units of alcohol per day and/or who score 20 or more on the AUDIT...' (27 words). Emergency line counts each sign alone, as NHS does. It leaves out NHS's 'unusually restless, irritable or upset'; acceptable, since that overlaps with mild withdrawal and the footer must stay small (rule 5). '8–48 hours' and 'each withdrawal can be worse' match ASAM r1. Refs r1 and r3 exist in 01-sedatives-opioids.json alcohol; r19 and r20 are new, with no id clash."
+  },
+  {
+   "where": "refs",
+   "index": 0,
+   "label": "researchRefsToAdd r18, r19, r20",
+   "verdict": "ok",
+   "problems": [],
+   "notes": "r19 and r20 cites, URLs, review dates and quotes match the live NHS pages word for word. Research file alcohol refs end at r17, so r18-r20 are free ids. I did not re-fetch r18 (Mirijello 2015); the timeline windows it serves are part b."
+  }
+ ]
+}

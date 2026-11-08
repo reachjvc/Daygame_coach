@@ -1,0 +1,176 @@
+{
+ "id": "nicotine",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "quit-status 81 in 100 never used help (Chou 2016)",
+   "verdict": "ok",
+   "problems": [
+    "Checked as overlap with part a (25 changed items, odd count). PMC8154113 refetched: quote word for word; Table 5 lifetime any NUD 18.75%, severe 27.78%; 20.0%/27.9% prevalence, n=36,309. 100-18.8 = about 81. No lifetime head count printed, so 'Head count not stated' is right. Old caveat figures moved to Measured, not dropped."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "after-lasting 90 in 100 stay off one more year (Hughes 2008)",
+   "verdict": "fix",
+   "problems": [
+    "PMC2577779: main quote in abstract word for word; quote2 and quote3 confirmed in full text (Discussion / Introduction; quote3 continues 'and this decreased to < 5%'). Headline is the complement of the 10% pooled yearly rate, with 'about' and 'expected': ok. Measured calls the 1982-84 survey a 'national US health survey follow-up'; source names it the NHANES Follow-up Study, retrospective: acceptable. Counted label 'people off a year after quit-medicine trials' reads as 'a year after the trials ended'; they were off at one year after quit day inside the trials."
+   ],
+   "fix": {
+    "numbers[14].counted": "people still off a year into quit-medicine trials"
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: 84 in 100 projected to get free; half took about 26 years",
+   "verdict": "ok",
+   "problems": [
+    "PMC3227547: both quotes found (83.7%; 'approximately 26 … years', ellipses cut other drugs only). Severity dependent matches DSM-IV dependence sample. 'projected' present. Dropped sentence 'The real share is likely lower…' has notUsed.proofs[8]."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "hard: withdrawal peaks week 1, gone by week 2-4 (Hughes 2007)",
+   "verdict": "ok",
+   "problems": [
+    "PubMed 17365764: quote word for word. Proof names 5 of the 7 symptoms (concentration, impatience left out); still not more hopeful, same time course. Severity users fits (review does not say who was checked). Old Shiffman proof has notUsed.proofs[7] and alsoRef. Test split Still using/Already off: safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "harmless: 83 in 100 who smoked in week 2 were smoking at 6 months (Kenford 1994)",
+   "verdict": "ok",
+   "problems": [
+    "PubMed 8301790: quote word for word; daily smokers >=15/day, CO >=10 ppm, 21-65, 88 and 112 subjects confirmed. Uses the cautious 83 (study 1; study 2 was 97). 'Not checked for addiction' is true (only FTQ score). Severity treatment fits trial patients. Kind moved moderation to harmless, so rule 4 no longer applies. Two figures."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "step 1 actions (Still using? / belief tests this week)",
+   "verdict": "ok",
+   "problems": [
+    "No figures, no source. Nothing dropped from the old actions; action 1 only extended. Safe for nicotine."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 actions (action 5 slogan dropped)",
+   "verdict": "fix",
+   "problems": [
+    "Old action 5 text 'Each one is a complete success, however loud the urge was.' left the page with no notUsed entry (rule 25: removal on a critic's word, not the owner's)."
+   ],
+   "fix": {
+    "notUsed.other[+]": {
+     "from": "v3 plan step 3 action 5, second sentence",
+     "text": "Each one is a complete success, however loud the urge was.",
+     "why": "Owner-lens critic (r3 vmix blocker, show don't tell): a slogan, not an action. Proposed to remove; awaits owner."
+    }
+   }
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 proof: most relapses in first 8 days (Hughes 2004)",
+   "verdict": "ok",
+   "problems": [
+    "PubMed 14678060: quote word for word. Self-quitters plus no-treatment control groups = 'quitting without help': fair. Severity users and 'not checked for addiction' match. One figure."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 3,
+   "label": "step 4 proof: 8 in 100 self-called non-smokers relapsed (Callaghan 2021)",
+   "verdict": "ok",
+   "problems": [
+    "PMC7572756 Table 2: trying to quit 14 / 71.4%, non-smoker 150 / 8.0%; 12-month follow-up. Quote word for word with ellipsis. 'most of the few' is true (71.4% of 14). One figure. Severity users fits. Minor: ref note says Australia 304, UK 240; Table 2 gives 302 and 239 (missing data), note only, not reader text."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof: 23 vs 10 in 100 on varenicline vs dummy pill (Cochrane 2023)",
+   "verdict": "ok",
+   "problems": [
+    "PMC10169257 SoF table: 99 vs 230 per 1000 (213-249), RR 2.32, quote cells found. Per-100 rewrite is plain rounding with 'about'. 'are expected' fits (assumed-risk SoF figures). Severity treatment fits. '41 trials' kept in ref note."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 action 5 vape varenicline + doRefs[1] (Butler 2025)",
+   "verdict": "ok",
+   "problems": [
+    "PubMed 41288132: quote word for word; varenicline vs placebo RR 2.71 (1.33-5.49), 2 studies, 315 participants, low certainty. 'two small trials suggest it may help' matches the review and is softer than the old 'it helped'. Old line kept in was."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 0,
+   "label": "Body: worst in week 1, gone by week 2-4 (Hughes 2007)",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word in PubMed 17365764. Label covers all 7 symptoms. 'Vape-only and pouch-only quitters have not been timed' restored from 06 timelineNote; nothing dropped. Ranges, not a craving curve."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 1,
+   "label": "Lab test: cues pulled harder at day 35 than day 7 (Bedi 2011)",
+   "verdict": "fix",
+   "problems": [
+    "PMC3027849: both quotes found (spacing aside). The difference was on TCQ-SF Total only; groups did not differ on QSU-B Factor 1, so without 'on one of three scales' the row reads stronger than the source. Old reader text 'On one of three craving scales' and 'Craving without cues, and withdrawal, fell over the same days' left the page with no notUsed entry. Still no peak and no fall (rule 19): ok."
+   ],
+   "fix": {
+    "windows[1].when": "A lab test, not everyday craving, and only on one craving scale. Not tested any later.",
+    "notUsed.other[+]": {
+     "from": "v3 timeline row 'Lab test: smoking cues…' (round 2), when",
+     "text": "On one of three craving scales, in a lab. Craving without cues, and withdrawal, fell over the same days.",
+     "why": "r3 vmix minor (process talk, two figures). The scale caveat is kept in plain words; the falling craving and withdrawal stay in note.quote and in body row 1."
+    }
+   }
+  },
+  {
+   "where": "windows",
+   "index": 2,
+   "label": "Weight up, most by month 3; 16 in 100 estimated to lose weight (Aubin 2012)",
+   "verdict": "ok",
+   "problems": [
+    "PubMed 22782848: quote word for word; 4-5 kg at 12 months, most within three months; 16% calculated from means and SDs, so 'estimated' is right. Untreated quitters = 'measured in smokers'. Two figures."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "windows",
+   "index": 3,
+   "label": "An odd urge, years later: about 1 in 10 (Hughes 2010)",
+   "verdict": "fix",
+   "problems": [
+    "PMC2902924 abstract fetched: 403 former smokers 1-10 years off, internet panel, clinically significant desire in 11%: 'about 1 in 10' ok. Full text blocked by a captcha this session; the 'strong urge at least monthly' definition and the n=22 / 95% quotes rest on the 2026-11-05 checker's full-text read. Old reader text 'more often heavy smokers' and 'None of 22 people 6-10 years off had one' left the page with no notUsed entry. 'Years later' is vague but true (1-5 years for 95%)."
+   ],
+   "fix": {
+    "notUsed.other[+]": {
+     "from": "v3 timeline row 'An odd urge, years later' (round 2), when",
+     "text": "Mostly 1–5 years off: … more often heavy smokers. None of 22 people 6–10 years off had one.",
+     "why": "r3 vmix blocker (3+ figures in one row). Kept in note.quote and note.quote2; proposed to remove from reader text, awaits owner."
+    }
+   }
+  }
+ ]
+}

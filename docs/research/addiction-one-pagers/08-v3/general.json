@@ -4,10 +4,10 @@
   {
    "kind": "gen-tries",
    "big": "3 tries",
-   "headline": "Of people who beat an alcohol or drug problem after at least one serious try, half needed 3 tries or fewer.",
+   "headline": "Of people who beat an alcohol or drug problem with serious tries, half needed 3 or fewer.",
    "mirror": "You've tried to stop before and think you've failed for good.",
    "severity": "resolved",
-   "counted": "people who beat an alcohol or drug problem after a serious try",
+   "counted": "people who say they beat an alcohol or drug problem after a serious try",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot, answered online",
     "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and had made at least one serious try. Alcohol and drugs together: in the whole survey about half named alcohol as the main problem, most others cannabis, cocaine, meth, opioids or other drugs, and about 1 in 8 named no main drug.",
@@ -36,15 +36,16 @@
    "covers": [
     "alcohol",
     "cannabis"
-   ]
+   ],
+   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"3 tries\", \"headline\": \"Of people who beat an alcohol or drug problem after at least one serious try, half needed 3 tries or fewer.\", \"counted\": \"people who beat an alcohol or drug problem after a serious try\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try')."
   },
   {
    "kind": "gen-alone",
-   "big": "46%",
-   "headline": "Of people who beat an alcohol or drug problem, 46% never used treatment, a group like AA, anti-craving medicine or recovery services.",
+   "big": "46 in 100",
+   "headline": "Of people who beat an alcohol or drug problem, 46 in 100 never used treatment, AA-type groups, anti-craving medicine or recovery services.",
    "mirror": "You want to quit on your own and doubt anyone manages it.",
    "severity": "resolved",
-   "counted": "people who beat an alcohol or drug problem",
+   "counted": "people who say they beat an alcohol or drug problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot, answered online",
     "who": "US adults who said yes to 'Did you use to have a problem with drugs or alcohol, but no longer do?'. Alcohol and drugs together: 51% named alcohol as the main problem, 11% cannabis, 10% cocaine, 7% meth, 5% opioids.",
@@ -73,15 +74,16 @@
    "covers": [
     "alcohol",
     "cannabis"
-   ]
+   ],
+   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"46%\", \"headline\": \"Of people who beat an alcohol or drug problem, 46% never used treatment, a group like AA, anti-craving medicine or recovery services.\", \"counted\": \"people who beat an alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try')."
   },
   {
    "kind": "gen-alone",
-   "big": "90%",
-   "headline": "Of people who beat an alcohol or drug problem and had ever been diagnosed with one, 90% had used some help.",
+   "big": "90 in 100",
+   "headline": "Of people who beat an alcohol or drug problem and had been diagnosed with one, 90 in 100 had used some help.",
    "mirror": "Yours got bad enough for a diagnosis; you still want to go it alone.",
    "severity": "resolved",
-   "counted": "people who beat a diagnosed alcohol or drug problem",
+   "counted": "people who say they beat a diagnosed alcohol or drug problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot, answered online",
     "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and said they had ever been diagnosed with an alcohol or other drug use disorder. Alcohol and drugs together.",
@@ -110,7 +112,8 @@
    "covers": [
     "alcohol",
     "cannabis"
-   ]
+   ],
+   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"90%\", \"headline\": \"Of people who beat an alcohol or drug problem and had ever been diagnosed with one, 90% had used some help.\", \"counted\": \"people who beat a diagnosed alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try')."
   },
   {
    "kind": "gen-years",
@@ -118,7 +121,7 @@
    "headline": "Among people who beat an alcohol or drug problem, those free longer rated well-being higher, climbing fast for 6 years, then slower.",
    "mirror": "You wonder if life without it ever gets better than the first weeks.",
    "severity": "resolved",
-   "counted": "people who beat an alcohol or drug problem",
+   "counted": "people who say they beat an alcohol or drug problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot, answered online; people at different stages compared, not followed",
     "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and had resolved it within the past 40 years. Alcohol and drugs together: 59% named alcohol as the main problem.",
@@ -147,7 +150,8 @@
    "covers": [
     "alcohol",
     "cannabis"
-   ]
+   ],
+   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"6 years\", \"headline\": \"Among people who beat an alcohol or drug problem, those free longer rated well-being higher, climbing fast for 6 years, then slower.\", \"counted\": \"people who beat an alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try')."
   }
  ],
  "gaps": [
