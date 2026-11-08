@@ -72,6 +72,8 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
   let online = true
   let conflictCount = 0
   let gate: Promise<void> | null = null
+  /** The next push is written and its answer never arrives: a request that timed out after the server saved it */
+  let loseNextAnswer = false
   const posts: { versioned: boolean; body: PushBody }[] = []
   /** every read asked for, by address */
   const gets: string[] = []
@@ -162,6 +164,10 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
         return { ok: false, status: 409, json: async () => ({ error: "another account", accountChanged: true }) }
       }
       const answer = push(body)
+      if (loseNextAnswer) {
+        loseNextAnswer = false
+        throw new TypeError("Failed to fetch")
+      }
       return { ok: true, status: 200, json: async () => answer }
     }
     const params = new URL(String(url), "http://localhost").searchParams
@@ -200,6 +206,10 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
     row,
     entry: (id: string) => row("timetrack_entries", id),
     linksOf,
+    /** The next push is saved, and its answer is lost on the way back */
+    loseTheNextAnswer() {
+      loseNextAnswer = true
+    },
     /** Hold every POST until the returned function is called */
     holdPosts(): () => void {
       let release: () => void = () => {}

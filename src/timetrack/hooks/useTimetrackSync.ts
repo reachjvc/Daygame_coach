@@ -573,8 +573,12 @@ export function useTimetrackSync({
   const userId = useRef<string | null>(null)
   const cursor = useRef<string | null>(null)
   const flushing = useRef(false)
-  /** The rows of the upload in the air, by `${table}/${key}`: a row put back meanwhile is sent again after it */
-  const sendingNow = useRef(new Set<string>())
+  /**
+   * The upload in the air: its rows as they were queued, by `${table}/${key}`, and
+   * the tag sets it carries. A row put back meanwhile is sent again after it, based
+   * on what was sent (see `takeBackWhatWasPutBack`).
+   */
+  const sendingNow = useRef<{ rows: Map<string, AnyRow>; tags: TagSets }>({ rows: new Map(), tags: {} })
   const ready = useRef(false)
   /** the latest state, for code that runs after an await and would otherwise see a stale one */
   const latestState = useRef<TimetrackState | null>(null)
@@ -1141,7 +1145,7 @@ export function useTimetrackSync({
     }
     /** What actually went, which on the way out may be only part of the queue */
     const went: Partial<TimetrackRows> = batches.length === 1 ? batches[0] : sending
-    sendingNow.current = keysIn(went)
+    sendingNow.current = { rows: indexRows(onlyKeys(queued, keysIn(went))), tags: setsFor(went, queuedSets) }
     try {
       for (const batch of batches) {
         // NOT registered in `inFlight`: an upload outlives the screen that started it (D3)
@@ -1430,7 +1434,7 @@ export function useTimetrackSync({
       }
     } finally {
       flushing.current = false
-      sendingNow.current = new Set()
+      sendingNow.current = { rows: new Map(), tags: {} }
       /**
        * Whatever was queued while that request was in the air goes now, rather
        * than waiting for a status change that may never come. This is the work
@@ -1887,6 +1891,15 @@ export function useTimetrackSync({
    * tombstone, for one that is gone — is queued behind it, and goes when the
    * upload answers, based on the version it wrote.
    *
+   * AND BASED ON WHAT WAS SENT, IN CASE THE ANSWER NEVER COMES. The row put back
+   * kept the base from before the send. When the send was saved and its answer
+   * lost — a request that timed out after the server wrote it — the retry was
+   * refused as stale, and the merge, finding this device's copy equal to that old
+   * base, took the account's: the delete, or "Typo", came back (a code review,
+   * 2026-11-05). Based on the row as sent, the put-back is this device's change
+   * whichever happened; `sent` says the account may hold that row now, so a new
+   * row taken back is no longer taken for one the account never had.
+   *
    * Rows still being changed are left to the merge, and a row whose base was not
    * kept is left queued as before. Returns whether the queue changed.
    */
@@ -1897,6 +1910,7 @@ export function useTimetrackSync({
     const drop = new Set<string>()
     const again: Partial<TimetrackRows> = {}
     const againTags: TagSets = {}
+    const againBases: Bases = {}
     for (const [key, queuedRow] of indexRows(pending.current)) {
       const record = bases.current[key]
       if (changing.has(key) || !record) continue
@@ -1904,20 +1918,26 @@ export function useTimetrackSync({
       const id = key.slice(table.length + 1)
       const now = here.get(key)
       if (!isBackToBase(table, now, record, table === "timetrack_entries" ? (tagsHere.get(id) ?? []) : undefined)) continue
-      const resend = sendingNow.current.has(key)
-        ? (now ?? (canTombstone(table) ? { ...queuedRow, deleted_at: serverNowIso() } : null))
-        : null
+      const sent = sendingNow.current.rows.get(key)
+      const resend = sent ? (now ?? (canTombstone(table) ? { ...queuedRow, deleted_at: serverNowIso() } : null)) : null
       if (!resend) {
         drop.add(key)
         continue
       }
       ;((again as Record<string, AnyRow[]>)[table] ??= []).push(resend)
       if (table === "timetrack_entries" && now && !now.deleted_at) againTags[id] = tagsHere.get(id) ?? []
+      againBases[key] = {
+        ...record,
+        row: sent!,
+        sent: true,
+        ...(table === "timetrack_entries" ? { tags: sendingNow.current.tags[id] ?? record.tags } : {}),
+      }
     }
     if (drop.size === 0 && countRows(again) === 0) return false
     const kept = new Set([...keysIn(pending.current)].filter((key) => !drop.has(key)))
     pending.current = mergeChangeSets(onlyKeys(pending.current, kept), again)
     tagSets.current = { ...tagSets.current, ...againTags }
+    bases.current = { ...bases.current, ...againBases }
     return true
   }, [])
 

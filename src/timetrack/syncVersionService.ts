@@ -65,6 +65,12 @@ export interface BaseRecord {
   row: AnyRow | null
   /** For an entry: its tag ids in that copy */
   tags?: string[]
+  /**
+   * `row` is what an upload carried that may have been saved without this device
+   * hearing of it — a row put back while it was in the air. The account may hold
+   * it, at a version not known here, even when `v` is null.
+   */
+  sent?: true
 }
 
 /** By `${table}/${rowKey}`, the same keys `keysIn` produces */
@@ -105,7 +111,7 @@ function isPlainObject(value: unknown): value is AnyRow {
 export function isBackToBase(table: TableName, now: AnyRow | undefined, base: BaseRecord, tagsNow?: readonly string[]): boolean {
   const gone = (row: AnyRow | null | undefined) => !row || Boolean(row.deleted_at)
   // the account never had it, and the device no longer has it either: created and taken back
-  if (base.v === null) return gone(now)
+  if (base.v === null && !base.sent) return gone(now)
   if (!base.row) return false
   if (gone(now) || gone(base.row)) return gone(now) && gone(base.row)
   if (table === "timetrack_entries" && (!base.tags || !tagsNow || !sameTagSet(base.tags, tagsNow))) return false

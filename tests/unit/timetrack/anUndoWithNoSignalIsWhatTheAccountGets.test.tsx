@@ -188,6 +188,109 @@ describe("on a slow signal, undone while the first send is on its way", () => {
   })
 })
 
+/**
+ * THE SEND IN THE AIR WAS SAVED, AND ITS ANSWER NEVER CAME BACK (a code review,
+ * 2026-11-05). The row put back went again with the base of the row before the
+ * send — but the server had moved on to the version that send wrote, so the retry
+ * was refused as stale, and the merge, finding the device's copy equal to that old
+ * base, took the account's: the delete, or "Typo", came back on the device.
+ */
+describe("on a slow signal, undone while a send is on its way that is saved but never answered", () => {
+  test("a delete: the entry comes back on the account, and stays on the device", async () => {
+    const { account, device } = await openDevice()
+
+    const release = account.holdPosts()
+    account.loseTheNextAnswer()
+    let removed: TimeEntry[] = []
+    device.apply((current) => {
+      const result = deleteEntries(current, ["keep"], new Date().toISOString())
+      removed = result.removed
+      return result.state
+    })
+    await wait(1500)
+    device.apply((current) => restoreEntries(current, removed))
+    await wait(500)
+    release()
+    await wait(20_000)
+
+    expect(account.entry("keep")?.deleted_at ?? null, "the account kept the delete the phone undid").toBeNull()
+    expect(device.latest().entries.some((e) => e.id === "keep"), "the undone delete came back on the phone").toBe(true)
+  })
+
+  test("a Continue: the new entry is gone from the account too, though the account may have saved it", async () => {
+    const { account, device } = await openDevice()
+    const timer = runningId(device.latest())
+
+    const release = account.holdPosts()
+    account.loseTheNextAnswer()
+    let started: string | null = null
+    device.apply((current) => {
+      const result = continueEntry(current, "keep", new Date().toISOString())
+      started = result.started!.id
+      return result.state
+    })
+    await wait(1500)
+    device.apply((current) => undoDisplacement(current, started!, timer, new Date().toISOString()).state)
+    await wait(500)
+    release()
+    // the answer is lost, the retry waits; meanwhile the phone goes on being used, which runs the queue's checks again
+    await wait(100)
+    device.apply((current) => updateEntry(current, "keep", { description: "Keep me, really" }, new Date().toISOString()).state)
+    await wait(20_000)
+
+    expect(account.entry(timer)?.stopped_at ?? null, "the account kept the stop the phone undid").toBeNull()
+    const third = account.entry(started!)
+    expect(third && !third.deleted_at ? third : null, "the new entry the phone undid stayed on the account").toBeNull()
+  })
+
+  test("a rename: the account and the device keep the name it was put back to", async () => {
+    const { account, device } = await openDevice()
+    const timer = runningId(device.latest())
+    const rename = (description: string) => (current: TimetrackState) =>
+      updateEntry(current, timer, { description }, new Date().toISOString()).state
+
+    const release = account.holdPosts()
+    account.loseTheNextAnswer()
+    device.apply(rename("Typo"))
+    await wait(1500)
+    device.apply(rename("Running task"))
+    await wait(500)
+    release()
+    await wait(20_000)
+
+    expect(account.entry(timer)?.description, "the account kept the name the phone put back").toBe("Running task")
+    expect(device.latest().entries.find((e) => e.id === timer)?.description, "\"Typo\" came back on the phone").toBe("Running task")
+  })
+
+  /**
+   * The other side of the same doubt: the send in the air was NOT saved. The
+   * row put back is based on what was sent, so making the change again matches
+   * that base — and must still go, since the account may never have had it.
+   */
+  test("a send that never landed, put back and then made again: the account gets it", async () => {
+    const { account, device } = await openDevice()
+    const timer = runningId(device.latest())
+    const rename = (description: string) => (current: TimetrackState) =>
+      updateEntry(current, timer, { description }, new Date().toISOString()).state
+
+    const release = account.holdPosts()
+    device.apply(rename("Typo"))
+    await wait(1500)
+    device.apply(rename("Running task"))
+    await wait(500)
+    account.online = false
+    release()
+    await wait(100)
+    device.apply(rename("Typo"))
+    await wait(500)
+    account.online = true
+    await wait(20_000)
+
+    expect(account.entry(timer)?.description, "the name made again never reached the account").toBe("Typo")
+    expect(device.latest().entries.find((e) => e.id === timer)?.description).toBe("Typo")
+  })
+})
+
 describe("a change that is not put back", () => {
   test("is still sent, with no signal, when the signal returns", async () => {
     const { account, device } = await openDevice()

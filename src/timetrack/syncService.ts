@@ -304,7 +304,6 @@ export function withServerTagLinks(
   return { ...rows, timetrack_entry_tags: links }
 }
 
-/** Every row key in a change set, so the caller knows what is still in flight */
 /**
  * A LIVE ANSWER SPEAKS FOR EVERY ROW THIS DEVICE HOLDS.
  *
@@ -329,6 +328,7 @@ export function liveAnswerCovers(answer: TimetrackRows, held: (Partial<Timetrack
   return true
 }
 
+/** Every row key in a change set, so the caller knows what is still in flight */
 export function keysIn(rows: Partial<TimetrackRows>): Set<string> {
   const keys = new Set<string>()
   for (const table of TIMETRACK_TABLES) {
