@@ -503,6 +503,12 @@
   "changed": true,
   "changeNote": "rev4 (2026-11-08): r4 owner major: the generic gap labels ('talk therapy or a group, with it and without' right under a talk-therapy card; 'stopping fully against cutting down') read as a contradiction and jargon. The owner-lens wording."
  },
+ "rev5": {
+  "round": "rev5",
+  "on": "2026-11-08",
+  "by": "data agent (rev5)",
+  "note": "After gates round 5 (r5-owner, r5-rules, r5-cold-nicotine) and decisions E1–E6. Changed items: changed true, changeNote (rev5 …), old values in wasR4 by field path, previous changeNote in changeNoteR4; check pending."
+ },
  "numbers": [
   {
    "kind": "hope-free-now",
@@ -519,7 +525,7 @@
     "when": "2001–2002",
     "measured": "Whether the signs of being hooked had finally stopped and never come back, as people recalled it. Free here means no signs of being hooked any more; it does not have to mean never using."
    },
-   "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today.",
+   "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card).",
    "projection": false,
    "weak": null,
    "ref": {
@@ -536,7 +542,10 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): basis.who adds 'how much they used is not reported' (r4 rules minor: a dependence checklist is not a use level). || Earlier: Round 4 (rev3, 2026-11-08): Headline: the share written 'N in 100', the same figure as the big number and belief 1 (r3 minor 'number formats': '344 of 530' against '65 in 100'; brief rules 5 and 6). The raw 344 of 530 stays in basis.n. Figure, basis and ref unchanged. || Earlier: Round 3 (rev2). Big shown as '65 in 100', one format per kind as on alcohol ('42 in 100'; owner-lens v1 finding on formats). Headline now says what 'free' means, in the alcohol card's words (both cold readers: 'free' was not defined at the top); 'In a national US survey' left to basis.design to stay within 22 words. Caveat: the process note 'the survey's own adjusted figure could differ a little' removed (owner-lens v2, research words and process notes). Quote trimmed to the two table cells, word for word. Figure, n and basis unchanged. PMC full text refetched via NCBI 2026-11-05: Table 1 'Cannabis Dependence (N=530)', Table 3 'Cannabis remission (N=344)'."
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (safety, D10 half-landed): the 71 in 100 pointer now in the count fold too, not only the projection fold.",
+   "wasR4": {
+    "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today."
+   }
   },
   {
    "kind": "hope-lifetime",
@@ -551,7 +560,7 @@
     "n": "530 adults ever hooked on weed (of 43,093 surveyed)",
     "where": "USA",
     "when": "2001–2002",
-    "measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. A projected 66% were free within 10 years."
+    "measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. The model puts about 66 in 100 free within 10 years."
    },
    "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card).",
    "projection": true,
@@ -568,12 +577,15 @@
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[1].weak"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): Caveat ends with the safety pointer to the 71 in 100 card (r4 safety minor, D10): 'free means … not never using' sat at the top with no pointer. Weak chip is D6's one chip 'Worked out, not counted' ('likely runs high' stays in the caveat: 'the true share is probably lower'). basis.who adds the use-level phrase (r4 rules minor). || Earlier: Round 4 (rev3, 2026-11-08): Caveat: deleted the ethnic-group sentence (owner-lens r3 major: every group below the total looks like an error to a reader checking the hope number; the paper gives both figures and does not explain the gap). Sentence and its source quote moved to notUsed.numbers. '344 of the 530' in the caveat now 'about 65 in 100', the hero's figure (brief rules 5 and 6). Weak chip in the one wording used on every page ('Projection, likely runs high', owner-lens r3 hero finding). Big stays '97%' (build rule 12b allows his v10 hero projection in %). || Earlier: Round 3 (rev2), task A0: weak chip cut to 6 words; its long reason (each ethnic group's projection runs from 82% to 96%, all below 97%) moved into the caveat, with the source sentence in alsoRef (81.6% to 95.6%, rounded). The authors' own limit ('institutionalized individuals ... may have not been sampled, leading to overestimation of the cumulative probability of remission') still backs 'probably lower'. Figure, headline, mirror, basis and ref unchanged. PMC full text refetched via NCBI 2026-11-05.",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds).",
    "revNotes": [
     "main session fix 2026-11-08 after rev3 build: rule 12b: 97% written as 97 in 100"
-   ]
+   ],
+   "wasR4": {
+    "basis.measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. A projected 66% were free within 10 years."
+   }
   },
   {
    "kind": "who-years",
@@ -592,7 +604,7 @@
    },
    "caveat": "A projection from recalled ages, not a head count. Those not free by year 6 kept getting free later: the same model projects 97 in 100 in a lifetime. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women. Weed was weaker in 2001 than today.",
    "projection": true,
-   "weak": "Worked out, not counted",
+   "weak": null,
    "ref": {
     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
@@ -607,8 +619,11 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): Weak chip per D6; basis.who adds the use-level phrase. Kind still off. || Earlier: Round 4 (rev3, 2026-11-08): Weak chip in the one wording used for this projection on every page; '97%' in the caveat written as '97 in 100' (brief rule 6). Kind still off in the menu. || Earlier: Round 3 (rev2), task C: the old mirror ('You've been hooked for years and think it's too late') was confirmed, not answered, for a man hooked longer than 6 years (cold reader v1: 'am I in the worse half?'). The new mirror is one the figure answers (half free about 6 years after getting hooked, not decades). The caveat now says the rest kept getting free after year 6 (the same paper's 97.2% lifetime projection). Weak chip cut to 6 words, the same text as the 97% card from the same paper (task A0). Figure, headline, basis and ref unchanged; PMC full text refetched via NCBI 2026-11-05 ('Half of the cases of ... cannabis ... dependence remitted approximately ... 6 ... years after dependence onset').",
-   "timeIsResult": true
+   "changeNote": "rev5 (2026-11-08): r5-rules major (D6, rule 10): the Weak 'Worked out, not counted' repeated the projection chip ('…; worked out'); the chip says it once.",
+   "timeIsResult": true,
+   "wasR4": {
+    "weak": "Worked out, not counted"
+   }
   },
   {
    "kind": "who-age",
@@ -625,7 +640,7 @@
     "when": "July–August 2016",
     "measured": "Age when the problem ended, as people remembered it. On average they first used weed at 15 and weekly at about 17. The paper puts the time from their first use of any substance to the end of the problem at about 12 years."
    },
-   "caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in.",
+   "caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in.",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -640,9 +655,12 @@
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[3].basis.n"
+    "notes": "checked after revision: corrections applied to numbers[3].caveat"
    },
-   "changeNote": "rev4 (2026-11-08): basis.n: one figure for the same weed group on all three cards (r4 rules minor: 'About 217' vs 'About 220'). Kelly 2018 gives '10.97% … n = 217', Kelly 2017 Table 3 '11.0' (PMC5992615 and PMC6076174 via NCBI BioC, fetched 2026-11-08). || Earlier: Round 4 (rev3, 2026-11-08): Counted label now says 'say' (r3 rules minor: the resolved tag means people who say they had a problem). basis.who now says how much they used is not reported (r3 rules major: who and how much they used). Weak chip capitalised (r3 minor: chips capitalised on every page). || Earlier: Round 3 (rev2). Mirror: the old one assumed the reader's age ('You're in your twenties'); now the same line as the alcohol card of this kind (owner-lens v1 finding). basis.measured: factual fix (factual auditor): first use 15.26 to resolution 28.87 is about 13.6 years, so '12 years from their first use' was wrong; the 11.74 is the paper's 'duration of the average addiction career'. Now 'first used weed at 15 and weekly at about 17, and their addiction lasted about 12 years' (quotes: 'The age of first use of primary substance was 15.26 years'; 'Age of Weekly Use (primary substance), M(SE) | 16.89'; 'the duration of the average addiction career for CAN was 11.74 years'). Weak chip cut to 'self-judged problem', the same text for this survey on every page (task A0; owner-lens: the 25-word sentence appeared three times); the long reason is now the caveat's last sentence. Figure, headline and ref unchanged; PMC full text refetched via NCBI 2026-11-05."
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b): '1 in 6' to 'N in 100'.",
+   "wasR4": {
+    "caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in."
+   }
   },
   {
    "kind": "how-alone",
@@ -657,9 +675,9 @@
     "n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)",
     "where": "USA",
     "when": "July–August 2016",
-    "measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8% had used one or more; the other 54% used none."
+    "measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8 in 100 had used one or more; about 54 in 100 used none."
    },
-   "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43 to 65 in 100). People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in.",
+   "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43 to 65 in 100). People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in.",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -674,9 +692,14 @@
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[4].basis.n"
+    "notes": "checked after revision: corrections applied to numbers[4].basis.measured, numbers[4].caveat"
    },
-   "changeNote": "rev4 (2026-11-08): basis.n: one figure for the same weed group on all three cards (r4 rules minor: 'About 217' vs 'About 220'). Kelly 2018 gives '10.97% … n = 217', Kelly 2017 Table 3 '11.0' (PMC5992615 and PMC6076174 via NCBI BioC, fetched 2026-11-08). || Earlier: Round 4 (rev3, 2026-11-08): Counted label with 'say'; basis.who says how much they used is not reported; weak chip capitalised (r3 rules findings). Caveat range written 'in 100' (brief rule 6). || Earlier: Round 3 (rev2). Big '54 in 100' and headline and mirror in the alcohol card's wording for this kind (owner-lens v1: one format and one framing per kind on every page). Weak chip cut to 'self-judged problem' (task A0); the long reason is the caveat's last sentence. Quote is now the table row word for word, without the 'Table 3' label. Figure (100 − 45.8) unchanged; PMC full text refetched via NCBI 2026-11-05."
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds). | r5-rules minor (rule 12b): '1 in 6' to 'N in 100'.",
+   "wasR4": {
+    "basis.measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8% had used one or more; the other 54% used none.",
+    "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43 to 65 in 100). People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in."
+   },
+   "changeNoteR4": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds)."
   },
   {
    "kind": "how-tries",
@@ -693,7 +716,7 @@
     "when": "July–August 2016",
     "measured": "Number of serious tries before the problem was resolved, as people remembered it, counting everyone, including people who reported no serious try at all. A quarter needed 1 try or none; a quarter needed 4 or more."
    },
-   "caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in.",
+   "caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in.",
    "projection": false,
    "weak": "Self-judged problem",
    "ref": {
@@ -708,9 +731,12 @@
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[5].basis.n"
+    "notes": "checked after revision: corrections applied to numbers[5].caveat"
    },
-   "changeNote": "rev4 (2026-11-08): basis.n: one figure for the same weed group on all three cards (r4 rules minor: 'About 217' vs 'About 220'). Kelly 2018 gives '10.97% … n = 217', Kelly 2017 Table 3 '11.0' (PMC5992615 and PMC6076174 via NCBI BioC, fetched 2026-11-08). || Earlier: Round 4 (rev3, 2026-11-08): Counted label with 'say'; basis.who says how much they used is not reported; weak chip capitalised (r3 rules findings). || Earlier: Round 3 (rev2), task A0: weak chip cut to 'self-judged problem', the same text for this survey on every page; the long reason is the caveat's last sentence. Everything else unchanged; PMC full text refetched via NCBI 2026-11-05 ('Cannabis 4.62 (8.41) 2 (1, 4) 0, 100')."
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b): '1 in 6' to 'N in 100'.",
+   "wasR4": {
+    "caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in."
+   }
   },
   {
    "kind": "how-abrupt",
@@ -718,14 +744,14 @@
    "headline": "Of daily users trying to change on their own, 85 in 100 tried cutting down at some point.",
    "mirror": "You keep trying to cut down instead of stopping, and think it's just you.",
    "severity": "heavy",
-   "counted": "daily weed users, not checked for addiction by a doctor; 75 in 100 met a self-report problem checklist, mild cases included",
+   "counted": "daily weed users, not checked for addiction by a doctor",
    "basis": {
     "design": "daily phone check-ins for 3 months, then a survey at 6 months",
     "who": "daily or near-daily weed users (5+ days a week) planning to stop or cut down on their own, not in treatment; half men, average age 32. 75 in 100 met a self-report checklist for a weed problem, mild cases included.",
     "n": "193 people",
     "where": "USA (recruited nationwide, mostly online)",
     "when": "2010–2012",
-    "measured": "Each day: weed use, and whether they were trying to stop or cut down. 85% tried cutting down at some point and 46% tried stopping. At 6 months, 8% had not used weed in the last month."
+    "measured": "Each day: weed use, and whether they were trying to stop or cut down. 85 in 100 tried cutting down at some point and 46 in 100 tried stopping. At 6 months, 8 in 100 had not used weed in the last month."
    },
    "caveat": "Volunteers paid for daily calls, not a random sample. Almost every try to stop or cut down lasted under a week. Only 10 people (about 6 in 100 of those who tried) sought treatment. More days of cutting down or stopping went with fewer signs of being hooked later. It does not show that cutting down works better or worse than stopping.",
    "projection": false,
@@ -744,7 +770,12 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): '3 in 4' written '75 in 100' (D7: shares as N in 100 everywhere). Kind still off. || Earlier: Round 4 (rev3, 2026-11-08): Big and headline written 'N in 100' (r3 minor formats; build rule 12b). Counted label: r3 rules minor ('how many were hooked is not reported' contradicted the basis, where 3 in 4 met a self-report checklist), worded with 'not checked for addiction' for the heavy tag. Caveat share in 'in 100'. Weak chip capitalised. Kind still off in the menu. || Earlier: Round 3 (rev2). counted: source checker: 'a quarter missed the checklist' implied three quarters were hooked, but 75% met a self-report checklist for any weed problem, mild cases included ('Most (75%) met criteria for DSM- 5 Cannabis Use Disorder using a self-report version of the DSM checklist'); now 'not checked for addiction', the 3 in 4 kept in basis.who. Mirror (task C): the old one ('...and it never lasts') was confirmed, not answered, by 85% who tried cutting down; the new one is a thought the figure answers (nearly everyone tries it). Weak chip cut to 6 words. Figure, headline and ref unchanged; PMC full text refetched via NCBI 2026-11-05."
+   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds). | Counted line was 21 words (12 max); the 75 in 100 checklist share stays in basis.who.",
+   "wasR4": {
+    "basis.measured": "Each day: weed use, and whether they were trying to stop or cut down. 85% tried cutting down at some point and 46% tried stopping. At 6 months, 8% had not used weed in the last month.",
+    "counted": "daily weed users, not checked for addiction by a doctor; 75 in 100 met a self-report problem checklist, mild cases included"
+   },
+   "changeNoteR4": "rev5 (2026-11-08): Brief (rule 12b in folds)."
   },
   {
    "kind": "helps-medicine",
@@ -763,7 +794,7 @@
    },
    "caveat": "No medicine is approved to treat weed addiction. This is not proof that none can help: most were tested in only a few small trials, and the review says all are still experimental. For THC medicines and NAC, it rates the no-better result as moderately certain.",
    "projection": true,
-   "weak": "Worked out, not counted",
+   "weak": null,
    "ref": {
     "cite": "Spiga F, Parkhouse T, Tang VM, Savović J, Le Foll B, Nielsen S (2025). Pharmacotherapies for cannabis use disorder. Cochrane Database of Systematic Reviews.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12481667/",
@@ -778,7 +809,10 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): Weak chip per D6, one 'not counted' only (r4 owner major on three stacked chips). || Earlier: Round 4 (rev3, 2026-11-08): Headline: the verdict lead-in 'No medicine has clearly helped:' removed (owner-lens r3 blocker, show don't tell); now says 'expected' because the 27 is the review's dummy-pill rate times its pooled effect, not a head count (r3 rules major, rule 10), so projection true and weak 'Worked out from a pooled effect, not counted'. 21 words, 2 figures, no lead-in before a colon. Severity 'treatment' with the auditor's counted label: the review took people 'diagnosed as cannabis dependent or who are likely to be dependent', so not all met the criteria (r3 rules major). basis.who adds that use level is not reported (eligibility in the abstract, refetched from Europe PMC 2026-11-08). || Earlier: Round 3 (rev2). Headline (task C; both cold readers: 'the conclusion that a pill doesn't help is left for me to work out'): it now says the answer to the mirror first, from the review's own words ('There are currently no medicines specifically for the treatment of cannabis use disorder'; 'those pharmacotherapies should still be considered experimental'). Big in the '… in 100' format used on every page. basis.measured: one sentence on why weed's own chemical is tried (cold reader v2), from the review: 'Narrative data from individual studies suggest that THC, cannabidiol and PF‐04457845 can reduce cannabis withdrawal symptoms, and THC can also reduce cravings'. 'randomised' put in plain words; the study note dropped from the cite (owner-lens v1: sources keep only author, year, title, journal). Figures (262 and 270 per 1000) unchanged; PMC page refetched 2026-11-05."
+   "changeNote": "rev5 (2026-11-08): r5-owner + r5-rules major (D6): chip read 'Worked out, not counted; worked out'; the Weak duplicate is gone, so the chip is 'Worked out, not counted'.",
+   "wasR4": {
+    "weak": "Worked out, not counted"
+   }
   },
   {
    "kind": "how-with-help",
@@ -797,7 +831,7 @@
    },
    "caveat": "Averages across trials, not one head count, and the last check-up came at different times. In the 6 trials that could be combined (1,166 people), more were off weed at about 4 months with therapy than without, but the review calls that evidence weak. No kind of therapy clearly worked at 9 months or later. In the short term, more than 4 sessions over more than a month did better than shorter therapy; adding rewards for clean urine tests cut smoking days further in 5 of 6 trials.",
    "projection": false,
-   "weak": "Averages across trials; no like-for-like comparison",
+   "weak": "No like-for-like comparison",
    "ref": {
     "cite": "Gates PJ, Sabioni P, Copeland J, Le Foll B, Gowing L (2016). Psychosocial interventions for cannabis use disorder. Cochrane Database of Systematic Reviews.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4914383/",
@@ -810,9 +844,14 @@
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "rev4: fix applied to an item the reviser had not flagged"
+    "notes": "checked after revision"
    },
-   "changeNote": "Round 4 (rev3, 2026-11-08): Owner-lens r3 major ('23 vs 12' is not like for like: the 23 is an 8-trial average at more than 4 months, the 12 a no-help average at the last check-up from unnamed trials). Kind moved from helps-talk to how-with-help (HOW THEY QUIT), big '23 in 100', the 12 kept in basis.measured with the reason it is not a fair pair, weak 'Averages across trials; no like-for-like comparison' (the auditor's text). Headline: 2 figures (4, 23), says what 'off weed' meant (no use in the past month), 21 words. basis.who: 'nearly every day' now 'near daily', the review's own 'at least near daily cannabis users' (PMC full text via NCBI BioC, refetched 2026-11-08). helps-talk is now an empty kind with a gap note. Figures and ref unchanged. || Earlier: Round 3 (rev2). Source checker: the 23% is the average 'at follow‐up of longer than four months' and the 12% the control average 'at final follow‐up', so 'at the last check-up' was wrong for the 23%. Headline now says 'at the later check-ups' and basis.measured says which time each figure is from, and that the review does not say which trials the 12% comes from. Caveat: 'helped in 5 of 6 trials' was more hopeful than the source ('data from five out of six studies supported the utility of adding voucher‐based incentives ... on cannabis use frequency'); now 'cut smoking days further'. Weak chip shortened (task A0; 'not given' is a banned process phrase, so 'no head count'). 'randomised' put in plain words; study note dropped from the cite. Big in the '… in 100' format. The review's Summary of findings gives no per-100 arm pair (only 'an average of 23.02% across treatments' and RR 2.55), so these averages stay. PMC page refetched 2026-11-05."
+   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: 'the average in the 8 trials', now pooled: true with the one chip 'Average across studies'; Weak no longer repeats 'Averages across trials'.",
+   "pooled": true,
+   "wasR4": {
+    "pooled": null,
+    "weak": "Averages across trials; no like-for-like comparison"
+   }
   },
   {
    "kind": "how-withdrawal",
@@ -841,7 +880,7 @@
     "quote": "Onset typically occurred between Days 1-3, peak effects between Days 2-6, and most effects lasted 4-14 days."
    },
    "origin": "07-mirror-stats/cannabis.json quit 'Day 2–6' (v10 'How quitting goes'; figure, basis and ref kept, basis in plain words; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev4 (2026-11-08): Propose reason made true (r4 rules minor): plan step 3's proof no longer uses this study, and never gave the day 2–6 peak. || Earlier: Round 4 (rev3, 2026-11-08): basis.who now says the use level is not reported (r3 rules major). The abstract says only 'heavy cannabis (marijuana) use'; the Bonnet 2017 review's table (PMC5414724, fetched 2026-11-08) describes the group as 'N=18 frequent, heavy cannabis users seeking treatment'; the full paper is not open, so no amount a day is given. || Earlier: Round 3 (rev2). Mirror: source checker: anger is not a day-3 symptom (irritability and anger peaked about day 8 in this study and day 14 in Hesse 2013, as tabulated in Hesse 2013 Table 5; 'In the later phase of withdrawal came irritability/anger, and vivid, unpleasant dreams, with peaks later than a week after cessation'); now 'restless and sleepless', the checker's wording. The caveat says so in one clause, to match the split body rows. Weak chip 'Weak: 18 people' (task A0 example). Figure, headline, basis and ref unchanged; abstract refetched from Europe PMC 2026-11-05.",
+   "changeNote": "rev5 (2026-11-08): E2 (r5-owner major): liked in version 10 (kinds.json how-withdrawal: 'weed: day 2–6'), so it stays under 'Take them off' with its Counted label.",
    "check": {
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
@@ -855,7 +894,8 @@
     "fetched": true,
     "quote": "In the later phase of withdrawal came irritability/anger, and vivid, unpleasant dreams, with peaks later than a week after cessation."
    },
-   "timeIsResult": true
+   "timeIsResult": true,
+   "liked": true
   },
   {
    "kind": "how-withdrawal",
@@ -866,15 +906,15 @@
    "counted": "regular weed users, many not checked for addiction",
    "basis": {
     "design": "a review that pooled 47 studies",
-    "who": "people who used weed regularly (each study set its own bar for 'regular') or were hooked on it; 69% men, typical age about 30",
+    "who": "people who used weed regularly (each study set its own bar for 'regular') or were hooked on it; 69 in 100 men, typical age about 30",
     "n": "23,518 people in 47 studies",
     "where": "several countries",
     "when": "studies up to June 2019; published 2020",
-    "measured": "Share who met the criteria for weed withdrawal on a tested checklist. The 47 in 100 is the review's pooled average of the studies' own rates. Counting every person instead, 6,469 of 23,518 had it (about 28 in 100), because the biggest studies were general surveys, where rates were lowest."
+    "measured": "Share who met the criteria for weed withdrawal on a tested checklist. The 47 in 100 is the review's pooled average of the studies' own rates. Counting every person instead, about 28 in 100 had it (6,469 people), because the biggest studies were general surveys, where rates were lowest."
    },
    "caveat": "It depends who is asked: about 17 in 100 in general surveys, 54 in 100 in outpatient clinics, 87 in 100 in inpatient units. Daily users had it more often.",
-   "weak": "Average across studies",
-   "propose": "It mixes regular users with people who were hooked (rule 2); a hooked reader is closer to the 54 in 100 for outpatients in the caveat.",
+   "weak": null,
+   "propose": "It mixes regular users with people who were hooked (rule 2); its caveat gives the higher share for outpatients in treatment.",
    "projection": false,
    "ref": {
     "cite": "Bahji A, Stephenson C, Tyo R, et al. (2020). Prevalence of cannabis withdrawal symptoms among people with regular or dependent use of cannabinoids: a systematic review and meta-analysis. JAMA Network Open.",
@@ -884,14 +924,22 @@
     "quote": "The overall pooled prevalence of CWS was 47% (6469 of 23 518) (95% CI, 41%-52%)"
    },
    "origin": "07-mirror-stats/cannabis.json quit '47%' (v10 'How quitting goes'; figure, basis and ref kept, basis in plain words; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev4 (2026-11-08): r4 rules major (rule 10): 47 in 100 is the review's pooled average, so projection true and the headline says 'expected'; the head count (about 28 in 100) stays in basis.measured, where the checker put it in rev3. Weak chip is D6's 'Average across studies' (D6 names this card). 'dozens of studies' kept so '47 studies, 47 in 100' isn't read as a typo (r2 cold readers). 21 words, 1 figure. || Earlier: Round 4 (rev3, 2026-11-08): r3 rules major (rule 10, cautious first): the big figure is now the head count, 6,469 of 23,518 = 27.5%, shown 'about 28 in 100', and the pooled 47% (an average of study rates) moved into basis.measured. Headline per the auditor's fix (2 figures, 16 words). basis.who: the review says 'The exact definition of regular cannabinoid use varied across cohorts' (PMC7146100 via NCBI BioC, fetched 2026-11-08). Caveat shares in 'in 100' (brief rule 6). Weak chip capitalised. Ref and quote unchanged (the quote holds both 47% and 6469 of 23 518). Judgment call: he liked '47%' in v10; it is still on the card, in Based on. || Earlier: Round 3 (rev2). Headline: both cold readers read '47 studies, 47%' as a typo; the study count stays in basis.n. Weak chip cut to 6 words (task A0); the long reason is in the caveat and the counted chip. Figure, mirror, basis and ref unchanged; abstract refetched from Europe PMC 2026-11-05 ('The overall pooled prevalence of CWS was 47% (6469 of 23 518)').",
+   "changeNote": "rev5 (2026-11-08): E5: Weak 'Average across studies' repeated the pooled chip word for word (a chip never repeats words); the chip carries it. | r5-rules minor: 'closer to the 54 in 100' clashed with the page's other 54 in 100. E2: liked in version 10 (kinds.json: 'weed: … 47%'), liked: true. | Brief (rule 12b in folds). | Brief (no raw 'N of M' in folds).",
    "check": {
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[10].headline, numbers[10].projection, numbers[10].pooled, numbers[10].weak"
+    "notes": "checked after revision"
    },
-   "pooled": true
+   "pooled": true,
+   "liked": true,
+   "wasR4": {
+    "weak": "Average across studies",
+    "propose": "It mixes regular users with people who were hooked (rule 2); a hooked reader is closer to the 54 in 100 for outpatients in the caveat.",
+    "basis.who": "people who used weed regularly (each study set its own bar for 'regular') or were hooked on it; 69% men, typical age about 30",
+    "basis.measured": "Share who met the criteria for weed withdrawal on a tested checklist. The 47 in 100 is the review's pooled average of the studies' own rates. Counting every person instead, 6,469 of 23,518 had it (about 28 in 100), because the biggest studies were general surveys, where rates were lowest."
+   },
+   "changeNoteR4": "rev5 (2026-11-08): E5: Weak 'Average across studies' repeated the pooled chip word for word (a chip never repeats words); the chip carries it. | r5-rules minor: 'closer to the 54 in 100' clashed with the page's other 54 in 100. E2: liked in version 10 (kinds.json: 'weed: … 47%'), liked: true. | Brief (rule 12b in folds)."
   },
   {
    "kind": "how-slips",
@@ -936,7 +984,7 @@
    "counted": "frequent young weed users, not checked for addiction",
    "basis": {
     "design": "a review that pooled 69 studies",
-    "who": "frequent or heavy weed users (how much they used is not reported) in studies whose average age was 26 or under (users' average age 20.6, 68% male, across all 69 studies) vs people who had barely used",
+    "who": "frequent or heavy weed users (how much they used is not reported) in studies whose average age was 26 or under (users' average age 20.6, about 68 in 100 male, across all 69 studies) vs people who had barely used",
     "n": "928 people, users and comparison people together, in the 15 studies that required more than 72 hours off (of 69 studies in the review)",
     "where": "several countries",
     "when": "studies up to May 2017; published 2018",
@@ -954,14 +1002,21 @@
     "quote": "studies requiring an abstinence period longer than 72 hours (15 studies; n = 928) had an overall effect size (d, -0.08 ...) that was not significantly different from 0"
    },
    "origin": "07-mirror-stats/cannabis.json after '72 hours' (v10 'How quitting goes'; figure, basis and ref kept; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev4 (2026-11-08): D7 / r4 owner minor: the big figure is a time and the review gives no plain result figure (an effect size, d = -0.08), so the big stays '72 hours' and the headline now leads with the result. || Earlier: Round 4 (rev3, 2026-11-08): basis.who says the use level is not reported (r3 rules major); the abstract says only 'frequent or heavy cannabis use' (refetched from Europe PMC 2026-11-08). Weak chip capitalised. || Earlier: Round 3 (rev2). Headline: both cold readers read 'over 72 hours' as 'during a 72-hour study'; now 'for more than 72 hours', and 'test scores' named as thinking tests. Weak chip cut to 6 words (task A0); the long reason is in the caveat and the counted chip. Figure, mirror, basis and ref unchanged; abstract refetched from Europe PMC 2026-11-05 ('abstinence of longer than 72 hours diminishes cognitive deficits associated with cannabis use').",
+   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds). | E5: a review pooling 69 studies' effect sizes, now pooled: true (chip 'Average across studies').",
    "check": {
     "by": "revision checker a (cannabis)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[12].basis.who"
    },
-   "timeIsResult": true
+   "timeIsResult": true,
+   "wasR4": {
+    "basis.who": "frequent or heavy weed users (how much they used is not reported) in studies whose average age was 26 or under (users' average age 20.6, 68% male, across all 69 studies) vs people who had barely used",
+    "pooled": null
+   },
+   "pooled": true,
+   "changeNoteR4": "rev5 (2026-11-08): Brief (rule 12b in folds).",
+   "liked": true
   },
   {
    "kind": "after-first-month",
@@ -997,7 +1052,8 @@
    },
    "propose": "It counts young regular users, and the study reports no diagnosis of being hooked (rule 2).",
    "changeNote": "rev4 (2026-11-08): D7: result first in the headline; the source gives test statistics, no plain result figure, so the big stays 'Week 1'. || Earlier: Round 4 (rev3, 2026-11-08): Weak chip capitalised (r3 minor). Nothing else changed. || Earlier: Round 3 (rev2). 'randomised study' put in plain words (owner-lens v1: 'a fair test, split by chance'). Weak chip cut to 6 words (task A0); the long reason is in the caveat and the counted chip. Figure, headline, mirror and ref unchanged; abstract refetched from Europe PMC 2026-11-05 ('Participants were randomly assigned to 4 weeks of cannabis abstinence ... (MJ-Abst; n = 62)').",
-   "timeIsResult": true
+   "timeIsResult": true,
+   "liked": true
   },
   {
    "kind": "after-mood",
@@ -1072,10 +1128,14 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "propose": "It is about using less, not quitting, so it answers no kind's question cleanly; the life-quality card above is the quitting answer. Covered by the one choice on numbers whose group or question is off.",
-   "changeNote": "rev4 (2026-11-08): r4 rules minor (rule 12, one idea): 'less anxious and depressed' was two outcomes; now anxiety only, the mirror's fear. D7: result first, since the source gives no plain result figure (model slopes only); depression and sleep stay in basis.measured. || Earlier: Round 4 (rev3, 2026-11-08): Safety r3 minor and brief ('12 weeks' is moderation framing): the headline no longer opens 'Cutting down, not quitting'; it now answers the mirror's fear (more anxiety) with what happened as weed days fell, 1 figure. The caveat says plainly it is using less, not stopping, and adds the slip pointer the safety fix asked for. Not moved to helps-stop-vs-cut as the rules auditor proposed: that would put a using-less result under WHAT HELPS 'Stop fully or cut down' with no with-and-without pair (rule 12a), which is stronger moderation framing for a man who can't moderate; and 'quitters among them' (the safety fix's words) was not added, because the paper groups people by the slope of their weekly use days and never says how many reached zero (PMC5607644 via NCBI BioC, fetched 2026-11-08). basis.who: use at the start, 'Cannabis use in past 30 days (mean/SD) … 26.0/6.2' (Table 2). Propose reason reworded for the single off-question choice. || Earlier: Round 3 (rev2). basis.who: source checker: this paper does not describe the cash rewards for attendance and clean urine tests (they are in the parent trial, Gray 2017); it says only 'added to a contingency management (CM) and medication management platform'. Now cut to what this paper says, in plain words ('a reward programme'). Weak chip cut to 6 words (task A0). Figure, headline, mirror, caveat, propose and ref unchanged; PMC full text refetched via NCBI 2026-11-05.",
+   "propose": "It is about using less, not quitting, so it answers no kind's question cleanly; the +12 points life-quality card is the quitting answer.",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor: dropped the leftover 'Covered by the one choice…' and the pointer 'above' that pointed at nothing on the review page.",
    "editNote": "2026-11-06: 'drinking and tobacco' -> 'other substance use' (rule 13 wording only)",
-   "timeIsResult": true
+   "timeIsResult": true,
+   "wasR4": {
+    "propose": "It is about using less, not quitting, so it answers no kind's question cleanly; the life-quality card above is the quitting answer. Covered by the one choice on numbers whose group or question is off."
+   },
+   "liked": true
   }
  ],
  "beliefs": [
@@ -1364,7 +1424,7 @@
     "For each need on your step 1 list, write one swap. 80% of the effect is enough."
    ],
    "proof": {
-    "text": "Of 25 long-time daily smokers who quit without treatment for a year or more, the most common things that kept them off were avoiding situations where they smoked, a changed routine and new interests. A small group.",
+    "text": "Of 25 long-time daily smokers who quit without treatment for a year or more, the most common things that kept them off were avoiding situations where they smoked, a changed routine and new interests.",
     "ref": {
      "cite": "Ellingstad TP, Sobell LC, Sobell MB, Eickleberry L, Golden CJ (2006). Self-change: a pathway to cannabis abuse resolution. Addictive Behaviors 31(3):519-30.",
      "url": "https://pubmed.ncbi.nlm.nih.gov/15967588/",
@@ -1378,15 +1438,22 @@
      "verdict": "ok"
     },
     "severity": "disorder",
-    "changeNote": "rev4 (2026-11-08): Severity 'disorder' with its own Counted line (r4 rules minor): Ellingstad 2006 counted 'Long-term daily cannabis abusers (N = 25)', a diagnosis, not a self-judged problem. Needs the template to render proof.counted. || Earlier: Round 4 (rev3, 2026-11-08): Added severity 'resolved' (r3 rules minor: plan proofs carry a tag): 'Long-term daily cannabis abusers (N = 25) who without treatment stopped using cannabis for at least one year' (abstract refetched from Europe PMC 2026-11-08). Text unchanged.",
-    "counted": "long-time daily users with a weed problem, mild cases included, who quit on their own"
+    "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 6): the verdict left the proof; size goes in Weak. | Weak names the size. | r5-rules minor: Counted line was 15 words.",
+    "counted": "daily users with a weed problem, mild cases included, who quit alone",
+    "wasR4": {
+     "text": "Of 25 long-time daily smokers who quit without treatment for a year or more, the most common things that kept them off were avoiding situations where they smoked, a changed routine and new interests. A small group.",
+     "weak": null,
+     "counted": "long-time daily users with a weed problem, mild cases included, who quit on their own"
+    },
+    "weak": "25 people",
+    "changeNoteR4": "rev5 (2026-11-08): r5-rules minor (rule 6): the verdict left the proof; size goes in Weak. | Weak names the size."
    }
   },
   {
    "do": [
     "Pick a date a few days to a few weeks out and put it in your calendar. Still smoking? Smoke as usual until then. Already off it? Today is your date.",
     "Throw out the stash, grinder and papers. Delete the dealer’s number.",
-    "Expect the first two weeks to be the hardest.",
+    "Expect the first week to be the hardest; the second is a little easier.",
     "For three months, weed is the one thing. No new diet, no new life plan.",
     "Mark each day off on a calendar.",
     "Slip? Go back through steps 1–3 on paper, the same day. Don’t go back to using as usual for days first."
@@ -1403,14 +1470,16 @@
     },
     "severity": "self-hooked",
     "check": {
-     "by": "revision checker a (cannabis, rev4)",
+     "by": "revision checker a (cannabis)",
      "on": "2026-11-08",
-     "verdict": "ok",
-     "notes": "ok once the fixed text, quote and via are applied"
+     "verdict": "ok"
     },
     "changeNote": "rev4 (2026-11-08): D9 (plan step 3 proofs use the figure the graph shows) and r4 rules minor (withdrawal length was '4–14 days' here, 'up to 3 weeks' in belief 2, 'Day 1–14' in the body rows, with no word on why). Now the forum graph's own figure, in the alcohol page's wording, so step 3 no longer rests on 18 heavy users not checked for addiction. Every stage from Days 6–7 on has 47+ posts and a median of 4 or less; 2 figures. The Budney text moved to notUsed; that study stays on the Day 2–6 card and the body rows."
    },
-   "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)"
+   "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)",
+   "wasR4": {
+    "do.2": "Expect the first two weeks to be the hardest."
+   }
   },
   {
    "do": [

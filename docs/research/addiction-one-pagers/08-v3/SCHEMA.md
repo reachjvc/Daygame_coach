@@ -31,6 +31,7 @@ Built by `board/build_v3.py` into the prototype. Rules: `../RULEBOOK.md`.
   "caveat": "…",                      // what the number does not mean
   "projection": false,                // true when the figure is modelled, not counted (one chip: "Worked out, not counted")
   "pooled": false,                    // true for a pooled average across studies (one chip: "Average across studies")
+  "liked": false,                     // true: he liked it in v10 and a rule argues against it; it stays under "take them off" (rule 26, E2)
   "timeIsResult": false,              // true when the big figure is a time that IS the finding (rule 12c)
   "alsoRef": null,                    // or a second source (or list) the card's lines rest on; "refs2" works the same; cited at the end of the caveat
   "weak": null,                       // or one plain sentence: why this number is weak
@@ -75,10 +76,10 @@ off-reader choice says (round 4, D2); `alt` is no longer used.
 
 | Field | Holds |
 |---|---|
-| `heroLine` | on a page with no hope number only: one line with no figure, under the title |
+| `heroLine` | not used since round 5 (E1): a page with no hope number goes from its title straight to the beliefs |
 | `gapReaderLine` | `{text, kinds}`: one plain reader line under "Who gets free, and how" that speaks for the empty kinds it names |
 | `gaps[]` | `{kind, why, reader?}`: why a picked kind is empty (review page); `reader` gives the page's own words for the gap line |
-| `windows[]` | body rows: `label`, `when`, `s`/`pk`/`e` in hours (start, peak, end), `open` (no clear end), `fall` (worst at the start), `kind` (feel, change, trigger, danger), `refs`, optional `note` (a smaller line under the caption) |
+| `windows[]` | body rows: `label`, `when`, `s`/`pk`/`e` in hours (start, peak, end), `open` (no clear end), `fall` (worst at the start), `kind` (feel, change, trigger, danger), `refs`, optional `caption` (a smaller reader line under the row's text); `note` is internal (source notes) and never shown |
 | `timelineNote` | a line under the body rows (default: the 06 note); "Many people get less than this." is added on every page |
 | `feltHeadlineProposal` | no longer used (round 4, D9): the template computes the graph headline; the build fails if a page carries one |
 | `footerProposal` | `{text, refs}`: the "Before you stop" line; on a page without a danger safety level it shows as one small note |

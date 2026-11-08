@@ -6,20 +6,24 @@
    "searched": "Europe PMC and web searches for the mean or median age when nicotine dependence ended ('age at remission', 'mean age' with remission, recovery, ex-smokers). Read in full: Lopez-Quintero 2011 (NESARC, PMC3227547), Dierker 2008 (NCS-R, PMC2659851), Goodwin 2011 (NESARC, PMC3337717), Chou 2016 (NESARC-III, PMC8154113). Searched again 2026-11-05: web searches for age at quitting or remission among dependent ex-smokers in national US surveys and Australian studies; read Agrawal 2008 (national US survey, PMC2516971).",
    "why": "None reports an average or median age when nicotine dependence ended. Lopez-Quintero gives years from getting hooked to getting free (a median of about 26), not the age. Ages at quitting exist for ex-smokers in general, but those count ordinary smokers, which rule 3 bans in the who-gets-free group. The National Recovery Survey behind the alcohol 'about 38' did not ask about nicotine. Later: our r/stopsmoking harvest could give a self-hooked count of age at quitting from posts that state both age and quit date. The new search found only Agrawal 2008: mean age 40 at quitting among 17,919 people who had smoked 100 cigarettes, ordinary smokers, which rule 3 bans here (listed in notUsed).",
    "changed": true,
-   "changeNote": "r4 owner major and r3 owner blocker: a plain reader line instead of the menu label (how-alone and who-age share one line, printed once).",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor: the two back-to-back gap lines merged into one (same text on all three kinds so it prints once). Placement before the helps cards needs the template.",
    "was": {
     "reader": null,
     "was": null,
     "changeNote": "Second search added, as the task asked; still no source about people hooked on nicotine, so the kind stays empty."
    },
-   "reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help."
+   "reader": "Not counted here yet: the age when nicotine addiction ended, how many got free with no help, or how many hooked on nicotine get withdrawal when they stop.",
+   "wasR4": {
+    "reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help."
+   },
+   "changeNoteR4": "r4 owner major and r3 owner blocker: a plain reader line instead of the menu label (how-alone and who-age share one line, printed once)."
   },
   {
    "kind": "how-alone",
    "searched": "Europe PMC and web searches for untreated or unassisted remission among people who had been nicotine-dependent (NESARC, NCS-R, 'natural recovery', 'formal help', 'without treatment'). Read: Lopez-Quintero 2011 (no treatment data), Chou 2016 NESARC-III, Smith 2015 (07). Searched again 2026-11-05: web searches for untreated or unassisted remission among nicotine-dependent people (national US surveys, Australian ex-smoker studies); Alghzawi 2020 (people with severe mental illness who all had help) and Agrawal 2008 checked.",
    "why": "No source counts, among people who were hooked on nicotine and got free, how many never used treatment, a group or medicine. Nearest: Chou 2016 (a national US survey, 2012–13) found 18.8% of everyone who ever had a nicotine problem had ever used any help (27.8% of severe cases); it counts mild cases and people still hooked, and has no count of who got free, so it cannot fill this kind. It shows on the page as quit-status ('81 in 100 never used any help') with a 'propose' note for him to decide. The 07 Australian review (54–69% of ex-smokers quit unassisted) counts ordinary ex-smokers, tag 'users', which kinds.json does not allow here. Later: our r/stopsmoking harvest could count quit posts naming cold turkey against patches, pills or vapes (self-hooked).",
    "changed": true,
-   "changeNote": "r4 owner major and r3 owner blocker: a plain reader line instead of the menu label (how-alone and who-age share one line, printed once).",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor: the two back-to-back gap lines merged into one (same text on all three kinds so it prints once). Placement before the helps cards needs the template.",
    "was": {
     "reader": null,
     "was": {
@@ -28,7 +32,11 @@
     },
     "changeNote": "Round 2: Chou 2016 checked again (PMC8154113 full text, 2026-11-05) for a count of people free without help; it has none, so quit-status keeps it with a 'propose' note and how-alone stays empty."
    },
-   "reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help."
+   "reader": "Not counted here yet: the age when nicotine addiction ended, how many got free with no help, or how many hooked on nicotine get withdrawal when they stop.",
+   "wasR4": {
+    "reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help."
+   },
+   "changeNoteR4": "r4 owner major and r3 owner blocker: a plain reader line instead of the menu label (how-alone and who-age share one line, printed once)."
   },
   {
    "kind": "how-slips",
@@ -59,13 +67,17 @@
    "searched": "2026-11-05: web and PubMed searches for how many people hooked on nicotine get withdrawal when they stop (national US surveys, epidemiologic studies); read Breslau 1992 (PMID 1554030) and Smith 2014 (PMC3935702).",
    "why": "When it peaks is covered by the timeline row (Hughes 2007: worst in week 1, gone by weeks 2–4) and belief 2 (Shiffman 2006: back to normal within 10 days). No fetched source counts how many people hooked on nicotine get withdrawal when they stop. Breslau 1992 says each symptom but two was reported by more than half of 239 young adults who had tried to quit and failed, but they were not checked for addiction and it is per symptom, not per person; Smith 2014 counts withdrawal in current smokers, not in people stopping.",
    "changed": true,
-   "changeNote": "r4 owner major and r3 owner blocker: a plain reader line instead of the menu label (how-alone and who-age share one line, printed once).",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor: the two back-to-back gap lines merged into one (same text on all three kinds so it prints once). Placement before the helps cards needs the template.",
    "was": {
     "reader": null,
     "was": null,
     "changeNote": "New gap note: how-withdrawal is a new picked kind."
    },
-   "reader": "Not counted here yet: how many people hooked on nicotine get withdrawal when they stop."
+   "reader": "Not counted here yet: the age when nicotine addiction ended, how many got free with no help, or how many hooked on nicotine get withdrawal when they stop.",
+   "wasR4": {
+    "reader": "Not counted here yet: how many people hooked on nicotine get withdrawal when they stop."
+   },
+   "changeNoteR4": "r4 owner major and r3 owner blocker: a plain reader line instead of the menu label (how-alone and who-age share one line, printed once)."
   },
   {
    "kind": "how-with-help",
@@ -291,6 +303,12 @@
   },
   "changeNote": "D10 / r4 safety minor, as written: pouches added (they also end the smoke), theophylline added (narrow safe range; named in Kroon 2007 quote2, abstract refetched 2026-11-08)."
  },
+ "rev5": {
+  "round": "rev5",
+  "on": "2026-11-08",
+  "by": "data agent (rev5)",
+  "note": "After gates round 5 (r5-owner, r5-rules, r5-cold-nicotine) and decisions E1–E6. Changed items: changed true, changeNote (rev5 …), old values in wasR4 by field path, previous changeNote in changeNoteR4; check pending."
+ },
  "numbers": [
   {
    "kind": "hope-free-now",
@@ -382,7 +400,7 @@
     "n": "6,937 adults ever hooked (of 43,093 surveyed)",
     "where": "US",
     "when": "2001–2002",
-    "measured": "The age when the signs first appeared and the age when they finally stopped and never came back, as people recalled it. From those ages the model projects the share free over a whole life. A projected 3.0% were free within a year of getting hooked and 18.4% within 10 years."
+    "measured": "The age when the signs first appeared and the age when they finally stopped and never came back, as people recalled it. From those ages the model projects the share free over a whole life. The model puts 3 in 100 free within a year of getting hooked and about 18 in 100 within 10 years."
    },
    "caveat": "'Free' means no signs of being hooked left, not that they never touched it again. Men got free less often than women. People in prison or hospital weren't surveyed, and the worst-hit cases may have been missed, so the true share is likely lower.",
    "projection": true,
@@ -454,12 +472,15 @@
     },
     "changeNote": "r3 owner:vmix minor (number formats, rule 6): big and headline as '84 in 100' (the source's 83.7% stays in the quote). The same figure is used in belief 1 (rule 5). r3 audit:rules minor: Measured now says the 3.0% and 18.4% are projected (rule 10). r3 owner:vmix major (hero): Weak chip worded 'Projection, likely runs high', as on the other pages. PMC3227547 refetched 2026-11-08: 'Lifetime cumulative probability estimates of dependence remission were 83.7% for nicotine'."
    },
-   "changeNote": "r4 rules minor (rule 3, USE_LEVEL): a dependent group still says how much they used; the source does not give it, so who says so. D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it.",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds): % to 'N in 100'.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[1].basis.measured"
+   },
+   "wasR4": {
+    "basis.measured": "The age when the signs first appeared and the age when they finally stopped and never came back, as people recalled it. From those ages the model projects the share free over a whole life. A projected 3.0% were free within a year of getting hooked and 18.4% within 10 years."
    }
   },
   {
@@ -567,7 +588,7 @@
    "basis": {
     "design": "a review of studies (too few and too mixed to combine)",
     "who": "smokers trying to quit without treatment; how much they smoked is not reported in the review's summary",
-    "n": "For 3–5%: 15 studies or study groups (a summary of 10 earlier studies, 2 more studies and 3 untreated groups). For eight days: 8 relapse curves from 2 studies and 5 untreated groups. Number of people not stated in the review's summary.",
+    "n": "For 3–5 in 100: 15 studies or study groups (a summary of 10 earlier studies, 2 more studies and 3 untreated groups). For eight days: 8 relapse curves from 2 studies and 5 untreated groups. Number of people not stated in the review's summary.",
     "where": "Countries not listed in the review's summary",
     "when": "studies before 2004",
     "measured": "Share still not smoking 6 to 12 months after one quit attempt, and when relapse happens (8 relapse curves)."
@@ -636,22 +657,26 @@
     "changeNote": "Rule C, pre-owner and cold-reader findings ('the bleakest number in the biggest type'): the headline now leads with the part that answers the mirror (slipping on an unaided try is the norm), figure, basis facts and ref kept (rule 26). A0: weak chip 4 words, longer reason into the caveat. Source checker: 'Countries not known' claimed more than anyone checked; now 'not listed in the review's summary' (the full text is paywalled), and the same for the head count. Plain words: 'systematic review' and 'pool' out of basis.design. PubMed abstract refetched 2026-11-05: 'most relapse occurs in the first 8 days'; '3-5% of self-quitters achieve prolonged abstinence for 6-12 month after a given quit attempt'."
    },
    "propose": "It counts single quit tries by smokers never checked for addiction (rule 2), so it may not describe a man who is hooked.",
-   "changeNote": "r3 owner:vmix minor (rule 6): '3–5 in 100' on the card (the source's 3-5% stays in the quote). r3 audit:rules minor (rule 17): Weak chip names the missing head count. r3 audit:rules major (rule 3): who says how much they used is not reported. PubMed abstract refetched 2026-11-08.",
+   "changeNote": "rev5 (2026-11-08): Brief (no % in folds).",
    "editNote": "2026-11-06: wording edit after gates round 2 (meaning and source unchanged)",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
-   }
+   },
+   "wasR4": {
+    "basis.n": "For 3–5%: 15 studies or study groups (a summary of 10 earlier studies, 2 more studies and 3 untreated groups). For eight days: 8 relapse curves from 2 studies and 5 untreated groups. Number of people not stated in the review's summary."
+   },
+   "liked": true
   },
   {
    "kind": "helps-stop-vs-cut",
    "big": "12 vs 12 in 100",
-   "headline": "Expected off six months later: 12 in 100 who cut down first, 12 in 100 who stopped at once.",
+   "headline": "Expected off six months later: 12 in 100 who cut down first, the same 12 in 100 who stopped at once.",
    "mirror": "You can't face stopping all at once, so you never start.",
    "severity": "treatment",
-   "counted": "smokers in quit trials who wanted to stop; not checked for addiction by a doctor",
+   "counted": "smokers in quit trials who wanted to stop, not checked for addiction",
    "basis": {
     "design": "a review of trials; this figure combines 22 trials that split people by chance",
     "who": "people who smoke cigarettes and were willing to join a quit trial, most of them adults, about 23 cigarettes a day on average",
@@ -725,13 +750,18 @@
     },
     "changeNote": "r3 audit:rules major (rules 4 and 10): Counted now says 'not checked for addiction' (no trial in the review checked); a pooled figure, so projection:true and 'Expected' in the headline. Rule 6: the English trial's 22.0% and 15.5% written per 100 on the card. Ref and basis unchanged."
    },
-   "changeNote": "D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it. Counted already says 'not checked for addiction', so the Weak chip said nothing new.",
+   "changeNote": "rev5 (2026-11-08): r5-cold-nicotine: the old headline did not say both work the same, so it read as 'nothing helps'. | r5-rules minor: Counted line was 15 words (SCHEMA 12); still says 'not checked', so E3 puts it in the off-reader list.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
-   }
+   },
+   "wasR4": {
+    "headline": "Expected off six months later: 12 in 100 who cut down first, 12 in 100 who stopped at once.",
+    "counted": "smokers in quit trials who wanted to stop; not checked for addiction by a doctor"
+   },
+   "changeNoteR4": "rev5 (2026-11-08): r5-cold-nicotine: the old headline did not say both work the same, so it read as 'nothing helps'."
   },
   {
    "kind": "helps-medicine",
@@ -929,7 +959,7 @@
     "when": "published 1997",
     "measured": "Anxiety by a single rating and a standard anxiety questionnaire, from 2 weeks before quit day to 4 weeks after. Only people with no slip at all counted as off."
    },
-   "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were in a quit trial, so may have had support or medicine.",
+   "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were in a quit trial, so may have had support or medicine. Reviews count anxiety among withdrawal signs that peak in week 1 (belief 2); in this trial, among people who stayed off, it was already falling by then.",
    "projection": false,
    "weak": "Small: 70 people, one trial",
    "ref": {
@@ -997,14 +1027,17 @@
     },
     "changeNote": "r3 audit:rules major (rule 12): the verdict lead-in 'No sign that anxiety rose' is gone; the finding's headline. Ref unchanged (PubMed abstract: 'a significant decrease in anxiety from the first week of abstinence')."
    },
-   "changeNote": "r4 rules minor (rule 3, USE_LEVEL): a dependent group still says how much they used; the source does not give it, so who says so. r4 owner minor and D7: the big figure is a time and the source gives no result figure, so the time stays and the headline says the result first.",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor: reconciles 'anxiety peaked in week 1' (belief 2, body row) with this card.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[7].basis.who"
+    "notes": "checked after revision"
    },
-   "timeIsResult": true
+   "timeIsResult": true,
+   "wasR4": {
+    "caveat": "It shows anxiety fell in those who stayed off, not how much. One small trial from the 1990s. People who slipped are not in this count. They were in a quit trial, so may have had support or medicine."
+   }
   },
   {
    "kind": "after-mood",
@@ -1015,7 +1048,7 @@
    "counted": "smokers in a quit trial, followed three years",
    "basis": {
     "design": "the same people followed 3 years, inside a quit-smoking trial",
-    "who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (58.2% women)",
+    "who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (about 58 in 100 women)",
     "n": "376 quitters vs 649 smokers at year 1; 359 vs 640 at year 3 (1,504 started)",
     "where": "Madison and Milwaukee, Wisconsin, US",
     "when": "joined 2005–2007, followed 3 years",
@@ -1067,14 +1100,17 @@
     },
     "changeNote": "v10 number he liked (rule 26): figure, basis facts and ref kept. Cold readers: 'held up better' was vague; headline is back to the v10 wording, which says what the abstract says (quitters rated life and mood better than people who kept smoking). A0: weak chip 5 words. Plain words: 'cohort', 'randomised', 'placebo', 'biochemical' out of basis. PubMed abstract refetched 2026-11-05: 'Compared with continuing smokers, quitters showed improved global QOL, HR-QOL, and affect at years 1 and 3'."
    },
-   "changeNote": "r4 owner minor and D7: big figure is a time with no single result figure in the source; headline now leads with the result.",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[8].basis.who"
    },
-   "timeIsResult": true
+   "timeIsResult": true,
+   "wasR4": {
+    "basis.who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (58.2% women)"
+   }
   },
   {
    "kind": "who-years",
@@ -1089,7 +1125,7 @@
     "n": "6,937 adults who had ever been hooked (of 43,093 surveyed); 1,300 of them had got free",
     "where": "US",
     "when": "2001–2002",
-    "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. A projected 3.0% got free within the first year and 18.4% within 10 years."
+    "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. The model puts 3 in 100 free within the first year and about 18 in 100 within 10 years."
    },
    "caveat": "The study projects that about 84 in 100 get free at some point in life; that is a model, not a head count, built from ages people recalled over decades. People in prisons or hospitals weren't surveyed, so the real pace may be slower. Men got free more slowly than women. Surveyed before vaping; the paper doesn't say which tobacco products people used.",
    "projection": true,
@@ -1160,14 +1196,17 @@
     },
     "changeNote": "Rule 5 and 6: the lifetime share is written '84 in 100', as on the hero card and belief 1; Measured says the 3.0% and 18.4% are projected (rule 10). Kind stays off; the 26 years now shows in belief 1's proof. PMC3227547 refetched 2026-11-08: 'Half of the cases of nicotine … dependence remitted approximately 26 … years after dependence onset'."
    },
-   "changeNote": "r4 rules minor (rule 3, USE_LEVEL): a dependent group still says how much they used; the source does not give it, so who says so. D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it.",
+   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to numbers[9].basis.measured"
    },
-   "timeIsResult": true
+   "timeIsResult": true,
+   "wasR4": {
+    "basis.measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. A projected 3.0% got free within the first year and 18.4% within 10 years."
+   }
   },
   {
    "kind": "helps-reward",
@@ -1268,7 +1307,7 @@
     "n": "514 quitters without medication at 12 months, in 25 studies; with medication, 1,138 on nicotine replacement (19 studies), 183 on bupropion (5) and 174 on varenicline (3)",
     "where": "59 of 62 trials in North America, Europe or Australia",
     "when": "review published 2012",
-    "measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. Quitters without medication gained about 2.9 kg by month 3, 4.2 kg by month 6 and 4.7 kg by month 12. For them at 12 months, the authors estimated from the averages and spreads, not by counting people: 16% lost weight, 37% gained under 5 kg, 34% gained 5–10 kg, 13% gained over 10 kg."
+    "measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. Quitters without medication gained about 2.9 kg by month 3, 4.2 kg by month 6 and 4.7 kg by month 12. For them at 12 months, the authors estimated from the averages and spreads, not by counting people: 16 in 100 lost weight, 37 in 100 gained under 5 kg, 34 in 100 gained 5–10 kg, 13 in 100 gained over 10 kg."
    },
    "caveat": "An average; it varies a lot between people. Measured in cigarette smokers in trials, not in vapers.",
    "projection": false,
@@ -1323,7 +1362,7 @@
     },
     "changeNote": "v10 number he liked: figure, ref and basis facts kept. Rule C and cold reader v2 ('my worry is that it keeps piling on; the card doesn't say whether gain stops'): headline now gives the part of the source that answers it (the gain slowed after month 3); the monthly averages behind that go into basis.measured. Plain words: 'meta-analysis' out of basis.design. PubMed abstract refetched 2026-11-05: mean gain 2.85 kg at 3 months, 4.23 kg at 6, 4.67 kg at 12 in untreated quitters; 'most weight gain occurs within three months of quitting'."
    },
-   "changeNote": "r3 audit:rules major (rule 12): one idea per line, the finding's headline; 'most of it by month 3' stays in the body row label. Rule 3: who says the use level is not given. PubMed abstract refetched 2026-11-08.",
+   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: a pooled mean across studies, now pooled: true (chip 'Average across studies'). r5-rules minor: % to 'N in 100' in the fold, matching the body row's 16 in 100.",
    "note": {
     "quote": "mean weight gain was 1.12 kg (95% confidence interval 0.76 to 1.47), 2.26 kg (1.98 to 2.54), 2.85 kg (2.42 to 3.28), 4.23 kg (3.69 to 4.77), and 4.67 kg",
     "url": "https://pubmed.ncbi.nlm.nih.gov/22782848/"
@@ -1333,6 +1372,11 @@
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
+   },
+   "pooled": true,
+   "wasR4": {
+    "pooled": null,
+    "basis.measured": "Weight change from quit day to 1, 2, 3, 6 and 12 months. Quitters without medication gained about 2.9 kg by month 3, 4.2 kg by month 6 and 4.7 kg by month 12. For them at 12 months, the authors estimated from the averages and spreads, not by counting people: 16% lost weight, 37% gained under 5 kg, 34% gained 5–10 kg, 13% gained over 10 kg."
    }
   },
   {
@@ -1422,10 +1466,10 @@
    "basis": {
     "design": "a national US survey, interviews, one snapshot",
     "who": "US adults who had ever met the criteria for a nicotine problem, mild, moderate or severe; people still hooked and people free alike; how much they used is not reported",
-    "n": "Head count not stated; 27.9% of the 36,309 adults surveyed had ever had the problem",
+    "n": "Head count not stated; about 28 in 100 of the 36,309 adults surveyed had ever had the problem",
     "where": "US",
     "when": "2012–2013",
-    "measured": "Whether they had ever used any help for tobacco or nicotine: prescribed medicine, nicotine patches, gum or lozenges, counselling, a support group or chat room, e-cigarettes, acupuncture or meditation, or anything else. The survey gives 18.8% who had; 81 in 100 is the rest. Shares adjusted to match the US population. Past-year problem: 20.0% of US adults; ever: 27.9%. Severe cases: 27.8% had used help."
+    "measured": "Whether they had ever used any help for tobacco or nicotine: prescribed medicine, nicotine patches, gum or lozenges, counselling, a support group or chat room, e-cigarettes, acupuncture or meditation, or anything else. The survey gives 18.8 in 100 who had; about 81 in 100 is the rest. Shares adjusted to match the US population. Past-year problem: 20 in 100 US adults; ever: about 28 in 100. Severe cases: about 28 in 100 had used help."
    },
    "caveat": "It counts everyone who ever had the problem, including people still hooked, so it does not show how many got free without help. Most of them still had it in the year before the survey. People with worse problems used help more often.",
    "projection": false,
@@ -1486,18 +1530,23 @@
     },
     "changeNote": "r3 audit:rules minor (rule 17): Weak chip 'No head count stated'. Rule 5: the caveat had two different '28 in 100' (adults ever, severe cases); both figures moved to Measured, in the source's %. 'propose' kept (rule 25). PMC8154113 Table 5 values as before."
    },
-   "changeNote": "r4 rules minor (rule 3, USE_LEVEL): a dependent group still says how much they used; the source does not give it, so who says so.",
+   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds); quote stays verbatim. | Brief (no % in folds).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision"
-   }
+    "notes": "checked after revision: corrections applied to numbers[13].basis.measured"
+   },
+   "wasR4": {
+    "basis.measured": "Whether they had ever used any help for tobacco or nicotine: prescribed medicine, nicotine patches, gum or lozenges, counselling, a support group or chat room, e-cigarettes, acupuncture or meditation, or anything else. The survey gives 18.8% who had; 81 in 100 is the rest. Shares adjusted to match the US population. Past-year problem: 20.0% of US adults; ever: 27.9%. Severe cases: 27.8% had used help.",
+    "basis.n": "Head count not stated; 27.9% of the 36,309 adults surveyed had ever had the problem"
+   },
+   "changeNoteR4": "rev5 (2026-11-08): Brief (rule 12b in folds); quote stays verbatim."
   },
   {
    "kind": "after-lasting",
    "big": "90 in 100",
-   "headline": "Of quitters still off a year after quit day, about 90 in 100 are expected to stay off one more year.",
+   "headline": "Of quitters still off a year after quit day, about 90 in 100 stayed off one more year, on average.",
    "mirror": "You think even a year off won't stick.",
    "severity": "treatment",
    "counted": "people still off a year into quit-medicine trials",
@@ -1510,7 +1559,7 @@
     "measured": "Of people off at one year (breath test in all but one trial), how many went back to smoking in each later year. The review gives about 10 in 100 going back each year; the other 90 stayed off. At that rate, the authors work out, about 41 in 100 would be back after 5 more years. A national US health survey follow-up from 1982–84, in the US Surgeon General's 1990 report, found 14 and 10 in 100 went back in years 2 and 3, then under 5 in 100 a year."
    },
    "caveat": "A share per year, not for good: the yearly losses add up over time. Small groups, so the share going back each year could be anywhere from 5 to 17 in 100. All were cigarette smokers in trials of nicotine medicines.",
-   "projection": true,
+   "projection": false,
    "weak": "Small trials",
    "ref": {
     "cite": "Hughes JR, Peters EN, Naud S (2008). Relapse to smoking after 1 year of abstinence: a meta-analysis. Addictive Behaviors 33(12):1516-20.",
@@ -1573,12 +1622,18 @@
     },
     "changeNote": "r3 audit:rules major (rule 10): a pooled yearly rate from a meta-analysis, so projection:true and the finding's headline. Rule 3: who says the use level is not given. Ref unchanged."
    },
-   "changeNote": "D6: one chip line per card; the projection chip already says 'not counted', so Weak no longer repeats it.",
+   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: the review's pooled yearly rate, not worked out: projection false, pooled true, chip 'Average across studies'. Source re-fetched: 8 studies located, the pooled 10%/yr leaves one outlier out, so the headline names no trial count. Weak 'Small trials' stays.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
+   },
+   "pooled": true,
+   "wasR4": {
+    "projection": true,
+    "pooled": null,
+    "headline": "Of quitters still off a year after quit day, about 90 in 100 are expected to stay off one more year."
    }
   }
  ],
@@ -1817,7 +1872,7 @@
    "counterpart": "There’s no “just one”. One is how quit turns into smoking again.",
    "test": "The next time the “just one” thought comes this week, turn that one down and leave the room for five minutes. An hour later, check: is the pull bigger or smaller?",
    "proof": "Of daily smokers on a nicotine patch who smoked at all in their second week off, 83 in 100 were smoking at 6 months.",
-   "severity": "treatment",
+   "severity": "heavy",
    "refs": [
     {
      "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
@@ -1878,12 +1933,15 @@
     },
     "changeNote": "r3 audit:rules major (rule 4) and brief rule 3: Kenford 1994 never checked for addiction. Searched Europe PMC 2026-11-08 for a lapse-to-relapse count in people who met the criteria: none; the nearest (Japuntich 2011, PMC3058636: of 930 who lapsed, 585 relapsed; Ashare 2013) are daily smokers in trials, also not checked. So the proof says 'Not checked for addiction' plainly and the row is filed as kind 'harmless' ('just one won’t hurt'), not 'moderation'. Kept his 2025 source and the cautious 83 (the 97 stays in the quote). Two figures (rule 12). PubMed abstract refetched 2026-11-08."
    },
-   "changeNote": "D1: back to kind moderation. r4 owner major: 'Not checked for addiction.' left the proof line; the Counted line now says it plainly. Severity stays 'treatment' (patch trials with counselling). The proof argues against the 'just one'. Weak names that no study of hooked people exists (r4 rules major wording). Kenford 1994 abstract refetched 2026-11-08.",
+   "changeNote": "rev5 (2026-11-08): r5-rules minor (D1 rule 4): daily smokers in patch trials, not checked for addiction, so the tag is heavy and the build's moderation check governs it. Counted and Weak stay.",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
     "notes": "checked after revision"
+   },
+   "wasR4": {
+    "severity": "treatment"
    }
   },
   {
@@ -1891,7 +1949,7 @@
    "limiting": "Vapes and pouches are basically harmless.",
    "counterpart": "Switching is a step down, not a way out.",
    "test": "Leave the vape or pouches at home for one afternoon this week. Count how often your hand goes to the pocket where it usually sits.",
-   "proof": "In 3,446 ex-smokers who now only vape, dependence was higher with stronger liquid.",
+   "proof": "In 3,446 ex-smokers who now only vape, dependence on the vape rose with liquid strength: lowest on nicotine-free liquid, highest at 13 mg/ml or more.",
    "severity": "users",
    "refs": [
     {
@@ -1900,7 +1958,10 @@
      "pmid": "25332459",
      "fetched": true,
      "quote": "E-cig dependence appears to vary by product characteristics and liquid nicotine concentration, and it may increase over time.",
-     "note": "Online survey from December 2012 of 3,609 ex-smokers who now only vape; volunteers from vaping websites, likely pro-vaping (the authors say so). Cigarette dependence was rated from memory (14.5 vs 8.1 on the same 0-20 scale); the liquid-strength analysis used 3,446."
+     "note": "Online survey from December 2012 of 3,609 ex-smokers who now only vape; volunteers from vaping websites, likely pro-vaping (the authors say so). Cigarette dependence was rated from memory (14.5 vs 8.1 on the same 0-20 scale); the liquid-strength analysis used 3,446.",
+     "quotesMore": [
+      "Those using zero nicotine liquid had significantly lower e-cig dependence scores than those using 1-12 mg/ml, who scored significantly lower than those using 13 or greater mg/ml nicotine liquid"
+     ]
     }
    ],
    "origin": "06-template.json nicotine belief 6 (limiting kept word for word; counterpart “Switching is a step down, not a way out.” rewritten into what he notices himself)",
@@ -1929,12 +1990,15 @@
     "was": "Less harmful, maybe. But I still reach for it all day and get edgy without it.",
     "changeNote": "A0: refs list only Foulds 2015, the source the proof line uses; the maker-funded pouch test (Lunell 2020) moved to alsoRef. Proof and test unchanged. PubMed abstract refetched 2026-11-05: 'E-cig dependence appears to vary by product characteristics and liquid nicotine concentration, and it may increase over time.'"
    },
-   "changeNote": "r4 rules minor (rule 12): one idea, the finding's line. D2: Counted says plainly who was counted. Foulds 2015 abstract quote unchanged: 'E-cig dependence appears to vary by product characteristics and liquid nicotine concentration'.",
+   "changeNote": "rev5 (2026-11-08): r5-cold-nicotine: 'higher with stronger liquid' had no size; now the source's three steps. Abstract re-fetched (Europe PMC 2026-11-08).",
    "check": {
     "by": "revision checker a (nicotine)",
     "on": "2026-11-08",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to beliefs[4].proof"
+    "notes": "checked after revision"
+   },
+   "wasR4": {
+    "proof": "In 3,446 ex-smokers who now only vape, dependence was higher with stronger liquid."
    }
   }
  ],
@@ -2257,7 +2321,7 @@
     "At the old moments (after food, on a break), do what a non-smoker does there: nothing."
    ],
    "proof": {
-    "text": "A year on, 8 in 100 ex-smokers who called themselves non-smokers were smoking again, fewer than those who still said ‘a smoker trying to quit’.",
+    "text": "A year on, 8 in 100 ex-smokers who called themselves non-smokers were smoking again, against about 71 in 100 of the few who still said ‘a smoker trying to quit’.",
     "ref": {
      "cite": "Callaghan L, Yong HH, Borland R, Cummings KM, Hitchman SC, Fong GT (2021). What kind of smoking identity following quitting would elevate smokers relapse risk? Addictive Behaviors 112:106654.",
      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7572756/",
@@ -2286,12 +2350,18 @@
      },
      "changeNote": "r3 owner:vmix blocker and audit:rules major (rule 12): one figure, the finding's line; '10 of 14' becomes 'most of the few'. Severity added. PMC7572756 Table 2 as before (14 'a smoker trying to quit', 71.4% relapsed; non-smokers 8.0%)."
     },
-    "changeNote": "r4 rules minor (rule 12): one figure; 'most of the few' and the in-line 'Not checked for addiction.' are gone (the Counted line says it). Kept the comparison, because it is what backs 'Say I don’t smoke'. PMC7572756 Table 2: non-smokers 8.0% vs 'a smoker trying to quit' 71.4%.",
+    "changeNote": "rev5 (2026-11-08): r5-owner minor (rule 12a) + cold reader: the other side of the comparison, from Callaghan 2021 Table 2 (re-fetched 2026-11-08: 'A smoker trying to quit' n=14, 71.4% relapsed; Non-Smoker n=150, 8.0%). | r5-owner minor: the small comparison group (the authors call it small) goes in Weak, not on the face.",
     "check": {
      "by": "revision checker a (nicotine)",
      "on": "2026-11-08",
      "verdict": "ok"
-    }
+    },
+    "wasR4": {
+     "text": "A year on, 8 in 100 ex-smokers who called themselves non-smokers were smoking again, fewer than those who still said ‘a smoker trying to quit’.",
+     "weak": null
+    },
+    "weak": "Only 14 people still called themselves a smoker trying to quit",
+    "changeNoteR4": "rev5 (2026-11-08): r5-owner minor (rule 12a) + cold reader: the other side of the comparison, from Callaghan 2021 Table 2 (re-fetched 2026-11-08: 'A smoker trying to quit' n=14, 71.4% relapsed; Non-Smoker n=150, 8.0%)."
    },
    "was": {
     "proof": {

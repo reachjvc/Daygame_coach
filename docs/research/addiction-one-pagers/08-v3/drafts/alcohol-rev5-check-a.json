@@ -1,0 +1,141 @@
+{
+ "id": "alcohol",
+ "by": "rev5 source checker a (independent)",
+ "on": "2026-11-08",
+ "brief": "rev3-check-brief.md applied to rev5 (all changed items, no a/b split) + rev5-brief.md E1–E6",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "42 in 100 (Measured line)",
+   "verdict": "ok",
+   "problems": [],
+   "source": "Lopez-Quintero 2011 abstract (Europe PMC): alcohol n = 4781; 2,008/4,781 = 42.0 in 100, exact."
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "87% less (pooled: true)",
+   "verdict": "ok",
+   "problems": [],
+   "source": "Miller 2001: averaged across seven multisite studies, so pooled is right (E5). The Weak label no longer repeats the chip."
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "36 vs 23 in 100 (pooled: true)",
+   "verdict": "ok",
+   "problems": [
+    "Note: 36.1 and 23.4 are written 36 and 23 with no 'about'. This was there before rev5 and is under half a point."
+   ],
+   "source": "Mann 2004 meta-analysis of 17 trials: pooled is right."
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "42 vs 35 in 100 (caveat)",
+   "verdict": "ok",
+   "problems": [],
+   "source": "The caveat no longer says 'Worked out, not counted', so the chip says it once (D6). Projection stays true."
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "62 vs 43 in 100 (headline + caveat)",
+   "verdict": "ok",
+   "problems": [
+    "'free three years on' matches 'By the 3-year follow-up, 62.4% … remitted' (PMC1976118). The '7 vs 27 in 100' card exists (numbers[8]). Measured confirms that free includes moderate drinking."
+   ],
+   "source": "Moos & Moos 2006 abstract re-fetched."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "26% lower (Measured line)",
+   "verdict": "fix",
+   "problems": [
+    "Source (PMC5942469 abstract): systolic BP −6.6%, diastolic −6.3%, weight −1.5%. The figures are right. But '6 to 7 in 100 off the reading' and 'weight by 1.5 in 100' put drops in the 'N in 100' form, which rule 12b keeps for shares of people. A drop stays in %, and the build's SHARE_PCT regex allows '% lower'. Also, 'fell a little' is a verdict."
+   ],
+   "fix": {
+    "numbers[12].basis.measured": "Blood tests, blood pressure and weight before and after one month. The group that kept drinking showed no clear change. Blood pressure was also about 6 to 7% lower, and weight 1.5% lower."
+   },
+   "source": "Mehta 2018 abstract re-fetched (Europe PMC)."
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "42 to 6 in 100 (Measured: biggest drop in week 2)",
+   "verdict": "ok",
+   "problems": [],
+   "source": "Brown & Schuckit 1988 abstract: 'largest reduction in scores at Week 2'."
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "75 in 100 (headline one fact)",
+   "verdict": "ok",
+   "problems": [
+    "One fact now. 'Still dependent 25.0%' (Dawson 2005 abstract) gives 75 in 100. The caveat covers 'some signs left' and why it differs from the 42."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 16,
+   "label": "2–7 days (caveat safety line)",
+   "verdict": "ok",
+   "problems": [
+    "It covers cutting back ('drops' in the Measured line), and 'now' is the right word."
+   ]
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "Stopping will be hell (test, safety)",
+   "verdict": "ok",
+   "problems": [
+    "A heavy daily drinker now skips the dry evening and reads Before you stop. Other drinkers do one dry evening, which is not a drink-delay drill. Brown & Schuckit quotes are word for word."
+   ]
+  },
+  {
+   "where": "windows",
+   "index": 2,
+   "label": "DTs (note -> caption)",
+   "verdict": "ok",
+   "problems": [
+    "Only the field changed, not the text. 'About 5 in 100' is unchanged."
+   ]
+  },
+  {
+   "where": "windows",
+   "index": 6,
+   "label": "Sleep (note -> caption)",
+   "verdict": "ok",
+   "problems": [
+    "Only the field changed, not the text."
+   ]
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "E2: liked v10 'How quitting goes' cards that are off-reader",
+   "verdict": "fix",
+   "problems": [
+    "E2 says every v10 'How quitting goes' card that is off-reader carries liked: true. v10's 'How quitting goes' section (board/template-v2.html SECS 'outlook') shows the 07-mirror-stats 'quit' and 'after' groups. These off-reader cards come from it and have no liked flag, so the off-reader choice can take them off and the decision 'Every How quitting goes number you liked is back' would be false: numbers[12] (26% lower, v10 after '1 month'); numbers[17] (6 years, v10 after).",
+    "Assumes the whole v10 'How quitting goes' section counts as liked, as kinds.json does for porn 'after' cards (74%, 1 in 6). If the owner meant only the cards kinds.json names, ignore this for the unnamed ones."
+   ],
+   "fix": {
+    "numbers[12].liked": true,
+    "numbers[17].liked": true
+   }
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "Items flagged changed but identical to pages/alcohol.json (carried over from earlier rounds)",
+   "verdict": "ok",
+   "problems": [
+    "No rev5 change: these items are identical to the current page, apart from changed/changeNote fields, so there was nothing new to check. The old flags stay set: gaps[0], gaps[4], footerProposal."
+   ]
+  }
+ ]
+}

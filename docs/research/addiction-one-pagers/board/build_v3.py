@@ -93,14 +93,18 @@ def verdict(s):
 
 
 # rule 12b: a share of people is written "N in 100" on every reader face: big figure, headline, proofs, body rows
-SHARE_BAD = re.compile(r"\d+(?:\.\d+)?%(?!\s*(?:less|more|lower|higher|fewer))|\b1 in (?!100\b)\d+\b|\b\d[\d,]* of \d[\d,]{2,}\b")
+SHARE_PCT = re.compile(r"\d+(?:\.\d+)?%(?!\s*(?:less|more|lower|higher|fewer))|\b1 in (?!100\b)\d+\b")
+# a raw count on a reader face: "2,008 of 4,781", "6 of 9", "Of 9 men …, 6 …" (round 5); folds may keep raw counts
+SHARE_RAW = re.compile(r"\b\d[\d,]* of (?:every )?\d[\d,]*\b|\b[Oo]f (\d[\d,]*)\b[^.;]{0,80}?, (\d[\d,]*)\b(?! in 100)")
 
 
-def share_fmt(t):
-    m = SHARE_BAD.search(t or "")
+def share_fmt(t, raw=True):
+    m = SHARE_PCT.search(t or "") or (raw and SHARE_RAW.search(t or ""))
     return m.group(0) if m else None
 
 
+# rule 10 / E5: a pooled average of studies' rates says so with one chip
+POOLED_TEXT = re.compile(r"\baverag\w* (?:across|in the \d+)|\bpooled\b|review (?:pooling|combining)|combin\w* \d+ (?:trials|studies)", re.I)
 # rule 12c (D7): a big figure is a result, not a time stamp ("Week 1", "72 hours", "7 days", "Years 1 and 3")
 TIME_BIG = re.compile(r"^(?:day|days|week|weeks|month|months|year|years)\b|^\d[\d–-]*\s*(?:hours?|days?|weeks?|months?|years?)$", re.I)
 # rule 12b: in the big figure itself, only a drop or rise ("87% less") stays in %
@@ -158,6 +162,18 @@ def check_number(x, page, kinds, where, general=False):
         P("12b", where, f"a share written as % or 'N of M' in the big figure (write 'N in 100'): {big}")
     if share_fmt(x.get("headline")):
         P("12b", where, f"a share not written 'N in 100' in the headline: {share_fmt(x.get('headline'))!r}")
+    for f in ("who", "measured"):
+        if share_fmt((x.get("basis") or {}).get(f), raw=False):
+            P("12b", where, f"a share in % or '1 in N' in the fold ({f}): {share_fmt(x['basis'][f], raw=False)!r}")
+    if share_fmt(x.get("caveat"), raw=False):
+        P("12b", where, f"a share in % or '1 in N' in the fold (caveat): {share_fmt(x.get('caveat'), raw=False)!r}")
+    if wc(x.get("counted")) > 12:
+        P(3, where, f"Counted label is {wc(x.get('counted'))} words (12 max)")
+    btxt = reader_text(*(x.get("basis") or {}).values(), x.get("caveat"))
+    if POOLED_TEXT.search(btxt) and not (x.get("pooled") or x.get("projection")):
+        P(10, where, f"its basis says {POOLED_TEXT.search(btxt).group(0)!r}, but it is neither pooled nor a projection (one chip, E5)")
+    if x.get("liked") and not (x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""))):
+        P(28, where, "marked liked (kept against the off-reader choice) but no rule argues against it; drop 'liked'")
     if TIME_BIG.search(big) and not x.get("timeIsResult"):
         P("12c", where, f"the big figure is a time, not a result: {big!r} (make the result big, or set timeIsResult when the time is the finding)")
     if verdict(x.get("headline")):
@@ -338,7 +354,9 @@ def review_facts(pages, kinds_doc):
     day = lambda d: next((x["n"] for x in app[0]["app"]["days"] if x["day"] == d), None) if app else None
     acts = [len(st.get("do", [])) for p in pages for st in p.get("plan", [])]
     picked = {k["id"] for k in kinds if k["pick"]}
-    off = sum(1 for p in pages for x in p.get("numbers", []) if (x.get("severity") in OFF_READER or x.get("propose")) and x["kind"] in picked)
+    is_off = lambda x: x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""), re.I)
+    off = sum(1 for p in pages for x in p.get("numbers", []) if is_off(x) and not x.get("liked") and x["kind"] in picked)
+    liked = [f"{p['tab'].lower()} {x['big']}" for p in pages for x in p.get("numbers", []) if is_off(x) and x.get("liked") and x["kind"] in picked]
     return {
         "nKinds": str(len(kinds)), "nGroups": str(len(kinds_doc["groups"])),
         "nPicked": str(sum(1 for k in kinds if k["scope"] == "specific" and k["pick"])),
@@ -356,6 +374,8 @@ def review_facts(pages, kinds_doc):
         "dangerPages": " and ".join(p["tab"].lower() for p in pages if p["danger"]) or "no page",
         "noteLine": " ".join(f"On the {p['tab'].lower()} page: one small “Before you stop” line above the sources: “{p['footer']['text']}”" for p in pages if p.get("footerLevel") == "note"),
         "offCards": str(off),
+        "nLiked": str(len(liked)), "likedCards": ", ".join(liked) or "none",
+        "likedLine": f"The ones you liked in version 10 stay either way: {', '.join(liked)}." if liked else "",
     }
 
 
@@ -446,9 +466,7 @@ def main():
             if not (g or (isinstance(gr, dict) and gr.get("text")) or isinstance(gr, str)):
                 P(15, pid, "no hope number, and 'Who gets free, and how' has no plain line saying so (gapReaderLine)")
         if page["heroLine"]:
-            lint(page["heroLine"], pid, f"{pid} hero line")
-            if figs(page["heroLine"]):
-                P(15, pid, f"the hero line has a figure but is not a checked number: {page['heroLine']}")
+            P(15, pid, "heroLine is no longer shown (E1: title, then the beliefs); move it to notUsed.other with its reason")
         gr = page.get("gapReaderLine")
         if gr:
             lint(gr if isinstance(gr, str) else gr.get("text", ""), pid, f"{pid} gap reader line")
@@ -477,6 +495,8 @@ def main():
                 P(4, w, "'not checked for addiction' belongs on the Counted line, not in the proof sentence")
             if wc(b.get("proof")) > 40:
                 P(8, w, f"proof is {wc(b['proof'])} words (40 max)")
+            if wc(b.get("counted")) > 12:
+                P(3, w, f"Counted line is {wc(b.get('counted'))} words (12 max)")
             if not b.get("ownWords") and share_fmt(b.get("proof")):
                 P("12b", w, f"a share not written 'N in 100' in the proof: {share_fmt(b.get('proof'))!r}")
             if figs(b.get("proof")) > 2 and not b.get("ownWords"):   # rule 26: his own v10 sentence stays word for word
@@ -501,6 +521,8 @@ def main():
                     P(6, f"{pid} plan step {i + 1}", f"an action that is a verdict, not a thing to do: {VERDICT_WORDS.search(d).group(0)!r} in {d[:60]!r}")
             if st.get("proof"):
                 pt = st["proof"].get("text", "")
+                if wc(st["proof"].get("counted")) > 12:
+                    P(3, f"{pid} plan step {i + 1} proof", f"Counted line is {wc(st['proof'].get('counted'))} words (12 max)")
                 if share_fmt(pt) and not st["proof"].get("ownWords"):
                     P("12b", f"{pid} plan step {i + 1} proof", f"a share not written 'N in 100': {share_fmt(pt)!r}")
                 for m in re.finditer(r"(\d+(?:\.\d)?)(?:\s+to\s+(\d+(?:\.\d)?))? out of 10", pt):
@@ -538,6 +560,12 @@ def main():
                     P(12, f"{pid} body row {w['label'][:30]!r}", f"{f} has {figs(w.get(f))} figures (2 max): {w.get(f)}")
                 if verdict(w.get(f)):
                     P(6, f"{pid} body row {w['label'][:30]!r}", f"{f} opens with a verdict: {verdict(w.get(f))!r}")
+            if isinstance(w.get("note"), str):
+                P(25, f"{pid} body row {w['label'][:30]!r}", "a reader line in 'note' is stripped before render; call it 'caption'")
+            if w.get("caption"):
+                lint(w["caption"], pid, f"{pid} body row caption")
+                if share_fmt(w["caption"]):
+                    P("12b", f"{pid} body row {w['label'][:30]!r}", f"a share not written 'N in 100' in the caption: {share_fmt(w['caption'])!r}")
             if not (isinstance(w.get("s"), (int, float)) and isinstance(w.get("e"), (int, float)) and 0 < w["s"] <= w["e"]):
                 P(18, f"{pid} body row {w['label'][:30]!r}", "needs a start and end in hours (s <= e) to be drawn as a bar")
             elif w.get("pk") is not None and not w["s"] <= w["pk"] <= w["e"]:

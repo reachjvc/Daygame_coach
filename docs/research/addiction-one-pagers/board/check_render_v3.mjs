@@ -73,6 +73,20 @@ try {
             felth: art.querySelectorAll(".sec-graph .felth").length,
             graphText: ((art.querySelector(".sec-graph .peaks, .sec-graph .say") || {}).innerText || ""),
             oldChip: /Projected, not counted/.test(txt),
+            // round 5
+            heroLine: ((art.querySelector(".sec-hero .line") || {}).innerText || "").trim(),
+            graphAll: [...art.querySelectorAll(".sec-graph .peaks, .sec-graph .say")].map(e => e.innerText).join(" ").toLowerCase(),
+            expectEase: (() => {
+              if (!P.feltMeds) return null;
+              const order = ["Day 1", "Days 2–3", "Days 4–7", "Week 2", "Weeks 3–4", "Month 2", "Month 3", "Months 4–12", "Year 2 +"].filter(l => l in P.feltMeds);
+              const v = order.map(l => P.feltMeds[l]), max = Math.max(...v);
+              let i = v.indexOf(max); while (i + 1 < v.length && v[i + 1] === max) i++;
+              for (let j = i + 1; j < v.length; j++) if (v[j] <= max - 1.5 && v.slice(j + 1).every(y => y <= max - 1)) return order[j].toLowerCase();
+              return "";
+            })(),
+            chips: [...art.querySelectorAll(".tag.weak")].map(t => t.textContent.trim()),
+            gapTexts: [...art.querySelectorAll(".gapl")].map(g => g.innerText.trim()),
+            likedMissing: (P.numbers || []).filter(x => x.liked && DATA.kinds.kinds.find(k => k.id === x.kind)?.pick).map(x => x.big).filter(b => !txt.includes(b)),
             medDiff: (() => {
               if (!P.feltMeds) return [];
               const js = {};
@@ -107,6 +121,22 @@ try {
           FAIL(15, where, `the page has both hope numbers but the hero doesn't show both (${r.heroBigs.join(", ")})`);
         if (/Worked out|Projection/i.test(r.heroText) && !/projected/i.test(r.heroText)) FAIL(10, where, "a projection chip in the hero, but no projected figure on it");
         if (r.oldChip) FAIL(10, where, "the old “Projected, not counted” chip is back (D6: one chip, “Worked out, not counted”)");
+        if (r.heroLine && /^(?:start with|here is|here are|below|read)\b/i.test(r.heroLine)) FAIL(6, where, `the hero line says what comes next: “${r.heroLine}”`);
+        if (/no clear peak/.test(r.graphAll)) FAIL(18, where, "the graph says “No clear peak” (E4: the highest counted stage is the peak)");
+        if (r.expectEase != null) {
+          if (r.expectEase && !r.graphAll.includes(`easier from ${r.expectEase}`)) FAIL(18, where, `the graph should say “Easier from ${r.expectEase}” (E4)`);
+          if (!r.expectEase && !r.graphAll.includes("no clear easing")) FAIL(18, where, "no stage qualifies as easier, but the graph doesn't say “No clear easing” (E4)");
+        }
+        for (const c of r.chips) {
+          if ((c.match(/worked out/gi) || []).length > 1) FAIL(10, where, `a chip says “worked out” twice: ${c}`);
+          const [lead, ...rest] = c.split(";");
+          const lw = new Set((lead.match(/[a-z]{4,}/gi) || []).map(w => w.toLowerCase()));
+          const rep = (rest.join(";").match(/[a-z]{4,}/gi) || []).map(w => w.toLowerCase()).filter(w => lw.has(w));
+          if (rep.length) FAIL(10, where, `a chip repeats “${rep[0]}”: ${c}`);
+        }
+        const phrases = r.gapTexts.flatMap((t, i) => t.replace(/^Not counted here yet:\s*/, "").replace(/\.$/, "").split(/;\s*/).map(ph => [i, ph.toLowerCase().split(/\s+/).slice(0, 4).join(" ")]));
+        for (const [i, ph] of phrases) if (ph.split(" ").length >= 3 && r.gapTexts.some((t, j) => j !== i && t.toLowerCase().includes(ph))) { FAIL(27, where, `two gap lines say the same thing: “${ph}…”`); break; }
+        if (ver === "mix" && r.likedMissing.length) FAIL(26, where, `cards he liked in version 10 are missing on the recommended view: ${r.likedMissing.join(", ")}`);
         if (r.medDiff.length) FAIL(18, where, `graph stage medians differ from the build's: ${r.medDiff.join("; ")}`);
         if (r.felth !== 1) FAIL(18, where, `${r.felth} graph headlines (one, D9)`);
         if (/No clear peak/.test(r.graphText) && /hardest/i.test(r.graphText)) FAIL(18, where, "the graph says both “No clear peak” and a hardest stretch");

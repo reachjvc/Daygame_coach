@@ -1,0 +1,183 @@
+{
+ "id": "cannabis",
+ "by": "rev5 source checker a (independent)",
+ "on": "2026-11-08",
+ "brief": "rev3-check-brief.md applied to rev5 (all changed items, no a/b split) + rev5-brief.md E1–E6",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "65 in 100 (caveat pointer)",
+   "verdict": "ok",
+   "problems": [
+    "The '71 in 100' card exists on the page."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "97 in 100 (Measured: 66%)",
+   "verdict": "ok",
+   "problems": []
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "6 years (Weak removed)",
+   "verdict": "ok",
+   "problems": [
+    "Projection stays true, so the chip says 'Worked out, not counted' once."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "Age 29 (caveat: 1 in 6 -> 17 in 100)",
+   "verdict": "fix",
+   "problems": [
+    "Typo: 'only only'. The figure is right: Kelly 2017 Table 1 gives an alcohol/substance use disorder diagnosis of 17.0% (PMC6076174, re-fetched). 17 is exact, so 'about' is optional; keep it."
+   ],
+   "fix": {
+    "numbers[3].caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in."
+   },
+   "source": "Kelly 2018 abstract (M = 28.87) + Kelly 2017 Table 1."
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "54 in 100 (Measured + caveat)",
+   "verdict": "fix",
+   "problems": [
+    "Typo: 'only only'. Measured: 45.8 is exact (Kelly 2017 Table 3, cannabis 45.8%), but 'the other 54' is 54.2 rounded, so it needs 'about'."
+   ],
+   "fix": {
+    "numbers[4].basis.measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8 in 100 had used one or more; about 54 in 100 used none.",
+    "numbers[4].caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43 to 65 in 100). People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "2 tries (caveat)",
+   "verdict": "fix",
+   "problems": [
+    "Typo: 'only only'."
+   ],
+   "fix": {
+    "numbers[5].caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. People judged their own problem: in the whole survey only about 17 in 100 had ever been diagnosed, so milder cases are mixed in."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "85 in 100 (Measured, Counted)",
+   "verdict": "ok",
+   "problems": [
+    "Straight % to 'N in 100' swaps. Counted is 8 words with 'not'. The 75 in 100 stays in basis.who."
+   ],
+   "source": "Hughes 2016 quote '(85%)' as before."
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "27 vs 26 in 100 (Weak removed)",
+   "verdict": "ok",
+   "problems": [
+    "Note: 262 per 1000 is written '26 in 100' with no 'about'. This was there before rev5."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "23 in 100 (pooled)",
+   "verdict": "ok",
+   "problems": [
+    "Gates 2016: 'an average of 23%' across the 8 trials, so pooled is right. Weak no longer repeats the chip."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "Day 2–6 (liked)",
+   "verdict": "ok",
+   "problems": [
+    "E2: listed by name."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "47 in 100 (pooled, liked, folds)",
+   "verdict": "ok",
+   "problems": [
+    "Bahji 2020 abstract re-fetched: 47% (6469 of 23 518), 17% population, 54% outpatient, 87% inpatient, 'men (69%)', median age 29.9. 6,469/23,518 = 27.5, so 'about 28 in 100' is honest. The propose text no longer clashes.",
+    "Doubt on the source itself: the abstract's own '14 387 were men (69%)' works out to 61 in 100 of 23,518. The card copies the paper's 69. Leave it, or write 'most of them men' if the owner cares."
+   ],
+   "source": "Bahji 2020 abstract."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "72 hours (pooled; who)",
+   "verdict": "fix",
+   "problems": [
+    "Scott 2018 abstract: '1472 [68.4%] male', so 68 needs 'about'. Pooled is right (a meta-analysis of effect sizes)."
+   ],
+   "fix": {
+    "numbers[12].basis.who": "frequent or heavy weed users (how much they used is not reported) in studies whose average age was 26 or under (users' average age 20.6, about 68 in 100 male, across all 69 studies) vs people who had barely used"
+   },
+   "source": "Scott 2018 abstract re-fetched."
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "12 weeks (propose text)",
+   "verdict": "ok",
+   "problems": [
+    "The '+12 points' card exists on the page."
+   ]
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "Step 2 proof (verdict out, Weak '25 people')",
+   "verdict": "ok",
+   "problems": [
+    "Ellingstad 2006 quote unchanged. Counted is 12 words with 'mild' (disorder). The proof has no verdict."
+   ]
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "Step 3 action: first week hardest",
+   "verdict": "ok",
+   "problems": [
+    "Checked against felt/cannabis.json with build_v3.py's STAGES and MIN_POSTS. Day 1 is 5 (29 posts), Days 2–3 are 5 (115), Days 4–7 are 5 (117), Week 2 is 4 (113), Weeks 3–4 are 3.5. The E4 headline is 'Day 1: the hardest … 5', then 'Easier from Weeks 3–4: 3.5'. 'The first week is the hardest; the second is a little easier' agrees. The step 3 proof ('4 out of 10 or less' after week 1) matches the stages shown."
+   ]
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "E2: liked v10 'How quitting goes' cards that are off-reader",
+   "verdict": "fix",
+   "problems": [
+    "E2 says every v10 'How quitting goes' card that is off-reader carries liked: true. v10's 'How quitting goes' section (board/template-v2.html SECS 'outlook') shows the 07-mirror-stats 'quit' and 'after' groups. These off-reader cards come from it and have no liked flag, so the off-reader choice can take them off and the decision 'Every How quitting goes number you liked is back' would be false: numbers[12] (72 hours, v10 after); numbers[13] (Week 1, v10 after); numbers[15] (12 weeks, v10 after).",
+    "Assumes the whole v10 'How quitting goes' section counts as liked, as kinds.json does for porn 'after' cards (74%, 1 in 6). If the owner meant only the cards kinds.json names, ignore this for the unnamed ones."
+   ],
+   "fix": {
+    "numbers[12].liked": true,
+    "numbers[13].liked": true,
+    "numbers[15].liked": true
+   }
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "Items flagged changed but identical to pages/cannabis.json (carried over from earlier rounds)",
+   "verdict": "ok",
+   "problems": [
+    "No rev5 change: these items are identical to the current page, apart from changed/changeNote fields, so there was nothing new to check. The old flags stay set: gaps[0], gaps[1], gaps[2], gaps[3], gaps[4], gaps[5], gaps[6], gaps[7], gaps[8], gaps[9], notUsed.numbers[13], notUsed.numbers[20], notUsed.numbers[21], notUsed.numbers[22], notUsed.beliefs[2], notUsed.beliefs[4], notUsed.beliefs[6], notUsed.beliefs[7], notUsed.beliefs[8], notUsed.beliefs[9], notUsed.beliefs[10], notUsed.beliefs[11], notUsed.beliefs[12], notUsed.beliefs[13], notUsed.beliefs[14], notUsed.beliefs[15], notUsed.beliefs[16], notUsed.beliefs[17], notUsed.beliefs[18], notUsed.beliefs[19], notUsed.beliefs[20], notUsed.beliefs[21], notUsed.beliefs[22], notUsed.page[0], notUsed.page[1], notUsed.page[2], gapReaderLine."
+   ]
+  }
+ ]
+}

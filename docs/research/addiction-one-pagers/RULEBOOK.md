@@ -51,7 +51,7 @@ number carries one severity tag, shown on the card in plain words:
 The "who" line also says how much they used (cigarettes a day, days a week,
 "daily"), or "how much they used is not reported". Belief proofs and plan
 proofs carry a tag too, and show a short Counted line under them.
-Why: rule 2. Check: Build fails on a missing or unknown tag; on a `heavy`
+A Counted label or line is 12 words or fewer. Why: rule 2. Check: Build fails on a missing or unknown tag; on a Counted label or line over 12 words; on a `heavy`
 or `users` number in the hope, who-gets-free or what-helps groups; on a
 Counted label that lacks its tag's key words (`disorder`: "mild"; `resolved`:
 "say"; `heavy`/`users`: "not"; `self-hooked`: "say" or "feel"; `screened`:
@@ -128,8 +128,11 @@ with the head count right under it in the same view; its line says
 "projected" and its one Weak label says it likely runs high, said once, not
 three times. The choice `hero` on the review page sets the order. A modelled
 figure (a pooled effect times an assumed rate, a model's estimate) is a
-projection too. On a card, a worked-out figure shows its Counted label and one
-amber chip, "Worked out, not counted" ("Average across studies" for a pooled
+projection too. A pooled average of studies' rates carries `pooled: true`
+(round 5, E5); the build fails when a card's basis says "averaged across",
+"pooled" or "combining N trials" and it is neither pooled nor a projection. A
+chip never repeats a word (the render check fails on "worked out" twice). On a
+card, a worked-out figure shows its Counted label and one amber chip, "Worked out, not counted" ("Average across studies" for a pooled
 average, `pooled: true`), carrying anything else its Weak label says; "not
 counted" is never said twice (round 4, D6). In the hero the chip names its
 figure ("About 91 in 100: worked out, not counted; likely runs high"), so it
@@ -159,9 +162,11 @@ less") stays in %; raw counts ("138 of 180") go under Based on. Why: round-3
 cold readers had to convert between "42 in 100", "90.6%" and "138 of 180" on one
 screen. Round 4: this holds for headlines, belief and plan proofs and body
 rows too ("1 in 4" is "25 in 100"; "2,008 of 4,781" goes under Based on). His
-own kept sentences (`ownWords`) are the exception (rule 26). Check: Build fails
-on "%" or "N of M" in a big figure, and on "N%", "1 in N" or a raw "N of M"
-count in a headline, a proof or a body row.
+own kept sentences (`ownWords`) are the exception (rule 26). In the folds
+(Based on), raw counts may stay, but shares are still "N in 100" (round 5).
+Check: Build fails on "%" or "N of M" in a big figure; on "N%", "1 in N" or a
+raw count ("6 of 9", "Of 9 men …, 6 …") in a headline, a proof, a body row or
+its caption; and on "N%" or "1 in N" in a fold's who, measured or caveat line.
 
 **12c. A big figure is a result, not a time stamp.** "Week 1", "72 hours",
 "7 days" or "Years 1 and 3" says when, not what happened. Make the result the
@@ -208,8 +213,8 @@ cards run by group: who gets free, how they quit, what helps, then life after.
 graph, then more numbers.** His words (5 Nov): "Perhaps a good combination is
 leading with one statistic creating hope, and then some belifs/the graph, then
 more statistics." When no study counts people hooked on it who got free (porn,
-8 Nov), the page has no hope number: its title, at most one line with no
-figure in it, then the beliefs; "Who gets free, and how" says plainly what is
+8 Nov), the page has no hope number: its title, then the beliefs, with no line
+between them (round 5, E1: a line that says what comes next breaks rule 6); "Who gets free, and how" says plainly what is
 not counted, and What is weak lists it. Check: Build (the section order is
 fixed in the template; a page with no hope number needs its plain gap line,
 and its hero line may carry no figure); the render check fails when such a
@@ -250,16 +255,20 @@ agreement and its bias note, and on a body row without a start and end in
 hours; the render check fails when a body row is not drawn as a bar or the
 graph says "few".
 
-The graph's headline (round 4, D9) calls the hardest stretch only where the
-highest typical day, among stages with 25 posts or more, stands at least 1
-point above every later stage; a hollow stage never sets it. Otherwise there is
-one headline, said plainly: "No clear peak. A typical day sits at 3 to 4 out of
-10 from days 2–3 through months 4–12." Pages carry no headline text of their
-own. A plan proof that quotes the graph uses a figure the graph shows. Check:
+The graph's headline (round 5, E4, replacing D9): the hardest stage is the
+highest typical day among stages with 25 posts or more (a hollow stage never
+sets it; a line that falls steadily from its first stage peaks there): "<stage>:
+the hardest. A typical day: X out of 10." Then "Easier from <stage>: Y out of
+10.", the first later stage at least 1.5 points below the peak with every stage
+after it at least 1 point below. Where no stage qualifies: "No clear easing: a
+typical day stays near X out of 10 through <last counted stage>." Never "No
+clear peak". Pages carry no headline text of their own, and any page text about
+the graph agrees with it. A plan proof that quotes the graph uses a figure the graph shows. Check:
 Build fails on a page's `feltHeadlineProposal` and on a plan proof's "N out of
 10" that no stage of the graph shows; the render check fails on more than one
-graph headline, on "No clear peak" next to a hardest stretch, and when the
-page's stage medians differ from the build's.
+graph headline, on "No clear peak", on an "easier from" stage (or "No clear
+easing") that the stage medians don't give, and when the page's stage medians
+differ from the build's.
 
 **19. A lab cue test is never drawn as craving.** Withdrawal is drawn as
 ranges. A phase whose study stopped at its peak ends there and says so. Why: 4
@@ -313,8 +322,13 @@ what I want than a bunch of the other stats", 5 Nov); the felt-difficulty
 graphic; the "age when it ended" number; alcohol belief row 3; his five-step
 plan; his 2025 nicotine one-pager. His own v10 and 2025 sentences in kept rows
 stay word for word, even where rule 10 or rule 12 would cut them; such a proof
-carries `ownWords: true` and the build skips its figure count (8 Nov). Check:
-Gate (owner-lens critic).
+carries `ownWords: true` and the build skips its figure count (8 Nov). A
+number card he liked in version 10 that a rule argues against carries `liked:
+true` and stays on the page under any answer to the off-reader choice, with its
+Counted label; the choice names those cards in one line (round 5, E2). Check:
+the render check fails when a liked card is missing from the recommended view;
+Build fails on `liked` on a card no rule argues against; Gate (owner-lens
+critic).
 
 **27. Decide; don't ask. Every choice put to him becomes a rule for every page,
 at most 7 per round, and never the same detail twice.** Why: 5 Nov he said he
@@ -322,8 +336,10 @@ fears looking every part over for all addictions "over and over". A card never
 asks on its own ("Proposed to remove"); every proposal folds into one choice
 that lists the cards it covers. A detail a rule or decision already settles is
 not asked again, and each card sits in exactly one choice. The off-reader
-choice covers number cards only; its count is the length of the list it shows
-(round 4, D2/D3). Belief and plan proofs about people not checked for addiction
+choice covers number cards only: every card tagged `heavy` or `users`, carrying
+a `propose`, or whose Counted label says "not checked" or "not required" (round
+5, E3), except the liked ones (rule 26); its count is the length of the list it
+shows (round 4, D2/D3). Belief and plan proofs about people not checked for addiction
 stay, labelled so, and the choice names them in one line. The review page says
 under its tabs that only "Choices for you" needs him. Check: Build (at most 7 choices); the render check fails on a
 "Proposed to remove" chip and on more than 7 asks on the review page; Gate.

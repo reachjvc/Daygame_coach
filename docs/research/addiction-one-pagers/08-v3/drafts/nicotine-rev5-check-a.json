@@ -1,0 +1,172 @@
+{
+ "id": "nicotine",
+ "by": "rev5 source checker a (independent)",
+ "on": "2026-11-08",
+ "brief": "rev3-check-brief.md applied to rev5 (all changed items, no a/b split) + rev5-brief.md E1–E6",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "84 in 100 (Measured: 3.0% / 18.4%)",
+   "verdict": "fix",
+   "problems": [
+    "3.0 is exact and 18.4 is rounded, but 'about' sits on the exact figure. Put it on the rounded one."
+   ],
+   "fix": {
+    "numbers[1].basis.measured": "The age when the signs first appeared and the age when they finally stopped and never came back, as people recalled it. From those ages the model projects the share free over a whole life. The model puts 3 in 100 free within a year of getting hooked and about 18 in 100 within 10 years."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "3–5 in 100 (n line)",
+   "verdict": "ok",
+   "problems": [
+    "The n line swap is fine. Liked flag missing: see the E2 entry."
+   ],
+   "source": "Hughes 2004 quote unchanged."
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "12 vs 12 in 100 (headline, Counted)",
+   "verdict": "ok",
+   "problems": [
+    "'the same 12 in 100' matches the source, '12 per 100 | 12 per 100'. Counted is 11 words with 'not checked', so E3 puts it in the off-reader list."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "Week 1 anxiety (caveat)",
+   "verdict": "ok",
+   "problems": [
+    "The new sentence matches belief 2's proof ('peak within the first week') and West & Hajek ('significant decrease in anxiety from the first week of abstinence'). Belief 2 is beliefs[1] (kind 'hard')."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "Years 1 and 3 (who: women share)",
+   "verdict": "fix",
+   "problems": [
+    "Piper 2012 abstract: 58.2% women. 58 is rounded, so it needs 'about'."
+   ],
+   "fix": {
+    "numbers[8].basis.who": "adult smokers of 10 or more cigarettes a day who wanted to quit; all got six counselling sessions and quit medicine or a dummy pill (about 58 in 100 women)"
+   },
+   "source": "Piper 2012 abstract re-fetched."
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "26 years (Measured)",
+   "verdict": "fix",
+   "problems": [
+    "The same 'about' placement problem as numbers[1]."
+   ],
+   "fix": {
+    "numbers[9].basis.measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using. The model puts 3 in 100 free within the first year and about 18 in 100 within 10 years."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "4–5 kg (pooled; fold shares)",
+   "verdict": "ok",
+   "problems": [
+    "Aubin 2012 abstract: random-effects meta-analysis, so pooled is right. 16%, 37%, 34% and 13% are exact as N in 100. Weak is null, so no chip repeats."
+   ],
+   "source": "Aubin 2012 abstract re-fetched."
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "81 in 100 (n + Measured)",
+   "verdict": "fix",
+   "problems": [
+    "27.9 to '28 in 100' and severe 27.78 to '28 in 100' are rounded with no 'about'. '81 in 100 is the rest' is 81.2, so it is rounded too (the headline already says 'about 81'). 18.8 and 20.0 match the abstract. The n line already has 'about 28'."
+   ],
+   "fix": {
+    "numbers[13].basis.measured": "Whether they had ever used any help for tobacco or nicotine: prescribed medicine, nicotine patches, gum or lozenges, counselling, a support group or chat room, e-cigarettes, acupuncture or meditation, or anything else. The survey gives 18.8 in 100 who had; about 81 in 100 is the rest. Shares adjusted to match the US population. Past-year problem: 20 in 100 US adults; ever: about 28 in 100. Severe cases: about 28 in 100 had used help."
+   },
+   "source": "Chou 2016 abstract re-fetched: 20.0%, 27.9%, 20.3%, 18.8%."
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "90 in 100 (now pooled, not projection)",
+   "verdict": "ok",
+   "problems": [
+    "Hughes 2008 abstract: eight RCTs located; 'After deleting one trial with outlier results, a meta-analysis estimated the annual incidence of relapse after 1 year to be 10%' (CI 5–17%). That is the review's own pooled estimate, so pooled: true and projection: false are right. 'about 90 in 100 stayed off one more year, on average' is not more hopeful than the source. The n line ('31 to 96 per trial, 4 to 33 per group') matches the full text ('4–33/study group and 31–96/study'). That range covers all 8 trials, and the line says so. The 41-in-100 and 14/10 quotes are in the full text.",
+    "Minor: basis.design says 'a review combining 8 trials', but the 10 in 100 combines 7. The n line explains this, so it is left as is."
+   ],
+   "source": "PMC2577779 re-fetched (abstract + full text)."
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "Just one (severity users -> heavy)",
+   "verdict": "ok",
+   "problems": [
+    "Kenford 1994 abstract: daily smokers (15 or more a day), no dependence diagnosis, so 'heavy' is the right tag (rule 3). Counted has 'not checked' (rule 4). The proof argues against the 'just one'. The quote is word for word."
+   ],
+   "source": "Kenford 1994 abstract re-fetched."
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "Vapes harmless (proof: liquid strength steps)",
+   "verdict": "ok",
+   "problems": [
+    "Abstract (Europe PMC): 'Those using zero nicotine liquid had significantly lower … than those using 1-12 mg/ml, who scored significantly lower than those using 13 or greater mg/ml nicotine liquid'. quotesMore is word for word and 29 words. The full text gives n = 3,446 (Figure 2 caption). The proof has 2 figures, one idea, under 40 words.",
+    "Optional: the proof rests on quotesMore[0], so it could be the main quote. The main quote is still true."
+   ],
+   "source": "Foulds 2015 abstract + PMC4838001 Figure 2 caption."
+  },
+  {
+   "where": "plan",
+   "index": 3,
+   "label": "Step 4 proof: 8 vs 71 in 100 (Callaghan 2021)",
+   "verdict": "fix",
+   "problems": [
+    "Table 2 (PMC7572756, re-fetched): 'A smoker trying to quit' n = 14, 71.4% relapse; Non-Smoker n = 150, 8.0%. 8 is exact. 71 is 71.4 rounded (10 of 14), so it needs 'about'. The quote is word for word and under 30 words. The Weak label (14 people) is right."
+   ],
+   "fix": {
+    "plan[3].proof.text": "A year on, 8 in 100 ex-smokers who called themselves non-smokers were smoking again, against about 71 in 100 of the few who still said ‘a smoker trying to quit’."
+   },
+   "source": "Callaghan 2021 Table 2 re-fetched."
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "gaps[0], gaps[1], gaps[4] (merged reader line)",
+   "verdict": "ok",
+   "problems": [
+    "The same text on all three kinds, so it prints once. Each clause names a kind with no card: who-age, how-alone, how-withdrawal. The nicotine page has no how-withdrawal card. Placement before the helps cards is the template's job."
+   ]
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "E2: liked v10 'How quitting goes' cards that are off-reader",
+   "verdict": "fix",
+   "problems": [
+    "E2 says every v10 'How quitting goes' card that is off-reader carries liked: true. v10's 'How quitting goes' section (board/template-v2.html SECS 'outlook') shows the 07-mirror-stats 'quit' and 'after' groups. These off-reader cards come from it and have no liked flag, so the off-reader choice can take them off and the decision 'Every How quitting goes number you liked is back' would be false: numbers[3] (3–5 in 100; its own origin says the owner liked it).",
+    "Assumes the whole v10 'How quitting goes' section counts as liked, as kinds.json does for porn 'after' cards (74%, 1 in 6). If the owner meant only the cards kinds.json names, ignore this for the unnamed ones."
+   ],
+   "fix": {
+    "numbers[3].liked": true
+   }
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "Items flagged changed but identical to pages/nicotine.json (carried over from earlier rounds)",
+   "verdict": "ok",
+   "problems": [
+    "No rev5 change: these items are identical to the current page, apart from changed/changeNote fields, so there was nothing new to check. The old flags stay set: gaps[2], gaps[3], gaps[5], notUsed.numbers[5], notUsed.numbers[14], notUsed.numbers[15], notUsed.proofs[0], notUsed.proofs[1], notUsed.proofs[2], notUsed.proofs[3], notUsed.proofs[4], notUsed.proofs[5], notUsed.proofs[6], notUsed.proofs[7], notUsed.proofs[8], footerProposal, plan[4].doRefs[1]."
+   ]
+  }
+ ]
+}

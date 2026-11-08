@@ -1,0 +1,139 @@
+{
+ "id": "porn",
+ "by": "rev5 source checker a (independent)",
+ "on": "2026-11-08",
+ "brief": "rev3-check-brief.md applied to rev5 (all changed items, no a/b split) + rev5-brief.md E1–E6",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "12 in 100 (Counted)",
+   "verdict": "fix",
+   "problems": [
+    "11 words, so it passes the build's regex ('likely .*problem'). But RULEBOOK rule 3 wants 'questionnaire' or 'answers' for the screened tag, and 'screened' is not one of them, even though the changeNote says the key words are kept."
+   ],
+   "fix": {
+    "numbers[0].counted": "Israeli men and women whose answers showed likely porn or sex problems"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "54 in 100 (Measured: 93% / 21%)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract re-fetched: '93% reduction ACT vs. 21% waitlist'. The figures are right. But 'viewing fell by 93 in 100' puts a drop in the people-share form, and it reads as 93 in 100 men. Rule 12b keeps drops in %, and the build allows '% lower'."
+   ],
+   "fix": {
+    "numbers[2].basis.measured": "Self-reported porn viewing at the end of 12 one-to-one sessions of acceptance and commitment therapy (ACT), which trains you to let urges come and go without acting on them. While one group waited, average viewing was 93% lower with therapy and 21% lower on the waiting list."
+   },
+   "source": "Crosby & Twohig 2016 abstract."
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "53 in 100 (caveat raw count removed)",
+   "verdict": "ok",
+   "problems": [
+    "The 104 stays in basis.n."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "35 in 100 ACT 3-month (big, headline, Measured, propose, liked)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract re-fetched: 'At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% … at least 70% reduction' and 'Complete cessation was seen in 54% … at posttreatment'. Big, headline and caveat are right. The headline leads with what the men did (E6) and has 2 figures. The quote is word for word.",
+    "Measured: '74 in 100 watching at least 70 in 100 less' puts a drop in the people-share form and reads badly. '70% less' is a drop: rule 12b keeps it in %, and the build allows '% less'.",
+    "propose: 'It counts watching less as success' is no longer true of the card. Its big figure is now complete stopping, and the watching-less share is only in Measured. Rule 28 needs it to be true."
+   ],
+   "fix": {
+    "numbers[8].basis.measured": "Self-reported porn viewing at the 3-month follow-up: 35 in 100 had stopped completely. Another measure, 74 in 100 watching at least 70% less than before therapy, counts watching less, so it is not used as the result here.",
+    "numbers[8].propose": "In version 10 it counted watching less as success, the moderation angle he called dangerous on 5 Nov (E6); it now shows the stopped-completely share, which is already belief 1's proof. You liked it in version 10."
+   },
+   "source": "Crosby & Twohig 2016 abstract."
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "16 in 100 (liked)",
+   "verdict": "ok",
+   "problems": [
+    "E2: listed by name. 823/5,083 = 16.2."
+   ]
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Step 1 proof dropped",
+   "verdict": "ok",
+   "problems": [
+    "Moved whole to notUsed.other with a reason (rule 25). The build allows a step with no proof."
+   ]
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "Step 3 action 1 (already off)",
+   "verdict": "ok",
+   "problems": [
+    "It matches weed plan[2].do[0]. 'Not tonight' is gone, so a man already off isn't told to carry on."
+   ]
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "heroLine null + notUsed.other (E1)",
+   "verdict": "ok",
+   "problems": [
+    "heroLine is null. The old text is in heroLineR4 and in notUsed.other with an E1 reason."
+   ]
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "heroDecision (E1)",
+   "verdict": "fix",
+   "problems": [
+    "Stale. The text is the same as rev4: 'A short plain lead, then the beliefs come first', and basis justifies that lead line. Under E1 there is no lead line, so both are false (rule 28)."
+   ],
+   "fix": {
+    "heroDecision.decision": "No hero number and no lead line: the title, then the beliefs.",
+    "heroDecision.basis": "Rule 15 (round 5, E1): with no hope number the page goes straight from the title to the beliefs; a line saying what comes next would break rule 6."
+   }
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "gapReaderLine (+ hope-lifetime)",
+   "verdict": "ok",
+   "problems": [
+    "The line already says no study counts how many get free, so it covers hope-lifetime too."
+   ]
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "E2: liked v10 'How quitting goes' cards that are off-reader",
+   "verdict": "fix",
+   "problems": [
+    "E2 says every v10 'How quitting goes' card that is off-reader carries liked: true. v10's 'How quitting goes' section (board/template-v2.html SECS 'outlook') shows the 07-mirror-stats 'quit' and 'after' groups. These off-reader cards come from it and have no liked flag, so the off-reader choice can take them off and the decision 'Every How quitting goes number you liked is back' would be false: numbers[4] (45 in 100, v10 quit '45%'); numbers[5] (51 in 100, v10 quit '51%').",
+    "Assumes the whole v10 'How quitting goes' section counts as liked, as kinds.json does for porn 'after' cards (74%, 1 in 6). If the owner meant only the cards kinds.json names, ignore this for the unnamed ones."
+   ],
+   "fix": {
+    "numbers[4].liked": true,
+    "numbers[5].liked": true
+   }
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "Items flagged changed but identical to pages/porn.json (carried over from earlier rounds)",
+   "verdict": "ok",
+   "problems": [
+    "No rev5 change: these items are identical to the current page, apart from changed/changeNote fields, so there was nothing new to check. The old flags stay set: gaps[0], gaps[1], gaps[3], gaps[4], gaps[5], gaps[10], gaps[12], heroDecision."
+   ]
+  }
+ ]
+}

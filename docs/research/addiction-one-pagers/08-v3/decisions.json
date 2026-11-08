@@ -15,14 +15,14 @@
   },
   {
    "id": "kept-outlook",
-   "title": "Every “How quitting goes” number you liked is back",
-   "decision": "All numbers from the v10 “How quitting goes” section are on the v3 pages, rewritten to the new rules, under “How quitting goes” or “Who gets free, and how”. Where a rule argues against one (it counts people not checked as hooked, or mixes in another group), one choice decides them all, on every page; I recommend taking them off, and the choice lists each one, so nothing goes without you seeing it.",
-   "why": "Your 5 Nov note: “more in line with what I want than a bunch of the other stats”. The first draft had dropped most of them; an owner-lens check caught it before you saw it."
+   "title": "Every “How quitting goes” number you liked is on the pages",
+   "decision": "All numbers from the v10 “How quitting goes” section are on the v3 pages, rewritten to the new rules, under “How quitting goes” or “Who gets free, and how”. Where a rule argues against one you liked, it stays even under the recommended off-reader answer, with its Counted label: {likedCards}.",
+   "why": "Your 5 Nov note: “more in line with what I want than a bunch of the other stats”. Rule 26 (keep what you liked) wins over the off-reader choice for these; the choice names them in one line."
   },
   {
    "id": "counted",
    "title": "Every number says who was counted",
-   "decision": "A “Counted:” label sits on every number, in plain words, and a short Counted line under each belief proof and plan proof. Number cards about heavy or ordinary users (not checked for addiction) come off the pages under the recommended answer to one choice; if you keep them, they carry an amber label and never appear as a hope, who-gets-free or what-helps number. A belief or plan proof about such people stays, and its Counted line says “not checked for addiction”. A group sorted by questionnaire answers gets its own label: people whose answers showed a likely … problem.",
+   "decision": "A “Counted:” label sits on every number, in plain words, and a short Counted line under each belief proof and plan proof. Number cards about people not checked for addiction come off the pages under the recommended answer to one choice, except the ones you liked in version 10, which stay labelled; kept cards carry an amber label and never appear as a hope, who-gets-free or what-helps number. A belief or plan proof about such people stays, and its Counted line says “not checked for addiction”. A group sorted by questionnaire answers gets its own label: people whose answers showed a likely … problem.",
    "why": "Your 5 Nov note on severity. It also stops a moderation number from coming from people who were never hooked."
   },
   {
@@ -52,7 +52,7 @@
   {
    "id": "graph",
    "title": "How the graph is made, for every addiction",
-   "decision": "About {feltRead} posts with a day count read from each addiction’s quit forum (2021–2025, fixed calendar days, 70 per day range); the {feltUsed} that say how the day felt are used. A reader scores how hard that day was, 0 to 10; a second reader, a different AI model, re-scores 15% blind. The headline calls the hardest stretch only where it stands at least 1 point above every later stage (stages under 25 posts never count); otherwise it says plainly that there is no clear peak. Version 1 draws a line (a typical day per stage) and a band (where the middle half of scores fell); version 2 draws 20 dots per stage. Under it, “What the body does” draws each body symptom from clinical sources as a bar on one time scale (hour 1 to year 3), darker where it is worst, red for a danger sign.",
+   "decision": "About {feltRead} posts with a day count read from each addiction’s quit forum (2021–2025, fixed calendar days, 70 per day range); the {feltUsed} that say how the day felt are used. A reader scores how hard that day was, 0 to 10; a second reader, a different AI model, re-scores 15% blind. The headline names the hardest stage (the highest typical day among stages with 25 posts or more) and the stage it is easier from (at least 1.5 points lower, and never back within 1 point after); where no stage qualifies it says “No clear easing”. Version 1 draws a line (a typical day per stage) and a band (where the middle half of scores fell); version 2 draws 20 dots per stage. Under it, “What the body does” draws each body symptom from clinical sources as a bar on one time scale (hour 1 to year 3), darker where it is worst, red for a danger sign.",
    "why": "Your 5 Nov note: true to how people feel, not one study. This is the same recipe on every page, and it says how many posts it rests on and how it is biased."
   },
   {
@@ -70,7 +70,7 @@
   {
    "id": "danger",
    "title": "Danger lines only where a source ties them to the drug",
-   "decision": "On the {dangerPages} page: the seizure and DTs rows under the graph (red), one short line in plan step 3 (where the drinking stops), a one-line pointer to “Before you stop” in two card folds (44 in 100, 2–7 days), and the “Before you stop” line above the sources, which names the signs and says a seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut back sharply is an emergency. {noteLine} On the porn page: one line in the erection card’s fold, that a doctor can check for medical causes, with its source. Nowhere else, and never up front.",
+   "decision": "On the {dangerPages} page: the seizure and DTs rows under the graph (red), one short line in plan step 3 (where the drinking stops), a one-line pointer to “Before you stop” in two card folds (44 in 100, 2–7 days), the same pointer in two belief tests (rows 3 and 4), and the “Before you stop” line above the sources, which names the signs and says a seizure, confusion, seeing or hearing things, or visible shaking after you stop or cut back sharply is an emergency. {noteLine} On the porn page: one line in the erection card’s fold, that a doctor can check for medical causes, with its source. Nowhere else, and never up front.",
    "why": "Your 4 Nov note: only where a source ties the risk to the drug, small, never up front. A safety audit found the plan stops drinking at step 3 while the warning sat in step 5 and at the very bottom, so a heavy daily drinker following the steps would stop before seeing it.",
    "assert": {
     "dangerPages": [
@@ -125,7 +125,7 @@
   {
    "id": "hero",
    "rule": "The big hope number on every page is:",
-   "why": "Both numbers stay on every page, together, in one view; this picks which one is big. Your own rule 15 says lead with one number that creates hope, so I recommend the lifetime projection ({heroProj}), with the head count right under it ({heroCount}). Rule 10 (cautious estimate first) came from reviewers, not from you; with the head count big, nicotine would open on 19 in 100. This is a judgment call: the projection is a model that likely runs high, and the page says so once, on its Weak label. Pages with no hope number ({noHero}) open at the beliefs either way.",
+   "why": "Both numbers stay on every page, together, in one view; this picks which one is big. Your own rule 15 says lead with one number that creates hope, so I recommend the lifetime projection ({heroProj}), with the head count right under it ({heroCount}). Rule 10 (cautious estimate first) came from reviewers, not from you; with the head count big, nicotine would open on 19 in 100. This is a judgment call: the projection is a model that likely runs high, and the page says so once, on the chip under it. Pages with no hope number ({noHero}) open at the beliefs either way.",
    "options": [
     {
      "id": "projection",
@@ -183,7 +183,7 @@
   {
    "id": "offreader",
    "rule": "Number cards about people who are not the reader: not checked as hooked (heavy drinkers in a month-off study, students, ordinary smokers), people never or still hooked mixed in, or cutting down instead of quitting:",
-   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason, including the ones you liked in version 10. This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says “not checked for addiction”.",
+   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason. {likedLine} This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says “not checked for addiction”.",
    "options": [
     {
      "id": "keep",
@@ -202,7 +202,7 @@
   {
    "id": "sections",
    "rule": "Which version of each section every page uses:",
-   "why": "Version 1 is your 2025 sheet with the rules applied; version 2 counts people (dots, a fact box). My picks, shown under “Your picks”: the hope number from version 2 (the dot grid shows what is counted and what is projected), the graph from version 1 (one line: when it peaks and when it eases), everything else from version 1. Change any section with the blue bar above it.",
+   "why": "Version 1 is your 2025 sheet with the rules applied; version 2 counts people (dots, a fact box). My picks, shown under “Your picks”: the hope number from version 2 (the dot grid shows what is counted and what is projected), the graph from version 1 (a line for the typical day; it names the hardest stage and when it gets easier, or says there is no clear easing), everything else from version 1. Change any section with the blue bar above it.",
    "options": [
     {
      "id": "v1",
@@ -262,7 +262,7 @@
  "weak": [
   {
    "title": "The porn page is a draft: its science is the thinnest",
-   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. So the page has no hope number: it opens at the beliefs, and “Who gets free, and how” says plainly what is not counted. Its other numbers are small (one forum’s journals, one church-based trial of 26 men); the statistical grouping of adults and the student studies are off the page under the recommended off-reader answer.",
+   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. So the page has no hope number: it opens at the beliefs, and “Who gets free, and how” says plainly what is not counted. Its other numbers are small (one forum’s journals, one church-based trial of 26 men); the statistical grouping of adults and the student studies are off the page under the recommended off-reader answer, except one you liked in version 10, which stays labelled.",
    "assert": {
     "noKinds": {
      "porn": [
@@ -276,7 +276,7 @@
   },
   {
    "title": "The lifetime “get free” numbers are projections, and they lead",
-   "text": "{heroProj} are a model built from ages people remembered. The authors say people over-report getting free and the survey missed people in prisons and hospitals, so the real shares are likely lower. They lead the page because your rule 15 asks for hope first; the head count sits right under each, and the projection carries one Weak label, said once: it likely runs high.",
+   "text": "{heroProj} are a model built from ages people remembered. The authors say people over-report getting free and the survey missed people in prisons and hospitals, so the real shares are likely lower. They lead the page because your rule 15 asks for hope first; the head count sits right under each, and the projection carries one chip, said once: worked out, not counted, likely runs high.",
    "assert": {
     "rec": {
      "hero": "projection"
