@@ -86,7 +86,7 @@
    "counted": "people who say they beat a diagnosed alcohol or drug problem",
    "basis": {
     "design": "national survey (National Recovery Survey), one snapshot, answered online",
-    "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and said they had ever been diagnosed with an alcohol or other drug use disorder. Alcohol and drugs together.",
+    "who": "US adults who said they used to have a problem with alcohol or drugs but no longer do, and said they had ever been diagnosed with an alcohol or other drug use disorder. Alcohol and drugs together; how much they used is not reported",
     "n": "About 340 people (17.0% of a weighted 2,002)",
     "where": "US",
     "when": "July–August 2016",
@@ -113,7 +113,7 @@
     "alcohol",
     "cannabis"
    ],
-   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"90%\", \"headline\": \"Of people who beat an alcohol or drug problem and had ever been diagnosed with one, 90% had used some help.\", \"counted\": \"people who beat a diagnosed alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try')."
+   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"90%\", \"headline\": \"Of people who beat an alcohol or drug problem and had ever been diagnosed with one, 90% had used some help.\", \"counted\": \"people who beat a diagnosed alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try'). 2026-11-08 round 4: who line says the use level is not reported (rule 3)."
   },
   {
    "kind": "gen-years",
@@ -151,7 +151,8 @@
     "alcohol",
     "cannabis"
    ],
-   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"6 years\", \"headline\": \"Among people who beat an alcohol or drug problem, those free longer rated well-being higher, climbing fast for 6 years, then slower.\", \"counted\": \"people who beat an alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try')."
+   "revisionNote": "2026-11-08 (rules 3, 12, 12b, no change of fact): was {\"big\": \"6 years\", \"headline\": \"Among people who beat an alcohol or drug problem, those free longer rated well-being higher, climbing fast for 6 years, then slower.\", \"counted\": \"people who beat an alcohol or drug problem\"}. 'say they' because the problem is self-judged; shares as N in 100; the 3-tries line had a third figure ('at least one serious try').",
+   "timeIsResult": true
   }
  ],
  "gaps": [

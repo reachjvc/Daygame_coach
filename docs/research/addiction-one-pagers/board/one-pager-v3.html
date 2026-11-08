@@ -70,6 +70,7 @@ button { font: inherit; color: inherit; }
 .rtabs button { border: 1.5px solid var(--lab); background: var(--paper); color: var(--lab); border-radius: 999px; padding: 3px 12px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
 .rtabs button[aria-pressed="true"] { background: var(--lab); color: var(--paper); }
 .rtabs .cnt { font-family: var(--f-mono); font-weight: 600; font-size: 11.5px; margin-left: 4px; }
+.rnote { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .rbody { display: grid; gap: 10px; max-width: 1100px; max-height: 48vh; overflow-y: auto; padding-right: 6px; }
 .rbody h2 { font-family: var(--f-display); font-size: 20px; font-weight: 800; font-stretch: 85%; }
 .rbody .lead { color: var(--ink-2); max-width: 75ch; }
@@ -166,7 +167,9 @@ details > summary { cursor: pointer; }
 .v1 .brow .bproof { font-size: 14px; color: var(--ink-2); border-top: 1px solid var(--hair); padding-top: 6px; }
 .v1 .bcell.cur p { font-size: 17px; }
 .byline { font-size: 13.5px; color: var(--ink-2); }
-.pcount { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.pcount { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.3; }
+.ref { white-space: nowrap; line-height: 1; }   /* a wrapped [n] kept a zero-height line and sat on the chip below */
+.cnt { margin-top: 2px; }
 .pcount.off { color: var(--watch); }
 .v1 a.tlink, .v2 a.tlink { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .hkey { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--v2-ink2); }
@@ -414,6 +417,7 @@ details > summary { cursor: pointer; }
 <section class="review" id="review">
   <div class="wrap">
     <div class="rtabs" id="rtabs" role="group" aria-label="Review sections"></div>
+    <p class="rnote">Only “Choices for you” needs you. The other tabs are for checking me.</p>
     <div class="rbody" id="rbody"></div>
     <div class="dbstate" id="dbstate">Connecting to the marks store…</div>
   </div>
@@ -451,8 +455,11 @@ function picked(kid) {
 const OFFSEV = x => ["heavy", "users"].includes(x && x.severity);
 const OFF = x => OFFSEV(x) || !!(x && x.propose);
 const dropOff = () => choice("offreader") === "drop";
+// within a section the cards run by group (who gets free, how they quit, what helps, life after), page order inside
+const GORDER = ["hope", "who", "how", "helps", "after"];
 function numbersAt(where) {
-  return (page.numbers || []).filter(x => KINDS[x.kind] && picked(x.kind) && KINDS[x.kind].where === where && !(OFF(x) && dropOff()));
+  const xs = (page.numbers || []).filter(x => KINDS[x.kind] && picked(x.kind) && KINDS[x.kind].where === where && !(OFF(x) && dropOff()));
+  return xs.map((x, i) => [x, i]).sort((a, b) => GORDER.indexOf(KINDS[a[0].kind].group) - GORDER.indexOf(KINDS[b[0].kind].group) || a[1] - b[1]).map(([x]) => x);
 }
 function heroNums() {
   const all = (page.numbers || []).filter(x => ["hero", "hero-second"].includes(KINDS[x.kind]?.where) && picked(x.kind));
@@ -465,21 +472,32 @@ function bigOf(x) {
   return m ? Math.round(100 * m[1] / m[2]) + " in 100" : x.big;
 }
 const cap1 = s => { s = String(s || "").trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
-function tags(x) {
-  return `<p class="cnt"><span class="tag${OFFSEV(x) ? " off" : ""}">Counted: ${esc(x.counted)}</span>${x.projection ? `<span class="tag proj">Projected, not counted</span>` : ""}${x.weak ? `<span class="tag weak">Weak: ${esc(cap1(x.weak))}</span>` : ""}</p>`;
+// D6 (round 4): one line of truth per card. A worked-out figure shows its Counted label and ONE amber chip,
+// "Worked out, not counted" ("Average across studies" for a pooled average), carrying whatever else its Weak label
+// says; "not counted" is never said twice.
+const PROJ_WORDS = /\b(?:a\s+)?(?:projection|projected)(?:\s+from recalled ages)?|worked out from a pooled effect|from a model|a pooled estimate|pooled average|averages? across (?:trials|studies)|not counted|not a count|,?\s*not a head count/gi;
+function projChip(x) {
+  const rest = String(x.weak || "").replace(PROJ_WORDS, "").replace(/^[\s,;:.]+|[\s,;:.]+$/g, "").replace(/\s*[,;]\s*[,;]\s*/g, "; ");
+  return `${x.pooled ? "Average across studies" : "Worked out, not counted"}${rest ? `; ${rest.charAt(0).toLowerCase() + rest.slice(1)}` : ""}`;
 }
-// the hope numbers share one row of chips: each Counted label once, each Weak label once. The projection's line
-// says "projected" (rule 10), so the hero hedges it once, on its Weak label, not again with a chip (rule 15 leads).
+function tags(x) {
+  const off = OFFSEV(x);
+  if (x.projection || x.pooled) return `<p class="cnt"><span class="tag${off ? " off" : ""}">Counted: ${esc(x.counted)}</span><span class="tag weak">${esc(projChip(x))}</span></p>`;
+  return `<p class="cnt"><span class="tag${off ? " off" : ""}">Counted: ${esc(x.counted)}</span>${x.weak ? `<span class="tag weak">Weak: ${esc(cap1(x.weak))}</span>` : ""}</p>`;
+}
+// the hope numbers share one row of chips: each Counted label once; the projection's chip names its own figure,
+// so it can never read as a label on the head count
 function heroTags(...xs) {
   xs = xs.filter(Boolean);
-  const cs = [...new Set(xs.map(x => x.counted))], ws = [...new Set(xs.map(x => x.weak).filter(Boolean).map(cap1))];
-  return `<p class="cnt">${cs.map(c => `<span class="tag${xs.some(x => x.counted === c && OFFSEV(x)) ? " off" : ""}">Counted: ${esc(c)}</span>`).join("")}${ws.map(w => `<span class="tag weak">Weak: ${esc(w)}</span>`).join("")}</p>`;
+  const cs = [...new Set(xs.map(x => x.counted))];
+  const ws = xs.map(x => x.projection || x.pooled ? `${bigOf(x)}: ${projChip(x)}` : x.weak ? `Weak: ${cap1(x.weak)}` : "").filter(Boolean);
+  return `<p class="cnt">${cs.map(c => `<span class="tag${xs.some(x => x.counted === c && OFFSEV(x)) ? " off" : ""}">Counted: ${esc(c)}</span>`).join("")}${ws.map(w => `<span class="tag weak">${esc(w)}</span>`).join("")}</p>`;
 }
 const foldLabel = (x, two) => two ? (x.projection ? "Based on: the projection" : "Based on: the count") : "Based on";
 function basis(x, label = "Based on") {
   const b = x.basis || {};
   const line = [b.design, b.n, [b.where, b.when].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
-  return `<details class="basis"><summary>${esc(label)}</summary>${b.who ? `<p><b>Who:</b> ${esc(b.who)}</p>` : ""}<p>${esc(line)} ${refs(x.n)}</p>${b.measured ? `<p><b>Measured:</b> ${esc(b.measured)}</p>` : ""}${x.caveat ? `<p><b>What it doesn’t mean:</b> ${esc(x.caveat)}</p>` : ""}</details>`;
+  return `<details class="basis"><summary>${esc(label)}</summary>${b.who ? `<p><b>Who:</b> ${esc(b.who)}</p>` : ""}<p>${esc(line)} ${refs(x.n)}</p>${b.measured ? `<p><b>Measured:</b> ${esc(b.measured)}</p>` : ""}${x.caveat || (x.alsoN || []).length ? `<p><b>What it doesn’t mean:</b> ${esc(x.caveat || "")} ${refs(x.alsoN)}</p>` : ""}</details>`;
 }
 function planSteps() {
   return DATA.plan.titles.map((title, k) => ({ i: k + 1, title, text: DATA.plan.text[k], st: (page.plan || [])[k] || { do: [] } }));
@@ -522,22 +540,28 @@ function feltPeaks() {
   while (i1 + 1 < ss.length && ss[i1 + 1].med === max) i1++;
   const peak = { ...ss[i0], med: max, label: spanLabel(ss[i0], ss[i1]), stages: ss.slice(i0, i1 + 1).map(x => x.label), hardShare: ss[i0].hardShare, easyShare: ss[i0].easyShare };
   const after = ss.slice(i1 + 1);
+  // D9: a peak is only called when it stands at least 1 point above everything after it; otherwise one plain line
+  const clear = after.length > 0 && max - Math.max(...after.map(x => x.med)) >= 1;
+  // the plateau: from the first counted stage, every stage within 1 point of the top
+  let pe = 0;
+  while (pe + 1 < ss.length && ss[pe + 1].med >= max - 1) pe++;
+  const pl = ss.slice(0, pe + 1), lo0 = Math.min(...pl.map(x => x.med)), rest = ss.slice(pe + 1);
+  const flat = clear ? null : { text: `A typical day sits at ${max - lo0 < 1 ? `about ${fmt1(max)}` : `${fmt1(lo0)} to ${fmt1(max)}`} out of 10 from ${pl[0].label.toLowerCase()} through ${pl[pl.length - 1].label.toLowerCase()}${rest.length ? `, lower after that (${fmt1(Math.max(...rest.map(x => x.med)))} or less)` : ""}, where 10 = can barely hold on.` };
   const ei = after.findIndex((x, i) => x.med <= max - 1.5 && after.slice(i).every(y => y.med <= max - 1.5));
   const ease = ei >= 0 ? after[ei] : null, back = null;
   const later = after.length ? Math.max(...after.map(x => x.med)) : null;
   const lo = after.length ? Math.min(...after.map(x => x.med)) : null;
-  return { peak, ease, back, later, lo, last: after[after.length - 1] || null, max, stages: all };
+  return { peak: clear ? peak : null, ease: clear ? ease : null, flat, back, later, lo, last: after[after.length - 1] || null, max, stages: all, easyShare: peak.easyShare };
 }
 // when the curve never drops clearly below its peak, say what it does instead of "never above" its own peak
 const noEase = pk => pk.last ? `A typical day stays at ${pk.lo === pk.later ? fmt1(pk.later) : `${fmt1(pk.lo)} to ${fmt1(pk.later)}`} out of 10 through ${esc(pk.last.label.toLowerCase())}.` : "";
 function peaksBlock(pk) {
   if (!pk) return "";
+  if (pk.flat) return `<div class="peaks"><div class="felth"><b>No clear peak</b><span>${esc(pk.flat.text)}</span></div></div>`;
   // the 0 to 10 scale is explained where it is first used (cold readers met "5 out of 10" before its key)
-  const a = `<div><b>${esc(pk.peak.label)}</b><span>The hardest stretch. A typical day: ${fmt1(pk.max)} out of 10, where 10 = can barely hold on.</span></div>`;
+  const a = `<div class="felth"><b>${esc(pk.peak.label)}</b><span>The hardest stretch. A typical day: ${fmt1(pk.max)} out of 10, where 10 = can barely hold on.</span></div>`;
   // "easier" is about how hard staying off feels, which can ease later than the body symptoms below
-  const fp = page.feltHeadlineProposal && page.feltHeadlineProposal.text, fm = fp && fp.match(/^([^.]+)\.\s*(.*)$/);
-  const b = fm ? `<div><b>${esc(fm[1])}</b><span>${esc(fm[2])}</span></div>`
-    : pk.ease ? `<div><b>${esc(pk.ease.label)}</b><span>Staying off feels clearly easier from here. A typical day: ${fmt1(pk.ease.med)} out of 10.</span></div>`
+  const b = pk.ease ? `<div><b>${esc(pk.ease.label)}</b><span>Staying off feels clearly easier from here. A typical day: ${fmt1(pk.ease.med)} out of 10.</span></div>`
     : pk.last ? `<div><b>No clear easing</b><span>${noEase(pk)}</span></div>` : "";
   return `<div class="peaks">${a}${b}</div>`;
 }
@@ -549,7 +573,7 @@ function feltVertical() {
   // the phone form: the same line and band as the wide chart, drawn for a 390 px screen
   const pk = feltPeaks(), ss = pk ? pk.stages : stageDots();
   const SHORT = { "Day 1": "D1", "Days 2–3": "D2–3", "Days 4–7": "D4–7", "Week 2": "W2", "Weeks 3–4": "W3–4", "Month 2": "M2", "Month 3": "M3", "Months 4–12": "M4–12", "Year 2 +": "Y2+" };
-  const W = 360, H = 230, L = 22, R = 6, T = 22, B = 44;
+  const W = 360, H = 230, L = 34, R = 6, T = 22, B = 44;
   const step = (W - L - R) / ss.length, x = i => L + step * (i + .5), y = v => T + (H - T - B) * (1 - v / 10);
   let g = "";
   // one left axis line ties the 0, 5 and 10 labels to the chart (on the phone a lone "10" read as a stray number)
@@ -560,10 +584,11 @@ function feltVertical() {
   g += `<polyline points="${pts.map(([i, b]) => `${x(i)},${y(b.med)}`).join(" ")}" fill="none" stroke="var(--med)" stroke-width="3" stroke-linejoin="round"/>`;
   ss.forEach((b, i) => { if (b.med != null) g += `<circle cx="${x(i)}" cy="${y(b.med)}" r="${b.n < MINP ? 3 : 4.5}" fill="${b.n < MINP ? "var(--paper)" : "var(--med)"}" stroke="var(--med)" stroke-width="${b.n < MINP ? 1.5 : 2}" ${b.n < MINP ? 'stroke-dasharray="2 2"' : ""}/>`; });
   ss.forEach((b, i) => {
-    const k = pk && (pk.peak.stages.includes(b.label) || (pk.ease && pk.ease.label === b.label));
+    const k = pk && pk.peak && (pk.peak.stages.includes(b.label) || (pk.ease && pk.ease.label === b.label));
     g += `<text class="lbl${k ? " k" : ""}" x="${x(i)}" y="${H - B + 16}" text-anchor="middle">${SHORT[b.label] || b.label}</text><text class="lbl" x="${x(i)}" y="${H - B + 30}" text-anchor="middle">${b.n}</text>`;
   });
-  if (pk) {
+  g += `<text class="lbl" x="0" y="${H - B + 30}" text-anchor="start">posts</text>`;   // the row of counts read as day numbers
+  if (pk && pk.peak) {
     const pi = ss.findIndex(b => b.label === pk.peak.stages[0]);
     g += `<text class="lbl k" x="${pi ? x(pi) : x(pi) - 6}" y="${y(Math.max(ss[pi].q3, ss[pi].med)) - 8}" text-anchor="${pi ? "middle" : "start"}">hardest</text>`;
     if (pk.ease) { const ei = ss.findIndex(b => b.label === pk.ease.label); g += `<text class="lbl k" x="${x(ei)}" y="${y(ss[ei].q3) - 8}" text-anchor="middle">easier</text>`; }
@@ -583,11 +608,11 @@ function feltHorizontal() {
   s += `<polyline points="${pts.map(([i, b]) => `${x(i)},${y(b.med)}`).join(" ")}" fill="none" stroke="var(--med)" stroke-width="3" stroke-linejoin="round"/>`;
   ss.forEach((b, i) => { if (b.med != null) s += `<circle cx="${x(i)}" cy="${y(b.med)}" r="${b.n < MINP ? 3.5 : 5}" fill="${b.n < MINP ? "var(--paper)" : "var(--med)"}" stroke="var(--med)" stroke-width="2" ${b.n < MINP ? 'stroke-dasharray="2 2"' : ""}/>`; });
   ss.forEach((b, i) => {
-    const k = pk && (pk.peak.stages.includes(b.label) || (pk.ease && pk.ease.label === b.label));
+    const k = pk && pk.peak && (pk.peak.stages.includes(b.label) || (pk.ease && pk.ease.label === b.label));
     s += `<text class="lbl${k ? " k" : ""}" x="${x(i)}" y="${H - B + 18}" text-anchor="middle">${esc(b.label)}</text><text class="lbl" x="${x(i)}" y="${H - B + 34}" text-anchor="middle">${b.n}</text>`;
   });
   s += `<text class="lbl" x="${L}" y="${H - 6}">Time since the last time · number of posts under each · hollow dot: under ${MINP} posts, too few to count</text>`;
-  if (pk) {
+  if (pk && pk.peak) {
     const pi = ss.findIndex(b => b.label === pk.peak.stages[0]);
     s += `<text class="lbl k" x="${x(pi)}" y="${y(ss[pi].q3) - 10}" text-anchor="start">hardest</text>`;
     if (pk.ease) { const ei = ss.findIndex(b => b.label === pk.ease.label); s += `<text class="lbl k" x="${x(ei)}" y="${y(ss[ei].q3) - 10}" text-anchor="middle">staying off feels easier from here</text>`; }
@@ -606,8 +631,8 @@ function appChart() {
   const max = 25, d1 = a.days.find(d => d.day === 1), d30 = a.days.find(d => d.day === 30);
   const bars = a.days.map(d => `<i style="height:${(d.hard / max) * 100}%" title="Day ${d.day}: ${d.hard}% of ${d.n} check-ins"></i>`).join("");
   return `<div class="appc"><h3 class="eyebrow" style="color:var(--muted)">A second source: the I Am Sober app</h3>
-    <p class="hl" style="font-weight:600">Share of daily check-ins rated hard or impossible, by day. ${refs(a.n)}</p>
-    <div class="appbars" role="img" aria-label="From ${a.days[0].hard}% on day 0 to ${d30.hard}% on day 30"><div class="yax"><span>25%</span><span>0%</span></div><div class="bars">${bars}</div></div>
+    <p class="hl" style="font-weight:600">Check-ins rated hard or impossible, per 100 check-ins, by day. ${refs(a.n)}</p>
+    <div class="appbars" role="img" aria-label="From ${a.days[0].hard}% on day 0 to ${d30.hard}% on day 30"><div class="yax"><span>25</span><span>0</span></div><div class="bars">${bars}</div></div>
     <div class="appx"><span>day 0</span><span>day 10</span><span>day 20</span><span>day 30</span></div>
     <p class="cap">Quit day: about ${Math.round(a.days[0].hard)} in 100 check-ins rated hard or impossible. Day 30: about ${Math.round(d30.hard)} in 100.</p>
     <p class="cnt"><span class="tag off">Counted: ${esc(a.counted)}</span></p>
@@ -674,7 +699,16 @@ function provedFor(x) {
   if (!x || !(x.counted || x.severity)) return "";
   const noun = page.subs.gap || ({ cannabis: "weed" }[page.id] || page.id);
   let t = x.counted || (DATA.severity[x.severity] || "").replace(/\ba \{x\}/, (/^[aeiou]/i.test(noun) ? "an " : "a ") + noun).replace("{x}", noun);
-  return t ? `<span class="pcount${OFFSEV(x) ? " off" : ""}">Counted: ${esc(t)}</span>` : "";
+  return (t ? `<span class="pcount${OFFSEV(x) ? " off" : ""}">Counted: ${esc(t)}</span>` : "") + (x.weak && x.limiting ? `<span class="pcount off">Weak: ${esc(cap1(x.weak))}</span>` : "");
+}
+// the proofs the off-reader choice leaves on the pages, labelled (D2): named once in the choice, never as toggles
+function offProofs() {
+  const out = [], nc = x => OFFSEV(x) || /not checked/i.test(x.counted || "");
+  for (const p of DATA.pages) {
+    (p.beliefs || []).forEach((b, i) => { if (nc(b)) out.push(`${p.tab} belief ${i + 1}`); });
+    (p.plan || []).forEach((s, i) => { if (s.proof && nc(s.proof)) out.push(`${p.tab} plan step ${i + 1}`); });
+  }
+  return out;
 }
 const exHref = () => DATA.exerciseUrl ? `${esc(DATA.exerciseUrl)}#${esc(page.id)}` : "#";
 
@@ -729,9 +763,13 @@ const V1 = {
 // (rule 14; the 'menu' decision says so). A gap with 'reader' gives its own words; otherwise the kinds' gap phrases.
 // A page-level gapReaderLine ({text, kinds}) speaks for the kinds it names; on a page with no hope number it sits at
 // the top of "Who gets free, and how", where the hope kinds' gap belongs.
-function gapLine(where) {
+// D6: a gap never sits right after cards that answer the same question: an empty kind is left out of the line
+// when the section shows a card of its group, or of a kind its 'near' list names (kinds.json)
+function gapLine(where, xs = []) {
   const ws = where === "more" && !heroNums().length ? ["hero", "hero-second", "more"] : [where];
-  const empty = (page.empty || []).filter(k => KINDS[k] && ws.includes(KINDS[k].where) && picked(k));
+  const shownGroups = new Set(xs.map(x => KINDS[x.kind].group)), shownKinds = new Set(xs.map(x => x.kind));
+  const covered = k => shownGroups.has(KINDS[k].group) || (KINDS[k].near || []).some(n => shownKinds.has(n));
+  const empty = (page.empty || []).filter(k => KINDS[k] && ws.includes(KINDS[k].where) && picked(k) && !covered(k));
   const gr = typeof page.gapReaderLine === "string" ? { text: page.gapReaderLine, kinds: [] } : page.gapReaderLine;
   const own = [], generic = [];
   if (gr && gr.text && where === "more") own.push(gr.text);
@@ -745,19 +783,19 @@ function gapLine(where) {
   return lines.map(l => `<p class="gapl">${esc(l)}</p>`).join("");
 }
 function statBlock(title, xs, where) {
-  const gl = gapLine(where);
+  const gl = gapLine(where, xs);
   if (!xs.length && !gl) return "";
   const lead = where === "more" && !heroNums().length;
-  return `<div class="blk"><h2>${esc(title)}</h2><div class="nrows">${lead ? gl : ""}${xs.map(x => `<div class="nrow"><span class="gtag">${esc(GROUPS[KINDS[x.kind].group])}</span>${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="nr-main"><div class="big">${esc(x.big)}</div><p class="hl">${esc(x.headline)} ${refs(x.n)}</p></div>${tags(x)}${basis(x)}</div>`).join("")}${lead ? "" : gl}</div></div>`;
+  return `<div class="blk"><h2>${esc(title)}</h2><div class="nrows">${lead ? gl : ""}${xs.map(x => `<div class="nrow" data-kind="${esc(x.kind)}"><span class="gtag">${esc(GROUPS[KINDS[x.kind].group])}</span>${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="nr-main"><div class="big">${esc(x.big)}</div><p class="hl">${esc(x.headline)} ${refs(x.n)}</p></div>${tags(x)}${basis(x)}</div>`).join("")}${lead ? "" : gl}</div></div>`;
 }
 // his plan text stays word for word (rule 21); "the table above" becomes a link to the beliefs, "me" to the byline
 function planText(t) {
   return fill(t).replace("(the table above)", `(<a class="tlink" href="#" data-goto="beliefs">the table above</a>)`).replace(/1-on-1 help from me\b/, `1-on-1 help from <a class="tlink" href="#" data-goto="byline">me</a>`);
 }
 // "take them off" swaps an off-reader proof for its stand-in (proof.alt), or leaves the step without one
+// D2: belief and plan proofs about people not checked for addiction stay, labelled; the off-reader choice covers cards only
 function planProof(s) {
-  let p = s.proof;
-  if (p && OFFSEV(p) && dropOff()) p = p.alt || null;
+  const p = s.proof;
   if (!p) return "";
   return `<p class="pproof">${esc(p.text)} ${refs(p.n)}${provedFor(p)}${p.weak ? `<span class="pcount off">Weak: ${esc(cap1(p.weak))}</span>` : ""}</p>`;
 }
@@ -777,7 +815,7 @@ function shareOf(big) {
   const s = String(big || "").replace(/,/g, "");
   let m = s.match(/^(?:about\s+)?(\d+(?:\.\d+)?)\s*%$/i);
   if (m) return +m[1];
-  m = s.match(/^(\d+)\s+(?:of|in)\s+(\d+)$/i);
+  m = s.match(/^(?:about\s+)?(\d+)\s+(?:of|in)\s+(\d+)$/i);
   if (m) return 100 * m[1] / m[2];
   return null;
 }
@@ -843,10 +881,10 @@ const V2 = {
   },
   graph() {
     if (!page.felt) return V1.graph();
-    const ss = stageDots(), pk = feltPeaks(), peak = pk.peak, ease = pk.ease;
+    const ss = stageDots(), pk = feltPeaks(), peak = pk.peak || { stages: [] }, ease = pk.ease;
     const rows = ss.map(s => `<div class="row${peak.stages.includes(s.label) ? " pk" : ""}${ease && s.label === ease.label ? " es" : ""}${s.n < MINP ? " thin" : ""}"><span class="lab"><b class="tv${s.med >= 5 ? " hot" : ""}">${s.med == null ? "–" : fmt1(s.med)}</b>${esc(s.label)}</span>${s.dots && s.n >= MINP ? dotStrip(s.dots) : `<span class="lab">only ${s.n} posts, too few to draw</span>`}<span class="n">${s.n}</span></div>`).join("");
     return `<div class="blk"><span class="k">From ${esc(page.felt.forums.join(" and "))}</span><h2>How hard today is, by day</h2>
-      <div class="say">Hardest to stay off: <em>${esc(peak.label.toLowerCase())}</em>, a typical day ${fmt1(pk.max)} out of 10, where 10 = can barely hold on.<br>${page.feltHeadlineProposal?.text ? esc(page.feltHeadlineProposal.text) : ease ? `Staying off feels clearly easier from <strong>${esc(ease.label.toLowerCase())}</strong>.` : pk.last ? `No clear easing: ${noEase(pk).replace(/^A/, "a")}` : ""}<br><span class="sub">Even in the hardest stretch, ${Math.round(peak.easyShare * 20)} of every 20 posts rated that day 2 or less.</span></div>${scoredLine()}
+      <div class="say felth">${pk.flat ? `No clear peak. ${esc(pk.flat.text)}` : `Hardest to stay off: <em>${esc(pk.peak.label.toLowerCase())}</em>, a typical day ${fmt1(pk.max)} out of 10, where 10 = can barely hold on.<br>${ease ? `Staying off feels clearly easier from <strong>${esc(ease.label.toLowerCase())}</strong>.` : pk.last ? `No clear easing: ${noEase(pk).replace(/^A/, "a")}` : ""}<br><span class="sub">Even in the hardest stretch, ${Math.round(pk.easyShare * 20)} of every 20 posts rated that day 2 or less.</span>`}</div>${scoredLine()}
       <div class="dp" role="img" aria-label="For each stage of quitting, 20 dots show how hard people said today was, 0 to 10">${rows}
       <div class="ax"><span></span><div class="ticks"><span style="left:${100 * .5 / 11}%">0 easy</span><span style="left:${100 * 5.5 / 11}%">5</span><span style="left:${100 * 10.5 / 11}%">10</span></div><span>posts</span></div>
       <p class="key">Each row is one stage. The big figure is a typical day, out of 10. Each dot is 1 in 20 posts, placed at how hard that day was rated; red dots are 6 or more. A faded row has under ${MINP} posts.</p></div>
@@ -873,10 +911,10 @@ const V2 = {
   sources() { return V1.sources(); },
 };
 function hx(title, xs, where) {
-  const gl = gapLine(where);
+  const gl = gapLine(where, xs);
   if (!xs.length && !gl) return "";
   const lead = where === "more" && !heroNums().length;
-  return `<div class="blk"><h2>${esc(title)}</h2>${lead ? gl : ""}${xs.length ? `<div class="hx">${xs.map(x => `<div class="hxr">
+  return `<div class="blk"><h2>${esc(title)}</h2>${lead ? gl : ""}${xs.length ? `<div class="hx">${xs.map(x => `<div class="hxr" data-kind="${esc(x.kind)}">
     ${x.mirror ? `<p class="mir">${esc(x.mirror)}</p>` : ""}<div class="top"><span class="big">${esc(x.big)}</span>${g10(shareOf(x.big))}</div>
     <p class="hl">${esc(x.headline)} ${refs(x.n)}</p>${tags(x)}${basis(x)}</div>`).join("")}</div>` : ""}${lead ? "" : gl}</div>`;
 }
@@ -955,20 +993,19 @@ function renderTop() {
 // ---------- review panel ----------
 const D = DATA.decisions;
 const RTABS = [["choices", "Choices for you", () => D.choices.length], ["decisions", "Decisions I took", () => D.decisions.length], ["weak", "What is weak", () => (D.weak || []).length + weakCards().length], ["menu", "Number menu", () => DATA.kinds.kinds.length], ["graph", "How the graph was made", null], ["kept", "Left untouched", null], ["left", "Not on the pages", () => DATA.pages.reduce((n, p) => n + leftItems(p).length, 0)], ["notes", "Notes", () => Object.values(M.notes).reduce((a, n) => a + (n.notes || []).length, 0)]];
-// every card and proof the off-reader choice covers, on every page, each with its reason (one ask, not one per card)
+// every number card the off-reader choice covers, on every page, each with its reason (one ask, not one per card);
+// its count on the review page is this list's length, never typed (rule 28)
 function offItems() {
   const out = [];
-  for (const p of DATA.pages) {
+  for (const p of DATA.pages)
     for (const x of p.numbers || []) if (OFF(x) && KINDS[x.kind] && picked(x.kind)) out.push({ tab: p.tab, what: x.big, why: x.propose || `Counted: ${x.counted}` });
-    (p.plan || []).forEach((s, i) => { if (s.proof && OFFSEV(s.proof)) out.push({ tab: p.tab, what: `plan step ${i + 1} proof`, why: s.proof.alt ? "swapped for its stand-in" : "the step keeps its actions, without a proof" }); });
-  }
   return out;
 }
 // rule 17: every shown card with a Weak label is listed under What is weak, by page
 function weakCards() {
   const out = [];
   for (const p of DATA.pages) {
-    for (const x of p.numbers || []) if (x.weak && KINDS[x.kind] && picked(x.kind)) out.push({ tab: p.tab, what: x.big, why: x.weak });
+    for (const x of p.numbers || []) if (x.weak && KINDS[x.kind] && picked(x.kind) && !(OFF(x) && dropOff())) out.push({ tab: p.tab, what: x.big, why: x.weak });
     (p.beliefs || []).forEach((b, i) => { if (b.weak) out.push({ tab: p.tab, what: `belief ${i + 1}`, why: b.weak }); });
     (p.plan || []).forEach((s, i) => { if (s.proof && s.proof.weak) out.push({ tab: p.tab, what: `plan step ${i + 1} proof`, why: s.proof.weak }); });
   }
@@ -999,7 +1036,7 @@ function renderReview() {
   const b = $("#rbody");
   if (st.rtab === "choices") {
     b.innerHTML = `<h2>${D.choices.length} choices. Each one becomes a rule for every page.</h2><div class="lead">The prototype already uses my recommendation for each. Pick another and every page changes at once. You won’t be asked these again.</div>` +
-      D.choices.map(c => { const cur = M.choices[c.id]?.pick; const its = c.id === "offreader" ? offItems() : null; return `<div class="ritem${cur ? " done" : ""}"><h3>${esc(c.rule)}</h3><p class="why">${esc(c.why)}</p>${its ? `<details><summary>The ${its.length} it covers, on every page</summary>${its.map(x => `<p class="why"><b>${esc(x.tab)} ${esc(x.what)}:</b> ${esc(x.why)}</p>`).join("")}</details>` : ""}<div class="row">${c.options.map(o => `<button type="button" class="pill" data-choice="${c.id}" data-o="${o.id}" aria-pressed="${(cur || "") === o.id}">${esc(o.label)}${o.id === c.rec ? `<span class="rec">recommended</span>` : ""}</button>`).join("")}</div>${noteBox("ch-" + c.id)}</div>`; }).join("");
+      D.choices.map(c => { const cur = M.choices[c.id]?.pick; const its = c.id === "offreader" ? offItems() : null; return `<div class="ritem${cur ? " done" : ""}" data-choice-id="${c.id}"><h3>${esc(c.rule)}</h3><p class="why">${esc(its ? c.why.replace("{offShown}", its.length) : c.why)}</p>${its ? `<details><summary data-count="${its.length}">The ${its.length} cards it covers, on every page</summary>${its.map(x => `<p class="why"><b>${esc(x.tab)} ${esc(x.what)}:</b> ${esc(x.why)}</p>`).join("")}</details>${offProofs().length ? `<p class="why">Proofs that stay either way, labelled “not checked for addiction”: ${esc(offProofs().join(", "))}.</p>` : ""}` : ""}<div class="row">${c.options.map(o => `<button type="button" class="pill" data-choice="${c.id}" data-o="${o.id}" aria-pressed="${(cur || "") === o.id}">${esc(o.label)}${o.id === c.rec ? `<span class="rec">recommended</span>` : ""}</button>`).join("")}</div>${noteBox("ch-" + c.id)}</div>`; }).join("");
   } else if (st.rtab === "decisions") {
     b.innerHTML = `<h2>Decisions I took, each with its reason</h2><div class="lead">Veto any of them and say why; I’ll change it on every page.</div>` +
       D.decisions.map(d => { const v = M.veto[d.id]?.v; return `<div class="ritem${v === "veto" ? " vetoed" : v === "ok" ? " done" : ""}"><h3>${esc(d.title)}</h3><p>${esc(d.decision)}</p><p class="why">Why: ${esc(d.why)}</p><div class="row"><button type="button" class="pill" data-veto="${d.id}" data-v="ok" aria-pressed="${v === "ok"}">Keep</button><button type="button" class="pill veto" data-veto="${d.id}" data-v="veto" aria-pressed="${v === "veto"}">Veto</button></div>${v === "veto" || (M.notes["dec-" + d.id]?.notes || []).length ? noteBox("dec-" + d.id) : ""}</div>`; }).join("");

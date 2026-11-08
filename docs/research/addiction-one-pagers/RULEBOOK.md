@@ -63,11 +63,18 @@ trial, therapy, help); and on a `basis.who` that names no amount of use
 words (5 Nov, beliefs): "some of these are sort of dangerous, because it isnt
 clear if were talking about real addicts who may not be able to moderate or
 not". The alcohol "27% vs 7%" relapse number does it right: it counts people
-who had been dependent. Check: Build fails when a belief tagged
-`moderation` has a proof whose severity is not `dependent`, `resolved` or
-`disorder`, or whose proof says "not checked for addiction" (such a row is
-another kind of belief, or it goes); and when a stop-or-cut-down number counts
-other people without saying "not checked for addiction".
+who had been dependent. Restated 8 Nov (round 4, D1): a moderation belief's
+proof must never support moderating. It is answered by a source that counted
+hooked people (`dependent`, `disorder`, `resolved` or `treatment`), or by one
+that didn't, and then the proof argues against the "just one" and its Counted
+line says plainly who was counted ("… not checked for addiction"); the words
+sit on the Counted line, not in the proof sentence. A "just one" thought ("just
+one", "one quick look", "I can handle it", "under control") is a moderation
+belief whatever kind it was filed under. Check: Build fails on a "just one"
+belief not filed as `moderation`; on a moderation belief answered by other
+people whose Counted line lacks "not checked"; on "not checked" inside its
+proof sentence; and when a stop-or-cut-down number counts other people
+without saying "not checked for addiction".
 
 ## B. Voice
 
@@ -121,8 +128,16 @@ with the head count right under it in the same view; its line says
 "projected" and its one Weak label says it likely runs high, said once, not
 three times. The choice `hero` on the review page sets the order. A modelled
 figure (a pooled effect times an assumed rate, a model's estimate) is a
-projection too. Check: Build fails when a number marked `projection` has no
-"projected" or "expected" in its line.
+projection too. On a card, a worked-out figure shows its Counted label and one
+amber chip, "Worked out, not counted" ("Average across studies" for a pooled
+average, `pooled: true`), carrying anything else its Weak label says; "not
+counted" is never said twice (round 4, D6). In the hero the chip names its
+figure ("About 91 in 100: worked out, not counted; likely runs high"), so it
+never reads as a label on the head count. Check: Build fails when a number
+marked `projection` has no "projected" or "expected" in its line; the render
+check fails when the hero has both hope numbers but shows only one, when a
+projection chip sits in a hero with no projected figure, and on the old
+"Projected, not counted" chip.
 
 **11. No death tolls or population totals.** His words (4 Nov): he doesn't care
 about "2.6 million deaths". Why: a reader can't see himself in a population
@@ -142,7 +157,18 @@ number back).
 big figure, the headline, the hope number too. Only a drop or a rise ("87%
 less") stays in %; raw counts ("138 of 180") go under Based on. Why: round-3
 cold readers had to convert between "42 in 100", "90.6%" and "138 of 180" on one
-screen. Check: Build fails on "%" or "N of M" in a big figure.
+screen. Round 4: this holds for headlines, belief and plan proofs and body
+rows too ("1 in 4" is "25 in 100"; "2,008 of 4,781" goes under Based on). His
+own kept sentences (`ownWords`) are the exception (rule 26). Check: Build fails
+on "%" or "N of M" in a big figure, and on "N%", "1 in N" or a raw "N of M"
+count in a headline, a proof or a body row.
+
+**12c. A big figure is a result, not a time stamp.** "Week 1", "72 hours",
+"7 days" or "Years 1 and 3" says when, not what happened. Make the result the
+big figure where the source gives one; where the time is itself the finding
+("2–7 days" of withdrawal, "6 years" of rising well-being), the card says so
+with `timeIsResult: true` and its headline says the result first. From round 4
+(D7). Check: Build fails on a time as the big figure without `timeIsResult`.
 
 **12a. A "what helps" number says what happened per 100 people with it and per
 100 without it.** "27 in 100 vs 12 in 100", never "×2.3" or "1 in 12" alone. From
@@ -173,7 +199,10 @@ choice on the review page, not the menu too (rule 27: never the same detail
 twice); when shown they sit under "Alcohol and drugs together". Check: Build
 fails on a number whose kind is not in the menu, and lists each page's empty
 kinds; the render check fails when a page has an empty picked kind and no gap
-line.
+line. A gap line never sits right after a card that answers the same question:
+an empty kind is left out of it when its section shows a card of the same
+group, or of a kind its `near` list names (round 4, D6). Within a section,
+cards run by group: who gets free, how they quit, what helps, then life after.
 
 **15. Section order: one number that creates hope, then the beliefs and the
 graph, then more numbers.** His words (5 Nov): "Perhaps a good combination is
@@ -220,6 +249,17 @@ Build fails on a felt-difficulty file without its post count, its reader
 agreement and its bias note, and on a body row without a start and end in
 hours; the render check fails when a body row is not drawn as a bar or the
 graph says "few".
+
+The graph's headline (round 4, D9) calls the hardest stretch only where the
+highest typical day, among stages with 25 posts or more, stands at least 1
+point above every later stage; a hollow stage never sets it. Otherwise there is
+one headline, said plainly: "No clear peak. A typical day sits at 3 to 4 out of
+10 from days 2–3 through months 4–12." Pages carry no headline text of their
+own. A plan proof that quotes the graph uses a figure the graph shows. Check:
+Build fails on a page's `feltHeadlineProposal` and on a plan proof's "N out of
+10" that no stage of the graph shows; the render check fails on more than one
+graph headline, on "No clear peak" next to a hardest stretch, and when the
+page's stage medians differ from the build's.
 
 **19. A lab cue test is never drawn as craving.** Withdrawal is drawn as
 ranges. A phase whose study stopped at its peak ends there and says so. Why: 4
@@ -281,7 +321,11 @@ at most 7 per round, and never the same detail twice.** Why: 5 Nov he said he
 fears looking every part over for all addictions "over and over". A card never
 asks on its own ("Proposed to remove"); every proposal folds into one choice
 that lists the cards it covers. A detail a rule or decision already settles is
-not asked again. Check: Build (at most 7 choices); the render check fails on a
+not asked again, and each card sits in exactly one choice. The off-reader
+choice covers number cards only; its count is the length of the list it shows
+(round 4, D2/D3). Belief and plan proofs about people not checked for addiction
+stay, labelled so, and the choice names them in one line. The review page says
+under its tabs that only "Choices for you" needs him. Check: Build (at most 7 choices); the render check fails on a
 "Proposed to remove" chip and on more than 7 asks on the review page; Gate.
 
 **28. Facts he can check, never "easy".** He finds Claude sycophantic. Say
@@ -289,8 +333,10 @@ where Claude is the biased party. Every sentence on the review page is true
 against the pages: a figure it states about them is filled in from the pages
 by the build (`{feltUsed}`, `{planActions}` …), and a sentence about one page
 carries an `assert` the build re-checks (8 Nov, round-3 finding: four review
-sentences were false). Check: Build (unknown fact names, failed asserts);
-Gate (report).
+sentences were false). A second source a line rests on (`alsoRef`, `refs2`) is
+cited as a numbered source at the end of the card's caveat (round 4, D10).
+Check: Build (unknown fact names, failed asserts); the render check fails when
+the off-reader choice's stated count differs from its list; Gate (report).
 
 **29. Gates run before he sees anything.** Source check, owner-lens critic,
 cold reader, browser check, adversarial audit, looped until none finds a

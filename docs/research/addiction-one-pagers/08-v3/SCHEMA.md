@@ -29,7 +29,10 @@ Built by `board/build_v3.py` into the prototype. Rules: `../RULEBOOK.md`.
     "measured": "…"                   // what exactly was counted
   },
   "caveat": "…",                      // what the number does not mean
-  "projection": false,                // true when the figure is modelled, not counted
+  "projection": false,                // true when the figure is modelled, not counted (one chip: "Worked out, not counted")
+  "pooled": false,                    // true for a pooled average across studies (one chip: "Average across studies")
+  "timeIsResult": false,              // true when the big figure is a time that IS the finding (rule 12c)
+  "alsoRef": null,                    // or a second source (or list) the card's lines rest on; "refs2" works the same; cited at the end of the caveat
   "weak": null,                       // or one plain sentence: why this number is weak
   "ref": { "cite": "…", "url": "…", "pmid": "…", "fetched": true,
            "quote": "…" },            // word for word from the fetched page, 30 words or fewer
@@ -52,6 +55,7 @@ Built by `board/build_v3.py` into the prototype. Rules: `../RULEBOOK.md`.
   "origin": "06-template.json alcohol belief 4 (marked Keep)",          // or "new"
   "keep": true,                       // only where he marked the row Keep (the Belief test page shows it as the example)
   "ownWords": false,                  // true: the proof is his own v10/2025 sentence, kept word for word (rule 26)
+  "counted": null,                    // or plain words that replace the Counted line built from the tag (moderation rows: "… not checked for addiction")
   "weak": null,                       // or one plain sentence; listed under What is weak
   "check": { "by": "…", "on": "…", "verdict": "ok", "notes": "…" }
 }
@@ -63,9 +67,9 @@ Built by `board/build_v3.py` into the prototype. Rules: `../RULEBOOK.md`.
 `06-template.json`). Each has `do`: 3 or more actions for this addiction (the
 review page states the real range, filled in by the build), and an optional
 sourced `proof`: `text`, `ref`, `severity` (rule 3; shown as a Counted line),
-optional `weak`, optional `ownWords`, and, for an off-reader proof, an optional
-`alt` ({`text`, `ref`, `severity`}) that replaces it when he picks "take them
-off" in the off-reader choice.
+optional `counted` (replaces that line), optional `weak`, optional `ownWords`.
+A proof about people not checked for addiction stays on the page whatever the
+off-reader choice says (round 4, D2); `alt` is no longer used.
 
 ## Page-level fields
 
@@ -76,7 +80,7 @@ off" in the off-reader choice.
 | `gaps[]` | `{kind, why, reader?}`: why a picked kind is empty (review page); `reader` gives the page's own words for the gap line |
 | `windows[]` | body rows: `label`, `when`, `s`/`pk`/`e` in hours (start, peak, end), `open` (no clear end), `fall` (worst at the start), `kind` (feel, change, trigger, danger), `refs`, optional `note` (a smaller line under the caption) |
 | `timelineNote` | a line under the body rows (default: the 06 note); "Many people get less than this." is added on every page |
-| `feltHeadlineProposal` | `{text}`: replaces the graph's computed second line ("No clear easing. …") |
+| `feltHeadlineProposal` | no longer used (round 4, D9): the template computes the graph headline; the build fails if a page carries one |
 | `footerProposal` | `{text, refs}`: the "Before you stop" line; on a page without a danger safety level it shows as one small note |
 | `researchRefsToAdd[]` | refs a v3 page adds for its own rows; a ref's `shortCite` replaces its title in the source list |
 | `notUsed.*` | any list here shows on the review page under "Not on the pages" |

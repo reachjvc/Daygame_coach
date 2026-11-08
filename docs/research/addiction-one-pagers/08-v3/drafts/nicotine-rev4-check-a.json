@@ -1,0 +1,394 @@
+{
+ "id": "nicotine",
+ "round": "rev4",
+ "checker": "independent source checker a (rev4, all changed items)",
+ "on": "2026-11-08",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "About 19 in 100 (hope-free-now)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Only change: who adds 'how much they used is not reported'. PMC3227547 full text refetched 2026-11-08: no per-person amount for the dependent group (only a discussion remark on Black smokers' lower daily consumption). Rule 3 USE_LEVEL met. Quote unchanged."
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "84 in 100 (hope-lifetime)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "who amount line true (same full text). Weak 'Likely runs high' renders as 'Worked out, not counted; likely runs high' (projChip): one chip, 'not counted' once (D6), and rule 10's 'likely runs high' said once."
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "About 30 (how-tries)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Weak now 'Loose: 7 to 142 by other counts'; chip renders 'Worked out, not counted; loose: 7 to 142 …' (D6). Range is one figure pair; the 7/142 spread is in the source's Table 3 per Measured. Figure and quote unchanged."
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "12 vs 12 in 100 (helps-stop-vs-cut)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Weak removed; projection chip alone, Counted already says 'not checked for addiction by a doctor' (D6). Nothing else changed."
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "23 vs 10 in 100 (helps-medicine)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Weak removed; projection chip carries 'Worked out, not counted' (D6). Nothing else changed."
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "11 vs 7 in 100 (helps-talk)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Weak removed; one projection chip (D6). Nothing else changed."
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "Week 1 (after-first-month)",
+   "verdict": "fix",
+   "problems": [
+    "basis.who now says 'how much they used is not reported'. Only the PubMed abstract could be read (PMID 9356569, refetched 2026-11-08); the full text at psychiatryonline returns 403. The abstract gives no amount, but a 1997 trial report normally gives cigarettes a day, so 'not reported' is a claim about a paper nobody here read. Say what was checked."
+   ],
+   "fix": {
+    "numbers[7].basis.who": "smokers who met the criteria for nicotine dependence and tried to stop; how much they smoked is not in the paper's summary"
+   },
+   "notes": "D7 ok: the abstract gives no result figure (only 'a significant decrease in anxiety from the first week of abstinence'), so 'Week 1' stays as big and the headline now leads with the result. Quote word for word (26 words). n 70 of 101 matches the abstract."
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "Years 1 and 3 (after-mood)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "D7 ok: Piper 2012 abstract (PMID 22160762, refetched) gives no single result figure; headline now leads with the result. Same claim as the quote; no more hopeful."
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "26 years (who-years)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "who amount line true (PMC3227547). Weak 'Built on recalled ages' renders after the projection chip without repeating 'not counted' (D6)."
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "10 vs 7 in 100 (helps-reward)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Weak removed; one projection chip (D6). Nothing else changed."
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "25 in 100 (after-body, erection)",
+   "verdict": "fix",
+   "problems": [
+    "Source (Pourmand 2004 abstract, refetched) says 'improved in > or = 25% of ex-smokers'. The headline keeps 'at least', but the big figure alone reads as exactly 25 in 100. Put 'At least' in the big figure too (rule 12b still passes: no % and no 'N of M').",
+    "'within a year': the score was taken once, after 1 year ('After 1 year the ED status improved'), not tracked during the year. Say 'a year later'."
+   ],
+   "fix": {
+    "numbers[12].big": "At least 25 in 100",
+    "numbers[12].headline": "Of men with erection problems who quit smoking, at least 25 in 100 had improved a year later; none who kept smoking did."
+   },
+   "notes": "D7/12b: '1 in 4' became 'N in 100' as the r4-rules fix gave. Two figures (25, none). Quote word for word."
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "81 in 100 (quit-status)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "who adds 'how much they used is not reported'. Chou 2016 full text (PMC8154113, refetched 2026-11-08) asks cigarettes per day but reports only shares of all US cigarettes smoked by groups (current NUD: 89.6%), not a per-person amount for lifetime NUD, so the line holds."
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "90 in 100 (after-lasting)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Weak 'Small trials' after the projection chip; 'not counted' said once (D6). Nothing else changed."
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "Quitting will be hell (hard)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "D2: proof about smokers not checked for addiction stays; Counted 'smokers who stopped, not checked for addiction' (users tag key word 'not' present). D5: test branches two ways ('Still using? … Already off it? …'), 'Either way' is the shared step, not a third branch; safe for nicotine. Hughes 2007 quote word for word (PMID 17365764 refetched). Proof and ref unchanged; proof depends on Hughes only, so alsoRef (Shiffman) need not render as cited (D10)."
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "Just one won't hurt (moderation)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "D1 met: kind 'moderation'; proof argues against the 'just one'; 'Not checked for addiction.' left the proof line and the Counted line says it ('daily smokers in patch trials, not checked for addiction'); severity 'treatment' fits (patch trials with counselling; 'trials' gives rule 3's treatment key word). Kenford 1994 abstract refetched: quote word for word (27 words); daily smokers >=15 a day, motivated to quit, 88 and 112. Weak 'No study of people hooked on it' is the wording the r4-rules finding gave. Note for the template agent: RULEBOOK.md rule 4 still has the old text (build fails when a moderation proof says 'not checked for addiction'); D1's restated rule 4 is not yet in RULEBOOK.md, so this row would fail the rule as written there."
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "Vapes and pouches are basically harmless",
+   "verdict": "fix",
+   "problems": [
+    "Rule 9 (n behind that exact figure): the liquid-strength result rests on 3,446 people, not 3,609. Foulds 2015 full text (PMC4838001, fetched 2026-11-08), Figure 2: dependence index by nicotine concentration (n = 3,446). The ref note already says so; the proof line does not."
+   ],
+   "fix": {
+    "beliefs[4].proof": "In 3,446 ex-smokers who now only vape, dependence was higher with stronger liquid."
+   },
+   "notes": "Rule 12 fix as the r4-rules finding gave: one idea. Direction true (zero < 1–12 < 13+ mg/ml, abstract). Quote word for word (18 words). D2 Counted 'ex-smokers who now only vape, not checked for addiction'. Cut halves ('lower than they recalled on cigarettes', 'may grow') are a wording cut on the same proof; the 14.5 vs 8.1 stays in the ref note."
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "Step 3 proof: most relapses in the first 8 days",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "D2: 'not checked for addiction' moved to the Counted line. Hughes 2004 quote word for word (PMID 14678060 refetched). D9: not a felt-graph figure, so no clash with the graph headline."
+  },
+  {
+   "where": "plan",
+   "index": 3,
+   "label": "Step 4 proof: 8 in 100 who called themselves non-smokers",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Rule 12: one figure; comparison kept in words. PMC7572756 full text refetched: Table 2 Non-Smoker n=150, 8.0% relapse; 'A smoker trying to quit' n=14, 71.4%. Quote word for word (truncation marked). Counted names Australia and the UK, users tag with 'not'."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 proof: varenicline 23 vs 10 in 100",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Only a Counted line added; projection:true set, so the Counted line plus one projection chip (D6). Text and ref unchanged."
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "Step 5 doRefs[1]: varenicline for quitting vaping",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Butler 2025 Cochrane (PMID 41288132) abstract refetched 2026-11-08: quote word for word (10 words); 'varenicline increased vaping cessation rates … low certainty … 2 studies, 315 participants'. Action line 'two small trials suggest it may help vapers stop' is not more hopeful than 'may help'. Change carried from rev3; no diff against pages/nicotine.json."
+  },
+  {
+   "where": "windows",
+   "index": 3,
+   "label": "An odd urge, years later",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "12b: 'about 10 in 100'. PMC2902924 full text fetched 2026-11-08: strong urge at least monthly in 11% (n = 45) of 403; the authors themselves say 'only 1 in 10' and 'a 10% chance'. 'Measured in ordinary ex-smokers' stays. One figure."
+  },
+  {
+   "where": "gaps",
+   "index": 0,
+   "label": "who-age gap reader line",
+   "verdict": "fix",
+   "problems": [
+    "'No study yet gives …' is a claim about all research; the gap notes only show our own searches found none. The other gap lines say 'Not counted here yet:'. Use that form, and keep gaps[1].reader identical so the line still prints once."
+   ],
+   "fix": {
+    "gaps[0].reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help.",
+    "gaps[1].reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help."
+   }
+  },
+  {
+   "where": "gaps",
+   "index": 1,
+   "label": "how-alone gap reader line",
+   "verdict": "fix",
+   "problems": [
+    "Same line as gaps[0]; same fix (see gaps[0])."
+   ],
+   "fix": {
+    "gaps[1].reader": "Not counted here yet: the age when nicotine addiction ended, or how many got free with no help."
+   },
+   "notes": "Why text tidied (Chou 2016 in plain words), true against PMC8154113 (18.8% lifetime, severe 27.8%)."
+  },
+  {
+   "where": "gaps",
+   "index": 2,
+   "label": "how-slips gap note",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; 'changed' flag carried from round 2."
+  },
+  {
+   "where": "gaps",
+   "index": 3,
+   "label": "helps-early-help gap reader line",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Plain words, no 'early against late' jargon (r4 owner major). True per the why note."
+  },
+  {
+   "where": "gaps",
+   "index": 4,
+   "label": "how-withdrawal gap reader line",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "True per the why note (Breslau 1992 counts people not checked for addiction, per symptom; in notUsed)."
+  },
+  {
+   "where": "gaps",
+   "index": 5,
+   "label": "how-with-help gap reader line",
+   "verdict": "fix",
+   "problems": [
+    "Its reader line is the early-help sentence, which says nothing about how-with-help; its own why says the kind is 'Not needed here' because the what-helps cards have a with-and-without count. On this page the template already drops it: kinds.json gives how-with-help a 'near' list (helps-medicine, helps-talk, helps-reward, helps-stop-vs-cut), all shown. A wrong-kind reader line is a trap if that list changes. Leave the reader line out."
+   ],
+   "fix": {
+    "gaps[5].reader": null
+   },
+   "notes": "For the main session: with the current gapLine() in one-pager-v3.html every nicotine gap kind is 'covered' (who group has quit-status, how group has how-slips, helps group has the what-helps cards), so none of the nicotine reader gap lines renders at all. The wording matters only on the review page or if the coverage rule changes."
+  },
+  {
+   "where": "notUsed",
+   "index": 5,
+   "label": "notUsed.numbers[5] £20 a week",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "Reason true: £20 a week is a cost of smoking, not a change after quitting. No change against pages/nicotine.json."
+  },
+  {
+   "where": "notUsed",
+   "index": 14,
+   "label": "notUsed.numbers[14] More than half",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 15,
+   "label": "notUsed.numbers[15] Age 40",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 0,
+   "label": "notUsed.proofs[0] plan step 2 proof",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 1,
+   "label": "notUsed.proofs[1] plan step 5 action 4",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 2,
+   "label": "notUsed.proofs[2] 06 belief 1 proof (calm row)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 3,
+   "label": "notUsed.proofs[3] 06 plan step 5 proof, second half",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 4,
+   "label": "notUsed.proofs[4] 06 plan step 3 proof, second half",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 5,
+   "label": "notUsed.proofs[5] 06 belief 5 proof ('Just one')",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 6,
+   "label": "notUsed.proofs[6] 06 belief 6 proof (vapes and pouches)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 7,
+   "label": "notUsed.proofs[7] v3 belief 2 proof (round 2)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "notUsed",
+   "index": 8,
+   "label": "notUsed.proofs[8] v3 belief 1 proof (round 2), second sentence",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "No change against pages/nicotine.json; flag carried from rev3, already checked."
+  },
+  {
+   "where": "footerProposal",
+   "index": 0,
+   "label": "Before you stop: clozapine, olanzapine, theophylline",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {},
+   "notes": "D10 applied word for word as r4-safety.txt gave it (34 words). Kroon 2007 abstract (PMID 17823102) refetched 2026-11-08: both quotes word for word; theophylline is in quote2's CYP1A2 list; 'upon smoking cessation, smokers may require a reduction in the dosage'. 'Switch to a vape or pouches' follows because either ends the smoke; the line does not claim vapes or pouches are safe themselves. Small footer line only, nothing up front (rule 5)."
+  }
+ ]
+}

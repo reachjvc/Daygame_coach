@@ -1,0 +1,272 @@
+{
+ "id": "cannabis",
+ "round": "rev4",
+ "checker": "revision checker a (cannabis, rev4, all changed items)",
+ "on": "2026-11-08",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "65 in 100 (hope-free-now)",
+   "verdict": "ok",
+   "problems": [],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "97 in 100 (hope-lifetime)",
+   "verdict": "fix",
+   "problems": [
+    "Caveat pointer to the 71 in 100 card is D10's text word for word and the 71 in 100 card's caveat supports it ('most of those who slipped went back to using 4+ days in a week'). basis.who use-level phrase true (dependence checklist only).",
+    "Weak 'Worked out, not counted' renders as the D6 chip, but RULEBOOK rule 10 (current text) says the hero projection's one Weak label 'says it likely runs high, said once'. projChip() strips projection words from weak and appends the rest, so weak 'Likely runs high' renders 'Worked out, not counted; likely runs high': one 'not counted', and rule 10 kept."
+   ],
+   "fix": {
+    "numbers[1].weak": "Likely runs high"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "6 years (who-years)",
+   "verdict": "ok",
+   "problems": [
+    "Weak per D6; basis.who true. Kind off, not shown."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "Age 29 (who-age)",
+   "verdict": "fix",
+   "problems": [
+    "basis.n says 'its papers give 217 to 220', but the papers give 217 (Kelly 2018 tables: 'Cannabis (12.6%, n = 217)') and a weighted share (10.97% in Kelly 2018, 11.0 in Kelly 2017 Table 3); 220 is 11% of 2,002 worked out, not a figure either paper prints. Rule 28: say what each figure is."
+   ],
+   "fix": {
+    "numbers[3].basis.n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "54 in 100 (how-alone)",
+   "verdict": "fix",
+   "problems": [
+    "basis.n says 'its papers give 217 to 220', but the papers give 217 (Kelly 2018 tables: 'Cannabis (12.6%, n = 217)') and a weighted share (10.97% in Kelly 2018, 11.0 in Kelly 2017 Table 3); 220 is 11% of 2,002 worked out, not a figure either paper prints. Rule 28: say what each figure is.",
+    "Kelly 2017 Table 3 refetched: 'Cannabis (e.g., marijuana, hashish) 11.0 1.13' (share) and help row '45.8 5.53' (SE 5.53 supports the ±11 caveat)."
+   ],
+   "fix": {
+    "numbers[4].basis.n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "2 tries (how-tries)",
+   "verdict": "fix",
+   "problems": [
+    "basis.n says 'its papers give 217 to 220', but the papers give 217 (Kelly 2018 tables: 'Cannabis (12.6%, n = 217)') and a weighted share (10.97% in Kelly 2018, 11.0 in Kelly 2017 Table 3); 220 is 11% of 2,002 worked out, not a figure either paper prints. Rule 28: say what each figure is."
+   ],
+   "fix": {
+    "numbers[5].basis.n": "About 220 of the 2,002 people surveyed named weed as their main problem (217 people as counted; 11 in 100 once the survey adjusts its counts to match the US population)"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "85 in 100 (how-abrupt)",
+   "verdict": "ok",
+   "problems": [
+    "'3 in 4' to '75 in 100' is the same 75% figure (D7). Kind off."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "27 vs 26 in 100 (helps-medicine)",
+   "verdict": "ok",
+   "problems": [
+    "A true projection (dummy-pill rate times pooled effect), so 'expected' and the one chip 'Worked out, not counted' are right (D6)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "23 in 100 (how-with-help) — not marked changed, flagged because plan step 5 was aligned to it",
+   "verdict": "fix",
+   "problems": [
+    "Source timing: 'an average of 37% intervention participants achieved PPA at end of treatment, and this decreased to 24% at three to four months from baseline and to 23% at follow-up of longer than four months' (Gates 2016, PMC4914383 via NCBI BioC, refetched 2026-11-08). Follow-ups count from baseline (the start), not from the end of therapy, so 'more than 4 months after talk therapy' is wrong; rev3's 'after starting' was right."
+   ],
+   "fix": {
+    "numbers[8].headline": "At check-ups more than 4 months after starting talk therapy for weed, 23 in 100 had not used it in the past month."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "Day 2–6 (how-withdrawal)",
+   "verdict": "ok",
+   "problems": [
+    "propose now true: body row 1 'Day 1–14, worst on day 2–6' rests on this study (r1); plan step 3 no longer uses it."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "47 in 100 (how-withdrawal)",
+   "verdict": "fix",
+   "problems": [
+    "'expected' is not accurate. Bahji 2020: 'The overall pooled prevalence of CWS was 47% (6469 of 23 518)'; the abstract says it came from 'a random-effects meta-analysis model'. That is an average of 47 studies' observed rates, weighted. It forecasts nothing, so 'are expected to get withdrawal' reads as a prediction for the reader that the source never makes.",
+    "projection:true also makes the template show 'Worked out, not counted', not D6's 'Average across studies': projChip() picks 'Average across studies' only when x.pooled is true (SCHEMA.md 'pooled'). With projection:true, the weak text 'Average across studies' is stripped by PROJ_WORDS and never shown.",
+    "Right form: pooled:true, projection:false (rule 10's build check applies to projection only), and a past-tense headline. 'Averaged across dozens of studies' already says it is an average. 2 figures, 19 words, no verdict, no share-format error (checked with build_v3.py figs/wc/verdict/share_fmt). The head count of about 28 in 100 stays in basis.measured."
+   ],
+   "fix": {
+    "numbers[10].headline": "Averaged across dozens of studies, about 47 in 100 regular or hooked weed users got withdrawal when they stopped.",
+    "numbers[10].projection": false,
+    "numbers[10].pooled": true,
+    "numbers[10].weak": "Average across studies"
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "72 hours (after-first-month)",
+   "verdict": "ok",
+   "problems": [
+    "Headline result-first matches Scott 2018 ('not significantly different from 0', 15 studies, n = 928). Big stays a time per D7's fallback, since the source's result is d = -0.08. The owner's r4 proposal of 'No clear gap after 72 hours' as the big figure was not taken; D7 allows that choice."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "Week 1 (after-first-month)",
+   "verdict": "ok",
+   "problems": [
+    "Matches Schuster 2018: 'driven by improved verbal learning in the first week of abstinence'. Comparison against those who kept using is in the caveat."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "12 weeks (after-mood)",
+   "verdict": "ok",
+   "problems": [
+    "Hser 2017 abstract: Cannabis Use Reduction group linked with improvement in anxiety (β=-0.09, p<0.05). Anxiety only now; one idea."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "Weed is the only thing that gets me to sleep",
+   "verdict": "ok",
+   "problems": [
+    "'69 in 100' is 68.9% rounded (Hser 2017, 'A high percentage (68.9%) of the study sample reported poor sleep quality')."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 1,
+   "label": "step 2 proof (Ellingstad 2006)",
+   "verdict": "fix",
+   "problems": [
+    "Abstract (Europe PMC, refetched 2026-11-08): 'Long-term daily cannabis abusers (N = 25) who without treatment stopped using cannabis for at least one year'. The text and quote are right.",
+    "The tag is now 'disorder', but the new proof.counted lacks the key word rule 3 sets for that tag ('mild'). build_v3.py checks COUNTED_KEYS on numbers only, so no build check catches it.",
+    "The change note calls 'abusers' 'a diagnosis'. The abstract shows no diagnostic criteria, and the full text is not open, so that claim is unverified. 'Abuse' at most means the milder DSM-IV category, which fits 'mild cases included'."
+   ],
+   "fix": {
+    "plan[1].proof.counted": "long-time daily users with a weed problem, mild cases included, who quit on their own"
+   }
+  },
+  {
+   "where": "plan",
+   "index": 2,
+   "label": "step 3 (action 1 split; new felt proof)",
+   "verdict": "fix",
+   "problems": [
+    "Action 1 split is D10 / r4-safety's text word for word. OK.",
+    "Proof figure checked against 08-v3/felt/cannabis.json with the graph's own merge (build_v3.py stage_meds, the same as one-pager-v3.html stageDots). Typical day per stage: Day 1 5 (29 posts), Days 2–3 5 (115), Days 4–7 5 (117), Week 2 4 (113), Weeks 3–4 3.5 (118), Month 2 3 (107), Month 3 3 (58), Months 4–12 3.5 (108), Year 2+ 1 (36). Every stage has 25 or more posts, so none is hollow.",
+    "D9 headline that the template will compute: the peak is 5 and the highest later stage is 4, a difference of 1. That is a clear peak: 'Days 1–7: The hardest stretch. A typical day: 5 out of 10'. Easing: 'Weeks 3–4 … 3.5 out of 10'. One headline.",
+    "Wrong timing in the proof: 'after the first few days … 4 out of 10 or less' does not match the graph, which shows Days 4–7 at 5, inside the hardest stretch. The 4-or-less claim holds only from Week 2 (day 8) on. The draft's quote and 'via' use the raw 15 bins (Days 6–7 = 4), which the graph never shows. D9 says the proof must use the figure the graph shows.",
+    "The build's D9 check passes only because 4 is one of the graph's values (Week 2). It does not check the timing.",
+    "Fixed text: 2 figures, 25 words, no verdict (checked with build_v3.py figs/wc/verdict). 'after the first week' matches the graph's hardest stretch (Days 1–7), and action 3 ('Expect the first two weeks to be the hardest') still fits, since easing starts at Weeks 3–4.",
+    "Severity 'self-hooked' is right for r/leaves posters. The rendered Counted line is 'people who say they feel hooked on weed'."
+   ],
+   "fix": {
+    "plan[2].proof.text": "In r/leaves posts with a day count, a reader rated a typical day after the first week at 4 out of 10 or less.",
+    "plan[2].proof.ref.quote": "typical (median) score by graph stage, Week 2 to Year 2+: 4, 3.5, 3, 3, 3.5, 1; scale 4 = noticeable but manageable",
+    "plan[2].proof.ref.via": "08-v3/felt/cannabis.json bins merged into the graph's nine stages as build_v3.py stage_meds() does (Week 2 to Year 2+: 113, 118, 107, 58, 108, 36 posts; Day 1 to Days 4–7: 5, 5, 5; 801 posts used); scale text from its 'scale' field",
+    "plan[2].proof.check": {
+     "by": "revision checker a (cannabis, rev4)",
+     "on": "2026-11-08",
+     "verdict": "ok",
+     "notes": "ok once the fixed text, quote and via are applied"
+    }
+   }
+  },
+  {
+   "where": "plan",
+   "index": 4,
+   "label": "step 5 proof (Gates 2016, 23 in 100)",
+   "verdict": "fix",
+   "problems": [
+    "Made the same as the card, but the card's 'more than 4 months after talk therapy' is wrong. Gates 2016: '24% at three to four months from baseline and to 23% at follow-up of longer than four months'. The follow-ups count from the start, which is rev3's 'after starting'. r4-owner's 'more than 4 months on' is also acceptable.",
+    "Fix both together (see numbers[8]) so they still match. Fixed text: 2 figures, 29 words."
+   ],
+   "fix": {
+    "plan[4].proof.text": "In therapy trials for a weed problem, 23 in 100 given talk therapy had not used weed in the past month at check-ups more than 4 months after starting."
+   }
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "gapReaderLine",
+   "verdict": "ok",
+   "problems": [
+    "Matches gaps[].why for helps-talk, helps-stop-vs-cut and helps-early-help. It is r4-owner's wording word for word. No card of those kinds sits right before it (D6)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "notUsed.beliefs[4].reason",
+   "verdict": "ok",
+   "problems": [
+    "Now true: build_v3.py pops milestones from v3 pages (lines 588–592) and lists them on the review page."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "page",
+   "index": null,
+   "label": "notUsed.beliefs[22] (rev3 step 3 proof)",
+   "verdict": "fix",
+   "problems": [
+    "The entry is right. Its reason says the swap 'ends the 4–14 days vs up to 3 weeks clash', which is true. Once plan[2] is fixed, it should also name the new timing so the trail matches."
+   ],
+   "fix": {
+    "notUsed.beliefs[22].reason": "Replaced by the forum graph's figure (D9: a typical day after the first week at 4 out of 10 or less), which counts people who say they feel hooked instead of 18 heavy users not checked for addiction, and ends the '4–14 days' vs 'up to 3 weeks' clash. The study stays on the Day 2–6 card and in the body rows."
+   }
+  }
+ ],
+ "rev4BriefConformance": {
+  "D6": "Followed for numbers[1], [2] and [7]. Not followed for numbers[10], where projection:true makes the chip 'Worked out, not counted'; fixed with pooled:true.",
+  "D7": "Followed: 75 in 100 and 69 in 100. The 72 hours, Week 1 and 12 weeks headlines lead with the result; their big figures stay times because the sources give no plain result figure.",
+  "D9": "Every stage has 25 or more posts. A clear peak exists (Days 1–7 at 5, against 4 at most later). Not followed for plan step 3's timing; fixed above.",
+  "D10": "Followed: step 3 split and the hero 71 in 100 pointer, word for word.",
+  "D1-D5, D8": "Not about this page's data. D2: belief 2 proof (heavy users) stays, labelled; that is allowed."
+ },
+ "sourcesFetched": [
+  "Europe PMC abstracts: 15967588, 32271390, 27149547, 28847455, 29710074, 30408351",
+  "NCBI BioC full text: PMC4914383 (Gates), PMC5992615 (Kelly 2018), PMC6076174 (Kelly 2017)",
+  "local: 08-v3/felt/cannabis.json, board/build_v3.py, board/one-pager-v3.html"
+ ]
+}

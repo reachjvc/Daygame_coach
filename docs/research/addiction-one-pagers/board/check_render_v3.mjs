@@ -48,9 +48,38 @@ try {
             never: /Never above/.test(txt),
             bars: art.querySelectorAll(".bw").length, barsDrawn: art.querySelectorAll(".bw .btrack i.main").length,
             windows: (P.windows || []).length,
-            empty: (P.empty || []).filter(k => { const K = DATA.kinds.kinds.find(x => x.id === k); return K && K.pick && ["more", "outlook"].includes(K.where); }).length,
-            gapl: art.querySelectorAll(".gapl").length,
+            // each empty picked kind is either answered by a shown card of its group (or a 'near' kind) in its section,
+            // or named in that section's gap line
+            unanswered: (() => {
+              const KK = Object.fromEntries(DATA.kinds.kinds.map(k => [k.id, k]));
+              const noHero = !art.querySelector(".sec-hero .big, .sec-hero .grid100");
+              const out = [];
+              for (const k of P.empty || []) {
+                const K = KK[k]; if (!K || !K.pick) continue;
+                const where = K.where.startsWith("hero") ? (noHero ? "more" : null) : K.where;
+                if (!where || !["more", "outlook"].includes(where)) continue;
+                const sec = art.querySelector(where === "more" ? ".sec-quit" : ".sec-outlook");
+                const shown = sec ? [...sec.querySelectorAll("[data-kind]")].map(e => e.dataset.kind) : [];
+                const covered = shown.some(s => KK[s].group === K.group || (K.near || []).includes(s));
+                if (!covered && !(sec && sec.querySelector(".gapl"))) out.push(k);
+              }
+              return out;
+            })(),
             tokens: (txt.match(/\{\w+\}/g) || []).slice(0, 3),
+            // round 4: the hero shows both hope numbers when both exist; a projection chip only beside a projected line
+            bothHope: ["hope-free-now", "hope-lifetime"].every(k => (P.numbers || []).some(x => x.kind === k) && DATA.kinds.kinds.find(y => y.id === k).pick),
+            heroText: (art.querySelector(".sec-hero") || { innerText: "" }).innerText,
+            heroBigs: ["hope-free-now", "hope-lifetime"].map(k => ((P.numbers || []).find(x => x.kind === k) || {}).big).filter(Boolean),
+            felth: art.querySelectorAll(".sec-graph .felth").length,
+            graphText: ((art.querySelector(".sec-graph .peaks, .sec-graph .say") || {}).innerText || ""),
+            oldChip: /Projected, not counted/.test(txt),
+            medDiff: (() => {
+              if (!P.feltMeds) return [];
+              const js = {};
+              stageDots().forEach(x => { if (x.n >= MINP) js[x.label] = Math.round(x.med * 2) / 2; });
+              const keys = new Set([...Object.keys(js), ...Object.keys(P.feltMeds)]);
+              return [...keys].filter(k => js[k] !== P.feltMeds[k]).map(k => `${k}: page ${js[k]}, build ${P.feltMeds[k]}`);
+            })(),
           };
         });
         if (r.overflow > 1) FAIL(24, where, `page scrolls sideways by ${r.overflow} px`);
@@ -71,8 +100,16 @@ try {
         if (r.few) FAIL(18, where, "the graph says “few” instead of a post count");
         if (r.never) FAIL(18, where, "the graph says “Never above” its own peak");
         if (r.windows && r.barsDrawn !== r.windows) FAIL(18, where, `${r.windows} body rows, ${r.barsDrawn} drawn as bars`);
-        if (r.empty && !r.gapl) FAIL(14, where, `${r.empty} picked kinds have no number and the page has no gap line`);
+        if (r.unanswered.length) FAIL(14, where, `picked kinds with no number, no card answering them and no gap line: ${r.unanswered.join(", ")}`);
         if (r.tokens.length) FAIL(28, where, `unfilled fact in reader text: ${r.tokens.join(" ")}`);
+        const norm = t => t.replace(/^about\s+/i, "").toLowerCase();
+        if (r.bothHope && !(/projected to get free|projected/i.test(r.heroText) && r.heroBigs.every(b => r.heroText.toLowerCase().includes(norm(b)))))
+          FAIL(15, where, `the page has both hope numbers but the hero doesn't show both (${r.heroBigs.join(", ")})`);
+        if (/Worked out|Projection/i.test(r.heroText) && !/projected/i.test(r.heroText)) FAIL(10, where, "a projection chip in the hero, but no projected figure on it");
+        if (r.oldChip) FAIL(10, where, "the old “Projected, not counted” chip is back (D6: one chip, “Worked out, not counted”)");
+        if (r.medDiff.length) FAIL(18, where, `graph stage medians differ from the build's: ${r.medDiff.join("; ")}`);
+        if (r.felth !== 1) FAIL(18, where, `${r.felth} graph headlines (one, D9)`);
+        if (/No clear peak/.test(r.graphText) && /hardest/i.test(r.graphText)) FAIL(18, where, "the graph says both “No clear peak” and a hardest stretch");
         if (shots && ver === "mix") await pg.screenshot({ path: path.join(shots, `${pilot}-${width}.png`), fullPage: true });
       }
     }
@@ -81,13 +118,17 @@ try {
       await pg.evaluate(() => { try { localStorage.clear(); } catch (e) {} location.hash = ""; });
       await pg.reload();
       const rv = await pg.evaluate(async () => {
-        const out = { asks: 0, prop: 0, tokens: [], tabs: {} };
+        const out = { asks: 0, prop: 0, tokens: [], tabs: {}, offWhy: null, offList: null };
         for (const b of [...document.querySelectorAll("#rtabs button")]) {
           b.click();
           await new Promise(r => setTimeout(r, 30));
           const t = document.querySelector("#rbody").innerText;
           out.tabs[b.dataset.rtab] = t.length;
-          if (b.dataset.rtab === "choices") out.asks = document.querySelectorAll("#rbody .ritem").length;
+          if (b.dataset.rtab === "choices") {
+            out.asks = document.querySelectorAll("#rbody .ritem").length;
+            const it = document.querySelector('#rbody [data-choice-id="offreader"]');
+            if (it) { out.offList = +it.querySelector("summary[data-count]")?.dataset.count; out.offWhy = (it.querySelector(".why").innerText.match(/\ball (\d+)\b/) || [])[1]; }
+          }
           out.tokens.push(...(t.match(/\{\w+\}/g) || []));
         }
         for (const pl of [...document.querySelectorAll("#tabs button")]) {
@@ -100,6 +141,8 @@ try {
       if (rv.asks > 7) FAIL(27, "review page", `${rv.asks} choices (7 max)`);
       if (rv.prop) FAIL(27, "review page", "cards still ask “Proposed to remove” on their own");
       if (rv.tokens.length) FAIL(28, "review page", `unfilled facts: ${[...new Set(rv.tokens)].join(" ")}`);
+      if (rv.offList != null && rv.offWhy != null && +rv.offWhy !== rv.offList) FAIL(28, "review page", `the off-reader choice says ${rv.offWhy} cards, its list shows ${rv.offList}`);
+      if (rv.offList != null && rv.offWhy == null) FAIL(28, "review page", "the off-reader choice doesn't state how many cards it covers");
       if (shots) await pg.screenshot({ path: path.join(shots, `review-1280.png`) });
     }
     for (const e of [...new Set(errs)]) FAIL(29, `${width}px`, `script error: ${e.slice(0, 200)}`);

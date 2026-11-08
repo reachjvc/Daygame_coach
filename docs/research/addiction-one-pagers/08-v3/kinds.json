@@ -1,5 +1,5 @@
 {
- "about": "The menu of number kinds for the one-pagers (rule 14). Every page fills the same kinds; 'general' kinds are about every addiction and are shown the same on every page. 'pick' marks the kinds recommended for the prototype (general kinds follow the choice 'general' instead); the owner's marks on the review page can swap them. 'where' is the page section a picked kind shows in (rule 15: hope first, then beliefs and the graph, then more numbers). 'reader' lists the severity tags a number of this kind may carry (RULEBOOK rule 3). 'gapPhrase' is the plain reader words for a kind a page has no number for (the gap line: 'Not counted here yet: …'). Sections: 'more' is “Who gets free, and how” (who, how they got free, what helps); 'outlook' is “How quitting goes” (slips, withdrawal, life after).",
+ "about": "The menu of number kinds for the one-pagers (rule 14). Every page fills the same kinds; 'general' kinds are about every addiction and are shown the same on every page. 'pick' marks the kinds recommended for the prototype (general kinds follow the choice 'general' instead); the owner's marks on the review page can swap them. 'where' is the page section a picked kind shows in (rule 15: hope first, then beliefs and the graph, then more numbers). 'reader' lists the severity tags a number of this kind may carry (RULEBOOK rule 3). 'gapPhrase' is the plain reader words for a kind a page has no number for (the gap line: 'Not counted here yet: …'). Sections: 'more' is “Who gets free, and how” (who, how they quit, what helps); 'outlook' is “How quitting goes” (life after). 'near' names kinds that answer the same question, so a gap line never sits right after a card that answers it.",
  "groups": {
   "hope": "Hope",
   "who": "Who gets free",
@@ -133,14 +133,14 @@
     "heavy"
    ],
    "why": "In the menu, not picked: on most pages it overlaps with stop-or-cut-down.",
-   "gapPhrase": "stopping at once against step by step"
+   "gapPhrase": "stopping at once against stopping step by step"
   },
   {
    "id": "how-slips",
    "group": "how",
    "scope": "specific",
    "pick": true,
-   "where": "outlook",
+   "where": "more",
    "label": "How often the first try slips",
    "question": "How many slip on a try, and when?",
    "reader": [
@@ -168,7 +168,7 @@
     "treatment"
    ],
    "why": "Rule 4: the moderation question answered only with numbers about addicts. The alcohol '27% vs 7%' is the model.",
-   "gapPhrase": "stopping fully against cutting down"
+   "gapPhrase": "quitting fully against cutting down"
   },
   {
    "id": "helps-medicine",
@@ -184,7 +184,10 @@
     "disorder"
    ],
    "why": "Shown as 'X in 100 with it vs Y in 100 without' (rule 12a), so it reads on the first pass.",
-   "gapPhrase": "a medicine, with it and without"
+   "gapPhrase": "a medicine against a dummy pill, in the same study",
+   "near": [
+    "how-with-help"
+   ]
   },
   {
    "id": "helps-talk",
@@ -201,7 +204,10 @@
     "self-hooked"
    ],
    "why": "Help is optional and a tool (his plan step 5); readers want to know if it is worth it.",
-   "gapPhrase": "talk therapy or a group, with it and without"
+   "gapPhrase": "talk therapy against no therapy, in the same study",
+   "near": [
+    "how-with-help"
+   ]
   },
   {
    "id": "helps-early-help",
@@ -217,7 +223,7 @@
     "disorder"
    ],
    "why": "Picked after the first review: '62% vs 43%' was one of the v10 'How quitting goes' numbers he liked. Not a trial, and it says so.",
-   "gapPhrase": "getting help early against late"
+   "gapPhrase": "help early against help late"
   },
   {
    "id": "helps-reward",
@@ -370,7 +376,7 @@
    "group": "how",
    "scope": "specific",
    "pick": true,
-   "where": "outlook",
+   "where": "more",
    "label": "How many get withdrawal, and when it peaks",
    "question": "How many get withdrawal symptoms when they stop, and when are they worst?",
    "reader": [
@@ -417,7 +423,14 @@
     "screened"
    ],
    "why": "Added in gates round 2: a with-help result that has no without-help count can't be a what-helps number (rule 12a), but it still answers who quits using what.",
-   "gapPhrase": "what happened with help"
+   "gapPhrase": "how people did with help when no one was compared without it",
+   "near": [
+    "helps-medicine",
+    "helps-talk",
+    "helps-early-help",
+    "helps-reward",
+    "helps-stop-vs-cut"
+   ]
   }
  ]
 }

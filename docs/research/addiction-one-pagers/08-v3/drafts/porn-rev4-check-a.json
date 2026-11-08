@@ -1,0 +1,203 @@
+{
+  "id": "porn",
+  "round": "rev4",
+  "checkedBy": "rev4 source checker a (porn), all changed items",
+  "on": "2026-11-08",
+  "notes": "gaps[0,1,3,4,5,10,12] and gapReaderLine still carry changed:true from rev3 but did not change against pages/porn.json, so they were not re-checked. Rev4 brief D1, D2 (propose kept on off-reader cards 0,4,5,6,9), D6, D7, D8, D9, D10 checked for this page; D3-D5 do not touch porn data (belief 2 test already branches two ways).",
+  "checked": [
+    {
+      "where": "numbers",
+      "index": 0,
+      "label": "12 in 100 (Efrati 'recovery' group)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PubMed abstract 41435755): 'recovery' (n = 138; 11.68 %); groups 952+138+50+42 = 1,182. 12 in 100 is the source's own share, rounded.",
+        "Quote word for word, 13 words. Headline 2 figures, names the problem (porn or sex) and says it is not a count of who got free (D8). Counted label has 'questionnaire' and 'likely porn or sex problem' (screened row, r4 rules minor fixed).",
+        "Note only: the mirror ('ever fades by itself') leans on a grouping the caveat says does not show anyone had a problem and lost it; acceptable because the headline denies it and the card stays proposed-to-remove under the off-reader choice (D2, D8)."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 1,
+      "label": "40 in 100 (Kraus quit 4+ times)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC5387768 full text): Table 1 quit 4+ 40.3 (wanting help) vs 5.8 (not); 'Approximately 80% of men reported viewing pornography at least once a week'; 132 + 54 = 186; age 32.8.",
+        "Folds '80 in 100' and '6 in 100' match the source. Severity self-hooked and the change note agree with D1."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 2,
+      "label": "54 in 100 (ACT, end of therapy)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PubMed abstract 27157029): 'When combining all participants (N=26) … Complete cessation was seen in 54% of participants at posttreatment'; 12-session protocol; 93% vs 21% between arms.",
+        "n 26 matches the combined count; headline says end of therapy (D8); quote 22 words, word for word."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 3,
+      "label": "53 in 100 (journals, slipped)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC7889567): 'sizeable proportion of the sample (at least 86.5%)'. 'At least 86 in 100' rounds down, so it stays true under 'at least'. Quote (n = 55) word for word."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 4,
+      "label": "45 in 100 (students, 7-day stop)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC9847461): '176 undergraduate students (64.2% female)'; '45.4%' quote word for word. Fold '64 in 100 were women' correct."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 5,
+      "label": "51 in 100 (Polish students tried to stop)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC6571756): current users n = 4260, 2520 female = 59.2%, so 'about 60 in 100' is right; 51.0% quote word for word; daily 10.7%."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 6,
+      "label": "7 days (craving on a break)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC9847461): PPCS below cutoff 84.7% (85 in 100), no intrinsic desire to quit 89.8% (90 in 100), daily 19.3% (34 of 176), craving effect only at high PPU with daily use. Quotes word for word.",
+        "D7: source gives no single result figure; big stays the time, headline now opens with the result (who craved more). One figure in the headline."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 7,
+      "label": "50 in 100 (erections improved)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch: PMC7889567 'Of the 42 members … half (n = 21)'; Grubbs & Gola abstract (PubMed 30621919) has both refs2 quotes word for word (23 and 10 words).",
+        "Caveat's last sentence matches the source: no causal link found, no control for medical covariates. refs2 with citedIn follows D10 (alsoRef rendered as a cited source); the template must render it."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 8,
+      "label": "74 in 100 (ACT, 3 months on)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (abstract 27157029): 'At the 3-month follow-up assessment, 35% … 74% … at least 70% reduction'. Weak chip and basis now say 26 men, as on every card from this trial (D8).",
+        "74% of 26 is not a whole number, so fewer than 26 were likely counted at 3 months; basis.n already says the study does not give that count. No change needed."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "numbers",
+      "index": 9,
+      "label": "16 in 100 (Polish students stopped)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC6571756): 'n = 5083; 3004 female' = 59.1% women ('about 60 in 100'); 823 quote word for word. Propose text now in the second person (r4 rules/owner)."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 0,
+      "label": "I've watched porn since I was a teenager (stuck)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (abstract 27157029): 35% complete cessation at 3-month follow-up. Proof opens with the time point (D8), 2 figures, no n on the face, same trial as the 54 and 74 cards. Severity treatment matches."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "beliefs",
+      "index": 3,
+      "label": "One quick look won't hurt (moderation)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC5387768): Table 1 cut back 4+ 46.2 among the 186; 'Out of the 1,298 individuals surveyed, 14.3% (n = 186) reported a current interest in seeking treatment' word for word.",
+        "D1 followed: kind moderation, severity self-hooked, Counted line says 'not checked for addiction', proof no longer carries it, proof argues against 'just one' (repeated cut-back tries) and does not support moderating. Change note says self-hooked, not treatment.",
+        "Note only: 132 of the 186 scored above a checklist line for likely out-of-control sexual behaviour (shown on the 40-in-100 card), so 'not checked for addiction' means no diagnosis, not no screening; still true."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 0,
+      "label": "Step 1 proof (Wordecha 9 men, 6 binged)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC6174597): 'Six out of nine subjects experienced binge (multiple hours or times a day) PuM.' word for word, 14 words; treatment-seeking males, Polish lab. 2 figures, one idea; the 'all but one' third quantity is gone and listed in notUsed.replaced[29].",
+        "Note only: 'Of 9 … 6' is a raw count on a reader face (rule 12b, r4 rules finding). Kept on purpose: '67 in 100' of 9 men would show false precision. quotesMore repeats the main quote (harmless)."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "plan",
+      "index": 2,
+      "label": "Step 3 proof (journals: support and accountability)",
+      "verdict": "fix",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (PMC7889567): the source says social support and accountability were the most instrumental EXTERNAL resources, and that 'A combination of external and internal resources appeared to be key'. With 'blockers' and 'of outside help' cut, 'seemed to matter most' reads as most of everything, which overstates the source.",
+        "The quote now leads with blocking apps, which the text no longer mentions."
+      ],
+      "fix": {
+        "plan[2].proof.text": "In 104 men’s porn-quit journals, the outside help that seemed to matter most was support from other people and being accountable to someone.",
+        "plan[2].proof.ref.quote": "social support and accountability appeared to be the external resources that were most instrumental to members’ ability to sustain abstinence"
+      }
+    },
+    {
+      "where": "plan",
+      "index": 4,
+      "label": "Step 5 proof (ACT 54 in 100, end of therapy)",
+      "verdict": "ok",
+      "problems": [
+        "Fetched 2026-11-08 via NCBI efetch (abstract 27157029): 54% complete cessation at posttreatment; says end of therapy, as on the card (D8); one figure; Weak chip 26 men."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "page",
+      "index": 0,
+      "label": "heroLine 'Start with what you tell yourself about porn.'",
+      "verdict": "ok",
+      "problems": [
+        "D8 followed: no figure (rule 15) and no claim the gap line later denies. Old line kept in heroLineR3 and notUsed.replaced[28]. Basis quotes his step 1 as in 06-template.json ('Identify what beliefs are driving your {thing}')."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "page",
+      "index": 1,
+      "label": "heroDecision.basis / changeNote",
+      "verdict": "ok",
+      "problems": [
+        "Matches the new heroLine; no source claim to check."
+      ],
+      "fix": {}
+    },
+    {
+      "where": "page",
+      "index": 2,
+      "label": "feltHeadlineProposal removed",
+      "verdict": "ok",
+      "problems": [
+        "D9 followed: dropped, listed in notUsed.replaced[27] with its reason (day 1 has 15 posts)."
+      ],
+      "fix": {}
+    }
+  ]
+}

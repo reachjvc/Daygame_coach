@@ -37,12 +37,14 @@ COUNTED_KEYS = {
     "self-hooked": r"\bsays?\b|\bsaid\b|calling themselves|call themselves|\bfeel",
     "heavy": r"\bnot\b",
     "users": r"\bnot\b",
-    "screened": r"questionnaire|answers|screen",
+    "screened": r"likely .*problem",
 }
 # rule 3: basis.who says how much they used (his 5 Nov "10 drinks every day" against "above the guidelines")
-USE_LEVEL = r"\d|daily|a day|a week|times|hooked|dependen|addict|criteria|checklist|diagnos|not reported"
+USE_LEVEL = r"\d|daily|a day|a week|times|not reported"   # "hooked" alone says nothing about how much (r4 rules audit)
 # rule 4: a moderation answer counts people who were hooked, or says plainly that it didn't check
-MOD_OK = {"dependent", "resolved", "disorder"}
+MOD_OK = {"dependent", "resolved", "disorder", "treatment"}
+# rule 4 (D1, round 4): a "just one" belief is a moderation belief whatever its kind says
+MOD_WORDS = re.compile(r"just one|one quick|handle it|in control|under control|moderate|a little|only on weekends", re.I)
 OTHER = {
     "alcohol": r"alcohol|drink(?:s|ing|er|ers)?|drunk|beer|wine|liquor|sober from booze",
     "nicotine": r"nicotine|cigarettes?|cigs?|tobacco|vap(?:e|es|ing|er|ers)|pouch(?:es)?|smokers?",
@@ -90,7 +92,18 @@ def verdict(s):
     return m.group(0).strip() if m else None
 
 
-# rule 12b: a share of people is written "N in 100"; only a drop or rise ("87% less") stays in %
+# rule 12b: a share of people is written "N in 100" on every reader face: big figure, headline, proofs, body rows
+SHARE_BAD = re.compile(r"\d+(?:\.\d+)?%(?!\s*(?:less|more|lower|higher|fewer))|\b1 in (?!100\b)\d+\b|\b\d[\d,]* of \d[\d,]{2,}\b")
+
+
+def share_fmt(t):
+    m = SHARE_BAD.search(t or "")
+    return m.group(0) if m else None
+
+
+# rule 12c (D7): a big figure is a result, not a time stamp ("Week 1", "72 hours", "7 days", "Years 1 and 3")
+TIME_BIG = re.compile(r"^(?:day|days|week|weeks|month|months|year|years)\b|^\d[\d–-]*\s*(?:hours?|days?|weeks?|months?|years?)$", re.I)
+# rule 12b: in the big figure itself, only a drop or rise ("87% less") stays in %
 BIG_OK_KINDS = set()   # none: since round 4 every share on a reader face is "N in 100", the hero projection too
 
 problems = []
@@ -143,6 +156,10 @@ def check_number(x, page, kinds, where, general=False):
     big = str(x.get("big", ""))
     if x.get("kind") not in BIG_OK_KINDS and (re.search(r"^\D*\d[\d,]*\s+of\s+\d", big) or (re.search(r"%", big) and not re.search(r"%\s*(?:less|more|lower|higher|fewer)", big))):
         P("12b", where, f"a share written as % or 'N of M' in the big figure (write 'N in 100'): {big}")
+    if share_fmt(x.get("headline")):
+        P("12b", where, f"a share not written 'N in 100' in the headline: {share_fmt(x.get('headline'))!r}")
+    if TIME_BIG.search(big) and not x.get("timeIsResult"):
+        P("12c", where, f"the big figure is a time, not a result: {big!r} (make the result big, or set timeIsResult when the time is the finding)")
     if verdict(x.get("headline")):
         P(6, where, f"headline opens with a verdict: {verdict(x.get('headline'))!r}")
     b = x.get("basis") or {}
@@ -171,6 +188,8 @@ def check_number(x, page, kinds, where, general=False):
     if not (c.get("by") and c.get("on") and c.get("verdict") == "ok"):
         P(16, where, "not passed by a separate source checker")
     check_ref(x.get("ref"), where)
+    for r in [r for f in ("alsoRef", "refs2") for r in ([x[f]] if isinstance(x.get(f), dict) else x.get(f) or [])]:
+        check_ref(r, where + " (second source)")
     txt = reader_text(x.get("big"), h, m, x.get("counted"), x.get("caveat"), x.get("weak"), *b.values())
     lint(txt, page, where, general)
 
@@ -195,7 +214,7 @@ def lint(txt, page, where, general=False):
 
 
 INTERNAL = {"origin", "changeNote", "revisionNote", "editNote", "was", "rejectedBy", "check", "fixedFields", "replacement",
-            "searched", "later", "fillLater", "missing", "note", "alsoRef", "doRefs", "checkHistory", "check1", "unchecked"}
+            "searched", "later", "fillLater", "missing", "note", "doRefs", "checkHistory", "check1", "unchecked"}
 
 
 def sanitize(obj):
@@ -258,6 +277,10 @@ def number_sources(page, own, kinds):
             if where.get(x["kind"]) == sec or (sec == "more" and where.get(x["kind"]) not in ("hero", "hero-second", "outlook")):
                 if "n" not in x:
                     x["n"] = cite(x.get("ref"), x["kind"])
+    # a card's second source (alsoRef) is cited in its fold, so a line that rests on it shows its number (D10)
+    for x in nums:
+        more = [r for f in ("alsoRef", "refs2") for r in ([x[f]] if isinstance(x.get(f), dict) else x.get(f) or [])]
+        x["alsoN"] = sorted({n for r in more for n in cite(r, x["kind"])})
     for i, st in enumerate(page.get("plan", [])):
         if st.get("proof"):
             st["proof"]["n"] = cite(st["proof"].get("ref"), f"plan {i}")
@@ -274,6 +297,25 @@ def number_sources(page, own, kinds):
 STAGES = [("Day 1", [0]), ("Days 2–3", [1, 2]), ("Days 4–7", [3, 4]), ("Week 2", [5, 6]), ("Weeks 3–4", [7, 8]),
           ("Month 2", [9, 10]), ("Month 3", [11]), ("Months 4–12", [12, 13]), ("Year 2 +", [14])]
 MIN_POSTS = 25
+
+
+def stage_meds(felt):
+    """The typical day per stage, exactly as one-pager-v3.html stageDots() computes it, rounded to 0.5 (fmt1)."""
+    out = {}
+    for label, idx in STAGES:
+        hist = [0] * 11
+        for i in idx:
+            for k, c in enumerate(felt["bins"][i].get("hist") or []):
+                hist[k] += c
+        vals = [k for k, c in enumerate(hist) for _ in range(c)]
+        n = len(vals)
+        if n < MIN_POSTS:
+            continue
+        q = (n - 1) * .5
+        f = int(q)
+        c = min(n - 1, f + 1)
+        out[label] = round((vals[f] + (vals[c] - vals[f]) * (q - f)) * 2) / 2
+    return out
 
 
 def rng(vals, fmt=lambda v: f"{v:,}", sep=" to "):
@@ -295,8 +337,8 @@ def review_facts(pages, kinds_doc):
     app = [p for p in pages if p.get("app")]
     day = lambda d: next((x["n"] for x in app[0]["app"]["days"] if x["day"] == d), None) if app else None
     acts = [len(st.get("do", [])) for p in pages for st in p.get("plan", [])]
-    off = sum(1 for p in pages for x in p.get("numbers", []) if x.get("severity") in OFF_READER or x.get("propose"))
-    off += sum(1 for p in pages for st in p.get("plan", []) if (st.get("proof") or {}).get("severity") in OFF_READER)
+    picked = {k["id"] for k in kinds if k["pick"]}
+    off = sum(1 for p in pages for x in p.get("numbers", []) if (x.get("severity") in OFF_READER or x.get("propose")) and x["kind"] in picked)
     return {
         "nKinds": str(len(kinds)), "nGroups": str(len(kinds_doc["groups"])),
         "nPicked": str(sum(1 for k in kinds if k["scope"] == "specific" and k["pick"])),
@@ -376,6 +418,11 @@ def main():
         check_number(x, None, kinds, f"general {x.get('big')}", general=True)
 
     pages = []
+    felt_meds = {}
+    for pid in PILOTS:
+        ffp = V3 / "felt" / f"{pid}.json"
+        if ffp.exists():
+            felt_meds[pid] = set(stage_meds(json.loads(ffp.read_text())).values())
     for pid in PILOTS:
         page = json.loads((V3 / "pages" / f"{pid}.json").read_text())
         o = old[pid]
@@ -406,7 +453,7 @@ def main():
         if gr:
             lint(gr if isinstance(gr, str) else gr.get("text", ""), pid, f"{pid} gap reader line")
         if page.get("feltHeadlineProposal"):
-            lint(page["feltHeadlineProposal"].get("text", ""), pid, f"{pid} graph headline")
+            P(18, pid, "feltHeadlineProposal is no longer used: the template computes the graph headline (D9); drop it")
         for g in page.get("gaps", []):
             if g.get("reader"):
                 lint(g["reader"], pid, f"{pid} gap line {g.get('kind')}")
@@ -419,14 +466,19 @@ def main():
                     P(22, w, f"{f} missing")
             if b.get("severity") not in SEVERITY:
                 P(3, w, f"severity {b.get('severity')!r} unknown")
-            # rule 4: a moderation belief is answered only by a source that counted people who were hooked; a proof
-            # that says "not checked for addiction" can't answer it (that row is another kind, or it goes)
-            if b.get("kind") == "moderation" and b.get("severity") not in MOD_OK:
-                P(4, w, f"a moderation belief answered with {b.get('severity')} people (needs {', '.join(sorted(MOD_OK))})")
-            if b.get("kind") == "moderation" and re.search(r"not checked", b.get("proof") or "", re.I):
-                P(4, w, "a moderation belief whose proof says 'not checked for addiction'")
+            # rule 4 (D1): a moderation belief is answered by a source that counted hooked people, or by one that
+            # didn't, and then its Counted line says plainly "not checked for addiction"
+            is_mod = b.get("kind") == "moderation" or MOD_WORDS.search(b.get("limiting") or "")
+            if is_mod and b.get("kind") != "moderation":
+                P(4, w, f"a 'just one' belief filed as kind {b.get('kind')!r}; it is a moderation belief")
+            if is_mod and b.get("severity") not in MOD_OK and "not checked" not in (b.get("counted") or ""):
+                P(4, w, f"a moderation belief answered with {b.get('severity')} people whose Counted line doesn't say 'not checked for addiction'")
+            if is_mod and re.search(r"not checked", b.get("proof") or "", re.I):
+                P(4, w, "'not checked for addiction' belongs on the Counted line, not in the proof sentence")
             if wc(b.get("proof")) > 40:
                 P(8, w, f"proof is {wc(b['proof'])} words (40 max)")
+            if not b.get("ownWords") and share_fmt(b.get("proof")):
+                P("12b", w, f"a share not written 'N in 100' in the proof: {share_fmt(b.get('proof'))!r}")
             if figs(b.get("proof")) > 2 and not b.get("ownWords"):   # rule 26: his own v10 sentence stays word for word
                 P(12, w, f"proof has {figs(b.get('proof'))} figures (2 max): {b.get('proof')}")
             if verdict(b.get("proof")):
@@ -449,6 +501,12 @@ def main():
                     P(6, f"{pid} plan step {i + 1}", f"an action that is a verdict, not a thing to do: {VERDICT_WORDS.search(d).group(0)!r} in {d[:60]!r}")
             if st.get("proof"):
                 pt = st["proof"].get("text", "")
+                if share_fmt(pt) and not st["proof"].get("ownWords"):
+                    P("12b", f"{pid} plan step {i + 1} proof", f"a share not written 'N in 100': {share_fmt(pt)!r}")
+                for m in re.finditer(r"(\d+(?:\.\d)?)(?:\s+to\s+(\d+(?:\.\d)?))? out of 10", pt):
+                    for v in filter(None, m.groups()):
+                        if felt_meds.get(pid) and float(v) not in felt_meds[pid]:
+                            P(18, f"{pid} plan step {i + 1} proof", f"says {v} out of 10; the graph shows typical days of {sorted(felt_meds[pid])} (use the graph's figure, D9)")
                 if figs(pt) > 2 and not st["proof"].get("ownWords"):
                     P(12, f"{pid} plan step {i + 1} proof", f"{figs(pt)} figures (2 max): {pt}")
                 if verdict(pt):
@@ -474,6 +532,8 @@ def main():
             if w["kind"] == "danger" and not page["danger"]:
                 P(5, f"{pid} window {w['label']}", "danger row on a page with no sourced danger")
             for f in ("label", "when"):
+                if share_fmt(w.get(f)):
+                    P("12b", f"{pid} body row {w['label'][:30]!r}", f"a share not written 'N in 100': {share_fmt(w.get(f))!r}")
                 if figs(w.get(f)) > 2:
                     P(12, f"{pid} body row {w['label'][:30]!r}", f"{f} has {figs(w.get(f))} figures (2 max): {w.get(f)}")
                 if verdict(w.get(f)):
@@ -515,6 +575,7 @@ def main():
             if not (felt.get("nUsed") and felt.get("agreement", {}).get("within1") is not None and felt.get("biases")):
                 P(18, f"{pid} felt", "graph needs its post count, reader agreement and bias note")
             page["felt"] = felt
+            page["feltMeds"] = stage_meds(felt)   # the render check compares the page's own stage medians with these
         else:
             P(18, pid, "no felt-difficulty file")
         pages.append(page)
