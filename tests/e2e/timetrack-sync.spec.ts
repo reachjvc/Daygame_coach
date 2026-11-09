@@ -138,6 +138,9 @@ test.describe('time is kept on the server, not just in one browser', { tag: '@ph
     await expect.poll(() => entriesOnAccount(page), { message: 'the entry never reached the account' }).toContain(
       'work that must survive',
     )
+    // and its Stop too: the entry reaches the account when it starts, and a second
+    // browser opened before the Stop lands shows it running, so out of the list
+    await savedToAccount(page)
 
     /**
      * ...and now a completely separate browser, SAME account: this worker's,
