@@ -623,6 +623,8 @@ export function useTimetrackSync({
    * it deleted a real entry, twice, before this ref existed.
    */
   const awaitingState = useRef<TimetrackState | null>(null)
+  /** a copy laid on the screen from the account's answer: news, not something to send (see `unwatched`) */
+  const heardFromAccount = useRef<TimetrackState | null>(null)
   const retryAt = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryDelay = useRef(RETRY_START_MS)
   /** set when a flush is asked for while one is already in the air */
@@ -1061,6 +1063,7 @@ export function useTimetrackSync({
       const shown = applyTagSets(mergeIncoming(local, rebased.hold, new Set()), rebased.holdTags)
       const settled = reconcileRunningEntries(rowsToState(shown, serverNowIso()))
       if (diffRows(local, stateToRows(settled.state, uid), serverNowIso()).count > 0) {
+        heardFromAccount.current = settled.state
         replaceState(settled.state)
       }
       if (notice) pushToast(notice)
@@ -1629,8 +1632,8 @@ export function useTimetrackSync({
           const accountWorkspaces = new Set((body.rows.timetrack_workspaces ?? []).map((row) => row.id))
           const blankAndUntouched =
             start !== null &&
+            latestHeld === start &&
             isBlankCopy(start) &&
-            isBlankCopy(latestHeld) &&
             !accountWorkspaces.has(start.workspace.id) &&
             !accountWorkspaces.has(latestHeld.workspace.id)
           const held = blankAndUntouched
@@ -1969,9 +1972,34 @@ export function useTimetrackSync({
     return true
   }, [])
 
+  /**
+   * A CHANGE ON SCREEN THAT THE WATCHER BELOW HAS NOT LOOKED AT IS NOT SAVED.
+   *
+   * The watcher is an effect, so the render that first shows a change comes one
+   * render before it is queued, and in that render the queue was empty: the
+   * badge said "Saved." about a Stop not yet sent, and a PC that asked at that
+   * moment still had the timer running (a browser test, 2026-11-09). So the
+   * state the watcher last looked at is kept, and a different one on screen
+   * counts as one change waiting. What came from the account is not a change.
+   */
+  const watched = useRef<TimetrackState | null>(null)
+  const [, settleUnwatched] = useState(0)
+  const isUnwatched = (shown: TimetrackState | null) =>
+    shown !== null &&
+    watched.current !== null &&
+    shown !== watched.current &&
+    shown !== awaitingState.current &&
+    shown !== heardFromAccount.current &&
+    userId.current !== null
+  const unwatched = isUnwatched(state)
+
   // --- every local change becomes something to send -------------------------
   useEffect(() => {
     if (!state) return
+    // seen now, whatever the watcher decides; a render that counted it as waiting is redrawn
+    const counted = isUnwatched(state)
+    watched.current = state
+    if (counted) settleUnwatched((n) => n + 1)
     if (!userId.current) {
       /**
        * Not heard from the account in this opening, so there is nothing to diff
@@ -2348,6 +2376,7 @@ export function useTimetrackSync({
        * written into the baseline and so was never uploaded at all, leaving the
        * other device's timer running on the server for ever.
        */
+      heardFromAccount.current = settled.state
       replaceState(settled.state)
     } catch {
       // Not worth a toast — the next check will run — but worth the badge: a
@@ -2680,7 +2709,7 @@ export function useTimetrackSync({
 
   return {
     status,
-    pendingCount,
+    pendingCount: pendingCount > 0 || !unwatched ? pendingCount : 1,
     /** what this device knows about the account right now (D2, D6) */
     check,
     /** check the account now, and send what is waiting: the badge's tap */

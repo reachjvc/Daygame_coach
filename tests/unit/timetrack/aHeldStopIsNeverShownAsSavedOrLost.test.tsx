@@ -52,6 +52,31 @@ function serve(copy: TimetrackState) {
   return account
 }
 
+/** what the sync badge says is one of these; other labels on the page are not the badge */
+const BADGE = /^(Saved|Saving|Checking|Couldn't|Not saved|Offline)/
+
+/**
+ * Every label the badge has, each with whether the Stop had landed by then.
+ * `skipFirstOld`: the badge's label before its first change dates from before
+ * the tap, and was true then.
+ */
+function badgeWatcher(said: { label: string; stopLanded: boolean }[], landed: () => boolean, { skipFirstOld }: { skipFirstOld: boolean }) {
+  const changedOnce = new WeakSet<Node>()
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      const now = (record.target as Element).getAttribute("aria-label") ?? ""
+      const old = record.oldValue ?? ""
+      if (!BADGE.test(now) && !BADGE.test(old)) continue
+      const first = !changedOnce.has(record.target)
+      changedOnce.add(record.target)
+      if (old && BADGE.test(old) && !(skipFirstOld && first)) said.push({ label: old, stopLanded: landed() })
+      if (BADGE.test(now)) said.push({ label: now, stopLanded: landed() })
+    }
+  })
+  observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["aria-label"], attributeOldValue: true })
+  return observer
+}
+
 function aRunningGym() {
   const copy = startTimer(
     baseState(),
@@ -89,14 +114,7 @@ describe("a Stop held while the tracker checks", () => {
     // every label the badge ever had, each with whether the Stop had landed by then
     const said: { label: string; stopLanded: boolean }[] = []
     const landed = () => Boolean(account.entry(gymId)?.stopped_at)
-    const observer = new MutationObserver((records) => {
-      for (const record of records) {
-        if (record.oldValue) said.push({ label: record.oldValue, stopLanded: landed() })
-        const now = (record.target as Element).getAttribute("aria-label")
-        if (now) said.push({ label: now, stopLanded: landed() })
-      }
-    })
-    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["aria-label"], attributeOldValue: true })
+    const observer = badgeWatcher(said, landed, { skipFirstOld: false })
 
     await wait(1_000)
     holdReads = false
@@ -205,6 +223,36 @@ describe("a Stop held while the tracker checks", () => {
 function aKeptTap(tap: unknown) {
   window.localStorage.setItem(HELD_STOP_KEY, JSON.stringify({ owner: USER, id: "kept-1", tap, tappedOnDevice: Date.now() - 60_000 }))
 }
+
+describe("a Stop tapped when nothing is being checked", () => {
+  /**
+   * The same gap without a check: the render that shows the Stop came one
+   * render before the change-watcher queued it, and in that render the badge
+   * said "Saved." (a browser test caught it: the PC, asked at that moment, still
+   * had Gym running). A change the watcher has not looked at yet counts as one
+   * waiting.
+   */
+  test("the badge never says Saved before the Stop has reached the account", async () => {
+    const { copy, gymId } = aRunningGym()
+    const account = serve(copy)
+    holdReads = false
+    render(<TogglLab account={USER} />)
+    for (let i = 0; i < 12 && !screen.queryByRole("button", { name: /^Saved\./ }); i++) await wait(500)
+
+    const said: { label: string; stopLanded: boolean }[] = []
+    const landed = () => Boolean(account.entry(gymId)?.stopped_at)
+    const observer = badgeWatcher(said, landed, { skipFirstOld: true })
+    fireEvent.click(main().getByRole("button", { name: "Stop timer" }))
+    // what the badge says the moment the tap has been drawn, before any timer or effect has run on
+    const rightAfter = screen.getByRole("button", { name: BADGE }).getAttribute("aria-label") ?? ""
+    for (let i = 0; i < 12 && !landed(); i++) await wait(500)
+    observer.disconnect()
+
+    expect(landed()).toBe(true)
+    expect(rightAfter, "the badge said Saved the moment Stop was tapped").not.toMatch(/^Saved\./)
+    expect(said.filter((s) => s.label.startsWith("Saved.") && !s.stopLanded).map((s) => s.label), "Saved while the Stop was not sent").toEqual([])
+  })
+})
 
 describe("a kept tap from every place that ends the timer", () => {
   test("Stop at… stops at the moment that was chosen", async () => {
