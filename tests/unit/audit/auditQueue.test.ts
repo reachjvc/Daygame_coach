@@ -112,3 +112,41 @@ describe("a delete with Undo time (alpha picky-eye-08, code review 2026-11-09)",
     expect(undone.answers).toEqual([waiting])
   })
 })
+
+describe("what each waiting answer saw (`was`, alpha slow-pass-06)", () => {
+  const Q = "2026-11-09T09:00:00.000Z"
+  const mark = (x: AuditAnswer) => ({ id: x.id, activity: x.activity, energy: x.energy, growth: x.growth, why: x.why })
+
+  it("an edit of an answer still waiting keeps what the first one saw: the server never had the first", () => {
+    const first = { ...a("1", Q, "Walk"), was: null }
+    let q = enqueueAnswers(emptyAuditQueue("me"), [first])
+    q = enqueueAnswers(q, [{ ...a("1", Q, "Walk in the park"), was: mark(first) }])
+    expect(q.answers).toHaveLength(1)
+    expect(q.answers[0].was).toBeNull()
+  })
+
+  it("an answer from a card that never saw the waiting one keeps its own `was`", () => {
+    const other = { ...a("2", Q, "Gym"), was: null }
+    let q = enqueueAnswers(emptyAuditQueue("me"), [{ ...a("1", Q, "Walk"), was: null }])
+    q = enqueueAnswers(q, [other])
+    expect(q.answers[0].was).toBeNull()
+    expect(q.answers[0].id).toBe("2")
+  })
+
+  it("once the first is stored, an edit made while it was on its way says it saw it", () => {
+    const first = { ...a("1", Q, "Walk"), was: null }
+    let q = enqueueAnswers(emptyAuditQueue("me"), [first])
+    q = enqueueAnswers(q, [{ ...a("1", Q, "Walk in the park"), was: mark(first) }])
+    q = answersSent(q, [first])
+    expect(q.answers).toHaveLength(1)
+    expect(q.answers[0].was).toEqual(mark(first))
+  })
+
+  it("a first answer the server refused does not make the edit say it saw it", () => {
+    const first = { ...a("1", Q, "Walk"), was: null }
+    let q = enqueueAnswers(emptyAuditQueue("me"), [first])
+    q = enqueueAnswers(q, [{ ...a("1", Q, "Walk in the park"), was: mark(first) }])
+    q = answersSent(q, [first], [])
+    expect(q.answers[0].was).toBeNull()
+  })
+})

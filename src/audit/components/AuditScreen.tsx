@@ -139,9 +139,24 @@ function NotKeptLine({ s, tz }: { s: AuditState; tz: string }) {
     <div className="mt-3 rounded-xl border border-amber-500/60 bg-amber-500/10 px-3.5 py-3 text-sm" role="alert" data-testid="audit-not-kept">
       <p className="font-semibold">{s.notKept.length === 1 ? "1 answer was not kept" : `${s.notKept.length} answers were not kept`}</p>
       <ul className="mt-1 space-y-0.5">
-        {s.notKept.map(({ answer, reason }) => (
-          <li key={`${answer.runId}:${answer.slotAt}`}>
+        {s.notKept.map(({ answer, reason, stored }) => (
+          <li key={`${answer.runId}:${answer.slotAt}`} data-testid="audit-not-kept-item">
             {stretchLabel([Date.parse(answer.slotAt)], tz)} · {answer.activity}: {reason}.
+            {stored && (
+              <>
+                {" "}
+                Answered on another device: {stored.activity} · E {stored.energy} · G {stored.growth}.
+                {/* the same choice the card offers (alpha slow-pass-06), for a refusal that came while the sheet was closed */}
+                <span className="mt-1 flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => s.keepStored([answer])} data-testid="audit-not-kept-keep">
+                    Keep that one
+                  </Button>
+                  <Button size="sm" onClick={() => s.answer([{ ...answer, answeredAt: new Date().toISOString(), was: stored }])} data-testid="audit-not-kept-mine">
+                    Use mine
+                  </Button>
+                </span>
+              </>
+            )}
           </li>
         ))}
       </ul>
@@ -512,6 +527,7 @@ function TodayView({
           suggestions={view.suggestions}
           slots={slots}
           notKept={s.notKept}
+          onKeepStored={s.keepStored}
           onSave={(answers) => {
             // Answered again inside the undo time: the new answer replaces the
             // held one under its id, and no delete follows.

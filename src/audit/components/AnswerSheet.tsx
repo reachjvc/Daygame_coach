@@ -19,6 +19,14 @@
  * folds the card into one green line, "✓ Saved · Gym · E 4 · G 7", with a
  * pencil to change it (and add a why), and moves to the next one.
  *
+ * TWO DEVICES, ONE QUARTER (alpha slow-pass-06). Each save carries what the
+ * card saw for its quarters when it opened (`was`; another device's answer
+ * the card has named since counts as seen). When the quarter holds something
+ * else by then, the server keeps that and returns it, and the card says
+ * "Answered on another device: Walk · E 5 · G 4" with "Keep that one" and
+ * "Use mine" (which sends this answer again over that one). Never a plain
+ * "Saved" over an answer that was not kept.
+ *
  * NO "AVOIDING" BUTTON. The owner's note on the look page (2026-11-09): the
  * "why" box is enough. The column stays (always false from here; an older
  * answer keeps its value when changed), so nothing stored is lost.
@@ -28,10 +36,10 @@ import { Check, Pencil } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
-import { missingAnswerLine, WHY_MAX } from "../auditService"
+import { markOf, missingAnswerLine, WHY_MAX } from "../auditService"
 import { stretchBefore, stretchLabel } from "../quarterService"
 import type { ActivityCount } from "../suggestService"
-import type { AnswerSource, AuditAnswer, ScaleValue } from "../types"
+import type { AnswerMark, AnswerSource, AuditAnswer, ScaleValue } from "../types"
 import type { DrawnSlot, NotKept } from "../hooks/useAudit"
 import { ActivityField } from "./ActivityField"
 import { ScaleRow } from "./ScaleRow"
@@ -65,6 +73,7 @@ function Card({
   suggestions,
   existingByQuarter,
   onSave,
+  onKeepStored,
   onDelete,
   saved,
   lost,
@@ -81,10 +90,11 @@ function Card({
   suggestions: readonly ActivityCount[]
   existingByQuarter: ReadonlyMap<number, DrawnSlot>
   onSave: (answers: AuditAnswer[]) => void
+  onKeepStored: (answers: AuditAnswer[]) => void
   onDelete: ((id: string) => void) | null
   saved: boolean
-  /** Why the server did not keep what this card saved, or null (fast-audit-02). */
-  lost: string | null
+  /** What the server did not keep of what this card saved, and why (fast-audit-02, slow-pass-06). */
+  lost: readonly NotKept[]
   onEdit: () => void
   cover: Cover | null
   onCover: (on: boolean) => void
@@ -106,13 +116,26 @@ function Card({
   // Opened on a gap, and the page's re-read now brings an answer for it that
   // this card did not save: another device (or tab) answered it meanwhile.
   const elsewhere = !e && !savedOnce ? quarters.map((q) => existingByQuarter.get(q)).find((s) => s !== undefined && !s.pending) ?? null : null
+  /**
+   * Per quarter, the answer this card's next save replaces: what was drawn
+   * when it opened, then its own last save, or the other device's answer it
+   * was told about (alpha slow-pass-06).
+   */
+  const base = useRef<Map<number, AnswerMark | null> | null>(null)
+  if (base.current === null) base.current = new Map([...existingByQuarter].map(([q, s]) => [q, markOf(s)]))
+  /** "Keep that one" was chosen: the other device's answers, shown in place of this card's. */
+  const [keptOther, setKeptOther] = useState<AnswerMark[] | null>(null)
 
   const save = (en: ScaleValue | null = energy, gr: ScaleValue | null = growth) => {
     setTried(true)
     if (!activity.trim() || en === null || gr === null) return
     setSavedOnce(true)
+    setKeptOther(null)
+    const seen = base.current!
     const answers = quarters.map((q) => {
       const slotAt = new Date(q).toISOString()
+      // the other device's answer named on this card ("Saving replaces it") counts as seen
+      const shown = elsewhere ? existingByQuarter.get(q) : undefined
       return {
         // An answered quarter keeps its id, so a waiting delete or resend still names it.
         id: existingByQuarter.get(q)?.id ?? crypto.randomUUID(),
@@ -126,9 +149,23 @@ function Card({
         source,
         timeEntryId: activity.trim() === card.text.trim() ? card.entryId : null,
         answeredAt: new Date().toISOString(),
+        was: shown ? markOf(shown) : (seen.get(q) ?? null),
       } satisfies AuditAnswer
     })
+    for (const a of answers) seen.set(Date.parse(a.slotAt), markOf(a))
     onSave(answers)
+  }
+  const conflicts = lost.filter((x) => x.stored)
+  /** "Use mine": the refused answers again, now over the answer each quarter holds. */
+  const useMine = () => {
+    const again = conflicts.map((x) => ({ ...x.answer, answeredAt: new Date().toISOString(), was: x.stored! }))
+    for (const a of again) base.current!.set(Date.parse(a.slotAt), markOf(a))
+    onSave(again)
+  }
+  const keepThat = () => {
+    for (const x of conflicts) base.current!.set(Date.parse(x.answer.slotAt), x.stored!)
+    setKeptOther(distinct(conflicts.map((x) => x.stored!)))
+    onKeepStored(conflicts.map((x) => x.answer))
   }
   // A new answer saves itself on the tap that completes it. A changed one (also
   // this card's own, reopened with the pencil), or one that would replace
@@ -146,7 +183,58 @@ function Card({
   }
 
   const label = stretchLabel(quarters, timezone)
-  if (saved && lost) {
+  if (saved && conflicts.length > 0 && !keptOther) {
+    const theirs = distinct(conflicts.map((x) => x.stored!))
+    return (
+      <section
+        className="rounded-2xl border border-amber-500/60 bg-amber-500/10 px-3 py-2"
+        data-testid="audit-card"
+        data-card={index}
+      >
+        <div role="alert" data-testid="audit-card-conflict">
+          <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Not saved yet · {stretchLabel(conflicts.map((x) => Date.parse(x.answer.slotAt)), timezone)}</p>
+          {theirs.map((t) => (
+            <p key={t.id} className="text-sm">
+              Answered on another device: {t.activity} <span className="tabular-nums">· E {t.energy} · G {t.growth}</span>
+            </p>
+          ))}
+          <p className="text-sm text-muted-foreground">
+            Yours: {activity.trim()} <span className="tabular-nums">· E {energy} · G {growth}</span>
+          </p>
+        </div>
+        <div className="mt-2 flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={keepThat} data-testid="audit-conflict-keep">
+            Keep that one
+          </Button>
+          <Button className="flex-1" onClick={useMine} data-testid="audit-conflict-mine">
+            Use mine
+          </Button>
+        </div>
+      </section>
+    )
+  }
+  if (saved && keptOther) {
+    return (
+      <section
+        className="flex min-h-14 items-center gap-3 rounded-2xl border border-emerald-500/60 bg-emerald-500/10 px-3 py-2"
+        data-testid="audit-card"
+        data-card={index}
+      >
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white" aria-hidden>
+          <Check className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1" role="status" data-testid="audit-card-kept">
+          <p className="text-sm font-semibold text-success">Kept the other device's answer · {label}</p>
+          {keptOther.map((t) => (
+            <p key={t.id} className="truncate text-sm">
+              {t.activity} <span className="tabular-nums text-muted-foreground">· E {t.energy} · G {t.growth}</span>
+            </p>
+          ))}
+        </div>
+      </section>
+    )
+  }
+  if (saved && lost.length > 0) {
     return (
       <section
         className="flex min-h-14 items-center gap-3 rounded-2xl border border-amber-500/60 bg-amber-500/10 px-3 py-2"
@@ -156,7 +244,7 @@ function Card({
         <div className="min-w-0 flex-1" role="alert" data-testid="audit-card-not-kept">
           <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Not kept · {label}</p>
           <p className="text-sm">
-            {activity.trim()}: {lost}. The Day list shows the answer that was kept.
+            {activity.trim()}: {lost[0].reason}. The Day list shows the answer that was kept.
           </p>
         </div>
         <button
@@ -277,6 +365,13 @@ function Card({
   )
 }
 
+/** One of each answer (a stretch of quarters holds the same answer under many ids). */
+function distinct(marks: readonly AnswerMark[]): AnswerMark[] {
+  const out = new Map<string, AnswerMark>()
+  for (const m of marks) out.set(`${m.activity}\u0000${m.energy}\u0000${m.growth}`, m)
+  return [...out.values()]
+}
+
 export function AnswerSheet({
   open,
   onClose,
@@ -289,6 +384,7 @@ export function AnswerSheet({
   slots,
   notKept = [],
   onSave,
+  onKeepStored = () => {},
   onDelete,
 }: {
   open: boolean
@@ -302,10 +398,12 @@ export function AnswerSheet({
   slots: readonly DrawnSlot[]
   notKept?: readonly NotKept[]
   onSave: (answers: AuditAnswer[]) => void
+  /** "Keep that one": the other device's answer stays for these quarters. */
+  onKeepStored?: (answers: AuditAnswer[]) => void
   onDelete?: (id: string) => void
 }) {
-  const lostByQuarter = new Map<number, string>()
-  for (const x of notKept) if (x.answer.runId === runId) lostByQuarter.set(Date.parse(x.answer.slotAt), x.reason)
+  const lostByQuarter = new Map<number, NotKept>()
+  for (const x of notKept) if (x.answer.runId === runId) lostByQuarter.set(Date.parse(x.answer.slotAt), x)
   const [saved, setSaved] = useState<Set<number>>(new Set())
   /** Card index → the quarters before it that it covers, ticked by the person. */
   const [covers, setCovers] = useState<Map<number, number[]>>(new Map())
@@ -365,7 +463,8 @@ export function AnswerSheet({
               suggestions={suggestions}
               existingByQuarter={existingByQuarter}
               saved={saved.has(i)}
-              lost={quarters.map((q) => lostByQuarter.get(q)).find((r) => r !== undefined) ?? null}
+              lost={quarters.flatMap((q) => lostByQuarter.get(q) ?? [])}
+              onKeepStored={onKeepStored}
               cover={cover}
               onTouched={() => {
                 if (!touched.has(i)) setTouched((prev) => new Set(prev).add(i))

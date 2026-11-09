@@ -89,6 +89,23 @@ export interface AuditAnswer {
    * device. Stored as the row's `updated_at`.
    */
   answeredAt?: string
+  /**
+   * What the card saw for this quarter when it opened: the stored answer, or
+   * null for none (alpha slow-pass-06). The server refuses the write when the
+   * quarter holds something else now (another device answered or changed it),
+   * and returns what it holds, so the person chooses. Left out only by
+   * answers queued before this rule: those keep the older-by-the-clock rule.
+   */
+  was?: AnswerMark | null
+}
+
+/** An answer as one device saw it: enough to tell whether it changed since. */
+export interface AnswerMark {
+  id: string
+  activity: string
+  energy: number
+  growth: number
+  why: string | null
 }
 
 /** A Time entry as the audit reads it (never written by the audit). */

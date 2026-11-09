@@ -14,7 +14,7 @@ import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
 import { hhmm, nextDateKey } from "@/src/notifications/quietHours"
 import { normalizePhrase } from "@/src/shared/textMatch"
 import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs, withAnswered } from "./quarterService"
-import { ANSWER_SOURCES, REVIEW_CHOICES, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue, type WeekBlock } from "./types"
+import { ANSWER_SOURCES, REVIEW_CHOICES, type AnswerMark, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue, type WeekBlock } from "./types"
 
 export const ACTIVITY_MAX = 200
 export const WHY_MAX = 2000
@@ -73,8 +73,27 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
   const quarter = checkQuarter(a.slotAt, run, now)
   if ("error" in quarter) return quarter
   const slotMs = quarter.slotMs
+  let was: AnswerMark | null | undefined
+  if (a.was !== undefined) {
+    if (a.was === null) was = null
+    else {
+      const w = (a.was && typeof a.was === "object" ? a.was : null) as Record<string, unknown> | null
+      if (!w || typeof w.id !== "string" || w.id.length > 200 || typeof w.activity !== "string" || typeof w.energy !== "number" || typeof w.growth !== "number" || (w.why !== null && typeof w.why !== "string")) {
+        return { error: "Bad earlier answer" }
+      }
+      // normalized as the stored answer was, so the same answer compares equal
+      was = {
+        id: w.id,
+        activity: storableText(w.activity).trim(),
+        energy: w.energy,
+        growth: w.growth,
+        why: typeof w.why === "string" ? storableText(w.why).trim() || null : null,
+      }
+    }
+  }
   return {
     answer: {
+      ...(was !== undefined ? { was } : {}),
       id: a.id,
       runId: run.id,
       slotAt: new Date(slotMs).toISOString(),
@@ -126,12 +145,30 @@ export interface StoredAnswer {
   why: string | null
 }
 
+/** What a device saw of an answer (`AuditAnswer.was`). */
+export const markOf = (a: AnswerMark): AnswerMark => ({ id: a.id, activity: a.activity, energy: a.energy, growth: a.growth, why: a.why ?? null })
+
+/** Two sightings of the same answer; null is "no answer". */
+export const sameMark = (x: AnswerMark | null | undefined, y: AnswerMark | null | undefined): boolean =>
+  x === undefined || y === undefined
+    ? x === y
+    : x === null || y === null
+      ? x === y
+      : x.id === y.id && x.activity === y.activity && x.energy === y.energy && x.growth === y.growth && (x.why ?? null) === (y.why ?? null)
+
 /** The same answer: same id and the same words and scores. An edit on another device keeps the id, so the id alone is not enough. */
 const sameAnswer = (a: AuditAnswer, held: StoredAnswer) =>
   held.id === a.id && held.activity === a.activity && held.energy === a.energy && held.growth === a.growth && (held.why ?? null) === (a.why ?? null)
 
 /**
  * WHICH ANSWERS TO STORE, given what each quarter holds now (`<run>:<slotAt>`).
+ *
+ * AN ANSWER IS STORED ONLY OVER WHAT ITS CARD SAW (`was`, alpha slow-pass-06):
+ * a quarter answered or changed on another device since the card opened is
+ * refused (CHANGED_SINCE) with the stored answer, so the card can name it and
+ * ask "Keep that one" / "Use mine". The later save used to overwrite the
+ * earlier with a plain "Saved". A quarter emptied since (deleted) takes it.
+ * Answers without `was` (queued before this rule) keep the clock rule below.
  *
  * An answer older than another device's answer for its quarter is refused
  * (CHANGED_SINCE): the newer one stays. But the SAME answer (id, words and
@@ -140,18 +177,27 @@ const sameAnswer = (a: AuditAnswer, held: StoredAnswer) =>
  * that told the phone "not kept" about an answer the server held (code review,
  * 2026-11-09). It is taken as stored, and not written over the newer copy.
  */
+/** An answer refused because its quarter holds another one now, which comes back with it. */
+export interface StoredRefusal {
+  id: string
+  error: string
+  retry: false
+  stored: AnswerMark
+}
+
 export function splitByStored(
   answers: readonly AuditAnswer[],
   stored: ReadonlyMap<string, StoredAnswer>,
-): { fresh: AuditAnswer[]; alreadyStored: AuditAnswer[]; refused: { id: string; error: string; retry: false }[] } {
+): { fresh: AuditAnswer[]; alreadyStored: AuditAnswer[]; refused: StoredRefusal[] } {
   const fresh: AuditAnswer[] = []
   const alreadyStored: AuditAnswer[] = []
-  const refused: { id: string; error: string; retry: false }[] = []
+  const refused: StoredRefusal[] = []
   for (const a of answers) {
     const held = stored.get(`${a.runId}:${a.slotAt}`)
-    if (held === undefined || held.at <= Date.parse(a.answeredAt ?? "")) fresh.push(a)
+    if (held === undefined) fresh.push(a)
     else if (sameAnswer(a, held)) alreadyStored.push(a)
-    else refused.push({ id: a.id, error: CHANGED_SINCE, retry: false })
+    else if (a.was !== undefined ? sameMark(a.was, markOf(held)) : held.at <= Date.parse(a.answeredAt ?? "")) fresh.push(a)
+    else refused.push({ id: a.id, error: CHANGED_SINCE, retry: false, stored: markOf(held) })
   }
   return { fresh, alreadyStored, refused }
 }

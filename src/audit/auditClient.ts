@@ -10,7 +10,7 @@
 
 import { PAGE_ACCOUNT_HEADER } from "@/src/shared/pageAccount"
 import type { ActivityCount } from "./suggestService"
-import type { AuditAnswer, AuditRun, AuditSlot, TimeEntryForAudit } from "./types"
+import type { AnswerMark, AuditAnswer, AuditRun, AuditSlot, TimeEntryForAudit } from "./types"
 import type { MuteOption, ReviewChange } from "./auditService"
 
 export class AuditCallError extends Error {
@@ -67,7 +67,7 @@ export function auditApi(account: string) {
     /** One choice, note or block, applied to the review as stored: another device's saves stay. */
     changeReview: (runId: string, reviewChange: ReviewChange) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { reviewChange })),
     save: (slots: AuditAnswer[]) =>
-      call<{ stored: number; refused?: { id: unknown; error: string; retry: boolean }[] }>(
+      call<{ stored: number; refused?: { id: unknown; error: string; retry: boolean; stored?: AnswerMark }[] }>(
         "/api/audit/slots",
         json("PUT", { slots, sentAt: new Date().toISOString() }),
       ),

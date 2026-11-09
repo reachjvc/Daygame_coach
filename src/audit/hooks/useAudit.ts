@@ -36,8 +36,8 @@ import {
   writeAuditViewCopy,
   type AuditQueue,
 } from "../auditQueue"
-import type { MuteOption, ReviewChange } from "../auditService"
-import type { AuditAnswer, AuditSlot } from "../types"
+import { markOf, type MuteOption, type ReviewChange } from "../auditService"
+import type { AnswerMark, AuditAnswer, AuditSlot } from "../types"
 
 /** An answer as drawn: from the server, or still only on this phone. */
 export type DrawnSlot = AuditSlot & { pending: boolean }
@@ -73,6 +73,12 @@ const NONE: Confirmed = { answers: [], deletes: [] }
 export interface NotKept {
   answer: AuditAnswer
   reason: string
+  /**
+   * The answer the quarter holds instead, when another device answered or
+   * changed it since this one's card opened (alpha slow-pass-06): named, with
+   * "Keep that one" / "Use mine".
+   */
+  stored?: AnswerMark
 }
 
 /**
@@ -180,6 +186,7 @@ export function useAudit(account: string) {
         flushAgain.current = false
         // Answers the server says may pass later (a quarter its clock has not reached) stay queued.
         let later = new Set<string>()
+        let storedNow: AuditAnswer[] = []
         stuck = await sendInChunks(
           queueRef.current.answers,
           async (batch) => {
@@ -189,16 +196,17 @@ export function useAudit(account: string) {
             const gone = new Set(refused.map((r) => String(r.id)))
             const lost = refused.flatMap((r) => {
               const answer = r.retry ? undefined : batch.find((a) => a.id === String(r.id))
-              return answer ? [{ answer, reason: r.error }] : []
+              return answer ? [{ answer, reason: r.error, ...(r.stored ? { stored: r.stored } : {}) }] : []
             })
             if (lost.length > 0) addNotKept(lost)
             const at = Date.now()
-            const kept = batch.filter((a) => !gone.has(a.id)).map((a) => ({ answer: a, at }))
+            storedNow = batch.filter((a) => !gone.has(a.id))
+            const kept = storedNow.map((a) => ({ answer: a, at }))
             const c = confirmedRef.current
             setC({ ...c, answers: [...c.answers.filter((x) => !kept.some((k) => quarterKey(k.answer) === quarterKey(x.answer))), ...kept] })
           },
           {
-            onSent: (batch) => setQ(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)))),
+            onSent: (batch) => setQ(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)), storedNow)),
             onDropped: (batch) => {
               addNotKept(batch.map((answer) => ({ answer, reason: "The server could not save it" })))
               setQ(answersSent(queueRef.current, batch))
@@ -299,11 +307,26 @@ export function useAudit(account: string) {
       // Answered again: an earlier "not kept" for these quarters is over.
       const keys = new Set(answers.map(quarterKey))
       setNotKept((prev) => (prev.some((x) => keys.has(quarterKey(x.answer))) ? prev.filter((x) => !keys.has(quarterKey(x.answer))) : prev))
-      setQ(enqueueAnswers(queueRef.current, answers))
+      // A quarter whose answer is being deleted (in its Undo time, or waiting
+      // for signal) is drawn empty, but the server still holds that answer
+      // until the delete is sent, after the answers: a card opened on it saw it.
+      const deleting = new Set(queueRef.current.deletes.map((d) => d.id))
+      const hidden = new Map((viewRef.current?.slots ?? []).filter((sl) => deleting.has(sl.id)).map((sl) => [quarterKey(sl), sl]))
+      const seen = answers.map((a) => {
+        const h = a.was === null ? hidden.get(quarterKey(a)) : undefined
+        return h ? { ...a, was: markOf(h) } : a
+      })
+      setQ(enqueueAnswers(queueRef.current, seen))
       void flush()
     },
     [flush, setQ],
   )
+
+  /** "Keep that one": the other device's answer stays, and this one's refusal is over. */
+  const keepStored = useCallback((answers: readonly AuditAnswer[]) => {
+    const keys = new Set(answers.map(quarterKey))
+    setNotKept((prev) => prev.filter((x) => !keys.has(quarterKey(x.answer))))
+  }, [])
 
   /**
    * Delete an answer. With `holdMs`, the delete is stored at once (stamped
@@ -352,6 +375,7 @@ export function useAudit(account: string) {
     dismissNotKept: () => setNotKept([]),
     setZone: (timezone: string) => decide(() => api.zone(timezone)),
     answer,
+    keepStored,
     remove,
     undoRemove,
     start: () => decide(() => api.start(crypto.randomUUID())),

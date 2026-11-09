@@ -228,7 +228,7 @@ describe("splitByStored: an older answer loses, the same answer sent twice does 
   it("refuses an older answer when another device answered the quarter", () => {
     const r = splitByStored([ans()], new Map([[key, held({ id: "pc-answer", activity: "Email" })]]))
     expect(r.fresh).toEqual([])
-    expect(r.refused).toEqual([{ id: ID, error: CHANGED_SINCE, retry: false }])
+    expect(r.refused).toEqual([{ id: ID, error: CHANGED_SINCE, retry: false, stored: { id: "pc-answer", activity: "Email", energy: 6, growth: 7, why: null } }])
   })
 
   it("takes the same answer sent again (stamped earlier by the clock correction) as stored, not refused, and does not write it", () => {
@@ -241,5 +241,80 @@ describe("splitByStored: an older answer loses, the same answer sent twice does 
   it("refuses an older edit of the same answer when another device changed it since: same id, other words", () => {
     const r = splitByStored([ans()], new Map([[key, held({ activity: "Email" })]]))
     expect(r.refused).toHaveLength(1)
+  })
+})
+
+describe("splitByStored with `was`: what the card saw when it opened (alpha slow-pass-06)", () => {
+  const SLOT = "2026-11-09T15:30:00.000Z"
+  const key = `${RUN_ID}:${SLOT}`
+  const ans = (over: Partial<AuditAnswer> = {}): AuditAnswer => ({
+    id: ID,
+    runId: RUN_ID,
+    slotAt: SLOT,
+    activity: "Reading",
+    energy: 2,
+    growth: 2,
+    avoiding: false,
+    why: null,
+    source: "app",
+    timeEntryId: null,
+    // later than the phone's answer by the clock: the old rule let it overwrite
+    answeredAt: "2026-11-09T15:51:00.000Z",
+    was: null,
+    ...over,
+  })
+  const phone: StoredAnswer = { id: "phone-answer", at: Date.parse("2026-11-09T15:50:20.000Z"), activity: "Walk", energy: 5, growth: 4, why: null }
+  const phoneMark = { id: "phone-answer", activity: "Walk", energy: 5, growth: 4, why: null }
+
+  it("refuses a later save from a card that opened on a gap the phone has answered since, and returns the stored answer", () => {
+    const r = splitByStored([ans()], new Map([[key, phone]]))
+    expect(r.fresh).toEqual([])
+    expect(r.alreadyStored).toEqual([])
+    expect(r.refused).toEqual([{ id: ID, error: CHANGED_SINCE, retry: false, stored: phoneMark }])
+  })
+
+  it("stores it when the quarter is still empty", () => {
+    expect(splitByStored([ans()], new Map()).fresh).toHaveLength(1)
+  })
+
+  it("stores it when the card saw the answer that is stored ('Use mine')", () => {
+    const r = splitByStored([ans({ was: phoneMark, answeredAt: "2026-11-09T15:40:00.000Z" })], new Map([[key, phone]]))
+    expect(r.fresh).toHaveLength(1)
+    expect(r.refused).toEqual([])
+  })
+
+  it("refuses it when the answer the card saw was changed since, even under the same id", () => {
+    const r = splitByStored([ans({ id: "phone-answer", was: { ...phoneMark, activity: "Walking" } })], new Map([[key, phone]]))
+    expect(r.refused).toEqual([{ id: "phone-answer", error: CHANGED_SINCE, retry: false, stored: phoneMark }])
+  })
+
+  it("takes an identical resend as stored, whatever it saw (Log Out and the page both sent it)", () => {
+    const mine: StoredAnswer = { id: ID, at: Date.parse("2026-11-09T15:52:00.000Z"), activity: "Reading", energy: 2, growth: 2, why: null }
+    const r = splitByStored([ans()], new Map([[key, mine]]))
+    expect(r.refused).toEqual([])
+    expect(r.alreadyStored).toHaveLength(1)
+  })
+
+  it("stores it when the answer the card saw was deleted since", () => {
+    expect(splitByStored([ans({ was: phoneMark })], new Map()).fresh).toHaveLength(1)
+  })
+
+  it("an answer with no `was` (queued before this rule) keeps the old rule: newer by the clock wins", () => {
+    const old = ans()
+    delete old.was
+    expect(splitByStored([old], new Map([[key, phone]])).fresh).toHaveLength(1)
+    const older = splitByStored([{ ...old, answeredAt: "2026-11-09T15:40:00.000Z" }], new Map([[key, phone]]))
+    expect(older.refused).toEqual([{ id: ID, error: CHANGED_SINCE, retry: false, stored: phoneMark }])
+  })
+
+  it("checkAnswer keeps `was`: none, an answer, or left out; anything else is refused", () => {
+    const now = new Date("2026-11-09T09:20:00Z")
+    const none = checkAnswer(answer({ was: null }), run(), now)
+    expect("answer" in none && none.answer.was).toBeNull()
+    const seen = checkAnswer(answer({ was: { id: "x", activity: " Walk\u0000 ", energy: 5, growth: 4, why: null } }), run(), now)
+    expect("answer" in seen && seen.answer.was).toEqual({ id: "x", activity: "Walk", energy: 5, growth: 4, why: null })
+    const legacy = checkAnswer(answer(), run(), now)
+    expect("answer" in legacy && "was" in legacy.answer).toBe(false)
+    expect("error" in checkAnswer(answer({ was: "x" }), run(), now)).toBe(true)
   })
 })

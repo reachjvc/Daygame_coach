@@ -1,6 +1,9 @@
 /**
  * SAVE ANSWERS. PUT { slots: AuditAnswer[] } (1–200). Each is checked against
- * its own audit (`checkAnswer`). The same quarter again replaces its answer.
+ * its own audit (`checkAnswer`). The same quarter again replaces its answer,
+ * but only the answer the card saw (`was`): one another device gave or changed
+ * since is kept, and comes back in `refused` with `stored`, for the person to
+ * choose (alpha slow-pass-06, `splitByStored`).
  *
  * ONE BAD ANSWER NEVER COSTS THE OTHERS. The good ones are stored and the bad
  * ones come back in `refused`, each with `retry`: true when it may pass later

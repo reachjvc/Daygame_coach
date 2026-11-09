@@ -13,6 +13,7 @@
 
 import { browserStore, readOwnedJson, writeOwnedJson, type KeyValueStore } from "@/src/shared/offlineQueue"
 import type { AuditView } from "./auditClient"
+import { markOf, sameMark } from "./auditService"
 import type { AuditAnswer } from "./types"
 
 export const AUDIT_QUEUE_KEY = "audit-queue-v1"
@@ -73,13 +74,24 @@ export function writeAuditQueue(store: KeyValueStore | null, q: AuditQueue): voi
   writeOwnedJson(store, AUDIT_QUEUE_KEY, owner, queueIsEmpty(q) ? null : rest)
 }
 
-/** Add answers; a newer answer for the same quarter replaces a waiting one. */
+/**
+ * Add answers; a newer answer for the same quarter replaces a waiting one.
+ *
+ * An answer made from one still waiting (its `was` is that answer) takes over
+ * what the waiting one saw: the server never had the waiting one, so it
+ * compares against what was there before it (alpha slow-pass-06).
+ */
 export function enqueueAnswers(q: AuditQueue, answers: readonly AuditAnswer[]): AuditQueue {
   const replaced = new Set(answers.map(quarterKey))
   const ids = new Set(answers.map((a) => a.id))
+  const waiting = new Map(q.answers.map((a) => [quarterKey(a), a]))
+  const added = answers.map((a) => {
+    const w = waiting.get(quarterKey(a))
+    return w && a.was && sameMark(a.was, markOf(w)) ? { ...a, was: w.was } : a
+  })
   return {
     ...q,
-    answers: [...q.answers.filter((a) => !replaced.has(quarterKey(a))), ...answers],
+    answers: [...q.answers.filter((a) => !replaced.has(quarterKey(a))), ...added],
     deletes: q.deletes.filter((d) => !ids.has(d.id)),
   }
 }
@@ -117,10 +129,24 @@ export const deleteIsDue = (d: QueuedDelete, nowMs: number): boolean => !d.notBe
  * These answers reached the server. Only the exact versions sent leave the
  * queue: an edit made while the first save was on its way keeps the same id,
  * and must still be sent (offline audit, 2026-11-09).
+ *
+ * Such an edit took over what the first one saw (`enqueueAnswers`). Once the
+ * server STORED the first (`stored`, all of `sent` unless named), the edit saw
+ * that one: its `was` becomes it, or the server would refuse the edit as a
+ * change from another device (alpha slow-pass-06).
  */
-export function answersSent(q: AuditQueue, sent: readonly AuditAnswer[]): AuditQueue {
+export function answersSent(q: AuditQueue, sent: readonly AuditAnswer[], stored: readonly AuditAnswer[] = sent): AuditQueue {
   const done = new Set(sent.map((a) => JSON.stringify(a)))
-  return { ...q, answers: q.answers.filter((a) => !done.has(JSON.stringify(a))) }
+  const kept = new Map(stored.map((a) => [`${quarterKey(a)}:${a.id}`, a]))
+  return {
+    ...q,
+    answers: q.answers
+      .filter((a) => !done.has(JSON.stringify(a)))
+      .map((a) => {
+        const s = kept.get(`${quarterKey(a)}:${a.id}`)
+        return s && a.was !== undefined && sameMark(a.was, s.was) ? { ...a, was: markOf(s) } : a
+      }),
+  }
 }
 
 export function deletesSent(q: AuditQueue, ids: readonly string[]): AuditQueue {
