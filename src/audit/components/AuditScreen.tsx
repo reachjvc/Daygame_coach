@@ -24,6 +24,7 @@ import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
 import { DayList, type DaySelection } from "./DayList"
 import { MuteSheet, mutedLine } from "./MuteSheet"
 import { SettingsSheet } from "./SettingsSheet"
+import { ReviewScreen } from "./ReviewScreen"
 import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
 const DAY_MS = 24 * 60 * 60_000
@@ -78,7 +79,7 @@ interface SheetState {
   allowDelete: boolean
 }
 
-function StartView({ s, view, push }: { s: AuditState; view: AuditView; push: PushDeviceState }) {
+function StartView({ s, view, push, onReview }: { s: AuditState; view: AuditView; push: PushDeviceState; onReview: (runId: string) => void }) {
   const [devicesOpen, setDevicesOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -122,11 +123,18 @@ function StartView({ s, view, push }: { s: AuditState; view: AuditView; push: Pu
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Past audits</h2>
           <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
             {past.map((r) => (
-              <li key={r.id} className="flex min-h-11 items-center justify-between gap-3 px-3.5 py-2 text-sm" data-testid="audit-past-row">
-                <span>
-                  {shortDate(r.startedAt, view.timezone)} – {shortDate(r.endedAt ?? r.endsAt, view.timezone)}
-                </span>
-                <span className="text-muted-foreground">{r.endedAt && Date.parse(r.endedAt) < Date.parse(r.endsAt) ? "ended early" : "two weeks"}</span>
+              <li key={r.id}>
+                <button
+                  type="button"
+                  onClick={() => onReview(r.id)}
+                  className="flex min-h-11 w-full items-center justify-between gap-3 px-3.5 py-2 text-left text-sm hover:bg-muted/40"
+                  data-testid="audit-past-row"
+                >
+                  <span>
+                    {shortDate(r.startedAt, view.timezone)} – {shortDate(r.endedAt ?? r.endsAt, view.timezone)}
+                  </span>
+                  <span className="text-muted-foreground">{r.endedAt && Date.parse(r.endedAt) < Date.parse(r.endsAt) ? "ended early" : "two weeks"} · Review →</span>
+                </button>
               </li>
             ))}
           </ul>
@@ -136,7 +144,19 @@ function StartView({ s, view, push }: { s: AuditState; view: AuditView; push: Pu
   )
 }
 
-function TodayView({ s, view, run, push }: { s: AuditState; view: AuditView; run: AuditRun; push: PushDeviceState }) {
+function TodayView({
+  s,
+  view,
+  run,
+  push,
+  onEnded,
+}: {
+  s: AuditState
+  view: AuditView
+  run: AuditRun
+  push: PushDeviceState
+  onEnded: (runId: string) => void
+}) {
   const tz = view.timezone
   const now = useNow()
   const todayKey = dayKeyOf(now, tz)
@@ -313,7 +333,11 @@ function TodayView({ s, view, run, push }: { s: AuditState; view: AuditView; run
               setEndError(null)
               const failed = await s.end()
               if (failed) setEndError(failed)
-              else setConfirmEnd(false)
+              else {
+                setConfirmEnd(false)
+                // End now opens the review straight away (D-NO-PUSH: no notice is sent).
+                onEnded(run.id)
+              }
             }}
             data-testid="audit-end-confirm-button"
           >
@@ -333,6 +357,17 @@ function TodayView({ s, view, run, push }: { s: AuditState; view: AuditView; run
 export function AuditScreen({ account }: { account: string }) {
   const s = useAudit(account)
   const push = usePushDevice()
+  const [reviewId, setReviewId] = useState<string | null>(null)
+  const view0 = s.view
+  // `?view=review` (the end notice): the latest audit that is over.
+  useEffect(() => {
+    if (!view0) return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("view") !== "review") return
+    window.history.replaceState(null, "", ROUTES.audit)
+    const latest = view0.runs.find((r) => r.id !== view0.run?.id)
+    if (latest) setReviewId(latest.id)
+  }, [view0])
   const view = s.view
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pb-16 pt-6" data-testid="audit-page">
@@ -354,10 +389,12 @@ export function AuditScreen({ account }: { account: string }) {
             <div className="h-64 animate-pulse rounded-xl bg-card" />
           </div>
         )
+      ) : reviewId ? (
+        <ReviewScreen key={reviewId} s={s} runId={reviewId} onBack={() => setReviewId(null)} />
       ) : view.run ? (
-        <TodayView key={view.run.id} s={s} view={view} run={view.run} push={push} />
+        <TodayView key={view.run.id} s={s} view={view} run={view.run} push={push} onEnded={setReviewId} />
       ) : (
-        <StartView s={s} view={view} push={push} />
+        <StartView s={s} view={view} push={push} onReview={setReviewId} />
       )}
     </main>
   )

@@ -168,14 +168,86 @@ test.describe("time & energy audit @phone", () => {
     await expect(page.getByTestId("audit-mute-open")).toHaveText("Mute")
   })
 
-  test("End now asks first, then shows the Start screen with one past audit", async ({ page, account }) => {
+  test("End now asks first, opens the review, and Back shows the Start screen with one past audit", async ({ page, account }) => {
     await seedRun(account.id)
     await openAudit(page)
     await page.getByTestId("audit-end-open").click()
     await expect(page.getByTestId("audit-end-confirm")).toContainText("End the audit now?")
     await page.getByTestId("audit-end-confirm-button").click()
+    await expect(page.getByTestId("review")).toBeVisible()
+    await expect(page.getByTestId("review-empty")).toBeVisible()
+    await page.getByTestId("review-back").click()
     await expect(page.getByTestId("audit-start")).toBeVisible()
     await expect(page.getByTestId("audit-past-row")).toHaveCount(1)
+  })
+
+  test("the review puts seeded activities in the right boxes, and a choice and note survive a reload", async ({ page, account }) => {
+    await clearAudits(account.id)
+    const admin = stackAdmin()
+    // A finished run of one day: 10:00 to 12:00 UTC, no quiet hours, so 8 possible quarters.
+    const id = randomUUID()
+    const start = Date.parse("2026-11-02T10:00:00Z")
+    expect(
+      (
+        await admin.from("audit_runs").insert({
+          id,
+          user_id: account.id,
+          started_at: new Date(start).toISOString(),
+          ends_at: new Date(start + 14 * 86400_000).toISOString(),
+          ended_at: new Date(start + 2 * 3600_000).toISOString(),
+          quiet_start: 0,
+          quiet_end: 0,
+        })
+      ).error,
+    ).toBeNull()
+    const rows = [
+      ["Daygame", 6, 7],
+      ["Daygame", 5, 7],
+      ["Gym", 3, 6],
+      ["Scrolling", 2, 1],
+      ["Scrolling", 3, 2],
+      ["Series", 6, 2],
+    ] as const
+    const { error } = await admin.from("audit_slots").insert(
+      rows.map(([activity, energy, growth], i) => ({
+        id: randomUUID(),
+        user_id: account.id,
+        run_id: id,
+        slot_at: new Date(start + i * QUARTER).toISOString(),
+        activity,
+        energy,
+        growth,
+        why: activity === "Scrolling" && i === 4 ? "Avoiding the email" : null,
+        source: "app",
+      })),
+    )
+    expect(error).toBeNull()
+
+    await page.goto(`${ROUTES.audit}?view=review`)
+    await expect(page.getByTestId("review-basis")).toHaveText(
+      "You answered 6 of 8 quarters (1.5 of 2 waking hours). Quarters you did not answer are not counted.",
+      { timeout: 60_000 },
+    )
+    await expect(page.getByTestId("review-activity").first()).toContainText("Daygame")
+    await expect(page.getByTestId("review-box-more")).toContainText("Daygame")
+    await expect(page.getByTestId("review-box-costs")).toContainText("Gym")
+    await expect(page.getByTestId("review-box-cut")).toContainText("Scrolling")
+    await expect(page.getByTestId("review-box-fun")).toContainText("Series")
+    await expect(page.getByTestId("review-box-more")).toContainText("33%")
+
+    await page.getByTestId("review-activity").filter({ hasText: "Scrolling" }).click()
+    const sheet = page.getByTestId("review-activity-sheet")
+    await expect(sheet).toContainText("Avoiding the email")
+    await sheet.getByRole("radio", { name: "Cut" }).click()
+    await sheet.getByTestId("review-note").fill("Phone in the other room after 21:00")
+    await sheet.getByTestId("review-save").click()
+    await expect(sheet.getByTestId("review-saved")).toBeVisible()
+
+    await page.reload()
+    await page.getByTestId("audit-past-row").first().click()
+    await page.getByTestId("review-activity").filter({ hasText: "Scrolling" }).click()
+    await expect(sheet.getByRole("radio", { name: "Cut" })).toHaveAttribute("aria-checked", "true")
+    await expect(sheet.getByTestId("review-note")).toHaveValue("Phone in the other room after 21:00")
   })
 
   test("answers while offline, and the answer is saved once when the signal returns", async ({ page, context, account }) => {

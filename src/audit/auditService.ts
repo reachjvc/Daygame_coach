@@ -9,8 +9,9 @@
 
 import { isUuid } from "@/src/shared/ids"
 import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
-import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart } from "./quarterService"
-import { ANSWER_SOURCES, REVIEW_CHOICES, type AuditAnswer, type AuditRun, type Review, type ReviewChoice, type ScaleValue } from "./types"
+import { normalizePhrase } from "@/src/shared/textMatch"
+import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs } from "./quarterService"
+import { ANSWER_SOURCES, REVIEW_CHOICES, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue } from "./types"
 
 export const ACTIVITY_MAX = 200
 export const WHY_MAX = 2000
@@ -150,3 +151,142 @@ export function checkQuiet(start: unknown, end: unknown): { quietStart: number; 
 }
 
 export { isAwake, localMinute }
+
+// ---------------------------------------------------------------------------
+// The review (Plans/energy-audit.md, Phase 6)
+// ---------------------------------------------------------------------------
+
+/** Martell's four boxes, growth in place of money (D-BOXES). The names are ours. */
+export type Box = "more" | "costs" | "cut" | "fun"
+export const BOXES: readonly Box[] = ["more", "costs", "cut", "fun"]
+export const BOX_NAMES: Record<Box, string> = {
+  more: "Do more",
+  costs: "Worth it, but it costs me",
+  cut: "Cut",
+  fun: "Fun that builds nothing",
+}
+
+/** Above 4 is high; exactly 4 counts as low. */
+export function boxOf(energy: number, growth: number): Box {
+  const e = energy > 4
+  const g = growth > 4
+  return e && g ? "more" : g ? "costs" : e ? "fun" : "cut"
+}
+
+export interface ReviewGroup {
+  /** `normalizePhrase` of the activity: the key choices and notes are stored under. */
+  key: string
+  /** The most used spelling. */
+  label: string
+  answers: number
+  minutes: number
+  /** Averages, one decimal. */
+  energy: number
+  growth: number
+  avoidingMinutes: number
+  box: Box
+  /** Newest first. */
+  whys: { text: string; slotAt: string }[]
+}
+
+export interface BuiltReview {
+  possibleQuarters: number
+  possibleHours: number
+  answered: number
+  hours: number
+  groups: ReviewGroup[]
+  /** Whole percent of the answered time in each box, summing to 100 (all 0 with no answers). */
+  shares: Record<Box, number>
+  /** Average energy per local hour, only hours with at least 4 answers. */
+  bestHours: { hour: number; energy: number; answers: number }[]
+}
+
+const oneDecimal = (n: number) => Math.round(n * 10) / 10
+const BEST_HOURS_MIN = 4
+
+/** Whole percents that sum to 100: floors, then the largest remainders get +1 (ties in box order). */
+function wholeShares(minutes: Record<Box, number>): Record<Box, number> {
+  const total = BOXES.reduce((s, b) => s + minutes[b], 0)
+  const out: Record<Box, number> = { more: 0, costs: 0, cut: 0, fun: 0 }
+  if (total === 0) return out
+  const exact = BOXES.map((b) => ({ b, v: (minutes[b] / total) * 100 }))
+  for (const x of exact) out[x.b] = Math.floor(x.v)
+  let left = 100 - BOXES.reduce((s, b) => s + out[b], 0)
+  const order = [...exact].sort((x, y) => y.v - Math.floor(y.v) - (x.v - Math.floor(x.v)) || BOXES.indexOf(x.b) - BOXES.indexOf(y.b))
+  for (const x of order) {
+    if (left <= 0) break
+    if (x.v - Math.floor(x.v) > 0) {
+      out[x.b]++
+      left--
+    }
+  }
+  return out
+}
+
+/**
+ * Everything the review shows, from the answers alone. Counts only answers in
+ * the run's possible quarters: awake, inside the run, before its end. No cap:
+ * the repo read pages past 1,000 rows.
+ */
+export function buildReview(slots: readonly AuditSlot[], run: AuditRun, tz: string): BuiltReview {
+  // Read "now" as one quarter past the end, so a run ended at 10:07 keeps its 10:00 quarter.
+  const possible = new Set(runQuarters(run, runStopMs(run) + QUARTER_MS, tz))
+  const counted = slots.filter((s) => possible.has(Date.parse(s.slotAt)))
+
+  const byKey = new Map<string, AuditSlot[]>()
+  for (const s of counted) {
+    const key = normalizePhrase(s.activity) || s.activity.trim().toLowerCase()
+    const list = byKey.get(key) ?? []
+    list.push(s)
+    byKey.set(key, list)
+  }
+
+  const groups: ReviewGroup[] = [...byKey.entries()].map(([key, list]) => {
+    const spellings = new Map<string, number>()
+    for (const s of list) spellings.set(s.activity.trim(), (spellings.get(s.activity.trim()) ?? 0) + 1)
+    const label = [...spellings.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0]
+    const energy = oneDecimal(list.reduce((sum, s) => sum + s.energy, 0) / list.length)
+    const growth = oneDecimal(list.reduce((sum, s) => sum + s.growth, 0) / list.length)
+    return {
+      key,
+      label,
+      answers: list.length,
+      minutes: list.length * 15,
+      energy,
+      growth,
+      avoidingMinutes: list.filter((s) => s.avoiding).length * 15,
+      box: boxOf(energy, growth),
+      whys: list
+        .filter((s) => s.why && s.why.trim())
+        .sort((a, b) => b.slotAt.localeCompare(a.slotAt))
+        .map((s) => ({ text: s.why!.trim(), slotAt: s.slotAt })),
+    }
+  })
+  groups.sort((a, b) => b.answers - a.answers || a.label.localeCompare(b.label))
+
+  const boxMinutes: Record<Box, number> = { more: 0, costs: 0, cut: 0, fun: 0 }
+  for (const g of groups) boxMinutes[g.box] += g.minutes
+
+  const perHour = new Map<number, { sum: number; n: number }>()
+  for (const s of counted) {
+    const hour = Math.floor(localMinute(Date.parse(s.slotAt), tz) / 60)
+    const h = perHour.get(hour) ?? { sum: 0, n: 0 }
+    h.sum += s.energy
+    h.n++
+    perHour.set(hour, h)
+  }
+  const bestHours = [...perHour.entries()]
+    .filter(([, h]) => h.n >= BEST_HOURS_MIN)
+    .sort((a, b) => a[0] - b[0])
+    .map(([hour, h]) => ({ hour, energy: oneDecimal(h.sum / h.n), answers: h.n }))
+
+  return {
+    possibleQuarters: possible.size,
+    possibleHours: possible.size * 0.25,
+    answered: counted.length,
+    hours: counted.length * 0.25,
+    groups,
+    shares: wholeShares(boxMinutes),
+    bestHours,
+  }
+}
