@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures/test"
 import type { Page } from "@playwright/test"
 import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan, planWithSteps } from "./helpers/lifePlan"
+import { seedLifePlan, planWithSteps, openBuildSteps } from "./helpers/lifePlan"
 
 /**
  * WHERE /plan OPENS (Plans/life-plan-after-setup.md, Phase 1).
@@ -45,5 +45,35 @@ test.describe("where the plan opens", () => {
     await page.reload()
     await expect(page.getByTestId("review-last")).toBeVisible()
     expect(errors.filter((e) => e.includes("same key"))).toEqual([])
+  })
+})
+
+test.describe("the step cards", () => {
+  test("a plan in use shows the use steps first and folds the rest", async ({ page, account }) => {
+    await seedLifePlan(page, account.id, inUse())
+    await page.goto(ROUTES.plan)
+    const cards = page.getByRole("navigation", { name: "Sections" }).getByRole("button")
+    await expect(cards.nth(0)).toHaveText(/^\d+\s*Today/)
+    await expect(cards.nth(1)).toHaveText(/^\d+\s*Review/)
+    await expect(cards.nth(2)).toHaveText(/^\d+\s*Journal/)
+    await expect(cards.nth(3)).toHaveText(/^\d+\s*Track/)
+    await expect(page.getByRole("button", { name: /^\d+\s*North star/ })).toHaveCount(0)
+    await openBuildSteps(page)
+    await expect(page.getByRole("button", { name: /^\d+\s*North star/ })).toHaveCount(1)
+  })
+
+  test.describe("@phone", () => {
+    test.use({ viewport: { width: 390, height: 844 } })
+
+    test("on a phone the step list folds into one line", async ({ page, account }) => {
+      await seedLifePlan(page, account.id, inUse())
+      await page.goto(ROUTES.plan)
+      const nav = page.getByRole("navigation", { name: "Sections" })
+      await expect(nav).toBeHidden()
+      const toggle = page.getByRole("button", { name: /^Today · all steps/ })
+      await expect(toggle).toBeVisible()
+      await toggle.click()
+      await expect(nav).toBeVisible()
+    })
   })
 })

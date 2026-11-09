@@ -59,7 +59,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { ArrowLeft, Check, ChevronDown } from "lucide-react"
 import type { PlanRows } from "@/src/db/lifePlanTypes"
 import type { HabitRampStep, MilestoneLadderConfig, NorthStarTabId, NsArea, NsAreaReview, NsGoal, NsGoalStatus, NsPlace, NsPlan, NsRoutineProgram, LinkedProgram, VisionGoalType } from "@/src/goals/types"
-import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY } from "@/src/goals/data/northStar"
+import { COMMIT_EDIT_COPY, ERRAND_COPY, NORTH_STAR_STORAGE_KEY, NS_TRACK_RUN_KEY, ORPHANED_PLAN_KEY, planCacheKey, BUILD_STEPS, RAIL_COPY, RECAP_COMMIT_ANCHOR, SCORED_TABS, stepFor, TAB_BLURBS, TAB_LABELS, TAB_ORDER, TODO_COPY, USE_STEPS } from "@/src/goals/data/northStar"
+import { planInUse } from "@/src/goals/planLanding"
 import type { RoutineNeed } from "@/src/goals/data/northStarBuild"
 import type { GuideQuestionId } from "@/src/goals/data/northStarGuide"
 import * as ns from "@/src/goals/northStarService"
@@ -143,6 +144,7 @@ export function NorthStarFlow({
   backLabel = "Dashboard",
   initialTab = "star",
   timezone = "UTC",
+  initialInUse = false,
 }: {
   /** Whose plan this is. The browser's copy is kept under it, so it is never another account's. */
   userId: string
@@ -165,6 +167,8 @@ export function NorthStarFlow({
    * instead would be a link that goes to the right page and the wrong screen.
    */
   initialTab?: NorthStarTabId
+  /** Whether the account's plan has something to do, read on the server: the rail's shape before the plan loads. */
+  initialInUse?: boolean
 }) {
   const [plan, setPlan] = useState<NsPlan>(ns.emptyNsPlan)
   const [loaded, setLoaded] = useState(false)
@@ -175,6 +179,10 @@ export function NorthStarFlow({
   /** The catalogue on Where to start: open when a link asked for Templates. */
   const [catalogueOpen, setCatalogueOpen] = useState(initialTab === "templates")
 
+  /** The phone's step list: open while the plan is not in use, so a first-time user sees the overview. */
+  const [railOpen, setRailOpen] = useState(!initialInUse)
+  /** "Edit your plan": the setup steps, folded away once the plan is in use. */
+  const [buildOpen, setBuildOpen] = useState(BUILD_STEPS.includes(stepFor(initialTab)))
   /**
    * THE ADDRESS FOLLOWS THE STEP YOU ARE ON.
    *
@@ -194,12 +202,16 @@ export function NorthStarFlow({
     const next = stepFor(asked)
     if (asked === "templates") setCatalogueOpen(true)
     setTabState(next)
+    setRailOpen(false)
     try {
       window.history.replaceState(null, "", `${ROUTES.plan}?step=${next}`)
     } catch {
       /* The step still changes; only the address is left behind. */
     }
   }, [])
+  // The fold follows the step: arriving on a setup step opens it, arriving on a use step closes it.
+  useEffect(() => { setBuildOpen(BUILD_STEPS.includes(tab)) }, [tab])
+  const railToggleRef = useRef<HTMLButtonElement>(null)
   const [confirmReset, setConfirmReset] = useState(false)
   /**
    * WHICH RUN OF THE PLAN THIS IS, for the goals pushed on the track step.
@@ -1088,6 +1100,9 @@ export function NorthStarFlow({
 
   const progress = ns.nsProgress(plan, account)
   const states = ns.stepStates(plan, account)
+  // Before the account's plan has loaded, the server's answer, so the cards do not jump.
+  const inUse = decision === null ? initialInUse : planInUse(plan)
+  const showBuild = !inUse || buildOpen
   const tabIndex = TAB_ORDER.indexOf(tab)
   const readBack = loaded && today ? ns.planAsText(plan, today) : ""
   const todos = loaded && today ? ns.planTodos(plan) : []
@@ -1610,6 +1625,40 @@ export function NorthStarFlow({
     />
   ) : null
 
+  /** One step card in the rail, numbered by TAB_ORDER so a number always names the same step. */
+  const card = (id: NorthStarTabId) => {
+    const active = id === tab
+    const state = states[id]
+    return (
+      <button
+        key={id}
+        onClick={() => { setTab(id); if (window.matchMedia?.("(max-width: 639px)").matches) railToggleRef.current?.focus() }}
+        aria-current={active ? "page" : undefined}
+        className={`rounded-xl border p-3 text-left transition-colors ${
+          active ? "border-violet-400/40 bg-violet-500/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          <span className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
+            active ? "bg-violet-500/25 text-violet-100" : "bg-white/5 text-zinc-500"
+          }`}>
+            {TAB_ORDER.indexOf(id) + 1}
+          </span>
+          <span className={`text-sm font-medium min-w-0 flex-1 ${active ? "text-white" : "text-zinc-300"}`}>{TAB_LABELS[id]}</span>
+          {/* HOW FULL, NOT WHETHER VISITED.
+              A green tick used to appear the moment a step had one
+              sentence in it, which is a scoreboard telling somebody
+              they are finished with work they have barely begun. */}
+          {/* No dot on the fork: there is nothing on it to fill in,
+              and a dot there would be scoring somebody on having
+              chosen a door. */}
+          {SCORED_TABS.includes(id) && <StepDot state={state} label={TAB_LABELS[id]} />}
+        </span>
+        <span className="block text-[11px] text-zinc-500 mt-1">{TAB_BLURBS[id]}</span>
+      </button>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-5xl mx-auto px-6 py-10 pb-28">
@@ -1696,40 +1745,21 @@ export function NorthStarFlow({
           </div>
         )}
 
-        {/* The rail. Every tab is reachable at any time. */}
-        <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-8" aria-label="Sections">
-          {TAB_ORDER.map((id, i) => {
-            const active = id === tab
-            const state = states[id]
-            return (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                aria-current={active ? "page" : undefined}
-                className={`rounded-xl border p-3 text-left transition-colors ${
-                  active ? "border-violet-400/40 bg-violet-500/10" : "border-white/10 bg-white/[0.02] hover:border-white/25"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className={`inline-flex items-center justify-center size-5 rounded-full text-[10px] tabular-nums shrink-0 ${
-                    active ? "bg-violet-500/25 text-violet-100" : "bg-white/5 text-zinc-500"
-                  }`}>
-                    {i + 1}
-                  </span>
-                  <span className={`text-sm font-medium min-w-0 flex-1 ${active ? "text-white" : "text-zinc-300"}`}>{TAB_LABELS[id]}</span>
-                  {/* HOW FULL, NOT WHETHER VISITED.
-                      A green tick used to appear the moment a step had one
-                      sentence in it, which is a scoreboard telling somebody
-                      they are finished with work they have barely begun. */}
-                  {/* No dot on the fork: there is nothing on it to fill in,
-                      and a dot there would be scoring somebody on having
-                      chosen a door. */}
-                  {SCORED_TABS.includes(id) && <StepDot state={state} label={TAB_LABELS[id]} />}
-                </span>
-                <span className="block text-[11px] text-zinc-500 mt-1">{TAB_BLURBS[id]}</span>
-              </button>
-            )
-          })}
+        {/* The rail. Every tab is reachable at any time: on a phone behind one line,
+            and once the plan is in use the setup steps behind "Edit your plan". */}
+        <button ref={railToggleRef} type="button" className="sm:hidden w-full mb-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-sm text-zinc-200" aria-expanded={railOpen} aria-controls="plan-sections" onClick={() => setRailOpen((o) => !o)}>{inUse && USE_STEPS.includes(tab) ? RAIL_COPY.phoneUse(TAB_LABELS[tab]) : RAIL_COPY.phoneStep(TAB_ORDER.indexOf(tab) + 1, TAB_ORDER.length, TAB_LABELS[tab])} <span aria-hidden>▾</span></button>
+        <nav id="plan-sections" aria-label="Sections" className={`${railOpen ? "grid" : "hidden"} sm:grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-8`}>
+          {inUse ? (
+            <>
+              {USE_STEPS.map(card)}
+              <div className="col-span-full">
+                <button type="button" aria-expanded={showBuild} onClick={() => setBuildOpen((o) => !o)} className="text-[12px] text-zinc-400 hover:text-zinc-100 py-1">{RAIL_COPY.editPlan(BUILD_STEPS.length)} <span aria-hidden>{showBuild ? "▴" : "▾"}</span></button>
+              </div>
+              {showBuild && BUILD_STEPS.map(card)}
+            </>
+          ) : (
+            TAB_ORDER.map(card)
+          )}
         </nav>
 
         {ribbon && !areaDialogOpen && !goalDialogOpen && <div className="mb-5">{ribbon}</div>}

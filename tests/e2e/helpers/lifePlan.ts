@@ -129,3 +129,10 @@ export function planWithSteps(
     updatedAt: '2026-01-01T00:00:00.000Z',
   }
 }
+
+/** Opens "Edit your plan" when the plan is in use and the setup steps are folded. */
+export async function openBuildSteps(page: Page): Promise<void> {
+  await expect(page.getByText("Saved to your account.")).toBeVisible()
+  const fold = page.getByRole("button", { name: /^Edit your plan/ })
+  if ((await fold.count()) > 0 && (await fold.getAttribute("aria-expanded")) === "false") await fold.click()
+}

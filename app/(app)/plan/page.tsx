@@ -66,6 +66,7 @@ export default async function LifeMasteryPage({
       backHref={ROUTES.dashboard}
       backLabel="Dashboard"
       initialTab={initialTab}
+      initialInUse={inUse}
       timezone={timezone}
     />
   )

@@ -874,6 +874,16 @@ export const SCORED_TABS: NorthStarTabId[] = TAB_ORDER.filter(
   (tab) => tab !== "pick" && tab !== "track" && tab !== "today" && tab !== "journal" && tab !== "review"
 )
 
+/** The steps used every day and week once the plan is in use, in the order shown then. */
+export const USE_STEPS: NorthStarTabId[] = ["today", "review", "journal", "track"]
+/** The steps that build the plan: TAB_ORDER without the use steps, in TAB_ORDER's order. */
+export const BUILD_STEPS: NorthStarTabId[] = TAB_ORDER.filter((t) => !USE_STEPS.includes(t))
+export const RAIL_COPY = {
+  editPlan: (n: number) => `Edit your plan · ${n} steps`,
+  phoneStep: (i: number, n: number, label: string) => `Step ${i} of ${n} · ${label}`,
+  phoneUse: (label: string) => `${label} · all steps`,
+}
+
 export const TAB_LABELS: Record<NorthStarTabId, string> = {
   star: "North star",
   now: "Your 10s",

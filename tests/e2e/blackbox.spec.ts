@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { test, expect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
-import { seedLifePlan } from "./helpers/lifePlan"
+import { seedLifePlan, openBuildSteps } from "./helpers/lifePlan"
 
 /**
  * The Black Box, end to end.
@@ -249,6 +249,7 @@ test.describe("the Black Box", () => {
     // its handler, and the routine stays shut (seen once in a 3-worker run).
     const vices = page.locator("#ns-routines button", { hasText: "Vices" }).first()
     await expect(async () => {
+      await openBuildSteps(page)
       await page.locator('nav[aria-label="Sections"] button', { hasText: "Systems" }).click()
       if ((await vices.getAttribute("aria-pressed")) !== "true") await vices.click()
       await expect(vices).toHaveAttribute("aria-pressed", "true", { timeout: 2000 })

@@ -58,7 +58,7 @@ test.describe("life plan tour", () => {
     const steps = process.env.TOUR_STEPS ? (process.env.TOUR_STEPS.split(",") as typeof TAB_ORDER) : TAB_ORDER
     for (const [i, step] of steps.entries()) {
       await page.goto(`${ROUTES.plan}?step=${step}`)
-      await expect(page.getByText(TAB_LABELS[stepFor(step)]).first()).toBeVisible()
+      await expect(page.getByText(TAB_LABELS[stepFor(step)]).filter({ visible: true }).first()).toBeVisible()
       // The account's read replaces the plan on screen a moment after load;
       // the footer says so once it has.
       await expect(page.getByText("Saved to your account.")).toBeVisible()
