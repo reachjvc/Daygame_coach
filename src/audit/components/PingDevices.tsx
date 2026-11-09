@@ -82,9 +82,9 @@ export function PingDeviceList({ push }: { push: PushDeviceState }) {
           <PingDeviceCard push={push} />
         </div>
       )}
-      <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Devices that get pings</h3>
+      <h4 className="text-sm font-semibold">Devices that get pings</h4>
       <div className="mt-2">
-        <PushDeviceList push={push} words={{ empty: "No device yet. Turn pings on from the audit page on your phone.", switchLabel: (l) => `Pings on ${l || "this device"}` }} />
+        <PushDeviceList push={push} words={{ empty: "None yet. Each phone or computer turns pings on for itself.", switchLabel: (l) => `Pings on ${l || "this device"}` }} />
       </div>
       <button type="button" className="mt-2 min-h-11 text-sm text-primary underline-offset-4 hover:underline" onClick={() => void push.sendTest()}>
         Send a test ping

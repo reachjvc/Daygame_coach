@@ -9,15 +9,17 @@
  * colours (D-NO-PUSH).
  */
 
+import { Bell, BellOff } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
 import { ROUTES } from "@/src/shared/routes"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
-import { answerSheetQuarters, prefillQuarters, QUARTER_MS, runQuarters, SHEET_WINDOW_MS, sheetOrder, stretchLabel, withAnswered } from "../quarterService"
+import { answerSheetQuarters, clockLabel, nextPingAt, prefillQuarters, QUARTER_MS, runDayOf, runQuarters, SHEET_WINDOW_MS, sheetOrder, stretchLabel, withAnswered } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
 import type { AuditView } from "../auditClient"
 import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
@@ -27,7 +29,6 @@ import { SettingsSheet } from "./SettingsSheet"
 import { ReviewScreen } from "./ReviewScreen"
 import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
-const DAY_MS = 24 * 60 * 60_000
 const FILL_IN_WAIT_MS = 3_000
 /** How long "Deleted · Undo" stays before the delete is sent (alpha picky-eye-08). */
 export const UNDO_MS = 6_000
@@ -376,23 +377,43 @@ function TodayView({
   }, [answerNowPending, run, tz, answered, cardsFor])
 
   const dayIndex = days.indexOf(shownDay)
-  const dayNumber = Math.min(14, Math.floor((now - Date.parse(run.startedAt)) / DAY_MS) + 1)
+  const dayOf = runDayOf(run, now, tz)
   const muted = mutedLine(run.mutedUntil, tz, now)
+  // Nothing to answer: a calm line with the next ping, not a big button that
+  // opens an empty sheet (alpha picky-eye-12). With no device getting pings,
+  // the next quarter to answer instead.
+  const pingsGo = !noPingDevice(push)
+  const next = recentGaps.length === 0 ? nextPingAt(run, now, tz, { ignoreMute: !pingsGo }) : null
 
   return (
     <div data-testid="audit-today">
       <p className="mt-1 text-sm text-muted-foreground" data-testid="audit-day-of">
-        Day {dayNumber} of 14 · ends {shortDate(run.endsAt, tz)}
+        Day {dayOf.day} of {dayOf.of} · ends {shortDate(run.endsAt, tz)} at {clockLabel(Date.parse(run.endsAt), tz)}
       </p>
-      <Button
-        size="lg"
-        className="mt-4 h-14 w-full text-lg"
-        onClick={() => void openAnswerNow(null)}
-        disabled={answerNowPending !== "no"}
-        data-testid="audit-answer-now"
-      >
-        Answer now ({recentGaps.length})
-      </Button>
+      {recentGaps.length > 0 ? (
+        <Button
+          size="lg"
+          className="mt-4 h-14 w-full text-lg"
+          onClick={() => void openAnswerNow(null)}
+          disabled={answerNowPending !== "no"}
+          data-testid="audit-answer-now"
+        >
+          Answer now ({recentGaps.length})
+        </Button>
+      ) : (
+        <div
+          className="mt-4 flex h-14 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4"
+          role="status"
+          data-testid="audit-nothing-to-answer"
+        >
+          <p className="font-semibold">Nothing to answer</p>
+          {next !== null && (
+            <p className="text-sm tabular-nums text-muted-foreground">
+              {pingsGo ? "Next ping at" : "Next question at"} <span className="font-semibold text-foreground">{clockLabel(next, tz)}</span>
+            </p>
+          )}
+        </div>
+      )}
       {noPingDevice(push) && (
         <div className="mt-3">
           <PingDeviceCard push={push} onOpenSettings={() => setSettingsOpen(true)} />
@@ -412,12 +433,30 @@ function TodayView({
       <NotKeptLine s={s} tz={tz} />
       <ZoneLine s={s} accountZone={tz} now={now} />
       <div className="mt-3 flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={() => setMuteOpen(true)} data-testid="audit-mute-open">
-          {muted ?? "Mute"}
-        </Button>
-        <Button variant="outline" className="flex-1" onClick={() => setSettingsOpen(true)} data-testid="audit-settings-open">
+        {/* Muted reads as a state, not a label: amber, filled, bell struck through (alpha F20, owner K-A4). */}
+        <button
+          type="button"
+          onClick={() => setMuteOpen(true)}
+          aria-pressed={muted !== null}
+          className={cn(
+            "flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-medium transition-colors",
+            muted
+              ? "border-amber-400/80 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+              : "border-border bg-card hover:bg-muted/50",
+          )}
+          data-testid="audit-mute-open"
+        >
+          {muted ? <BellOff className="size-4 shrink-0" aria-hidden /> : <Bell className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
+          <span className="truncate tabular-nums">{muted ?? "Mute"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted/50"
+          data-testid="audit-settings-open"
+        >
           Settings
-        </Button>
+        </button>
       </div>
 
       <DayList

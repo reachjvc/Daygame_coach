@@ -45,10 +45,22 @@ export interface PushDeviceStatus {
   paused?: boolean
 }
 
+/**
+ * The way back from a refused permission, for the device in hand. The lead
+ * line used to say "your phone's settings" on a PC too (alpha picky-eye-10).
+ */
+export function deniedLead(kind: "ios" | "android" | "desktop"): string {
+  if (kind === "ios") return "Only the iPhone's settings can undo that:"
+  if (kind === "android") return "Only this phone's settings can undo that:"
+  return "Only this browser's settings can undo that:"
+}
+
 function DeniedHelp() {
   const ios = isAppleTouch()
   const android = typeof navigator !== "undefined" && /Android/.test(navigator.userAgent)
   return (
+    <>
+    <p className="mt-1 text-sm text-muted-foreground">{deniedLead(ios ? "ios" : android ? "android" : "desktop")}</p>
     <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
       {ios ? (
         <>
@@ -67,6 +79,7 @@ function DeniedHelp() {
         </>
       )}
     </ol>
+    </>
   )
 }
 
@@ -144,11 +157,10 @@ export function PushDeviceCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="font-semibold">{words.deniedTitle}</p>
-            <p className="mt-1 text-sm text-muted-foreground">Only your phone&apos;s settings can undo that:</p>
+            <DeniedHelp />
           </div>
           {settingsButton}
         </div>
-        <DeniedHelp />
       </section>
     )
   }

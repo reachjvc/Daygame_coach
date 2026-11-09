@@ -93,7 +93,23 @@ test.describe("time & energy audit @phone", () => {
     await expect(page.getByTestId("audit-start")).toContainText("Run it when you feel stuck")
     await page.getByTestId("audit-start-button").click()
     await expect(page.getByTestId("audit-today")).toBeVisible()
-    await expect(page.getByTestId("audit-day-of")).toContainText("Day 1 of 14 · ends ")
+    // calendar days (alpha fast-audit-10): 14 when started at midnight, else 15
+    await expect(page.getByTestId("audit-day-of")).toContainText(/^Day 1 of 1[45] · ends \d+ \w+ at \d\d:\d\d$/)
+    // nothing to answer yet: a calm line with the next ping, not the big button (alpha picky-eye-12)
+    await expect(page.getByTestId("audit-nothing-to-answer")).toContainText(/Nothing to answer.*Next (ping|question) at \d\d:\d\d/)
+    await expect(page.getByTestId("audit-answer-now")).toHaveCount(0)
+  })
+
+  test("Save on an unfinished card names what is missing and marks it", async ({ page, account }) => {
+    await seedRun(account.id)
+    await openAudit(page)
+    await page.getByTestId("audit-answer-now").click()
+    const card = page.getByTestId("audit-answer-sheet").getByTestId("audit-card").first()
+    await card.getByTestId("audit-activity").fill("Email")
+    await card.getByTestId("audit-save").click()
+    await expect(card.getByTestId("audit-card-missing")).toHaveText("Pick Energy and Growth.")
+    await expect(card.getByTestId("audit-energy")).toHaveAttribute("aria-invalid", "true")
+    await expect(card.getByTestId("audit-activity")).not.toHaveAttribute("aria-invalid", "true")
   })
 
   test("answers a quarter pre-filled from a Time entry", async ({ page, account }) => {
@@ -172,9 +188,12 @@ test.describe("time & energy audit @phone", () => {
     await page.getByTestId("audit-mute-open").click()
     await page.getByTestId("audit-mute-sheet").getByRole("button", { name: /^1 hour/ }).click()
     await expect(page.getByTestId("audit-mute-open")).toContainText(/Muted until \d\d:\d\d/)
+    // muted reads as a state (alpha F20)
+    await expect(page.getByTestId("audit-mute-open")).toHaveAttribute("aria-pressed", "true")
     await page.getByTestId("audit-mute-open").click()
     await page.getByTestId("audit-unmute").click()
     await expect(page.getByTestId("audit-mute-open")).toHaveText("Mute")
+    await expect(page.getByTestId("audit-mute-open")).toHaveAttribute("aria-pressed", "false")
   })
 
   test("End now asks first, opens the review, and Back shows the Start screen with one past audit", async ({ page, account }) => {

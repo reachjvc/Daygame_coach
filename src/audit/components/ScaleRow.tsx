@@ -15,6 +15,7 @@ export function ScaleRow({
   value,
   onChange,
   testId,
+  invalid = false,
 }: {
   label: string
   low: string
@@ -22,10 +23,12 @@ export function ScaleRow({
   value: ScaleValue | null
   onChange: (v: ScaleValue) => void
   testId: string
+  /** Save was tapped with no score here: the row is marked (alpha picky-eye-20). */
+  invalid?: boolean
 }) {
   return (
-    <fieldset className="min-w-0" data-testid={testId}>
-      <legend className="text-sm font-medium">{label}</legend>
+    <fieldset className="min-w-0" data-testid={testId} aria-invalid={invalid || undefined}>
+      <legend className={cn("text-sm font-medium", invalid && "text-destructive")}>{label}</legend>
       <div className="mt-1.5 flex gap-1" role="radiogroup" aria-label={label}>
         {SCALE_VALUES.map((v) => (
           <button
@@ -37,7 +40,7 @@ export function ScaleRow({
             onClick={() => onChange(v)}
             className={cn(
               "h-11 min-w-0 flex-1 rounded-lg border text-base font-medium transition-colors",
-              value === v ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/60 hover:bg-muted/50",
+              value === v ? "border-primary bg-primary text-primary-foreground" : invalid ? "border-destructive/70 bg-background/60 hover:bg-muted/50" : "border-border bg-background/60 hover:bg-muted/50",
             )}
           >
             {v}

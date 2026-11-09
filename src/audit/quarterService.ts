@@ -11,6 +11,7 @@
  */
 
 import { inQuietHours } from "@/src/notifications/quietHours"
+import { getTodayInTimezone } from "@/src/shared/dateUtils"
 import type { AuditRun, TimeEntryForAudit } from "./types"
 
 export const QUARTER_MS = 900_000
@@ -110,6 +111,51 @@ export function answerSheetQuarters(run: AuditRun, nowMs: number, tz: string, an
     return withAnswered(recent, [asked])
   }
   return recent
+}
+
+const DAY_MS = 24 * 60 * 60_000
+
+/** Whole days from one "YYYY-MM-DD" to another. */
+function daysFrom(a: string, b: string): number {
+  const utc = (k: string) => {
+    const [y, m, d] = k.split("-").map(Number)
+    return Date.UTC(y, m - 1, d)
+  }
+  return Math.round((utc(b) - utc(a)) / DAY_MS)
+}
+
+/**
+ * "Day 2 of 15": calendar days in the person's zone, the start day being
+ * Day 1 (alpha fast-audit-10: started at 21:00, the next morning said Day 1).
+ * `of` counts every calendar day the run touches, so the last day is the one
+ * it ends on: 14 when started at midnight, else 15 (the evening of day 1 and
+ * the hours of day 15 together make the fourteen 24-hour days).
+ */
+export function runDayOf(run: Pick<AuditRun, "startedAt" | "endsAt" | "endedAt">, nowMs: number, tz: string): { day: number; of: number } {
+  const first = getTodayInTimezone(tz, new Date(Date.parse(run.startedAt)))
+  const last = getTodayInTimezone(tz, new Date(Date.parse(run.endsAt) - 1))
+  const today = getTodayInTimezone(tz, new Date(Math.min(nowMs, runStopMs(run) - 1)))
+  const of = daysFrom(first, last) + 1
+  return { day: Math.min(of, Math.max(1, daysFrom(first, today) + 1)), of }
+}
+
+/**
+ * When the next ping goes out (alpha picky-eye-12): the end of the next
+ * awake quarter of the run, once any mute is over; null when none is left.
+ * The same rules as `audit_pings_due`. `ignoreMute`: when the next quarter to
+ * answer ends, for a person whose devices get no pings anyway.
+ */
+export function nextPingAt(run: AuditRun, nowMs: number, tz: string, opts: { ignoreMute?: boolean } = {}): number | null {
+  const stop = runStopMs(run)
+  const started = Date.parse(run.startedAt)
+  const mutedUntil = !opts.ignoreMute && run.mutedUntil ? Date.parse(run.mutedUntil) : null
+  for (let t = quarterStart(nowMs) + QUARTER_MS; t < stop && t < nowMs + 3 * DAY_MS; t += QUARTER_MS) {
+    const q = t - QUARTER_MS
+    if (q + QUARTER_MS <= started || !isAwake(q, run, tz)) continue
+    if (mutedUntil !== null && mutedUntil > t) continue
+    return t
+  }
+  return null
 }
 
 export interface Prefill {

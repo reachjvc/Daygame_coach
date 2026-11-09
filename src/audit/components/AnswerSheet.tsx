@@ -28,7 +28,7 @@ import { Check, Pencil } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
-import { WHY_MAX } from "../auditService"
+import { missingAnswerLine, WHY_MAX } from "../auditService"
 import { stretchBefore, stretchLabel } from "../quarterService"
 import type { ActivityCount } from "../suggestService"
 import type { AnswerSource, AuditAnswer, ScaleValue } from "../types"
@@ -236,9 +236,9 @@ function Card({
         <ActivityField id={`audit-activity-${index}`} value={activity} onChange={(v) => {
             setActivity(v)
             onTouched()
-          }} suggestions={suggestions} />
-        <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={pickEnergy} testId="audit-energy" />
-        <ScaleRow label="Growth" low="1 ruins my life" high="7 builds my life" value={growth} onChange={pickGrowth} testId="audit-growth" />
+          }} suggestions={suggestions} invalid={tried && !activity.trim()} />
+        <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={pickEnergy} testId="audit-energy" invalid={tried && energy === null} />
+        <ScaleRow label="Growth" low="1 ruins my life" high="7 builds my life" value={growth} onChange={pickGrowth} testId="audit-growth" invalid={tried && growth === null} />
         <div>
           <label htmlFor={`audit-why-${index}`} className="text-sm font-medium">
             Why I feel like this <span className="font-normal text-muted-foreground">(optional)</span>
@@ -258,8 +258,8 @@ function Card({
           />
         </div>
         {tried && !ready && (
-          <p className="text-sm text-destructive" role="alert">
-            Fill in what you did, energy and growth.
+          <p className="text-sm text-destructive" role="alert" data-testid="audit-card-missing">
+            {missingAnswerLine({ activity, energy, growth })}
           </p>
         )}
         <div className="sticky bottom-0 -mx-1 flex gap-2 bg-card px-1 py-1">

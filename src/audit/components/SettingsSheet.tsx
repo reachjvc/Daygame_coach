@@ -120,12 +120,16 @@ export function SettingsSheet({
   const pings = awakeQuarters(start, end)
   return (
     <BottomSheet open={open} onClose={onClose} title="Audit settings" testId="audit-settings-sheet">
-      <section className="rounded-2xl border border-border bg-card p-3.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="font-semibold">Pings each day</h3>
-          <p className="text-sm tabular-nums text-muted-foreground" data-testid="audit-quiet-summary">
-            {start === end ? "around the clock" : `${hhmm(end)}–${hhmm(start)}`} · {pings} a day
+      {/* One look for both parts (alpha F20, owner K-A5 "I appreciate crisp"):
+          a small heading over each card, the number that matters big. */}
+      <h3 className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Pings each day</h3>
+      <section className="mt-1.5 rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-end justify-between gap-2" data-testid="audit-quiet-summary">
+          <p className="tabular-nums">
+            <span className="text-3xl font-semibold tracking-tight">{pings}</span>
+            <span className="ml-1.5 text-sm text-muted-foreground">a day</span>
           </p>
+          <p className="pb-1 text-sm tabular-nums text-muted-foreground">{start === end ? "around the clock" : `${hhmm(end)}–${hhmm(start)}`}</p>
         </div>
         <div className="mt-3">
           <DayBar quietStart={start} quietEnd={end} />
@@ -167,7 +171,12 @@ export function SettingsSheet({
           </div>
         )}
       </section>
-      {devices && <section className="mt-3 rounded-2xl border border-border bg-card p-3.5">{devices}</section>}
+      {devices && (
+        <>
+          <h3 className="mt-5 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Where pings go</h3>
+          <section className="mt-1.5 rounded-2xl border border-border bg-card p-4">{devices}</section>
+        </>
+      )}
     </BottomSheet>
   )
 }

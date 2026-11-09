@@ -29,6 +29,21 @@ export function runIsOpen(run: Pick<AuditRun, "endedAt" | "endsAt">, now: Date):
 }
 
 /**
+ * What an answer card still lacks, in words naming the fields ("Pick Energy
+ * and Growth."), or null when it is complete (alpha picky-eye-20: the old line
+ * listed all three whatever was missing).
+ */
+export function missingAnswerLine(a: { activity: string; energy: ScaleValue | number | null; growth: ScaleValue | number | null }): string | null {
+  const write = !a.activity.trim()
+  const picks = [a.energy === null && "Energy", a.growth === null && "Growth"].filter((p): p is string => p !== false)
+  const pick = picks.length > 0 ? `pick ${picks.join(" and ")}` : null
+  if (write && pick) return `Write what you did and ${pick}.`
+  if (write) return "Write what you did."
+  if (pick) return `P${pick.slice(1)}.`
+  return null
+}
+
+/**
  * One answer, checked against its run (D-REQUIRED, D-RUN-QUARTERS). Returns
  * the answer to store, trimmed, or the reason it is refused.
  */
