@@ -305,8 +305,8 @@ conclusions. `/security-review` cannot run in this checkout.
 
 ### Phase 1. Land on Today when the plan is in use; Commit points onward; Review fixes (d1, d7, d8, d10, F5)
 
-**Status:** Built and pushed 2026-11-09, commit 01971ab6; waiting for Vercel to deploy it (its first
-push got no deploy). Differences: `SeasonBand.tsx` line ~239 had already been reached by content, not
+**Status:** Built and live 2026-11-09, commit 01971ab6, buildId confirmed (9d39f668; Vercel made no
+deploy for the first push, the next push carried it). Decision page section `p1-live` added. Differences: `SeasonBand.tsx` line ~239 had already been reached by content, not
 line; the full desktop e2e run with 4+ workers overloaded the dev server (sign-in timeouts), so it was
 rerun with 2 workers and the 4 leftovers alone: all pass. `npm run lint:ratchet` fails only on
 `docs/research/addiction-one-pagers/board/check_render_v3.mjs` (another session's file); `npx eslint`
@@ -476,7 +476,13 @@ anything on the rebuild plan's Phase 7 list, anything about values.
 
 ### Phase 2. The step cards: use steps first, setup folded; one line on a phone (d2)
 
-**Status:** not started. Depends on: Phase 1.
+**Status:** Built and live 2026-11-09, commit ab8ee6ac, buildId confirmed. Decision page section
+`p2-live` added. Differences: the card's `matchMedia` call is written `window.matchMedia?.(…)`, because
+jsdom has none and the unit suite threw on a card click; `tests/e2e/life-plan-tour.spec.ts` (and the
+phone copy in `<keep>`) now match only visible step labels, since the phone line is hidden on a
+computer; `blackbox.spec.ts:252` got `openBuildSteps` inside its loop, as the plan foresaw. Desktop e2e
+ran with 2 workers. /code-review: 9 findings; fixed one (the new state had split the `setTab` doc
+comment from its function); the rest ask to change what the plan sets on purpose.
 
 **2.1 Data.** In `src/goals/data/northStar.ts`, after `SCORED_TABS` (line ~873):
 
