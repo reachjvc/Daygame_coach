@@ -155,6 +155,7 @@ export function BuildBoard({ plan, today, handlers, program }: {
           )}
         </div>
         <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed">{BOARD_COPY.help}</p>
+        <p className="text-xs text-muted-foreground mt-1">{BOARD_COPY.kindsLegend}</p>
 
         {/* ONE "LEVEL" CONTROL ON THE STEP, at 44 px. There were two — this
             one and a second row inside the training block underneath, which

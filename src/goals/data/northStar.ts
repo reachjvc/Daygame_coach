@@ -135,6 +135,7 @@ export const TODAY_COPY = {
   restHelp:
     "The plan puts these on days that are not today, and you may have done one anyway. A plan that only accepts the sessions it predicted under-counts the weeks you actually had.",
   feltTitle: "How today went",
+  feltCount: (n: number, of: number) => `${n} of ${of} rated`,
   feltHelp:
     "Rate each area on how it actually felt today, 0 to 10. Same scale as the wheel and the same store, so this is what the rolling average on Your 10s is made of. Skip any of them; click a number again to clear it.",
   noteLabel: "Anything worth remembering about today",
@@ -610,6 +611,7 @@ export const READBACK_COPY = {
  */
 export const REVIEW_PERIOD_COPY = {
   title: "Review",
+  readStarFirst: "Read it once before you look back.",
   /** What a row going to the Review step calls it (`REVIEW_DESTINATION_ID`). */
   destination: "This week's review",
   help: "Look back over a stretch of your life: score each area 0 to 10, keep what went well and what it taught you, and say what the next one is to bring.",
@@ -1052,17 +1054,17 @@ export const STAR_PROMPTS: NsReviewPrompt[] = [
   {
     id: "identity_total",
     question: "Who are you?",
-    help: "Your identity, in the present tense, as lines that start with I am. Not who you will be once it works: who you are, read back every week until it is simply true. Put the roles in as well as the qualities. His way in: if you looked your own name up in the dictionary, what would it say about you?",
+    help: "Your identity, in the present tense, as lines that start with I am. Not who you will be once it works: who you are, read back every week until it is simply true. Put the roles in as well as the qualities. One way in: if you looked your own name up in the dictionary, what would it say about you?",
     placeholder: "I am…",
-    example: "His: “I'm an extraordinarily loving man… I'm an amazing friend, son, brother, uncle… I'm an athlete, bodybuilder and fitness model.”",
+    example: "For example: “I'm an extraordinarily loving man… I'm an amazing friend, son, brother, uncle… I'm an athlete, bodybuilder and fitness model.”",
     list: true,
   },
   {
     id: "conduct",
     question: "What do you hold yourself to?",
-    help: "Your standards, and a different thing from the identity above. That one is what is true of you. This is the bar you set: what you can fall short of on a bad Tuesday and come back to. His own list is short and every line starts with to be.",
+    help: "Your standards, and a different thing from the identity above. That one is what is true of you. This is the bar you set: what you can fall short of on a bad Tuesday and come back to. Keep the list short, and start every line with to be.",
     placeholder: "To be…",
-    example: "His: “to be fun, playful, outrageous. To be loving and caring. To be disciplined. To be outgoing, social and friendly.”",
+    example: "For example: “to be fun, playful, outrageous. To be loving and caring. To be disciplined. To be outgoing, social and friendly.”",
     list: true,
   },
   {
@@ -1321,17 +1323,17 @@ export const VALUE_CONFLICTS: Array<{ above: string[]; below: string[]; note: st
   {
     above: ["success", "achievement", "money", "wealth", "business", "career", "ambition"],
     below: ["happiness", "happy", "joy", "fulfilment", "fulfillment", "peace"],
-    note: "With success above happiness you only let yourself feel good once you are winning, and the bar keeps moving. He lived that way for years and says it is the thing he would change first.",
+    note: "With success above happiness you only let yourself feel good once you are winning, and the bar keeps moving. One coach lived that way for years and calls it the first thing to change.",
   },
   {
     above: ["fitness", "physique", "aesthetics", "performance"],
     below: ["health", "vitality", "energy", "wellbeing", "longevity"],
-    note: "He put fitness above health for a while, did two fitness competitions, and was the most ripped and the least healthy he has ever been. Fitness is what your body can do today. Health is whether it is still there in twenty years.",
+    note: "One coach put fitness above health for a while and did two fitness competitions: the leanest body and the worst health, at the same time. Fitness is what your body can do today. Health is whether it is still there in twenty years.",
   },
   {
     above: ["business", "work", "career", "money", "wealth", "success"],
     below: ["love", "family", "connection", "intimacy", "relationship", "friendship"],
-    note: "Work is sitting above the people. His version of this: if you check email first thing in the morning, you are valuing the business above everything else on the list.",
+    note: "Work is sitting above the people. One example: if you check email first thing in the morning, you are valuing the business above everything else on the list.",
   },
 ]
 
@@ -1832,7 +1834,7 @@ export const TIMEFRAME_COPY = {
 export const GOAL_DATE_PRESETS: Array<{ id: string; label: string; months: number | null; note: string }> = [
   { id: "m3", label: "3 months", months: 3, note: "A sprint. Close enough that this week counts." },
   { id: "m6", label: "6 months", months: 6, note: "Long enough for a real change in a body or a balance." },
-  { id: "m12", label: "1 year", months: 12, note: "His own default. Past a year a goal gets hard to measure." },
+  { id: "m12", label: "1 year", months: 12, note: "A good default. Past a year a goal gets hard to measure." },
   { id: "m24", label: "2 years", months: 24, note: "For something that genuinely cannot be done sooner." },
   { id: "eoy", label: "End of this year", months: null, note: "The 31st of December." },
 ]
@@ -2020,7 +2022,7 @@ export const AREA_TEN_EXAMPLES: Record<string, string> = {
 export const REVIEW_INTRO = {
   title: "Does the plan point at your 10?",
   help: "You wrote your 10 in each area and rated where you stand. Now read the goals against that picture, and answer the questions that decide whether you keep going in February.",
-  dailyNote: "The ratings and the 10s live on the Where you are tab. This tab reads them back beside the goals in that area.",
+  dailyNote: "The ratings and the 10s live on the Your 10s step. This step reads them back beside the goals in that area.",
 }
 
 /**
@@ -2097,7 +2099,7 @@ export const SERVES_COPY = {
   },
   /** Shown inside an area, listing what already runs there from elsewhere. */
   inArea: "Also working on this area:",
-  none: "Nothing from elsewhere reaches this area yet.",
+  none: "Nothing else runs in this area yet.",
 }
 
 /**
@@ -2325,7 +2327,7 @@ export const AREA_REVIEW_COPY = {
    * nothing.
    */
   tenGuide: [
-    "Your 10 is yours. His 10 for his body is 170 pounds at 6 percent body fat and six hours of sleep. Somebody else's is being pain free with energy all day. Both are fine.",
+    "Your 10 is yours. One person's 10 for their body is 170 pounds at 6 percent body fat and six hours of sleep. Somebody else's is being pain free with energy all day. Both are fine.",
     "It moves. A 10 at this stage of your life will not be a 10 in ten years. Rewrite it as you grow.",
     "Write the version of this area you could be living inside a year or two. If you set it at billionaire, you will rate yourself a 2 every week for a decade and learn nothing from it.",
   ],
@@ -2349,10 +2351,10 @@ export const AREA_REVIEW_COPY = {
   },
   /** The two dialogs are one area split in half, so each points at the other. */
   toGoals: (label: string) => `Write the goals for ${label} →`,
-  toGoalsHelp: "The goals live on the next tab. This one is the picture they are aimed at.",
+  toGoalsHelp: "Write the goals with the button beside this. This is the picture they are aimed at.",
   fromGoals: "Your 10 in this area",
   fromGoalsEdit: "edit the picture",
-  fromGoalsEmpty: "No 10 written for this area yet. Write it first, on Where you are, and the goals have something to aim at.",
+  fromGoalsEmpty: "No 10 written for this area yet. Write it first, on Your 10s, and the goals have something to aim at.",
   /** The footer, so you can leave an area without clicking into empty space. */
   done: "Done",
   next: (label: string) => `Next: ${label}`,

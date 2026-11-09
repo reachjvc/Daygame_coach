@@ -354,7 +354,7 @@ export const ONE_ANSWERS = {
 
 export const ONE_COPY = {
   intro:
-    "One step, one sentence. The list of everything you want comes next, and it goes better once this is decided — a plan that is a list of everything is a plan nobody runs.",
+    "One step, one sentence. A plan that is a list of everything is a plan nobody runs, so say first what this season is for.",
   title: "What is the one thing?",
   help:
     "The one change that, if it happened, would make the next few months or years far more likely to work. Not your most important goal — the one that makes several of the others easier, or unnecessary.",
@@ -388,7 +388,7 @@ export const ONE_COPY = {
      tracking, and found nothing. Copy that promises a write nobody has made is
      worse than no copy: it makes a working feature look broken. */
   needsHelp:
-    "One line each. These are not notes — each becomes a real goal, filed in the area it belongs to. They stay in your plan until the Track step at the end, which is what puts them on your goals and tracking pages.",
+    "One line each. These are not notes — each becomes a real goal, filed in the area it belongs to.",
   needsPlaceholder: "Something that has to be true",
   needsAdd: "Add",
   /* Named before the line is typed, not guessed from it. See `Requirements`. */

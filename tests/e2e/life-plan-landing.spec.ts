@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/test"
+import { test, expect, signIn } from "./fixtures/test"
 import type { Page } from "@playwright/test"
 import { ROUTES } from "@/src/shared/routes"
 import { seedLifePlan, planWithSteps, openBuildSteps } from "./helpers/lifePlan"
@@ -75,5 +75,31 @@ test.describe("the step cards", () => {
       await toggle.click()
       await expect(nav).toBeVisible()
     })
+  })
+})
+
+test.describe("words and folds", () => {
+  const withStar = () => ({ ...inUse(), northStar: "A calm, strong life." })
+
+  test("Review shows the north star", async ({ page, account }) => {
+    await seedLifePlan(page, account.id, withStar())
+    await page.goto(`${ROUTES.plan}?step=review`)
+    await expect(page.getByTestId("review-north-star")).toContainText("A calm, strong life.")
+  })
+
+  test("How today went starts folded", async ({ page, account }) => {
+    await seedLifePlan(page, account.id, withStar())
+    await page.goto(`${ROUTES.plan}?step=today`)
+    await expect(page.getByRole("button", { name: /^How today went/ })).toHaveAttribute("aria-expanded", "false")
+    await expect(page.getByRole("button", { name: /today: 4 out of 10/ })).toHaveCount(0)
+    await page.getByRole("button", { name: /^How today went/ }).click()
+    await expect(page.getByRole("button", { name: /today: 4 out of 10/ }).first()).toBeVisible()
+  })
+
+  test("an account with no plan yet says its writing goes to the account", async ({ page, context, throwawayAccount }) => {
+    await context.clearCookies()
+    await signIn(page, throwawayAccount)
+    await page.goto(`${ROUTES.plan}?step=star`)
+    await expect(page.getByText("Saves to your account as you write.")).toBeVisible()
   })
 })

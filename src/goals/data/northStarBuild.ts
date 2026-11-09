@@ -360,6 +360,7 @@ export const BOARD_COPY = {
   title: "Pick what you are taking on",
   help: "Everything on offer, all of it optional, all of it editable after. Toggling a goal set brings its routine with it, because a target nobody has a Tuesday for is a wish.",
   goalsLabel: "Goal sets",
+  kindsLegend: "🔁 practice · 🎯 target · 🏁 finish line",
   targetsLabel: "One at a time",
   practicesLabel: "Practices",
   practiceHelp: "These go straight into a routine. Turning one on adds the routine to your stack if it is not there yet.",

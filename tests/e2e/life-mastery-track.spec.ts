@@ -210,6 +210,7 @@ test.describe('Life Mastery — the track step', () => {
     // A step tick, an area rating and a note.
     const vitamins = page.getByRole('checkbox', { name: 'Did E2E vitamins' })
     await vitamins.check()
+    await page.getByRole('button', { name: /^How today went/ }).click()
     await page.getByRole('button', { name: 'Fitness today: 7 out of 10' }).click()
     const note = page.getByLabel('Anything worth remembering about today')
     await note.fill('Tired but went anyway.')
@@ -220,6 +221,7 @@ test.describe('Life Mastery — the track step', () => {
     await page.reload()
     await page.getByRole('button', { name: /^\d+\s*Today\b/ }).click()
     await expect(page.getByLabel('Anything worth remembering about today')).toHaveValue('Tired but went anyway.')
+    await page.getByRole('button', { name: /^How today went/ }).click()
     await expect(page.getByRole('button', { name: 'Fitness today: 7 out of 10' })).toHaveAttribute('aria-pressed', 'true')
     await expect(vitamins).toBeChecked()
     await expect(page.getByText('1 of 2 this week')).toBeVisible()

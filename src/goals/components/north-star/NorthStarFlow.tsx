@@ -1736,7 +1736,7 @@ export function NorthStarFlow({
         </div>
 
         <header className="mb-6">
-          <h1 className="text-2xl font-semibold">Life Mastery</h1>
+          <h1 className="text-2xl font-semibold">Your plan</h1>
           <p className="text-sm text-zinc-400 mt-1">
             {/* "Everything saves as you type" was here until 2026-09-23 and was
                 false for the whole day half. The day route landed in M1 and the
@@ -2358,12 +2358,17 @@ export function NorthStarFlow({
                 true and is worth saying: where the work is. */}
             {/* `unsent` is the whole correction: during the debounce and while
                 the request is open, this browser has the work and the account
-                does not, and "Saved on this device." is what that is. */}
+                does not, and "Saved on this device." is what that is.
+                "unknown" is an account with no plan yet: nothing is saved until
+                something is written, and then it goes to the account
+                (Plans/life-plan-after-setup.md, F10). */}
             {!plan.updatedAt && !unsent
               ? "Nothing written yet"
               : serverState === "saved" && !unsent
                 ? "Saved to your account."
-                : "Saved on this device."}
+                : loaded && serverState === "unknown"
+                  ? "Saves to your account as you write."
+                  : "Saved on this device."}
           </span>
           {tabIndex < TAB_ORDER.length - 1 ? (
             <button

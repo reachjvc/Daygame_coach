@@ -365,7 +365,7 @@ export function AreaDialog({
                       <span className="min-w-0 flex-1 text-[12px] text-zinc-200">{r.label}</span>
                       <span className="text-[10px] text-zinc-600 tabular-nums shrink-0">
                         {r.steps.length} {r.steps.length === 1 ? "step" : "steps"}
-                        {r.areaId !== area.id && " · from elsewhere"}
+                        {r.areaId === null ? " · not tied to one area" : r.areaId !== area.id ? " · from another area" : ""}
                       </span>
                     </button>
                   </li>

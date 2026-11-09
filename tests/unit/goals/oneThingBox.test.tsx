@@ -554,10 +554,12 @@ describe("the rest of the step is hidden only when we know there is nothing", ()
     ).toBeInTheDocument()
   })
 
-  it("says where the goals actually are — the plan, until the Track step", () => {
+  it("says where the goals actually are — a real goal in its area, with no Track step in between", () => {
+    // Since Q4 of Plans/life-plan-rebuild.md goals are counted on Today, not pushed by the
+    // Track step; the old "until the Track step" line was untrue (life-plan-after-setup F8).
     tab({ current: one() })
     const help = screen.getByText(/each becomes a real goal/i).textContent ?? ""
     expect(help).not.toMatch(/waiting for you on the goals page/i)
-    expect(help).toMatch(/Track step/i)
+    expect(help).not.toMatch(/Track step/i)
   })
 })

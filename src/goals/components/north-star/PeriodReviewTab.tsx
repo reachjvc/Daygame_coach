@@ -95,6 +95,13 @@ export function PeriodReviewTab({ plan, today, ticks = NO_TRAINING_TICKS, handle
         <p className="text-[12px] text-zinc-300 mt-3" data-testid="review-last">
           {last ? COPY.last(noun, agoLabel(last.writtenOn, today), periodLabel(periodOfReview(last))) : COPY.never(noun)}
         </p>
+        {/* The north star first, as the weekly re-read does (Plans/life-plan-after-setup.md, d9). */}
+        {plan.northStar.trim() !== "" && (
+          <>
+            <blockquote data-testid="review-north-star" className="mt-3 border-l-2 border-violet-400/40 pl-3 text-[12.5px] text-zinc-300 whitespace-pre-wrap">{plan.northStar.trim()}</blockquote>
+            <p className="text-[11px] text-zinc-500 mt-1">{COPY.readStarFirst}</p>
+          </>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

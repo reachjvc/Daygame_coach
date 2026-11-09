@@ -850,6 +850,9 @@ export function TodayTab({
    * moves. Keyed by date so opening tomorrow does not show today's draft.
    */
   const [note, setNote] = useState(() => plan.notes[today] ?? "")
+  /** "How today went", folded until opened (Q7): twelve rows of 0 to 10 is a lot to meet every day. */
+  const [feltOpen, setFeltOpen] = useState(false)
+  const rated = plan.areas.filter((a) => dailyRating(plan, today, a.id) != null).length
   useEffect(() => {
     setNote(plan.notes[today] ?? "")
   }, [today, plan.notes])
@@ -1467,10 +1470,10 @@ export function TodayTab({
           two screens asking one question, not two questions. */}
       <section className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="px-5 pt-4">
-          <h2 className="text-sm font-semibold text-zinc-200">{TODAY_COPY.feltTitle}</h2>
-          <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed max-w-prose">{TODAY_COPY.feltHelp}</p>
+          <h2 className="text-sm font-semibold text-zinc-200"><button type="button" aria-expanded={feltOpen} onClick={() => setFeltOpen((o) => !o)} className="text-left">{TODAY_COPY.feltTitle} <span className="text-[11px] font-normal text-zinc-500">{TODAY_COPY.feltCount(rated, plan.areas.length)}</span></button></h2>
+          {feltOpen && <p className="text-[11.5px] text-zinc-400 mt-1 leading-relaxed max-w-prose">{TODAY_COPY.feltHelp}</p>}
         </div>
-        <div className="px-5 py-3 grid gap-x-6 gap-y-1 lg:grid-cols-2">
+        {feltOpen && <div className="px-5 py-3 grid gap-x-6 gap-y-1 lg:grid-cols-2">
           {plan.areas.map((area) => (
             <ScoreRow
               key={area.id}
@@ -1481,7 +1484,7 @@ export function TodayTab({
               onPick={(n) => onRate(area.id, n)}
             />
           ))}
-        </div>
+        </div>}
         <div className="px-5 pb-5">
           <label htmlFor="today-note" className="block text-[11px] text-zinc-400 mb-1">
             {TODAY_COPY.noteLabel}
