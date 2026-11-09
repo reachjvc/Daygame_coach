@@ -6,6 +6,7 @@ text and timeline rows of 06-template.json and the safety level in research file
 Fails (exit 1) on any rule break; each PROBLEM line names the rule.
 """
 import json
+import math
 import os
 import re
 import shutil
@@ -182,9 +183,11 @@ def check_number(x, page, kinds, where, general=False):
         P(4, where, f"the face sells using less ({LESS.search(face).group(0)!r}) without saying it is not stopping (F3)")
     if x.get("pooled") and re.search(r"averag\w*\s+across", x.get("headline", ""), re.I):
         P(10, where, "the headline says 'average' and the chip says it again (one chip, D6)")
-    is_off = x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""), re.I)
-    if is_off and not x.get("liked") and not x.get("propose") and not general and k["pick"]:
-        P(27, where, "an off-reader card with no 'propose' reason: the review would print its label as the reason")
+    # round 7 (G3): off-reader cards stay, tagged; a 'propose' reason is no longer printed anywhere, so none is required
+    if x.get("checked") not in (None, "hooked", "not"):
+        P(3, where, f"checked must be 'hooked' or 'not': {x.get('checked')!r}")
+    if x.get("checked") == "hooked" and x.get("severity") in OFF_READER:
+        P(3, where, f"checked 'hooked' on a {x.get('severity')} card (its source did not check for addiction)")
     if x.get("liked") and not (x.get("severity") in OFF_READER or x.get("propose") or re.search(r"not checked|not required", x.get("counted", ""))):
         P(28, where, "marked liked (kept against the off-reader choice) but no rule argues against it; drop 'liked'")
     if TIME_BIG.search(big) and not x.get("timeIsResult"):
@@ -296,6 +299,14 @@ def number_sources(page, own, kinds):
         for x in nums:
             if where.get(x["kind"]) == sec:
                 x["n"] = cite(x.get("ref"), x["kind"])
+    h7 = page.get("hero7") or {}
+    for part in ("def", "half"):
+        if h7.get(part):
+            h7[part]["n"] = sorted({n for r in h7[part].pop("refs", []) for n in cite(r, f"hero {part}")})
+    if h7.get("range"):
+        h7["range"]["n"] = sorted({n for r in h7["range"].pop("refs", []) for n in cite(r, "hero range")})
+        for s_ in h7["range"].get("studies", []):
+            s_["n"] = sorted({n for r in s_.pop("refs", []) for n in cite(r, "hero range study")})
     for i, b in enumerate(page.get("beliefs", [])):
         b["n"] = sorted({n for r in b.get("refs", []) for n in cite(r, f"belief {i}")})
     for w in page.get("windows", []):
@@ -328,23 +339,66 @@ STAGES = [("Day 1", [0]), ("Days 2–3", [1, 2]), ("Days 4–7", [3, 4]), ("Week
 MIN_POSTS = 25
 
 
-def stage_meds(felt):
-    """The typical day per stage, exactly as one-pager-v3.html stageDots() computes it, rounded to 0.5 (fmt1)."""
-    out = {}
+HARD = {"craving": ("Cravings", 1), "anxious": ("Anxiety", 0), "low-mood": ("Low mood", 0), "sleep": ("Bad sleep", 0), "tired": ("Tiredness", 0),
+        "brain-fog": ("Brain fog", 0), "stomach-appetite": ("Stomach / appetite", 0), "sweats-shakes": ("Sweats or shakes", 1),
+        "headache": ("Headaches", 1), "restless": ("Restlessness", 0), "bored": ("Boredom", 0), "lonely": ("Loneliness", 0), "body-pain": ("Aches", 1),
+        "libido-low": ("No sex drive", 0), "libido-high": ("Strong sexual urges", 1), "irritable": ("Short temper", 0), "dreams": ("Vivid dreams", 1)}
+GOOD = {"better-mood": ("Better mood", 0), "better-sleep": ("Better sleep", 0), "clear-head": ("A clearer head", 0), "body-health": ("Feeling healthier", 0),
+        "energy": ("More energy", 0), "confidence": ("More confidence", 0), "proud": ("Feeling proud", 0), "libido-back": ("Sex drive back", 0),
+        "money": ("Money saved", 0), "relationships": ("Better relationships", 1)}
+
+
+def _at(label):
+    return {"Day 1": "on day 1", "Year 2 +": "in year 2 and on"}.get(label, f"in {label.lower()}")
+
+
+def _round(x):
+    return math.floor(x + 0.5)   # JS Math.round, not Python's round-half-even
+
+
+def felt_lines(felt):
+    """Round 8: the graph's lines and headline, exactly as one-pager-v3.html feltLines()/feltHead() compute them.
+    Each line is how many in 100 posts at a stage mention one thing (counted in whole posts); the lines are the 4 hard
+    things (symptoms) and 2 good changes (positives) named most across all stages. Returns (lines, headline strings)."""
+    ss = []
     for label, idx in STAGES:
-        hist = [0] * 11
-        for i in idx:
-            for k, c in enumerate(felt["bins"][i].get("hist") or []):
-                hist[k] += c
-        vals = [k for k, c in enumerate(hist) for _ in range(c)]
-        n = len(vals)
-        if n < MIN_POSTS:
-            continue
-        q = (n - 1) * .5
-        f = int(q)
-        c = min(n - 1, f + 1)
-        out[label] = round((vals[f] + (vals[c] - vals[f]) * (q - f)) * 2) / 2
-    return out
+        bins = [felt["bins"][i] for i in idx if i < len(felt["bins"])]
+        n = sum(b.get("n") or 0 for b in bins)
+        cnt = {}
+        for fam in ("symptoms", "positives"):
+            o = {}
+            for b in bins:
+                for k, v in (b.get(fam) or {}).items():
+                    o[k] = o.get(k, 0) + _round((v or 0) * b["n"])
+            cnt[fam] = o
+        ss.append({"label": label, "n": n, "thin": n < MIN_POSTS, **cnt})
+
+    def top(fam, k):
+        t = {}
+        for s in ss:
+            for i, c in s[fam].items():
+                t[i] = t.get(i, 0) + c
+        return [i for i, c in sorted(t.items(), key=lambda x: (-x[1], x[0])) if c > 0][:k]
+
+    lines = [{"id": i, "fam": fam, "name": names.get(i, (i, 0))[0], "pl": names.get(i, (i, 0))[1],
+              "vals": [_round(100 * s[fam].get(i, 0) / s["n"]) if s["n"] else None for s in ss]}
+             for fam, k, names in (("symptoms", 4, HARD), ("positives", 2, GOOD)) for i in top(fam, k)]
+    cnt = [i for i, s in enumerate(ss) if not s["thin"]]
+    head = []
+    if cnt:
+        def peak(l):
+            return max(cnt, key=lambda i: (l["vals"][i], -i))
+        h = next((l for l in lines if l["fam"] == "symptoms"), None)
+        g = next((l for l in lines if l["fam"] == "positives"), None)
+        if h:
+            p, z = peak(h), cnt[-1]
+            head.append(f"{h['name']} {'come' if h['pl'] else 'comes'} up most {_at(ss[p]['label'])}. {h['vals'][p]} in 100 posts"
+                        + (f"; {_at(ss[z]['label'])}, {h['vals'][z]} in 100" if p != z else "") + ".")
+        if g:
+            p, a = peak(g), cnt[0]
+            head.append(f"{g['name']} {'show' if g['pl'] else 'shows'} up most {_at(ss[p]['label'])}. {g['vals'][p]} in 100 posts"
+                        + (f", up from {g['vals'][a]} in 100 {_at(ss[a]['label'])}" if p != a else "") + ".")
+    return lines, head
 
 
 def rng(vals, fmt=lambda v: f"{v:,}", sep=" to "):
@@ -359,7 +413,7 @@ def review_facts(pages, kinds_doc):
     few = {}
     for p in felt:
         for label, idx in STAGES:
-            n = sum(sum(p["felt"]["bins"][i].get("hist") or []) for i in idx)
+            n = sum(p["felt"]["bins"][i].get("n") or 0 for i in idx)
             if n < MIN_POSTS:
                 few.setdefault(label, []).append(p["tab"].lower())
     hero = lambda p, k: next((x for x in p.get("numbers", []) if x["kind"] == k), None)
@@ -376,6 +430,7 @@ def review_facts(pages, kinds_doc):
     for pg in pages:
         nm = pg["id"].capitalize()
         per_page[f"off{nm}"] = ", ".join(x["big"] for x in pg.get("numbers", []) if is_off(x) and not x.get("liked") and x["kind"] in picked) or "none"
+        per_page[f"notChecked{nm}"] = ", ".join(x["big"] for x in pg.get("numbers", []) if is_off(x) and x["kind"] in picked) or "none"
         per_page[f"liked{nm}"] = ", ".join(x["big"] for x in pg.get("numbers", []) if is_off(x) and x.get("liked") and x["kind"] in picked) or "none"
     emerg = [sent for pg in pages if pg.get("footerLevel") == "danger" for sent in re.split(r"(?<=[.?])\s+", pg["footer"]["text"]) if "emergency" in sent]
     own_pct = [f"{pg['tab'].lower()} belief {i + 1}: {m.group(0)}" for pg in pages for i, b in enumerate(pg.get("beliefs", [])) if b.get("ownWords") for m in [re.search(r"\d+(?:\.\d+)?%", b.get("proof") or "")] if m]
@@ -385,7 +440,6 @@ def review_facts(pages, kinds_doc):
         "nGeneral": str(sum(1 for k in kinds if k["scope"] == "general")),
         "feltRead": rng([p["felt"]["nSampled"] for p in felt]),
         "feltUsed": rng([p["felt"]["nUsed"] for p in felt]),
-        "agreeCross": rng([round(100 * p["felt"]["agreementCross"]["within1"]) for p in felt if p["felt"].get("agreementCross")], lambda v: f"{v}%"),
         "fewStages": "; ".join(f"{k} on {' and '.join(v)}" for k, v in few.items()) or "none",
         "appPages": ", ".join(p["tab"].lower() for p in app) or "none",
         "app1": f"{day(1):,}" if day(1) else "?", "app30": f"{day(30):,}" if day(30) else "?",
@@ -448,6 +502,67 @@ def check_asserts(decisions, pages, kinds):
                         P(28, w, f"assumes choice {cid} recommends {rec!r}")
 
 
+def _refs(v, page, extra_key):
+    """A field's sources: its own 'ref'/'refs', or a page-level '<field>Ref' beside a plain string."""
+    out = []
+    if isinstance(v, dict):
+        out += [v["ref"]] if isinstance(v.get("ref"), dict) else []
+        out += [r for r in v.get("refs") or [] if isinstance(r, dict)]
+    r = page.get(extra_key)
+    out += [r] if isinstance(r, dict) else [x for x in r or [] if isinstance(x, dict)]
+    return out
+
+
+HEDGE = re.compile(r"likely runs high", re.I)
+
+
+def hero7(page, pid):
+    """Round 7, G1: heroDefinition, heroRange, heroHalfFree (data agent's fields, any of them may be absent) become
+    page['hero7'] = {def: {text, refs}, range: {line, refs, studies: [{big, who, where, refs}]}, half: {text, refs}}."""
+    out = {}
+    for f, part in (("heroDefinition", "def"), ("heroHalfFree", "half")):
+        v = page.get(f)
+        if not v:
+            continue
+        text = v if isinstance(v, str) else v.get("text") or v.get("line") or ""
+        rs = _refs(v, page, f + "Ref")
+        out[part] = {"text": text, "refs": rs}
+        w = f"{pid} hero {part}"
+        lint(text, pid, w)
+        if share_fmt(text, raw=part != "def"):   # "3 of 7 signs" in a definition counts signs, not people
+            P("12b", w, f"a share not written 'N in 100': {share_fmt(text, raw=part != 'def')!r}")
+        if part == "half" and not rs:
+            P(9, w, "the half-free line has no source")
+        for r in rs:
+            check_ref(r, w)
+    v = page.get("heroRange")
+    if v:
+        v = {"line": v} if isinstance(v, str) else v
+        studies = []
+        for i, st in enumerate(v.get("studies") or []):
+            w = f"{pid} hero range study {i + 1}"
+            rs = _refs(st, {}, "")
+            if not rs:
+                P(9, w, "no source link")
+            for r in rs:
+                check_ref(r, w)
+            big = str(st.get("big", ""))
+            if share_fmt(big):
+                P("12b", w, f"a share not written 'N in 100': {share_fmt(big)!r}")
+            lint(reader_text(big, st.get("who"), st.get("where")), pid, w)
+            studies.append({"big": big, "who": st.get("who", ""), "where": st.get("where", ""), "refs": rs})
+        line = v.get("line") or ""
+        lint(line, pid, f"{pid} hero range")
+        if share_fmt(line):
+            P("12b", f"{pid} hero range", f"a share not written 'N in 100': {share_fmt(line)!r}")
+        out["range"] = {"line": line, "refs": _refs(v, page, "heroRangeRef"), "studies": studies}
+    # G1: no hedge words on the hero (the template no longer shows a hero card's Weak label)
+    for x in page.get("numbers", []):
+        if x.get("kind", "").startswith("hope-") and HEDGE.search(reader_text(x.get("headline"), x.get("big"), x.get("counted"))):
+            P(10, f"{pid} {x['kind']}", "hedge words on the hero ('likely runs high'): show the definition and the range instead (G1)")
+    page["hero7"] = out
+
+
 def main():
     dest = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "one-pager-v3.html"
     exercise_url = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -461,6 +576,15 @@ def main():
         for it in json.loads((REPO / name).read_text()):
             research[it["id"]] = it
     decisions = json.loads((V3 / "decisions.json").read_text())
+    # G6: the main session's "What I did" replies, {noteKey: [{t, text}]}; an empty file until it writes one
+    rp = V3 / "replies.json"
+    if not rp.exists():
+        rp.write_text("{}\n")
+    replies = json.loads(rp.read_text())
+    for k, rs in replies.items():
+        for r in rs:
+            if not str(r.get("text", "")).strip():
+                P(25, f"reply {k}", "a reply with no text")
     general = json.loads((V3 / "general.json").read_text())
     for i, x in enumerate(general["numbers"]):
         if kinds.get(x.get("kind"), {}).get("scope") != "general":
@@ -468,11 +592,7 @@ def main():
         check_number(x, None, kinds, f"general {x.get('big')}", general=True)
 
     pages = []
-    felt_meds = {}
-    for pid in PILOTS:
-        ffp = V3 / "felt" / f"{pid}.json"
-        if ffp.exists():
-            felt_meds[pid] = set(stage_meds(json.loads(ffp.read_text())).values())
+    stale = []   # round 8: page text that still quotes the dropped 0 to 10 graph score (pages/*.json are fixed by hand)
     for pid in PILOTS:
         page = json.loads((V3 / "pages" / f"{pid}.json").read_text())
         o = old[pid]
@@ -483,6 +603,7 @@ def main():
         nums = page.get("numbers", [])
         for i, x in enumerate(nums):
             check_number(x, pid, kinds, f"{pid} {x.get('kind')} {x.get('big')}")
+        hero7(page, pid)
         have = {x["kind"] for x in nums}
         page["empty"] = [k["id"] for k in kinds_doc["kinds"] if k["scope"] == "specific" and k["pick"] and k["id"] not in have]
         for kid in page["empty"]:
@@ -555,10 +676,10 @@ def main():
                     P(3, f"{pid} plan step {i + 1} proof", f"Counted line is {wc(st['proof'].get('counted'))} words (12 max)")
                 if share_fmt(pt) and not st["proof"].get("ownWords"):
                     P("12b", f"{pid} plan step {i + 1} proof", f"a share not written 'N in 100': {share_fmt(pt)!r}")
-                for m in re.finditer(r"(\d+(?:\.\d)?)(?:\s+to\s+(\d+(?:\.\d)?))? out of 10", pt):
-                    for v in filter(None, m.groups()):
-                        if felt_meds.get(pid) and float(v) not in felt_meds[pid]:
-                            P(18, f"{pid} plan step {i + 1} proof", f"says {v} out of 10; the graph shows typical days of {sorted(felt_meds[pid])} (use the graph's figure, D9)")
+                if re.search(r"\bout of 10\b|\btypical day\b", pt):
+                    stale.append(f"{pid} plan step {i + 1} proof: {pt}")
+                if re.search(r"\bscored\b", (st["proof"].get("ref") or {}).get("cite", "")):
+                    stale.append(f"{pid} plan step {i + 1} proof source: {st['proof']['ref']['cite']}")
                 if figs(pt) > 2 and not st["proof"].get("ownWords"):
                     P(12, f"{pid} plan step {i + 1} proof", f"{figs(pt)} figures (2 max): {pt}")
                 if verdict(pt):
@@ -634,10 +755,13 @@ def main():
         ff = V3 / "felt" / f"{pid}.json"
         if ff.exists():
             felt = json.loads(ff.read_text())
-            if not (felt.get("nUsed") and felt.get("agreement", {}).get("within1") is not None and felt.get("biases")):
-                P(18, f"{pid} felt", "graph needs its post count, reader agreement and bias note")
+            if not (felt.get("nUsed") and felt.get("biases") and all("symptoms" in b and "positives" in b and "n" in b for b in felt.get("bins", []))):
+                P(18, f"{pid} felt", "graph needs its post count, each stage's post count and mentions, and its bias note")
             page["felt"] = felt
-            page["feltMeds"] = stage_meds(felt)   # the render check compares the page's own stage medians with these
+            lines, head = felt_lines(felt)
+            if len(lines) < 3:
+                P(18, f"{pid} felt", f"only {len(lines)} lines to draw (3 or more)")
+            page["feltHead"] = head   # the render check compares the page's own headline with these
         else:
             P(18, pid, "no felt-difficulty file")
         pages.append(page)
@@ -655,7 +779,8 @@ def main():
         sanitize(page)
     sanitize(general)
     data = {"kinds": kinds_doc, "general": general, "plan": {"titles": tpl["planTitles"], "text": tpl["plan"]},
-            "pages": pages, "decisions": decisions, "severity": SEVERITY, "exerciseUrl": exercise_url}
+            "pages": pages, "decisions": decisions, "severity": SEVERITY, "exerciseUrl": exercise_url,
+            "replies": replies}
     emb = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     html = (HERE / "one-pager-v3.html").read_text().replace("/*DATA*/", emb)
     # rule 6: no sentence under a heading that tells the reader what comes next
@@ -692,6 +817,8 @@ def main():
     print(f"{len(pages)} pages, {len(html) // 1024} KB -> {dest}")
     for p in pages:
         print(f"  {p['id']}: {len(p.get('numbers', []))} numbers, {len(p.get('beliefs', []))} beliefs, empty kinds: {', '.join(p['empty']) or 'none'}")
+    for s in stale:
+        print("STALE (still quotes the old 0 to 10 graph score; fix in pages/*.json):", s)
     for p in problems:
         print("PROBLEM:", p)
     sys.exit(1 if problems else 0)

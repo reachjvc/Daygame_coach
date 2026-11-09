@@ -198,7 +198,7 @@
    {
     "origin": "07-mirror-stats/cannabis.json rejected 'Hirvonen 2012 CB1 receptors'",
     "big": "about 4 weeks",
-    "why": "Not on the v3 page: the body rows are withdrawal ranges, and this is a 30-man brain-scan finding.",
+    "why": "Not a number card on the v3 page: the body rows are withdrawal ranges, and this is a 30-man brain-scan finding. Since rev8 it is the proof of belief 1 ('I’ve smoked for years. I’m stuck.').",
     "changed": true,
     "changeNote": "Round 4 (rev3, 2026-11-08): Reason was false ('already a timeline milestone': milestones are not shown on v3); the auditor's reason (r3 rules major)."
    },
@@ -467,6 +467,58 @@
     "reason": "Replaced by the forum graph's figure (D9: a typical day after the first week at 4 out of 10 or less), which counts people who say they feel hooked instead of 18 heavy users not checked for addiction, and ends the '4–14 days' vs 'up to 3 weeks' clash. The study stays on the Day 2–6 card and in the body rows.",
     "changed": true,
     "changeNote": "rev4 (2026-11-08): Moved here."
+   },
+   {
+    "from": "v3 belief 'I’ve smoked for years. I’m stuck.' proof (round 6)",
+    "text": "Of Americans ever hooked on weed, about 65 in 100 were already free of every sign of it when asked. More may get free later.",
+    "refs": [
+     {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "pmid": "21077975",
+      "fetched": true,
+      "quote": "Cannabis Dependence (N=530) … Cannabis remission (N=344)"
+     }
+    ],
+    "reason": "G2 (round 7): it repeated the hero's 65 in 100."
+   },
+   {
+    "from": "v3 belief 'I can’t handle quitting. Last time I barely lasted three days.' proof (round 6)",
+    "text": "In reviews of people with weed withdrawal, most signs peak on days 2–6, some last up to 3 weeks or more in heavy users, and poor sleep can go on for several weeks or longer.",
+    "refs": [
+     {
+      "cite": "Connor JP, Stjepanović D, Budney AJ, Le Foll B, Hall WD (2022). Clinical management of cannabis withdrawal. Addiction 117(7):2075-2095.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9110555/",
+      "pmid": "34791767",
+      "fetched": true,
+      "quote": "most symptoms generally peak at days 2-6, with some symptoms lasting up to 3 weeks or more in heavy cannabis users",
+      "quotesMore": [
+       "Sleep disturbances may continue for several weeks or longer."
+      ]
+     }
+    ],
+    "reason": "G2 (round 7): its 'days 2–6' repeated the 'Day 2–6' card."
+   },
+   {
+    "from": "v3 belief 1 'I’ve smoked for years. I’m stuck.' proof (round 7)",
+    "text": "Of Americans with a weed problem, 67 in 100 no longer had it 3 years later; most of them had stopped using.",
+    "refs": [
+     {
+      "cite": "Feingold D, Fox J, Rehm J, Lev-Ran S (2015). Natural outcome of cannabis use disorder: a 3-year longitudinal follow-up. Addiction 110(12):1963-1974.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/26212076/",
+      "pmid": "26212076",
+      "fetched": true,
+      "fetchedOn": "2026-11-09",
+      "via": "PubMed abstract (efetch)",
+      "quote": "Approximately two-thirds (67%) of individuals with baseline CUD remitted at follow-up. Approximately 37% of those who remitted were non-abstinent.",
+      "quotesMore": [
+       "Our sample included 444 individuals diagnosed with DSM-IV cannabis abuse and/or dependence during the 12 months prior to wave 1 of the NESARC."
+      ]
+     }
+    ],
+    "severity": "disorder",
+    "counted": "people with a weed problem, mild cases included",
+    "reason": "rev8 (owner 9 Nov, 'don't just repeat the same stats'): a share-free number, the same kind as the hero and its range; replaced by a different kind of fact."
    }
   ],
   "page": [
@@ -504,6 +556,42 @@
     },
     "why": "r6 rev6: the proof now rests on Connor 2022 for both halves; Bonnet 2017's 'usually lasts up to 3 weeks' gave a length that clashed with the Day 2–6 card and the body rows."
    }
+  ],
+  "beliefs-tests": [
+   {
+    "from": "v3 belief 1 'I’ve smoked for years. I’m stuck.' test (round 7)",
+    "limiting": "I’ve smoked for years. I’m stuck.",
+    "text": "Pick one day this week and live it as a man already getting free: no weed from waking to bed, with the evening planned before it starts. Before you sleep, name one thing the day gave you.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 2 'I can’t handle quitting. Last time I barely lasted three days.' test (round 7)",
+    "limiting": "I can’t handle quitting. Last time I barely lasted three days.",
+    "text": "One evening this week, spend the hour you’d usually smoke on something hard and physical: a run, a workout, a long uphill walk. Guess first how hard it will be, out of 10. Afterwards, put the real score next to your guess.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 3 'Day 10, I feel fine. Now I can handle it.' test (round 7)",
+    "limiting": "Day 10, I feel fine. Now I can handle it.",
+    "text": "This week, the next time “just one” comes up, from a friend or in your own head, answer “I don’t smoke” and leave the room for ten minutes. Then see if the pull is still there.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 4 'Weed is the only thing that gets me to sleep.' test (round 7)",
+    "limiting": "Weed is the only thing that gets me to sleep.",
+    "text": "Still smoking? Pick one night this week with nothing early the next day. Skip the evening smoke, keep your bedtime, phone outside the bedroom. Expect to take longer to fall asleep. Already off it? Keep the same bedtime and phone rule one night. In the morning, check two things: did you dream, and how clear is your head?",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 plan step 1 action (round 7)",
+    "text": "Do the belief tests above this week too: each one is a one-off trial run.",
+    "reason": "rev8: it pointed at the belief tests, which are now 'When this thought comes' steps (owner 9 Nov: tests ask him to step into the hard thing on purpose)"
+   },
+   {
+    "from": "v3 plan step 1 action (round 7)",
+    "text": "Each thing weed does for you is a belief to test. Start with the beliefs above.",
+    "reason": "rev8: it pointed at the belief tests, which are now 'When this thought comes' steps (owner 9 Nov: tests ask him to step into the hard thing on purpose)"
+   }
   ]
  },
  "gapReaderLine": {
@@ -528,6 +616,65 @@
   "by": "data agent (rev6)",
   "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
  },
+ "heroDefinition": {
+  "text": "Hooked here: at least 3 of 7 signs in the same year, such as needing more, failing to cut down, or using despite harm. Free: none of the signs left, and they never came back.",
+  "ref": {
+   "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+   "pmid": "21077975",
+   "fetched": true,
+   "fetchedOn": "2026-11-09",
+   "via": "NCBI PMC full text (efetch)",
+   "quote": "Dependence diagnoses require the existence of 3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period"
+  },
+  "refs": [
+   {
+    "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+    "pmid": "21077975",
+    "fetched": true,
+    "fetchedOn": "2026-11-09",
+    "via": "NCBI PMC full text (efetch)",
+    "quote": "when you finally stopped having any of these experiences (dependence criteria) with (name of drug)? By finally stopped, I mean they never started happening again."
+   }
+  ]
+ },
+ "heroHalfFree": {
+  "text": "Half are free about 6 years after they got hooked, worked out from the ages people gave.",
+  "ref": {
+   "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+   "pmid": "21077975",
+   "fetched": true,
+   "fetchedOn": "2026-11-09",
+   "via": "NCBI PMC full text (efetch)",
+   "quote": "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+  }
+ },
+ "heroRange": {
+  "line": "A Canadian national survey found 72 in 100 of those once hooked not hooked in the past year; this survey counted signs gone for good.",
+  "studies": [
+   {
+    "big": "72 in 100",
+    "who": "people once hooked on weed, not hooked in the past year",
+    "where": "Canada, national survey, 2012; 336 people once hooked",
+    "ref": {
+     "cite": "Fuller-Thomson E, Jayanthikumar J, Redmond ML, Agbeyaka S (2020). Is recovery from cannabis dependence possible? Factors that help or hinder recovery in a national sample of Canadians with a history of cannabis dependence. Advances in Preventive Medicine 2020:9618398.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7180401/",
+     "pmid": "32351740",
+     "fetched": true,
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC full text (efetch)",
+     "quote": "Among those with a history of cannabis dependence, 72% were in remission in the year preceding the survey.",
+     "quotesMore": [
+      "Data from Statistics Canada's nationally representative 2012 Canadian Community Health Survey-Mental Health ( n = 20, 777, of whom 336 have a history of cannabis dependence) was used."
+     ]
+    }
+   }
+  ]
+ },
+ "rev7": "Round 7 (2026-11-09), data agent: G1 hero fields (heroDefinition, heroHalfFree, heroRange) and hedges removed; G2 belief proofs that repeated a figure on the page replaced (old lines in notUsed.beliefs); G3 every number card carries checked: hooked | not, and propose reasons that only said who was counted are gone.",
+ "rev8": "Round 8 (2026-11-09), data agent: every belief's test is now a 'When this thought comes' step (old text in testR7 and notUsed.beliefs-tests); belief 1 proofs that were share-free numbers like the hero replaced by a different kind of fact (alcohol Vaillant 1996, weed Hirvonen 2012, nicotine Doll 2004; porn has no hero, unchanged); plan step 1 lines about the tests reworded.",
  "numbers": [
   {
    "kind": "hope-free-now",
@@ -557,16 +704,20 @@
    "origin": "07-mirror-stats/cannabis.json who '6 years' (its head count, 344 of 530; refetched from PMC on 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): r6-owner minor: the 71 in 100 is any slip within 6 months; the 4+ days fact is in that card's caveat.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "wasR4": {
     "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today."
    },
    "wasR5": {
     "caveat": "Some of the other 186 may still get free later. The authors say people may over-report getting free, and people in prison or hospital weren't asked. Weed was weaker in 2001 than today. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card)."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -584,9 +735,9 @@
     "when": "2001–2002",
     "measured": "The age when the signs of being hooked first appeared and the age when they finally stopped and never came back, as recalled. From these ages the model projects the share free by the end of life. The model puts about 66 in 100 free within 10 years."
    },
-   "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
+   "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat).",
    "projection": true,
-   "weak": "Likely runs high",
+   "weak": null,
    "ref": {
     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
@@ -597,11 +748,11 @@
    "origin": "06-template.json cannabis hero '97%' (same source as 07-mirror-stats/cannabis.json who '6 years'; refetched from PMC on 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): r6-owner minor: the 71 in 100 is any slip within 6 months; the 4+ days fact is in that card's caveat.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it). G1: 'Likely runs high' removed; the hero shows what hooked meant and the range from other studies instead. G1: hedge 'the true share is probably lower' removed; the hero range shows what another study counted.",
    "revNotes": [
     "main session fix 2026-11-08 after rev3 build: rule 12b: 97% written as 97 in 100"
    ],
@@ -610,6 +761,12 @@
    },
    "wasR5": {
     "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (the 71 in 100 card)."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null,
+    "weak": "Likely runs high",
+    "caveat": "A model, not a head count: about 65 in 100 were free when asked. People in prison or hospital weren't surveyed, so the authors say the true share is probably lower. Free means no signs of being hooked, not never using. Men got free more slowly than women. For people treated for weed, a slip after two weeks off led most back to 4+ days a week (see the 71 in 100 card's caveat)."
    }
   },
   {
@@ -627,7 +784,7 @@
     "when": "2001–2002",
     "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never using."
    },
-   "caveat": "A projection from recalled ages, not a head count. Those not free by year 6 kept getting free later: the same model projects 97 in 100 in a lifetime. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women. Weed was weaker in 2001 than today.",
+   "caveat": "A projection from recalled ages, not a head count. Those not free by year 6 kept getting free later: the same model projects 97 in 100 in a lifetime. People in prisons and hospitals weren't asked. Men got free more slowly than women. Weed was weaker in 2001 than today.",
    "projection": true,
    "weak": null,
    "ref": {
@@ -640,14 +797,19 @@
    "origin": "07-mirror-stats/cannabis.json who '6 years' (figure, n and ref kept; the comparison with other addictions dropped under rule 13; not picked in kinds.json, included because a checked number exists)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules major (D6, rule 10): the Weak 'Worked out, not counted' repeated the projection chip ('…; worked out'); the chip says it once.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it). G1: hedge 'real rates are probably lower' removed (card is not picked; kept tidy).",
    "timeIsResult": true,
    "wasR4": {
     "weak": "Worked out, not counted"
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null,
+    "caveat": "A projection from recalled ages, not a head count. Those not free by year 6 kept getting free later: the same model projects 97 in 100 in a lifetime. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women. Weed was weaker in 2001 than today."
    }
   },
   {
@@ -678,13 +840,17 @@
    "origin": "07-mirror-stats/cannabis.json who 'Age 29' (figure, n and ref kept; comparison ages for other addictions dropped under rule 13; quote narrowed to the weed figure; refetched from PMC on 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[3].caveat"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b): '1 in 6' to 'N in 100'.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "wasR4": {
     "caveat": "An average age, not a cut-off: the likely range for the average is about 26 to 31. It counts only people who said they got free. People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -715,16 +881,20 @@
    "origin": "07-mirror-stats/cannabis.json how '46%' (same table cell, shown as its complement: 100 − 45.8 = 54% who used no help; ref kept; refetched from PMC on 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[4].basis.measured, numbers[4].caveat"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds). | r5-rules minor (rule 12b): '1 in 6' to 'N in 100'.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "wasR4": {
     "basis.measured": "Ever used, at any point: mutual-help groups (such as Marijuana Anonymous), outpatient or inpatient treatment, anti-craving medicine, or recovery services such as sober living. 45.8% had used one or more; the other 54% used none.",
     "caveat": "Help could be one meeting or years of treatment. It doesn't show which route worked better; people with worse problems used help more. It rests on about 220 people, so the true share could be about 11 points either way (roughly 43 to 65 in 100). People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in."
    },
-   "changeNoteR4": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds)."
+   "changeNoteR4": "rev5 (2026-11-08): r5-rules minor (rule 12b in folds).",
+   "checked": "not",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "how-tries",
@@ -754,13 +924,17 @@
    "origin": "07-mirror-stats/cannabis.json how '2 tries' (figure, n and ref kept; the comparison with another addiction dropped under rule 13; refetched from PMC on 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[5].caveat"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12b): '1 in 6' to 'N in 100'.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "wasR4": {
     "caveat": "Counts only people who succeeded, from memory. The average was higher, about 5, because a few needed many. The question asked about tries before they overcame it, so some may not have counted the try that worked. People judged their own problem: in the whole survey only about 1 in 6 had ever been diagnosed, so milder cases are mixed in."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -791,16 +965,20 @@
    "origin": "07-mirror-stats/cannabis.json how '85%' (figure, n and ref kept; 75%-met-checklist and the 8% line added from the refetched PMC full text, 2026-11-05; not picked in kinds.json, included because a checked number exists)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds). | Counted line was 21 words (12 max); the 75 in 100 checklist share stays in basis.who.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "wasR4": {
     "basis.measured": "Each day: weed use, and whether they were trying to stop or cut down. 85% tried cutting down at some point and 46% tried stopping. At 6 months, 8% had not used weed in the last month.",
     "counted": "daily weed users, not checked for addiction by a doctor; 75 in 100 met a self-report problem checklist, mild cases included"
    },
-   "changeNoteR4": "rev5 (2026-11-08): Brief (rule 12b in folds)."
+   "changeNoteR4": "rev5 (2026-11-08): Brief (rule 12b in folds).",
+   "checked": "not",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "helps-medicine",
@@ -830,16 +1008,20 @@
    "origin": "07-mirror-stats/cannabis.json works '0 pills' (figure, basis and ref kept; 'who' tightened to the review's own eligibility wording, abstract refetched from Europe PMC on 2026-11-05); rewritten 2026-11-05 to per 100 from the review's Summary of findings tables (PMC full text)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): r6-rules minor: says what was worked out (the review's table: 262 and 270 per 1,000).",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "wasR4": {
     "weak": "Worked out, not counted"
    },
    "wasR5": {
     "caveat": "No medicine is approved to treat weed addiction. This is not proof that none can help: most were tested in only a few small trials, and the review says all are still experimental. For THC medicines and NAC, it rates the no-better result as moderately certain."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -870,15 +1052,19 @@
    "origin": "07-mirror-stats/cannabis.json works '1 in 4' (figure, basis and ref kept; abstract refetched from Europe PMC on 2026-11-05); rewritten 2026-11-05 to per 100 with and without from the review's full text (PMC4914383)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: 'the average in the 8 trials', now pooled: true with the one chip 'Average across studies'; Weak no longer repeats 'Averages across trials'.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "pooled": true,
    "wasR4": {
     "pooled": null,
     "weak": "Averages across trials; no like-for-like comparison"
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -898,7 +1084,7 @@
    },
    "caveat": "Small study of 18 people. These are typical times, and 'most' effects, not all: irritability and anger often peak later, past the first week. Your days can differ.",
    "weak": "18 people",
-   "propose": "It counts heavy users who were not checked for addiction (rule 2); the same study already drives the body rows' day 2–6 peak.",
+   "propose": "The same study already drives the body rows' day 2–6 peak.",
    "projection": false,
    "ref": {
     "cite": "Budney AJ, Moore BA, Vandrey RG, Hughes JR (2003). The time course and significance of cannabis withdrawal. Journal of Abnormal Psychology.",
@@ -908,10 +1094,10 @@
     "quote": "Onset typically occurred between Days 1-3, peak effects between Days 2-6, and most effects lasted 4-14 days."
    },
    "origin": "07-mirror-stats/cannabis.json quit 'Day 2–6' (v10 'How quitting goes'; figure, basis and ref kept, basis in plain words; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev5 (2026-11-08): E2 (r5-owner major): liked in version 10 (kinds.json how-withdrawal: 'weed: day 2–6'), so it stays under 'Take them off' with its Counted label.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); other reason kept.",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -923,7 +1109,12 @@
     "quote": "In the later phase of withdrawal came irritability/anger, and vivid, unpleasant dreams, with peaks later than a week after cessation."
    },
    "timeIsResult": true,
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts heavy users who were not checked for addiction (rule 2); the same study already drives the body rows' day 2–6 peak."
+   }
   },
   {
    "kind": "how-withdrawal",
@@ -942,7 +1133,6 @@
    },
    "caveat": "It depends who is asked: about 17 in 100 in general surveys, 54 in 100 in outpatient clinics, 87 in 100 in inpatient units. Daily users had it more often.",
    "weak": null,
-   "propose": "It mixes regular users with people who were hooked (rule 2); its caveat gives the higher share for outpatients in treatment.",
    "projection": false,
    "ref": {
     "cite": "Bahji A, Stephenson C, Tyo R, et al. (2020). Prevalence of cannabis withdrawal symptoms among people with regular or dependent use of cannabinoids: a systematic review and meta-analysis. JAMA Network Open.",
@@ -952,10 +1142,10 @@
     "quote": "The overall pooled prevalence of CWS was 47% (6469 of 23 518) (95% CI, 41%-52%)"
    },
    "origin": "07-mirror-stats/cannabis.json quit '47%' (v10 'How quitting goes'; figure, basis and ref kept, basis in plain words; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev6 (2026-11-08): r6-rules minor (rule 10): 'Averaged across' repeated the chip.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -970,6 +1160,12 @@
    "changeNoteR4": "rev5 (2026-11-08): E5: Weak 'Average across studies' repeated the pooled chip word for word (a chip never repeats words); the chip carries it. | r5-rules minor: 'closer to the 54 in 100' clashed with the page's other 54 in 100. E2: liked in version 10 (kinds.json: 'weed: … 47%'), liked: true. | Brief (rule 12b in folds).",
    "wasR5": {
     "headline": "Averaged across dozens of studies, about 47 in 100 regular or hooked weed users got withdrawal when they stopped."
+   },
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It mixes regular users with people who were hooked (rule 2); its caveat gives the higher share for outpatients in treatment."
    }
   },
   {
@@ -999,12 +1195,16 @@
    },
    "origin": "07-mirror-stats/cannabis.json quit '71%' (figure, basis and ref kept; abstract refetched from Europe PMC on 2026-11-05)",
    "check": {
-    "by": "revision checker b (cannabis)",
-    "on": "2026-11-08",
+    "by": "revision checker a (cannabis)",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "Round 4 (rev3, 2026-11-08): Headline: the verdict lead-in 'Most slip.' removed (owner-lens r3 blocker) and the share written '71 in 100'; 'for at least two weeks' left to the Counted label ('who got two weeks off') so the line holds 2 figures (rule 12; 'two' counts as a figure) (r3 minor formats), now the only 71 on the page: belief 3's proof no longer carries the other 71% (owner-lens r3 major, two different 71%s). Severity 'dependent' to match belief 3, which uses the same group (rule 5): the abstract describes 'outpatient treatment for marijuana dependence' and calls such patients 'marijuana-dependent outpatients'; flagged for the source checker. basis.who adds the use level is not reported. Weak chip capitalised. Abstract refetched from Europe PMC 2026-11-08. || Earlier: Round 3 (rev2), task 'one number per line': the card held two 71% figures (headline and caveat), which both cold readers read as a repeat; the second 71% (of those who slipped, 'relapsed to heavier use') is now 'most' in the caveat. Headline says 'stopped for at least two weeks' (cold reader v1: 'had stopped' here means two weeks off). Weak chip cut to 6 words; its long reason moved to the caveat. Figure, mirror, basis and ref unchanged; abstract refetched from Europe PMC 2026-11-05."
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "after-first-month",
@@ -1023,7 +1223,7 @@
    },
    "caveat": "Compares groups at one moment; it does not follow the same people. Young users only, so it says nothing about decades of smoking.",
    "weak": "Young users, not followed over time",
-   "propose": "It counts frequent young users, not people checked as hooked (rule 2), and compares different people instead of following the same ones.",
+   "propose": "It compares different people instead of following the same ones.",
    "projection": false,
    "ref": {
     "cite": "Scott JC, Slomiak ST, Jones JD, et al. (2018). Association of cannabis with cognitive functioning in adolescents and young adults: a systematic review and meta-analysis. JAMA Psychiatry.",
@@ -1033,10 +1233,10 @@
     "quote": "studies requiring an abstinence period longer than 72 hours (15 studies; n = 928) had an overall effect size (d, -0.08 ...) that was not significantly different from 0"
    },
    "origin": "07-mirror-stats/cannabis.json after '72 hours' (v10 'How quitting goes'; figure, basis and ref kept; abstract refetched from Europe PMC 2026-11-05)",
-   "changeNote": "rev6 (2026-11-08): r6-owner minor: reads in one go.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); other reason kept.",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1050,6 +1250,11 @@
    "liked": true,
    "wasR5": {
     "headline": "No clear gap on thinking tests from people who barely used, in young frequent users off weed for more than 72 hours."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts frequent young users, not people checked as hooked (rule 2), and compares different people instead of following the same ones."
    }
   },
   {
@@ -1080,14 +1285,19 @@
    "origin": "07-mirror-stats/cannabis.json after 'Week 1' (figure, basis and ref kept; use frequency added from the PMC full text, PMC6587572, fetched 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "propose": "It counts young regular users, and the study reports no diagnosis of being hooked (rule 2).",
-   "changeNote": "rev4 (2026-11-08): D7: result first in the headline; the source gives test statistics, no plain result figure, so the big stays 'Week 1'. || Earlier: Round 4 (rev3, 2026-11-08): Weak chip capitalised (r3 minor). Nothing else changed. || Earlier: Round 3 (rev2). 'randomised study' put in plain words (owner-lens v1: 'a fair test, split by chance'). Weak chip cut to 6 words (task A0); the long reason is in the caveat and the counted chip. Figure, headline, mirror and ref unchanged; abstract refetched from Europe PMC 2026-11-05 ('Participants were randomly assigned to 4 weeks of cannabis abstinence ... (MJ-Abst; n = 62)').",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "timeIsResult": true,
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts young regular users, and the study reports no diagnosis of being hooked (rule 2)."
+   }
   },
   {
    "kind": "after-mood",
@@ -1115,10 +1325,10 @@
     "quote": "For individuals who were abstinent, their QLES-Q-SF scores were higher by 6.78 points (12%), correlating with greater than one standard deviation of improvement as seen in community samples"
    },
    "origin": "new (the quitting result for after-mood that both critics asked for; full text fetched via NCBI on 2026-11-05)",
-   "changeNote": "Round 3 (rev2). Cold readers: 'Is 12 points a lot?'; the caveat now says the authors call it big enough to matter (alsoRef quote; the paper also says it exceeds one standard deviation of improvement in community samples). Weak chip: '52 people', the head count behind the figure (Model 1, N = 52), not 62, which both cold readers mixed up with the 62 of the memory trial. Figure, headline, mirror, basis and ref unchanged; PMC full text refetched via NCBI 2026-11-05 ('higher QLES-Q-SF raw score on average by 6.78 points (or 12% of the maximum possible change in QLES-Q-SF score)').",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "check": {
-    "by": "revision checker b (cannabis)",
-    "on": "2026-11-05",
+    "by": "revision checker a (cannabis)",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1128,6 +1338,10 @@
     "pmid": "29457671",
     "fetched": true,
     "quote": "This is a clinically meaningful improvement as supported by previous studies examining changes in QLES-Q-SF during treatment"
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -1158,12 +1372,12 @@
    "origin": "07-mirror-stats/cannabis.json after '12 weeks' (figure, basis and ref kept; abstract refetched from Europe PMC on 2026-11-05)",
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
    "propose": "It is about using less, not quitting, so it answers no kind's question cleanly; the +12 points life-quality card is the quitting answer.",
-   "changeNote": "rev6 (2026-11-08): r6-owner minor: same pointer fix. | F3 + r6-owner major: the face says plainly it counted using less, not quitting; the caveat points to the 71 in 100 card. | r6-owner major. | r6-rules minor: same 302-adult NAC trial as belief 4 (tagged dependent), and its who line says they met the doctors' checklist for being hooked. | Counted line to match the tag and belief 4.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "editNote": "2026-11-06: 'drinking and tobacco' -> 'other substance use' (rule 13 wording only)",
    "timeIsResult": true,
    "wasR4": {
@@ -1177,7 +1391,11 @@
     "severity": "treatment",
     "counted": "adults in a treatment trial for a weed problem"
    },
-   "changeNoteR5": "rev6 (2026-11-08): r6-owner minor: same pointer fix. | F3 + r6-owner major: the face says plainly it counted using less, not quitting; the caveat points to the 71 in 100 card. | r6-owner major. | r6-rules minor: same 302-adult NAC trial as belief 4 (tagged dependent), and its who line says they met the doctors' checklist for being hooked."
+   "changeNoteR5": "rev6 (2026-11-08): r6-owner minor: same pointer fix. | F3 + r6-owner major: the face says plainly it counted using less, not quitting; the caveat points to the 71 in 100 card. | r6-owner major. | r6-rules minor: same 302-adult NAC trial as belief 4 (tagged dependent), and its who line says they met the doctors' checklist for being hooked.",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   }
  ],
  "beliefs": [
@@ -1185,34 +1403,81 @@
    "kind": "stuck",
    "limiting": "I’ve smoked for years. I’m stuck.",
    "counterpart": "Most people hooked on weed get free in the end. I’m doing it now.",
-   "test": "Pick one day this week and live it as a man already getting free: no weed from waking to bed, with the evening planned before it starts. Before you sleep, name one thing the day gave you.",
-   "proof": "Of Americans ever hooked on weed, about 65 in 100 were already free of every sign of it when asked. More may get free later.",
-   "severity": "dependent",
+   "test": "Write the thought down, and next to it: “Most people hooked on weed get free in the end.” Then read the proof under it once and do the next step of the plan below.",
+   "proof": "In men who had smoked weed daily for years, 12 on average, the brain receptors weed dulls were back to normal in most areas after about 4 weeks off. Years smoked made no difference to the rise.",
+   "severity": "heavy",
    "refs": [
     {
-     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
-     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
-     "pmid": "21077975",
+     "cite": "Hirvonen J, Goodwin RS, Li CT, Terry GE, Zoghbi SS, Morse C, Pike VW, Volkow ND, Huestis MA, Innis RB (2012). Reversible and regionally selective downregulation of brain cannabinoid CB1 receptors in chronic daily cannabis smokers. Molecular Psychiatry 17(6):642-649.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3223558/",
+     "pmid": "21747398",
      "fetched": true,
-     "quote": "Cannabis Dependence (N=530) … Cannabis remission (N=344)"
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC full text (efetch)",
+     "quote": "Even in these heavy smokers, binding returned to normal levels in most regions after ~4 weeks of abstinence.",
+     "quotesMore": [
+      "Change in V T did not correlate with any of the clinical variables, such as current amount or years of cannabis smoking",
+      "Participants smoked an average of 10 ± 6 joints or blunts per day (range 1–30) for 12 ± 7 years (range 4–37).",
+      "Another interesting finding is that hippocampus did not show reversal of downregulation after abstinence"
+     ]
     }
    ],
    "origin": "06-template.json cannabis belief 5. Limiting kept. Counterpart put in the form of the row marked Keep (RULEBOOK rule 22): the old “97% … I’m next” rested on a lifetime projection and read as a slogan; the proof now leads with the counted 344 of 530 (rule 10).",
    "keep": false,
    "check": {
-    "by": "revision checker b (cannabis)",
-    "on": "2026-11-08",
+    "by": "revision checker a (cannabis)",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to beliefs[0].proofNote"
    },
-   "changeNote": "Round 4 (rev3, 2026-11-08): Proof written 'about 65 in 100', the same figure and format as the hero (r3 minor formats: '344 of 530' against '65 in 100'; brief rule 5). keep set to false: he marked no weed row Keep (r3 rules minor; SCHEMA keep means his Keep mark). || Earlier: Round 3 (rev2), task A0 ('proofs hold one figure') and cold readers (97.2% here vs 97% at the top; 'half within about 6 years: half of whom?'). The proof now holds one figure, the counted head count (rule 10: the cautious figure), with 'free' said in the hero's words. The v10 sentence (97.2% projected; half within about 6 years) is kept in notUsed; both figures stay on the page as their own cards (the 97% under the hero, the '6 years' card). Refs: only the source the proof uses, one entry; the study note dropped from the cite. Limiting, counterpart and test unchanged. PMC full text refetched via NCBI 2026-11-05."
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests. Proof replaced: the rev7 proof was a share-free number, the same kind as the hero and its range (owner: 'don't just repeat the same stats'); now a different kind of fact that answers the thought. Counterpart unchanged. Old proof in wasR7 and notUsed.beliefs.",
+   "counted": "men who smoked daily, not checked for addiction",
+   "wasR6": {
+    "proof": "Of Americans ever hooked on weed, about 65 in 100 were already free of every sign of it when asked. More may get free later.",
+    "refs": [
+     {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "pmid": "21077975",
+      "fetched": true,
+      "quote": "Cannabis Dependence (N=530) … Cannabis remission (N=344)"
+     }
+    ],
+    "severity": "dependent",
+    "counted": null
+   },
+   "testR7": "Pick one day this week and live it as a man already getting free: no weed from waking to bed, with the evening planned before it starts. Before you sleep, name one thing the day gave you.",
+   "wasR7": {
+    "proof": "Of Americans with a weed problem, 67 in 100 no longer had it 3 years later; most of them had stopped using.",
+    "refs": [
+     {
+      "cite": "Feingold D, Fox J, Rehm J, Lev-Ran S (2015). Natural outcome of cannabis use disorder: a 3-year longitudinal follow-up. Addiction 110(12):1963-1974.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/26212076/",
+      "pmid": "26212076",
+      "fetched": true,
+      "fetchedOn": "2026-11-09",
+      "via": "PubMed abstract (efetch)",
+      "quote": "Approximately two-thirds (67%) of individuals with baseline CUD remitted at follow-up. Approximately 37% of those who remitted were non-abstinent.",
+      "quotesMore": [
+       "Our sample included 444 individuals diagnosed with DSM-IV cannabis abuse and/or dependence during the 12 months prior to wave 1 of the NESARC."
+      ]
+     }
+    ],
+    "severity": "disorder",
+    "counted": "people with a weed problem, mild cases included",
+    "weak": null,
+    "ownWords": null
+   },
+   "weak": "Small: 14 men scanned twice, kept off weed on a locked unit; one memory area had not come back; it measures brain receptors, not cravings.",
+   "ownWords": false,
+   "proofNote": "Hirvonen 2012: 30 male chronic daily smokers (12 years on average) vs 28 controls; 14 rescanned after 26 days (13-32) of monitored abstinence. No dependence diagnosis reported, so tag heavy. The 12-year average is for all 30; the source reports the 14 rescanned did not differ from the other 16 in baseline receptor binding (years smoked not given for the 14 alone). Used in the 06 template for the moderation row (rejected there under rule 4); a 'stuck' belief is not a moderation belief."
   },
   {
    "kind": "hard",
    "limiting": "I can’t handle quitting. Last time I barely lasted three days.",
    "counterpart": "It’s a few hard weeks, not forever. I’ve got through hard weeks before.",
-   "test": "One evening this week, spend the hour you’d usually smoke on something hard and physical: a run, a workout, a long uphill walk. Guess first how hard it will be, out of 10. Afterwards, put the real score next to your guess.",
-   "proof": "In reviews of people with weed withdrawal, most signs peak on days 2–6, some last up to 3 weeks or more in heavy users, and poor sleep can go on for several weeks or longer.",
+   "test": "Write the thought down, and next to it one hard week you got through and what carried you. Still smoking? Do the next step of the plan, not the whole quit. Already off it? Text one person who knows you’ve stopped that today is hard.",
+   "proof": "A review of weed withdrawal finds few risks from the withdrawal itself; in heavy users some signs last up to 3 weeks or more, and poor sleep can go on for several weeks.",
    "severity": "heavy",
    "refs": [
     {
@@ -1220,30 +1485,49 @@
      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9110555/",
      "pmid": "34791767",
      "fetched": true,
-     "quote": "most symptoms generally peak at days 2-6, with some symptoms lasting up to 3 weeks or more in heavy cannabis users",
+     "quote": "There are few risks related directly to cannabis withdrawal.",
      "quotesMore": [
+      "most symptoms generally peak at days 2-6, with some symptoms lasting up to 3 weeks or more in heavy cannabis users",
       "Sleep disturbances may continue for several weeks or longer."
-     ]
+     ],
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC full text (efetch)"
     }
    ],
    "origin": "new",
    "keep": false,
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to beliefs[1].test"
    },
-   "changeNote": "rev6 (2026-11-08): r6-rules minor: one length across the page (Day 2–6 card, body rows to week 4). Connor 2022 abstract re-read 2026-11-08 (Europe PMC).",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "wasR5": {
     "proof": "In reviews of people with weed withdrawal, it usually lasts up to 3 weeks; poor sleep can go on for several weeks or longer."
-   }
+   },
+   "wasR6": {
+    "proof": "In reviews of people with weed withdrawal, most signs peak on days 2–6, some last up to 3 weeks or more in heavy users, and poor sleep can go on for several weeks or longer.",
+    "refs": [
+     {
+      "cite": "Connor JP, Stjepanović D, Budney AJ, Le Foll B, Hall WD (2022). Clinical management of cannabis withdrawal. Addiction 117(7):2075-2095.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9110555/",
+      "pmid": "34791767",
+      "fetched": true,
+      "quote": "most symptoms generally peak at days 2-6, with some symptoms lasting up to 3 weeks or more in heavy cannabis users",
+      "quotesMore": [
+       "Sleep disturbances may continue for several weeks or longer."
+      ]
+     }
+    ]
+   },
+   "testR7": "One evening this week, spend the hour you’d usually smoke on something hard and physical: a run, a workout, a long uphill walk. Guess first how hard it will be, out of 10. Afterwards, put the real score next to your guess."
   },
   {
    "kind": "moderation",
    "limiting": "Day 10, I feel fine. Now I can handle it.",
    "counterpart": "Feeling fine means the withdrawal is over, not that I’m in control again.",
-   "test": "This week, the next time “just one” comes up, from a friend or in your own head, answer “I don’t smoke” and leave the room for ten minutes. Then see if the pull is still there.",
+   "test": "Write the thought down, and next to it: “Feeling fine means the withdrawal is over, not that I’m in control again.” Then say “I don’t smoke” and get out of the room for ten minutes.",
    "proof": "Of people treated for weed who slipped after 2+ weeks off, most went back to smoking 4+ days a week.",
    "severity": "dependent",
    "refs": [
@@ -1258,18 +1542,19 @@
    "origin": "06-template.json cannabis belief 4. Limiting and counterpart kept word for word. Proof replaced: the old one rested on quitters’ stories and a receptor finding; rule 4 needs a study of people who had been hooked.",
    "keep": false,
    "check": {
-    "by": "revision checker b (cannabis)",
-    "on": "2026-11-08",
+    "by": "revision checker a (cannabis)",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "Round 4 (rev3, 2026-11-08): Owner-lens r3 major and brief: two different 71%s on one page. The proof now holds no 71: the 71% of those who slipped is 'most', and the card keeps the one 71 (71 in 100 smoked again). 2 figures, 19 words, one idea (a slip led most back to heavy use, the answer to 'now I can handle it'). Ref: only the quote the proof uses; the other quote is the card's own ref. Severity 'dependent', the same group as the card ('outpatient treatment for marijuana dependence'), so rule 4 is met by people hooked on weed. keep set to false. || Earlier: Round 3 (rev2), task 'belief 3 proof one figure' (owner-lens v1 and v2: '71% ... and 71% of those' cannot be read once). The first 71% is now 'most'; the one figure left is the 71% who went back to 4+ days a week, the part that answers 'now I can handle it'. 'Early slips led back more often' moved to notUsed (cold readers: 'more often than what?'), with its ref. Test: 'this week' added and the trigger widened to an offer or his own thought, so it can be done this week whether or not he has reached a day he feels fine; still answered as a non-smoker. Counterpart, limiting and severity unchanged (treatment group, rule 4). Abstract refetched from Europe PMC 2026-11-05."
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
+   "testR7": "This week, the next time “just one” comes up, from a friend or in your own head, answer “I don’t smoke” and leave the room for ten minutes. Then see if the pull is still there."
   },
   {
    "kind": "need",
    "limiting": "Weed is the only thing that gets me to sleep.",
    "counterpart": "Weed knocks me out. It doesn’t give me good sleep.",
-   "test": "Still smoking? Pick one night this week with nothing early the next day. Skip the evening smoke, keep your bedtime, phone outside the bedroom. Expect to take longer to fall asleep. Already off it? Keep the same bedtime and phone rule one night. In the morning, check two things: did you dream, and how clear is your head?",
+   "test": "Write the thought down, and next to it: “Weed knocks me out. It doesn’t give me good sleep.” Then do your step 2 sleep routine: screens out of the bed, same wake-up time tomorrow.",
    "proof": "Of 302 adults hooked on weed starting treatment, 69 in 100 slept poorly.",
    "severity": "dependent",
    "refs": [
@@ -1285,11 +1570,12 @@
    "keep": false,
    "check": {
     "by": "revision checker a (cannabis)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): '69%' written '69 in 100' (r4 owner and rules minors, D7). Source figure 68.9% unchanged. || Earlier: Round 4 (rev3, 2026-11-08): Brief and r3 rules/owner-lens majors: 'Some rough weeks buy my real sleep back' had no source, and the page's own body row says sleep trouble is still there at day 45. Counterpart is now his own first two v10 sentences, which the proof supports (69 in 100 of 302 adults hooked on weed slept poorly while still using, Hser 2017). The third sentence moved to notUsed.beliefs; the propose note is folded into that entry, since its own suggestion ('back to normal within about 4 weeks') rested on young users not checked for addiction and clashed with the day-45 row. Test: a 'Still smoking? / Already off it?' split (r3 safety minor pattern), so it works for a reader who has stopped. keep set to false. || Earlier: Round 3 (rev2), task A0 (one figure) and owner-lens v2 ('keep the 302-adults figure, move the adolescent study to the fold'): the proof is now the one figure about people hooked on weed (69% of 302 slept poorly at the start of treatment); the young-users sleep study (Baumer 2023) moved to notUsed with its text. Severity back to 'dependent' (the 302 met the older checklist for being hooked, 'dependence (per ... DSM-IV criteria)'). Refs: only the source the proof uses; the study note dropped from the cite. Propose note now gives the source checker's fitting counterpart for his yes (rule 25: his v10 counterpart unchanged). Test unchanged. PMC full text refetched via NCBI 2026-11-05 ('35.8% ... anxiety, and 15.5% depression at the baseline. A high percentage (68.9%) of the study sample reported poor sleep quality.')."
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
+   "testR7": "Still smoking? Pick one night this week with nothing early the next day. Skip the evening smoke, keep your bedtime, phone outside the bedroom. Expect to take longer to fall asleep. Already off it? Keep the same bedtime and phone rule one night. In the morning, check two things: did you dream, and how clear is your head?"
   }
  ],
  "windows": [
@@ -1445,13 +1731,13 @@
   {
    "do": [
     "Still smoking? Smoke as usual for a few days while you log; don’t cut down yet.",
-    "Do the belief tests above this week too: each one is a one-off trial run.",
+    "When one of the thoughts above comes up this week, do the step under it. Don’t go looking for it.",
     "Already stopped? Don’t start smoking again to do this step: write it from memory.",
     "Allow it. No guilt while you log: you’re investigating, not failing.",
     "Write down what weed does for you: sleep, boredom, anxiety, fun.",
     "Before each smoke, note the time, where you are and what you want from it.",
     "After it, note whether it gave you that, and for how long.",
-    "Each thing weed does for you is a belief to test. Start with the beliefs above."
+    "Each thing weed does for you is a belief. Set each one against the beliefs above."
    ],
    "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)"
   },
@@ -1494,20 +1780,20 @@
    "do": [
     "Pick a date a few days to a few weeks out and put it in your calendar. Still smoking? Smoke as usual until then. Already off it? Today is your date.",
     "Throw out the stash, grinder and papers. Delete the dealer’s number.",
-    "Expect the first week to be the hardest; the second is a little easier.",
+    "Expect cravings for months, not only the first week. Keep the plan going after the hard first days.",
     "For three months, weed is the one thing. No new diet, no new life plan.",
     "Mark each day off on a calendar.",
     "Slip? Go back through steps 1–3 on paper, the same day. Don’t go back to using as usual for days first."
    ],
    "proof": {
-    "text": "In r/leaves posts with a day count, a reader rated a typical day after the first week at 4 out of 10 or less.",
+    "text": "In r/leaves posts with a day count, cravings still came up in 46 in 100 posts in months 4–12.",
     "ref": {
-     "cite": "Posts on r/leaves with a day count, 2021-2025, scored for this page",
+     "cite": "Posts on r/leaves with a day count, 2021-2025, tagged for this page",
      "url": "",
      "own": true,
      "fetched": true,
-     "quote": "typical (median) score by graph stage, Week 2 to Year 2+: 4, 3.5, 3, 3, 3.5, 1; scale 4 = noticeable but manageable",
-     "via": "08-v3/felt/cannabis.json bins merged into the graph's nine stages as build_v3.py stage_meds() does (Week 2 to Year 2+: 113, 118, 107, 58, 108, 36 posts; Day 1 to Days 4–7: 5, 5, 5; 801 posts used); scale text from its 'scale' field"
+     "quote": "cravings, share of posts by graph stage, Days 2–3 to Months 4–12: 24, 32, 30, 24, 29, 45, 46 in 100 (115, 117, 113, 118, 107, 58, 108 posts)",
+     "via": "08-v3/felt/cannabis.json bins pooled into the graph's nine stages by build_v3.py felt_lines() (recomputed 2026-11-09)"
     },
     "severity": "self-hooked",
     "check": {
@@ -1515,11 +1801,20 @@
      "on": "2026-11-08",
      "verdict": "ok"
     },
-    "changeNote": "rev4 (2026-11-08): D9 (plan step 3 proofs use the figure the graph shows) and r4 rules minor (withdrawal length was '4–14 days' here, 'up to 3 weeks' in belief 2, 'Day 1–14' in the body rows, with no word on why). Now the forum graph's own figure, in the alcohol page's wording, so step 3 no longer rests on 18 heavy users not checked for addiction. Every stage from Days 6–7 on has 47+ posts and a median of 4 or less; 2 figures. The Budney text moved to notUsed; that study stays on the Day 2–6 card and the body rows."
+    "changeNote": "rev8 (2026-11-09): the 0–10 score is gone from the graph (owner 9 Nov: \"the scoring does not make sense\"); the proof now uses the share of posts mentioning cravings, as the graph draws it. | rev4 (2026-11-08): D9 (plan step 3 proofs use the figure the graph shows) and r4 rules minor (withdrawal length was '4–14 days' here, 'up to 3 weeks' in belief 2, 'Day 1–14' in the body rows, with no word on why). Now the forum graph's own figure, in the alcohol page's wording, so step 3 no longer rests on 18 heavy users not checked for addiction. Every stage from Days 6–7 on has 47+ posts and a median of 4 or less; 2 figures. The Budney text moved to notUsed; that study stays on the Day 2–6 card and the body rows.",
+    "wasR7": {
+     "text": "In r/leaves posts with a day count, a reader rated a typical day after the first week at 4 out of 10 or less.",
+     "quote": "typical (median) score by graph stage, Week 2 to Year 2+: 4, 3.5, 3, 3, 3.5, 1; scale 4 = noticeable but manageable",
+     "cite": "Posts on r/leaves with a day count, 2021-2025, scored for this page"
+    },
+    "changed": true
    },
    "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)",
    "wasR4": {
     "do.2": "Expect the first two weeks to be the hardest."
+   },
+   "wasR7do": {
+    "2": "Expect the first week to be the hardest; the second is a little easier."
    }
   },
   {

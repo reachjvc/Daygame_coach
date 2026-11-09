@@ -1,0 +1,82 @@
+{
+ "id": "nicotine",
+ "round": "rev8",
+ "by": "independent checker a, rev8, 2026-11-09",
+ "checked": [
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "I’ve smoked too long. It’s too late.",
+   "verdict": "ok",
+   "problems": [
+    "Doll 2004 quote word for word in PMC437139 abstract. Proof: 2 figures (60, about 3 years), 'on average' and 'male British doctors' kept; not more hopeful than the source. users tag right (34,439 male doctors, no dependence check); Counted line 7 words with 'not'. Weak names the 1900–1930 birth cohort. No figure repeats a page card. Test safe; old test and old proof in notUsed."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "Quitting will be hell. I can’t handle the withdrawal.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged; Hughes 2007 quote word for word in the abstract. Test: two branches, no deliberate morning without nicotine, no timing or rating of urges."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "A cigarette is the only thing that calms me down.",
+   "verdict": "fix",
+   "problems": [
+    "Proof unchanged; Hajek 2010 quote word for word; 469 and 'highly dependent' in the abstract. Test is safe (no stress rating), but 'write next to it' has nothing to write next to: it skips writing the thought down, unlike every other test."
+   ],
+   "fix": {
+    "beliefs[2].test": "When stress brings the thought, write it down, and next to it: “Smoking creates the stress it seems to relieve.” Then take ten slow breaths or a two-minute walk before you decide anything."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "Just one won’t hurt. I’m still quit.",
+   "verdict": "fix",
+   "problems": [
+    "Proof unchanged; Kenford 1994 quote word for word in the abstract. Test is safe and seeks no trigger, but 'Then text the person you told your date.' does not say what to send."
+   ],
+   "fix": {
+    "beliefs[3].test": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text the person you told your date that the thought came and you said no."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "Vapes and pouches are basically harmless.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged; Foulds 2015 quote word for word in the abstract. Test: write and reread step 5's vape lines; no leaving the vape at home as an experiment."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Step 1 actions (rev8 rewording)",
+   "verdict": "fix",
+   "problems": [
+    "Line 1 now carries two ideas in three sentences (use as usual; do the belief step when a thought comes). Cannabis splits them and adds 'Don’t go looking for it', the owner's 9 Nov point. Last line ('Set each one against the beliefs above') fine; old lines in notUsed.beliefs-tests."
+   ],
+   "fix": {
+    "plan[0].do": [
+     "Still using? Don’t quit yet. For the next few days, use it the way you always do.",
+     "When one of the thoughts above comes up, do the step under it. Don’t go looking for it.",
+     "Already stopped? Don’t start again to do this step: write it from memory.",
+     "Allow it. No guilt, no promises. You’re studying it, not fighting it.",
+     "Write down what you think nicotine gives you: calm, focus, a break.",
+     "Each time, write one line: the time, where you are, what you wanted from it.",
+     "Ten minutes after each one, ask: did it give me that, or did it just stop the itch?",
+     "Most of it is relief from the itch nicotine itself made. Set each one against the beliefs above."
+    ]
+   }
+  }
+ ]
+}

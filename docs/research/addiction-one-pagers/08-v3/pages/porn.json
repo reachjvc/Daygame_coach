@@ -252,6 +252,41 @@
     "counterpart": "A week off costs me little. No withdrawal has been measured.",
     "proof": "In a randomised trial of 176 regular users (mostly students, many women), those who stopped for 7 days did no worse than those who kept watching.",
     "reason": "The proof counts regular users, 85 in 100 below the problem line, and the trial's daily users with high problem scores craved more, so 'costs me little' is not backed for a hooked reader (rules 2 and 3). The limiting belief stays word for word; the trial stays on the '7 days' card."
+   },
+   {
+    "from": "v3 belief 'I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.' proof (round 6)",
+    "text": "Three months after a course of ACT talk therapy ended, 35 in 100 men in a US trial for problem porn use had stopped completely.",
+    "refs": [
+     {
+      "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
+      "pmid": "27157029",
+      "fetched": true,
+      "quote": "At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% of participants showing at least 70% reduction in viewing."
+     }
+    ],
+    "reason": "G2 (round 7): it repeated the '35 in 100' card."
+   },
+   {
+    "from": "v3 belief 'I slipped again. I’m just someone who can’t quit.' proof (round 6)",
+    "text": "Of 104 men keeping a porn-quit journal, most calling themselves addicted, 53 in 100 wrote of slipping at least once.",
+    "refs": [
+     {
+      "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+      "pmid": "33403533",
+      "fetched": true,
+      "quote": "More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt."
+     },
+     {
+      "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+      "pmid": "33403533",
+      "fetched": true,
+      "quote": "Self-perceived addiction to pornography Yes 80 76.9"
+     }
+    ],
+    "reason": "G2 (round 7): it repeated the '53 in 100' card."
    }
   ],
   "restored": [
@@ -530,6 +565,48 @@
     "text": "Kept with this choice from E6: the trial's other figure counts watching far less as success. Version 10 showed that figure (74 in 100 watched far less), not this 35 in 100; you liked that card, and it now shows the men who stopped completely.",
     "reason": "r7 verify: nothing in the off-reader choice argues against men who stopped completely; the card stays, liked, as the v10 trial card (v10 showed 74 in 100 watched far less)."
    }
+  ],
+  "beliefs-tests": [
+   {
+    "from": "v3 belief 1 'I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.' test (round 7)",
+    "limiting": "I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.",
+    "text": "One evening this week, spend your usual porn hour as a man already getting free: out with people, at the gym, or on a job you’ve put off. At bedtime, count the minutes of that hour you spent thinking about porn.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 2 'Quitting means a brutal flatline and weeks of withdrawal.' test (round 7)",
+    "limiting": "Quitting means a brutal flatline and weeks of withdrawal.",
+    "text": "Still watching? Take two days off porn this week. Already off it? Use your next two days. Each night, give the day one score from 0 (easy) to 10 (unbearable) and name what was hard: your body, or the pull. By the second night you’ll know which one it was.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 3 'I need it to switch off. Nothing else works at the end of the day.' test (round 7)",
+    "limiting": "I need it to switch off. Nothing else works at the end of the day.",
+    "text": "On three evenings this week, when you’d reach for porn to switch off, switch off another way instead: a walk, a shower, a call. No porn those evenings. Rate the pull 0–10 before and after. Notice how much of the need the swap covered.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 4 'One quick look won’t hurt. I can handle it now.' test (round 7)",
+    "limiting": "One quick look won’t hurt. I can handle it now.",
+    "text": "The next time “just one look” comes up this week, treat it as the start of a binge: put the phone in another room for 20 minutes. See whether “just one” is still asking when you come back.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 5 'I slipped again. I’m just someone who can’t quit.' test (round 7)",
+    "limiting": "I slipped again. I’m just someone who can’t quit.",
+    "text": "If you slip this week, run the next day exactly like a kept day: same alarm, blocker on, plans as made. That evening, check what the slip cost: one day, or the whole attempt.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 plan step 1 action (round 7)",
+    "text": "Still watching? Don’t quit yet. For the next few days, watch the way you normally do; the belief tests above are short trial runs and fit inside this week.",
+    "reason": "rev8: it pointed at the belief tests, which are now 'When this thought comes' steps (owner 9 Nov: tests ask him to step into the hard thing on purpose)"
+   },
+   {
+    "from": "v3 plan step 1 action (round 7)",
+    "text": "Each one is a belief to test. Start with the beliefs above.",
+    "reason": "rev8: it pointed at the belief tests, which are now 'When this thought comes' steps (owner 9 Nov: tests ask him to step into the hard thing on purpose)"
+   }
   ]
  },
  "rev": {
@@ -597,6 +674,8 @@
   "by": "data agent (rev6)",
   "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
  },
+ "rev7": "Round 7 (2026-11-09), data agent: G1 hero fields (heroDefinition, heroHalfFree, heroRange) and hedges removed; G2 belief proofs that repeated a figure on the page replaced (old lines in notUsed.beliefs); G3 every number card carries checked: hooked | not, and propose reasons that only said who was counted are gone.",
+ "rev8": "Round 8 (2026-11-09), data agent: every belief's test is now a 'When this thought comes' step (old text in testR7 and notUsed.beliefs-tests); belief 1 proofs that were share-free numbers like the hero replaced by a different kind of fact (alcohol Vaillant 1996, weed Hirvonen 2012, nicotine Doll 2004; porn has no hero, unchanged); plan step 1 lines about the tests reworded.",
  "numbers": [
   {
    "kind": "quit-status",
@@ -641,12 +720,12 @@
     "caveat": "Questionnaire scores, not a doctor's diagnosis, and porn and sex problems are counted together. 'Recovery' is the authors' name for a group a model drew; it does not show that each of the 138 dropped below a problem line. The groups rest on the 2018 and 2022 surveys only, so they do not show how people changed or whether it lasted after 2022.",
     "weak": "How the model drew the 'recovery' group is unchecked, so it may not mean each person got free; how many were men is unknown; porn and sex problems are mixed."
    },
-   "changeNote": "rev5 (2026-11-08): Counted line was 17 words (12 max); keeps the screened key words.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[0].counted"
+    "notes": "checked after revision"
    },
    "wasR1": {
     "big": "138 of 180",
@@ -702,6 +781,10 @@
    },
    "wasR4": {
     "counted": "adults in Israel, men and women, sorted by questionnaire answers for a likely porn or sex problem"
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -737,10 +820,10 @@
     "mirror": "You've tried to quit four times and think a fifth is pointless.",
     "weak": "It counts tries so far by men still struggling, not the tries it took men who got free; no porn study counts those."
    },
-   "changeNote": "rev6 (2026-11-08): r6-owner + r6-rules minor: one label for the same 186 men (Kraus 2016) as belief 4; 132 of 186 scored above a checklist line, so 'by a doctor' is exact. | Now in the off-reader list (owner: let it, the list is computed); a real reason shown.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -788,8 +871,13 @@
     "counted": "men who said they wanted help for porn, not in treatment",
     "propose": null
    },
-   "propose": "It counts men who said they wanted help, not checked by a doctor (rule 2, F2); most scored above a checklist line, but none were diagnosed.",
-   "changeNoteR5": "rev6 (2026-11-08): r6-owner + r6-rules minor: one label for the same 186 men (Kraus 2016) as belief 4; 132 of 186 scored above a checklist line, so 'by a doctor' is exact."
+   "changeNoteR5": "rev6 (2026-11-08): r6-owner + r6-rules minor: one label for the same 186 men (Kraus 2016) as belief 4; 132 of 186 scored above a checklist line, so 'by a doctor' is exact.",
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts men who said they wanted help, not checked by a doctor (rule 2, F2); most scored above a checklist line, but none were diagnosed."
+   }
   },
   {
    "kind": "how-with-help",
@@ -839,12 +927,12 @@
      "quote": "significant between-condition reductions in pornography viewing compared to the waitlist condition (93% reduction ACT vs. 21% waitlist)"
     }
    },
-   "changeNote": "rev5 (2026-11-08): Brief (rule 12b in folds).",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[2].basis.measured"
+    "notes": "checked after revision"
    },
    "editNote": "2026-11-06: moved out of what helps: no with-and-without count exists (rule 12a)",
    "wasR1": {
@@ -895,6 +983,10 @@
    },
    "wasR4": {
     "basis.measured": "Self-reported porn viewing at the end of 12 one-to-one sessions of acceptance and commitment therapy (ACT), which trains you to let urges come and go without acting on them. While one group waited, viewing fell 93% on average with therapy and 21% on the waiting list."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -927,10 +1019,10 @@
     "mirror": "You broke your streak and think the whole attempt was wasted.",
     "weak": "A forum sample of 104 men, read from their own posts, with no record of when the slips happened."
    },
-   "changeNote": "rev5 (2026-11-08): Brief (no raw 'N of M' on the face); the 104 stays in basis.n.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -973,6 +1065,10 @@
    },
    "wasR4": {
     "caveat": "Many men just stopped writing, so nobody knows how their attempts ended, and the study does not say when in an attempt the slips came. Slips the men did not write about are not counted. About half the attempts (54 of 104) seemed to run 7 to 30 days, judged from the men's own day counts or the dates of their posts. Men who journal in public may differ from men who quit quietly."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -1001,15 +1097,14 @@
     "quote": "nearly half (45.4%) of participants in the abstinence group reported using pornography at least once during the experimental period"
    },
    "origin": "07-mirror-stats/porn.json quit '45%' (v10 'How quitting goes')",
-   "propose": "It counts students who were mostly not hooked and had not chosen to quit, so rule 2 (the reader is a man who is hooked) argues against it.",
-   "changeNote": "Rule 12b in the fold ('64% women' as 64 in 100).",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "was": {
     "line": "Even when asked to stop for only 7 days, nearly half of regular users watched porn at least once.",
     "mirror": "You slipped in the first week and feel like a failure."
    },
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1050,7 +1145,13 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts students who were mostly not hooked and had not chosen to quit, so rule 2 (the reader is a man who is hooked) argues against it."
+   }
   },
   {
    "kind": "how-slips",
@@ -1078,15 +1179,14 @@
     "quote": "51.0% admitted to making at least one attempt to give up using it with no difference in the frequency of these attempts between males and females"
    },
    "origin": "07-mirror-stats/porn.json quit '51%' (v10 'How quitting goes')",
-   "propose": "It counts ordinary students, most of them women, not men who are hooked (rule 2).",
-   "changeNote": "Rule 12b in the fold ('6 in 10' as 60 in 100). Kind stays how-slips: the how-tries reader list does not take ordinary users, and the headline answers the slips question (they tried and went back). The off-reader choice decides the card (D2).",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "was": {
     "line": "About half of Polish students who still watch porn have tried at least once to give it up.",
     "mirror": "You've tried to quit before and you're still watching."
    },
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1131,7 +1231,13 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts ordinary students, most of them women, not men who are hooked (rule 2)."
+   }
   },
   {
    "kind": "how-withdrawal",
@@ -1186,11 +1292,10 @@
      "quote": "generally does not experience withdrawal-like symptoms while trying to abstain from pornography for a 7-day period"
     }
    },
-   "propose": "It counts students who were mostly not hooked and had not chosen to quit (rule 2).",
-   "changeNote": "D7: the source gives no single result figure, so the big stays the break length and the headline now opens with the result (who craved more). Propose text without process words. Folds: '9 in 10' and '64%' as N in 100. Full text re-fetched 2026-11-08.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1236,7 +1341,13 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "timeIsResult": true
+   "timeIsResult": true,
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts students who were mostly not hooked and had not chosen to quit (rule 2)."
+   }
   },
   {
    "kind": "after-body",
@@ -1266,7 +1377,7 @@
    "origin": "07-mirror-stats/porn.json who '21 of 42'",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1275,7 +1386,7 @@
     "caveat": "Their own words, not a doctor's check, and nobody was compared with men who kept watching. The authors say men it helped were likelier to keep posting, and most were also stopping masturbation, so the change may not come from quitting porn alone. At most 32 of the 42 called themselves addicted. Research linking porn to erection problems is inconclusive.",
     "weak": "A forum sample of 42 men describing themselves, with no comparison group."
    },
-   "changeNote": "Safety r4 major: the medical line rests on Grubbs & Gola 2019, which the build stripped (alsoRef is internal). It is now a second rendered source on the card ('refs2', citedIn the caveat's last sentence) and stays in alsoRef for the old build; D10 says the template renders it as a cited source. Text unchanged. Abstract re-fetched (PubMed efetch) 2026-11-08.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "checkR1": {
     "by": "re-checker (porn)",
     "on": "2026-11-05",
@@ -1328,7 +1439,11 @@
      ],
      "citedIn": "caveat, last sentence"
     }
-   ]
+   ],
+   "checked": "not",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "after-lasting",
@@ -1356,14 +1471,14 @@
     "quote": "At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% of participants showing at least 70% reduction in viewing."
    },
    "origin": "07-mirror-stats/porn.json after '74%' (v10 'How quitting goes')",
-   "changeNote": "rev6 (2026-11-08): r6 brief + r6-owner minor: the liked reason says plainly that v10 showed 74, not 35.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "was": {
     "line": "Three months after ACT therapy ended, 35% of men had stopped completely and 74% still watched at least 70% less.",
     "mirror": "You fear any progress will fade once the help stops."
    },
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1431,6 +1546,10 @@
    "changeNoteR4": "rev5 (2026-11-08): E6 + r5-owner major: the headline leads with what the men did (stopped completely), not 'far less' as a win. | r5-owner major: big figure is the stopped-completely share; 74 in 100 'far less' moves to Measured. | r5-owner major / E6: the 74 in 100 and 'far less' sit in Measured. | Caveat no longer gives the 'cut back' shares as progress (E6); both stopped-completely figures stay.",
    "wasR5": {
     "propose": "In version 10 it counted watching less as success, the moderation angle he called dangerous on 5 Nov (E6); it now shows the stopped-completely share, which is already belief 1's proof. You liked it in version 10."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -1459,15 +1578,15 @@
     "quote": "while the rest ( n = 823; 484 female and 339 male) reported to successfully cease its use"
    },
    "origin": "07-mirror-stats/porn.json after '1 in 6' (v10 'How quitting goes')",
-   "propose": "It counts everyone who ever watched, mostly people who were never hooked, and it answers who stopped, not whether it lasts (rule 2). You liked it in version 10.",
-   "changeNote": "rev5 (2026-11-08): E2: liked in version 10 (kinds.json after-lasting: '1 in 6 stopped'), liked: true.",
+   "propose": "It answers who stopped, not whether it lasts.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); other reason kept.",
    "was": {
     "line": "Of Polish students who had ever watched porn, 823 of 5,083 (about 1 in 6) said they had successfully stopped; for men alone, 339 of 2,079.",
     "mirror": "You doubt anyone really quits porn for good."
    },
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1511,7 +1630,12 @@
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts everyone who ever watched, mostly people who were never hooked, and it answers who stopped, not whether it lasts (rule 2). You liked it in version 10."
+   }
   }
  ],
  "beliefs": [
@@ -1519,16 +1643,22 @@
    "kind": "stuck",
    "limiting": "I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.",
    "counterpart": "I can’t call it wired in until I’ve stayed off for three months. I’m doing it now.",
-   "test": "One evening this week, spend your usual porn hour as a man already getting free: out with people, at the gym, or on a job you’ve put off. At bedtime, count the minutes of that hour you spent thinking about porn.",
-   "proof": "Three months after a course of ACT talk therapy ended, 35 in 100 men in a US trial for problem porn use had stopped completely.",
-   "severity": "treatment",
+   "test": "Write the thought down, and next to it: “I can’t call it wired in until I’ve stayed off for three months.” Then put the phone in another room and do the next step of the plan below.",
+   "proof": "In men’s porn-quit journals, most by men who called themselves addicted, about 27 in 100 recorded a quit attempt lasting 3 months or more.",
+   "severity": "self-hooked",
    "refs": [
     {
-     "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
-     "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
-     "pmid": "27157029",
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50(2):711-728.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+     "pmid": "33403533",
      "fetched": true,
-     "quote": "At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% of participants showing at least 70% reduction in viewing."
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC full text (efetch), Table 2",
+     "quote": "Inferred duration of abstinence attempt 7 days–30 days 54 52.0 1 month–3 months 22 21.2 3 months–6 months 13 12.5 6 months–1 year 15 14.4",
+     "quotesMore": [
+      "Members could have continued with the abstinence attempt, but stopped posting in their journals."
+     ],
+     "note": "Table 2: 13 + 15 = 28 of 104 journals recorded 3 months or more (27 in 100)."
     }
    ],
    "origin": "new",
@@ -1537,10 +1667,10 @@
     "test": "This week, write down one habit you were once sure you’d never drop, and did. Next to it, write what changed. Notice whether “wired in” held up.",
     "proof": "An Israeli survey asked adults about compulsive sex and problem porn use in 2018 and 2022. A statistical model sorted 138 into a pattern the authors call ‘recovery’ and 42 into one they call ‘chronic’."
    },
-   "changeNote": "D8 and cold reader (r4): the proof now opens with the time point, so 35 in 100 three months after therapy reads apart from 54 in 100 at the end of therapy. Same trial, same 26 men as the cards. Abstract re-fetched 2026-11-08.",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1600,13 +1730,29 @@
    },
    "revNotes": [
     "main session 2026-11-08: counterpart reworded; 'I won't know it's wired in until…' read as the opposite of what it means"
-   ]
+   ],
+   "counted": null,
+   "wasR6": {
+    "proof": "Three months after a course of ACT talk therapy ended, 35 in 100 men in a US trial for problem porn use had stopped completely.",
+    "refs": [
+     {
+      "cite": "Crosby JM, Twohig MP (2016). Acceptance and commitment therapy for problematic internet pornography use: a randomized trial. Behavior Therapy 47:355-366.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27157029/",
+      "pmid": "27157029",
+      "fetched": true,
+      "quote": "At the 3-month follow-up assessment, 35% of participants showed complete cessation, with 74% of participants showing at least 70% reduction in viewing."
+     }
+    ],
+    "severity": "treatment",
+    "counted": null
+   },
+   "testR7": "One evening this week, spend your usual porn hour as a man already getting free: out with people, at the gym, or on a job you’ve put off. At bedtime, count the minutes of that hour you spent thinking about porn."
   },
   {
    "kind": "hard",
    "limiting": "Quitting means a brutal flatline and weeks of withdrawal.",
    "counterpart": "Some men get a flat spell. Mostly, the hard part is the pull.",
-   "test": "Still watching? Take two days off porn this week. Already off it? Use your next two days. Each night, give the day one score from 0 (easy) to 10 (unbearable) and name what was hard: your body, or the pull. By the second night you’ll know which one it was.",
+   "test": "Write the thought down, and next to it: “Mostly, the hard part is the pull.” Still watching? Do the next step of the plan. Already off it? On a flat or hard day, text the person you told your date.",
    "proof": "In 104 men’s porn-quit journals, most by men who called themselves addicted, close to 33 in 100 wrote of a ‘flatline’, a spell of low sex drive.",
    "severity": "self-hooked",
    "refs": [
@@ -1631,10 +1777,10 @@
     "test": "Rate your mood, sleep and focus 0–10 each night: three nights while you still watch, then each night of your first days off. Notice which nights score worse.",
     "proof": "In a small study, 14 men who scored as hooked on sex kept off all sexual activity for 10 days. By day 3 their withdrawal-type symptoms had already dropped; by day 10 they matched men below the cut-off."
    },
-   "changeNote": "Owner lens (r3): 'Their own accounts.' cut (doubts stay in the source). Cold reader: 'About two in three did not' claimed men who may simply not have written about it, so it is gone, and the counterpart no longer says 'most don’t'. 'Close to one-third' as 'close to 33 in 100' (rule 6). Rule 3 hold: self-hooked. Safety audit (r3): the test splits 'Still watching? / Already off it?'. Full text re-fetched 2026-11-08.",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "check": {
-    "by": "revision checker b (porn)",
-    "on": "2026-11-08",
+    "by": "revision checker a (porn)",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1692,13 +1838,14 @@
     "on": "2026-11-05",
     "verdict": "ok",
     "notes": "checked after revision: corrections applied to beliefs[1].proof"
-   }
+   },
+   "testR7": "Still watching? Take two days off porn this week. Already off it? Use your next two days. Each night, give the day one score from 0 (easy) to 10 (unbearable) and name what was hard: your body, or the pull. By the second night you’ll know which one it was."
   },
   {
    "kind": "need",
    "limiting": "I need it to switch off. Nothing else works at the end of the day.",
    "counterpart": "Porn is one way I switch off. It isn’t the only one I have.",
-   "test": "On three evenings this week, when you’d reach for porn to switch off, switch off another way instead: a walk, a shower, a call. No porn those evenings. Rate the pull 0–10 before and after. Notice how much of the need the swap covered.",
+   "test": "When the thought comes at the end of the day, write next to it: “It isn’t the only way I switch off.” Then do one swap from step 2 for that hour: a walk, a shower or a call.",
    "proof": "In 104 men’s porn-quit journals, most by men who called themselves addicted, more than 75 in 100 wrote of other ways to get through, such as exercise, going out, better sleep or changing how they thought.",
    "severity": "self-hooked",
    "refs": [
@@ -1759,12 +1906,12 @@
      }
     ]
    },
-   "changeNote": "Owner lens (r3): 'Their own accounts.' cut. Cold reader: whether 75 in 100 was of all 104 men; the study's 'most members' is of all members, now said so. Safety audit (r3) and rule 4: the test no longer implies watching after the 15 minutes; the evenings are lived without porn. Full text re-fetched 2026-11-08.",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "check": {
-    "by": "revision checker b (porn)",
-    "on": "2026-11-08",
+    "by": "revision checker a (porn)",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to beliefs[2].proof"
+    "notes": "checked after revision"
    },
    "wasR1": {
     "proof": "Men in 104 quit journals, most calling themselves addicted, had often used porn to handle bad moods. Most used other ways to cope instead, such as exercise, meditating, going out and better sleep. Their own accounts, not a trial.",
@@ -1816,13 +1963,14 @@
     "on": "2026-11-05",
     "verdict": "ok",
     "notes": "checked after revision"
-   }
+   },
+   "testR7": "On three evenings this week, when you’d reach for porn to switch off, switch off another way instead: a walk, a shower, a call. No porn those evenings. Rate the pull 0–10 before and after. Notice how much of the need the swap covered."
   },
   {
    "kind": "moderation",
    "limiting": "One quick look won’t hurt. I can handle it now.",
    "counterpart": "I’ve tried keeping it to a little before. It didn’t stay little.",
-   "test": "The next time “just one look” comes up this week, treat it as the start of a binge: put the phone in another room for 20 minutes. See whether “just one” is still asking when you come back.",
+   "test": "Write next to the thought: “It didn’t stay little.” Then treat it as the start of a binge: phone in another room, and you out of the room for 20 minutes.",
    "proof": "Of men who said they wanted help with porn, 46 in 100 had already tried to cut back, not quit, four or more times.",
    "severity": "self-hooked",
    "refs": [
@@ -1871,10 +2019,10 @@
      }
     ]
    },
-   "changeNote": "rev6 (2026-11-08): Same label as the 40 in 100 card (r6).",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "check": {
     "by": "revision checker a (porn)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1949,29 +2097,29 @@
    },
    "wasR5": {
     "counted": "men who said they wanted help for porn, not checked for addiction"
-   }
+   },
+   "testR7": "The next time “just one look” comes up this week, treat it as the start of a binge: put the phone in another room for 20 minutes. See whether “just one” is still asking when you come back."
   },
   {
    "kind": "identity",
    "limiting": "I slipped again. I’m just someone who can’t quit.",
    "counterpart": "A slip is one day. The days I kept still happened.",
-   "test": "If you slip this week, run the next day exactly like a kept day: same alarm, blocker on, plans as made. That evening, check what the slip cost: one day, or the whole attempt.",
-   "proof": "Of 104 men keeping a porn-quit journal, most calling themselves addicted, 53 in 100 wrote of slipping at least once.",
+   "test": "After a slip, write the thought down, and next to it: “A slip is one day. The days I kept still happened.” Then do what a kept day does next: shower, get dressed, get out of the house.",
+   "proof": "In men’s porn-quit journals, most by men who called themselves addicted, about 48 in 100 recorded a quit attempt of over a month, though many wrote of a slip along the way.",
    "severity": "self-hooked",
    "refs": [
     {
-     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50(2):711-728.",
      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
      "pmid": "33403533",
      "fetched": true,
-     "quote": "More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt."
-    },
-    {
-     "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
-     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
-     "pmid": "33403533",
-     "fetched": true,
-     "quote": "Self-perceived addiction to pornography Yes 80 76.9"
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC full text (efetch), Table 2",
+     "quote": "1 month–3 months 22 21.2 3 months–6 months 13 12.5 6 months–1 year 15 14.4",
+     "quotesMore": [
+      "More than half of the sample ( n = 55) reported at least one lapse during their abstinence attempt."
+     ],
+     "note": "Table 2: 22 + 13 + 15 = 50 of 104 journals recorded more than a month (48 in 100). Not the 36.5-day median: it conflicts with the table's 52.0% at 7 to 30 days."
     }
    ],
    "origin": "new (built on 06-template.json porn plan step 4 “A slip is information, not proof you’re broken.”)",
@@ -1996,10 +2144,10 @@
      }
     ]
    },
-   "changeNote": "Owner lens (r3): 'How the attempts ended is unknown.' cut from the face (it stays on the 53-in-100 card's caveat). Rule 6: '53 in 100' (55 of 104), the same figure as the card. Refs cut to the quotes the line uses. Full text re-fetched 2026-11-08.",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "check": {
-    "by": "revision checker b (porn)",
-    "on": "2026-11-08",
+    "by": "revision checker a (porn)",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -2076,19 +2224,40 @@
     "on": "2026-11-05",
     "verdict": "ok",
     "notes": "checked after revision"
-   }
+   },
+   "wasR6": {
+    "proof": "Of 104 men keeping a porn-quit journal, most calling themselves addicted, 53 in 100 wrote of slipping at least once.",
+    "refs": [
+     {
+      "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+      "pmid": "33403533",
+      "fetched": true,
+      "quote": "More than half of the sample (n = 55) reported at least one lapse during their abstinence attempt."
+     },
+     {
+      "cite": "Fernandez DP, Kuss DJ, Griffiths MD (2021). The pornography “rebooting” experience: a qualitative analysis of abstinence journals on an online pornography abstinence forum. Archives of Sexual Behavior 50:711-728.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889567/",
+      "pmid": "33403533",
+      "fetched": true,
+      "quote": "Self-perceived addiction to pornography Yes 80 76.9"
+     }
+    ]
+   },
+   "testR7": "If you slip this week, run the next day exactly like a kept day: same alarm, blocker on, plans as made. That evening, check what the slip cost: one day, or the whole attempt."
   }
  ],
  "windows": [],
  "plan": [
   {
    "do": [
-    "Still watching? Don’t quit yet. For the next few days, watch the way you normally do; the belief tests above are short trial runs and fit inside this week.",
+    "Still watching? Don’t quit yet. For the next few days, watch the way you normally do.",
+    "When one of the thoughts above comes up, do the step under it. Don’t go looking for it.",
     "Already stopped? Don’t start watching again to do this step: write it from memory.",
     "Before each time, write one line: the hour, where you are, what you felt just before.",
     "After, one more line: what it gave you, and what it cost.",
     "Then write down what porn does for you: stress relief, sleep, boredom, loneliness.",
-    "Each one is a belief to test. Start with the beliefs above.",
+    "Each one is a belief. Start with the beliefs above.",
     "Circle what repeats. Those hours and feelings are what your swaps are for."
    ],
    "proof": null,

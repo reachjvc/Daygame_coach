@@ -1,0 +1,134 @@
+{
+ "id": "porn",
+ "round": "rev7",
+ "part": "a",
+ "by": "revision checker a (rev7)",
+ "on": "2026-11-09",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "quit-status 12 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity screened; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "how-tries 40 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity self-hooked; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "how-with-help 54 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity treatment; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "how-slips 53 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity self-hooked; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "how-slips 45 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity users; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "how-slips 51 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity users; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "how-withdrawal 7 days",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity users; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "after-body 50 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity self-hooked; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "after-lasting 35 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity treatment; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "after-lasting 16 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (severity users; nobody diagnosed or checked against criteria)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: wired in since a teenager",
+   "verdict": "ok",
+   "problems": [
+    "Fetched PMC7889567 Table 2: 3-6 months 13, 6 months-1 year 15, of 104 journals; 28/104 = about 27 in 100; quote is the table row, 25 words. 80 of 104 called themselves addicted, so 'most' holds. No card figure repeated. Durations are what the journals recorded; men may have gone on after they stopped posting (caveat already in quotesMore)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "identity: slipped again",
+   "verdict": "fix",
+   "problems": [
+    "'Half the quit attempts ran 36 days or more' misreads the source: 36.5 days is the median total duration per journal, and it clashes with the same paper's Table 2, where 52 in 100 journals recorded 7-30 days. A line resting on the paper's internal conflict is not safe.",
+    "Use Table 2 instead: 22 + 13 + 15 = 50 of 104 journals recorded more than a month (about 48 in 100). Also drops 'half', close to the 50 in 100 card."
+   ],
+   "fix": {
+    "beliefs[4].proof": "In men’s porn-quit journals, most by men who called themselves addicted, about 48 in 100 recorded a quit attempt of over a month, though many wrote of a slip along the way.",
+    "beliefs[4].refs[0].quote": "1 month–3 months 22 21.2 3 months–6 months 13 12.5 6 months–1 year 15 14.4",
+    "beliefs[4].refs[0].note": "Table 2: 22 + 13 + 15 = 50 of 104 journals recorded more than a month (48 in 100). Not the 36.5-day median: it conflicts with the table's 52.0% at 7 to 30 days."
+   }
+  }
+ ]
+}

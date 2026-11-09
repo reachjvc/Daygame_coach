@@ -1,0 +1,68 @@
+{
+ "id": "cannabis",
+ "round": "rev8",
+ "by": "independent checker a, rev8, 2026-11-09",
+ "checked": [
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "I’ve smoked for years. I’m stuck.",
+   "verdict": "fix",
+   "problems": [
+    "Proof, quote, quotesMore all word for word in PMC3223558 (refetched via efetch): 'most regions after ~4 weeks', '12 ± 7 years', 'Change in V T did not correlate with ... years of cannabis smoking'. 2 figures, heavy tag and Counted line right (30 non-treatment-seeking daily smokers, no diagnosis). Answers 'stuck' without overclaiming; Weak names the hippocampus exception and n=14. Test is a when-the-thought-comes step; safe.",
+    "proofNote overstates: the source says the 14 rescanned did not differ from the 16 others in baseline receptor binding (VT), not in years smoked; the 12-year average is for all 30.",
+    "notUsed.numbers entry for Hirvonen 2012 ('Not on the v3 page ...') is now false: the study is this belief's proof."
+   ],
+   "fix": {
+    "beliefs[0].proofNote": "Hirvonen 2012: 30 male chronic daily smokers (12 years on average) vs 28 controls; 14 rescanned after 26 days (13-32) of monitored abstinence. No dependence diagnosis reported, so tag heavy. The 12-year average is for all 30; the source reports the 14 rescanned did not differ from the other 16 in baseline receptor binding (years smoked not given for the 14 alone). Used in the 06 template for the moderation row (rejected there under rule 4); a 'stuck' belief is not a moderation belief.",
+    "notUsed.numbers[13].why": "Not a number card on the v3 page: the body rows are withdrawal ranges, and this is a 30-man brain-scan finding. Since rev8 it is the proof of belief 1 ('I’ve smoked for years. I’m stuck.')."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "I can’t handle quitting. Last time I barely lasted three days.",
+   "verdict": "fix",
+   "problems": [
+    "Proof unchanged; Connor 2022 quote and quotesMore word for word in PMC9110555.",
+    "Test points at 'the person you told your date', but the cannabis plan never has him tell anyone his date (step 3 only puts it in a calendar; step 4 tells smoking friends he has stopped). Otherwise a safe when-the-thought-comes step, two branches."
+   ],
+   "fix": {
+    "beliefs[1].test": "Write the thought down, and next to it one hard week you got through and what carried you. Still smoking? Do the next step of the plan, not the whole quit. Already off it? Text one person who knows you’ve stopped that today is hard."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "Day 10, I feel fine. Now I can handle it.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged; Moore 2003 quote word for word in the PubMed abstract. Test: catch the thought, answer, leave the room; seeks no trigger. Safe."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "Weed is the only thing that gets me to sleep.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged; Hser 2017 quote word for word in PMC5607644. Test matches plan step 2 sleep line (same wake-up time, no screens in bed); does not ask him to skip a smoke on purpose."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Step 1 actions (rev8 rewording)",
+   "verdict": "fix",
+   "problems": [
+    "New line 2 ('When one of the thoughts above comes up this week, do the step under it. Don’t go looking for it.') is right.",
+    "Last line lost its verb when 'to test' was cut: 'Start with the beliefs above' no longer says what to do (nicotine's rewording does say it). Old lines are in notUsed.beliefs-tests."
+   ],
+   "fix": {
+    "plan[0].do[7]": "Each thing weed does for you is a belief. Set each one against the beliefs above."
+   }
+  }
+ ]
+}

@@ -35,7 +35,7 @@
    "reader": [
     "dependent"
    ],
-   "why": "His original hero (90.6% for alcohol), the bigger hope. Leads the hero by rule 15 (his words: lead with hope), its line says 'projected', and its one Weak label says it likely runs high.",
+   "why": "His original hero (90.6% for alcohol). Sits right under the head count (round 7, G1: honest first); its line says 'projected', and the hero shows what 'hooked' meant and what other studies found, in place of a caveat chip.",
    "gapPhrase": "how many get free in a lifetime"
   },
   {
@@ -187,7 +187,8 @@
    "gapPhrase": "a medicine against a dummy pill, in the same study",
    "near": [
     "how-with-help"
-   ]
+   ],
+   "mainlyHooked": true
   },
   {
    "id": "helps-talk",
@@ -387,7 +388,8 @@
     "disorder"
    ],
    "why": "Kept from the v10 'How quitting goes' numbers he liked (weed: day 2–6, 47%).",
-   "gapPhrase": "how many get withdrawal, and when it peaks"
+   "gapPhrase": "how many get withdrawal, and when it peaks",
+   "mainlyHooked": true
   },
   {
    "id": "after-lasting",

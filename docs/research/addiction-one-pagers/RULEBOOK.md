@@ -31,8 +31,19 @@ criteria for addiction or dependence, not people who use above the guidelines.
 His words (5 Nov): "theres different between like 10 drinks every day, and
 someone who drinks more than the recommended guidelines. so it isnt clear
 enough to me what is what with these." Why: numbers about binge drinkers or
-casual users were mixed in with numbers about addicts. Check: Build requires a
-`severity` on every number and belief (see rule 3); Gate (owner-lens critic).
+casual users were mixed in with numbers about addicts. Round 7 (9 Nov, G3): the
+pages are not only for men who are truly hooked. His words: "I didn't say every
+page is for an addict. It is very important to distinguish. Some things are
+more necessary for people who are truly addicts, less so if you're not." So
+cards about people not checked for addiction stay on the pages, and every
+number card carries one small tag: "Checked as hooked" or "Not checked for
+addiction", from who its source counted (`checked: "hooked" | "not"` on the
+card; without it, the severity tag decides). A card that matters mainly to men
+who are truly hooked (a kind with `mainlyHooked`: medicine, withdrawal) says so
+on its tag. Check: Build requires a `severity` on every number and belief (see
+rule 3) and fails on `checked: "hooked"` on a `heavy` or `users` card; the
+render check fails on a number card without exactly one of the two tags, and
+on a picked card missing from the page; Gate (owner-lens critic).
 
 **3. Every number says which group it counts and how much they used.** Each
 number carries one severity tag, shown on the card in plain words:
@@ -128,12 +139,10 @@ really promising, but based on what?" Check: Build requires `who`, `n`,
 
 **10. The cautious estimate goes first; a projection says so.** Why: the
 lifetime "get free" numbers are projections from recalled ages and probably
-run too hopeful (5 Nov reviewers). Exception (8 Nov): the hope number at the
-top follows rule 15, his own words ("leading with one statistic creating
-hope"), where this rule came from reviewers. There the projection may lead,
-with the head count right under it in the same view; its line says
-"projected" and its one Weak label says it likely runs high, said once, not
-three times. The choice `hero` on the review page sets the order. A modelled
+run too hopeful (5 Nov reviewers). Hero (9 Nov, his notes): the head count leads, the projection
+right under it in the same view; its line says "projected". No hedge words
+such as "likely runs high": the hero shows what "hooked" meant in the study
+and the range other studies found, instead of caveats. A modelled
 figure (a pooled effect times an assumed rate, a model's estimate) is a
 projection too. A pooled average of studies' rates carries `pooled: true`
 (round 5, E5); the build fails when a card's basis says "averaged across",
@@ -142,8 +151,8 @@ chip never repeats a word (the render check fails on "worked out" twice). On a
 card, a worked-out figure shows its Counted label and one amber chip, "Worked out, not counted" ("Average across studies" for a pooled
 average, `pooled: true`), carrying anything else its Weak label says; "not
 counted" is never said twice (round 4, D6). In the hero the chip names its
-figure ("About 91 in 100: worked out, not counted; likely runs high"), so it
-never reads as a label on the head count. A face never says "average across" above an "Average across studies" chip
+figure ("About 91 in 100: worked out, not counted"), so it never reads as a
+label on the head count. A face never says "average across" above an "Average across studies" chip
 (round 6). Check: Build fails when a number
 marked `projection` has no "projected" or "expected" in its line, and on a
 pooled card whose headline says "averaged across"; the render
@@ -247,41 +256,46 @@ two can't differ; Gate.
 
 ## D. Timeline
 
-**18. A graph of how hard quitting feels: when it peaks, when it eases.** His
+**18. A graph of how quitting feels: what people name at each stage.** His
 words (5 Nov): "i liked the graphical representation of how difficult it should
 be, i kind of still want that like a visual of when it peaks and when it is much
 less … not based on one study but like feels true to people actually. (the ideal
-would be surveying 1000 people every day …)". The recipe (same for every
-addiction): body symptoms from clinical sources, drawn as ranges; how hard it
-feels from that addiction's quit forum, posts with a day count, scored 0–10 by
-an AI reader, with 15% re-scored blind by a second, different model, plotted as
-a typical day and its spread for each stage. A stage under 25 posts is drawn
-hollow, with its post count (never "few"). The 0 to 10 scale is explained
-where it is first used. Body symptoms are drawn as bars on one time axis
-(hour 1 to year 3, log scale), darker where they peak, red for danger, with
-their text as captions, and readable at 390 px (8 Nov, his v10 praise). Check:
-Build fails on a felt-difficulty file without its post count, its reader
-agreement and its bias note, and on a body row without a start and end in
-hours; the render check fails when a body row is not drawn as a bar or the
-graph says "few".
+would be surveying 1000 people every day …)". And (9 Nov, round 8): "this graph
+as it is now is not great. The scoring does not make sense. Before you had
+multiple lines on the graph, so I think that's something that may be useful".
+The recipe (same for every addiction): body symptoms from clinical sources,
+drawn as ranges; from that addiction's quit forum, posts with a day count, each
+tagged by an AI reader with what it mentions (hard things such as cravings,
+anxiety, bad sleep; good changes such as better mood, feeling proud). No 0 to 10
+score. The chart's x axis is the nine stages (day 1 to year 2 and on), its y
+axis "N in 100 posts" at that stage that mention a thing. One line each for the
+4 hard things and the 2 good changes named most across all stages of that page
+(counted in whole posts); good changes are dashed, in a cool colour family, hard
+things solid, warm, each with its own marker shape, and a legend that wraps at
+390 px names every line in plain words ("Stomach / appetite", never
+`stomach-appetite`). A stage under 25 posts is drawn faded, with its post count
+(never "few"). Body symptoms are drawn as bars on one time axis (hour 1 to year
+3, log scale), darker where they peak, red for danger, with their text as
+captions, and readable at 390 px (8 Nov, his v10 praise). Check: Build fails on
+a forum file without its post count, each stage's post count and mentions, and
+its bias note, on a page with fewer than 3 lines to draw, and on a body row
+without a start and end in hours; the render check fails when a body row is not
+drawn as a bar, when the graph says "few", when a chart draws fewer than 3
+lines, and when the graph section says "out of 10", "0 to 10", "scored",
+"hardest stretch", "easier from" or "No clear easing".
 
-The graph's headline (round 5, E4, replacing D9): the hardest stage is the
-highest typical day among stages with 25 posts or more (a hollow stage never
-sets it; a line that falls steadily from its first stage peaks there): "<stage>:
-the hardest. A typical day: X out of 10." Then "Easier from <stage>: Y out of
-10.", the first later stage at least 1.5 points below the peak with every stage
-after it at least 1 point below. A later stage that ties the top belongs to the
-hardest stretch. Where no stage qualifies there is one line only, with no
-"hardest" line and no "hardest" label on the chart (round 6, F4): "No clear
-easing: a typical day stays near X out of 10 from <first counted stage>
-through <last counted stage>." Never "No clear peak". Pages carry no headline text of their own, and any page text about
-the graph agrees with it. A plan proof that quotes the graph uses a figure the graph shows. Check:
-Build fails on a page's `feltHeadlineProposal` and on a plan proof's "N out of
-10" that no stage of the graph shows; the render check fails on more than one
-graph headline, on "No clear peak", on an "easier from" stage (or "No clear
-easing") that the stage medians don't give, on "hardest" next to "No clear
-easing", and when the page's stage medians
-differ from the build's.
+The graph's headline (round 8, replacing E4, F4 and D9) is computed from the
+lines, among stages with 25 posts or more (the earliest stage wins a tie): "<hard
+thing named most> come(s) up most <stage>. X in 100 posts; <last counted stage>,
+Y in 100." and "<good change named most> shows up most <stage>. X in 100 posts,
+up from Y in 100 <first counted stage>." (a clause is left out where the peak is
+that stage). No hedge words. Pages carry no headline text of their own, and any
+page text about the graph agrees with it. Check: Build fails on a page's
+`feltHeadlineProposal` and lists as STALE any plan proof that still quotes the
+old score ("out of 10", "typical day", a source "scored for this page"); the
+build computes the lines and headline itself (`felt_lines()`), and the render
+check fails on more than one graph headline and on a headline that doesn't say
+what the build's computation gives.
 
 **19. A lab cue test is never drawn as craving.** Withdrawal is drawn as
 ranges. A phase whose study stopped at its peak ends there and says so. Why: 4
@@ -289,8 +303,9 @@ Nov he found the round-1 curves confusing, then wrong (craving drawn rising to
 the top). Check: Build (trigger rows carry no peak and no fall).
 
 **20. The graph names its basis and its biases.** How many posts it rests on;
-that people who post are not everyone and likely struggle more; that scores
-come from readers of the posts, not from the writers. Check: Build.
+that people who post are not everyone and likely struggle more, so hard things
+are likely named more often; that what each post mentions was tagged by AI
+readers, not by the writers. Check: Build.
 
 ## E. Plan and beliefs
 
@@ -302,10 +317,19 @@ links to a byline under the plan. Check: Build fails if a step title or text dif
 the render check fails when "the table above" is not a link.
 
 **22. Beliefs in his two-column form: the limiting belief, a counterpart you
-also genuinely believe, then a real-life test.** 3 to 5 per page, each tagged
-with the reader it is about (rule 3). The alcohol row "I've been drinking for
+also genuinely believe, then "When this thought comes".** 3 to 5 per page,
+each tagged with the reader it is about (rule 3). The third column is one small
+thing to do at the moment the thought shows up on its own, never a test that
+sends him into the hard thing on purpose (his words, 9 Nov: "Nobody tests out
+how hard it is willy nilly, they need a lot of pushing themselves to go
+there"). The alcohol row "I've been drinking for
 years. I'm stuck with it." → "Most people hooked on alcohol get free in the
-end." is marked Keep. Check: Build counts rows and fields.
+end." is marked Keep. A belief proof never repeats a number already shown
+elsewhere on the same page (the hero or a card): it uses a different source or
+figure that still answers the belief (round 7, G2; his words, 9 Nov: "don't
+just repeat the same stats"). A replaced proof moves to `notUsed` with its
+reason. Check: Build counts rows and fields; the render check fails when every
+figure of a shown big number reappears in a belief proof on that page.
 
 **23. The beliefs exercise is a feature one click from every page.** It is
 fully explained there and done there. His words (5 Nov): "Ideally we make the
@@ -337,8 +361,8 @@ plan; his 2025 nicotine one-pager. His own v10 and 2025 sentences in kept rows
 stay word for word, even where rule 10 or rule 12 would cut them; such a proof
 carries `ownWords: true` and the build skips its figure count (8 Nov). A
 number card he liked in version 10 that a rule argues against carries `liked:
-true` and stays on the page under any answer to the off-reader choice, with its
-Counted label; the choice names those cards in one line (round 5, E2). Check:
+true` and stays on the page with its Counted label (round 5, E2; since round 7
+every such card stays, G3). Check:
 the render check fails when a liked card is missing from the recommended view;
 Build fails on `liked` on a card no rule argues against; Gate (owner-lens
 critic).
@@ -349,16 +373,13 @@ fears looking every part over for all addictions "over and over". A card never
 asks on its own ("Proposed to remove"); every proposal folds into one choice
 that lists the cards it covers. A detail a rule or decision already settles is
 not asked again, and each card sits in exactly one choice. The off-reader
-choice covers number cards only: every card tagged `heavy` or `users`, carrying
-a `propose`, or whose Counted label says "not checked" or "not required" (round
-5, E3), except the liked ones (rule 26); its count is the length of the list it
-shows (round 4, D2/D3). Whether a card says "not checked for addiction" is
-decided by who its source counted, never by hand (round 6, F2), and every card
-in the choice carries a `propose` reason (Build fails without one). A card
-whose Counted label mixes drink and drugs is named in the pooled-numbers choice
-only, never in the off-reader list (F5). A kind whose every card the current
-answer hides gets its gap line like an empty kind. Belief and plan proofs about people not checked for addiction
-stay, labelled so, and the choice names them in one line. The review page says
+choice is gone (round 7, G3): cards about people not checked for addiction stay,
+tagged (rule 2). Whether a card says "not checked for addiction" is decided by
+who its source counted, never by hand (round 6, F2). A card whose Counted label
+mixes drink and drugs is named in the pooled-numbers choice only (F5). Belief
+and plan proofs about people not checked for addiction stay, labelled so. A
+choice he answered is recorded (`answered` in decisions.json) and shown as
+answered; with none open, the tab says "Nothing left to choose". The review page says
 under its tabs that only "Choices for you" needs him. Check: Build (at most 7 choices); the render check fails on a
 "Proposed to remove" chip and on more than 7 asks on the review page; Gate.
 
@@ -370,7 +391,8 @@ carries an `assert` the build re-checks (8 Nov, round-3 finding: four review
 sentences were false). A second source a line rests on (`alsoRef`, `refs2`) is
 cited as a numbered source at the end of the card's caveat (round 4, D10).
 Check: Build (unknown fact names, failed asserts); the render check fails when
-the off-reader choice's stated count differs from its list; Gate (report).
+the Choices tab's "Nothing left to choose" or its answered list disagrees with
+decisions.json; Gate (report).
 
 **29. Gates run before he sees anything.** Source check, owner-lens critic,
 cold reader, browser check, adversarial audit, looped until none finds a

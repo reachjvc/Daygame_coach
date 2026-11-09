@@ -1,0 +1,189 @@
+{
+ "id": "nicotine",
+ "round": "rev7",
+ "by": "rev7 checker a",
+ "on": "2026-11-09",
+ "checked": [
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "About 19 in 100 (hope-free-now)",
+   "verdict": "ok",
+   "problems": [
+    "checked hooked: NESARC lifetime DSM-IV dependence; 6,937 and 1,300 re-found."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "84 in 100 (hope-lifetime)",
+   "verdict": "ok",
+   "problems": [
+    "checked hooked; 83.7% re-found; hedge removal only."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "About 30 (how-tries)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: daily smokers, no diagnosis; correct; remaining propose reason fine."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "3–5 in 100 (how-slips)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: untreated self-quitters; correct; propose gone."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "12 vs 12 in 100 (helps-stop-vs-cut)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: quit-trial volunteers, no diagnosis required; correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "23 vs 10 in 100 (helps-medicine)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: trials did not require dependence; correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "11 vs 7 in 100 (helps-talk)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "Week 1 (after-first-month)",
+   "verdict": "ok",
+   "problems": [
+    "checked hooked: abstract re-fetched: 101 smokers 'who satisfied DSM-III-R criteria for nicotine dependence'; 70 abstinent 4 weeks."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "Years 1 and 3 (after-mood)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: Fagerstrom scored, not required; correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "26 years (who-years)",
+   "verdict": "ok",
+   "problems": [
+    "checked hooked; 26 years re-found; hedge removal only."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "10 vs 7 in 100 (helps-reward)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "4–5 kg (after-body)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "At least 25 in 100 (after-body)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: men asking for NRT, no diagnosis; correct."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "81 in 100 (quit-status)",
+   "verdict": "ok",
+   "problems": [
+    "checked hooked: DSM-5 nicotine use disorder, mild included (PMC8154113); fits 'diagnosed or meeting disorder criteria'; tag disorder matches."
+   ]
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "90 in 100 (after-lasting)",
+   "verdict": "ok",
+   "problems": [
+    "checked not: correct."
+   ]
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "too late: CDC quit ratio 62 in 100",
+   "verdict": "fix",
+   "problems": [
+    "Quote and definition re-found in PMC6855510 (61.7% of ever smokers of 100+ cigarettes had quit, 2018); 62 in 100 correct; repeats no card or hero figure; Counted line right.",
+    "Counterpart 'I'm not waiting 26 years' repeats the hero's half-free 26 years (brief, G2). It is his 2025 wording (rule 26), so the smallest change: drop the figure only.",
+    "ownWords: true still sits on this row, but the new proof is not his sentence; it would skip the figure count for a proof that is no longer his."
+   ],
+   "fix": {
+    "beliefs[0].counterpart": "Most people hooked on nicotine get free in the end. I’m not waiting years.",
+    "beliefs[0].ownWords": false
+   }
+  },
+  {
+   "where": "hero",
+   "index": 0,
+   "label": "heroDefinition",
+   "verdict": "ok",
+   "problems": [
+    "Quotes re-found; Goodwin's methods list the same 7 DSM-IV nicotine criteria, so 'needing more, failing to cut down, smoking despite harm' match."
+   ]
+  },
+  {
+   "where": "hero",
+   "index": 1,
+   "label": "heroHalfFree 26 years",
+   "verdict": "ok",
+   "problems": [
+    "Re-found; no hedge words."
+   ]
+  },
+  {
+   "where": "hero",
+   "index": 2,
+   "label": "heroRange 49 in 100 (Goodwin 2011)",
+   "verdict": "fix",
+   "problems": [
+    "48.9% / n=2793 re-found (PMC3337717). Wave 1 counted lifetime dependence, so many were already free before Wave 1; 'were no longer hooked three years later' reads as getting free within 3 years. Wave 2 counted the previous 12 months. Same NESARC survey, not another study: line says 'other count', fine. Paper's own totals disagree (5,256 lifetime at Wave 1 vs 2,793+2,903 = 5,696); no n shown in where."
+   ],
+   "fix": {
+    "heroRange.line": "Asked again 3 years later, 49 in 100 of those once hooked had not been hooked in the past year. That counted the past year; this survey counted signs gone for good.",
+    "heroRange.studies[0].where": "US, 2001–2002 and 2004–2005 (the same national survey, asked twice); 2,793 of about 5,700 once hooked"
+   }
+  }
+ ]
+}

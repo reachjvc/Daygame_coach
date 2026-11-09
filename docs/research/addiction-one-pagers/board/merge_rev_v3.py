@@ -15,7 +15,7 @@ from finalize_v3 import setpath
 
 V3 = Path(__file__).resolve().parent.parent / "08-v3"
 D = V3 / "drafts"
-TODAY = "2026-11-08"
+TODAY = "2026-11-09"
 
 
 def main(ids, rnd="rev"):

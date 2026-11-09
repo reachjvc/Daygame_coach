@@ -1,0 +1,270 @@
+{
+ "id": "alcohol",
+ "round": "rev7",
+ "part": "a",
+ "by": "revision checker a (rev7)",
+ "on": "2026-11-09",
+ "checked": [
+  {
+   "where": "hero",
+   "index": 0,
+   "label": "heroDefinition",
+   "verdict": "ok",
+   "problems": [
+    "Fetched PMC3227547: '3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period' and 'they never started happening again' word for word; plain, no hedge."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "hero",
+   "index": 1,
+   "label": "heroHalfFree",
+   "verdict": "ok",
+   "problems": [
+    "Quote word for word ('approximately 26, 14, 6 and 5 years after dependence onset'); 'worked out from the ages people gave' is a basis, not a hedge."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "hero",
+   "index": 2,
+   "label": "heroRange",
+   "verdict": "ok",
+   "problems": [
+    "Glantz 2020 Table 4: ALD remission all countries combined 59.7; Lebanon 29.0, Iraq 93.9; US, NZ and Mexico have no ALD figure (dash), so '26 surveys, not the US' holds; 2001-2015 and the 12-months-or-two-birthdays definition confirmed.",
+    "Rapsey 2019 abstract: 67.2% of dependence cases remitted, 12,992 people, Oct 2003-Dec 2004 confirmed; the '12 months' definition quote is not in the abstract (agent cites the article page), not re-confirmed here.",
+    "Range line is not more hopeful than the hero: 60/67 sit between the 42 head count and the 91 projection, and the line says why (looser definition). Iraq's 94 rests on a tiny sample (SE 5.2), fine in the fold.",
+    "Optional: Rapsey's abstract also gives '50% of dependence cases had not remitted after 9 years' in New Zealand, a second half-free figure (9 vs 14 years) for the fold if wanted."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 0,
+   "label": "hope-free-now 42 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 1,
+   "label": "hope-lifetime about 91 in 100",
+   "verdict": "fix",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated.",
+    "Hedges gone; new caveat confirmed ('Males were less likely than females to remit'; institutionalised people not sampled).",
+    "basis.measured still says 'the first belief below uses the same figure'; since G2 belief 0 no longer uses 91, that is false."
+   ],
+   "fix": {
+    "numbers[1].basis.measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100. The study gives 90.6 in 100, shown here as about 91."
+   }
+  },
+  {
+   "where": "numbers",
+   "index": 2,
+   "label": "who-years 14 years",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated.",
+    "Hedge removed; 'Men got free more slowly than women' matches the source. Same 14 years now also in heroHalfFree: allowed (only beliefs may not repeat)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 3,
+   "label": "who-age age 38",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (self-said resolved problem)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 4,
+   "label": "who-life-event x2.2",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 5,
+   "label": "how-alone 44 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 6,
+   "label": "how-tries 2 tries",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 7,
+   "label": "after-lasting 25 in 100 (Miller 2001)",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated. Abstract: treated for alcoholism 'broadly defined as alcohol use disorders'; '1 in 4 clients remained continuously abstinent'."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 8,
+   "label": "helps-stop-vs-cut 7 vs 27",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 9,
+   "label": "helps-medicine 36 vs 23",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 10,
+   "label": "helps-talk 42 vs 35",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated. (AUD, mild included)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 11,
+   "label": "helps-early-help 62 vs 43 (Moos 2006)",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated. Abstract: 'initially untreated individuals with alcohol use disorders', n=461."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 12,
+   "label": "after-first-month 26% lower",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (heavy, known addicts excluded); propose dropped, liked kept: fine."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 13,
+   "label": "after-body 45 in 100 (Trabut 2012)",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' acceptable: 'Patients hospitalized for alcohol withdrawal in our Liver and Addiction Unit'; the abstract names no diagnosis, but inpatient withdrawal is treatment for being hooked. 62 of 137 (45.3%) confirmed."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 14,
+   "label": "after-mood 42 to 6",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated. (primary alcoholics, diagnosed)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 15,
+   "label": "quit-status 75 in 100",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 16,
+   "label": "how-withdrawal 2-7 days",
+   "verdict": "ok",
+   "problems": [
+    "checked 'hooked' matches: source counted people meeting dependence/disorder criteria or diagnosed/treated. (AUD patients; withdrawal card is mainly for the truly hooked)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "numbers",
+   "index": 17,
+   "label": "after-lasting 6 years",
+   "verdict": "ok",
+   "problems": [
+    "checked 'not' matches: source did not check for addiction. (self-said resolved, drink and drugs mixed)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "stuck: drinking for years",
+   "verdict": "ok",
+   "problems": [
+    "Dawson 1996 abstract fetched: 4,585 adults with prior DSM-IV dependence, NLAES 1992; '27.8% of the total sample met the criteria for alcohol abuse or dependence' word for word; 'about 28' correct; no figure repeated from hero or cards.",
+    "Doubt for the main session: it is the same kind of number as card 15 (75 in 100 no longer hooked, past year) and the hero range (a year without signs), only mirrored. It passes G2's letter; the owner's 'don't just repeat the same stats' may still bite.",
+    "origin is stale: it still says the proof leads with the v10 sentence."
+   ],
+   "fix": {
+    "beliefs[0].origin": "06-template.json alcohol belief 4 (marked Keep). Limiting and counterpart word for word. Round 7 (G2): the proof is new, from Dawson 1996 (NLAES 1992); the v10 sentence is in notUsed.beliefs."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "stuck: tried before, always go back",
+   "verdict": "fix",
+   "problems": [
+    "5.38 is a mean the source calls heavily skewed (skewness 5.89); its median is 2 and its mode 1. 'About 5 on average' next to the card's 'half needed 2 or fewer' reads as a clash and overstates the typical count.",
+    "Use the same Table 1 alcohol row's upper quartile (IQR 1 to 4): at least 25 in 100 needed 4 or more tries. Answers 'I always go back' without the card's 2."
+   ],
+   "fix": {
+    "beliefs[1].proof": "Of Americans who say they beat a drinking problem, at least 25 in 100 had made 4 or more serious tries before the one that stuck.",
+    "beliefs[1].refs[0].note": "Table 1 columns: mean (SD), median (IQR), range. Alcohol: median 2, IQR 1 to 4, so at least a quarter reported 4 or more serious attempts."
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "moderation: just one",
+   "verdict": "fix",
+   "problems": [
+    "Helzer 1985 abstract fetched: 1,289 diagnosed alcoholics, 1973-1975, 5-7 years, data for 83 per cent, 'Only 1.6 per cent ... stable moderate drinking' word for word. Rule 4 met (treated, diagnosed; argues against 'just one').",
+    "Source says 'medical and psychiatric treatment facilities', not 'hospitals and clinics'.",
+    "origin is stale: it still describes Dawson 2007 (1,772 re-interviewed, a survey)."
+   ],
+   "fix": {
+    "beliefs[4].proof": "Of people diagnosed alcoholic and treated at US medical and psychiatric facilities, only 1.6 in 100 had become steady moderate drinkers when traced years later.",
+    "beliefs[4].origin": "new (rule 4 model). Round 7 (G2): Helzer 1985, 1,289 diagnosed alcoholics treated at medical and psychiatric facilities in 1973-1975, traced 5 to 7 years later; the old Dawson 2007 proof is in notUsed.beliefs."
+   }
+  }
+ ]
+}

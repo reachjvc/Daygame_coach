@@ -1,0 +1,87 @@
+{
+ "id": "porn",
+ "round": "rev8",
+ "part": "a",
+ "by": "rev8 source checker a (alcohol, porn)",
+ "on": "2026-11-09",
+ "checked": [
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "I’ve watched porn since I was a teenager. It’s wired in. I’m stuck with it.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged in rev8 (porn has no hero). Re-fetched Fernandez 2021 (PMC7889567): Table 2 row word for word; 13+15 = 28 of 104 = about 27 in 100; self-perceived addiction 80 of 104 supports 'most'. Severity self-hooked fits.",
+    "Test: 'When this thought comes' step: one small thing at the moment, no trigger sought, no dry-evening or craving-rating drill. Phone in another room, next plan step. The one-evening experiment and minute count are gone; old text in notUsed.beliefs-tests."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "Quitting means a brutal flatline and weeks of withdrawal.",
+   "verdict": "ok",
+   "problems": [
+    "Quote 'close to one-third ... “flatline.”' word for word (re-fetched); 'close to 33 in 100' fair. 2 figures (104, 33).",
+    "Test: two branches (still watching / already off it); the two-days-off experiment and 0-10 scoring removed; old text in notUsed.beliefs-tests."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "I need it to switch off. Nothing else works at the end of the day.",
+   "verdict": "ok",
+   "problems": [
+    "Quotes word for word (re-fetched): 'Most members reported making use of various internal resources' and the 'most' = more than 75% key; examples match the day-to-day strategies quote.",
+    "Test: at the moment the thought comes, one swap for that hour; 'No porn those evenings' and the 0-10 rating removed."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "One quick look won’t hurt. I can handle it now.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged (Kraus 2016, 46.2 cut back 4+ among treatment-interested men; Counted line says not checked by a doctor). Rule 4 met.",
+    "Test: treat the thought as the start of a binge, phone away and leave the room 20 minutes; no 'see whether it is still asking' check. One idea."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "I slipped again. I’m just someone who can’t quit.",
+   "verdict": "ok",
+   "problems": [
+    "Table 2 rows word for word; 22+13+15 = 50 of 104 = 48 in 100; '55' lapse quote word for word. 'many wrote of a slip' matches 'More than half'.",
+    "Test: after a slip, write the line, then shower, dress, leave the house (same as plan step 4 line 1, consistent). No 'check what the slip cost' review."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Step 1 actions (rev8 rewording)",
+   "verdict": "fix",
+   "problems": [
+    "do[0] carries two ideas in one line (watch normally for a few days + do the step when a thought comes): one idea per line.",
+    "It lacks 'Don’t go looking for it.', which the alcohol page has and the owner's 9 Nov note asks for.",
+    "Old lines are in notUsed.beliefs-tests (ok)."
+   ],
+   "fix": {
+    "plan[0].do": [
+     "Still watching? Don’t quit yet. For the next few days, watch the way you normally do.",
+     "When one of the thoughts above comes up, do the step under it. Don’t go looking for it.",
+     "Already stopped? Don’t start watching again to do this step: write it from memory.",
+     "Before each time, write one line: the hour, where you are, what you felt just before.",
+     "After, one more line: what it gave you, and what it cost.",
+     "Then write down what porn does for you: stress relief, sleep, boredom, loneliness.",
+     "Each one is a belief. Start with the beliefs above.",
+     "Circle what repeats. Those hours and feelings are what your swaps are for."
+    ]
+   }
+  }
+ ]
+}

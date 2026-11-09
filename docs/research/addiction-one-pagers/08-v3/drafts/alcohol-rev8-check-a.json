@@ -1,0 +1,113 @@
+{
+ "id": "alcohol",
+ "round": "rev8",
+ "part": "a",
+ "by": "rev8 source checker a (alcohol, porn)",
+ "on": "2026-11-09",
+ "checked": [
+  {
+   "where": "beliefs",
+   "index": 0,
+   "label": "I’ve been drinking for years. I’m stuck with it.",
+   "verdict": "ok",
+   "problems": [
+    "Vaillant 1996 abstract re-fetched (PubMed 8611061): quote 'After abstinence had been maintained for 5 years, relapse was rare.' is word for word (11 words); quotesMore also word for word.",
+    "Figure fits: proof claims only that 5 years off held ('rarely went back'), no more hopeful than 'relapse was rare'. It answers 'stuck' indirectly (getting out lasts) rather than 'most get out'; acceptable since the hero already carries the get-free share and the rule bans repeating it.",
+    "Severity disorder and Counted 'men with a drinking problem, mild cases included' (9 words) match: DSM-III alcohol abuse, 205 of 724 men; some were dependent, so 'mild included' is right.",
+    "Repeats no figure on the page ('5 years' appears on no card). One idea, 1 figure, plain words. Weak line true (abstract gives no count off 5 years).",
+    "Test: 'When this thought comes' step: one small thing at the moment, no trigger sought, no dry-evening or craving-rating drill. 'do the next step of the plan' is safe for a heavy daily drinker because step 1 says don't stop yet. Old test in testR7 and notUsed.beliefs-tests; old proof in wasR7 (notUsed.beliefs per changeNote)."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 1,
+   "label": "I’ve tried to stop before. I always go back.",
+   "verdict": "fix",
+   "problems": [
+    "As the brief says: proof repeats '25 in 100' (card 7 big figure) and restates the how-tries card (Kelly 2019, same table); it carries 3 figures (25, 4, plus 'at least' on a quartile).",
+    "Replacement fetched: Witkiewitz & Masyn 2008 (PMC2721008, full text): 563 people in community alcohol treatment (RREP: Providence, Buffalo, Albuquerque; DIS alcohol abuse or dependence); 395 lapsed in the 12 months after; growth-mixture classes after the first lapse: frequent heavy 6%, 'prolapse' 12%, infrequent 82%.",
+    "New proof answers 'I always go back' with a different kind of fact (what happens after a slip), 1 figure. '6 in 100' also sits on the after-mood card (42 to 6 in 100) as a different measure; it is the source's own figure, so kept rather than the arithmetic 94 (which also appears in the hero range fold).",
+    "Not a moderation proof and must not be read as one: the 82% infrequent group kept drinking; the proof claims only that heavy frequent drinking was rare after a slip. Noted in proofNote.",
+    "Test: 'When this thought comes' step: one small thing at the moment, no trigger sought, no dry-evening or craving-rating drill. Sends him to step 3, whose first line is the heavy-drinker doctor pointer, so safe. Two branches (after a slip / when the thought comes)."
+   ],
+   "fix": {
+    "beliefs[1].proof": "Of people treated for drinking who slipped in the year after, only 6 in 100 went on drinking heavily and often.",
+    "beliefs[1].severity": "treatment",
+    "beliefs[1].counted": "people in treatment for drinking who slipped afterwards",
+    "beliefs[1].weak": "One US study of 563 people in community treatment (published 2008); 395 slipped; the groups come from a statistical model over 7 months after the slip.",
+    "beliefs[1].refs": [
+     {
+      "cite": "Witkiewitz K, Masyn KE (2008). Drinking trajectories following an initial lapse. Psychology of Addictive Behaviors 22(2):157-167.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2721008/",
+      "pmid": "18540713",
+      "pmcid": "PMC2721008",
+      "fetched": true,
+      "fetchedOn": "2026-11-09",
+      "via": "PMC article page (full text), Results",
+      "quote": "Only a small percentage (6%) of individuals displayed a frequent heavy drinking trajectory.",
+      "quotesMore": [
+       "the majority of individuals reported a return to abstinence or infrequent drinking following the initial lapse",
+       "a sample of 563 individuals who received community alcohol treatment",
+       "the complete data of those who lapsed ( n = 395) were included"
+      ]
+     }
+    ],
+    "beliefs[1].proofNote": "Witkiewitz & Masyn 2008, RREP: 563 treated for alcohol abuse or dependence (no major psychiatric or more severe drug diagnosis); 395 lapsed within 12 months; after the first lapse, model classes: frequent heavy 6%, frequent then less often 12%, infrequent moderate 82%. The proof claims only the 6; the 82% kept drinking, so it is no case for moderating (belief 5 answers that).",
+    "beliefs[1].wasR7": {
+     "proof": "Of Americans who say they beat a drinking problem, at least 25 in 100 had made 4 or more serious tries before the one that stuck.",
+     "severity": "resolved",
+     "refs": "Kelly 2019 (PMC6602820) Table 1, as in rev8"
+    },
+    "notUsed.beliefs[+]": {
+     "from": "v3 belief 2 'I’ve tried to stop before. I always go back.' proof (round 7/8)",
+     "text": "Of Americans who say they beat a drinking problem, at least 25 in 100 had made 4 or more serious tries before the one that stuck.",
+     "reason": "rev8 check: repeated '25 in 100' from a number card and the how-tries card's source; 3 figures (rule 22, G2)"
+    }
+   }
+  },
+  {
+   "where": "beliefs",
+   "index": 2,
+   "label": "Stopping will be hell. I won’t get through it.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged (Brown & Schuckit 1988, checked in earlier rounds); 1 figure-like item (week 2).",
+    "Test: 'When this thought comes' step: one small thing at the moment, no trigger sought, no dry-evening or craving-rating drill. Heavy-drinker pointer says 'now' and names all footer signs (heavily every day; shaky, sweaty or sick in the morning until you drink; earlier seizure or DTs). One branch. Dry-evening walk and 0-10 rating removed; old text in notUsed.beliefs-tests."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 3,
+   "label": "I need a drink to unwind after work.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged (Brower 2001, checked earlier).",
+    "Test: the swap 'before you pour' is a small step at the moment, not a timed delay drill or a night without drink; heavy-drinker pointer says 'now' and names the footer signs. One branch. Three-night sleep log removed; old text in notUsed.beliefs-tests."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "beliefs",
+   "index": 4,
+   "label": "I’ve got it under control now. I can handle just one.",
+   "verdict": "ok",
+   "problems": [
+    "Proof unchanged (Helzer 1985, treatment, rule 4 model).",
+    "Test: answer 'I don’t drink' and leave the room a few minutes, then text the person told the date (plan step 3). No seeking an offer, no timing the pull. Safe: no stopping instruction. Old text in notUsed.beliefs-tests."
+   ],
+   "fix": {}
+  },
+  {
+   "where": "plan",
+   "index": 0,
+   "label": "Step 1 actions (rev8 rewording)",
+   "verdict": "ok",
+   "problems": [
+    "New line 'When one of the thoughts above comes up this week, do the step under it. Don’t go looking for it.' fits the owner's note; 'Each one is a belief.' replaces 'belief to test'. Both old lines in notUsed.beliefs-tests. No figures, one idea per line, 'Still drinking? Don’t stop yet.' stays first."
+   ],
+   "fix": {}
+  }
+ ]
+}

@@ -3,9 +3,27 @@
  "decisions": [
   {
    "id": "reader",
-   "title": "Who every page is written for",
-   "decision": "A man who has tried to cut down or stop and couldn't.",
-   "why": "Your notes of 4 and 5 Nov: he already knows he has a problem, and “10 drinks every day” is a different reader from “above the guidelines”. Every number now says which group it counts."
+   "title": "Who the pages are written for",
+   "decision": "A man who wants to cut down or stop. Some readers are truly hooked, some are not, so every number card says whether its people were checked as hooked.",
+   "why": "Your 9 Nov note: “I didn't say every page is for an addict. It is very important to distinguish. Some things are more necessary for people who are truly addicts, less so if you're not.” Your 4 and 5 Nov notes still hold: “10 drinks every day” is a different reader from “above the guidelines”, so every number says which group it counts."
+  },
+  {
+   "id": "hero",
+   "title": "The hope number: the head count first",
+   "decision": "Every page with a hope number shows the head count big (how many once hooked are already free when asked), and the lifetime projection right under it. Under them: one line on what “hooked” meant in that study, what other studies found (a range, each study listed in a fold), and how long until half were free. No caveat chip on it.",
+   "why": "Your 9 Nov notes: “I probably like that it gives hope, not that the first thing must always give hope, and we definitely don't want false hope.” and “A range from different studies is better than a bunch of caveats.” So honest first: the counted figure leads, and the range shows how far studies differ. You said you will look over each headline figure yourself; nothing more is asked here."
+  },
+  {
+   "id": "offreader",
+   "title": "Cards about people not checked for addiction stay, labelled",
+   "decision": "Every number card carries a small tag: “Checked as hooked” or “Not checked for addiction”, decided by who its source counted. Cards about people not checked stay on the pages. Where a card matters mainly to men who are truly hooked (medicine, withdrawal), its tag says so.",
+   "why": "Your 9 Nov note: “I didn't say every page is for an addict. It is very important to distinguish. Some things are more necessary for people who are truly addicts, less so if you're not.” A tag lets each reader see at a glance which numbers are about people like him."
+  },
+  {
+   "id": "sections",
+   "title": "Each section's look: my pick",
+   "decision": "Each section of the page comes in two looks; I picked one look per section. You can switch any section with the blue bar above it, and it changes on every page.",
+   "why": "Your 9 Nov note on the old choice: “I don't understand what this is asking of me.” It asked nothing you need to answer, so it is a decision now. My picks: the hope number with the dot grid (look 2), the graph as lines (look 1), the rest look 1."
   },
   {
    "id": "order",
@@ -19,13 +37,13 @@
   {
    "id": "kept-outlook",
    "title": "Every “How quitting goes” number you liked is on the pages",
-   "decision": "All numbers from the v10 “How quitting goes” section are on the v3 pages, rewritten to the new rules, under “How quitting goes” or “Who gets free, and how”. Where a rule argues against one you liked, it stays even under the recommended off-reader answer, with its Counted label: {likedCards}.",
-   "why": "Your 5 Nov note: “more in line with what I want than a bunch of the other stats”. Rule 26 (keep what you liked) wins over the off-reader choice for these; the choice names them in one line."
+   "decision": "All numbers from the v10 “How quitting goes” section are on the v3 pages, rewritten to the new rules, under “How quitting goes” or “Who gets free, and how”. The ones a rule argued against stay too, with their Counted label: {likedCards}.",
+   "why": "Your 5 Nov note: “more in line with what I want than a bunch of the other stats”. Rule 26: keep what you liked."
   },
   {
    "id": "counted",
    "title": "Every number says who was counted",
-   "decision": "A “Counted:” label sits on every number, in plain words, and a short Counted line under each belief proof and plan proof. Number cards about people not checked for addiction come off the pages under the recommended answer to one choice, except the ones you liked in version 10, which stay labelled; kept cards carry an amber label and never appear as a hope, who-gets-free or what-helps number. A belief or plan proof about such people stays, and its Counted line says who was not checked. A group sorted by questionnaire answers gets its own label: people whose answers showed a likely … problem.",
+   "decision": "A “Counted:” label sits on every number, in plain words, and a short Counted line under each belief proof and plan proof. Cards about people not checked for addiction carry an amber label and never appear as a hope, who-gets-free or what-helps number. A group sorted by questionnaire answers gets its own label: people whose answers showed a likely … problem.",
    "why": "Your 5 Nov note on severity. It also stops a moderation number from coming from people who were never hooked."
   },
   {
@@ -49,19 +67,19 @@
   {
    "id": "general",
    "title": "Numbers about every addiction",
-   "decision": "Numbers that pool alcohol and other drugs (tries it took, quit with no help, life in the years after) are kept in the Number menu but off the pages, unless you choose otherwise; when shown, they sit under “Alcohol and drugs together”. A page card from the same pooled survey says so on its Counted label and falls under the off-reader choice.",
+   "decision": "Numbers that pool alcohol and other drugs (tries it took, quit with no help, life in the years after) are kept in the Number menu but off the pages, unless you choose otherwise; when shown, they sit under “Alcohol and drugs together”. A page card from the same pooled survey says so on its Counted label.",
    "why": "You suggested general numbers shown “somewhere”, and said a one-pager is about one drug. These come from one survey of alcohol and drug problems, so on most pages they would be another drug’s numbers."
   },
   {
    "id": "graph",
    "title": "How the graph is made, for every addiction",
-   "decision": "About {feltRead} posts with a day count read from each addiction’s quit forum (2021–2025, fixed calendar days, 70 per day range); the {feltUsed} that say how the day felt are used. A reader scores how hard that day was, 0 to 10; a second reader, a different AI model, re-scores 15% blind. The headline names the hardest stage (the highest typical day among stages with 25 posts or more) and the stage it is easier from (at least 1.5 points lower, and never back within 1 point after); where no stage qualifies it says “No clear easing”. Version 1 draws a line (a typical day per stage) and a band (where the middle half of scores fell); version 2 draws 20 dots per stage. Under it, “What the body does” draws each body symptom from clinical sources as a bar on one time scale (hour 1 to year 3), darker where it is worst, red for a danger sign.",
-   "why": "Your 5 Nov note: true to how people feel, not one study. This is the same recipe on every page, and it says how many posts it rests on and how it is biased."
+   "decision": "About {feltRead} posts with a day count read from each addiction’s quit forum (2021–2025, fixed calendar days, 70 per day range); the {feltUsed} that say how the writer is doing that day are used. An AI reader tags what each post mentions: hard things (cravings, anxiety, low mood, bad sleep and others) and good changes (better mood, feeling proud, better sleep and others). Version 1 draws one line per thing: how many in 100 posts at each stage mention it, for the 4 hard things and the 2 good changes named most across all stages (good changes dashed, in a cool colour). Version 2 shows the same figures as a table. A stage with under 25 posts is drawn faded. The headline is computed from the lines: the stage where the hard thing named most comes up most, and the stage where the good change named most shows up most, each with its “N in 100 posts”. Under it, “What the body does” draws each body symptom from clinical sources as a bar on one time scale (hour 1 to year 3), darker where it is worst, red for a danger sign.",
+   "why": "Your 9 Nov note: “The scoring does not make sense. Before you had multiple lines on the graph, so I think that's something that may be useful.” So the 0 to 10 score is gone, and the lines count what people write about, which needs no scale. Your 5 Nov note still holds: true to how people feel, not one study. The same recipe on every page, and it says how many posts it rests on and how it is biased."
   },
   {
    "id": "phone",
    "title": "Phone first, wide on big screens",
-   "decision": "Each page is one column on a phone. From 760 px wide, headings move to a left column, numbers sit beside their sentence, and the graph turns from rows into a chart. The review shows both at once.",
+   "decision": "Each page is one column on a phone. From 760 px wide, headings move to a left column, numbers sit beside their sentence, and the graph's chart gets wider, with each stage's full name. The review shows both at once.",
    "why": "You said header B fails on a browser and you were unsure how to design for both. Phone first means the narrow screen gets the real design and the wide screen adds to it, so neither is an afterthought."
   },
   {
@@ -73,7 +91,7 @@
   {
    "id": "danger",
    "title": "Danger lines only where a source ties them to the drug",
-   "decision": "On the {dangerPages} page: the seizure and DTs rows under the graph (red), one short line in plan step 3 (where the drinking stops), a one-line pointer to “Before you stop” in two card folds (44 in 100, 2–7 days), the same pointer in two belief tests (rows 3 and 4), and the “Before you stop” line above the sources, which names the signs and says: “{emergencyLine}” {noteLine} On the porn page: one line in the erection card’s fold, that a doctor can check for medical causes, with its source. Nowhere else, and never up front.",
+   "decision": "On the {dangerPages} page: the seizure and DTs rows under the graph (red), one short line in plan step 3 (where the drinking stops), a one-line pointer to “Before you stop” in two card folds (44 in 100, 2–7 days), the same pointer in two “When this thought comes” steps (rows 3 and 4), and the “Before you stop” line above the sources, which names the signs and says: “{emergencyLine}” {noteLine} On the porn page: one line in the erection card’s fold, that a doctor can check for medical causes, with its source. Nowhere else, and never up front.",
    "why": "Your 4 Nov note: only where a source ties the risk to the drug, small, never up front. A safety audit found the plan stops drinking at step 3 while the warning sat in step 5 and at the very bottom, so a heavy daily drinker following the steps would stop before seeing it.",
    "assert": {
     "dangerPages": [
@@ -129,28 +147,6 @@
  ],
  "choices": [
   {
-   "id": "hero",
-   "rule": "The big hope number on every page is:",
-   "why": "Both numbers stay on every page, together, in one view; this picks which one comes first and leads the dot grid. Your own rule 15 says lead with one number that creates hope, so I recommend the lifetime projection ({heroProj}), with the head count right under it ({heroCount}). Rule 10 (cautious estimate first) came from reviewers, not from you; with the head count big, nicotine would open on 19 in 100. This is a judgment call: the projection is a model that likely runs high, and the page says so once, on the chip under it. Pages with no hope number ({noHero}) open at the beliefs either way.",
-   "options": [
-    {
-     "id": "projection",
-     "label": "The lifetime projection, the count under it"
-    },
-    {
-     "id": "count",
-     "label": "The head count, the projection under it"
-    }
-   ],
-   "rec": "projection",
-   "assert": {
-    "maxChoices": 7,
-    "rec": {
-     "hero": "projection"
-    }
-   }
-  },
-  {
    "id": "general",
    "rule": "Numbers that mix every drug together (tries it took, used no help, life in the years after):",
    "why": "One US survey of people who beat a drink or drug problem also reports numbers for everyone together, not split by drug. The pages show its alcohol-only and weed-only numbers. I recommend leaving the mixed ones off. {mixedLine}",
@@ -168,7 +164,11 @@
      "label": "Leave them off the pages"
     }
    ],
-   "rec": "page"
+   "rec": "page",
+   "answered": "page",
+   "assert": {
+    "maxChoices": 7
+   }
   },
   {
    "id": "appdata",
@@ -184,46 +184,8 @@
      "label": "Leave it out"
     }
    ],
-   "rec": "hide"
-  },
-  {
-   "id": "offreader",
-   "rule": "Number cards about people who are not the reader: not checked as hooked (students, ordinary smokers), people never or still hooked mixed in, or cutting down instead of quitting:",
-   "why": "Your rule: every page is for a man who is hooked. So I recommend taking all {offCards} off every page; the list below names each card and its reason. This choice covers number cards only: a belief proof or plan proof about such people stays, with a Counted line that says who was not checked.",
-   "options": [
-    {
-     "id": "keep",
-     "label": "Keep them, labelled"
-    },
-    {
-     "id": "drop",
-     "label": "Take them off every page"
-    }
-   ],
-   "rec": "drop",
-   "assert": {
-    "offCount": true
-   }
-  },
-  {
-   "id": "sections",
-   "rule": "Which version of each section every page uses:",
-   "why": "Version 1 is your 2025 sheet with the rules applied; version 2 counts people (dots, a fact box). My picks, shown under “Your picks”: the hope number from version 2 (the dot grid shows what is counted and what is projected), the graph from version 1 (a line for the typical day; it names the hardest stage and when it gets easier, or says there is no clear easing), everything else from version 1. Change any section with the blue bar above it.",
-   "options": [
-    {
-     "id": "v1",
-     "label": "All version 1"
-    },
-    {
-     "id": "v2",
-     "label": "All version 2"
-    },
-    {
-     "id": "mix",
-     "label": "Mixed, my picks per section"
-    }
-   ],
-   "rec": "mix"
+   "rec": "hide",
+   "answered": "hide"
   }
  ],
  "graph": [
@@ -232,23 +194,23 @@
    "text": [
     "Posts from that addiction's quit forum, downloaded from the Arctic Shift public archive (reddit.com blocks this machine): every post from fixed calendar days, 2021 to 2025, so no season or weekday is favoured.",
     "Only posts that give a day count (“Day 12”, “3 weeks”, or the forum's day badge). 70 posts drawn at random for each of 15 day bins, from day 1 to year 2 and on: about 1,050 per addiction.",
-    "An AI reader scored each post: how hard the writer says staying off is today, 0 (no struggle) to 10 (can barely hold on), and which symptoms they name. Posts about a slip, or that say nothing about how today feels, are left out.",
-    "15% of posts were scored again by a second reader that never saw the first scores, once by the same model and once by a different one (Claude Sonnet). The table below gives how often they landed within 1 point.",
+    "An AI reader tagged each post with what it mentions: hard things (such as cravings, anxiety, bad sleep) and good changes (such as better mood, better sleep, feeling proud). Posts about a slip, or that say nothing about how today feels, are left out.",
+    "Each line is how many in 100 posts at that stage mention the thing; one post can mention several. The chart draws the 4 hard things and the 2 good changes named most across all stages of that page.",
     "Body symptoms under the graph come from clinical sources, drawn as ranges, never as one curve. A lab test of how strongly cues pull is never drawn as craving."
    ]
   },
   {
    "title": "What it can't tell you",
    "text": [
-    "People who post are not everyone who quits. People who find it easy have less reason to post, and people post more on hard days, so the curve likely runs higher than for quitters in general.",
+    "People who post are not everyone who quits. People who find it easy have less reason to post, and people post more on hard days, so hard things are likely named more often than quitters in general feel them.",
     "Later days are mostly milestone posts. People who slipped earlier are no longer in them.",
-    "The readers are AI models, not the writers rating themselves. Two models agreeing shows the scores are consistent, not that they are what the writers would have said."
+    "What each post mentions was tagged by AI readers, not by the writers themselves. A post that doesn't mention sleep may still have slept badly; the lines count what people write about, not everything they feel."
    ]
   },
   {
    "title": "Your “1,000 people a day”: a proposal for the app",
    "text": [
-    "One question a day after the quit date, “How hard was today?”, on the same 0 to 10 scale, plus optional symptom taps. Each reader sees his own line over the page's curve.",
+    "One question a day after the quit date, “How hard was today?”, on a 0 to 10 scale, plus optional taps for what he feels (cravings, sleep, mood). Each reader sees his own taps beside the page's lines.",
     "Opt-in, counted without names, and shown per day bin only once 30 people have reached it; until then the page keeps the forum curve. Nothing is built: the full proposal is in 08-v3/daily-log-proposal.md."
    ]
   }
@@ -268,7 +230,7 @@
  "weak": [
   {
    "title": "The porn page is a draft: its science is the thinnest",
-   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. So the page has no hope number: it opens at the beliefs, and “Who gets free, and how” says plainly what is not counted. Its other numbers are small (one forum’s journals, one church-based trial of 26 men). Under the recommended off-reader answer these porn cards come off: {offPorn}; these stay because you liked them in version 10: {likedPorn}.",
+   "text": "No study counts men hooked on porn who got free, projects it over a lifetime, gives the age it ended, or counts who quit without help. So the page has no hope number: it opens at the beliefs, and “Who gets free, and how” says plainly what is not counted. Its other numbers are small (one forum’s journals, one church-based trial of 26 men). Several porn cards count people not checked for addiction; each carries the tag “Not checked for addiction”: {notCheckedPorn}.",
    "assert": {
     "noKinds": {
      "porn": [
@@ -281,25 +243,20 @@
    }
   },
   {
-   "title": "The lifetime “get free” numbers are projections, and they lead",
-   "text": "{heroProj} are a model built from ages people remembered. The authors say people over-report getting free and the survey missed people in prisons and hospitals, so the real shares are likely lower. They lead the page because your rule 15 asks for hope first; the head count sits right under each, and the projection carries one chip, said once: worked out, not counted, likely runs high.",
-   "assert": {
-    "rec": {
-     "hero": "projection"
-    }
-   }
+   "title": "The lifetime “get free” numbers are projections",
+   "text": "{heroProj} are a model built from ages people remembered. The authors say people over-report getting free and the survey missed people in prisons and hospitals, so the real shares may be lower. On each page the head count leads and the projection sits right under it; the hero says what “hooked” meant in that study and what other studies found."
   },
   {
    "title": "The felt-difficulty graph is posts, not people",
-   "text": "It rests on {feltUsed} usable posts per addiction, scored by AI readers, not the writers. People who post are not everyone who quits and likely struggle more. A stage under 25 posts is drawn hollow, with its post count, and not used to call the hardest stretch ({fewStages})."
+   "text": "It rests on {feltUsed} usable posts per addiction, tagged by AI readers, not the writers. People who post are not everyone who quits and likely struggle more, so hard things are likely named more often than quitters in general feel them. A stage under 25 posts is drawn faded, with its post count, and not used for the headline ({fewStages})."
   },
   {
-   "title": "Two AI readers agreeing is not the same as being right",
-   "text": "A second, different model landed within 1 point of the first {agreeCross} of the time. That shows the scores are consistent. Nobody checked them against what the writers would have said."
+   "title": "The lines count what people write, not everything they feel",
+   "text": "An AI reader tagged what each post mentions; nobody checked the tags against what the writers meant. A post that says nothing about sleep is counted as not mentioning it, so every line is a floor, not a full count. The same reader tagged every stage, so a change between stages is not a change of reader."
   },
   {
    "title": "The I Am Sober app curve counts heavy drinkers who kept using the app",
-   "text": "Members who drank 21 to 70 a week, not checked for addiction, quitting or cutting back. {app1} wrote a check-in on day 1 and {app30} on day 30, so later days describe the ones still going. Off the page under the recommended answer."
+   "text": "Members who drank 21 to 70 a week, not checked for addiction, quitting or cutting back. {app1} wrote a check-in on day 1 and {app30} on day 30, so later days describe the ones still going. Off the pages: you chose to leave it out."
   },
   {
    "title": "Most “who gets free” numbers are surveys of memory",

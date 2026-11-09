@@ -289,6 +289,85 @@
     "from": "06-template.json alcohol plan step 5 proof, second half",
     "text": "In a Cochrane review, AA beat other treatments for staying sober.",
     "reason": "A step proof takes one ref (SCHEMA); the acamprosate half was kept. The AA fact also needed fixing: the review tested therapy built to get people to AA (twelve-step facilitation), not AA itself."
+   },
+   {
+    "from": "v3 belief 'I’ve been drinking for years. I’m stuck with it.' proof (round 6)",
+    "text": "In a big US survey, 90.6% of people ever hooked on alcohol are projected to get free in their lifetime; half within about 14 years.",
+    "refs": [
+     {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "pmid": "21077975",
+      "fetched": true,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quote": "Lifetime cumulative probability estimates of dependence remission were … 90.6% for alcohol"
+     },
+     {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "pmid": "21077975",
+      "fetched": true,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quote": "Half of the cases of … alcohol … dependence remitted approximately … 14 … years after dependence onset"
+     }
+    ],
+    "reason": "G2 (round 7): it repeated the hero (90.6% is the 'about 91 in 100' projection) and the half-free line (14 years). His v10 sentence; the page now shows both figures on the hero."
+   },
+   {
+    "from": "v3 belief 'I’ve tried to stop before. I always go back.' proof (round 6)",
+    "text": "Half of Americans who say they beat a drinking problem needed 2 serious tries or fewer.",
+    "refs": [
+     {
+      "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+      "pmid": "31090945",
+      "fetched": true,
+      "quote": "Mean (SD) Median (IQR) Min, max … Primary substance Alcohol 5.38 (13.45) 2 (1, 4) 0, 100"
+     }
+    ],
+    "reason": "G2 (round 7): it repeated the '2 tries' card."
+   },
+   {
+    "from": "v3 belief 'I’ve got it under control now. I can handle just one.' proof (round 6)",
+    "text": "In a US survey of people who had got free of alcohol dependence, problems came back within a few years for 7 in 100 who had stopped drinking and 27 in 100 light drinkers.",
+    "refs": [
+     {
+      "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
+      "pmid": "18034696",
+      "fetched": true,
+      "quote": "The Wave 1 NESARC identified 2,109 individuals who met the DSM-IV criteria for full remission from alcohol dependence. Of these, 1,772 were reinterviewed at Wave 2"
+     },
+     {
+      "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
+      "pmid": "18034696",
+      "fetched": true,
+      "quote": "By Wave 2, 51.0% of the Wave 1 asymptomatic risk drinkers had experienced the recurrence of AUD symptoms, compared with 27.2% of low-risk drinkers and 7.3% of abstainers."
+     }
+    ],
+    "reason": "G2 (round 7): it repeated the '7 vs 27 in 100' card."
+   },
+   {
+    "from": "v3 belief 1 'I’ve been drinking for years. I’m stuck with it.' proof (round 7)",
+    "text": "In a 1992 US survey of people once hooked on alcohol, only about 28 in 100 still had a drinking problem in the past year.",
+    "refs": [
+     {
+      "cite": "Dawson DA (1996). Correlates of past-year status among treated and untreated persons with former alcohol dependence: United States, 1992. Alcoholism: Clinical and Experimental Research 20(4):771-779.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/8800398/",
+      "pmid": "8800398",
+      "fetched": true,
+      "fetchedOn": "2026-11-09",
+      "via": "PubMed abstract (efetch)",
+      "quote": "In the past year, 27.8% of the total sample met the criteria for alcohol abuse or dependence"
+     }
+    ],
+    "severity": "dependent",
+    "counted": null,
+    "reason": "rev8 (owner 9 Nov, 'don't just repeat the same stats'): a share-free number, the same kind as the hero and its range; replaced by a different kind of fact."
+   },
+   {
+    "from": "v3 belief 2 'I’ve tried to stop before. I always go back.' proof (round 7/8)",
+    "text": "Of Americans who say they beat a drinking problem, at least 25 in 100 had made 4 or more serious tries before the one that stuck.",
+    "reason": "rev8 check: repeated '25 in 100' from a number card and the how-tries card's source; 3 figures (rule 22, G2)"
    }
   ],
   "revisionNote": "2026-11-05: quit '1 in 4', after '1 month' and after '6 years' moved onto the page (quit-status, after-first-month, after-lasting), so they left this list. rev2 (2026-11-05): no list changes; belief 5 and 7 reasons updated (the lab cue fact left plan step 3; the doctor line moved from step 5 to step 3). rev3 (2026-11-08): 2.6 million and 1 in 12 added (rules audit r3: 06 items dropped with no entry); 'other' holds the 06 timelineNote, hero sub, community block, plan step 3 proof and the old who-age sentence.",
@@ -322,6 +401,48 @@
     "from": "rev2 plan step 3 action 6, second sentence",
     "text": "Drank heavily every day? Talk to the doctor before you start again.",
     "why": "Action 1 now comes first and sends a heavy daily drinker, a man with morning signs, or one with an earlier seizure or the DTs to the doctor before any quit date, a new one after a slip included. The slip line keeps one idea (rule 12)."
+   }
+  ],
+  "beliefs-tests": [
+   {
+    "from": "v3 belief 1 'I’ve been drinking for years. I’m stuck with it.' test (round 7)",
+    "limiting": "I’ve been drinking for years. I’m stuck with it.",
+    "text": "This week, ask one person who used to drink hard and doesn’t now how they got out. Listen for whether they once felt as stuck as you do.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 2 'I’ve tried to stop before. I always go back.' test (round 7)",
+    "limiting": "I’ve tried to stop before. I always go back.",
+    "text": "Write one line: where your last try ended (a day, a place, a person). This week, plan for it: a soft drink ordered first, a time to leave. Don’t seek it out; when it comes, see how far the plan carries you.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 3 'Stopping will be hell. I won’t get through it.' test (round 7)",
+    "limiting": "Stopping will be hell. I won’t get through it.",
+    "text": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the dry evening and read Before you stop now. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 4 'I need a drink to unwind after work.' test (round 7)",
+    "limiting": "I need a drink to unwind after work.",
+    "text": "Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the night without drink and read Before you stop now. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 belief 5 'I’ve got it under control now. I can handle just one.' test (round 7)",
+    "limiting": "I’ve got it under control now. I can handle just one.",
+    "text": "This week, the next time someone offers you just one, turn it down: say “I don’t drink” and order something else. Time how long the pull lasts after you say it.",
+    "reason": "owner 9 Nov: tests ask him to step into the hard thing on purpose"
+   },
+   {
+    "from": "v3 plan step 1 action (round 7)",
+    "text": "The belief tests above are one-off trial runs; they don’t break this week.",
+    "reason": "rev8: it pointed at the belief tests, which are now 'When this thought comes' steps (owner 9 Nov: tests ask him to step into the hard thing on purpose)"
+   },
+   {
+    "from": "v3 plan step 1 action (round 7)",
+    "text": "Each one is a belief to test. Start with the beliefs above.",
+    "reason": "rev8: it pointed at the belief tests, which are now 'When this thought comes' steps (owner 9 Nov: tests ask him to step into the hard thing on purpose)"
    }
   ]
  },
@@ -404,6 +525,83 @@
   "by": "data agent (rev6)",
   "note": "After gates round 6 (r6-owner, r6-rules) and decisions F1–F5. Changed items: changed true, changeNote (rev6 …), old values in wasR5 by field path, previous changeNote in changeNoteR5; check pending."
  },
+ "heroDefinition": {
+  "text": "Hooked here: at least 3 of 7 signs in the same year, such as needing more, failing to cut down, or drinking despite harm. Free: none of the signs left, and they never came back.",
+  "ref": {
+   "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+   "pmid": "21077975",
+   "fetched": true,
+   "fetchedOn": "2026-11-09",
+   "via": "NCBI PMC full text (efetch)",
+   "quote": "Dependence diagnoses require the existence of 3 or more of the 7 DSM-IV diagnostic criteria within a 12 month period"
+  },
+  "refs": [
+   {
+    "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+    "pmid": "21077975",
+    "fetched": true,
+    "fetchedOn": "2026-11-09",
+    "via": "NCBI PMC full text (efetch)",
+    "quote": "when you finally stopped having any of these experiences (dependence criteria) with (name of drug)? By finally stopped, I mean they never started happening again."
+   }
+  ]
+ },
+ "heroHalfFree": {
+  "text": "Half are free about 14 years after they got hooked, worked out from the ages people gave.",
+  "ref": {
+   "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction 106(3):657-69.",
+   "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+   "pmid": "21077975",
+   "fetched": true,
+   "fetchedOn": "2026-11-09",
+   "via": "NCBI PMC full text (efetch)",
+   "quote": "Half of the cases of nicotine, alcohol, cannabis and cocaine dependence remitted approximately 26, 14, 6 and 5 years after dependence onset, respectively."
+  }
+ },
+ "heroRange": {
+  "line": "Other national surveys counted 60 and 67 in 100 free; they counted a year or more without signs, this survey counted signs gone for good.",
+  "studies": [
+   {
+    "big": "60 in 100",
+    "who": "people once hooked on alcohol, no drinking problem for over a year when asked",
+    "where": "26 surveys in 24 countries, 2001–2015, not the US; from 29 in 100 (Lebanon) to 94 in 100 (Iraq)",
+    "ref": {
+     "cite": "Glantz MD, Bharat C, Degenhardt L, et al. (2020). The epidemiology of alcohol use disorders cross-nationally: Findings from the World Mental Health Surveys. Addictive Behaviors 102:106128.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7416527/",
+     "pmid": "31865172",
+     "fetched": true,
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC full text (efetch)",
+     "quote": "The average prevalence of ALA remission for all countries was 79.5% and 59.7% for ALD.",
+     "quotesMore": [
+      "Remission among people with lifetime AUD was defined at time of interview as having had more than 12 months, or at least two birthdays, since the last disorder related problem."
+     ]
+    }
+   },
+   {
+    "big": "67 in 100",
+    "who": "people once hooked on alcohol, no signs for over a year when asked",
+    "where": "New Zealand, national survey of 12,992 people, 2003–2004",
+    "ref": {
+     "cite": "Rapsey CM, Wells JE, Bharat C, Glantz M, Kessler RC, Scott KM (2019). Transitions through stages of alcohol use, use disorder and remission: findings from Te Rau Hinengaro, the New Zealand Mental Health Survey. Alcohol and Alcoholism 54(1):87-96.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6324656/",
+     "pmid": "30260382",
+     "fetched": true,
+     "fetchedOn": "2026-11-09",
+     "via": "NCBI PMC abstract (efetch) and PMC article page",
+     "quote": "Of those with an abuse or dependence disorder, 79.9 and 67.2% had remitted, respectively.",
+     "quotesMore": [
+      "Computer-assisted personal interviews were carried out face to face with 12,992 people from October 2003 to December 2004.",
+      "remission was defined as the absence of all disorder-related symptoms for more than 12 months prior to the interview."
+     ]
+    }
+   }
+  ]
+ },
+ "rev7": "Round 7 (2026-11-09), data agent: G1 hero fields (heroDefinition, heroHalfFree, heroRange) and hedges removed; G2 belief proofs that repeated a figure on the page replaced (old lines in notUsed.beliefs); G3 every number card carries checked: hooked | not, and propose reasons that only said who was counted are gone.",
+ "rev8": "Round 8 (2026-11-09), data agent: every belief's test is now a 'When this thought comes' step (old text in testR7 and notUsed.beliefs-tests); belief 1 proofs that were share-free numbers like the hero replaced by a different kind of fact (alcohol Vaillant 1996, weed Hirvonen 2012, nicotine Doll 2004; porn has no hero, unchanged); plan step 1 lines about the tests reworded.",
  "numbers": [
   {
    "kind": "hope-free-now",
@@ -434,13 +632,17 @@
    "origin": "07-mirror-stats/alcohol.json who '14 years' (its second figure, 2,008 of 4,781; Table 3 re-fetched 2026-11-05)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): Brief (fold shares as 'N in 100'): raw '2,008 of 4,781' left the Measured line; the head count stays in n.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "wasR4": {
     "basis.measured": "Whether each person had stopped having every sign of being hooked, with none coming back, by the day of the interview. 2,008 of 4,781 is 42 in 100."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -456,11 +658,11 @@
     "n": "4,781 adults who had ever been hooked (of 43,093 surveyed); 2,008 of them had already got free",
     "where": "US",
     "when": "2001–2002",
-    "measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100. The study gives 90.6 in 100, shown here as about 91; the first belief below uses the same figure."
+    "measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100. The study gives 90.6 in 100, shown here as about 91."
    },
-   "caveat": "A model, not a head count. The authors say people over-reporting that they got free, and people the survey missed (in prison, in hospital, or worse), likely push it too high; recalled ages can also be wrong. Men got free less often than women.",
+   "caveat": "A model from the ages people gave, not a head count: 42 in 100 were free when asked. People in prison or hospital weren't asked. Men got free less often than women.",
    "projection": true,
-   "weak": "Likely runs high",
+   "weak": null,
    "ref": {
     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
@@ -472,16 +674,22 @@
    "origin": "06-template.json alcohol hero '90.6%' (same study as 07-mirror-stats/alcohol.json who '14 years')",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision: corrections applied to numbers[1].basis.measured"
    },
-   "changeNote": "rev6 (2026-11-08): r6 brief: belief 1 (his own words, kept) says 90.6% next to the hero's 'About 91 in 100'; the hero fold now says one rounds to the other.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it). G1: 'Likely runs high' removed; the hero shows what hooked meant and the range from other studies instead. G1: hedge 'likely push it too high' removed; the hero range shows what other studies counted.",
    "revNotes": [
     "main session fix 2026-11-08 after rev3 build: rule 12b: 90.6% written as about 91 in 100 (90.6% stays in the quote)"
    ],
    "wasR5": {
     "basis.measured": "The age each person was first hooked and the age every sign of it stopped for good, as they recalled it; a model projects the share free over a whole life. Projected free within 10 years: about 37 in 100."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null,
+    "weak": "Likely runs high",
+    "caveat": "A model, not a head count. The authors say people over-reporting that they got free, and people the survey missed (in prison, in hospital, or worse), likely push it too high; recalled ages can also be wrong. Men got free less often than women."
    }
   },
   {
@@ -499,9 +707,9 @@
     "when": "2001–2002",
     "measured": "The age when the signs of being hooked first appeared, and the age when they finally stopped and never came back, as people recalled it. Getting free here means no signs of being hooked any more; it does not have to mean never drinking."
    },
-   "caveat": "The clock starts when the person first got hooked, not at the first drink. A model from recalled ages, not a head count. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women.",
+   "caveat": "The clock starts when the person first got hooked, not at the first drink. A model from the ages people gave, not a head count. People in prisons and hospitals weren't asked. Men got free more slowly than women.",
    "projection": true,
-   "weak": "Likely runs high",
+   "weak": null,
    "ref": {
     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
@@ -513,12 +721,18 @@
    "origin": "07-mirror-stats/alcohol.json who '14 years' (other drugs removed from basis and quote, rule 13)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): timeIsResult true (D7: the time until half are free is the finding). Weak chip as on the lifetime card (D6). basis.who: use level (rule 3). Kind who-years is not picked. | earlier: rev2: Cold readers (both): '14 years from when?'. Headline now says 'after they got hooked' (source: 'after dependence onset'); caveat opens by saying when the clock starts. Weak chip cut to 4 words (A0), same as the lifetime card. Figure and quote unchanged; re-read in the full text.",
-   "timeIsResult": true
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it). G1: 'Likely runs high' removed; the hero shows what hooked meant and the range from other studies instead. G1: hedge 'real rates are probably lower' removed (card is not picked; kept tidy).",
+   "timeIsResult": true,
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null,
+    "weak": "Likely runs high",
+    "caveat": "The clock starts when the person first got hooked, not at the first drink. A model from recalled ages, not a head count. People in prisons and hospitals weren't asked, so the authors say the real rates are probably lower. Men got free more slowly than women."
+   }
   },
   {
    "kind": "who-age",
@@ -550,12 +764,16 @@
    "origin": "07-mirror-stats/alcohol.json who 'Age 38' (the weed figure dropped, rule 13; quote taken from the alcohol-only part of the results text, re-fetched 2026-11-05)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): basis.n: one figure for the survey's alcohol group on all three cards (rules r4 minor: 1,013 vs 1,000 vs '51 in 100'); 1,013 kept in ref.note. | earlier: rev3 (2026-11-08): Caveat's last sentence: owner-lens r3 blocker and rules audit (rule 4): the self-judged group, mostly never diagnosed, must not read as permission to drink a little; it now points to the card that counts people once hooked, in that card's new order (7 vs 27). basis.who: use level, rule 3 (not reported by the survey). The older sentence 'Free here is not always quitting: about 1 in 3 still drank some.' is listed in notUsed.other. | earlier: rev2: Mirror: 'You think if you haven't stopped by now, you never will.' reads the wrong way for a reader over 38 (cold reader v2); the new thought is one an average of 38 answers (rule C). Basis: factual audit found '18 years between first use and getting free' wrong (14.90 to 37.86 is about 23); 18.39 is the paper's 'drinking career' figure, now named so, with first use 15 and weekly use 19 from Table 1. Weak: the same short chip as every National Recovery Survey card (owner-lens v1 and v2, task); the long reason is in the caveat ('most never diagnosed': Kelly 2017, same survey, Table 1, only 17.0 in 100 ever diagnosed with an alcohol or drug use disorder). Figure, headline and quote unchanged.",
-   "editNote": "2026-11-06: moderation-leaning sentence replaced (gates round 3, rule 4)"
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
+   "editNote": "2026-11-06: moderation-leaning sentence replaced (gates round 3, rule 4)",
+   "checked": "not",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "who-life-event",
@@ -586,11 +804,15 @@
    "origin": "07-mirror-stats/alcohol.json who '×2.2'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): basis.who: use level (rule 3). Kind who-life-event is not picked. | earlier: Basis only: 'NESARC' and the extra ratio figures (×1.37, ×1.76, ×0.70) replaced by plain words, same findings (rule E). Headline, figure and quote unchanged; re-read."
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "how-alone",
@@ -621,14 +843,18 @@
    "origin": "07-mirror-stats/alcohol.json how '56%'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): F1 + r6-rules minor (safety): 'first' read as 'then stop alone'; now 'now', with the footer's signs.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "editNote": "2026-11-06: wording edit after gates round 2 (meaning and source unchanged)",
    "wasR5": {
     "caveat": "'No help' means none of those four kinds; some may have had other support, such as a family doctor. Help could be one meeting years ago or years of treatment. It doesn't show which route worked better; people with worse problems used help more. Each person judged his own problem, and most in this survey were never diagnosed, so milder cases are mixed in. Drinking heavily every day? Read Before you stop first: stopping alone can be dangerous."
+   },
+   "checked": "not",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -660,11 +886,15 @@
    "origin": "new: the alcohol row of Table 1 in the paper behind 07-mirror-stats/alcohol.json how '3 tries' (that figure mixes all drugs)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): basis.n: same alcohol-group figure on all three cards (rules r4 minor). Measured share as 'N in 100' (D7). | earlier: rev3 (2026-11-08): Headline: 'a few needed dozens' cut (rules audit r3, rule 12: one idea per line); the 100-try maximum stays in Measured. basis.who: use level (rule 3). | earlier: rev2: Weak: the same short National Recovery Survey chip (owner-lens v1 and v2); long reason in the caveat. Basis: says what a 'serious try' is (cold readers, both: undefined), from the survey's own question. Figure, headline, mirror and quote unchanged."
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
+   "checked": "not",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "after-lasting",
@@ -698,11 +928,11 @@
    "origin": "new",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[7].mirror, numbers[7].basis.measured"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): F3 + r6-rules major (safety) + r6-owner minor: the face leads with not drinking; 87% less (drinking less) moves to the fold, as porn 74 in 100 did (E6). | F3: headline says what a quitter needs (did not drink at all; the chip says it is an average); source quote unchanged, the 25 in 100 is in its Measured line. | r6-rules minor (rule 10): said three times; Measured and Weak keep it. | F3: the reduction is told plainly as not the result, before the 7 vs 27 pointer the caveat already ends with. | Quote check: the abstract's 'During the year after treatment, 1 in 4 clients remained continuously abstinent on average' is added to quotesMore (re-read 2026-11-08 Europe PMC, PMID 11327187).",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "pooled": true,
    "wasR4": {
     "pooled": null,
@@ -713,7 +943,11 @@
     "headline": "In the year after treatment for a drinking problem, those who still had problems drank 87% less alcohol than before, on average.",
     "caveat": "An average for a group, not a promise for one person. It does not show when slips happened. The 10 in 100 who drank moderately were people treated for any drinking problem, mild ones included; for people once hooked, light drinking brought problems back far more often than none (the “7 vs 27 in 100” card)."
    },
-   "changeNoteR5": "rev6 (2026-11-08): F3 + r6-rules major (safety) + r6-owner minor: the face leads with not drinking; 87% less (drinking less) moves to the fold, as porn 74 in 100 did (E6). | F3: headline says what a quitter needs (did not drink at all; the chip says it is an average); source quote unchanged, the 25 in 100 is in its Measured line. | r6-rules minor (rule 10): said three times; Measured and Weak keep it."
+   "changeNoteR5": "rev6 (2026-11-08): F3 + r6-rules major (safety) + r6-owner minor: the face leads with not drinking; 87% less (drinking less) moves to the fold, as porn 74 in 100 did (E6). | F3: headline says what a quitter needs (did not drink at all; the chip says it is an average); source quote unchanged, the 25 in 100 is in its Measured line. | r6-rules minor (rule 10): said three times; Measured and Weak keep it.",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "helps-stop-vs-cut",
@@ -744,11 +978,15 @@
    "origin": "07-mirror-stats/alcohol.json works '27% vs 7%'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[8].headline"
+    "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): Caveat: the safety clause after 'the gap wasn't clear' (safety r4 minor, D10, word for word). Headline: 'non-drinkers' to 'who had stopped drinking' (cold reader r4: the group was hard to parse). basis.who: use level (rule 3). | earlier: rev3 (2026-11-08): Big and headline in the order of the other what-helps cards, the helped group first (owner-lens r3 minor: under What helps, 27 read as the helped group). Same figures, source and basis. 'Over the next three years' left the line (rule 12 counts number words); the 3-year gap is in Based on (when: 2001–2002 and 2004–2005). | earlier: rev2: Counted label: 'free of it at first interview' was research wording (owner-lens v1, item 3); now 'when first asked'. Figures, headline, basis and quote unchanged; abstract re-read."
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "helps-medicine",
@@ -779,7 +1017,7 @@
    "origin": "07-mirror-stats/alcohol.json works '1 in 12' (Jonas 2014, kept in the basis and alsoRef); arm figures from Mann 2004 (new)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -791,10 +1029,14 @@
     "quote": "The NNT to prevent return to any drinking for acamprosate was 12 (95% CI, 8 to 26; risk difference [RD], -0.09; 95% CI, -0.14 to -0.04)",
     "via": "re-read 2026-11-05 rev2 (JAMA full text): '16 trials, n = 4847'; low risk of bias subgroup 'RD, −0.02; 95% CI, −0.09 to 0.05, 4 trials, n = 1409', 'not statistically significant'"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules major / E5: event rates pooled over 17 trials (Mann 2004), now pooled: true; Weak stays.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "pooled": true,
    "wasR4": {
     "pooled": null
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -826,13 +1068,17 @@
    "origin": "07-mirror-stats/alcohol.json works '×1.2'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 10, D6): the caveat no longer repeats the chip's 'Worked out, not counted'.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "wasR4": {
     "caveat": "Worked out, not counted: 35 in 100 is the review's typical rate on other therapy, and 42 in 100 is that rate times the review's combined effect. A head-to-head test against other proven therapy, not against no help, so the gain is modest: about 7 more in 100. It tests a therapist steering you into AA, not AA alone. On how much people drank when they did drink, AA-based help did about as well as other therapy, not better."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -865,16 +1111,20 @@
    "origin": "07-mirror-stats/alcohol.json quit '62% vs 43%'",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-owner minor: 'free by the third' had no noun. | r5-owner + r5-rules minor (safety): the 7 vs 27 clause, as on the hero, Age 38, 75 in 100 and 87% less.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "wasR4": {
     "headline": "62 in 100 help-seekers who got treatment or AA in the first year were free by the third; 43 in 100 without.",
     "caveat": "Not a trial: people chose whether to get help, so they may differ in other ways. Only 99 people got no help. Slipping back was common in both groups."
    },
-   "changeNoteR4": "rev5 (2026-11-08): r5-owner minor: 'free by the third' had no noun."
+   "changeNoteR4": "rev5 (2026-11-08): r5-owner minor: 'free by the third' had no noun.",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "after-first-month",
@@ -894,7 +1144,6 @@
    "caveat": "Small study, not a trial. People known to be hooked on alcohol were kept out, and nothing shows how long the gains last if drinking resumes.",
    "projection": false,
    "weak": "Small study, drinkers not hooked",
-   "propose": "It counts drinkers who were not hooked (rule 2), so it could go; the liver card counts people in hospital to stop drinking.",
    "ref": {
     "cite": "Mehta G, Macdonald S, Cronberg A, et al. (2018). Short-term abstinence from alcohol and changes in cardiovascular risk factors, liver function tests and cancer-related growth factors: a prospective observational study. BMJ Open.",
     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5942469/",
@@ -904,17 +1153,23 @@
     "via": "re-read 2026-11-05 rev2 (NCBI full text): 94 stopped (mean age 45.5), 47 kept drinking; 'Exclusion criteria were known liver disease or alcohol dependence'"
    },
    "origin": "07-mirror-stats/alcohol.json after '1 month'",
-   "changeNote": "rev5 (2026-11-08): Brief (no % in folds; template build rule 12b).",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked. G3: propose reason about who was counted dropped (the card stays, labelled); no other reason, so propose is gone.",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision: corrections applied to numbers[12].basis.measured"
+    "notes": "checked after revision"
    },
    "wasR4": {
     "basis.measured": "Blood tests, blood pressure and weight before and after one month. The group that kept drinking showed no clear change. Blood pressure also fell about 6 to 7%, and weight 1.5%."
    },
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "propose": null,
+   "wasR6": {
+    "checked": null,
+    "propose": "It counts drinkers who were not hooked (rule 2), so it could go; the liver card counts people in hospital to stop drinking."
+   }
   },
   {
    "kind": "after-body",
@@ -945,11 +1200,15 @@
    "origin": "new",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev3 (2026-11-08): Headline: 'clearly better' is a verdict word (rule 6) and 'one week' a second figure (rule 12); now 'a real drop', which the caveat defines as a drop larger than chance. Same figure and source. | earlier: rev2: Cold readers (both): 'clearly better' undefined and 'what about the other 55%?'; the caveat now defines it and gives the rest (about 43 in 100 no clear change, 12 in 100 worse: 16 of 137, 11.7%). Big '45%' now '45 in 100', the share format the hero uses (owner-lens v1). Basis: 'FibroScan' replaced by 'a standard liver scan' (owner-lens v1 item 7). Figure and quote unchanged."
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
+   }
   },
   {
    "kind": "after-mood",
@@ -980,13 +1239,17 @@
    "origin": "new (the same figure is on the 06-template.json alcohol timeline, Week 4 milestone, ref r15)",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev5 (2026-11-08): r5-rules minor: the source says 'largest reduction in scores at Week 2', as belief 3 proof says.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "wasR4": {
     "basis.measured": "A standard depression score within 48 hours of arrival and at each of the 4 weeks; 'clearly depressed' means a score of 20 or more. The biggest drop came by week 2."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -1016,15 +1279,19 @@
     "via": "re-read 2026-11-05 rev2 (Europe PMC abstract): 25.0% still dependent, 25.5% ever treated, 4,422 people"
    },
    "origin": "07-mirror-stats/alcohol.json quit '1 in 4'",
-   "changeNote": "rev5 (2026-11-08): r5-rules minor (rule 12, one fact) per the brief; the 'some signs left' half and why it differs from the 42 stay in the caveat.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
    "wasR4": {
     "headline": "Of Americans hooked on alcohol before the past year, 75 in 100 no longer were; many still had some signs."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -1054,10 +1321,10 @@
     "via": "re-read 2026-11-05 rev2 (NCBI full text of the author manuscript)"
    },
    "origin": "new (kind how-withdrawal, picked after the first review)",
-   "changeNote": "rev6 (2026-11-08): F1: the pointer names the footer's signs.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'hooked': its source counted people who met the criteria for being hooked (or a diagnosed disorder / treatment for it).",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
@@ -1068,6 +1335,10 @@
    },
    "wasR5": {
     "caveat": "'Up to half' is a ceiling, not an exact share. It does not cover the rarer severe form, which the timeline shows. Some symptoms can linger for weeks to months after the first days. Shaky after you stop or cut back? Read Before you stop now."
+   },
+   "checked": "hooked",
+   "wasR6": {
+    "checked": null
    }
   },
   {
@@ -1098,15 +1369,19 @@
     "via": "re-read 2026-11-05 rev2 (BioC full text): Table 2 bends at 0-8 years (quality of life), 0-11 (happiness), 0-6 (self-esteem); 'highest rates of improvement during the first 6–11 years'"
    },
    "origin": "07-mirror-stats/alcohol.json after '6 years'",
-   "changeNote": "rev4 (2026-11-08): timeIsResult true (D7: when the steep climb eases is the finding; the headline leads with the result (D7)). Headline leads with the result, not the time (D7). basis.n share as 'N in 100' and said to be a subset of the 1,879 (rules r4 minor). propose kept: off-reader choice only (D3). | earlier: rev3 (2026-11-08): basis.who: use level (rule 3). Kind kept as after-lasting, not moved to gen-years as the rules audit asked: the template shows a page number of a general kind nowhere (general() reads general.json only; the general choice is 'page', which shows none), so the move would take a v10 card he liked off the page without his say (rule 25). See 'needs template'. propose kept for the off-kind choice. | earlier: rev2: Factual audit: 'happiness and quality of life climbed steeply for about 6 years' was wrong (their bends are 8 and 11 years; only self-esteem bends at 6). The headline now uses the paper's own summary for well-being in general ('steep increases in indices of well-being … during the first 6 years', the quote), and basis.measured gives each bend. Caveat adds that only people still free were asked (audit). Weak chip cut to 6 words with the National Recovery Survey wording first (A0). v10 figure, mirror, ref and propose kept.",
+   "changeNote": "rev7 (2026-11-09): G3: checked 'not': its source did not check whether people were hooked.",
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
    "timeIsResult": true,
-   "liked": true
+   "liked": true,
+   "checked": "not",
+   "wasR6": {
+    "checked": null
+   }
   }
  ],
  "beliefs": [
@@ -1114,67 +1389,139 @@
    "kind": "stuck",
    "limiting": "I’ve been drinking for years. I’m stuck with it.",
    "counterpart": "Most people hooked on alcohol get free in the end. I’m doing it now.",
-   "test": "This week, ask one person who used to drink hard and doesn’t now how they got out. Listen for whether they once felt as stuck as you do.",
-   "proof": "In a big US survey, 90.6% of people ever hooked on alcohol are projected to get free in their lifetime; half within about 14 years.",
-   "severity": "dependent",
+   "test": "Write the thought down, and next to it: “Most people hooked on alcohol get free in the end.” Then read the proof under it once and do the next step of the plan below.",
+   "proof": "In men followed for decades from their youth, those with a drinking problem who had stayed off drink for 5 years rarely went back to it.",
+   "severity": "disorder",
    "refs": [
     {
-     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
-     "pmid": "21077975",
+     "cite": "Vaillant GE (1996). A long-term follow-up of male alcohol abuse. Archives of General Psychiatry 53(3):243-249.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/8611061/",
+     "pmid": "8611061",
      "fetched": true,
-     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
-     "quote": "Lifetime cumulative probability estimates of dependence remission were … 90.6% for alcohol"
-    },
-    {
-     "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
-     "pmid": "21077975",
-     "fetched": true,
-     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
-     "quote": "Half of the cases of … alcohol … dependence remitted approximately … 14 … years after dependence onset"
+     "fetchedOn": "2026-11-09",
+     "via": "PubMed abstract (efetch)",
+     "quote": "After abstinence had been maintained for 5 years, relapse was rare.",
+     "quotesMore": [
+      "At some point during their lives, 55 (21%) of the college and 150 (33%) of the core city men met DSM-III criteria for alcohol abuse.",
+      "Alcohol abuse could continue for decades without remission or progression of symptoms."
+     ]
     }
    ],
-   "origin": "06-template.json alcohol belief 4 (marked Keep). Limiting and counterpart word for word. Proof leads with the v10 proof sentence word for word; the head count follows it.",
+   "origin": "06-template.json alcohol belief 4 (marked Keep). Limiting and counterpart word for word. Round 7 (G2): the proof is new, from Dawson 1996 (NLAES 1992); the v10 sentence is in notUsed.beliefs.",
    "keep": true,
    "check": {
-    "by": "revision checker b (alcohol)",
-    "on": "2026-11-05",
+    "by": "revision checker a (alcohol)",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev2: Proof back to the v10 sentence word for word, his Keep row (rules 25, 26). The head count added last round ('Of 4,781 asked, 2,008 were already free.') repeated the hero (cold readers, both) and gave the proof four figures (A0); it moved to 'rejected'. The v10 sentence still holds two figures; his Keep row wins over A0 here. Refs: only the two quotes the line uses (A0). Limiting, counterpart and test unchanged.",
-   "ownWords": true
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests. Proof replaced: the rev7 proof was a share-free number, the same kind as the hero and its range (owner: 'don't just repeat the same stats'); now a different kind of fact that answers the thought. Counterpart unchanged. Old proof in wasR7 and notUsed.beliefs.",
+   "ownWords": false,
+   "wasR6": {
+    "proof": "In a big US survey, 90.6% of people ever hooked on alcohol are projected to get free in their lifetime; half within about 14 years.",
+    "refs": [
+     {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "pmid": "21077975",
+      "fetched": true,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quote": "Lifetime cumulative probability estimates of dependence remission were … 90.6% for alcohol"
+     },
+     {
+      "cite": "Lopez-Quintero C, Hasin DS, de los Cobos JP, Pines A, Wang S, Grant BF, Blanco C (2011). Probability and predictors of remission from life-time nicotine, alcohol, cannabis or cocaine dependence: results from the National Epidemiologic Survey on Alcohol and Related Conditions. Addiction.",
+      "pmid": "21077975",
+      "fetched": true,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3227547/",
+      "quote": "Half of the cases of … alcohol … dependence remitted approximately … 14 … years after dependence onset"
+     }
+    ],
+    "ownWords": true,
+    "keep": true,
+    "severity": "dependent"
+   },
+   "testR7": "This week, ask one person who used to drink hard and doesn’t now how they got out. Listen for whether they once felt as stuck as you do.",
+   "wasR7": {
+    "proof": "In a 1992 US survey of people once hooked on alcohol, only about 28 in 100 still had a drinking problem in the past year.",
+    "refs": [
+     {
+      "cite": "Dawson DA (1996). Correlates of past-year status among treated and untreated persons with former alcohol dependence: United States, 1992. Alcoholism: Clinical and Experimental Research 20(4):771-779.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/8800398/",
+      "pmid": "8800398",
+      "fetched": true,
+      "fetchedOn": "2026-11-09",
+      "via": "PubMed abstract (efetch)",
+      "quote": "In the past year, 27.8% of the total sample met the criteria for alcohol abuse or dependence"
+     }
+    ],
+    "severity": "dependent",
+    "counted": null,
+    "weak": null,
+    "ownWords": false
+   },
+   "counted": "men with a drinking problem, mild cases included",
+   "weak": "One study of men from Boston and Harvard, followed since 1940; the summary gives no count of how many stayed off 5 years.",
+   "proofNote": "Vaillant 1996: 724 men (268 Harvard graduates, 456 inner-city Boston men) studied since 1940; 205 met DSM-III alcohol abuse at some point (abuse, so tag disorder). The same summary also says abuse could go on for decades without remission: the proof claims only that 5 years off held, not that everyone gets out."
   },
   {
    "kind": "stuck",
    "limiting": "I’ve tried to stop before. I always go back.",
    "counterpart": "Each try showed me where it breaks. I know more now than I did the first time.",
-   "test": "Write one line: where your last try ended (a day, a place, a person). This week, plan for it: a soft drink ordered first, a time to leave. Don’t seek it out; when it comes, see how far the plan carries you.",
-   "proof": "Half of Americans who say they beat a drinking problem needed 2 serious tries or fewer.",
-   "severity": "resolved",
+   "test": "After a slip, or when the thought comes, write one line: where the last try broke (a day, a place, a person) and one thing you’ll do there next time. Then go back to step 3 of the plan the same day.",
+   "proof": "Of people treated for drinking who slipped in the year after, only 6 in 100 went on drinking heavily and often.",
+   "severity": "treatment",
    "refs": [
     {
-     "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
-     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
-     "pmid": "31090945",
+     "cite": "Witkiewitz K, Masyn KE (2008). Drinking trajectories following an initial lapse. Psychology of Addictive Behaviors 22(2):157-167.",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2721008/",
+     "pmid": "18540713",
+     "pmcid": "PMC2721008",
      "fetched": true,
-     "quote": "Mean (SD) Median (IQR) Min, max … Primary substance Alcohol 5.38 (13.45) 2 (1, 4) 0, 100"
+     "fetchedOn": "2026-11-09",
+     "via": "PMC article page (full text), Results",
+     "quote": "Only a small percentage (6%) of individuals displayed a frequent heavy drinking trajectory.",
+     "quotesMore": [
+      "the majority of individuals reported a return to abstinence or infrequent drinking following the initial lapse",
+      "a sample of 563 individuals who received community alcohol treatment",
+      "the complete data of those who lapsed ( n = 395) were included"
+     ]
     }
    ],
    "origin": "new. The alcohol row of the tries table (about 1,000 people whose main problem was alcohol), worded the same as the how-tries card.",
    "keep": false,
    "check": {
-    "by": "revision checker b (alcohol)",
-    "on": "2026-11-08",
+    "by": "revision checker a (alcohol)",
+    "on": "2026-11-09",
     "verdict": "ok",
-    "notes": "checked after revision"
+    "notes": "checked after revision: corrections applied to beliefs[1].proof, beliefs[1].severity, beliefs[1].counted, beliefs[1].weak, beliefs[1].refs, beliefs[1].proofNote, beliefs[1].wasR7"
    },
-   "changeNote": "rev3 (2026-11-08): Proof: 'a few needed dozens' cut (rules audit r3, rule 12), the same line as the 2 tries card. Test, refs unchanged. | earlier: rev2: Test: safety audit said 'meet that moment once this week' walks him into his highest-risk moment on purpose. Now he sets the plan this week and meets the moment when it comes, without seeking it out (writing stays a one-line record). Proof: 'who say they beat' carries the card's self-judged point (A0). Ref unchanged."
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
+   "wasR6": {
+    "proof": "Half of Americans who say they beat a drinking problem needed 2 serious tries or fewer.",
+    "refs": [
+     {
+      "cite": "Kelly JF, Greene MC, Bergman BG, White WL, Hoeppner BB (2019). How many recovery attempts does it take to successfully resolve an alcohol or drug problem? Estimates and correlates from a national study of recovering U.S. adults. Alcoholism: Clinical and Experimental Research.",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6602820/",
+      "pmid": "31090945",
+      "fetched": true,
+      "quote": "Mean (SD) Median (IQR) Min, max … Primary substance Alcohol 5.38 (13.45) 2 (1, 4) 0, 100"
+     }
+    ]
+   },
+   "testR7": "Write one line: where your last try ended (a day, a place, a person). This week, plan for it: a soft drink ordered first, a time to leave. Don’t seek it out; when it comes, see how far the plan carries you.",
+   "counted": "people in treatment for drinking who slipped afterwards",
+   "weak": "One US study of 563 people in community treatment (published 2008); 395 slipped; the groups come from a statistical model over 7 months after the slip.",
+   "proofNote": "Witkiewitz & Masyn 2008, RREP: 563 treated for alcohol abuse or dependence (no major psychiatric or more severe drug diagnosis); 395 lapsed within 12 months; after the first lapse, model classes: frequent heavy 6%, frequent then less often 12%, infrequent moderate 82%. The proof claims only the 6; the 82% kept drinking, so it is no case for moderating (belief 5 answers that).",
+   "wasR7": {
+    "proof": "Of Americans who say they beat a drinking problem, at least 25 in 100 had made 4 or more serious tries before the one that stuck.",
+    "severity": "resolved",
+    "refs": "Kelly 2019 (PMC6602820) Table 1, as in rev8"
+   }
   },
   {
    "kind": "hard",
    "limiting": "Stopping will be hell. I won’t get through it.",
    "counterpart": "I’ve got through hard weeks before. This is a few hard weeks, not a hard life.",
-   "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the dry evening and read Before you stop now. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on.",
+   "test": "Write down one hard week you got through and what carried you; if you drink heavily every day, are shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before, read Before you stop now.",
    "proof": "In a study of men in hospital treatment for drinking, with no earlier major mental illness, low mood lifted fast once they stopped; the biggest lift came in week 2.",
    "severity": "treatment",
    "refs": [
@@ -1197,23 +1544,24 @@
    "keep": false,
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): F1 + r6-rules minor (safety): the footer's full signs, not only heavy daily drinking; 'now'.",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "wasR4": {
     "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day? Read Before you stop first. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on."
    },
    "wasR5": {
     "test": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day? Skip the dry evening and read Before you stop. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on."
-   }
+   },
+   "testR7": "Write down one hard week you got through, and what carried you. Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the dry evening and read Before you stop now. If not, spend one evening you'd usually drink on a long walk, no drink. Already off it? Take that walk when the next pull comes. Rate the pull at the start and the end: 0 is none, 10 is can’t hold on."
   },
   {
    "kind": "need",
    "limiting": "I need a drink to unwind after work.",
    "counterpart": "Drinking takes the edge off for a while. It takes my sleep, and sleep is what would unwind me.",
-   "test": "Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the night without drink and read Before you stop now. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank.",
+   "test": "Write the thought down, and next to it: “It takes my sleep, and sleep is what would unwind me.” Then take your unwinding swap from step 2 before you pour; if you drink heavily every day, are shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before, read Before you stop now.",
    "proof": "In sleep-lab studies of men treated for alcoholism, drink did not reliably help them sleep: while drinking, they often took longer to fall asleep and slept less.",
    "severity": "treatment",
    "refs": [
@@ -1243,48 +1591,70 @@
    "keep": false,
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev6 (2026-11-08): F1 + r6-rules minor (safety): 'before' implied he could do the dry night once he had read it; now he skips it.",
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
    "wasR5": {
     "test": "Still drinking? Drinking heavily every day? Read Before you stop before any night without drink. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank."
-   }
+   },
+   "testR7": "Still drinking? Drinking heavily every day, shaky, sweaty or sick in the morning until you drink, or had a seizure or the DTs before? Skip the night without drink and read Before you stop now. Otherwise, on three nights this week note how long you took to fall asleep and how often you woke; set a night you drank against one you didn’t. Already off it? Note the same for three nights and set it against how you slept when you drank."
   },
   {
    "kind": "moderation",
    "limiting": "I’ve got it under control now. I can handle just one.",
    "counterpart": "I’ve tried “just one” before. I know where it went.",
-   "test": "This week, the next time someone offers you just one, turn it down: say “I don’t drink” and order something else. Time how long the pull lasts after you say it.",
-   "proof": "In a US survey of people who had got free of alcohol dependence, problems came back within a few years for 7 in 100 who had stopped drinking and 27 in 100 light drinkers.",
-   "severity": "dependent",
+   "test": "Answer it the way a non-drinker would, “I don’t drink,” and get out of the room or the place for a few minutes. Then text the person you told your date.",
+   "proof": "Of people diagnosed alcoholic and treated at US medical and psychiatric facilities, only 1.6 in 100 had become steady moderate drinkers when traced years later.",
+   "severity": "treatment",
    "refs": [
     {
-     "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
-     "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
-     "pmid": "18034696",
+     "cite": "Helzer JE, Robins LN, Taylor JR, Carey K, Miller RH, Combs-Orme T, Farmer A (1985). The extent of long-term moderate drinking among alcoholics discharged from medical and psychiatric treatment facilities. New England Journal of Medicine 312(26):1678-1682.",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/4000215/",
+     "pmid": "4000215",
      "fetched": true,
-     "quote": "The Wave 1 NESARC identified 2,109 individuals who met the DSM-IV criteria for full remission from alcohol dependence. Of these, 1,772 were reinterviewed at Wave 2"
-    },
-    {
-     "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
-     "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
-     "pmid": "18034696",
-     "fetched": true,
-     "quote": "By Wave 2, 51.0% of the Wave 1 asymptomatic risk drinkers had experienced the recurrence of AUD symptoms, compared with 27.2% of low-risk drinkers and 7.3% of abstainers."
+     "fetchedOn": "2026-11-09",
+     "via": "PubMed abstract (efetch)",
+     "quote": "Only 1.6 per cent of the subjects met our definition of stable moderate drinking at follow-up",
+     "quotesMore": [
+      "the five- to seven-year outcome for 1289 diagnosed alcoholics treated in our facilities during a two-year period (between 1973 and 1975)"
+     ]
     }
    ],
-   "origin": "new (rule 4 model). Counts only people who had been dependent and were fully free at the first interview (1,772 re-interviewed). A survey, not a trial: people chose to drink lightly or not at all.",
+   "origin": "new (rule 4 model). Round 7 (G2): Helzer 1985, 1,289 diagnosed alcoholics treated at medical and psychiatric facilities in 1973-1975, traced 5 to 7 years later; the old Dawson 2007 proof is in notUsed.beliefs.",
    "keep": false,
    "check": {
     "by": "revision checker a (alcohol)",
-    "on": "2026-11-08",
+    "on": "2026-11-09",
     "verdict": "ok",
     "notes": "checked after revision"
    },
-   "changeNote": "rev4 (2026-11-08): Counted override (rules r4 minor: the template line said 'people hooked on alcohol', but Dawson 2007 counted people already free of dependence). Proof: 'who weren't drinking when first asked' to 'who had stopped drinking' (cold reader r4), as on the card. Same figures and refs. | earlier: rev3 (2026-11-08): Proof in the card's new order, non-drinkers first (owner-lens r3); 'who weren't drinking when first asked' answers the cold reader's 'how do signs come back in someone who doesn't drink'. 'signs of a drinking problem' shortened to 'problems', as on the card. Same figures and refs. 'within 3 years' left the line (rule 12: 2 figures). | earlier: rev2: Test: say 'I don't drink', the words plan step 4 uses (owner-lens v1: the old 'I'm good' clashed with step 4). Proof and refs unchanged.",
-   "counted": "people once hooked on alcohol, free of it when first asked"
+   "changeNote": "rev8 (2026-11-09): test rewritten as a 'When this thought comes' step (owner 9 Nov: the tests asked him to step into the hard thing on purpose): catch the thought, write the also-true line next to it, one small next thing; old text in testR7 and notUsed.beliefs-tests.",
+   "counted": null,
+   "weak": "1,289 people treated in 1973–1975 and traced 5 to 7 years later; 83 in 100 of them were found.",
+   "wasR6": {
+    "proof": "In a US survey of people who had got free of alcohol dependence, problems came back within a few years for 7 in 100 who had stopped drinking and 27 in 100 light drinkers.",
+    "refs": [
+     {
+      "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
+      "pmid": "18034696",
+      "fetched": true,
+      "quote": "The Wave 1 NESARC identified 2,109 individuals who met the DSM-IV criteria for full remission from alcohol dependence. Of these, 1,772 were reinterviewed at Wave 2"
+     },
+     {
+      "cite": "Dawson DA, Goldstein RB, Grant BF (2007). Rates and correlates of relapse among individuals in remission from DSM-IV alcohol dependence: a 3-year follow-up. Alcoholism: Clinical and Experimental Research.",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/18034696/",
+      "pmid": "18034696",
+      "fetched": true,
+      "quote": "By Wave 2, 51.0% of the Wave 1 asymptomatic risk drinkers had experienced the recurrence of AUD symptoms, compared with 27.2% of low-risk drinkers and 7.3% of abstainers."
+     }
+    ],
+    "severity": "dependent",
+    "counted": "people once hooked on alcohol, free of it when first asked"
+   },
+   "testR7": "This week, the next time someone offers you just one, turn it down: say “I don’t drink” and order something else. Time how long the pull lasts after you say it."
   }
  ],
  "windows": [
@@ -1429,13 +1799,13 @@
   {
    "do": [
     "Still drinking? Don’t stop yet. This week, drink as you normally do, and watch it.",
-    "The belief tests above are one-off trial runs; they don’t break this week.",
+    "When one of the thoughts above comes up this week, do the step under it. Don’t go looking for it.",
     "Already stopped? Don’t start drinking again to do this step: write it from memory.",
     "Write down what drinking does for you: unwinding, sleep, confidence, fun with friends.",
     "Before each drink, note the time, the place and what you want from it. Next morning, note whether you got it.",
     "Allow it. No guilt and no promises this week. You’re finding out, not judging.",
     "Look at each reason up close: does drinking give you that, or take it back by morning?",
-    "Each one is a belief to test. Start with the beliefs above."
+    "Each one is a belief. Start with the beliefs above."
    ],
    "editNote": "2026-11-06: plan action edited after the round-2 safety audit (no new figure, no source change)"
   },
@@ -1459,14 +1829,14 @@
     "Slip? Don’t wait for Monday, and don’t go back to days of normal drinking: the same day, ask what that drink gave you."
    ],
    "proof": {
-    "text": "In r/stopdrinking posts with a day count, a reader rated a typical day after the first few days at about 3 out of 10.",
+    "text": "In r/stopdrinking posts with a day count, cravings still came up in 31 in 100 posts in months 4–12.",
     "ref": {
-     "cite": "Posts on r/stopdrinking with a day count, 2021-2025, scored for this page",
+     "cite": "Posts on r/stopdrinking with a day count, 2021-2025, tagged for this page",
      "url": "",
      "own": true,
      "fetched": true,
-     "quote": "typical score by graph stage, Days 4–7 to Months 4–12: 3, 3, 3, 3, 3.5, 3 (Days 2–3: 5); scale 0 = no struggle today, 10 = can barely hold on",
-     "via": "08-v3/felt/alcohol.json bins pooled into the graph's nine stages, as one-pager-v3.html stageDots() does (recomputed 2026-11-08: Days 2–3 n 86 median 5; Days 4–7 n 104 median 3; Week 2 3; Weeks 3–4 3; Month 2 3; Month 3 n 32 median 3.5; Months 4–12 3; Year 2+ n 25 median 1)"
+     "quote": "cravings, share of posts by graph stage, Days 2–3 to Months 4–12: 29, 39, 31, 35, 34, 31, 31 in 100 (86, 104, 97, 100, 71, 32, 75 posts)",
+     "via": "08-v3/felt/alcohol.json bins pooled into the graph's nine stages by build_v3.py felt_lines() (recomputed 2026-11-09)"
     },
     "check": {
      "by": "revision checker a (alcohol)",
@@ -1474,7 +1844,13 @@
      "verdict": "ok"
     },
     "severity": "self-hooked",
-    "changeNote": "rev4 (2026-11-08): D9 and cold reader r4: the proof said 4 out of 10 while the graph shows 3 for days 4–7; it now uses the graph's own stage medians (3, one stage 3.5). Same data. | earlier: rev3 (2026-11-08): Owner-lens r3 blocker (show, don't tell): 'noticeable but manageable' cut; 'scored by an AI reader for this page' cut (brief rule 7, process note; the graph's fold says who scored). 605 dropped from the line to keep 2 figures (rule 12); it stays in the ref's via. Severity added (rules audit r3, plan proofs carry a tag). Same data. 'the first three' became 'the first few days' (rule 12; Day 3's median is also 4, Days 1–2 are 5)."
+    "changeNote": "rev8 (2026-11-09): the 0–10 score is gone from the graph (owner 9 Nov: \"the scoring does not make sense\"); the proof now uses the share of posts mentioning cravings, as the graph draws it. | rev4 (2026-11-08): D9 and cold reader r4: the proof said 4 out of 10 while the graph shows 3 for days 4–7; it now uses the graph's own stage medians (3, one stage 3.5). Same data. | earlier: rev3 (2026-11-08): Owner-lens r3 blocker (show, don't tell): 'noticeable but manageable' cut; 'scored by an AI reader for this page' cut (brief rule 7, process note; the graph's fold says who scored). 605 dropped from the line to keep 2 figures (rule 12); it stays in the ref's via. Severity added (rules audit r3, plan proofs carry a tag). Same data. 'the first three' became 'the first few days' (rule 12; Day 3's median is also 4, Days 1–2 are 5).",
+    "wasR7": {
+     "text": "In r/stopdrinking posts with a day count, a reader rated a typical day after the first few days at about 3 out of 10.",
+     "quote": "typical score by graph stage, Days 4–7 to Months 4–12: 3, 3, 3, 3, 3.5, 3 (Days 2–3: 5); scale 0 = no struggle today, 10 = can barely hold on",
+     "cite": "Posts on r/stopdrinking with a day count, 2021-2025, scored for this page"
+    },
+    "changed": true
    },
    "doRefs": [
     {

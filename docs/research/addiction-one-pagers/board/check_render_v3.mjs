@@ -1,7 +1,7 @@
 // Checks the built one-pager prototype as it renders (RULEBOOK rules 24, 27, 28): every reader view at 390 and
 // 1280 px, and the review page. Run by build_v3.py after it writes the page; prints "FAIL <rule> <where>: <msg>".
 // Usage: node board/check_render_v3.mjs <built.html>   (SHOTS=<dir> also saves full-page screenshots)
-/* global DATA, MINP, stageDots -- the built page's own globals, read inside pg.evaluate */
+/* global DATA -- the built page's own globals, read inside pg.evaluate */
 import { chromium } from "playwright";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
@@ -10,8 +10,9 @@ const file = process.argv[2];
 if (!file) { console.error("usage: node check_render_v3.mjs <built.html>"); process.exit(2); }
 const url = pathToFileURL(path.resolve(file)).href;
 const shots = process.env.SHOTS || "";
-let fails = 0;
+let fails = 0, warns = 0;
 const FAIL = (rule, where, msg) => { fails++; console.log(`FAIL ${rule} ${where}: ${msg}`); };
+const WARN = (rule, where, msg) => { warns++; console.log(`WARN ${rule} ${where}: ${msg}`); };
 
 const browser = await chromium.launch();
 try {
@@ -41,7 +42,7 @@ try {
           const tableLink = [...art.querySelectorAll("a.tlink")].some(a => a.textContent === "the table above");
           return {
             overflow: document.documentElement.scrollWidth - innerWidth,
-            values: lis.map(li => +li.value), forum: lis.filter(li => /scored 0 to 10 by an AI reader|scored for this page/.test(li.textContent)).length,
+            values: lis.map(li => +li.value), forum: lis.filter(li => /tagged by an AI reader for this page/.test(li.textContent)).length,
             cited: [...cited], heroChips, secs, heroHasNum, tableLink,
             hasTableText: /the table above/.test(txt),
             prop: /Proposed to remove/i.test(txt), back: /Back to the review page/i.test(txt),
@@ -73,36 +74,56 @@ try {
               return out;
             })(),
             tokens: (txt.match(/\{\w+\}/g) || []).slice(0, 3),
+            // round 7
+            hedge: (document.body.innerText.match(/likely runs high/i) || [])[0] || "",
+            wantDef: !!(P.heroDefinition && (typeof P.heroDefinition === "string" ? P.heroDefinition : P.heroDefinition.text || P.heroDefinition.line)),
+            hasDef: ((art.querySelector(".sec-hero .hdef") || {}).innerText || "").trim().length > 0,
+            wantRange: !!(P.heroRange && ((P.heroRange.studies || []).length || P.heroRange.line)), hasRange: !!art.querySelector(".sec-hero .hrange"),
+            rangeStudies: art.querySelectorAll(".sec-hero .hstudies li").length, wantStudies: ((P.heroRange || {}).studies || []).length,
+            wantHalf: !!P.heroHalfFree, hasHalf: !!art.querySelector(".sec-hero .hhalf"),
+            noteCtl: art.querySelectorAll(".nbtn, .inote, .nadd").length,
+            // G3: every number card carries one of the two tags
+            untagged: [...art.querySelectorAll("[data-kind]")].filter(c => c.querySelectorAll(".tag.chk").length !== 1).map(c => c.dataset.kind),
+            offShown: (P.numbers || []).filter(x => DATA.kinds.kinds.find(k => k.id === x.kind)?.pick && !["hero", "hero-second"].includes(DATA.kinds.kinds.find(k => k.id === x.kind).where)).length - art.querySelectorAll("[data-kind]").length,
+            // G2: a belief proof never repeats a big figure shown on its page (hero or a card)
+            repeats: (() => {
+              const KK = Object.fromEntries(DATA.kinds.kinds.map(k => [k.id, k]));
+              const shown = new Set([...art.querySelectorAll("[data-kind]")].map(e => e.dataset.kind));
+              const heroOn = !!art.querySelector(".sec-hero .big, .sec-hero .grid100");
+              const nums = t => (String(t).match(/\d[\d,]*(?:\.\d+)?/g) || []).map(v => +v.replace(/,/g, "")).filter(v => v !== 100);
+              const bigs = (P.numbers || []).filter(x => KK[x.kind] && KK[x.kind].pick && (shown.has(x.kind) || (heroOn && KK[x.kind].where.startsWith("hero")))).map(x => x.big);
+              const out = [];
+              (P.beliefs || []).forEach((b, i) => {
+                // rounding only for figures of 10 or more (90.6 = 91), never small counts (1.6 is not 2)
+                const have = new Set(nums(b.proof).flatMap(v => v >= 10 ? [v, Math.round(v)] : [v]));
+                // a big figure with a unit ("2 tries", "14 years") repeats only if the proof has that number with that unit
+                const unitOk = big => { const m = String(big).match(/(\d[\d,.]*)\s+([a-z]+)/i); if (!m || /^(in|of|vs)$/i.test(m[2])) return true; const u = m[2].toLowerCase().replace(/s$/, ""); return new RegExp(m[1].replace(/[.,]/g, "\\$&") + "\\+?\\s+(?:serious\\s+|more\\s+)?" + u, "i").test(b.proof); };
+                for (const big of bigs) { const ns = nums(big); if (ns.length && ns.some(v => v >= 2) && ns.every(v => have.has(v)) && unitOk(big)) { out.push(`belief ${i + 1} repeats “${big}”`); break; } }
+              });
+              return out;
+            })(),
+            merged: DATA.pages.some(p => p.heroDefinition || p.heroRange),
             // round 4: the hero shows both hope numbers when both exist; a projection chip only beside a projected line
             bothHope: ["hope-free-now", "hope-lifetime"].every(k => (P.numbers || []).some(x => x.kind === k) && DATA.kinds.kinds.find(y => y.id === k).pick),
             heroText: (art.querySelector(".sec-hero") || { innerText: "" }).innerText,
             heroBigs: ["hope-free-now", "hope-lifetime"].map(k => ((P.numbers || []).find(x => x.kind === k) || {}).big).filter(Boolean),
             felth: art.querySelectorAll(".sec-graph .felth").length,
-            graphText: ((art.querySelector(".sec-graph .peaks, .sec-graph .say") || {}).innerText || ""),
             oldChip: /Projected, not counted/.test(txt),
             // round 5
             heroLine: ((art.querySelector(".sec-hero .line") || {}).innerText || "").trim(),
-            graphAll: [...art.querySelectorAll(".sec-graph .peaks, .sec-graph .say")].map(e => e.innerText).join(" ").toLowerCase(),
-            expectEase: (() => {
-              if (!P.feltMeds) return null;
-              const order = ["Day 1", "Days 2–3", "Days 4–7", "Week 2", "Weeks 3–4", "Month 2", "Month 3", "Months 4–12", "Year 2 +"].filter(l => l in P.feltMeds);
-              const v = order.map(l => P.feltMeds[l]), max = Math.max(...v);
-              const i = v.lastIndexOf(max);   // a later tie belongs to the hardest stretch
-              for (let j = i + 1; j < v.length; j++) if (v[j] <= max - 1.5 && v.slice(j + 1).every(y => y <= max - 1)) return order[j].toLowerCase();
-              return "";
-            })(),
-            chartLabels: [...art.querySelectorAll(".sec-graph svg text.k")].map(t => t.textContent).join(" ").toLowerCase(),
+            graphAll: [...art.querySelectorAll(".sec-graph .peaks, .sec-graph .say")].map(e => e.innerText).join(" ").replace(/\s+/g, " ").toLowerCase(),
+            // round 8: the score is gone from the whole graph section, and every chart draws 3 lines or more
+            graphSec: ((art.querySelector(".sec-graph") || {}).innerText || ""),
+            hasFelt: !!P.felt,
+            charts: [...art.querySelectorAll(".sec-graph .fv svg, .sec-graph .fh svg")].map(s => s.querySelectorAll("g.ln").length)
+              .concat([...art.querySelectorAll(".sec-graph table.ftab")].map(t => t.querySelectorAll("tbody tr").length)),
+            wantHead: P.feltHead || [],
+            appShown: !!art.querySelector(".appc"),
+            appHidden: (() => { const c = DATA.decisions.choices.find(c => c.id === "appdata"); return !!(c && (c.answered || c.rec) === "hide"); })(),
             averTwice: [...art.querySelectorAll("[data-kind]")].filter(c => /averag\w*\s+across/i.test((c.querySelector(".hl") || {}).textContent || "") && /Average across studies/.test(c.textContent)).map(c => c.querySelector(".big")?.textContent),
             chips: [...art.querySelectorAll(".tag.weak")].map(t => t.textContent.trim()),
             gapTexts: [...art.querySelectorAll(".gapl")].map(g => g.innerText.trim()),
             likedMissing: (P.numbers || []).filter(x => x.liked && DATA.kinds.kinds.find(k => k.id === x.kind)?.pick).map(x => x.big).filter(b => !txt.includes(b)),
-            medDiff: (() => {
-              if (!P.feltMeds) return [];
-              const js = {};
-              stageDots().forEach(x => { if (x.n >= MINP) js[x.label] = Math.round(x.med * 2) / 2; });
-              const keys = new Set([...Object.keys(js), ...Object.keys(P.feltMeds)]);
-              return [...keys].filter(k => js[k] !== P.feltMeds[k]).map(k => `${k}: page ${js[k]}, build ${P.feltMeds[k]}`);
-            })(),
           };
         });
         if (r.overflow > 1) FAIL(24, where, `page scrolls sideways by ${r.overflow} px`);
@@ -125,18 +146,29 @@ try {
         if (r.windows && r.barsDrawn !== r.windows) FAIL(18, where, `${r.windows} body rows, ${r.barsDrawn} drawn as bars`);
         if (r.unanswered.length) FAIL(14, where, `picked kinds with no number, no card answering them and no gap line: ${r.unanswered.join(", ")}`);
         if (r.tokens.length) FAIL(28, where, `unfilled fact in reader text: ${r.tokens.join(" ")}`);
+        if (r.hedge) FAIL(10, where, `the page says “${r.hedge}” (G1: no hedge words; show the definition and the range)`);
+        if (r.wantDef && !r.hasDef) FAIL(15, where, "the page has a heroDefinition but the hero shows no definition line (G1)");
+        if (r.wantRange && !r.hasRange) FAIL(15, where, "the page has a heroRange but the hero shows no range line (G1)");
+        if (r.rangeStudies !== r.wantStudies) FAIL(15, where, `the range fold lists ${r.rangeStudies} studies, the data has ${r.wantStudies} (G1)`);
+        if (r.wantHalf && !r.hasHalf) FAIL(15, where, "the page has a heroHalfFree but the hero shows no half-free line (G1)");
+        if (r.noteCtl) FAIL(29, where, `the reader's page shows ${r.noteCtl} note controls (review only)`);
+        if (r.untagged.length) FAIL(3, where, `number cards without exactly one “Checked as hooked” / “Not checked for addiction” tag: ${r.untagged.join(", ")}`);
+        if (r.offShown > 0) FAIL(27, where, `${r.offShown} picked cards are missing from the page (G3: cards about people not checked stay, labelled)`);
+        if (ver === "mix" && (r.merged || width === 390)) for (const m of r.repeats) (r.merged ? FAIL : WARN)("G2", `${pilot} ${width}px`, `${m} (a belief proof never repeats a number shown on its page)`);
         const norm = t => t.replace(/^about\s+/i, "").toLowerCase();
         if (r.bothHope && !(/projected to get free|projected/i.test(r.heroText) && r.heroBigs.every(b => r.heroText.toLowerCase().includes(norm(b)))))
           FAIL(15, where, `the page has both hope numbers but the hero doesn't show both (${r.heroBigs.join(", ")})`);
         if (/Worked out|Projection/i.test(r.heroText) && !/projected/i.test(r.heroText)) FAIL(10, where, "a projection chip in the hero, but no projected figure on it");
         if (r.oldChip) FAIL(10, where, "the old “Projected, not counted” chip is back (D6: one chip, “Worked out, not counted”)");
         if (r.heroLine && /^(?:start with|here is|here are|below|read)\b/i.test(r.heroLine)) FAIL(6, where, `the hero line says what comes next: “${r.heroLine}”`);
-        if (/no clear peak/.test(r.graphAll)) FAIL(18, where, "the graph says “No clear peak” (E4: the highest counted stage is the peak)");
-        if (r.expectEase != null) {
-          if (r.expectEase && !r.graphAll.includes(`easier from ${r.expectEase}`)) FAIL(18, where, `the graph should say “Easier from ${r.expectEase}” (E4)`);
-          if (!r.expectEase && !r.graphAll.includes("no clear easing")) FAIL(18, where, "no stage qualifies as easier, but the graph doesn't say “No clear easing” (E4)");
-          if (!r.expectEase && /the hardest|hardest/.test(r.graphAll + " " + r.chartLabels)) FAIL(18, where, "“No clear easing” with a “hardest” line or chart label (F4: one line)");
+        if (r.hasFelt) {
+          if (/out of 10|0 to 10|\bscored\b|hardest stretch|easier from|no clear easing/i.test(r.graphSec)) FAIL(18, where, `the graph section still speaks of the old score: “${(r.graphSec.match(/[^.\n]*(?:out of 10|0 to 10|\bscored\b|hardest stretch|easier from|no clear easing)[^.\n]*/i) || [""])[0].trim()}”`);
+          if (!r.charts.length) FAIL(18, where, "the graph section draws no chart");
+          for (const c of r.charts) if (c < 3) FAIL(18, where, `a graph draws ${c} lines (3 or more)`);
+          if (!r.wantHead.length) FAIL(18, where, "the build gave no graph headline");
+          for (const s of r.wantHead) if (!r.graphAll.includes(s.toLowerCase())) FAIL(18, where, `the graph headline doesn't say what the data gives: “${s}”`);
         }
+        if (r.appShown && r.appHidden) FAIL(16, where, "the I Am Sober chart shows, but he chose to leave it out");
         for (const c of r.chips) {
           if ((c.match(/worked out/gi) || []).length > 1) FAIL(10, where, `a chip says “worked out” twice: ${c}`);
           const [lead, ...rest] = c.split(";");
@@ -148,27 +180,72 @@ try {
         for (const [i, ph] of phrases) if (ph.split(" ").length >= 3 && r.gapTexts.some((t, j) => j !== i && t.toLowerCase().includes(ph))) { FAIL(27, where, `two gap lines say the same thing: “${ph}…”`); break; }
         if (r.averTwice.length) FAIL(10, where, `“average” said twice on one card face (headline and chip): ${r.averTwice.join(", ")}`);
         if (ver === "mix" && r.likedMissing.length) FAIL(26, where, `cards he liked in version 10 are missing on the recommended view: ${r.likedMissing.join(", ")}`);
-        if (r.medDiff.length) FAIL(18, where, `graph stage medians differ from the build's: ${r.medDiff.join("; ")}`);
         if (r.felth !== 1) FAIL(18, where, `${r.felth} graph headlines (one, D9)`);
-        if (/No clear peak/.test(r.graphText) && /hardest/i.test(r.graphText)) FAIL(18, where, "the graph says both “No clear peak” and a hardest stretch");
         if (shots && ver === "mix") await pg.screenshot({ path: path.join(shots, `${pilot}-${width}.png`), fullPage: true });
       }
+    }
+    // G5: on the review page (not the reader's), every section bar, belief, number card, plan step and the body rows
+    // carry a "Note" button, and pressing one opens the note box right there, in the frame that was pressed
+    await pg.evaluate(() => { try { localStorage.clear(); } catch { /* storage blocked: the page opens without it */ } location.hash = ""; });
+    await pg.reload();
+    for (const pilot of pilots) {
+      const n = await pg.evaluate(async pid => {
+        document.querySelector(`#tabs [data-pilot="${pid}"]`).click();
+        await new Promise(r => setTimeout(r, 40));
+        const out = { frames: 0, miss: [], opened: null, hint: null };
+        for (const fr of document.querySelectorAll("#frames .frame")) {
+          out.frames++;
+          const need = [...fr.querySelectorAll(".labbar"), ...fr.querySelectorAll(".brow, .lrow"), ...fr.querySelectorAll("[data-kind]"), ...fr.querySelectorAll(".pstep, .tstop"), ...fr.querySelectorAll('[data-nk$="/graph/body"]')];
+          for (const el of need) if (!el.querySelector(":scope .nbtn")) out.miss.push((el.className || el.dataset.nk || "?").toString().slice(0, 30));
+        }
+        // press the first belief's Note in the first frame: the box must open inside that belief, a draft shows the hint
+        const fr = document.querySelector("#frames .frame");
+        const btn = fr && fr.querySelector(".brow .nbtn, .lrow .nbtn");
+        if (btn) {
+          const key = btn.dataset.inote;
+          btn.click();
+          await new Promise(r => setTimeout(r, 40));
+          const fr2 = document.querySelector("#frames .frame");
+          const row = fr2.querySelector(`[data-nk="${CSS.escape(key)}"]`);
+          const ta = row && row.querySelector(".inote textarea");
+          out.opened = !!ta && !!row.querySelector(".inote button[data-nadd]") && /Save/.test(row.querySelector(".inote button[data-nadd]").textContent);
+          if (ta) {
+            ta.value = "test draft"; ta.dispatchEvent(new Event("input", { bubbles: true }));
+            const h = row.querySelector(".unsaved");
+            out.hint = !!h && !h.hidden && /Not saved yet: press Save/.test(h.textContent);
+            ta.value = ""; ta.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          const b2 = fr2.querySelector(`.nbtn[data-inote="${CSS.escape(key)}"]`); if (b2) b2.click();
+          await new Promise(r => setTimeout(r, 20));
+        }
+        out.overflow = document.documentElement.scrollWidth - innerWidth;
+        return out;
+      }, pilot);
+      const where = `${pilot} review ${width}px`;
+      if (!n.frames) FAIL(29, where, "no page frame on the review page");
+      if (n.miss.length) FAIL("G5", where, `${n.miss.length} sections or items without a Note button (first: ${n.miss[0]})`);
+      if (n.opened === false) FAIL("G5", where, "pressing a belief's Note does not open a box with a Save button inside that belief");
+      if (n.hint === false) FAIL("G5", where, "a typed draft does not say “Not saved yet: press Save”");
+      if (n.overflow > 1) FAIL(24, where, `review page scrolls sideways by ${n.overflow} px with a note box open`);
     }
     // the review page, as he first opens it (no saved marks, recommendations applied)
     if (width === 1280) {
       await pg.evaluate(() => { try { localStorage.clear(); } catch { /* storage blocked: the page opens without it */ } location.hash = ""; });
       await pg.reload();
       const rv = await pg.evaluate(async () => {
-        const out = { asks: 0, prop: 0, tokens: [], tabs: {}, offWhy: null, offList: null };
+        const out = { asks: 0, prop: 0, tokens: [], tabs: {}, hedge: [], nothing: null, answered: 0, open: null };
         for (const b of [...document.querySelectorAll("#rtabs button")]) {
           b.click();
           await new Promise(r => setTimeout(r, 30));
           const t = document.querySelector("#rbody").innerText;
           out.tabs[b.dataset.rtab] = t.length;
+          if (/likely runs high/i.test(t)) out.hedge.push(b.dataset.rtab);
           if (b.dataset.rtab === "choices") {
-            out.asks = document.querySelectorAll("#rbody .ritem").length;
-            const it = document.querySelector('#rbody [data-choice-id="offreader"]');
-            if (it) { out.offList = +it.querySelector("summary[data-count]")?.dataset.count; out.offWhy = (it.querySelector(".why").innerText.match(/\ball (\d+)\b/) || [])[1]; }
+            out.asks = document.querySelectorAll("#rbody .ritem:not(.done)").length;
+            out.answered = document.querySelectorAll("#rbody .ritem.done").length;
+            out.open = DATA.decisions.choices.filter(c => !c.answered).length;
+            out.nothing = /Nothing left to choose/.test(t);
+            out.recorded = DATA.decisions.choices.filter(c => c.answered).length;
           }
           out.tokens.push(...(t.match(/\{\w+\}/g) || []));
         }
@@ -176,14 +253,17 @@ try {
           pl.click();
           await new Promise(r => setTimeout(r, 30));
           out.prop += document.querySelectorAll("#frames .tag.prop").length + (/Proposed to remove/i.test(document.querySelector("#frames").innerText) ? 1 : 0);
+          if (/likely runs high/i.test(document.body.innerText)) out.hedge.push("page " + pl.dataset.pilot);
         }
         return out;
       });
       if (rv.asks > 7) FAIL(27, "review page", `${rv.asks} choices (7 max)`);
       if (rv.prop) FAIL(27, "review page", "cards still ask “Proposed to remove” on their own");
       if (rv.tokens.length) FAIL(28, "review page", `unfilled facts: ${[...new Set(rv.tokens)].join(" ")}`);
-      if (rv.offList != null && rv.offWhy != null && +rv.offWhy !== rv.offList) FAIL(28, "review page", `the off-reader choice says ${rv.offWhy} cards, its list shows ${rv.offList}`);
-      if (rv.offList != null && rv.offWhy == null) FAIL(28, "review page", "the off-reader choice doesn't state how many cards it covers");
+      if (rv.hedge.length) FAIL(10, "review page", `says “likely runs high” on: ${rv.hedge.join(", ")}`);
+      if (rv.open === 0 && !rv.nothing) FAIL("G4", "review page", "no choice is open, but the Choices tab doesn't say “Nothing left to choose”");
+      if (rv.open > 0 && rv.nothing) FAIL("G4", "review page", "the Choices tab says “Nothing left to choose” with choices still open");
+      if (rv.answered !== rv.recorded) FAIL("G4", "review page", `${rv.answered} answered choices shown, ${rv.recorded} recorded`);
       if (shots) await pg.screenshot({ path: path.join(shots, `review-1280.png`) });
     }
     for (const e of [...new Set(errs)]) FAIL(29, `${width}px`, `script error: ${e.slice(0, 200)}`);
@@ -192,5 +272,5 @@ try {
 } finally {
   await browser.close();
 }
-console.log(fails ? `render check: ${fails} problems` : "render check: ok (4 pages × 3 versions × 390/1280 px, review page)");
+console.log(fails ? `render check: ${fails} problems` : `render check: ok (4 pages × 3 versions × 390/1280 px, review page, note boxes)${warns ? `, ${warns} warnings` : ""}`);
 process.exit(fails ? 1 : 0);
