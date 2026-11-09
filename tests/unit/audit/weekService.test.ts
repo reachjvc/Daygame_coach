@@ -155,7 +155,16 @@ describe("planHours (alpha fast-review-05: evening TV hours were named for the h
       { hour: 9, energy: 5.5, answers: 6 },
       { hour: 15, energy: 4.5, answers: 4 },
     ]
-    expect(planHours(work, all)).toEqual({ best: "09:00 and 15:00", low: "14:00 and 13:00" })
+    expect(planHours(work, all)).toEqual({ best: "09:00 and 15:00", bestAboveNeutral: true, low: "14:00 and 13:00" })
+  })
+  it("calls them best hours only when their energy is above 4, and better hours otherwise", () => {
+    const flat = [
+      { hour: 9, energy: 3.5, answers: 6 },
+      { hour: 10, energy: 4.0, answers: 6 },
+    ]
+    expect(planHours(flat, all)).toMatchObject({ best: "10:00 and 09:00", bestAboveNeutral: false })
+    expect(planHours([{ hour: 9, energy: 4.5, answers: 6 }, ...flat.slice(1)], all)).toMatchObject({ bestAboveNeutral: false })
+    expect(planHours([{ hour: 9, energy: 4.5, answers: 6 }], all)).toMatchObject({ bestAboveNeutral: true })
   })
   it("names no best hours without growth answers to go on", () => {
     expect(planHours([], all).best).toBe(null)

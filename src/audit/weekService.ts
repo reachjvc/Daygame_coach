@@ -154,14 +154,16 @@ type HourEnergy = { hour: number; energy: number; answers: number }
  * the three hours with the least energy over all answers, under the neutral 4,
  * apart from the best.
  */
-export function planHours(workHours: readonly HourEnergy[], allHours: readonly HourEnergy[]): { best: string | null; low: string | null } {
-  const best = [...workHours].sort((a, b) => b.energy - a.energy || a.hour - b.hour).slice(0, 3).map((h) => h.hour)
+export function planHours(workHours: readonly HourEnergy[], allHours: readonly HourEnergy[]): { best: string | null; bestAboveNeutral: boolean; low: string | null } {
+  const top = [...workHours].sort((a, b) => b.energy - a.energy || a.hour - b.hour).slice(0, 3)
+  const best = top.map((h) => h.hour)
   const low = [...allHours]
     .filter((h) => h.energy < 4 && !best.includes(h.hour))
     .sort((a, b) => a.energy - b.energy || a.hour - b.hour)
     .slice(0, 3)
     .map((h) => h.hour)
-  return { best: hoursList(best), low: hoursList(low) }
+  // "Best" only when every one is above the neutral 4; otherwise they are only your better hours.
+  return { best: hoursList(best), bestAboveNeutral: top.length > 0 && top.every((h) => h.energy > 4), low: hoursList(low) }
 }
 
 /** The audit's three most energetic hours, best first, as text ("09:00, 10:00 and 08:00"); null with no hours to go on. */

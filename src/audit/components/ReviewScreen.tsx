@@ -19,7 +19,7 @@ import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AuditCallError, type AuditView } from "../auditClient"
-import { BOX_NAMES, buildReview, CHOICE_NAMES, choiceFor, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
+import { BOX_NAMES, buildReview, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, CHOICE_NAMES, choiceFor, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
 import { storableText } from "../requestGuard"
 import { clockLabel } from "../quarterService"
 import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice, type WeekBlock } from "../types"
@@ -184,10 +184,18 @@ function ActivitySheet({
   review: Review
   timezone: string
   onClose: () => void
-  /** `noteWas`: the stored note this sheet last saw; the save is refused (NOTE_CHANGED) if another device changed it since. */
-  onSave: (key: string, choice: ReviewChoice | null, note: string, noteWas: string) => Promise<string | null>
+  /**
+   * `choice`: only when changed in this sheet, with the stored choice the sheet last saw (`was`);
+   * null keeps the stored choice. `noteWas`: the stored note this sheet last saw. Either is refused
+   * (CHOICE_CHANGED / NOTE_CHANGED) if another device changed it since.
+   */
+  onSave: (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string) => Promise<string | null>
 }) {
   const [choice, setChoice] = useState<ReviewChoice | null>(null)
+  // The stored choice this sheet last saw, whether it was changed here, and whether a save was refused because another device changed it.
+  const [choiceWas, setChoiceWas] = useState<ReviewChoice | null>(null)
+  const [choiceTouched, setChoiceTouched] = useState(false)
+  const [choiceStale, setChoiceStale] = useState(false)
   const [note, setNote] = useState("")
   // The stored note this sheet last saw, and whether a save was refused because another device changed it.
   const [noteWas, setNoteWas] = useState("")
@@ -205,6 +213,9 @@ function ActivitySheet({
   useEffect(() => {
     if (key === null) return
     setChoice(review.choices[key] ?? prefilled)
+    setChoiceWas(review.choices[key] ?? null)
+    setChoiceTouched(false)
+    setChoiceStale(false)
     setNote(review.notes[key] ?? "")
     setNoteWas(review.notes[key] ?? "")
     setNoteStale(false)
@@ -219,6 +230,15 @@ function ActivitySheet({
     setNoteWas(storedNote)
     setNoteStale(false)
   }, [noteStale, storedNote])
+  // The same for the choice: once read again, show the newer choice (or the pre-fill when it was cleared).
+  const storedChoice = key === null ? null : (review.choices[key] ?? null)
+  useEffect(() => {
+    if (!choiceStale) return
+    setChoice(storedChoice ?? prefilled)
+    setChoiceWas(storedChoice)
+    setChoiceTouched(false)
+    setChoiceStale(false)
+  }, [choiceStale, storedChoice, prefilled])
   if (!group) return null
   return (
     <BottomSheet open onClose={onClose} title={group.label.length > 32 ? `${group.label.slice(0, 30)}…` : group.label} testId="review-activity-sheet">
@@ -262,6 +282,7 @@ function ActivitySheet({
                 onClick={() => {
                   // A pre-filled choice is changed by picking another, not cleared (it would only come back).
                   setChoice(choice === c && !prefilled ? null : c)
+                  setChoiceTouched(true)
                   setState("idle")
                 }}
                 className={cn(
@@ -273,9 +294,9 @@ function ActivitySheet({
               </button>
             ))}
           </div>
-          {prefilled && !review.choices[group.key] && choice === "more" && (
+          {prefilled && !review.choices[group.key] && (
             <p className="mt-2 text-xs text-muted-foreground" data-testid="review-prefilled">
-              Pre-filled, because it lifts you and builds your life. Pick another to change it.
+              It lifts you and builds your life, so until you pick another choice it counts as Do more and shows in your perfect week.
             </p>
           )}
           <label htmlFor="review-note" className="mt-3 block text-sm font-medium">
@@ -301,12 +322,24 @@ function ActivitySheet({
               onClick={async () => {
                 setState("saving")
                 const savedFor = group.key
-                const failed = await onSave(savedFor, choice, note, noteWas)
+                const sentChoice = choiceTouched ? choice : undefined
+                const failed = await onSave(savedFor, sentChoice === undefined ? null : { value: sentChoice, was: choiceWas }, note, noteWas)
                 // Closed and another activity opened meanwhile: this answer is not about the sheet now shown.
                 if (openKey.current !== savedFor) return
                 if (failed === NOTE_CHANGED) setNoteStale(true)
-                // What the server stores for this note now (blank clears it), so a second save from this sheet is not refused.
-                else if (!failed) setNoteWas(storableText(note).trim() ? storableText(note) : "")
+                else if (failed === CHOICE_CHANGED) setChoiceStale(true)
+                else if (failed === CHOICE_AND_NOTE_CHANGED) {
+                  setNoteStale(true)
+                  setChoiceStale(true)
+                }
+                else if (!failed) {
+                  // What the server stores now (blank clears a note), so a second save from this sheet is not refused.
+                  setNoteWas(storableText(note).trim() ? storableText(note) : "")
+                  if (sentChoice !== undefined) {
+                    setChoiceWas(sentChoice)
+                    setChoiceTouched(false)
+                  }
+                }
                 setState(failed ? { error: failed } : "saved")
               }}
               data-testid="review-save"
@@ -321,7 +354,8 @@ function ActivitySheet({
           </div>
           {typeof state === "object" && (
             <p className="mt-2 text-sm text-destructive" role="alert">
-              Not saved: {state.error}.{state.error === NOTE_CHANGED ? " Your choice is still here." : " Your choice and note are still here; try again."}
+              Not saved: {state.error}.
+              {state.error === NOTE_CHANGED ? " Your choice is still here." : state.error === CHOICE_CHANGED ? " Your note is still here." : state.error === CHOICE_AND_NOTE_CHANGED ? "" : " Your choice and note are still here; try again."}
             </p>
           )}
         </section>
@@ -375,7 +409,8 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     await load()
     return failed
   }
-  const save = (key: string, choice: ReviewChoice | null, note: string, noteWas: string) => send({ activity: key, choice, note, noteWas })
+  const save = (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string) =>
+    send(choice ? { activity: key, choice: choice.value, choiceWas: choice.was, note, noteWas } : { activity: key, note, noteWas })
   const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[]) => send(copies.length > 0 ? { block, edit, copies } : { block, edit })
   const removeBlock = (id: string) => send({ removeBlock: id })
 

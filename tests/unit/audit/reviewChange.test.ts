@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { applyReviewChange, applyReviewParts, BLOCK_GONE, nextReviewVersion, NOTE_CHANGED, readStoredReview, REVIEW_UNREADABLE, reviewToStore } from "@/src/audit/auditService"
+import { applyReviewChange, applyReviewParts, BLOCK_GONE, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, nextReviewVersion, NOTE_CHANGED, readStoredReview, REVIEW_UNREADABLE, reviewToStore } from "@/src/audit/auditService"
 import type { Review, WeekBlock } from "@/src/audit/types"
 
 const block = (id: string, day: number, start: number, end: number, what: string): WeekBlock => ({ id, day, start, end, what, kind: "deep" })
@@ -48,6 +48,24 @@ describe("applyReviewChange", () => {
 
   it("refuses a block that overlaps one saved from another device, naming both", () => {
     expect(applyReviewChange(stored(), { block: block("phone", 0, 600, 660, "Gym") })).toEqual({ error: '"Gym" overlaps "Write the book" on Monday' })
+  })
+
+  it("a note-only save leaves the stored choice alone (review of 3c01aebb: a pre-filled Do more overwrote a Keep)", () => {
+    const base = { ...stored(), choices: { daygame: "keep" as const } }
+    expect(applyReviewChange(base, { activity: "daygame", note: "Evenings", noteWas: "Mornings" })).toEqual({
+      review: { ...base, notes: { daygame: "Evenings" } },
+    })
+  })
+
+  it("refuses a choice when the stored one changed since the sheet opened, and takes it when it did not", () => {
+    expect(applyReviewChange(stored(), { activity: "daygame", choice: "cut", choiceWas: null, note: "Mornings" })).toEqual({ error: CHOICE_CHANGED })
+    expect(applyReviewChange(stored(), { activity: "scrolling", choice: "cut", choiceWas: "keep", note: "" })).toEqual({ error: CHOICE_CHANGED })
+    const ok = applyReviewChange(stored(), { activity: "daygame", choice: "keep", choiceWas: "more", note: "Mornings" })
+    expect("review" in ok && ok.review.choices).toEqual({ daygame: "keep" })
+    const fresh = applyReviewChange(stored(), { activity: "scrolling", choice: "cut", choiceWas: null, note: "" })
+    expect("review" in fresh && fresh.review.choices).toEqual({ daygame: "more", scrolling: "cut" })
+    expect("error" in applyReviewChange(stored(), { activity: "daygame", choice: "keep", choiceWas: 5, note: "" })).toBe(true)
+    expect(applyReviewChange(stored(), { activity: "daygame", choice: "keep", choiceWas: null, note: "x", noteWas: "" })).toEqual({ error: CHOICE_AND_NOTE_CHANGED })
   })
 
   it("adds a block with its copies on other days in one write (alpha picky-eye-07)", () => {

@@ -152,7 +152,7 @@ function BlockSheet({
             ))}
           </div>
           {d.kind === null && <p className="mt-2 text-xs text-muted-foreground">Pick one, so the week&apos;s totals count it right.</p>}
-          {d.kind === "deep" && bestHours && <p className="mt-2 text-xs text-muted-foreground">Your best hours in this audit: {bestHours}.</p>}
+          {d.kind === "deep" && bestHours && <p className="mt-2 text-xs text-muted-foreground">{bestHours}.</p>}
         </fieldset>
 
         <fieldset>
@@ -229,6 +229,8 @@ export function PerfectWeek({
   const [draft, setDraft] = useState<Draft | null>(null)
   const hours = planHours(workHours, bestHours)
   const best = hours.best
+  // "Best" only when their energy is above the neutral 4; otherwise they are only better than the rest.
+  const bestName = hours.bestAboveNeutral ? "Best hours" : "Your better hours"
   const totals = useMemo(() => hoursByKind(week), [week])
   const from = barStart(week)
   const span = 24 * 60 - from
@@ -278,7 +280,7 @@ export function PerfectWeek({
         <p data-testid="week-best-hours">
           {best ? (
             <>
-              Best hours, for your hardest work: <span className="font-medium tabular-nums">{best}</span>.
+              {bestName}, for your hardest work: <span className="font-medium tabular-nums">{best}</span>.
             </>
           ) : (
             <span className="text-muted-foreground">Not enough answers yet to name your best hours.</span>
@@ -290,7 +292,7 @@ export function PerfectWeek({
           </p>
         )}
         <p className="text-xs text-muted-foreground">
-          Best hours are when your energy was highest while doing something that builds your life (growth 5 or more). Low hours are when your energy was lowest, under 4.
+          Best hours are when your energy was highest while doing something that builds your life (growth 5 or more), called "better" when not all were above 4. Low hours are when your energy was lowest, under 4.
         </p>
       </div>
 
@@ -361,7 +363,7 @@ export function PerfectWeek({
         </p>
       )}
 
-      <BlockSheet draft={draft} week={week} suggestions={suggestions} bestHours={best} onClose={() => setDraft(null)} onSave={save} onDelete={remove} />
+      <BlockSheet draft={draft} week={week} suggestions={suggestions} bestHours={best ? `${hours.bestAboveNeutral ? "Your best hours" : "Your better hours"} in this audit: ${best}` : null} onClose={() => setDraft(null)} onSave={save} onDelete={remove} />
     </section>
   )
 }

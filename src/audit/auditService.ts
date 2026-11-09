@@ -186,19 +186,25 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
 
 /**
  * One change to a review, as a device sends it:
- *   { activity, choice, note, noteWas? }  one activity's choice and note (null / blank clears);
- *                                         `noteWas` is the note the sheet opened with
+ *   { activity, choice?, choiceWas?, note, noteWas? }
+ *                                         one activity's choice and note (null / blank clears);
+ *                                         no `choice`: the stored choice stays (a note-only save);
+ *                                         `choiceWas` / `noteWas`: what the sheet opened with
  *   { block, edit?, copies? }             add a block, or change the one with its id (`edit`: it must still be there);
  *                                         `copies`: new blocks on other days, added in the same write
  *   { removeBlock }                       remove one block by id (already gone: no change)
  */
 export type ReviewChange =
-  | { activity: string; choice: ReviewChoice | null; note: string; noteWas?: string }
+  | { activity: string; choice?: ReviewChoice | null; choiceWas?: ReviewChoice | null; note: string; noteWas?: string }
   | { block: WeekBlock; edit?: boolean; copies?: WeekBlock[] }
   | { removeBlock: string }
 
 /** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
 export const NOTE_CHANGED = "This note was changed on another device. The newer note is shown now; change it and save again"
+/** Said when another device changed the choice after this sheet opened; the page then shows the newer choice. */
+export const CHOICE_CHANGED = "This choice was changed on another device. The newer choice is shown now; change it and save again"
+/** Both at once: one refusal, so the page shows the newer choice and note together. */
+export const CHOICE_AND_NOTE_CHANGED = "This choice and note were changed on another device. The newer ones are shown now; change them and save again"
 /** Said when the block being changed was removed on another device; saving would bring it back. */
 export const BLOCK_GONE = "This block was removed on another device"
 /** Said when part of the stored review is in a shape this version cannot read: nothing is written over it. */
@@ -214,21 +220,28 @@ export const REVIEW_UNREADABLE = "Part of this review was saved in a shape this 
 export function applyReviewChange(stored: Review, input: unknown): { review: Review } | { error: string } {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "Send one change" }
   const c = input as Record<string, unknown>
-  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit").sort().join(",")
+  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas").sort().join(",")
   const next: Review = { choices: { ...stored.choices }, notes: { ...stored.notes }, week: [...stored.week] }
-  if (keys === "activity,choice,note" && !("edit" in c)) {
-    const { activity, choice, note, noteWas } = c
+  if ((keys === "activity,choice,note" || (keys === "activity,note" && !("choiceWas" in c))) && !("edit" in c)) {
+    const { activity, choice, choiceWas, note, noteWas } = c
     if (typeof activity !== "string" || activity.length < 1 || activity.length > ACTIVITY_MAX) return { error: "Bad activity key" }
-    if (choice !== null && (typeof choice !== "string" || !(REVIEW_CHOICES as readonly string[]).includes(choice))) return { error: "Unknown choice" }
+    const isChoice = (v: unknown) => v === null || (typeof v === "string" && (REVIEW_CHOICES as readonly string[]).includes(v))
+    if (choiceWas !== undefined && !isChoice(choiceWas)) return { error: "Bad choice" }
+    if (choice !== undefined && choice !== null && (typeof choice !== "string" || !(REVIEW_CHOICES as readonly string[]).includes(choice))) return { error: "Unknown choice" }
     if (typeof note !== "string" || note.length > REVIEW_NOTE_MAX) return { error: `A note can be at most ${REVIEW_NOTE_MAX} characters` }
     if (noteWas !== undefined && typeof noteWas !== "string") return { error: "Bad note" }
     const key = storableText(activity) || activity
-    if (typeof noteWas === "string" && (stored.notes[key] ?? "") !== noteWas) return { error: NOTE_CHANGED }
+    const noteChanged = typeof noteWas === "string" && (stored.notes[key] ?? "") !== noteWas
+    const choiceChanged = choiceWas !== undefined && (stored.choices[key] ?? null) !== choiceWas
+    if (noteChanged && choiceChanged) return { error: CHOICE_AND_NOTE_CHANGED }
+    if (noteChanged) return { error: NOTE_CHANGED }
+    if (choiceChanged) return { error: CHOICE_CHANGED }
+    // Sent only when changed in the sheet: a note-only save never writes the pre-filled "Do more" over a choice saved elsewhere.
     if (choice) next.choices[key] = choice as ReviewChoice
-    else delete next.choices[key]
+    else if (choice === null) delete next.choices[key]
     if (storableText(note).trim()) next.notes[key] = note
     else delete next.notes[key]
-  } else if ((keys === "block" || keys === "block,copies") && !("noteWas" in c)) {
+  } else if ((keys === "block" || keys === "block,copies") && !("noteWas" in c) && !("choiceWas" in c)) {
     if (c.edit !== undefined && typeof c.edit !== "boolean") return { error: "Bad edit" }
     const one = checkWeek([c.block])
     if ("error" in one) return one
@@ -246,7 +259,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
         next.week.push(copy)
       }
     }
-  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c)) {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
     next.week = next.week.filter((b) => b.id !== c.removeBlock)
   } else {

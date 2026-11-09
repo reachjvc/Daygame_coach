@@ -141,6 +141,8 @@ test("a stale sheet never overwrites a newer note, nor brings back a block remov
     await sheet.getByTestId("review-save").click()
     await expect(sheet.getByRole("alert")).toContainText("changed on another device")
     await expect(sheet.getByTestId("review-note")).toHaveValue("Mornings")
+    // The choice changed there too (Do more saved): it is shown, not the Keep picked here.
+    await expect(sheet.getByRole("radio", { name: "Do more", exact: true })).toHaveAttribute("aria-checked", "true")
     expect((await stored(id)).notes).toEqual({ daygame: "Mornings" })
     // Saving again now, knowingly, goes through.
     await sheet.getByTestId("review-note").fill("Mornings and evenings")
@@ -160,6 +162,46 @@ test("a stale sheet never overwrites a newer note, nor brings back a block remov
     await blockSheet.getByTestId("week-save").click()
     await expect(blockSheet.getByTestId("week-error")).toContainText("removed on another device")
     expect((await stored(id)).week).toEqual([])
+  } finally {
+    await phoneCtx.close()
+  }
+})
+
+test("a note saved on one device keeps a choice saved on another, and a stale choice is refused, not written over it", async ({ page, browser, account }) => {
+  test.setTimeout(150_000) // two devices and four saves
+  const id = await seedEndedRun(account.id)
+  await openReview(page)
+  const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } = devices["Pixel 7"]
+  const phoneCtx = await browser.newContext({ viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, storageState: account.storageState })
+  try {
+    const phone = await phoneCtx.newPage()
+    await openReview(phone)
+
+    // PC opens Daygame (top box, so "Do more" is pre-filled); the phone then saves Keep for it.
+    await page.getByTestId("review-activity").filter({ hasText: "Daygame" }).first().click()
+    const sheet = page.getByTestId("review-activity-sheet")
+    await expect(sheet.getByRole("radio", { name: "Do more", exact: true })).toHaveAttribute("aria-checked", "true")
+    await choose(phone, "Daygame", "Keep", "")
+    expect((await stored(id)).choices).toEqual({ daygame: "keep" })
+
+    // PC changes only the note: the phone's Keep stays.
+    await sheet.getByTestId("review-note").fill("Mornings")
+    await sheet.getByTestId("review-save").click()
+    await expect(sheet.getByTestId("review-saved")).toBeVisible()
+    expect(await stored(id)).toMatchObject({ choices: { daygame: "keep" }, notes: { daygame: "Mornings" } })
+
+    // PC now picks Cut while still holding the old choice: refused, and the newer Keep is shown.
+    await sheet.getByRole("radio", { name: "Cut", exact: true }).click()
+    await sheet.getByTestId("review-save").click()
+    await expect(sheet.getByRole("alert")).toContainText("changed on another device")
+    await expect(sheet.getByRole("radio", { name: "Keep", exact: true })).toHaveAttribute("aria-checked", "true")
+    expect((await stored(id)).choices).toEqual({ daygame: "keep" })
+
+    // Picking it again, knowingly, goes through.
+    await sheet.getByRole("radio", { name: "Cut", exact: true }).click()
+    await sheet.getByTestId("review-save").click()
+    await expect(sheet.getByTestId("review-saved")).toBeVisible()
+    expect((await stored(id)).choices).toEqual({ daygame: "cut" })
   } finally {
     await phoneCtx.close()
   }
