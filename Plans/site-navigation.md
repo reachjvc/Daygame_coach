@@ -47,11 +47,13 @@ and corrects the description below where the app differs.
 | D | **By life area** | **Calm** (was Headspace, wrong: its areas are now tiles inside Explore). Calm's Sleep is its own tab with top tabs | Today · Dating · Life · Progress · Me; Dating and Life are hubs with top tabs | its own tab; shared things in Today and Progress |
 | E | **Home + tool grid** | **Grab** (was Revolut/WeChat: Revolut's home is accounts, WeChat's grid is a pull-down). Grab: Home of service tiles + More + cards; bar Home · Payment · Activity · Messages; profile top corner | Home · Plan · Activity · Coach; profile top corner | dating tiles in the grid, a Dating group under More |
 
-**My lean: D**, with C's ⊕ button as an add-on to try. Reasons: dating gets one tab, which
-matches the premium tier; shared things (Today, Progress) stay single; a new feature joins a hub
-as a row, so the bar never grows. Weak spot: "Life" may become a junk drawer of its own, which the
-page must show honestly with all future features placed in it. The page shows the lean, and the
-owner overrules it freely.
+**My lean: E** (changed from D on 2026-11-09, after the owner's note). The owner pointed out that
+dating is part of Tracking, Life and Today anyway, so no option keeps it in one place, and that the
+payment model may change (a cheap basic tier, packages of X scenarios), so locking dating as one unit
+is no longer D's advantage. A tile grid does not file things as dating or life, each tile can be locked
+on its own, and E is fastest (11 taps). Two fixes when building E: Ask Coach becomes a tile, not a tab
+(no locked tab in the bar), and the plan opens from a Home card instead of a tab that hides the bar.
+D's lean reasoning, kept for the record: dating gets one tab, which matched one premium tier.
 
 ## What the comparison page shows
 
@@ -93,7 +95,7 @@ clicking every tappable item on every screen of every mock in a browser test (1,
 | Fill an audit slot | 3 | 2 | 4 | 2 | 4 | 2 |
 | **Total** | **14** | **16** | **20** | **12** | **16** | **11** |
 
-Against the lean: D ties A at 16; E (11) and C (12) are fastest. The page says so.
+E, the lean since the owner's note, is fastest (11); C 12; D and A 16; B 20.
 Unconfirmed: Airbnb's guest tab names Explore and Wishlists, and Calm's full bar order (Sleep and Discover confirmed).
 
 ## Steps
