@@ -2,7 +2,8 @@
 
 **Status:** written 2026-11-09. Reviewed again the same day by six agents: dry-runs of every phase plus
 an independent whole-plan review, and the findings were merged into this version. **Go given** (owner,
-2026-11-09). Nothing built yet. Phases run in order: 0, 1, 2, 3, 4, 5.
+2026-11-09). Phases 0 to 5 built and live 2026-11-09; Phase 6 (added after Phase 5, owner's yes) too.
+Phases run in order: 0, 1, 2, 3, 4, 5, 6.
 Decision page (marks and notes): https://claude.ai/artifact/Tbhg3XTAizXkLmutiUaQpp.
 
 The owner asked on 2026-11-08: "It seems kind of weird to open the full plan, dont you think? ... i want
@@ -21,6 +22,10 @@ months after it.
    live database deletes his reminder row and send records, so that does need his yes first.
 3. **Values (R1): "keep it as is, and ill look at it after youre fully done".** No phase changes
    anything about values: not the lists, not their help text. Ask him again after Phase 5.
+   **After Phase 5 he said yes** to removing the lists from step 1 (Phase 6), with step 7 unchanged.
+5. **Phase 6 (2026-11-09): yes** to three changes, without being asked again: R1, one weekly reminder per
+   calendar week, and Review waiting for the reminder's day. Its migration is covered by the same yes;
+   its rollback on the live database still needs his yes.
 4. **R2 and R3: he did not know what they meant.** They were explained in plain words afterwards. Both
    stay unbuilt in this plan whatever he answers. They would be a separate change.
 
@@ -72,7 +77,7 @@ rated, a season, committed) at desktop width. Pictures are on the decision page.
 | F4 | After "I commit to this", nothing points onward. | walk | Phase 1 |
 | F5 | Rating an area on Your 10s during setup makes Review say "Last weekly review: today", though no review was written. | `PeriodReviewTab.tsx:81` uses `lastReviewOf`, which counts a scores-only review | Phase 1 |
 | F6 | React warns "two children with the same key" every time Review opens. | `PeriodReviewTab.tsx:151` and `:218` are siblings with the same key | Phase 1 |
-| F7 | Values are asked three times: the same two lists on step 1 and on step 7, and once more per area. Step 1 says "You put them in order later, on the review". | `StarTab.tsx:201`, `NorthStarFlow.tsx:1915` | **Deferred by the owner.** No change. |
+| F7 | Values are asked three times: the same two lists on step 1 and on step 7, and once more per area. Step 1 says "You put them in order later, on the review". | `StarTab.tsx:201`, `NorthStarFlow.tsx:1915` | Phase 6 (R1): the lists are on step 7 only. |
 | F8 | Out-of-date words: "The list of everything you want comes next" (Season); goals "stay in your plan until the Track step … puts them on your goals and tracking pages" (untrue since Q4); "the Where you are tab" (twice, for Your 10s); "The goals live on the next tab" (means the button beside it); "from elsewhere" (unexplained, and wrong for routines that belong to no area). | `northStarStart.ts:357,391`; `northStar.ts:1991,2068,2320,2323`; `AreaGoalsDialog.tsx:214`; `AreaDialog.tsx:368` | Phase 4 |
 | F9 | Quotes say "His:", "His way in", "He put fitness above health", "His 10 for his body", and nobody is named. The project's voice policy v2 (`tests/unit/goals/lifeMasteryCopyLint.test.ts`) already bans naming the source coach and calling him he/his. | `northStar.ts:1023,1025,1031,1033,1292,1297,1302,1803,2296` | Phase 4, per the voice policy |
 | F10 | The footer says "Saved on this device." on a signed-in account whose plan has not reached the account yet. | `NorthStarFlow.tsx:2293-2297` | Phase 4 |
@@ -120,7 +125,8 @@ rated, a season, committed) at desktop width. Pictures are on the decision page.
 
 ### Proposed to remove (not built)
 
-- **R1.** The two value lists on step 1. **Deferred by the owner** until after Phase 5.
+- **R1.** The two value lists on step 1. **Built in Phase 6** (owner's yes after Phase 5): step 1 points to
+  step 7, which keeps both lists as they were.
 - **R2.** One weekly review instead of two. Tracking's dating "Weekly Reviews" would fold into the plan's
   Review. Recommendation: not now.
 - **R3.** The Journal's "Weekly review" question set (four questions that repeat the Review step's
@@ -1014,7 +1020,7 @@ change in `pushService.ts`) instead of 10 min, "written" in SQL is any non-space
 as the app's `trim()`), `sent` counts only pushes that went out, and the switch keeps a device turned
 on meanwhile. Not changed: the once-per-local-day key (moving the day mid-week can send a second
 reminder for the same week), and Review opens on the default-day week until the reminder's day has
-loaded. The integration file ran while another session's e2e had started (B4); it touches only this
+loaded. (Both fixed in Phase 6.) The integration file ran while another session's e2e had started (B4); it touches only this
 phase's table and its own users. Depends on: Phases 1 to 4 live.
 
 **One device switch (decided).** `push_devices.enabled` is a device's switch for reminders:
@@ -1298,7 +1304,104 @@ line changed), `public/sw.js`, what the device switch means.
 **Pictures:** W6 after, with `TOUR_STEPS=review`, desktop and phone. Also take a phone picture of the
 review step with the reminder switched on.
 
-**After Phase 5:** ask the owner about values (R1), as he asked.
+**After Phase 5:** ask the owner about values (R1), as he asked. Asked; answered yes: Phase 6.
+
+### Phase 6. After Phase 5: values on step 7 only, one reminder a week, Review waits for the day (R1)
+
+**Status:** Built and live 2026-11-09, commits d3466e11 and 356d4671, buildId confirmed (356d4671).
+Migration `20261109170000_plan_review_one_per_week.sql` applied (only it was pending); backup
+`~/dg-backups/life-plan-reminder-week-2026-11-09.json` (0 reminder rows, 0 reminder sends, the old function
+text; mode 600). Live checks: the function holds the weekly check, anon and signed-in users cannot run it,
+`notifications-clock` succeeded 9 of 9 after the change, `plan_reviews_due(10)` answers 0. Rehearsed
+up/down/up locally. Decision page section `p6-live` added, R1 marked built.
+Differences from the request, after the code review: step 1's "N of 5 answered" and its ring counted the
+values list, so both now leave values out ("of 4"); `STAR_WORK_INTRO.help` lost "what would have to
+matter to you"; the values to-do and the goal card's hint now point to step 7; the step number comes
+from `TAB_ORDER`. Not changed (review findings kept as decided): the key is the calendar week the
+reminder goes out in, as asked. So a move from Sunday to Monday can still send on Sunday and on the next
+Monday about the same reviewed week (two calendar weeks), and a move from Wednesday to Friday skips
+that week's Friday. `VALUES_INTRO.help` on step 7 still says "You put them in order later, on the
+review" (step 7 stays as it is). After 2 s without an answer Review opens on Sunday's week and keeps
+it. Tests: whole unit suite, type and lint ratchets, build, e2e landing/due-now/life-mastery on
+desktop (22 first-run failures were timeouts under a load average of 23–35 from another session's
+e2e; all passed on rerun at 1–2 workers), landing on phone. "Review opens without a React key warning"
+also fails now and then on unchanged main (1 of 3), so that one is not from this phase. The integration file ran with
+a scratch config that skips `test-stack up` (it would have rebuilt the shared database under the other
+session's runs): all reminder cases pass. `pushPlumbing`'s "no VAPID key in the test vault" fails
+because another session stored one there; not touched by this phase.
+
+**The owner's yes (2026-11-09, given before this phase; he is not asked again).** Three changes:
+remove the two value lists from step 1 (R1), at most one weekly reminder per calendar week, and Review
+picks its week only once the reminder's day is known. R2 stays "not now"; R3 belongs to
+`Plans/life-plan-review-reads-back.md`. Neither is touched.
+
+**What this phase may not do.** Delete or hide any value he wrote. Remove anything beyond the step-1
+lists. Run the rollback file on the live database without asking him. Stop and tell him if a test
+fails in a way this phase does not cover, or if the live database shows more than this phase's own
+migration pending.
+
+**6.0 Proof first: step 1's lists are step 7's lists.**
+- Code: `StarTab.tsx` rendered `<ValuesWork plan={plan} handlers={valuesHandlers} mode="elicit" />`.
+  Step 7 (`tab === "values"` in `NorthStarFlow.tsx`) renders the same component, with the same
+  `mode="elicit"` and the same `valuesHandlers`, above the ordering half. Both lists are
+  `plan.currentValues` and `plan.values`; the mapper stores them in one table, scoped `past` and
+  `needed` (`lifePlanMapper.ts`). The review and Everything show `plan.values` too, and keep both lists
+  behind "Add to the lists".
+- Data: a test account seeded through the account's own save path with both lists filled. Step 1
+  shows neither list; step 7 shows all four words (e2e "values live on step 7 (R1)").
+- If step 1 had held anything step 7 does not show, this phase would have stopped here.
+
+**6.1 R1, the screen and the words.**
+- `StarTab.tsx`: the values block goes. In its place one line, `STAR_VALUES_POINTER`: "Your values come
+  later, on step 7, Values & identity." The step number and name are read from `TAB_ORDER` and
+  `TAB_LABELS`, so they follow the step list.
+- `VALUES_INTRO` (with "Two lists… You put them in order later, on the review") now shows on step 7
+  only. It is not changed: step 7 stays as it is.
+- Step 1's "N of 5 answered" counted the values list, and "anything written under the paragraph"
+  (the ring's "started") did too. Neither counts values now: it is 4 questions, and values on their
+  own leave step 1 empty (`starWorkAnswered`, `starWorkTotal`, `starWorkWritten`).
+- `STAR_WORK_INTRO.help` drops "and what would have to matter to you".
+- Copy that placed values on step 1: `VALUES_ORDER.empty` ("on the north star tab") and the goal
+  card's values hint ("offered back to you on the north star tab") now name step 7. The to-do "Ask
+  yourself what you value most" opens step 7, not step 1. "Plan the new year" already said "your
+  values (step 7)" and is unchanged.
+
+**6.2 One reminder per week: migration `20261109170000_plan_review_one_per_week.sql`.**
+- The one-send key becomes `plan-review:<user>:<Monday of the local ISO week>`
+  (`reminderEntryId` in `reviewReminderService.ts`). The existing unique index
+  `notification_sends_one_plan_review` on `entry_id` now allows one record per person per week. No
+  new index.
+- `plan_reviews_due` is replaced with the same arguments, columns and grants. Its "not sent yet" check
+  looks for any `plan-review` record of that person whose key ends in a date from Monday to Sunday of
+  this week. That also counts a Phase 5 record keyed by a day, so the week this ships in cannot send
+  twice.
+- Rollback `rollback/20261109170000_plan_review_one_per_week.down.sql` puts the Phase 5 body back and
+  deletes nothing. Roll back the code first. Ask the owner before running it on the live database.
+- Rehearsed on the local test database: up, down, up, each without error; grants checked.
+
+**6.3 Review waits for the reminder's day.**
+- `NorthStarFlow.tsx`: a `reminderSettled` flag turns true when the reminder fetch answers, fails, or
+  after `REMINDER_WAIT_MS` (2 s, in `dueNowService.ts`). Review mounts only after that, or at once when
+  a card or link named a week. Until then it shows "Opening your reviews…".
+
+**6.4 Tests.**
+- Unit: `reminderEntryId` gives the Monday for every day of a week, and crosses a year as ISO weeks do
+  (Fri 1 Jan 2027 is in the week of Mon 28 Dec). Step 1's count leaves out values and the why; values
+  alone leave step 1 empty; the values to-do opens step 7.
+- Integration (`lifePlanReminders.integration.test.ts`): moving the day from Wednesday to Friday in the
+  same week sends once, and Friday of the next week is due again; a Phase 5 day key counts for its
+  whole week, and one from the week before does not. The existing cases now expect the Monday key.
+- E2e (`life-plan-landing.spec.ts`): Review shows "Opening your reviews…" while the reminder request is
+  held and then opens on the reminder day's week; an aborted request and one that never answers still
+  open Review on the default day's week; step 1 has no lists and the pointer line, and step 7 shows
+  what was written.
+
+**6.5 Live.** Backup, then `migration list --linked` (only this migration pending), then
+`db push --linked --yes`, then check the function and the clock. Then ship the code (W8). Either order
+is safe: the new check counts the old keys.
+
+**Pictures:** W6 before and after, `TOUR_STEPS=star`, desktop and phone.
+
 
 ## How this survives a rebuild
 
@@ -1321,7 +1424,8 @@ These behaviours carry over whatever the code looks like:
 4. A review counts as done only when something is written in it or a goal has a verdict. Scores alone
    do not count.
 5. One phone notification a week, at a day and hour the person picks (default Sunday 19:00, hours 6–22),
-   only while that week's review is unwritten. Its text never contains what the person wrote.
+   only while that week's review is unwritten, and never two in one calendar week, even when the day
+   moves. Review opens on the week of the chosen day, not the default's. Its text never contains what the person wrote.
 6. Committing points to Today. The Review starts with the north star. Opening Review from the step list
    opens the week the card is about.
 
@@ -1331,7 +1435,7 @@ Give this to the model that builds it, one phase per session, or all phases in o
 room:
 
 > Build `Plans/life-plan-after-setup.md` in the daygame-coach repo
-> (`/home/jonaswsl/projects/daygame-coach`), one phase at a time, in order: 0, 1, 2, 3, 4, 5.
+> (`/home/jonaswsl/projects/daygame-coach`), one phase at a time, in order: 0, 1, 2, 3, 4, 5, 6.
 > The owner has said go, and has said yes to Phase 5's database change without being asked again.
 > Read the whole plan first, then for each phase:
 > 1. Find the first phase whose **Status** line is not "Built and live". Do only that phase, unless
