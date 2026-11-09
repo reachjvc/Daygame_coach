@@ -205,6 +205,8 @@ export function formatIdleSpan(totalSeconds: number): string {
 /** Compact label for charts and totals, e.g. "3h 05m" / "12m" */
 export function formatCompact(totalSeconds: number): string {
   const { h, m } = splitDuration(totalSeconds)
+  // A few tracked seconds are not "0m": that label sat on a full-height bar (alpha picky-eye-18)
+  if (h === 0 && m === 0 && Math.round(totalSeconds) > 0) return "<1m"
   if (h === 0) return `${m}m`
   return `${h}h ${pad2(m)}m`
 }

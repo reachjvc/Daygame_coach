@@ -22,6 +22,7 @@ import { AuditCallError, type AuditView } from "../auditClient"
 import { BOX_NAMES, buildReview, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, CHOICE_NAMES, choiceFor, REVIEW_NOTE_MAX, type Box, type BuiltReview, NOTE_CHANGED, type ReviewChange, type ReviewGroup } from "../auditService"
 import { storableText } from "../requestGuard"
 import { clockLabel } from "../quarterService"
+import { distinctWhys, durationText, scoreText, wakingHoursText } from "../reviewText"
 import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice, type WeekBlock } from "../types"
 import type { AuditState } from "../hooks/useAudit"
 import { PerfectWeek } from "./PerfectWeek"
@@ -35,7 +36,6 @@ const BOX_TONE: Record<Box, string> = {
 }
 const BOX_DOT: Record<Box, string> = { more: "bg-emerald-500", costs: "bg-amber-500", cut: "bg-red-500", fun: "bg-violet-500" }
 
-const hoursText = (h: number) => (h === 1 ? "1 hour" : `${Number.isInteger(h) ? h : h.toFixed(2).replace(/0$/, "")} hours`)
 const answersText = (n: number) => (n === 1 ? "1 answer" : `${n} answers`)
 
 function shortDate(iso: string, tz: string): string {
@@ -63,7 +63,7 @@ function ActivityRow({ g, review, onOpen }: { g: ReviewGroup; review: Review; on
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{g.label}</p>
           <p className="text-xs tabular-nums text-muted-foreground">
-            {hoursText(g.minutes / 60)} · E {g.energy.toFixed(1)} · G {g.growth.toFixed(1)} · from {answersText(g.answers)}
+            {durationText(g.minutes)} · energy {scoreText(g.energy)} · growth {scoreText(g.growth)} · from {answersText(g.answers)}
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
@@ -83,7 +83,7 @@ function BoxGrid({ built, onOpen }: { built: BuiltReview; onOpen: (g: ReviewGrou
       <section className={cn("min-w-0 rounded-xl border p-2.5", BOX_TONE[box])} data-testid={`review-box-${box}`}>
         <p className="text-2xl font-semibold tabular-nums">{built.shares[box]}%</p>
         <p className="text-sm font-semibold leading-tight">{BOX_NAMES[box]}</p>
-        <p className="text-[11px] text-muted-foreground">our name</p>
+        <p className="text-[11px] text-muted-foreground">our name for this box</p>
         <ul className="mt-2 space-y-1">
           {items.length === 0 ? (
             <li className="text-xs text-muted-foreground">Nothing here</li>
@@ -93,7 +93,7 @@ function BoxGrid({ built, onOpen }: { built: BuiltReview; onOpen: (g: ReviewGrou
                 <button type="button" onClick={() => onOpen(g)} className="w-full min-w-0 rounded-md py-1 text-left hover:underline">
                   <span className="block truncate text-sm">{g.label}</span>
                   <span className="block text-[11px] tabular-nums text-muted-foreground">
-                    {hoursText(g.minutes / 60)} · E {g.energy.toFixed(1)} · G {g.growth.toFixed(1)}
+                    {durationText(g.minutes)} · energy {scoreText(g.energy)} · growth {scoreText(g.growth)}
                   </span>
                 </button>
               </li>
@@ -147,8 +147,8 @@ function EnergyByHour({ built }: { built: BuiltReview }) {
                 <li
                   key={h.hour}
                   className="group relative flex h-full min-w-0 flex-1 items-end"
-                  title={`${String(h.hour).padStart(2, "0")}:00–${String(h.hour + 1).padStart(2, "0")}:00 · energy ${h.energy.toFixed(1)} · from ${answersText(h.answers)}`}
-                  aria-label={`${String(h.hour).padStart(2, "0")}:00, energy ${h.energy.toFixed(1)}, from ${answersText(h.answers)}`}
+                  title={`${String(h.hour).padStart(2, "0")}:00–${String(h.hour + 1).padStart(2, "0")}:00 · energy ${scoreText(h.energy)} · from ${answersText(h.answers)}`}
+                  aria-label={`${String(h.hour).padStart(2, "0")}:00, energy ${scoreText(h.energy)}, from ${answersText(h.answers)}`}
                 >
                   <div className="w-full rounded-t-[4px] bg-primary group-hover:bg-primary/80" style={{ height: Math.max(3, y(h.energy)) }} />
                 </li>
@@ -245,12 +245,12 @@ function ActivitySheet({
       <div className="max-h-[70vh] space-y-4 overflow-y-auto pb-2">
         {group.label.length > 32 && <p className="break-all font-medium">{group.label}</p>}
         <p className="text-sm tabular-nums text-muted-foreground">
-          {hoursText(group.minutes / 60)} · energy {group.energy.toFixed(1)} · growth {group.growth.toFixed(1)} · from {answersText(group.answers)}
+          {durationText(group.minutes)} · energy {scoreText(group.energy)} · growth {scoreText(group.growth)} · from {answersText(group.answers)}
         </p>
         <BoxChip box={group.box} />
         {group.avoidingMinutes > 0 && (
           <p className="text-sm" data-testid="review-avoiding">
-            Marked &quot;avoiding something&quot;: <span className="font-medium tabular-nums">{hoursText(group.avoidingMinutes / 60)}</span> of its {hoursText(group.minutes / 60)}.
+            Marked &quot;avoiding something&quot;: <span className="font-medium tabular-nums">{durationText(group.avoidingMinutes)}</span> of its {durationText(group.minutes)}.
           </p>
         )}
         <section>
@@ -259,11 +259,19 @@ function ActivitySheet({
             <p className="mt-1 text-sm text-muted-foreground">You wrote no notes on this one.</p>
           ) : (
             <ul className="mt-2 space-y-2">
-              {group.whys.map((w) => (
-                <li key={w.slotAt} className="rounded-lg border-l-2 border-primary/60 bg-muted/30 px-3 py-2 text-sm">
-                  {w.text}
-                  <span className="block text-[11px] text-muted-foreground">
-                    {shortDate(w.slotAt, timezone)}, {clockLabel(Date.parse(w.slotAt), timezone)}
+              {/* Each note once, with how often and when (alpha picky-eye-15): four identical cards read as a glitch. */}
+              {distinctWhys(group.whys).map((w) => (
+                <li key={w.slotAts[0]} className="rounded-lg border-l-2 border-primary/60 bg-muted/30 px-3 py-2 text-sm" data-testid="review-why">
+                  <span className="flex items-start gap-2">
+                    <span className="min-w-0 flex-1 break-words">{w.text}</span>
+                    {w.slotAts.length > 1 && (
+                      <span className="shrink-0 rounded-full bg-primary/15 px-2 text-xs font-medium tabular-nums text-primary" aria-label={`written ${w.slotAts.length} times`}>
+                        ×{w.slotAts.length}
+                      </span>
+                    )}
+                  </span>
+                  <span className="block text-[11px] tabular-nums text-muted-foreground">
+                    {w.slotAts.map((at) => `${shortDate(at, timezone)}, ${clockLabel(Date.parse(at), timezone)}`).join(" · ")}
                   </span>
                 </li>
               ))}
@@ -347,7 +355,7 @@ function ActivitySheet({
               {state === "saving" ? "Saving…" : "Save"}
             </Button>
             {state === "saved" && (
-              <span className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400" role="status" data-testid="review-saved">
+              <span className="flex items-center gap-1 text-sm font-medium text-success" role="status" data-testid="review-saved">
                 <Check className="size-4" aria-hidden /> Saved
               </span>
             )}
@@ -440,7 +448,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
 
   const tz = view.timezone
   const open = built.groups.find((g) => g.key === openKey) ?? null
-  const answeredHours = built.hours
+  const answeredTime = durationText(built.hours * 60)
   return (
     <div data-testid="review">
       {back}
@@ -448,7 +456,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
         Your audit, {shortDate(run.startedAt, tz)} – {shortDate(run.endedAt ?? run.endsAt, tz)}
       </h2>
       <p className="mt-2 text-sm leading-relaxed" data-testid="review-basis">
-        You answered {built.answered} of {built.possibleQuarters} quarters ({answeredHours} of {built.possibleHours} waking hours). Quarters you did not answer are not counted.
+        You answered {built.answered} of {built.possibleQuarters} quarters ({answeredTime} of {wakingHoursText(built.possibleHours)}). Quarters you did not answer are not counted.
       </p>
 
       {built.answered === 0 ? (
@@ -459,7 +467,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
         <>
           <section className="mt-6">
             <h3 className="text-base font-semibold">What you did, most often first</h3>
-            <p className="text-xs text-muted-foreground">E is energy, G is growth: averages of your 1–7 answers. Tap one for your notes and what you will do with it.</p>
+            <p className="text-xs text-muted-foreground">Energy and growth are averages of your 1–7 answers. Tap one for your notes and what you will do with it.</p>
             <ul className="mt-2 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               {built.groups.map((g) => (
                 <ActivityRow key={g.key} g={g} review={run.review} onOpen={() => setOpenKey(g.key)} />
@@ -470,7 +478,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
           <section className="mt-8">
             <h3 className="text-base font-semibold">Four boxes</h3>
             <p className="text-xs text-muted-foreground">
-              Martell&apos;s four boxes, with growth in place of money. Above 4 counts as high. Each share is of the {answeredHours} hours you answered.
+              Martell&apos;s four boxes, with growth in place of money. Above 4 counts as high. Each share is of the {answeredTime} you answered.
             </p>
             <div className="mt-3">
               <BoxGrid built={built} onOpen={(g) => setOpenKey(g.key)} />

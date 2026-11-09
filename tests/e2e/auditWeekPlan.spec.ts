@@ -84,7 +84,7 @@ test.describe("review and perfect week after the alpha findings @phone", () => {
     const week = page.getByTestId("perfect-week")
     await expect(week.getByTestId("week-inputs")).toContainText("Do more: Coding the app")
     await expect(week.getByTestId("week-best-hours")).toHaveText("Best hours, for your hardest work: 10:00.")
-    await expect(week.getByTestId("week-low-hours")).toHaveText("Low hours, for admin and calls: 12:00 and 13:00.")
+    await expect(week.getByTestId("week-low-hours")).toHaveText("Low hours, for admin and calls, lowest first: 12:00 and 13:00.")
     await week.getByText("Martell's steps").click()
     await expect(week.locator("ol > li")).toHaveCount(7)
     await expect(week.locator("ol > li").nth(3)).toContainText("Cut bleed time")
@@ -102,7 +102,7 @@ test.describe("review and perfect week after the alpha findings @phone", () => {
 
     // Avoiding hours on the card.
     await page.getByTestId("review-activity").filter({ hasText: "Scrolling" }).click()
-    await expect(sheet.getByTestId("review-avoiding")).toHaveText('Marked "avoiding something": 0.5 hours of its 1 hour.')
+    await expect(sheet.getByTestId("review-avoiding")).toHaveText('Marked "avoiding something": 30 min of its 1 hour.')
     await expect(sheet.getByRole("radio", { name: "Do more" })).toHaveAttribute("aria-checked", "false")
   })
 
@@ -138,7 +138,7 @@ test.describe("review and perfect week after the alpha findings @phone", () => {
       [2, 1020, 1080, "Gym", "workout"],
       [4, 1020, 1080, "Gym", "workout"],
     ])
-    await expect(week.getByTestId("week-totals")).toHaveText("In the week: Workout or hobby 3 h")
+    await expect(week.getByTestId("week-totals")).toHaveText("In the week: Workout or hobby 3 hours")
 
     // A name already in the week brings its kind.
     await week.getByTestId("week-add-1").click()

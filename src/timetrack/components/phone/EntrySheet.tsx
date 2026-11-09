@@ -446,7 +446,7 @@ export function EntrySheet({
     if (iso === null) {
       // a running entry's end is "now", with no date, as Toggl's is [H25 help_14 f012]
       return (
-        <span data-testid="end-chip" className="flex min-h-11 items-center justify-center rounded-lg px-3 text-sm tabular-nums">
+        <span data-testid="end-chip" className="flex min-h-12 items-center justify-center rounded-lg px-3 text-sm tabular-nums">
           {formatTimeOfDay(isoFromEpochSeconds(Math.max(nowSec, ownSecond)), format)}
         </span>
       )
@@ -455,7 +455,7 @@ export function EntrySheet({
     const date = chipDate(dateKey(iso), state.user.dateFormat)
     if (which === selected) {
       return (
-        <div className="flex min-h-11 items-center gap-1 rounded-lg border border-primary bg-primary/10 px-2">
+        <div className="flex min-h-12 items-center gap-1 rounded-lg border border-primary bg-primary/10 px-2">
           <input
             ref={(input) => {
               if (!input || focusChip.current !== which) return
@@ -473,7 +473,8 @@ export function EntrySheet({
             onChange={(event) => putChip(event.target.value)}
             onBlur={commitChip}
             onKeyDown={keys(commitChip, () => putChip(null))}
-            className="w-full min-w-0 bg-transparent text-center text-sm tabular-nums outline-none"
+            // the whole chip's height is the field: it was a 23px strip inside a 44px box (alpha fast-time-03)
+            className="-my-px h-12 w-full min-w-0 bg-transparent text-center text-sm tabular-nums outline-none"
           />
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{date}</span>
         </div>
@@ -488,7 +489,7 @@ export function EntrySheet({
           focusChip.current = which
           setEdge(which)
         }}
-        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-border px-2 text-sm tabular-nums hover:bg-secondary/60"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-border px-2 text-sm tabular-nums hover:bg-secondary/60"
       >
         {time}
         <span className="text-xs text-muted-foreground">{date}</span>
@@ -501,7 +502,8 @@ export function EntrySheet({
       type="button"
       disabled={!enabled}
       onClick={run}
-      className="mt-1 min-h-9 w-full whitespace-nowrap rounded px-0.5 text-[10px] font-semibold uppercase text-primary disabled:text-muted-foreground disabled:opacity-60"
+      // 48px, Toggl Android's (Material) size: these were 36 (alpha fast-time-03)
+      className="mt-1 min-h-12 w-full whitespace-nowrap rounded px-0.5 text-[10px] font-semibold uppercase text-primary disabled:text-muted-foreground disabled:opacity-60"
     >
       {label}
     </button>
@@ -805,7 +807,7 @@ export function EntrySheet({
                   show(moved, (d) => ({ ...d, start: lastStop }))
                 })}
               </div>
-              <span className="flex min-h-11 items-center text-muted-foreground">→</span>
+              <span className="flex min-h-12 items-center text-muted-foreground">→</span>
               <div>
                 {chip("stop")}
                 {textLink("Round stop time", rounded !== null, () => rounded && edit((d) => ({ ...d, stop: rounded })))}

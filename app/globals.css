@@ -25,6 +25,10 @@
   --accent-foreground: #e0e0e0;
   --destructive: #e63946;
   --destructive-foreground: #e0e0e0;
+  /* "Saved" and other good news. emerald-400: emerald-600 measured 4.36:1 on the
+     dark sheets, under the 4.5:1 floor (alpha picky-eye-16). The app has no light
+     theme, so a `dark:` variant never applies; this token is the one colour. */
+  --success: #34d399;
   --border: #374151;
   --input: #1f2937;
   --ring: #ff6b35;
@@ -62,6 +66,10 @@
   --accent-foreground: #e0e0e0;
   --destructive: #e63946;
   --destructive-foreground: #e0e0e0;
+  /* "Saved" and other good news. emerald-400: emerald-600 measured 4.36:1 on the
+     dark sheets, under the 4.5:1 floor (alpha picky-eye-16). The app has no light
+     theme, so a `dark:` variant never applies; this token is the one colour. */
+  --success: #34d399;
   --border: #374151;
   --input: #1f2937;
   --ring: #ff6b35;
@@ -120,6 +128,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

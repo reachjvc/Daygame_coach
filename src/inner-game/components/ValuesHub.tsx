@@ -73,7 +73,7 @@ function getStatusBadge(status: SectionStatus, detail?: string) {
   switch (status) {
     case "completed":
       return (
-        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+        <span className="inline-flex items-center gap-1 text-xs text-success">
           <CheckCircle2 className="h-3.5 w-3.5" />
           Complete
         </span>
@@ -140,7 +140,7 @@ function SectionCard({
             <Icon
               className={cn(
                 "size-5",
-                isCompleted ? "text-emerald-600 dark:text-emerald-400" : "text-primary"
+                isCompleted ? "text-success" : "text-primary"
               )}
             />
           )}

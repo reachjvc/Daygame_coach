@@ -234,7 +234,7 @@ test.describe("time & energy audit @phone", () => {
 
     await page.goto(`${ROUTES.audit}?view=review`)
     await expect(page.getByTestId("review-basis")).toHaveText(
-      "You answered 6 of 8 quarters (1.5 of 2 waking hours). Quarters you did not answer are not counted.",
+      "You answered 6 of 8 quarters (1 h 30 min of 2 waking hours). Quarters you did not answer are not counted.",
       { timeout: 60_000 },
     )
     await expect(page.getByTestId("review-activity").first()).toContainText("Daygame")
@@ -307,7 +307,7 @@ test.describe("time & energy audit @phone", () => {
     await sheet.getByTestId("week-save").click()
     await expect(sheet).toBeHidden()
     await expect(week.getByTestId("week-day-0").getByTestId("week-block")).toContainText("09:00–11:00")
-    await expect(week.getByTestId("week-totals")).toContainText("People 2 h")
+    await expect(week.getByTestId("week-totals")).toContainText("People 2 hours")
 
     await week.getByTestId("week-add-0").click()
     await sheet.getByTestId("week-what").fill("Gym")

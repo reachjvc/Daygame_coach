@@ -617,13 +617,14 @@ const PhoneRow = memo(function PhoneRow({
         </span>
         {/* not on the running row: the bar at the bottom is that timer's control, and a ▷ here read as one (findability, 2026-11-05) */}
         {running ? (
-          <span className="h-9 w-11" />
+          <span className="-mb-1.5 h-12 w-12" />
         ) : (
+          // 48px, Toggl Android's (Material) size: it was 44x36 (alpha fast-time-03)
           <button
             type="button"
             onClick={continueIt}
             aria-label="Continue this entry"
-            className="flex h-9 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
+            className="-mb-1.5 flex size-12 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/60"
           >
             <IconStart className="size-4" />
           </button>

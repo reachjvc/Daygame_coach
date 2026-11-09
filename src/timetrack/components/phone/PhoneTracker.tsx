@@ -329,10 +329,21 @@ export function PhoneTracker({ lab }: { lab: PhoneLab }) {
             40px off, found by the touch test. The back word and the title give
             way instead, the back word first. */}
         <div className="flex items-center gap-x-1 px-3 pt-1.5">
-          {/* the way out: see `BACK_LINK_CLASS`; small, left of the title (D-PHONE-SHELL) */}
-          <Link href={lab.backHref} onClick={lab.goBack} className={cn(BACK_LINK_CLASS, "min-w-0 shrink-[3]")}>
-            <span className="shrink-0">←</span>
-            <span className="max-w-[96px] truncate">{lab.backText}</span>
+          {/* the way out: see `BACK_LINK_CLASS`; small, left of the title (D-PHONE-SHELL).
+              The back word gives way WHOLE, and before the title does (alpha
+              picky-eye-17: "← Dashbo…  Repor…" while the badge said "Saving 1…").
+              The link wraps and is one 44px line tall with the rest hidden: a
+              word that does not fit beside the arrow drops to the hidden second
+              line instead of being cut. Flex shrinks in proportion to weight
+              times width, so at 100 the title still lost a pixel and showed
+              "Repor…"; at 10000 the link gives up all the room it can first. */}
+          <Link
+            href={lab.backHref}
+            onClick={lab.goBack}
+            className={cn(BACK_LINK_CLASS, "h-11 min-w-8 shrink-[10000] flex-wrap content-start overflow-hidden")}
+          >
+            <span className="shrink-0 leading-[2.75rem]">←</span>
+            <span className="max-w-[96px] truncate leading-[2.75rem]">{lab.backText}</span>
           </Link>
           {/* the page's one heading, for a screen reader and the browser tests; the title below says where you are */}
           <h1 className="sr-only">Time</h1>

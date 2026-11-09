@@ -44,6 +44,13 @@ describe("duration formatting", () => {
     expect(formatCompact(600)).toBe("10m")
     expect(formatCompact(3900)).toBe("1h 05m")
   })
+
+  test("a compact label never says 0m for time that was tracked (alpha picky-eye-18)", () => {
+    expect(formatCompact(0)).toBe("0m")
+    expect(formatCompact(8)).toBe("<1m")
+    expect(formatCompact(59)).toBe("<1m")
+    expect(formatCompact(60)).toBe("1m")
+  })
 })
 
 describe("duration input parsing", () => {

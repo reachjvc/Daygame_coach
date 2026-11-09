@@ -191,7 +191,7 @@ export function TrainingSettingsCard({
             {busy && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
             Save
           </Button>
-          {saved && <span className="text-xs text-emerald-600 dark:text-emerald-400">Saved.</span>}
+          {saved && <span className="text-xs text-success">Saved.</span>}
           {error && <span className="text-xs text-destructive">{error}</span>}
         </div>
       </CardContent>

@@ -20,6 +20,7 @@ import { hhmm as minuteLabel } from "@/src/notifications/quietHours"
 import type { ReviewGroup } from "../auditService"
 import { TimeTile } from "./SettingsSheet"
 import type { WeekBlock, WeekKind } from "../types"
+import { durationText } from "../reviewText"
 import { checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX } from "../weekService"
 
 const KIND_BAR: Record<WeekKind, string> = {
@@ -280,7 +281,7 @@ export function PerfectWeek({
         <p data-testid="week-best-hours">
           {best ? (
             <>
-              {bestName}, for your hardest work: <span className="font-medium tabular-nums">{best}</span>.
+              {bestName}, for your hardest work{best.includes(" and ") ? ", best first" : ""}: <span className="font-medium tabular-nums">{best}</span>.
             </>
           ) : (
             <span className="text-muted-foreground">Not enough answers yet to name your best hours.</span>
@@ -288,7 +289,7 @@ export function PerfectWeek({
         </p>
         {hours.low && (
           <p data-testid="week-low-hours">
-            Low hours, for admin and calls: <span className="font-medium tabular-nums">{hours.low}</span>.
+            Low hours, for admin and calls{hours.low.includes(" and ") ? ", lowest first" : ""}: <span className="font-medium tabular-nums">{hours.low}</span>.
           </p>
         )}
         <p className="text-xs text-muted-foreground">
@@ -358,7 +359,7 @@ export function PerfectWeek({
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground" data-testid="week-totals">
           In the week:{" "}
           {WEEK_KINDS.filter((k) => totals[k] > 0)
-            .map((k) => `${WEEK_KIND_NAMES[k]} ${totals[k]} h`)
+            .map((k) => `${WEEK_KIND_NAMES[k]} ${durationText(totals[k] * 60)}`)
             .join(" · ")}
         </p>
       )}
