@@ -604,13 +604,15 @@ Add two cases to `planLanding.test.ts`:
 
 ### Phase 3. Due now, on top of Today (d3, d5, d11)
 
-**Status:** Built, NOT shipped (2026-11-09): stopped for the owner. Code is on local branch
-`after-setup-p3` (worktree in the session scratchpad). Six existing review specs fail on a Sunday,
-Monday or Tuesday (`life-mastery-reviews` ×2, `-readings`, `-achievements`, `-dated-steps`,
-`-goal-status`): d11 opens Review on last week while the weekly card shows, and they write into "this
-week". Not covered by the plan. Recommended fix: those specs open
-`?step=review&period=<this week>`, asserts unchanged. Also: the plan's `nextSetupStep` rule ("none left →
-recap") and its test row ("else null") disagree; built to the rule. Depends on: Phases 1 and 2 (`isWrittenReview`, `BUILD_STEPS`).
+**Status:** Built and live 2026-11-09, commit d63545af, buildId confirmed. Decision page section
+`p3-live` added. Differences, after the owner's go ("go ahead with your recommendations"): six review
+specs (`life-mastery-reviews` ×4 gotos, `-readings`, `-achievements`, `-dated-steps`, `-goal-status`)
+open this week by name through a new helper `thisWeeksReview(accountTimezone)`, because d11 opens
+Review on last week from Sunday to Tuesday; what they check is unchanged. `nextSetupStep` follows the
+written rule (none left → `recap`), not the test row's "else null". `DueNow` rows are keyed by card key.
+The "Not now" e2e waits for either footer text, since the footer can say "Saved on this device." there.
+The period-link test names a week 3 weeks back, so it fails if `?period=` is ignored. /code-review: 10
+findings, that one fixed; the rest ask to change d11 or the plan's wording on purpose. Depends on: Phases 1 and 2 (`isWrittenReview`, `BUILD_STEPS`).
 
 **3.1 Pure service.** New `src/goals/dueNowService.ts`.
 
