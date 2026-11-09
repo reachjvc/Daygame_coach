@@ -30,6 +30,7 @@ import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { followNewest } from "../calendarBoxService"
 import { typedIntoPair, type TimePair } from "../drumService"
 import type { PushToast } from "../hooks/useTimetrack"
 import { IconClose, IconDuplicate, IconStart, IconStop } from "../icons"
@@ -131,6 +132,22 @@ export function CalendarEntryBox({
     setPair(fresh.pair)
     setTyped(null)
   }, [targetKey]) // eslint-disable-line react-hooks/exhaustive-deps -- only a new target resets what is being typed
+
+  // the entry changed elsewhere (the phone renamed or stopped it): what was not touched here follows (D-FOLLOW);
+  // before the browser hands over the next key, so a key typed meanwhile is not replaced
+  useLayoutEffect(() => {
+    if (!saved || !opened.current) return
+    const newest = {
+      draft: { description: saved.description, projectId: saved.projectId, taskId: saved.taskId, tagIds: saved.tagIds, billable: saved.billable },
+      pair: { start: saved.start, stop: saved.stop },
+    }
+    const next = followNewest(opened.current, now.current, newest)
+    if (next.opened === opened.current) return
+    opened.current = next.opened
+    now.current = next.shown
+    setDraft(next.shown.draft)
+    setPair(next.shown.pair)
+  }, [saved])
 
   // beside the block: to its right where there is room, else to its left; kept on screen
   const box = useRef<HTMLDivElement | null>(null)
