@@ -180,6 +180,27 @@ test.describe("audit across devices @phone", () => {
       await phone.ctx.close()
     }
   })
+
+  test("03: a card left open on the phone says when the PC answers its quarter meanwhile", async ({ page, account, browser }) => {
+    test.setTimeout(120_000)
+    const runId = await seedRun(account.id)
+    const label = labelOf(qStart(Date.now()) - 2 * Q)
+    const phone = await secondDevice(browser, account.storageState)
+    try {
+      await openAudit(phone.page)
+      await phone.page.getByTestId("audit-row-gap").filter({ hasText: label }).click()
+      await phone.page.getByTestId("audit-answer-selection").click()
+      const card = phone.page.getByTestId("audit-answer-sheet").getByTestId("audit-card")
+      await expect(card).toHaveCount(1)
+      await expect(card.getByTestId("audit-card-elsewhere")).toHaveCount(0)
+      await openAudit(page)
+      await answerGap(page, label, "Email")
+      await expect.poll(() => activities(account.id, runId)).toEqual(["Email"])
+      await expect(card.getByTestId("audit-card-elsewhere")).toContainText("Answered on another device just now: Email", { timeout: 45_000 })
+    } finally {
+      await phone.ctx.close()
+    }
+  })
 })
 
 async function seedTimeEntry(userId: string, description: string, from: number, to: number): Promise<string> {

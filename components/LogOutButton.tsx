@@ -24,7 +24,7 @@ import { signOut } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog"
 import { unsentAuditChanges } from "@/src/audit/auditQueue"
-import { sendWaitingAudit } from "@/src/audit/sendWaitingAudit"
+import { sendWaitingAudit, type AuditSendOutcome } from "@/src/audit/sendWaitingAudit"
 import { forgetOfflineCopies } from "@/src/shared/offlineCopies"
 import { SendTrackerChanges } from "@/src/timetrack/components/SendTrackerChanges"
 import { sendTrackerChangesNow, unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
@@ -33,7 +33,19 @@ import { sendTrackerChangesNow, unsentTrackerChanges } from "@/src/timetrack/hoo
 export const SEND_BEFORE_LOG_OUT_MS = 5_000
 const LOOK_EVERY_MS = 250
 
-type Phase = { kind: "idle" } | { kind: "sending" } | { kind: "asking"; left: number } | { kind: "leaving" }
+type Phase =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "asking"; left: number; refused: AuditSendOutcome["refused"] }
+  | { kind: "leaving" }
+
+const clock = (iso: string) => {
+  try {
+    return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso))
+  } catch {
+    return iso
+  }
+}
 
 export function LogOutButton({ children }: { children: (press: { onClick: () => void; busy: boolean }) => ReactNode }) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" })
@@ -43,6 +55,9 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
   /** The audit queue here is another account's (409): not the person's who is logging out */
   const auditStranger = useRef(false)
   const auditSending = useRef(false)
+  /** Audit answers the account refused for good, with its reason: named, and dropped only by "Log out anyway" */
+  const auditRefused = useRef<AuditSendOutcome["refused"]>([])
+  const auditFinal = useRef(false)
   const [, startTransition] = useTransition()
 
   const leave = useCallback(() => {
@@ -61,11 +76,14 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
 
   /** One audit send at a time; tried again while Log Out waits, as signal may return */
   const sendAudit = useCallback(() => {
-    if (auditSending.current || auditStranger.current || unsentAuditChanges() === 0) return
+    // Everything left was refused for good: sending it again changes nothing.
+    if (auditSending.current || auditStranger.current || auditFinal.current || unsentAuditChanges() === 0) return
     auditSending.current = true
     void sendWaitingAudit()
       .then((result) => {
-        if (result === "stranger") auditStranger.current = true
+        if (result.status === "stranger") auditStranger.current = true
+        auditRefused.current = result.refused
+        if (result.status === "refused") auditFinal.current = true
       })
       .catch(() => {})
       .finally(() => {
@@ -82,6 +100,8 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     if (phase.kind !== "idle") return
     stranger.current = false
     auditStranger.current = false
+    auditRefused.current = []
+    auditFinal.current = false
     if (unsent() === 0) {
       leave()
       return
@@ -97,8 +117,10 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
         leave()
         return
       }
-      if (Date.now() - started >= SEND_BEFORE_LOG_OUT_MS) {
-        setPhase({ kind: "asking", left })
+      const refused = auditFinal.current ? auditRefused.current : []
+      // Nothing left that waiting could send: ask now rather than wait out the seconds.
+      if (Date.now() - started >= SEND_BEFORE_LOG_OUT_MS || (refused.length > 0 && left <= refused.length)) {
+        setPhase({ kind: "asking", left, refused })
         return
       }
       sendAudit()
@@ -112,7 +134,9 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
     setPhase({ kind: "idle" })
   }, [])
 
-  const left = phase.kind === "asking" ? phase.left : 0
+  const refused = phase.kind === "asking" ? phase.refused : []
+  const left = phase.kind === "asking" ? Math.max(0, phase.left - refused.length) : 0
+  const all = left + refused.length
   return (
     <>
       {children({ onClick, busy: phase.kind === "sending" || phase.kind === "leaving" })}
@@ -121,9 +145,28 @@ export function LogOutButton({ children }: { children: (press: { onClick: () => 
         <DialogContent className="sm:max-w-md" data-testid="log-out-unsent">
           <DialogTitle>Not saved to your account yet</DialogTitle>
           <DialogDescription>
-            {left === 1 ? "1 change hasn't" : `${left} changes haven't`} reached your account yet, probably because there is
-            no signal. Log out anyway and lose {left === 1 ? "it" : "them"}?
+            {left > 0 && (
+              <>
+                {left === 1 ? "1 change hasn't" : `${left} changes haven't`} reached your account yet, probably because there is
+                no signal.{" "}
+              </>
+            )}
+            {refused.length > 0 && (
+              <>
+                {refused.length === 1 ? "1 audit answer can't be saved:" : `${refused.length} audit answers can't be saved:`}
+              </>
+            )}
           </DialogDescription>
+          {refused.length > 0 && (
+            <ul className="space-y-0.5 text-sm" data-testid="log-out-not-kept">
+              {refused.map(({ answer, reason }) => (
+                <li key={answer.id}>
+                  {clock(answer.slotAt)} · {answer.activity}: {reason}.
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-sm text-muted-foreground">Log out anyway and lose {all === 1 ? "it" : "them"}?</p>
           <DialogFooter>
             <Button variant="outline" onClick={stay} data-testid="log-out-stay">
               Stay signed in

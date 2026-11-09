@@ -121,6 +121,50 @@ describe("Log Out with an audit answer still waiting on the phone", () => {
     expect(window.localStorage.getItem(AUDIT_QUEUE_KEY)).toBeNull()
   })
 
+  test("an answer the account refuses for good is named, kept on Stay signed in, and dropped only on Log out anyway", async () => {
+    answerWaitingOnThePhone()
+    const tries = { n: 0 }
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.startsWith("/api/audit/slots") && init?.method === "PUT") {
+          tries.n += 1
+          const body = JSON.parse(String(init.body)) as { slots: AuditAnswer[] }
+          return new Response(JSON.stringify({ stored: 0, refused: body.slots.map((s) => ({ id: s.id, error: "Changed on another device since", retry: false })) }), { status: 200 })
+        }
+        return new Response("{}", { status: 200 })
+      }),
+    )
+    renderLogOut()
+    await wait(1000)
+    // asked at once: waiting longer could not change the answer
+    expect(signedOut.count).toBe(0)
+    expect(screen.getByTestId("log-out-not-kept").textContent).toContain("Approached in the metro: Changed on another device since")
+    expect(screen.getByTestId("log-out-unsent").textContent).toContain("1 audit answer can't be saved")
+    expect(screen.getByTestId("log-out-unsent").textContent).not.toContain("hasn't reached")
+    expect(tries.n, "it kept resending what can never be stored").toBe(1)
+    fireEvent.click(screen.getByTestId("log-out-stay"))
+    await wait(100)
+    expect(unsentAuditChanges(window.localStorage), "Stay signed in threw it away").toBe(1)
+
+    fireEvent.click(screen.getByRole("button", { name: "Log Out" }))
+    await wait(1000)
+    fireEvent.click(screen.getByTestId("log-out-anyway"))
+    await wait(100)
+    expect(signedOut.count).toBe(1)
+    expect(window.localStorage.getItem(AUDIT_QUEUE_KEY)).toBeNull()
+  })
+
+  test("a send the server rejects outright (400) is named too, not dropped in silence", async () => {
+    answerWaitingOnThePhone()
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "The audit could not save that" }), { status: 400 })))
+    renderLogOut()
+    await wait(1000)
+    expect(signedOut.count).toBe(0)
+    expect(screen.getByTestId("log-out-not-kept").textContent).toContain("Approached in the metro")
+    expect(unsentAuditChanges(window.localStorage)).toBe(1)
+  })
+
   test("another account's waiting answers are not sent and do not hold the person back", async () => {
     answerWaitingOnThePhone()
     const stored = account("user-2")

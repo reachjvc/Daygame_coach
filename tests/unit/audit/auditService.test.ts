@@ -2,8 +2,18 @@
  * THE AUDIT'S RULES — src/audit/auditService.ts (Plans/energy-audit.md, Phase 4).
  */
 import { describe, expect, it } from "vitest"
-import { checkAnswer, checkQuiet, checkReview, correctedTime, muteUntil, runIsOpen } from "@/src/audit/auditService"
-import type { AuditRun } from "@/src/audit/types"
+import {
+  CHANGED_SINCE,
+  checkAnswer,
+  checkQuiet,
+  checkReview,
+  correctedTime,
+  muteUntil,
+  runIsOpen,
+  splitByStored,
+  type StoredAnswer,
+} from "@/src/audit/auditService"
+import type { AuditAnswer, AuditRun } from "@/src/audit/types"
 
 const CPH = "Europe/Copenhagen"
 const RUN_ID = "00000000-0000-4000-8000-000000000001"
@@ -167,5 +177,56 @@ describe("text that cannot be stored", () => {
     expect("answer" in r && r.answer.activity).toBe("Pastedtext")
     expect("answer" in r && r.answer.why).toBe("line one\nline two")
     expect(checkReview({ notes: { email: "a\u0000b" } })).toEqual({ review: { choices: {}, notes: { email: "ab" }, week: [] } })
+  })
+})
+
+describe("splitByStored: an older answer loses, the same answer sent twice does not (code review, 2026-11-09)", () => {
+  const SLOT = "2026-11-09T15:30:00.000Z"
+  const key = `${RUN_ID}:${SLOT}`
+  const ans = (over: Partial<AuditAnswer> = {}): AuditAnswer => ({
+    id: ID,
+    runId: RUN_ID,
+    slotAt: SLOT,
+    activity: "Daygame sets",
+    energy: 6,
+    growth: 7,
+    avoiding: false,
+    why: null,
+    source: "app",
+    timeEntryId: null,
+    answeredAt: "2026-11-09T15:50:00.000Z",
+    ...over,
+  })
+  const held = (over: Partial<StoredAnswer> = {}): StoredAnswer => ({
+    id: ID,
+    at: Date.parse("2026-11-09T15:50:05.000Z"),
+    activity: "Daygame sets",
+    energy: 6,
+    growth: 7,
+    why: null,
+    ...over,
+  })
+
+  it("stores a quarter nobody answered, and an answer newer than the stored one", () => {
+    expect(splitByStored([ans()], new Map()).fresh).toHaveLength(1)
+    expect(splitByStored([ans()], new Map([[key, held({ id: "other", at: Date.parse("2026-11-09T15:40:00.000Z") })]])).fresh).toHaveLength(1)
+  })
+
+  it("refuses an older answer when another device answered the quarter", () => {
+    const r = splitByStored([ans()], new Map([[key, held({ id: "pc-answer", activity: "Email" })]]))
+    expect(r.fresh).toEqual([])
+    expect(r.refused).toEqual([{ id: ID, error: CHANGED_SINCE, retry: false }])
+  })
+
+  it("takes the same answer sent again (stamped earlier by the clock correction) as stored, not refused, and does not write it", () => {
+    const r = splitByStored([ans()], new Map([[key, held()]]))
+    expect(r.refused).toEqual([])
+    expect(r.fresh).toEqual([])
+    expect(r.alreadyStored).toHaveLength(1)
+  })
+
+  it("refuses an older edit of the same answer when another device changed it since: same id, other words", () => {
+    const r = splitByStored([ans()], new Map([[key, held({ activity: "Email" })]]))
+    expect(r.refused).toHaveLength(1)
   })
 })

@@ -79,6 +79,8 @@ export interface NotKept {
  * fast-audit-03). Only while the page is on screen.
  */
 export const REREAD_MS = 30_000
+/** A focus, a visibility change or a tick this soon after a read started is the same read. */
+export const REREAD_GAP_MS = 1_000
 
 export function useAudit(account: string) {
   const api = useMemo(() => auditApi(account), [account])
@@ -101,6 +103,8 @@ export function useAudit(account: string) {
   const flushAgain = useRef(false)
   const readsStarted = useRef(0)
   const readApplied = useRef(0)
+  const readsInFlight = useRef(0)
+  const lastReadStarted = useRef(0)
 
   const setQ = useCallback(
     (next: AuditQueue) => {
@@ -120,8 +124,12 @@ export function useAudit(account: string) {
   const load = useCallback(async (): Promise<AuditView | null> => {
     const mine = ++readsStarted.current
     const started = Date.now()
+    readsInFlight.current += 1
+    lastReadStarted.current = started
     try {
-      const fresh = await api.view()
+      const fresh = await api.view().finally(() => {
+        readsInFlight.current -= 1
+      })
       if (mine < readApplied.current) return null
       readApplied.current = mine
       viewRef.current = fresh
@@ -233,10 +241,15 @@ export function useAudit(account: string) {
     const retry = () => {
       if (!queueIsEmpty(queueRef.current)) void flush()
     }
+    // Coming back fires focus and visibilitychange together: one read, not two.
+    const readSoon = () => {
+      if (readsInFlight.current > 0 || Date.now() - lastReadStarted.current < REREAD_GAP_MS) return
+      void load()
+    }
     const onVisible = () => {
       if (document.visibilityState !== "visible") return
       retry()
-      void load()
+      readSoon()
     }
     // Another tab of this account changed the queue: take its version, so two
     // tabs never overwrite each other's waiting answers (offline audit, 2026-11-09).
@@ -248,9 +261,9 @@ export function useAudit(account: string) {
     }
     // Another device may have answered meanwhile (fast-audit-03): read again on
     // focus, and every REREAD_MS while the page is on screen.
-    const onFocus = () => void load()
+    const onFocus = () => readSoon()
     const every = window.setInterval(() => {
-      if (document.visibilityState === "visible") void load()
+      if (document.visibilityState === "visible") readSoon()
     }, REREAD_MS)
     window.addEventListener("online", retry)
     window.addEventListener("storage", onStorage)

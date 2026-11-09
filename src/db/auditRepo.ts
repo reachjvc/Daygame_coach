@@ -18,6 +18,7 @@
 import type { AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
 import { normalizePhrase } from "@/src/shared/textMatch"
 import { nextReviewVersion, readStoredReview, reviewToStore } from "@/src/audit/auditService"
+import type { StoredAnswer } from "@/src/audit/auditService"
 import { readAllRows } from "./paging"
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
 
@@ -300,9 +301,9 @@ export async function deleteSlot(userId: string, id: string, notAfter?: Date): P
   return (data ?? []).length > 0
 }
 
-/** When each of these quarters was last answered, by run and quarter (`<run>:<iso>`). */
-export async function answeredTimes(userId: string, quarters: { runId: string; slotAt: string }[]): Promise<Map<string, number>> {
-  const out = new Map<string, number>()
+/** What each of these quarters holds and when it was last answered, by run and quarter (`<run>:<iso>`). */
+export async function answeredTimes(userId: string, quarters: { runId: string; slotAt: string }[]): Promise<Map<string, StoredAnswer>> {
+  const out = new Map<string, StoredAnswer>()
   if (quarters.length === 0) return out
   const supabase = await createServerSupabaseClient()
   const byRun = new Map<string, string[]>()
@@ -310,13 +311,21 @@ export async function answeredTimes(userId: string, quarters: { runId: string; s
   for (const [runId, slots] of byRun) {
     const { data, error } = await supabase
       .from("audit_slots")
-      .select("slot_at, updated_at")
+      .select("id, slot_at, updated_at, activity, energy, growth, why")
       .eq("user_id", userId)
       .eq("run_id", runId)
       .in("slot_at", slots)
     if (error) throw new Error(`Failed to read the stored answers: ${error.message}`)
-    for (const r of (data ?? []) as { slot_at: string; updated_at: string }[]) {
-      out.set(`${runId}:${new Date(r.slot_at).toISOString()}`, Date.parse(r.updated_at))
+    type Row = { id: string; slot_at: string; updated_at: string; activity: string; energy: number; growth: number; why: string | null }
+    for (const r of (data ?? []) as Row[]) {
+      out.set(`${runId}:${new Date(r.slot_at).toISOString()}`, {
+        id: r.id,
+        at: Date.parse(r.updated_at),
+        activity: r.activity,
+        energy: r.energy,
+        growth: r.growth,
+        why: r.why,
+      })
     }
   }
   return out

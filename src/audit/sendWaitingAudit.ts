@@ -5,61 +5,79 @@
  * no signal, still waiting when signal returned on another page, was thrown
  * away with no word (alpha test fast-audit-01). Log Out now sends what waits
  * first, the way the page would (`useAudit`'s flush), and asks about the rest
- * (`LogOutButton`), as it does for Time's changes.
+ * (`LogOutButton`), as it does for Time.
+ *
+ * AN ANSWER THE SERVER REFUSES FOR GOOD STAYS IN THE QUEUE and comes back in
+ * `refused`, with the server's reason, so Log Out can name it ("Changed on
+ * another device since"). Only "Log out anyway" drops it; "Stay signed in"
+ * keeps it, and the audit page names it the next time it sends (useAudit).
  *
  * Only ever for the account the queue names: the request carries it, and the
  * server answers 409 when someone else is signed in (`requireAuth`). That is
  * "stranger": the queue is not the person's who is logging out.
  */
 
-import { browserStore, sendInChunks, type KeyValueStore } from "@/src/shared/offlineQueue"
+import { browserStore, failureOf, refusedForGood, SEND_AT_MOST, type KeyValueStore } from "@/src/shared/offlineQueue"
 import { AuditCallError, auditApi } from "./auditClient"
-import { answersSent, auditQueueOwner, deletesSent, queueIsEmpty, readAuditQueue, writeAuditQueue, type AuditQueue } from "./auditQueue"
+import { answersSent, auditQueueOwner, deletesSent, readAuditQueue, writeAuditQueue, type AuditQueue } from "./auditQueue"
+import type { AuditAnswer } from "./types"
 
-export type AuditSendResult = "sent" | "waiting" | "stranger"
+export interface AuditSendOutcome {
+  /** sent: nothing waits. refused: what waits can never be stored. waiting: might go later. stranger: not this person's. */
+  status: "sent" | "waiting" | "stranger" | "refused"
+  refused: { answer: AuditAnswer; reason: string }[]
+}
 
-export async function sendWaitingAudit(store: KeyValueStore | null = browserStore()): Promise<AuditSendResult> {
+const COULD_NOT_SAVE = "The server could not save it"
+
+export async function sendWaitingAudit(store: KeyValueStore | null = browserStore()): Promise<AuditSendOutcome> {
+  const refused: AuditSendOutcome["refused"] = []
   const owner = auditQueueOwner(store)
-  if (!owner) return "sent"
+  if (!owner) return { status: "sent", refused }
   const api = auditApi(owner)
   // Read again before each write: the audit page in this tab may have changed it meanwhile.
   const current = () => readAuditQueue(store, owner)
   const put = (next: AuditQueue) => writeAuditQueue(store, { ...next, owner })
-  let stranger = false
-  const strangerIf = (error: unknown) => {
-    if (error instanceof AuditCallError && error.status === 409) stranger = true
-  }
+  const stranger = (error: unknown) => error instanceof AuditCallError && error.status === 409
 
-  let later = new Set<string>()
-  const stuck = await sendInChunks(
-    current().answers,
-    async (batch) => {
-      try {
-        const answer = await api.save(batch)
-        later = new Set((answer.refused ?? []).filter((r) => r.retry).map((r) => String(r.id)))
-      } catch (error) {
-        strangerIf(error)
-        throw error
+  let waiting = false
+  const answers = current().answers
+  for (let i = 0; i < answers.length; i += SEND_AT_MOST) {
+    const batch = answers.slice(i, i + SEND_AT_MOST)
+    try {
+      const result = await api.save(batch)
+      const kept = new Set<string>()
+      for (const r of result.refused ?? []) {
+        kept.add(String(r.id))
+        if (r.retry) {
+          waiting = true
+          continue
+        }
+        const answer = batch.find((a) => a.id === String(r.id))
+        if (answer) refused.push({ answer, reason: r.error })
       }
-    },
-    {
-      onSent: (batch) => put(answersSent(current(), batch.filter((a) => !later.has(a.id)))),
-      onDropped: (batch) => put(answersSent(current(), batch)),
-    },
-  )
-  if (stranger) return "stranger"
-  if (stuck) return "waiting"
+      put(answersSent(current(), batch.filter((a) => !kept.has(a.id))))
+    } catch (error) {
+      if (stranger(error)) return { status: "stranger", refused: [] }
+      if (refusedForGood(failureOf(error))) {
+        for (const answer of batch) refused.push({ answer, reason: COULD_NOT_SAVE })
+        continue
+      }
+      return { status: "waiting", refused }
+    }
+  }
+  if (waiting) return { status: "waiting", refused }
 
   for (const { id, at } of current().deletes) {
     try {
       await api.remove(id, at)
       put(deletesSent(current(), [id]))
     } catch (error) {
-      strangerIf(error)
-      if (stranger) return "stranger"
-      if (error instanceof AuditCallError && !error.retryable && error.status !== 401) put(deletesSent(current(), [id]))
-      else return "waiting"
+      if (stranger(error)) return { status: "stranger", refused: [] }
+      // A delete refused for good undoes nothing a person wrote: it goes, as on the page.
+      if (refusedForGood(failureOf(error))) put(deletesSent(current(), [id]))
+      else return { status: "waiting", refused }
     }
   }
-  return queueIsEmpty(current()) ? "sent" : "waiting"
+  return { status: refused.length > 0 ? "refused" : "sent", refused }
 }

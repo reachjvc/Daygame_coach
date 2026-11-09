@@ -129,6 +129,19 @@ export function writeAuditViewCopy(store: KeyValueStore | null, owner: string, v
   writeOwnedJson(store, AUDIT_VIEW_KEY, owner, { view })
 }
 
+/**
+ * A sign-in (or a session that ended): the last read is a copy, not unsent
+ * work, and it was the previous person's day. Answers still waiting stay
+ * (they are sent only to their own account).
+ */
+export function forgetAuditViewCopy(store: KeyValueStore | null = browserStore()): void {
+  try {
+    store?.removeItem(AUDIT_VIEW_KEY)
+  } catch {
+    // Nothing kept, nothing to forget.
+  }
+}
+
 /** Signing out: no answer text stays on a shared phone, waiting or last read. */
 export function forgetAuditOnThisDevice(store: KeyValueStore | null = browserStore()): void {
   try {

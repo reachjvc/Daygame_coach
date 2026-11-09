@@ -16,7 +16,7 @@
  * accepts from its owner alone.
  */
 
-import { forgetAuditOnThisDevice } from "@/src/audit/auditQueue"
+import { forgetAuditOnThisDevice, forgetAuditViewCopy } from "@/src/audit/auditQueue"
 import { forgetThisDevice, forgetTimerOnThisDevice } from "@/src/notifications/pushClient"
 import { forgetTimeTrackerOnThisDevice } from "@/src/timetrack/browserOwner"
 import { unsentTrackerChanges } from "@/src/timetrack/hooks/useTimetrackSync"
@@ -59,6 +59,9 @@ const SHELL_STORE_PREFIX = "app-shell-"
  * stores its page again, for the right person, the next time it is opened.
  */
 export async function forgetStoredPages(): Promise<void> {
+  // The audit's last read is a copy of the previous person's day, drawn when
+  // /audit opens with no signal: it goes with the stored pages.
+  forgetAuditViewCopy()
   try {
     if (typeof caches === "undefined") return
     const stores = await caches.keys()

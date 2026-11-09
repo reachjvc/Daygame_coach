@@ -101,6 +101,46 @@ export function correctedTime(at: unknown, sentAt: unknown, now: Date): number {
   return Math.min(nowMs, atMs + offset)
 }
 
+/** What is stored for a quarter: its answer, and when it was last answered. */
+export interface StoredAnswer {
+  id: string
+  at: number
+  activity: string
+  energy: number
+  growth: number
+  why: string | null
+}
+
+/** The same answer: same id and the same words and scores. An edit on another device keeps the id, so the id alone is not enough. */
+const sameAnswer = (a: AuditAnswer, held: StoredAnswer) =>
+  held.id === a.id && held.activity === a.activity && held.energy === a.energy && held.growth === a.growth && (held.why ?? null) === (a.why ?? null)
+
+/**
+ * WHICH ANSWERS TO STORE, given what each quarter holds now (`<run>:<slotAt>`).
+ *
+ * An answer older than another device's answer for its quarter is refused
+ * (CHANGED_SINCE): the newer one stays. But the SAME answer (id, words and
+ * scores) is this answer again — the page and Log Out both sent it, or two tabs did — and the
+ * clock correction can stamp the first copy later than the second. Refusing
+ * that told the phone "not kept" about an answer the server held (code review,
+ * 2026-11-09). It is taken as stored, and not written over the newer copy.
+ */
+export function splitByStored(
+  answers: readonly AuditAnswer[],
+  stored: ReadonlyMap<string, StoredAnswer>,
+): { fresh: AuditAnswer[]; alreadyStored: AuditAnswer[]; refused: { id: string; error: string; retry: false }[] } {
+  const fresh: AuditAnswer[] = []
+  const alreadyStored: AuditAnswer[] = []
+  const refused: { id: string; error: string; retry: false }[] = []
+  for (const a of answers) {
+    const held = stored.get(`${a.runId}:${a.slotAt}`)
+    if (held === undefined || held.at <= Date.parse(a.answeredAt ?? "")) fresh.push(a)
+    else if (sameAnswer(a, held)) alreadyStored.push(a)
+    else refused.push({ id: a.id, error: CHANGED_SINCE, retry: false })
+  }
+  return { fresh, alreadyStored, refused }
+}
+
 /**
  * The quarter rules alone (D-RUN-QUARTERS): on :00/:15/:30/:45, inside the
  * run, and already started. Used by `checkAnswer` and by the ping route.

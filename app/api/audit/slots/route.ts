@@ -13,7 +13,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { answeredTimes, AuditRefused, readRuns, upsertSlots } from "@/src/db/auditRepo"
-import { CHANGED_SINCE, checkAnswer, correctedTime, NOT_STARTED } from "@/src/audit/auditService"
+import { checkAnswer, correctedTime, NOT_STARTED, splitByStored } from "@/src/audit/auditService"
 import { refuseCrossSite } from "@/src/audit/requestGuard"
 import type { AuditAnswer } from "@/src/audit/types"
 
@@ -61,17 +61,11 @@ export async function PUT(req: Request) {
     }
     // An answer older than the one stored for its quarter came from a phone that
     // was offline while another device answered: the newer one stays.
-    const stored = await answeredTimes(auth.userId, answers)
-    const fresh = answers.filter((a) => {
-      const at = stored.get(`${a.runId}:${a.slotAt}`)
-      if (at !== undefined && at > Date.parse(a.answeredAt!)) {
-        refused.push({ id: a.id, error: CHANGED_SINCE, retry: false })
-        return false
-      }
-      return true
-    })
-    await upsertSlots(auth.userId, fresh)
-    return NextResponse.json({ stored: fresh.length, refused })
+    // The same answer sent twice is stored, not refused as older (`splitByStored`).
+    const split = splitByStored(answers, await answeredTimes(auth.userId, answers))
+    refused.push(...split.refused)
+    await upsertSlots(auth.userId, split.fresh)
+    return NextResponse.json({ stored: split.fresh.length + split.alreadyStored.length, refused })
   } catch (error) {
     if (error instanceof AuditRefused) return NextResponse.json({ error: "The audit could not save that" }, { status: 400 })
     console.error("[audit] save failed", error instanceof Error ? error.message : "unknown")

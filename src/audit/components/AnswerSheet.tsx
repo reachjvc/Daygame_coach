@@ -70,12 +70,18 @@ function Card({
   const avoiding = e?.avoiding ?? false
   const [why, setWhy] = useState(e?.why ?? "")
   const [tried, setTried] = useState(false)
+  /** This card has saved at least once: an answer now drawn for its quarters is its own. */
+  const [savedOnce, setSavedOnce] = useState(false)
   const ready = activity.trim().length > 0 && energy !== null && growth !== null
   const fromTime = card.entryId !== null && !e
+  // Opened on a gap, and the page's re-read now brings an answer for it that
+  // this card did not save: another device (or tab) answered it meanwhile.
+  const elsewhere = !e && !savedOnce ? card.quarters.map((q) => existingByQuarter.get(q)).find((s) => s !== undefined && !s.pending) ?? null : null
 
   const save = () => {
     setTried(true)
     if (!ready) return
+    setSavedOnce(true)
     const answers = card.quarters.map((q) => {
       const slotAt = new Date(q).toISOString()
       return {
@@ -161,6 +167,11 @@ function Card({
           {card.quarters.length > 1 && <span className="font-normal text-muted-foreground"> · {card.quarters.length} quarters</span>}
         </h3>
       </div>
+      {elsewhere && (
+        <p className="mx-1 mt-2 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-300" role="status" data-testid="audit-card-elsewhere">
+          Answered on another device just now: {elsewhere.activity} · E {elsewhere.energy} · G {elsewhere.growth}. Saving replaces it.
+        </p>
+      )}
       <div className="mt-3 space-y-4 px-1">
         <ActivityField id={`audit-activity-${index}`} value={activity} onChange={setActivity} suggestions={suggestions} />
         <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={setEnergy} testId="audit-energy" />

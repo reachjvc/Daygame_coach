@@ -14,10 +14,19 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
-import { AUDIT_QUEUE_KEY, AUDIT_VIEW_KEY, forgetAuditOnThisDevice, writeAuditViewCopy } from "@/src/audit/auditQueue"
+import {
+  AUDIT_QUEUE_KEY,
+  AUDIT_VIEW_KEY,
+  emptyAuditQueue,
+  enqueueAnswers,
+  forgetAuditOnThisDevice,
+  writeAuditQueue,
+  writeAuditViewCopy,
+} from "@/src/audit/auditQueue"
 import type { AuditView } from "@/src/audit/auditClient"
 import { CHANGED_SINCE } from "@/src/audit/auditService"
-import { REREAD_MS, useAudit } from "@/src/audit/hooks/useAudit"
+import { REREAD_GAP_MS, REREAD_MS, useAudit } from "@/src/audit/hooks/useAudit"
+import { forgetStoredPages } from "@/src/shared/offlineCopies"
 import type { AuditAnswer, AuditRun, AuditSlot } from "@/src/audit/types"
 
 const OWNER = "user-1"
@@ -150,9 +159,25 @@ describe("an open page reads again (fast-audit-03)", () => {
     const server = fakeServer()
     const { result } = renderHook(() => useAudit(OWNER))
     await waitFor(() => expect(result.current.view).not.toBeNull())
+    await new Promise((r) => setTimeout(r, REREAD_GAP_MS + 50))
     server.view = viewWith([slot("Email", "pc-1")])
     act(() => void window.dispatchEvent(new Event("focus")))
     await waitFor(() => expect(result.current.slots.map((s) => s.activity)).toEqual(["Email"]))
+  })
+
+  test("coming back (focus and visibility together) reads once, not twice", async () => {
+    const server = fakeServer()
+    const { result } = renderHook(() => useAudit(OWNER))
+    await waitFor(() => expect(result.current.view).not.toBeNull())
+    await new Promise((r) => setTimeout(r, REREAD_GAP_MS + 50))
+    const before = server.reads
+    act(() => {
+      window.dispatchEvent(new Event("focus"))
+      document.dispatchEvent(new Event("visibilitychange"))
+    })
+    await waitFor(() => expect(server.reads).toBe(before + 1))
+    await new Promise((r) => setTimeout(r, 100))
+    expect(server.reads).toBe(before + 1)
   })
 })
 
@@ -196,5 +221,13 @@ describe("opened with no signal (fast-audit-04)", () => {
     expect(window.localStorage.getItem(AUDIT_VIEW_KEY)).toContain("Gym")
     forgetAuditOnThisDevice(window.localStorage)
     expect(window.localStorage.getItem(AUDIT_VIEW_KEY)).toBeNull()
+  })
+
+  test("a sign-in forgets the last read (the previous person's day) but keeps answers still waiting", async () => {
+    writeAuditViewCopy(window.localStorage, OWNER, viewWith([slot("Gym", "g-1")]))
+    writeAuditQueue(window.localStorage, enqueueAnswers(emptyAuditQueue(OWNER), [answer("Daygame sets")]))
+    await forgetStoredPages()
+    expect(window.localStorage.getItem(AUDIT_VIEW_KEY), "offline /audit would draw the previous person's day").toBeNull()
+    expect(window.localStorage.getItem(AUDIT_QUEUE_KEY)).toContain("Daygame sets")
   })
 })
