@@ -17,11 +17,11 @@ import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { hhmm as minuteLabel } from "@/src/notifications/quietHours"
-import type { ReviewGroup } from "../auditService"
+import { BLOCK_CHANGED, type ReviewGroup } from "../auditService"
 import { TimeTile } from "./SettingsSheet"
 import type { WeekBlock, WeekKind } from "../types"
 import { durationText } from "../reviewText"
-import { checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX } from "../weekService"
+import { BEST_HOURS_RULE, checkWeek, DAY_NAMES, DAY_SHORT, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_KIND_NAMES, WEEK_KINDS, WEEK_WHAT_MAX, WORK_DAYS_MIN } from "../weekService"
 
 const KIND_BAR: Record<WeekKind, string> = {
   deep: "bg-sky-500",
@@ -61,6 +61,33 @@ interface Draft {
   kindFromName: boolean
 }
 
+/** The stored block a draft was opened from (null for a new block). */
+function blockOf(d: Draft | null): WeekBlock | null {
+  if (!d || !d.id || d.kind === null) return null
+  return { id: d.id, day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }
+}
+
+/**
+ * The person's draft put on top of the block as stored now: what they changed
+ * in the sheet (name, kind, time, days) stays, the rest comes from the stored
+ * block, so a move made on another device is kept (alpha prove-review-01).
+ */
+function rebased(d: Draft, was: WeekBlock, stored: WeekBlock): Draft {
+  const timeChanged = d.start !== was.start || d.end !== was.end
+  const kindChanged = d.kind !== was.kind
+  const daysChanged = !(d.days.length === 1 && d.days[0] === was.day)
+  return {
+    ...d,
+    day: stored.day,
+    days: daysChanged ? d.days : [stored.day],
+    start: timeChanged ? d.start : stored.start,
+    end: timeChanged ? d.end : stored.end,
+    what: d.what !== was.what ? d.what : stored.what,
+    kind: kindChanged ? d.kind : stored.kind,
+    kindFromName: kindChanged ? d.kindFromName : false,
+  }
+}
+
 function BlockSheet({
   draft,
   week,
@@ -75,17 +102,32 @@ function BlockSheet({
   suggestions: string[]
   bestHours: string | null
   onClose: () => void
-  onSave: (d: Draft) => Promise<string | null>
+  /** `was`: the block as this sheet opened it (or last saw it), so a change made elsewhere since is refused, not undone. */
+  onSave: (d: Draft, was: WeekBlock | null) => Promise<string | null>
   onDelete: (id: string) => Promise<string | null>
 }) {
   const [d, setD] = useState<Draft | null>(draft)
   const [state, setState] = useState<"idle" | "saving" | { error: string }>("idle")
   const [openedFor, setOpenedFor] = useState<Draft | null>(draft)
+  const [was, setWas] = useState<WeekBlock | null>(blockOf(draft))
+  // Refused because another device changed the block: once the week is read again, put the person's change on the stored block.
+  const [rebase, setRebase] = useState(false)
   // A new draft (another block, or Add) replaces the form; adjusting state while rendering, as React suggests.
   if (draft !== openedFor) {
     setOpenedFor(draft)
     setD(draft)
+    setWas(blockOf(draft))
+    setRebase(false)
     setState("idle")
+  }
+  if (rebase && d && was) {
+    const stored = week.find((b) => b.id === was.id)
+    if (!stored) setRebase(false)
+    else if (stored.day !== was.day || stored.start !== was.start || stored.end !== was.end || stored.what !== was.what || stored.kind !== was.kind) {
+      setD(rebased(d, was, stored))
+      setWas(stored)
+      setRebase(false)
+    }
   }
   if (!d) return null
   const set = (patch: Partial<Draft>) => {
@@ -107,6 +149,7 @@ function BlockSheet({
     setState("saving")
     const failed = await fn()
     if (failed) setState({ error: failed })
+    if (failed?.startsWith(BLOCK_CHANGED)) setRebase(true)
   }
   return (
     <BottomSheet open onClose={onClose} title={d.id ? "Change block" : "Add a block"} testId="week-block-sheet">
@@ -152,7 +195,12 @@ function BlockSheet({
               </button>
             ))}
           </div>
-          {d.kind === null && <p className="mt-2 text-xs text-muted-foreground">Pick one, so the week&apos;s totals count it right.</p>}
+          {/* Said from the start, with Save waiting for it, not as an error after Save (alpha prove-eye-05). */}
+          {d.kind === null && (
+            <p className="mt-2 text-xs text-muted-foreground" data-testid="week-kind-needed">
+              Pick a kind to save, so the week&apos;s totals count it right.
+            </p>
+          )}
           {d.kind === "deep" && bestHours && <p className="mt-2 text-xs text-muted-foreground">{bestHours}.</p>}
         </fieldset>
 
@@ -185,12 +233,12 @@ function BlockSheet({
 
         {typeof state === "object" && (
           <p className="text-sm text-destructive" role="alert" data-testid="week-error">
-            Not saved: {state.error}.
+            Not saved: {state.error}.{state.error.startsWith(BLOCK_CHANGED) ? " Your change is put on that block below; save again to keep it." : ""}
           </p>
         )}
 
         <div className="flex gap-2">
-          <Button className="flex-1" disabled={state === "saving"} onClick={() => void run(() => onSave(d))} data-testid="week-save">
+          <Button className="flex-1" disabled={state === "saving" || d.kind === null} onClick={() => void run(() => onSave(d, was))} data-testid="week-save">
             {state === "saving" ? "Saving…" : d.days.length > 1 ? `Save on ${d.days.length} days` : "Save"}
           </Button>
           {d.id && (
@@ -216,22 +264,20 @@ export function PerfectWeek({
   /** The activities marked "Do more" in this review, most frequent first. */
   doMore: ReviewGroup[]
   bestHours: { hour: number; energy: number; answers: number }[]
-  /** Energy per hour over growth answers only (buildReview `workHours`). */
-  workHours: { hour: number; energy: number; answers: number }[]
+  /** Energy and growth per hour, Monday to Friday (buildReview `workHours`). */
+  workHours: { hour: number; energy: number; growth: number; answers: number; days: number }[]
   /**
    * Saves one block; `edit` when it changes a block already there (refused if
    * another device removed it meanwhile, rather than adding it back). Resolves
    * to an error a person can read, or null. Only that block is sent, so blocks
    * saved on another device stay.
    */
-  onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[]) => Promise<string | null>
+  onSaveBlock: (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null) => Promise<string | null>
   onRemoveBlock: (id: string) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<Draft | null>(null)
   const hours = planHours(workHours, bestHours)
   const best = hours.best
-  // "Best" only when their energy is above the neutral 4; otherwise they are only better than the rest.
-  const bestName = hours.bestAboveNeutral ? "Best hours" : "Your better hours"
   const totals = useMemo(() => hoursByKind(week), [week])
   const from = barStart(week)
   const span = 24 * 60 - from
@@ -243,7 +289,7 @@ export function PerfectWeek({
     setDraft({ id: null, day, days: [day], start: slot.start, end: slot.end, what: "", kind: null, kindFromName: false })
   }
 
-  const save = async (d: Draft): Promise<string | null> => {
+  const save = async (d: Draft, was: WeekBlock | null): Promise<string | null> => {
     if (!d.what.trim()) return "Say what the block is for"
     if (d.kind === null) return "Pick a kind"
     const [block, ...copies] = spreadBlock({ id: d.id ?? newId(), day: d.day, start: d.start, end: d.end, what: d.what, kind: d.kind }, d.days, newId)
@@ -251,7 +297,7 @@ export function PerfectWeek({
     // Checked here first so a mistake (an overlap, an empty name) is said at once, in the sheet, without a round trip.
     const checked = checkWeek(next)
     if ("error" in checked) return checked.error
-    const failed = await onSaveBlock(block, d.id !== null, copies)
+    const failed = await onSaveBlock(block, d.id !== null, copies, was)
     if (!failed) setDraft(null)
     return failed
   }
@@ -281,10 +327,10 @@ export function PerfectWeek({
         <p data-testid="week-best-hours">
           {best ? (
             <>
-              {bestName}, for your hardest work{best.includes(" and ") ? ", best first" : ""}: <span className="font-medium tabular-nums">{best}</span>.
+              Best hours, for your hardest work{best.includes(" and ") ? ", best first" : ""}: <span className="font-medium tabular-nums">{best}</span>.
             </>
           ) : (
-            <span className="text-muted-foreground">Not enough answers yet to name your best hours.</span>
+            <span className="text-muted-foreground">No best hours to name yet: no Monday-to-Friday hour had both energy and growth above 4 over at least {WORK_DAYS_MIN} work days.</span>
           )}
         </p>
         {hours.low && (
@@ -293,7 +339,7 @@ export function PerfectWeek({
           </p>
         )}
         <p className="text-xs text-muted-foreground">
-          Best hours are when your energy was highest while doing something that builds your life (growth 5 or more), called "better" when not all were above 4. Low hours are when your energy was lowest, under 4.
+          {BEST_HOURS_RULE}
         </p>
       </div>
 
@@ -364,7 +410,7 @@ export function PerfectWeek({
         </p>
       )}
 
-      <BlockSheet draft={draft} week={week} suggestions={suggestions} bestHours={best ? `${hours.bestAboveNeutral ? "Your best hours" : "Your better hours"} in this audit: ${best}` : null} onClose={() => setDraft(null)} onSave={save} onDelete={remove} />
+      <BlockSheet draft={draft} week={week} suggestions={suggestions} bestHours={best ? `Your best hours in this audit: ${best}` : null} onClose={() => setDraft(null)} onSave={save} onDelete={remove} />
     </section>
   )
 }

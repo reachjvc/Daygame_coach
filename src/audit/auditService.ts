@@ -9,11 +9,11 @@
 
 import { isUuid } from "@/src/shared/ids"
 import { storableText } from "./requestGuard"
-import { checkWeek } from "./weekService"
+import { checkWeek, DAY_NAMES, WEEK_KIND_NAMES } from "./weekService"
 import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
 import { hhmm, nextDateKey } from "@/src/notifications/quietHours"
 import { normalizePhrase } from "@/src/shared/textMatch"
-import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs, withAnswered } from "./quarterService"
+import { belongsToRun, isAwake, localDay, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs, withAnswered } from "./quarterService"
 import { ANSWER_SOURCES, REVIEW_CHOICES, type AnswerMark, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue, type WeekBlock } from "./types"
 
 export const ACTIVITY_MAX = 200
@@ -281,13 +281,14 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
  *                                         one activity's choice and note (null / blank clears);
  *                                         no `choice`: the stored choice stays (a note-only save);
  *                                         `choiceWas` / `noteWas`: what the sheet opened with
- *   { block, edit?, copies? }             add a block, or change the one with its id (`edit`: it must still be there);
+ *   { block, edit?, blockWas?, copies? }  add a block, or change the one with its id (`edit`: it must still be there);
+ *                                         `blockWas`: that block as the sheet opened it (refused if stored differs);
  *                                         `copies`: new blocks on other days, added in the same write
  *   { removeBlock }                       remove one block by id (already gone: no change)
  */
 export type ReviewChange =
   | { activity: string; choice?: ReviewChoice | null; choiceWas?: ReviewChoice | null; note: string; noteWas?: string }
-  | { block: WeekBlock; edit?: boolean; copies?: WeekBlock[] }
+  | { block: WeekBlock; edit?: boolean; blockWas?: WeekBlock; copies?: WeekBlock[] }
   | { removeBlock: string }
 
 /** Said when another device changed the note after this sheet opened; the page then shows the newer note. */
@@ -298,6 +299,14 @@ export const CHOICE_CHANGED = "This choice was changed on another device. The ne
 export const CHOICE_AND_NOTE_CHANGED = "This choice and note were changed on another device. The newer ones are shown now; change them and save again"
 /** Said when the block being changed was removed on another device; saving would bring it back. */
 export const BLOCK_GONE = "This block was removed on another device"
+/**
+ * Said when the block being changed was changed on another device after the sheet opened (alpha
+ * prove-review-01: a stale rename put a moved block back). Followed by the stored block, see `blockChanged`.
+ */
+export const BLOCK_CHANGED = "Changed on another device"
+const blockChanged = (b: WeekBlock) => `${BLOCK_CHANGED}: now ${DAY_NAMES[b.day]} ${hhmm(b.start)}–${hhmm(b.end)}, "${b.what}" (${WEEK_KIND_NAMES[b.kind]})`
+const sameBlock = (a: WeekBlock, b: WeekBlock) => a.id === b.id && a.day === b.day && a.start === b.start && a.end === b.end && a.what === b.what && a.kind === b.kind
+
 /** Said when part of the stored review is in a shape this version cannot read: nothing is written over it. */
 export const REVIEW_UNREADABLE = "Part of this review was saved in a shape this page cannot read, so nothing was changed"
 
@@ -311,9 +320,9 @@ export const REVIEW_UNREADABLE = "Part of this review was saved in a shape this 
 export function applyReviewChange(stored: Review, input: unknown): { review: Review } | { error: string } {
   if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "Send one change" }
   const c = input as Record<string, unknown>
-  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas").sort().join(",")
+  const keys = Object.keys(c).filter((k) => k !== "noteWas" && k !== "edit" && k !== "choiceWas" && k !== "blockWas").sort().join(",")
   const next: Review = { choices: { ...stored.choices }, notes: { ...stored.notes }, week: [...stored.week] }
-  if ((keys === "activity,choice,note" || (keys === "activity,note" && !("choiceWas" in c))) && !("edit" in c)) {
+  if ((keys === "activity,choice,note" || (keys === "activity,note" && !("choiceWas" in c))) && !("edit" in c) && !("blockWas" in c)) {
     const { activity, choice, choiceWas, note, noteWas } = c
     if (typeof activity !== "string" || activity.length < 1 || activity.length > ACTIVITY_MAX) return { error: "Bad activity key" }
     const isChoice = (v: unknown) => v === null || (typeof v === "string" && (REVIEW_CHOICES as readonly string[]).includes(v))
@@ -338,6 +347,14 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
     if ("error" in one) return one
     const block = one.week[0]
     const at = next.week.findIndex((b) => b.id === block.id)
+    if ("blockWas" in c) {
+      const was = checkWeek([c.blockWas])
+      if ("error" in was) return was
+      if (was.week[0].id !== block.id) return { error: "Bad block" }
+      if (at < 0) return { error: BLOCK_GONE }
+      // Another device changed it since the sheet opened: writing the sheet's whole block would undo that change unseen.
+      if (!sameBlock(next.week[at], was.week[0])) return { error: blockChanged(next.week[at]) }
+    }
     if (at >= 0) next.week[at] = block
     else if (c.edit === true) return { error: BLOCK_GONE }
     else next.week.push(block)
@@ -350,7 +367,7 @@ export function applyReviewChange(stored: Review, input: unknown): { review: Rev
         next.week.push(copy)
       }
     }
-  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c)) {
+  } else if (keys === "removeBlock" && !("noteWas" in c) && !("edit" in c) && !("choiceWas" in c) && !("blockWas" in c)) {
     if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
     next.week = next.week.filter((b) => b.id !== c.removeBlock)
   } else {
@@ -553,11 +570,13 @@ export interface BuiltReview {
   /** Average energy per local hour, only hours with at least 4 answers. */
   bestHours: { hour: number; energy: number; answers: number }[]
   /**
-   * The same, counting only answers with growth above 4: the hours to put the
-   * hardest work in are the ones you had energy while building something, not
-   * the evening hours of a favourite series (alpha fast-review-05).
+   * Average energy AND growth per local hour, Monday to Friday only, with the
+   * number of work days each hour was answered on. The hours for the hardest
+   * work are where you had energy while building something on the days you
+   * work (planHours), not a weekday series hour, nor an hour decided by a few
+   * weekend answers (alpha fast-review-05, prove-review-02).
    */
-  workHours: { hour: number; energy: number; answers: number }[]
+  workHours: { hour: number; energy: number; growth: number; answers: number; days: number }[]
 }
 
 const oneDecimal = (n: number) => Math.round(n * 10) / 10
@@ -646,7 +665,23 @@ export function buildReview(slots: readonly AuditSlot[], run: AuditRun, tz: stri
       .map(([hour, h]) => ({ hour, energy: oneDecimal(h.sum / h.n), answers: h.n }))
   }
   const bestHours = energyByHour(counted)
-  const workHours = energyByHour(counted.filter((s) => s.growth > 4))
+  const perWorkHour = new Map<number, { energy: number; growth: number; n: number; days: Set<string> }>()
+  for (const s of counted) {
+    const ms = Date.parse(s.slotAt)
+    const day = localDay(ms, tz)
+    if (day.weekday > 4) continue
+    const hour = Math.floor(localMinute(ms, tz) / 60)
+    const h = perWorkHour.get(hour) ?? { energy: 0, growth: 0, n: 0, days: new Set<string>() }
+    h.energy += s.energy
+    h.growth += s.growth
+    h.n++
+    h.days.add(day.date)
+    perWorkHour.set(hour, h)
+  }
+  const workHours = [...perWorkHour.entries()]
+    .filter(([, h]) => h.n >= BEST_HOURS_MIN)
+    .sort((a, b) => a[0] - b[0])
+    .map(([hour, h]) => ({ hour, energy: oneDecimal(h.energy / h.n), growth: oneDecimal(h.growth / h.n), answers: h.n, days: h.days.size }))
 
   return {
     possibleQuarters: possible.size,

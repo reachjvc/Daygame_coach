@@ -9,7 +9,8 @@ import { ROUTES } from "@/src/shared/routes"
  * - a box never uses the name of a choice, and the top box pre-fills "Do more",
  *   so the week starts from what the boxes show;
  * - an activity's card says how many of its hours were marked avoiding;
- * - best hours come from growth answers only, low hours are named for admin,
+ * - best hours need energy and growth both above 4 on enough work days
+ *   (prove-review-02; one day is not enough), low hours are named for admin,
  *   and Martell's step 4 is in the checklist;
  * - a block's kind is picked, never assumed, it can go on several days in one
  *   save, and a new From moves To along with it.
@@ -83,7 +84,7 @@ test.describe("review and perfect week after the alpha findings @phone", () => {
 
     const week = page.getByTestId("perfect-week")
     await expect(week.getByTestId("week-inputs")).toContainText("Do more: Coding the app")
-    await expect(week.getByTestId("week-best-hours")).toHaveText("Best hours, for your hardest work: 10:00.")
+    await expect(week.getByTestId("week-best-hours")).toHaveText("No best hours to name yet: no Monday-to-Friday hour had both energy and growth above 4 over at least 5 work days.")
     await expect(week.getByTestId("week-low-hours")).toHaveText("Low hours, for admin and calls, lowest first: 12:00 and 13:00.")
     await week.getByText("Martell's steps").click()
     await expect(week.locator("ol > li")).toHaveCount(7)
@@ -117,11 +118,13 @@ test.describe("review and perfect week after the alpha findings @phone", () => {
     await week.getByTestId("week-add-0").click()
     const sheet = page.getByTestId("week-block-sheet")
     await sheet.getByTestId("week-what").fill("Gym")
-    // No kind until one is picked.
+    // No kind until one is picked, said from the start, and Save waits for it (alpha prove-eye-05).
     await expect(sheet.getByRole("radio", { checked: true })).toHaveCount(0)
-    await sheet.getByTestId("week-save").click()
-    await expect(sheet.getByTestId("week-error")).toHaveText("Not saved: Pick a kind.")
+    await expect(sheet.getByTestId("week-kind-needed")).toHaveText("Pick a kind to save, so the week's totals count it right.")
+    await expect(sheet.getByTestId("week-save")).toBeDisabled()
     await sheet.getByRole("radio", { name: "Workout or hobby" }).click()
+    await expect(sheet.getByTestId("week-kind-needed")).toHaveCount(0)
+    await expect(sheet.getByTestId("week-save")).toBeEnabled()
 
     // From 17:00 moves To from 10:00 to 18:00, keeping the hour.
     await sheet.getByTestId("week-start").selectOption("1020")

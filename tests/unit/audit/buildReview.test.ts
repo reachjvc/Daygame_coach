@@ -93,11 +93,11 @@ describe("buildReview", () => {
     expect(r.bestHours).toEqual([{ hour: 8, energy: 3.5, answers: 4 }])
   })
 
-  it("averages energy per hour over growth answers only (above 4) for the hours to put hard work in", () => {
-    // 08:00: four growth answers; 09:00: four answers, only two of them growth.
-    const slots = [0, 1, 2, 3].map((q) => slot(q, "Work", 5, 6)).concat([4, 5].map((q) => slot(q, "Work", 3, 5)), [6, 7].map((q) => slot(q, "Series", 7, 2)))
-    const r = buildReview(slots, run(), CPH)
-    expect(r.workHours).toEqual([{ hour: 8, energy: 5, answers: 4 }])
+  it("averages energy and growth per hour over work-day answers only, with the days each hour was answered on", () => {
+    // Mon 9 Nov: 08:00 work; Sat 14 Nov (5 days on, same clock): 08:00 a series, left out.
+    const slots = [0, 1, 2, 3].map((q) => slot(q, "Work", 5, 6)).concat([0, 1, 2, 3].map((q) => slot(5 * 96 + q, "Series", 7, 2)))
+    const r = buildReview(slots, run({ endedAt: null }), CPH)
+    expect(r.workHours).toEqual([{ hour: 8, energy: 5, growth: 6, answers: 4, days: 1 }])
   })
 
   it("counts the minutes marked avoiding per activity", () => {

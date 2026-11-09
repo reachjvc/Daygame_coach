@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest"
 import { checkReview } from "@/src/audit/auditService"
-import { bestHoursText, checkWeek, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, shiftedEnd, spreadBlock, WEEK_BLOCKS_MAX, type WeekBlock } from "@/src/audit/weekService"
+import { bestHoursText, checkWeek, freeSlot, hoursByKind, kindFor, MARTELL_STEPS, planHours, WORK_DAYS_MIN, shiftedEnd, spreadBlock, WEEK_BLOCKS_MAX, type WeekBlock } from "@/src/audit/weekService"
 
 const block = (over: Partial<WeekBlock> = {}): WeekBlock => ({
   id: "b1",
@@ -109,6 +109,13 @@ describe("kindFor (alpha picky-eye-06: a new block was always Deep work)", () =>
     expect(kindFor(week, "Daygame")).toBe(null)
     expect(kindFor([], "Gym")).toBe(null)
   })
+  it("takes the kind a name spells out, such as a Do more chip called Deep work (alpha prove-eye-05)", () => {
+    expect(kindFor([], "Deep work")).toBe("deep")
+    expect(kindFor([], " rest ")).toBe("rest")
+    expect(kindFor([], "Workout or hobby")).toBe("workout")
+    expect(kindFor([block({ what: "Deep work", kind: "batch" })], "deep work")).toBe("batch")
+    expect(kindFor([], "Deep work on the app")).toBe(null)
+  })
 })
 
 describe("shiftedEnd (alpha fast-review-06: From past To was refused)", () => {
@@ -141,7 +148,7 @@ describe("spreadBlock (alpha picky-eye-07: one block per day meant 15 taps for g
   })
 })
 
-describe("planHours (alpha fast-review-05: evening TV hours were named for the hardest work)", () => {
+describe("planHours (alpha fast-review-05, prove-review-02: best hours for the hardest work)", () => {
   const all = [
     { hour: 9, energy: 5.0, answers: 8 },
     { hour: 13, energy: 3.1, answers: 8 },
@@ -150,23 +157,23 @@ describe("planHours (alpha fast-review-05: evening TV hours were named for the h
     { hour: 19, energy: 6.5, answers: 8 },
     { hour: 20, energy: 6.2, answers: 8 },
   ]
-  it("names best hours from growth answers only, and low hours (energy under 4) from all answers, apart from the best ones", () => {
-    const work = [
-      { hour: 9, energy: 5.5, answers: 6 },
-      { hour: 15, energy: 4.5, answers: 4 },
-    ]
-    expect(planHours(work, all)).toEqual({ best: "09:00 and 15:00", bestAboveNeutral: true, low: "14:00 and 13:00" })
+  const wh = (hour: number, energy: number, growth: number, days = 10) => ({ hour, energy, growth, answers: days * 3, days })
+  it("names work-day hours high on both energy and growth, highest on both first, and low hours (energy under 4) apart from them", () => {
+    expect(planHours([wh(9, 5, 6), wh(15, 6, 7), wh(13, 3, 6), wh(19, 6, 2)], all)).toEqual({ best: "15:00 and 09:00", low: "14:00 and 13:00" })
   })
-  it("calls them best hours only when their energy is above 4, and better hours otherwise", () => {
-    const flat = [
-      { hour: 9, energy: 3.5, answers: 6 },
-      { hour: 10, energy: 4.0, answers: 6 },
-    ]
-    expect(planHours(flat, all)).toMatchObject({ best: "10:00 and 09:00", bestAboveNeutral: false })
-    expect(planHours([{ hour: 9, energy: 4.5, answers: 6 }, ...flat.slice(1)], all)).toMatchObject({ bestAboveNeutral: false })
-    expect(planHours([{ hour: 9, energy: 4.5, answers: 6 }], all)).toMatchObject({ bestAboveNeutral: true })
+  it("never names an hour that is high on only one of the two", () => {
+    // 19:00 a series (energy 6, growth 2); 13:00 tired coding (energy 3, growth 6); 4 is neutral, not high.
+    expect(planHours([wh(19, 6, 2), wh(13, 3, 6), wh(10, 4, 6), wh(11, 6, 4)], all).best).toBe(null)
   })
-  it("names no best hours without growth answers to go on", () => {
+  it("needs the hour on at least WORK_DAYS_MIN work days", () => {
+    expect(planHours([wh(9, 6, 6, WORK_DAYS_MIN - 1)], all).best).toBe(null)
+    expect(planHours([wh(9, 6, 6, WORK_DAYS_MIN)], all).best).toBe("09:00")
+  })
+  it("breaks a tie on the sum by more growth, then the earlier hour", () => {
+    // 20:00 calls (6 + 5) and 09:00 coding (5 + 6) sum the same: the coding hour builds more.
+    expect(planHours([wh(20, 6, 5), wh(9, 5, 6), wh(10, 5, 6), wh(15, 6, 7)], all).best).toBe("15:00, 09:00 and 10:00")
+  })
+  it("names no best hours without work-day hours to go on", () => {
     expect(planHours([], all).best).toBe(null)
     expect(planHours([], []).low).toBe(null)
   })

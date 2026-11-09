@@ -116,11 +116,18 @@ export const MARTELL_STEPS: readonly { title: string; text: string }[] = [
   { title: "Say no often", text: "The planned week shows what to refuse: what has no room in it gets a no." },
 ]
 
-/** The kind of a block with this name already in the week (case and spaces ignored); null when there is none, so the kind is picked, never assumed. */
+/**
+ * The kind for a block of this name (case and spaces ignored): that of a block
+ * with the same name already in the week, else the kind the name spells out
+ * ("Deep work", "Rest": alpha prove-eye-05); null otherwise, so the kind is
+ * picked, never guessed.
+ */
 export function kindFor(week: readonly WeekBlock[], what: string): WeekKind | null {
   const name = what.trim().toLowerCase()
   if (!name) return null
-  return week.find((b) => b.what.trim().toLowerCase() === name)?.kind ?? null
+  const same = week.find((b) => b.what.trim().toLowerCase() === name)?.kind
+  if (same) return same
+  return WEEK_KINDS.find((k) => WEEK_KIND_NAMES[k].toLowerCase() === name) ?? null
 }
 
 /** A new From moves To with it, keeping the block's length, up to midnight. */
@@ -147,23 +154,36 @@ function hoursList(hours: readonly number[]): string | null {
 }
 
 type HourEnergy = { hour: number; energy: number; answers: number }
+type WorkHour = HourEnergy & { growth: number; days: number }
+
+/** An hour counts for the hardest work only when answered on at least this many work days: half of the audit's ten. */
+export const WORK_DAYS_MIN = 5
+
+/** The rule, in one plain line, as the page shows it under the hours. */
+export const BEST_HOURS_RULE = `Best hours are Monday-to-Friday hours where, over at least ${WORK_DAYS_MIN} work days, your energy and your growth both averaged above 4; highest on both first. Low hours are when your energy was lowest, under 4.`
 
 /**
- * Martell's step 2 from the audit. Best: the three hours with the most energy
- * while doing things that build your life (`workHours`, growth above 4). Low:
- * the three hours with the least energy over all answers, under the neutral 4,
- * apart from the best.
+ * Martell's step 2 from the audit: hardest work in your best hours, admin and
+ * calls in the low ones. Best: up to three work-day hours (`workHours`, Monday
+ * to Friday) where you were both high on energy and doing growth work, both
+ * averaging above the neutral 4, seen on at least WORK_DAYS_MIN work days;
+ * ranked by energy plus growth, then growth, then the earlier hour. None
+ * qualifying is said plainly, never filled with lesser hours (alpha
+ * prove-review-02). Low: the three hours with the least energy over all
+ * answers, under the neutral 4, apart from the best.
  */
-export function planHours(workHours: readonly HourEnergy[], allHours: readonly HourEnergy[]): { best: string | null; bestAboveNeutral: boolean; low: string | null } {
-  const top = [...workHours].sort((a, b) => b.energy - a.energy || a.hour - b.hour).slice(0, 3)
-  const best = top.map((h) => h.hour)
+export function planHours(workHours: readonly WorkHour[], allHours: readonly HourEnergy[]): { best: string | null; low: string | null } {
+  const best = workHours
+    .filter((h) => h.energy > 4 && h.growth > 4 && h.days >= WORK_DAYS_MIN)
+    .sort((a, b) => b.energy + b.growth - (a.energy + a.growth) || b.growth - a.growth || a.hour - b.hour)
+    .slice(0, 3)
+    .map((h) => h.hour)
   const low = [...allHours]
     .filter((h) => h.energy < 4 && !best.includes(h.hour))
     .sort((a, b) => a.energy - b.energy || a.hour - b.hour)
     .slice(0, 3)
     .map((h) => h.hour)
-  // "Best" only when every one is above the neutral 4; otherwise they are only your better hours.
-  return { best: hoursList(best), bestAboveNeutral: top.length > 0 && top.every((h) => h.energy > 4), low: hoursList(low) }
+  return { best: hoursList(best), low: hoursList(low) }
 }
 
 /** The audit's three most energetic hours, best first, as text ("09:00, 10:00 and 08:00"); null with no hours to go on. */

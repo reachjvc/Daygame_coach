@@ -189,13 +189,18 @@ test("a note saved on one device keeps a choice saved on another, and a stale ch
     await sheet.getByTestId("review-save").click()
     await expect(sheet.getByTestId("review-saved")).toBeVisible()
     expect(await stored(id)).toMatchObject({ choices: { daygame: "keep" }, notes: { daygame: "Mornings" } })
+    // Next to Saved the PC shows the stored Keep, not the pre-filled Do more it opened with (alpha prove-review-03).
+    await expect(sheet.getByRole("radio", { checked: true })).toHaveText(["Keep"])
 
-    // PC now picks Cut while still holding the old choice: refused, and the newer Keep is shown.
+    // The phone changes it again; the PC, still holding Keep, picks Cut: refused, and the newer choice is shown.
+    await openReview(phone) // the phone reads the PC's note first
+    await choose(phone, "Daygame", "Hand off", "Mornings")
+    expect((await stored(id)).choices).toEqual({ daygame: "handoff" })
     await sheet.getByRole("radio", { name: "Cut", exact: true }).click()
     await sheet.getByTestId("review-save").click()
     await expect(sheet.getByRole("alert")).toContainText("changed on another device")
-    await expect(sheet.getByRole("radio", { name: "Keep", exact: true })).toHaveAttribute("aria-checked", "true")
-    expect((await stored(id)).choices).toEqual({ daygame: "keep" })
+    await expect(sheet.getByRole("radio", { name: "Hand off", exact: true })).toHaveAttribute("aria-checked", "true")
+    expect((await stored(id)).choices).toEqual({ daygame: "handoff" })
 
     // Picking it again, knowingly, goes through.
     await sheet.getByRole("radio", { name: "Cut", exact: true }).click()

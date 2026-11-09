@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { applyReviewChange, applyReviewParts, BLOCK_GONE, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, nextReviewVersion, NOTE_CHANGED, readStoredReview, REVIEW_UNREADABLE, reviewToStore } from "@/src/audit/auditService"
+import { applyReviewChange, applyReviewParts, BLOCK_CHANGED, BLOCK_GONE, CHOICE_AND_NOTE_CHANGED, CHOICE_CHANGED, nextReviewVersion, NOTE_CHANGED, readStoredReview, REVIEW_UNREADABLE, reviewToStore } from "@/src/audit/auditService"
 import type { Review, WeekBlock } from "@/src/audit/types"
 
 const block = (id: string, day: number, start: number, end: number, what: string): WeekBlock => ({ id, day, start, end, what, kind: "deep" })
@@ -119,6 +119,30 @@ describe("a change that would overwrite what it did not see", () => {
     expect(applyReviewChange(stored(), { block: block("gone", 1, 60, 120, "Old"), edit: true })).toEqual({ error: BLOCK_GONE })
     const r = applyReviewChange(stored(), { block: block("pc", 0, 540, 600, "Book"), edit: true })
     expect("review" in r && r.review.week).toEqual([block("pc", 0, 540, 600, "Book")])
+  })
+})
+
+describe("a block edit carries the block as the sheet opened it (alpha prove-review-01)", () => {
+  // PC moved "Write the book" 09:00-12:00 to 13:00-16:00; the phone, not reloaded, renames the old 09:00-12:00.
+  const moved = (): Review => ({ ...stored(), week: [block("pc", 0, 780, 960, "Write the book")] })
+  const stale = block("pc", 0, 540, 720, "Write the book")
+
+  it("refuses when the stored block is not the one the sheet opened, and names the stored block", () => {
+    const r = applyReviewChange(moved(), { block: block("pc", 0, 540, 720, "Write the book, chapter 2"), edit: true, blockWas: stale })
+    expect(r).toEqual({ error: `${BLOCK_CHANGED}: now Monday 13:00–16:00, "Write the book" (Deep work)` })
+  })
+
+  it("applies the edit when the stored block is still the one the sheet opened", () => {
+    const r = applyReviewChange(moved(), { block: block("pc", 0, 780, 960, "Write the book, chapter 2"), edit: true, blockWas: block("pc", 0, 780, 960, "Write the book") })
+    expect("review" in r && r.review.week).toEqual([block("pc", 0, 780, 960, "Write the book, chapter 2")])
+  })
+
+  it("says the block is gone when it was removed elsewhere, and refuses a bad or misplaced blockWas", () => {
+    expect(applyReviewChange(stored(), { block: block("gone", 1, 60, 120, "Old"), edit: true, blockWas: block("gone", 1, 60, 120, "Old") })).toEqual({ error: BLOCK_GONE })
+    expect("error" in applyReviewChange(moved(), { block: stale, edit: true, blockWas: { id: "pc" } })).toBe(true)
+    expect("error" in applyReviewChange(moved(), { block: stale, edit: true, blockWas: block("other", 0, 780, 960, "Write the book") })).toBe(true)
+    expect(applyReviewChange(moved(), { activity: "x", note: "", blockWas: stale })).toEqual({ error: "Send one change" })
+    expect(applyReviewChange(moved(), { removeBlock: "pc", blockWas: stale })).toEqual({ error: "Send one change" })
   })
 })
 

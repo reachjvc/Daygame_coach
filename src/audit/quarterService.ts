@@ -53,6 +53,26 @@ function wallClock(ms: number, tz: string): { hour: number; minute: number } {
   return { hour: get("hour") % 24, minute: get("minute") }
 }
 
+const dayFormatters = new Map<string, Intl.DateTimeFormat>()
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+/** The local date at `ms` in `tz` ("2026-11-09") and its weekday, 0 Monday to 6 Sunday, read straight from Intl. */
+export function localDay(ms: number, tz: string): { date: string; weekday: number } {
+  let f = dayFormatters.get(tz)
+  if (!f) {
+    const opts = { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" } as const
+    try {
+      f = new Intl.DateTimeFormat("en-US", { ...opts, timeZone: tz })
+    } catch {
+      f = new Intl.DateTimeFormat("en-US", { ...opts, timeZone: "UTC" })
+    }
+    dayFormatters.set(tz, f)
+  }
+  const parts = f.formatToParts(new Date(ms))
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? ""
+  return { date: `${get("year")}-${get("month")}-${get("day")}`, weekday: WEEKDAYS.indexOf(get("weekday")) }
+}
+
 /** Minutes after local midnight at `ms`, in `tz`. */
 export function localMinute(ms: number, tz: string): number {
   const { hour, minute } = wallClock(ms, tz)

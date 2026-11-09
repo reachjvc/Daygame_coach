@@ -346,6 +346,10 @@ function ActivitySheet({
                   if (sentChoice !== undefined) {
                     setChoiceWas(sentChoice)
                     setChoiceTouched(false)
+                  } else {
+                    // A note-only save keeps the stored choice, which another device may have changed:
+                    // show that one next to "Saved", not the choice this sheet opened with (alpha prove-review-03).
+                    setChoiceStale(true)
                   }
                 }
                 setState(failed ? { error: failed } : "saved")
@@ -419,7 +423,9 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   }
   const save = (key: string, choice: { value: ReviewChoice | null; was: ReviewChoice | null } | null, note: string, noteWas: string) =>
     send(choice ? { activity: key, choice: choice.value, choiceWas: choice.was, note, noteWas } : { activity: key, note, noteWas })
-  const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[]) => send(copies.length > 0 ? { block, edit, copies } : { block, edit })
+  // `blockWas`: the block as the sheet opened it; the server refuses if another device changed it since (alpha prove-review-01).
+  const saveBlock = (block: WeekBlock, edit: boolean, copies: WeekBlock[], blockWas: WeekBlock | null) =>
+    send({ block, edit, ...(blockWas ? { blockWas } : {}), ...(copies.length > 0 ? { copies } : {}) })
   const removeBlock = (id: string) => send({ removeBlock: id })
 
   const back = (
