@@ -1,0 +1,80 @@
+/**
+ * THE TIME & ENERGY AUDIT'S TYPES (Plans/energy-audit.md).
+ *
+ * A RUN is one audit of up to 14 days. A QUARTER is 15 minutes on the clock
+ * (:00, :15, :30, :45); the database calls an answered quarter a "slot", and
+ * so does the code that talks to it. Words shown to a person say "quarter".
+ */
+
+/** 1-7: energy (1 takes my energy, 4 neutral, 7 gives me energy) or growth (1 ruins my life, 4 neither, 7 builds my life). */
+export type ScaleValue = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
+export const SCALE_VALUES: readonly ScaleValue[] = [1, 2, 3, 4, 5, 6, 7]
+
+/** Where an answer came from: typed in the app, filled in later from the Day list, or "Same as before". */
+export type AnswerSource = "app" | "later" | "same"
+
+export const ANSWER_SOURCES: readonly AnswerSource[] = ["app", "later", "same"]
+
+/** What the person decides for each activity in the review. */
+export type ReviewChoice = "more" | "keep" | "handoff" | "cut" | "change"
+
+export const REVIEW_CHOICES: readonly ReviewChoice[] = ["more", "keep", "handoff", "cut", "change"]
+
+/** Stored on the run: the choice and the note per activity key (`normalizePhrase` of the activity). */
+export interface Review {
+  choices: Record<string, ReviewChoice>
+  notes: Record<string, string>
+}
+
+export interface AuditRun {
+  id: string
+  /** ISO instants. */
+  startedAt: string
+  endsAt: string
+  endedAt: string | null
+  /** Minutes after midnight in the person's zone, multiples of 15. A start equal to the end means no quiet hours. */
+  quietStart: number
+  quietEnd: number
+  mutedUntil: string | null
+  review: Review
+  endSentAt: string | null
+}
+
+/** One answered quarter. */
+export interface AuditSlot {
+  id: string
+  runId: string
+  /** The quarter's start, an ISO instant on :00/:15/:30/:45. */
+  slotAt: string
+  activity: string
+  energy: ScaleValue
+  growth: ScaleValue
+  avoiding: boolean
+  why: string | null
+  source: AnswerSource
+  timeEntryId: string | null
+}
+
+/** What a phone sends for one quarter. The id is made on the phone, so a resend saves once. */
+export interface AuditAnswer {
+  id: string
+  runId: string
+  slotAt: string
+  activity: string
+  energy: ScaleValue
+  growth: ScaleValue
+  avoiding: boolean
+  why: string | null
+  source: AnswerSource
+  timeEntryId: string | null
+}
+
+/** A Time entry as the audit reads it (never written by the audit). */
+export interface TimeEntryForAudit {
+  id: string
+  description: string
+  projectName: string | null
+  startedAt: string
+  stoppedAt: string | null
+}

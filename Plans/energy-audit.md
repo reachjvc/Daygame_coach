@@ -535,6 +535,8 @@ prints only `app/api/notifications/tick/route.ts` and `src/shared/offlineCopies.
 `grep -rlw "removeDevice\|setDeviceEnabled\|moveDevice\|closeSend" tests --include=*.test.ts` lists
 `pushPlumbing.integration.test.ts`.
 
+**Status:** Live 2026-11-09, commit 0a6aa5bd (pushed 2026-11-09 06:59 UTC). Vercel never built this commit on its own: it built the next push, 9f8ecbcc, which contains it, so the buildId of 0a6aa5bd itself was never seen on the live site; the live site has run its code since 9f8ecbcc. Checks run: all unit tests (540 files), the moved integration file, the moved e2e spec and the whole old Thoughts e2e spec at phone size (10 passed) before deletion, the type ratchet (none new). The lint ratchet fails on main for a peer's file (`docs/research/addiction-one-pagers/board/check_render_v3.mjs`), not on files changed here; changed files were linted directly with no errors. Two parts differ from the plan: the Thoughts-only UI test of the device list stayed in `thoughts.spec.ts` until Phase 2 deleted it, and `pushDevices.spec.ts` checks the device routes through the app's own endpoints, not a screen. The Thoughts offline queue now uses `src/shared/offlineQueue.ts` for its owner rule and its send loop only; the Thoughts-specific queue state stayed in `logQueue.ts`.
+
 ## Phase 2 — Thoughts out (code, then Migration A) · M
 
 1. **Delete the code:**
@@ -619,6 +621,8 @@ prints only `app/api/notifications/tick/route.ts` and `src/shared/offlineCopies.
 - the More sheet shows no Thoughts;
 - this prints nothing:
   `grep -rnE "src/thoughts|thoughtsRepo|/api/thoughts|ROUTES\.thoughts|thought-prompt|thought_(logs|settings|reframes|prompt_schedule)|forgetThoughtsOnThisDevice|runPromptClock|promptUrl|claimDuePrompts" app src components public tests scripts proxy.ts --include=*.ts --include=*.tsx --include=*.js --include=*.mjs`
+
+**Status:** Live 2026-11-09, commit 9f8ecbcc, buildId confirmed (live `/api/healthz` showed 9f8ecbcc at 07:24 UTC). Code shipped first. The clock called the site 1 time in the 15 minutes before the migration, status 200 (no sends). Migration A (`20261109100000_thoughts_out.sql`) applied to the test database first (also rehearsed with its rollback and re-applied inside a rolled-back transaction), then live with `supabase db push --linked --yes` at about 07:25 UTC, after `supabase migration list --linked` showed only that file pending. Live checks: thought tables 0, thought functions 0, `cron.job` lists `notifications-clock` and not `thoughts-clock`, `select public.timetrack_alert_due()` returned false without error, and `notifications-clock` succeeded in each of the first three minutes after the apply (07:26, 07:27, 07:28 UTC). `notification_sends` now: timetrack-running 11, test 1 (524 thought-prompt rows deleted; the plan said 516, live had 524). The grep of Done-when prints nothing. The More sheet at 390 px shows Time, Ask Coach, Articles, Settings, Log Out. Differences from the plan: the migration is `20261109100000` (dated today), the rollback sits in `supabase/migrations/rollback/`, and `theRunningTimerReachesOnlyDevicesThatAskedForIt` passes.
 
 ## Phase 3 — Audit storage (Migration B) · M
 

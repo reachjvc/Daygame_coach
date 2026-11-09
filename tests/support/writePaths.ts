@@ -41,8 +41,10 @@ const DIRECT_WRITE = /\.(insert|update|upsert|delete)\s*\(/
  *
  * `timetrack_alerts_due` is a `stable` SQL function: the list of 6 h timer
  * alerts due now (migration 20261105150000_running_timer_notification.sql).
+ * `audit_pings_due` and `audit_ends_due` are `stable` SQL functions: the audit's
+ * pings and "your two weeks are done" due now (migration 20261109110000_energy_audit.sql).
  */
-const READ_ONLY_RPCS = new Set(["match_embeddings", "match_embeddings_test", "timetrack_alerts_due"])
+const READ_ONLY_RPCS = new Set(["match_embeddings", "match_embeddings_test", "timetrack_alerts_due", "audit_pings_due", "audit_ends_due"])
 
 const RPC_CALL = /\.rpc\s*\(\s*["'`]([^"'`]+)["'`]/g
 
