@@ -1,7 +1,7 @@
 # Site navigation: where everything lives once the site is more than dating
 
 **Written 2026-11-09** for the owner and for the session that builds the comparison page.
-**Status 2026-11-09: steps 1–5 done; waiting for the owner's marks (step 6).**
+**Status 2026-11-09: steps 1–5 done. The owner liked E as drawn on the before/after page; the build plan is `Plans/site-navigation-build.md`.**
 **Scope of this plan: a comparison page, then one decision. No app code changes.** Building the
 chosen navigation gets its own plan after the owner picks.
 
