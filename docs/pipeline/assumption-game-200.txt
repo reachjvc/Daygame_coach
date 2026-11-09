@@ -1,0 +1,205 @@
+# 200 videos picked 2026-11-09 to find 100 assumption (cold read) moments for the Assumption Game scenario.
+# Scored by counting assumption phrases in YouTube's automatic captions ("you look like a…", "let me guess", "I bet you…", "you seem like", nationality/job guesses).
+# Counts include the coach's commentary, so they show where to look, not finished moments.
+# Krauser, Todd V and Austen Summers have fewer than 25 street videos on their channels; their spare slots went to the others.
+# Format: coach|video_id|assumption_phrases_found|minutes|already_in_pipeline|title
+Austen Summers|iOSpNACA9VI|6|31|no|Picking Up Girls in Barcelona  |  Immersion Documentary
+Austen Summers|33TX_X2zyqg|4|19|no|Keys of Daygame Pick Up (+Day Game Infield) Part 1
+Austen Summers|y8szHx4ljIM|3|26|no|Pulling 21 Blondes in 4 Days | Immersion Documentary
+Austen Summers|fbRpUOxqWcs|2|11|yes|Casey Neistat Picking Up Girls
+Austen Summers|bzUa2cB61hU|2|38|no|How to Take Home a Latina MILF (+Daygame Infield)
+Austen Summers|PYa_GzOOLtU|2|214|no|Coach Vs Coach Infield Breakdown (W/ Austen Summers, Kevin Wilder, A.G Hayden)
+Austen Summers|D1t_K8hjJzc|2|25|yes|How to Take Home a Swedish Blonde
+Austen Summers|qBQ00i7i5wY|1|7|no|Bootcamp Mini-Documentary | Picking Up Girls In Santa Barbara
+Austen Summers|x2kk9HoXjnI|1|8|yes|Software Developer Picks Up Girls
+Austen Summers|R6inrSd9qFk|1|13|no|Picking Up Cosplay Girls At Comic-Con 2019 - PART 2
+Austen Summers|HQ3bPwYpXTE|1|19|no|The Magnetic Vibe That Makes Women Chase You — LIVE DEMO
+Austen Summers|-gg0Ykxalkk|1|6|yes|How I Got Laid With A Shy College Girl
+Austen Summers|3u0I751NGN0|1|53|no|7 Minute Pull - Analysis
+Austen Summers|XDZbqorwGNk|0|11|yes|Picking Up Cosplay Girls At Comic-Con  2019
+Austen Summers|KURlBcRF6-M|0|6|yes|Swedish Hockey Player Picks Up Girls
+Austen Summers|H3_8iPikhDw|0|6|yes|A Basic Daygame Approach Anyone Can Do
+Austen Summers|1Ottjy_7jzk|0|6|yes|Depressed Musician Picks Up Girls
+Austen Summers|n0smMRCqVmc|0|6|yes|Picking Up Girls in a Wheelchair
+Austen Summers|vwPnv26X9MA|0|18|no|The Secret Every Woman Wants from a High Value Man (+ Infield)
+Austen Summers|AG8bA1BiCVA|0|16|no|How I Destroyed My Approach Anxiety (+ Infield)
+Austen Summers|RR7IeX2PCzI|0|15|no|Keys of Daygame Pick Up (+Day Game Infield) Part 2
+Austen Summers|01t-U1xaacE|0|9|no|Lonely Women Need To Be Approached 😢
+Austen Summers|4Xrp5NzEO_8|0|6|no|Harvard Prepster Picks Up Girls
+Austen Summers|DckH-MWKxkY|0|6|no|The Key to a Magnetic Interaction - SHIFTING
+Daily Evolution|CfsZbTegOCM|9|60|no|DAYGAME PICKING UP GIRLS 1 HOUR COMPILATION
+Daily Evolution|cbA0Qtwr2fI|7|61|no|Daygame Infield Pickup 1 Hour Compilation! How To Pick Up Girls
+Daily Evolution|e1eqqTOSlkE|4|73|no|DAYGAME PICKUP INFIELD 1 HOUR COMPILATION
+Daily Evolution|WyXNWCB0U_k|3|3|yes|Anti-Trump Rally Picking Up Hillary Supporters
+Daily Evolution|8e45oh3nQyM|3|4|no|Using Cold Reads To Pick Up Women [+Daygame Infield]
+Daily Evolution|fNl30KAQJDA|2|3|yes|Remarkable Daygame Infield With DEEP Tactical Training
+Daily Evolution|IswneeXy_yY|2|4|yes|Picking Up Hot Hippie Girl  [Daygame Infield]
+Daily Evolution|7Dt6hhpNUTA|2|4|no|Ice Bath Approach Method To Get 4 Girlfriends by End of Summer
+Daily Evolution|iJFskBBT4sU|2|5|no|Daygame Pickup Infield - Picking Up A Girl At The Grocery Store
+Daily Evolution|-AFtaDcMxZ8|2|5|yes|NIGHTGAME INFIELD | GET OUT OF YOUR HEAD
+Daily Evolution|Udfxdrjunl8|2|5|yes|Do You Think I'm Ugly? [Daygame Infield]
+Daily Evolution|Nr8wLPJzZGc|2|7|yes|DAYGAME INFIELD | HOT SINGLE MOM #MILF
+Daily Evolution|lAuvScVel88|2|7|yes|Instant Date Daygame Infield
+Daily Evolution|yxYIyUbpcvM|2|12|yes|INFIELD Daygame Pick Up | APPROACH ANXIETY AT TARGET!
+Daily Evolution|seKzM2XTmBc|2|14|no|Daygame INFIELD Breakdown From Melbourne Australia
+Daily Evolution|zwE1t_qKw2A|2|21|yes|Infield Daygame Pickup | Grocery Game Single Mom
+Daily Evolution|KqsVC-qH_WU|2|34|yes|Instant Date With Hot Blonde Model | Daygame Infield Pickup
+Daily Evolution|KG8X6cQ5wGw|2|61|no|Daygame Infield Pickup 1 Hour Compilation 2019!
+Daily Evolution|SnzpDLBF0y0|1|3|yes|INFIELD + DAYGAME Stealing Cutie From Soldier Boyfriend
+Daily Evolution|OzyhqjdSLPE|1|4|yes|How To Approach Seated Girls (+Infield)
+Daily Evolution|jNLFN9Ys4ok|1|4|yes|PICK UP INFIELD + Daygame Approaching a Group of Girls
+Daily Evolution|-ymOG7QMrBA|1|4|no|Daygame Infield From Earth's #1 Dating Coach
+Daily Evolution|oy7q9j-eTbw|1|4|no|15 Years of Pickup Crammed Into 5 Minutes
+Daily Evolution|arpG2y0VtKk|1|4|yes|Picking Up Smoking Hot Blonde Chick [NIGHTGAME INFIELD]
+Daily Evolution|pPSIJ90s75w|1|4|no|hot girls hate this approach 😖 (+daygame infield)
+Daily Evolution|4IRP_hqRYrY|1|4|yes|Approaching a Serious Hottie In A Clothing Store
+Daily Evolution|ZQoGfv-wH4k|1|4|no|Daygame Infield Epic Grocery Store Pickup Hot Blonde!
+Daily Evolution|YI0R17xr7Po|1|4|no|DAYGAME INFIELD | Picking Up Hot Blonde With Her Sister
+Daily Evolution|NK5OD5BKs6c|1|5|no|Daygame Infield | Grocery Store Pickup!
+Nick Krauser|2RZKlRFw2EE|4|9|yes|Joy of Daygame #3 - Gutter Game in Warsaw
+Nick Krauser|WXj3xY1Wsrk|2|6|no|Daygame Mediocrity #1
+Nick Krauser|lAy-FXetfI4|2|6|no|Daygame Mediocrity #4
+Nick Krauser|ZwpdclwWqw0|1|6|no|How To Pick Up Hot Girl In A Shop (infield)
+Nick Krauser|Q8ogLW676MA|1|52|no|Womanizers Bible #7 - How To Do Real Bouncebacks (infield)
+Nick Krauser|L2MWaFVEX74|1|2|yes|Joy of Daygame #7 - Jailbait two-set
+Nick Krauser|z4uxbrI4rPE|1|4|no|Daygame Mediocrity #8
+Nick Krauser|fslMIbpUpiQ|1|6|no|Daygame Mediocrity #2
+Nick Krauser|4n7tesaFEdI|1|7|yes|Joy of Daygame #5 - Dappy Bird in Mall
+Nick Krauser|NhaqeRwLPJY|1|9|yes|Joy of Daygame #6 - Brunette in Park
+Nick Krauser|grq-TNERVuA|1|14|yes|Joy of Daygame #4 - More Gutter Game in Warsaw
+Coach Kyle|SwKI2EmazhA|4|15|yes|5 Small Things That Create BIG Attraction (LIVE DEMO)
+Coach Kyle|AFD-p4vgrwk|4|18|no|How to Talk to Women in Public: Real Infield Breakdown
+Coach Kyle|O_k0TE-i_Ro|4|23|no|A Realistic Approach at a Bookstore (Full Infield)
+Coach Kyle|04njgij7V7w|3|8|yes|This ONE Phrase Makes Any Conversation Flirty FAST
+Coach Kyle|tvHA57vuHOA|3|9|no|Simple Cold Approach: Make Her Attracted in 5 Minutes
+Coach Kyle|sCg5TxfiPXs|3|74|no|A Realistic 74 Minutes of Approaching Women (UNCUT INFIELD)
+Coach Kyle|u2R8_rF_j2s|2|8|yes|What Happens When You Talk To Girls After Working Out? (Infield)
+Coach Kyle|Yz1TGfAF0zc|2|8|no|What to say to a Woman in the 1st Seconds? (LIVE DEMO)
+Coach Kyle|rE1b1SFoa4A|2|12|yes|Afraid of talking to women? Watch this approach
+Coach Kyle|-1orxwZOp24|2|13|no|Forget Pickup Lines, Try This Instead (LIVE DEMO)
+Coach Kyle|0R1rv1ar6Bk|2|13|no|A Realistic Approach at a Mall (Infield)
+Coach Kyle|1Y_ubktsJ_c|2|30|no|How To Keep A Conversation Going With ANY Woman (cold approach and dating)
+Coach Kyle|tyI2OZCVhT8|1|4|yes|How to Approach a Group of Girls (INFIELD)
+Coach Kyle|d8H9RlGpS0g|1|5|yes|5 Minute Attraction HACK for Cold Approach Success!
+Coach Kyle|hllwnZLqvsE|1|6|yes|Can I COLD APPROACH These 2 HOT Girls?
+Coach Kyle|e2dLEB-AwmA|1|8|yes|Get a Date in 5 Minutes: Full Infield Interaction (Cold Approach)
+Coach Kyle|mv2X8Yhg9M0|1|8|yes|Approach ANY GIRL in Public LIKE a PRO! (INFIELD)
+Coach Kyle|0DEnRDZ-sqI|1|9|yes|I teach an average guy how to cold approach (LIVE DEMO)
+Coach Kyle|XpqbO8_gVOo|1|9|no|Younger Women Want to be Approached Like This (LIVE DEMO)
+Coach Kyle|B5DKakgnlxs|1|10|no|A Realistic Approach to a Single Woman Sitting Alone on a Bench (Infield)
+Coach Kyle|xBqZxHMDsLE|1|10|no|4 Approaches Men Are Too Scared to Try (all turned into dates)
+Coach Kyle|B7dQXJLkr0I|1|10|no|2 EASY & "Non-Creepy" Ways To Cold Approach ANYONE Daily
+Coach Kyle|pI3rYRHL4Oc|1|11|yes|Cold Approaching a HOT Girl in Miami (Can I get a date?)
+Coach Kyle|NwsML0CZ2uo|1|11|no|What to say to a Woman in the 1st Minute ? (LIVE DEMO)
+Coach Kyle|wxAsWkMqsHo|1|13|no|3 Simple Flirting Techniques For Cold Approaching Women
+Coach Kyle|RHfsmA7QmmQ|1|14|yes|5 Phrases To Approach ANY woman, Anytime, Anywhere
+Coach Kyle|DGrky-wDxuQ|1|14|yes|How to Cold APPROACH (Infield)
+Coach Kyle|7BfD4URAD1Y|1|16|yes|3 Easy Ways To Make Her Chase You (LIVE DEMO)
+Coach Kyle|pEjUOTXczm4|1|17|no|How to approach any woman any time anywhere (LIVE DEMO)
+Natural Lifestyles|X8cBWxS4w-k|11|51|no|How to Meet Women Confidently Without Pickup Lines Or Fake Persona
+Natural Lifestyles|1Ba_x0Pn0wM|5|48|no|From "hi" to the Bedroom in 12 hours (TNL student’s 1st infield training day)
+Natural Lifestyles|2MCC-pde5Co|3|72|no|How To Overcome Fear & Talk To Women Easily (TNL Workshop Secrets)
+Natural Lifestyles|TeZg-eAknDs|2|20|yes|Single on Valentine’s Day? How to meet hot women and get a date today!
+Natural Lifestyles|7gEU3DHe1Vw|2|28|no|How To Attract Older Women (young guy picks up Persian MILF on Camera)
+Natural Lifestyles|vRxY8ZvusPc|2|36|no|How To Get a Date For Tonight (Shy Guy Picks Up 3 Women on Camera)
+Natural Lifestyles|5844WBf4Exk|2|45|no|You're One Rejection Away From Your Dream Girl (LIVE Student's 1st Pickup)
+Natural Lifestyles|VGgtgzrkRTo|2|52|no|Who Wins at Street Pickup? Pro Dating Coach or Hot Model? (1hr Challenge)
+Natural Lifestyles|4vT7CleK8ck|2|53|no|Shy Guy Picks Up Hot Blonde AND Her Granny (caught on camera!)
+Natural Lifestyles|k2QYwA9n8V0|2|54|no|From Shy & Awkward To Approaching Hot Women in 2 Hours (LIVE Student Transformation)
+Natural Lifestyles|J02LapVhOyM|2|25|yes|How to Make Conversations Sexual without being Creepy
+Natural Lifestyles|VRsmSr3-EBU|1|6|yes|How To Approach A Girl w/ Her Girl Friend - Real Demonstration
+Natural Lifestyles|2h9wq53QIQk|1|12|yes|How to Pick Up Hippie Girls (As an analytical guy)
+Natural Lifestyles|IS2SoUgqDLE|1|24|no|James Marshall picks up 3 shy girls (how to relax, connect & seduce them)
+Natural Lifestyles|CTfDIHi91uk|1|34|yes|”You’re Too Old For Me…” - How To Overcome Age Objections In Your 30s & 40s (+ Live demo)
+Natural Lifestyles|YmvU4KOSBqw|1|36|no|"Sorry, I have a boyfriend" - The Reality of Approaching Attractive Women
+Natural Lifestyles|_ss-P3mkqK4|1|48|no|4 Ways To Be Direct With Women - Approach, Get Numbers, Get Dates, Get her Home
+Natural Lifestyles|bRMqJ5DHxsk|1|52|no|How To Get Dates In 2 Minutes - Learning Fast Pickup from the Masters
+Natural Lifestyles|jdDdgzdFPfs|1|27|yes|Seducing A Fitness Model (Getting Through Rejections To Find Your Dream Girl)
+Natural Lifestyles|2jJg3l9OP7Y|1|42|no|She's Not Out Of Your League, With These 2 Non Negotiable Seduction Skills
+Natural Lifestyles|Y0qu_Ls94nE|1|49|no|How To Improve Your Game Without a Dating Coach - 5 Trackable Metrics For Seduction Success
+Natural Lifestyles|03m9yo-ikPc|0|26|yes|"You're so adorable" How I Seduced a Shy Artsy Girl (James Marshall 2025 Infield)
+Natural Lifestyles|KtmnHDVbmss|0|9|yes|Picking Up 3 Girls In 10 minutes (the busy man’s dating method)
+Natural Lifestyles|K97Z1obtEik|0|44|no|How To Seduce Shy Women (picking up 2 sexy introverts)
+Natural Lifestyles|kyBKT_uIREA|0|33|no|She Just Left Her Husband – Here’s How I Got Her Number (LIVE Infield Analysis)
+Natural Lifestyles|gJy-_c_zwN4|0|58|no|"Approaching women just leads to rejection” - 7 Excuses That Ruin Your Dating Life
+Natural Lifestyles|B1UR8q_Dlpo|0|32|no|Challenging a 23yo Model - Street Pickup Competition (Who Gets More Dates in 1hr?)
+Natural Lifestyles|J8YMzCabd2s|0|30|no|5 Easy, No B.S. Ways To Approach Women In The Street (+ Infield Demonstration)
+Playing With Fire|9MTPFgpkwBk|11|213|no|Looks4L VS Jake Pickup Contest Results
+Playing With Fire|LSLq-2QbvmA|9|73|no|Chad Vs Club Promoter Full Infield Breakdown
+Playing With Fire|HfUHlQiKets|7|174|no|Zherka Infield Breakdown + Never Before Seen Speed Dates
+Playing With Fire|Vz_hlam_dtU|6|67|no|Daygame Vs Nightgame - Gabriel Grey Infield Breakdown
+Playing With Fire|eTjKDx2A2AQ|5|66|no|Gabriel Grey Reveals New Infield ( +Free Coaching)
+Playing With Fire|a5pPmkB-A7I|4|8|yes|How To Approach A Girl in EVERY Situation (Live Demo)
+Playing With Fire|feaoEKc17qo|4|16|yes|How To Approach A Girl Like A Boss (PWF Client Infield Demonstration)
+Playing With Fire|yTWnGdzgz7w|4|21|yes|How To Pickup A Girl At The Mall (Daygame Infield Breakdown)
+Playing With Fire|PQW4BDKfAv8|3|4|yes|Girl Rejects Me (Awkward Infield Rejection)
+Playing With Fire|fO1NVRiSy9s|3|5|yes|Picking Up Miami Girls In A Lamborghini (Crazy Infield)
+Playing With Fire|1zRgPwnpbCk|3|59|no|Gabriel Grey Student Infield Breakdown
+Playing With Fire|CdNI2fre0SY|2|4|yes|Epic Infield Rejection Compilation (Special 75k Bonus)
+Playing With Fire|jeFPE9bzjow|2|6|yes|Picking Up Girls Using Andrew Tate Lines
+Playing With Fire|G9ZQD5QD-pk|2|17|yes|White Guy vs. Indian - Same Girl Cold Approach Experiment (Infield Breakdown)
+Playing With Fire|-xXMXfHk55o|2|48|no|Gabriel Grey Free Coaching + INFIELD Breakdown
+Playing With Fire|9r6_bAyzIZE|1|3|yes|How To Get An Instant Date In 2 Minutes (100% Real Infield)
+Playing With Fire|h-wWMx5Ssac|1|6|yes|How To Pull A Girl Home From A Date (Live Infield)
+Playing With Fire|MLsXlUmxIpk|1|6|yes|How To Pickup A Hot Girl With Her Mom
+Playing With Fire|sx6BdsFnJpY|1|8|yes|Picking Up A Bratty Girl During An Interview
+Playing With Fire|QVfFg_rFJyw|1|13|yes|40 Year Old "Natural" Tries Cold Approach
+Playing With Fire|EpNmjlq0H0k|1|20|yes|How to Approach Girls | From Opener to Date (Daygame Infield & Text Screenshots)
+Playing With Fire|meWiqqU57w0|1|31|no|Gabriel Grey New Infield Breakdown + Free Coaching
+Playing With Fire|8kJK_bB5LEo|0|14|yes|How to Approach a Shy Girl and Get a Date - INFIELD (+ Text Interaction)
+Playing With Fire|C6KOmMdgQeI|0|12|yes|Picking Up A Girl Gets Sexual Fast (Daygame Infield)
+Playing With Fire|Iv0AbAOXU9A|0|9|yes|How To Talk To A Girl At A Coffee Shop (Live Daygame Infield Breakdown)
+Playing With Fire|0m3iRVM4FZk|0|6|yes|Can An Average Guy Pickup A Hot Girl
+Playing With Fire|oZjZU0kksK8|0|6|yes|The Best Night Game Opener Revealed (Infield Breakdown)
+Playing With Fire|jljQm8Hr5mY|0|5|yes|FreshPrinceCeo FINALLY Picks Up A Girl (Crazy Infield)
+Playing With Fire|OntdnFF7HSM|0|4|yes|How To Pickup Girls With A 100% Success Rate
+Social Stoic|thG_7oaCA0o|10|31|no|Rejected? Doesn't Matter - How I Still Get 9s & 10s (Infields)
+Social Stoic|A-gUGrsvkKY|7|26|no|How To Approach ANY Girl in Public (Without Being Scared)
+Social Stoic|gISxAc0Zvtw|7|32|no|How to Pick Up an Arrogant Woman (Infield)
+Social Stoic|JYzJLfBi4R0|5|28|no|Crazy Pickup Lines That Actually WORKED (Infield Breakdown)
+Social Stoic|di3JrFOivNQ|3|8|yes|I Met Cute Girls Just by Walking a Dog (Infields) 
+Social Stoic|yYyNPRIcUm4|3|10|yes|How to Get a Same-Day Date (Infield Breakdown)
+Social Stoic|DPieYj7nji0|3|12|yes|Turn Small Talk into Deep Connection (Daygame Coaching Infield)
+Social Stoic|H-_FULmTJXc|3|17|yes|How To Pick Up 9s and 10s (Infield Example)
+Social Stoic|p8NGf6VWOfo|3|19|yes|He Approached 950 Women in 1 Month! (+ Infield)
+Social Stoic|F2PnXKlMKA0|3|19|no|Exactly How to Pick Up 9s and 10s (Infield Examples)
+Social Stoic|-CZtcqqEDdk|3|19|yes|Do Absurd Pick-Up Lines Actually Work? (Infields)
+Social Stoic|XrH6QsQsv84|3|30|no|This Weird Opener Makes Approaching Women EASY (Infield Proof)
+Social Stoic|9tcvr26JP10|2|11|yes|I Got Flirty Fast with a Hot Blonde (Uncut Infield)
+Social Stoic|A6dFLFMNK_I|2|12|yes|Cold Approaching Girls in Prague (Infields)
+Social Stoic|XOS_kGpXl0U|2|12|no|Do THIS To 10x Your Results With Women (Infield Examples)
+Social Stoic|s4aUoByxPfU|2|13|no|Flirt Like This or Stay Friendzoned Forever (Infield Proof)
+Social Stoic|vBhN49LSyz4|2|13|yes|How to Pick Up a Group of Girls (Infield)
+Social Stoic|j4foLMbvieE|2|14|no|Thailand Is The Best Place To Meet Western Women (Infield Proof)
+Social Stoic|xnWRrBhCE6g|2|15|yes|This Easy Hack Will Reduce Your Anxiety with Women (Infield Examples)
+Social Stoic|Sz1f6OiO5Ko|2|15|yes|How To Approach Hot Women (Infield Examples)
+Social Stoic|csomLwclnsI|2|16|yes|This Move Sparks Instant Attraction (Infield Proof)
+Social Stoic|UmhMBv40HU8|2|17|yes|How To ACTUALLY Flirt With Women + Real Life Examples
+Social Stoic|kVNih9mOvsE|2|20|yes|The Vibe Blueprint That Gets Results (Infield)
+Social Stoic|qKDcTQ3IVlk|2|29|no|I Tested 3 Outfits - Which One Gets Most Girls? (Infields)
+Social Stoic|xsgdv9smyHI|2|33|no|I Approached an Italian Stunner... 10 Minutes Later We're on a Date (Infield)
+Social Stoic|_Am8ItTeNoQ|1|7|yes|Teaching MMA Fighter How To Cold Approach Women (Student Infield)
+Social Stoic|F_tky6wVSsU|1|17|yes|Picking Up Hot Blonde After Her Brutal Breakup (Infield Breakdown)
+Social Stoic|kJJiAgO77jw|1|18|no|How I Got a Date With a 21 Year Old Model in 9 Minutes (Infield)
+Social Stoic|UKytjD6YvNk|1|18|yes|How to Flirt with Girls Who Have Boyfriends (Infield Examples) 
+Todd V|Rw1xyaNejyw|5|9|no|Get a Date in 5 Minutes: Verbal Game Infield
+Todd V|HwLED9blsEw|4|28|no|When "Good Game" Fails -- Student Infield Breakdown
+Todd V|NQ4JKMBcoWA|3|10|no|Make this SWITCH When Talking to Women
+Todd V|mEu3uJwTpSw|3|13|no|How to Show Interest without Getting Rejected
+Todd V|TLuThLf2raY|2|11|no|From Hello to Interested Every Time (+Infield Breakdown)
+Todd V|bf6miBNwCvo|2|33|no|THE APPROACH FORMULA (What to Say and How To Get Her Attention)
+Todd V|OAky72Dj_TA|2|27|no|How to Meet Women Anywhere
+Todd V|FhKQd7Eza6g|1|6|no|The Forgotten Pickup Line (Infield)
+Todd V|gyZTpsBy-oo|1|9|yes|04.3a Todd V - How To Make Her Chase You Instantly (Infield Breakdown)
+Todd V|tbqcEcCVmP4|1|13|no|The Best Pickup Line in The World
+Todd V|4Fh4ryl5uLs|1|15|no|Todd vs Hot Twins: Verbal Game Mastery (Infield Breakdown)
+Todd V|MaV7wlO-GmE|1|21|no|Flirting with the HOT GIRL at the Store (See How I Do It)
+Todd V|RxyyTSfjUK0|1|22|no|The Subtle Art of Flirting
+Todd V|IFThXns7WhA|1|12|no|How to Talk to Girls in Groups
+Todd V|yPwm1vMCUxs|1|14|yes|From Boring Conversation to Romantic Connection
+Todd V|OpmAWcMtBFw|0|18|yes|My EASY Step-by-Step System for Getting The Girl (+infield)
+Todd V|VvtklOOkGhM|0|11|no|How to Pass a Shit Test (Verbal Game Infield)
+Todd V|mfCqDAgXIx0|0|11|no|What to Say to Her in the First 2 Minutes (Student Infield)
+Todd V|2bQjfTHlwzU|0|9|no|Approaching Girls made Easy! (For Introverts & Beginners)
+Todd V|DNnMrWcnlI4|0|31|no|How To Date High-Value Girls (30 min Demonstration)
+Todd V|AOwLLtuECyA|0|9|no|The Ultimate Flirting Cheatcode
