@@ -77,8 +77,11 @@ async function answerCard(page: Page, card: ReturnType<Page["getByTestId"]>, act
   if (activity !== null) await card.getByTestId("audit-activity").fill(activity)
   await card.getByTestId("audit-energy").getByRole("radio", { name: `Energy ${energy}` }).click()
   await card.getByTestId("audit-growth").getByRole("radio", { name: `Growth ${growth}` }).click()
+  const before = await page.getByTestId("audit-card-saved").count()
   await card.getByTestId("audit-save").click()
-  await expect(card.getByTestId("audit-card-saved")).toBeVisible()
+  // the card folds into one green "Saved" line with the answer on it
+  await expect(page.getByTestId("audit-card-saved")).toHaveCount(before + 1)
+  await expect(page.getByTestId("audit-card-saved").filter({ hasText: `E ${energy} · G ${growth}` }).first()).toBeVisible()
 }
 
 test.describe("time & energy audit @phone", () => {
@@ -158,7 +161,7 @@ test.describe("time & energy audit @phone", () => {
     await seedRun(account.id)
     await openAudit(page)
     await page.getByTestId("audit-mute-open").click()
-    await page.getByTestId("audit-mute-sheet").getByRole("button", { name: "1 h" }).click()
+    await page.getByTestId("audit-mute-sheet").getByRole("button", { name: /^1 hour/ }).click()
     await expect(page.getByTestId("audit-mute-open")).toContainText(/Muted until \d\d:\d\d/)
     await page.getByTestId("audit-mute-open").click()
     await page.getByTestId("audit-unmute").click()
@@ -223,6 +226,25 @@ test.describe("time & energy audit @phone", () => {
     } finally {
       await context.close()
     }
+  })
+
+  test("a ping's address opens the answer sheet, then the page's own address", async ({ page, account }) => {
+    await seedRun(account.id)
+    const slot = new Date(quarterStart(Date.now()) - QUARTER).toISOString()
+    await page.goto(`${ROUTES.audit}?answer=${encodeURIComponent(slot)}&send=${randomUUID()}`)
+    await expect(page.getByTestId("audit-answer-sheet")).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByTestId("audit-answer-sheet").getByTestId("audit-card").first()).toBeVisible()
+    expect(new URL(page.url()).search).toBe("")
+  })
+
+  test("with no device getting pings, the page offers to turn them on", async ({ page, account }) => {
+    await seedRun(account.id)
+    const { devices } = await (await page.request.get("/api/notifications/devices")).json()
+    for (const d of devices as { id: string }[]) await page.request.delete(`/api/notifications/devices/${d.id}`)
+    await openAudit(page)
+    await expect(page.getByText("Pings are off on the development server").or(page.getByTestId("audit-pings-offer")).or(page.getByText("Pings need the Home Screen app")).or(page.getByText("This browser can't receive pings"))).toBeVisible()
+    await page.getByTestId("audit-settings-open").click()
+    await expect(page.getByTestId("audit-settings-sheet")).toContainText("Devices that get pings")
   })
 
   for (const width of [360, 390]) {

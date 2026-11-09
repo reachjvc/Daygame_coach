@@ -10,6 +10,7 @@
 
 import { NextResponse } from "next/server"
 import { bearerMatches, clockSecret } from "@/src/notifications/clockAuth"
+import { runAuditPingClock } from "@/src/audit/pingService"
 import { runTimerAlertClock } from "@/src/timetrack/runningTimerService"
 
 export async function POST(req: Request) {
@@ -19,9 +20,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Not allowed" }, { status: 401 })
   }
 
-  const timerAlerts = await runTimerAlertClock().catch((error: unknown) => {
-    console.error("[timer alert] tick failed", error instanceof Error ? error.message : "unknown")
-    return { failed: true as const }
-  })
-  return NextResponse.json({ timerAlerts })
+  const [timerAlerts, auditPings] = await Promise.all([
+    runTimerAlertClock().catch((error: unknown) => {
+      console.error("[timer alert] tick failed", error instanceof Error ? error.message : "unknown")
+      return { failed: true as const }
+    }),
+    runAuditPingClock().catch((error: unknown) => {
+      console.error("[audit ping] tick failed", error instanceof Error ? error.message : "unknown")
+      return { failed: true as const }
+    }),
+  ])
+  return NextResponse.json({ timerAlerts, auditPings })
 }

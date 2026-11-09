@@ -1,28 +1,53 @@
 "use client"
 
 /**
- * THE AUDIT'S SETTINGS: quiet hours, in 15-minute steps (D-QUIET). A quarter
- * whose start falls in quiet hours is not pinged and not counted. The device
- * card and list join here in Phase 5 (D-DEVICES), passed in as `devices`.
+ * THE AUDIT'S SETTINGS: quiet hours, in 15-minute steps (D-QUIET), and the
+ * devices that get pings (D-DEVICES, passed in as `devices`). A quarter whose
+ * start falls in quiet hours is not pinged and not counted.
+ *
+ * Redrawn after the owner's note on the look page (2026-11-09: "make it look
+ * crisp"): the day these hours make is drawn as one bar, with the count of
+ * pings it means, and each end of it is a tile with its time.
  */
 
+import { Moon, Sun } from "lucide-react"
 import { useEffect, useState, type ReactNode } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 
-const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`
+const hhmm = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`
 const STEPS = Array.from({ length: 96 }, (_, i) => i * 15)
+const DAY = 1440
 
-function TimeSelect({ id, label, value, onChange }: { id: string; label: string; value: number; onChange: (v: number) => void }) {
+/** How many quarters a day are awake with these quiet hours. */
+export function awakeQuarters(quietStart: number, quietEnd: number): number {
+  if (quietStart === quietEnd) return 96
+  const quiet = (quietStart < quietEnd ? quietEnd - quietStart : DAY - quietStart + quietEnd) / 15
+  return 96 - quiet
+}
+
+function TimeTile({
+  id,
+  icon,
+  label,
+  value,
+  onChange,
+}: {
+  id: string
+  icon: ReactNode
+  label: string
+  value: number
+  onChange: (v: number) => void
+}) {
   return (
-    <label htmlFor={id} className="flex min-h-11 flex-1 flex-col gap-1 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="h-11 rounded-lg border border-border bg-background px-2 text-base"
-      >
+    <label htmlFor={id} className="relative flex min-h-16 flex-1 cursor-pointer flex-col justify-center rounded-xl border border-border bg-background/60 px-3.5 py-2 hover:border-primary/60">
+      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {icon}
+        {label}
+      </span>
+      <span className="text-2xl font-semibold tabular-nums">{hhmm(value)}</span>
+      {/* The native picker, over the whole tile: the phone's own wheel opens. */}
+      <select id={id} value={value} onChange={(e) => onChange(Number(e.target.value))} className="absolute inset-0 cursor-pointer text-base opacity-0" aria-label={label}>
         {STEPS.map((m) => (
           <option key={m} value={m}>
             {hhmm(m)}
@@ -30,6 +55,29 @@ function TimeSelect({ id, label, value, onChange }: { id: string; label: string;
         ))}
       </select>
     </label>
+  )
+}
+
+/** The 24 hours as one bar: awake time filled, quiet time dark. */
+function DayBar({ quietStart, quietEnd }: { quietStart: number; quietEnd: number }) {
+  const pct = (m: number) => `${(m / DAY) * 100}%`
+  const awake: [number, number][] =
+    quietStart === quietEnd ? [[0, DAY]] : quietStart > quietEnd ? [[quietEnd, quietStart]] : [[0, quietStart], [quietEnd, DAY]]
+  return (
+    <div aria-hidden>
+      <div className="relative h-3 overflow-hidden rounded-full bg-muted-foreground/20">
+        {awake.map(([a, b]) => (
+          <div key={a} className="absolute inset-y-0 bg-primary" style={{ left: pct(a), width: pct(b - a) }} />
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[11px] tabular-nums text-muted-foreground">
+        <span>00</span>
+        <span>06</span>
+        <span>12</span>
+        <span>18</span>
+        <span>24</span>
+      </div>
+    </div>
   )
 }
 
@@ -61,34 +109,57 @@ export function SettingsSheet({
   }, [open, quietStart, quietEnd])
 
   const changed = start !== quietStart || end !== quietEnd
+  const pings = awakeQuarters(start, end)
   return (
     <BottomSheet open={open} onClose={onClose} title="Audit settings" testId="audit-settings-sheet">
-      <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Quiet hours</h3>
-      <p className="mt-1 text-sm text-muted-foreground">No pings, and nothing to answer, between these times. Every day.</p>
-      <div className="mt-2 flex gap-2">
-        <TimeSelect id="audit-quiet-start" label="From" value={start} onChange={setStart} />
-        <TimeSelect id="audit-quiet-end" label="To" value={end} onChange={setEnd} />
-      </div>
-      {start === end && <p className="mt-2 text-sm text-muted-foreground">The same time twice means no quiet hours: pings around the clock.</p>}
-      <Button
-        className="mt-3 w-full"
-        disabled={!changed || busy}
-        onClick={async () => {
-          setBusy(true)
-          const failed = await onSave(start, end)
-          setBusy(false)
-          setMessage(failed ?? "✓ Saved")
-        }}
-        data-testid="audit-quiet-save"
-      >
-        Save quiet hours
-      </Button>
-      {message && (
-        <p className="mt-2 text-sm" role="status">
-          {message}
+      <section className="rounded-2xl border border-border bg-card p-3.5">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="font-semibold">Pings each day</h3>
+          <p className="text-sm tabular-nums text-muted-foreground" data-testid="audit-quiet-summary">
+            {start === end ? "around the clock" : `${hhmm(end)}–${hhmm(start)}`} · {pings} a day
+          </p>
+        </div>
+        <div className="mt-3">
+          <DayBar quietStart={start} quietEnd={end} />
+        </div>
+        <div className="mt-3 flex gap-2">
+          <TimeTile id="audit-quiet-end" icon={<Sun className="size-3.5" aria-hidden />} label="Day starts" value={end} onChange={setEnd} />
+          <TimeTile id="audit-quiet-start" icon={<Moon className="size-3.5" aria-hidden />} label="Quiet from" value={start} onChange={setStart} />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Quiet hours apply every day. A quarter in them gets no ping and is not counted. The same time twice means no quiet hours.
         </p>
-      )}
-      {devices && <div className="mt-5">{devices}</div>}
+        {(changed || message) && (
+          <div className="mt-3 flex items-center gap-3">
+            {changed && (
+              <Button
+                className="flex-1"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true)
+                  const failed = await onSave(start, end)
+                  setBusy(false)
+                  setMessage(failed ?? "✓ Saved")
+                }}
+                data-testid="audit-quiet-save"
+              >
+                {busy ? "Saving…" : "Save these hours"}
+              </Button>
+            )}
+            {message && !changed && (
+              <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400" role="status">
+                {message}
+              </p>
+            )}
+            {message && changed && message !== "✓ Saved" && (
+              <p className="text-sm text-destructive" role="alert">
+                {message}
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+      {devices && <section className="mt-3 rounded-2xl border border-border bg-card p-3.5">{devices}</section>}
     </BottomSheet>
   )
 }

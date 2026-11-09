@@ -13,6 +13,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { getTodayInTimezone } from "@/src/shared/dateUtils"
+import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/usePushDevice"
+import { ROUTES } from "@/src/shared/routes"
+import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
 import { groupQuarters, prefillQuarters, QUARTER_MS, runQuarters } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
@@ -21,6 +24,7 @@ import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
 import { DayList, type DaySelection } from "./DayList"
 import { MuteSheet, mutedLine } from "./MuteSheet"
 import { SettingsSheet } from "./SettingsSheet"
+import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
 const DAY_MS = 24 * 60 * 60_000
 const SHEET_WINDOW_MS = 3 * 60 * 60_000
@@ -74,7 +78,8 @@ interface SheetState {
   allowDelete: boolean
 }
 
-function StartView({ s, view }: { s: AuditState; view: AuditView }) {
+function StartView({ s, view, push }: { s: AuditState; view: AuditView; push: PushDeviceState }) {
+  const [devicesOpen, setDevicesOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const past = view.runs.filter((r) => r.id !== view.run?.id)
@@ -104,6 +109,14 @@ function StartView({ s, view }: { s: AuditState; view: AuditView }) {
           {error}
         </p>
       )}
+      {noPingDevice(push) && (
+        <div className="mt-5">
+          <PingDeviceCard push={push} onOpenSettings={() => setDevicesOpen(true)} />
+        </div>
+      )}
+      <BottomSheet open={devicesOpen} onClose={() => setDevicesOpen(false)} title="Pings" testId="audit-devices-sheet">
+        <PingDeviceList push={push} />
+      </BottomSheet>
       {past.length > 0 && (
         <section className="mt-8" data-testid="audit-past">
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Past audits</h2>
@@ -123,7 +136,7 @@ function StartView({ s, view }: { s: AuditState; view: AuditView }) {
   )
 }
 
-function TodayView({ s, view, run }: { s: AuditState; view: AuditView; run: AuditRun }) {
+function TodayView({ s, view, run, push }: { s: AuditState; view: AuditView; run: AuditRun; push: PushDeviceState }) {
   const tz = view.timezone
   const now = useNow()
   const todayKey = dayKeyOf(now, tz)
@@ -169,6 +182,15 @@ function TodayView({ s, view, run }: { s: AuditState; view: AuditView; run: Audi
     await s.reload()
     setAnswerNowPending("ready")
   }, [s])
+  // Opened from a ping (`?answer=<quarter>&send=<id>`): straight to the answer sheet.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has("answer")) return
+    window.history.replaceState(null, "", ROUTES.audit)
+    void openAnswerNow()
+    // once, on arrival
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   useEffect(() => {
     if (answerNowPending !== "ready") return
     setAnswerNowPending("no")
@@ -195,6 +217,11 @@ function TodayView({ s, view, run }: { s: AuditState; view: AuditView; run: Audi
       >
         Answer now ({recentGaps.length})
       </Button>
+      {noPingDevice(push) && (
+        <div className="mt-3">
+          <PingDeviceCard push={push} onOpenSettings={() => setSettingsOpen(true)} />
+        </div>
+      )}
       {s.waiting > 0 && (
         <p className="mt-2 text-sm text-amber-500" role="status" data-testid="audit-waiting">
           {s.waiting === 1 ? "1 change is" : `${s.waiting} changes are`} saved on this phone
@@ -262,13 +289,14 @@ function TodayView({ s, view, run }: { s: AuditState; view: AuditView; run: Audi
           onDelete={sheet.allowDelete ? s.remove : undefined}
         />
       )}
-      <MuteSheet open={muteOpen} onClose={() => setMuteOpen(false)} mutedUntil={run.mutedUntil} timezone={tz} onMute={s.mute} />
+      <MuteSheet open={muteOpen} onClose={() => setMuteOpen(false)} run={run} timezone={tz} onMute={s.mute} />
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         quietStart={run.quietStart}
         quietEnd={run.quietEnd}
         onSave={s.setQuiet}
+        devices={<PingDeviceList push={push} />}
       />
       <BottomSheet open={confirmEnd} onClose={() => setConfirmEnd(false)} title="End the audit now?" testId="audit-end-confirm">
         <p className="text-sm text-muted-foreground">
@@ -304,10 +332,13 @@ function TodayView({ s, view, run }: { s: AuditState; view: AuditView; run: Audi
 
 export function AuditScreen({ account }: { account: string }) {
   const s = useAudit(account)
+  const push = usePushDevice()
   const view = s.view
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pb-16 pt-6" data-testid="audit-page">
       <h1 className="text-2xl font-semibold tracking-tight">Time &amp; energy audit</h1>
+      {/* The page opens with no signal (`/audit` is in the worker's SHELL_PATHS), and a ping tapped in a basement still lands. */}
+      <OfflineShell />
       {!view ? (
         s.loadError ? (
           <div className="mt-6 rounded-2xl border border-border bg-card p-5" role="alert" data-testid="audit-load-error">
@@ -324,9 +355,9 @@ export function AuditScreen({ account }: { account: string }) {
           </div>
         )
       ) : view.run ? (
-        <TodayView key={view.run.id} s={s} view={view} run={view.run} />
+        <TodayView key={view.run.id} s={s} view={view} run={view.run} push={push} />
       ) : (
-        <StartView s={s} view={view} />
+        <StartView s={s} view={view} push={push} />
       )}
     </main>
   )

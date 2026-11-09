@@ -1,20 +1,30 @@
 "use client"
 
-/** MUTE THE PINGS (D-MUTE): 30 min · 1 h · 2 h · until morning, or unmute. */
+/**
+ * MUTE THE PINGS (D-MUTE): 30 min · 1 h · 2 h · until morning, or unmute.
+ *
+ * Redrawn after the owner's note on the look page (2026-11-09: "this tab looks
+ * a bit bad"): the state on top in one line you can read at a glance, and each
+ * choice as a tile that says when it would end, so nobody has to add an hour
+ * in their head.
+ */
 
+import { Bell, BellOff, Moon } from "lucide-react"
 import { useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
-import { Button } from "@/components/ui/button"
-import type { MuteOption } from "../auditService"
+import { cn } from "@/lib/utils"
+import { muteUntil, type MuteOption } from "../auditService"
 import { clockLabel } from "../quarterService"
+import type { AuditRun } from "../types"
 
-const CHOICES: { option: MuteOption; label: string }[] = [
+const CHOICES: { option: Exclude<MuteOption, "off">; label: string }[] = [
   { option: "30m", label: "30 min" },
-  { option: "1h", label: "1 h" },
-  { option: "2h", label: "2 h" },
+  { option: "1h", label: "1 hour" },
+  { option: "2h", label: "2 hours" },
   { option: "morning", label: "Until morning" },
 ]
 
+/** "Muted until 10:00" (or "… tomorrow"), or null when not muted. */
 export function mutedLine(mutedUntil: string | null, timezone: string, now: number): string | null {
   if (!mutedUntil || Date.parse(mutedUntil) <= now) return null
   const sameDay = Date.parse(mutedUntil) - now < 20 * 60 * 60_000
@@ -24,54 +34,90 @@ export function mutedLine(mutedUntil: string | null, timezone: string, now: numb
 export function MuteSheet({
   open,
   onClose,
-  mutedUntil,
+  run,
   timezone,
   onMute,
 }: {
   open: boolean
   onClose: () => void
-  mutedUntil: string | null
+  run: Pick<AuditRun, "mutedUntil" | "quietStart" | "quietEnd">
   timezone: string
   onMute: (option: MuteOption) => Promise<string | null>
 }) {
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<MuteOption | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const line = mutedLine(mutedUntil, timezone, Date.now())
+  const now = new Date()
+  const line = mutedLine(run.mutedUntil, timezone, now.getTime())
 
   const pick = async (option: MuteOption) => {
-    setBusy(true)
+    setBusy(option)
     setError(null)
     const failed = await onMute(option)
-    setBusy(false)
+    setBusy(null)
     if (failed) setError(failed)
     else onClose()
   }
 
   return (
     <BottomSheet open={open} onClose={onClose} title="Mute pings" testId="audit-mute-sheet">
-      {line && (
-        <p className="mb-2 text-sm" data-testid="audit-muted-line">
-          {line}
-        </p>
-      )}
-      <div className="grid grid-cols-2 gap-2">
-        {CHOICES.map((c) => (
-          <Button key={c.option} variant="outline" disabled={busy} onClick={() => void pick(c.option)}>
-            {c.label}
-          </Button>
-        ))}
+      <div
+        className={cn(
+          "flex items-center gap-3 rounded-2xl border px-4 py-3",
+          line ? "border-amber-500/50 bg-amber-500/10" : "border-emerald-500/40 bg-emerald-500/10",
+        )}
+        data-testid="audit-mute-state"
+      >
+        <span
+          className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", line ? "bg-amber-500 text-black" : "bg-emerald-500 text-white")}
+          aria-hidden
+        >
+          {line ? <BellOff className="size-5" /> : <Bell className="size-5" />}
+        </span>
+        <div className="min-w-0">
+          <p className="font-semibold" data-testid={line ? "audit-muted-line" : undefined}>
+            {line ?? "Pings are on"}
+          </p>
+          <p className="text-sm text-muted-foreground">{line ? "You can still answer. Only the pings wait." : "Every 15 minutes, outside your quiet hours."}</p>
+        </div>
+      </div>
+
+      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{line ? "Change it to" : "Mute for"}</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {CHOICES.map((c) => {
+          const until = muteUntil(c.option, run, now, timezone)
+          return (
+            <button
+              key={c.option}
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void pick(c.option)}
+              className="flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-xl border border-border bg-background/60 px-3.5 py-2 text-left transition-colors hover:border-primary/60 hover:bg-primary/10 disabled:opacity-50"
+            >
+              <span className="flex items-center gap-1.5 text-base font-semibold">
+                {c.option === "morning" && <Moon className="size-4 text-muted-foreground" aria-hidden />}
+                {busy === c.option ? "Muting…" : c.label}
+              </span>
+              <span className="text-xs tabular-nums text-muted-foreground">until {until ? clockLabel(until.getTime(), timezone) : "—"}</span>
+            </button>
+          )
+        })}
       </div>
       {line && (
-        <Button className="mt-2 w-full" variant="secondary" disabled={busy} onClick={() => void pick("off")} data-testid="audit-unmute">
-          Unmute
-        </Button>
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => void pick("off")}
+          className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-semibold text-primary-foreground disabled:opacity-50"
+          data-testid="audit-unmute"
+        >
+          <Bell className="size-4" aria-hidden /> Unmute now
+        </button>
       )}
       {error && (
         <p className="mt-2 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
-      <p className="mt-3 text-xs text-muted-foreground">You can still answer while muted. Only the pings stop.</p>
     </BottomSheet>
   )
 }

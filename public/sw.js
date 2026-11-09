@@ -90,6 +90,10 @@ const SHELL_PATHS = [
   // page in place of the sets (Plans/program-builder.md, Q21). Its sets queue
   // in localStorage and are put back on screen from there; this keeps the page.
   "/training/live",
+  // The time & energy audit: answers are kept in localStorage with no signal
+  // and sent when it returns (Plans/energy-audit.md, D-OFFLINE); this keeps the
+  // page itself, so a ping tapped in a basement opens it.
+  "/audit",
 ]
 
 /** Is this one of them? */
@@ -259,8 +263,8 @@ const TIMER_TAG = "timer-running"
 const TIMER_URL = "/time?view=timer"
 const STOP_SYNC_TAG = "timetrack-stop"
 
-/** A page on this site, or `fallback` (the settings page) when the payload names anything else. */
-function sameSiteUrl(raw, fallback = "/settings") {
+/** A page on this site, or `fallback` (the audit) when the payload names anything else. */
+function sameSiteUrl(raw, fallback = "/audit") {
   try {
     const url = new URL(raw || fallback, self.location.origin)
     if (url.origin === self.location.origin) return url.href
@@ -507,8 +511,48 @@ self.addEventListener("notificationclick", (event) => {
     event.waitUntil(focusOrOpen(sameSiteUrl(data.url, TIMER_URL)))
     return
   }
+  if (data.kind === "audit-ping" && (event.action === "same" || event.action === "mute") && data.slotAt) {
+    event.waitUntil(answerPing(event.action, data))
+    return
+  }
   event.waitUntil(focusOrOpen(sameSiteUrl(data.url)))
 })
+
+/* --- The audit ping's buttons (Plans/energy-audit.md, D-BUTTONS) ---------- */
+
+/**
+ * "Same as before" or "Mute 1 h", from the notification itself, with no page
+ * open. The server answers with the words to show; they never hold anything
+ * the person wrote. On any failure the ping comes back as "Not saved. Tap to
+ * answer.", and tapping it opens the answer sheet.
+ */
+async function answerPing(action, data) {
+  const title = "Time & energy audit"
+  let shown = { title, body: "Not saved. Tap to answer." }
+  let ok = false
+  try {
+    const res = await fetch("/api/audit/ping", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, slotAt: data.slotAt, sendId: data.sendId }),
+    })
+    const answer = await res.json().catch(() => ({}))
+    ok = res.ok
+    if (ok && typeof answer.body === "string") shown = { title: typeof answer.title === "string" ? answer.title : title, body: answer.body }
+  } catch {
+    ok = false
+  }
+  await self.registration.showNotification(shown.title, {
+    body: ok ? shown.body : "Not saved. Tap to answer.",
+    tag: "audit-ping",
+    renotify: false,
+    silent: true,
+    icon: "/icon-192.png",
+    timestamp: Date.now(),
+    data: { url: sameSiteUrl(data.url), kind: ok ? "audit-answered" : "audit-ping", slotAt: null, sendId: null },
+  })
+}
 
 /**
  * The browser replaced this device's address (Firefox does; Chrome rarely).

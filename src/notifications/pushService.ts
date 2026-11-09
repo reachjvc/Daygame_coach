@@ -57,8 +57,15 @@ export interface PushPayload {
   silent?: boolean
   /** Ring again when it replaces one with the same tag. Left out: the worker's default, which does. */
   renotify?: boolean
-  /** "timetrack-running": the worker's Stop button and tap go to the timer, not to the audit. */
-  kind?: "timetrack-running"
+  /**
+   * "timetrack-running": the worker's Stop button and tap go to the timer.
+   * "audit-ping": "Same as before" and "Mute 1 h" post to /api/audit/ping.
+   */
+  kind?: "timetrack-running" | "audit-ping" | "audit-end"
+  /** The audit quarter a ping asks about (its start, ISO). */
+  slotAt?: string
+  /** The ping's send id, carried back by its buttons. */
+  sendId?: string
   /** The time entry a timer notification is about, for its Stop button. */
   entryId?: string
   /** The timer's name, for the worker's own "Stop saved · Gym" when it has no signal. */

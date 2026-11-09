@@ -4,16 +4,19 @@
  * THE ANSWER SHEET: one card per stretch of quarters (D-RANGE).
  *
  * Each card: what you did (pre-filled from Time when it knows), Energy 1–7,
- * Growth 1–7, optionally "Avoiding something" and "Why I feel like this".
- * Activity and both scores are needed to save (D-REQUIRED). Saving shows
- * "✓ Saved" on the card and moves to the next one.
+ * Growth 1–7, and optionally "Why I feel like this". Activity and both scores
+ * are needed to save (D-REQUIRED). Saving folds the card into one green line,
+ * "✓ Saved · Gym · E 4 · G 7", and moves to the next one.
+ *
+ * NO "AVOIDING" BUTTON. The owner's note on the look page (2026-11-09): the
+ * "why" box is enough. The column stays (always false from here; an older
+ * answer keeps its value when changed), so nothing stored is lost.
  */
 
-import { Check } from "lucide-react"
+import { Check, Pencil } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { WHY_MAX } from "../auditService"
 import { stretchLabel } from "../quarterService"
 import type { ActivityCount } from "../suggestService"
@@ -43,6 +46,7 @@ function Card({
   onSave,
   onDelete,
   saved,
+  onEdit,
 }: {
   card: AnswerCardInput
   index: number
@@ -54,12 +58,13 @@ function Card({
   onSave: (answers: AuditAnswer[]) => void
   onDelete: ((id: string) => void) | null
   saved: boolean
+  onEdit: () => void
 }) {
   const e = card.existing
   const [activity, setActivity] = useState(card.text)
   const [energy, setEnergy] = useState<ScaleValue | null>(e?.energy ?? null)
   const [growth, setGrowth] = useState<ScaleValue | null>(e?.growth ?? null)
-  const [avoiding, setAvoiding] = useState(e?.avoiding ?? false)
+  const avoiding = e?.avoiding ?? false
   const [why, setWhy] = useState(e?.why ?? "")
   const [tried, setTried] = useState(false)
   const ready = activity.trim().length > 0 && energy !== null && growth !== null
@@ -88,9 +93,36 @@ function Card({
   }
 
   const label = stretchLabel(card.quarters, timezone)
+  if (saved) {
+    return (
+      <section
+        className="flex min-h-14 items-center gap-3 rounded-2xl border border-emerald-500/60 bg-emerald-500/10 px-3 py-2"
+        data-testid="audit-card"
+        data-card={index}
+      >
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white" aria-hidden>
+          <Check className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1" role="status" data-testid="audit-card-saved">
+          <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Saved · {label}</p>
+          <p className="truncate text-sm">
+            {activity.trim()} <span className="tabular-nums text-muted-foreground">· E {energy} · G {growth}</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50"
+          aria-label={`Change the answer for ${label}`}
+        >
+          <Pencil className="size-4" />
+        </button>
+      </section>
+    )
+  }
   return (
     <section
-      className={cn("rounded-2xl border bg-card px-2 py-3", saved ? "border-emerald-500/50" : "border-border")}
+      className="rounded-2xl border border-border bg-card px-2 py-3"
       data-testid="audit-card"
       data-card={index}
     >
@@ -100,29 +132,11 @@ function Card({
           {fromTime && <span className="font-normal text-muted-foreground"> · from Time</span>}
           {card.quarters.length > 1 && <span className="font-normal text-muted-foreground"> · {card.quarters.length} quarters</span>}
         </h3>
-        {saved && (
-          <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-emerald-500" role="status" data-testid="audit-card-saved">
-            <Check className="size-4" aria-hidden /> Saved
-          </span>
-        )}
       </div>
       <div className="mt-3 space-y-4 px-1">
         <ActivityField id={`audit-activity-${index}`} value={activity} onChange={setActivity} suggestions={suggestions} />
         <ScaleRow label="Energy" low="1 takes my energy" high="7 gives me energy" value={energy} onChange={setEnergy} testId="audit-energy" />
         <ScaleRow label="Growth" low="1 ruins my life" high="7 builds my life" value={growth} onChange={setGrowth} testId="audit-growth" />
-        <button
-          type="button"
-          aria-pressed={avoiding}
-          onClick={() => setAvoiding((v) => !v)}
-          className={cn(
-            "flex h-11 w-full items-center justify-between rounded-lg border px-3 text-left text-base",
-            avoiding ? "border-primary bg-primary/10" : "border-border bg-background/60",
-          )}
-          data-testid="audit-avoiding"
-        >
-          <span>Avoiding something</span>
-          <span className="text-sm text-muted-foreground">{avoiding ? "Yes" : "Optional"}</span>
-        </button>
         <div>
           <label htmlFor={`audit-why-${index}`} className="text-sm font-medium">
             Why I feel like this <span className="font-normal text-muted-foreground">(optional)</span>
@@ -132,6 +146,7 @@ function Card({
             value={why}
             maxLength={WHY_MAX}
             rows={2}
+            placeholder="Is it the activity itself, or how you were thinking about it?"
             onChange={(ev) => setWhy(ev.target.value)}
             className="mt-1.5 w-full min-w-0 rounded-lg border border-border bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             data-testid="audit-why"
@@ -149,7 +164,7 @@ function Card({
             </Button>
           )}
           <Button className="flex-1" onClick={save} data-testid="audit-save">
-            {saved ? "Save again" : "Save"}
+            Save
           </Button>
         </div>
       </div>
@@ -210,6 +225,13 @@ export function AnswerSheet({
               suggestions={suggestions}
               existingByQuarter={existingByQuarter}
               saved={saved.has(i)}
+              onEdit={() =>
+                setSaved((prev) => {
+                  const next = new Set(prev)
+                  next.delete(i)
+                  return next
+                })
+              }
               onDelete={
                 onDelete
                   ? (id) => {

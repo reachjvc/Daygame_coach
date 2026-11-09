@@ -344,3 +344,23 @@ export async function markEndSentAsServer(runId: string): Promise<void> {
     .eq("id", runId)
   if (error) throw new Error(`Failed to record the end notice: ${error.message}`)
 }
+
+/**
+ * Is `sendId` this person's ping for this quarter of this run? The ping route
+ * acts only on a send that the server itself made for that quarter, so a
+ * "Same as before" cannot be aimed at any other quarter. Read on the person's
+ * own connection: another person's send is simply not found.
+ */
+export async function pingSendMatches(userId: string, sendId: string, runId: string, slotAt: Date): Promise<boolean> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("notification_sends")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("id", sendId)
+    .eq("kind", "audit-ping")
+    .eq("entry_id", `audit:${runId}:${Math.floor(slotAt.getTime() / 1000)}`)
+    .maybeSingle()
+  if (error) throw new Error(`Failed to read the ping: ${error.message}`)
+  return data !== null
+}

@@ -101,6 +101,79 @@ describe("rule 4 — a tap opens the app, only ever on this site", () => {
   test("an address on another site is never opened", async () => {
     const w = await loadWorker()
     await w.dispatch("push", pushOf({ url: "https://evil.example/phish" }))
-    expect(w.shown[0].options.data).toMatchObject({ url: `${ORIGIN}/settings` })
+    expect(w.shown[0].options.data).toMatchObject({ url: `${ORIGIN}/audit` })
+  })
+})
+
+describe("the audit ping (Plans/energy-audit.md, D-BUTTONS)", () => {
+  const PING = {
+    kind: "audit-ping",
+    title: "Time & energy audit",
+    body: "What did you do from 10:00 to 10:15?",
+    url: "/audit?answer=2026-11-09T09:00:00.000Z&send=s1",
+    tag: "audit-ping",
+    slotAt: "2026-11-09T09:00:00.000Z",
+    sendId: "s1",
+    actions: [
+      { id: "same", title: "Same as before" },
+      { id: "mute", title: "Mute 1 h" },
+    ],
+  }
+
+  test("keeps kind, quarter and send, and shows both buttons", async () => {
+    const w = await loadWorker()
+    await w.dispatch("push", pushOf(PING))
+    expect(w.shown[0].title).toBe("Time & energy audit")
+    expect(w.shown[0].options).toMatchObject({
+      body: "What did you do from 10:00 to 10:15?",
+      tag: "audit-ping",
+      data: { kind: "audit-ping", slotAt: PING.slotAt, sendId: "s1", url: `${ORIGIN}${PING.url}` },
+      actions: [
+        { action: "same", title: "Same as before" },
+        { action: "mute", title: "Mute 1 h" },
+      ],
+    })
+  })
+
+  for (const action of ["same", "mute"] as const) {
+    test(`"${action}" posts to the server and shows its answer, silently`, async () => {
+      const w = await loadWorker()
+      await w.dispatch("push", pushOf(PING))
+      w.fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ title: "Time & energy audit", body: "Saved for 10:00–10:15 (same as before)" }), { status: 200 }))
+      await w.dispatch("notificationclick", { action, notification: { data: w.shown[0].options.data, close: vi.fn() } })
+      const [url, init] = w.fetchMock.mock.calls.at(-1) as unknown as [string, RequestInit]
+      expect(url).toBe("/api/audit/ping")
+      expect(init).toMatchObject({ method: "POST", credentials: "same-origin" })
+      expect(JSON.parse(init.body as string)).toEqual({ action, slotAt: PING.slotAt, sendId: "s1" })
+      expect(w.shown.at(-1)!.options).toMatchObject({ body: "Saved for 10:00–10:15 (same as before)", tag: "audit-ping", silent: true })
+      expect(w.opened).toEqual([])
+    })
+  }
+
+  test("when the post fails, it shows 'Not saved. Tap to answer.', and a tap then opens the sheet", async () => {
+    const w = await loadWorker()
+    await w.dispatch("push", pushOf(PING))
+    w.fetchMock.mockRejectedValueOnce(new TypeError("offline"))
+    await w.dispatch("notificationclick", { action: "same", notification: { data: w.shown[0].options.data, close: vi.fn() } })
+    const last = w.shown.at(-1)!
+    expect(last.options.body).toBe("Not saved. Tap to answer.")
+    await w.dispatch("notificationclick", { action: "", notification: { data: last.options.data, close: vi.fn() } })
+    expect(w.opened).toEqual([`${ORIGIN}${PING.url}`])
+  })
+
+  test("a refusal (409) also says 'Not saved. Tap to answer.'", async () => {
+    const w = await loadWorker()
+    await w.dispatch("push", pushOf(PING))
+    w.fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ title: "Time & energy audit", body: "Not saved. Tap to answer." }), { status: 409 }))
+    await w.dispatch("notificationclick", { action: "same", notification: { data: w.shown[0].options.data, close: vi.fn() } })
+    expect(w.shown.at(-1)!.options.body).toBe("Not saved. Tap to answer.")
+  })
+
+  test("a tap on the ping itself opens the answer sheet", async () => {
+    const w = await loadWorker()
+    await w.dispatch("push", pushOf(PING))
+    await w.dispatch("notificationclick", { action: "", notification: { data: w.shown[0].options.data, close: vi.fn() } })
+    expect((w.fetchMock.mock.calls as unknown as [string][]).filter(([u]) => String(u).includes("/api/audit"))).toEqual([])
+    expect(w.opened).toEqual([`${ORIGIN}${PING.url}`])
   })
 })
