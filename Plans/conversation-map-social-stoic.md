@@ -11,6 +11,14 @@ Written 2026-11-09. Follows the Assumption Moments page
 - **Your time:** about 30–45 minutes per round to review 5 sets on a page.
   The first round is at the end of Phase 1.
 
+## Progress
+
+- **2026-11-09: Phases 0 and 1 done.** Review page:
+  https://claude.ai/artifact/TDRWh1quCTtUKsNZHdC22o (marks in its database,
+  collection `notes`, one document per action). Waiting on Phase 2, your review.
+- Data, readings and the page source are in
+  `~/.cache/daygame-research/conversation-map/social-stoic/`, not in this repo.
+
 ## What we are doing, in plain words
 
 We map whole street conversations into **beats**. A beat is a stretch of
@@ -134,6 +142,29 @@ so that your reviews **teach** rather than **repeat**.
 Done when: all 5 timelines are complete, and a spot check of 3 random lines
 per set against the video agrees.
 
+*Done 2026-11-09.*
+- **The 5 sets:**
+  - goes badly: boyfriend refusal, `UKytjD6YvNk` 15:36–16:12. The video shows
+    only the end; no failed set in the untouched videos shows its opener.
+  - off the street: coffee shop, `UMZkMjD3luQ`.
+  - group: four girls in Prague, `vBhN49LSyz4`.
+  - pushback: the "arrogant" Polish woman, 31 minutes, `gISxAc0Zvtw`.
+  - long, to a date: Italian woman, street to an instant café date,
+    `xsgdv9smyHI`.
+- **Sources:** YouTube captions, plus a fresh Whisper large-v3 pass over every
+  set. Whisper agrees with the captions on 92–95% of words. One clip was 4.5 s
+  off and was re-aligned.
+- **Timelines:** 934 lines, 81 voice-over rows and 361 edit cuts in total. 0
+  lines are found in neither source. 331 lines (35%) have a guessed speaker.
+- **Voice check:** pyannote diarization runs offline on cached models. It
+  agrees with the speaker labels the rebuild was sure of only about 80% of the
+  time, so it is shown as a hint and never used to relabel. It is not usable on
+  the group set.
+- **Spot check:** 15 random lines, each re-transcribed from its own 8-second
+  clip. 14 matched. The miss was a timing slip; the line is in both sources.
+- **Voice-over fix:** the rebuild had summarised voice-over in 2 sets. Those
+  rows now carry the caption words verbatim.
+
 **Phase 1: read round 1 (me).** Two lenses, then merge, then the checker. Each
 set gets:
 - its beats;
@@ -148,6 +179,25 @@ Plus the "doesn't fit" section across the 5 sets. The output is a review page:
 
 Marks save to the page's database. Done when the page is live and its notes
 save.
+
+*Done 2026-11-09.*
+- **Readers:** 10 independent readers, 2 lenses × 5 sets. The coffee-shop set
+  was held out: read without your 10 notes.
+- **Merge:** 121 beats, 64 of them agreed by both readers and 57 marked unsure.
+  Most disagreements are about prepared vs spontaneous.
+- **Checker:** drops claims with no line behind them. Across the sets it
+  dropped 29 claims and softened 310. Most drops were Danish drafts on beats
+  where one reader saw no prepared line; most softenings mark a guess or a
+  doubtful speaker.
+- **Cross-set section:** "doesn't fit" (11 items), "what held up" (3) and "my
+  doubts" (8).
+- **Save flow:** tested with a fake database at phone and desktop width, 42
+  checks including a failed save and its retry. Also checked live with one
+  probe document, written, read and deleted.
+- **Lessons from the build itself:**
+  - rebuild agents may summarise voice-over unless told to quote it;
+  - Danish drafts need a native check;
+  - readers cite row numbers, which the page now turns into video times.
 
 **Phase 2: your review (owner, about 30–45 min).** Mark the 5 sets. Speed
 matters more than completeness: skip what you don't care about.
