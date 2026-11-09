@@ -221,6 +221,45 @@ export async function updateRun(userId: string, runId: string, patch: RunPatch):
   return toRun(data as RunRow)
 }
 
+/** A change to the review that `changeReview` applies to what is stored; an error is a refusal a person can read. */
+export type ReviewEdit = (stored: Review) => { review: Review } | { error: string }
+
+/** Two devices clash now and then; ten saves at one moment (tested) still all land within these. */
+const REVIEW_TRIES = 20
+const pause = (ms: number) => new Promise((done) => setTimeout(done, ms))
+
+/**
+ * Change the review from what is stored NOW, never from a page's old copy: two
+ * devices on one review each keep what they saved (alpha fast-review-01/02).
+ * The write only lands while `updated_at` is still the value read, so a save
+ * from another device in between makes this read again and re-apply, instead
+ * of overwriting it.
+ */
+export async function changeReview(userId: string, runId: string, edit: ReviewEdit): Promise<AuditRun | { error: string }> {
+  const supabase = await createServerSupabaseClient()
+  for (let attempt = 0; attempt < REVIEW_TRIES; attempt++) {
+    const read = await supabase.from("audit_runs").select("review, updated_at").eq("user_id", userId).eq("id", runId).maybeSingle()
+    if (read.error) throw new Error(`Failed to read the review: ${read.error.message}`)
+    if (!read.data) throw new AuditRunNotFound()
+    const row = read.data as { review: unknown; updated_at: string }
+    const next = edit(toReview(row.review))
+    if ("error" in next) return next
+    const { data, error } = await supabase
+      .from("audit_runs")
+      .update({ review: next.review, updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .eq("id", runId)
+      .eq("updated_at", row.updated_at)
+      .select(RUN_COLUMNS)
+      .maybeSingle()
+    if (error) throw refusal(error, "change the review")
+    if (data) return toRun(data as RunRow)
+    // Another save landed in between: wait a moment, spread out, then read it and apply this change on top.
+    await pause(10 + Math.random() * 40 * (attempt + 1))
+  }
+  throw new Error("Failed to change the review: it kept changing underneath")
+}
+
 const UPSERT_AT_MOST = 200
 
 /** Save answers. One quarter holds one answer: the same `(run, quarter)` again replaces it. */

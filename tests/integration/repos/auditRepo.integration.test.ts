@@ -12,7 +12,9 @@ import { randomUUID } from "node:crypto"
 import { actAs, asOwner, asUser, newUser, type TestUser } from "@/tests/db/harness"
 import {
   AuditRefused,
+  AuditRunNotFound,
   auditEndsDueAsServer,
+  changeReview,
   auditPingsDueAsServer,
   copyPreviousSlot,
   deleteSlot,
@@ -29,6 +31,7 @@ import { openSend, registerDevice } from "@/src/db/notificationsRepo"
 import { updateTimezone } from "@/src/db/settingsRepo"
 import { readTimeEntriesBetween } from "@/src/db/timetrackRangeRepo"
 import type { AuditAnswer } from "@/src/audit/types"
+import { applyReviewChange } from "@/src/audit/auditService"
 
 vi.mock("@/src/db/supabase", async (importOriginal) =>
   (await import("@/tests/db/harness")).stackSupabaseModule(await importOriginal())
@@ -154,6 +157,43 @@ describe("runs", () => {
     expect([patched.quietStart, patched.quietEnd]).toEqual([1380, 420])
     expect(patched.review).toEqual({ choices: { gym: "more" }, notes: { gym: "keep it up" }, week: [{ id: "b1", day: 0, start: 540, end: 660, what: "Write", kind: "deep" }] })
     await expect(updateRun(user.id, run.id, { quietStart: 1321 })).rejects.toBeInstanceOf(AuditRefused)
+  })
+})
+
+describe("the review, changed from two devices", () => {
+  it("applies each change to what is stored, so saves sent at once all stay", async () => {
+    const user = await newUser("audit-review-change")
+    actAs(user)
+    const run = await startAuditRun(user.id, { id: randomUUID(), startedAt: new Date() })
+    const changes = [
+      { activity: "daygame", choice: "more", note: "Mornings" },
+      { activity: "scrolling", choice: "cut", note: "" },
+      { block: { id: "pc", day: 0, start: 540, end: 720, what: "Write the book", kind: "deep" } },
+      { block: { id: "phone", day: 1, start: 1020, end: 1080, what: "Gym", kind: "workout" } },
+    ]
+    await Promise.all(changes.map((c) => changeReview(user.id, run.id, (stored) => applyReviewChange(stored, c))))
+    const after = (await readRuns(user.id)).find((r) => r.id === run.id)!
+    expect(after.review).toEqual({
+      choices: { daygame: "more", scrolling: "cut" },
+      notes: { daygame: "Mornings" },
+      week: [
+        { id: "pc", day: 0, start: 540, end: 720, what: "Write the book", kind: "deep" },
+        { id: "phone", day: 1, start: 1020, end: 1080, what: "Gym", kind: "workout" },
+      ],
+    })
+    const removed = await changeReview(user.id, run.id, (stored) => applyReviewChange(stored, { removeBlock: "pc" }))
+    expect("review" in removed && removed.review.week.map((b) => b.id)).toEqual(["phone"])
+  })
+
+  it("returns a refusal without writing, and refuses someone else's audit", async () => {
+    const user = await newUser("audit-review-refuse")
+    const other = await newUser("audit-review-other")
+    actAs(user)
+    const run = await startAuditRun(user.id, { id: randomUUID(), startedAt: new Date() })
+    expect(await changeReview(user.id, run.id, () => ({ error: "No" }))).toEqual({ error: "No" })
+    expect((await readRuns(user.id)).find((r) => r.id === run.id)!.review).toEqual({ choices: {}, notes: {}, week: [] })
+    actAs(other)
+    await expect(changeReview(other.id, run.id, (stored) => ({ review: stored }))).rejects.toBeInstanceOf(AuditRunNotFound)
   })
 })
 

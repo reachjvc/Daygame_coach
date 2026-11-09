@@ -14,7 +14,7 @@ import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
 import { hhmm, nextDateKey } from "@/src/notifications/quietHours"
 import { normalizePhrase } from "@/src/shared/textMatch"
 import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs, withAnswered } from "./quarterService"
-import { ANSWER_SOURCES, REVIEW_CHOICES, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue } from "./types"
+import { ANSWER_SOURCES, REVIEW_CHOICES, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue, type WeekBlock } from "./types"
 
 export const ACTIVITY_MAX = 200
 export const WHY_MAX = 2000
@@ -142,6 +142,55 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
     if (clean.trim()) notes[storableText(key) || key] = clean
   }
   return { review: { choices, notes, week: checkedWeek.week } }
+}
+
+/**
+ * One change to a review, as a device sends it:
+ *   { activity, choice, note }  one activity's choice and note (null / blank clears)
+ *   { block }                   add a block, or change the one with its id
+ *   { removeBlock }             remove one block by id (already gone: no change)
+ */
+export type ReviewChange =
+  | { activity: string; choice: ReviewChoice | null; note: string }
+  | { block: WeekBlock }
+  | { removeBlock: string }
+
+/**
+ * Apply one change to the review AS STORED, so two devices on one review never
+ * erase each other's saves (alpha findings fast-review-01/02: each device sent
+ * its own stale copy of the whole review). The result is checked as a whole
+ * (`checkReview`), so a block that overlaps one saved from the other device is
+ * refused with both names.
+ */
+export function applyReviewChange(stored: Review, input: unknown): { review: Review } | { error: string } {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return { error: "Send one change" }
+  const c = input as Record<string, unknown>
+  const keys = Object.keys(c).sort().join(",")
+  const next: Review = { choices: { ...stored.choices }, notes: { ...stored.notes }, week: [...stored.week] }
+  if (keys === "activity,choice,note") {
+    const { activity, choice, note } = c
+    if (typeof activity !== "string" || activity.length < 1 || activity.length > ACTIVITY_MAX) return { error: "Bad activity key" }
+    if (choice !== null && (typeof choice !== "string" || !(REVIEW_CHOICES as readonly string[]).includes(choice))) return { error: "Unknown choice" }
+    if (typeof note !== "string" || note.length > REVIEW_NOTE_MAX) return { error: `A note can be at most ${REVIEW_NOTE_MAX} characters` }
+    const key = storableText(activity) || activity
+    if (choice) next.choices[key] = choice as ReviewChoice
+    else delete next.choices[key]
+    if (storableText(note).trim()) next.notes[key] = note
+    else delete next.notes[key]
+  } else if (keys === "block") {
+    const one = checkWeek([c.block])
+    if ("error" in one) return one
+    const block = one.week[0]
+    const at = next.week.findIndex((b) => b.id === block.id)
+    if (at >= 0) next.week[at] = block
+    else next.week.push(block)
+  } else if (keys === "removeBlock") {
+    if (typeof c.removeBlock !== "string") return { error: "Bad block id" }
+    next.week = next.week.filter((b) => b.id !== c.removeBlock)
+  } else {
+    return { error: "Send one change" }
+  }
+  return checkReview(next)
 }
 
 export type MuteOption = "30m" | "1h" | "2h" | "morning" | "off"

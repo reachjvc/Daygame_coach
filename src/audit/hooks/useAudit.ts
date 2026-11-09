@@ -29,8 +29,8 @@ import {
   writeAuditQueue,
   type AuditQueue,
 } from "../auditQueue"
-import type { MuteOption } from "../auditService"
-import type { AuditAnswer, AuditSlot, Review } from "../types"
+import type { MuteOption, ReviewChange } from "../auditService"
+import type { AuditAnswer, AuditSlot } from "../types"
 
 /** An answer as drawn: from the server, or still only on this phone. */
 export type DrawnSlot = AuditSlot & { pending: boolean }
@@ -239,7 +239,7 @@ export function useAudit(account: string) {
   // Stable, so a screen can depend on them without re-reading on every render
   // (the review re-read itself on every parent render: code review, 2026-11-09).
   const readRun = useCallback((id: string) => api.view(id), [api])
-  const saveReview = useCallback((id: string, review: Partial<Review>) => decide(() => api.review(id, review)), [api, decide])
+  const changeReview = useCallback((id: string, change: ReviewChange) => decide(() => api.changeReview(id, change)), [api, decide])
   return {
     view,
     loadError,
@@ -253,7 +253,7 @@ export function useAudit(account: string) {
     end: () => (runId ? decide(() => api.end(runId)) : Promise.resolve("No audit is running")),
     mute: (option: MuteOption) => (runId ? decide(() => api.mute(runId, option)) : Promise.resolve("No audit is running")),
     setQuiet: (start: number, end: number) => (runId ? decide(() => api.quiet(runId, start, end)) : Promise.resolve("No audit is running")),
-    saveReview,
+    changeReview,
     readRun,
   }
 }

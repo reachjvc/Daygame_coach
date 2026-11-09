@@ -4,6 +4,7 @@
   "src/api_ai/apiAiService.ts:testLogging": "unasserted",
   "src/api_ai/apiAiService.ts:testUserLogging": "unasserted",
   "src/audit/pingService.ts:runAuditPingClock": "asserted",
+  "src/db/auditRepo.ts:changeReview": "asserted",
   "src/db/auditRepo.ts:copyPreviousSlot": "asserted",
   "src/db/auditRepo.ts:deleteSlot": "asserted",
   "src/db/auditRepo.ts:markEndSentAsServer": "asserted",

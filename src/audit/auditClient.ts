@@ -10,8 +10,8 @@
 
 import { PAGE_ACCOUNT_HEADER } from "@/src/shared/pageAccount"
 import type { ActivityCount } from "./suggestService"
-import type { AuditAnswer, AuditRun, AuditSlot, Review, TimeEntryForAudit } from "./types"
-import type { MuteOption } from "./auditService"
+import type { AuditAnswer, AuditRun, AuditSlot, TimeEntryForAudit } from "./types"
+import type { MuteOption, ReviewChange } from "./auditService"
 
 export class AuditCallError extends Error {
   constructor(
@@ -64,8 +64,8 @@ export function auditApi(account: string) {
     mute: (runId: string, mute: MuteOption) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { mute })),
     quiet: (runId: string, quietStart: number, quietEnd: number) =>
       call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { quietStart, quietEnd })),
-    /** Only the parts sent change; the rest stays as stored. */
-    review: (runId: string, review: Partial<Review>) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { review })),
+    /** One choice, note or block, applied to the review as stored: another device's saves stay. */
+    changeReview: (runId: string, reviewChange: ReviewChange) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { reviewChange })),
     save: (slots: AuditAnswer[]) =>
       call<{ stored: number; refused?: { id: unknown; error: string; retry: boolean }[] }>(
         "/api/audit/slots",

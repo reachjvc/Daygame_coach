@@ -19,7 +19,7 @@ import { BottomSheet } from "@/components/BottomSheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AuditCallError, type AuditView } from "../auditClient"
-import { BOX_NAMES, buildReview, REVIEW_NOTE_MAX, type Box, type BuiltReview, type ReviewGroup } from "../auditService"
+import { BOX_NAMES, buildReview, REVIEW_NOTE_MAX, type Box, type BuiltReview, type ReviewChange, type ReviewGroup } from "../auditService"
 import { clockLabel } from "../quarterService"
 import { REVIEW_CHOICES, type AuditRun, type Review, type ReviewChoice, type WeekBlock } from "../types"
 import type { AuditState } from "../hooks/useAudit"
@@ -305,7 +305,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   const [error, setError] = useState<string | null>(null)
   const [openKey, setOpenKey] = useState<string | null>(null)
 
-  const { readRun, saveReview } = s
+  const { readRun, changeReview } = s
   const load = useCallback(async () => {
     setError(null)
     try {
@@ -317,29 +317,37 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   useEffect(() => {
     void load()
   }, [load])
+  // Back on this tab (another device may have saved meanwhile): show what is stored now.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void load()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener("focus", onVisible)
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener("focus", onVisible)
+    }
+  }, [load])
 
   const run: AuditRun | null = view?.runs.find((r) => r.id === runId) ?? null
   const built = useMemo(() => (view && run ? buildReview(view.slots, run, view.timezone) : null), [view, run])
 
-  const save = async (key: string, choice: ReviewChoice | null, note: string): Promise<string | null> => {
+  /**
+   * Sends one change; the server applies it to the review as stored, so what
+   * another device saved stays (alpha fast-review-01/02). Reads the review
+   * again either way, so a refusal (a block overlapping one saved elsewhere)
+   * shows next to what caused it.
+   */
+  const send = async (change: ReviewChange): Promise<string | null> => {
     if (!run) return "This audit is not loaded"
-    const choices = { ...run.review.choices }
-    const notes = { ...run.review.notes }
-    if (choice) choices[key] = choice
-    else delete choices[key]
-    if (note.trim()) notes[key] = note
-    else delete notes[key]
-    return patchReview({ choices, notes })
-  }
-
-  /** Sends only the parts that changed; the server keeps the rest as stored, so a choice never touches the week or the other way round. */
-  const patchReview = async (part: Partial<Review>): Promise<string | null> => {
-    if (!run) return "This audit is not loaded"
-    const failed = await saveReview(run.id, part)
-    if (!failed) await load()
+    const failed = await changeReview(run.id, change)
+    await load()
     return failed
   }
-  const saveWeek = (week: WeekBlock[]) => patchReview({ week })
+  const save = (key: string, choice: ReviewChoice | null, note: string) => send({ activity: key, choice, note })
+  const saveBlock = (block: WeekBlock) => send({ block })
+  const removeBlock = (id: string) => send({ removeBlock: id })
 
   const back = (
     <button type="button" onClick={onBack} className="-ml-2 flex h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted-foreground hover:text-foreground" data-testid="review-back">
@@ -415,7 +423,8 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
             week={run.review.week}
             doMore={built.groups.filter((g) => run.review.choices[g.key] === "more")}
             bestHours={built.bestHours}
-            onSaveWeek={saveWeek}
+            onSaveBlock={saveBlock}
+            onRemoveBlock={removeBlock}
           />
         </>
       )}

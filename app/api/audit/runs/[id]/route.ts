@@ -3,14 +3,17 @@
  *   { end: true }                         End now (an open audit only)
  *   { mute: "30m"|"1h"|"2h"|"morning"|"off" }
  *   { quietStart, quietEnd }              minutes after midnight, on the quarter
- *   { review: { choices?, notes?, week? } } the review (checkReview); a part left out keeps what is stored
+ *   { reviewChange: ReviewChange }        one choice+note, one block, or one block removed,
+ *                                         applied to the review as stored (applyReviewChange)
+ *   { review: { choices?, notes?, week? } } the review (checkReview); a part left out keeps what is stored.
+ *                                         Pages from before reviewChange only: it replaces whole parts.
  */
 
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { AuditRefused, AuditRunNotFound, readRuns, updateRun, type RunPatch } from "@/src/db/auditRepo"
+import { AuditRefused, AuditRunNotFound, changeReview, readRuns, updateRun, type RunPatch } from "@/src/db/auditRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import { checkQuiet, checkReview, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
+import { applyReviewChange, checkQuiet, checkReview, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
 import { isUuid } from "@/src/shared/ids"
 import { refuseCrossSite } from "@/src/audit/requestGuard"
 
@@ -47,6 +50,11 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       if (!runIsOpen(run, now)) return NextResponse.json({ error: "This audit is already over" }, { status: 409 })
       patch.quietStart = quiet.quietStart
       patch.quietEnd = quiet.quietEnd
+    } else if ("reviewChange" in body) {
+      // Applied to what is stored now, so a save from another device is never erased (alpha fast-review-01/02).
+      const changed = await changeReview(auth.userId, id, (stored) => applyReviewChange(stored, body.reviewChange))
+      if ("error" in changed) return NextResponse.json({ error: changed.error }, { status: 400 })
+      return NextResponse.json({ run: changed })
     } else if ("review" in body) {
       const review = checkReview(body.review)
       if ("error" in review) return NextResponse.json({ error: review.error }, { status: 400 })
