@@ -305,7 +305,14 @@ conclusions. `/security-review` cannot run in this checkout.
 
 ### Phase 1. Land on Today when the plan is in use; Commit points onward; Review fixes (d1, d7, d8, d10, F5)
 
-**Status:** not started. Depends on: Phase 0.
+**Status:** Built and pushed 2026-11-09, commit 01971ab6; waiting for Vercel to deploy it (its first
+push got no deploy). Differences: `SeasonBand.tsx` line ~239 had already been reached by content, not
+line; the full desktop e2e run with 4+ workers overloaded the dev server (sign-in timeouts), so it was
+rerun with 2 workers and the 4 leftovers alone: all pass. `npm run lint:ratchet` fails only on
+`docs/research/addiction-one-pagers/board/check_render_v3.mjs` (another session's file); `npx eslint`
+on this phase's files: 0 errors. /code-review: 10 findings, none fixed: each asks to change something
+this plan sets on purpose (inUse read on every visit, keep `lastReviewOf`, leave the build link,
+never-throw).
 
 **1.1 The landing rule, as a pure function.** New file `src/goals/planLanding.ts`:
 
