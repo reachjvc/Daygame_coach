@@ -33,11 +33,11 @@ export function dayBit(isoWeekday: number): number {
   return 1 << (isoWeekday - 1)
 }
 
-function hhmm(minutes: number): string {
+export function hhmm(minutes: number): string {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
 }
 
-function nextDateKey(key: string): string {
+export function nextDateKey(key: string): string {
   const [y, m, d] = key.split("-").map(Number)
   return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
 }

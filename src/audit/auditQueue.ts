@@ -16,11 +16,17 @@ import type { AuditAnswer } from "./types"
 
 export const AUDIT_QUEUE_KEY = "audit-queue-v1"
 
+export interface QueuedDelete {
+  id: string
+  /** When it was deleted, by this phone's clock: a newer answer on another device is kept. */
+  at: string
+}
+
 export interface AuditQueue {
   owner: string | null
   answers: AuditAnswer[]
-  /** Answer ids whose delete the server has not confirmed. */
-  deletes: string[]
+  /** Deletes the server has not confirmed. */
+  deletes: QueuedDelete[]
 }
 
 export const emptyAuditQueue = (owner: string | null): AuditQueue => ({ owner, answers: [], deletes: [] })
@@ -35,7 +41,15 @@ export function readAuditQueue(store: KeyValueStore | null, owner: string): Audi
   return {
     owner,
     answers: Array.isArray(parsed.answers) ? parsed.answers : [],
-    deletes: Array.isArray(parsed.deletes) ? parsed.deletes.filter((x): x is string => typeof x === "string") : [],
+    deletes: Array.isArray(parsed.deletes)
+      ? (parsed.deletes as unknown[]).flatMap((x): QueuedDelete[] =>
+          typeof x === "string"
+            ? [{ id: x, at: new Date().toISOString() }]
+            : x && typeof x === "object" && typeof (x as QueuedDelete).id === "string" && typeof (x as QueuedDelete).at === "string"
+              ? [x as QueuedDelete]
+              : [],
+        )
+      : [],
   }
 }
 
@@ -51,27 +65,32 @@ export function enqueueAnswers(q: AuditQueue, answers: readonly AuditAnswer[]): 
   return {
     ...q,
     answers: [...q.answers.filter((a) => !replaced.has(quarterKey(a))), ...answers],
-    deletes: q.deletes.filter((id) => !ids.has(id)),
+    deletes: q.deletes.filter((d) => !ids.has(d.id)),
   }
 }
 
 /** Delete an answer: out of the queue, and a delete queued in case it already reached the server. */
-export function enqueueDelete(q: AuditQueue, id: string): AuditQueue {
+export function enqueueDelete(q: AuditQueue, id: string, at: string = new Date().toISOString()): AuditQueue {
   return {
     ...q,
     answers: q.answers.filter((a) => a.id !== id),
-    deletes: q.deletes.includes(id) ? q.deletes : [...q.deletes, id],
+    deletes: q.deletes.some((d) => d.id === id) ? q.deletes : [...q.deletes, { id, at }],
   }
 }
 
-export function answersSent(q: AuditQueue, ids: readonly string[]): AuditQueue {
-  const done = new Set(ids)
-  return { ...q, answers: q.answers.filter((a) => !done.has(a.id)) }
+/**
+ * These answers reached the server. Only the exact versions sent leave the
+ * queue: an edit made while the first save was on its way keeps the same id,
+ * and must still be sent (offline audit, 2026-11-09).
+ */
+export function answersSent(q: AuditQueue, sent: readonly AuditAnswer[]): AuditQueue {
+  const done = new Set(sent.map((a) => JSON.stringify(a)))
+  return { ...q, answers: q.answers.filter((a) => !done.has(JSON.stringify(a))) }
 }
 
 export function deletesSent(q: AuditQueue, ids: readonly string[]): AuditQueue {
   const done = new Set(ids)
-  return { ...q, deletes: q.deletes.filter((id) => !done.has(id)) }
+  return { ...q, deletes: q.deletes.filter((d) => !done.has(d.id)) }
 }
 
 /** Signing out: no answer text stays on a shared phone. */

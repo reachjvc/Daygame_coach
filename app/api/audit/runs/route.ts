@@ -7,10 +7,13 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { AuditRefused, startAuditRun } from "@/src/db/auditRepo"
 import { isUuid } from "@/src/shared/ids"
+import { refuseCrossSite } from "@/src/audit/requestGuard"
 
 export async function POST(req: Request) {
   const auth = await requireAuth(req)
   if (!auth.success) return auth.response
+  const refused = refuseCrossSite(req)
+  if (refused) return refused
   const body = (await req.json().catch(() => null)) as { id?: unknown } | null
   if (!isUuid(body?.id)) return NextResponse.json({ error: "Send an id" }, { status: 400 })
   try {

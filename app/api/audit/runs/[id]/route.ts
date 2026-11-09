@@ -12,12 +12,15 @@ import { AuditRefused, AuditRunNotFound, readRuns, updateRun, type RunPatch } fr
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import { checkQuiet, checkReview, muteUntil, MUTE_OPTIONS, runIsOpen, type MuteOption } from "@/src/audit/auditService"
 import { isUuid } from "@/src/shared/ids"
+import { refuseCrossSite } from "@/src/audit/requestGuard"
 
 type RouteParams = { params: Promise<{ id: string }> }
 
 export async function PATCH(req: Request, { params }: RouteParams) {
   const auth = await requireAuth(req)
   if (!auth.success) return auth.response
+  const refused = refuseCrossSite(req)
+  if (refused) return refused
   const { id } = await params
   if (!isUuid(id)) return NextResponse.json({ error: "No such audit" }, { status: 404 })
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null
@@ -40,6 +43,8 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     } else if ("quietStart" in body || "quietEnd" in body) {
       const quiet = checkQuiet(body.quietStart, body.quietEnd)
       if ("error" in quiet) return NextResponse.json({ error: quiet.error }, { status: 400 })
+      // A finished audit's quiet hours are part of its record (clock audit, 2026-11-09).
+      if (!runIsOpen(run, now)) return NextResponse.json({ error: "This audit is already over" }, { status: 409 })
       patch.quietStart = quiet.quietStart
       patch.quietEnd = quiet.quietEnd
     } else if ("review" in body) {

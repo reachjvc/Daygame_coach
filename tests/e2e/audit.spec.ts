@@ -319,6 +319,110 @@ test.describe("time & energy audit @phone", () => {
     await expect(page.getByTestId("audit-settings-sheet")).toContainText("Devices that get pings")
   })
 
+  // ---- From the adversarial audit (Plans/energy-audit.md, Phase 7); each was red before its fix. ----
+
+  test("saved rows stay on screen while a slow read is on its way", async ({ page, account }) => {
+    await seedRun(account.id)
+    await openAudit(page)
+    // every read from now on takes 3 seconds, like a weak signal
+    await page.route(/\/api\/audit(\?.*)?$/, async (route) => {
+      await new Promise((r) => setTimeout(r, 3000))
+      await route.continue()
+    })
+    const gaps = page.getByTestId("audit-row-gap")
+    await gaps.nth(0).click()
+    await gaps.nth(2).click()
+    await page.getByTestId("audit-answer-selection").click()
+    const confirmed = page.waitForResponse((r) => r.url().endsWith("/api/audit/slots") && r.request().method() === "PUT" && r.ok())
+    await answerCard(page, page.getByTestId("audit-answer-sheet").getByTestId("audit-card"), "Slow signal", 4, 4)
+    await page.keyboard.press("Escape")
+    // The server has confirmed, the answers have left the queue, and the read
+    // that includes them is still 3 seconds away: they must still be drawn.
+    await confirmed
+    const reRead = page.waitForResponse((r) => /\/api\/audit(\?.*)?$/.test(r.url()))
+    const rows = page.getByTestId("audit-row-answered").filter({ hasText: "Slow signal" })
+    expect(await rows.count()).toBe(3)
+    await expect(page.getByTestId("audit-waiting")).toBeHidden()
+    expect(await rows.count()).toBe(3)
+    await reRead
+    await expect(rows).toHaveCount(3)
+  })
+
+  test("an edit made while the first save is still on its way is the one saved", async ({ page, account }) => {
+    const run = await seedRun(account.id)
+    await openAudit(page)
+    let first = true
+    await page.route("**/api/audit/slots", async (route) => {
+      if (first) {
+        first = false
+        await new Promise((r) => setTimeout(r, 4000))
+      }
+      await route.continue()
+    })
+    await page.getByTestId("audit-row-gap").first().click()
+    await page.getByTestId("audit-answer-selection").click()
+    await answerCard(page, page.getByTestId("audit-answer-sheet").getByTestId("audit-card"), "First version", 3, 3)
+    await page.getByRole("button", { name: /^Change the answer for/ }).click()
+    await answerCard(page, page.getByTestId("audit-answer-sheet").getByTestId("audit-card"), "Edited version", 5, 5)
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).map((s) => s.activity), { timeout: 20_000 }).toEqual(["Edited version"])
+  })
+
+  test("two tabs offline: both tabs' answers are saved", async ({ page, context, account }) => {
+    const run = await seedRun(account.id)
+    await openAudit(page)
+    const tab2 = await context.newPage()
+    await openAudit(tab2)
+    await context.setOffline(true)
+    for (const [tab, name, n] of [[page, "Tab one", 0], [tab2, "Tab two", 1]] as const) {
+      await tab.getByTestId("audit-row-gap").nth(n).click()
+      await tab.getByTestId("audit-answer-selection").click()
+      await answerCard(tab, tab.getByTestId("audit-answer-sheet").getByTestId("audit-card"), name, 4, 4)
+      await tab.keyboard.press("Escape")
+    }
+    await page.close()
+    await context.setOffline(false)
+    await tab2.evaluate(() => window.dispatchEvent(new Event("online")))
+    await expect.poll(async () => (await slotsOf(account.id, run.id)).map((s) => s.activity).sort(), { timeout: 20_000 }).toEqual(["Tab one", "Tab two"])
+  })
+
+  test("a ping tapped hours later still offers the quarter it asked about", async ({ page, account }) => {
+    await seedRun(account.id, 8)
+    const asked = new Date(quarterStart(Date.now()) - 6 * 60 * 60_000)
+    await page.goto(`${ROUTES.audit}?answer=${encodeURIComponent(asked.toISOString())}&send=${randomUUID()}`)
+    const cards = page.getByTestId("audit-answer-sheet").getByTestId("audit-card")
+    await expect(cards.first()).toBeVisible({ timeout: 60_000 })
+    const label = await page.evaluate((ms) => {
+      const f = (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Copenhagen" })
+      return `${f(new Date(ms))}–${f(new Date(ms + 15 * 60_000))}`
+    }, asked.getTime())
+    await expect(cards.first()).toContainText(label)
+  })
+
+  test("changing quiet hours keeps answers already given visible, and Settings says Saved", async ({ page, account }) => {
+    const run = await seedRun(account.id)
+    const first = run.startedAt
+    const { error } = await stackAdmin()
+      .from("audit_slots")
+      .insert({ id: randomUUID(), user_id: account.id, run_id: run.id, slot_at: new Date(first).toISOString(), activity: "Early answer", energy: 4, growth: 4, source: "app" })
+    expect(error).toBeNull()
+    await openAudit(page)
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Early answer" })).toHaveCount(1)
+    // make the answered quarter's time quiet: quiet from its start until an hour later, every day
+    const minute = await page.evaluate((ms) => {
+      const d = new Date(ms)
+      const [h, m] = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Copenhagen" }).split(":").map(Number)
+      return h * 60 + m
+    }, first)
+    await page.getByTestId("audit-settings-open").click()
+    await page.locator("#audit-quiet-start").selectOption(String(minute))
+    await page.locator("#audit-quiet-end").selectOption(String((minute + 60) % 1440))
+    await page.getByTestId("audit-quiet-save").click()
+    await expect(page.getByTestId("audit-settings-sheet").getByRole("status")).toHaveText("✓ Saved")
+    await page.keyboard.press("Escape")
+    await page.reload()
+    await expect(page.getByTestId("audit-row-answered").filter({ hasText: "Early answer" })).toHaveCount(1)
+  })
+
   for (const width of [360, 390]) {
     test(`the answer sheet has no sideways scroll at ${width} px`, async ({ page, account }) => {
       await page.setViewportSize({ width, height: 800 })

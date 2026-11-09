@@ -16,6 +16,7 @@
  */
 
 import type { AnswerSource, AuditAnswer, AuditRun, AuditSlot, Review, ScaleValue } from "@/src/audit/types"
+import { normalizePhrase } from "@/src/shared/textMatch"
 import { readAllRows } from "./paging"
 import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase"
 
@@ -103,7 +104,8 @@ function toSlot(r: SlotRow): AuditSlot {
 
 /** A database rule refused it (check, foreign key, unique): a refusal, not an outage. */
 function refusal(error: { code?: string; message: string }, call: string): Error {
-  if (error.code && ["23514", "23503", "23505", "22P02", "22007", "22008"].includes(error.code)) return new AuditRefused()
+  // 22P05: text the database cannot store (the NUL character), refused for good, not an outage.
+  if (error.code && ["23514", "23503", "23505", "22P02", "22P05", "22007", "22008"].includes(error.code)) return new AuditRefused()
   return new Error(`Failed to ${call}: ${error.message}`)
 }
 
@@ -234,16 +236,48 @@ export async function upsertSlots(userId: string, answers: AuditAnswer[]): Promi
     why: a.why,
     source: a.source,
     time_entry_id: a.timeEntryId,
-    updated_at: new Date().toISOString(),
+    // The time it was answered (already on the server's clock), so a later
+    // answer from another device can be told from an older one.
+    updated_at: a.answeredAt ?? new Date().toISOString(),
   }))
   const { error } = await supabase.from("audit_slots").upsert(rows, { onConflict: "run_id,slot_at" })
   if (error) throw refusal(error, "save the answers")
 }
 
-export async function deleteSlot(userId: string, id: string): Promise<void> {
+/**
+ * Delete one answer. With `notAfter`, only if it was not answered again after
+ * that time (on another device): a delete made offline never removes a newer
+ * answer. Returns whether a row went.
+ */
+export async function deleteSlot(userId: string, id: string, notAfter?: Date): Promise<boolean> {
   const supabase = await createServerSupabaseClient()
-  const { error } = await supabase.from("audit_slots").delete().eq("user_id", userId).eq("id", id)
+  let query = supabase.from("audit_slots").delete().eq("user_id", userId).eq("id", id)
+  if (notAfter) query = query.lte("updated_at", notAfter.toISOString())
+  const { data, error } = await query.select("id")
   if (error) throw new Error(`Failed to delete an answer: ${error.message}`)
+  return (data ?? []).length > 0
+}
+
+/** When each of these quarters was last answered, by run and quarter (`<run>:<iso>`). */
+export async function answeredTimes(userId: string, quarters: { runId: string; slotAt: string }[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>()
+  if (quarters.length === 0) return out
+  const supabase = await createServerSupabaseClient()
+  const byRun = new Map<string, string[]>()
+  for (const q of quarters) byRun.set(q.runId, [...(byRun.get(q.runId) ?? []), q.slotAt])
+  for (const [runId, slots] of byRun) {
+    const { data, error } = await supabase
+      .from("audit_slots")
+      .select("slot_at, updated_at")
+      .eq("user_id", userId)
+      .eq("run_id", runId)
+      .in("slot_at", slots)
+    if (error) throw new Error(`Failed to read the stored answers: ${error.message}`)
+    for (const r of (data ?? []) as { slot_at: string; updated_at: string }[]) {
+      out.set(`${runId}:${new Date(r.slot_at).toISOString()}`, Date.parse(r.updated_at))
+    }
+  }
+  return out
 }
 
 /** The activities the person wrote most often, across every audit, most frequent first. */
@@ -254,7 +288,8 @@ export async function frequentActivities(userId: string, limit = 200): Promise<{
   )
   const counts = new Map<string, { activity: string; count: number; spellings: Map<string, number> }>()
   for (const { activity } of rows) {
-    const key = activity.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim()
+    // The same key as the review's groups (`buildReview`), so the two never disagree.
+    const key = normalizePhrase(activity) || activity.trim().toLowerCase()
     const entry = counts.get(key) ?? { activity, count: 0, spellings: new Map() }
     entry.count++
     entry.spellings.set(activity, (entry.spellings.get(activity) ?? 0) + 1)

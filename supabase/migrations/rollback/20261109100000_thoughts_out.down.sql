@@ -1,6 +1,11 @@
 -- ============================================================================
 -- THE WAY BACK FROM 20261109100000_thoughts_out.sql (Plans/energy-audit.md).
 --
+-- RUN 20261109110000_energy_audit.down.sql FIRST while the audit is installed:
+-- this file restores the clock's gate and the send-kind check of before the
+-- audit, so run alone it would either fail (audit sends exist) or quietly stop
+-- the audit's pings and break its sends (security review, 2026-11-09).
+--
 -- THE DATA DOES NOT COME BACK. This recreates the five Thoughts tables, their
 -- policies and the four functions EMPTY, restores the clock's gate and the
 -- send-kind check, and renames the cron job back. Definitions are copied from

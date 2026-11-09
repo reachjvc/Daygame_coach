@@ -4,6 +4,8 @@
 import { describe, expect, it } from "vitest"
 import {
   QUARTER_MS,
+  answerSheetQuarters,
+  withAnswered,
   groupQuarters,
   prefillQuarters,
   quarterLabel,
@@ -165,5 +167,59 @@ describe("runQuarters", () => {
   it("an empty run before its first quarter ends", () => {
     expect(runQuarters(run({ startedAt: "2026-11-09T09:07:00.000Z" }), at("2026-11-09T09:10:00Z"), CPH)).toEqual([])
     void min
+  })
+})
+
+describe("withAnswered", () => {
+  it("adds answered quarters to the awake ones, sorted, without duplicates", () => {
+    expect(withAnswered([3, 1], [2, 1])).toEqual([1, 2, 3])
+  })
+})
+
+describe("answerSheetQuarters", () => {
+  const r = run({ startedAt: "2026-11-09T07:00:00.000Z" }) // 08:00 Copenhagen
+  const now = at("2026-11-09T13:05:00Z") // 14:05 Copenhagen
+
+  it("offers the unanswered quarters that ended in the last 3 hours", () => {
+    const qs = answerSheetQuarters(r, now, CPH, new Set())
+    expect(quarterLabel(qs[0], CPH)).toBe("11:00–11:15")
+    expect(quarterLabel(qs[qs.length - 1], CPH)).toBe("13:45–14:00")
+  })
+
+  it("also offers the quarter a ping named, however old, when it is unanswered", () => {
+    const asked = at("2026-11-09T09:00:00Z") // 10:00 Copenhagen
+    const qs = answerSheetQuarters(r, now, CPH, new Set(), asked)
+    expect(quarterLabel(qs[0], CPH)).toBe("10:00–10:15")
+    expect(answerSheetQuarters(r, now, CPH, new Set([asked]), asked)[0]).not.toBe(asked)
+  })
+
+  it("ignores a named quarter outside the run, off the quarter, or not started", () => {
+    const base = answerSheetQuarters(r, now, CPH, new Set())
+    expect(answerSheetQuarters(r, now, CPH, new Set(), at("2026-11-09T05:00:00Z"))).toEqual(base)
+    expect(answerSheetQuarters(r, now, CPH, new Set(), at("2026-11-09T09:07:00Z"))).toEqual(base)
+    expect(answerSheetQuarters(r, now, CPH, new Set(), at("2026-11-09T14:00:00Z"))).toEqual(base)
+  })
+})
+
+describe("stretchLabel", () => {
+  it("names each unbroken part of a stretch, and a whole day 00:00–24:00", () => {
+    const q = (hhmm: string) => at(`2026-11-09T${hhmm}:00Z`) // UTC labels
+    expect(stretchLabel([q("05:45"), q("06:15")], "UTC")).toBe("05:45–06:00, 06:15–06:30")
+    expect(stretchLabel([q("10:00"), q("10:15"), q("10:30")], "UTC")).toBe("10:00–10:45")
+    const day = Array.from({ length: 96 }, (_, i) => at("2026-11-09T00:00:00Z") + i * QUARTER_MS)
+    expect(stretchLabel(day, "UTC")).toBe("00:00–24:00")
+  })
+})
+
+describe("times never depend on the device's own zone", () => {
+  // Run under TZ=Europe/Copenhagen too: the spring-forward gap there is 02:00–03:00 on 29 March 2026.
+  it("labels a UTC account's 02:30 on 29 March as 02:30", () => {
+    expect(quarterLabel(at("2026-03-29T02:30:00Z"), "UTC")).toBe("02:30–02:45")
+  })
+  it("keeps a quarter at 02:30 UTC quiet with quiet hours 22:00–03:00", () => {
+    const r = run({ startedAt: "2026-03-28T20:00:00.000Z", endsAt: "2026-04-11T20:00:00.000Z", quietStart: 1320, quietEnd: 180 })
+    const qs = runQuarters(r, at("2026-03-29T04:00:00Z"), "UTC").map((q) => quarterLabel(q, "UTC"))
+    expect(qs).not.toContain("02:30–02:45")
+    expect(qs).toContain("03:00–03:15")
   })
 })

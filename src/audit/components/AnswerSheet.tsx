@@ -87,6 +87,7 @@ function Card({
         why: why.trim() || null,
         source,
         timeEntryId: activity.trim() === card.text.trim() ? card.entryId : null,
+        answeredAt: new Date().toISOString(),
       } satisfies AuditAnswer
     })
     onSave(answers)

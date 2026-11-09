@@ -40,13 +40,29 @@ describe("the audit queue", () => {
     let q = enqueueAnswers(emptyAuditQueue("me"), [a("1", "2026-11-09T09:00:00.000Z")])
     q = enqueueDelete(q, "1")
     expect(q.answers).toEqual([])
-    expect(q.deletes).toEqual(["1"])
+    expect(q.deletes.map((d) => d.id)).toEqual(["1"])
     expect(deletesSent(q, ["1"]).deletes).toEqual([])
   })
 
   it("sent answers leave the queue", () => {
-    const q = enqueueAnswers(emptyAuditQueue("me"), [a("1", "2026-11-09T09:00:00.000Z"), a("2", "2026-11-09T09:15:00.000Z")])
-    expect(answersSent(q, ["1"]).answers.map((x) => x.id)).toEqual(["2"])
+    const first = a("1", "2026-11-09T09:00:00.000Z")
+    const q = enqueueAnswers(emptyAuditQueue("me"), [first, a("2", "2026-11-09T09:15:00.000Z")])
+    expect(answersSent(q, [first]).answers.map((x) => x.id)).toEqual(["2"])
+  })
+
+  it("an edit made while the first version was being sent stays queued", () => {
+    const sent = { ...a("1", "2026-11-09T09:00:00.000Z", "First version"), answeredAt: "2026-11-09T09:16:00.000Z" }
+    const edit = { ...sent, activity: "Edited version", answeredAt: "2026-11-09T09:16:02.000Z" }
+    const q = enqueueAnswers(enqueueAnswers(emptyAuditQueue("me"), [sent]), [edit])
+    expect(answersSent(q, [sent]).answers.map((x) => x.activity)).toEqual(["Edited version"])
+  })
+
+  it("reads an older queue whose deletes were plain ids", () => {
+    window.localStorage.setItem(AUDIT_QUEUE_KEY, JSON.stringify({ owner: "me", answers: [], deletes: ["x1"] }))
+    const q = readAuditQueue(window.localStorage, "me")
+    expect(q.deletes.map((d) => d.id)).toEqual(["x1"])
+    expect(typeof q.deletes[0].at).toBe("string")
+    window.localStorage.removeItem(AUDIT_QUEUE_KEY)
   })
 
   it("is one person's: another account's queue is thrown away unread", () => {

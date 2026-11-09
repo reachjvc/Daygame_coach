@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { sendInChunks, browserStore } from "@/src/shared/offlineQueue"
 import { AuditCallError, auditApi, type AuditView } from "../auditClient"
 import {
+  AUDIT_QUEUE_KEY,
   answersSent,
   deletesSent,
   emptyAuditQueue,
@@ -38,12 +39,34 @@ export type SendState = "sent" | "waiting" | "signed-out"
 
 const quarterKey = (s: { runId: string; slotAt: string }) => `${s.runId}:${s.slotAt}`
 
+/**
+ * WHAT THE SERVER HAS CONFIRMED BUT THE SCREEN'S LAST READ MAY NOT INCLUDE.
+ *
+ * An answer leaves the queue the moment the server confirms it; the next read
+ * arrives a moment later (seconds on a weak signal). In between it must still
+ * be drawn, or the row turns back into a grey gap, and a tap on it starts a
+ * new answer over the saved one (phone audit, 2026-11-09). Each entry is
+ * dropped by the first read that STARTED after its confirmation: that read
+ * has it, or knows it was changed since.
+ */
+interface Confirmed {
+  answers: { answer: AuditAnswer; at: number }[]
+  deletes: { id: string; at: number }[]
+}
+const NONE: Confirmed = { answers: [], deletes: [] }
+
 export function useAudit(account: string) {
   const api = useMemo(() => auditApi(account), [account])
   const [view, setView] = useState<AuditView | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [queue, setQueue] = useState<AuditQueue>(emptyAuditQueue(account))
   const [sendState, setSendState] = useState<SendState>("sent")
+  const [confirmed, setConfirmed] = useState<Confirmed>(NONE)
+  const confirmedRef = useRef<Confirmed>(NONE)
+  const setC = useCallback((next: Confirmed) => {
+    confirmedRef.current = next
+    setConfirmed(next)
+  }, [])
   const queueRef = useRef(queue)
   const flushing = useRef(false)
   const flushAgain = useRef(false)
@@ -63,17 +86,21 @@ export function useAudit(account: string) {
   /** Read the page. An answer older than one already drawn is dropped. */
   const load = useCallback(async () => {
     const mine = ++readsStarted.current
+    const started = Date.now()
     try {
       const fresh = await api.view()
       if (mine < readApplied.current) return
       readApplied.current = mine
       setView(fresh)
+      // What this read includes no longer needs drawing from here.
+      const c = confirmedRef.current
+      setC({ answers: c.answers.filter((x) => x.at >= started), deletes: c.deletes.filter((x) => x.at >= started) })
       setLoadError(null)
     } catch (error) {
       if (mine < readApplied.current) return
       setLoadError(error instanceof AuditCallError ? error.message : "Could not read your audit")
     }
-  }, [api])
+  }, [api, setC])
 
   /** Send the queue: answers in chunks of 200, then deletes. One flush at a time. */
   const flush = useCallback(async () => {
@@ -86,14 +113,32 @@ export function useAudit(account: string) {
       let stuck: { status: number } | null = null
       do {
         flushAgain.current = false
-        stuck = await sendInChunks(queueRef.current.answers, (batch) => api.save(batch).then(() => undefined), {
-          onSent: (batch) => setQ(answersSent(queueRef.current, batch.map((x) => x.id))),
-          onDropped: (batch) => setQ(answersSent(queueRef.current, batch.map((x) => x.id))),
-        })
+        // Answers the server says may pass later (a quarter its clock has not reached) stay queued.
+        let later = new Set<string>()
+        stuck = await sendInChunks(
+          queueRef.current.answers,
+          async (batch) => {
+            const answer = await api.save(batch)
+            const refused = answer.refused ?? []
+            later = new Set(refused.filter((r) => r.retry).map((r) => String(r.id)))
+            const gone = new Set(refused.map((r) => String(r.id)))
+            const at = Date.now()
+            const kept = batch.filter((a) => !gone.has(a.id)).map((a) => ({ answer: a, at }))
+            const c = confirmedRef.current
+            setC({ ...c, answers: [...c.answers.filter((x) => !kept.some((k) => quarterKey(k.answer) === quarterKey(x.answer))), ...kept] })
+          },
+          {
+            onSent: (batch) => setQ(answersSent(queueRef.current, batch.filter((a) => !later.has(a.id)))),
+            onDropped: (batch) => setQ(answersSent(queueRef.current, batch)),
+          },
+        )
+        if (!stuck && queueRef.current.answers.some((a) => later.has(a.id))) stuck = { status: 0 }
         if (!stuck) {
-          for (const id of queueRef.current.deletes) {
+          for (const { id, at: deletedAt } of queueRef.current.deletes) {
             try {
-              await api.remove(id)
+              await api.remove(id, deletedAt)
+              const c = confirmedRef.current
+              setC({ answers: c.answers.filter((x) => x.answer.id !== id), deletes: [...c.deletes, { id, at: Date.now() }] })
               setQ(deletesSent(queueRef.current, [id]))
             } catch (error) {
               const e = error as AuditCallError
@@ -114,7 +159,7 @@ export function useAudit(account: string) {
     } finally {
       flushing.current = false
     }
-  }, [api, load, setQ])
+  }, [api, load, setQ, setC])
 
   useEffect(() => {
     const stored = readAuditQueue(browserStore(), account)
@@ -130,9 +175,19 @@ export function useAudit(account: string) {
       retry()
       void load()
     }
+    // Another tab of this account changed the queue: take its version, so two
+    // tabs never overwrite each other's waiting answers (offline audit, 2026-11-09).
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== AUDIT_QUEUE_KEY) return
+      const shared = readAuditQueue(browserStore(), account)
+      queueRef.current = shared
+      setQueue(shared)
+    }
     window.addEventListener("online", retry)
+    window.addEventListener("storage", onStorage)
     document.addEventListener("visibilitychange", onVisible)
     return () => {
+      window.removeEventListener("storage", onStorage)
       window.removeEventListener("online", retry)
       document.removeEventListener("visibilitychange", onVisible)
     }
@@ -142,11 +197,12 @@ export function useAudit(account: string) {
   const slots: DrawnSlot[] = useMemo(() => {
     if (!view) return []
     const byQuarter = new Map<string, DrawnSlot>()
-    const deleted = new Set(queue.deletes)
+    const deleted = new Set([...queue.deletes.map((d) => d.id), ...confirmed.deletes.map((d) => d.id)])
     for (const s of view.slots) if (!deleted.has(s.id)) byQuarter.set(quarterKey(s), { ...s, pending: false })
+    for (const { answer } of confirmed.answers) byQuarter.set(quarterKey(answer), { ...answer, pending: false })
     for (const a of queue.answers) byQuarter.set(quarterKey(a), { ...a, pending: true })
     return [...byQuarter.values()].sort((x, y) => x.slotAt.localeCompare(y.slotAt))
-  }, [view, queue])
+  }, [view, queue, confirmed])
 
   const answer = useCallback(
     (answers: AuditAnswer[]) => {
@@ -180,6 +236,10 @@ export function useAudit(account: string) {
   )
 
   const runId = view?.run?.id ?? null
+  // Stable, so a screen can depend on them without re-reading on every render
+  // (the review re-read itself on every parent render: code review, 2026-11-09).
+  const readRun = useCallback((id: string) => api.view(id), [api])
+  const saveReview = useCallback((id: string, review: Review) => decide(() => api.review(id, review)), [api, decide])
   return {
     view,
     loadError,
@@ -193,8 +253,8 @@ export function useAudit(account: string) {
     end: () => (runId ? decide(() => api.end(runId)) : Promise.resolve("No audit is running")),
     mute: (option: MuteOption) => (runId ? decide(() => api.mute(runId, option)) : Promise.resolve("No audit is running")),
     setQuiet: (start: number, end: number) => (runId ? decide(() => api.quiet(runId, start, end)) : Promise.resolve("No audit is running")),
-    saveReview: (id: string, review: Review) => decide(() => api.review(id, review)),
-    readRun: (id: string) => api.view(id),
+    saveReview,
+    readRun,
   }
 }
 

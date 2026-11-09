@@ -68,6 +68,13 @@ export interface AuditAnswer {
   why: string | null
   source: AnswerSource
   timeEntryId: string | null
+  /**
+   * When it was answered, by the phone's clock (the server corrects it by the
+   * phone's offset). An answer older than what is stored for its quarter is
+   * refused, so an offline phone never overwrites a newer answer from another
+   * device. Stored as the row's `updated_at`.
+   */
+  answeredAt?: string
 }
 
 /** A Time entry as the audit reads it (never written by the audit). */

@@ -2,7 +2,7 @@
  * THE AUDIT'S RULES — src/audit/auditService.ts (Plans/energy-audit.md, Phase 4).
  */
 import { describe, expect, it } from "vitest"
-import { checkAnswer, checkQuiet, checkReview, muteUntil, runIsOpen } from "@/src/audit/auditService"
+import { checkAnswer, checkQuiet, checkReview, correctedTime, muteUntil, runIsOpen } from "@/src/audit/auditService"
 import type { AuditRun } from "@/src/audit/types"
 
 const CPH = "Europe/Copenhagen"
@@ -139,5 +139,33 @@ describe("checkQuiet", () => {
     expect("error" in checkQuiet(1321, 480)).toBe(true)
     expect("error" in checkQuiet(1440, 480)).toBe(true)
     expect("error" in checkQuiet("22:00", 480)).toBe(true)
+  })
+})
+
+describe("correctedTime", () => {
+  const now = new Date("2026-11-09T10:00:00Z")
+  it("moves a phone's time onto the server's clock by the phone's offset", () => {
+    // The phone is 10 minutes fast: it sent at 10:10 by its clock, answered at 10:05 by its clock.
+    expect(new Date(correctedTime("2026-11-09T10:05:00Z", "2026-11-09T10:10:00Z", now)).toISOString()).toBe("2026-11-09T09:55:00.000Z")
+  })
+  it("is never after now, and is now when missing or unreadable", () => {
+    expect(correctedTime("2026-11-09T11:00:00Z", undefined, now)).toBe(now.getTime())
+    expect(correctedTime(undefined, undefined, now)).toBe(now.getTime())
+    expect(correctedTime("nonsense", "2026-11-09T10:00:00Z", now)).toBe(now.getTime())
+  })
+  it("leaves a few seconds of network delay alone", () => {
+    expect(new Date(correctedTime("2026-11-09T09:59:55Z", "2026-11-09T09:59:56Z", now)).toISOString()).toBe("2026-11-09T09:59:55.000Z")
+  })
+  it("ignores an offset of more than a day", () => {
+    expect(new Date(correctedTime("2026-11-09T09:00:00Z", "2026-11-01T00:00:00Z", now)).toISOString()).toBe("2026-11-09T09:00:00.000Z")
+  })
+})
+
+describe("text that cannot be stored", () => {
+  it("drops the NUL character and other control characters, keeping newlines", () => {
+    const r = checkAnswer(answer({ activity: "Pasted\u0000text", why: "line one\nline\u0007 two" }), run(), new Date("2026-11-09T09:20:00Z"))
+    expect("answer" in r && r.answer.activity).toBe("Pastedtext")
+    expect("answer" in r && r.answer.why).toBe("line one\nline two")
+    expect(checkReview({ notes: { email: "a\u0000b" } })).toEqual({ review: { choices: {}, notes: { email: "ab" } } })
   })
 })

@@ -17,7 +17,7 @@ import { usePushDevice, type PushDeviceState } from "@/src/notifications/hooks/u
 import { ROUTES } from "@/src/shared/routes"
 import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { useAudit, type AuditState, type DrawnSlot } from "../hooks/useAudit"
-import { groupQuarters, prefillQuarters, QUARTER_MS, runQuarters } from "../quarterService"
+import { answerSheetQuarters, groupQuarters, prefillQuarters, QUARTER_MS, runQuarters, SHEET_WINDOW_MS, withAnswered } from "../quarterService"
 import type { AnswerSource, AuditRun } from "../types"
 import type { AuditView } from "../auditClient"
 import { AnswerSheet, type AnswerCardInput } from "./AnswerSheet"
@@ -28,7 +28,6 @@ import { ReviewScreen } from "./ReviewScreen"
 import { noPingDevice, PingDeviceCard, PingDeviceList } from "./PingDevices"
 
 const DAY_MS = 24 * 60 * 60_000
-const SHEET_WINDOW_MS = 3 * 60 * 60_000
 
 const dayKeyOf = (ms: number, tz: string) => getTodayInTimezone(tz, new Date(ms))
 
@@ -178,7 +177,8 @@ function TodayView({
     return m
   }, [s.slots, run.id])
   const recentGaps = quarters.filter((q) => q + QUARTER_MS > now - SHEET_WINDOW_MS && !answered.has(q))
-  const dayQuarters = quarters.filter((q) => dayKeyOf(q, tz) === shownDay)
+  // Answered quarters always show, even if quiet hours were changed to cover them later.
+  const dayQuarters = withAnswered(quarters, answered.keys()).filter((q) => dayKeyOf(q, tz) === shownDay)
 
   const viewRef = useRef(view)
   viewRef.current = view
@@ -197,25 +197,33 @@ function TodayView({
   )
 
   // "Answer now": read again first, so Time's latest entry fills the cards (D-PREFILL).
-  const openAnswerNow = useCallback(async () => {
-    setAnswerNowPending("reading")
-    await s.reload()
-    setAnswerNowPending("ready")
-  }, [s])
+  // From a ping, the quarter it asked about is offered too, however long ago it was.
+  const askedRef = useRef<number | null>(null)
+  const reload = s.reload
+  const openAnswerNow = useCallback(
+    async (asked: number | null = null) => {
+      askedRef.current = asked
+      setAnswerNowPending("reading")
+      await reload()
+      setAnswerNowPending("ready")
+    },
+    [reload],
+  )
   // Opened from a ping (`?answer=<quarter>&send=<id>`): straight to the answer sheet.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (!params.has("answer")) return
+    const asked = Date.parse(params.get("answer") ?? "")
     window.history.replaceState(null, "", ROUTES.audit)
-    void openAnswerNow()
+    void openAnswerNow(Number.isFinite(asked) ? asked : null)
     // once, on arrival
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
     if (answerNowPending !== "ready") return
     setAnswerNowPending("no")
-    const t = Date.now()
-    const gaps = runQuarters(run, t, tz).filter((q) => q + QUARTER_MS > t - SHEET_WINDOW_MS && !answered.has(q))
+    const gaps = answerSheetQuarters(run, Date.now(), tz, new Set(answered.keys()), askedRef.current)
+    askedRef.current = null
     setSheet({ title: "Answer now", cards: cardsFor(gaps, false), source: "app", allowDelete: false })
   }, [answerNowPending, run, tz, answered, cardsFor])
 
@@ -231,7 +239,7 @@ function TodayView({
       <Button
         size="lg"
         className="mt-4 h-14 w-full text-lg"
-        onClick={() => void openAnswerNow()}
+        onClick={() => void openAnswerNow(null)}
         disabled={answerNowPending !== "no"}
         data-testid="audit-answer-now"
       >

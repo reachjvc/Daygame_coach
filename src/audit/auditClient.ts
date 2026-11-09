@@ -48,7 +48,10 @@ export function auditApi(account: string) {
     const body = (await res.json().catch(() => ({}))) as Record<string, unknown>
     if (!res.ok) {
       const message = typeof body.error === "string" ? body.error : "Something went wrong"
-      throw new AuditCallError(message, res.status, res.status >= 500 || res.status === 408 || res.status === 429)
+      // 409 is "this page was opened for another account" (requireAuth): the
+      // answers waiting here are the page's account's, so they are kept, never
+      // dropped as if the server had refused them for good.
+      throw new AuditCallError(message, res.status, res.status >= 500 || res.status === 408 || res.status === 409 || res.status === 429)
     }
     return body as T
   }
@@ -62,8 +65,16 @@ export function auditApi(account: string) {
     quiet: (runId: string, quietStart: number, quietEnd: number) =>
       call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { quietStart, quietEnd })),
     review: (runId: string, review: Review) => call<{ run: AuditRun }>(`/api/audit/runs/${runId}`, json("PATCH", { review })),
-    save: (slots: AuditAnswer[]) => call<{ stored: number }>("/api/audit/slots", json("PUT", { slots })),
-    remove: (id: string) => call<{ ok: true }>(`/api/audit/slots/${id}`, { method: "DELETE" }),
+    save: (slots: AuditAnswer[]) =>
+      call<{ stored: number; refused?: { id: unknown; error: string; retry: boolean }[] }>(
+        "/api/audit/slots",
+        json("PUT", { slots, sentAt: new Date().toISOString() }),
+      ),
+    remove: (id: string, at?: string) =>
+      call<{ ok: true }>(
+        `/api/audit/slots/${id}${at ? `?at=${encodeURIComponent(at)}&sentAt=${encodeURIComponent(new Date().toISOString())}` : ""}`,
+        { method: "DELETE" },
+      ),
   }
 }
 

@@ -206,8 +206,9 @@ function ActivitySheet({
   }, [key])
   if (!group) return null
   return (
-    <BottomSheet open onClose={onClose} title={group.label} testId="review-activity-sheet">
+    <BottomSheet open onClose={onClose} title={group.label.length > 32 ? `${group.label.slice(0, 30)}…` : group.label} testId="review-activity-sheet">
       <div className="max-h-[70vh] space-y-4 overflow-y-auto pb-2">
+        {group.label.length > 32 && <p className="break-all font-medium">{group.label}</p>}
         <p className="text-sm tabular-nums text-muted-foreground">
           {hoursText(group.minutes / 60)} · energy {group.energy.toFixed(1)} · growth {group.growth.toFixed(1)} · from {answersText(group.answers)}
         </p>
@@ -302,14 +303,15 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
   const [error, setError] = useState<string | null>(null)
   const [openKey, setOpenKey] = useState<string | null>(null)
 
+  const { readRun, saveReview } = s
   const load = useCallback(async () => {
     setError(null)
     try {
-      setView(await s.readRun(runId))
+      setView(await readRun(runId))
     } catch (e) {
       setError(e instanceof AuditCallError ? e.message : "Could not read this audit")
     }
-  }, [s, runId])
+  }, [readRun, runId])
   useEffect(() => {
     void load()
   }, [load])
@@ -325,7 +327,7 @@ export function ReviewScreen({ s, runId, onBack }: { s: AuditState; runId: strin
     else delete choices[key]
     if (note.trim()) notes[key] = note
     else delete notes[key]
-    const failed = await s.saveReview(run.id, { choices, notes })
+    const failed = await saveReview(run.id, { choices, notes })
     if (!failed) await load()
     return failed
   }

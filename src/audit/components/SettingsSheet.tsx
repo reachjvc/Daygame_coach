@@ -100,13 +100,16 @@ export function SettingsSheet({
   const [end, setEnd] = useState(quietEnd)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  // Reset when the sheet opens, not when the saved hours come back from the
+  // server: that wiped the "✓ Saved" the person had just been shown.
   useEffect(() => {
     if (open) {
       setStart(quietStart)
       setEnd(quietEnd)
       setMessage(null)
     }
-  }, [open, quietStart, quietEnd])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const changed = start !== quietStart || end !== quietEnd
   const pings = awakeQuarters(start, end)

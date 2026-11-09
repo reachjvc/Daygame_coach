@@ -93,11 +93,24 @@ describe("buildReview", () => {
     expect(r.bestHours).toEqual([{ hour: 8, energy: 3.5, answers: 4 }])
   })
 
-  it("does not count answers outside the possible quarters (quiet hours, after the end)", () => {
-    // 22:00 local is quiet; quarter 60 is after End now.
-    const r = buildReview([slot(56, "Late", 4, 4), slot(60, "After", 4, 4), slot(0, "Email", 4, 4)], run(), CPH)
+  it("does not count answers after the end", () => {
+    // quarter 60 is after End now.
+    const r = buildReview([slot(60, "After", 4, 4), slot(0, "Email", 4, 4)], run(), CPH)
     expect(r.answered).toBe(1)
     expect(r.groups.map((g) => g.label)).toEqual(["Email"])
+  })
+
+  it("keeps an answer whose quarter became quiet when quiet hours were changed later", () => {
+    // Answered at 21:45 local, then quiet hours moved to start at 21:00.
+    const r = buildReview([slot(55, "Reading", 5, 6), slot(0, "Email", 4, 4)], run({ quietStart: 1260 }), CPH)
+    expect(r.answered).toBe(2)
+    expect(r.possibleQuarters).toBe(53) // 08:00–21:00 is 52 awake, plus the answered 21:45
+    expect(r.groups.map((g) => g.label).sort()).toEqual(["Email", "Reading"])
+  })
+
+  it("does not count the quarter still running at End now unless it was answered", () => {
+    const ended = run({ endedAt: new Date(START + 2 * Q + 7 * 60_000).toISOString() })
+    expect(buildReview([slot(0, "Email", 4, 4), slot(1, "Email", 4, 4)], ended, CPH)).toMatchObject({ answered: 2, possibleQuarters: 2 })
   })
 
   it("keeps the quarter a run was ended in", () => {

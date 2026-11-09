@@ -8,9 +8,11 @@
  */
 
 import { isUuid } from "@/src/shared/ids"
+import { storableText } from "./requestGuard"
 import { getTodayInTimezone, localTimeInstant } from "@/src/shared/dateUtils"
+import { hhmm, nextDateKey } from "@/src/notifications/quietHours"
 import { normalizePhrase } from "@/src/shared/textMatch"
-import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs } from "./quarterService"
+import { belongsToRun, isAwake, localMinute, QUARTER_MS, quarterStart, runQuarters, runStopMs, withAnswered } from "./quarterService"
 import { ANSWER_SOURCES, REVIEW_CHOICES, type AuditAnswer, type AuditRun, type AuditSlot, type Review, type ReviewChoice, type ScaleValue } from "./types"
 
 export const ACTIVITY_MAX = 200
@@ -33,7 +35,7 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
   const a = (input && typeof input === "object" ? input : {}) as Record<string, unknown>
   if (!isUuid(a.id)) return { error: "Each answer needs an id" }
   if (a.runId !== run.id) return { error: "That answer is for another audit" }
-  const activity = typeof a.activity === "string" ? a.activity.trim() : ""
+  const activity = typeof a.activity === "string" ? storableText(a.activity).trim() : ""
   if (activity.length < 1) return { error: "Say what you did" }
   if (activity.length > ACTIVITY_MAX) return { error: `What you did can be at most ${ACTIVITY_MAX} characters` }
   if (!isScale(a.energy)) return { error: "Energy is a number from 1 to 7" }
@@ -42,7 +44,7 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
   let why: string | null = null
   if (a.why !== null && a.why !== undefined) {
     if (typeof a.why !== "string") return { error: "Why is text" }
-    why = a.why.trim() || null
+    why = storableText(a.why).trim() || null
     if (why && why.length > WHY_MAX) return { error: `Why can be at most ${WHY_MAX} characters` }
   }
   const source = a.source ?? "app"
@@ -52,10 +54,9 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
     if (typeof a.timeEntryId !== "string" || a.timeEntryId.length > 200) return { error: "Bad time entry" }
     timeEntryId = a.timeEntryId
   }
-  const slotMs = typeof a.slotAt === "string" ? Date.parse(a.slotAt) : NaN
-  if (!Number.isFinite(slotMs) || slotMs % QUARTER_MS !== 0) return { error: "A quarter starts at :00, :15, :30 or :45" }
-  if (!belongsToRun(slotMs, run)) return { error: "That quarter is outside this audit" }
-  if (slotMs > quarterStart(now.getTime())) return { error: "That quarter has not started yet" }
+  const quarter = checkQuarter(a.slotAt, run, now)
+  if ("error" in quarter) return quarter
+  const slotMs = quarter.slotMs
   return {
     answer: {
       id: a.id,
@@ -70,6 +71,45 @@ export function checkAnswer(input: unknown, run: AuditRun, now: Date): { answer:
       timeEntryId,
     },
   }
+}
+
+export const NOT_STARTED = "That quarter has not started yet"
+export const CHANGED_SINCE = "Changed on another device since"
+
+const MAX_CLOCK_CORRECTION_MS = 24 * 60 * 60_000
+/**
+ * Below this, the gap between the phone's "sent" and the server's "now" is the
+ * network, not the phone's clock, and is left alone: counting a slow request's
+ * seconds as clock error stamped the first save later than a quick edit after
+ * it, and the edit was refused as older (found by the e2e test, 2026-11-09).
+ */
+const MIN_CLOCK_CORRECTION_MS = 2 * 60_000
+
+/**
+ * A time by the phone's clock, put on the server's: `at + (now - sentAt)`, where
+ * `sentAt` is when the phone sent the request by the same clock (as Time's Stop
+ * does). Never after now; now when `at` is missing or unreadable.
+ */
+export function correctedTime(at: unknown, sentAt: unknown, now: Date): number {
+  const nowMs = now.getTime()
+  const atMs = typeof at === "string" ? Date.parse(at) : NaN
+  if (!Number.isFinite(atMs)) return nowMs
+  const sentMs = typeof sentAt === "string" ? Date.parse(sentAt) : NaN
+  const gap = Number.isFinite(sentMs) ? nowMs - sentMs : 0
+  const offset = Math.abs(gap) >= MIN_CLOCK_CORRECTION_MS && Math.abs(gap) <= MAX_CLOCK_CORRECTION_MS ? gap : 0
+  return Math.min(nowMs, atMs + offset)
+}
+
+/**
+ * The quarter rules alone (D-RUN-QUARTERS): on :00/:15/:30/:45, inside the
+ * run, and already started. Used by `checkAnswer` and by the ping route.
+ */
+export function checkQuarter(slotAt: unknown, run: AuditRun, now: Date): { slotMs: number } | { error: string } {
+  const slotMs = typeof slotAt === "string" ? Date.parse(slotAt) : NaN
+  if (!Number.isFinite(slotMs) || slotMs % QUARTER_MS !== 0) return { error: "A quarter starts at :00, :15, :30 or :45" }
+  if (!belongsToRun(slotMs, run)) return { error: "That quarter is outside this audit" }
+  if (slotMs > quarterStart(now.getTime())) return { error: NOT_STARTED }
+  return { slotMs }
 }
 
 /** The review's choices and notes (D-CHOICES). Anything else is refused. */
@@ -90,12 +130,13 @@ export function checkReview(input: unknown): { review: Review } | { error: strin
   for (const [key, value] of choiceEntries) {
     if (key.length < 1 || key.length > ACTIVITY_MAX) return { error: "Bad activity key" }
     if (typeof value !== "string" || !(REVIEW_CHOICES as readonly string[]).includes(value)) return { error: "Unknown choice" }
-    choices[key] = value as ReviewChoice
+    choices[storableText(key) || key] = value as ReviewChoice
   }
   for (const [key, value] of noteEntries) {
     if (key.length < 1 || key.length > ACTIVITY_MAX) return { error: "Bad activity key" }
     if (typeof value !== "string" || value.length > REVIEW_NOTE_MAX) return { error: `A note can be at most ${REVIEW_NOTE_MAX} characters` }
-    if (value.trim()) notes[key] = value
+    const clean = storableText(value)
+    if (clean.trim()) notes[storableText(key) || key] = clean
   }
   return { review: { choices, notes } }
 }
@@ -105,12 +146,6 @@ export const MUTE_OPTIONS: readonly MuteOption[] = ["30m", "1h", "2h", "morning"
 
 const MORNING_FALLBACK = 8 * 60
 
-const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`
-
-function nextDateKey(key: string): string {
-  const [y, m, d] = key.split("-").map(Number)
-  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
-}
 
 /**
  * When a mute ends (D-MUTE). "morning" is the end of the quiet hours: the end
@@ -229,8 +264,13 @@ function wholeShares(minutes: Record<Box, number>): Record<Box, number> {
  * the repo read pages past 1,000 rows.
  */
 export function buildReview(slots: readonly AuditSlot[], run: AuditRun, tz: string): BuiltReview {
-  // Read "now" as one quarter past the end, so a run ended at 10:07 keeps its 10:00 quarter.
-  const possible = new Set(runQuarters(run, runStopMs(run) + QUARTER_MS, tz))
+  // The quarters that had ended by the end, as the page offered them, plus every
+  // answered quarter of the run: a run ended at 10:07 counts its 10:00 quarter
+  // only if it was answered, and an answer stays counted even if quiet hours
+  // were changed to cover it later.
+  const stopMs = runStopMs(run)
+  const answeredInRun = slots.map((s) => Date.parse(s.slotAt)).filter((q) => belongsToRun(q, run))
+  const possible = new Set(withAnswered(runQuarters(run, stopMs, tz), answeredInRun))
   const counted = slots.filter((s) => possible.has(Date.parse(s.slotAt)))
 
   const byKey = new Map<string, AuditSlot[]>()
