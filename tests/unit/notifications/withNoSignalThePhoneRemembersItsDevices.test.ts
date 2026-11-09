@@ -23,6 +23,7 @@ vi.mock("@/src/notifications/pushClient", () => ({
   isAppleTouch: () => false,
   workerRegistration: async () => null,
   subscribe: async () => null,
+  subscriptionForPage: async () => null,
   forgetThisDevice: async () => {},
   forgetTimerOnThisDevice: async () => {},
 }))

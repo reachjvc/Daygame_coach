@@ -10,13 +10,17 @@
  *   - The browser side: a subscription made with another key (or one whose key
  *     the browser does not tell) is unsubscribed and made fresh, and the old
  *     address is forgotten on the server so it is not listed twice.
- *   - The server side: a push service that refuses the key (401/403), like one
- *     that says the address is dead (404/410), removes the device, so Settings
- *     no longer names it as getting pings.
+ *   - Without a tap: every page that opens with notifications allowed checks
+ *     the key the same way and, when it differs, subscribes fresh and moves
+ *     the device's row to the new address (`oldEndpoint`), keeping its
+ *     switches. A key change heals itself on the next open.
+ *   - The server side: a push service that refuses the key (401/403) is only
+ *     a failure, never a removal. Were the server's own key pair wrong, one
+ *     ping round would otherwise delete every device.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { subscribe } from "@/src/notifications/pushClient"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { claimThisDevice, subscribe } from "@/src/notifications/pushClient"
 import { outcomeOf } from "@/src/notifications/pushService"
 
 // Two public keys of a real key's shape (65 bytes, base64url); only their bytes matter here.
@@ -91,11 +95,108 @@ describe("turning pings on in a browser that already has a subscription", () => 
 })
 
 describe("a push service refusing the server's key", () => {
-  it("counts as a dead address, which removes the device", () => {
-    expect(outcomeOf(401)).toBe("gone")
-    expect(outcomeOf(403)).toBe("gone")
-    // a passing hiccup is still only a failure
-    expect(outcomeOf(429)).toBe("failed")
-    expect(outcomeOf(500)).toBe("failed")
+  it("is a failure, never a removal: only a dead address (404/410) removes the device", () => {
+    expect(outcomeOf(401)).toBe("failed")
+    expect(outcomeOf(403)).toBe("failed")
+    expect(outcomeOf(404)).toBe("gone")
+    expect(outcomeOf(410)).toBe("gone")
+  })
+})
+
+describe("a page opening with notifications allowed", () => {
+  function aSignedInBrowser(subscribedWith: string | null, server: { publicKey?: string; down?: boolean } = { publicKey: NEW_KEY }) {
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubGlobal("Notification", { permission: "granted" })
+    vi.stubGlobal("PushManager", function PushManager() {})
+    const unsubscribed: string[] = []
+    const made: unknown[] = []
+    const old = {
+      endpoint: "https://fcm.googleapis.com/fcm/send/old",
+      options: { applicationServerKey: subscribedWith === null ? null : bytes(subscribedWith) },
+      unsubscribe: async () => (unsubscribed.push("old"), true),
+      toJSON: () => ({ endpoint: "https://fcm.googleapis.com/fcm/send/old", keys: { p256dh: "BOld", auth: "aOld" } }),
+    }
+    const fresh = {
+      endpoint: "https://fcm.googleapis.com/fcm/send/new",
+      options: { applicationServerKey: bytes(NEW_KEY) },
+      unsubscribe: async () => true,
+      toJSON: () => ({ endpoint: "https://fcm.googleapis.com/fcm/send/new", keys: { p256dh: "BNew", auth: "aNew" } }),
+    }
+    let current: typeof old | typeof fresh = old
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        getRegistration: async () => ({
+          pushManager: {
+            getSubscription: async () => current,
+            subscribe: async (options: unknown) => {
+              made.push(options)
+              current = fresh
+              return fresh
+            },
+          },
+          getNotifications: async () => [],
+        }),
+      },
+    })
+    const fetch = vi.fn(async (url: string) => {
+      if (url === "/api/notifications/key") {
+        if (server.down) throw new TypeError("Failed to fetch")
+        return Response.json(server.publicKey ? { publicKey: server.publicKey } : { error: "not set up" }, { status: server.publicKey ? 200 : 503 })
+      }
+      return Response.json({ id: "d1", enabled: true, timerRunning: false })
+    })
+    vi.stubGlobal("fetch", fetch)
+    const posted = () =>
+      (fetch.mock.calls as unknown as [string, RequestInit | undefined][])
+        .filter(([url, init]) => url === "/api/notifications/devices" && init?.method === "POST")
+        .map(([, init]) => JSON.parse(String(init?.body)) as { intent: string; subscription: { endpoint: string }; oldEndpoint?: string })
+    return { unsubscribed, made, posted, fetch }
+  }
+
+  beforeEach(() => window.localStorage.clear())
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: undefined })
+  })
+
+  it("subscribes fresh when the key changed, and moves the device to the new address", async () => {
+    const b = aSignedInBrowser(OLD_KEY)
+    await claimThisDevice()
+    expect(b.unsubscribed).toEqual(["old"])
+    expect(b.made).toHaveLength(1)
+    expect(b.posted()).toEqual([
+      expect.objectContaining({ intent: "refresh", subscription: expect.objectContaining({ endpoint: "https://fcm.googleapis.com/fcm/send/new" }), oldEndpoint: "https://fcm.googleapis.com/fcm/send/old" }),
+    ])
+    // a move keeps the row and its switches: nothing is forgotten
+    expect(b.fetch.mock.calls.some(([url]) => url === "/api/notifications/devices/forget")).toBe(false)
+  })
+
+  it("leaves a subscription made with the current key alone", async () => {
+    const b = aSignedInBrowser(NEW_KEY)
+    await claimThisDevice()
+    expect(b.unsubscribed).toEqual([])
+    expect(b.made).toEqual([])
+    expect(b.posted()).toEqual([expect.objectContaining({ intent: "refresh", subscription: expect.objectContaining({ endpoint: "https://fcm.googleapis.com/fcm/send/old" }) })])
+    expect(b.posted()[0].oldEndpoint).toBeUndefined()
+  })
+
+  it("replaces one whose key the browser does not tell once, then trusts the one it made", async () => {
+    const b = aSignedInBrowser(null)
+    await claimThisDevice()
+    expect(b.made).toHaveLength(1)
+    // the next open: the browser still does not tell the key, but this one was made here with it
+    await claimThisDevice()
+    expect(b.made).toHaveLength(1)
+  })
+
+  it("changes nothing when the server's key cannot be read (no signal, or no keys)", async () => {
+    for (const server of [{ down: true }, {}]) {
+      const b = aSignedInBrowser(OLD_KEY, server)
+      await claimThisDevice()
+      expect(b.unsubscribed).toEqual([])
+      expect(b.made).toEqual([])
+      vi.unstubAllGlobals()
+    }
   })
 })

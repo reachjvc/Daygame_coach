@@ -81,6 +81,41 @@ function sameBytes(a: ArrayBuffer | null | undefined, b: Uint8Array): boolean {
 }
 
 /**
+ * WHICH KEY THIS BROWSER'S SUBSCRIPTION WAS MADE WITH, when the browser does
+ * not tell (`options.applicationServerKey` is null in some): the address and
+ * the key it was made with here. Without it, such a browser would be
+ * subscribed afresh on every page open.
+ */
+const MADE_WITH_KEY = "push-subscription-key-v1"
+
+function rememberKey(endpoint: string, publicKey: string): void {
+  try {
+    window.localStorage.setItem(MADE_WITH_KEY, JSON.stringify({ endpoint, publicKey }))
+  } catch {
+    // storage blocked: such a browser is checked again next time
+  }
+}
+
+function madeWith(sub: PushSubscription, publicKey: string, key: Uint8Array): boolean {
+  if (sameBytes(sub.options?.applicationServerKey, key)) return true
+  if (sub.options?.applicationServerKey) return false
+  try {
+    const kept = JSON.parse(window.localStorage.getItem(MADE_WITH_KEY) ?? "null") as { endpoint?: unknown; publicKey?: unknown } | null
+    return kept?.endpoint === sub.endpoint && kept?.publicKey === publicKey
+  } catch {
+    return false
+  }
+}
+
+/** A fresh subscription with `publicKey`, the old one (if any) dropped first: a browser refuses a new key while it stands. */
+async function subscribeFresh(registration: ServiceWorkerRegistration, existing: PushSubscription | null, publicKey: string): Promise<PushSubscription> {
+  if (existing) await existing.unsubscribe()
+  const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) })
+  rememberKey(fresh.endpoint, publicKey)
+  return fresh
+}
+
+/**
  * This browser's subscription, made with the server's current public key.
  *
  * A SUBSCRIPTION MADE WITH AN EARLIER KEY IS REPLACED (alpha prove-slow-01).
@@ -88,18 +123,60 @@ function sameBytes(a: ArrayBuffer | null | undefined, b: Uint8Array): boolean {
  * service refuses every message signed with the new key for a subscription
  * made with the old one. Kept and registered again, it looked switched on in
  * Settings while no ping ever arrived. One whose key the browser does not
- * tell is replaced too: it cannot be shown to match. The old address is
- * forgotten on the server, so the device is not listed twice.
+ * tell, and that was not made here with this key, is replaced too: it cannot
+ * be shown to match. The old address is forgotten on the server, so the
+ * device is not listed twice.
  */
 export async function subscribe(registration: ServiceWorkerRegistration, publicKey: string): Promise<PushSubscription> {
-  const key = keyBytes(publicKey)
   const existing = await registration.pushManager.getSubscription()
-  if (existing && sameBytes(existing.options?.applicationServerKey, key)) return existing
-  // A browser refuses a new key while the old subscription stands.
-  if (existing) await existing.unsubscribe()
-  const fresh = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+  if (existing && madeWith(existing, publicKey, keyBytes(publicKey))) return existing
+  const fresh = await subscribeFresh(registration, existing, publicKey)
   if (existing && existing.endpoint !== fresh.endpoint) await forgetEndpoint(existing.endpoint)
   return fresh
+}
+
+/** The address this page load replaced, and its replacement: every later "refresh" of the replacement names it. */
+let replaced: { from: string; to: string } | null = null
+const oldEndpointOf = (sub: PushSubscription) => (replaced?.to === sub.endpoint ? replaced.from : null)
+let checking: Promise<{ subscription: PushSubscription; oldEndpoint: string | null } | null> | null = null
+
+/**
+ * THIS BROWSER'S SUBSCRIPTION AS A PAGE OPENS, A KEY CHANGE HEALED WITHOUT A
+ * TAP. With notifications already allowed, a subscription made with another
+ * key than the server's (or one not shown to match) is replaced at once, and
+ * its `oldEndpoint` returned, so the "refresh" registration moves the device's
+ * row to the new address with its switches as they were. A key that cannot be
+ * read (no signal, no keys on the server) changes nothing. Null when there is
+ * no subscription; never throws.
+ *
+ * One check per page at a time: the layout's claim and a screen's device
+ * hook both ask as the page opens, and two replacements would race.
+ */
+export function subscriptionForPage(
+  registration: ServiceWorkerRegistration,
+): Promise<{ subscription: PushSubscription; oldEndpoint: string | null } | null> {
+  checking ??= (async () => {
+    try {
+      const existing = await registration.pushManager.getSubscription()
+      if (!existing) return null
+      const publicKey = await fetch("/api/notifications/key", { cache: "no-store" })
+        .then(async (res) => (res.ok ? ((await res.json()) as { publicKey?: unknown }).publicKey : null))
+        .catch(() => null)
+      if (typeof publicKey !== "string" || madeWith(existing, publicKey, keyBytes(publicKey))) {
+        return { subscription: existing, oldEndpoint: oldEndpointOf(existing) }
+      }
+      const fresh = await subscribeFresh(registration, existing, publicKey)
+      if (fresh.endpoint !== existing.endpoint) replaced = { from: existing.endpoint, to: fresh.endpoint }
+      return { subscription: fresh, oldEndpoint: oldEndpointOf(fresh) }
+    } catch {
+      // A replacement that failed: the next page open tries again.
+      const sub = await registration.pushManager.getSubscription().catch(() => null)
+      return sub ? { subscription: sub, oldEndpoint: oldEndpointOf(sub) } : null
+    }
+  })().finally(() => {
+    checking = null
+  })
+  return checking
 }
 
 /** This browser's address, if it has one, without registering anything. */
@@ -187,12 +264,18 @@ export async function claimThisDevice(): Promise<void> {
   if (pushSupport() !== "ready" || permission() !== "granted") return
   try {
     const registration = await navigator.serviceWorker.getRegistration()
-    const sub = await registration?.pushManager.getSubscription()
-    if (!sub) return
+    const here = registration ? await subscriptionForPage(registration) : null
+    if (!here) return
     const res = await fetch("/api/notifications/devices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subscription: sub.toJSON(), intent: "refresh", label: deviceLabel(navigator.userAgent, isInstalledApp()) }),
+      body: JSON.stringify({
+        subscription: here.subscription.toJSON(),
+        intent: "refresh",
+        label: deviceLabel(navigator.userAgent, isInstalledApp()),
+        // a subscription replaced for a new server key: the device's row follows it
+        ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
+      }),
     })
     /**
      * AND THE PREVIOUS PERSON'S TIMER ON THE SCREEN GOES TOO. Their pushes stop

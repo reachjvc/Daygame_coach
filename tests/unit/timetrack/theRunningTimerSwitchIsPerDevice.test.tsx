@@ -34,6 +34,7 @@ vi.mock("@/src/notifications/pushClient", () => ({
   isAppleTouch: () => false,
   workerRegistration: async () => ({ pushManager: { getSubscription: async () => client.subscription } }),
   subscribe: async () => client.subscription,
+  subscriptionForPage: async () => ({ subscription: client.subscription, oldEndpoint: null }),
 }))
 
 import { LOCK_SCREEN_NOTE, RunningTimerSetting } from "@/src/timetrack/components/RunningTimerSetting"

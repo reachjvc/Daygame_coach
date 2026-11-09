@@ -17,7 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { deviceLabel } from "../endpoints"
-import { isInstalledApp, permission, pushSupport, subscribe, workerRegistration, type PushSupport } from "../pushClient"
+import { isInstalledApp, permission, pushSupport, subscribe, subscriptionForPage, workerRegistration, type PushSupport } from "../pushClient"
 
 export interface DeviceSummary {
   id: string
@@ -116,12 +116,18 @@ export function usePushDevice() {
     if (s !== "ready" || permission() !== "granted") return
     void (async () => {
       const registration = await workerRegistration()
-      const sub = await registration?.pushManager.getSubscription()
-      if (!sub) return
+      // a subscription made with an earlier server key is replaced here, without a tap (prove-slow-01)
+      const here = registration ? await subscriptionForPage(registration) : null
+      if (!here) return
       try {
         const r = await json<{ id: string | null; enabled: boolean; timerRunning?: boolean }>("/api/notifications/devices", {
           method: "POST",
-          body: JSON.stringify({ subscription: sub.toJSON(), intent: "refresh", label: deviceLabel(navigator.userAgent, isInstalledApp()) }),
+          body: JSON.stringify({
+            subscription: here.subscription.toJSON(),
+            intent: "refresh",
+            label: deviceLabel(navigator.userAgent, isInstalledApp()),
+            ...(here.oldEndpoint ? { oldEndpoint: here.oldEndpoint } : {}),
+          }),
         })
         setThisDevice(r.id ? { id: r.id, enabled: r.enabled, timerRunning: r.timerRunning === true } : null)
         void loadDevices()

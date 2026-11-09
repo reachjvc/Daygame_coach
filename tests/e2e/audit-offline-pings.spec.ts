@@ -38,6 +38,7 @@ async function seedRun(userId: string): Promise<void> {
 }
 
 async function aPhoneGetsPings(userId: string): Promise<void> {
+  expect((await stackAdmin().from("push_devices").delete().eq("user_id", userId)).error).toBeNull()
   const { error } = await stackAdmin()
     .from("push_devices")
     .insert({ user_id: userId, endpoint: `https://push.example.test/${randomUUID()}`, p256dh: "k", auth: "a", enabled: true, label: "Android phone · Chrome" })
@@ -107,6 +108,8 @@ test.describe("pings on /audit with no signal", () => {
 
   test("prove-slow-02: before an audit, with no device known, nothing about pings is offered offline", async ({ page, account }) => {
     expect((await stackAdmin().from("audit_runs").delete().eq("user_id", account.id)).error).toBeNull()
+    // The account is the worker's: an earlier test may have given it a device with pings on.
+    expect((await stackAdmin().from("push_devices").delete().eq("user_id", account.id)).error).toBeNull()
     test.skip(!(await openStored(page, "audit-start")), NO_WORKER)
     // Online, a browser with no device getting pings is asked to set them up
     // (headless Chromium answers "blocked", which shows the blocked variant).
