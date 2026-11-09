@@ -896,7 +896,16 @@ reviews, the Dashboard, anything about values.
 
 ### Phase 4. Words, the north star in Review, Today's ratings folded (d9)
 
-**Status:** not started. Depends on: Phase 3.
+**Status:** Built and live 2026-11-09, commit a91dfb33, buildId confirmed. Decision page section
+`p4-live` added. Differences: the footer branch is `loaded && serverState === "unknown"` without
+`!unsent` (with it the branch could never show: `unsent` is always true before the first save), with a
+new e2e on a fresh account; the routine label for a routine with no area is " · not tied to one area"
+(not " · for every area", which is untrue for a routine that serves only some areas); the icon legend
+uses `text-xs text-muted-foreground`, because `trainingTypeFloor.test.ts` forbids `text-[10.5px]` and
+zinc in `BuildBoard.tsx`; `oneThingBox.test.tsx` asserted the old "Track step" sentence and now asserts
+it is gone; the fold e2e also opens the fold. Vercel incident: a late deploy of 01971ab6 (the push it had
+missed at 09:46) went live at 11:28 over newer code; a fresh push restored main at 11:33. Depends on:
+Phase 3.
 
 Copy changes. Each row is an exact replacement of the whole quoted text. First run
 `grep -rn "<a distinctive part of the old text>" src tests` for each row. On 2026-11-09 no test asserted
