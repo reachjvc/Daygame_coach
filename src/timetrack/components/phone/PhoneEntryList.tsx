@@ -139,53 +139,42 @@ export const PhoneEntryList = memo(function PhoneEntryList({
   const weekSeconds = list.weekSecondsAt(todayKey, state.user.weekStart, nowSec)
   const format = state.user.durationFormat
 
-  /** overlaps and small gaps, per day on screen, kept while the day's group is the same (see `EntryList`) */
+  /**
+   * What a day hands its rows to act with, the same functions for the list's
+   * whole life: each calls what the parent gave last. The parent makes some of
+   * them afresh every second ("See in calendar"), and a day must not be drawn
+   * again for that (see `PhoneDay`).
+   */
+  const given = useRef({ setState, pushToast, afterCheck, onEditEntry, onGoToProject, onSelect, onSeeInCalendar, nowSec })
+  given.current = { setState, pushToast, afterCheck, onEditEntry, onGoToProject, onSelect, onSeeInCalendar, nowSec }
   const jointCache = useRef(new WeakMap<DayGroup, Map<string, Joint>>())
-  const jointsOfDay = (group: DayGroup): Map<string, Joint> => {
-    let found = jointCache.current.get(group)
-    if (!found) {
-      const dayEntries = new Map([...(group.carriedIn ?? []), ...group.rows.flatMap((row) => row.entries)].map((e) => [e.id, e]))
-      found = new Map(jointsOf([...dayEntries.values()], new Date(nowSec * 1000).toISOString()).map((j) => [`${j.earlierId}>${j.laterId}`, j]))
-      jointCache.current.set(group, found)
-    }
-    return found
-  }
-  const jointBelow = (group: DayGroup, rows: EntryRow[], index: number): Joint | null => {
-    const later = rows[index]
-    const earlier = rows[index + 1]
-    if (earlier && !later.grouped && !earlier.grouped) return jointsOfDay(group).get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
-    if (earlier || later.grouped || later.continuedDays || !group.carriedIn) return null
-    for (const carried of group.carriedIn) {
-      const joint = jointsOfDay(group).get(`${carried.id}>${later.entries[0].id}`)
-      if (joint) return joint
-    }
-    return null
-  }
+  const actions = useMemo<DayActions>(
+    () => ({
+      setState: (updater) => given.current.setState(updater),
+      pushToast: (...args) => given.current.pushToast(...args),
+      afterCheck: (...args) => given.current.afterCheck(...args),
+      onEditEntry: (entry) => given.current.onEditEntry(entry),
+      onGoToProject: (projectId) => given.current.onGoToProject(projectId),
+      onSelect: (ids) => given.current.onSelect(ids),
+      onSeeInCalendar: (day) => given.current.onSeeInCalendar(day),
+      latest: () => latestState.current,
+      toggleExpanded: (key) => setExpanded((keys) => (keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key])),
+      /** overlaps and small gaps, per day on screen, kept while the day's group is the same (see `EntryList`) */
+      jointsOfDay: (group) => {
+        let found = jointCache.current.get(group)
+        if (!found) {
+          const dayEntries = new Map([...(group.carriedIn ?? []), ...group.rows.flatMap((row) => row.entries)].map((e) => [e.id, e]))
+          found = new Map(jointsOf([...dayEntries.values()], new Date(given.current.nowSec * 1000).toISOString()).map((j) => [`${j.earlierId}>${j.laterId}`, j]))
+          jointCache.current.set(group, found)
+        }
+        return found
+      },
+    }),
+    [],
+  )
 
   if (list.entries.length === 0) {
     return <EmptyState title="No time entries yet" hint="Tap “I’m working on…” below to start a timer, or ⊕ above to add time you already worked." />
-  }
-
-  const selecting = selected !== null
-  const toggle = (ids: Id[]) => {
-    if (!selected) return
-    const all = ids.every((id) => selected.includes(id))
-    onSelect(all ? selected.filter((id) => !ids.includes(id)) : [...new Set([...selected, ...ids])])
-  }
-
-  const rowProps = {
-    state,
-    setState,
-    nowSec,
-    pushToast,
-    afterCheck,
-    onEditEntry,
-    onGoToProject,
-    latest: () => latestState.current,
-    selecting,
-    onStartSelecting: (ids: Id[]) => onSelect(ids),
-    // D-SWIPE: on unless switched off in Settings; not while ticking rows for the bulk bar
-    swipes: state.user.swipeActions !== false && !selecting,
   }
 
   return (
@@ -197,80 +186,9 @@ export const PhoneEntryList = memo(function PhoneEntryList({
         </span>
       </div>
 
-      {groups.map((group) => {
-        // planned entries are in the calendar, not here, until they start (D-PLANNED)
-        const rows = listedRows(group, nowSec)
-        // a day whose only entry is the running one is the bar's until it stops
-        if (rows.length === 0 && group.plannedSeconds === 0) return null
-        return (
-        <section key={group.date} className="pt-2">
-          <div className="flex items-baseline justify-between px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <h3>{formatDayHeader(group.date, todayKey)}</h3>
-            <span className="tabular-nums normal-case">
-              {formatDuration(group.totalSeconds, format)}
-              {/* planned time is not in the total until it starts (Q2): said beside it */}
-              {group.plannedSeconds > 0 && ` · ${formatDuration(group.plannedSeconds, format)} planned`}
-            </span>
-          </div>
-          {rows.length === 0 ? (
-            <div className="flex items-center justify-between rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
-              <span>Only planned entries: they show here once they start.</span>
-              <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => onSeeInCalendar(group.date)}>
-                See in calendar
-              </Button>
-            </div>
-          ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-            {rows.map((row, index) => {
-              const joint = jointBelow(group, rows, index)
-              const ids = row.entries.map((e) => e.id)
-              const open = expanded.includes(row.key)
-              return (
-                <Fragment key={row.key}>
-                  <li>
-                    <PhoneRow
-                      {...rowProps}
-                      entry={row.entries[0]}
-                      row={row}
-                      checked={selecting && ids.every((id) => selected.includes(id))}
-                      onCheck={() => toggle(ids)}
-                      expanded={open}
-                      onToggleExpand={() => setExpanded((keys) => (keys.includes(row.key) ? keys.filter((k) => k !== row.key) : [...keys, row.key]))}
-                    />
-                    {row.grouped && open && (
-                      <ul className="divide-y divide-border border-t border-border bg-secondary/20">
-                        {row.entries.map((entry) => (
-                          <li key={entry.id}>
-                            <PhoneRow
-                              {...rowProps}
-                              entry={entry}
-                              nested
-                              checked={selecting && selected.includes(entry.id)}
-                              onCheck={() => toggle([entry.id])}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                  {joint && (
-                    <JointMark
-                      joint={joint}
-                      across={index === rows.length - 1}
-                      state={state}
-                      latest={() => latestState.current}
-                      setState={setState}
-                      pushToast={pushToast}
-                    />
-                  )}
-                </Fragment>
-              )
-            })}
-          </ul>
-          )}
-        </section>
-        )
-      })}
+      {groups.map((group) => (
+        <PhoneDay key={group.date} group={group} todayKey={todayKey} nowSec={nowSec} state={state} expanded={expanded} selected={selected} actions={actions} />
+      ))}
 
       {allGroups.length > visibleDays && (
         <div className="flex justify-center pt-2">
@@ -283,7 +201,239 @@ export const PhoneEntryList = memo(function PhoneEntryList({
   )
 })
 
-function PhoneRow({
+interface DayActions {
+  setState: SetState
+  pushToast: PushToast
+  afterCheck: AfterCheck
+  onEditEntry: (entry: TimeEntry) => void
+  onGoToProject: (projectId: Id) => void
+  onSelect: (ids: Id[] | null) => void
+  onSeeInCalendar: (day: IsoDate) => void
+  latest: () => TimetrackState
+  toggleExpanded: (key: string) => void
+  jointsOfDay: (group: DayGroup) => Map<string, Joint>
+}
+
+interface DayProps {
+  group: DayGroup
+  todayKey: IsoDate
+  nowSec: number
+  state: TimetrackState
+  expanded: string[]
+  selected: Id[] | null
+  actions: DayActions
+}
+
+/**
+ * A DAY IS DRAWN AGAIN WHEN SOMETHING IT SHOWS CHANGED, NOT EVERY SECOND.
+ *
+ * Every second drew every row of every day open: ~2.4 s of work in 5 s on a
+ * phone with three months of entries and every day opened (audit of
+ * 2026-11-09, bug 3 of Plans/time-tracker-leftovers.md). The clock is left out
+ * of the comparison on purpose: `timerList` hands back a day as the same object
+ * for as long as nothing in it can change (no running entry in it, no planned
+ * one starting), and while it is the same object its rows, lengths and total
+ * read the same at any second. The running day comes back new each second and
+ * is drawn; the running entry itself is the bar's, not a row here.
+ */
+function dayPropsEqual(prev: DayProps, next: DayProps): boolean {
+  return (
+    prev.group === next.group &&
+    prev.todayKey === next.todayKey &&
+    prev.state === next.state &&
+    prev.expanded === next.expanded &&
+    prev.selected === next.selected &&
+    prev.actions === next.actions
+  )
+}
+
+const PhoneDay = memo(function PhoneDay({ group, todayKey, nowSec, state, expanded, selected, actions }: DayProps) {
+  const format = state.user.durationFormat
+  // planned entries are in the calendar, not here, until they start (D-PLANNED)
+  const rows = listedRows(group, nowSec)
+  // a day whose only entry is the running one is the bar's until it stops
+  if (rows.length === 0 && group.plannedSeconds === 0) return null
+
+  const jointBelow = (index: number): Joint | null => {
+    const later = rows[index]
+    const earlier = rows[index + 1]
+    if (earlier && !later.grouped && !earlier.grouped) return actions.jointsOfDay(group).get(`${earlier.entries[0].id}>${later.entries[0].id}`) ?? null
+    if (earlier || later.grouped || later.continuedDays || !group.carriedIn) return null
+    for (const carried of group.carriedIn) {
+      const joint = actions.jointsOfDay(group).get(`${carried.id}>${later.entries[0].id}`)
+      if (joint) return joint
+    }
+    return null
+  }
+
+  const selecting = selected !== null
+  const toggle = (ids: Id[]) => {
+    if (!selected) return
+    const all = ids.every((id) => selected.includes(id))
+    actions.onSelect(all ? selected.filter((id) => !ids.includes(id)) : [...new Set([...selected, ...ids])])
+  }
+
+  const rowProps = {
+    state,
+    setState: actions.setState,
+    nowSec,
+    pushToast: actions.pushToast,
+    afterCheck: actions.afterCheck,
+    onEditEntry: actions.onEditEntry,
+    onGoToProject: actions.onGoToProject,
+    latest: actions.latest,
+    selecting,
+    selected,
+    onStartSelecting: (ids: Id[]) => actions.onSelect(ids),
+    // D-SWIPE: on unless switched off in Settings; not while ticking rows for the bulk bar
+    swipes: state.user.swipeActions !== false && !selecting,
+  }
+
+  return (
+    <section className="pt-2">
+      <div className="flex items-baseline justify-between px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h3>{formatDayHeader(group.date, todayKey)}</h3>
+        <span className="tabular-nums normal-case">
+          {formatDuration(group.totalSeconds, format)}
+          {/* planned time is not in the total until it starts (Q2): said beside it */}
+          {group.plannedSeconds > 0 && ` · ${formatDuration(group.plannedSeconds, format)} planned`}
+        </span>
+      </div>
+      {rows.length === 0 ? (
+        <div className="flex items-center justify-between rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+          <span>Only planned entries: they show here once they start.</span>
+          <Button variant="ghost" size="sm" className="h-11 shrink-0" onClick={() => actions.onSeeInCalendar(group.date)}>
+            See in calendar
+          </Button>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+          {rows.map((row, index) => {
+            const joint = jointBelow(index)
+            const ids = row.entries.map((e) => e.id)
+            const open = expanded.includes(row.key)
+            return (
+              <Fragment key={row.key}>
+                <li>
+                  <PhoneRow
+                    {...rowProps}
+                    entry={row.entries[0]}
+                    row={row}
+                    checked={selecting && ids.every((id) => selected.includes(id))}
+                    onCheck={() => toggle(ids)}
+                    expanded={open}
+                    onToggleExpand={() => actions.toggleExpanded(row.key)}
+                  />
+                  {row.grouped && open && (
+                    <ul className="divide-y divide-border border-t border-border bg-secondary/20">
+                      {row.entries.map((entry) => (
+                        <li key={entry.id}>
+                          <PhoneRow
+                            {...rowProps}
+                            entry={entry}
+                            nested
+                            checked={selecting && selected.includes(entry.id)}
+                            onCheck={() => toggle([entry.id])}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+                {joint && (
+                  <JointMark
+                    joint={joint}
+                    across={index === rows.length - 1}
+                    state={state}
+                    latest={actions.latest}
+                    setState={actions.setState}
+                    pushToast={actions.pushToast}
+                  />
+                )}
+              </Fragment>
+            )
+          })}
+        </ul>
+      )}
+    </section>
+  )
+}, dayPropsEqual)
+
+type PhoneRowProps = {
+  entry: TimeEntry
+  row?: EntryRow
+  nested?: boolean
+  state: TimetrackState
+  setState: SetState
+  nowSec: number
+  pushToast: PushToast
+  afterCheck: AfterCheck
+  onEditEntry: (entry: TimeEntry) => void
+  onGoToProject: (projectId: Id) => void
+  latest: () => TimetrackState
+  selecting: boolean
+  /** the bulk bar's selection: compared, because `onCheck` reads it */
+  selected: Id[] | null
+  checked: boolean
+  onCheck: () => void
+  expanded?: boolean
+  onToggleExpand?: () => void
+  onStartSelecting: (ids: Id[]) => void
+  /** right to continue, left to delete (D-SWIPE) */
+  swipes: boolean
+}
+
+/**
+ * A ROW IS DRAWN AGAIN WHEN WHAT IT SHOWS CHANGED.
+ *
+ * A day is drawn again whenever the workspace changes (the account's answer to
+ * a Start, a rename anywhere), and on `next dev` drawing ~2,000 rows took
+ * seconds. A row shows its entry (or group), the settings, projects, clients,
+ * tags and favourites; its buttons act on `latest()` or the copy a check hands
+ * them, not on `state`. The clock is not compared: the running entry is the
+ * bar's, not a row, and a planned one is not listed, so a row's length is its
+ * stored one. The callbacks are made fresh by each day and not compared; what
+ * they close over that can change (the selection) is.
+ */
+function sameRow(a: EntryRow | undefined, b: EntryRow | undefined): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.key === b.key &&
+    a.grouped === b.grouped &&
+    a.totalSeconds === b.totalSeconds &&
+    a.continuedDays === b.continuedDays &&
+    a.entries.length === b.entries.length &&
+    a.entries.every((e, n) => e === b.entries[n])
+  )
+}
+function rowPropsEqual(prev: PhoneRowProps, next: PhoneRowProps): boolean {
+  const a = prev.state
+  const b = next.state
+  return (
+    prev.entry === next.entry &&
+    sameRow(prev.row, next.row) &&
+    prev.nested === next.nested &&
+    prev.checked === next.checked &&
+    prev.expanded === next.expanded &&
+    prev.selecting === next.selecting &&
+    prev.selected === next.selected &&
+    prev.swipes === next.swipes &&
+    a.user === b.user &&
+    a.projects === b.projects &&
+    a.clients === b.clients &&
+    a.tags === b.tags &&
+    a.favorites === b.favorites &&
+    prev.setState === next.setState &&
+    prev.pushToast === next.pushToast &&
+    prev.afterCheck === next.afterCheck &&
+    prev.onEditEntry === next.onEditEntry &&
+    prev.onGoToProject === next.onGoToProject &&
+    prev.latest === next.latest
+  )
+}
+
+const PhoneRow = memo(function PhoneRow({
   entry,
   row,
   nested,
@@ -302,27 +452,7 @@ function PhoneRow({
   onToggleExpand,
   onStartSelecting,
   swipes,
-}: {
-  entry: TimeEntry
-  row?: EntryRow
-  nested?: boolean
-  state: TimetrackState
-  setState: SetState
-  nowSec: number
-  pushToast: PushToast
-  afterCheck: AfterCheck
-  onEditEntry: (entry: TimeEntry) => void
-  onGoToProject: (projectId: Id) => void
-  latest: () => TimetrackState
-  selecting: boolean
-  checked: boolean
-  onCheck: () => void
-  expanded?: boolean
-  onToggleExpand?: () => void
-  onStartSelecting: (ids: Id[]) => void
-  /** right to continue, left to delete (D-SWIPE) */
-  swipes: boolean
-}) {
+}: PhoneRowProps) {
   const running = isRunning(entry)
   const planned = isPlanned(entry, nowSec)
   const seconds = row ? row.totalSeconds : entrySeconds(entry, nowSec)
@@ -515,7 +645,7 @@ function PhoneRow({
     </div>
     </div>
   )
-}
+}, rowPropsEqual)
 
 /** The row's ⋮: today's extras, which Toggl's phone rows do not have, kept one tap away */
 function RowMenu({
