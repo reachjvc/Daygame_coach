@@ -999,8 +999,23 @@ weekly set, Tracking's weekly reviews, `SEASON_BAND_COPY`.
 
 ### Phase 5. One weekly reminder on the phone (d4)
 
-**Status:** not started. Depends on: Phases 1 to 4 live. The owner's yes for the migration is already
-given: do not ask.
+**Status:** Built and live 2026-11-09, commit 5878eb64, buildId confirmed. Migration
+`20261109140000_plan_review_reminder.sql` applied (only it was pending); backup
+`~/dg-backups/life-plan-reminders-2026-11-09.json` (1 device, 17 sends, mode 600); live checks: 2
+functions, 0 reminder rows, `notifications-clock` succeeded 5 of 5 after the change, the API answers 401
+signed out. Rehearsed up/down/up locally. Worker proven on a production build in headed Chromium under
+xvfb (CDP delivery showed title, body, tag and link; the e2e config blocks service workers, so the check
+allowed them). Not proven: real delivery to the phone. Decision page section `p5-live` added.
+Differences: the clock's log line has no user id (`textStaysPrivate` allows a tag and a message only);
+the payload url uses `ROUTES.plan` (`routeList.test.ts`); `readReminderPatch` lives in
+`reviewReminderService.ts` (a route file may export handlers only) and refuses `{}`; after the code and
+security reviews: the reminder keeps 6 h at the push service (`REVIEW_PUSH_TTL_SECONDS`, a one-line
+change in `pushService.ts`) instead of 10 min, "written" in SQL is any non-space character (`~ '\S'`,
+as the app's `trim()`), `sent` counts only pushes that went out, and the switch keeps a device turned
+on meanwhile. Not changed: the once-per-local-day key (moving the day mid-week can send a second
+reminder for the same week), and Review opens on the default-day week until the reminder's day has
+loaded. The integration file ran while another session's e2e had started (B4); it touches only this
+phase's table and its own users. Depends on: Phases 1 to 4 live.
 
 **One device switch (decided).** `push_devices.enabled` is a device's switch for reminders:
 `notificationsRepo.ts` says "Reminders and tests go to devices with reminders on". The audit's pings and
