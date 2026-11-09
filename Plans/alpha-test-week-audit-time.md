@@ -1,6 +1,6 @@
 # Alpha test: Perfect week, Time & energy audit, Time
 
-Written 2026-11-09. Status: **not started.**
+Written 2026-11-09. Status: **running** (started 2026-11-09). O1 = yes ("use a test account"). O2 = left blank in the prompt, read as "none"; the owner's notes on the look pages stand in (alpha/KNOWN.md).
 
 The owner asked for Claude to be the alpha tester of three features — Time (`/time`), the Time & energy audit
 (`/audit`) and the Perfect week (the last part of the audit's review) — for hours, on several browsers and devices
@@ -121,6 +121,20 @@ phase without a status note.
 **Done when:** one script starts server, phone and three PC browsers on one test account, and a screenshot of
 each is in `alpha/rig/`.
 
+**Status (2026-11-09): done, with two changes.**
+- Rig scripts in `alpha/`: `server.sh` (production build of origin/main fca3fa79, `next start` on :3400, local
+  test stack), `tick.sh` (calls `/api/notifications/tick` each minute), `pw.sh` (Playwright, five profiles),
+  `phone.sh` (emulator). Marks read: audit page 13, Dread or Delight 19, Perfect week 0, Toggl parity 0 → `alpha/KNOWN.md`.
+- B-LOCAL-PUSH: the test stack has `pg_cron` + `pg_net` but no keys. Added test-only VAPID keys and a clock secret
+  to the test stack's vault (never the live one); `tick.sh` stands in for the clock (pg_cron needs an https URL).
+- B-ANDROID changed: this user has no permission on `/dev/kvm` and no sudo, so the emulator would not start.
+  It now runs inside a Docker container given `/dev/kvm` (`alpha-emu`). Pixel 7, Android 14 Play image boots;
+  its Chrome is **113** (the image's own; updating needs a Google account). Real phones run a newer Chrome.
+- B-ENV: the O1 live account was made through the live sign-up page with a free throwaway inbox (mail.tm);
+  credentials only in `alpha/live-account.json` (private). The first try failed on the password rule
+  ("Add a capital letter").
+- The three PC/phone sign-ins on one account are done by the slow pass (Phase 3) rather than a separate script.
+
 ## Phase 1 — Charters · S
 Write `alpha/CHARTERS.md`: 20–30 "days in his life" and edge cases across the three features and their seams
 (Time's entry fills the audit answer; one answer covers a stretch; Same as before; Mute 1 h; quiet hours;
@@ -128,6 +142,10 @@ offline answers waiting; two devices answering the same quarter; crossing midnig
 day 14 ends; review → Do more / Cut → perfect week; editing the week after a new choice). Each charter names its
 yardstick (D-YARDSTICK) and the browsers it runs on. O2's items become charters first.
 **Done when:** every item in KNOWN.md maps to a charter.
+
+**Status (2026-11-09): done.** 32 charters in `alpha/CHARTERS.md`; the owner-note charters C01–C11 first,
+each KNOWN item mapped. Phases 2, 3 and 4 run in parallel (independent agents; the picky eye is not shown
+the other findings), which the plan's order allows since none feeds the other.
 
 ## Phase 2 — Fast pass (fake clock) · M
 Agent per feature group (Time; audit; review + perfect week), each running its charters with Playwright's
