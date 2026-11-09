@@ -79,6 +79,9 @@ One artifact, phone first (375px frame, works at 320px).
 ## Result (2026-11-09)
 
 **Comparison page:** https://claude.ai/artifact/MGAzdo5nRWDS9vFKWkWF6K ("Five Ways Around", private).
+**Before and after page:** https://claude.ai/artifact/3BV7cJWjt5YS5RPZtvFtej ("Site Before and After"): real phone and laptop
+screenshots of 12 pages (local app, test account) beside the same page under E. Bar Home · Plan · Activity · You;
+Tracking becomes Activity, Settings becomes You, the Dashboard becomes Home. Marks: `ba--E`, notes per row.
 Marks live in its database, collection `marks`: `opt--<A..E>` (mark yes/maybe/no), `idea--<fab|switch|topswitch|hub|browse|tiles|corner>`
 (mark), and every block's note log as `n--<section>--<hash>` or on the mark docs (`notes: [{text, at}]`, `note` = latest).
 
